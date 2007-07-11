@@ -1,0 +1,36 @@
+Short desc      : oversampling
+Submission time : 2007-06-12
+Submited by     : ripieces
+State           : considered
+Aissg. coders   : ripieces
+Long desc       : in connection with alphamasks
+
+
+
+Short desc      : using alpha channels instead of masks
+Submission time : 2007-06-12
+Submited by     : ripieces
+State           : considered
+Aissg. coders   : ripieces
+
+
+
+Short desc      : outputing streams to avi etc.
+Submission time : 2007-05-28
+Submited by     : ripieces
+State           : considered
+Aissg. coders   : ripieces
+Est. use        :  90%
+Est. difficulty :  60%
+
+
+
+
+Short desc      : Ingame GUI
+Submission time : 2007-05-28
+Submited by     : ripieces
+State           : in_progress(since 2007-06-29, 1%)
+Aissg. coders   : ripieces
+Assig. priority :  95%
+Est. use        :  50%
+Est. difficulty :  85%
