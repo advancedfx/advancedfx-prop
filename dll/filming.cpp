@@ -12,15 +12,22 @@
 #include "cmdregister.h"
 #include "filming.h"
 
+//#include "math.h"
+
 extern cl_enginefuncs_s *pEngfuncs;
 extern engine_studio_api_s *pEngStudio;
 extern playermove_s *ppmove;
 
 extern float clamp(float, float, float);
 
-REGISTER_CVAR(movie_customdump, "1", 0);
+REGISTER_DEBUGCVAR(depth_bias, "0", 0);;
+REGISTER_DEBUGCVAR(depth_scale, "1", 0);
+
+REGISTER_CVAR(movie_customdump, "1", 0)
 REGISTER_CVAR(movie_depthdump, "0", 0);
 REGISTER_CVAR(movie_filename, "untitled", 0);
+REGISTER_CVAR(movie_fixemptydumps, "0", 0);
+REGISTER_CVAR(depth_logarithmic, "32", 0);
 REGISTER_CVAR(movie_splitstreams, "0", 0);
 REGISTER_CVAR(movie_swapweapon, "0", 0);
 REGISTER_CVAR(movie_swapdoors, "0", 0);
@@ -37,7 +44,7 @@ void Filming::setScreenSize(GLint w, GLint h)
 {
 	if (m_pBuffer == NULL || m_iWidth < w || m_iHeight < h)
 	{
-		m_pBuffer = (unsigned char *) realloc(m_pBuffer, w * h * 3);
+		m_pBuffer = (unsigned char *) realloc(m_pBuffer, w * h * max(sizeof(float),max(sizeof(unsigned int),sizeof(unsigned char)))); // old was 3
 		m_iWidth = w;
 		m_iHeight = h;
 	}
@@ -55,6 +62,7 @@ void Filming::Start()
 	m_nFrames = 0;
 	m_iFilmingState = FS_STARTING;
 	m_iMatteStage = MS_WORLD;
+
 }
 
 void Filming::Stop()
@@ -70,8 +78,11 @@ void Filming::Stop()
 void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
 {
 	char cDepth = (iBuffer == COLOR ? 2 : 3);
-	int iGlBuffer = (iBuffer == COLOR ? GL_BGR_EXT : GL_DEPTH_COMPONENT);
-	int nBits = (iBuffer == COLOR ? 3 : 1);
+	int iMovieBitDepth = (int)(movie_depthdump->value);
+
+	GLenum eGLBuffer = (iBuffer == COLOR ? GL_BGR_EXT : GL_DEPTH_COMPONENT);
+	GLenum eGLtype = ((iBuffer == COLOR) ? GL_UNSIGNED_BYTE : GL_FLOAT);
+	int nBits = ((iBuffer == COLOR ) ? 3 : (iMovieBitDepth==32?4:(iMovieBitDepth==24?3:(iMovieBitDepth==16?2:1))));
 
 	char szFilename[128];
 	_snprintf(szFilename, sizeof(szFilename) - 1, "%s_%s_%02d_%05d.tga", m_szFilename, pszFileTag, m_nTakes, iFileNumber);
@@ -80,13 +91,72 @@ void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
 	unsigned char szHeader[6] = { (int) (m_iWidth % 256), (int) (m_iWidth / 256), (int) (m_iHeight % 256), (int) (m_iHeight / 256), 8 * nBits, 0 };
 
 	FILE *pImage;
+	
+	GLint tBuffer2;
 
-	glReadPixels(0, 0, m_iWidth, m_iHeight, iGlBuffer, GL_UNSIGNED_BYTE, m_pBuffer);
+	int tError;
+
+
+	if(iBuffer==COLOR && movie_fixemptydumps->value!=0)
+	{
+		// some ATI Cards (i.e. ATI Radeon X800 with Catalyst 6.7 and 7.6 driver ) would return an empty COLOR buffer when AntiAliasing is enabled
+		//glFinish(); // let it finish the pipe
+		//glGetIntegerv(GL_DRAW_BUFFER,&tBuffer); // rember original buffers
+		glGetIntegerv(GL_READ_BUFFER,&tBuffer2); // .
+		//glDrawBuffer(GL_FRONT); // set buffer we want to draw on
+		//glGetError();
+		//glAccum(GL_RETURN,1); // get Data from the Accumaltion buffer that should keep the antialiased data
+		//if(tError=glGetError()) pEngfuncs->Con_Printf("glGetError(): %d\n",tError);
+		glReadBuffer(GL_FRONT); // we want to read the pixels from the buffer we drew to
+	}
+
+	glReadPixels(0, 0, m_iWidth, m_iHeight, eGLBuffer, eGLtype, m_pBuffer);
+
+	if(iBuffer==COLOR && movie_fixemptydumps->value!=0)
+	{
+		// clean up our mess again
+		//glDrawBuffer(tBuffer);
+		glReadBuffer(tBuffer2);
+	}
+
+	// apply postprocessing to the depthbuffer:
+	if (iBuffer==DEPTH)
+	{
+		// user wants 24 Bit output, we need to cut off
+		int iSize=m_iWidth*m_iHeight;
+		unsigned char* t_pBuffer=m_pBuffer;
+		unsigned char* t_pBuffer2=t_pBuffer;
+		
+		float tfloat;
+		unsigned int tuint;
+
+		unsigned int mymax=(1<<(8*nBits))-1;
+
+		float logscale=depth_logarithmic->value;
+
+		for (int i=0;i<iSize;i++)
+		{
+			memmove(&tfloat,t_pBuffer2,sizeof(float));
+				
+			if (logscale!=0)
+			{
+				tfloat = (exp(tfloat*logscale)-1)/(exp((float)1*logscale)-1);
+			}
+			tfloat *= mymax*(depth_scale->value)+(depth_bias->value);
+			tuint = max(min((unsigned int)tfloat,mymax),0);
+
+			memmove(t_pBuffer,&tuint,nBits);
+				
+			t_pBuffer+=nBits;
+			t_pBuffer2+=sizeof(float);
+		}
+	}
 
 	if ((pImage = fopen(szFilename, "wb")) != NULL)
 	{
 		fwrite(szTgaheader, sizeof(unsigned char), 12, pImage);
 		fwrite(szHeader, sizeof(unsigned char), 6, pImage);
+
 		fwrite(m_pBuffer, sizeof(unsigned char), m_iWidth * m_iHeight * nBits, pImage);
 
 		fclose(pImage);
@@ -368,7 +438,7 @@ REGISTER_CMD_FUNC(matte_setcolour)
 	float flBlue = (float) atoi(pEngfuncs->Cmd_Argv(3)) / 100.0f;
 
 	clamp(flRed, 0.0f, 1.0f);
-	clamp(flGreen, 0.0f, 1.0f);
+	clamp(flGreen, 0.0f, 1.0f);	
 	clamp(flBlue, 0.0f, 1.0f);
 
 	g_Filming.setMatteColour(flRed, flGreen, flBlue);
