@@ -19,6 +19,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="../../hlsdk/multiplayer/cl_dll;../../hlsdk/multiplayer/common;../../hlsdk/multiplayer/engine;../../hlsdk/multiplayer/pm_shared;../../hlsdk/multiplayer/utils/vgui/inlcude"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;MIRVDEMOTOOL_EXPORTS"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -67,7 +68,7 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="../../hlsdk/multiplayer/cl_dll;../../hlsdk/multiplayer/common;../../hlsdk/multiplayer/engine;../../hlsdk/multiplayer/pm_shared"
+				AdditionalIncludeDirectories="../../hlsdk/multiplayer/cl_dll;../../hlsdk/multiplayer/common;../../hlsdk/multiplayer/engine;../../hlsdk/multiplayer/pm_shared;../../hlsdk/multiplayer/utils/vgui/include;$(NOINHERIT)"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;MIRVDEMOTOOL_EXPORTS"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
@@ -78,6 +79,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalOptions="../../hlsdk/multiplayer/utils/vgui/lib/win32_vc6/vgui.lib"
 				OutputFile="$(OutDir)/Mirv Demo Tool.dll"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"
@@ -91,7 +93,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Versioning..."
-				CommandLine="c:\rcstamp.exe &quot;$(ProjectDir)Mirv Demo Tool.rc&quot; *.*.+.0 &quot;$(ProjectDir)version.cpp&quot;"/>
+				CommandLine="c:\rcstamp.exe &quot;$(ProjectDir)Mirv Demo Tool.rc&quot; *.*.*.+ &quot;$(ProjectDir)version.cpp&quot;"/>
 			<Tool
 				Name="VCPreBuildEventTool"
 				CommandLine="c:\rcstamp.exe -u &quot;$(ProjectDir)version.cpp&quot; &quot;$(ProjectDir)Mirv Demo Tool.rc&quot;"/>
@@ -134,6 +136,9 @@
 				RelativePath=".\main.cpp">
 			</File>
 			<File
+				RelativePath=".\temporary_dominik.cpp">
+			</File>
+			<File
 				RelativePath=".\version.cpp">
 			</File>
 			<File
@@ -157,12 +162,6 @@
 				RelativePath=".\filming.h">
 			</File>
 			<File
-				RelativePath=".\functions.h">
-			</File>
-			<File
-				RelativePath=".\misc\parsemsg.h">
-			</File>
-			<File
 				RelativePath=".\register.h">
 			</File>
 			<File
@@ -178,6 +177,16 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}">
 			<File
 				RelativePath=".\Mirv Demo Tool.rc">
+			</File>
+		</Filter>
+		<Filter
+			Name="HLSDK"
+			Filter="">
+			<File
+				RelativePath="..\..\hlsdk\multiplayer\common\interface.cpp">
+			</File>
+			<File
+				RelativePath="..\..\hlsdk\multiplayer\common\interface.h">
 			</File>
 		</Filter>
 	</Files>
