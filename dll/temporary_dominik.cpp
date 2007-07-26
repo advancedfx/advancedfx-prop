@@ -1,10 +1,10 @@
 /*
-File        : mdtgui.cpp
+File        : temporaray_dominik.cpp
 Last Change : n/a, we use a code versioning system
 Started     : 2007-06-29 22:27:00
 Authors     : Gavin Bramhill, Dominik Tugend
 Project     : Mirv Demo Tool
-Description : Implements the classes for the MDT GUI
+Description : for testing purposes in specific the gui
 */
 
 // 	g_nViewports: 0=Game Only 1=GameUI 2=VGUI2 Overlays 3=unused/unkown 4=VGUI 1 (not enabled in CS 1.6)
@@ -160,11 +160,16 @@ public:
 void* gADDR_HL                    = (void*)0x01400000;
 void* gADDR_HL_CreateInterface    = (void*)0x014013ef;
 
-void* ADDR_GAMEUI_CreateInterface = (void*)0x0ee43b10;
+void* ADDR_GAMEUI_CreateInterface = (void*)0x0ee43b10; // can be filled in with getmodulhandle since it's an usual win32 module (no valve sh*t)
 
 #ifdef _DEBUG
   // prints will be later moved to debug
 #endif
+
+//#include "temporary_gui.h"
+
+//MDTbaseGUI g_MDTbaseGUI;
+
 
 REGISTER_DEBUGCMD_FUNC(test_dominik)
 {	
@@ -229,7 +234,7 @@ REGISTER_DEBUGCMD_FUNC(test_dominik)
 
 	pEngfuncs->Con_Printf("IEngineVGui->GetPanel(): 0x%08x\n",myClientPanel);
 
-
+//	g_MDTbaseGUI.HookOnClient(myClientPanel);
 
 
 //	vgui::VPANEL tstpanel = enginevgui->GetPanel(PANEL_INGAMESCREENS);
