@@ -4,6 +4,7 @@
 	Version="7.10"
 	Name="Mirv Demo Tool"
 	ProjectGUID="{B5B38F84-EE5E-4B8E-A0B3-5AE3DC669896}"
+	RootNamespace="Mirv Demo Tool"
 	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
@@ -68,7 +69,7 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="../../hlsdk/multiplayer/cl_dll;../../hlsdk/multiplayer/common;../../hlsdk/multiplayer/engine;../../hlsdk/multiplayer/pm_shared;../../hlsdk/multiplayer/utils/vgui/include;$(NOINHERIT)"
+				AdditionalIncludeDirectories="c:\Libraries/hlsdk/multiplayer/cl_dll;c:\Libraries/hlsdk/multiplayer/common;c:\Libraries/hlsdk/multiplayer/engine;c:\Libraries/hlsdk/multiplayer/pm_shared;$(NOINHERIT)"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;MIRVDEMOTOOL_EXPORTS"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
@@ -79,7 +80,6 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="../../hlsdk/multiplayer/utils/vgui/lib/win32_vc6/vgui.lib"
 				OutputFile="$(OutDir)/Mirv Demo Tool.dll"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"
@@ -182,12 +182,6 @@
 		<Filter
 			Name="HLSDK"
 			Filter="">
-			<File
-				RelativePath="..\..\hlsdk\multiplayer\common\interface.cpp">
-			</File>
-			<File
-				RelativePath="..\..\hlsdk\multiplayer\common\interface.h">
-			</File>
 		</Filter>
 	</Files>
 	<Globals>
