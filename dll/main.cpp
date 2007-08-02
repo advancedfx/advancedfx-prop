@@ -3,6 +3,10 @@
 
 */
 
+#ifndef MDT_DEBUG
+#define MDT_DEBUG
+#endif
+
 #pragma comment(lib,"OpenGL32.lib")
 #pragma comment(lib,"GLu32.lib")
 #pragma comment(lib,"GLaux.lib")
@@ -28,6 +32,8 @@
 #include "aiming.h"
 #include "zooming.h"
 #include "cmdregister.h"
+
+#include "mdt_gltools.h" // we want g_Mdt_GlTools for having tools to force Buffers and Stuff like that
 
 #include <map>
 #include <list>
@@ -77,6 +83,47 @@ REGISTER_CMD_FUNC(whereami)
 	float angles[3];
 	pEngfuncs->GetViewAngles(angles);
 	pEngfuncs->Con_Printf("Location: %fx %fy %fz\nAngles: %fx %fy %fz\n", ppmove->origin.x, ppmove->origin.y, ppmove->origin.z, angles[0], angles[1], angles[2]);
+}
+
+// _mirv_info - Print some informations into the console that might be usefull. when people want to report problems they should copy the console output of the command.
+REGISTER_DEBUGCMD_FUNC(info)
+{
+	pEngfuncs->Con_Printf(">>>> >>>> >>>> >>>>\n");
+	pEngfuncs->Con_Printf("MDT_DLL_VERSION: v%s (%s)\n", pszFileVersion, __DATE__);
+	pEngfuncs->Con_Printf("GL_VENDOR: %s\n",glGetString(GL_VENDOR));
+	pEngfuncs->Con_Printf("GL_RENDERER: %s\n",glGetString(GL_RENDERER));
+	pEngfuncs->Con_Printf("GL_VERSION: %s\n",glGetString(GL_VERSION));
+	pEngfuncs->Con_Printf("GL_EXTENSIONS: %s\n",glGetString(GL_EXTENSIONS));
+	pEngfuncs->Con_Printf("<<<< <<<< <<<< <<<<\n");
+}
+
+REGISTER_DEBUGCMD_FUNC(forcebuffers)
+{
+	const char* cBType_AppDecides = "APP_DECIDES";
+	
+	if (pEngfuncs->Cmd_Argc() != 3)
+	{
+		pEngfuncs->Con_Printf("Useage: " DEBUG_PREFIX "forcebuffers <readbuffer_type> <drawbuffer_type\n");
+
+		const char* cCurReadBuf = cBType_AppDecides; // when forcing is off that means the app decides
+		const char* cCurDrawBuf = cBType_AppDecides; // .
+
+		if (g_Mdt_GlTools.m_bForceReadBuff) cCurReadBuf = g_Mdt_GlTools.GetReadBufferStr();
+		if (g_Mdt_GlTools.m_bForceDrawBuff) cCurDrawBuf = g_Mdt_GlTools.GetDrawBufferStr();
+
+		pEngfuncs->Con_Printf("Current: " DEBUG_PREFIX "forcebuffers %s %s\n",cCurReadBuf,cCurDrawBuf);
+		pEngfuncs->Con_Printf("Available Types: ");
+
+		for (int i=0;i<SIZE_Mdt_GlTools_GlBuffs;i++)
+		{
+			const char* cBuffType=cMdt_GlTools_GlBuffStrings[i];
+			if (i) pEngfuncs->Con_Printf(", %s",cBuffType); // is not first so add comma
+			else pEngfuncs->Con_Printf("%s",cBuffType); // first
+		}
+
+		pEngfuncs->Con_Printf("\n");
+		return;
+	}
 }
 
 REGISTER_DEBUGCVAR(deltatime, "1.0", 0);
@@ -167,8 +214,14 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 		g_Zooming.handleZoom();
 			
 		if (g_Filming.isFilming())
+#ifdef MDT_DEBUG
+		{
+			pEngfuncs->Con_Printf("filming, glViewPort is %dx%d\n",width,height);
+#endif
 			g_Filming.recordBuffers();
-
+#ifdef MDT_DEBUG
+		}
+#endif
 		if (g_Aiming.isAiming())
 			g_Aiming.aim();
 	}
@@ -177,6 +230,7 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 
 	g_Zooming.adjustViewportParams(x, y, width, height);
 	glViewport(x, y, width, height);
+
 }
 
 

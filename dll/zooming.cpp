@@ -1,3 +1,6 @@
+#ifndef MDT_DEBUG
+#define MDT_DEBUG
+#endif
 
 #include "wrect.h"
 #include "cl_dll.h"
@@ -69,7 +72,9 @@ void Zooming::handleZoom()
 	}
 
 	float flTimeDelta = pEngfuncs->GetClientTime() - flLastTime;
-
+#ifdef MDT_DEBUG
+	if (flTimeDelta<0) pEngfuncs->Con_Printf("ERORR: DELTA<0 due to old=%f new=%f",flLastTime,flLastTime+flTimeDelta);
+#endif
 	m_flZoom += flTimeDelta * (m_bActive ? zoom_speed->value : -zoom_speed->value);
 	m_flZoom = clamp(m_flZoom, 0.0f, 100.0f);
 
