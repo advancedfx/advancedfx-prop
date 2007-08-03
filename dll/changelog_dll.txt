@@ -32,7 +32,8 @@
          mirv_crop_yofs on -1 in this case)).
          
 - Added: mirv_crop_yofs (default -1)
-         -1 means no pixels at the top will be cropped off, other values crop
+         -1 will automatically center any cropping action (so you can easily
+         crop 4:3 down to 16:9 and stuff like that), other values crop value
          lines of from the top
 
 - Changed: mirv_matte_setcolor (renamed from the BE mirv_matte_setcolour) now
