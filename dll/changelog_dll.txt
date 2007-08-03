@@ -1,8 +1,62 @@
-1.0.58.x DLL UNOFFICIAL
+1.0.58.158 DLL UNOFFICIAL
 
-- Added: _mirv_info:
+- Added: __mirv_depth_fixempty (default 0)
+         If you have one of those card's where you get an empty DepthDump
+         (because those have problems with GL_FLOAT) you can try
+         __mirv_depth_fixempty 1
+         GL (this will try to retrive the depth with GL_UNSIGNED_INT instead
+         However if 0 works fine for you take 0, 1 is slower!
+
+- Changed: tried to reduce impact of Half-Life Client timing problems on the
+           mirv_zoom_ stuff by preventing changes when deltatime gets negative
+           (meaning the zoom will not pop back anymore and will stay fully
+           zoomed when u are zoomed in, however on zooming stuttering can
+           still occur)
+
+- Hint: this seems to be a common problem with HLTV demos, althoug it's hardly
+        noticeable:
+        the client timing problems (which also happen when not using MDT) can
+        also cause player models to stutter etc. (we don't know if and when we
+        can fix it, since the orign of the problem is probably on Valve's end).
+        However you can reduce stuttering when setting cl_clockreset to a value
+        higher than the number of seconds the scene you want to record lasts.
+        (I.e. if you plan to record bellow 1 minute you can set it to 60,
+        however we have no idea what side effects this could cause, so may be
+        note the default value first bevore changing it (I think it's 0.1 or so)).
+         
+- Added: mirv_crop_height (default -1)
+         -1 means no (height) cropping will be applied
+         you can specifiy an outputheight you want the images to be cropped to.
+         (if you have a black line at the top of your images you can use this
+         to cut it off by suppling the correct value (you can leave
+         mirv_crop_yofs on -1 in this case)).
+         
+- Added: mirv_crop_yofs (default -1)
+         -1 means no pixels at the top will be cropped off, other values crop
+         lines of from the top
+
+- Changed: mirv_matte_setcolor (renamed from the BE mirv_matte_setcolour) now
+           accepts values from 0 - 255 (r g b), like it was before MDT 1.0
+           
+- Added: mirv_matte_setcolorf - this allows directly setting the color using
+         the usual GL float values (0.0 - 1.0)
+
+- Added: In order to improve the fix for avoiding empty dumps that occured on
+         some grfx cards (ATI Radeon X800, ASUS ATI x1600xt, Geforce FX 5600,
+         ...) a system has been added to force GL to read from and draw to
+         specific buffers. This system is enabled by default now and set to
+         work on the GL_BACK buffer. You can control and even turn off this
+         system with the new __mirv_forcebuffers command (type it in console
+         and press enter for more infos)
+
+- Removed: mirv_movie_fixemptydumps is now obsolete (due to the new system)
+
+- Added: __mirv_info:
          People should use this command and copy the info it prints to the
          console when reporting bugs.
+         
+- Thanks: For testing and reporting details about bugs:
+          msthavoc (Cyanide-Pictures.de), dios (hanshenschel.de)
 
 
 1.0.58.87 DLL UNOFFICIAL
@@ -20,9 +74,9 @@
          any other x = use a logrithmic scale where x specifies how fast the
          distance grows, default     : 32
 
-- Thanks: Thanks to C-M|Slize for testing and feedback and especially
-          AM|entrioN for a massive amount of testing related to the empty
-          dumps problem, thx guys!
+- Thanks: Thanks to Slize (Creative-Movies.de) for testing and feedback and
+          especially entrioN (AirWalk-Media.com) for a massive amount of testing
+          related to the empty dumps problem, thx guys!
 
 
 1.0.57.0 DLL

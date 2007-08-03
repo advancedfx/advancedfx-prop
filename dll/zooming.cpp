@@ -1,5 +1,5 @@
 #ifndef MDT_DEBUG
-#define MDT_DEBUG
+//#define MDT_DEBUG
 #endif
 
 #include "wrect.h"
@@ -72,6 +72,8 @@ void Zooming::handleZoom()
 	}
 
 	float flTimeDelta = pEngfuncs->GetClientTime() - flLastTime;
+	// this is a bad hack to reduce the impact of timing problems for users, but I was lazy heh:
+	if (flTimeDelta<0) flTimeDelta=0;
 #ifdef MDT_DEBUG
 	if (flTimeDelta<0) pEngfuncs->Con_Printf("ERORR: DELTA<0 due to old=%f new=%f",flLastTime,flLastTime+flTimeDelta);
 #endif

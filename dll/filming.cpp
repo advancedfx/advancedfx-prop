@@ -20,14 +20,17 @@ extern playermove_s *ppmove;
 
 extern float clamp(float, float, float);
 
-REGISTER_DEBUGCVAR(depth_bias, "0", 0);;
+REGISTER_CVAR(crop_height, "-1", 0);
+REGISTER_CVAR(crop_yofs, "-1", 0);
+
+REGISTER_DEBUGCVAR(depth_bias, "0", 0);
+REGISTER_DEBUGCVAR(depth_fixempty, "0", 0);
+REGISTER_CVAR(depth_logarithmic, "32", 0);
 REGISTER_DEBUGCVAR(depth_scale, "1", 0);
 
 REGISTER_CVAR(movie_customdump, "1", 0)
 REGISTER_CVAR(movie_depthdump, "0", 0);
 REGISTER_CVAR(movie_filename, "untitled", 0);
-REGISTER_CVAR(movie_fixemptydumps, "0", 0);
-REGISTER_CVAR(depth_logarithmic, "32", 0);
 REGISTER_CVAR(movie_splitstreams, "0", 0);
 REGISTER_CVAR(movie_swapweapon, "0", 0);
 REGISTER_CVAR(movie_swapdoors, "0", 0);
@@ -63,6 +66,34 @@ void Filming::Start()
 	m_iFilmingState = FS_STARTING;
 	m_iMatteStage = MS_WORLD;
 
+	// Init Cropping:
+	// retrive cropping settings and make sure the values are in bounds we can work with:
+	// -1 means the code will try to act as if this value was default (default ofs / default max height)
+
+	int iTcrop_yofs=(int)crop_yofs->value;
+
+	m_iCropHeight = (int)crop_height->value;
+	if (m_iCropHeight == -1) m_iCropHeight = m_iHeight; // default is maximum height we know, doh :O
+	else
+	{
+		// make sure we are within valid bounds to avoid mem acces errors and potential problems with badly coded loops :P
+		// may be someone can optimize this:
+		if (m_iCropHeight > m_iHeight) m_iCropHeight=m_iHeight;
+		else if (m_iCropHeight < 2)  m_iCropHeight=2;
+	}
+
+	if (iTcrop_yofs==-1) m_iCropYOfs = (m_iHeight-m_iCropHeight)/2; // user wants that we center the height-crop (this way we preffer cutting off top lines (OpenGL y-axis!) if the number of lines is uneven)
+	else {
+		int iTHeightDiff = (m_iHeight - m_iCropHeight);
+		// user specified an offset, we will transform the values for him, so he sees Yofs/-axis as top->down while OpenGL handles it down->up
+		m_iCropYOfs  =  iTHeightDiff - iTcrop_yofs; //GL y-axis is down->up
+
+		// may be someone can optimize this:
+		if (m_iCropYOfs > iTHeightDiff) m_iCropYOfs=iTHeightDiff;
+		else if (m_iCropYOfs<0) m_iCropYOfs=0;
+	}
+
+
 }
 
 void Filming::Stop()
@@ -79,55 +110,42 @@ void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
 {
 	char cDepth = (iBuffer == COLOR ? 2 : 3);
 	int iMovieBitDepth = (int)(movie_depthdump->value);
+	bool bDepthUINT = (depth_fixempty->value == 1); // some users can't use float, try GL_UNSIGNED_INT instead
 
 	GLenum eGLBuffer = (iBuffer == COLOR ? GL_BGR_EXT : GL_DEPTH_COMPONENT);
-	GLenum eGLtype = ((iBuffer == COLOR) ? GL_UNSIGNED_BYTE : GL_FLOAT);
+	GLenum eGLtype = ((iBuffer == COLOR) ? GL_UNSIGNED_BYTE : (bDepthUINT ? GL_UNSIGNED_INT : GL_FLOAT));
 	int nBits = ((iBuffer == COLOR ) ? 3 : (iMovieBitDepth==32?4:(iMovieBitDepth==24?3:(iMovieBitDepth==16?2:1))));
 
 	char szFilename[128];
 	_snprintf(szFilename, sizeof(szFilename) - 1, "%s_%s_%02d_%05d.tga", m_szFilename, pszFileTag, m_nTakes, iFileNumber);
 
 	unsigned char szTgaheader[12] = { 0, 0, cDepth, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-	unsigned char szHeader[6] = { (int) (m_iWidth % 256), (int) (m_iWidth / 256), (int) (m_iHeight % 256), (int) (m_iHeight / 256), 8 * nBits, 0 };
+	unsigned char szHeader[6] = { (int) (m_iWidth % 256), (int) (m_iWidth / 256), (int) (m_iCropHeight % 256), (int) (m_iCropHeight / 256), 8 * nBits, 0 };
 
 	FILE *pImage;
-	
-	GLint tBuffer2;
 
-	int tError;
+	//// in case we want to check if the buffer's are set:
+	//GLint iTemp,iTemp2;
+	//glGetIntegerv(GL_READ_BUFFER,&iTemp); 	glGetIntegerv(GL_DRAW_BUFFER,&iTemp2);
+	//pEngfuncs->Con_Printf(">>Read:  0x%08x, Draw:  0x%08x \n",iTemp,iTemp2); 
 
+	glReadPixels(0, m_iCropYOfs, m_iWidth, m_iCropHeight, eGLBuffer, eGLtype, m_pBuffer);
 
-	if(iBuffer==COLOR && movie_fixemptydumps->value!=0)
-	{
-		// some ATI Cards (i.e. ATI Radeon X800 with Catalyst 6.7 and 7.6 driver ) would return an empty COLOR buffer when AntiAliasing is enabled
-		//glFinish(); // let it finish the pipe
-		//glGetIntegerv(GL_DRAW_BUFFER,&tBuffer); // rember original buffers
-		glGetIntegerv(GL_READ_BUFFER,&tBuffer2); // .
-		//glDrawBuffer(GL_FRONT); // set buffer we want to draw on
-		//glGetError();
-		//glAccum(GL_RETURN,1); // get Data from the Accumaltion buffer that should keep the antialiased data
-		//if(tError=glGetError()) pEngfuncs->Con_Printf("glGetError(): %d\n",tError);
-		glReadBuffer(GL_FRONT); // we want to read the pixels from the buffer we drew to
-	}
-
-	glReadPixels(0, 0, m_iWidth, m_iHeight, eGLBuffer, eGLtype, m_pBuffer);
-
-	if(iBuffer==COLOR && movie_fixemptydumps->value!=0)
-	{
-		// clean up our mess again
-		//glDrawBuffer(tBuffer);
-		glReadBuffer(tBuffer2);
-	}
 
 	// apply postprocessing to the depthbuffer:
+	// the following code should be replaced completly later, cause it's rather dependent
+	// on sizes of unsigned int and float and stuff, although it should be somewhat
+	// save from acces violations (only corrupted pixel data):
+	// also the GL_UNSIGNED_INT FIX is somewhat slow by now, code has to be optimized
 	if (iBuffer==DEPTH)
 	{
 		// user wants 24 Bit output, we need to cut off
-		int iSize=m_iWidth*m_iHeight;
+		int iSize=m_iWidth*m_iCropHeight;
 		unsigned char* t_pBuffer=m_pBuffer;
 		unsigned char* t_pBuffer2=t_pBuffer;
 		
 		float tfloat;
+		unsigned int tfakefloat; // for bDepthUINT
 		unsigned int tuint;
 
 		unsigned int mymax=(1<<(8*nBits))-1;
@@ -136,7 +154,12 @@ void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
 
 		for (int i=0;i<iSize;i++)
 		{
-			memmove(&tfloat,t_pBuffer2,sizeof(float));
+			if (bDepthUINT)
+			{
+				memmove(&tfakefloat,t_pBuffer2,sizeof(unsigned int));
+				tfloat=((float)tfakefloat)/4294967295; // (2^32-1)
+			}
+			else memmove(&tfloat,t_pBuffer2,sizeof(float));
 				
 			if (logscale!=0)
 			{
@@ -148,7 +171,7 @@ void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
 			memmove(t_pBuffer,&tuint,nBits);
 				
 			t_pBuffer+=nBits;
-			t_pBuffer2+=sizeof(float);
+			if (bDepthUINT) t_pBuffer2+=sizeof(unsigned int); else t_pBuffer2+=sizeof(float);
 		}
 	}
 
@@ -157,7 +180,7 @@ void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
 		fwrite(szTgaheader, sizeof(unsigned char), 12, pImage);
 		fwrite(szHeader, sizeof(unsigned char), 6, pImage);
 
-		fwrite(m_pBuffer, sizeof(unsigned char), m_iWidth * m_iHeight * nBits, pImage);
+		fwrite(m_pBuffer, sizeof(unsigned char), m_iWidth * m_iCropHeight * nBits, pImage);
 
 		fclose(pImage);
 	}
@@ -425,21 +448,44 @@ REGISTER_CMD_FUNC(recordmovie_stop)
 	CALL_CMD_END(recordmovie);
 }
 
-REGISTER_CMD_FUNC(matte_setcolour)
+void _mirv_matte_setcolorf(float flRed, float flBlue, float flGreen)
 {
-	if (pEngfuncs->Cmd_Argc() != 4)
-	{
-		pEngfuncs->Con_Printf("Useage: " PREFIX "entity_setcolourjump <red: 0-100> <green: 0-100> <blue: 0-100>\n");
-		return;
-	}
-
-	float flRed = (float) atoi(pEngfuncs->Cmd_Argv(1)) / 100.0f;
-	float flGreen = (float) atoi(pEngfuncs->Cmd_Argv(2)) / 100.0f;
-	float flBlue = (float) atoi(pEngfuncs->Cmd_Argv(3)) / 100.0f;
-
+	// ensure that the values are within the falid range
 	clamp(flRed, 0.0f, 1.0f);
 	clamp(flGreen, 0.0f, 1.0f);	
 	clamp(flBlue, 0.0f, 1.0f);
-
+	// store matte values.
 	g_Filming.setMatteColour(flRed, flGreen, flBlue);
+}
+
+// that's not too nice, may be someone can code it more efficient (but still readable please):
+// also I think you can retrive it directly as float or even dot it as an cvars
+REGISTER_CMD_FUNC(matte_setcolor)
+{
+	if (pEngfuncs->Cmd_Argc() != 4)
+	{
+		pEngfuncs->Con_Printf("Useage: " PREFIX "matte_setcolour <red: 0-255> <green: 0-255> <blue: 0-255>\n");
+		return;
+	}
+
+	float flRed = (float) atoi(pEngfuncs->Cmd_Argv(1)) / 255.0f;
+	float flGreen = (float) atoi(pEngfuncs->Cmd_Argv(2)) / 255.0f;
+	float flBlue = (float) atoi(pEngfuncs->Cmd_Argv(3)) / 255.0f;
+
+	_mirv_matte_setcolorf(flRed, flBlue, flGreen);
+}
+
+REGISTER_CMD_FUNC(matte_setcolorf)
+{
+	if (pEngfuncs->Cmd_Argc() != 4)
+	{
+		pEngfuncs->Con_Printf("Useage: " PREFIX "matte_setcolourf <red: 0.0-1.0> <green: 0.0-1.0> <blue: 0.0-1.0>\n");
+		return;
+	}
+
+	float flRed = (float) atof(pEngfuncs->Cmd_Argv(1));
+	float flGreen = (float) atof(pEngfuncs->Cmd_Argv(2));
+	float flBlue = (float) atof(pEngfuncs->Cmd_Argv(3));
+
+	_mirv_matte_setcolorf(flRed, flBlue, flGreen);
 }

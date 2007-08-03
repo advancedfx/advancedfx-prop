@@ -27,7 +27,7 @@ private:
 	unsigned int m_nFrames;
 
 	int m_iWidth, m_iHeight;
-
+	int m_iCropYOfs,m_iCropHeight; // used to determine the output params (after cropping)
 
 	bool m_bActive;
 
@@ -46,7 +46,11 @@ private:
 	GLenum m_iLastMode;
 
 public:
-	Filming() { m_pBuffer = NULL; m_bInWireframe = false; }
+	Filming()
+	{
+		m_pBuffer = NULL;
+		m_bInWireframe = false;
+	}
 	~Filming() { if (m_pBuffer) free(m_pBuffer); }
 
 	void Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer);

@@ -85,6 +85,15 @@ bool cMdt_GlTools::_SetBufferFromStr(const char* pString,bool bIsReadBuff)
 	return mres;
 }
 
+bool cMdt_GlTools::SetReadBufferFromStr(const char* pString)
+{
+	return _SetBufferFromStr(pString,true);
+}
+bool cMdt_GlTools::SetDrawBufferFromStr(const char* pString)
+{
+	return _SetBufferFromStr(pString,false);
+}
+
 void cMdt_GlTools::SetReadBufferUnkown (GLenum iGlBuffer)
 {
 	_m_iForcedReadNum  = MDT_GLTOOLS_BUFFER_UNKOWN;

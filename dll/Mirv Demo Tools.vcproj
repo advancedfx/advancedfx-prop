@@ -136,6 +136,9 @@
 				RelativePath=".\main.cpp">
 			</File>
 			<File
+				RelativePath=".\mdt_gltools.cpp">
+			</File>
+			<File
 				RelativePath=".\temporary_dominik.cpp">
 			</File>
 			<File
@@ -162,6 +165,9 @@
 				RelativePath=".\filming.h">
 			</File>
 			<File
+				RelativePath=".\mdt_gltools.h">
+			</File>
+			<File
 				RelativePath=".\register.h">
 			</File>
 			<File
@@ -179,10 +185,9 @@
 				RelativePath=".\Mirv Demo Tool.rc">
 			</File>
 		</Filter>
-		<Filter
-			Name="HLSDK"
-			Filter="">
-		</Filter>
+		<File
+			RelativePath=".\changelog_dll.txt">
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

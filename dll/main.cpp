@@ -4,7 +4,7 @@
 */
 
 #ifndef MDT_DEBUG
-#define MDT_DEBUG
+//#define MDT_DEBUG
 #endif
 
 #pragma comment(lib,"OpenGL32.lib")
@@ -103,6 +103,7 @@ REGISTER_DEBUGCMD_FUNC(forcebuffers)
 	
 	if (pEngfuncs->Cmd_Argc() != 3)
 	{
+		// user didn't supply 2 arguments, so give him some info about the command:
 		pEngfuncs->Con_Printf("Useage: " DEBUG_PREFIX "forcebuffers <readbuffer_type> <drawbuffer_type\n");
 
 		const char* cCurReadBuf = cBType_AppDecides; // when forcing is off that means the app decides
@@ -112,18 +113,36 @@ REGISTER_DEBUGCMD_FUNC(forcebuffers)
 		if (g_Mdt_GlTools.m_bForceDrawBuff) cCurDrawBuf = g_Mdt_GlTools.GetDrawBufferStr();
 
 		pEngfuncs->Con_Printf("Current: " DEBUG_PREFIX "forcebuffers %s %s\n",cCurReadBuf,cCurDrawBuf);
-		pEngfuncs->Con_Printf("Available Types: ");
+		pEngfuncs->Con_Printf("Available Types: %s",cBType_AppDecides); // also add APP_DECIDES
 
 		for (int i=0;i<SIZE_Mdt_GlTools_GlBuffs;i++)
 		{
 			const char* cBuffType=cMdt_GlTools_GlBuffStrings[i];
-			if (i) pEngfuncs->Con_Printf(", %s",cBuffType); // is not first so add comma
-			else pEngfuncs->Con_Printf("%s",cBuffType); // first
+			pEngfuncs->Con_Printf(", %s",cBuffType); // is not first so add comma
+
 		}
 
 		pEngfuncs->Con_Printf("\n");
-		return;
+	} else {
+		// user supplied 2 argument's try to set it
+
+		const char* cReadBuffStr = pEngfuncs->Cmd_Argv(1);
+		const char* cDrawBuffStr = pEngfuncs->Cmd_Argv(2);
+
+		// the following code checks for each buffer if the user wants either let app decide (then it turns force off) or if he wants to set a specific type (on success it turns force on and otherwise prints an error):
+		// ReadBuffer (for reading color buffers from GL):
+		if (!stricmp(cBType_AppDecides,cReadBuffStr)) g_Mdt_GlTools.m_bForceReadBuff=false;
+		else if (g_Mdt_GlTools.SetReadBufferFromStr(cReadBuffStr))  g_Mdt_GlTools.m_bForceReadBuff=true;
+		else pEngfuncs->Con_Printf("Error: Failed to set ReadBuffer, supplied buffer type not valid.\n");
+		// DrawBuffer (for definig the target GL color buffer for pixel writing functions etc.):
+		if (!stricmp(cBType_AppDecides,cDrawBuffStr)) g_Mdt_GlTools.m_bForceDrawBuff=false;
+		else if (g_Mdt_GlTools.SetDrawBufferFromStr(cDrawBuffStr))  g_Mdt_GlTools.m_bForceDrawBuff=true;
+		else pEngfuncs->Con_Printf("Error: Failed to set DrawBuffer, supplied buffer type not valid.\n");
 	}
+
+
+
+	return;
 }
 
 REGISTER_DEBUGCVAR(deltatime, "1.0", 0);
@@ -178,6 +197,10 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 	static bool bFirstRun = true;
 
 	g_bIsSucceedingViewport = true;
+
+	// this is probably also a good place to force our Buffers (if requested)
+	g_Mdt_GlTools.AdjustReadBuffer();
+	g_Mdt_GlTools.AdjustDrawBuffer();
 
 	if (bFirstRun)
 	{
@@ -251,6 +274,10 @@ void APIENTRY my_glMatrixMode(GLenum mode)
 
 void APIENTRY my_glFrustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble zNear, GLdouble zFar)
 {
+	// this is probably also a good place to force our Buffers (if requested)
+	g_Mdt_GlTools.AdjustReadBuffer();
+	g_Mdt_GlTools.AdjustDrawBuffer();
+	
 	// This is to stop the viewports from drifting out of sync
 	// The viewport followed by a frustum (rather than a matrix mode) should be the
 	// first one after the viewport that we use.
