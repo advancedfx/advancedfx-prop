@@ -32,6 +32,7 @@
 #include "aiming.h"
 #include "zooming.h"
 #include "cmdregister.h"
+#include "ui.h"
 
 #include "mdt_gltools.h" // we want g_Mdt_GlTools for having tools to force Buffers and Stuff like that
 
@@ -41,6 +42,8 @@
 extern Filming g_Filming;
 extern Aiming g_Aiming;
 extern Zooming g_Zooming;
+
+extern UI *gui;
 
 extern const char *pszFileVersion;
 
@@ -59,13 +62,14 @@ VoidFuncList &GetCmdList()
 void CvarRegister(Void_func_t func) { GetCvarList().push_front(func); }
 void CmdRegister(Void_func_t func) { GetCmdList().push_front(func); }
 
-// Todo: Ini files for these?
+// Todo - Ini files for these?
 cl_enginefuncs_s* pEngfuncs		= (cl_enginefuncs_s*)	0x01EA0A08;
 engine_studio_api_s* pEngStudio	= (engine_studio_api_s*)0x01EBC978;
 playermove_s* ppmove			= (playermove_s*)		0x02D590A0;
 
 int		g_nViewports = 0;
 bool	g_bIsSucceedingViewport = false;
+bool	g_bMenu = false;
 
 //
 //  Cvars
@@ -77,6 +81,27 @@ REGISTER_CVAR(fixforcehltv, "1", 0);
 //
 // Commands
 //
+
+#if 0
+REGISTER_CMD_FUNC(menu)
+{
+	g_bMenu = !g_bMenu;
+
+	// If we leave the gui then reset the mouse position so view doesn't jump
+	if (!g_bMenu)
+		SetCursorPos(pEngfuncs->GetWindowCenterX(), pEngfuncs->GetWindowCenterY());
+}
+#endif
+
+void ToggleMenu()
+{
+	g_bMenu = !g_bMenu;
+
+	// If we leave the gui then reset the mouse position so view doesn't jump
+	if (!g_bMenu)
+		SetCursorPos(pEngfuncs->GetWindowCenterX(), pEngfuncs->GetWindowCenterY());
+}
+
 
 REGISTER_CMD_FUNC(whereami)
 {
@@ -163,6 +188,65 @@ void DrawActivePlayers()
 	}
 }
 
+bool InMenu()
+{
+	// TODO - CHECK THAT WE'RE NOT IN MAIN MENU SCREEN
+	return g_bMenu;
+}
+
+//
+//
+//
+
+WNDPROC pWndProc;
+
+LRESULT APIENTRY my_WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	static int old_wParam = 0;
+
+	if (InMenu())
+	{
+		switch (uMsg)
+		{
+		case WM_KEYDOWN:
+		case WM_KEYUP:
+			if (wParam == VK_ESCAPE)
+			{
+				ToggleMenu();
+				return 0;
+			}
+			return 0;
+
+		case WM_LBUTTONDOWN:
+			gui->MouseDown(MOUSE_BUTTON1);
+			return 0;
+
+		case WM_LBUTTONUP:
+			gui->MouseUp(MOUSE_BUTTON1);
+			return 0;
+
+		case WM_RBUTTONDOWN:
+			gui->MouseDown(MOUSE_BUTTON2);
+			return 0;
+
+		case WM_RBUTTONUP:
+			gui->MouseUp(MOUSE_BUTTON2);
+			return 0;
+
+		case WM_MOUSEMOVE:
+			if ((old_wParam & MK_LBUTTON) ^ (wParam & MK_LBUTTON))
+				(wParam & MK_LBUTTON) ? gui->MouseDown(MOUSE_BUTTON1) : gui->MouseUp(MOUSE_BUTTON1);
+			if ((old_wParam & MK_RBUTTON) ^ (wParam & MK_RBUTTON))
+				(wParam & MK_LBUTTON) ? gui->MouseDown(MOUSE_BUTTON1) : gui->MouseUp(MOUSE_BUTTON1);
+
+			old_wParam = wParam;
+			return 0;
+		}
+	}
+
+	return CallWindowProc(pWndProc, hwnd, uMsg, wParam, lParam);
+}
+
 //
 //	OpenGl Hooking
 //
@@ -192,6 +276,8 @@ void APIENTRY my_glBegin(GLenum mode)
 	glBegin(mode);
 }
 
+SCREENINFO screeninfo;
+
 void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 {
 	static bool bFirstRun = true;
@@ -215,6 +301,13 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 			(*i++)();
 
 		pEngfuncs->Con_Printf("Mirv Demo Tool v%s (%s) Loaded\nBy Mirvin_Monkey 02/05/2004\n\n", pszFileVersion, __DATE__);
+
+		gui->Initialise();
+
+		// TODO - use this for buffer size
+		screeninfo.iSize = sizeof(SCREENINFO);
+		pEngfuncs->pfnGetScreenInfo(&screeninfo);
+		pEngfuncs->Con_Printf("%d %d %d %d\n", screeninfo.iWidth, screeninfo.iHeight, (int) screeninfo.charWidths, screeninfo.iCharHeight);
 
 		bFirstRun = false;
 	}
@@ -249,7 +342,9 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 			g_Aiming.aim();
 	}
 
-	g_nViewports = (g_nViewports + 1) % 5;
+	// Not necessarily 5 viewports anymore, keep counting until reset
+	// by swapbuffers hook.
+	g_nViewports++;
 
 	g_Zooming.adjustViewportParams(x, y, width, height);
 	glViewport(x, y, width, height);
@@ -266,26 +361,12 @@ void APIENTRY my_glClear(GLbitfield mask)
 	glClear(mask);
 }
 
-void APIENTRY my_glMatrixMode(GLenum mode)
-{
-	g_bIsSucceedingViewport = false;
-	glMatrixMode(mode);
-}
-
 void APIENTRY my_glFrustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble zNear, GLdouble zFar)
 {
 	// this is probably also a good place to force our Buffers (if requested)
 	g_Mdt_GlTools.AdjustReadBuffer();
 	g_Mdt_GlTools.AdjustDrawBuffer();
 	
-	// This is to stop the viewports from drifting out of sync
-	// The viewport followed by a frustum (rather than a matrix mode) should be the
-	// first one after the viewport that we use.
-	if (g_bIsSucceedingViewport)
-		g_nViewports = 1;
-
-	g_bIsSucceedingViewport = false;
-
 	g_Zooming.adjustFrustumParams(left, right, top, bottom);
 	glFrustum(left, right, bottom, top, zNear, zFar);
 }
@@ -345,6 +426,68 @@ void *InterceptDllCall(HMODULE hModule, char *szDllName, char *szFunctionName, D
 	return NULL;
 }
 
+BOOL (APIENTRY *pwglSwapBuffers)(HDC hDC);
+BOOL APIENTRY my_wglSwapBuffers(HDC hDC)
+{
+	static bool bHaveWindowHandle = false;
+
+	if (!bHaveWindowHandle && hDC != 0)
+	{
+		HWND hWnd = WindowFromDC(hDC);
+		pWndProc = (WNDPROC) SetWindowLong(hWnd, GWL_WNDPROC, (long) my_WndProc);
+		bHaveWindowHandle = true;
+	}
+
+	// Next viewport will be the first of the new frame
+	// We could probably move capturing code into here if required.
+	// If we call wglSwapBuffers then check the front buffer that should
+	// be pretty reliable
+	g_nViewports = 0;
+
+	// Obviously use 
+	if (InMenu())
+	{
+		gui->Update(pEngfuncs->GetClientTime());
+		gui->Render(screeninfo.iWidth, screeninfo.iHeight);
+	}
+
+	return (*pwglSwapBuffers)(hDC);
+}
+
+
+
+// Don't let HL reset the cursor position if we're in our own gui
+BOOL APIENTRY my_SetCursorPos(int x, int y)
+{
+	if (InMenu())
+		return 1;
+
+	return SetCursorPos(x, y);
+}
+
+// Get the mouse position for our menu and tell HL that the mouse is in the centre
+// of the screen (to stop player from spinning while in menu)
+BOOL APIENTRY my_GetCursorPos(LPPOINT lpPoint)
+{
+	if (!InMenu())
+		return GetCursorPos(lpPoint);
+
+	BOOL bRet = GetCursorPos(lpPoint);
+
+	if (!bRet)
+		return FALSE;
+
+	int iMidx = pEngfuncs->GetWindowCenterX();
+	int iMidy = pEngfuncs->GetWindowCenterY();
+
+	gui->UpdateMouse((int) lpPoint->x - (iMidx - 800 / 2),
+					 (int) lpPoint->y - (iMidy - 600 / 2));
+
+	lpPoint->x = (long) iMidx;
+	lpPoint->y = (long) iMidy;
+	return TRUE;
+}
+
 FARPROC (WINAPI *pGetProcAddress)(HMODULE hModule, LPCSTR lpProcName);
 FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 {
@@ -363,8 +506,15 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 			return (FARPROC) &my_glClear;
 		if (!lstrcmp(lpProcName, "glFrustum"))
 			return (FARPROC) &my_glFrustum;
-		if (!lstrcmp(lpProcName, "glMatrixMode"))
-			return (FARPROC) &my_glMatrixMode;
+		if (!lstrcmp(lpProcName, "GetCursorPos"))
+			return (FARPROC) &my_GetCursorPos;
+		if (!lstrcmp(lpProcName, "SetCursorPos"))
+			return (FARPROC) &my_SetCursorPos;
+		if (!lstrcmp(lpProcName, "wglSwapBuffers"))
+		{
+			pwglSwapBuffers = (BOOL (APIENTRY *)(HDC hDC)) nResult;
+			return (FARPROC) &my_wglSwapBuffers;
+		}
 	}
 
 	return nResult;

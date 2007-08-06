@@ -15,8 +15,8 @@ Global
 	GlobalSection(ProjectDependencies) = postSolution
 	EndGlobalSection
 	GlobalSection(ProjectConfiguration) = postSolution
-		{B5B38F84-EE5E-4B8E-A0B3-5AE3DC669896}.Debug.ActiveCfg = Release|Win32
-		{B5B38F84-EE5E-4B8E-A0B3-5AE3DC669896}.Debug.Build.0 = Release|Win32
+		{B5B38F84-EE5E-4B8E-A0B3-5AE3DC669896}.Debug.ActiveCfg = Debug|Win32
+		{B5B38F84-EE5E-4B8E-A0B3-5AE3DC669896}.Debug.Build.0 = Debug|Win32
 		{B5B38F84-EE5E-4B8E-A0B3-5AE3DC669896}.Release.ActiveCfg = Release|Win32
 		{B5B38F84-EE5E-4B8E-A0B3-5AE3DC669896}.Release.Build.0 = Release|Win32
 		{ED914089-6510-4418-B994-F05D397907AE}.Debug.ActiveCfg = Release|Win32

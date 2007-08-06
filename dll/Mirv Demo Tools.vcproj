@@ -20,11 +20,11 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../hlsdk/multiplayer/cl_dll;../../hlsdk/multiplayer/common;../../hlsdk/multiplayer/engine;../../hlsdk/multiplayer/pm_shared;../../hlsdk/multiplayer/utils/vgui/inlcude"
+				AdditionalIncludeDirectories="c:\Libraries/hlsdk/multiplayer/cl_dll;c:\Libraries/hlsdk/multiplayer/common;c:\Libraries/hlsdk/multiplayer/engine;c:\Libraries/hlsdk/multiplayer/pm_shared;$(NOINHERIT);C:\Libraries/ui/Include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;MIRVDEMOTOOL_EXPORTS"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
+				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="TRUE"
@@ -35,6 +35,7 @@
 				Name="VCLinkerTool"
 				OutputFile="$(OutDir)/Mirv Demo Tool.dll"
 				LinkIncremental="2"
+				AdditionalLibraryDirectories="C:\Libraries/ui/Lib"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/Mirv Demo Tool.pdb"
 				SubSystem="2"
@@ -69,9 +70,9 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="c:\Libraries/hlsdk/multiplayer/cl_dll;c:\Libraries/hlsdk/multiplayer/common;c:\Libraries/hlsdk/multiplayer/engine;c:\Libraries/hlsdk/multiplayer/pm_shared;$(NOINHERIT)"
+				AdditionalIncludeDirectories="c:\Libraries/hlsdk/multiplayer/cl_dll;c:\Libraries/hlsdk/multiplayer/common;c:\Libraries/hlsdk/multiplayer/engine;c:\Libraries/hlsdk/multiplayer/pm_shared;$(NOINHERIT);C:\Libraries/ui/Include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;MIRVDEMOTOOL_EXPORTS"
-				RuntimeLibrary="0"
+				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="TRUE"
@@ -82,6 +83,9 @@
 				Name="VCLinkerTool"
 				OutputFile="$(OutDir)/Mirv Demo Tool.dll"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="C:\Libraries/ui/Lib"
+				IgnoreAllDefaultLibraries="FALSE"
+				IgnoreDefaultLibraryNames=""
 				GenerateDebugInformation="TRUE"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -135,12 +139,15 @@
 			<File
 				RelativePath=".\main.cpp">
 			</File>
-			<File
-				RelativePath=".\mdt_gltools.cpp">
-			</File>
-			<File
-				RelativePath=".\temporary_dominik.cpp">
-			</File>
+                        <File
+                                RelativePath=".\ui.cpp">
+                        </File>
+                        <File
+                                RelativePath=".\mdt_gltools.cpp">
+                        </File>
+                        <File
+                                RelativePath=".\temporary_dominik.cpp">
+                        </File>
 			<File
 				RelativePath=".\version.cpp">
 			</File>
@@ -172,6 +179,9 @@
 			</File>
 			<File
 				RelativePath=".\resource.h">
+			</File>
+			<File
+				RelativePath=".\ui.h">
 			</File>
 			<File
 				RelativePath=".\zooming.h">
