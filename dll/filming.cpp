@@ -45,12 +45,8 @@ Filming g_Filming;
 
 void Filming::setScreenSize(GLint w, GLint h)
 {
-	if (m_pBuffer == NULL || m_iWidth < w || m_iHeight < h)
-	{
-		m_pBuffer = (unsigned char *) realloc(m_pBuffer, w * h * max(sizeof(float),max(sizeof(unsigned int),sizeof(unsigned char)))); // old was 3
-		m_iWidth = w;
-		m_iHeight = h;
-	}
+	if (m_iWidth < w) m_iWidth = w;
+	if (m_iHeight < h) m_iHeight = h;
 }
 
 void Filming::Start()
@@ -125,12 +121,14 @@ void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
 	FILE *pImage;
 
 	//// in case we want to check if the buffer's are set:
-	//GLint iTemp,iTemp2;
-	//glGetIntegerv(GL_READ_BUFFER,&iTemp); 	glGetIntegerv(GL_DRAW_BUFFER,&iTemp2);
-	//pEngfuncs->Con_Printf(">>Read:  0x%08x, Draw:  0x%08x \n",iTemp,iTemp2); 
+	//GLint iTemp,iTemp2; glGetIntegerv(GL_READ_BUFFER,&iTemp); glGetIntegerv(GL_DRAW_BUFFER,&iTemp2); pEngfuncs->Con_Printf(">>Read:  0x%08x, Draw:  0x%08x \n",iTemp,iTemp2);
 
-	glReadPixels(0, m_iCropYOfs, m_iWidth, m_iCropHeight, eGLBuffer, eGLtype, m_pBuffer);
-
+	bool bReadOk = m_GlRawPic.DoGlReadPixels(0, m_iCropYOfs, m_iWidth, m_iCropHeight, eGLBuffer, eGLtype);
+	if (!bReadOk)
+	{
+		pEngfuncs->Con_Printf("MDT ERROR: failed to capture take %05d, Errorcode: %d.\n",m_nTakes,m_GlRawPic.GetLastUnhandledError());
+		return; // may be we should code some better error handling here heh
+	}
 
 	// apply postprocessing to the depthbuffer:
 	// the following code should be replaced completly later, cause it's rather dependent
@@ -141,7 +139,7 @@ void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
 	{
 		// user wants 24 Bit output, we need to cut off
 		int iSize=m_iWidth*m_iCropHeight;
-		unsigned char* t_pBuffer=m_pBuffer;
+		unsigned char* t_pBuffer=m_GlRawPic.GetPointer();
 		unsigned char* t_pBuffer2=t_pBuffer;
 		
 		float tfloat;
@@ -180,7 +178,7 @@ void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
 		fwrite(szTgaheader, sizeof(unsigned char), 12, pImage);
 		fwrite(szHeader, sizeof(unsigned char), 6, pImage);
 
-		fwrite(m_pBuffer, sizeof(unsigned char), m_iWidth * m_iCropHeight * nBits, pImage);
+		fwrite(m_GlRawPic.GetPointer(), sizeof(unsigned char), m_iWidth * m_iCropHeight * nBits, pImage);
 
 		fclose(pImage);
 	}

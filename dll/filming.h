@@ -7,6 +7,8 @@
 #include <gl\glu.h>
 #include <gl\glaux.h>
 
+#include "mdt_media.h" // We Mant RAWGLPICS and other media interfaces
+
 class Filming
 {
 private:
@@ -31,7 +33,7 @@ private:
 
 	bool m_bActive;
 
-	unsigned char *m_pBuffer;
+	CMdt_Media_RAWGLPIC m_GlRawPic;
 
 	MATTE_STAGE m_iMatteStage;
 
@@ -48,10 +50,11 @@ private:
 public:
 	Filming()
 	{
-		m_pBuffer = NULL;
 		m_bInWireframe = false;
 	}
-	~Filming() { if (m_pBuffer) free(m_pBuffer); }
+	~Filming()
+	{
+	}
 
 	void Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer);
 	DRAW_RESULT shouldDraw(GLenum mode);
