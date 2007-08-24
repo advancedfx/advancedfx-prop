@@ -63,7 +63,7 @@ void CMdt_Media_BASE::SetMediaType(MEDIA_TYPE eMediaType)
 }
 
 // _OnErrorHandler:
-MDT_MEDIA_ERROR_ACTION	 CMdt_Media_BASE::_OnErrorHandler(unsigned int iErrorCode)
+MDT_MEDIA_ERROR_ACTION CMdt_Media_BASE::_OnErrorHandler(unsigned int iErrorCode)
 {
 	if (pOnErrorHandler) return pOnErrorHandler(iErrorCode); // call the error handler if present
 	else
@@ -73,6 +73,13 @@ MDT_MEDIA_ERROR_ACTION	 CMdt_Media_BASE::_OnErrorHandler(unsigned int iErrorCode
 		_has_unhandled_error  = true;
 		return MMOEA_DEFAULT; // let class decide the action to take
 	}
+}
+
+//
+unsigned int CMdt_Media_BASE::GetLastUnhandledError()
+{
+	if (_has_unhandled_error) return _last_unhandled_error;
+	return MDT_MEDIA_ERROR_NONE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -93,9 +100,9 @@ bool CMdt_Media_RAWGLPIC::_CalcSizeComponent (GLenum eGLtype, unsigned char* out
 		*outIsSigned      = true;
 		*outSizeComponent = 1;
 		return true;
-	case GL_BITMAP:
+//	case GL_BITMAP:
 		// I am to lazy to code that now, this would require special treatment determining the bitdepth etc.
-		return false; // not treated yet
+//		return false; // not treated yet
 	case GL_UNSIGNED_SHORT:
 		*outIsSigned      = false;
 		*outSizeComponent = 2;
@@ -138,9 +145,11 @@ bool CMdt_Media_RAWGLPIC::_CalcNumComponents (GLenum eGLformat, unsigned char* o
 	case GL_LUMINANCE:
 		*outNumComponents = 1;
 		return true;
+	case GL_BGR_EXT:
 	case GL_RGB:
 		*outNumComponents = 3;
 		return true;
+	case GL_BGRA_EXT:
 	case GL_RGBA:
 		*outNumComponents = 4;
 		return true;
@@ -153,59 +162,75 @@ bool CMdt_Media_RAWGLPIC::_CalcNumComponents (GLenum eGLformat, unsigned char* o
 }
 
 // CMdt_MediaDesc_RAWGLPIC:
-CMdt_Media_RAWGLPIC::CMdt_Media_RAWGLPIC(int iWidth, int iHeight, GLenum eGLDataFormat, GLenum eGLDataType,  unsigned char* outPointer)
+CMdt_Media_RAWGLPIC::CMdt_Media_RAWGLPIC()
                     :CMdt_Media_BASE(MT_RAWGLPIC,MD_IN_AND_OUT)
 {
-	// set pointers to NULL:
-	*outPointer = NULL;	// always make sure that friggin pointer is realy NULL (in case s.th. went's wrong)
-	_pBuffer    = NULL;	// .
-
-	_iWidth  = iWidth;
-	_iHeight = iHeight;
-
-	_eGLformat = eGLDataFormat;
-	_eGLtype   = eGLDataType;
-
-	// set some other stuff (cause we might return bellow before it is set):
-	_ucNumComponents = 0;
-	_ucSizeComponent = 0;
-	_bComponentIsSigned = false;
-	_uiPixelSize = 0;
-	_uiSize = 0;
-
-	// calcualte date required to know the size of a pixel (if possible / known):
-	if (!_CalcNumComponents(eGLDataFormat,&_ucNumComponents)) return;
-	if (!_CalcSizeComponent(eGLDataType,&_ucSizeComponent,&_bComponentIsSigned)) return;
-
-	// calcualte the size:
-	_uiPixelSize = ((unsigned short)_ucNumComponents) * ((unsigned short)_ucSizeComponent);
-	_uiSize      = _iWidth * _iHeight * ((unsigned int)_uiPixelSize);
-
-	// try to allocate the memory:
-	// fucking VC++ doesn't support new (nothrow) for array types, wtf1111^, that is why we have to fetch the exception:
-	try {
-		_pBuffer = new unsigned char[_uiSize]; 
-	}
-	catch(...) {
-		// we don't want an exception here, just give NULL ffs
-		#ifdef _DEBUG // (Microsoft specific)
-			throw; // in _DEBUG mode we want the exception to be thrown
-		#endif
-		_pBuffer = NULL;
-	}
+	_pBuffer    = NULL;	// this will make _freeAndClean justClean : )
+	_freeAndClean();
 }
 
 // ~CMdt_MediaDesc_RAWGLPIC:
 CMdt_Media_RAWGLPIC::~CMdt_Media_RAWGLPIC()
 {
-	delete[] _pBuffer; // according to C++ documentation this will automatically take care off NULL pointers heh ....
-	_pBuffer = NULL; // Just to be sure biatches
+	_freeAndClean();
 }
 
-// IsAlive:
-bool CMdt_Media_RAWGLPIC::IsAlive()
+// DoGlReadPixels:
+bool CMdt_Media_RAWGLPIC::DoGlReadPixels(int iXofs, int iYofs, int iWidth, int iHeight, GLenum eGLformat, GLenum eGLtype)
 {
-	return _pBuffer != 0;
+	// calcualte data required to know the size of a pixel (if possible / known):
+	if (_eGLformat!=eGLformat)
+		if (!_CalcNumComponents(eGLformat,&_ucNumComponents))
+		{
+			_bHasConsistentData	= false; // data not consistent anynmore, but no need to free everything yet
+			_OnErrorHandler(MDT_MEDIA_ERROR_GLFORMAT);
+			return false;
+		} else _eGLformat = eGLformat;
+	;
+
+	if (_eGLtype!=eGLtype)
+		if (!_CalcSizeComponent(eGLtype,&_ucSizeComponent,&_bComponentIsSigned))
+		{
+			_bHasConsistentData	= false; // data not consistent anynmore, but no need to free everything yet
+			_OnErrorHandler(MDT_MEDIA_ERROR_GLTYPE);
+			return false;
+		} else _eGLtype = eGLtype;
+	;
+
+	// we need to recaclualte the memory usuage and adjust the memory
+	_iWidth				= iWidth;
+	_iHeight			= iHeight;
+
+	// calcualte the size:
+	_uiPixelSize = ((unsigned short)_ucNumComponents) * ((unsigned short)_ucSizeComponent);
+	_uiSize      = _iWidth * _iHeight * ((unsigned int)_uiPixelSize);
+
+	if (!_adjustMemory(_uiSize,true))  // we only want enlarging the memory if required and no compacting to keep memory access low
+		return false;
+
+	if (_pBuffer) glReadPixels(iXofs, iYofs, _iWidth, _iHeight, _eGLformat, _eGLtype, _pBuffer);
+	
+	_bHasConsistentData=true;
+	return true;
+}
+
+
+// HasConsistentData:
+bool CMdt_Media_RAWGLPIC::HasConsistentData()
+{
+	return _bHasConsistentData;
+}
+
+// CompactStructures:
+bool CMdt_Media_RAWGLPIC::CompactStructures()
+{
+	return _compactMemory();
+}
+
+// FreeStructures:
+void CMdt_Media_RAWGLPIC::FreeStructures()
+{
+	_freeAndClean();
 }
 
 // GetWidth:
@@ -260,4 +285,52 @@ GLenum CMdt_Media_RAWGLPIC::GetGLFormat()
 GLenum CMdt_Media_RAWGLPIC::GetGLType()
 {
 	return _eGLtype;
+}
+
+// _adjustMemory:
+bool CMdt_Media_RAWGLPIC::_adjustMemory(unsigned int iNewSize,bool bOnlyWhenGreater)
+{
+	if ((iNewSize>_uiBytesAllocated)||(!bOnlyWhenGreater && iNewSize != _uiBytesAllocated))
+	{
+		_pBuffer = (unsigned char *)realloc(_pBuffer,iNewSize);
+		if(!_pBuffer && iNewSize)
+		{
+			_freeAndClean();
+			_OnErrorHandler(MDT_MEDIA_ERROR_MEMORY);
+			return false;
+		} else {
+			_uiBytesAllocated = iNewSize;
+			_uiSize           = iNewSize;
+			return true;
+		}
+	} else {
+		_uiSize = iNewSize;
+		return true;
+	}
+}
+
+// _CompactMemory:
+bool CMdt_Media_RAWGLPIC::_compactMemory()
+{
+	return _adjustMemory(_uiSize,false);
+}
+
+// _freeMemory:
+void CMdt_Media_RAWGLPIC::_freeAndClean()
+{
+	free(_pBuffer);
+	_pBuffer			= NULL;
+	_bHasConsistentData	= false;
+	_uiBytesAllocated	= 0;
+	_uiSize				= 0;
+	_iWidth				= 0;
+	_iHeight			= 0;
+
+	_eGLformat			= 0;
+	_eGLtype			= 0;
+
+	_uiPixelSize		= 0;
+	_ucSizeComponent	= 0;
+	_ucNumComponents	= 0;
+	_bComponentIsSigned	= false;
 }
