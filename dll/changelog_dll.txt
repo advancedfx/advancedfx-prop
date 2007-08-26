@@ -1,5 +1,19 @@
 1.0.58.158 DLL UNOFFICIAL
 
+- Added: mirv_cameraofs_cs
+         Can be used in Counter-Strike 1.6 to move the final view in x y z,
+         I.e. mirv_cameraofs_cs 10 0 -10 would move the view 10 units to the
+         right and 10 units backwards.
+         This can be usefull if you want to do stereo captures, because in this
+         case you could record a scene twice and use a negative x value in the
+         first pass to move the camera slighlty left and a positive x value in
+         the second pass to move the camera slightly right.
+
+- Thanks: msthavoc (Cyanide-Pictures.de)
+
+
+1.0.58.158 DLL UNOFFICIAL
+
 - Added: __mirv_depth_fixempty (default 0)
          If you have one of those card's where you get an empty DepthDump
          (because those have problems with GL_FLOAT) you can try
