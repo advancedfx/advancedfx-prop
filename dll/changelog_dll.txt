@@ -1,8 +1,14 @@
-1.0.58.158 DLL UNOFFICIAL
+1.0.58.309 DLL UNOFFICIAL
+
+- Fixed: mirv_cameraofs_cs should now work in ineye demos too
+
+- Thanks: msthavoc (Cyanide-Pictures.de) for testing
+
+1.0.58.268 DLL UNOFFICIAL
 
 - Added: mirv_cameraofs_cs
          Can be used in Counter-Strike 1.6 to move the final view in x y z,
-         I.e. mirv_cameraofs_cs 10 0 -10 would move the view 10 units to the
+         I.e. mirv_cameraofs_cs 1.5 0 -10 would move the view 1.5 units to the
          right and 10 units backwards.
          This can be usefull if you want to do stereo captures, because in this
          case you could record a scene twice and use a negative x value in the
