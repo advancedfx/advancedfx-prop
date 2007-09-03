@@ -48,8 +48,8 @@ public:
 	// constructor:
 	cMdt_GlTools()
 	{
-		m_bForceReadBuff = true;
-		m_bForceDrawBuff = true;
+		m_bForceReadBuff = true; // by default we force
+		m_bForceDrawBuff = true; // by default we force
 
 		m_iSavedReadBuff  = GL_NONE; // actually we should it leave undefined, but u never know heh
 		m_iSavedDrawBuff  = GL_NONE; // .

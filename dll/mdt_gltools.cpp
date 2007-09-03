@@ -36,7 +36,7 @@ void cMdt_GlTools::SaveReadBuffer()
 
 void cMdt_GlTools::SaveDrawBuffer()
 {
-	glGetIntegerv(GL_DRAW_BUFFER,&m_iSavedReadBuff);
+	glGetIntegerv(GL_DRAW_BUFFER,&m_iSavedDrawBuff);
 }
 
 
