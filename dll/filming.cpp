@@ -24,9 +24,10 @@ REGISTER_CVAR(crop_height, "-1", 0);
 REGISTER_CVAR(crop_yofs, "-1", 0);
 
 REGISTER_DEBUGCVAR(depth_bias, "0", 0);
-REGISTER_DEBUGCVAR(depth_fixempty, "0", 0);
 REGISTER_CVAR(depth_logarithmic, "32", 0);
 REGISTER_DEBUGCVAR(depth_scale, "1", 0);
+
+REGISTER_DEBUGCVAR(gl_force_noztrick, "1", 0);
 
 REGISTER_CVAR(movie_customdump, "1", 0)
 REGISTER_CVAR(movie_depthdump, "0", 0);
@@ -90,6 +91,23 @@ void Filming::Start()
 	}
 
 
+	// prepare (and force) some HL engine settings:
+
+	// Clear up the screen
+	if (movie_clearscreen->value != 0.0f)
+	{
+		pEngfuncs->Cvar_SetValue("hud_draw", 0);
+		pEngfuncs->Cvar_SetValue("crosshair", 0);
+	}
+
+	//
+	// gl_ztrick:
+	// we force it to 0 by default, cause otherwise it could suppress gl_clear and mess up, see ID SOftware's Quake 1 source for more info why this has to be done
+	if (gl_force_noztrick->value)
+		pEngfuncs->Cvar_SetValue("gl_ztrick", 0);
+
+	// well for some reason gavin forced gl_clear 1, but we don't relay on it anyways (which is good, cause the in ineye demo mode the engine will reforce it to 0 anyways):
+	pEngfuncs->Cvar_SetValue("gl_clear", 1); // this needs should be reforced somwhere since in ineydemo mode the engine might force it to 0
 }
 
 void Filming::Stop()
@@ -106,10 +124,9 @@ void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
 {
 	char cDepth = (iBuffer == COLOR ? 2 : 3);
 	int iMovieBitDepth = (int)(movie_depthdump->value);
-	bool bDepthUINT = (depth_fixempty->value == 1); // some users can't use float, try GL_UNSIGNED_INT instead
 
 	GLenum eGLBuffer = (iBuffer == COLOR ? GL_BGR_EXT : GL_DEPTH_COMPONENT);
-	GLenum eGLtype = ((iBuffer == COLOR) ? GL_UNSIGNED_BYTE : (bDepthUINT ? GL_UNSIGNED_INT : GL_FLOAT));
+	GLenum eGLtype = ((iBuffer == COLOR) ? GL_UNSIGNED_BYTE : GL_FLOAT);
 	int nBits = ((iBuffer == COLOR ) ? 3 : (iMovieBitDepth==32?4:(iMovieBitDepth==24?3:(iMovieBitDepth==16?2:1))));
 
 	char szFilename[128];
@@ -139,37 +156,42 @@ void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
 	{
 		// user wants 24 Bit output, we need to cut off
 		int iSize=m_iWidth*m_iCropHeight;
-		unsigned char* t_pBuffer=m_GlRawPic.GetPointer();
-		unsigned char* t_pBuffer2=t_pBuffer;
+		unsigned char* t_pBuffer=m_GlRawPic.GetPointer();	// the pointer where we write
+		unsigned char* t_pBuffer2=t_pBuffer;				// the pointer where we read
 		
 		float tfloat;
-		unsigned int tfakefloat; // for bDepthUINT
 		unsigned int tuint;
 
 		unsigned int mymax=(1<<(8*nBits))-1;
 
 		float logscale=depth_logarithmic->value;
 
+		// these values are needed in order to work around in bugs i.e. of the NVIDIA Geforce 5600, since it doesn't use the default values for some reason:
+		static float fHard_GL_DEPTH_BIAS  = 0.0; // OGL reference says default is 0.0
+		static float fHard_GL_DEPTH_SCALE = 1.0; // OGL reference says default is 1.0	
+		glGetFloatv(GL_DEPTH_BIAS,&fHard_GL_DEPTH_BIAS);
+		glGetFloatv(GL_DEPTH_SCALE,&fHard_GL_DEPTH_SCALE);
+
+		//pEngfuncs->Con_Printf("Depth: Scale: %f, Bias: %f, Firstpixel: %f\n",fHard_GL_DEPTH_SCALE,fHard_GL_DEPTH_BIAS,(float)*(float *)t_pBuffer2);
+
 		for (int i=0;i<iSize;i++)
 		{
-			if (bDepthUINT)
-			{
-				memmove(&tfakefloat,t_pBuffer2,sizeof(unsigned int));
-				tfloat=((float)tfakefloat)/4294967295; // (2^32-1)
-			}
-			else memmove(&tfloat,t_pBuffer2,sizeof(float));
-				
+			memmove(&tfloat,t_pBuffer2,sizeof(float));
+
+            tfloat=tfloat*(depth_scale->value)+(depth_bias->value); // allow custom scale and offset
+			tfloat=tfloat/fHard_GL_DEPTH_SCALE-fHard_GL_DEPTH_BIAS; // fix the range for card's that don't do it their selfs, although the OpenGL reference says so.
+
 			if (logscale!=0)
 			{
 				tfloat = (exp(tfloat*logscale)-1)/(exp((float)1*logscale)-1);
 			}
-			tfloat *= mymax*(depth_scale->value)+(depth_bias->value);
-			tuint = max(min((unsigned int)tfloat,mymax),0);
+			tfloat*=mymax; // scale to int's max. value
+			tuint = max(min((unsigned int)tfloat,mymax),0); // floor,clamp and convert to the desired data type
 
 			memmove(t_pBuffer,&tuint,nBits);
 				
 			t_pBuffer+=nBits;
-			if (bDepthUINT) t_pBuffer2+=sizeof(unsigned int); else t_pBuffer2+=sizeof(float);
+			t_pBuffer2+=sizeof(float);
 		}
 	}
 
@@ -304,6 +326,7 @@ void Filming::recordBuffers()
 	// the first frame is drawn correctly
 	if (m_iFilmingState == FS_STARTING)
 	{
+		glClearColor(m_MatteColour[0], m_MatteColour[1], m_MatteColour[2], 1.0f); // don't forget to set our clear color
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 		m_iFilmingState = FS_ACTIVE;
 		return;
@@ -314,15 +337,6 @@ void Filming::recordBuffers()
 
 	static char *pszTitles[] = { "all", "world", "entity" };
 	static char *pszDepthTitles[] = { "depthall", "depthworld", "depthall" };
-
-	// Clear up the screen
-	if (movie_clearscreen->value != 0.0f)
-	{
-		pEngfuncs->Cvar_SetValue("hud_draw", 0);
-		pEngfuncs->Cvar_SetValue("crosshair", 0);
-	}
-
-	pEngfuncs->Cvar_SetValue("gl_clear", 1);
 
 	// Are we doing our own screenshot stuff
 	bool bCustomDumps = (movie_customdump->value != 0);
@@ -362,19 +376,27 @@ void Filming::recordBuffers()
 	flNextFrameDuration = max(flNextFrameDuration, MIN_FRAME_DURATION);
 
 	pEngfuncs->Cvar_SetValue("host_framerate", flNextFrameDuration);
+}
 
+void Filming::clearBuffers()
+{
 	// Now we do our clearing!
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+
+	// well for some reason gavin forced gl_clear 1, but we don't relay on it anyways (which is good, cause the in ineye demo mode the engine will reforce it to 0 anyways):
+	pEngfuncs->Cvar_SetValue("gl_clear", 1); // reforce (I am not sure if this is a good position)
 }
 
 bool Filming::checkClear(GLbitfield mask)
 {
+	// we now want coll app controll
 	// Don't clear unless we specify
 	if (isFilming() && (mask & GL_COLOR_BUFFER_BIT || mask & GL_DEPTH_BUFFER_BIT))
 		return false;
 
 	// Make sure the mask colour is still correct
 	glClearColor(m_MatteColour[0], m_MatteColour[1], m_MatteColour[2], 1.0f);
+	// we could also force glDepthRange here, but I preffer relaing on that forcing ztrick 0 worked
 	return true;
 }
 

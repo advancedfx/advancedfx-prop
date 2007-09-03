@@ -78,6 +78,8 @@ bool	g_bMenu = false;
 REGISTER_CVAR(disableautodirector, "0", 0);
 REGISTER_CVAR(fixforcehltv, "1", 0);
 
+REGISTER_DEBUGCVAR(gl_noclear, "0", 0);
+
 //
 // Commands
 //
@@ -276,6 +278,18 @@ void APIENTRY my_glBegin(GLenum mode)
 	glBegin(mode);
 }
 
+void APIENTRY my_glClear(GLbitfield mask)
+{
+	if (gl_noclear->value)
+		return;
+	
+	// check if we want to clear (it also might set clearcolor and stuff like that):
+	if (!g_Filming.checkClear(mask))
+		return;
+
+	glClear(mask);
+}
+
 SCREENINFO screeninfo;
 
 void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
@@ -283,10 +297,6 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 	static bool bFirstRun = true;
 
 	g_bIsSucceedingViewport = true;
-
-	// this is probably also a good place to force our Buffers (if requested)
-	g_Mdt_GlTools.AdjustReadBuffer();
-	g_Mdt_GlTools.AdjustDrawBuffer();
 
 	if (bFirstRun)
 	{
@@ -307,15 +317,18 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 		// TODO - use this for buffer size
 		screeninfo.iSize = sizeof(SCREENINFO);
 		pEngfuncs->pfnGetScreenInfo(&screeninfo);
-		pEngfuncs->Con_Printf("%d %d %d %d\n", screeninfo.iWidth, screeninfo.iHeight, (int) screeninfo.charWidths, screeninfo.iCharHeight);
+		pEngfuncs->Con_DPrintf("%d %d %d %d\n", screeninfo.iWidth, screeninfo.iHeight, (int) screeninfo.charWidths, screeninfo.iCharHeight);
+
+		g_Filming.setScreenSize(screeninfo.iWidth,screeninfo.iHeight);
 
 		bFirstRun = false;
 	}
 
+
 	// Only on the first viewport
 	if (g_nViewports == 0)
 	{
-		g_Filming.setScreenSize(width, height);
+		//g_Filming.setScreenSize(width, height);
 
 		// Make sure we can see the local player if dem_forcehltv is on
 		// dem_forcehtlv is not a cvar, so don't bother checking
@@ -328,16 +341,11 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 
 		// This is called whether we're zooming or not
 		g_Zooming.handleZoom();
-			
-		if (g_Filming.isFilming())
-#ifdef MDT_DEBUG
-		{
-			pEngfuncs->Con_Printf("filming, glViewPort is %dx%d\n",width,height);
-#endif
-			g_Filming.recordBuffers();
-#ifdef MDT_DEBUG
-		}
-#endif
+
+		// this is now done in doCapturePoint() called in swap
+		//if (g_Filming.isFilming())
+		//	g_Filming.recordBuffers();
+
 		if (g_Aiming.isAiming())
 			g_Aiming.aim();
 	}
@@ -351,22 +359,8 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 
 }
 
-
-
-void APIENTRY my_glClear(GLbitfield mask)
-{
-	if (!g_Filming.checkClear(mask))
-		return;
-
-	glClear(mask);
-}
-
 void APIENTRY my_glFrustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble zNear, GLdouble zFar)
 {
-	// this is probably also a good place to force our Buffers (if requested)
-	g_Mdt_GlTools.AdjustReadBuffer();
-	g_Mdt_GlTools.AdjustDrawBuffer();
-	
 	g_Zooming.adjustFrustumParams(left, right, top, bottom);
 	glFrustum(left, right, bottom, top, zNear, zFar);
 }
@@ -439,10 +433,23 @@ BOOL APIENTRY my_wglSwapBuffers(HDC hDC)
 	}
 
 	// Next viewport will be the first of the new frame
-	// We could probably move capturing code into here if required.
-	// If we call wglSwapBuffers then check the front buffer that should
-	// be pretty reliable
 	g_nViewports = 0;
+
+	if (g_Filming.isFilming())
+	{
+		// we are filming, force buffers and capture our image:
+		
+		// save current buffers:
+		g_Mdt_GlTools.SaveDrawBuffer();
+		g_Mdt_GlTools.SaveReadBuffer();
+
+		// force selected buffers(if any):
+		g_Mdt_GlTools.AdjustReadBuffer();
+		g_Mdt_GlTools.AdjustDrawBuffer();
+		
+		// record the selected buffer (capture):
+		g_Filming.recordBuffers();
+	}
 
 	// Obviously use 
 	if (InMenu())
@@ -451,7 +458,24 @@ BOOL APIENTRY my_wglSwapBuffers(HDC hDC)
 		gui->Render(screeninfo.iWidth, screeninfo.iHeight);
 	}
 
-	return (*pwglSwapBuffers)(hDC);
+	// do the switching of buffers as requersted:
+	bool bResWglSwapBuffers = (*pwglSwapBuffers)(hDC);
+
+	// no we have captured the image (by default from backbuffer) and display it on the front, now we can prepare the new backbuffer image if required.
+
+	if (g_Filming.isFilming())
+	{
+		// we are filming, do required clearing and restore buffers:
+
+		// carry out preparerations on the backbuffer for the next frame:
+		g_Filming.clearBuffers();
+
+		// restore saved buffers:
+		g_Mdt_GlTools.AdjustDrawBuffer(g_Mdt_GlTools.m_iSavedDrawBuff,false);
+		g_Mdt_GlTools.AdjustReadBuffer(g_Mdt_GlTools.m_iSavedReadBuff,false);
+	}
+
+	return bResWglSwapBuffers;
 }
 
 

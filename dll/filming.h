@@ -60,7 +60,8 @@ public:
 	DRAW_RESULT shouldDraw(GLenum mode);
 	void Start();
 	void Stop();
-	void recordBuffers();
+	void recordBuffers();	// call to record from the currently selected buffers
+	void clearBuffers();	// call this (i.e. after Swapping) when we can prepare (clear) our buffers for the next frame
 
 	void setScreenSize(GLint w, GLint h);
 

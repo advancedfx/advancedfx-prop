@@ -1,8 +1,25 @@
+1.0.59.0 UNOFFICIAL
+
+- Changed: changed the capture point of images and the matte color clearing
+
+- Changed: modified detection of game resolution
+
+- Changed: MDT now automatically forces gl_ztrick 0 by default in order to make sure depthdumps retrive normalized depthdata
+
+- Added: __mirv_gl_force_noztrick, __mirv_gl_noclear for debugging (you should leave them on the default values)
+
+- Removed: __mirv_depth_fixempty
+
+- Thanks: really big thanks to msthavoc (Cyanide-Pictures.de) for helping with
+          testing and providing his system for tests :-)
+
+
 1.0.58.309 DLL UNOFFICIAL
 
 - Fixed: mirv_cameraofs_cs should now work in ineye demos too
 
 - Thanks: msthavoc (Cyanide-Pictures.de) for testing
+
 
 1.0.58.268 DLL UNOFFICIAL
 
