@@ -96,10 +96,11 @@
 				Name="VCMIDLTool"/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Versioning..."
+				Description="Post-Build: calling rcstamp ..."
 				CommandLine="c:\rcstamp.exe &quot;$(ProjectDir)Mirv Demo Tool.rc&quot; *.*.*.+ &quot;$(ProjectDir)version.cpp&quot;"/>
 			<Tool
 				Name="VCPreBuildEventTool"
+				Description="Pre-Build: calling rcstamp ..."
 				CommandLine="c:\rcstamp.exe -u &quot;$(ProjectDir)version.cpp&quot; &quot;$(ProjectDir)Mirv Demo Tool.rc&quot;"/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
@@ -129,6 +130,9 @@
 			</File>
 			<File
 				RelativePath=".\cameraofs.cpp">
+			</File>
+			<File
+				RelativePath=".\dd_hook.cpp">
 			</File>
 			<File
 				RelativePath=".\demoeditfix.cpp">
@@ -170,6 +174,9 @@
 			</File>
 			<File
 				RelativePath=".\cmdregister.h">
+			</File>
+			<File
+				RelativePath=".\dd_hook.h">
 			</File>
 			<File
 				RelativePath=".\detours.h">

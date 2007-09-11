@@ -35,6 +35,7 @@
 #include "ui.h"
 
 #include "mdt_gltools.h" // we want g_Mdt_GlTools for having tools to force Buffers and Stuff like that
+#include "dd_hook.h" // we have to call functions (inGetProcAddress) from here in order to init the hook
 
 #include <map>
 #include <list>
@@ -71,13 +72,25 @@ int		g_nViewports = 0;
 bool	g_bIsSucceedingViewport = false;
 bool	g_bMenu = false;
 
+bool	g_bEnumDMcalled = false;
+
+
+
 //
 //  Cvars
 //
 
+
 REGISTER_CVAR(disableautodirector, "0", 0);
 REGISTER_CVAR(fixforcehltv, "1", 0);
 
+REGISTER_DEBUGCMD_FUNC(enumdm_called)
+{
+	if (g_bEnumDMcalled) pEngfuncs->Con_Printf("YES, got called since last check.\n");
+	else  pEngfuncs->Con_Printf("NO, did not get called since last check.\n");
+
+	g_bEnumDMcalled = false;
+}
 REGISTER_DEBUGCVAR(gl_noclear, "0", 0);
 
 //
@@ -539,6 +552,24 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 			pwglSwapBuffers = (BOOL (APIENTRY *)(HDC hDC)) nResult;
 			return (FARPROC) &my_wglSwapBuffers;
 		}
+
+		/*// some test infos:
+		char tstString[10];
+		int nLen =  strlen("Direct");;
+		int lLen = strlen(lpProcName);
+		if (lLen<nLen) nLen=lLen;
+		memcpy(tstString,lpProcName,nLen);
+		tstString[nLen+1]=0;
+
+		if (!lstrcmpi("Direct",tstString))
+		{
+			//g_bEnumDMcalled = true;
+			MessageBox(NULL,lpProcName,"MDT DLL Info",MB_OK);
+			//return nResult;
+		}*/
+
+		if (!lstrcmp(lpProcName,"DirectDrawCreate"))
+			return Hook_DirectDrawCreate(nResult); // give our hook original address and return new (it remembers the original one from it's first call, it also cares about the commandline options (if to force the res or not and does not install the hook if not needed))
 	}
 
 	return nResult;

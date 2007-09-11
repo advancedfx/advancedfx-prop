@@ -1,3 +1,23 @@
+1.0.60.0 UNOFFICIAL
+
+- Added: Capability to force resolutions, currently focused on windowed mode.
+         The loader has been extended to reflect and support those additions.
+         You will find a GUI for forcing specific resolutions when you switch
+         the MDT loader to extended mode.
+         Note: There are problems with forcing fullscreen (windowed mode is
+         recommended). Also the color depth seems to be limited to the desktop
+         depth or the last depth you selected in your game. And the Height has
+         to be 480 Pixels or greater. And the ingame isn't adjusted (You will
+         see what I mean when using an extreme Widht and a small Height).
+         However the bottom line is: You wanted to be able to force wide
+         screen resolutions (i.e. 800x500) and here it is (and it wasn't 
+         too easy :)
+         
+- Thanks: msthavoc (Cyanide-Pictures.de) for testing
+
+- Greets: code-mdt forum Guys :)
+
+
 1.0.59.0 UNOFFICIAL
 
 - Changed: changed the capture point of images and the matte color clearing

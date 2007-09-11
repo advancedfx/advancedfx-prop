@@ -25,8 +25,8 @@ Description : This file implements the mirv_cameraofs_cs function to allow setti
 #include "in_defs.h" // PITCH YAW ROLL // HL1 sdk
 
 extern cl_enginefuncs_s *pEngfuncs;
-extern engine_studio_api_s *pEngStudio;
-extern playermove_s *ppmove;
+//extern engine_studio_api_s *pEngStudio;
+//extern playermove_s *ppmove;
 
 void *HookVTentryWrapper(DWORD* tableEntry, BYTE* wrappingFunc)
 // tableEntry --> Address(-pointer) of Table entry
