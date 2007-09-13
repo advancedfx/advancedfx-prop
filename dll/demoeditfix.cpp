@@ -14,6 +14,8 @@
 #include "detours.h"
 #include "cmdregister.h"
 
+#include "hl_addresses.h"
+
 extern cl_enginefuncs_s *pEngfuncs;
 extern engine_studio_api_s *pEngStudio;
 extern playermove_s *ppmove;
@@ -21,8 +23,8 @@ extern playermove_s *ppmove;
 std::map <int, int> g_DemoEditMappings;
 
 // Addresses for TFC
-#define DM_ADDR	0x01909A00
-#define A0_ADDR 0x01909A23
+#define DM_ADDR	HL_ADDR_HUDSPECTATOR_FUNC_TFC
+#define A0_ADDR HL_ADDR_HUDSPECTATOR_CMPA0_TFC
 
 typedef bool (__stdcall *DirectorMessage_t)(DWORD *this_ptr, int iSize, void *pbuf);
 DirectorMessage_t orig_DirectorMessage;

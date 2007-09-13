@@ -18,6 +18,8 @@ Description : This file implements the mirv_cameraofs_cs function to allow setti
 #include "cvardef.h"
 #include "entity_types.h"
 
+#include "hl_addresses.h"
+
 //
 #include <windows.h> // BYTE, ...
 #include "cmdregister.h" // functions to help with registering console commands
@@ -56,10 +58,10 @@ float camerofs_screenofs_up = 0;
 float camerofs_screenofs_forward = 0;
 
 // address from client.dll's export table:
-#define VTENTRY_V_CalcRefDef 0x02f6a98c
 
 #if 0
-	// not used:
+	// not used: // also outdated now
+	#define VTENTRY_V_CalcRefDef 0x02f6a98c
 	#define SIZE_V_CalcRefDef 38
 	#define ADDRESS_V_CalcRefDef 0x0196db70
 	#define VTENTRY_CL_CameraOffset 0x02f6a980
@@ -196,10 +198,10 @@ creenaspect = (float)r_refdef.vrect.width/r_refdef.vrect.height;
 */
 
 
-#define ADDRESS_R_RenderView 0x01d50550
+#define ADDRESS_R_RenderView HL_ADDR_R_RenderView
 // Use 20 Bytes for detouring (this is a series of asm commands that should stay together I guess)
 #define DETOURSIZE_R_RenderView 0x014
-#define ADDRESS_r_refdef 0x02c192e0
+#define ADDRESS_r_refdef HL_ADDR_r_refdef
 
 // BEGIN from ID Software's Quake 1 Source:
 

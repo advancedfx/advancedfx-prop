@@ -37,6 +37,8 @@ enum VGUIPANEL
 
 extern cl_enginefuncs_s *pEngfuncs;
 extern engine_studio_api_s *pEngStudio;
+extern playermove_s* ppmove;
+
 //extern TeamFortressViewport *gViewPort;
 // MDTgui g_MDTgui; // global MDT gui object
 
@@ -173,6 +175,22 @@ void* ADDR_GAMEUI_CreateInterface = (void*)0x0ee43b10; // can be filled in with 
 
 REGISTER_DEBUGCMD_FUNC(test_dominik)
 {	
+	extern cl_enginefuncs_s *pEngfuncs;
+	extern engine_studio_api_s *pEngStudio;
+	extern playermove_s* ppmove;
+	float vorigin[3]; float vup[3]; float vright[3]; float vforward[3];
+
+	pEngfuncs->Con_Printf("ppmove->origin (x,y,z) == (%f,%f,%f)\n",ppmove->origin.x,ppmove->origin.y,ppmove->origin.z);
+	pEngStudio->GetViewInfo(vorigin,vup, vright, vforward );
+	pEngfuncs->Con_Printf("pEngStudio->GetViewInfo: orign (x,y,z) == (%f,%f,%f)\n",vorigin[0],vorigin[1],vorigin[2]);
+	pEngfuncs->Con_Printf("pEngStudio->GetViewInfo: right (x,y,z) == (%f,%f,%f)\n",vright[0],vright[1],vright[2]);
+	pEngfuncs->Con_Printf("pEngStudio->GetViewInfo: up (x,y,z) == (%f,%f,%f)\n",vup[0],vup[1],vup[2]);
+	pEngfuncs->Con_Printf("pEngStudio->GetViewInfo: forward (x,y,z) == (%f,%f,%f)\n",vforward[0],vforward[1],vforward[2]);
+
+	return;
+
+    // old test stuff:
+	
 	CreateInterfaceFn myHlIface = (CreateInterfaceFn)ADDR_GAMEUI_CreateInterface;
     	
 	int myret=-1;

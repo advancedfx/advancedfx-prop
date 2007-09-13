@@ -185,6 +185,9 @@
 				RelativePath=".\filming.h">
 			</File>
 			<File
+				RelativePath=".\hl_addresses.h">
+			</File>
+			<File
 				RelativePath=".\mdt_gltools.h">
 			</File>
 			<File

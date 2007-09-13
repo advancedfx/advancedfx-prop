@@ -37,6 +37,8 @@
 #include "mdt_gltools.h" // we want g_Mdt_GlTools for having tools to force Buffers and Stuff like that
 #include "dd_hook.h" // we have to call functions (inGetProcAddress) from here in order to init the hook
 
+#include "hl_addresses.h" // address definitions
+
 #include <map>
 #include <list>
 
@@ -64,9 +66,9 @@ void CvarRegister(Void_func_t func) { GetCvarList().push_front(func); }
 void CmdRegister(Void_func_t func) { GetCmdList().push_front(func); }
 
 // Todo - Ini files for these?
-cl_enginefuncs_s* pEngfuncs		= (cl_enginefuncs_s*)	0x01EA0A08;
-engine_studio_api_s* pEngStudio	= (engine_studio_api_s*)0x01EBC978;
-playermove_s* ppmove			= (playermove_s*)		0x02D590A0;
+cl_enginefuncs_s* pEngfuncs		= (cl_enginefuncs_s*)	HL_ADDR_CL_ENGINEFUNCS_S;//0x01EA0A08;
+engine_studio_api_s* pEngStudio	= (engine_studio_api_s*)HL_ADDR_ENGINE_SUTDIO_API_S;//0x01EBC978;
+playermove_s* ppmove			= (playermove_s*)		HL_ADDR_PLAYERMOVE_S;//0x02D590A0;
 
 int		g_nViewports = 0;
 bool	g_bIsSucceedingViewport = false;

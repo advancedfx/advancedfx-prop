@@ -1,3 +1,10 @@
+1.0.60.7
+
+- Fixed: Valve's Steam community release broke MDT.
+         We (MIRVIN_Monkey, ripieces, neomic) hope this update makes MDT
+         working for you again :)
+
+
 1.0.60.0 UNOFFICIAL
 
 - Added: Capability to force resolutions, currently focused on windowed mode.
