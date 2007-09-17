@@ -7,6 +7,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MDTLoader", "exe\MDTLoader.
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rcstamp", "rcstamp\rcstamp.vcproj", "{0AC711F3-F9E4-4CDD-969A-BA73A281A06C}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
@@ -23,6 +27,13 @@ Global
 		{ED914089-6510-4418-B994-F05D397907AE}.Debug.Build.0 = Release|Win32
 		{ED914089-6510-4418-B994-F05D397907AE}.Release.ActiveCfg = Release|Win32
 		{ED914089-6510-4418-B994-F05D397907AE}.Release.Build.0 = Release|Win32
+		{0AC711F3-F9E4-4CDD-969A-BA73A281A06C}.Debug.ActiveCfg = Debug|Win32
+		{0AC711F3-F9E4-4CDD-969A-BA73A281A06C}.Debug.Build.0 = Debug|Win32
+		{0AC711F3-F9E4-4CDD-969A-BA73A281A06C}.Release.ActiveCfg = Release|Win32
+		{0AC711F3-F9E4-4CDD-969A-BA73A281A06C}.Release.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionItems) = postSolution
+		info.txt = info.txt
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection

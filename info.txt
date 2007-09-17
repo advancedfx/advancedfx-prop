@@ -1,0 +1,23 @@
+You are here: mdt/trunk
+
+build/
+  Directory where all projects place their temporary release and debug folders
+  in a subfolder, the binary and debug headers go into the bin subfolder
+
+dll/
+  Project for the MDT dll that is injected into the engine
+  
+exe/
+  Project for the MDT loader
+  
+rcstamp/
+  Source for the modified rcstamp tool.
+  
+shared/
+  files and source code used in more than one project go here
+  
+mdt.sln
+  Solution file for Microsoft Visual Studio 2003 .NET (VC++) which organizes the different projects.
+  
+info.txt
+  This file.
