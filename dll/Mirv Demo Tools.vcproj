@@ -13,8 +13,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="Debug"
-			IntermediateDirectory="Debug"
+			OutputDirectory="../build/bin"
+			IntermediateDirectory="../build/dll/debug"
 			ConfigurationType="2"
 			CharacterSet="2">
 			<Tool
@@ -44,9 +44,13 @@
 			<Tool
 				Name="VCMIDLTool"/>
 			<Tool
-				Name="VCPostBuildEventTool"/>
+				Name="VCPostBuildEventTool"
+				Description="Post-Build: calling rcstamp ..."
+				CommandLine="&quot;../shared/bin/rcstamp.exe&quot; -u &quot;$(ProjectDir)version.cpp&quot; &quot;$(ProjectDir)Mirv Demo Tool.rc&quot;"/>
 			<Tool
-				Name="VCPreBuildEventTool"/>
+				Name="VCPreBuildEventTool"
+				Description="Pre-Build: calling rcstamp ..."
+				CommandLine="&quot;../shared/bin/rcstamp.exe&quot; -u &quot;$(ProjectDir)version.cpp&quot; &quot;$(ProjectDir)Mirv Demo Tool.rc&quot;"/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
 			<Tool
@@ -64,8 +68,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="Release"
-			IntermediateDirectory="Release"
+			OutputDirectory="../build/bin"
+			IntermediateDirectory="../build/dll/release"
 			ConfigurationType="2"
 			CharacterSet="2">
 			<Tool
@@ -97,11 +101,11 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Post-Build: calling rcstamp ..."
-				CommandLine="c:\rcstamp.exe &quot;$(ProjectDir)Mirv Demo Tool.rc&quot; *.*.*.+ &quot;$(ProjectDir)version.cpp&quot;"/>
+				CommandLine="&quot;../shared/bin/rcstamp.exe&quot; -u &quot;$(ProjectDir)version.cpp&quot; &quot;$(ProjectDir)Mirv Demo Tool.rc&quot;"/>
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Pre-Build: calling rcstamp ..."
-				CommandLine="c:\rcstamp.exe -u &quot;$(ProjectDir)version.cpp&quot; &quot;$(ProjectDir)Mirv Demo Tool.rc&quot;"/>
+				CommandLine="&quot;../shared/bin/rcstamp.exe&quot; -u &quot;$(ProjectDir)version.cpp&quot; &quot;$(ProjectDir)Mirv Demo Tool.rc&quot;"/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
 			<Tool
@@ -154,6 +158,9 @@
 			</File>
 			<File
 				RelativePath=".\temporary_dominik.cpp">
+			</File>
+			<File
+				RelativePath=".\temporary_fabian.cpp">
 			</File>
 			<File
 				RelativePath=".\ui.cpp">
