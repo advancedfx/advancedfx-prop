@@ -148,6 +148,9 @@
 				RelativePath=".\filming.cpp">
 			</File>
 			<File
+				RelativePath=".\hl_addresses.cpp">
+			</File>
+			<File
 				RelativePath=".\main.cpp">
 			</File>
 			<File

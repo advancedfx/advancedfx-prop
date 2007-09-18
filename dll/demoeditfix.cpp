@@ -131,7 +131,7 @@ REGISTER_CMD_FUNC(demoedit_fix)
 			g_DemoEditMappings.clear();
 			g_DemoEditMappings[14] = 4;
 			g_DemoEditMappings[15] = 11;
-			PatchDMFunction(DM_ADDR, 8, A0_ADDR);
+			PatchDMFunction((int)DM_ADDR, 8, (int)A0_ADDR);
 			bFixedMapping = true;
 			pEngfuncs->Con_Printf("Fixed TFC demoedit\n");
 		}

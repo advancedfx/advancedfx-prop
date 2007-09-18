@@ -67,7 +67,7 @@ void CmdRegister(Void_func_t func) { GetCmdList().push_front(func); }
 
 // Todo - Ini files for these?
 cl_enginefuncs_s* pEngfuncs		= (cl_enginefuncs_s*)	HL_ADDR_CL_ENGINEFUNCS_S;//0x01EA0A08;
-engine_studio_api_s* pEngStudio	= (engine_studio_api_s*)HL_ADDR_ENGINE_SUTDIO_API_S;//0x01EBC978;
+engine_studio_api_s* pEngStudio	= (engine_studio_api_s*)HL_ADDR_ENGINE_STUDIO_API_S;//0x01EBC978;
 playermove_s* ppmove			= (playermove_s*)		HL_ADDR_PLAYERMOVE_S;//0x02D590A0;
 
 int		g_nViewports = 0;
