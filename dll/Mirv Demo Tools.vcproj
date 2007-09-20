@@ -20,7 +20,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="c:\Libraries/hlsdk/multiplayer/cl_dll;c:\Libraries/hlsdk/multiplayer/common;c:\Libraries/hlsdk/multiplayer/engine;c:\Libraries/hlsdk/multiplayer/pm_shared;$(NOINHERIT);C:\Libraries/ui/Include"
+				AdditionalIncludeDirectories="c:\Libraries/hlsdk/multiplayer/cl_dll;c:\Libraries/hlsdk/multiplayer/common;c:\Libraries/hlsdk/multiplayer/engine;c:\Libraries/hlsdk/multiplayer/pm_shared;C:\Libraries/UI/Include;../shared/tinyxml;$(NOINHERIT)"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;MIRVDEMOTOOL_EXPORTS"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -136,6 +136,9 @@
 				RelativePath=".\cameraofs.cpp">
 			</File>
 			<File
+				RelativePath=".\config_mdtdll.cpp">
+			</File>
+			<File
 				RelativePath=".\dd_hook.cpp">
 			</File>
 			<File
@@ -184,6 +187,9 @@
 			</File>
 			<File
 				RelativePath=".\cmdregister.h">
+			</File>
+			<File
+				RelativePath=".\config_mdtdll.h">
 			</File>
 			<File
 				RelativePath=".\dd_hook.h">

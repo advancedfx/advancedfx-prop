@@ -16,6 +16,9 @@ rcstamp/
 shared/
   files and source code used in more than one project go here
   
+resources/
+  files that should be packaged with an release
+  
 mdt.sln
   Solution file for Microsoft Visual Studio 2003 .NET (VC++) which organizes the different projects.
   

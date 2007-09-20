@@ -305,6 +305,11 @@ void APIENTRY my_glClear(GLbitfield mask)
 	glClear(mask);
 }
 
+#include "config_mdtdll.h"
+
+cConfig_mdtdll* pg_Config_mdtdll;
+static char* pg_MDTpath="C:\\Dokumente und Einstellungen\\Dominik\\Eigene Dateien\\firma\\software\\2007\\mdt\\trunk\\build\\bin\\mdt_config.ini";
+
 SCREENINFO screeninfo;
 
 void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
@@ -315,6 +320,13 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 
 	if (bFirstRun)
 	{
+		// the very first thing we have to do is to set the addresses from the config, cuz really much stuff relays on that:
+		//GetModuleFileName(
+
+		pg_Config_mdtdll = new cConfig_mdtdll(pg_MDTpath);
+		bool bCfgres = pg_Config_mdtdll->GetAddresses(&g_hl_addresses);
+		//if (bCfgres) pg_Config_mdtdll->ApplyAddresses(&g_gl_addresses);
+				
 		// Register the commands
 		std::list<Void_func_t>::iterator i = GetCmdList().begin();
 		while (i != GetCmdList().end())
@@ -325,11 +337,23 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 		while (i != GetCvarList().end())
 			(*i++)();
 
-		pEngfuncs->Con_Printf("Mirv Demo Tool v%s (%s) Loaded\nBy Mirvin_Monkey 02/05/2004\n\n", pszFileVersion, __DATE__);
+		char* pszAddrLoad="Warning: The config's address syntax or semantics were not valid (using default).";
+		if (bCfgres)
+		{
+			pszAddrLoad="Loaded addreses from config.";
+			pg_Config_mdtdll->ApplyAddresses(&g_hl_addresses);
+			// update globals that we already set:
+			pEngfuncs		= (cl_enginefuncs_s*)	HL_ADDR_CL_ENGINEFUNCS_S;
+			pEngStudio	= (engine_studio_api_s*)HL_ADDR_ENGINE_STUDIO_API_S;
+			ppmove			= (playermove_s*)		HL_ADDR_PLAYERMOVE_S;
+		}
+
+		delete pg_Config_mdtdll;
+
+		pEngfuncs->Con_Printf("Mirv Demo Tool v%s (%s) Loaded\nBy Mirvin_Monkey 02/05/2004\n%s\n\n", pszFileVersion, __DATE__, pszAddrLoad);
 
 		gui->Initialise();
 
-		// TODO - use this for buffer size
 		screeninfo.iSize = sizeof(SCREENINFO);
 		pEngfuncs->pfnGetScreenInfo(&screeninfo);
 		pEngfuncs->Con_DPrintf("%d %d %d %d\n", screeninfo.iWidth, screeninfo.iHeight, (int) screeninfo.charWidths, screeninfo.iCharHeight);
