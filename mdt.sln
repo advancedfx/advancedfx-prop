@@ -33,7 +33,9 @@ Global
 		{0AC711F3-F9E4-4CDD-969A-BA73A281A06C}.Release.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionItems) = postSolution
+		resources\changelog.txt = resources\changelog.txt
 		info.txt = info.txt
+		resources\mdt_config.ini = resources\mdt_config.ini
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection

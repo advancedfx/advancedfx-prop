@@ -38,6 +38,7 @@
 #include "dd_hook.h" // we have to call functions (inGetProcAddress) from here in order to init the hook
 
 #include "hl_addresses.h" // address definitions
+#include "config_mdtdll.h" // used temporary to load i.e. addresses
 
 #include <map>
 #include <list>
@@ -76,7 +77,14 @@ bool	g_bMenu = false;
 
 bool	g_bEnumDMcalled = false;
 
+#define MDT_MAX_PATH_BYTES 1025
+#define MDT_CFG_FILE "mdt_config.ini"
+#define MDT_CFG_FILE_SLEN 14
+#define DLL_NAME	"Mirv Demo Tool.dll"
 
+HMODULE g_hMDTDLL=NULL; // handle to our self
+static char pg_MDTpath[MDT_MAX_PATH_BYTES];
+static char pg_MDTcfgfile[MDT_MAX_PATH_BYTES+MDT_CFG_FILE_SLEN];
 
 //
 //  Cvars
@@ -305,10 +313,20 @@ void APIENTRY my_glClear(GLbitfield mask)
 	glClear(mask);
 }
 
-#include "config_mdtdll.h"
+void retriveMDTConfigFile(char *frompath,char *tocfg)
+// Warning: Doesn't check buffers.
+{
+	char* spos=strrchr(frompath,'\\');
+	tocfg[0]=NULL;
 
-cConfig_mdtdll* pg_Config_mdtdll;
-static char* pg_MDTpath="C:\\Dokumente und Einstellungen\\Dominik\\Eigene Dateien\\firma\\software\\2007\\mdt\\trunk\\build\\bin\\mdt_config.ini";
+	if (spos!=NULL){
+		memcpy(tocfg,frompath,spos-frompath+1);
+		tocfg+=spos-frompath+1;
+	}
+
+	strcpy(tocfg,MDT_CFG_FILE);
+}
+
 
 SCREENINFO screeninfo;
 
@@ -318,14 +336,26 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 
 	g_bIsSucceedingViewport = true;
 
+	cConfig_mdtdll* pg_Config_mdtdll;
+
 	if (bFirstRun)
 	{
 		// the very first thing we have to do is to set the addresses from the config, cuz really much stuff relays on that:
-		//GetModuleFileName(
+		g_hMDTDLL = GetModuleHandle(DLL_NAME);
+		pg_MDTpath[0]=NULL;
+		if (g_hMDTDLL) GetModuleFileName(g_hMDTDLL,pg_MDTpath,MDT_MAX_PATH_BYTES-1);
 
-		pg_Config_mdtdll = new cConfig_mdtdll(pg_MDTpath);
-		bool bCfgres = pg_Config_mdtdll->GetAddresses(&g_hl_addresses);
-		//if (bCfgres) pg_Config_mdtdll->ApplyAddresses(&g_gl_addresses);
+		retriveMDTConfigFile(pg_MDTpath,pg_MDTcfgfile);
+		// not allowed before addresses are validied pEngfuncs->Con_Printf("Path: %s | %s \n",pg_MDTpath,pg_MDTcfgfile);
+
+		bool bCfgres = false;
+
+		if (g_hMDTDLL)
+		{
+			pg_Config_mdtdll = new cConfig_mdtdll(pg_MDTcfgfile);
+			bCfgres = pg_Config_mdtdll->GetAddresses(&g_hl_addresses);
+			if (bCfgres) pg_Config_mdtdll->ApplyAddresses(&g_hl_addresses);
+		} else pEngfuncs->Con_Printf("WARNING: Could not locate DLL.\n");
 				
 		// Register the commands
 		std::list<Void_func_t>::iterator i = GetCmdList().begin();
