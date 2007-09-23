@@ -41,7 +41,8 @@ REGISTER_CVAR(movie_depthdump, "0", 0);
 REGISTER_CVAR(movie_filename, "untitled", 0);
 REGISTER_CVAR(movie_fps, "30", 0);
 REGISTER_CVAR(movie_stereomode,"0",0);
-REGISTER_CVAR(movie_stereoofs,"1.27",0);
+REGISTER_CVAR(movie_stereo_centerdist,"0.0",0);
+REGISTER_CVAR(movie_stereo_yawdegrees,"0.7",0);
 REGISTER_CVAR(movie_swapdoors, "0", 0);
 REGISTER_CVAR(movie_swapweapon, "0", 0);
 REGISTER_CVAR(movie_splitstreams, "0", 0);
@@ -163,15 +164,24 @@ void touring_R_RenderView_(void)
 
 	// apply our displacement (this code is similar to HL1SDK/multiplayer/cl_dll/view.cpp/V_CalcNormalRefdef):
 	float fDispRight, fDispUp, fDispForward;
+	float fYaw=0;
 
 	g_Filming.GetCameraOfs(&fDispRight,&fDispUp,&fDispForward);
 
-	if (g_Filming.bEnableStereoMode()&&(g_Filming.isFilming() || !g_Filming.isFinished()))
+	if (g_Filming.bEnableStereoMode()&&(g_Filming.isFilming()))
 	{
 		if (g_Filming.GetStereoState()==Filming::STS_LEFT)
-			fDispRight+=g_Filming.GetStereoOffset();
+		{
+			// left
+			fDispRight-=movie_stereo_centerdist->value; // left displacement
+			p_r_refdef->viewangles[YAW]+= movie_stereo_yawdegrees->value; // right turn
+		}
 		else
-			fDispRight-=g_Filming.GetStereoOffset();
+		{
+			// right
+			fDispRight+=movie_stereo_centerdist->value; // right displacement
+			p_r_refdef->viewangles[YAW]-= movie_stereo_yawdegrees->value; // left turn
+		}
 	}
 
 	for ( int i=0 ; i<3 ; i++ )
@@ -301,7 +311,7 @@ void Filming::Start()
 	m_iMatteStage = MS_WORLD;
 
 	// retrive some cvars:
-	_fStereoOffset = movie_stereoofs->value;
+	_fStereoOffset = movie_stereo_centerdist->value;
 	_bNewRequestMethod = (movie_oldcapture->value != 1.0);
 	_bEnableStereoMode = (movie_stereomode->value != 0.0) && _bNewRequestMethod; // we also have to be able to use R_RenderView
 	_bNoMatteInterpolation = (matte_nointerp->value == 0.0);

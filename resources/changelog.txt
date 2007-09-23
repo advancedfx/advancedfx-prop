@@ -1,13 +1,14 @@
-1.0.60.34
+1.0.60.41
 
 - Changed: New stream capturing system, now there will be no delay (was 1ms)
            between the streams anymore.
            If there are problems u can use the old one with
            __mirv_movie_oldcapture 1 (is 0 by default).
            
-- Added: mirv_movie_stereomode and mirv_movie_stereofs, for stereo caputring.
-         Only works when the new stream capture method is enabled (default).
-         Set mirv_movie_stermode 1 to enable stereo capturing.
+- Added: mirv_movie_stereomode, mirv_movie_stereo_centerdist and
+         mirv_movie_stereo_yawdegrees for faking stereo captures.
+         (True stereo captures would require adjustments of the projection.)
+         Set mirv_movie_stereomode 1 to enable stereo capturing.
 
 The HUD problems (only the (left) worldstream has the HUD if it is enabled)
 are not solved yet and remain the same as in previous versions.
