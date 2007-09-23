@@ -9,7 +9,7 @@ Description : see config.h
 #include "windows.h"
 #include "config_mdtdll.h"
 
-/*
+#if 0
 // only needed when doing console prints:
 #include "wrect.h"
 #include "cl_dll.h"
@@ -21,7 +21,7 @@ Description : see config.h
 #include "cvardef.h"
 #include "entity_types.h"
 extern cl_enginefuncs_s *pEngfuncs;
-*/
+#endif
 
 cConfig_mdtdll::cConfig_mdtdll(char *pFileNamez)
 {
@@ -56,16 +56,22 @@ typedef struct AddrEntry_s
 	bool	bSet;		// indicates if the value has been already set or not
 } AddrEntry_t;
 
-#define CONFIG_MDTDLL_ADDR_ENTRIES_NUM 7
+#define CONFIG_MDTDLL_ADDR_ENTRIES_NUM 11
 
 AddrEntry_t pAddrEntries[CONFIG_MDTDLL_ADDR_ENTRIES_NUM] =
 {
-//	{"", (char *)&, false},
 	{"cl_enginefuncs_s", (DWORD)HL_ADDR_CL_ENGINEFUNCS_S, false},
 	{"engine_studio_api_s", (DWORD)HL_ADDR_ENGINE_STUDIO_API_S, false},
 	{"playermove_s", (DWORD)HL_ADDR_PLAYERMOVE_S, false},
-	{"R_RenderView", (DWORD)HL_ADDR_R_RenderView, false},
+
+	{"SCR_UpdateScreen", (DWORD)HL_ADDR_SCR_UpdateScreen, false},
+
+	{"SCR_SetUpToDrawConsole", (DWORD)HL_ADDR_SCR_SetUpToDrawConsole, false},
+	{"V_RenderView", (DWORD)HL_ADDR_V_RenderView, false},
+	{"R_RenderView_", (DWORD)HL_ADDR_R_RenderView_, false},
+	{"GL_Set2D", (DWORD)HL_ADDR_GL_Set2D, false},
 	{"r_refdef", (DWORD)HL_ADDR_r_refdef, false},
+
 	{"HudSpectator_tfc", (DWORD)HL_ADDR_HUDSPECTATOR_FUNC_TFC, false},
 	{"HudSpectator_cmp_tfc", (DWORD)HL_ADDR_HUDSPECTATOR_CMPA0_TFC, false},
 };
@@ -75,10 +81,17 @@ void cConfig_mdtdll::ApplyAddresses(hl_addresses_t *pTargetAddresses)
 	pTargetAddresses->p_cl_enginefuncs_s	=(char *)pAddrEntries[0].dTabEntry;
 	pTargetAddresses->p_engine_studio_api_s	=(char *)pAddrEntries[1].dTabEntry;
 	pTargetAddresses->p_playermove_s		=(char *)pAddrEntries[2].dTabEntry;
-	pTargetAddresses->p_R_RenderView		=(char *)pAddrEntries[3].dTabEntry;
-	pTargetAddresses->p_r_refdef			=(char *)pAddrEntries[4].dTabEntry;
-	pTargetAddresses->p_HudSpectator_tfc	=(char *)pAddrEntries[5].dTabEntry;
-	pTargetAddresses->p_HudSpectator_cmp_tfc=(char *)pAddrEntries[6].dTabEntry;
+
+	pTargetAddresses->p_SCR_UpdateScreen	=(char *)pAddrEntries[3].dTabEntry;
+
+	pTargetAddresses->p_SCR_SetUpToDrawConsole	=(char *)pAddrEntries[4].dTabEntry;
+	pTargetAddresses->p_V_RenderView		=(char *)pAddrEntries[5].dTabEntry;
+	pTargetAddresses->p_R_RenderView_		=(char *)pAddrEntries[6].dTabEntry;
+	pTargetAddresses->p_GL_Set2D			=(char *)pAddrEntries[7].dTabEntry;
+	pTargetAddresses->p_r_refdef			=(char *)pAddrEntries[8].dTabEntry;
+
+	pTargetAddresses->p_HudSpectator_tfc	=(char *)pAddrEntries[9].dTabEntry;
+	pTargetAddresses->p_HudSpectator_cmp_tfc=(char *)pAddrEntries[10].dTabEntry;
 }
 
 AddrEntry_t *FindAddrEntry(char* pszName)
@@ -131,6 +144,7 @@ bool RetriveOpper(char *pos_begin, char *pos_end, DWORD* value)
 }
 
 bool parseAddrExpression(AddrEntry_t *pTargetEntry,char *pExpression)
+// when I have time I should compact the automaton a bit, cuz it has some inneccessary code duplication
 {
 	if (!pExpression) return false;
 
@@ -146,7 +160,7 @@ bool parseAddrExpression(AddrEntry_t *pTargetEntry,char *pExpression)
 
 	DWORD accu,value;
 	enum eACCU_OP { AO_SET, AO_PLUS, AO_MINUS };
-	enum eAUTO_STATE {AS_FAIL, AS_START, AS_LTRIM, AS_READ, AS_RTRIM, AS_PLUS, AS_MINUS, AS_FINISH, AS_DONE};
+	enum eAUTO_STATE {AS_FAIL, AS_START, AS_LTRIM, AS_READ, AS_RTRIM, AS_PLUS, AS_MINUS, AS_INDIRECTION, AS_FINISH, AS_DONE};
 
 	eACCU_OP accu_op=AO_SET;
 	eAUTO_STATE astate=AS_START;
@@ -176,8 +190,23 @@ bool parseAddrExpression(AddrEntry_t *pTargetEntry,char *pExpression)
 			pos++;
 			break;
 		case AS_READ:
-			if (ccur==NULL) astate=AS_FINISH;
-			else if(ccur==' ') astate=AS_RTRIM;
+			switch (ccur)
+			{
+			case NULL:
+				astate=AS_FINISH;
+				break;
+			case ' ':
+				astate=AS_RTRIM;
+				break;
+			case '+':
+				astate = AS_PLUS;
+				break;
+			case '-':
+				astate = AS_MINUS;
+				break;
+			case '^':
+				astate = AS_INDIRECTION;
+			}
 			pos_end=pos;
 			pos++;
 			break;
@@ -195,6 +224,9 @@ bool parseAddrExpression(AddrEntry_t *pTargetEntry,char *pExpression)
 			case '-':
 				astate = AS_MINUS;
 				break;
+			case '^':
+				astate = AS_INDIRECTION;
+				break;
 			default:
 				// every other char.
 				astate = AS_FAIL;
@@ -203,12 +235,14 @@ bool parseAddrExpression(AddrEntry_t *pTargetEntry,char *pExpression)
 			break;
 		case AS_PLUS:
 		case AS_MINUS:
+		case AS_INDIRECTION:
 		case AS_FINISH:
 			// AS_PLUS, AS_MINUS and AS_FINISH have a common part we do first:
 			//pEngfuncs->Con_Printf("Finsih!");
 			if(!RetriveOpper(pos_begin,pos_end,&value)) astate=AS_FAIL;
 			else
 			{
+				// carry out lingering operation (if any):
 				switch(accu_op)
 				{
 				case AO_SET:
@@ -219,18 +253,30 @@ bool parseAddrExpression(AddrEntry_t *pTargetEntry,char *pExpression)
 					break;
 				case AO_MINUS:
 					accu-=value;
+					break;
 				}
 
-				// and now we differ AS_PLUS, AS_MINUS and AS_FINISH (all 3 states exactly one edge which is an epsilon edge):
-				if (astate==AS_PLUS)
+				// and now we differ AS_PLUS, AS_MINUS, AS_INDIRECTION and AS_FINISH:
+				switch (astate)
 				{
+				case AS_PLUS:
 					accu_op=AO_PLUS;
 					astate=AS_START;
-				} else if (astate==AS_MINUS)
-				{
+					break;
+				case AS_MINUS:
 					accu_op=AO_MINUS;
 					astate=AS_START;
-				} else astate=AS_DONE; // done with finishing.
+					break;
+				case AS_INDIRECTION:
+					astate=AS_RTRIM;
+					break;
+				case AS_FINISH:
+					astate=AS_DONE; // done with finishing.
+					break;
+				default:
+					// should not happen
+					astate=AS_FAIL;
+				}
 
 			}
 			break;

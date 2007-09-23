@@ -501,6 +501,9 @@ BOOL APIENTRY my_wglSwapBuffers(HDC hDC)
 		bHaveWindowHandle = true;
 	}
 
+	bool bResWglSwapBuffers;
+	bool bRecordSwapped=false;
+
 	// Next viewport will be the first of the new frame
 	g_nViewports = 0;
 
@@ -517,7 +520,7 @@ BOOL APIENTRY my_wglSwapBuffers(HDC hDC)
 		g_Mdt_GlTools.AdjustDrawBuffer();
 		
 		// record the selected buffer (capture):
-		g_Filming.recordBuffers();
+		bRecordSwapped = g_Filming.recordBuffers(hDC,&bResWglSwapBuffers);
 	}
 
 	// Obviously use 
@@ -528,7 +531,7 @@ BOOL APIENTRY my_wglSwapBuffers(HDC hDC)
 	}
 
 	// do the switching of buffers as requersted:
-	bool bResWglSwapBuffers = (*pwglSwapBuffers)(hDC);
+	if (!bRecordSwapped) bResWglSwapBuffers = (*pwglSwapBuffers)(hDC);
 
 	// no we have captured the image (by default from backbuffer) and display it on the front, now we can prepare the new backbuffer image if required.
 

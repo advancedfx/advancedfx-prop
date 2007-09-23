@@ -12,7 +12,10 @@
 #include "cmdregister.h"
 #include "filming.h"
 
-//#include "math.h"
+#include "hl_addresses.h" // we want to access addressese (i.e. R_RenderView)
+#include "detours.h" // we want to use Detourapply
+#include "in_defs.h" // PITCH YAW ROLL // HL1 sdk
+
 
 extern cl_enginefuncs_s *pEngfuncs;
 extern engine_studio_api_s *pEngStudio;
@@ -20,29 +23,263 @@ extern playermove_s *ppmove;
 
 extern float clamp(float, float, float);
 
+REGISTER_DEBUGCVAR(depth_bias, "0", 0);
+REGISTER_DEBUGCVAR(depth_scale, "1", 0);
+REGISTER_DEBUGCVAR(gl_force_noztrick, "1", 0);
+
+REGISTER_DEBUGCVAR(matte_nointerp, "1", 0);
+REGISTER_DEBUGCVAR(movie_oldcapture, "0", 0);
+
 REGISTER_CVAR(crop_height, "-1", 0);
 REGISTER_CVAR(crop_yofs, "-1", 0);
 
-REGISTER_DEBUGCVAR(depth_bias, "0", 0);
 REGISTER_CVAR(depth_logarithmic, "32", 0);
-REGISTER_DEBUGCVAR(depth_scale, "1", 0);
-
-REGISTER_DEBUGCVAR(gl_force_noztrick, "1", 0);
 
 REGISTER_CVAR(movie_customdump, "1", 0)
+REGISTER_CVAR(movie_clearscreen, "0", 0);
 REGISTER_CVAR(movie_depthdump, "0", 0);
 REGISTER_CVAR(movie_filename, "untitled", 0);
-REGISTER_CVAR(movie_splitstreams, "0", 0);
-REGISTER_CVAR(movie_swapweapon, "0", 0);
-REGISTER_CVAR(movie_swapdoors, "0", 0);
-REGISTER_CVAR(movie_onlyentity, "0", 0);
-REGISTER_CVAR(movie_clearscreen, "0", 0);
 REGISTER_CVAR(movie_fps, "30", 0);
+REGISTER_CVAR(movie_stereomode,"0",0);
+REGISTER_CVAR(movie_stereoofs,"1.27",0);
+REGISTER_CVAR(movie_swapdoors, "0", 0);
+REGISTER_CVAR(movie_swapweapon, "0", 0);
+REGISTER_CVAR(movie_splitstreams, "0", 0);
+REGISTER_CVAR(movie_onlyentity, "0", 0);
 REGISTER_CVAR(movie_wireframe, "0", 0);
 REGISTER_CVAR(movie_wireframesize, "1", 0);
 
 // Our filming singleton
 Filming g_Filming;
+
+//>> added 20070922 >>
+
+R_RenderView__t	detoured_R_RenderView_=NULL;
+V_RenderView_t	detoured_V_RenderView=NULL;
+SCR_UpdateScreen_t	detoured_SCR_UpdateScreen=NULL;
+
+#define ADDRESS_R_RenderView_ HL_ADDR_R_RenderView_
+#define DETOURSIZE_R_RenderView_ 0x014
+#define ADDRESS_r_refdef HL_ADDR_r_refdef
+#define ADDRESS_V_RenderView HL_ADDR_V_RenderView
+#define DETOURSIZE_V_RenderView 0x5
+
+// BEGIN from ID Software's Quake 1 Source:
+
+// q1source/QW/client/mathlib.h
+// our hl includes already give us that:
+//typedef float vec_t;
+//typedef vec_t vec3_t[3];
+
+// q1source/QW/client/vid.h
+typedef struct vrect_s
+{
+	int				x,y,width,height;
+	struct vrect_s	*pnext;
+} vrect_t;
+
+// q1source/QW/client/render.h
+// !!! if this is changed, it must be changed in asm_draw.h too !!!
+typedef struct
+{
+	vrect_t		vrect;				// subwindow in video for refresh
+									// FIXME: not need vrect next field here?
+	vrect_t		aliasvrect;			// scaled Alias version
+	int			vrectright, vrectbottom;	// right & bottom screen coords
+	int			aliasvrectright, aliasvrectbottom;	// scaled Alias versions
+	float		vrectrightedge;			// rightmost right edge we care about,
+										//  for use in edge list
+	float		fvrectx, fvrecty;		// for floating-point compares
+	float		fvrectx_adj, fvrecty_adj; // left and top edges, for clamping
+	int			vrect_x_adj_shift20;	// (vrect.x + 0.5 - epsilon) << 20
+	int			vrectright_adj_shift20;	// (vrectright + 0.5 - epsilon) << 20
+	float		fvrectright_adj, fvrectbottom_adj;
+										// right and bottom edges, for clamping
+	float		fvrectright;			// rightmost edge, for Alias clamping
+	float		fvrectbottom;			// bottommost edge, for Alias clamping
+	float		horizontalFieldOfView;	// at Z = 1.0, this many X is visible 
+										// 2.0 = 90 degrees
+	float		xOrigin;			// should probably allways be 0.5
+	float		yOrigin;			// between be around 0.3 to 0.5
+
+	vec3_t		vieworg;
+	vec3_t		viewangles;
+
+	float		fov_x, fov_y;
+	
+	int			ambientlight;
+} refdef_t;
+
+// END from ID Software's Quake 1 Source.
+
+// from HL1SDK/multiplayer/common/mathlib.h:
+#ifndef M_PI
+#define M_PI		3.14159265358979323846	// matches value in gcc v2 math.h
+#endif
+
+void touring_R_RenderView_(void)
+// this is our R_RemderView hook
+// pay attention, cuz it will have heavy interaction with our filming singelton!
+{
+	refdef_t* p_r_refdef=(refdef_t*)ADDRESS_r_refdef; // pointer to r_refdef global struct
+
+	vec3_t oldorigin = p_r_refdef->vieworg; // save old
+
+	// >> begin calculate transform vectors
+	// we have to calculate our own transformation vectors from the angles and can not use pparams->forward etc., because in spectator mode they might be not present:
+	// (adapted from HL1SDK/multiplayer/pm_shared.c/AngleVectors) and modified for quake order of angles:
+
+	vec3_t angles;
+	float forward[3],right[3],up[3];
+
+	float		angle;
+	float		sr, sp, sy, cr, cp, cy;
+
+	angles = p_r_refdef->viewangles;
+
+	angle = angles[YAW] * ((float)M_PI*2 / 360);
+	sy = sin((float)angle);
+	cy = cos((float)angle);
+	angle = angles[PITCH] * ((float)M_PI*2 / 360);
+	sp = sin((float)angle);
+	cp = cos((float)angle);
+	angle = angles[ROLL] * ((float)M_PI*2 / 360);
+	sr = sin((float)angle);
+	cr = cos((float)angle);
+
+	forward[0] = cp*cy;
+	forward[1] = cp*sy;
+	forward[2] = -sp;
+
+	right[0] = (-1*sr*sp*cy+-1*cr*-sy);
+	right[1] = (-1*sr*sp*sy+-1*cr*cy);
+	right[2] = -1*sr*cp;
+
+	up[0] = (cr*sp*cy+-sr*-sy);
+	up[1] = (cr*sp*sy+-sr*cy);
+	up[2] = cr*cp;
+
+	// << end calculate transform vectors
+
+	// apply our displacement (this code is similar to HL1SDK/multiplayer/cl_dll/view.cpp/V_CalcNormalRefdef):
+	float fDispRight, fDispUp, fDispForward;
+
+	g_Filming.GetCameraOfs(&fDispRight,&fDispUp,&fDispForward);
+
+	if (g_Filming.bEnableStereoMode()&&(g_Filming.isFilming() || !g_Filming.isFinished()))
+	{
+		if (g_Filming.GetStereoState()==Filming::STS_LEFT)
+			fDispRight+=g_Filming.GetStereoOffset();
+		else
+			fDispRight-=g_Filming.GetStereoOffset();
+	}
+
+	for ( int i=0 ; i<3 ; i++ )
+	{
+		p_r_refdef->vieworg[i] += fDispForward*forward[i] + fDispRight*right[i] + fDispUp*up[i];
+	}
+
+	detoured_R_RenderView_();
+
+	p_r_refdef->vieworg = oldorigin; // restore old (is this necessary? I don't know if the values are used for interpolations later or not)
+}
+
+void touring_V_RenderView(void)
+{
+	detoured_V_RenderView();
+}
+
+REGISTER_CMD_FUNC(cameraofs_cs)
+{
+	if (!detoured_R_RenderView_)
+	{
+		pEngfuncs->Con_Printf("Usage: " PREFIX "cameraofs_cs will only work when R_RenderView is available (you have to record one time first)\n");
+	}
+
+	if (pEngfuncs->Cmd_Argc() == 4)
+		g_Filming.SetCameraOfs(atof(pEngfuncs->Cmd_Argv(1)),atof(pEngfuncs->Cmd_Argv(2)),atof(pEngfuncs->Cmd_Argv(3)));
+	else
+		pEngfuncs->Con_Printf("Usage: " PREFIX "cameraofs_cs <right> <up> <forward>\nNot neccessary for stereo mode, use mirv_movie_stereo instead\n");
+}
+
+bool Filming::bNewRequestMethod()
+{ return _bNewRequestMethod; }
+
+void Filming::bNewRequestMethod(bool bSet)
+{ if (m_iFilmingState == FS_INACTIVE) _bNewRequestMethod = bSet; };
+
+bool Filming::bNoMatteInterpolation()
+{ return _bNoMatteInterpolation; }
+
+void Filming::bNoMatteInterpolation (bool bSet)
+{ if (m_iFilmingState == FS_INACTIVE) _bNoMatteInterpolation = bSet; }
+
+bool Filming::bEnableStereoMode()
+{ return _bEnableStereoMode; }
+
+void Filming::bEnableStereoMode(bool bSet)
+{ if (m_iFilmingState == FS_INACTIVE) _bEnableStereoMode = bSet; }
+
+void Filming::SetCameraOfs(float right, float up, float forward)
+{
+	if (m_iFilmingState == FS_INACTIVE)
+	{
+		_cameraofs.right = right;
+		_cameraofs.up = up;
+		_cameraofs.forward = forward;
+	}
+}
+
+void Filming::SetStereoOfs(float left_and_rightofs)
+{
+	if (m_iFilmingState == FS_INACTIVE) _fStereoOffset = left_and_rightofs;
+}
+
+Filming::Filming()
+// constructor
+{
+		m_bInWireframe = false;
+
+		// added 20070922:
+		_bNewRequestMethod = true;
+		_bNoMatteInterpolation = true;
+		_bEnableStereoMode = false;
+		_cameraofs.right = 0;
+		_cameraofs.up = 0;
+		_cameraofs.forward = 0;
+		_fStereoOffset = (float)1.27;
+		
+		// this is currently done globally: _detoured_R_RenderView = NULL; // only hook when requested
+
+		_bRecordBuffers_FirstCall = true; //has to be set here cause it is checked by isFinished()
+
+		// (will be set in Start again)
+		_stereo_state = STS_LEFT;
+}
+
+Filming::~Filming()
+// destructor
+{
+}
+
+void Filming::GetCameraOfs(float *right, float *up, float *forward)
+{
+	*right = _cameraofs.right;
+	*up = _cameraofs.up;
+	*forward = _cameraofs.forward;
+}
+float Filming::GetStereoOffset()
+{
+	return _fStereoOffset;
+}
+
+Filming::STEREO_STATE Filming::GetStereoState()
+{
+	return _stereo_state;
+}
+
+
+//<< added 20070922 <<
 
 void Filming::setScreenSize(GLint w, GLint h)
 {
@@ -62,6 +299,30 @@ void Filming::Start()
 	m_nFrames = 0;
 	m_iFilmingState = FS_STARTING;
 	m_iMatteStage = MS_WORLD;
+
+	// retrive some cvars:
+	_fStereoOffset = movie_stereoofs->value;
+	_bNewRequestMethod = (movie_oldcapture->value != 1.0);
+	_bEnableStereoMode = (movie_stereomode->value != 0.0) && _bNewRequestMethod; // we also have to be able to use R_RenderView
+	_bNoMatteInterpolation = (matte_nointerp->value == 0.0);
+
+	// if we want to use R_RenderView and we have not already done that, we need to set it up now:
+	if (_bNewRequestMethod)
+	{
+		// we want to use it, so make sure we have it:
+		if (!detoured_R_RenderView_&&((ADDRESS_R_RenderView_)!=NULL))
+		{
+			// we don't have it yet and the addres is not NULL (which might be an intended cfg setting)
+			detoured_R_RenderView_ = (R_RenderView__t) DetourApply((BYTE *)ADDRESS_R_RenderView_, (BYTE *)touring_R_RenderView_, (int)DETOURSIZE_R_RenderView_);
+			//detoured_V_RenderView = (V_RenderView_t) DetourApply((BYTE *)ADDRESS_V_RenderView, (BYTE *)touring_V_RenderView, (int)DETOURSIZE_V_RenderView);
+			//detoured_SCR_UpdateScreen = (SCR_UpdateScreen_t) DetourApply((BYTE *)ADDRESS_SCR_UpdateScreen, (BYTE *)touring_SCR_UpdateScreen, (int)DETOURSIZE_SCR_UpdateScreen);
+
+		}
+	}
+
+	// make sure some states used in recordBuffers are set properly:
+	_stereo_state = STS_LEFT;
+	_bRecordBuffers_FirstCall = true;
 
 	// Init Cropping:
 	// retrive cropping settings and make sure the values are in bounds we can work with:
@@ -129,8 +390,14 @@ void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
 	GLenum eGLtype = ((iBuffer == COLOR) ? GL_UNSIGNED_BYTE : GL_FLOAT);
 	int nBits = ((iBuffer == COLOR ) ? 3 : (iMovieBitDepth==32?4:(iMovieBitDepth==24?3:(iMovieBitDepth==16?2:1))));
 
-	char szFilename[128];
-	_snprintf(szFilename, sizeof(szFilename) - 1, "%s_%s_%02d_%05d.tga", m_szFilename, pszFileTag, m_nTakes, iFileNumber);
+	char* pszStereotag="";
+	if (_bEnableStereoMode)
+	{
+		if (_stereo_state==STS_LEFT) pszStereotag="_left"; else pszStereotag="_right";
+	}
+
+	char szFilename[196];
+	_snprintf(szFilename, sizeof(szFilename) - 1, "%s_%s_%02d%s_%05d.tga", m_szFilename, pszFileTag, m_nTakes, pszStereotag, iFileNumber);
 
 	unsigned char szTgaheader[12] = { 0, 0, cDepth, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 	unsigned char szHeader[6] = { (int) (m_iWidth % 256), (int) (m_iWidth / 256), (int) (m_iCropHeight % 256), (int) (m_iCropHeight / 256), 8 * nBits, 0 };
@@ -314,7 +581,7 @@ Filming::DRAW_RESULT Filming::shouldDrawDuringWorldMatte(GLenum mode)
 	return DR_NORMAL;
 }
 
-void Filming::recordBuffers()
+void Filming::_old_recordBuffers()
 {
 	// If this is a none swapping one then force to the correct stage.
 	// Otherwise continue working wiht the stage that this frame has
@@ -376,6 +643,84 @@ void Filming::recordBuffers()
 	flNextFrameDuration = max(flNextFrameDuration, MIN_FRAME_DURATION);
 
 	pEngfuncs->Cvar_SetValue("host_framerate", flNextFrameDuration);
+}
+
+bool Filming::recordBuffers(HDC hSwapHDC,bool *bSwapRes)
+// be sure to read the comments to _bRecordBuffers_FirstCall in filming.h, because this is fundamental for undertanding what the **** is going on here
+// currently like the old code we relay on some user changable values, however we should lock those during filming to avoid crashes caused by the user messing around (not implemented yet)
+{
+	if (!_bNewRequestMethod)
+	{
+		_old_recordBuffers();
+		return false;
+	} else if (!_bRecordBuffers_FirstCall)
+	{
+		pEngfuncs->Con_Printf("WARNING: Unexpected recordBuffers request, this should not happen!");
+	}
+
+	// If this is a none swapping one then force to the correct stage.
+	// Otherwise continue working wiht the stage that this frame has
+	// been rendered with.
+	if (movie_splitstreams->value < 3.0f)
+		m_iMatteStage = (MATTE_STAGE) ((int) MS_ALL + (int) max(movie_splitstreams->value, 0.0f));
+
+	// If we've only just started, delay until the next scene so that
+	// the first frame is drawn correctly
+	if (m_iFilmingState == FS_STARTING)
+	{
+		glClearColor(m_MatteColour[0], m_MatteColour[1], m_MatteColour[2], 1.0f); // don't forget to set our clear color
+		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+		m_iFilmingState = FS_ACTIVE;
+		return false;
+	}
+
+	bool bSplitting = (movie_splitstreams->value == 3.0f);
+	float flTime = 1.0f / max(movie_fps->value, 1.0f);
+
+	static char *pszTitles[] = { "all", "world", "entity" };
+	static char *pszDepthTitles[] = { "depthall", "depthworld", "depthall" };
+
+	// Are we doing our own screenshot stuff
+	bool bCustomDumps = (movie_customdump->value != 0);
+	bool bDepthDumps = (movie_depthdump->value != 0);
+
+	do
+	{
+		// capture stage:
+		if (bCustomDumps) Capture(pszTitles[m_iMatteStage], m_nFrames, COLOR);
+		if (bDepthDumps) Capture(pszDepthTitles[m_iMatteStage], m_nFrames, DEPTH);
+		*bSwapRes=SwapBuffers(hSwapHDC);
+
+		if (bSplitting)
+		{
+			m_iMatteStage = MS_ENTITY;
+
+			g_Filming.clearBuffers();
+			touring_R_RenderView_(); // rerender frame instant!!!!
+
+			// capture stage:
+			if (bCustomDumps) Capture(pszTitles[m_iMatteStage], m_nFrames, COLOR);
+			if (bDepthDumps) Capture(pszDepthTitles[m_iMatteStage], m_nFrames, DEPTH);
+			*bSwapRes=SwapBuffers(hSwapHDC); // well let's count the last on, ok? :)
+
+			m_iMatteStage = MS_WORLD;
+		}
+	if (_bEnableStereoMode && (_stereo_state==STS_LEFT))
+	{
+		_stereo_state=STS_RIGHT;
+		g_Filming.clearBuffers();
+		touring_R_RenderView_(); // rerender frame instant!!!!
+	} else _stereo_state=STS_LEFT;
+	} while (_stereo_state!=STS_LEFT);
+	
+	float flNextFrameDuration = flTime;
+	m_nFrames++;
+	
+	// Make sure the next frame time isn't invalid
+	flNextFrameDuration = max(flNextFrameDuration, MIN_FRAME_DURATION);
+	pEngfuncs->Cvar_SetValue("host_framerate", flNextFrameDuration);
+
+	return true;
 }
 
 void Filming::clearBuffers()

@@ -1,41 +1,38 @@
 #include "hl_addresses.h"
 
 //
-// definitions of default addresses:
+// definitions of default addresses that need to be present early in case we use prints for debug:
 //
-
-// main, ...
-#define HL_DEFAULT_ADDR_CL_ENGINEFUNCS_S 0x01ECCB00
-// old: 0x01EA0A08
-#define HL_DEFAULT_ADDR_ENGINE_STUDIO_API_S 0x01EE8FC0
-// old: 0x01EBC978
-#define HL_DEFAULT_ADDR_PLAYERMOVE_S 0x02D82500
-// old: 0x02D590A0;
-
-// demoedit:
-#define HL_DEFAULT_ADDR_HUDSPECTATOR_FUNC_TFC 0x01909A00
-#define HL_DEFAULT_ADDR_HUDSPECTATOR_CMP_TFC (HL_DEFAULT_ADDR_HUDSPECTATOR_FUNC_TFC+0x23)
-
-// Render View and RefDef for information how to find these values reffer to cameraofs.cpp:
-#define HL_DEFAULT_ADDR_R_RENDERVIEW 0x01d51d90
-// old       : 0x01d50550
-#define HL_DEFAULT_ADDR_R_REFDEF (HL_ADDR_PLAYERMOVE_S - 0x13FDC0)
-// old        : 0x02c192e0
-
 
 //
 // g_hl_addresses initalization:
 //
 
+
 hl_addresses_t g_hl_addresses = {
 // be carefull when you change s.th. here and keep hl_addresses_s and g_hl_addresses in sync
-	(char *)HL_DEFAULT_ADDR_CL_ENGINEFUNCS_S,
-	(char *)HL_DEFAULT_ADDR_ENGINE_STUDIO_API_S,
-	(char *)HL_DEFAULT_ADDR_PLAYERMOVE_S,
-
-	(char *)HL_DEFAULT_ADDR_R_RENDERVIEW,
-	(char *)HL_DEFAULT_ADDR_R_REFDEF,
-
-	(char *)HL_DEFAULT_ADDR_HUDSPECTATOR_FUNC_TFC,
-	(char *)HL_DEFAULT_ADDR_HUDSPECTATOR_CMP_TFC
+// NULL values are calculated at runtime from the .ini system
+	(char *)0x01ECCB00, // p_cl_enginefuncs_s
+	0, // p_engine_studio_api_s
+	0, // p_playermove_s
+	0, // p_SCR_UpdateScreen
+	0, // p_SCR_SetUpToDrawConsole
+	0, // p_V_RenderView
+	0, // p_R_RenderView_
+	0, // p_GL_Set2D
+	0, // p_r_refdef
+	0, // p_HudSpectator_tfc
+	0, // p_HudSpectator_cmp_tfc
 };
+
+/*
+
+01dd0370 SCR_UpdateScreen:
+...
+01dd041e e83d74f8ff      call    launcher!CreateInterface+0x956471 (01d57860) == SCR_SetUpToDrawConsole ()
+01dd0423 e8a8480000      call    launcher!CreateInterface+0x9d38e1 (01dd4cd0) == V_RenderView
+01dd0428 e823b5f8ff      call    launcher!CreateInterface+0x95a561 (01d5b950) == GL_Set2D
+
+V_RenderView calls 01d51d90 R_RenderView
+
+*/

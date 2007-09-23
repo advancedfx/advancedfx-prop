@@ -10,6 +10,11 @@ You can retrive the (older) offical version, a manual and tutorials from here:
 http://www.madabouthats.org/projects/mdt
 
 
+Epilepsy warning:
+
+  This software will cause fast changing colors and images on your screen.
+
+
 Using the MDT:
 
   Extract all contents of this archive into a folder you like.

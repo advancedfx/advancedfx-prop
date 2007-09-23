@@ -46,7 +46,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Post-Build: calling rcstamp ..."
-				CommandLine="&quot;../shared/bin/rcstamp.exe&quot; -u &quot;$(ProjectDir)version.cpp&quot; &quot;$(ProjectDir)Mirv Demo Tool.rc&quot;"/>
+				CommandLine="&quot;../shared/bin/rcstamp.exe&quot; &quot;$(ProjectDir)Mirv Demo Tool.rc&quot; *.*.*.+ &quot;$(ProjectDir)version.cpp&quot;"/>
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Pre-Build: calling rcstamp ..."
@@ -101,7 +101,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Post-Build: calling rcstamp ..."
-				CommandLine="&quot;../shared/bin/rcstamp.exe&quot; -u &quot;$(ProjectDir)version.cpp&quot; &quot;$(ProjectDir)Mirv Demo Tool.rc&quot;"/>
+				CommandLine="&quot;../shared/bin/rcstamp.exe&quot; &quot;$(ProjectDir)Mirv Demo Tool.rc&quot; *.*.*.+ &quot;$(ProjectDir)version.cpp&quot;"/>
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Pre-Build: calling rcstamp ..."
@@ -131,9 +131,6 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
 			<File
 				RelativePath=".\aiming.cpp">
-			</File>
-			<File
-				RelativePath=".\cameraofs.cpp">
 			</File>
 			<File
 				RelativePath=".\config_mdtdll.cpp">
@@ -227,9 +224,6 @@
 				RelativePath=".\Mirv Demo Tool.rc">
 			</File>
 		</Filter>
-		<File
-			RelativePath=".\changelog_dll.txt">
-		</File>
 	</Files>
 	<Globals>
 	</Globals>

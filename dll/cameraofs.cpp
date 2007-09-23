@@ -82,7 +82,7 @@ void hooked_V_CalcRefDef( struct ref_params_s *pparams )
 /*
 Finding R_RenderView in a debugger:
 You can find R_RenderView very easily if you look into gl_rmain.c (it is similar to the Half-Life one).
-Shortly before ret it directly pushes the string "%3ifps %3i ms %4i wpoly %4i epoly\n"
+Shortly before ret it directly pushes the string "%3ifps %3i ms  %4i wpoly %4i epoly\n"
 in order to do an Con_Printf with it. just follow the ret and you get the original address (from the call).
 
 01d50550 d9056809eb01    fld     dword ptr [launcher!CreateInterface+0xaaf579 (01eb0968)] ds:0023:01eb0968=00000000	// if (r_norefresh.value) return;
