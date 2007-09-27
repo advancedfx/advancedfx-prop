@@ -32,10 +32,11 @@ private:
 public:
 	enum DRAW_RESULT { DR_NORMAL, DR_HIDE, DR_MASK };
 	enum STEREO_STATE { STS_LEFT, STS_RIGHT };
+	enum BUFFER { COLOR, DEPTH, ALPHA };
+	enum HUD_REQUEST_STATE { HUDRQ_NORMAL,HUDRQ_HIDE,HUDRQ_CAPTURE_COLOR,HUDRQ_CAPTURE_ALPHA };
 
 private:
 	enum MATTE_STAGE { MS_ALL, MS_WORLD, MS_ENTITY };
-	enum BUFFER { COLOR, DEPTH };
 	enum FILMING_STATE { FS_INACTIVE, FS_STARTING, FS_ACTIVE };
 
 private:
@@ -53,8 +54,6 @@ private:
 
 	MATTE_STAGE m_iMatteStage;
 
-	float m_MatteColour[3];
-
 	FILMING_STATE m_iFilmingState;
 
 	DRAW_RESULT shouldDrawDuringWorldMatte(GLenum mode);
@@ -66,7 +65,7 @@ private:
 	// added 20070922:
 	struct _cameraofs_s { float right; float up; float forward; } _cameraofs;
 	bool	_bNewRequestMethod; // if we have R_RenderView etc available
-	bool	_bNoMatteInterpolation;
+	//bool	_bNoMatteInterpolation;
 	bool	_bEnableStereoMode;
 	float	_fStereoOffset;
 
@@ -80,6 +79,8 @@ private:
 
 	void _old_recordBuffers(); // unused
 
+	HUD_REQUEST_STATE _HudRqState;
+
 public:
 	Filming();
 	~Filming();
@@ -88,7 +89,7 @@ public:
 	DRAW_RESULT shouldDraw(GLenum mode);
 	void Start();
 	void Stop();
-	bool recordBuffers(HDC hSwapHDC,bool *bSwapRes);	// call to record from the currently selected buffers, returns true if it already swapped itself, in this case also bSwapRes is the result of SwapBuffers
+	bool recordBuffers(HDC hSwapHDC,BOOL *bSwapRes);	// call to record from the currently selected buffers, returns true if it already swapped itself, in this case also bSwapRes is the result of SwapBuffers
 	void clearBuffers();	// call this (i.e. after Swapping) when we can prepare (clear) our buffers for the next frame
 
 	void setScreenSize(GLint w, GLint h);
@@ -99,6 +100,8 @@ public:
 
 	Filming::DRAW_RESULT doWireframe(GLenum mode);
 
+	float m_MatteColour[3];
+
 	void setMatteColour(float r, float g, float b)
 	{
 		m_MatteColour[0] = r;
@@ -106,7 +109,9 @@ public:
 		m_MatteColour[2] = b;
 	}
 
-	// added 20070922:
+	//
+	HUD_REQUEST_STATE giveHudRqState();
+
 
 	// those are used by R_RenderView, since it doesn't sit in the class yet ( I didn't want to mess around with static properties and this pointers etc.)
 	void GetCameraOfs(float *right, float *up, float *forward); // will copy the current camera ofs to the supplied addresses
@@ -114,15 +119,22 @@ public:
 	bool bEnableStereoMode();
 	STEREO_STATE GetStereoState();
 
+	bool bWantsHudCapture; // used by R_RenderView to prepare HUD Captures
+	bool bCustomDump();
+
+	void OnHudBeginEvent(); // called by Hud Begin tour
+	bool OnHudEndEvnet(); // called by Hud End tour, if pDoLoop is true the toor will cause an loop, otherwise it will continue normal HL code operation
+
 	// I don't know why I wrote these, may be remove them again if u want (but I like em heh):
 	bool bNewRequestMethod();
 	void bNewRequestMethod(bool bSet);	// if R_RenderView is not available set this to false, cannot be set during filming
-	bool bNoMatteInterpolation();
-	void bNoMatteInterpolation (bool bSet); // if the Interpolation should check for Matte Color on Entity streams (if enabled Matte Color will not be blended, instead it will be overwritten)
+	//bool bNoMatteInterpolation();
+	//void bNoMatteInterpolation (bool bSet); // if the Interpolation should check for Matte Color on Entity streams (if enabled Matte Color will not be blended, instead it will be overwritten)
 	void bEnableStereoMode(bool bSet); // if you enable stereo mode MDT will take left and right images using the stereofs you set
 
 	void SetCameraOfs(float right, float up, float forward); // you can set an static cameraofs here, however during stereomode it should be 0
 	void SetStereoOfs(float left_and_rightofs); // will be used in stereo mode to displace the camera left and right, suggested values are between 1.0 - 1.4, value should be positive, otherewise you would switch left and right cam
+
 };
 
 #endif

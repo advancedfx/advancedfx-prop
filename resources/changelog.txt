@@ -1,3 +1,20 @@
+1.0.60.152
+
+- Added: mirv_movie_separate_hud 0|1|2
+         Set to 1 if you want to have an separate hud stream (, there should be
+         no hud on any of the other streams then).
+         By default there is also an "hudalpha" stream which you should use
+         to blend an black layer bellow and draw the "hudcolor" stream additive
+         onto it (since not all HUD elements are additive).
+         You can turn the hudalpha stream off if you don't need it by using
+	     mirv_movie_separate_hud 2 instead.
+	     
+- Changed: Naming of output files to:
+           Name_Take#_StreamType[_StereoType]_Frame#.tga
+           
+I'd say one of the caziest versions ever : P
+
+
 1.0.60.41
 
 - Changed: New stream capturing system, now there will be no delay (was 1ms)

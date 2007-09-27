@@ -295,8 +295,8 @@ void APIENTRY my_glBegin(GLenum mode)
 	else if (res == Filming::DR_MASK)
 		glColorMask(FALSE, FALSE, FALSE, TRUE);
 
-	else
-		glColorMask(TRUE, TRUE, TRUE, TRUE);
+	else if (!g_Filming.bWantsHudCapture)
+		glColorMask(TRUE, TRUE, TRUE, TRUE); // BlendFunc for additive sprites needs special controll, don't override it
 
 	glBegin(mode);
 }
@@ -434,6 +434,31 @@ void APIENTRY my_glFrustum(GLdouble left, GLdouble right, GLdouble bottom, GLdou
 	glFrustum(left, right, bottom, top, zNear, zFar);
 }
 
+void APIENTRY my_glBlendFunc (GLenum sfactor, GLenum dfactor)
+{
+	switch(g_Filming.giveHudRqState())
+	{
+	case Filming::HUDRQ_CAPTURE_ALPHA:
+		if (dfactor == GL_ONE)//(sfactor == dfactor == GL_ONE)
+		{
+			// block the Alpha chan of Additive sprites
+			glColorMask(TRUE, TRUE, TRUE, FALSE); // block alpha for additive HUD sprites
+			glBlendFunc(sfactor,dfactor);
+		}
+		else
+		{
+			// don't let sprites lower alpha value:
+			glColorMask(TRUE, TRUE, TRUE,TRUE); // allow alpha
+			if (sfactor==GL_SRC_ALPHA) sfactor=GL_SRC_ALPHA_SATURATE;
+			if (dfactor==GL_SRC_ALPHA) dfactor=GL_SRC_ALPHA_SATURATE;
+			glBlendFunc(sfactor,dfactor);
+		}
+		break;
+	default :
+		glBlendFunc(sfactor,dfactor);
+	}
+}
+
 //
 // Hooking
 //
@@ -501,7 +526,7 @@ BOOL APIENTRY my_wglSwapBuffers(HDC hDC)
 		bHaveWindowHandle = true;
 	}
 
-	bool bResWglSwapBuffers;
+	BOOL bResWglSwapBuffers;
 	bool bRecordSwapped=false;
 
 	// Next viewport will be the first of the new frame
@@ -540,7 +565,7 @@ BOOL APIENTRY my_wglSwapBuffers(HDC hDC)
 		// we are filming, do required clearing and restore buffers:
 
 		// carry out preparerations on the backbuffer for the next frame:
-		g_Filming.clearBuffers();
+		if (g_Filming.bCustomDump()) g_Filming.clearBuffers();
 
 		// restore saved buffers:
 		g_Mdt_GlTools.AdjustDrawBuffer(g_Mdt_GlTools.m_iSavedDrawBuff,false);
@@ -611,24 +636,10 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 			pwglSwapBuffers = (BOOL (APIENTRY *)(HDC hDC)) nResult;
 			return (FARPROC) &my_wglSwapBuffers;
 		}
-
-		/*// some test infos:
-		char tstString[10];
-		int nLen =  strlen("Direct");;
-		int lLen = strlen(lpProcName);
-		if (lLen<nLen) nLen=lLen;
-		memcpy(tstString,lpProcName,nLen);
-		tstString[nLen+1]=0;
-
-		if (!lstrcmpi("Direct",tstString))
-		{
-			//g_bEnumDMcalled = true;
-			MessageBox(NULL,lpProcName,"MDT DLL Info",MB_OK);
-			//return nResult;
-		}*/
-
 		if (!lstrcmp(lpProcName,"DirectDrawCreate"))
 			return Hook_DirectDrawCreate(nResult); // give our hook original address and return new (it remembers the original one from it's first call, it also cares about the commandline options (if to force the res or not and does not install the hook if not needed))
+		if (!lstrcmp(lpProcName, "glBlendFunc"))
+			return (FARPROC) &my_glBlendFunc;
 	}
 
 	return nResult;

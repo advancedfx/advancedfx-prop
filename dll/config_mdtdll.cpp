@@ -137,8 +137,8 @@ bool RetriveOpper(char *pos_begin, char *pos_end, DWORD* value)
 			return true;
 		}
 	} else {
-		// we
-		*value = strtoul(myspace,NULL,16);
+		// get hex value:
+		*value = strtoul(myspace+2,NULL,16);
 		return true;
 	}
 }
@@ -368,13 +368,21 @@ bool cConfig_mdtdll::GetAddresses(hl_addresses_t *pDefaultHlAddresses)
 	// currently we us ini instead:
 
 	bool bres = true;
+	bool btres;
 
 	GetPrivateProfileString("mdt_current","mdt_useaddr","mdt_addr_current",_tmp1,CONFIG_MDTDLL_MAX_CFGSTRLEN,_pFileNamez);
 
 	for (int i=0;i<CONFIG_MDTDLL_ADDR_ENTRIES_NUM;i++)
 	{
-		_tmp2[0]='0'; _tmp2[1]='x'; ultoa(pAddrEntries[i].dTabEntry,_tmp2+2,16); GetPrivateProfileString(_tmp1,pAddrEntries[i].pszName,_tmp2,_tmp2,CONFIG_MDTDLL_MAX_CFGSTRLEN,_pFileNamez);
-		bres = bres && parseAddrExpression(&(pAddrEntries[i]),_tmp2);
+		_tmp2[0]='0'; _tmp2[1]='x';
+		if (pAddrEntries[i].dTabEntry==0)
+		{
+			_tmp2[3]='0'; _tmp2[4]=0; // make sure there is at least one zero
+		} else ultoa(pAddrEntries[i].dTabEntry,_tmp2+2,16);
+		
+		GetPrivateProfileString(_tmp1,pAddrEntries[i].pszName,_tmp2,_tmp2,CONFIG_MDTDLL_MAX_CFGSTRLEN,_pFileNamez);
+		btres = parseAddrExpression(&(pAddrEntries[i]),_tmp2);
+		bres = bres && btres;
 		//pEngfuncs->Con_Printf("| %s == 0x%08x (%i)\n",pAddrEntries[i].pszName,pAddrEntries[i].dTabEntry,bres);
 	}
 

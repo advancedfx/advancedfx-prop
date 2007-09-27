@@ -27,7 +27,7 @@ REGISTER_DEBUGCVAR(depth_bias, "0", 0);
 REGISTER_DEBUGCVAR(depth_scale, "1", 0);
 REGISTER_DEBUGCVAR(gl_force_noztrick, "1", 0);
 
-REGISTER_DEBUGCVAR(matte_nointerp, "1", 0);
+//REGISTER_DEBUGCVAR(matte_nointerp, "1", 0);
 REGISTER_DEBUGCVAR(movie_oldcapture, "0", 0);
 
 REGISTER_CVAR(crop_height, "-1", 0);
@@ -40,9 +40,10 @@ REGISTER_CVAR(movie_clearscreen, "0", 0);
 REGISTER_CVAR(movie_depthdump, "0", 0);
 REGISTER_CVAR(movie_filename, "untitled", 0);
 REGISTER_CVAR(movie_fps, "30", 0);
+REGISTER_CVAR(movie_separate_hud, "0", 0);
 REGISTER_CVAR(movie_stereomode,"0",0);
 REGISTER_CVAR(movie_stereo_centerdist,"0.0",0);
-REGISTER_CVAR(movie_stereo_yawdegrees,"0.7",0);
+REGISTER_CVAR(movie_stereo_yawdegrees,"2.0",0);
 REGISTER_CVAR(movie_swapdoors, "0", 0);
 REGISTER_CVAR(movie_swapweapon, "0", 0);
 REGISTER_CVAR(movie_splitstreams, "0", 0);
@@ -55,15 +56,187 @@ Filming g_Filming;
 
 //>> added 20070922 >>
 
+typedef void (* HL_unknownFunc_t) ( void );
+//GL_Set2D_t detoured_GL_Set2D=NULL;
 R_RenderView__t	detoured_R_RenderView_=NULL;
-V_RenderView_t	detoured_V_RenderView=NULL;
-SCR_UpdateScreen_t	detoured_SCR_UpdateScreen=NULL;
+//V_RenderView_t	detoured_V_RenderView=NULL;
+//SCR_UpdateScreen_t	detoured_SCR_UpdateScreen=NULL;
+//HL_unknownFunc_t detoured_unknown=NULL;
+
+//#define ADDRESS_unkown 0x01d50960
+//#define DETOURSIZE_unknown 6
 
 #define ADDRESS_R_RenderView_ HL_ADDR_R_RenderView_
 #define DETOURSIZE_R_RenderView_ 0x014
 #define ADDRESS_r_refdef HL_ADDR_r_refdef
-#define ADDRESS_V_RenderView HL_ADDR_V_RenderView
-#define DETOURSIZE_V_RenderView 0x5
+
+//#define ADDRESS_V_RenderView HL_ADDR_V_RenderView
+//#define DETOURSIZE_V_RenderView 0x5
+//#define ADDRESS_GL_Set2D HL_ADDR_GL_Set2D
+//#define DETOURSIZE_GL_Set2D 9
+
+
+// >> Hooking the HUD functions  >>
+
+// >> fyi >>
+
+// relevant excerpt from HL's SCR_UpdateScreen after the first GL_Set2D() call
+
+// 01dd0442 7535            jne     launcher!CreateInterface+0x9cf08a (01dd0479)
+
+// Hud Begin
+
+// 01dd0444 a1603fe002      mov     eax,dword ptr [launcher!CreateInterface+0x1a02b71 (02e03f60)]
+// 01dd0449 c644240c00      mov     byte ptr [esp+0Ch],0
+// 01dd044e 83f801          cmp     eax,1
+// 01dd0451 7505            jne     launcher!CreateInterface+0x9cf069 (01dd0458)
+// 01dd0453 c644240c01      mov     byte ptr [esp+0Ch],1
+// 01dd0458 6a00            push    0
+
+// drawing stuff before ingame hud:
+
+// 01dd045a e80105f8ff      call    launcher!CreateInterface+0x94f571 (01d50960)
+// 01dd045f 8b4c2410        mov     ecx,dword ptr [esp+10h]
+// 01dd0463 81e1ff000000    and     ecx,0FFh
+// 01dd0469 51              push    ecx
+
+// main ingame hud
+
+// 01dd046a e83184f4ff      call    launcher!CreateInterface+0x9174b1 (01d188a0)
+// 01dd046f 6a01            push    1
+
+// past main hud
+
+// 01dd0471 e8ea04f8ff      call    launcher!CreateInterface+0x94f571 (01d50960)
+// 01dd0476 83c40c          add     esp,0Ch
+
+// Hud End
+
+// 01dd0479 a1b00c8302      mov     eax,dword ptr [launcher!CreateInterface+0x142f8c1 (02830cb0)]
+
+// << fyi <<
+
+// okay,´this is what we do:
+//
+// we place two __declspec(naked) detours:
+// 1st: on 01dd0444
+// 2nd: on 01dd0479
+//
+// the first will care about calling an g_Filming.Onxxx Event Function
+// the 2nd will also call an event function and depending on it's result either jump to the first one (doing a loop) or just continue normal op
+
+// asm related definitons we will use:
+#define asmNOP 0x90 // opcode for NOP
+#define asmJMP	0xE9 // opcode for JUMP
+#define JMP32_SZ 5	// the size of JMP <address>
+
+// addresses:
+#define ADDRESS_SCR_UpdateScreen HL_ADDR_SCR_UpdateScreen
+// 
+// 0x01dd0444:
+#define ADDRESS_HUD_TOURIN (HL_ADDR_SCR_UpdateScreen + 0xD4)
+// 0x01dd0479:
+#define ADDRESS_HUD_TOUROUT (ADDRESS_HUD_TOURIN + 0x35)
+
+bool bHudToursInstalled=false;
+char pHudTours_begin[5+JMP32_SZ]; // for detouring before jumping into tour_HudBegin
+char pHudTours_end[5+JMP32_SZ];	// for detouring on finally leaving tour_HudEnd (when no loop was requested)
+
+DWORD dwAddress_TourIn_Back = 0;
+DWORD dwAddress_HudTours_begin=(DWORD)pHudTours_begin;
+DWORD dwAddress_HudTours_end=(DWORD)pHudTours_end;
+
+bool bHudBeginCalled=false;
+
+__declspec(naked) void tour_HudBegin()
+{
+	bHudBeginCalled=true;
+	g_Filming.OnHudBeginEvent();
+	__asm
+	{
+		JMP [dwAddress_TourIn_Back]
+	}
+}
+
+__declspec(naked) void tour_HudEnd()
+{
+	// I am not sure, may be we should adjust the stackspace here, acutally some of our function might operate in the HL stack space lol :O
+	__asm
+	{
+		PUSH eax
+	}
+	if(g_Filming.OnHudEndEvnet())
+	{
+		__asm {
+			POP EAX
+			JMP [dwAddress_HudTours_begin]
+		}
+	} else {
+		__asm {
+			POP EAX
+			JMP [ dwAddress_HudTours_end]
+		}
+	}
+}
+
+// this function installs the tours:
+void install_Hud_tours()
+// this func also checks if the hook has been already installedo or not.
+{
+	if (bHudToursInstalled) // don't do anything if already hooked
+		return;
+
+	bHudToursInstalled=true;
+
+	// fill tourin return address:
+	dwAddress_TourIn_Back = (DWORD)ADDRESS_HUD_TOURIN +5;
+    
+	// get access top the code in the code segment:
+	char *pCodeAccess=(char *)ADDRESS_HUD_TOURIN;
+	DWORD dwOldProtect;
+	VirtualProtect(pCodeAccess,(ADDRESS_HUD_TOUROUT - ADDRESS_HUD_TOURIN)+5,PAGE_READWRITE,&dwOldProtect);
+
+	DWORD dwTemp;
+
+	// Detour of HudIn:
+
+	// copy the in code we want to detour and place a jump onto the inhook func:
+	memcpy(pHudTours_begin,pCodeAccess,5); // copy the mov
+	pHudTours_begin[5]=asmJMP; // place JMP opcode
+	dwTemp=(DWORD)tour_HudBegin - ((DWORD)pHudTours_begin+5) - JMP32_SZ; // and supply the address
+	memcpy(pHudTours_begin+6,&dwTemp,sizeof(DWORD));// .
+
+	// replace the mov with a jump on our code hook:
+	pCodeAccess[0]=asmJMP;
+	dwTemp=(DWORD)pHudTours_begin - (DWORD)pCodeAccess - JMP32_SZ;
+	memcpy(pCodeAccess+1,&dwTemp,sizeof(DWORD));
+
+	// Detour HudOut:
+	char *pOutAccess=(char *)ADDRESS_HUD_TOUROUT;
+
+	// save the code (the 5 byte move eax,[addr]) we have to exec later when leaving our loop:
+	memcpy(pHudTours_end,pOutAccess,5);
+	// and make it Jump back into the original Code:
+	pHudTours_end[5]=asmJMP;
+	dwTemp=((DWORD)pOutAccess+5) - ((DWORD)pHudTours_end+5) - JMP32_SZ;
+	memcpy(pHudTours_end+6,&dwTemp,sizeof(DWORD));
+
+	//memset(pOutAccess,0,5);
+	//memcpy(pOutAccess,pHudTours_end,5);
+
+	// now place the JMP onto our introducing end hook tour into the original code:
+	pOutAccess[0]=asmJMP;
+	dwTemp=(DWORD)tour_HudEnd  - (DWORD)pOutAccess - JMP32_SZ;
+	memcpy(pOutAccess+1,&dwTemp,sizeof(DWORD));
+
+	//
+	// that's it.
+
+	// restore olde code access:
+	VirtualProtect(pCodeAccess,(ADDRESS_HUD_TOUROUT - ADDRESS_HUD_TOURIN)+5,dwOldProtect,NULL);
+}
+
+// << Hooking the HUD functions  <<
 
 // BEGIN from ID Software's Quake 1 Source:
 
@@ -193,11 +366,27 @@ void touring_R_RenderView_(void)
 
 	p_r_refdef->vieworg = oldorigin; // restore old (is this necessary? I don't know if the values are used for interpolations later or not)
 }
-
-void touring_V_RenderView(void)
+/*
+void touring_unknown(void)
 {
-	detoured_V_RenderView();
-}
+	static int ifakeframe=0;
+	static char tmptag[10];
+
+	//pEngfuncs->Con_Printf("Called GL_Set2d (%i times) during tracking.\n",GL_2DCalls);
+	if (g_Filming.isFilming()&&g_Filming.bWantsHudCapture)
+	{
+		GL_2DCalls++;
+		sprintf(tmptag,"dbg%i",GL_2DCalls);
+		g_Filming.Capture(tmptag,ifakeframe,g_Filming.BUFFER::COLOR);
+	}
+	detoured_unknown();
+	if (g_Filming.isFilming()&&g_Filming.bWantsHudCapture)
+	{
+		GL_2DCalls++;
+		sprintf(tmptag,"dbg%i",GL_2DCalls);
+		g_Filming.Capture(tmptag,ifakeframe,g_Filming.BUFFER::COLOR);
+	}
+}*/
 
 REGISTER_CMD_FUNC(cameraofs_cs)
 {
@@ -218,11 +407,11 @@ bool Filming::bNewRequestMethod()
 void Filming::bNewRequestMethod(bool bSet)
 { if (m_iFilmingState == FS_INACTIVE) _bNewRequestMethod = bSet; };
 
-bool Filming::bNoMatteInterpolation()
-{ return _bNoMatteInterpolation; }
+//bool Filming::bNoMatteInterpolation()
+//{ return _bNoMatteInterpolation; }
 
-void Filming::bNoMatteInterpolation (bool bSet)
-{ if (m_iFilmingState == FS_INACTIVE) _bNoMatteInterpolation = bSet; }
+//void Filming::bNoMatteInterpolation (bool bSet)
+//{ if (m_iFilmingState == FS_INACTIVE) _bNoMatteInterpolation = bSet; }
 
 bool Filming::bEnableStereoMode()
 { return _bEnableStereoMode; }
@@ -252,7 +441,7 @@ Filming::Filming()
 
 		// added 20070922:
 		_bNewRequestMethod = true;
-		_bNoMatteInterpolation = true;
+		//_bNoMatteInterpolation = true;
 		_bEnableStereoMode = false;
 		_cameraofs.right = 0;
 		_cameraofs.up = 0;
@@ -265,6 +454,10 @@ Filming::Filming()
 
 		// (will be set in Start again)
 		_stereo_state = STS_LEFT;
+
+		bWantsHudCapture = false;
+
+		_HudRqState = HUDRQ_NORMAL;
 }
 
 Filming::~Filming()
@@ -288,8 +481,61 @@ Filming::STEREO_STATE Filming::GetStereoState()
 	return _stereo_state;
 }
 
+bool Filming::bCustomDump()
+{
+	return (movie_customdump->value != 0.0);
+}
 
-//<< added 20070922 <<
+Filming::HUD_REQUEST_STATE Filming::giveHudRqState()
+{
+	if (!isFilming())
+		return HUDRQ_NORMAL;
+
+	return _HudRqState;
+}
+
+void Filming::OnHudBeginEvent()
+{
+	//MessageBox(NULL,"IN","HUD Event",MB_OK);
+	switch(giveHudRqState())
+	{
+	case HUDRQ_CAPTURE_COLOR:
+		glClearColor(0.0f,0.0f,0.0f, 1.0f); // don't forget to set our clear color
+		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+		break;
+	case HUDRQ_CAPTURE_ALPHA:
+		glClearColor(0.0f,0.0f,0.0f, 0.0f); // don't forget to set our clear color
+		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+		break;
+	case HUDRQ_HIDE:
+		glColorMask(GL_FALSE,GL_FALSE,GL_FALSE,GL_FALSE);
+		break;
+	}
+}
+
+bool Filming::OnHudEndEvnet()
+{
+	//MessageBox(NULL,"OUT","HUD Event",MB_OK);
+	switch(giveHudRqState())
+	{
+	case HUDRQ_CAPTURE_COLOR:
+		Capture("hudcolor",m_nFrames,COLOR);
+		if (movie_separate_hud->value!=2.0)
+		{
+			// we want alpha too in this case
+			_HudRqState = HUDRQ_CAPTURE_ALPHA; // set ALPHA mode!
+			return true; // we need loop
+		}
+		break;
+	case HUDRQ_CAPTURE_ALPHA:
+		Capture("hudalpha",m_nFrames,ALPHA);
+		break;
+	}
+	return false; // do not loop
+}
+
+
+//<< added 
 
 void Filming::setScreenSize(GLint w, GLint h)
 {
@@ -312,9 +558,10 @@ void Filming::Start()
 
 	// retrive some cvars:
 	_fStereoOffset = movie_stereo_centerdist->value;
-	_bNewRequestMethod = (movie_oldcapture->value != 1.0);
+	_bNewRequestMethod = (movie_oldcapture->value != 1.0)&&(movie_customdump->value != 0.0);
+	if (!_bNewRequestMethod) pEngfuncs->Con_Printf("Warning: Using old RequestMethod!\nThe new method is only available with __mirv_movie_oldcapture 0 and mirv_movie_customdump 1.\n");
 	_bEnableStereoMode = (movie_stereomode->value != 0.0) && _bNewRequestMethod; // we also have to be able to use R_RenderView
-	_bNoMatteInterpolation = (matte_nointerp->value == 0.0);
+	//_bNoMatteInterpolation = (matte_nointerp->value == 0.0);
 
 	// if we want to use R_RenderView and we have not already done that, we need to set it up now:
 	if (_bNewRequestMethod)
@@ -324,15 +571,20 @@ void Filming::Start()
 		{
 			// we don't have it yet and the addres is not NULL (which might be an intended cfg setting)
 			detoured_R_RenderView_ = (R_RenderView__t) DetourApply((BYTE *)ADDRESS_R_RenderView_, (BYTE *)touring_R_RenderView_, (int)DETOURSIZE_R_RenderView_);
+			install_Hud_tours(); // wil automaticall check if already installed or not
+
 			//detoured_V_RenderView = (V_RenderView_t) DetourApply((BYTE *)ADDRESS_V_RenderView, (BYTE *)touring_V_RenderView, (int)DETOURSIZE_V_RenderView);
 			//detoured_SCR_UpdateScreen = (SCR_UpdateScreen_t) DetourApply((BYTE *)ADDRESS_SCR_UpdateScreen, (BYTE *)touring_SCR_UpdateScreen, (int)DETOURSIZE_SCR_UpdateScreen);
-
+			//detoured_GL_Set2D = (GL_Set2D_t) DetourApply((BYTE *)ADDRESS_GL_Set2D, (BYTE *)touring_GL_Set2D, (int)DETOURSIZE_GL_Set2D);
+			//detoured_unknown = (HL_unknownFunc_t) DetourApply((BYTE *)ADDRESS_unkown, (BYTE *)touring_unknown, (int)DETOURSIZE_unknown);
 		}
 	}
 
 	// make sure some states used in recordBuffers are set properly:
+	_HudRqState = HUDRQ_NORMAL;
 	_stereo_state = STS_LEFT;
 	_bRecordBuffers_FirstCall = true;
+	bWantsHudCapture = false;
 
 	// Init Cropping:
 	// retrive cropping settings and make sure the values are in bounds we can work with:
@@ -386,6 +638,7 @@ void Filming::Stop()
 	m_nFrames = 0;
 	m_iFilmingState = FS_INACTIVE;
 	m_nTakes++;
+	_HudRqState=HUDRQ_NORMAL;
 
 	// Need to reset this otherwise everything will run crazy fast
 	pEngfuncs->Cvar_SetValue("host_framerate", 0);
@@ -393,21 +646,22 @@ void Filming::Stop()
 
 void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
 {
-	char cDepth = (iBuffer == COLOR ? 2 : 3);
+	char cDepth = (iBuffer == COLOR ? 2 : 3); //? problem if depth caputre and bits >8?
 	int iMovieBitDepth = (int)(movie_depthdump->value);
 
-	GLenum eGLBuffer = (iBuffer == COLOR ? GL_BGR_EXT : GL_DEPTH_COMPONENT);
-	GLenum eGLtype = ((iBuffer == COLOR) ? GL_UNSIGNED_BYTE : GL_FLOAT);
-	int nBits = ((iBuffer == COLOR ) ? 3 : (iMovieBitDepth==32?4:(iMovieBitDepth==24?3:(iMovieBitDepth==16?2:1))));
+	GLenum eGLBuffer = (iBuffer == COLOR ? GL_BGR_EXT : (iBuffer == ALPHA ? GL_ALPHA : GL_DEPTH_COMPONENT));
+	GLenum eGLtype = ((iBuffer == COLOR)||(iBuffer == ALPHA)? GL_UNSIGNED_BYTE : GL_FLOAT);
+	int nBits = ((iBuffer == COLOR ) ? 3 : (iBuffer == ALPHA ? 1:(iMovieBitDepth==32?4:(iMovieBitDepth==24?3:(iMovieBitDepth==16?2:1)))));
 
 	char* pszStereotag="";
-	if (_bEnableStereoMode)
+	if (_bEnableStereoMode&&!bWantsHudCapture)
 	{
+		// if we are not capturing the hud and are in stereo mode add the proper tag:
 		if (_stereo_state==STS_LEFT) pszStereotag="_left"; else pszStereotag="_right";
 	}
 
 	char szFilename[196];
-	_snprintf(szFilename, sizeof(szFilename) - 1, "%s_%s_%02d%s_%05d.tga", m_szFilename, pszFileTag, m_nTakes, pszStereotag, iFileNumber);
+	_snprintf(szFilename, sizeof(szFilename) - 1, "%s_%02d_%s%s_%05d.tga", m_szFilename, m_nTakes, pszFileTag, pszStereotag, iFileNumber);
 
 	unsigned char szTgaheader[12] = { 0, 0, cDepth, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 	unsigned char szHeader[6] = { (int) (m_iWidth % 256), (int) (m_iWidth / 256), (int) (m_iCropHeight % 256), (int) (m_iCropHeight / 256), 8 * nBits, 0 };
@@ -655,7 +909,7 @@ void Filming::_old_recordBuffers()
 	pEngfuncs->Cvar_SetValue("host_framerate", flNextFrameDuration);
 }
 
-bool Filming::recordBuffers(HDC hSwapHDC,bool *bSwapRes)
+bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 // be sure to read the comments to _bRecordBuffers_FirstCall in filming.h, because this is fundamental for undertanding what the **** is going on here
 // currently like the old code we relay on some user changable values, however we should lock those during filming to avoid crashes caused by the user messing around (not implemented yet)
 {
@@ -667,20 +921,33 @@ bool Filming::recordBuffers(HDC hSwapHDC,bool *bSwapRes)
 	{
 		pEngfuncs->Con_Printf("WARNING: Unexpected recordBuffers request, this should not happen!");
 	}
+	_bRecordBuffers_FirstCall = false;
 
 	// If this is a none swapping one then force to the correct stage.
 	// Otherwise continue working wiht the stage that this frame has
 	// been rendered with.
-	if (movie_splitstreams->value < 3.0f)
+	if ((0.0f <= movie_splitstreams->value)&&(movie_splitstreams->value < 3.0f))
 		m_iMatteStage = (MATTE_STAGE) ((int) MS_ALL + (int) max(movie_splitstreams->value, 0.0f));
+	else
+		m_iMatteStage = MS_WORLD;
 
 	// If we've only just started, delay until the next scene so that
 	// the first frame is drawn correctly
 	if (m_iFilmingState == FS_STARTING)
 	{
+		if (movie_separate_hud->value!=0.0)
+		{
+			bWantsHudCapture = true; // signal for R_RenderView
+			m_iMatteStage = MS_ALL; // override matte stage
+			_HudRqState = HUDRQ_CAPTURE_COLOR; // signal we want an color capture
+		}
+		
 		glClearColor(m_MatteColour[0], m_MatteColour[1], m_MatteColour[2], 1.0f); // don't forget to set our clear color
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+
 		m_iFilmingState = FS_ACTIVE;
+
+		_bRecordBuffers_FirstCall = true;
 		return false;
 	}
 
@@ -693,6 +960,17 @@ bool Filming::recordBuffers(HDC hSwapHDC,bool *bSwapRes)
 	// Are we doing our own screenshot stuff
 	bool bCustomDumps = (movie_customdump->value != 0);
 	bool bDepthDumps = (movie_depthdump->value != 0);
+
+	if (bWantsHudCapture)
+	{
+		// currently we waste a whole frame cuz I want to get this done, so rerquest it
+		_HudRqState = HUDRQ_NORMAL;
+		bWantsHudCapture=false;
+		glColorMask(GL_TRUE,GL_TRUE,GL_TRUE,GL_TRUE);
+		glClearColor(m_MatteColour[0], m_MatteColour[1], m_MatteColour[2], 1.0f); // don't forget to set our clear color
+		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+		touring_R_RenderView_(); // rerender frame instant!!!!
+	}
 
 	do
 	{
@@ -715,14 +993,16 @@ bool Filming::recordBuffers(HDC hSwapHDC,bool *bSwapRes)
 
 			m_iMatteStage = MS_WORLD;
 		}
-	if (_bEnableStereoMode && (_stereo_state==STS_LEFT))
-	{
-		_stereo_state=STS_RIGHT;
-		g_Filming.clearBuffers();
-		touring_R_RenderView_(); // rerender frame instant!!!!
-	} else _stereo_state=STS_LEFT;
-	} while (_stereo_state!=STS_LEFT);
 	
+		if (_bEnableStereoMode && (_stereo_state==STS_LEFT))
+		{
+			_stereo_state=STS_RIGHT;
+			g_Filming.clearBuffers();
+			touring_R_RenderView_(); // rerender frame instant!!!!
+		} else _stereo_state=STS_LEFT;
+
+	} while (_stereo_state!=STS_LEFT);
+
 	float flNextFrameDuration = flTime;
 	m_nFrames++;
 	
@@ -730,6 +1010,14 @@ bool Filming::recordBuffers(HDC hSwapHDC,bool *bSwapRes)
 	flNextFrameDuration = max(flNextFrameDuration, MIN_FRAME_DURATION);
 	pEngfuncs->Cvar_SetValue("host_framerate", flNextFrameDuration);
 
+	_bRecordBuffers_FirstCall = true;
+
+	if ((movie_separate_hud->value!=0)&&isFilming())
+	{
+		bWantsHudCapture = true; // signal for R_RenderView
+		m_iMatteStage = MS_ALL; // override matte stage
+		_HudRqState = HUDRQ_CAPTURE_COLOR; // signal we want an color capture
+	}
 	return true;
 }
 
