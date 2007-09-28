@@ -44,7 +44,7 @@ In addition to the mentions in the changelog we want to credit the following
 people, companys or organistations:
 
 Microsoft
-  for VC++, MSDN2, Windows,...
+  for VC++, MSDN2, Windows, ...
   http://www.Microsoft.com
   
 Valve
@@ -54,8 +54,12 @@ Valve
 MetaMod
   for HLSDK p3
   http://www.MetaMod.org
+
+id Software
+  for Quake 1 source code
+  http://www.idsoftware.com
   
-And everyone that feels he should have been mentioned here.
+And everyone that feels he/she/it should have been mentioned here.
 
 
 Greetings:
