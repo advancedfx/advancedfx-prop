@@ -1,3 +1,9 @@
+/*
+File        : ui.h
+Project     : Mirv Demo Tool
+Authors     : Gavin Bramhill
+Description : preparations for ui interfaces
+*/
 
 #ifndef UI_H
 #define UI_H

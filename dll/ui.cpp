@@ -1,7 +1,14 @@
+/*
+File        : ui.cpp
+Project     : Mirv Demo Tool
+Authors     : Gavin Bramhill
+Description : preparations for ui interfaces
+*/
+
+
 
 #include "ui.h"
-#include "Gui.h"
-
+/*#include "Gui.h"
 
 #include "util/Color.h"
 #include "component/Frame.h"
@@ -17,13 +24,14 @@
 #else
 #pragma comment(lib, "UI.lib")
 #endif
+*/
 
-using namespace ui;
+// using namespace ui;
 
 //
 // THIS IS JUST A PLACEHOLDER, HAVEN'T YET IMPLEMENTED THE FONT TEXTURE LOADING OR DRAWING.
 //
-
+/*
 class BitmapFont : public ui::Font
 {
 public:
@@ -43,11 +51,12 @@ private:
 	GLuint textureId;
 	GLuint base;
 };
+*/
 
 //
 // THIS IS COMPLETE.
 //
-
+/*
 class BitmapFontFactory : public ui::AbstractFontFactory
 {
 public:
@@ -57,11 +66,11 @@ public:
 private:
 	BitmapFont *bitmapFont;
 };
-
+*/
 //
 // JUST A VERY SIMPLE TEST DIALOG WINDOW.
 //
-
+/*
 class TestDialog : public ui::Dialog
 {
 public:
@@ -96,6 +105,12 @@ TestDialog::~TestDialog()
 	delete button;
 	delete contentPane;
 }
+*/
+
+//#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <gl\gl.h>
+#include <gl\glu.h>
 
 //
 // ACTUAL GUI STUFF, INTERFACES WITH WHATEVER GUI WE DECIDE TO USE
@@ -104,13 +119,13 @@ TestDialog::~TestDialog()
 class MDTUI : public UI
 {
 private:
-	Gui *m_pGui;
+	//Gui *m_pGui;
 	float m_flLastTime;
 	POINT mouse;
 
 private:
-	Frame *m_pFrame;
-	TestDialog *m_pTestDialog;
+	//Frame *m_pFrame;
+	//TestDialog *m_pTestDialog;
 
 public:
 	MDTUI();
@@ -119,17 +134,17 @@ public:
 	int Initialise();
 	int Render(int width, int height);
 	int Update(float time);
-	int UpdateMouse(int x, int y) { mouse.x = x; mouse.y = y; m_pGui->importMouseMotion(x, y); return 0; }
+	int UpdateMouse(int x, int y) { mouse.x = x; mouse.y = y; /*m_pGui->importMouseMotion(x, y);*/ return 0; }
 
-	int KeyDown(int key, int modifier) { m_pGui->importKeyPressed(key, modifier); return 0; }
-	int KeyUp(int key, int modifier) { m_pGui->importKeyReleased(key, modifier); return 0; }
-	int MouseDown(int button) { m_pGui->importMousePressed(button);	return 0; }
-	int MouseUp(int button) { m_pGui->importMouseReleased(button); return 0; }
+	int KeyDown(int key, int modifier) { /*m_pGui->importKeyPressed(key, modifier);*/ return 0; }
+	int KeyUp(int key, int modifier) { /*m_pGui->importKeyReleased(key, modifier);*/ return 0; }
+	int MouseDown(int button) { /*m_pGui->importMousePressed(button);*/	return 0; }
+	int MouseUp(int button) { /*m_pGui->importMouseReleased(button);*/ return 0; }
 };
 
 MDTUI::MDTUI()
 {
-	m_pGui = new Gui();
+	/*m_pGui = new Gui();
 	m_pGui->setFontFactory(new BitmapFontFactory());
 	m_pFrame = new Frame(0, 0, 800, 600);
 	m_pFrame->setBackground(new util::Color(0.0f, 0.0f, 0.0f, 0.0f));
@@ -138,16 +153,16 @@ MDTUI::MDTUI()
 	m_pFrame->show();
 	m_pTestDialog = new TestDialog(m_pFrame);
 	m_pTestDialog->show();
-	m_pTestDialog->setLocation(10, 10);
+	m_pTestDialog->setLocation(10, 10);*/
 
 	m_flLastTime = 0.0f;
 }
 
 MDTUI::~MDTUI()
 {
-	delete m_pFrame;
+	/*delete m_pFrame;
 	delete m_pGui;
-	delete m_pTestDialog;
+	delete m_pTestDialog;*/
 }
 
 int MDTUI::Initialise()
@@ -159,11 +174,11 @@ int MDTUI::Update(float time)
 {
 	float deltaTime = time - m_flLastTime;
 
-	m_pGui->importUpdate(deltaTime);
+	// m_pGui->importUpdate(deltaTime);
 
 	m_flLastTime = time;
 
-	m_pGui->importMouseMotion(mouse.x, mouse.y);
+	// m_pGui->importMouseMotion(mouse.x, mouse.y);
 
 	return 0;
 }
@@ -212,7 +227,7 @@ int MDTUI::Render(int width, int height)
 
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
-	m_pGui->paint();
+	// m_pGui->paint();
 
 	glDisable(GL_DEPTH_TEST);
 

@@ -74,7 +74,7 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="c:\Libraries/hlsdk/multiplayer/cl_dll;c:\Libraries/hlsdk/multiplayer/common;c:\Libraries/hlsdk/multiplayer/engine;c:\Libraries/hlsdk/multiplayer/pm_shared;C:\Libraries/UI/Include;$(NOINHERIT)"
+				AdditionalIncludeDirectories="c:\Libraries/hlsdk/multiplayer/cl_dll;c:\Libraries/hlsdk/multiplayer/common;c:\Libraries/hlsdk/multiplayer/engine;c:\Libraries/hlsdk/multiplayer/pm_shared;$(NOINHERIT)"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;MIRVDEMOTOOL_EXPORTS"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -87,7 +87,7 @@
 				Name="VCLinkerTool"
 				OutputFile="$(OutDir)/Mirv Demo Tool.dll"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="C:\Libraries/UI/Lib"
+				AdditionalLibraryDirectories=""
 				IgnoreAllDefaultLibraries="FALSE"
 				IgnoreDefaultLibraryNames=""
 				GenerateDebugInformation="TRUE"
