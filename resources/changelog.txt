@@ -1,3 +1,9 @@
+to be determined
+
+- Changed: 
+
+- Changed: removed dependency on msvcp71.dll
+
 1.0.60.152
 
 - Added: mirv_movie_separate_hud 0|1|2

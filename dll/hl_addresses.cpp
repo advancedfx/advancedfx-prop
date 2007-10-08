@@ -28,7 +28,34 @@ hl_addresses_t g_hl_addresses = {
 #include <list>
 #include <string>
 
-typedef class cHLAddressEntry cHLAddressEntry_t; // forward decleration
+typedef class cHLAddressEntry cHLAddressEntry_t; // forward decleration+
+
+
+/* The MDT Addresses Config Syntax:
+
+SIGMA = the alphabet (8 Bit American ASCII)
+EPS = Epsylon (the empty word)
+WS  = ' ' | '\t' (white space)
+
+COMMENT = ';' (SIGMA / {'\0','\n'})*
+
+CONST = 0x[0-9A-Fa-f]+
+VAR = [A-Za-z_][0-9A-Za-z_]*
+
+TERMINAL = CONST | VAR
+
+EXPRESSION = TERMINAL 
+           | EXPRESSION WS* ('+','-') WS* TERMINAL
+	       | EXPRESSION WS* '^'
+
+ALLOCATION = VAR WS* '=' WS* EXPRESSION
+
+LINE = WS* (EPS | EXPRESSION WS* ) (EPS | COMMENT)
+
+LINES = '\0'
+       (LINE '\n')* LINE '\0'
+
+*/
 
 class cHLAddresses
 {
@@ -40,6 +67,9 @@ public:
 	cHLAddressEntry* GiveEntry(char *pszName); // retrives entry by name
 
 	bool EvaluateExpression(std::string *pstrExpression,unsigned long &pulValue);
+	// tries to parse an Expression.
+	// if it succeeds it returns true and pulValue is the Value of the expression.
+	// if it fails (syntax or seantic error (used uninitalized or unknown variable)) it returns false
 	
 	friend cHLAddressEntry_t;
 };
