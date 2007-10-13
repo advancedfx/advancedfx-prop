@@ -78,8 +78,8 @@ bool	g_bMenu = false;
 bool	g_bEnumDMcalled = false;
 
 #define MDT_MAX_PATH_BYTES 1025
-#define MDT_CFG_FILE "mdt_config.ini"
-#define MDT_CFG_FILE_SLEN 14
+#define MDT_CFG_FILE "mdt_addresses.ini"
+#define MDT_CFG_FILE_SLEN 15
 #define DLL_NAME	"Mirv Demo Tool.dll"
 
 HMODULE g_hMDTDLL=NULL; // handle to our self
@@ -353,8 +353,7 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 		if (g_hMDTDLL)
 		{
 			pg_Config_mdtdll = new cConfig_mdtdll(pg_MDTcfgfile);
-			bCfgres = pg_Config_mdtdll->GetAddresses(&g_hl_addresses);
-			if (bCfgres) pg_Config_mdtdll->ApplyAddresses(&g_hl_addresses);
+			bCfgres = pg_Config_mdtdll->LoadAndApplyAddresses();
 		} else pEngfuncs->Con_Printf("WARNING: Could not locate DLL.\n");
 				
 		// Register the commands
@@ -368,14 +367,15 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 			(*i++)();
 
 		char* pszAddrLoad="Warning: The config's address syntax or semantics were not valid (using default).";
-		if (bCfgres)
+		if (bCfgres) 
 		{
-			pszAddrLoad="Loaded addreses from config.";
-			pg_Config_mdtdll->ApplyAddresses(&g_hl_addresses);
-			// update globals that we already set:
+			// update unregistered local copies manually:
 			pEngfuncs		= (cl_enginefuncs_s*)	HL_ADDR_CL_ENGINEFUNCS_S;
 			pEngStudio	= (engine_studio_api_s*)HL_ADDR_ENGINE_STUDIO_API_S;
-			ppmove			= (playermove_s*)		HL_ADDR_PLAYERMOVE_S;
+			ppmove			= (playermove_s*)		HL_ADDR_PLAYERMOVE_S;		
+			
+			pszAddrLoad="Loaded addreses from config.";
+
 		}
 
 		delete pg_Config_mdtdll;

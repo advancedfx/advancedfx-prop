@@ -35,7 +35,7 @@ Global
 	GlobalSection(SolutionItems) = postSolution
 		resources\changelog.txt = resources\changelog.txt
 		info.txt = info.txt
-		resources\mdt_config.ini = resources\mdt_config.ini
+		resources\mdt_addresses.ini = resources\mdt_addresses.ini
 		resources\readme.txt = resources\readme.txt
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution

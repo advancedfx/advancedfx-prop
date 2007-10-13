@@ -12,28 +12,27 @@ Description : Functions for loading data from the mdt mdt_config.xml file
 #include "hl_addresses.h"
 
 class cConfig_mdtdll
-// Warning: UpdateAddressByName is probably not thread safe currently since it calls another function in the cpp which operates on structures outside of the class's scope!
+// config singelton
 {
+public:
+	cConfig_mdtdll(char* pFileNamez); // path to the config has to be supplied
+	~cConfig_mdtdll();
+
+	bool bLoadOk();
+	bool bAddressesApplied();
+
+    bool LoadAndApplyAddresses(); // loads and applies the addresses
+
 private:
 	#define CONFIG_MDTDLL_MAX_CFGSTRLEN 200
-	// min: 35
-public:
-	cConfig_mdtdll(char* pFileNamez);
-	~cConfig_mdtdll();
-	bool bLoadOk();
 
-    bool GetAddresses(hl_addresses_t *pDefaultHlAddresses);
-	void ApplyAddresses(hl_addresses_t *pTargetAddresses);
-
-private:
-	char _tmp1[CONFIG_MDTDLL_MAX_CFGSTRLEN+1];
-	char _tmp2[CONFIG_MDTDLL_MAX_CFGSTRLEN+1];
+	char	_tmp1[CONFIG_MDTDLL_MAX_CFGSTRLEN+1];
 
 	size_t	_bytesFileName;
+
 	char*	_pFileNamez;
 	bool	_bLoadOk;
-
-	bool UpdateAddressByName(char *pout,char *pout2);
+	bool	_bAddressesApplied;
 } ;
 
 #endif

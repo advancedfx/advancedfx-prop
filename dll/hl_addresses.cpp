@@ -1,5 +1,7 @@
 #include "hl_addresses.h"
 
+#include <windows.h>
+
 //
 // definitions of default addresses that need to be present early in case we use prints for debug:
 //
@@ -7,7 +9,7 @@
 //
 // g_hl_addresses initalization:
 //
-
+/*
 
 hl_addresses_t g_hl_addresses = {
 // be carefull when you change s.th. here and keep hl_addresses_s and g_hl_addresses in sync
@@ -23,203 +25,54 @@ hl_addresses_t g_hl_addresses = {
 	0, // p_r_refdef
 	0, // p_HudSpectator_tfc
 	0, // p_HudSpectator_cmp_tfc
-};
-
-#include <list>
-#include <string>
-
-typedef class cHLAddressEntry cHLAddressEntry_t; // forward decleration+
+};*/
 
 
-/*
+///////////////////////////////////////////////////////////////////////////////
+// g_HLAddresses global and Addresses Initialisation
+///////////////////////////////////////////////////////////////////////////////
 
-The MDT Addresses Config Syntax:
+cHLAddresses g_HLAddresses;
 
-SIGMA = the alphabet (8 Bit American ASCII)
-EPS = Epsylon (the empty word)
-WS  = ' ' | '\t' (white space)
+#define HL_ADDR_ENTRY(name,expression) \
+	unsigned long ulHLAddr_##name; \
+	cHLAddressEntry HLAddrObj_##name(&g_HLAddresses,#name,##expression,&ulHLAddr_##name);
 
-COMMENT = ';' (SIGMA / {'\0','\n'})*
+#define HL_ADDR_VAR(name) \
+	cHLAddressEntry HLAddrObj_##name(&g_HLAddresses,#name);
 
-CONST = 0x[0-9A-Fa-f]+
-actually CONST has a few more restrictions (those of strtoul)
-VAR = [A-Za-z_][0-9A-Za-z_]*
+// Variables:
+HL_ADDR_VAR(_v0)
+HL_ADDR_VAR(_v1)
+HL_ADDR_VAR(_v2)
+HL_ADDR_VAR(_v3)
+HL_ADDR_VAR(_v4)
+HL_ADDR_VAR(_v5)
+HL_ADDR_VAR(_v6)
+HL_ADDR_VAR(_v7)
+HL_ADDR_VAR(_v8)
+HL_ADDR_VAR(_v9)
+HL_ADDR_VAR(_vA)
+HL_ADDR_VAR(_vB)
+HL_ADDR_VAR(_vC)
+HL_ADDR_VAR(_vD)
+HL_ADDR_VAR(_vE)
+HL_ADDR_VAR(_vF)
 
-TERMINAL = CONST | VAR
+// Addresses:
+HL_ADDR_ENTRY(p_cl_enginefuncs_s,"0x01ECCB00")
+HL_ADDR_ENTRY(p_engine_studio_api_s,"0x01EE8FC0")
+HL_ADDR_ENTRY(p_playermove_s,"0x02D82500")
+HL_ADDR_ENTRY(SCR_UpdateScreen,"0x01dd0370")
+HL_ADDR_ENTRY(R_RenderView_,"0x01d51d9")
+HL_ADDR_ENTRY(p_r_refdef,"p_playermove_s - 0x13FDC0")
+HL_ADDR_ENTRY(HudSpectator_tfc,"0x01909A00")
+HL_ADDR_ENTRY(HudSpectator_cmp_tfc,"HudSpectator_tfc + 0x23")
 
-EXPRESSION = TERMINAL 
-           | EXPRESSION WS* ('+','-') WS* TERMINAL
-	       | EXPRESSION WS* '^'
+///////////////////////////////////////////////////////////////////////////////
+// cHLAddresses
+///////////////////////////////////////////////////////////////////////////////
 
-ALLOCATION = VAR WS* '=' WS* EXPRESSION
-
-LINE = WS* (EPS |ALLOCATION WS* ) (EPS | COMMENT)
-
-LINES = '\0'
-       (LINE '\n')* LINE '\0'
-
-
-The MDT Addresses Config Semantics:
-
-The following things have to be ensured by the programmer using the object:
-
-- Variables should be registered with the Object before any config is loaded.
-  Also variables shouldn't be unregistered if any config action could take
-  place later; The reason is expressions of still existing variables might
-  rellay on them and an requested reevaluation may fail.
-
-- Variable names must match the syntax or otherwise they will be inaccessable
-  to the config parsing system.
-
-- The expressions used for default values of variables must be valid in the
-  order they will be applied (object initialisation order). Otherwise there
-  will be no valid fall back values in case the config syntax is broken.
-
-The following things are checked and forced by the config system:
-
-- Variables have to have been initalized / allocated (ALLOCATION) before they
-  are allowed to be used in expressions. The alloaction order is the config's
-  line order (first line parsed first).
-  
-- Expressions are calculated using an accumulator, all expressions apply to the
-  accumulated value, so the operator precendence (First Come First Served)
-  differs from the one you may be used to from mathematics.
-
-*/
-
-class cHLAddresses
-{
-public:
-	#define MDT_OPCHAR_PLUS '+'
-	#define MDT_OPCHAR_MINUS '-'
-	#define MDT_OPCHAR_INDIRECTION '^'
-	#define MDT_CHAR_ALLOCATION '='
-
-	enum MDT_PRESULT // Result indication type for parsing functions
-	{
-		MDTP_OK,				// OK means there was no error till the currently parsed position
-		MDTP_EUNKNOWN,			// unknown error
-		MDTP_EPROGRAM,			// s.th. is wrong with the program (MDT) if this happend
-		MDTP_EMEMALLOC,			// memory allocation failed (currently not signaled, program might just crash)
-		MDTP_ESYNTAX,			// Syntax error
-		MDTP_ESEMANTICS,		// (unspecified) Semantic error
-		MDTP_ESEM_VARUNK,		// Semantic error: unknown variable was used
-		MDTP_ESEM_VARUNINIT,	// Semantic error: the variable is non but has not been initalized / is not valid
-		MDTP_EINDIRECTION,		// Error: Indirection failed
-	};
-    
-private:
-	std::list<cHLAddressEntry_t*> _HLAddressEntryList;
-	void _RegisterEntry(cHLAddressEntry_t *pHLAddressEntry);
-	void _UnregisterEntry(cHLAddressEntry_t *pHLAddressEntry);
-
-public:
-	cHLAddressEntry* GiveEntry(char *pszName); // retrives entry by name
-
-	bool Do_Indirection(unsigned long ulPointer,unsigned long & ulPointed);
-	// tries indirect ulPointer and return the result in ulPointed
-	// if it returns false s.th. went wron for sure
-	// please understand that the protections for indirection are (currently very) limited.
-	// in the future i.e. addresses should be limited to being in the launcher module), but that is not the case yet, also the whole class structure would have to be extended to only allow such addresses.
-
-	MDT_PRESULT Parse_WhiteSpaceKleene(char *pszInput,char *&pszRemainder);
-	// parses WS*
-	// munches as much WhiteSpace (WS) as it can. in it's current implementation (asuming supplied arguments are valid) it never fails.
-	// the returned pszRemainder will point on the first non WhiteSpace char
-
-	MDT_PRESULT Parse_Variable(char *pszInput,char *&pszRemainder,cHLAddressEntry *&pEntry);
-	// parses VARIABLE
-	// on MDTP_OK pEntry points onto the variable entry that has been found
-	// on otherwise pEntry will be 0 (NULL)
-	// returned pszRemainder always points onto the first char that could not be parsed (yet)
-
-	MDT_PRESULT Parse_Terminal(char *pszInput,char *&pszRemainder,unsigned long &ulValue);
-	// tries to parse TERMINAL
-	// on MDT_OK ulValue contains the current value of the expression
-	// on otherwise the result indicates parsing errors / problems and ulValue remains untouched
-	// returned pszRemainder always points on the first char that could not be parsed (yet)
-
-	MDT_PRESULT Parse_Expression(char *pszInput,char *&pszRemainder,unsigned long &ulValue);
-	// tries to parse EXPRESSION
-	// on MDT_OK pszRemainder points onto the next char that could not be parsed and ulValue is the Value of the expression
-	// on otherwise pszRemainder points onto the char where an error was identified
-
-	bool EvaluateExpression(std::string *pstrExpression,unsigned long &pulValue);
-	// this is a wrapper around Parse_Expression for use by cHLAddressEntry.
-	// on MDTP_OK it would return true, otherwise false
-
-	MDT_PRESULT Parse_Allocation(char *pszInput,char *&pszRemainder);
-	// tries to parse ALLOCATION
-	// on MDT_OK the ALLOCATION was parsed successfully and the variable has been updated
-	// on otherwise an error happend (the variable should remain unchanged in this case)
-	// returned pszRemainder always points on the first char that could not be parsed (yet)
-
-	MDT_PRESULT Parse_Comment(char *pszInput,char *&pszRemainder);
-	// tries to parse COMMENT
-	// returned pszRemainder always points on the first char that could not be parsed (yet or anymore)
-
-	MDT_PRESULT Parse_Line(char *pszInput,char *&pszRemainder);
-	// tries to parse LINE
-	// on MDTP_OK the parsing seems to be ok.
-	// returned pszRemainder always points on the first char that could not be parsed (yet or anymore)
-
-	MDT_PRESULT Parse_AddressConfig(char *pszInput,unsigned long & ulErrLinesTotal,unsigned long & ulFirstErrLine, char *& pFirstErrorLine, char *& pFirstErrorChar);
-	// parses LINES with BEST EFFORT:
-	// if One Line fails it will still try to parse the following lines, hoping they are independant.
-	// on MDTP_OK there was no error and the return Values of the other returns will be 0 or NULL
-	// on otherwise there was at least one error (the code is the one of the first that happend) and ulErrorNum, ulFirstErrLine, ulFirstErrCol, pErrorChar will be set accordingly
-	// description of the other returns:
-	// ulErrLinesTotal: the total number of errorneous lines
-	// ulFirstErrLine: the line number, where the first error happend, the first Line is 1.
-    // pFirstErrorLine: A pointer onto the line in pszInput, where the first error happend.
-	// pFirstErrorChar: A pointer onto the char in pszInput, where the first error happend.
-	// hints:
-	// you can retrive the col number where the first error happend by (unsigned long)(pFirstErrorChar - pFirstErrorLine)+1
-	// you can retrive an (English) error description string if you pass the result (MDT_PRESULT) to the GiveErrorString function
-	// this is the only function that checks pszInput == 0 == NULL, in this case it will return an MDTP_ESYNTAX error (and the other returns will be all 0)
-
-	friend cHLAddressEntry_t;
-};
-
-class cHLAddressEntry
-{
-private:
-	bool _bIsValid;
-	unsigned long _ulValue;
-
-	std::list<unsigned long*> _lstPrivateCopies;
-
-	std::string _strName;
-	std::string _strExpression;
-
-	cHLAddresses *_pHLAddresses;
-
-	void _cHLAddressEntry_Init(cHLAddresses *pHLAddresses,char *pszName);
-
-	void _makeExpression_From_Value();
-
-	void _updatePrivateCopy(unsigned long* pulPrivateCopy, unsigned long ulValue);
-	void _updatePrivateCopies(unsigned long ulValue);
-
-public:
-	cHLAddressEntry(cHLAddresses *pHLAddresses,char *pszName);
-	cHLAddressEntry(cHLAddresses *pHLAddresses,char *pszName,unsigned long ulValue);
-	cHLAddressEntry(cHLAddresses *pHLAddresses,char *pszName,char *pstrExpression);
-
-	~cHLAddressEntry();
-
-	bool bIsValid();
-
-	void SetValue(unsigned long ulValue);
-	bool SetExpression(char *pszExpression);
-
-	void RegisterPrivateCopy(unsigned long *pulPrviateCopy);
-	void UnRegisterPrivateCopy(unsigned long *pulPrivateCopy);
-
-	unsigned long GetValue();
-	char *GetExpression();
-	char *GetName();
-};
 
 void cHLAddresses::_RegisterEntry(cHLAddressEntry_t *pHLAddressEntry)
 {
@@ -228,9 +81,17 @@ void cHLAddresses::_RegisterEntry(cHLAddressEntry_t *pHLAddressEntry)
 
 void cHLAddresses::_UnregisterEntry(cHLAddressEntry_t *pHLAddressEntry)
 {
+	//MessageBox(NULL,pHLAddressEntry->GetName(),"unregistering",MB_OK);
+	
 	std::list<cHLAddressEntry_t*>::iterator it;
 	for (it=_HLAddressEntryList.begin();it!=_HLAddressEntryList.end();it++)
-		if (*it==pHLAddressEntry) _HLAddressEntryList.erase(it); // WARNING: this asumes addresses of object won't change
+	{
+		if ((*it)==pHLAddressEntry)
+		{
+			_HLAddressEntryList.erase(it); // WARNING: this asumes addresses of object won't change
+			break; // we have to break since this op could change the list and render our iterators into crap
+		}
+	}
 }
 
 cHLAddressEntry* cHLAddresses::GiveEntry(char *pszName)
@@ -241,6 +102,18 @@ cHLAddressEntry* cHLAddresses::GiveEntry(char *pszName)
 		if(strcmp((*it)->GetName(),pszName)==0)
 			return (*it);
 	}
+
+	return NULL;
+}
+
+cHLAddresses::~cHLAddresses()
+{
+	// we have to destroy all entries first since the current Entry Implementation relays on the presense of the cHLAddress Object:
+	
+	// note: the entries will operate on the list during their destruction, since they will unregister themselfs!
+
+	while(!_HLAddressEntryList.empty()) delete (*_HLAddressEntryList.end());
+
 }
 
 bool cHLAddresses::Do_Indirection(unsigned long ulPointer,unsigned long & ulPointed)
@@ -269,7 +142,8 @@ cHLAddresses::MDT_PRESULT cHLAddresses::Parse_WhiteSpaceKleene(char *pszInput,ch
 cHLAddresses::MDT_PRESULT cHLAddresses::Parse_Variable(char *pszInput,char *&pszRemainder,cHLAddressEntry *&pEntry)
 {
 	char cTmp = pszInput[0];
-	pszRemainder = pszInput;	
+	pszRemainder = pszInput;
+	char *pszR = pszRemainder;
 	pEntry=0; // NULL
 	
 	// variable strings may not be empty:
@@ -279,7 +153,7 @@ cHLAddresses::MDT_PRESULT cHLAddresses::Parse_Variable(char *pszInput,char *&psz
 	if (!( (cTmp>='A' && cTmp<='Z') || (cTmp>='a' && cTmp<='z') || (cTmp=='_') )) return MDTP_ESYNTAX;
 
 	// parse [0-9A-Za-z_]*
-	do cTmp = *(pszRemainder++); while ( (cTmp>='0' && cTmp <='9') || (cTmp>='A' && cTmp<='Z') || (cTmp>='a' && cTmp<='z') || (cTmp=='_') );
+	do cTmp = *(++pszR); while ( (cTmp>='0' && cTmp <='9') || (cTmp>='A' && cTmp<='Z') || (cTmp>='a' && cTmp<='z') || (cTmp=='_') );
 
 	// well I seriously thought if we should simply modify the original string temporary or not (put null in and preserve and restore original value)
 	// but finally I decided I should rather make a copy of it for some unknown reason:
@@ -291,7 +165,7 @@ cHLAddresses::MDT_PRESULT cHLAddresses::Parse_Variable(char *pszInput,char *&psz
 	// get memory:
 	try
 	{
-		pszT = new char[pszRemainder-pszInput+1];
+		pszT = new char[pszR-pszInput+1];
 	}
 	catch(...)
 	{
@@ -301,12 +175,13 @@ cHLAddresses::MDT_PRESULT cHLAddresses::Parse_Variable(char *pszInput,char *&psz
 	if (mRes==MDTP_OK)
 	{
 		// only when allocation was successfull
-		memcpy(pszT,pszInput,pszRemainder-pszInput);
-		pszT[pszRemainder-pszInput]=0; // place NULL termination char
+		memcpy(pszT,pszInput,pszR-pszInput);
+		pszT[pszR-pszInput]=0; // place NULL termination char
 
 		// retrive entry if possible:
-		if (!(pEntry=GiveEntry(pszT)))
-			mRes=MDTP_ESEM_VARUNK; // entry not found
+		if ((pEntry=GiveEntry(pszT))) pszRemainder=pszR;
+		else mRes=MDTP_ESEM_VARUNK; // entry not found
+
 	}
 
 	// free memory
@@ -342,9 +217,13 @@ cHLAddresses::MDT_PRESULT cHLAddresses::Parse_Terminal(char *pszInput,char *&psz
 		cHLAddressEntry *pEntry;
 		MDT_PRESULT mRes=Parse_Variable(pszRemainder,pszRemainder,pEntry);
 
-		if (mRes==MDTP_OK && pEntry && pEntry->bIsValid())
-			ulValue=pEntry->GetValue();
-		else mRes=MDTP_ESEM_VARUNINIT; // not valid for use
+		if (mRes==MDTP_OK)
+		{
+			if( pEntry && pEntry->bIsValid()) ulValue=pEntry->GetValue();
+			else mRes=MDTP_ESEM_VARUNINIT; // not valid for use
+		}
+
+		return mRes;
 	}
 }
 
@@ -373,6 +252,7 @@ cHLAddresses::MDT_PRESULT cHLAddresses::Parse_Expression(char *pszInput,char *&p
 			break;
 		case MDTAO_MINUS:
 			ulAccu -= ulTerminal;
+			break;
 		default:
 			return MDTP_EPROGRAM; // this should not happen
 		}
@@ -388,27 +268,38 @@ cHLAddresses::MDT_PRESULT cHLAddresses::Parse_Expression(char *pszInput,char *&p
 			break;
 		case MDT_OPCHAR_PLUS:
 			mAccuOp = MDTAO_PLUS;
+			pszT++;
 			if (MDTP_OK != (mRes = Parse_WhiteSpaceKleene(pszT,pszT))) return mRes; // munch WS* (if any)
 			break;
 		case MDT_OPCHAR_MINUS:
 			mAccuOp = MDTAO_MINUS;
+			pszT++;
 			if (MDTP_OK != (mRes = Parse_WhiteSpaceKleene(pszT,pszT))) return mRes; // munch WS* (if any)
 			break;
 		default:
 			// there was no op
+			ulValue=ulAccu;
 			return MDTP_OK; // quit instantly (returns current pszRemainder and accu)
 		}
 
 		// if we are here the expression syntax is not finished yet, so update the pszRemainder:
 		pszRemainder = pszT; // update!!
 	}
-	return MDTP_OK;
+	
+	return MDTP_EPROGRAM;
 }
 
-bool cHLAddresses::EvaluateExpression(std::string *pstrExpression,unsigned long &pulValue)
+bool cHLAddresses::EvaluateExpression(std::string *pstrExpression,unsigned long &ulValue)
 {
 	static char *pszDummy;
-	return Parse_Expression((char *)pstrExpression->c_str(),(char *)pszDummy,pulValue)==MDTP_OK;
+
+	bool btmp=Parse_Expression((char *)pstrExpression->c_str(),(char *)pszDummy,ulValue)==MDTP_OK;
+
+	//char ttt[1000];
+	//sprintf(ttt,"%s: %s->0x%08x (%i)","?",(char *)pstrExpression->c_str(),ulValue,btmp);
+	//MessageBox(NULL,ttt,"DebugInfo",MB_OK);
+
+	return btmp;
 }
 
 cHLAddresses::MDT_PRESULT cHLAddresses::Parse_Allocation(char *pszInput,char *&pszRemainder)
@@ -453,7 +344,7 @@ cHLAddresses::MDT_PRESULT cHLAddresses::Parse_Comment(char *pszInput,char *&pszR
 
 	// munch everything except new line char '\n'or (string-) termination char 0
 	char cTmp;
-	do cTmp=(pszRemainder++)[0];
+	do cTmp=(++pszRemainder)[0];
 	while (cTmp!='\n' && cTmp!=0);
 
 	return MDTP_OK;
@@ -514,11 +405,11 @@ cHLAddresses::MDT_PRESULT cHLAddresses::Parse_AddressConfig(char *pszInput,unsig
 	pFirstErrorChar = 0;
 
 	// Note: this is the only function that checks NULL == 0 on pszInput!
-	if (pszInput=0) return MDTP_ESYNTAX; // actually this should have never been supplied, but we are a friendly kind :)
+	if (pszInput==0) return MDTP_ESYNTAX; // actually this should have never been supplied, but we are a friendly kind :)
 
 	// parse a Line (if any)
 	while (pszInput[0]!=0)
-	{
+	{	
 		ulLineNum++; // increment Line Number
 
 		tRes=Parse_Line(pszInput,pszT);
@@ -544,13 +435,18 @@ cHLAddresses::MDT_PRESULT cHLAddresses::Parse_AddressConfig(char *pszInput,unsig
 		// in any case proceed to line end (even if it was errorneous):
 		pszInput=pszT;
 		while(pszInput[0]!=0 && pszInput[0]!='\n') pszInput++;
+		if(pszInput[0]=='\n') pszInput++;
 	}
 
 
 	return mRes;
 }
 
-/////
+
+///////////////////////////////////////////////////////////////////////////////
+// cHLAddressEntry
+///////////////////////////////////////////////////////////////////////////////
+
 
 void cHLAddressEntry::_cHLAddressEntry_Init(cHLAddresses *pHLAddresses,char *pszName)
 {
@@ -598,10 +494,11 @@ cHLAddressEntry::cHLAddressEntry(cHLAddresses *pHLAddresses,char *pszName,unsign
 	SetValue(ulValue);
 }
 
-cHLAddressEntry::cHLAddressEntry(cHLAddresses *pHLAddresses,char *pszName,char* pszExpression)
+cHLAddressEntry::cHLAddressEntry(cHLAddresses *pHLAddresses,char *pszName,char* pszExpression,unsigned long *pulPrviateCopy)
 {
 	_cHLAddressEntry_Init(pHLAddresses,pszName);
 	SetExpression(pszExpression);
+	RegisterPrivateCopy(pulPrviateCopy);
 }
 
 cHLAddressEntry::~cHLAddressEntry()
