@@ -1,8 +1,12 @@
-to be determined
+1.0.60.239
 
-- Changed: 
+- Changed: internal changes to the address config system.
 
 - Changed: removed dependency on msvcp71.dll
+
+- Added: mirv_movie_export_cammotion 0|1
+         creates Biovision (BVH) compatible motion data that hopefully can be
+         imported i.e. in Blender and 3ds Max
 
 1.0.60.152
 

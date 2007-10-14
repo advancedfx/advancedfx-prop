@@ -38,6 +38,7 @@ REGISTER_CVAR(depth_logarithmic, "32", 0);
 REGISTER_CVAR(movie_customdump, "1", 0)
 REGISTER_CVAR(movie_clearscreen, "0", 0);
 REGISTER_CVAR(movie_depthdump, "0", 0);
+REGISTER_CVAR(movie_export_cammotion, "0", 0);
 REGISTER_CVAR(movie_filename, "untitled", 0);
 REGISTER_CVAR(movie_fps, "30", 0);
 REGISTER_CVAR(movie_separate_hud, "0", 0);
@@ -362,6 +363,8 @@ void touring_R_RenderView_(void)
 		p_r_refdef->vieworg[i] += fDispForward*forward[i] + fDispRight*right[i] + fDispUp*up[i];
 	}
 
+	g_Filming.SupplyCamMotion(p_r_refdef->vieworg[0],p_r_refdef->vieworg[1],p_r_refdef->vieworg[2],p_r_refdef->viewangles[ROLL],p_r_refdef->viewangles[PITCH],p_r_refdef->viewangles[YAW]);
+
 	detoured_R_RenderView_();
 
 	p_r_refdef->vieworg = oldorigin; // restore old (is this necessary? I don't know if the values are used for interpolations later or not)
@@ -458,6 +461,9 @@ Filming::Filming()
 		bWantsHudCapture = false;
 
 		_HudRqState = HUDRQ_NORMAL;
+
+		_bCamMotion = false;
+		pMotionFile = NULL;
 }
 
 Filming::~Filming()
@@ -562,6 +568,9 @@ void Filming::Start()
 	if (!_bNewRequestMethod) pEngfuncs->Con_Printf("Warning: Using old RequestMethod!\nThe new method is only available with __mirv_movie_oldcapture 0 and mirv_movie_customdump 1.\n");
 	_bEnableStereoMode = (movie_stereomode->value != 0.0) && _bNewRequestMethod; // we also have to be able to use R_RenderView
 	//_bNoMatteInterpolation = (matte_nointerp->value == 0.0);
+	_bCamMotion = (movie_export_cammotion->value != 0.0) && _bNewRequestMethod;
+
+	if (_bCamMotion) MotionFile_Begin();
 
 	// if we want to use R_RenderView and we have not already done that, we need to set it up now:
 	if (_bNewRequestMethod)
@@ -635,6 +644,8 @@ void Filming::Start()
 
 void Filming::Stop()
 {
+	if (_bCamMotion) MotionFile_End();
+	
 	m_nFrames = 0;
 	m_iFilmingState = FS_INACTIVE;
 	m_nTakes++;
@@ -993,6 +1004,8 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 
 			m_iMatteStage = MS_WORLD;
 		}
+
+		if (_bCamMotion) MotionFile_Frame();
 	
 		if (_bEnableStereoMode && (_stereo_state==STS_LEFT))
 		{
@@ -1084,6 +1097,67 @@ Filming::DRAW_RESULT Filming::doWireframe(GLenum mode)
 
 	return DR_NORMAL;
 }
+
+void Filming::SupplyCamMotion(float Xposition,float Yposition,float Zposition,float Zrotation,float Xrotation,float Yrotation)
+{
+	_cammotion.Xposition=Xposition;
+	_cammotion.Yposition=Yposition;
+	_cammotion.Zposition=Zposition;
+	_cammotion.Zrotation=Zrotation;
+	_cammotion.Xrotation=Xrotation;
+	_cammotion.Yrotation=Yrotation;
+}
+
+void Filming::MotionFile_Begin()
+{
+	char szTmp[196];
+	_snprintf(szTmp, sizeof(szTmp) - 1, "%s_%02d_cammotion.bvh", m_szFilename, m_nTakes);
+
+	if ((pMotionFile = fopen(szTmp, "wb")) != NULL)
+	{
+		fputs("HIERARCHY\n",pMotionFile);
+
+		if (_bEnableStereoMode)
+		{
+			fputs("ROOT MdtCamLeft\n{\n\tOFFSET 0.00 0.00 0.00\n\tCHANNELS 6 Xposition Yposition Zposition Zrotation Xrotation Yrotation\n}\n",pMotionFile);
+			fputs("ROOT MdtCamRight\n{\n\tOFFSET 0.00 0.00 0.00\n\tCHANNELS 6 Xposition Yposition Zposition Zrotation Xrotation Yrotation\n}\n",pMotionFile);
+		} else {
+			fputs("ROOT MdtCam\n{\n\tOFFSET 0.00 0.00 0.00\n\tCHANNELS 6 Xposition Yposition Zposition Zrotation Xrotation Yrotation\n}\n",pMotionFile);
+		}
+
+		fputs("MOTION\n",pMotionFile);
+		_lMotionTPos = ftell(pMotionFile);
+		fputs("Frames: 0123456789A\n",pMotionFile);
+
+		float flTime = max(1.0f / max(movie_fps->value, 1.0f), MIN_FRAME_DURATION);
+		_snprintf(szTmp, sizeof(szTmp) - 1,"Frame Time: %f\n",flTime);
+		fputs(szTmp,pMotionFile);
+
+	}
+}
+void Filming::MotionFile_Frame()
+{
+	if (!pMotionFile) return;
+
+	char pszT[249];
+
+	_snprintf(pszT,sizeof(pszT)-1,"%f %f %f %f %f %f",_cammotion.Xposition,_cammotion.Yposition,_cammotion.Zposition,_cammotion.Zrotation,_cammotion.Xrotation,_cammotion.Yrotation);
+	fputs(pszT,pMotionFile);
+	if (!_bEnableStereoMode || _stereo_state == STS_RIGHT) fputs("\n",pMotionFile);
+
+}
+void Filming::MotionFile_End()
+{
+	if (pMotionFile){
+		char pTmp[100];
+		fseek(pMotionFile,_lMotionTPos,SEEK_SET);
+		_snprintf(pTmp,sizeof(pTmp)-1,"Frames: %11i",m_nFrames);
+		fputs(pTmp,pMotionFile);
+		fclose(pMotionFile);
+	}
+}
+
+/////
 
 REGISTER_CMD_FUNC_BEGIN(recordmovie)
 {

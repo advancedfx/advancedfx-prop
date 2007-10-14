@@ -81,6 +81,24 @@ private:
 
 	HUD_REQUEST_STATE _HudRqState;
 
+	struct _cammotion_s
+	{
+		float Xposition;
+		float Yposition;
+		float Zposition;
+		float Zrotation;
+		float Xrotation;
+		float Yrotation;
+	} _cammotion;
+
+	bool _bCamMotion;
+	FILE *pMotionFile;
+	long _lMotionTPos;
+
+	void MotionFile_Begin();
+	void MotionFile_Frame();
+	void MotionFile_End();
+
 public:
 	Filming();
 	~Filming();
@@ -118,6 +136,7 @@ public:
 	float GetStereoOffset(); // returns current stereoofs
 	bool bEnableStereoMode();
 	STEREO_STATE GetStereoState();
+	void SupplyCamMotion(float Xposition,float Yposition,float Zposition,float Zrotation,float Xrotation,float Yrotation); // used by R_RenderView_ to supply Camera Motion Data
 
 	bool bWantsHudCapture; // used by R_RenderView to prepare HUD Captures
 	bool bCustomDump();
@@ -134,7 +153,6 @@ public:
 
 	void SetCameraOfs(float right, float up, float forward); // you can set an static cameraofs here, however during stereomode it should be 0
 	void SetStereoOfs(float left_and_rightofs); // will be used in stereo mode to displace the camera left and right, suggested values are between 1.0 - 1.4, value should be positive, otherewise you would switch left and right cam
-
 };
 
 #endif
