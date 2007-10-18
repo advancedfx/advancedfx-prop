@@ -27,8 +27,9 @@ REGISTER_DEBUGCVAR(depth_bias, "0", 0);
 REGISTER_DEBUGCVAR(depth_scale, "1", 0);
 REGISTER_DEBUGCVAR(gl_force_noztrick, "1", 0);
 
-//REGISTER_DEBUGCVAR(matte_nointerp, "1", 0);
 REGISTER_DEBUGCVAR(movie_oldcapture, "0", 0);
+
+REGISTER_DEBUGCVAR(print_pos, "0", 0);
 
 REGISTER_CVAR(crop_height, "-1", 0);
 REGISTER_CVAR(crop_yofs, "-1", 0);
@@ -363,8 +364,24 @@ void touring_R_RenderView_(void)
 		p_r_refdef->vieworg[i] += fDispForward*forward[i] + fDispRight*right[i] + fDispUp*up[i];
 	}
 
-	g_Filming.SupplyCamMotion(p_r_refdef->vieworg[0],p_r_refdef->vieworg[1],p_r_refdef->vieworg[2],p_r_refdef->viewangles[ROLL],p_r_refdef->viewangles[PITCH],p_r_refdef->viewangles[YAW]);
+	if(print_pos->value!=0.0)
+		pEngfuncs->Con_Printf("(%f,%f,%f) (%f,%f,%f)\n",
+			p_r_refdef->vieworg[0],
+			p_r_refdef->vieworg[1],
+			p_r_refdef->vieworg[2],
+			p_r_refdef->viewangles[PITCH],
+			p_r_refdef->viewangles[YAW],
+			p_r_refdef->viewangles[ROLL]
+		);
 
+	g_Filming.SupplyCamMotion(
+		+p_r_refdef->vieworg[1],
+		+p_r_refdef->vieworg[2],
+		-p_r_refdef->vieworg[0],
+		-p_r_refdef->viewangles[ROLL],
+		+p_r_refdef->viewangles[PITCH],
+		+p_r_refdef->viewangles[YAW]
+	);
 	detoured_R_RenderView_();
 
 	p_r_refdef->vieworg = oldorigin; // restore old (is this necessary? I don't know if the values are used for interpolations later or not)
@@ -1119,10 +1136,10 @@ void Filming::MotionFile_Begin()
 
 		if (_bEnableStereoMode)
 		{
-			fputs("ROOT MdtCamLeft\n{\n\tOFFSET 0.00 0.00 0.00\n\tCHANNELS 6 Xposition Yposition Zposition Zrotation Xrotation Yrotation\n}\n",pMotionFile);
-			fputs("ROOT MdtCamRight\n{\n\tOFFSET 0.00 0.00 0.00\n\tCHANNELS 6 Xposition Yposition Zposition Zrotation Xrotation Yrotation\n}\n",pMotionFile);
+			fputs("ROOT MdtCamLeft\n{\n\tOFFSET 0.00 0.00 0.00\n\tCHANNELS 6 Xposition Yposition Zposition Zrotation Xrotation Yrotation\n\t{\n\t\tOFFSET 0.00 0.00 -1.00\n\t}\n}\n",pMotionFile);
+			fputs("ROOT MdtCamRight\n{\n\tOFFSET 0.00 0.00 0.00\n\tCHANNELS 6 Xposition Yposition Zposition Zrotation Xrotation Yrotation\n\t{\n\t\tOFFSET 0.00 0.00 -1.00\n\t}\n}\n",pMotionFile);
 		} else {
-			fputs("ROOT MdtCam\n{\n\tOFFSET 0.00 0.00 0.00\n\tCHANNELS 6 Xposition Yposition Zposition Zrotation Xrotation Yrotation\n}\n",pMotionFile);
+			fputs("ROOT MdtCam\n{\n\tOFFSET 0.00 0.00 0.00\n\tCHANNELS 6 Xposition Yposition Zposition Zrotation Xrotation Yrotation\n\tEnd Site\n\t{\n\t\tOFFSET 0.00 0.00 -1.00\n\t}\n}\n",pMotionFile);
 		}
 
 		fputs("MOTION\n",pMotionFile);
@@ -1144,7 +1161,7 @@ void Filming::MotionFile_Frame()
 	_snprintf(pszT,sizeof(pszT)-1,"%f %f %f %f %f %f",_cammotion.Xposition,_cammotion.Yposition,_cammotion.Zposition,_cammotion.Zrotation,_cammotion.Xrotation,_cammotion.Yrotation);
 	fputs(pszT,pMotionFile);
 	if (!_bEnableStereoMode || _stereo_state == STS_RIGHT) fputs("\n",pMotionFile);
-
+	else fputs(" ",pMotionFile);
 }
 void Filming::MotionFile_End()
 {

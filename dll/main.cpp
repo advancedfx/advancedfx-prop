@@ -75,8 +75,6 @@ int		g_nViewports = 0;
 bool	g_bIsSucceedingViewport = false;
 bool	g_bMenu = false;
 
-bool	g_bEnumDMcalled = false;
-
 #define MDT_MAX_PATH_BYTES 1025
 #define MDT_CFG_FILE "mdt_addresses.ini"
 #define MDT_CFG_FILE_SLEN 15
@@ -94,13 +92,6 @@ static char pg_MDTcfgfile[MDT_MAX_PATH_BYTES+MDT_CFG_FILE_SLEN];
 REGISTER_CVAR(disableautodirector, "0", 0);
 REGISTER_CVAR(fixforcehltv, "1", 0);
 
-REGISTER_DEBUGCMD_FUNC(enumdm_called)
-{
-	if (g_bEnumDMcalled) pEngfuncs->Con_Printf("YES, got called since last check.\n");
-	else  pEngfuncs->Con_Printf("NO, did not get called since last check.\n");
-
-	g_bEnumDMcalled = false;
-}
 REGISTER_DEBUGCVAR(gl_noclear, "0", 0);
 
 //
