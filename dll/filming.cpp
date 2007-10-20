@@ -43,6 +43,8 @@ REGISTER_CVAR(movie_export_cammotion, "0", 0);
 REGISTER_CVAR(movie_filename, "untitled", 0);
 REGISTER_CVAR(movie_fps, "30", 0);
 REGISTER_CVAR(movie_separate_hud, "0", 0);
+REGISTER_CVAR(movie_simulate, "0", 0);
+REGISTER_CVAR(movie_simulate_delay, "0.0", 0);
 REGISTER_CVAR(movie_stereomode,"0",0);
 REGISTER_CVAR(movie_stereo_centerdist,"0.0",0);
 REGISTER_CVAR(movie_stereo_yawdegrees,"2.0",0);
@@ -481,6 +483,9 @@ Filming::Filming()
 
 		_bCamMotion = false;
 		pMotionFile = NULL;
+		pMotionFile2 = NULL;
+
+		_bSimulate = false;
 }
 
 Filming::~Filming()
@@ -542,7 +547,7 @@ bool Filming::OnHudEndEvnet()
 	switch(giveHudRqState())
 	{
 	case HUDRQ_CAPTURE_COLOR:
-		Capture("hudcolor",m_nFrames,COLOR);
+		if (!_bSimulate)Capture("hudcolor",m_nFrames,COLOR);
 		if (movie_separate_hud->value!=2.0)
 		{
 			// we want alpha too in this case
@@ -551,7 +556,7 @@ bool Filming::OnHudEndEvnet()
 		}
 		break;
 	case HUDRQ_CAPTURE_ALPHA:
-		Capture("hudalpha",m_nFrames,ALPHA);
+		if(!_bSimulate)Capture("hudalpha",m_nFrames,ALPHA);
 		break;
 	}
 	return false; // do not loop
@@ -586,8 +591,9 @@ void Filming::Start()
 	_bEnableStereoMode = (movie_stereomode->value != 0.0) && _bNewRequestMethod; // we also have to be able to use R_RenderView
 	//_bNoMatteInterpolation = (matte_nointerp->value == 0.0);
 	_bCamMotion = (movie_export_cammotion->value != 0.0) && _bNewRequestMethod;
+	_bSimulate = (movie_simulate->value != 0.0);
 
-	if (_bCamMotion) MotionFile_Begin();
+	if (_bCamMotion && !_bSimulate) MotionFile_Begin();
 
 	// if we want to use R_RenderView and we have not already done that, we need to set it up now:
 	if (_bNewRequestMethod)
@@ -994,6 +1000,9 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 		// currently we waste a whole frame cuz I want to get this done, so rerquest it
 		_HudRqState = HUDRQ_NORMAL;
 		bWantsHudCapture=false;
+
+		if (_bSimulate && movie_simulate_delay->value > 0) Sleep((DWORD)movie_simulate_delay->value);
+
 		glColorMask(GL_TRUE,GL_TRUE,GL_TRUE,GL_TRUE);
 		glClearColor(m_MatteColour[0], m_MatteColour[1], m_MatteColour[2], 1.0f); // don't forget to set our clear color
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
@@ -1003,9 +1012,11 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 	do
 	{
 		// capture stage:
-		if (bCustomDumps) Capture(pszTitles[m_iMatteStage], m_nFrames, COLOR);
-		if (bDepthDumps) Capture(pszDepthTitles[m_iMatteStage], m_nFrames, DEPTH);
+		if (bCustomDumps && !_bSimulate) Capture(pszTitles[m_iMatteStage], m_nFrames, COLOR);
+		if (bDepthDumps && !_bSimulate) Capture(pszDepthTitles[m_iMatteStage], m_nFrames, DEPTH);
 		*bSwapRes=SwapBuffers(hSwapHDC);
+
+		if (_bSimulate && movie_simulate_delay->value > 0) Sleep((DWORD)movie_simulate_delay->value);
 
 		if (bSplitting)
 		{
@@ -1015,14 +1026,16 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 			touring_R_RenderView_(); // rerender frame instant!!!!
 
 			// capture stage:
-			if (bCustomDumps) Capture(pszTitles[m_iMatteStage], m_nFrames, COLOR);
-			if (bDepthDumps) Capture(pszDepthTitles[m_iMatteStage], m_nFrames, DEPTH);
+			if (bCustomDumps && !_bSimulate) Capture(pszTitles[m_iMatteStage], m_nFrames, COLOR);
+			if (bDepthDumps && !_bSimulate) Capture(pszDepthTitles[m_iMatteStage], m_nFrames, DEPTH);
 			*bSwapRes=SwapBuffers(hSwapHDC); // well let's count the last on, ok? :)
+
+			if (_bSimulate && movie_simulate_delay->value > 0) Sleep((DWORD)movie_simulate_delay->value);
 
 			m_iMatteStage = MS_WORLD;
 		}
 
-		if (_bCamMotion) MotionFile_Frame();
+		if (_bCamMotion && !_bSimulate) MotionFile_Frame();
 	
 		if (_bEnableStereoMode && (_stereo_state==STS_LEFT))
 		{
@@ -1048,6 +1061,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 		m_iMatteStage = MS_ALL; // override matte stage
 		_HudRqState = HUDRQ_CAPTURE_COLOR; // signal we want an color capture
 	}
+
 	return true;
 }
 
@@ -1125,52 +1139,71 @@ void Filming::SupplyCamMotion(float Xposition,float Yposition,float Zposition,fl
 	_cammotion.Yrotation=Yrotation;
 }
 
+void Filming::_MotionFile_BeginContent(FILE *pFile,char *pAdditonalTag,long &ulTPos)
+{
+	char szTmp[196];
+
+	fputs("HIERARCHY\n",pFile);
+
+	fputs("ROOT MdtCam",pFile);
+	fputs(pAdditonalTag,pFile);
+	fputs("\n{\n\tOFFSET 0.00 0.00 0.00\n\tCHANNELS 6 Xposition Yposition Zposition Zrotation Xrotation Yrotation\n\tEnd Site\n\t{\n\t\tOFFSET 0.00 0.00 -1.00\n\t}\n}\n",pFile);
+
+	fputs("MOTION\n",pFile);
+	ulTPos = ftell(pFile);
+	fputs("Frames: 0123456789A\n",pFile);
+
+	float flTime = max(1.0f / max(movie_fps->value, 1.0f), MIN_FRAME_DURATION);
+	_snprintf(szTmp, sizeof(szTmp) - 1,"Frame Time: %f\n",flTime);
+	fputs(szTmp,pFile);
+}
+
 void Filming::MotionFile_Begin()
 {
 	char szTmp[196];
-	_snprintf(szTmp, sizeof(szTmp) - 1, "%s_%02d_cammotion.bvh", m_szFilename, m_nTakes);
+
+	_snprintf(szTmp, sizeof(szTmp) - 1, "%s_%02d_motion%s.bvh", m_szFilename, m_nTakes,_bEnableStereoMode ? "_left" : "");
 
 	if ((pMotionFile = fopen(szTmp, "wb")) != NULL)
+		_MotionFile_BeginContent(pMotionFile,_bEnableStereoMode ? "Left" : "",_lMotionTPos);
+
+	if (_bEnableStereoMode)
 	{
-		fputs("HIERARCHY\n",pMotionFile);
 
-		if (_bEnableStereoMode)
-		{
-			fputs("ROOT MdtCamLeft\n{\n\tOFFSET 0.00 0.00 0.00\n\tCHANNELS 6 Xposition Yposition Zposition Zrotation Xrotation Yrotation\n\t{\n\t\tOFFSET 0.00 0.00 -1.00\n\t}\n}\n",pMotionFile);
-			fputs("ROOT MdtCamRight\n{\n\tOFFSET 0.00 0.00 0.00\n\tCHANNELS 6 Xposition Yposition Zposition Zrotation Xrotation Yrotation\n\t{\n\t\tOFFSET 0.00 0.00 -1.00\n\t}\n}\n",pMotionFile);
-		} else {
-			fputs("ROOT MdtCam\n{\n\tOFFSET 0.00 0.00 0.00\n\tCHANNELS 6 Xposition Yposition Zposition Zrotation Xrotation Yrotation\n\tEnd Site\n\t{\n\t\tOFFSET 0.00 0.00 -1.00\n\t}\n}\n",pMotionFile);
-		}
+		_snprintf(szTmp, sizeof(szTmp) - 1, "%s_%02d_motion_right.bvh", m_szFilename, m_nTakes);
 
-		fputs("MOTION\n",pMotionFile);
-		_lMotionTPos = ftell(pMotionFile);
-		fputs("Frames: 0123456789A\n",pMotionFile);
-
-		float flTime = max(1.0f / max(movie_fps->value, 1.0f), MIN_FRAME_DURATION);
-		_snprintf(szTmp, sizeof(szTmp) - 1,"Frame Time: %f\n",flTime);
-		fputs(szTmp,pMotionFile);
-
+		if ((pMotionFile2 = fopen(szTmp, "wb")) != NULL)
+			_MotionFile_BeginContent(pMotionFile2,"Right",_lMotionTPos2);
 	}
+
 }
 void Filming::MotionFile_Frame()
 {
-	if (!pMotionFile) return;
-
 	char pszT[249];
+	_snprintf(pszT,sizeof(pszT)-1,"%f %f %f %f %f %f\n",_cammotion.Xposition,_cammotion.Yposition,_cammotion.Zposition,_cammotion.Zrotation,_cammotion.Xrotation,_cammotion.Yrotation);
 
-	_snprintf(pszT,sizeof(pszT)-1,"%f %f %f %f %f %f",_cammotion.Xposition,_cammotion.Yposition,_cammotion.Zposition,_cammotion.Zrotation,_cammotion.Xrotation,_cammotion.Yrotation);
-	fputs(pszT,pMotionFile);
-	if (!_bEnableStereoMode || _stereo_state == STS_RIGHT) fputs("\n",pMotionFile);
-	else fputs(" ",pMotionFile);
+	if (pMotionFile&&(!_bEnableStereoMode || _stereo_state == STS_LEFT)) fputs(pszT,pMotionFile);
+	else if(pMotionFile2 && _bEnableStereoMode && _stereo_state == STS_RIGHT)  fputs(pszT,pMotionFile2);
+
 }
 void Filming::MotionFile_End()
 {
+	char pTmp[100];
+
 	if (pMotionFile){
-		char pTmp[100];
 		fseek(pMotionFile,_lMotionTPos,SEEK_SET);
 		_snprintf(pTmp,sizeof(pTmp)-1,"Frames: %11i",m_nFrames);
 		fputs(pTmp,pMotionFile);
 		fclose(pMotionFile);
+		pMotionFile=NULL;
+	}
+
+	if (pMotionFile2){
+		fseek(pMotionFile2,_lMotionTPos2,SEEK_SET);
+		_snprintf(pTmp,sizeof(pTmp)-1,"Frames: %11i",m_nFrames);
+		fputs(pTmp,pMotionFile2);
+		fclose(pMotionFile2);
+		pMotionFile2=NULL;
 	}
 }
 

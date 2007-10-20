@@ -92,12 +92,15 @@ private:
 	} _cammotion;
 
 	bool _bCamMotion;
-	FILE *pMotionFile;
-	long _lMotionTPos;
+	FILE *pMotionFile, *pMotionFile2;
+	long _lMotionTPos,_lMotionTPos2;
 
+	void _MotionFile_BeginContent(FILE *pFile,char *pAdditonalTag,long &ulTPos);
 	void MotionFile_Begin();
 	void MotionFile_Frame();
 	void MotionFile_End();
+
+	bool _bSimulate;
 
 public:
 	Filming();

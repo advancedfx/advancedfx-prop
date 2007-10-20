@@ -1,3 +1,23 @@
+1.0.60.251
+
+- Added: mirv_movie_simulate 0|1
+         If set to 1 recording will not create any files (simulation mode), if
+         it runs too fast you can supply an additional delay in milli seconds
+         with mirv_movie_simualte_delay (1000 ms = 1 sec), be carefull with
+         the delay ;)
+         
+- Thanks: cRZYFST (style-productions.net)
+
+
+1.0.60.249
+
+- Changed: exporting motion data in stereo mode will create two files now since
+           several programs had problems with handling BVH files with two roots
+           (not to mention an typo that was present in stereo mode heh).
+
+- Thanks: msthavoc for testing.
+
+
 1.0.60.248
 
 - Changed: internal changes to the address config system.
