@@ -43,7 +43,7 @@ REGISTER_DEBUGCVAR(test_snd_export,"0",0);
 #define ADDRESS_channels (0x027a8f04-0x04)
 #define ADDRESS_paintedtime 0x027a7a40
 #define ADDRESS_p_shm 0x024ab538
-#define ADDRESS_paintbuffer 0x02791734
+#define ADDRESS_paintbuffer 0x0279b8e0
 
 //QW/bothdefs.h:
 #define	MAX_QPATH		64			// max length of a quake game pathname
