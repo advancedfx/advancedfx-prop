@@ -3,7 +3,7 @@
 - Added: mirv_movie_simulate 0|1
          If set to 1 recording will not create any files (simulation mode), if
          it runs too fast you can supply an additional delay in milli seconds
-         with mirv_movie_simualte_delay (1000 ms = 1 sec), be carefull with
+         with mirv_movie_simulate_delay (1000 ms = 1 sec), be carefull with
          the delay ;)
          
 - Thanks: cRZYFST (style-productions.net)

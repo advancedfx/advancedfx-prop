@@ -13,6 +13,7 @@ Description : see mdt_gltools.h
 #include <gl\glaux.h>
 
 #include "mdt_media.h" // We Mant RAWGLPICS and other media interfaces
+#include "film_sound.h"
 
 // added 20070922:
 
@@ -40,6 +41,9 @@ private:
 	enum FILMING_STATE { FS_INACTIVE, FS_STARTING, FS_ACTIVE };
 
 private:
+	CFilmSound _FilmSound; // our sound filming class
+	bool _bExportingSound;
+
 	char m_szFilename[256];
 
 	unsigned int m_nTakes;

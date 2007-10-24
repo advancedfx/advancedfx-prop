@@ -145,6 +145,9 @@
 				RelativePath=".\detours.cpp">
 			</File>
 			<File
+				RelativePath=".\film_sound.cpp">
+			</File>
+			<File
 				RelativePath=".\filming.cpp">
 			</File>
 			<File
@@ -160,7 +163,7 @@
 				RelativePath=".\mdt_media.cpp">
 			</File>
 			<File
-				RelativePath=".\temporary_dominik.cpp">
+				RelativePath=".\temporary_dominik_0002.cpp">
 			</File>
 			<File
 				RelativePath=".\ui.cpp">
@@ -190,6 +193,9 @@
 			</File>
 			<File
 				RelativePath=".\detours.h">
+			</File>
+			<File
+				RelativePath=".\film_sound.h">
 			</File>
 			<File
 				RelativePath=".\filming.h">

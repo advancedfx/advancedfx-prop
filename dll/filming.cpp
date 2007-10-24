@@ -40,11 +40,12 @@ REGISTER_CVAR(movie_customdump, "1", 0)
 REGISTER_CVAR(movie_clearscreen, "0", 0);
 REGISTER_CVAR(movie_depthdump, "0", 0);
 REGISTER_CVAR(movie_export_cammotion, "0", 0);
+REGISTER_CVAR(movie_export_sound, "0", 0); // should default to 1, but I don't want to mess up other updates
 REGISTER_CVAR(movie_filename, "untitled", 0);
 REGISTER_CVAR(movie_fps, "30", 0);
 REGISTER_CVAR(movie_separate_hud, "0", 0);
 REGISTER_CVAR(movie_simulate, "0", 0);
-REGISTER_CVAR(movie_simulate_delay, "0.0", 0);
+REGISTER_CVAR(movie_simulate_delay, "0", 0);
 REGISTER_CVAR(movie_stereomode,"0",0);
 REGISTER_CVAR(movie_stereo_centerdist,"0.0",0);
 REGISTER_CVAR(movie_stereo_yawdegrees,"2.0",0);
@@ -663,6 +664,9 @@ void Filming::Start()
 
 	// well for some reason gavin forced gl_clear 1, but we don't relay on it anyways (which is good, cause the in ineye demo mode the engine will reforce it to 0 anyways):
 	pEngfuncs->Cvar_SetValue("gl_clear", 1); // this needs should be reforced somwhere since in ineydemo mode the engine might force it to 0
+
+	// indicate sound export if requested:
+	_bExportingSound = (movie_export_sound->value!=0.0f);
 }
 
 void Filming::Stop()
@@ -673,6 +677,13 @@ void Filming::Stop()
 	m_iFilmingState = FS_INACTIVE;
 	m_nTakes++;
 	_HudRqState=HUDRQ_NORMAL;
+
+	// stop sound system if exporting sound:
+	if (_bExportingSound)
+	{
+		_FilmSound.Stop();
+		_bExportingSound = false;
+	}
 
 	// Need to reset this otherwise everything will run crazy fast
 	pEngfuncs->Cvar_SetValue("host_framerate", 0);
@@ -1046,6 +1057,43 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 
 	} while (_stereo_state!=STS_LEFT);
 
+	
+	//
+	// Sound system handling:
+	//
+
+	if (_bExportingSound)
+	{
+		// is requested or active
+		
+		if (m_nFrames==0)
+		{
+			// first frame, start sound system!
+
+			// try to init sound filming system:
+			char szFilename[196];
+			_snprintf(szFilename, sizeof(szFilename) - 1, "%s_%02d_sound.wav", m_szFilename, m_nTakes);
+
+			_bExportingSound = _FilmSound.Start(szFilename,1.0f / max(movie_fps->value, 1.0f));
+			// the soundsystem will get deactivated here, if it fails
+
+		} else {
+			// advancing frame, update sound system
+
+			// calculate desired target time while keeping the rerrors low:
+			unsigned long ulUsedFps = (unsigned long)max(movie_fps->value,1.0f);
+			// this relays on movie_fps staying constant during recording btw!
+
+			// calculate absoulute time we are already recording while keeping rounding errors low:
+			unsigned long ulSecsPassed = (m_nFrames+1) / ulUsedFps;
+			unsigned long ulSubFrames = (m_nFrames+1) % ulUsedFps; // number of residuing frames that are less than those for a second
+			float flAsumedTime = (float)ulSecsPassed + flTime*ulSubFrames;
+
+			_FilmSound.AdvanceFrame(flAsumedTime);
+		}
+	}
+
+	
 	float flNextFrameDuration = flTime;
 	m_nFrames++;
 	

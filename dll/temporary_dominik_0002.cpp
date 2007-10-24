@@ -297,11 +297,11 @@ void touring_S_TransferPaintBuffer(int endtime)
 
 	 // ´for infos why we do what here see QW/snd_mix.c/S_TransferStereo16 and others
 
-	int		lpos;
+	//int		lpos;
 	int		lpaintedtime;
 
 	int *snd_p;
-	int snd_linear_count;
+	//int snd_linear_count;
 
 	snd_p = (int *) paintbuffer;
 	lpaintedtime = paintedtime;
@@ -314,7 +314,7 @@ void touring_S_TransferPaintBuffer(int endtime)
 	{
 		if (!g_bRec)
 		{
-			pWaveFile=fBeginWave("mdt_Test.wav",shm->samples);
+			pWaveFile=fBeginWave("mdt_Test.wav",shm->speed);
 			g_bRec=true;
 		}
 
@@ -337,7 +337,8 @@ void touring_S_TransferPaintBuffer(int endtime)
 			else wrchan = irchan;
 
 			fWriteWave(pWaveFile,wlchan,wrchan);
-			lpaintedtime+=2;
+			//WAS WRONG I GUESS: lpaintedtime+=2;
+			lpaintedtime++;
 
 			//pEngfuncs->Con_Printf("%i %i ",snd_p[0],snd_p[1]);
 			snd_p+=2;
