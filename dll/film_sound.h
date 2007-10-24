@@ -88,7 +88,7 @@ private:
 	static S_PaintChannels_t _detoured_S_PaintChannels;
 	static S_TransferPaintBuffer_t _detoured_S_TransferPaintBuffer;
 
-	//static _loc_paintedtime;
+	//static int _initial_paintedtime;
 	//static _loc_soundtime;
 
 	FILE *_pWaveFile;
@@ -96,6 +96,8 @@ private:
 	
 	float _fTargetTime;
 	float _fCurrentTime;
+
+	float _fOld_HL_snd_noextraupdate;
 
 	// look into S_Update_ etc. in Quake 1 Source to understand those:
 	// (this is also crucial in order to understand their flow order that is asumed by the class)

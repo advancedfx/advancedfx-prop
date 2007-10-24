@@ -666,7 +666,7 @@ void Filming::Start()
 	pEngfuncs->Cvar_SetValue("gl_clear", 1); // this needs should be reforced somwhere since in ineydemo mode the engine might force it to 0
 
 	// indicate sound export if requested:
-	_bExportingSound = (movie_export_sound->value!=0.0f);
+	_bExportingSound = !_bSimulate && (movie_export_sound->value!=0.0f);
 }
 
 void Filming::Stop()
@@ -1074,8 +1074,11 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 			char szFilename[196];
 			_snprintf(szFilename, sizeof(szFilename) - 1, "%s_%02d_sound.wav", m_szFilename, m_nTakes);
 
-			_bExportingSound = _FilmSound.Start(szFilename,1.0f / max(movie_fps->value, 1.0f));
+			_bExportingSound = _FilmSound.Start(szFilename,flTime);
 			// the soundsystem will get deactivated here, if it fails
+			pEngfuncs->Con_Printf("sound t: %f\n",flTime);
+
+			if (!_bExportingSound) pEngfuncs->Con_Printf("ERROR: Starting MDT Sound Recording System failed!\n");
 
 		} else {
 			// advancing frame, update sound system
@@ -1088,6 +1091,8 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 			unsigned long ulSecsPassed = (m_nFrames+1) / ulUsedFps;
 			unsigned long ulSubFrames = (m_nFrames+1) % ulUsedFps; // number of residuing frames that are less than those for a second
 			float flAsumedTime = (float)ulSecsPassed + flTime*ulSubFrames;
+
+			pEngfuncs->Con_Printf("sound t: %f\n",flAsumedTime);
 
 			_FilmSound.AdvanceFrame(flAsumedTime);
 		}

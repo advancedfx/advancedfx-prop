@@ -21,6 +21,9 @@ Description : see film_sound.h
 #include "detours.h" // detouring funcs
 
 
+// for debug:
+extern cl_enginefuncs_s *pEngfuncs;
+
 //
 // defs for Quake 1 (reconstructed form Q1 Source + H-L) structs we use:
 //
@@ -45,6 +48,7 @@ typedef struct
 	unsigned char	*buffer;
 } dma_t;
 
+
 //
 //	the static variables for the class:
 //
@@ -53,7 +57,10 @@ CFilmSound::GetSoundtime_t CFilmSound::_detoured_GetSoundtime;
 CFilmSound::S_PaintChannels_t CFilmSound::_detoured_S_PaintChannels;
 CFilmSound::S_TransferPaintBuffer_t CFilmSound::_detoured_S_TransferPaintBuffer;
 
+//int CFilmSound::_initial_paintedtime;
 CFilmSound* CFilmSound::_pFilmSound;
+
+
 //
 // class functions:
 //
@@ -74,7 +81,8 @@ void CFilmSound::_touring_GetSoundtime(void)
 		if (eCurrState == FSS_STARTING)
 		{
 			// starting,get last valid time:
-
+			pEngfuncs->Con_Printf("Called _touring_GetSoundtime in FSS_STARTING.\n");
+			
 			_detoured_GetSoundtime(); // let it calculate a last engine controlled time
 
 			//
@@ -82,15 +90,16 @@ void CFilmSound::_touring_GetSoundtime(void)
 			// since we probably drop already calculated sounds now
 			//
 
-			//// now we will save that time, so we can controll it our selfs:
-			//_loc_paintedtime = *(int *)ADDRESS_paintedtime;
+			// now we will save that time, ife we need it for requests:
+			//_initial_paintedtime = *(int *)ADDRESS_paintedtime;
 
 			// go to normal filming mode:
-			_pFilmSound->_set_eFilmSoundState(eCurrState = FSS_FILMING);
+			_pFilmSound->_set_eFilmSoundState(FSS_FILMING);
 		}
 
 		// override soundtime:
 		*(int *)ADDRESS_soundtime = *(int *)ADDRESS_paintedtime; // we always exactly played what we got painted by H-L (at least for now)
+		pEngfuncs->Con_Printf("sndtime: %i, paintt: %i\n",*(int *)ADDRESS_soundtime,*(int *)ADDRESS_paintedtime);
 	}
 }
 
@@ -120,12 +129,15 @@ void CFilmSound::_touring_S_PaintChannels(int endtime)
 			endtime = (int)floor(fendtime); // we preffer having faster updates and therefore less samples during filming
 	
 
+		pEngfuncs->Con_Printf("Painting time: %i ... %i | sndt: %i\n",currPaintedTime,endtime,*(int *)ADDRESS_soundtime);
+
 		// call original painting:	
 		_detoured_S_PaintChannels(endtime);
 		// detoured_S_PaintChannels will set paintedtime = end
 
 
 		static int newPaintedTime = *(int *)ADDRESS_paintedtime;
+		pEngfuncs->Con_Printf(" == %i\n",newPaintedTime);
 
 		// update Our clas'ss _CurrentTime:
 		static float fnewcurr = _pFilmSound->_get_fCurrentTime() + ((float)(newPaintedTime-currPaintedTime) / (float)shm->speed);
@@ -151,9 +163,12 @@ void CFilmSound::_touring_S_TransferPaintBuffer(int endtime)
 	if (eCurrState == FSS_IDLE)
 	{
 		// don't do anything abnormal
+		//pEngfuncs->Con_Printf("Called touring_S_TransferPaintBuffer in IDLE mode.\n");
+
 		_detoured_S_TransferPaintBuffer(endtime);
 	} else {
 		// filming
+		pEngfuncs->Con_Printf("Called touring_S_TransferPaintBuffer in filming mode.\n");
 
 		// retrive globals:
 		static int paintedtime = *(int *)ADDRESS_paintedtime; //this should be == _loc_paintedtime
@@ -209,6 +224,10 @@ void CFilmSound::_OnStoppingFinished()
 {
 	_fEndWave(_pWaveFile); // finish the wave file
 	_eFilmSoundState = FSS_IDLE; // we will be idle again
+
+	pEngfuncs->Cvar_SetValue("snd_noextraupdate",_fOld_HL_snd_noextraupdate); // restore old value
+	
+	pEngfuncs->Con_Printf("Sound system finished stopping.\n");
 }
 
 float CFilmSound::_get_fTargetTime()
@@ -332,8 +351,12 @@ bool CFilmSound::Start(char *pszFileName,float fTargetTime)
 		// retrive sound info structure (since we need the samples per second value == shm->speed):
 		volatile dma_t *shm=*(dma_t **)ADDRESS_p_shm;
 
-		if(!_fBeginWave(pszFileName,shm->speed))
+		if(!(_pWaveFile=_fBeginWave(pszFileName,shm->speed)))
 			return false; // on fail return false
+	
+		
+		_fOld_HL_snd_noextraupdate = pEngfuncs->pfnGetCvarFloat("snd_noextraupdate");
+		pEngfuncs->Cvar_SetValue("snd_noextraupdate",1.0f); // turn off extra updates !!!
 
 		_eFilmSoundState = FSS_STARTING; // switch to filming mode
 
