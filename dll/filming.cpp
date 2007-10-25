@@ -41,6 +41,7 @@ REGISTER_CVAR(movie_clearscreen, "0", 0);
 REGISTER_CVAR(movie_depthdump, "0", 0);
 REGISTER_CVAR(movie_export_cammotion, "0", 0);
 REGISTER_CVAR(movie_export_sound, "0", 0); // should default to 1, but I don't want to mess up other updates
+REGISTER_CVAR(movie_sound_volume, "0.5", 0); // volume 0.8 is CS 1.6 default
 REGISTER_CVAR(movie_filename, "untitled", 0);
 REGISTER_CVAR(movie_fps, "30", 0);
 REGISTER_CVAR(movie_separate_hud, "0", 0);
@@ -1074,9 +1075,9 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 			char szFilename[196];
 			_snprintf(szFilename, sizeof(szFilename) - 1, "%s_%02d_sound.wav", m_szFilename, m_nTakes);
 
-			_bExportingSound = _FilmSound.Start(szFilename,flTime);
+			_bExportingSound = _FilmSound.Start(szFilename,flTime,movie_sound_volume->value);
 			// the soundsystem will get deactivated here, if it fails
-			pEngfuncs->Con_Printf("sound t: %f\n",flTime);
+			//pEngfuncs->Con_Printf("sound t: %f\n",flTime);
 
 			if (!_bExportingSound) pEngfuncs->Con_Printf("ERROR: Starting MDT Sound Recording System failed!\n");
 
@@ -1092,7 +1093,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 			unsigned long ulSubFrames = (m_nFrames+1) % ulUsedFps; // number of residuing frames that are less than those for a second
 			float flAsumedTime = (float)ulSecsPassed + flTime*ulSubFrames;
 
-			pEngfuncs->Con_Printf("sound t: %f\n",flAsumedTime);
+			//pEngfuncs->Con_Printf("sound t: %f\n",flAsumedTime);
 
 			_FilmSound.AdvanceFrame(flAsumedTime);
 		}

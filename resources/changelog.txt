@@ -1,3 +1,24 @@
+1.1.0.0
+
+Well there have been so many additions to MDT in the past, so that is why we
+are counting the minor version number 1up :)
+
+But even better there is some candy in it:
+
+- Added: mirv_movie_export_sound 0|1
+         If set to 1 the experimental sound recording system is enabled which
+         will record the sound to a .wav in 22.050 kHz 16 Bit stereo quality.
+         It is recommended to turn s_eax and s_a3d of (set both to 0.0),
+         because it wasn't designed for those, but you can try if you want :)
+         With mirv_movie_export_sound (default 0.5) you can control the
+         clamping of the sound before it is outputed (this is neccessary to
+         avoid hitting the peeks). The default value should be ok.
+
+- Greetz: everyone that want's to be greeted + GabeN + MartinO :P
+
+Cheers!
+
+
 1.0.60.251
 
 - Added: mirv_movie_simulate 0|1

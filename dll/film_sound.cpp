@@ -49,6 +49,20 @@ typedef struct
 } dma_t;
 
 
+typedef struct
+{
+	qboolean		gamealive;
+	qboolean		soundalive;
+	qboolean		splitbuffer;
+	int				channels;
+	int				samples;				// mono samples in buffer
+	int				submission_chunk;		// don't mix less than this #
+	int				samplepos;				// in mono samples
+	int				samplebits;
+	int				Quake_speed;
+	int				Valve_speed;			// added by Valve(?)
+} dma_HL_t;
+
 //
 //	the static variables for the class:
 //
@@ -81,7 +95,7 @@ void CFilmSound::_touring_GetSoundtime(void)
 		if (eCurrState == FSS_STARTING)
 		{
 			// starting,get last valid time:
-			pEngfuncs->Con_Printf("Called _touring_GetSoundtime in FSS_STARTING.\n");
+			//pEngfuncs->Con_Printf("Called _touring_GetSoundtime in FSS_STARTING.\n");
 			
 			_detoured_GetSoundtime(); // let it calculate a last engine controlled time
 
@@ -97,9 +111,11 @@ void CFilmSound::_touring_GetSoundtime(void)
 			_pFilmSound->_set_eFilmSoundState(FSS_FILMING);
 		}
 
-		// override soundtime:
-		*(int *)ADDRESS_soundtime = *(int *)ADDRESS_paintedtime; // we always exactly played what we got painted by H-L (at least for now)
-		pEngfuncs->Con_Printf("sndtime: %i, paintt: %i\n",*(int *)ADDRESS_soundtime,*(int *)ADDRESS_paintedtime);
+		// override soundtime (translated into valve space):
+		*(int *)ADDRESS_soundtime = (*(int *)ADDRESS_paintedtime)<<1; // we always exactly played what we got painted by H-L (at least for now)
+		// we are multiplying with 2 since the valve DirectSound buffers tick at 22.050 kHz while the internal mixing happens at 11.025 khz
+
+		//pEngfuncs->Con_Printf("sndtime: %i, paintt: %i\n",*(int *)ADDRESS_soundtime,*(int *)ADDRESS_paintedtime);
 	}
 }
 
@@ -114,14 +130,14 @@ void CFilmSound::_touring_S_PaintChannels(int endtime)
 		// we are filming, adjust endtime (the mixahead for the curren frame) as desired:
 
 		// retrive sound info structure:
-		static volatile dma_t *shm;
-		shm =*(dma_t **)ADDRESS_p_shm;
+		static volatile dma_HL_t *shm;
+		shm =*(dma_HL_t **)ADDRESS_p_shm;
 
 		// calculate mix ahead of current position:
 		static int currPaintedTime; // do not assert here, statics are only asserted once (at which time?)
-		currPaintedTime = *(int *)ADDRESS_paintedtime;
+		currPaintedTime = (*(int *)ADDRESS_paintedtime)<<1; // translate into valve space
 		static float fendtime;
-		fendtime = (float)(currPaintedTime) + (_pFilmSound->_get_fTargetTime()-_pFilmSound->_get_fCurrentTime()) * (float)shm->speed;
+		fendtime = (float)(currPaintedTime) + (_pFilmSound->_get_fTargetTime()-_pFilmSound->_get_fCurrentTime()) * (float)shm->Valve_speed;
 
 		// and override
 		if (eCurrState==FSS_STOPPING)
@@ -130,20 +146,20 @@ void CFilmSound::_touring_S_PaintChannels(int endtime)
 			endtime = (int)floor(fendtime); // we preffer having faster updates and therefore less samples during filming
 	
 
-		pEngfuncs->Con_Printf("Painting time: %i ... %i | sndt: %i\n",currPaintedTime,endtime,*(int *)ADDRESS_soundtime);
+		//pEngfuncs->Con_Printf("Painting time: %i ... %i | sndt: %i\n",currPaintedTime,endtime,*(int *)ADDRESS_soundtime);
 
 		// call original painting:	
-		_detoured_S_PaintChannels(endtime);
+		_detoured_S_PaintChannels(endtime >> 1);
 		// detoured_S_PaintChannels will set paintedtime = end
 
 
 		static int newPaintedTime; // do not assert here, statics are only asserted once (at which time?)
-		newPaintedTime = *(int *)ADDRESS_paintedtime;
-		pEngfuncs->Con_Printf(" == %i\n",newPaintedTime);
+		newPaintedTime = (*(int *)ADDRESS_paintedtime)<<1;
+		//pEngfuncs->Con_Printf(" == %i\n",newPaintedTime);
 
 		// update Our clas'ss _CurrentTime:
 		static float fnewcurr;
-		fnewcurr = _pFilmSound->_get_fCurrentTime() + ((float)(newPaintedTime-currPaintedTime) / (float)shm->speed);
+		fnewcurr = _pFilmSound->_get_fCurrentTime() + ((float)(newPaintedTime-currPaintedTime) / (float)shm->Valve_speed);
 		_pFilmSound->_set_fCurrentTime(fnewcurr);
 
 		// handle FSS_STOPPING:
@@ -171,15 +187,18 @@ void CFilmSound::_touring_S_TransferPaintBuffer(int endtime)
 		_detoured_S_TransferPaintBuffer(endtime);
 	} else {
 		// filming
-		pEngfuncs->Con_Printf("Called touring_S_TransferPaintBuffer in filming mode.\n");
+		//pEngfuncs->Con_Printf("Called touring_S_TransferPaintBuffer in filming mode.\n");
 
 		// retrive globals:
 		static int paintedtime;
 		paintedtime= *(int *)ADDRESS_paintedtime; //this should be == _lsoc_paintedtime
-		static volatile dma_t *shm;
-		shm=*(dma_t **)ADDRESS_p_shm;
+		static volatile dma_HL_t *shm;
+		shm=*(dma_HL_t **)ADDRESS_p_shm;
 		static portable_samplepair_t *paintbuffer;
 		paintbuffer = (portable_samplepair_t *)ADDRESS_paintbuffer;
+
+		static int iMyVolume;
+		iMyVolume = (int)(_pFilmSound->_get_fUseVolume()*256.0f);
 
 		int		lpaintedtime;
 
@@ -190,29 +209,29 @@ void CFilmSound::_touring_S_TransferPaintBuffer(int endtime)
 
 		while (lpaintedtime < endtime)
 		{
-			int ilchan;
-			int irchan;
-			WORD wlchan,wrchan;
+			for (int i=0;i<2;i++)
+			{
+				int ilchan;
+				int irchan;
+				WORD wlchan,wrchan;
 
-			// limiter from Snd_WriteLinearBlastStereo16:
-			
-			ilchan = snd_p[0];
-			if (ilchan > 0x7fff) wlchan = 0x7fff;
-			else if (ilchan < (short)0x8000) wlchan = (short)0x8000;
-			else wlchan = ilchan;
+				// limiter from Snd_WriteLinearBlastStereo16:
+				
+				ilchan = (snd_p[0]*iMyVolume)>>8;
+				if (ilchan > 0x7fff) wlchan = 0x7fff;
+				else if (ilchan < (short)0x8000) wlchan = (short)0x8000;
+				else wlchan = ilchan;
 
-			irchan = snd_p[1];
-			if (irchan > 0x7fff) wrchan = 0x7fff;
-			else if (irchan < (short)0x8000) wrchan = (short)0x8000;
-			else wrchan = irchan;
+				irchan = (snd_p[1]*iMyVolume)>>8;
+				if (irchan > 0x7fff) wrchan = 0x7fff;
+				else if (irchan < (short)0x8000) wrchan = (short)0x8000;
+				else wrchan = irchan;
 
-
-			//pEngfuncs->Con_Printf("%i %i ",snd_p[0],snd_p[1]);
-	
-			_pFilmSound->_fWriteWave(_pFilmSound->_get_pWaveFile(),wlchan,wrchan); // write pair to Wave
+				_pFilmSound->_fWriteWave(_pFilmSound->_get_pWaveFile(),wlchan,wrchan); // write pair to Wave
+				snd_p+=2;
+			}
 
 			lpaintedtime++;
-			snd_p+=2;
 		}
 
 	}
@@ -244,6 +263,11 @@ float CFilmSound::_get_fTargetTime()
 float CFilmSound::_get_fCurrentTime()
 {
 	return _fCurrentTime;
+}
+
+float CFilmSound::_get_fUseVolume()
+{
+	return _fUseVolume;
 }
 
 void CFilmSound::_set_fCurrentTime(float fNewCurrTime)
@@ -342,7 +366,7 @@ CFilmSound::CFilmSound()
 	_eFilmSoundState = FSS_IDLE;
 }
 
-bool CFilmSound::Start(char *pszFileName,float fTargetTime)
+bool CFilmSound::Start(char *pszFileName,float fTargetTime,float fUseVolume)
 {
 	_InstallHooks(); // make sure hooks are installed
 
@@ -354,10 +378,13 @@ bool CFilmSound::Start(char *pszFileName,float fTargetTime)
 		_fTargetTime = fTargetTime;
 		_fCurrentTime = 0;
 
-		// retrive sound info structure (since we need the samples per second value == shm->speed):
-		volatile dma_t *shm=*(dma_t **)ADDRESS_p_shm;
+		// set volume:
+		_fUseVolume=fUseVolume;
 
-		if(!(_pWaveFile=_fBeginWave(pszFileName,shm->speed)))
+		// retrive sound info structure (since we need the samples per second value == shm->Valve_speed):
+		volatile dma_HL_t *shm=*(dma_HL_t **)ADDRESS_p_shm;
+
+		if(!(_pWaveFile=_fBeginWave(pszFileName,shm->Valve_speed))) // we use Quake speed since we capture the internal mixer
 			return false; // on fail return false
 	
 		

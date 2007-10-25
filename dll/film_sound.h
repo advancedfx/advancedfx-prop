@@ -99,6 +99,8 @@ private:
 
 	float _fOld_HL_snd_noextraupdate;
 
+	float _fUseVolume;
+
 	// look into S_Update_ etc. in Quake 1 Source to understand those:
 	// (this is also crucial in order to understand their flow order that is asumed by the class)
 	static void _touring_GetSoundtime(void);
@@ -111,6 +113,7 @@ private:
 	// used by static hooks:
 	float _get_fTargetTime();
 	float _get_fCurrentTime();
+	float _get_fUseVolume();
 	void _set_fCurrentTime(float fNewCurrTime);
 	FILM_SOUND_STATE _get_eFilmSoundState();
 	void _set_eFilmSoundState(FILM_SOUND_STATE eNewFilmSoundState);
@@ -124,7 +127,7 @@ public:
 
 	CFilmSound();
 
-	bool Start(char *pszFileName,float fTargetTime);
+	bool Start(char *pszFileName,float fTargetTime,float fUseVolume);
 	// Only starts when eFilmSoundState()==FSS_IDLE
 	// if starting failed it will return false
 	// the targettime should be the delta frametime on the first call (so it is not null) and advance with every frame
