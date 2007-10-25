@@ -118,7 +118,8 @@ void CFilmSound::_touring_S_PaintChannels(int endtime)
 		shm =*(dma_t **)ADDRESS_p_shm;
 
 		// calculate mix ahead of current position:
-		static int currPaintedTime = *(int *)ADDRESS_paintedtime;
+		static int currPaintedTime; // do not assert here, statics are only asserted once (at which time?)
+		currPaintedTime = *(int *)ADDRESS_paintedtime;
 		static float fendtime;
 		fendtime = (float)(currPaintedTime) + (_pFilmSound->_get_fTargetTime()-_pFilmSound->_get_fCurrentTime()) * (float)shm->speed;
 
@@ -136,11 +137,13 @@ void CFilmSound::_touring_S_PaintChannels(int endtime)
 		// detoured_S_PaintChannels will set paintedtime = end
 
 
-		static int newPaintedTime = *(int *)ADDRESS_paintedtime;
+		static int newPaintedTime; // do not assert here, statics are only asserted once (at which time?)
+		newPaintedTime = *(int *)ADDRESS_paintedtime;
 		pEngfuncs->Con_Printf(" == %i\n",newPaintedTime);
 
 		// update Our clas'ss _CurrentTime:
-		static float fnewcurr = _pFilmSound->_get_fCurrentTime() + ((float)(newPaintedTime-currPaintedTime) / (float)shm->speed);
+		static float fnewcurr;
+		fnewcurr = _pFilmSound->_get_fCurrentTime() + ((float)(newPaintedTime-currPaintedTime) / (float)shm->speed);
 		_pFilmSound->_set_fCurrentTime(fnewcurr);
 
 		// handle FSS_STOPPING:
@@ -171,9 +174,12 @@ void CFilmSound::_touring_S_TransferPaintBuffer(int endtime)
 		pEngfuncs->Con_Printf("Called touring_S_TransferPaintBuffer in filming mode.\n");
 
 		// retrive globals:
-		static int paintedtime = *(int *)ADDRESS_paintedtime; //this should be == _loc_paintedtime
-		static volatile dma_t *shm=*(dma_t **)ADDRESS_p_shm;
-		static portable_samplepair_t *paintbuffer = (portable_samplepair_t *)ADDRESS_paintbuffer;
+		static int paintedtime;
+		paintedtime= *(int *)ADDRESS_paintedtime; //this should be == _lsoc_paintedtime
+		static volatile dma_t *shm;
+		shm=*(dma_t **)ADDRESS_p_shm;
+		static portable_samplepair_t *paintbuffer;
+		paintbuffer = (portable_samplepair_t *)ADDRESS_paintbuffer;
 
 		int		lpaintedtime;
 
