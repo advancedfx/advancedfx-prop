@@ -2,6 +2,7 @@
 #include "wrect.h"
 #include "cl_dll.h"
 #include "cdll_int.h"
+#include "net_api.h" // net_api_s
 #include "r_efx.h"
 #include "com_model.h"
 #include "r_studioint.h"
@@ -133,9 +134,16 @@ bool Aiming::getValidTarget(Vector &outTarget)
 	float vis;
 	int msg;
 
+	// we track net status in order to make sure we do not kill ents to fast:
+	static net_status_s nssNetStatus;
+	static double dOldLatency=0;
+
+	pEngfuncs->pNetAPI->Status(&nssNetStatus);
+
 	// Some booleans
 	bool bOneWay = !(aim_oneway->value == 0);
 	bool bViewOnly = !(aim_onlyvisible->value == 0);
+	bool bNetActive = (dOldLatency != nssNetStatus.latency); // not perfect yet
 
 	// The time we linger before we move on!
 	int iLingerTime = (int) aim_lingertime->value;
@@ -184,7 +192,7 @@ bool Aiming::getValidTarget(Vector &outTarget)
 		if (m_EntityStates[i] != ES_DEAD && (m_LastMsgNums[i] != msg || m_ActiveTimes[i] > 0))
 		{
 			if (m_LastMsgNums[i] != msg)
-				m_ActiveTimes[i] = 5;
+				m_ActiveTimes[i] = 5; //WARNING note: actuall this might have to be s.th. like c*(FPS/updaterate)
 
 			// We don't care about whether it is visible, so assume it is
 			if (!bViewOnly)
@@ -226,7 +234,8 @@ bool Aiming::getValidTarget(Vector &outTarget)
 		}
 
 		// We just need to decrement this however
-		if (m_ActiveTimes[i] > 0)
+		// BUT DO NOT KILL WHEN NET IS NOT ACTIVE (i.e. Demo Paused)s
+		if ((m_ActiveTimes[i] > 0) && bNetActive)
 			m_ActiveTimes[i]--;
 
 		// Now we just update their values
@@ -234,7 +243,15 @@ bool Aiming::getValidTarget(Vector &outTarget)
 
 		slot_position++;
 	}
-	
+
+	//pEngfuncs->Con_Printf("Aiming::getValidTarget NetState: %i, %i, %e, %e %e,\n",nssNetStatus.connected,nssNetStatus.packet_loss,nssNetStatus.latency,nssNetStatus.connection_time,nssNetStatus.rate);
+
+	//if (bNetActive) pEngfuncs->Con_Printf("net on\n");
+	//else pEngfuncs->Con_Printf("net OFF\n");
+
+	// save new connection time
+	dOldLatency = nssNetStatus.latency;
+
 	// Return whether we found an entity
 	return !bFirstEntity;
 }
@@ -411,7 +428,7 @@ REGISTER_CMD_FUNC_BEGIN(aim)
 
 REGISTER_CMD_FUNC_END(aim)
 {
-	g_Aiming.Start();
+	g_Aiming.Stop();
 }
 
 REGISTER_CMD_FUNC(aim_start)

@@ -1,3 +1,15 @@
+1.1.0.25
+
+- Fixed: Typo that would prevent the aiming system from ever being turned off.
+
+- Fixed: The aiming system asumed entities to be dead to early due to lack of
+         updates from the H-L network stream when it was paused (i.e. due to
+         dem_pause 1).
+         The aiming system now tries to detect, if the stream is paused.
+         However the detection is not perfect yet plus there might be still
+         problems when using very high fps when recording.
+
+
 1.1.0.0
 
 Well there have been so many additions to MDT in the past, so that is why we
