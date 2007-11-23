@@ -346,17 +346,8 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 			pg_Config_mdtdll = new cConfig_mdtdll(pg_MDTcfgfile);
 			bCfgres = pg_Config_mdtdll->LoadAndApplyAddresses();
 		} else pEngfuncs->Con_Printf("WARNING: Could not locate DLL.\n");
-				
-		// Register the commands
-		std::list<Void_func_t>::iterator i = GetCmdList().begin();
-		while (i != GetCmdList().end())
-			(*i++)();
 
-		// Register the cvars
-		i = GetCvarList().begin();
-		while (i != GetCvarList().end())
-			(*i++)();
-
+		// update the globals like pEngfuncs before we use them to register cmds / cvars etc.:
 		char* pszAddrLoad="Warning: The config's address syntax or semantics were not valid (using default).";
 		if (bCfgres) 
 		{
@@ -370,6 +361,16 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 		}
 
 		delete pg_Config_mdtdll;
+				
+		// Register the commands
+		std::list<Void_func_t>::iterator i = GetCmdList().begin();
+		while (i != GetCmdList().end())
+			(*i++)();
+
+		// Register the cvars
+		i = GetCvarList().begin();
+		while (i != GetCvarList().end())
+			(*i++)();
 
 		pEngfuncs->Con_Printf("Mirv Demo Tool v%s (%s) Loaded\nBy Mirvin_Monkey 02/05/2004\n%s\n\n", pszFileVersion, __DATE__, pszAddrLoad);
 
