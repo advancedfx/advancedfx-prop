@@ -1,3 +1,14 @@
+1.1.0.29
+
+- Fixed: Various bugs that would affect stereo captures and
+         mirv_movie_cameraofs_cs.
+         
+- Fixed: Bug that would cause HLAE to ignore the pEngfuncs entry in
+         the addresses.ini config file.
+
+- Thanks: msthavoc for testing.
+
+
 1.1.0.25
 
 - Fixed: Typo that would prevent the aiming system from ever being turned off.

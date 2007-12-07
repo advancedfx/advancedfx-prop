@@ -303,13 +303,19 @@ void touring_R_RenderView_(void)
 {
 	refdef_t* p_r_refdef=(refdef_t*)ADDRESS_r_refdef; // pointer to r_refdef global struct
 
-	vec3_t oldorigin = p_r_refdef->vieworg; // save old
+	static vec3_t oldorigin;
+	static vec3_t oldangles;
+	
+	// save original values
+	memcpy (oldorigin,p_r_refdef->vieworg,3*sizeof(float));
+	memcpy (oldangles,p_r_refdef->viewangles,3*sizeof(float));
+
 
 	// >> begin calculate transform vectors
 	// we have to calculate our own transformation vectors from the angles and can not use pparams->forward etc., because in spectator mode they might be not present:
 	// (adapted from HL1SDK/multiplayer/pm_shared.c/AngleVectors) and modified for quake order of angles:
 
-	vec3_t angles;
+	float *angles;
 	float forward[3],right[3],up[3];
 
 	float		angle;
@@ -347,19 +353,23 @@ void touring_R_RenderView_(void)
 
 	g_Filming.GetCameraOfs(&fDispRight,&fDispUp,&fDispForward);
 
+	// one note on the stereoyawing:
+	// it may look simple, but it is only simple since the H-L engine carrys the yawing out as last rotation and after that translates
+	// if this wouldn't be the case, then we would have a bit more complicated calculations to make sure the camera is always rotated around the up axis!
+
 	if (g_Filming.bEnableStereoMode()&&(g_Filming.isFilming()))
 	{
 		if (g_Filming.GetStereoState()==Filming::STS_LEFT)
 		{
 			// left
 			fDispRight-=movie_stereo_centerdist->value; // left displacement
-			p_r_refdef->viewangles[YAW]+= movie_stereo_yawdegrees->value; // right turn
+			p_r_refdef->viewangles[YAW]-= movie_stereo_yawdegrees->value; // turn right
 		}
 		else
 		{
 			// right
 			fDispRight+=movie_stereo_centerdist->value; // right displacement
-			p_r_refdef->viewangles[YAW]-= movie_stereo_yawdegrees->value; // left turn
+			p_r_refdef->viewangles[YAW]+= movie_stereo_yawdegrees->value; // turn left
 		}
 	}
 
@@ -386,9 +396,16 @@ void touring_R_RenderView_(void)
 		+p_r_refdef->viewangles[PITCH],
 		+p_r_refdef->viewangles[YAW]
 	);
+
+	//
+	// call original R_RenderView_
+	//
 	detoured_R_RenderView_();
 
-	p_r_refdef->vieworg = oldorigin; // restore old (is this necessary? I don't know if the values are used for interpolations later or not)
+	// restore old (is this necessary? I don't know if the values are used for interpolations later or not)
+	// But one thing is for sure, if we do steropases, then we need to restore them for ourselfs anways!
+	memcpy (p_r_refdef->vieworg,oldorigin,3*sizeof(float));
+	memcpy (p_r_refdef->viewangles,oldangles,3*sizeof(float));
 }
 /*
 void touring_unknown(void)

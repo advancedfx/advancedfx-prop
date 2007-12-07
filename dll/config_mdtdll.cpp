@@ -46,7 +46,7 @@ cConfig_mdtdll::~cConfig_mdtdll()
 
 bool cConfig_mdtdll::bLoadOk()
 {
-	return bLoadOk;
+	return _bLoadOk;
 }
 
 bool cConfig_mdtdll::LoadAndApplyAddresses()
