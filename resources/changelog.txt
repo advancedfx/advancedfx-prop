@@ -1,12 +1,15 @@
 1.1.0.29
 
-- Fixed: Various bugs that would affect stereo captures and
+- Fixed: Various bugs that would affect stereo camera captures and
          mirv_movie_cameraofs_cs.
          
-- Fixed: Bug that would cause HLAE to ignore the pEngfuncs entry in
-         the addresses.ini config file.
+- Fixed: Bug that would cause MDT to ignore the pEngfuncs entry in the
+         addresses.ini config file on initialization.
+         
+- Changed: Default values for stereo cam mode, but you might want to use your
+           own anyways.
 
-- Thanks: msthavoc for testing.
+- Thanks: msthavoc (mst-gaming.de) for testing.
 
 
 1.1.0.25
