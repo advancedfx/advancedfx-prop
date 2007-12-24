@@ -36,6 +36,13 @@ REGISTER_CVAR(crop_yofs, "-1", 0);
 
 REGISTER_CVAR(depth_logarithmic, "32", 0);
 
+REGISTER_CVAR(fx_wh_enable, "0", 0);
+REGISTER_CVAR(fx_wh_alpha, "0.5", 0);
+REGISTER_CVAR(fx_wh_additive, "1", 0);
+REGISTER_CVAR(fx_wh_noquads, "0", 0);
+REGISTER_CVAR(fx_wh_tint_enable, "0", 0);
+REGISTER_CVAR(fx_wh_xtendvis, "1", 0);
+
 REGISTER_CVAR(movie_customdump, "1", 0)
 REGISTER_CVAR(movie_clearscreen, "0", 0);
 REGISTER_CVAR(movie_depthdump, "0", 0);
@@ -44,6 +51,7 @@ REGISTER_CVAR(movie_export_sound, "0", 0); // should default to 1, but I don't w
 REGISTER_CVAR(movie_sound_volume, "0.5", 0); // volume 0.8 is CS 1.6 default
 REGISTER_CVAR(movie_filename, "untitled", 0);
 REGISTER_CVAR(movie_fps, "30", 0);
+
 REGISTER_CVAR(movie_separate_hud, "0", 0);
 REGISTER_CVAR(movie_simulate, "0", 0);
 REGISTER_CVAR(movie_simulate_delay, "0", 0);
@@ -429,6 +437,53 @@ void touring_unknown(void)
 	}
 }*/
 
+
+//
+// R_MarkLeaves WH related stuff:
+//
+
+// Hints:
+
+// 01d51d90 R_RenderView (found by searching for "%3ifps %3i ms %4i wpoly %4i epoly\n")
+// 
+// 01d51c60 R_RenderScene (modified)
+// 
+// 01d51cb3 e8b8f0ffff      call    launcher!CreateInterface+0x94f981 (01d50d70)
+// 01d51cb8 e883efffff      call    launcher!CreateInterface+0x94f851 (01d50c40)
+// 01d51cbd e82ef5ffff      call    launcher!CreateInterface+0x94fe01 (01d511f0) R_SetupGL
+// 01d51cc2 e8d9320000      call    launcher!CreateInterface+0x953bb1 (01d54fa0) <-- R_MarkLeafs
+// 
+// 01d54fa0 R_MarkLeafs (Valve modification):
+// 
+// (see Q1 source for more help):
+// 
+// 01edcdb4 --> r_novis.value
+
+#define ADDRESS_R_MarkLeaves HL_ADDR_R_MarkLeaves
+#define DETOURSIZE_R_MarkLeaves 0x05
+
+typedef void (*R_MarkLeaves_t)(void);
+R_MarkLeaves_t detoured_R_MarkLeaves;
+
+void touring_R_MarkLeaves (void)
+{
+	// (Re-)force r_novis 1 if requested!:	
+	if (fx_wh_enable->value && fx_wh_xtendvis->value)
+			pEngfuncs->Cvar_SetValue("r_novis", 1.0f);
+
+	detoured_R_MarkLeaves();
+}
+
+void InstallHook_R_MarLeaves()
+{
+	if (!detoured_R_MarkLeaves && (ADDRESS_R_MarkLeaves!=NULL))
+		detoured_R_MarkLeaves = (R_MarkLeaves_t) DetourApply((BYTE *)ADDRESS_R_MarkLeaves, (BYTE *)touring_R_MarkLeaves, (int)DETOURSIZE_R_MarkLeaves);
+}
+
+//
+// // // //
+//
+
 REGISTER_CMD_FUNC(cameraofs_cs)
 {
 	if (!detoured_R_RenderView_)
@@ -505,6 +560,10 @@ Filming::Filming()
 		pMotionFile2 = NULL;
 
 		_bSimulate = false;
+
+	_fx_whRGBf[0]=0.0f;
+	_fx_whRGBf[1]=0.5f;	
+	_fx_whRGBf[2]=1.0f;
 }
 
 Filming::~Filming()
@@ -611,6 +670,9 @@ void Filming::Start()
 	//_bNoMatteInterpolation = (matte_nointerp->value == 0.0);
 	_bCamMotion = (movie_export_cammotion->value != 0.0) && _bNewRequestMethod;
 	_bSimulate = (movie_simulate->value != 0.0);
+
+	// make sure the R_MarLeaves is hooked:
+	InstallHook_R_MarLeaves();
 
 	if (_bCamMotion && !_bSimulate) MotionFile_Begin();
 
@@ -1278,6 +1340,58 @@ void Filming::MotionFile_End()
 	}
 }
 
+void Filming::DoWorldFxBegin(GLenum mode)
+{
+	static float psCurColor[4];
+
+	// only if transparency is enabled world and not in worldmatte
+	if ( fx_wh_enable->value==0.0f || mode == GL_TRIANGLE_STRIP || mode == GL_TRIANGLE_FAN || m_iMatteStage == Filming::MS_ENTITY )
+	{
+		_bWorldFxDisableBlend=false;
+		_bWorldFxEnableDepth=false;
+		return;
+	}
+
+	if (fx_wh_tint_enable->value==0.0f)
+	{
+		glGetFloatv(GL_CURRENT_COLOR,psCurColor);
+		glColor4f(psCurColor[0],psCurColor[1],psCurColor[2],fx_wh_alpha->value);
+	}
+	else
+		glColor4f(_fx_whRGBf[0],_fx_whRGBf[1],_fx_whRGBf[2],fx_wh_alpha->value);
+
+
+	glDisable(GL_DEPTH_TEST);
+	_bWorldFxEnableDepth=true;
+	if (mode==GL_QUADS)
+	{
+		if (fx_wh_noquads->value==1.0f)
+			glBlendFunc(GL_ZERO,GL_ONE);
+		//else default blend func
+	} else 	{
+		if (fx_wh_additive->value==1.0f)
+			glBlendFunc(GL_SRC_ALPHA,GL_ONE);
+		else
+			glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+	}
+
+	glEnable(GL_BLEND);
+	_bWorldFxDisableBlend=true;
+}
+
+void Filming::DoWorldFxEnd()
+{
+	if (_bWorldFxDisableBlend) glDisable(GL_BLEND);
+	if (_bWorldFxEnableDepth) glEnable(GL_DEPTH_TEST);
+}
+
+void Filming::setWhTintColor(float r, float g, float b)
+{
+	_fx_whRGBf[0]=r;
+	_fx_whRGBf[1]=g;	
+	_fx_whRGBf[2]=b;
+}
+
 /////
 
 REGISTER_CMD_FUNC_BEGIN(recordmovie)
@@ -1322,7 +1436,7 @@ REGISTER_CMD_FUNC(matte_setcolor)
 {
 	if (pEngfuncs->Cmd_Argc() != 4)
 	{
-		pEngfuncs->Con_Printf("Useage: " PREFIX "matte_setcolour <red: 0-255> <green: 0-255> <blue: 0-255>\n");
+		pEngfuncs->Con_Printf("Useage: " PREFIX "matte_setcolor <red: 0-255> <green: 0-255> <blue: 0-255>\n");
 		return;
 	}
 
@@ -1337,7 +1451,7 @@ REGISTER_CMD_FUNC(matte_setcolorf)
 {
 	if (pEngfuncs->Cmd_Argc() != 4)
 	{
-		pEngfuncs->Con_Printf("Useage: " PREFIX "matte_setcolourf <red: 0.0-1.0> <green: 0.0-1.0> <blue: 0.0-1.0>\n");
+		pEngfuncs->Con_Printf("Useage: " PREFIX "matte_setcolorf <red: 0.0-1.0> <green: 0.0-1.0> <blue: 0.0-1.0>\n");
 		return;
 	}
 
@@ -1346,4 +1460,20 @@ REGISTER_CMD_FUNC(matte_setcolorf)
 	float flBlue = (float) atof(pEngfuncs->Cmd_Argv(3));
 
 	_mirv_matte_setcolorf(flRed, flBlue, flGreen);
+}
+
+REGISTER_CMD_FUNC(fx_wh_tint_colorf)
+{
+	if (pEngfuncs->Cmd_Argc() != 4)
+	{
+		pEngfuncs->Con_Printf("Useage: " PREFIX "wh_tint_colorf <red: 0.0-1.0> <green: 0.0-1.0> <blue: 0.0-1.0>\n");
+		return;
+	}
+
+	float flRed = (float) atof(pEngfuncs->Cmd_Argv(1));
+	float flGreen = (float) atof(pEngfuncs->Cmd_Argv(2));
+	float flBlue = (float) atof(pEngfuncs->Cmd_Argv(3));
+
+	// ensure that the values are within the falid range
+	g_Filming.setWhTintColor(clamp(flRed, 0.0f, 1.0f),clamp(flGreen, 0.0f, 1.0f),clamp(flBlue, 0.0f, 1.0f));
 }

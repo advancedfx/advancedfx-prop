@@ -272,6 +272,8 @@ void APIENTRY my_glBegin(GLenum mode)
 	if (g_Filming.doWireframe(mode) == Filming::DR_HIDE)
 		return;
 
+	g_Filming.DoWorldFxBegin(mode);
+
 	if (!g_Filming.isFilming())
 	{
 		glBegin(mode);
@@ -290,6 +292,12 @@ void APIENTRY my_glBegin(GLenum mode)
 		glColorMask(TRUE, TRUE, TRUE, TRUE); // BlendFunc for additive sprites needs special controll, don't override it
 
 	glBegin(mode);
+}
+
+void APIENTRY my_glEnd(void)
+{
+	glEnd();
+	g_Filming.DoWorldFxEnd();
 }
 
 void APIENTRY my_glClear(GLbitfield mask)
@@ -354,7 +362,7 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 			// update unregistered local copies manually:
 			pEngfuncs		= (cl_enginefuncs_s*)	HL_ADDR_CL_ENGINEFUNCS_S;
 			pEngStudio	= (engine_studio_api_s*)HL_ADDR_ENGINE_STUDIO_API_S;
-			ppmove			= (playermove_s*)		HL_ADDR_PLAYERMOVE_S;		
+			ppmove			= (playermove_s*)		HL_ADDR_PLAYERMOVE_S;
 			
 			pszAddrLoad="Loaded addreses from config.";
 
@@ -613,6 +621,8 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 
 		if (!lstrcmp(lpProcName, "glBegin"))
 			return (FARPROC) &my_glBegin;
+		if (!lstrcmp(lpProcName, "glEnd"))
+			return (FARPROC) &my_glEnd;
 		if (!lstrcmp(lpProcName, "glViewport"))
 			return (FARPROC) &my_glViewport;
 		if (!lstrcmp(lpProcName, "glClear"))

@@ -1,13 +1,8 @@
 Dear MIRV Demo Tool (MDT) user,
 
 
-This is a developement version.
-
 You can retrive the latest MDT, infos, reports bugs and post suggestions here:
 http://www.madabouthats.org/code-mdt/viewforum.php?f=3
-
-You can retrive the (older) offical version, a manual and tutorials from here:
-http://www.madabouthats.org/projects/mdt
 
 
 Epilepsy warning:
@@ -74,9 +69,9 @@ MIRVIN_monkey
   http://www.madabouthats.org
   
 ripieces
-  assistant programmer
+  programer
   http://dominik.matrixstorm.com
   
 neomic
-  assistant programer
+  programer
   http://neomic.xail.net/

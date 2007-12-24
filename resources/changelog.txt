@@ -1,3 +1,83 @@
+1.1.1.0 XMAS 2007
+
+Hello, this is a special Christmas release :D
+
+At first we want to hint you to the HLAEwiki*, which already contains the Mirv
+Demo Tool command reference and will be extended in the future:
+http://www.hhg-clan.de/hlae/wiki
+
+Along some bonus tools you normally have to download separately (check the bonus
+folder in the zip) we also added some sweet extra candy to MDT itself:
+
+A build in WallHack system : P
+
+mirv_fx_wh_enable 0|1
+  Default: 0
+  Enable / Disable built in wh system.
+  
+  The wall hack system WILL ONLY WORK PROPERLY WHEN MDT IS IN RECORDING MODE:
+  To preview the final result you can use mirv_movie_simulate 1 (please
+  reffer to the HLAEwiki entry for more info on that command).
+  
+  All transparency stuff is not applied to the entity stream, but all other
+  streams. So there will be problems with the world depthdump when the wh is
+  enabled, because the z-Buffer check on walls is disabled to make the wh work.
+
+mirv:fx_wh_alpha 0.0 - 1.0
+  Default: 0.5
+  Controls the alpha blending value of the walls (higher value = less
+  transparency)
+  
+mirv_fx_wh_additive 0|1
+  Default: 1
+  If enabled this blends the walls additive. The non addivte mode (0) might
+  look a bit wrong in some cases due to OpenGL limitations (polygons overlap
+  in wrong order) but still looks good I guess, so try both : )
+  
+mirv_fx_wh_noquads 0|1
+  Default: 0
+  If enabled it makes some things like sprites etc. completly invisible.
+  
+mirv_fx_wh_tint_enable 0|1
+  Default: 0
+  If enabled the walls etc. will be tinted in a spefic color you
+  can supply with the mirv_fx_wh_tint_colorf command.
+  
+mirv_fx_wh_tint_colorf 0.0-10.0 0.0-1.0 0.0-1.0
+  Default: 0.0 0.5 1.0
+  Allows to set a specific color for tinting the walls.
+  The 3 values are floating point values between 0.0 and 1.0
+  The order is R G B.
+  
+mirv_fx_wh_xtendvis 0|1
+  Default: 1
+  When enabled, this forces Half-Life to ignore the visibility checks.
+  This means you can see all walls and this is especially helpfull
+  for HLTV demos, because in those you can see the CTs at their spawn
+  from the T spawn on de_dust2 and so on xD
+  (The use for in-eye demos is limited, except that your player hacked the
+  server :P
+  So in case the wh shows too much walls, then set it to 0, so you will
+  have the default H-L vis check enabled again :)
+  
+
+Thanks and greets too:
+
+C-M|s0nkite ( www.mattepainting.gr )
+  for supplying the merry_xmas.jpg that is included in the download!
+  
+msthavoc ( www.mst-gaming.de )
+  for helping now and then with testing mdt and making tutorials :)
+
+  
+  
+Merry X-Mas to you guys then,
+have fun, cya next year.
+
+* it's HLAEwiki, because MDT might get renamed in the far away future to
+  Half-Life Adavanced Effects : )
+  
+
 1.1.0.29
 
 - Fixed: Various bugs that would affect stereo camera captures and

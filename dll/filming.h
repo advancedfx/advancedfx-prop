@@ -15,6 +15,8 @@ Description : see mdt_gltools.h
 #include "mdt_media.h" // We Mant RAWGLPICS and other media interfaces
 #include "film_sound.h"
 
+//#include "eiface_mdt.h"
+
 // added 20070922:
 
 // I could have also moved this into the class, but I didn't want to mess around with static members and stuff etc.
@@ -106,6 +108,11 @@ private:
 
 	bool _bSimulate;
 
+	bool _bWorldFxDisableBlend;
+	bool _bWorldFxEnableDepth;
+
+	float _fx_whRGBf[3];
+
 public:
 	Filming();
 	~Filming();
@@ -125,6 +132,9 @@ public:
 
 	Filming::DRAW_RESULT doWireframe(GLenum mode);
 
+	void DoWorldFxBegin(GLenum mode); // begin and end have to maintain the order
+	void DoWorldFxEnd(); // .
+
 	float m_MatteColour[3];
 
 	void setMatteColour(float r, float g, float b)
@@ -133,6 +143,8 @@ public:
 		m_MatteColour[1] = g;
 		m_MatteColour[2] = b;
 	}
+
+	void setWhTintColor(float r, float g, float b);
 
 	//
 	HUD_REQUEST_STATE giveHudRqState();
