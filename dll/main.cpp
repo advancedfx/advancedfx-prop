@@ -93,6 +93,7 @@ REGISTER_CVAR(disableautodirector, "0", 0);
 REGISTER_CVAR(fixforcehltv, "1", 0);
 
 REGISTER_DEBUGCVAR(gl_noclear, "0", 0);
+REGISTER_DEBUGCVAR(movie_oldmatte, "0", 0);
 
 //
 // Commands
@@ -267,12 +268,55 @@ LRESULT APIENTRY my_WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 //	OpenGl Hooking
 //
 
+struct glBegin_saved_s {
+	bool restore;
+	GLclampf fColorv [4];
+	GLboolean b_GL_BLEND;
+	GLboolean b_GL_TEXTURE_2D;
+} g_glBegin_saved;
+
+union my_glMatteTexture_t {
+	struct {
+		GLbyte px1[4];
+		GLbyte px2[4];
+		GLbyte px3[4];
+		GLbyte px4[4];
+	} px;
+	GLbyte data[16];
+} my_glMatteTexture;
+
+GLuint my_tex_dude;
+bool bMatteTextureBound=false;
+
+void doGenMatteTex()
+{
+	my_glMatteTexture.px.px1[0]=255*g_Filming.m_MatteColour[0];
+	my_glMatteTexture.px.px1[1]=255*g_Filming.m_MatteColour[1];
+	my_glMatteTexture.px.px1[2]=255*g_Filming.m_MatteColour[2];
+	my_glMatteTexture.px.px1[3]=255;
+
+	memcpy(my_glMatteTexture.px.px2,my_glMatteTexture.px.px1,4);
+	memcpy(my_glMatteTexture.px.px3,my_glMatteTexture.px.px1,4);
+	memcpy(my_glMatteTexture.px.px4,my_glMatteTexture.px.px1,4);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, my_glMatteTexture.data);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+}
+
 void APIENTRY my_glBegin(GLenum mode)
 {
+	g_glBegin_saved.restore=false;
+
 	if (g_Filming.doWireframe(mode) == Filming::DR_HIDE)
 		return;
 
-	g_Filming.DoWorldFxBegin(mode);
+	g_Filming.DoWorldFxBegin(mode); // WH fx
+
+	g_Filming.DoWorldFx2(mode); // lightmap fx
 
 	if (!g_Filming.isFilming())
 	{
@@ -286,8 +330,34 @@ void APIENTRY my_glBegin(GLenum mode)
 		return;
 
 	else if (res == Filming::DR_MASK)
-		glColorMask(FALSE, FALSE, FALSE, TRUE);
+	{	
+		if (movie_oldmatte->value==1.0f)
+			glColorMask(FALSE, FALSE, FALSE, TRUE); // this is illegal, since you can't asume a specific drawing order of polygons
+		else
+		{
+			if (!bMatteTextureBound)
+			{
+				glGenTextures(1,&my_tex_dude);
+				glBindTexture(GL_TEXTURE_2D,my_tex_dude);
 
+				doGenMatteTex();
+
+				bMatteTextureBound=true;
+
+			} else {
+				glBindTexture(GL_TEXTURE_2D,my_tex_dude);
+				if (g_Filming.bRequestingMatteTextUpdate)
+				{
+					doGenMatteTex();
+					g_Filming.bRequestingMatteTextUpdate = false;
+				}
+			}
+
+			glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_REPLACE);
+
+			glColorMask(TRUE, TRUE, TRUE, TRUE); // we need it to be drawn
+		}
+	}
 	else if (!g_Filming.bWantsHudCapture)
 		glColorMask(TRUE, TRUE, TRUE, TRUE); // BlendFunc for additive sprites needs special controll, don't override it
 

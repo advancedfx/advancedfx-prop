@@ -107,6 +107,7 @@ private:
 	void MotionFile_End();
 
 	bool _bSimulate;
+	bool _bSimulate2;
 
 	bool _bWorldFxDisableBlend;
 	bool _bWorldFxEnableDepth;
@@ -132,8 +133,12 @@ public:
 
 	Filming::DRAW_RESULT doWireframe(GLenum mode);
 
+	// WH fx:
 	void DoWorldFxBegin(GLenum mode); // begin and end have to maintain the order
 	void DoWorldFxEnd(); // .
+
+	// lightmap fx:
+	void DoWorldFx2(GLenum mode);
 
 	float m_MatteColour[3];
 
@@ -142,12 +147,16 @@ public:
 		m_MatteColour[0] = r;
 		m_MatteColour[1] = g;
 		m_MatteColour[2] = b;
+
+		bRequestingMatteTextUpdate=true;
 	}
 
 	void setWhTintColor(float r, float g, float b);
 
 	//
 	HUD_REQUEST_STATE giveHudRqState();
+
+	bool bRequestingMatteTextUpdate;
 
 
 	// those are used by R_RenderView, since it doesn't sit in the class yet ( I didn't want to mess around with static properties and this pointers etc.)

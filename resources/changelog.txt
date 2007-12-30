@@ -1,3 +1,21 @@
+1.1.1.83
+
+- Changed: The matte system to avoid some problems with players not masked in
+           the entity stream. In case the new method is causing problems you
+           can use the old method by setting __mirv_movie_oldmatte 1
+
+- Changed: mirv_movie_simulate
+           0 - anything is saved to disk
+           1 - nothing is saved to disk(only simulate)
+           2 - except the splitstreams (all / world / matte) anything
+               additionally activated is still exported, usefull if you only
+               want to capture sound i.e. and don't want the images (although
+               I wonder why you want sound without images)
+  
+- Added: mirv_fx_lightmap (experimental)
+         0 = off (default), 1 = show light maps, 2 = fullbright (no light maps)
+
+
 1.1.1.0 XMAS 2007
 
 Hello, this is a special Christmas release :D

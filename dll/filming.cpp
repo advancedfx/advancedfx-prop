@@ -36,6 +36,8 @@ REGISTER_CVAR(crop_yofs, "-1", 0);
 
 REGISTER_CVAR(depth_logarithmic, "32", 0);
 
+REGISTER_CVAR(fx_lightmap, "0", 0);
+
 REGISTER_CVAR(fx_wh_enable, "0", 0);
 REGISTER_CVAR(fx_wh_alpha, "0.5", 0);
 REGISTER_CVAR(fx_wh_additive, "1", 0);
@@ -560,10 +562,13 @@ Filming::Filming()
 		pMotionFile2 = NULL;
 
 		_bSimulate = false;
+		_bSimulate2 = false;
 
 	_fx_whRGBf[0]=0.0f;
 	_fx_whRGBf[1]=0.5f;	
 	_fx_whRGBf[2]=1.0f;
+
+	 bRequestingMatteTextUpdate=false;
 }
 
 Filming::~Filming()
@@ -625,7 +630,7 @@ bool Filming::OnHudEndEvnet()
 	switch(giveHudRqState())
 	{
 	case HUDRQ_CAPTURE_COLOR:
-		if (!_bSimulate)Capture("hudcolor",m_nFrames,COLOR);
+		if (!_bSimulate2)Capture("hudcolor",m_nFrames,COLOR);
 		if (movie_separate_hud->value!=2.0)
 		{
 			// we want alpha too in this case
@@ -634,7 +639,7 @@ bool Filming::OnHudEndEvnet()
 		}
 		break;
 	case HUDRQ_CAPTURE_ALPHA:
-		if(!_bSimulate)Capture("hudalpha",m_nFrames,ALPHA);
+		if(!_bSimulate2)Capture("hudalpha",m_nFrames,ALPHA);
 		break;
 	}
 	return false; // do not loop
@@ -670,11 +675,12 @@ void Filming::Start()
 	//_bNoMatteInterpolation = (matte_nointerp->value == 0.0);
 	_bCamMotion = (movie_export_cammotion->value != 0.0) && _bNewRequestMethod;
 	_bSimulate = (movie_simulate->value != 0.0);
+	_bSimulate2 = _bSimulate && (movie_simulate->value != 2.0);
 
 	// make sure the R_MarLeaves is hooked:
 	InstallHook_R_MarLeaves();
 
-	if (_bCamMotion && !_bSimulate) MotionFile_Begin();
+	if (_bCamMotion && !_bSimulate2) MotionFile_Begin();
 
 	// if we want to use R_RenderView and we have not already done that, we need to set it up now:
 	if (_bNewRequestMethod)
@@ -746,7 +752,7 @@ void Filming::Start()
 	pEngfuncs->Cvar_SetValue("gl_clear", 1); // this needs should be reforced somwhere since in ineydemo mode the engine might force it to 0
 
 	// indicate sound export if requested:
-	_bExportingSound = !_bSimulate && (movie_export_sound->value!=0.0f);
+	_bExportingSound = !_bSimulate2 && (movie_export_sound->value!=0.0f);
 }
 
 void Filming::Stop()
@@ -879,6 +885,21 @@ Filming::DRAW_RESULT Filming::shouldDrawDuringEntityMatte(GLenum mode)
 	bool bSwapWeapon = (movie_swapweapon->value != 0);
 	bool bSwapDoors = (movie_swapdoors->value != 0);
 	int iOnlyActor = (int) movie_onlyentity->value;
+
+	cl_entity_t *pce = pEngStudio->GetCurrentEntity();
+	if (pce && pce->model && strncmp(pce->model->name,"*31",3) == 0 )
+	{
+		GLfloat fcol[4];
+		GLboolean bDepth;
+		GLboolean bBlended;
+
+		glGetFloatv(GL_CURRENT_COLOR,fcol);
+		glGetBooleanv(GL_DEPTH_TEST,&bDepth);
+		glGetBooleanv(GL_BLEND,&bBlended);
+
+		pEngfuncs->Con_Printf("MAT: %s %i (%f,%f,%f,%f) %s %s\n",pce->model->name,mode,fcol[0],fcol[1],fcol[2],fcol[3],bDepth?"Y":"N",bBlended?"Y":"N");
+
+	}
 
 	// GL_POLYGON is a worldbrush
 	if (mode == GL_POLYGON)
@@ -1104,7 +1125,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 	{
 		// capture stage:
 		if (bCustomDumps && !_bSimulate) Capture(pszTitles[m_iMatteStage], m_nFrames, COLOR);
-		if (bDepthDumps && !_bSimulate) Capture(pszDepthTitles[m_iMatteStage], m_nFrames, DEPTH);
+		if (bDepthDumps && !_bSimulate2) Capture(pszDepthTitles[m_iMatteStage], m_nFrames, DEPTH);
 		*bSwapRes=SwapBuffers(hSwapHDC);
 
 		if (_bSimulate && movie_simulate_delay->value > 0) Sleep((DWORD)movie_simulate_delay->value);
@@ -1118,7 +1139,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 
 			// capture stage:
 			if (bCustomDumps && !_bSimulate) Capture(pszTitles[m_iMatteStage], m_nFrames, COLOR);
-			if (bDepthDumps && !_bSimulate) Capture(pszDepthTitles[m_iMatteStage], m_nFrames, DEPTH);
+			if (bDepthDumps && !_bSimulate2) Capture(pszDepthTitles[m_iMatteStage], m_nFrames, DEPTH);
 			*bSwapRes=SwapBuffers(hSwapHDC); // well let's count the last on, ok? :)
 
 			if (_bSimulate && movie_simulate_delay->value > 0) Sleep((DWORD)movie_simulate_delay->value);
@@ -1126,7 +1147,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 			m_iMatteStage = MS_WORLD;
 		}
 
-		if (_bCamMotion && !_bSimulate) MotionFile_Frame();
+		if (_bCamMotion && !_bSimulate2) MotionFile_Frame();
 	
 		if (_bEnableStereoMode && (_stereo_state==STS_LEFT))
 		{
@@ -1344,7 +1365,9 @@ void Filming::DoWorldFxBegin(GLenum mode)
 {
 	static float psCurColor[4];
 
-	// only if transparency is enabled world and not in worldmatte
+	// those are wh effects
+
+	// only if transparency is enabled world and not in entitymatte
 	if ( fx_wh_enable->value==0.0f || mode == GL_TRIANGLE_STRIP || mode == GL_TRIANGLE_FAN || m_iMatteStage == Filming::MS_ENTITY )
 	{
 		_bWorldFxDisableBlend=false;
@@ -1381,8 +1404,18 @@ void Filming::DoWorldFxBegin(GLenum mode)
 
 void Filming::DoWorldFxEnd()
 {
-	if (_bWorldFxDisableBlend) glDisable(GL_BLEND);
-	if (_bWorldFxEnableDepth) glEnable(GL_DEPTH_TEST);
+	// those are wh effects
+
+	if (_bWorldFxDisableBlend)
+	{
+		glDisable(GL_BLEND);
+		_bWorldFxDisableBlend = false;
+	}
+	if (_bWorldFxEnableDepth)
+	{
+		glEnable(GL_DEPTH_TEST);
+		_bWorldFxEnableDepth = false;
+	}
 }
 
 void Filming::setWhTintColor(float r, float g, float b)
@@ -1390,6 +1423,18 @@ void Filming::setWhTintColor(float r, float g, float b)
 	_fx_whRGBf[0]=r;
 	_fx_whRGBf[1]=g;	
 	_fx_whRGBf[2]=b;
+}
+
+void Filming::DoWorldFx2(GLenum mode)
+{
+	// only if enabled and world and not in entity matte
+	if ( fx_lightmap->value==0.0f || mode != GL_POLYGON || m_iMatteStage == Filming::MS_ENTITY )
+		return;
+
+	if (fx_lightmap->value==2.0f)
+		glBindTexture(GL_TEXTURE_2D,0);
+	else
+		glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_REPLACE);
 }
 
 /////
