@@ -434,7 +434,7 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 			pEngStudio	= (engine_studio_api_s*)HL_ADDR_ENGINE_STUDIO_API_S;
 			ppmove			= (playermove_s*)		HL_ADDR_PLAYERMOVE_S;
 			
-			pszAddrLoad="Loaded addreses from config.";
+			pszAddrLoad="Loaded addresses from config.";
 
 		}
 

@@ -1,4 +1,4 @@
-1.1.1.83
+1.1.1.87
 
 - Changed: The matte system to avoid some problems with players not masked in
            the entity stream. In case the new method is causing problems you
@@ -11,9 +11,12 @@
                additionally activated is still exported, usefull if you only
                want to capture sound i.e. and don't want the images (although
                I wonder why you want sound without images)
-  
+
 - Added: mirv_fx_lightmap (experimental)
          0 = off (default), 1 = show light maps, 2 = fullbright (no light maps)
+
+- Changed: mirv_movie_only_entity now tries to mask other entities instead of
+           hiding them
 
 
 1.1.1.0 XMAS 2007

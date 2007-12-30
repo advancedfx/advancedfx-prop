@@ -886,21 +886,6 @@ Filming::DRAW_RESULT Filming::shouldDrawDuringEntityMatte(GLenum mode)
 	bool bSwapDoors = (movie_swapdoors->value != 0);
 	int iOnlyActor = (int) movie_onlyentity->value;
 
-	cl_entity_t *pce = pEngStudio->GetCurrentEntity();
-	if (pce && pce->model && strncmp(pce->model->name,"*31",3) == 0 )
-	{
-		GLfloat fcol[4];
-		GLboolean bDepth;
-		GLboolean bBlended;
-
-		glGetFloatv(GL_CURRENT_COLOR,fcol);
-		glGetBooleanv(GL_DEPTH_TEST,&bDepth);
-		glGetBooleanv(GL_BLEND,&bBlended);
-
-		pEngfuncs->Con_Printf("MAT: %s %i (%f,%f,%f,%f) %s %s\n",pce->model->name,mode,fcol[0],fcol[1],fcol[2],fcol[3],bDepth?"Y":"N",bBlended?"Y":"N");
-
-	}
-
 	// GL_POLYGON is a worldbrush
 	if (mode == GL_POLYGON)
 	{
@@ -935,7 +920,7 @@ Filming::DRAW_RESULT Filming::shouldDrawDuringEntityMatte(GLenum mode)
 
 			// We have selected 1 ent only to be visible and its not this
 			if (iOnlyActor != 0 && iOnlyActor != ce->index)
-				return DR_HIDE;
+				return DR_MASK;
 		}	
 		// This is some sort of func thing so matte effect it
 		// TODO: why is this doing MATTE_COLOUR instea of masking?
