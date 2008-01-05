@@ -1,3 +1,11 @@
+1.1.1.96
+
+- Fixed: Flaw in new matte system that would cause problems with detail textures.
+
+Note, you might need to disable r_detailtextures in case you use the
+mirv_fx_lightmap feature.
+
+
 1.1.1.87
 
 - Changed: The matte system to avoid some problems with players not masked in

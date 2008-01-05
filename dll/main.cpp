@@ -270,9 +270,11 @@ LRESULT APIENTRY my_WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 struct glBegin_saved_s {
 	bool restore;
-	GLclampf fColorv [4];
-	GLboolean b_GL_BLEND;
-	GLboolean b_GL_TEXTURE_2D;
+	//GLclampf fColorv [4];
+	GLint i_GL_TEXTURE_ENV_MODE;
+	GLint i_GL_TEXTURE_BINDING_2D;
+
+	// those are accessed idenpendently from restore:
 } g_glBegin_saved;
 
 union my_glMatteTexture_t {
@@ -335,6 +337,10 @@ void APIENTRY my_glBegin(GLenum mode)
 			glColorMask(FALSE, FALSE, FALSE, TRUE); // this is illegal, since you can't asume a specific drawing order of polygons
 		else
 		{
+			// save some old environment properties we will overwrite:
+			glGetIntegerv(GL_TEXTURE_BINDING_2D,&g_glBegin_saved.i_GL_TEXTURE_BINDING_2D);
+			glGetTexEnviv(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,&g_glBegin_saved.i_GL_TEXTURE_ENV_MODE);
+
 			if (!bMatteTextureBound)
 			{
 				glGenTextures(1,&my_tex_dude);
@@ -356,6 +362,8 @@ void APIENTRY my_glBegin(GLenum mode)
 			glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_REPLACE);
 
 			glColorMask(TRUE, TRUE, TRUE, TRUE); // we need it to be drawn
+
+			g_glBegin_saved.restore = true; // we request to restore parts of the environment after glEnd()
 		}
 	}
 	else if (!g_Filming.bWantsHudCapture)
@@ -367,6 +375,15 @@ void APIENTRY my_glBegin(GLenum mode)
 void APIENTRY my_glEnd(void)
 {
 	glEnd();
+
+	if (g_glBegin_saved.restore)
+	{
+		// restore old texture mode:
+		glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,g_glBegin_saved.i_GL_TEXTURE_ENV_MODE);
+		glBindTexture(GL_TEXTURE_2D,g_glBegin_saved.i_GL_TEXTURE_BINDING_2D);
+		g_glBegin_saved.restore=false;
+	}
+
 	g_Filming.DoWorldFxEnd();
 }
 
