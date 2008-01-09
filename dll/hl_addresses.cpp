@@ -71,6 +71,8 @@ HL_ADDR_ENTRY(p_r_refdef,"p_playermove_s - 0x13FDC0")
 HL_ADDR_ENTRY(HudSpectator_tfc,"0x01909A00")
 HL_ADDR_ENTRY(HudSpectator_cmp_tfc,"HudSpectator_tfc + 0x23")
 
+HL_ADDR_ENTRY(UnkIGAWorld,"0x01d57460")
+
 ///////////////////////////////////////////////////////////////////////////////
 // cHLAddresses
 ///////////////////////////////////////////////////////////////////////////////

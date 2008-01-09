@@ -54,6 +54,8 @@ REGISTER_CVAR(movie_sound_volume, "0.5", 0); // volume 0.8 is CS 1.6 default
 REGISTER_CVAR(movie_filename, "untitled", 0);
 REGISTER_CVAR(movie_fps, "30", 0);
 
+REGISTER_CVAR(movie_noadverts, "0", 0);
+
 REGISTER_CVAR(movie_separate_hud, "0", 0);
 REGISTER_CVAR(movie_simulate, "0", 0);
 REGISTER_CVAR(movie_simulate_delay, "0", 0);
@@ -483,6 +485,27 @@ void InstallHook_R_MarLeaves()
 }
 
 //
+// IGA handling, see temporary_dominik_0003.cpp for more info
+//
+
+#define ADDRESS_UnkIGAWorld HL_ADDR_UnkIGAWorld
+#define DETOURSIZE_UnkIGAWorld 0x05
+
+typedef void (*UnkIGAWorld_t) (DWORD dwUnkown1);
+UnkIGAWorld_t detoured_UnkIGAWorld=NULL;
+
+void touring_UnkIGAWorld (DWORD dwUnkown1)
+{
+	if (movie_noadverts->value==0.0f)detoured_UnkIGAWorld(dwUnkown1);
+}
+
+void InstallHook_UnkIGAWorld()
+{
+	if (!detoured_UnkIGAWorld && (ADDRESS_UnkIGAWorld!=NULL))
+			detoured_UnkIGAWorld = (UnkIGAWorld_t) DetourApply((BYTE *)ADDRESS_UnkIGAWorld, (BYTE *)touring_UnkIGAWorld, (int)DETOURSIZE_UnkIGAWorld);
+}
+
+//
 // // // //
 //
 
@@ -679,6 +702,8 @@ void Filming::Start()
 
 	// make sure the R_MarLeaves is hooked:
 	InstallHook_R_MarLeaves();
+
+	InstallHook_UnkIGAWorld(); // Install InGameAdvertisment World Ads Blcok
 
 	if (_bCamMotion && !_bSimulate2) MotionFile_Begin();
 
@@ -1083,7 +1108,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 	}
 
 	bool bSplitting = (movie_splitstreams->value == 3.0f);
-	float flTime = 1.0f / max(movie_fps->value, 1.0f);
+	float flTime = max(1.0f / max(movie_fps->value, 1.0f), MIN_FRAME_DURATION);
 
 	static char *pszTitles[] = { "all", "world", "entity" };
 	static char *pszDepthTitles[] = { "depthall", "depthworld", "depthall" };
@@ -1184,12 +1209,9 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 		}
 	}
 
-	
-	float flNextFrameDuration = flTime;
 	m_nFrames++;
 	
-	// Make sure the next frame time isn't invalid
-	flNextFrameDuration = max(flNextFrameDuration, MIN_FRAME_DURATION);
+	float flNextFrameDuration = flTime;
 	pEngfuncs->Cvar_SetValue("host_framerate", flNextFrameDuration);
 
 	_bRecordBuffers_FirstCall = true;

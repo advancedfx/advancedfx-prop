@@ -1,3 +1,11 @@
+1.1.2.0
+
+- Added: mirv_movie_noads 0|1
+         You need to start recording before you can see a difference.
+         This allows to remove the InGame Advertisements (IGAs) in levels
+         during movie recording.
+         
+
 1.1.1.96
 
 - Fixed: Flaw in new matte system that would cause problems with detail textures.

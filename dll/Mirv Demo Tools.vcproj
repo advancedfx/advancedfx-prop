@@ -182,7 +182,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Post-Build: calling rcstamp ..."
-				CommandLine="&quot;../shared/bin/rcstamp.exe&quot; &quot;$(ProjectDir)Mirv Demo Tool.rc&quot; *.*.*.+ &quot;$(ProjectDir)version.cpp&quot;"
+				CommandLine="&quot;../shared/bin/rcstamp.exe&quot; &quot;$(ProjectDir)Mirv Demo Tool.rc&quot; *.*.2.0 &quot;$(ProjectDir)version.cpp&quot;"
 			/>
 		</Configuration>
 	</Configurations>

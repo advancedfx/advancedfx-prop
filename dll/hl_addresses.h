@@ -258,6 +258,8 @@ extern unsigned long ulHLAddr_p_r_refdef;
 extern unsigned long ulHLAddr_HudSpectator_tfc;
 extern unsigned long ulHLAddr_HudSpectator_cmp_tfc;
 
+extern unsigned long ulHLAddr_UnkIGAWorld;
+
 //
 // macros for accessing the header exports (for compabtility with old code):
 //
@@ -279,5 +281,7 @@ extern unsigned long ulHLAddr_HudSpectator_cmp_tfc;
 
 #define HL_ADDR_HUDSPECTATOR_FUNC_TFC ulHLAddr_HudSpectator_tfc
 #define HL_ADDR_HUDSPECTATOR_CMPA0_TFC ulHLAddr_HudSpectator_cmp_tfc
+
+#define HL_ADDR_UnkIGAWorld ulHLAddr_UnkIGAWorld
 
 #endif // #ifndef HL_ADDRESSES_H
