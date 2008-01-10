@@ -31,9 +31,10 @@ private:
 	// old: 0x01da6910
 	#define DETOURSIZE_S_PaintChannels 0x06
 
-	#define ADDRESS_S_TransferPaintBuffer 0x01da3b40
-	// old: 0x01da6120
-	#define DETOURSIZE_S_TransferPaintBuffer 0x05
+	#define ADDRESS_S_TransferPaintBuffer 0x01da33f0
+	// (there wee 5 byte before the jump, now the are gone, old: 0x01da6120
+	#define DETOURSIZE_S_TransferPaintBuffer 0x06
+	// old: 0x05
 
 	#define ADDRESS_p_shm 0x024a7b00
 	// old: 0x024ab538 // 2F03A8
