@@ -60,18 +60,20 @@ HL_ADDR_VAR(_vE)
 HL_ADDR_VAR(_vF)
 
 // Addresses:
-HL_ADDR_ENTRY(p_cl_enginefuncs_s,"0x01ECCB00")
-HL_ADDR_ENTRY(p_enginefuncs_s,"0x01EF2048") // unused
-HL_ADDR_ENTRY(p_engine_studio_api_s,"0x01EE8FC0")
-HL_ADDR_ENTRY(p_playermove_s,"0x02D82500")
-HL_ADDR_ENTRY(SCR_UpdateScreen,"0x01dd0370")
-HL_ADDR_ENTRY(R_RenderView_,"0x01d51d9")
-HL_ADDR_ENTRY(R_MarkLeaves,"0x01D54FA0")
-HL_ADDR_ENTRY(p_r_refdef,"p_playermove_s - 0x13FDC0")
-HL_ADDR_ENTRY(HudSpectator_tfc,"0x01909A00")
-HL_ADDR_ENTRY(HudSpectator_cmp_tfc,"HudSpectator_tfc + 0x23")
-
-HL_ADDR_ENTRY(UnkIGAWorld,"0x01d57460")
+HL_ADDR_ENTRY(p_cl_enginefuncs_s,"0x0")
+HL_ADDR_ENTRY(p_enginefuncs_s,"0x0") // unused
+HL_ADDR_ENTRY(p_engine_studio_api_s,"0x0")
+HL_ADDR_ENTRY(p_playermove_s,"0x0")
+HL_ADDR_ENTRY(SCR_UpdateScreen,"0x0") // unused
+HL_ADDR_ENTRY(SCR_SetUpToDrawConsole,"0x0") // unused
+HL_ADDR_ENTRY(V_RenderView,"0x0") // unused
+HL_ADDR_ENTRY(GL_Set2D,"0x0") // unused
+HL_ADDR_ENTRY(R_RenderView_,"0x0")
+HL_ADDR_ENTRY(R_MarkLeaves,"0x0")
+HL_ADDR_ENTRY(p_r_refdef,"0x0")
+HL_ADDR_ENTRY(HudSpectator_tfc,"0x0")
+HL_ADDR_ENTRY(HudSpectator_cmp_tfc,"0x0")
+HL_ADDR_ENTRY(UnkIGAWorld,"0x0")
 
 ///////////////////////////////////////////////////////////////////////////////
 // cHLAddresses

@@ -6,6 +6,8 @@ Authors     : Dominik Tugend // add yourself here if u change s.th.
 Description : See dd_hook.h
 */
 
+#include "mdt_debug.h"
+
 #include "dd_hook.h"
 #include <ddraw.h>
 #include <stdio.h>
@@ -124,6 +126,10 @@ HRESULT WINAPI myDirectDrawCreate(
 	// if not done already check for forcing:
 	if (!g_dd_hook_bForceChecked)
 	{
+#ifdef MDT_DEBUG
+	MessageBox(0,"myDirectDrawCreate - firstcall","MDT_DEBUG",MB_OK|MB_ICONINFORMATION);
+#endif
+
 		// Check the commandline if we are ment to force a res:
 		char		*pstart = NULL ;
 		int i = pEngfuncs->CheckParm( "-mdtres", &pstart );
@@ -227,7 +233,9 @@ HRESULT WINAPI myDirectDrawCreate(
 
 FARPROC WINAPI Hook_DirectDrawCreate(FARPROC fpOldAddress)
 {	
-
+#ifdef MDT_DEBUG
+	MessageBox(0,"Hook_DirectDrawCreate - called","MDT_DEBUG",MB_OK|MB_ICONINFORMATION);
+#endif
 	if (!g_oldDirectDrawCreate) g_oldDirectDrawCreate=(DirectDrawCreate_t)fpOldAddress; // save old address for us
 	return (FARPROC)myDirectDrawCreate; // set our hooked struct
 }

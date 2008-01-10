@@ -3,9 +3,7 @@
 
 */
 
-#ifndef MDT_DEBUG
-//#define MDT_DEBUG
-#endif
+#include "mdt_debug.h"
 
 #pragma comment(lib,"OpenGL32.lib")
 #pragma comment(lib,"GLu32.lib")
@@ -420,43 +418,15 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 {
 	static bool bFirstRun = true;
 
-	g_bIsSucceedingViewport = true;
+#ifdef MDT_DEBUG
+	if (bFirstRun)
+			MessageBox(0,"my_glViewport - FirstRun","MDT_DEBUG",MB_OK|MB_ICONINFORMATION);
+#endif
 
-	cConfig_mdtdll* pg_Config_mdtdll;
+	g_bIsSucceedingViewport = true;
 
 	if (bFirstRun)
 	{
-		// the very first thing we have to do is to set the addresses from the config, cuz really much stuff relays on that:
-		g_hMDTDLL = GetModuleHandle(DLL_NAME);
-		pg_MDTpath[0]=NULL;
-		if (g_hMDTDLL) GetModuleFileName(g_hMDTDLL,pg_MDTpath,MDT_MAX_PATH_BYTES-1);
-
-		retriveMDTConfigFile(pg_MDTpath,pg_MDTcfgfile);
-		// not allowed before addresses are validied pEngfuncs->Con_Printf("Path: %s | %s \n",pg_MDTpath,pg_MDTcfgfile);
-
-		bool bCfgres = false;
-
-		if (g_hMDTDLL)
-		{
-			pg_Config_mdtdll = new cConfig_mdtdll(pg_MDTcfgfile);
-			bCfgres = pg_Config_mdtdll->LoadAndApplyAddresses();
-		} else pEngfuncs->Con_Printf("WARNING: Could not locate DLL.\n");
-
-		// update the globals like pEngfuncs before we use them to register cmds / cvars etc.:
-		char* pszAddrLoad="Warning: The config's address syntax or semantics were not valid (using default).";
-		if (bCfgres) 
-		{
-			// update unregistered local copies manually:
-			pEngfuncs		= (cl_enginefuncs_s*)	HL_ADDR_CL_ENGINEFUNCS_S;
-			pEngStudio	= (engine_studio_api_s*)HL_ADDR_ENGINE_STUDIO_API_S;
-			ppmove			= (playermove_s*)		HL_ADDR_PLAYERMOVE_S;
-			
-			pszAddrLoad="Loaded addresses from config.";
-
-		}
-
-		delete pg_Config_mdtdll;
-				
 		// Register the commands
 		std::list<Void_func_t>::iterator i = GetCmdList().begin();
 		while (i != GetCmdList().end())
@@ -467,7 +437,7 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 		while (i != GetCvarList().end())
 			(*i++)();
 
-		pEngfuncs->Con_Printf("Mirv Demo Tool v%s (%s) Loaded\nBy Mirvin_Monkey 02/05/2004\n%s\n\n", pszFileVersion, __DATE__, pszAddrLoad);
+		pEngfuncs->Con_Printf("Mirv Demo Tool v%s (%s) Loaded\nBy Mirvin_Monkey 02/05/2004\n\n", pszFileVersion, __DATE__);
 
 		gui->Initialise();
 
@@ -564,6 +534,10 @@ void *InterceptDllCall(HMODULE hModule, char *szDllName, char *szFunctionName, D
 	DWORD dwOldProtect2;
 	void *pOldFunction;
 
+#ifdef MDT_DEBUG
+	MessageBox(0,"InterceptDllCall - starting","MDT_DEBUG",MB_OK|MB_ICONINFORMATION);
+#endif
+
 	if (!(pOldFunction = GetProcAddress(GetModuleHandle(szDllName), szFunctionName)))
 		return 0;
 
@@ -594,10 +568,16 @@ void *InterceptDllCall(HMODULE hModule, char *szDllName, char *szFunctionName, D
 			VirtualProtect((void *) &pThunk->u1.Function, sizeof(DWORD), PAGE_EXECUTE_READWRITE, &dwOldProtect);
 			pThunk->u1.Function = (DWORD) pNewFunction;
 			VirtualProtect((void *) &pThunk->u1.Function, sizeof(DWORD), dwOldProtect, &dwOldProtect2);
+
+#ifdef MDT_DEBUG
+	MessageBox(0,"InterceptDllCall - finished as desired","MDT_DEBUG",MB_OK|MB_ICONINFORMATION);
+#endif
+
 			return pOldFunction;
 		}
 		pThunk++;
 	}
+
 	return NULL;
 }
 
@@ -701,6 +681,7 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 {
 	FARPROC nResult;
 	nResult = GetProcAddress(hModule, lpProcName);
+
 	if (HIWORD(lpProcName))
 	{
 		if (!lstrcmp(lpProcName, "GetProcAddress"))
@@ -734,13 +715,56 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 	return nResult;
 }
 
+bool Mdt_LoadAddressConfig()
+{
+	cConfig_mdtdll* pg_Config_mdtdll;
+	
+	// the very first thing we have to do is to set the addresses from the config, cuz really much stuff relays on that:
+	g_hMDTDLL = GetModuleHandle(DLL_NAME);
+	pg_MDTpath[0]=NULL;
+	if (g_hMDTDLL) GetModuleFileName(g_hMDTDLL,pg_MDTpath,MDT_MAX_PATH_BYTES-1);
+
+	retriveMDTConfigFile(pg_MDTpath,pg_MDTcfgfile);
+	// not allowed before addresses are validied pEngfuncs->Con_Printf("Path: %s | %s \n",pg_MDTpath,pg_MDTcfgfile);
+
+	bool bCfgres = false;
+
+	if (g_hMDTDLL)
+	{
+		pg_Config_mdtdll = new cConfig_mdtdll(pg_MDTcfgfile);
+		bCfgres = pg_Config_mdtdll->LoadAndApplyAddresses();
+
+		if (!bCfgres) MessageBox(0,"mdt_addresses.ini syntax or semantics were invalid.\nTrying to continue ...","MDT_WARNING",MB_OK|MB_ICONEXCLAMATION);
+
+		// update unregistered local copies manually:
+		pEngfuncs		= (cl_enginefuncs_s*)	HL_ADDR_CL_ENGINEFUNCS_S;
+		pEngStudio	= (engine_studio_api_s*)HL_ADDR_ENGINE_STUDIO_API_S;
+		ppmove			= (playermove_s*)		HL_ADDR_PLAYERMOVE_S;
+
+
+	} else MessageBox(0,"Could not locate mdt_addresses.ini.","MDT_ERROR",MB_OK|MB_ICONHAND);
+
+	
+	delete pg_Config_mdtdll;
+
+	return bCfgres;
+}
+
 bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 {
 	switch (fdwReason) 
 	{ 
 		case DLL_PROCESS_ATTACH:
 		{
+#ifdef MDT_DEBUG
+			MessageBox(0,"DllMain - DLL_PROCESS_ATTACH","MDT_DEBUG",MB_OK|MB_ICONINFORMATION);
+#endif
+			// Intercept GetProcAddress:
 			pGetProcAddress = (FARPROC(WINAPI *)(HMODULE, LPCSTR)) InterceptDllCall(GetModuleHandle(NULL), "Kernel32.dll", "GetProcAddress", (DWORD) &newGetProcAddress);
+
+			// load addresses form config:
+			Mdt_LoadAddressConfig();
+
 			break;
 		}
 		case DLL_PROCESS_DETACH:

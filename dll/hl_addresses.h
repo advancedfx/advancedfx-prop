@@ -248,7 +248,7 @@ extern cHLAddresses g_HLAddresses;
 // Header exports of address variables (should be only for reading!):
 //
 extern unsigned long ulHLAddr_p_cl_enginefuncs_s;
-extern unsigned long ulHLAddr_p_enginefuncs_s;
+//extern unsigned long ulHLAddr_p_enginefuncs_s;
 extern unsigned long ulHLAddr_p_engine_studio_api_s;
 extern unsigned long ulHLAddr_p_playermove_s;
 extern unsigned long ulHLAddr_SCR_UpdateScreen;
@@ -257,7 +257,6 @@ extern unsigned long ulHLAddr_R_MarkLeaves;
 extern unsigned long ulHLAddr_p_r_refdef;
 extern unsigned long ulHLAddr_HudSpectator_tfc;
 extern unsigned long ulHLAddr_HudSpectator_cmp_tfc;
-
 extern unsigned long ulHLAddr_UnkIGAWorld;
 
 //
@@ -265,18 +264,16 @@ extern unsigned long ulHLAddr_UnkIGAWorld;
 //
 
 #define HL_ADDR_CL_ENGINEFUNCS_S ulHLAddr_p_cl_enginefuncs_s
-#define HL_ADDR_ENGINEFUNCS_S ulHLAddr_p_enginefuncs_s
+//#define HL_ADDR_ENGINEFUNCS_S ulHLAddr_p_enginefuncs_s
+#define HL_ADDR_ENGINE_STUDIO_API_S ulHLAddr_p_engine_studio_api_s;
 
-#define HL_ADDR_ENGINE_STUDIO_API_S ulHLAddr_p_engine_studio_api_s
 #define HL_ADDR_PLAYERMOVE_S ulHLAddr_p_playermove_s
 
 #define HL_ADDR_SCR_UpdateScreen ulHLAddr_SCR_UpdateScreen
 
-//#define HL_ADDR_SCR_SetUpToDrawConsole g_hl_addresses.p_SCR_SetUpToDrawConsole
-//#define HL_ADDR_V_RenderView g_hl_addresses.p_V_RenderView
 #define HL_ADDR_R_RenderView_ ulHLAddr_R_RenderView_
 #define HL_ADDR_R_MarkLeaves ulHLAddr_R_MarkLeaves
-//#define HL_ADDR_GL_Set2D g_hl_addresses.p_GL_Set2D
+
 #define HL_ADDR_r_refdef ulHLAddr_p_r_refdef
 
 #define HL_ADDR_HUDSPECTATOR_FUNC_TFC ulHLAddr_HudSpectator_tfc

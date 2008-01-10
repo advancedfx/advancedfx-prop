@@ -1,3 +1,16 @@
+1.1.2.20
+
+- Fixed: adapated MDT to the latest Steam update.
+         If you happen to find eatures of MDT that are still borken, then
+         please report those to the forum:
+         http://www.madabouthats.org/code-mdt/index.php
+
+- Fixed: some minor changes in the handling of the mdt_addresses.ini
+
+With kind regards
+the MDT team.
+
+
 1.1.2.0
 
 - Added: mirv_movie_noads 0|1

@@ -1,6 +1,4 @@
-#ifndef MDT_DEBUG
-//#define MDT_DEBUG
-#endif
+#include "mdt_debug.h"
 
 #include "wrect.h"
 #include "cl_dll.h"
