@@ -1195,7 +1195,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 			// advancing frame, update sound system
 
 			// calculate desired target time while keeping the rerrors low:
-			unsigned long ulUsedFps = (unsigned long)max(movie_fps->value,1.0f);
+			unsigned long ulUsedFps = (unsigned long)min(max(movie_fps->value,1.0f),1.0f/MIN_FRAME_DURATION);
 			// this relays on movie_fps staying constant during recording btw!
 
 			// calculate absoulute time we are already recording while keeping rounding errors low:
