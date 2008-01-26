@@ -1,3 +1,21 @@
+1.1.3.0
+
+- Added: mirv_fx_skyhd 0|1
+         0 - off
+         1 - on:
+         MDT will look in the folder where the HL.exe of your game is located
+         for the files mdtskyrt.bmp, mdtskybk.bmp, mdtskylf.bmp, mdtskyft.bmp,
+         mdtskyup.bmp, mdtskydn.bmp and use those to replace the skybox.
+         Those work basicaly the same like the original skies, except that they
+         are 24 bit TrueColor bitmaps, can have a higher resolution
+         (i.e. 512x512) and are turned upside-down.
+         This MDT version will include a example sky for testing and
+         understanding. For later versions refer to the HLAEwiki instead then.
+
+- Greetz: C-M | s0nkite for going on my nerves and wanting a friggin
+          High Defintion skybox feature in MDT and creating the example sky.
+
+
 1.1.2.21
 
 - Fixed: crashbug after recording when using sound export with the latest
