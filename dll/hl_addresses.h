@@ -248,7 +248,7 @@ extern cHLAddresses g_HLAddresses;
 // Header exports of address variables (should be only for reading!):
 //
 extern unsigned long ulHLAddr_p_cl_enginefuncs_s;
-//extern unsigned long ulHLAddr_p_enginefuncs_s;
+extern unsigned long ulHLAddr_p_enginefuncs_s;
 extern unsigned long ulHLAddr_p_engine_studio_api_s;
 extern unsigned long ulHLAddr_p_playermove_s;
 extern unsigned long ulHLAddr_SCR_UpdateScreen;
@@ -264,7 +264,7 @@ extern unsigned long ulHLAddr_UnkIGAWorld;
 //
 
 #define HL_ADDR_CL_ENGINEFUNCS_S ulHLAddr_p_cl_enginefuncs_s
-//#define HL_ADDR_ENGINEFUNCS_S ulHLAddr_p_enginefuncs_s
+#define HL_ADDR_ENGINEFUNCS_S ulHLAddr_p_enginefuncs_s
 #define HL_ADDR_ENGINE_STUDIO_API_S ulHLAddr_p_engine_studio_api_s;
 
 #define HL_ADDR_PLAYERMOVE_S ulHLAddr_p_playermove_s

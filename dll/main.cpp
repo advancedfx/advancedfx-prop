@@ -15,15 +15,15 @@
 #include <gl\glu.h>
 #include <gl\glaux.h>
 
-#include "wrect.h"
-#include "cl_dll.h"
-#include "cdll_int.h"
-#include "r_efx.h"
-#include "com_model.h"
-#include "r_studioint.h"
-#include "pm_defs.h"
-#include "cvardef.h"
-#include "entity_types.h"
+#include <wrect.h>
+#include <cl_dll.h>
+#include <cdll_int.h>
+#include <r_efx.h>
+#include <com_model.h>
+#include <r_studioint.h>
+#include <pm_defs.h>
+#include <cvardef.h>
+#include <entity_types.h>
 
 #include "detours.h"
 #include "filming.h"
@@ -37,6 +37,8 @@
 
 #include "hl_addresses.h" // address definitions
 #include "config_mdtdll.h" // used temporary to load i.e. addresses
+
+#include "newsky.h"
 
 #include <map>
 #include <list>
@@ -310,6 +312,8 @@ void doGenMatteTex()
 void APIENTRY my_glBegin(GLenum mode)
 {
 	g_glBegin_saved.restore=false;
+
+	g_NewSky.DetectAndProcessSky(mode);
 
 	if (g_Filming.doWireframe(mode) == Filming::DR_HIDE)
 		return;
