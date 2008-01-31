@@ -62,7 +62,7 @@ Greetings:
 You :)
 
 
-The MDT programers:
+The MDT Team:
 
 MIRVIN_monkey
   the creator and programmer
@@ -75,3 +75,7 @@ ripieces
 neomic
   programer
   http://neomic.xail.net/
+
+msthavoc
+  documentation, testing, community relations
+  http://www.mst-gaming.de
