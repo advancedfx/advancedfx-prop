@@ -33,6 +33,20 @@ OPENFILENAME	g_ofStruct; // we use a global struct for our browse dialog current
 
 char*			g_psHLexe = new char[MAX_PATHFILE_LENGTH]; // path/file of hl.exe goes here
 char*			g_psMDTpath = new char[MAX_PATHFILE_LENGTH]; // mdt path
+char*			g_psLoaderCfg = new char[MAX_PATHFILE_LENGTH]; // mdt_loader.ini path
+char*			g_psCfgAppName = "MDT Loader";
+
+// cfg strings
+#define MDTLCFGSTR_force_res "force_res"
+#define MDTLCFGSTR_hl_exe_path "hl_exe_path"
+#define MDTLCFGSTR_color_dropdown "color_dropdown"
+#define MDTLCFGSTR_color_custom "color_custom"
+#define MDTLCFGSTR_video_dropdown "video_dropdown"
+#define MDTLCFGSTR_video_width "video_width"
+#define MDTLCFGSTR_video_height "video_height"
+#define MDTLCFGSTR_mod_dropdown "mod_dropdown"
+#define MDTLCFGSTR_mod_custom "mod_custom"
+#define MDTLCFGSTR_launchoptions "launchoptions"
 
 // maximum length of HL launchoptions:
 #define MAXLEN_HLRES 5
@@ -165,6 +179,11 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	if(!GetCurrentDirectory(MAX_PATHFILE_LENGTH,g_psMDTpath))
 		*g_psMDTpath=0; // if it fails fall back to working directory (but this might be changed by the openfiledialog in case it is used)
 
+	// make mdt_loader.ini path:
+	char *pTString = g_psLoaderCfg;
+	pTString+=myStrCpy(pTString,g_psMDTpath);
+	pTString+=myStrCpy(pTString,"\\mdt_loader.ini");
+
 	DialogBox(hInstance, MAKEINTRESOURCE(IDD_DIALOG_MAIN),
 	          hWnd, reinterpret_cast<DLGPROC> (DlgProc));
 
@@ -174,6 +193,21 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	DeleteObject(hFont);
 
 	return FALSE;
+}
+
+void UpdateResControls(HWND hWndDlg,BOOL bEnable)
+ // also updates g_bForceRes
+{
+	g_bForceRes = bEnable;
+	EnableWindow(GetDlgItem(hWndDlg,IDC_STATIC_WIDTH),g_bForceRes);
+	EnableWindow(GetDlgItem(hWndDlg,IDC_EDIT_WIDTH),g_bForceRes);
+	EnableWindow(GetDlgItem(hWndDlg,IDC_STATIC_HEIGHT),g_bForceRes);
+	EnableWindow(GetDlgItem(hWndDlg,IDC_EDIT_HEIGHT),g_bForceRes);
+	EnableWindow(GetDlgItem(hWndDlg,IDC_STATIC_COLOR),g_bForceRes);
+	EnableWindow(GetDlgItem(hWndDlg,IDC_COMBO_COLOR),g_bForceRes);
+	EnableWindow(GetDlgItem(hWndDlg,IDC_EDIT_CCOLOR),g_bForceRes&&(SendDlgItemMessage(hWndDlg,IDC_COMBO_COLOR,CB_GETCURSEL,NULL,NULL)==0));
+	EnableWindow(GetDlgItem(hWndDlg,IDC_STATIC_DMODE),g_bForceRes);
+	EnableWindow(GetDlgItem(hWndDlg,IDC_COMBO_DMODE),g_bForceRes);
 }
 
 void UpdateCurrent(HWND hWndDlg)
@@ -262,12 +296,16 @@ void UpdateCurrent(HWND hWndDlg)
 
 LRESULT CALLBACK DlgProc(HWND hWndDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
+	static char pcTmp[MAXLEN_HLOPT+1];
 
 	LRESULT lrComboSel;
 
 	switch(Msg)
 	{
 	case WM_INITDIALOG:
+		int iTmp;
+		pcTmp[0]=0;
+
 		hWnd = hWndDlg;
 		g_ofStruct.hwndOwner=hWndDlg; // set this dialog as owner for the Browse File Dialog
 
@@ -276,25 +314,56 @@ LRESULT CALLBACK DlgProc(HWND hWndDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 		SendDlgItemMessage(hWndDlg,IDC_EDIT_HEIGHT,EM_SETLIMITTEXT,MAXLEN_HLRES,NULL);
 		SendDlgItemMessage(hWndDlg,IDC_EDIT_CCOLOR,EM_SETLIMITTEXT,MAXLEN_HLCOLOR,NULL);
 
+		// Init HL EXE PATH:
+		GetPrivateProfileString(g_psCfgAppName,MDTLCFGSTR_hl_exe_path,"hl.exe",g_ofStruct.lpstrFile,MAX_PATHFILE_LENGTH-1,g_psLoaderCfg);
+		SetDlgItemText(hWndDlg,IDC_EDIT_GPATH,g_ofStruct.lpstrFile);
+		
 		// Init the Color Dropdown:
+		iTmp = GetPrivateProfileInt(g_psCfgAppName,MDTLCFGSTR_color_dropdown,3,g_psLoaderCfg);
+		if (iTmp<0||iTmp>3) iTmp=3;
 		SendDlgItemMessage(hWndDlg,IDC_COMBO_COLOR,CB_ADDSTRING,NULL,(LPARAM)"Custom:");
 		SendDlgItemMessage(hWndDlg,IDC_COMBO_COLOR,CB_ADDSTRING,NULL,(LPARAM)"16 Bit");
 		SendDlgItemMessage(hWndDlg,IDC_COMBO_COLOR,CB_ADDSTRING,NULL,(LPARAM)"24 Bit");
 		SendDlgItemMessage(hWndDlg,IDC_COMBO_COLOR,CB_ADDSTRING,NULL,(LPARAM)"32 Bit");
-		SendDlgItemMessage(hWndDlg,IDC_COMBO_COLOR,CB_SETCURSEL,3,NULL); // select 32 Bit by default
+		SendDlgItemMessage(hWndDlg,IDC_COMBO_COLOR,CB_SETCURSEL,iTmp,NULL); // select
+
+		// Intit the custom bits:
+		GetPrivateProfileString(g_psCfgAppName,MDTLCFGSTR_color_custom,"32",pcTmp,MAXLEN_HLOPT,g_psLoaderCfg);
+		SetDlgItemText(hWndDlg,IDC_EDIT_CCOLOR,pcTmp);
+		
 
 		// Init the VideoMode Dropdown:
+		iTmp = GetPrivateProfileInt(g_psCfgAppName,MDTLCFGSTR_video_dropdown,0,g_psLoaderCfg);
+		if (iTmp<0||iTmp>1) iTmp=0;
 		SendDlgItemMessage(hWndDlg,IDC_COMBO_DMODE,CB_ADDSTRING,NULL,(LPARAM)"Windowed");
 		SendDlgItemMessage(hWndDlg,IDC_COMBO_DMODE,CB_ADDSTRING,NULL,(LPARAM)"Fullscreen");
-		SendDlgItemMessage(hWndDlg,IDC_COMBO_DMODE,CB_SETCURSEL,0,NULL); // select Windowed
+		SendDlgItemMessage(hWndDlg,IDC_COMBO_DMODE,CB_SETCURSEL,iTmp,NULL); // select
+
+		// init video_width
+		GetPrivateProfileString(g_psCfgAppName,MDTLCFGSTR_video_width,"800",pcTmp,MAXLEN_HLOPT,g_psLoaderCfg);
+		SetDlgItemText(hWndDlg,IDC_EDIT_WIDTH,pcTmp);
+
+		// init video_height
+		GetPrivateProfileString(g_psCfgAppName,MDTLCFGSTR_video_height,"600",pcTmp,MAXLEN_HLOPT,g_psLoaderCfg);
+		SetDlgItemText(hWndDlg,IDC_EDIT_HEIGHT,pcTmp);
 
 		// Init the Mod's Dropdown menus (this doesn't seem to work with the data property Value, I guess because Either we are in a dialog or bc we aren't using the classes, whtever, who cares ...)
+		iTmp = GetPrivateProfileInt(g_psCfgAppName,MDTLCFGSTR_mod_dropdown,2,g_psLoaderCfg);
+		if (iTmp<0||iTmp>4) iTmp=2;
 		SendDlgItemMessage(hWndDlg,IDC_COMBO_MOD,CB_ADDSTRING,NULL,(LPARAM)"Custom:");
 		SendDlgItemMessage(hWndDlg,IDC_COMBO_MOD,CB_ADDSTRING,NULL,(LPARAM)"(Half-Life)");
 		SendDlgItemMessage(hWndDlg,IDC_COMBO_MOD,CB_ADDSTRING,NULL,(LPARAM)"cstrike (Counter-Strike 1.6)");
 		SendDlgItemMessage(hWndDlg,IDC_COMBO_MOD,CB_ADDSTRING,NULL,(LPARAM)"dod (Day Of Defeat)");
 		SendDlgItemMessage(hWndDlg,IDC_COMBO_MOD,CB_ADDSTRING,NULL,(LPARAM)"tfc (Team Fortress Classic)");
-		SendDlgItemMessage(hWndDlg,IDC_COMBO_MOD,CB_SETCURSEL,2,NULL); // select cstrike by defualt
+		SendDlgItemMessage(hWndDlg,IDC_COMBO_MOD,CB_SETCURSEL,iTmp,NULL); // select
+
+		// init the custom mod:
+		GetPrivateProfileString(g_psCfgAppName,MDTLCFGSTR_mod_custom,"",pcTmp,MAXLEN_HLOPT,g_psLoaderCfg);
+		SetDlgItemText(hWndDlg,IDC_EDIT_CMOD,pcTmp);
+
+		// init the custom options:
+		GetPrivateProfileString(g_psCfgAppName,MDTLCFGSTR_launchoptions,"-demoedit",pcTmp,MAXLEN_HLOPT,g_psLoaderCfg);
+		SetDlgItemText(hWndDlg,IDC_EDIT_UCOPT,pcTmp);
 
 		// select traditional by default:
 		CheckRadioButton(hWndDlg,IDC_RADIO_MODET,IDC_RADIO_MODEX,IDC_RADIO_MODET);
@@ -332,6 +401,10 @@ LRESULT CALLBACK DlgProc(HWND hWndDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 
 		SendMessage(GetDlgItem(hWnd, IDC_DISCLAIMER), WM_SETFONT, (WPARAM) hFont, (LPARAM)FALSE);
 
+		// init res forcing:
+		iTmp = GetPrivateProfileInt(g_psCfgAppName,MDTLCFGSTR_force_res,0,g_psLoaderCfg);
+		CheckDlgButton(hWndDlg,IDC_CHECK_FRES,iTmp==1);
+		UpdateResControls(hWndDlg,iTmp==1); // also updates g_bForceRes
 
 		UpdateCurrent(hWndDlg); // update current launchoptions preview
 
@@ -342,7 +415,8 @@ LRESULT CALLBACK DlgProc(HWND hWndDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 	case WM_COMMAND:
 		switch(LOWORD(wParam)) // Hey Gavin, I think there should be LOWORD here :)
 		{
-		case IDOK: case IDCANCEL:
+		case IDOK:
+		case IDCANCEL:
 			// we cannot simply quit here, because EndDialog might quit and destroy handles when the threads are already in their critical live sections and asume them to be valid!
 			g_bDebugWanted = false; // indicate we don't want them anymore
 			g_bOldLoaderWanted = false; // .
@@ -406,10 +480,55 @@ LRESULT CALLBACK DlgProc(HWND hWndDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 			// since we use pTmp also temporary there might be crap at the end, so set end to NULL:
 			pTmp+=myStrCpy(pTmp,"");
 
+			// update exe path from edit box:
+			GetDlgItemText(hWndDlg,IDC_EDIT_GPATH,g_ofStruct.lpstrFile,MAX_PATHFILE_LENGTH);
+
 			if (bAllOk)
 			{
 				if (InitDebug(hWndDlg))
+				{
 					EnableWindow(GetDlgItem(hWndDlg,IDC_BUTTON_START),FALSE);
+
+					//
+					// save options:
+					//
+					pTmp[0]=0;
+
+					// HL Exe Path:
+					WritePrivateProfileString(g_psCfgAppName,MDTLCFGSTR_hl_exe_path,g_ofStruct.lpstrFile,g_psLoaderCfg);
+
+					// color_dropdown:
+					WritePrivateProfileString(g_psCfgAppName,MDTLCFGSTR_color_dropdown,ltoa(SendDlgItemMessage(hWndDlg,IDC_COMBO_COLOR,CB_GETCURSEL,NULL,NULL),pcTmp,10),g_psLoaderCfg);
+
+					// custom bits:
+					GetDlgItemText(hWndDlg,IDC_EDIT_CCOLOR,pcTmp,MAXLEN_HLOPT);
+					WritePrivateProfileString(g_psCfgAppName,MDTLCFGSTR_color_custom,pcTmp,g_psLoaderCfg);
+
+					// video_dropdown:
+					WritePrivateProfileString(g_psCfgAppName,MDTLCFGSTR_video_dropdown,ltoa(SendDlgItemMessage(hWndDlg,IDC_COMBO_DMODE,CB_GETCURSEL,NULL,NULL),pcTmp,10),g_psLoaderCfg);
+
+					// video_width:
+					GetDlgItemText(hWndDlg,IDC_EDIT_WIDTH,pcTmp,MAXLEN_HLOPT);
+					WritePrivateProfileString(g_psCfgAppName,MDTLCFGSTR_video_width,pcTmp,g_psLoaderCfg);
+
+					// video_height:
+					GetDlgItemText(hWndDlg,IDC_EDIT_HEIGHT,pcTmp,MAXLEN_HLOPT);
+					WritePrivateProfileString(g_psCfgAppName,MDTLCFGSTR_video_height,pcTmp,g_psLoaderCfg);
+
+					// mod_dropdown:
+					WritePrivateProfileString(g_psCfgAppName,MDTLCFGSTR_mod_dropdown,ltoa(SendDlgItemMessage(hWndDlg,IDC_COMBO_MOD,CB_GETCURSEL,NULL,NULL),pcTmp,10),g_psLoaderCfg);
+
+					// custom mod:
+					GetDlgItemText(hWndDlg,IDC_EDIT_CMOD,pcTmp,MAXLEN_HLOPT);
+					WritePrivateProfileString(g_psCfgAppName,MDTLCFGSTR_mod_custom,pcTmp,g_psLoaderCfg);
+
+					// custom options:
+					GetDlgItemText(hWndDlg,IDC_EDIT_UCOPT,pcTmp,MAXLEN_HLOPT);
+					WritePrivateProfileString(g_psCfgAppName,MDTLCFGSTR_launchoptions,pcTmp,g_psLoaderCfg);
+
+					// force_res:
+					WritePrivateProfileString(g_psCfgAppName,MDTLCFGSTR_force_res,itoa((int)g_bForceRes,pcTmp,10),g_psLoaderCfg);
+				}
 			} else
 				MessageBox(hWndDlg,myerrorText,"MDT - You are not allowed to start yet",MB_OK|MB_ICONHAND);
 			return TRUE;
@@ -517,17 +636,7 @@ LRESULT CALLBACK DlgProc(HWND hWndDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 		case IDC_CHECK_FRES:
 			if (HIWORD(wParam)==BN_CLICKED)
 			{
-				g_bForceRes=!g_bForceRes;
-				EnableWindow(GetDlgItem(hWndDlg,IDC_STATIC_WIDTH),g_bForceRes);
-				EnableWindow(GetDlgItem(hWndDlg,IDC_EDIT_WIDTH),g_bForceRes);
-				EnableWindow(GetDlgItem(hWndDlg,IDC_STATIC_HEIGHT),g_bForceRes);
-				EnableWindow(GetDlgItem(hWndDlg,IDC_EDIT_HEIGHT),g_bForceRes);
-				EnableWindow(GetDlgItem(hWndDlg,IDC_STATIC_COLOR),g_bForceRes);
-				EnableWindow(GetDlgItem(hWndDlg,IDC_COMBO_COLOR),g_bForceRes);
-				EnableWindow(GetDlgItem(hWndDlg,IDC_EDIT_CCOLOR),g_bForceRes&&(SendDlgItemMessage(hWndDlg,IDC_COMBO_COLOR,CB_GETCURSEL,NULL,NULL)==0));
-				EnableWindow(GetDlgItem(hWndDlg,IDC_STATIC_DMODE),g_bForceRes);
-				EnableWindow(GetDlgItem(hWndDlg,IDC_COMBO_DMODE),g_bForceRes);
-				
+				UpdateResControls(hWndDlg,!g_bForceRes); // also updates g_bForceRes
 				UpdateCurrent(hWndDlg); // update current launchoptions preview
 				return TRUE;
 			}
