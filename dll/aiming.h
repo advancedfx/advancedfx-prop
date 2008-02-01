@@ -31,12 +31,25 @@ private:
 
 	float m_flRealAimSpeed;
 
+	float _fAimOfsRight;
+	float _fAimOfsForward;
+	float _fAimOfsUp;
+	bool _bUseAimOfs;
+
+	void _RetriveTargetFromEnt(cl_entity_t *pmyEnt,Vector &outTarget);
+
 public:
+
 	Aiming()
 	{
 		m_iCurrentEntity = 0;
 		m_iHighestSlot = -1;
 		m_flRealAimSpeed = 0;
+
+		_fAimOfsRight = 0;
+		_fAimOfsForward = 0;
+		_fAimOfsUp = 0;
+		_bUseAimOfs = false;
 	}
 
 	void addAimLayer(int iSlot, int iEnt);
@@ -55,6 +68,8 @@ public:
 	bool getValidTarget(Vector &outTarget);
 	bool isAiming() { return m_bActive; }
 	void aim();
+
+	void SetAimOfs(float fOfsRight,float fOfsForward,float fOfsUp);
 };
 
 #endif

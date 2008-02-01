@@ -8,6 +8,10 @@ Description : see mdt_media.h
 
 #include "mdt_media.h"
 
+#ifdef MDT_DEBUG
+	#include <stdio.h>
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 // Implementation of class CMdt_Media_BASE
 
@@ -208,8 +212,18 @@ bool CMdt_Media_RAWGLPIC::DoGlReadPixels(int iXofs, int iYofs, int iWidth, int i
 	if (!_adjustMemory(_uiSize,true))  // we only want enlarging the memory if required and no compacting to keep memory access low
 		return false;
 
+#ifdef MDT_DEBUG
+	static char sztmp[1000];
+	_snprintf(sztmp,1000,"Size: %u",_uiSize);
+	MessageBox(0,sztmp,"DEBUG",MB_OK);
+#endif
+
 	if (_pBuffer) glReadPixels(iXofs, iYofs, _iWidth, _iHeight, _eGLformat, _eGLtype, _pBuffer);
-	
+
+#ifdef MDT_DEBUG
+	MessageBox(0,sztmp,"DEBUG2",MB_OK);
+#endif
+
 	_bHasConsistentData=true;
 	return true;
 }

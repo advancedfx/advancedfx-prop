@@ -23,14 +23,22 @@ REGISTER_CVAR(aim_snapto, "1", 0);
 REGISTER_CVAR(aim_lingertime, "50", 0);
 REGISTER_CVAR(aim_onlyvisible, "0", 0);
 
+REGISTER_DEBUGCVAR(aim_maxspeed,"3.0",0);
+REGISTER_DEBUGCVAR(aim_accel,"20.0",0);
+REGISTER_DEBUGCVAR(aim_deaccel,"10.0",0);
+
 // Our aiming singleton
 Aiming g_Aiming;
 
 void AnglesFromTo(Vector &from, Vector &to, Vector &angles);
 float TraceLine(cl_entity_t *target);
 float clamp(float i, float min, float max);
+void MakeLocalCoords(Vector vAngles,Vector &vUp,Vector &vRight,Vector &vForward);
 
-#define PI 3.14159265f
+#define PI 3.14159265358979323846f
+#ifndef M_PI
+#define M_PI PI
+#endif
 
 void Aiming::addAimLayer(int iSlot, int iEnt)
 {
@@ -114,8 +122,10 @@ void Aiming::LookAtCurrentEntity()
 	if (them)
 	{
 		Vector angles;
+		Vector target;
 
-		AnglesFromTo(ppmove->origin, them->origin, angles);
+		_RetriveTargetFromEnt(them,target);
+		AnglesFromTo(ppmove->origin, target, angles);
 
 		float cangles[3];
 
@@ -197,7 +207,7 @@ bool Aiming::getValidTarget(Vector &outTarget)
 			// We don't care about whether it is visible, so assume it is
 			if (!bViewOnly)
 			{
-				m_LastPositions[i] = them->origin;
+				_RetriveTargetFromEnt(them,m_LastPositions[i]);
 				m_VisibleTimes[i] = iLingerTime;
 			}
 			// Actually we only look at visible entities
@@ -206,7 +216,7 @@ bool Aiming::getValidTarget(Vector &outTarget)
 				if (vis == 1.0f)
 					m_VisibleTimes[i] = iLingerTime;
 
-				m_LastPositions[i] = them->origin;
+				_RetriveTargetFromEnt(them,m_LastPositions[i]);
 			}
 		}
 		// This entity is not active
@@ -244,11 +254,6 @@ bool Aiming::getValidTarget(Vector &outTarget)
 		slot_position++;
 	}
 
-	//pEngfuncs->Con_Printf("Aiming::getValidTarget NetState: %i, %i, %e, %e %e,\n",nssNetStatus.connected,nssNetStatus.packet_loss,nssNetStatus.latency,nssNetStatus.connection_time,nssNetStatus.rate);
-
-	//if (bNetActive) pEngfuncs->Con_Printf("net on\n");
-	//else pEngfuncs->Con_Printf("net OFF\n");
-
 	// save new connection time
 	dOldLatency = nssNetStatus.latency;
 
@@ -258,9 +263,9 @@ bool Aiming::getValidTarget(Vector &outTarget)
 
 void Aiming::aim()
 {
-	const float flRealAimMaxSpeed = 3.0f;
-	const float flRealAimAccel = 20.0f;
-	const float flRealAimDeaccel = 10.0f;
+	float flRealAimMaxSpeed = aim_maxspeed->value; // 3.0f;
+	float flRealAimAccel = aim_accel->value;// 20.0f;
+	float flRealAimDeaccel = aim_deaccel->value;// 10.0f;
 
 	Vector target(0, 0, 0);
 
@@ -334,6 +339,32 @@ void Aiming::aim()
 	}
 }
 
+void Aiming::SetAimOfs(float fOfsRight,float fOfsForward,float fOfsUp)
+{
+	_fAimOfsRight=fOfsRight;
+	_fAimOfsForward=fOfsForward;
+	_fAimOfsUp=fOfsUp;
+	_bUseAimOfs =  fOfsRight!=0 || fOfsForward!=0 || fOfsUp!=0;
+}
+
+////
+
+void Aiming::_RetriveTargetFromEnt(cl_entity_t *pmyEnt,Vector &outTarget)
+{
+	outTarget=pmyEnt->origin;
+
+	if (_bUseAimOfs)
+	{
+		Vector vUp,vRight,vForward;
+
+		MakeLocalCoords(pmyEnt->angles,vUp,vRight,vForward);
+
+		outTarget = outTarget + (_fAimOfsRight*vRight) + (_fAimOfsForward*vForward) + (_fAimOfsUp*vUp);
+	}
+}
+
+////
+
 void AnglesFromTo(Vector &from, Vector &to, Vector &angles)
 {
 	Vector dir = to - from;
@@ -390,6 +421,38 @@ float clamp(float i, float min, float max)
 		return max;
 	else
 		return i;
+}
+
+void MakeLocalCoords(Vector vAngles,Vector &vUp,Vector &vRight,Vector &vForward)
+{
+	// >> begin calculate transform vectors
+	// we have to calculate our own transformation vectors from the angles and can not use pparams->forward etc., because in spectator mode they might be not present:
+	// (adapted from HL1SDK/multiplayer/pm_shared.c/AngleVectors) and modified for quake order of angles:
+
+	float		angle;
+	float		sr, sp, sy, cr, cp, cy;
+
+	angle = vAngles.y * ((float)M_PI*2 / 360); // yaw
+	sy = sin((float)angle);
+	cy = cos((float)angle);
+	angle = vAngles.x * ((float)M_PI*2 / 360); // pitch
+	sp = sin((float)angle);
+	cp = cos((float)angle);
+	angle = vAngles.z * ((float)M_PI*2 / 360); // roll
+	sr = sin((float)angle);
+	cr = cos((float)angle);
+
+	vForward.x = cp*cy;
+	vForward.y = cp*sy;
+	vForward.z = -sp;
+
+	vRight.x = (-1*sr*sp*cy+-1*cr*-sy);
+	vRight.y = (-1*sr*sp*sy+-1*cr*cy);
+	vRight.z = -1*sr*cp;
+
+	vUp.x = (cr*sp*cy+-sr*-sy);
+	vUp.y = (cr*sp*sy+-sr*cy);
+	vUp.z = cr*cp;
 }
 
 REGISTER_CMD_FUNC(entity_lookat)
@@ -489,4 +552,13 @@ REGISTER_CMD_FUNC(showentities)
 			pEngfuncs->Con_Printf("  %03d. %s (dist: %d)\n", i, pEnt->model->name, iDistance);
 		}
 	}
+}
+
+
+REGISTER_CMD_FUNC(aim_offset)
+{
+	if (pEngfuncs->Cmd_Argc() == 4)
+		g_Aiming.SetAimOfs(atof(pEngfuncs->Cmd_Argv(1)),atof(pEngfuncs->Cmd_Argv(3)),atof(pEngfuncs->Cmd_Argv(2)));
+	else
+		pEngfuncs->Con_Printf("Usage: " PREFIX "aim_offset <right> <up> <forward>\n");
 }

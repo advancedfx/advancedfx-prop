@@ -447,7 +447,7 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 
 		screeninfo.iSize = sizeof(SCREENINFO);
 		pEngfuncs->pfnGetScreenInfo(&screeninfo);
-		pEngfuncs->Con_DPrintf("%d %d %d %d\n", screeninfo.iWidth, screeninfo.iHeight, (int) screeninfo.charWidths, screeninfo.iCharHeight);
+		pEngfuncs->Con_DPrintf("ScreenRes: %dx%d\n", screeninfo.iWidth, screeninfo.iHeight);
 
 		g_Filming.setScreenSize(screeninfo.iWidth,screeninfo.iHeight);
 
@@ -680,6 +680,28 @@ BOOL APIENTRY my_GetCursorPos(LPPOINT lpPoint)
 	return TRUE;
 }
 
+HWND APIENTRY my_CreateWindowEx(      
+    DWORD dwExStyle,
+    LPCTSTR lpClassName,
+    LPCTSTR lpWindowName,
+    DWORD dwStyle,
+    int x,
+    int y,
+    int nWidth,
+    int nHeight,
+    HWND hWndParent,
+    HMENU hMenu,
+    HINSTANCE hInstance,
+    LPVOID lpParam
+)
+{
+	char sbuff[1500];
+	sprintf(sbuff,"dwExStyle: 0x%08x\nlpClassName: %s\nlpWindowName: %s\ndwStyle: 0x%08x\nx: %i\ny: %i\nWidth: %i\nnHeight: %i\nhWndParent: %u\nhMenu: %u\nhInstance: %u\nlpParam: 0x%08x",dwExStyle,lpClassName,lpWindowName,dwStyle,x,y,nWidth,nHeight,hWndParent,hMenu,hInstance,lpParam);
+	MessageBox(NULL,sbuff,"MDT CreateWindowEx",MB_OK|MB_ICONINFORMATION);
+
+	return CreateWindowEx(dwExStyle,lpClassName,lpWindowName,dwStyle,x,y,nWidth,nHeight,hWndParent,hMenu,hInstance,lpParam);
+}
+
 FARPROC (WINAPI *pGetProcAddress)(HMODULE hModule, LPCSTR lpProcName);
 FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 {
@@ -690,7 +712,6 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 	{
 		if (!lstrcmp(lpProcName, "GetProcAddress"))
 			return (FARPROC) &newGetProcAddress;
-
 		if (!lstrcmp(lpProcName, "glBegin"))
 			return (FARPROC) &my_glBegin;
 		if (!lstrcmp(lpProcName, "glEnd"))
@@ -714,6 +735,9 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 			return Hook_DirectDrawCreate(nResult); // give our hook original address and return new (it remembers the original one from it's first call, it also cares about the commandline options (if to force the res or not and does not install the hook if not needed))
 		if (!lstrcmp(lpProcName, "glBlendFunc"))
 			return (FARPROC) &my_glBlendFunc;
+
+		//if (!lstrcmp(lpProcName, "CreateWindowExA"))
+		//	return (FARPROC) &my_CreateWindowEx;
 	}
 
 	return nResult;
