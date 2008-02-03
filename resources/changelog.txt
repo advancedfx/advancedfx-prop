@@ -1,3 +1,13 @@
+1.1.3.46
+
+- Added: mirv_aim_offset right up forward
+         Allows to set a offset relative to the entites origin and orientation.
+         Example: mirv_aim_offset 0 16.5 -20 would aim behind a players head
+         
+- Added: __mirv_aim_maxspeed, __mirv_aim_accel, __mirv_aim_deaccel
+         Those allow to adjust the camera man aiming simulation parameters.
+         (Only used when mirv_aim_snapto is 0)
+
 1.1.3.1
 
 The MDT Loader.exe has been updated and will try to remember some of the

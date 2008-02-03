@@ -40,6 +40,8 @@
 
 #include "newsky.h"
 
+#include "basecomClient.h"
+
 #include <map>
 #include <list>
 
@@ -74,6 +76,8 @@ playermove_s* ppmove			= (playermove_s*)		HL_ADDR_PLAYERMOVE_S;//0x02D590A0;
 int		g_nViewports = 0;
 bool	g_bIsSucceedingViewport = false;
 bool	g_bMenu = false;
+
+HWND	g_hlaeGameWindow=NULL;
 
 #define MDT_MAX_PATH_BYTES 1025
 #define MDT_CFG_FILE "mdt_addresses.ini"
@@ -695,11 +699,19 @@ HWND APIENTRY my_CreateWindowEx(
     LPVOID lpParam
 )
 {
+#if 1
+//#ifdef MDT_DEBUG
 	char sbuff[1500];
 	sprintf(sbuff,"dwExStyle: 0x%08x\nlpClassName: %s\nlpWindowName: %s\ndwStyle: 0x%08x\nx: %i\ny: %i\nWidth: %i\nnHeight: %i\nhWndParent: %u\nhMenu: %u\nhInstance: %u\nlpParam: 0x%08x",dwExStyle,lpClassName,lpWindowName,dwStyle,x,y,nWidth,nHeight,hWndParent,hMenu,hInstance,lpParam);
 	MessageBox(NULL,sbuff,"MDT CreateWindowEx",MB_OK|MB_ICONINFORMATION);
+#endif
 
-	return CreateWindowEx(dwExStyle,lpClassName,lpWindowName,dwStyle,x,y,nWidth,nHeight,hWndParent,hMenu,hInstance,lpParam);
+	if (g_hlaeGameWindow && hWndParent==NULL)
+	{
+		// GameWindow is being created
+		return g_hlaeGameWindow;
+	}
+	else return CreateWindowEx(dwExStyle,lpClassName,lpWindowName,dwStyle,x,y,nWidth,nHeight,hWndParent,hMenu,hInstance,lpParam);
 }
 
 FARPROC (WINAPI *pGetProcAddress)(HMODULE hModule, LPCSTR lpProcName);
@@ -736,8 +748,8 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 		if (!lstrcmp(lpProcName, "glBlendFunc"))
 			return (FARPROC) &my_glBlendFunc;
 
-		//if (!lstrcmp(lpProcName, "CreateWindowExA"))
-		//	return (FARPROC) &my_CreateWindowEx;
+		if (!lstrcmp(lpProcName, "CreateWindowExA"))
+			return (FARPROC) &my_CreateWindowEx;
 	}
 
 	return nResult;
@@ -793,10 +805,16 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 			// load addresses form config:
 			Mdt_LoadAddressConfig();
 
+			if(HlaeBcCltStart())
+			{
+				g_hlaeGameWindow = HlaeBcClt_retriveGameWindow();
+			}
+
 			break;
 		}
 		case DLL_PROCESS_DETACH:
 		{
+			HlaeBcCltStop();
 			break;
 		}
 		case DLL_THREAD_ATTACH:

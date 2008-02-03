@@ -3,8 +3,13 @@
 #include <wx/statusbr.h>
 #include <wx/textdlg.h>
 
-#include <hlae/framemain.h>
+//#include <wx/textctrl.h>
+#include <wx/scrolwin.h>
+#include <wx/utils.h> // wxGetProcessId
 
+#include "hlae/framemain.h"
+
+#include "basecomServer.h"
 
 BEGIN_EVENT_TABLE(hlaeFrameMain, wxFrame)
 
@@ -40,15 +45,23 @@ hlaeFrameMain::hlaeFrameMain()
 	m_auimanager->AddPane(new wxButton(this, wxID_ANY, wxT("test"),
 		wxDefaultPosition, wxSize(20,20), wxNO_BORDER),
 		wxAuiPaneInfo().Left().MinSize(wxSize(100,100)));
-	wxWindow* window = new wxWindow(this, wxID_ANY);
-	new wxButton(window, wxID_ANY, wxT("1"), wxPoint(10,10), wxSize(20,20));
-	new wxButton(window, wxID_ANY, wxT("2"), wxPoint(10,30), wxSize(20,20));
-	m_auimanager->AddPane(window, wxAuiPaneInfo().Center());
+	
+	//wxWindow* window = new wxWindow(this, wxID_ANY);
+	//new wxButton(window, wxID_ANY, wxT("1"), wxPoint(10,10), wxSize(20,20));
+	//new wxButton(window, wxID_ANY, wxT("2"), wxPoint(10,30), wxSize(20,20));
+	//m_auimanager->AddPane(window, wxAuiPaneInfo().Center());
+
+	wxScrolledWindow *myGameWindow=new wxScrolledWindow(this);
+
+	m_auimanager->AddPane(myGameWindow, wxAuiPaneInfo().Right());
 
 	m_auimanager->AddLayout(wxT("Default"),true);
+
+	HlaeBcSrvStart(wxGetProcessId(),myGameWindow->GetHWND());
 }
 
 hlaeFrameMain::~hlaeFrameMain() {
+	HlaeBcSrvStop();
 	delete m_auimanager;
 }
 
