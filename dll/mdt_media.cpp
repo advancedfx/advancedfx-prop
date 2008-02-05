@@ -8,8 +8,10 @@ Description : see mdt_media.h
 
 #include "mdt_media.h"
 
+//#define MDT_DEBUG
 #ifdef MDT_DEBUG
-	#include <stdio.h>
+	#include <stdio.h> // _snprintf
+	#include <malloc.h> // _msize
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -182,6 +184,10 @@ CMdt_Media_RAWGLPIC::~CMdt_Media_RAWGLPIC()
 // DoGlReadPixels:
 bool CMdt_Media_RAWGLPIC::DoGlReadPixels(int iXofs, int iYofs, int iWidth, int iHeight, GLenum eGLformat, GLenum eGLtype)
 {
+#ifdef MDT_DEBUG
+	static char sztmp[2000];
+#endif
+
 	// calcualte data required to know the size of a pixel (if possible / known):
 	if (_eGLformat!=eGLformat)
 		if (!_CalcNumComponents(eGLformat,&_ucNumComponents))
@@ -207,22 +213,69 @@ bool CMdt_Media_RAWGLPIC::DoGlReadPixels(int iXofs, int iYofs, int iWidth, int i
 
 	// calcualte the size:
 	_uiPixelSize = ((unsigned short)_ucNumComponents) * ((unsigned short)_ucSizeComponent);
-	_uiSize      = _iWidth * _iHeight * ((unsigned int)_uiPixelSize);
+	_uiSize      = _iWidth * ((unsigned int)_uiPixelSize);
+
+	// check for problems with GL_PIXEL_ALIGNMENT == 4
+	unsigned int uiRowPackSize;
+	unsigned int uiRowSize = _uiSize;
+
+	if (_uiSize && 0x03)
+	{
+		// is not divideable by 4 (has remainder)
+
+		_uiSize = 0x04 + (_uiSize & ~(unsigned int)0x03); //+= 4-(_uiSize && 0x03);// fill up to 4
+		uiRowPackSize = _uiSize;
+	}
+
+	_uiSize = _iHeight * _uiSize;
 
 	if (!_adjustMemory(_uiSize,true))  // we only want enlarging the memory if required and no compacting to keep memory access low
 		return false;
 
 #ifdef MDT_DEBUG
-	static char sztmp[1000];
-	_snprintf(sztmp,1000,"Size: %u",_uiSize);
+	_snprintf(sztmp,1000,"_uiSize: %u Bytes\niXofs: %i\niYofs: %i\n_iWidth: %i\n_iHeight: %i\n_eGLformat: 0x%08x\n_eGLtype: 0x%08x\n_pBuffer:  0x%08x (%u Bytes)",_uiSize,iXofs,iYofs,_iWidth,_iHeight,_eGLformat,_eGLtype,_pBuffer,_msize(_pBuffer));
 	MessageBox(0,sztmp,"DEBUG",MB_OK);
+	memset(_pBuffer,0x0FF,_uiSize);
 #endif
+
 
 	if (_pBuffer) glReadPixels(iXofs, iYofs, _iWidth, _iHeight, _eGLformat, _eGLtype, _pBuffer);
 
 #ifdef MDT_DEBUG
-	MessageBox(0,sztmp,"DEBUG2",MB_OK);
+	unsigned char* tBuffer=_pBuffer+_uiSize-1;
+	unsigned int tcnt=0;
+	GLint t_rowl,t_skipp,t_skiprows,t_align;
+
+	glGetIntegerv(GL_PACK_ROW_LENGTH,&t_rowl);
+	glGetIntegerv(GL_PACK_SKIP_PIXELS,&t_skipp);
+	glGetIntegerv(GL_PACK_SKIP_ROWS,&t_skiprows);
+	glGetIntegerv(GL_PACK_ALIGNMENT,&t_align);
+
+	while (_pBuffer<=tBuffer && *tBuffer == 0x0FF)
+	{
+		tBuffer--;
+		tcnt++;
+	}
+	_snprintf(sztmp,2000,"GL_PACK_ROW_LENGTH:%i\nGL_PACK_SKIP_PIXELS: %i\nGL_PACK_SKIP_ROWS: %i\nGL_PACK_ALIGNMENT: %i\n\niXofs: %i\niYofs: %i\n_iWidth: %i\n_iHeight: %i\n_eGLformat: 0x%08x\n_eGLtype: 0x%08x\n_pBuffer:  0x%08x (%u Bytes)\n\nExpected: %u Bytes\nAllocated: %u Bytes\nglReadPixels used: %u Bytes (minimum, might be more)",t_rowl,t_skipp,t_skiprows,t_align,iXofs,iYofs,_iWidth,_iHeight,_eGLformat,_eGLtype,_pBuffer,_msize(_pBuffer),3*_iWidth*_iHeight,_uiSize,_uiSize-tcnt);
+	MessageBox(0,sztmp,"glReadPixels DEBUG",MB_OK);
 #endif
+
+	if (uiRowSize != uiRowPackSize)
+	{
+		// postprocess (it would be better to post process it when outputting, since  this way we have overhead)
+		unsigned char* pTsrc=_pBuffer;
+		unsigned char* pTdst=_pBuffer+uiRowSize;
+		int iT=1;
+
+		while (iT<_iHeight)
+		{
+			pTsrc+=uiRowPackSize;
+			pTdst+=uiRowSize;
+			memcpy(pTdst,pTsrc,uiRowSize);
+			iT++;
+		}
+	}
+
 
 	_bHasConsistentData=true;
 	return true;

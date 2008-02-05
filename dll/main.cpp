@@ -699,8 +699,7 @@ HWND APIENTRY my_CreateWindowEx(
     LPVOID lpParam
 )
 {
-#if 1
-//#ifdef MDT_DEBUG
+#ifdef MDT_DEBUG
 	char sbuff[1500];
 	sprintf(sbuff,"dwExStyle: 0x%08x\nlpClassName: %s\nlpWindowName: %s\ndwStyle: 0x%08x\nx: %i\ny: %i\nWidth: %i\nnHeight: %i\nhWndParent: %u\nhMenu: %u\nhInstance: %u\nlpParam: 0x%08x",dwExStyle,lpClassName,lpWindowName,dwStyle,x,y,nWidth,nHeight,hWndParent,hMenu,hInstance,lpParam);
 	MessageBox(NULL,sbuff,"MDT CreateWindowEx",MB_OK|MB_ICONINFORMATION);
