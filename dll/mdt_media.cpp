@@ -219,11 +219,11 @@ bool CMdt_Media_RAWGLPIC::DoGlReadPixels(int iXofs, int iYofs, int iWidth, int i
 	unsigned int uiRowPackSize;
 	unsigned int uiRowSize = _uiSize;
 
-	if (_uiSize && 0x03)
+	if (_uiSize & 0x03)
 	{
 		// is not divideable by 4 (has remainder)
 
-		_uiSize = 0x04 + (_uiSize & ~(unsigned int)0x03); //+= 4-(_uiSize && 0x03);// fill up to 4
+		_uiSize = 0x04 + (_uiSize & ~(unsigned int)0x03); //+= 4-(_uiSize & 0x03);// fill up to 4
 		uiRowPackSize = _uiSize;
 	}
 
