@@ -252,12 +252,27 @@ extern unsigned long ulHLAddr_p_enginefuncs_s;
 extern unsigned long ulHLAddr_p_engine_studio_api_s;
 extern unsigned long ulHLAddr_p_playermove_s;
 extern unsigned long ulHLAddr_SCR_UpdateScreen;
+extern unsigned long ulHLAddr_HUD_TOURIN;
+extern unsigned long ulHLAddr_HUD_TOUROUT;
 extern unsigned long ulHLAddr_R_RenderView_;
+extern unsigned long ulHLAddr_DTOURSZ_R_RenderView_;
 extern unsigned long ulHLAddr_R_MarkLeaves;
+extern unsigned long ulHLAddr_DTOURSZ_R_MarkLeaves;
 extern unsigned long ulHLAddr_p_r_refdef;
 extern unsigned long ulHLAddr_HudSpectator_tfc;
 extern unsigned long ulHLAddr_HudSpectator_cmp_tfc;
 extern unsigned long ulHLAddr_UnkIGAWorld;
+extern unsigned long ulHLAddr_DTOURSZ_UnkIGAWorld;
+extern unsigned long ulHLAddr_GetSoundtime;
+extern unsigned long ulHLAddr_DTOURSZ_GetSoundtime;
+extern unsigned long ulHLAddr_S_PaintChannels;
+extern unsigned long ulHLAddr_DTOURSZ_S_PaintChannels;
+extern unsigned long ulHLAddr_S_TransferPaintBuffer;
+extern unsigned long ulHLAddr_DTOURSZ_S_TransferPaintBuffer;
+extern unsigned long ulHLAddr_p_shm;
+extern unsigned long ulHLAddr_paintbuffer;
+extern unsigned long ulHLAddr_soundtime;
+extern unsigned long ulHLAddr_paintedtime;
 
 //
 // macros for accessing the header exports (for compabtility with old code):
@@ -270,9 +285,14 @@ extern unsigned long ulHLAddr_UnkIGAWorld;
 #define HL_ADDR_PLAYERMOVE_S ulHLAddr_p_playermove_s
 
 #define HL_ADDR_SCR_UpdateScreen ulHLAddr_SCR_UpdateScreen
+#define HL_ADDR_HUD_TOURIN ulHLAddr_HUD_TOURIN
+#define HL_ADDR_HUD_TOUROUT ulHLAddr_HUD_TOUROUT
 
 #define HL_ADDR_R_RenderView_ ulHLAddr_R_RenderView_
+#define HL_ADDR_DTOURSZ_R_RenderView_ ulHLAddr_DTOURSZ_R_RenderView_
+
 #define HL_ADDR_R_MarkLeaves ulHLAddr_R_MarkLeaves
+#define HL_ADDR_DTOURSZ_R_MarkLeaves ulHLAddr_DTOURSZ_R_MarkLeaves
 
 #define HL_ADDR_r_refdef ulHLAddr_p_r_refdef
 
@@ -280,5 +300,20 @@ extern unsigned long ulHLAddr_UnkIGAWorld;
 #define HL_ADDR_HUDSPECTATOR_CMPA0_TFC ulHLAddr_HudSpectator_cmp_tfc
 
 #define HL_ADDR_UnkIGAWorld ulHLAddr_UnkIGAWorld
+#define HL_ADDR_DTOURSZ_UnkIGAWorld ulHLAddr_DTOURSZ_UnkIGAWorld
+
+#define HL_ADDR_GetSoundtime ulHLAddr_GetSoundtime
+#define HL_ADDR_DTOURSZ_GetSoundtime ulHLAddr_DTOURSZ_GetSoundtime
+
+#define HL_ADDR_S_PaintChannels ulHLAddr_S_PaintChannels
+#define HL_ADDR_DTOURSZ_S_PaintChannels ulHLAddr_DTOURSZ_S_PaintChannels
+
+#define HL_ADDR_S_TransferPaintBuffer ulHLAddr_S_TransferPaintBuffer
+#define HL_ADDR_DTOURSZ_S_TransferPaintBuffer ulHLAddr_DTOURSZ_S_TransferPaintBuffer
+
+#define HL_ADDR_p_shm ulHLAddr_p_shm
+#define HL_ADDR_paintbuffer ulHLAddr_paintbuffer
+#define HL_ADDR_soundtime ulHLAddr_soundtime
+#define HL_ADDR_paintedtime ulHLAddr_paintedtime
 
 #endif // #ifndef HL_ADDRESSES_H

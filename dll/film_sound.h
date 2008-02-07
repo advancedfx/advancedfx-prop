@@ -23,6 +23,7 @@ class CFilmSound
 public:
 	enum FILM_SOUND_STATE {FSS_IDLE,FSS_STARTING,FSS_FILMING,FSS_STOPPING};
 private:
+/*
 	#define ADDRESS_GetSoundtime 0x01da1db0
 	// old: 0x01da4370
 	#define DETOURSIZE_GetSoundtime 0x06
@@ -44,7 +45,7 @@ private:
 	// old: 0x027a7a3c
 	#define ADDRESS_paintedtime (ADDRESS_paintbuffer + 0xC160)
 	// old: 0x027a7a40
-
+*/
 	typedef void (*GetSoundtime_t)(void);
 	typedef void (*S_PaintChannels_t)(int endtime);
 	typedef void (*S_TransferPaintBuffer_t)(int endtime);

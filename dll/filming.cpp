@@ -84,10 +84,6 @@ R_RenderView__t	detoured_R_RenderView_=NULL;
 //#define ADDRESS_unkown 0x01d50960
 //#define DETOURSIZE_unknown 6
 
-#define ADDRESS_R_RenderView_ HL_ADDR_R_RenderView_
-#define DETOURSIZE_R_RenderView_ 0x014
-#define ADDRESS_r_refdef HL_ADDR_r_refdef
-
 //#define ADDRESS_V_RenderView HL_ADDR_V_RenderView
 //#define DETOURSIZE_V_RenderView 0x5
 //#define ADDRESS_GL_Set2D HL_ADDR_GL_Set2D
@@ -148,14 +144,6 @@ R_RenderView__t	detoured_R_RenderView_=NULL;
 #define asmJMP	0xE9 // opcode for JUMP
 #define JMP32_SZ 5	// the size of JMP <address>
 
-// addresses:
-#define ADDRESS_SCR_UpdateScreen HL_ADDR_SCR_UpdateScreen
-// 
-// 0x01dd0444:
-#define ADDRESS_HUD_TOURIN (HL_ADDR_SCR_UpdateScreen + 0xD4)
-// 0x01dd0479:
-#define ADDRESS_HUD_TOUROUT (ADDRESS_HUD_TOURIN + 0x35)
-
 bool bHudToursInstalled=false;
 char pHudTours_begin[5+JMP32_SZ]; // for detouring before jumping into tour_HudBegin
 char pHudTours_end[5+JMP32_SZ];	// for detouring on finally leaving tour_HudEnd (when no loop was requested)
@@ -207,12 +195,12 @@ void install_Hud_tours()
 	bHudToursInstalled=true;
 
 	// fill tourin return address:
-	dwAddress_TourIn_Back = (DWORD)ADDRESS_HUD_TOURIN +5;
+	dwAddress_TourIn_Back = (DWORD)HL_ADDR_HUD_TOURIN +5;
     
 	// get access top the code in the code segment:
-	char *pCodeAccess=(char *)ADDRESS_HUD_TOURIN;
+	char *pCodeAccess=(char *)HL_ADDR_HUD_TOURIN;
 	DWORD dwOldProtect;
-	VirtualProtect(pCodeAccess,(ADDRESS_HUD_TOUROUT - ADDRESS_HUD_TOURIN)+5,PAGE_READWRITE,&dwOldProtect);
+	VirtualProtect(pCodeAccess,(HL_ADDR_HUD_TOUROUT - HL_ADDR_HUD_TOURIN)+5,PAGE_READWRITE,&dwOldProtect);
 
 	DWORD dwTemp;
 
@@ -230,7 +218,7 @@ void install_Hud_tours()
 	memcpy(pCodeAccess+1,&dwTemp,sizeof(DWORD));
 
 	// Detour HudOut:
-	char *pOutAccess=(char *)ADDRESS_HUD_TOUROUT;
+	char *pOutAccess=(char *)HL_ADDR_HUD_TOUROUT;
 
 	// save the code (the 5 byte move eax,[addr]) we have to exec later when leaving our loop:
 	memcpy(pHudTours_end,pOutAccess,5);
@@ -251,7 +239,7 @@ void install_Hud_tours()
 	// that's it.
 
 	// restore olde code access:
-	VirtualProtect(pCodeAccess,(ADDRESS_HUD_TOUROUT - ADDRESS_HUD_TOURIN)+5,dwOldProtect,NULL);
+	VirtualProtect(pCodeAccess,(HL_ADDR_HUD_TOUROUT - HL_ADDR_HUD_TOURIN)+5,dwOldProtect,NULL);
 }
 
 // << Hooking the HUD functions  <<
@@ -313,7 +301,7 @@ void touring_R_RenderView_(void)
 // this is our R_RemderView hook
 // pay attention, cuz it will have heavy interaction with our filming singelton!
 {
-	refdef_t* p_r_refdef=(refdef_t*)ADDRESS_r_refdef; // pointer to r_refdef global struct
+	refdef_t* p_r_refdef=(refdef_t*)HL_ADDR_r_refdef; // pointer to r_refdef global struct
 
 	static vec3_t oldorigin;
 	static vec3_t oldangles;
@@ -463,9 +451,6 @@ void touring_unknown(void)
 // 
 // 01edcdb4 --> r_novis.value
 
-#define ADDRESS_R_MarkLeaves HL_ADDR_R_MarkLeaves
-#define DETOURSIZE_R_MarkLeaves 0x05
-
 typedef void (*R_MarkLeaves_t)(void);
 R_MarkLeaves_t detoured_R_MarkLeaves;
 
@@ -480,16 +465,13 @@ void touring_R_MarkLeaves (void)
 
 void InstallHook_R_MarLeaves()
 {
-	if (!detoured_R_MarkLeaves && (ADDRESS_R_MarkLeaves!=NULL))
-		detoured_R_MarkLeaves = (R_MarkLeaves_t) DetourApply((BYTE *)ADDRESS_R_MarkLeaves, (BYTE *)touring_R_MarkLeaves, (int)DETOURSIZE_R_MarkLeaves);
+	if (!detoured_R_MarkLeaves && (HL_ADDR_R_MarkLeaves!=NULL))
+		detoured_R_MarkLeaves = (R_MarkLeaves_t) DetourApply((BYTE *)HL_ADDR_R_MarkLeaves, (BYTE *)touring_R_MarkLeaves, (int)HL_ADDR_DTOURSZ_R_MarkLeaves);
 }
 
 //
 // IGA handling, see temporary_dominik_0003.cpp for more info
 //
-
-#define ADDRESS_UnkIGAWorld HL_ADDR_UnkIGAWorld
-#define DETOURSIZE_UnkIGAWorld 0x05
 
 typedef void (*UnkIGAWorld_t) (DWORD dwUnkown1);
 UnkIGAWorld_t detoured_UnkIGAWorld=NULL;
@@ -501,8 +483,8 @@ void touring_UnkIGAWorld (DWORD dwUnkown1)
 
 void InstallHook_UnkIGAWorld()
 {
-	if (!detoured_UnkIGAWorld && (ADDRESS_UnkIGAWorld!=NULL))
-			detoured_UnkIGAWorld = (UnkIGAWorld_t) DetourApply((BYTE *)ADDRESS_UnkIGAWorld, (BYTE *)touring_UnkIGAWorld, (int)DETOURSIZE_UnkIGAWorld);
+	if (!detoured_UnkIGAWorld && (HL_ADDR_UnkIGAWorld!=NULL))
+			detoured_UnkIGAWorld = (UnkIGAWorld_t) DetourApply((BYTE *)HL_ADDR_UnkIGAWorld, (BYTE *)touring_UnkIGAWorld, (int)HL_ADDR_DTOURSZ_UnkIGAWorld);
 }
 
 //
@@ -711,14 +693,14 @@ void Filming::Start()
 	if (_bNewRequestMethod)
 	{
 		// we want to use it, so make sure we have it:
-		if (!detoured_R_RenderView_&&((ADDRESS_R_RenderView_)!=NULL))
+		if (!detoured_R_RenderView_&&((HL_ADDR_R_RenderView_)!=NULL))
 		{
 			// we don't have it yet and the addres is not NULL (which might be an intended cfg setting)
-			detoured_R_RenderView_ = (R_RenderView__t) DetourApply((BYTE *)ADDRESS_R_RenderView_, (BYTE *)touring_R_RenderView_, (int)DETOURSIZE_R_RenderView_);
+			detoured_R_RenderView_ = (R_RenderView__t) DetourApply((BYTE *)HL_ADDR_R_RenderView_, (BYTE *)touring_R_RenderView_, (int)HL_ADDR_DTOURSZ_R_RenderView_);
 			install_Hud_tours(); // wil automaticall check if already installed or not
 
 			//detoured_V_RenderView = (V_RenderView_t) DetourApply((BYTE *)ADDRESS_V_RenderView, (BYTE *)touring_V_RenderView, (int)DETOURSIZE_V_RenderView);
-			//detoured_SCR_UpdateScreen = (SCR_UpdateScreen_t) DetourApply((BYTE *)ADDRESS_SCR_UpdateScreen, (BYTE *)touring_SCR_UpdateScreen, (int)DETOURSIZE_SCR_UpdateScreen);
+			//detoured_SCR_UpdateScreen = (SCR_UpdateScreen_t) DetourApply((BYTE *)HL_ADDR_SCR_UpdateScreen, (BYTE *)touring_SCR_UpdateScreen, (int)DETOURSIZE_SCR_UpdateScreen);
 			//detoured_GL_Set2D = (GL_Set2D_t) DetourApply((BYTE *)ADDRESS_GL_Set2D, (BYTE *)touring_GL_Set2D, (int)DETOURSIZE_GL_Set2D);
 			//detoured_unknown = (HL_unknownFunc_t) DetourApply((BYTE *)ADDRESS_unkown, (BYTE *)touring_unknown, (int)DETOURSIZE_unknown);
 		}
