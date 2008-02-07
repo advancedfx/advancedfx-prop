@@ -1,3 +1,22 @@
+1.1.3.97
+
+- Changed: Exposed more of MDTs internas to the mdt_addresses.ini to make it
+           more community friendly and increase potential for customisation
+
+1.1.3.95
+
+- Fixed: fixed the fix
+
+
+1.1.3.93
+
+- Fixed: ´Problems / crashes with resolutions when the width was not dividable
+          by 4. Mdt should handle those properly now, however the performance
+          of those may be a bit worse than those that are dividable by 4. (Bug
+          reported by s0nkite). Please be aware that several codecs and video
+          editing programs might not support these resolutions. 
+
+
 1.1.3.46
 
 - Added: mirv_aim_offset right up forward
