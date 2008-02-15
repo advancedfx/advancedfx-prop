@@ -77,8 +77,6 @@ int		g_nViewports = 0;
 bool	g_bIsSucceedingViewport = false;
 bool	g_bMenu = false;
 
-HWND	g_hlaeGameWindow=NULL;
-
 #define MDT_MAX_PATH_BYTES 1025
 #define MDT_CFG_FILE "mdt_addresses.ini"
 #define MDT_CFG_FILE_SLEN 15
@@ -684,7 +682,9 @@ BOOL APIENTRY my_GetCursorPos(LPPOINT lpPoint)
 	return TRUE;
 }
 
-HWND APIENTRY my_CreateWindowEx(      
+HWND g_HLGameWindow=NULL;
+
+HWND APIENTRY my_CreateWindowExA(      
     DWORD dwExStyle,
     LPCTSTR lpClassName,
     LPCTSTR lpWindowName,
@@ -699,18 +699,47 @@ HWND APIENTRY my_CreateWindowEx(
     LPVOID lpParam
 )
 {
+	HWND hwResultWin;
 #ifdef MDT_DEBUG
 	char sbuff[1500];
 	sprintf(sbuff,"dwExStyle: 0x%08x\nlpClassName: %s\nlpWindowName: %s\ndwStyle: 0x%08x\nx: %i\ny: %i\nWidth: %i\nnHeight: %i\nhWndParent: %u\nhMenu: %u\nhInstance: %u\nlpParam: 0x%08x",dwExStyle,lpClassName,lpWindowName,dwStyle,x,y,nWidth,nHeight,hWndParent,hMenu,hInstance,lpParam);
 	MessageBox(NULL,sbuff,"MDT CreateWindowEx",MB_OK|MB_ICONINFORMATION);
 #endif
 
-	if (g_hlaeGameWindow && hWndParent==NULL)
+	if (hWndParent==NULL)
 	{
 		// GameWindow is being created
-		return g_hlaeGameWindow;
+		if (HlaeBcCltStart())
+		{
+			hwResultWin = HlaeBcClt_CreateWindowExA(dwExStyle,lpClassName,lpWindowName,dwStyle,x,y,nWidth,nHeight,hWndParent,hMenu,hInstance,lpParam);
+			HlaeBcCltStop();
+		}
 	}
-	else return CreateWindowEx(dwExStyle,lpClassName,lpWindowName,dwStyle,x,y,nWidth,nHeight,hWndParent,hMenu,hInstance,lpParam);
+	else hwResultWin = CreateWindowEx(dwExStyle,lpClassName,lpWindowName,dwStyle,x,y,nWidth,nHeight,hWndParent,hMenu,hInstance,lpParam);
+
+	g_HLGameWindow = hwResultWin;
+
+	return hwResultWin;
+}
+
+BOOL APIENTRY my_DestroyWindow(      
+    HWND hWnd
+)
+{
+	if (hWnd == g_HLGameWindow)
+		return HlaeBcClt_DestroyWindow(hWnd);
+	else
+		return DestroyWindow(hWnd);
+}
+
+ATOM APIENTRY my_RegisterClassA(      
+    CONST WNDCLASS *lpWndClass
+)
+{
+	if (!lstrcmp(lpWndClass->lpszClassName,"Valve0001"))
+		return HlaeBcClt_RegisterClassA(lpWndClass);
+	else
+		return RegisterClassA(lpWndClass);
 }
 
 FARPROC (WINAPI *pGetProcAddress)(HMODULE hModule, LPCSTR lpProcName);
@@ -748,7 +777,14 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 			return (FARPROC) &my_glBlendFunc;
 
 		if (!lstrcmp(lpProcName, "CreateWindowExA"))
-			return (FARPROC) &my_CreateWindowEx;
+			return (FARPROC) &my_CreateWindowExA;
+
+		if (!lstrcmp(lpProcName, "DestroyWindow"))
+			return (FARPROC) &my_DestroyWindow;
+
+		if (!lstrcmp(lpProcName, "RegisterClassA"))
+			return (FARPROC) &my_RegisterClassA;
+
 	}
 
 	return nResult;
@@ -803,17 +839,10 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 
 			// load addresses form config:
 			Mdt_LoadAddressConfig();
-
-			if(HlaeBcCltStart())
-			{
-				g_hlaeGameWindow = HlaeBcClt_retriveGameWindow();
-			}
-
 			break;
 		}
 		case DLL_PROCESS_DETACH:
 		{
-			HlaeBcCltStop();
 			break;
 		}
 		case DLL_THREAD_ATTACH:
