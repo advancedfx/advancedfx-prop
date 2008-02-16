@@ -1,5 +1,5 @@
 /* includes */
-#include <hlae/DialogTextInput.h>
+#include "DialogTextInput.h"
 #include <wx/statbmp.h>
 #include <wx/bitmap.h>
 #include <wx/artprov.h>

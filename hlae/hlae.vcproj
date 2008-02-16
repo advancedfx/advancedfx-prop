@@ -232,21 +232,45 @@
 				>
 			</File>
 			<File
-				RelativePath=".\DialogLayoutManager.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\DialogTextInput.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\FrameMain.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\Lists.cpp"
 				>
 			</File>
+			<Filter
+				Name="Frames"
+				>
+				<File
+					RelativePath=".\FrameMain.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Dialogs"
+				>
+				<File
+					RelativePath=".\DialogLayoutManager.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\DialogTextInput.cpp"
+					>
+				</File>
+				<Filter
+					Name="Settings"
+					>
+					<File
+						RelativePath=".\DialogSettings.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\SettingsPageElement.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\SettingsPageTemplate.cpp"
+						>
+					</File>
+				</Filter>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -266,21 +290,45 @@
 				>
 			</File>
 			<File
-				RelativePath=".\DialogLayoutManager.h"
-				>
-			</File>
-			<File
-				RelativePath=".\DialogTextInput.h"
-				>
-			</File>
-			<File
-				RelativePath=".\FrameMain.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Lists.h"
 				>
 			</File>
+			<Filter
+				Name="Dialogs"
+				>
+				<File
+					RelativePath=".\DialogLayoutManager.h"
+					>
+				</File>
+				<File
+					RelativePath=".\DialogTextInput.h"
+					>
+				</File>
+				<Filter
+					Name="Settings"
+					>
+					<File
+						RelativePath=".\DialogSettings.h"
+						>
+					</File>
+					<File
+						RelativePath=".\SettingsPageElement.h"
+						>
+					</File>
+					<File
+						RelativePath=".\SettingsPageTemplate.h"
+						>
+					</File>
+				</Filter>
+			</Filter>
+			<Filter
+				Name="Frames"
+				>
+				<File
+					RelativePath=".\FrameMain.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 	</Files>
 	<Globals>

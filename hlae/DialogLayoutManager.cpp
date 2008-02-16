@@ -1,5 +1,5 @@
 /* includes */
-#include <hlae/DialogLayoutManager.h>
+#include "DialogLayoutManager.h"
 
 #include <wx/arrstr.h>
 #include <wx/textdlg.h>

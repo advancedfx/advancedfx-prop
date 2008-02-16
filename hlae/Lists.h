@@ -1,11 +1,14 @@
-#ifndef HLAELISTS_H
-	#define HLAELISTS_H
+#ifndef HEADER_HLAE_LIST
 
-	/* includes */
+	#define HEADER_HLAE_LIST
+
 	#include <wx/list.h>
+	#include "SettingsPageElement.h"
 
-	/* declaration */
-	struct hlaeLayoutElement {
+	class hlaeSettingsPageElement;
+
+	struct hlaeLayoutElement
+	{
 		bool is_predefined;
 		long id;
 		wxString describtion;
@@ -13,5 +16,8 @@
 	};
 
 	WX_DECLARE_LIST(hlaeLayoutElement, hlaeLayoutList);
+	WX_DECLARE_LIST(hlaeSettingsPageElement, hlaeSettingsPageList);
 
-#endif // HLAELISTS_H
+	
+
+#endif // HEADER_HLAE_LIST

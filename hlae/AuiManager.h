@@ -4,10 +4,10 @@
 	class hlaeAuiManager;
 
 	/* includes */
-	#include "hlae/dialoglayoutmanager.h"
-	#include <hlae/dialogtextinput.h>
+	#include "DialogLayoutManager.h"
+	#include "DialogTextInput.h"
 	#include "hlae/framemain.h"
-	#include "hlae/lists.h"
+	#include "Lists.h"
 	#include "wx/aui/aui.h"
 	#include "wx/menu.h"
 	#include "wx/window.h"

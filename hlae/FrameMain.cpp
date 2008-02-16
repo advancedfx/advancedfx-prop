@@ -11,6 +11,8 @@
 
 #include "basecomServer.h"
 
+#include "DialogSettings.h"
+
 BEGIN_EVENT_TABLE(hlaeFrameMain, wxFrame)
 
 	// standard indentifiers
@@ -67,6 +69,9 @@ hlaeFrameMain::~hlaeFrameMain() {
 
 void hlaeFrameMain::OnAbout(wxCommandEvent& WXUNUSED(event)) {
 
+	hlaeDialogSettings* bla = new hlaeDialogSettings(this);
+	bla->Show();
+	/*
     wxDialog* h_about = new wxDialog(this ,wxID_ANY,
 		wxT("About Half-Life After Effects"), wxDefaultPosition);
 	
@@ -81,6 +86,7 @@ void hlaeFrameMain::OnAbout(wxCommandEvent& WXUNUSED(event)) {
 	h_about->ShowModal();
 
 	delete h_about;
+	*/
 
 }
 

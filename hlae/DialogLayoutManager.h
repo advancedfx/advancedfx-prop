@@ -6,7 +6,7 @@
 	#include <wx/dialog.h>
 	#include <wx/stattext.h>
 	#include <wx/listbox.h>
-	#include <hlae/Lists.h>
+	#include "Lists.h"
 
 	/* declaration */
 	class hlaeDialogLayoutManager : public wxDialog {
