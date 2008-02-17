@@ -1,57 +1,35 @@
-#include <wx/panel.h>
-#include <wx/button.h>
 #include <wx/statusbr.h>
-#include <wx/textdlg.h>
-
-//#include <wx/textctrl.h>
+#include <wx/button.h>
 #include <wx/scrolwin.h>
-#include <wx/utils.h> // wxGetProcessId
 
-#include "hlae/framemain.h"
-
-#include "basecomServer.h"
-
-#include "DialogSettings.h"
+#include <hlae/frames/main.h>
+#include <hlae/dialogs/settings.h>
 
 BEGIN_EVENT_TABLE(hlaeFrameMain, wxFrame)
-
-	// standard indentifiers
 	EVT_MENU(wxID_EXIT, hlaeFrameMain::OnExit)
 	EVT_MENU(wxID_ABOUT, hlaeFrameMain::OnAbout)
-
-	// hlae indentifiers
 	EVT_MENU(hlaeFrameMain::hlaeID_SaveLayout, hlaeFrameMain::OnSaveLayout)
 	EVT_MENU(hlaeFrameMain::hlaeID_LayoutManager, hlaeFrameMain::OnLayoutManager)
-
 END_EVENT_TABLE()
-
 
 hlaeFrameMain::hlaeFrameMain()
 		: wxFrame(NULL, wxID_ANY,
 			wxT("Half-Life After Effects - Developer Edition"),
 			wxDefaultPosition, wxSize(800,600))
 {
-	// initialization
 	m_auimanager = new hlaeAuiManager(this);
 
 	m_toolbarmenu = new wxMenu;
 	m_windowmenu = new wxMenu;
 	m_layoutmenu = new wxMenu;
 
-	// set the menu- and statusbar
 	CreateMenuBar();
 	CreateStatusBar();
     GetStatusBar()->SetStatusText(wxT("Ready"));
 
-	// some test panes
 	m_auimanager->AddPane(new wxButton(this, wxID_ANY, wxT("test"),
 		wxDefaultPosition, wxSize(20,20), wxNO_BORDER),
 		wxAuiPaneInfo().Left().MinSize(wxSize(100,100)));
-	
-	//wxWindow* window = new wxWindow(this, wxID_ANY);
-	//new wxButton(window, wxID_ANY, wxT("1"), wxPoint(10,10), wxSize(20,20));
-	//new wxButton(window, wxID_ANY, wxT("2"), wxPoint(10,30), wxSize(20,20));
-	//m_auimanager->AddPane(window, wxAuiPaneInfo().Center());
 
 	wxScrolledWindow *myGameWindow=new wxScrolledWindow(this);
 
@@ -59,11 +37,11 @@ hlaeFrameMain::hlaeFrameMain()
 
 	m_auimanager->AddLayout(wxT("Default"),true);
 
-	HlaeBcSrvStart(wxGetProcessId(),myGameWindow->GetHWND());
+	// HlaeBcSrvStart(wxGetProcessId(),myGameWindow->GetHWND());
 }
 
 hlaeFrameMain::~hlaeFrameMain() {
-	HlaeBcSrvStop();
+	// HlaeBcSrvStop();
 	delete m_auimanager;
 }
 
@@ -71,6 +49,7 @@ void hlaeFrameMain::OnAbout(wxCommandEvent& WXUNUSED(event)) {
 
 	hlaeDialogSettings* bla = new hlaeDialogSettings(this);
 	bla->Show();
+
 	/*
     wxDialog* h_about = new wxDialog(this ,wxID_ANY,
 		wxT("About Half-Life After Effects"), wxDefaultPosition);

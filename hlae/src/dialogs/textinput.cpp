@@ -1,11 +1,9 @@
-/* includes */
-#include "DialogTextInput.h"
 #include <wx/statbmp.h>
-#include <wx/bitmap.h>
+#include <wx/stattext.h>
 #include <wx/artprov.h>
 
+#include <hlae/dialogs/textinput.h>
 
-/* implementation */
 BEGIN_EVENT_TABLE(hlaeDialogTextInput, wxDialog)
     EVT_BUTTON(hlaeDialogTextInput::hlaeID_OK, hlaeDialogTextInput::OnOK)
 END_EVENT_TABLE()

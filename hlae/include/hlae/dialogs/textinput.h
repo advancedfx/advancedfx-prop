@@ -1,13 +1,11 @@
-#ifndef HEADER_HLAEDIALOGTEXTINPUT
-	#define HEADER_HLAEDIALOGTEXTINPUT
+#ifndef _HLAE_DIALOGTEXTINPUT_H_
 
-	/* includes */
-	#include <wx/button.h>
+	#define _HLAE_DIALOGTEXTINPUT_H_
+
 	#include <wx/dialog.h>
-	#include <wx/stattext.h>
 	#include <wx/textctrl.h>
+	#include <wx/button.h>
 
-	/* declaration */
 	class hlaeDialogTextInput : public wxDialog {
 
 		private:
@@ -37,4 +35,4 @@
 
 	};
 
-#endif // HEADER_HLAEDIALOGTEXTINPUT
+#endif // _HLAE_DIALOGTEXTINPUT_H_

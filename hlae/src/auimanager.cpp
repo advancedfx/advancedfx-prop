@@ -1,16 +1,11 @@
-/* includes */
-#include <hlae/AuiManager.h>
+#include <hlae/auimanager.h>
+#include <hlae/dialogs/textinput.h>
 
-#include <wx/msgdlg.h>
-
-#include <windows.h>
-
-/* implementation */
 hlaeAuiManager::hlaeAuiManager(hlaeFrameMain* parent)
 		: wxAuiManager(parent)
 {
 	m_parent = parent;
-	m_layoutlist = new hlaeLayoutList();
+	m_layoutlist = new hlaeListLayout();
 	m_layoutlist->DeleteContents(true);
 }
 
@@ -39,10 +34,10 @@ void hlaeAuiManager::AddLayout(const wxString& describtion, bool is_predefined) 
 			// append a number based on the ones of layouts
 			int count = 0;
 
-			for (hlaeLayoutList::iterator iter = m_layoutlist->begin();
+			for (hlaeListLayout::iterator iter = m_layoutlist->begin();
 				iter != m_layoutlist->end(); iter++)
 			{
-				hlaeLayoutElement *current = *iter;
+				hlaeListElementLayout *current = *iter;
 
 				if (!current->is_predefined) {
 					count++;
@@ -68,7 +63,7 @@ void hlaeAuiManager::AddLayout(const wxString& describtion, bool is_predefined) 
 
 	if (!dialog_canceled) {
 
-		hlaeLayoutElement* layoutelement = new hlaeLayoutElement();
+		hlaeListElementLayout* layoutelement = new hlaeListElementLayout();
 		
 		layoutelement->is_predefined = is_predefined;
 		layoutelement->id = wxNewId();
@@ -82,19 +77,14 @@ void hlaeAuiManager::AddLayout(const wxString& describtion, bool is_predefined) 
 	UpdateLayoutMenu();
 }
 
-void hlaeAuiManager::RemoveLayout(hlaeLayoutElement* layoutelement) {
+void hlaeAuiManager::RemoveLayout(hlaeListElementLayout* layoutelement) {
 
 	m_layoutlist->DeleteObject(layoutelement);
 
 }
 
-void hlaeAuiManager::ShowManager() {
-
-	hlaeDialogLayoutManager* h_layoutmanager = new hlaeDialogLayoutManager(
-		m_parent, wxID_ANY, m_layoutlist);
-	h_layoutmanager->ShowModal();
-
-	delete h_layoutmanager;
+void hlaeAuiManager::ShowManager()
+{
 
 }
 
@@ -117,10 +107,10 @@ void hlaeAuiManager::UpdateLayoutMenu() {
 	int count1 = 0;
 	int count2 = 0;
 
-	for (hlaeLayoutList::iterator iter = m_layoutlist->begin();
+	for (hlaeListLayout::iterator iter = m_layoutlist->begin();
 			iter != m_layoutlist->end(); ++iter)
 	{
-		hlaeLayoutElement *current = *iter;
+		hlaeListElementLayout *current = *iter;
 
 		m_parent->Connect(current->id, wxEVT_COMMAND_MENU_SELECTED,
 			wxCommandEventHandler(hlaeAuiManager::OnLayout),NULL,this);
@@ -132,10 +122,10 @@ void hlaeAuiManager::UpdateLayoutMenu() {
 	}
 
 	// write the layouts defined by the user in the menu
-	for (hlaeLayoutList::iterator iter = m_layoutlist->begin();
+	for (hlaeListLayout::iterator iter = m_layoutlist->begin();
 			iter != m_layoutlist->end(); ++iter)
 	{
-		hlaeLayoutElement *current = *iter;
+		hlaeListElementLayout *current = *iter;
 
 		if (!current->is_predefined) {
 			count2++;
@@ -154,13 +144,15 @@ void hlaeAuiManager::ClearMenu(wxMenu* menu) {
 
 void hlaeAuiManager::OnLayout(wxCommandEvent& evt) {
 
-	for (hlaeLayoutList::iterator iter = m_layoutlist->begin();
+	for (hlaeListLayout::iterator iter = m_layoutlist->begin();
 			iter != m_layoutlist->end(); iter++)
 	{
-		hlaeLayoutElement *current = *iter;
+		hlaeListElementLayout *current = *iter;
 
 		if (current->id == evt.GetId()) {
 			LoadPerspective(current->layout);
 		}
 	}
 }
+
+

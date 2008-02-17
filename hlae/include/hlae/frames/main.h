@@ -1,14 +1,13 @@
-#ifndef HEADER_HLAEFRAMEMAIN
-	#define HEADER_HLAEFRAMEMAIN
+#ifndef _HLAE_FRAMEMAIN_H_
+	#define _HLAE_FRAMEMAIN_H_
+
+	#include <wx/menu.h>
+	#include <wx/frame.h>
 
 	class hlaeFrameMain;
-
-	/* includes */
+	
 	#include <hlae/auimanager.h>
-	#include <wx/frame.h>
-	#include <wx/menu.h>
 
-	/* declaration */
 	class hlaeFrameMain : public wxFrame {
 
 		private:
@@ -42,4 +41,4 @@
 
 		};
 
-#endif // HEADER_HLAEFRAMEMAIN
+#endif // _HLAE_FRAMEMAIN_H_

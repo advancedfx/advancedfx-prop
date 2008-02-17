@@ -1,24 +1,19 @@
-#ifndef HEADER_HLAEAUIMANAGER
-	#define HEADER_HLAEAUIMANAGER
+#ifndef _HLAE_AUIMANAGER_H_
+
+	#define _HLAE_AUIMANAGER_H_
+
+	#include <wx/aui/aui.h>
 
 	class hlaeAuiManager;
 
-	/* includes */
-	#include "DialogLayoutManager.h"
-	#include "DialogTextInput.h"
-	#include "hlae/framemain.h"
-	#include "Lists.h"
-	#include "wx/aui/aui.h"
-	#include "wx/menu.h"
-	#include "wx/window.h"
+	#include <hlae/lists/layout.h>
+	#include <hlae/frames/main.h> 
 
-
-	/* declaration */
 	class hlaeAuiManager : public wxAuiManager {
 
 		private:
 
-			hlaeLayoutList* m_layoutlist;
+			hlaeListLayout* m_layoutlist;
 			hlaeFrameMain* m_parent;
 
 			void UpdateLayoutMenu();
@@ -31,7 +26,7 @@
 
 			void AddLayout(const wxString& describtion = wxEmptyString,
 				bool is_predefined = false);
-			void RemoveLayout(hlaeLayoutElement* layoutelement);
+			void RemoveLayout(hlaeListElementLayout* layoutelement);
 
 			void ShowManager();
 
@@ -41,4 +36,4 @@
 
 	};
 
-#endif
+#endif // _HLAE_AUIMANAGER_H_

@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="8,00"
 	Name="Half-Life After Effects"
-	ProjectGUID="{33C0366A-F16E-4112-8A8D-1C97D9CAA964}"
+	ProjectGUID="{6083B0F5-854B-4DC9-B2AD-B983384ECA10}"
 	RootNamespace="gui2"
 	>
 	<Platforms>
@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(WXWIN)/include/msvc/&quot;;&quot;$(WXWIN)/include/&quot;"
+				AdditionalIncludeDirectories="include;&quot;$(WXWIN)/include/msvc/&quot;;&quot;$(WXWIN)/include/&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_UNICODE;UNICODE;__WXMSW__;__WXDEBUG__;_WINDOWS;NOPCH"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -220,26 +220,52 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\App.cpp"
+				RelativePath=".\src\app.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\AuiManager.cpp"
+				RelativePath=".\auimanager.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\basecomServer.cpp"
+				RelativePath=".\src\lists.cpp"
 				>
 			</File>
-			<File
-				RelativePath=".\Lists.cpp"
+			<Filter
+				Name="Old"
 				>
-			</File>
+			</Filter>
 			<Filter
 				Name="Frames"
 				>
 				<File
-					RelativePath=".\FrameMain.cpp"
+					RelativePath=".\src\frames\main.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+						/>
+					</FileConfiguration>
+				</File>
+			</Filter>
+			<Filter
+				Name="ListElements"
+				>
+				<File
+					RelativePath=".\src\listelements\settingspage.cpp"
 					>
 				</File>
 			</Filter>
@@ -247,29 +273,25 @@
 				Name="Dialogs"
 				>
 				<File
-					RelativePath=".\DialogLayoutManager.cpp"
+					RelativePath=".\src\dialogs\settings.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\DialogTextInput.cpp"
+					RelativePath=".\src\dialogs\textinput.cpp"
 					>
 				</File>
-				<Filter
-					Name="Settings"
+			</Filter>
+			<Filter
+				Name="SettingsPages"
+				>
+				<File
+					RelativePath=".\src\settingspages\general.cpp"
 					>
-					<File
-						RelativePath=".\DialogSettings.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\SettingsPageElement.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\SettingsPageTemplate.cpp"
-						>
-					</File>
-				</Filter>
+				</File>
+				<File
+					RelativePath=".\src\settingspages\template.cpp"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<Filter
@@ -278,54 +300,58 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\App.h"
+				RelativePath=".\include\hlae\app.h"
 				>
 			</File>
 			<File
-				RelativePath=".\AuiManager.h"
+				RelativePath=".\include\hlae\auimanager.h"
 				>
 			</File>
-			<File
-				RelativePath=".\basecomServer.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Lists.h"
-				>
-			</File>
-			<Filter
-				Name="Dialogs"
-				>
-				<File
-					RelativePath=".\DialogLayoutManager.h"
-					>
-				</File>
-				<File
-					RelativePath=".\DialogTextInput.h"
-					>
-				</File>
-				<Filter
-					Name="Settings"
-					>
-					<File
-						RelativePath=".\DialogSettings.h"
-						>
-					</File>
-					<File
-						RelativePath=".\SettingsPageElement.h"
-						>
-					</File>
-					<File
-						RelativePath=".\SettingsPageTemplate.h"
-						>
-					</File>
-				</Filter>
-			</Filter>
 			<Filter
 				Name="Frames"
 				>
 				<File
-					RelativePath=".\FrameMain.h"
+					RelativePath=".\include\hlae\frames\main.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Lists"
+				>
+				<File
+					RelativePath=".\include\hlae\lists\layout.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\hlae\lists\settingspage.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\hlae\lists\settingspageid.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="SettingsPages"
+				>
+				<File
+					RelativePath=".\include\hlae\settingspages\general.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\hlae\settingspages\template.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Dialogs"
+				>
+				<File
+					RelativePath=".\include\hlae\dialogs\settings.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\hlae\dialogs\textinput.h"
 					>
 				</File>
 			</Filter>
