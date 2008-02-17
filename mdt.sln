@@ -14,14 +14,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		resources\readme.txt = resources\readme.txt
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Half-Life After Effects", "hlae\hlae.vcproj", "{33C0366A-F16E-4112-8A8D-1C97D9CAA964}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "shared", "shared", "{9EFD84D5-DFA9-4A6C-8148-EAF559459BCD}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "com", "com", "{AF538BB2-FD7C-4431-8150-097D24116F54}"
 	ProjectSection(SolutionItems) = preProject
 		shared\com\basecom.h = shared\com\basecom.h
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Half-Life After Effects", "gui\gui.vcproj", "{6083B0F5-854B-4DC9-B2AD-B983384ECA10}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,10 +41,10 @@ Global
 		{0AC711F3-F9E4-4CDD-969A-BA73A281A06C}.Debug|Win32.Build.0 = Debug|Win32
 		{0AC711F3-F9E4-4CDD-969A-BA73A281A06C}.Release|Win32.ActiveCfg = Release|Win32
 		{0AC711F3-F9E4-4CDD-969A-BA73A281A06C}.Release|Win32.Build.0 = Release|Win32
-		{33C0366A-F16E-4112-8A8D-1C97D9CAA964}.Debug|Win32.ActiveCfg = Debug|Win32
-		{33C0366A-F16E-4112-8A8D-1C97D9CAA964}.Debug|Win32.Build.0 = Debug|Win32
-		{33C0366A-F16E-4112-8A8D-1C97D9CAA964}.Release|Win32.ActiveCfg = Release|Win32
-		{33C0366A-F16E-4112-8A8D-1C97D9CAA964}.Release|Win32.Build.0 = Release|Win32
+		{6083B0F5-854B-4DC9-B2AD-B983384ECA10}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6083B0F5-854B-4DC9-B2AD-B983384ECA10}.Debug|Win32.Build.0 = Debug|Win32
+		{6083B0F5-854B-4DC9-B2AD-B983384ECA10}.Release|Win32.ActiveCfg = Release|Win32
+		{6083B0F5-854B-4DC9-B2AD-B983384ECA10}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
