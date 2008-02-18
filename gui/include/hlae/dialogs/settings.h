@@ -34,10 +34,10 @@
 
 			hlaeListSettingsPage* m_pagelist;
 			hlaeListSettingsPageID* m_pageidlist;
+			bool m_advancedmode;
+
 			wxTreeCtrl* m_treectrl;
 			wxFlexGridSizer* m_pagesizer;
-			hlaeSettingsPageTemplate* m_settingspage;
-			bool m_advancedmode;
 			wxCheckBox* m_chkAdvanced;
 			wxButton* m_btnOK;
 			wxButton* m_btnCancel;

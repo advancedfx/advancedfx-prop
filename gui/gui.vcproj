@@ -224,17 +224,13 @@
 				>
 			</File>
 			<File
-				RelativePath=".\auimanager.cpp"
+				RelativePath=".\src\auimanager.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\src\lists.cpp"
 				>
 			</File>
-			<Filter
-				Name="Old"
-				>
-			</Filter>
 			<Filter
 				Name="Frames"
 				>

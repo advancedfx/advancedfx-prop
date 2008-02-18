@@ -9,6 +9,7 @@
 		public:
 
 			hlaeSettingsPageTemplate(wxWindow* parent);
+
 			virtual void ShowPage(bool is_advanced);
 			virtual void ApplyChanges();
 			

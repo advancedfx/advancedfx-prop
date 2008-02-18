@@ -21,7 +21,6 @@ hlaeDialogSettings::hlaeDialogSettings(wxWindow* parent, wxWindowID id, const wx
 	m_pagelist->DeleteContents(true);
 	m_pageidlist->DeleteContents(true);
 
-
 	wxFlexGridSizer* fgSizer1 = new wxFlexGridSizer(4, 1, 0, 0);
 	fgSizer1->AddGrowableCol(0);
 	fgSizer1->AddGrowableRow(0);
@@ -101,12 +100,14 @@ hlaeDialogSettings::~hlaeDialogSettings()
 
 void hlaeDialogSettings::OnApply(wxCommandEvent& WXUNUSED(evt))
 {
-	m_settingspage->ApplyChanges();
+	dynamic_cast<hlaeSettingsPageTemplate*>(
+		m_pagesizer->GetItem(1)->GetWindow())->ApplyChanges();
 }
 
 void hlaeDialogSettings::OnOK(wxCommandEvent& WXUNUSED(evt))
 {
-	m_settingspage->ApplyChanges();
+	dynamic_cast<hlaeSettingsPageTemplate*>(
+		m_pagesizer->GetItem(1)->GetWindow())->ApplyChanges();
 	Close();
 }
 
@@ -133,9 +134,10 @@ void hlaeDialogSettings::UpdateTreeCtrlNodes(hlaeListElementSettingsPage* node,
 
 		hlaeListElementSettingsPageID* pageid_element = new hlaeListElementSettingsPageID;
 
-		node->GetWindow()->Hide();
+		hlaeSettingsPageTemplate* page = node->GetPage();
+		page->Hide();
 
-		pageid_element->window = node->GetWindow();
+		pageid_element->page = page;
 		pageid_element->id = sub_id;
 		m_pageidlist->Append(pageid_element);
 
@@ -159,12 +161,14 @@ void hlaeDialogSettings::OnSelectionChanged(wxTreeEvent& evt)
 	
 		if (evt.GetItem() == current->id)
 		{
-			m_settingspage = dynamic_cast<hlaeSettingsPageTemplate*>(
+			hlaeSettingsPageTemplate* current_page = current->page;
+			hlaeSettingsPageTemplate* last_page = dynamic_cast<hlaeSettingsPageTemplate*>(
 				m_pagesizer->GetItem(1)->GetWindow());
-			m_settingspage->Hide();
-			m_pagesizer->Replace(m_settingspage, current->window);
-			m_settingspage = current->window;
-			m_settingspage->ShowPage(m_advancedmode);
+
+			last_page->Hide();
+			current_page->ShowPage(m_advancedmode);
+
+			m_pagesizer->Replace(last_page, current_page);
 			m_pagesizer->Layout();
 
 			break;

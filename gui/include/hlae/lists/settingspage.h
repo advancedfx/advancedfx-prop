@@ -16,7 +16,7 @@
 			hlaeListSettingsPage* m_pagelist;
 			bool m_isadvanced;
 			wxString m_name;
-			hlaeSettingsPageTemplate* m_window;
+			hlaeSettingsPageTemplate* m_page;
 
 		public:
 			hlaeListElementSettingsPage(hlaeSettingsPageTemplate* window,
@@ -24,7 +24,7 @@
 			~hlaeListElementSettingsPage();
 			bool IsAdvanced();
 			const wxString& GetName();
-			hlaeSettingsPageTemplate* GetWindow();
+			hlaeSettingsPageTemplate* GetPage();
 			void Append(hlaeListElementSettingsPage* page_element);
 			hlaeListElementSettingsPage* GetElement(int index);
 			size_t GetCount();

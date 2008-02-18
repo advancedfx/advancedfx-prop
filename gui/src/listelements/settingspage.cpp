@@ -1,12 +1,12 @@
 #include <hlae/lists/settingspage.h>
 
 hlaeListElementSettingsPage::hlaeListElementSettingsPage(
-	hlaeSettingsPageTemplate* window, const wxString& name, bool is_advanced)
+	hlaeSettingsPageTemplate* page, const wxString& name, bool is_advanced)
 {
 	m_pagelist = new hlaeListSettingsPage;
 	m_pagelist->DeleteContents(true);
 
-	m_window = window;
+	m_page = page;
 	m_name = name;
 	m_isadvanced = is_advanced;
 }
@@ -27,9 +27,9 @@ const wxString& hlaeListElementSettingsPage::GetName()
 	return m_name;
 }
 
-hlaeSettingsPageTemplate* hlaeListElementSettingsPage::GetWindow()
+hlaeSettingsPageTemplate* hlaeListElementSettingsPage::GetPage()
 {
-	return m_window;
+	return m_page;
 }
 
 hlaeListElementSettingsPage* hlaeListElementSettingsPage::GetElement(int index)

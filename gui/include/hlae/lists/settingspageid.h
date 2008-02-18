@@ -10,7 +10,7 @@
 	struct hlaeListElementSettingsPageID
 	{
 		wxTreeItemId id;
-		hlaeSettingsPageTemplate* window;
+		hlaeSettingsPageTemplate* page;
 	};
 
 	WX_DECLARE_LIST(hlaeListElementSettingsPageID, hlaeListSettingsPageID);
