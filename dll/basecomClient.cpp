@@ -43,20 +43,20 @@ LRESULT CALLBACK HlaeBcCltWndProc(
 			{
 			case HLAE_BASECOM_MSG_TESTDUMMY:
 				MessageBoxW(hwnd,L"Got empty test data.",HLAE_BASECOM_CLIENT_ID,MB_OK);
-				break;
+				return TRUE;
 			case HLAE_BASECOM_MSGCL_RET_CreateWindowExA:
 				if (g_pHlaeBcResultTarget) memcpy(g_pHlaeBcResultTarget,pMyCDS->lpData,sizeof(HLAE_BASECOM_RET_CreateWindowExA_s));
-				break;
+				return TRUE;
 			case HLAE_BASECOM_MSGCL_RET_RegisterClassA:
 				if (g_pHlaeBcResultTarget) memcpy(g_pHlaeBcResultTarget,pMyCDS->lpData,sizeof(HLAE_BASECOM_RET_RegisterClassA_s));
-				break;
+				return TRUE;
 			case HLAE_BASECOM_MSGCL_RET_DestroyWindow:
 				if (g_pHlaeBcResultTarget) memcpy(g_pHlaeBcResultTarget,pMyCDS->lpData,sizeof(HLAE_BASECOM_RET_DestroyWindow_s));
-				break;
+				return TRUE;
 			default:
 				MessageBoxW(hwnd,L"Unexpected message.",HLAE_BASECOM_CLIENT_ID,MB_OK|MB_ICONERROR);
 			}
-			return 0;
+			return FALSE;
  
         default: 
             return DefWindowProc(hwnd, uMsg, wParam, lParam); 

@@ -129,6 +129,47 @@ REGISTER_CMD_FUNC(whereami)
 	pEngfuncs->Con_Printf("Location: %fx %fy %fz\nAngles: %fx %fy %fz\n", ppmove->origin.x, ppmove->origin.y, ppmove->origin.z, angles[0], angles[1], angles[2]);
 }
 
+void PrintDebugPlayerInfo(cl_entity_s *pl)
+{
+	static hud_player_info_t m_hpinfo;
+
+	memset(&m_hpinfo,0,sizeof(hud_player_info_t));
+	pEngfuncs->pfnGetPlayerInfo(pl->index,&m_hpinfo);
+	pEngfuncs->Con_Printf("%i (%s): %s, %s, %i, %i, %i, %i, %i, %i\n",pl->index,(pl->curstate.effects & EF_NODRAW) ? "y" : "n",m_hpinfo.name,m_hpinfo.model,m_hpinfo.ping,m_hpinfo.packetloss,m_hpinfo.topcolor,m_hpinfo.bottomcolor,m_hpinfo.spectator,m_hpinfo.thisplayer);
+}
+
+REGISTER_DEBUGCMD_FUNC(listplayers)
+{
+	bool bLocalListed=false;
+	int iLocalIndex;
+	cl_entity_s *plocal = pEngfuncs->GetLocalPlayer();
+
+	pEngfuncs->Con_Printf("Listing Players:\nindex (EF_NODRAW): name, model, ping, packetloss, topcolor, bottomcolor, spectator, thisplayer\n");
+	for (int i = 0; i <= pEngfuncs->GetMaxClients(); i++)
+	{
+		cl_entity_t *e = pEngfuncs->GetEntityByIndex(i);
+		if (e && e->player)
+		{
+			PrintDebugPlayerInfo(e);
+			if (e->index==plocal->index)
+			{
+				bLocalListed=true;
+				iLocalIndex=e->index;
+			}
+		}
+	}
+
+	if (bLocalListed)
+	{
+		pEngfuncs->Con_Printf("The local player is index %i.\n",iLocalIndex);
+
+	} else {
+		pEngfuncs->Con_Printf("The local player is hidden (not flagged as player):\n");
+		PrintDebugPlayerInfo(plocal);
+	}
+
+}
+
 // _mirv_info - Print some informations into the console that might be usefull. when people want to report problems they should copy the console output of the command.
 REGISTER_DEBUGCMD_FUNC(info)
 {
@@ -465,7 +506,9 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 		// Make sure we can see the local player if dem_forcehltv is on
 		// dem_forcehtlv is not a cvar, so don't bother checking
 		if (fixforcehltv->value != 0.0f && pEngfuncs->IsSpectateOnly() && ppmove->iuser1 != 4)
+		{
 			DrawActivePlayers();
+		}
 
 		// Always get rid of auto_director
 		if (disableautodirector->value != 0.0f)
@@ -712,7 +755,6 @@ HWND APIENTRY my_CreateWindowExA(
 		if (HlaeBcCltStart())
 		{
 			hwResultWin = HlaeBcClt_CreateWindowExA(dwExStyle,lpClassName,lpWindowName,dwStyle,x,y,nWidth,nHeight,hWndParent,hMenu,hInstance,lpParam);
-			HlaeBcCltStop();
 		}
 	}
 	else hwResultWin = CreateWindowEx(dwExStyle,lpClassName,lpWindowName,dwStyle,x,y,nWidth,nHeight,hWndParent,hMenu,hInstance,lpParam);
@@ -727,7 +769,12 @@ BOOL APIENTRY my_DestroyWindow(
 )
 {
 	if (hWnd == g_HLGameWindow)
-		return HlaeBcClt_DestroyWindow(hWnd);
+	{
+		BOOL bResult;
+		bResult = HlaeBcClt_DestroyWindow(hWnd);
+		HlaeBcCltStop();
+		return bResult;
+	}
 	else
 		return DestroyWindow(hWnd);
 }
