@@ -1,4 +1,25 @@
-typedef bool (* HlaeBcOnRecieve_t)(void *lpClassPointer,unsigned long dwData,unsigned long cbData,void *lpData);
+#ifndef HLAE_BASECOMSERVER_H
+#define HLAE_BASECOMSERVER_H
 
-bool HlaeBcSrvStart(unsigned long ulInstance,void *lpGameWindow);
-bool HlaeBcSrvStop();
+#include <hlae/auimanager.h>
+#include <hlae/gamewindow.h>
+
+//class haleAuiManager;
+class CBCServerInternal;
+
+class CHlaeBcServer
+{
+public:
+	CHlaeBcServer(hlaeAuiManager *pHlaeAuiManager);
+	~CHlaeBcServer();
+
+	friend class CBCServerInternal;
+
+private:
+	hlaeAuiManager *_pHlaeAuiManager;
+	CHlaeGameWindow *_pHlaeGameWindow;
+
+	void * _DoCreateWindowExA(char *lpClassNameA,char *lpWindowNameA,int x, int y, int nHeight, int nWidth);
+};
+
+#endif

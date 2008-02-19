@@ -4,9 +4,12 @@
 	#include <wx/menu.h>
 	#include <wx/frame.h>
 
+	// this is not very nice, but we currently lack a better solution:
 	class hlaeFrameMain;
+	class CHlaeBcServer;
 	
 	#include <hlae/auimanager.h>
+	#include <hlae/basecomServer.h>
 
 	class hlaeFrameMain : public wxFrame {
 
@@ -20,6 +23,7 @@
 			};
 
 			hlaeAuiManager* m_auimanager;
+			CHlaeBcServer* m_basecom;
 			wxMenu* m_windowmenu;
 			wxMenu*	m_toolbarmenu;
 			wxMenu*	m_layoutmenu;

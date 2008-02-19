@@ -1,14 +1,56 @@
-
-#include "basecomServer.h"
+#include <hlae/auimanager.h>
+#include <hlae/gamewindow.h>
 
 #include <windows.h>
+#include <shared/com/basecom.h>
 
-#include "shared/com/basecom.h"
+#include <hlae/basecomserver.h>
+
+// typedef bool (* OnRecieve_t)(class *lpClassPointer,unsigned long dwData,unsigned long cbData,void *lpData);
+
+
+//
+// CBCServerInternal defintion
+//
+
+class CBCServerInternal
+{
+private:
+	CHlaeBcServer *_pBase; // coordinator class
+	static HWND _hwClient;
+	static LRESULT CALLBACK _HlaeBcSrvWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+	bool _MyOnRecieve(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
+	bool _ReturnMessage(HWND hWnd,HWND hwTarget,ULONG dwData,DWORD cbData,PVOID lpData);
+
+	// wrappers:
+	bool _Wrapper_CreateWindowExA(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
+
+public:
+	bool HlaeBcSrvStart(CHlaeBcServer *pBase);
+	bool HlaeBcSrvStop();
+};
+
+
+//
+// winapi related globals
+//
 
 HWND g_hwHlaeBcSrvWindow = NULL;
-HWND g_hwHlaeGameWindow = NULL;
+bool (CBCServerInternal::*g_OnRecieve)(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS) = NULL;
+CBCServerInternal *g_pClass = NULL;
+	
+// USE INTERLOCED ACCES ONLY:
+LONG g_lInstancesActive = 0; // this variable is accessed interlocked by HlaeBcSrvStart
 
-LRESULT CALLBACK HlaeBcSrvWndProc(
+//
+// Internal class for the internal global
+//
+// Purpose is to wrap between WinAPI into an abstract view that is suitable for using in a wxWidgets targeted class
+// It also does some basic low level handling and processing of the messages and events.
+//
+
+LRESULT CALLBACK CBCServerInternal::_HlaeBcSrvWndProc(
     HWND hwnd,        // handle to window
     UINT uMsg,        // message identifier
     WPARAM wParam,    // first message parameter
@@ -19,62 +61,104 @@ LRESULT CALLBACK HlaeBcSrvWndProc(
     { 
         case WM_CREATE: 
             // Initialize the window.
-			//MessageBox(hwnd,L"WM_CREATE",L"HLAE BaseCom Server",MB_OK|MB_ICONINFORMATION);
-            return 0; 
+            return FALSE; 
  
         case WM_PAINT: 
             // Paint the window's client area. 
-            return 0; 
+            return FALSE; 
  
         case WM_SIZE: 
             // Set the size and position of the window. 
-            return 0; 
+            return FALSE; 
  
         case WM_DESTROY: 
             // Clean up window-specific data objects. 
-			//MessageBox(hwnd,L"WM_DESTROY",L"HLAE BaseCom Server",MB_OK|MB_ICONINFORMATION);
-            return 0; 
+            return FALSE; 
 
 		case WM_COPYDATA:
+			if (!(g_OnRecieve && g_pClass)) return FALSE;
+
 			PCOPYDATASTRUCT pMyCDS;
 			pMyCDS = (PCOPYDATASTRUCT) lParam;
-
-			switch(pMyCDS->dwData)
-			{
-			case HLAE_BASECOM_MSG_EMPTY:
-				MessageBoxW(hwnd,L"Got empty test data.",HLAE_BASECOM_CLIENT_ID,MB_OK);
-				break;
-			case HLAE_BASECOM_MSGSV_GETGWND:
-				// client requests window
-				COPYDATASTRUCT myCopyData;
-
-				myCopyData.dwData=HLAE_BASECOM_MSGCL_SENDWND;
-				myCopyData.cbData=0;
-				myCopyData.lpData=NULL;
-
-				SendMessage((HWND)wParam,WM_COPYDATA,(WPARAM)g_hwHlaeGameWindow,(LPARAM)&myCopyData);
-				
-				break;
-			default:
-				MessageBoxW(hwnd,L"Unexpected message.",HLAE_BASECOM_CLIENT_ID,MB_OK|MB_ICONERROR);
-			}
-			return 0;
+			
+			if ((g_pClass->*g_OnRecieve)(hwnd,(HWND)wParam,pMyCDS))
+				return TRUE;
+			else
+				return FALSE;
  
         default: 
             return DefWindowProc(hwnd, uMsg, wParam, lParam); 
     } 
-    return 0; 
+    
+	return FALSE;
+}
+
+bool CBCServerInternal::_MyOnRecieve(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS)
+// we could add some pointer security checks here, they miss currently, we asume data is consitent.
+{
+	switch (pMyCDS->dwData)
+	{
+	case HLAE_BASECOM_MSG_TESTDUMMY:
+		MessageBoxW(hWnd,L"Got empty test data.",HLAE_BASECOM_CLIENT_ID,MB_OK);
+		return true;
+	case HLAE_BASECOM_MSGSV_CreateWindowExA:
+		return _Wrapper_CreateWindowExA(hWnd,hwSender,pMyCDS);
+	case HLAE_BASECOM_MSGSV_RegisterClassA:
+		break;
+	case HLAE_BASECOM_MSGSV_DestroyWindow:
+		break;
+	default:
+		;
+	}
+	return false;
+}
+
+bool CBCServerInternal::_ReturnMessage(HWND hWnd,HWND hwTarget,ULONG dwData,DWORD cbData,PVOID lpData)
+{
+	if(!hwTarget) return false;
+	
+	COPYDATASTRUCT myCopyData;
+	
+	myCopyData.dwData=dwData;
+	myCopyData.cbData=cbData;
+	myCopyData.lpData=lpData;
+
+	return TRUE==SendMessageW(
+		hwTarget,
+		WM_COPYDATA,
+		(WPARAM)hWnd, // identify us as sender
+		(LPARAM)&myCopyData
+	);
+}
+
+bool CBCServerInternal::_Wrapper_CreateWindowExA(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS)
+{
+	bool bRes;
+
+	HLAE_BASECOM_RET_CreateWindowExA_s *pRet = new HLAE_BASECOM_RET_CreateWindowExA_s;
+
+	HLAE_BASECOM_CreateWindowExA_s * pdata = (HLAE_BASECOM_CreateWindowExA_s *)pMyCDS->lpData;
+
+	pRet->retResult = (HWND)_pBase->_DoCreateWindowExA((char *)pdata->lpClassName,(char *)pdata->lpWindowName,pdata->x,pdata->y,pdata->nHeight,pdata->nWidth);
+
+	bRes=_ReturnMessage(hWnd,hwSender,HLAE_BASECOM_MSGCL_RET_CreateWindowExA,sizeof(HLAE_BASECOM_RET_CreateWindowExA_s),pRet);
+
+	delete pRet;
+
+	return bRes;
 }
 
 
-bool HlaeBcSrvStart(unsigned long ulInstance,void *lpGameWindow)
+bool CBCServerInternal::HlaeBcSrvStart(CHlaeBcServer *pBase)
 {
-	HINSTANCE hInstance = (HINSTANCE) ulInstance;
-	
-	g_hwHlaeGameWindow = (HWND) lpGameWindow;
+	if (InterlockedIncrement(&g_lInstancesActive)>1)
+	{
+		 // if already running quit
+		InterlockedDecrement(&g_lInstancesActive);
+		return false;
+	}
 
-	if (g_hwHlaeBcSrvWindow)
-		return false; // if already running quit
+	HINSTANCE hInstance = (HINSTANCE)GetCurrentProcessId();
 
 	static bool bRegistered=false;
 	static WNDCLASS wc;
@@ -84,7 +168,7 @@ bool HlaeBcSrvStart(unsigned long ulInstance,void *lpGameWindow)
  
 		// Register the main window class. 
 		wc.style = NULL; 
-		wc.lpfnWndProc = (WNDPROC) HlaeBcSrvWndProc; 
+		wc.lpfnWndProc = (WNDPROC) _HlaeBcSrvWndProc; 
 		wc.cbClsExtra = 0; 
 		wc.cbWndExtra = 0; 
 		wc.hInstance = hInstance; 
@@ -95,23 +179,83 @@ bool HlaeBcSrvStart(unsigned long ulInstance,void *lpGameWindow)
 		wc.lpszClassName = HLAE_BASECOM_CLASSNAME;
 
 		if (!RegisterClass(&wc))
+		{
+			InterlockedDecrement(&g_lInstancesActive);
 			return false;
+		}
 
 		bRegistered = true;
 	 }
 
-	if (!(g_hwHlaeBcSrvWindow = CreateWindow(wc.lpszClassName,HLAE_BASECOM_SERVER_ID,WS_CHILD|WS_DISABLED|WS_POPUP,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,NULL,NULL,hInstance,NULL)))
+	g_OnRecieve = &CBCServerInternal::_MyOnRecieve;
+	g_pClass = this;
+
+	_pBase = pBase; // connect to coordinator class
+
+	if (!(g_hwHlaeBcSrvWindow = CreateWindow(wc.lpszClassName,HLAE_BASECOM_SERVER_ID,WS_DISABLED|WS_POPUP,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,NULL,NULL,hInstance,NULL)))
+	{
+		g_OnRecieve = NULL;
+		g_pClass = NULL;
+		_pBase = NULL;
+		InterlockedDecrement(&g_lInstancesActive);
 		return false;
+	}
 
 	return true;
 }
 
-bool HlaeBcSrvStop()
+bool CBCServerInternal::HlaeBcSrvStop()
 {
-	if (!g_hwHlaeBcSrvWindow) return true;
+	if (g_lInstancesActive==0) // according to MSDN 32 bit reads (or writes) are guaranteed to be atomic
+		return true;
 
 	if (!DestroyWindow(g_hwHlaeBcSrvWindow)) return false;
 
 	g_hwHlaeBcSrvWindow = NULL;
+	_pBase = NULL;
+	InterlockedDecrement(&g_lInstancesActive);
 	return true;
+}
+
+
+//
+// the CBCServerInternal global:
+//
+
+CBCServerInternal g_BCServerInternal;
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+//
+// CHlaeBcServer
+//
+
+CHlaeBcServer::CHlaeBcServer(hlaeAuiManager *pHlaeAuiManager)
+{
+	_pHlaeAuiManager = pHlaeAuiManager;
+	_pHlaeGameWindow = NULL;
+
+	if(!g_BCServerInternal.HlaeBcSrvStart(this)) throw "ERROR: HlaeBcSrvStart() failed.";
+
+
+}
+
+CHlaeBcServer::~CHlaeBcServer()
+{
+	g_BCServerInternal.HlaeBcSrvStop();
+	if(_pHlaeGameWindow) delete _pHlaeGameWindow;
+}
+
+void * CHlaeBcServer::_DoCreateWindowExA(char *lpClassNameA,char *lpWindowNameA,int x, int y, int nHeight, int nWidth)
+{
+	if (_pHlaeGameWindow)
+		return NULL; // still window present, we only allow one window
+	else
+	{
+		_pHlaeGameWindow = new CHlaeGameWindow;
+		_pHlaeAuiManager->AddPane(_pHlaeGameWindow, wxAuiPaneInfo().TopDockable());
+
+		return _pHlaeGameWindow->GetHandle();
+	}
 }

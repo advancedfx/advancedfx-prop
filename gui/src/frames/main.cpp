@@ -2,8 +2,10 @@
 #include <wx/button.h>
 #include <wx/scrolwin.h>
 
-#include <hlae/frames/main.h>
+#include <hlae/basecomServer.h>
 #include <hlae/dialogs/settings.h>
+
+#include <hlae/frames/main.h>
 
 BEGIN_EVENT_TABLE(hlaeFrameMain, wxFrame)
 	EVT_MENU(wxID_EXIT, hlaeFrameMain::OnExit)
@@ -31,17 +33,13 @@ hlaeFrameMain::hlaeFrameMain()
 		wxDefaultPosition, wxSize(20,20), wxNO_BORDER),
 		wxAuiPaneInfo().Left().MinSize(wxSize(100,100)));
 
-	wxScrolledWindow *myGameWindow=new wxScrolledWindow(this);
-
-	m_auimanager->AddPane(myGameWindow, wxAuiPaneInfo().Right());
-
 	m_auimanager->AddLayout(wxT("Default"),true);
 
-	// HlaeBcSrvStart(wxGetProcessId(),myGameWindow->GetHWND());
+	//m_basecom = new CHlaeBcServer(m_auimanager);
 }
 
 hlaeFrameMain::~hlaeFrameMain() {
-	// HlaeBcSrvStop();
+	//delete m_basecom;
 	delete m_auimanager;
 }
 

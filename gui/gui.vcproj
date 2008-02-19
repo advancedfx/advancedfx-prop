@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8,00"
-	Name="Half-Life After Effects"
+	Name="Half-Life Advanced Effects"
 	ProjectGUID="{6083B0F5-854B-4DC9-B2AD-B983384ECA10}"
 	RootNamespace="gui2"
 	>
@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="include;&quot;$(WXWIN)/include/msvc/&quot;;&quot;$(WXWIN)/include/&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;include;&quot;$(WXWIN)/include/msvc/&quot;;&quot;$(WXWIN)/include/&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_UNICODE;UNICODE;__WXMSW__;__WXDEBUG__;_WINDOWS;NOPCH"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -139,7 +139,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="3"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(WXWIN)/include/msvc/&quot;;&quot;$(WXWIN)/include/&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;include;&quot;$(WXWIN)/include/msvc/&quot;;&quot;$(WXWIN)/include/&quot;"
 				PreprocessorDefinitions="WIN32;__WXMSW__;_UNICODE;UNICODE;_WINDOWS;NOPCH"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -228,6 +228,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\basecomserver.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\gamewindow.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\lists.cpp"
 				>
 			</File>
@@ -301,6 +309,14 @@
 			</File>
 			<File
 				RelativePath=".\include\hlae\auimanager.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\hlae\basecomserver.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\hlae\gamewindow.h"
 				>
 			</File>
 			<Filter
