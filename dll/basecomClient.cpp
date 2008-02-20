@@ -156,11 +156,18 @@ HWND HlaeBcClt_CreateWindowExA(DWORD dwExStyle,LPCTSTR lpClassName,LPCTSTR lpWin
 	HWND hwRetWin=NULL;
 
 	HLAE_BASECOM_RET_CreateWindowExA_s *mycwret = new HLAE_BASECOM_RET_CreateWindowExA_s;
-	HLAE_BASECOM_CreateWindowExA_s *mycws = new HLAE_BASECOM_CreateWindowExA_s;
+	HLAE_BASECOM_CreateWindowExA_s *mycws;
+
+	size_t cbBase=sizeof(HLAE_BASECOM_CreateWindowExA_s);
+	size_t cbClassName=strlen(lpClassName)+1;
+	size_t cbWindowName=strlen(lpWindowName)+1;
+	size_t cbPiggyBack=cbClassName+cbWindowName;
+
+	mycws=(HLAE_BASECOM_CreateWindowExA_s *)malloc(cbBase+cbPiggyBack);
 
 	mycws->dwExStyle = dwExStyle;
-	mycws->lpClassName = lpClassName;
-	mycws->lpWindowName = lpWindowName;
+	mycws->lpClassName = (LPCTSTR)cbBase; memcpy((char *)mycws + cbBase,lpClassName,cbClassName);
+	mycws->lpWindowName = (LPCTSTR)(cbBase + cbClassName); memcpy((char *)mycws + cbBase + cbClassName,lpWindowName,cbWindowName);
 	mycws->dwStyle = dwStyle;
 	mycws->x = x;
 	mycws->y = y ;
@@ -171,10 +178,10 @@ HWND HlaeBcClt_CreateWindowExA(DWORD dwExStyle,LPCTSTR lpClassName,LPCTSTR lpWin
 	mycws->hInstance = hInstance;
 	mycws->lpParam = lpParam;
 
-	HlaeBcCltSendMessageRet(HLAE_BASECOM_MSGSV_CreateWindowExA,sizeof(HLAE_BASECOM_CreateWindowExA_s),(PVOID)mycws,mycwret);
+	HlaeBcCltSendMessageRet(HLAE_BASECOM_MSGSV_CreateWindowExA,cbBase+cbPiggyBack,(PVOID)mycws,mycwret);
 	hwRetWin = mycwret->retResult;
 
-	delete mycws;
+	free(mycws);
 	delete mycwret;
 
 	if (hwRetWin)
@@ -190,14 +197,24 @@ ATOM HlaeBcClt_RegisterClassA(CONST WNDCLASSA *lpWndClass)
 	ATOM aRetAtom=NULL;
 
 	HLAE_BASECOM_RET_RegisterClassA_s *mycwret = new HLAE_BASECOM_RET_RegisterClassA_s;
-	HLAE_BASECOM_RegisterClassA_s *mycws = new HLAE_BASECOM_RegisterClassA_s;
+	HLAE_BASECOM_RegisterClassA_s *mycws;
+	
+	size_t cbBase=sizeof(HLAE_BASECOM_CreateWindowExA_s);
+	size_t cbClassName=strlen(lpWndClass->lpszClassName)+1;
+	size_t cbMenuName=strlen(lpWndClass->lpszMenuName)+1;
+	size_t cbPiggyBack=cbClassName+cbMenuName;	
+	
+	mycws = (HLAE_BASECOM_RegisterClassA_s *)malloc(cbBase+cbPiggyBack);
 
 	memcpy(mycws,lpWndClass,sizeof(WNDCLASSA));
 
-	HlaeBcCltSendMessageRet(HLAE_BASECOM_MSGSV_RegisterClassA,sizeof(HLAE_BASECOM_RegisterClassA_s),(PVOID)mycws,mycwret);
+	mycws->lpszClassName = (LPCTSTR)cbBase; memcpy((char *)mycws + cbBase,lpWndClass->lpszClassName,cbClassName);
+	mycws->lpszMenuName = (LPCTSTR)(cbBase + cbClassName); memcpy((char *)mycws + cbBase + cbClassName,lpWndClass->lpszMenuName,cbMenuName);
+
+	HlaeBcCltSendMessageRet(HLAE_BASECOM_MSGSV_RegisterClassA,cbBase+cbPiggyBack,(PVOID)mycws,mycwret);
 	aRetAtom = mycwret->retResult;
 
-	delete mycws;
+	free(mycws);
 	delete mycwret;
 
 	if (aRetAtom)

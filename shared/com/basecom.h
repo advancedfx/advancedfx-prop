@@ -39,8 +39,8 @@
 struct HLAE_BASECOM_CreateWindowExA_s
 {
     DWORD dwExStyle;
-    LPCTSTR lpClassName;
-    LPCTSTR lpWindowName;
+    LPCTSTR lpClassName; // relative (piggy backed)
+    LPCTSTR lpWindowName; // relative (piggy backed)
     DWORD dwStyle;
     int x;
     int y;
@@ -49,7 +49,7 @@ struct HLAE_BASECOM_CreateWindowExA_s
     HWND hWndParent;
     HMENU hMenu;
     HINSTANCE hInstance;
-    LPVOID lpParam;
+    LPVOID lpParam; // only valid in client process space
 };
 
 struct HLAE_BASECOM_RET_CreateWindowExA_s
@@ -68,6 +68,9 @@ struct HLAE_BASECOM_RET_DestroyWindow_s
 };
 
 typedef WNDCLASSA HLAE_BASECOM_RegisterClassA_s;
+// lpszMenuName // relative (piggy backed)
+// lpszClassName // relative (piggy backed)
+// lpfnWndProc // only valid in client process space
 
 struct HLAE_BASECOM_RET_RegisterClassA_s
 {

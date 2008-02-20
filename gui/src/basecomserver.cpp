@@ -139,6 +139,10 @@ bool CBCServerInternal::_Wrapper_CreateWindowExA(HWND hWnd,HWND hwSender,PCOPYDA
 
 	HLAE_BASECOM_CreateWindowExA_s * pdata = (HLAE_BASECOM_CreateWindowExA_s *)pMyCDS->lpData;
 
+	// adjust pointers for piggy backs:
+	pdata->lpClassName=(LPCTSTR)((char *)pdata + (size_t)(pdata->lpClassName));
+	pdata->lpWindowName=(LPCTSTR)((char *)pdata + (size_t)(pdata->lpWindowName));
+
 	pRet->retResult = (HWND)_pBase->_DoCreateWindowExA((char *)pdata->lpClassName,(char *)pdata->lpWindowName,pdata->x,pdata->y,pdata->nHeight,pdata->nWidth);
 
 	bRes=_ReturnMessage(hWnd,hwSender,HLAE_BASECOM_MSGCL_RET_CreateWindowExA,sizeof(HLAE_BASECOM_RET_CreateWindowExA_s),pRet);
@@ -254,11 +258,15 @@ void * CHlaeBcServer::_DoCreateWindowExA(char *lpClassNameA,char *lpWindowNameA,
 		return NULL; // still window present, we only allow one window
 	else
 	{
-		_pHlaeGameWindow =new CHlaeGameWindow(_parent,wxID_ANY,wxDefaultPosition,wxDefaultSize,wxHSCROLL | wxVSCROLL,wxT("Game Test Window"));
+		wxString mycaption(lpWindowNameA,wxConvUTF8);
 
-		_pHlaeGameWindow->SetClientSize(nWidth,nHeight);
+		_pHlaeGameWindow =new CHlaeGameWindow(_parent,wxID_ANY,wxDefaultPosition,wxSize(200,150),wxHSCROLL | wxVSCROLL,mycaption);
 
-		_pHlaeAuiManager->AddPane(_pHlaeGameWindow, wxAuiPaneInfo().TopDockable());
+		_pHlaeGameWindow->SetVirtualSize(nWidth,nHeight);
+		_pHlaeGameWindow->SetScrollRate(10,10);
+		
+
+		_pHlaeAuiManager->AddPane(_pHlaeGameWindow, wxAuiPaneInfo().RightDockable().Float().Caption(mycaption));
 		return _pHlaeGameWindow->GetHWND();
 	}
 }
