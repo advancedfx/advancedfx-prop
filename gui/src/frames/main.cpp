@@ -35,11 +35,11 @@ hlaeFrameMain::hlaeFrameMain()
 
 	m_auimanager->AddLayout(wxT("Default"),true);
 
-	//m_basecom = new CHlaeBcServer(m_auimanager);
+	m_basecom = new CHlaeBcServer(this,m_auimanager);
 }
 
 hlaeFrameMain::~hlaeFrameMain() {
-	//delete m_basecom;
+	delete m_basecom;
 	delete m_auimanager;
 }
 

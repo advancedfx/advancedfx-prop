@@ -10,12 +10,13 @@ class CBCServerInternal;
 class CHlaeBcServer
 {
 public:
-	CHlaeBcServer(hlaeAuiManager *pHlaeAuiManager);
+	CHlaeBcServer(wxWindow *parent,hlaeAuiManager *pHlaeAuiManager);
 	~CHlaeBcServer();
 
 	friend class CBCServerInternal;
 
 private:
+	wxWindow *_parent;
 	hlaeAuiManager *_pHlaeAuiManager;
 	CHlaeGameWindow *_pHlaeGameWindow;
 

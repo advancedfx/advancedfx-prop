@@ -45,7 +45,9 @@ LRESULT CALLBACK HlaeBcCltWndProc(
 				MessageBoxW(hwnd,L"Got empty test data.",HLAE_BASECOM_CLIENT_ID,MB_OK);
 				return TRUE;
 			case HLAE_BASECOM_MSGCL_RET_CreateWindowExA:
+				MessageBox(0,"TEST","Hello",MB_OK);
 				if (g_pHlaeBcResultTarget) memcpy(g_pHlaeBcResultTarget,pMyCDS->lpData,sizeof(HLAE_BASECOM_RET_CreateWindowExA_s));
+				if(pMyCDS->lpData == NULL) MessageBox(0,"NULL","0000",MB_OK);
 				return TRUE;
 			case HLAE_BASECOM_MSGCL_RET_RegisterClassA:
 				if (g_pHlaeBcResultTarget) memcpy(g_pHlaeBcResultTarget,pMyCDS->lpData,sizeof(HLAE_BASECOM_RET_RegisterClassA_s));

@@ -231,8 +231,9 @@ CBCServerInternal g_BCServerInternal;
 // CHlaeBcServer
 //
 
-CHlaeBcServer::CHlaeBcServer(hlaeAuiManager *pHlaeAuiManager)
+CHlaeBcServer::CHlaeBcServer(wxWindow *parent,hlaeAuiManager *pHlaeAuiManager)
 {
+	_parent = parent;
 	_pHlaeAuiManager = pHlaeAuiManager;
 	_pHlaeGameWindow = NULL;
 
@@ -253,9 +254,11 @@ void * CHlaeBcServer::_DoCreateWindowExA(char *lpClassNameA,char *lpWindowNameA,
 		return NULL; // still window present, we only allow one window
 	else
 	{
-		_pHlaeGameWindow = new CHlaeGameWindow;
-		_pHlaeAuiManager->AddPane(_pHlaeGameWindow, wxAuiPaneInfo().TopDockable());
+		_pHlaeGameWindow =new CHlaeGameWindow(_parent,wxID_ANY,wxDefaultPosition,wxDefaultSize,wxHSCROLL | wxVSCROLL,wxT("Game Test Window"));
 
-		return _pHlaeGameWindow->GetHandle();
+		_pHlaeGameWindow->SetClientSize(nWidth,nHeight);
+
+		_pHlaeAuiManager->AddPane(_pHlaeGameWindow, wxAuiPaneInfo().TopDockable());
+		return _pHlaeGameWindow->GetHWND();
 	}
 }
