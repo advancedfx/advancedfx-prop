@@ -34,6 +34,7 @@
 
 			hlaeListSettingsPage* m_pagelist;
 			hlaeListSettingsPageID* m_pageidlist;
+			hlaeSettingsPageTemplate* m_lastpage;
 			bool m_advancedmode;
 
 			wxTreeCtrl* m_treectrl;

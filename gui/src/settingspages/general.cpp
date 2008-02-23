@@ -1,4 +1,4 @@
-#include <wx/button.h>
+#include <wx/textctrl.h>
 
 #include <hlae/settingspages/general.h>
 
@@ -8,7 +8,7 @@ hlaeSettingsPageGeneral::hlaeSettingsPageGeneral(wxWindow* parent)
 
 void hlaeSettingsPageGeneral::ShowPage(bool is_advanced)
 {
-	new wxButton(this, wxID_ANY, wxT("yes :D"));
+	new wxTextCtrl (this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(400,300));
 	Show();
 }
 

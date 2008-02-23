@@ -18,60 +18,64 @@ hlaeDialogSettings::hlaeDialogSettings(wxWindow* parent, wxWindowID id, const wx
 {
 	m_pagelist = new hlaeListSettingsPage;
 	m_pageidlist = new hlaeListSettingsPageID;
+	m_lastpage = new hlaeSettingsPageTemplate(this);
+
 	m_pagelist->DeleteContents(true);
 	m_pageidlist->DeleteContents(true);
 
+
 	wxFlexGridSizer* fgSizer1 = new wxFlexGridSizer(4, 1, 0, 0);
-	fgSizer1->AddGrowableCol(0);
 	fgSizer1->AddGrowableRow(0);
-	fgSizer1->SetFlexibleDirection(wxBOTH);
-	fgSizer1->SetNonFlexibleGrowMode(wxFLEX_GROWMODE_ALL);
+	fgSizer1->AddGrowableCol(0);
+
 
 	m_pagesizer = new wxFlexGridSizer(1, 2, 0, 0);
 	m_pagesizer->AddGrowableCol(1);
 	m_pagesizer->AddGrowableRow(0);
-	m_pagesizer->SetFlexibleDirection(wxBOTH);
-	m_pagesizer->SetNonFlexibleGrowMode(wxFLEX_GROWMODE_ALL);
 
 	m_treectrl = new wxTreeCtrl(this, hlaeID_SelectionChanged, wxDefaultPosition,
 		wxSize(125,-1), wxTR_HAS_BUTTONS | wxTR_HIDE_ROOT | wxTR_LINES_AT_ROOT);
 
-	m_pagesizer->Add(m_treectrl, 0, wxALL | wxEXPAND);
-	m_pagesizer->Add(new hlaeSettingsPageTemplate(this), 0, wxLEFT | wxEXPAND, 5);
+	m_pagesizer->Add(m_treectrl, 0, wxRIGHT | wxEXPAND, 5);
+	m_pagesizer->Add(m_lastpage, 0, wxLEFT | wxALIGN_CENTER , 5);
 
-	fgSizer1->Add( m_pagesizer, 0, wxALL | wxEXPAND, 5);
+	fgSizer1->Add(m_pagesizer, 0, wxALL | wxEXPAND, 5);
+
+
 	fgSizer1->Add( new wxStaticLine( this, wxID_ANY, wxDefaultPosition, wxDefaultSize,
 		wxLI_HORIZONTAL ), 0, wxEXPAND, 5);
 
+
 	wxFlexGridSizer* fgSizer2 = new wxFlexGridSizer(1, 2, 0, 0);
 	fgSizer2->AddGrowableCol(0);
-	fgSizer2->AddGrowableRow(0);
-	fgSizer2->SetFlexibleDirection(wxBOTH);
-	fgSizer2->SetNonFlexibleGrowMode(wxFLEX_GROWMODE_SPECIFIED);
 	
-	m_chkAdvanced = new wxCheckBox( this, hlaeID_AdvancedMode, wxT("Advanced Settings"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_chkAdvanced = new wxCheckBox( this, hlaeID_AdvancedMode, wxT("Advanced Settings"),
+		wxDefaultPosition, wxDefaultSize, 0 );
 	
 	fgSizer2->Add(m_chkAdvanced, 0, wxALIGN_CENTER_VERTICAL | wxEXPAND, 5 );
 
-	wxBoxSizer* bSizer2 = new wxBoxSizer(wxHORIZONTAL);
+	wxBoxSizer* bSizer = new wxBoxSizer(wxHORIZONTAL);
 	
 	m_btnOK = new wxButton( this, wxID_OK, wxT("OK"), wxDefaultPosition, wxDefaultSize, 0 );
-	bSizer2->Add( m_btnOK, 0, wxLEFT, 5 );
+	bSizer->Add( m_btnOK, 0, wxLEFT, 5 );
 	
 	m_btnCancel = new wxButton( this, wxID_CANCEL, wxT("Cancel"));
-	bSizer2->Add( m_btnCancel, 0, wxLEFT, 5 );
+	bSizer->Add( m_btnCancel, 0, wxLEFT, 5 );
 	
 	m_btnApply = new wxButton( this, wxID_APPLY, wxT("Apply"));
-	bSizer2->Add( m_btnApply, 0, wxLEFT, 5 );
+	bSizer->Add( m_btnApply, 0, wxLEFT, 5 );
 
-	fgSizer2->Add(bSizer2, 1, 0, 5);
-	
+	fgSizer2->Add(bSizer, 1, 0, 5);
+
 	fgSizer1->Add(fgSizer2, 1, wxALL|wxEXPAND, 5);
-	
-	SetEscapeId(wxID_CANCEL);
+
 	SetSizer(fgSizer1);
 
 	Layout();
+
+	SetEscapeId(wxID_CANCEL);
+
+	// All settingspages
 
 	hlaeListElementSettingsPage* node_general =	new hlaeListElementSettingsPage(
 		new hlaeSettingsPageGeneral(this), wxT("General"), false);
@@ -87,6 +91,7 @@ hlaeDialogSettings::hlaeDialogSettings(wxWindow* parent, wxWindowID id, const wx
 		new hlaeSettingsPageGeneral(this),wxT("Advanced"), true));
 	m_pagelist->Append(node_advanced);
 
+	// Update the control
 	UpdateTreeCtrl();
 }
 
@@ -94,20 +99,19 @@ hlaeDialogSettings::~hlaeDialogSettings()
 {
 	m_pagelist->Clear();
 	m_pageidlist->Clear();
+
 	delete m_pagelist;
 	delete m_pageidlist;
 }
 
 void hlaeDialogSettings::OnApply(wxCommandEvent& WXUNUSED(evt))
 {
-	dynamic_cast<hlaeSettingsPageTemplate*>(
-		m_pagesizer->GetItem(1)->GetWindow())->ApplyChanges();
+	m_lastpage->ApplyChanges();
 }
 
 void hlaeDialogSettings::OnOK(wxCommandEvent& WXUNUSED(evt))
 {
-	dynamic_cast<hlaeSettingsPageTemplate*>(
-		m_pagesizer->GetItem(1)->GetWindow())->ApplyChanges();
+	m_lastpage->ApplyChanges();
 	Close();
 }
 
@@ -161,15 +165,13 @@ void hlaeDialogSettings::OnSelectionChanged(wxTreeEvent& evt)
 	
 		if (evt.GetItem() == current->id)
 		{
-			hlaeSettingsPageTemplate* current_page = current->page;
-			hlaeSettingsPageTemplate* last_page = dynamic_cast<hlaeSettingsPageTemplate*>(
-				m_pagesizer->GetItem(1)->GetWindow());
+			m_lastpage->Hide();
+			current->page->ShowPage(m_advancedmode);
 
-			last_page->Hide();
-			current_page->ShowPage(m_advancedmode);
-
-			m_pagesizer->Replace(last_page, current_page);
+			m_pagesizer->Replace(m_lastpage, current->page);
 			m_pagesizer->Layout();
+
+			m_lastpage = current->page;
 
 			break;
 		}
