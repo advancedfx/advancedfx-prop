@@ -7,6 +7,30 @@
 HWND g_hwHlaeBcCltWindow = NULL;
 HWND g_hwHlaeGameWindow = NULL;
 
+WNDPROC g_HL_WindowProc = NULL;
+
+LRESULT HlaeBcCallWndProc(WNDPROC callWndProc,HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+{
+	LRESULT lrRet = FALSE;
+	if (!callWndProc) return FALSE;
+
+	//
+	// place your custom actions and filters here:
+
+
+	//
+	// then we call it:
+	lrRet = callWndProc(hwnd,uMsg,wParam,lParam);
+
+	//
+	// we could examine the result here:
+
+
+	//
+	// and finally return:
+	return lrRet;
+}
+
 void *g_pHlaeBcResultTarget=NULL;
 
 LRESULT CALLBACK HlaeBcCltWndProc(
@@ -55,6 +79,10 @@ LRESULT CALLBACK HlaeBcCltWndProc(
 			case HLAE_BASECOM_MSGCL_RET_DestroyWindow:
 				if (g_pHlaeBcResultTarget) memcpy(g_pHlaeBcResultTarget,pMyCDS->lpData,sizeof(HLAE_BASECOM_RET_DestroyWindow_s));
 				return TRUE;
+			case HLAE_BASECOM_MSGCL_CallWndProc_s:
+				// it's a bit risky, but whatev0r:
+				return HlaeBcCallWndProc(((HLAE_BASECOM_CallWndProc_s *)(pMyCDS->lpData))->lpfnWndProc,((HLAE_BASECOM_CallWndProc_s *)(pMyCDS->lpData))->hwnd,((HLAE_BASECOM_CallWndProc_s *)(pMyCDS->lpData))->uMsg,((HLAE_BASECOM_CallWndProc_s *)(pMyCDS->lpData))->wParam,((HLAE_BASECOM_CallWndProc_s *)(pMyCDS->lpData))->lParam);
+
 			default:
 				MessageBoxW(hwnd,L"Unexpected message.",HLAE_BASECOM_CLIENT_ID,MB_OK|MB_ICONERROR);
 			}
@@ -211,6 +239,9 @@ ATOM HlaeBcClt_RegisterClassA(CONST WNDCLASSA *lpWndClass)
 	mycws->lpszClassName = (LPCTSTR)cbBase; memcpy((char *)mycws + cbBase,lpWndClass->lpszClassName,cbClassName);
 	mycws->lpszMenuName = (LPCTSTR)(cbBase + cbClassName); memcpy((char *)mycws + cbBase + cbClassName,lpWndClass->lpszMenuName,cbMenuName);
 
+	g_HL_WindowProc = lpWndClass->lpfnWndProc;
+
+	// we already know that the server will just use this to capture our window ID and stuff and not handle it (return NULL)
 	HlaeBcCltSendMessageRet(HLAE_BASECOM_MSGSV_RegisterClassA,cbBase+cbPiggyBack,(PVOID)mycws,mycwret);
 	aRetAtom = mycwret->retResult;
 

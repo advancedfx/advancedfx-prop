@@ -22,15 +22,17 @@
 // If the reciever proccessed the message it shall return TRUE to SendMessage
 // otherwise it shall return FALSE to SendMessage
 
-#define HLAE_BASECOM_MSG_TESTDUMMY			0x00000000
+#define HLAE_BASECOM_MSG_TESTDUMMY				0x00000000
 
-#define HLAE_BASECOM_MSGSV_CreateWindowExA	0x00000001
-#define HLAE_BASECOM_MSGSV_RegisterClassA	0x00000002
-#define HLAE_BASECOM_MSGSV_DestroyWindow	0x00000003
+#define HLAE_BASECOM_MSGSV_CreateWindowExA		0x00000001
+#define HLAE_BASECOM_MSGSV_RegisterClassA		0x00000002
+#define HLAE_BASECOM_MSGSV_DestroyWindow		0x00000003
+//#define HLAE_BASECOM_MSGSV_RET_CallWndProc_s	0x00000004
 
 #define HLAE_BASECOM_MSGCL_RET_CreateWindowExA	0x00000001
 #define HLAE_BASECOM_MSGCL_RET_RegisterClassA	0x00000002
 #define HLAE_BASECOM_MSGCL_RET_DestroyWindow	0x00000003
+#define HLAE_BASECOM_MSGCL_CallWndProc_s		0x00000004
 
 //
 // Message Structures:
@@ -77,3 +79,18 @@ struct HLAE_BASECOM_RET_RegisterClassA_s
 	ATOM retResult;
 };
 
+struct HLAE_BASECOM_CallWndProc_s
+{
+	HINSTANCE hInstance; // might be ignored
+	WNDPROC lpfnWndProc;
+    HWND hwnd;
+    UINT uMsg;
+    WPARAM wParam;
+    LPARAM lParam;
+};
+
+// returned directly instead currently (cuz I was too lazy f0lks)
+//struct HLAE_BASECOM_RET_CallWndProc_s
+//{
+//	LRESULT retResult;
+//};
