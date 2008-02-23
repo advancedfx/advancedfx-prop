@@ -751,11 +751,7 @@ HWND APIENTRY my_CreateWindowExA(
 
 	if (hWndParent==NULL)
 	{
-		// GameWindow is being created
-		if (HlaeBcCltStart())
-		{
-			hwResultWin = HlaeBcClt_CreateWindowExA(dwExStyle,lpClassName,lpWindowName,dwStyle,x,y,nWidth,nHeight,hWndParent,hMenu,hInstance,lpParam);
-		}
+		hwResultWin = HlaeBcClt_CreateWindowExA(dwExStyle,lpClassName,lpWindowName,dwStyle,x,y,nWidth,nHeight,hWndParent,hMenu,hInstance,lpParam);
 	}
 	else hwResultWin = CreateWindowEx(dwExStyle,lpClassName,lpWindowName,dwStyle,x,y,nWidth,nHeight,hWndParent,hMenu,hInstance,lpParam);
 
@@ -783,8 +779,20 @@ ATOM APIENTRY my_RegisterClassA(
     CONST WNDCLASS *lpWndClass
 )
 {
-	if (!lstrcmp(lpWndClass->lpszClassName,"Valve0001"))
+#ifdef MDT_DEBUG
+	char sztemp[1000];
+	if (HIWORD(lpWndClass->lpszClassName))
+	{
+		_snprintf(sztemp,sizeof(sztemp),"ClassName: %s",lpWndClass->lpszClassName);
+		MessageBox(0,sztemp,"RegisterClassA",MB_OK);
+	}
+#endif
+
+	if (HIWORD(lpWndClass) && !lstrcmp(lpWndClass->lpszClassName,"Valve001"))
+	{
+		HlaeBcCltStart(); // start the server here please
 		return HlaeBcClt_RegisterClassA(lpWndClass);
+	}
 	else
 		return RegisterClassA(lpWndClass);
 }

@@ -142,8 +142,10 @@ bool CBCServerInternal::HlaeBcSrvStop()
 LRESULT CBCServerInternal::DispatchToClientProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	if (!(_cl_lpfnWndProc && _cl_hInstance)) return FALSE;
+	if(uMsg==WM_SIZE) MessageBoxW(hwnd,L"WM_SIZE",L"DISP",MB_OK);
 	if(!_hwClient) return FALSE;
-	
+
+
 	COPYDATASTRUCT myCopyData;
 
 	static HLAE_BASECOM_CallWndProc_s mycws;
@@ -158,6 +160,8 @@ LRESULT CBCServerInternal::DispatchToClientProc(HWND hwnd, UINT uMsg, WPARAM wPa
 	myCopyData.dwData=HLAE_BASECOM_MSGCL_CallWndProc_s;
 	myCopyData.cbData=sizeof(HLAE_BASECOM_CallWndProc_s);
 	myCopyData.lpData=&mycws;
+
+	return FALSE;
 
 	return SendMessageW(
 		_hwClient,
@@ -217,18 +221,16 @@ bool CBCServerInternal::_MyOnRecieve(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMy
 	switch (pMyCDS->dwData)
 	{
 	case HLAE_BASECOM_MSG_TESTDUMMY:
-		MessageBoxW(hWnd,L"Got empty test data.",HLAE_BASECOM_CLIENT_ID,MB_OK);
+		MessageBoxW(hWnd,L"Got empty test data.",HLAE_BASECOM_SERVER_ID,MB_OK);
 		return true;
 	case HLAE_BASECOM_MSGSV_CreateWindowExA:
 		return _Wrapper_CreateWindowExA(hWnd,hwSender,pMyCDS);
 	case HLAE_BASECOM_MSGSV_RegisterClassA:
-		_Wrapper_RegisterClassA(hWnd,hwSender,pMyCDS);
-		break;
+		return _Wrapper_RegisterClassA(hWnd,hwSender,pMyCDS);
 	case HLAE_BASECOM_MSGSV_DestroyWindow:
-		_Wrapper_DestroyWindow(hWnd,hwSender,pMyCDS);
-		break;
+		return _Wrapper_DestroyWindow(hWnd,hwSender,pMyCDS);
 	default:
-		;
+		MessageBoxW(hWnd,L"Error: Recieved unkown message.",HLAE_BASECOM_SERVER_ID,MB_OK|MB_ICONERROR);
 	}
 	return false;
 }
@@ -253,11 +255,18 @@ bool CBCServerInternal::_ReturnMessage(HWND hWnd,HWND hwTarget,ULONG dwData,DWOR
 
 bool CBCServerInternal::_Wrapper_RegisterClassA(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS)
 {
+	MessageBoxW(hWnd,L"recvied",L"Reg",MB_OK);
 	HLAE_BASECOM_RegisterClassA_s * pdata = (HLAE_BASECOM_RegisterClassA_s *)pMyCDS->lpData;
 
 	// adjust pointers for piggy backs:
-	pdata->lpszClassName=(LPCSTR)((char *)pdata + (size_t)(pdata->lpszClassName));
-	pdata->lpszMenuName=(LPCSTR)((char *)pdata + (size_t)(pdata->lpszMenuName));
+	if (HIWORD(pdata->lpszClassName))
+		pdata->lpszClassName=(LPCSTR)((char *)pdata + (size_t)(pdata->lpszClassName));
+	else
+		pdata->lpszClassName=NULL;
+	if (HIWORD(pdata->lpszMenuName))
+		pdata->lpszMenuName=(LPCSTR)((char *)pdata + (size_t)(pdata->lpszMenuName));
+	else
+		pdata->lpszMenuName=NULL;
 
 	// we will just fetch the window proc properties:
 	// although we won't use them.
@@ -267,6 +276,7 @@ bool CBCServerInternal::_Wrapper_RegisterClassA(HWND hWnd,HWND hwSender,PCOPYDAT
 	// we also fetch the window, since we will need it for transmitting data that shall be passed to the WindowProc function:
 	_hwClient = hwSender;
 
+	MessageBoxW(hWnd,L"Survived?",L"Reg",MB_OK);
 	return false; // we didn't handle it, let the hook handle it
 }
 
@@ -279,8 +289,14 @@ bool CBCServerInternal::_Wrapper_CreateWindowExA(HWND hWnd,HWND hwSender,PCOPYDA
 	HLAE_BASECOM_CreateWindowExA_s * pdata = (HLAE_BASECOM_CreateWindowExA_s *)pMyCDS->lpData;
 
 	// adjust pointers for piggy backs:
-	pdata->lpClassName=(LPCTSTR)((char *)pdata + (size_t)(pdata->lpClassName));
-	pdata->lpWindowName=(LPCTSTR)((char *)pdata + (size_t)(pdata->lpWindowName));
+	if(HIWORD(pdata->lpClassName))
+		pdata->lpClassName=(LPCTSTR)((char *)pdata + (size_t)(pdata->lpClassName));
+	else
+		pdata->lpClassName=NULL;
+	if(HIWORD(pdata->lpWindowName))
+		pdata->lpWindowName=(LPCTSTR)((char *)pdata + (size_t)(pdata->lpWindowName));
+	else
+		pdata->lpWindowName=NULL;
 
 	pRet->retResult = (HWND)_pBase->_DoCreateWindowExA((char *)pdata->lpClassName,(char *)pdata->lpWindowName,pdata->x,pdata->y,pdata->nHeight,pdata->nWidth);
 

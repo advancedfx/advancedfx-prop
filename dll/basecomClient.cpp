@@ -17,6 +17,7 @@ LRESULT HlaeBcCallWndProc(WNDPROC callWndProc,HWND hwnd,UINT uMsg,WPARAM wParam,
 	//
 	// place your custom actions and filters here:
 
+	if (uMsg==WM_SIZE) MessageBox(0,"WM_SIZE","Got s.th.:",MB_OK);
 
 	//
 	// then we call it:
@@ -187,15 +188,26 @@ HWND HlaeBcClt_CreateWindowExA(DWORD dwExStyle,LPCTSTR lpClassName,LPCTSTR lpWin
 	HLAE_BASECOM_CreateWindowExA_s *mycws;
 
 	size_t cbBase=sizeof(HLAE_BASECOM_CreateWindowExA_s);
-	size_t cbClassName=strlen(lpClassName)+1;
-	size_t cbWindowName=strlen(lpWindowName)+1;
+	size_t cbClassName=HIWORD(lpClassName) ? strlen(lpClassName)+1 : 0;
+	size_t cbWindowName=HIWORD(lpWindowName) ? strlen(lpWindowName)+1 : 0;
 	size_t cbPiggyBack=cbClassName+cbWindowName;
 
 	mycws=(HLAE_BASECOM_CreateWindowExA_s *)malloc(cbBase+cbPiggyBack);
 
 	mycws->dwExStyle = dwExStyle;
-	mycws->lpClassName = (LPCTSTR)cbBase; memcpy((char *)mycws + cbBase,lpClassName,cbClassName);
-	mycws->lpWindowName = (LPCTSTR)(cbBase + cbClassName); memcpy((char *)mycws + cbBase + cbClassName,lpWindowName,cbWindowName);
+
+	if(cbClassName>0)
+	{
+		mycws->lpClassName = (LPCTSTR)cbBase; memcpy((char *)mycws + cbBase,lpClassName,cbClassName);
+	} else
+		mycws->lpClassName = NULL;
+
+	if (cbWindowName>0)
+	{
+		mycws->lpWindowName = (LPCTSTR)(cbBase + cbClassName); memcpy((char *)mycws + cbBase + cbClassName,lpWindowName,cbWindowName);
+	} else
+		mycws->lpWindowName = NULL;
+
 	mycws->dwStyle = dwStyle;
 	mycws->x = x;
 	mycws->y = y ;
@@ -206,8 +218,8 @@ HWND HlaeBcClt_CreateWindowExA(DWORD dwExStyle,LPCTSTR lpClassName,LPCTSTR lpWin
 	mycws->hInstance = hInstance;
 	mycws->lpParam = lpParam;
 
-	HlaeBcCltSendMessageRet(HLAE_BASECOM_MSGSV_CreateWindowExA,cbBase+cbPiggyBack,(PVOID)mycws,mycwret);
-	hwRetWin = mycwret->retResult;
+	if(HlaeBcCltSendMessageRet(HLAE_BASECOM_MSGSV_CreateWindowExA,cbBase+cbPiggyBack,(PVOID)mycws,mycwret))
+		hwRetWin = mycwret->retResult;
 
 	free(mycws);
 	delete mycwret;
@@ -227,23 +239,32 @@ ATOM HlaeBcClt_RegisterClassA(CONST WNDCLASSA *lpWndClass)
 	HLAE_BASECOM_RET_RegisterClassA_s *mycwret = new HLAE_BASECOM_RET_RegisterClassA_s;
 	HLAE_BASECOM_RegisterClassA_s *mycws;
 	
-	size_t cbBase=sizeof(HLAE_BASECOM_CreateWindowExA_s);
-	size_t cbClassName=strlen(lpWndClass->lpszClassName)+1;
-	size_t cbMenuName=strlen(lpWndClass->lpszMenuName)+1;
+	size_t cbBase=sizeof(HLAE_BASECOM_RET_RegisterClassA_s);
+	size_t cbClassName=HIWORD(lpWndClass->lpszClassName) ? strlen(lpWndClass->lpszClassName)+1 : 0;
+	size_t cbMenuName=HIWORD(lpWndClass->lpszMenuName) ? strlen(lpWndClass->lpszMenuName)+1 : 0;
 	size_t cbPiggyBack=cbClassName+cbMenuName;	
 	
 	mycws = (HLAE_BASECOM_RegisterClassA_s *)malloc(cbBase+cbPiggyBack);
 
-	memcpy(mycws,lpWndClass,sizeof(WNDCLASSA));
+	
+	memcpy(mycws,lpWndClass,sizeof(HLAE_BASECOM_RET_RegisterClassA_s));
 
-	mycws->lpszClassName = (LPCTSTR)cbBase; memcpy((char *)mycws + cbBase,lpWndClass->lpszClassName,cbClassName);
-	mycws->lpszMenuName = (LPCTSTR)(cbBase + cbClassName); memcpy((char *)mycws + cbBase + cbClassName,lpWndClass->lpszMenuName,cbMenuName);
+	if(cbClassName>0)
+	{
+		mycws->lpszClassName = (LPCTSTR)cbBase; memcpy((char *)mycws + cbBase,lpWndClass->lpszClassName,cbClassName);
+	} else
+		mycws->lpszClassName = NULL;
+	if(cbMenuName>0)
+	{
+		mycws->lpszMenuName = (LPCTSTR)(cbBase + cbClassName); memcpy((char *)mycws + cbBase + cbClassName,lpWndClass->lpszMenuName,cbMenuName);
+	} else
+		mycws->lpszMenuName = NULL;
 
 	g_HL_WindowProc = lpWndClass->lpfnWndProc;
 
 	// we already know that the server will just use this to capture our window ID and stuff and not handle it (return NULL)
-	HlaeBcCltSendMessageRet(HLAE_BASECOM_MSGSV_RegisterClassA,cbBase+cbPiggyBack,(PVOID)mycws,mycwret);
-	aRetAtom = mycwret->retResult;
+	if(HlaeBcCltSendMessageRet(HLAE_BASECOM_MSGSV_RegisterClassA,cbBase+cbPiggyBack,(PVOID)mycws,mycwret))
+		aRetAtom = mycwret->retResult;
 
 	free(mycws);
 	delete mycwret;
