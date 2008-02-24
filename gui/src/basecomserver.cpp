@@ -141,10 +141,8 @@ bool CBCServerInternal::HlaeBcSrvStop()
 
 LRESULT CBCServerInternal::DispatchToClientProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if (!(_cl_lpfnWndProc && _cl_hInstance)) return FALSE;
-	if(uMsg==WM_SIZE) MessageBoxW(hwnd,L"WM_SIZE",L"DISP",MB_OK);
-	if(!_hwClient) return FALSE;
-
+	//if (!(_cl_lpfnWndProc && _cl_hInstance && _hwClient)) return FALSE;
+	if (!(_cl_lpfnWndProc && _hwClient)) return FALSE;
 
 	COPYDATASTRUCT myCopyData;
 
@@ -160,8 +158,6 @@ LRESULT CBCServerInternal::DispatchToClientProc(HWND hwnd, UINT uMsg, WPARAM wPa
 	myCopyData.dwData=HLAE_BASECOM_MSGCL_CallWndProc_s;
 	myCopyData.cbData=sizeof(HLAE_BASECOM_CallWndProc_s);
 	myCopyData.lpData=&mycws;
-
-	return FALSE;
 
 	return SendMessageW(
 		_hwClient,
@@ -255,7 +251,7 @@ bool CBCServerInternal::_ReturnMessage(HWND hWnd,HWND hwTarget,ULONG dwData,DWOR
 
 bool CBCServerInternal::_Wrapper_RegisterClassA(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS)
 {
-	MessageBoxW(hWnd,L"recvied",L"Reg",MB_OK);
+	//MessageBoxW(hWnd,L"recvied",L"Reg",MB_OK);
 	HLAE_BASECOM_RegisterClassA_s * pdata = (HLAE_BASECOM_RegisterClassA_s *)pMyCDS->lpData;
 
 	// adjust pointers for piggy backs:
@@ -273,10 +269,14 @@ bool CBCServerInternal::_Wrapper_RegisterClassA(HWND hWnd,HWND hwSender,PCOPYDAT
 	_cl_hInstance = pdata->hInstance;
 	_cl_lpfnWndProc = pdata->lpfnWndProc;
 
+	//char sztemp[100];
+	//_snprintf(sztemp,sizeof(sztemp),"0x%08x",pdata->lpfnWndProc);
+	//MessageBoxA(0,sztemp,"SV says:",MB_OK);
+
 	// we also fetch the window, since we will need it for transmitting data that shall be passed to the WindowProc function:
 	_hwClient = hwSender;
 
-	MessageBoxW(hWnd,L"Survived?",L"Reg",MB_OK);
+	//MessageBoxW(hWnd,L"Survived?",L"Reg",MB_OK);
 	return false; // we didn't handle it, let the hook handle it
 }
 
@@ -391,8 +391,8 @@ void * CHlaeBcServer::_DoCreateWindowExA(char *lpClassNameA,char *lpWindowNameA,
 		_pHlaeGameWindow->SetVirtualSize(nWidth,nHeight);
 		_pHlaeGameWindow->SetScrollRate(10,10);
 		
-
 		_pHlaeAuiManager->AddPane(_pHlaeGameWindow, wxAuiPaneInfo().RightDockable().Float().Caption(mycaption));
+
 		return _pHlaeGameWindow->GetHWND();
 	}
 }
@@ -402,7 +402,9 @@ bool CHlaeBcServer::_DoDestroyWindow(WXHWND wxhWnd)
 	if (!_pHlaeGameWindow) return false;
 
 	if (_pHlaeGameWindow->GetHWND()==wxhWnd)
+	{
 		return _pHlaeGameWindow->Destroy();
+	}
 	else
 		return false;
 }

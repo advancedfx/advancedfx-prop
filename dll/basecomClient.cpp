@@ -2,6 +2,8 @@
 
 #include "shared/com/basecom.h"
 
+//#include <stdio.h>
+
 // In order to understand the source that follows the Microsoft Documentation of WM_COPYDATA might be useful.
 
 HWND g_hwHlaeBcCltWindow = NULL;
@@ -13,11 +15,24 @@ LRESULT HlaeBcCallWndProc(WNDPROC callWndProc,HWND hwnd,UINT uMsg,WPARAM wParam,
 {
 	LRESULT lrRet = FALSE;
 	if (!callWndProc) return FALSE;
-
 	//
 	// place your custom actions and filters here:
 
-	if (uMsg==WM_SIZE) MessageBox(0,"WM_SIZE","Got s.th.:",MB_OK);
+	switch(uMsg)
+	{
+	case WM_CLOSE:
+	case WM_DESTROY:
+		MessageBoxA(hwnd,"Close/Destroy","CL recieved event",MB_OK);
+		break;
+	case WM_KEYDOWN:
+	case WM_CHAR:
+	case WM_KEYUP:
+		//MessageBoxA(hwnd,"KeyEvent","CL recieved event",MB_OK);
+		break;
+	default:
+		break;
+		return FALSE;
+	}
 
 	//
 	// then we call it:
@@ -70,7 +85,7 @@ LRESULT CALLBACK HlaeBcCltWndProc(
 				MessageBoxW(hwnd,L"Got empty test data.",HLAE_BASECOM_CLIENT_ID,MB_OK);
 				return TRUE;
 			case HLAE_BASECOM_MSGCL_RET_CreateWindowExA:
-				MessageBox(0,"TEST","Hello",MB_OK);
+				//MessageBox(0,"TEST","Hello",MB_OK);
 				if (g_pHlaeBcResultTarget) memcpy(g_pHlaeBcResultTarget,pMyCDS->lpData,sizeof(HLAE_BASECOM_RET_CreateWindowExA_s));
 				if(pMyCDS->lpData == NULL) MessageBox(0,"NULL","0000",MB_OK);
 				return TRUE;
@@ -239,15 +254,18 @@ ATOM HlaeBcClt_RegisterClassA(CONST WNDCLASSA *lpWndClass)
 	HLAE_BASECOM_RET_RegisterClassA_s *mycwret = new HLAE_BASECOM_RET_RegisterClassA_s;
 	HLAE_BASECOM_RegisterClassA_s *mycws;
 	
-	size_t cbBase=sizeof(HLAE_BASECOM_RET_RegisterClassA_s);
+	size_t cbBase=sizeof(HLAE_BASECOM_RegisterClassA_s);
 	size_t cbClassName=HIWORD(lpWndClass->lpszClassName) ? strlen(lpWndClass->lpszClassName)+1 : 0;
 	size_t cbMenuName=HIWORD(lpWndClass->lpszMenuName) ? strlen(lpWndClass->lpszMenuName)+1 : 0;
 	size_t cbPiggyBack=cbClassName+cbMenuName;	
 	
 	mycws = (HLAE_BASECOM_RegisterClassA_s *)malloc(cbBase+cbPiggyBack);
 
-	
-	memcpy(mycws,lpWndClass,sizeof(HLAE_BASECOM_RET_RegisterClassA_s));
+	memcpy(mycws,lpWndClass,sizeof(HLAE_BASECOM_RegisterClassA_s));
+
+	//char szt[100];
+	//_snprintf(szt,sizeof(szt),"Org: hi: 0x%08x wp: 0x%08x\nCpy: hi: 0x%08x wp: 0x%08x",lpWndClass->hInstance,lpWndClass->lpfnWndProc,mycws->hInstance,mycws->lpfnWndProc);
+	//MessageBox(0,szt,"CL INFO",MB_OK);
 
 	if(cbClassName>0)
 	{

@@ -10,7 +10,7 @@ class CHlaeGameWindow : public wxScrolledWindow
 public:
 	CHlaeGameWindow(CHlaeBcServer *pHlaeBcServer)
 		: wxScrolledWindow()
-		{_pHlaeBcServer = pHlaeBcServer; };
+		{ CreateInternal(pHlaeBcServer); };
 
 	CHlaeGameWindow(CHlaeBcServer *pHlaeBcServer,
 					 wxWindow *parent,
@@ -20,15 +20,22 @@ public:
                      long style = wxScrolledWindowStyle,
                      const wxString& name = wxPanelNameStr)
 		: wxScrolledWindow(parent, winid, pos, size, style, name)
-		{ _pHlaeBcServer = pHlaeBcServer; };
+		{ CreateInternal(pHlaeBcServer); };
+
+	void CreateInternal(CHlaeBcServer *pHlaeBcServer);
+	
+	bool Create(wxWindow *parent, wxWindowID winid, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxScrolledWindowStyle, const wxString& name = wxPanelNameStr);
+	
+	bool Destroy();
 
 	//virtual bool ProcessEvent(wxEvent &myevent); // override command handler
 private:
 	DECLARE_EVENT_TABLE()
 
 	CHlaeBcServer *_pHlaeBcServer;
+	bool	_bTransmitAllowed;
 
-	// events:
+	// (other) events:
 	void OnActivate( wxActivateEvent &myevent );
 	void OnClose( wxCloseEvent &myevent );
 	void OnEraseBackground( wxEraseEvent &myevent );

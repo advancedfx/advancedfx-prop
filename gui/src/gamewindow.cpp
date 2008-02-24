@@ -66,44 +66,52 @@ END_EVENT_TABLE()
 
 void CHlaeGameWindow::OnActivate( wxActivateEvent &myevent )
 {
-	// we map this to activate app
-	_pHlaeBcServer->PassEventPreParsed(WM_ACTIVATE,(unsigned int)((unsigned short)(myevent.GetActive())&0x0ffff),(unsigned int)GetHWND());
+	if (_bTransmitAllowed) _pHlaeBcServer->PassEventPreParsed(WM_ACTIVATE,(unsigned int)((unsigned short)(myevent.GetActive())&0x0ffff),(unsigned int)GetHWND());
 	myevent.Skip();
 }
 void CHlaeGameWindow::OnClose( wxCloseEvent &myevent )
 {
-	_pHlaeBcServer->PassEventPreParsed(WM_CLOSE,0,0);
+	if (_bTransmitAllowed) _pHlaeBcServer->PassEventPreParsed(WM_CLOSE,0,0);
 	myevent.Skip();
 }
 void CHlaeGameWindow::OnEraseBackground( wxEraseEvent &myevent )
 {
-	_pHlaeBcServer->PassEventPreParsed(WM_ERASEBKGND,(unsigned int)(myevent.GetDC()->GetHDC()),0);
+	if (_bTransmitAllowed) _pHlaeBcServer->PassEventPreParsed(WM_ERASEBKGND,(unsigned int)(myevent.GetDC()->GetHDC()),0);
 	myevent.Skip();
 }
 void CHlaeGameWindow::OnSetFocus( wxFocusEvent &myevent )
 {
-	_pHlaeBcServer->PassEventPreParsed(WM_SETFOCUS,(unsigned int)GetHWND(),0);
+	if (_bTransmitAllowed) _pHlaeBcServer->PassEventPreParsed(WM_SETFOCUS,(unsigned int)GetHWND(),0);
 	myevent.Skip();
 }
 void CHlaeGameWindow::OnKillFocus( wxFocusEvent &myevent )
 {
-	_pHlaeBcServer->PassEventPreParsed(WM_KILLFOCUS,(unsigned int)GetHWND(),0);
+	if (_bTransmitAllowed) _pHlaeBcServer->PassEventPreParsed(WM_KILLFOCUS,(unsigned int)GetHWND(),0);
 	myevent.Skip();
 }
 void CHlaeGameWindow::OnKeyDown( wxKeyEvent &myevent )
 {
-	if(_pHlaeBcServer->PassEventPreParsed(WM_KEYDOWN,(unsigned int)(myevent.GetRawKeyCode()),(unsigned int)(myevent.GetRawKeyFlags())))
-		myevent.Skip();
+	if (_bTransmitAllowed) 
+	{
+		if(_pHlaeBcServer->PassEventPreParsed(WM_KEYDOWN,(unsigned int)(myevent.GetRawKeyCode()),(unsigned int)(myevent.GetRawKeyFlags())))
+			myevent.Skip();
+	} else myevent.Skip();
 }
 void CHlaeGameWindow::OnKeyUp( wxKeyEvent &myevent )
 {
-	if(_pHlaeBcServer->PassEventPreParsed(WM_KEYUP,(unsigned int)(myevent.GetRawKeyCode()),(unsigned int)(myevent.GetRawKeyFlags())))
-		myevent.Skip();
+	if (_bTransmitAllowed)
+	{
+		if(_pHlaeBcServer->PassEventPreParsed(WM_KEYUP,(unsigned int)(myevent.GetRawKeyCode()),(unsigned int)(myevent.GetRawKeyFlags())))
+			myevent.Skip();
+	} else myevent.Skip();
 }
 void CHlaeGameWindow::OnChar( wxKeyEvent &myevent )
 {
-	if(_pHlaeBcServer->PassEventPreParsed(WM_CHAR,(unsigned int)(myevent.GetRawKeyCode()),(unsigned int)(myevent.GetRawKeyFlags())))
-		myevent.Skip();
+	if (_bTransmitAllowed)
+	{
+		if(_pHlaeBcServer->PassEventPreParsed(WM_CHAR,(unsigned int)(myevent.GetRawKeyCode()),(unsigned int)(myevent.GetRawKeyFlags())))
+			myevent.Skip();
+	} else myevent.Skip();
 }
 void CHlaeGameWindow::OnIdle( wxIdleEvent &myevent )
 {
@@ -116,37 +124,37 @@ void CHlaeGameWindow::OnIdle( wxIdleEvent &myevent )
 
 void CHlaeGameWindow::OnMouseLeftDown( wxMouseEvent &myevent )
 {
-	_pHlaeBcServer->PassEventPreParsed(WM_LBUTTONDOWN,0,MY_GET_MPOS);
+	if (_bTransmitAllowed) _pHlaeBcServer->PassEventPreParsed(WM_LBUTTONDOWN,0,MY_GET_MPOS);
 	myevent.Skip();
 }
 void CHlaeGameWindow::OnMouseLeftUp( wxMouseEvent &myevent )
 {
-	_pHlaeBcServer->PassEventPreParsed(WM_LBUTTONUP,0,MY_GET_MPOS);
+	if (_bTransmitAllowed) _pHlaeBcServer->PassEventPreParsed(WM_LBUTTONUP,0,MY_GET_MPOS);
 	myevent.Skip();
 }
 void CHlaeGameWindow::OnMouseMiddleDown( wxMouseEvent &myevent )
 {
-	_pHlaeBcServer->PassEventPreParsed(WM_MBUTTONDOWN,0,MY_GET_MPOS);
+	if (_bTransmitAllowed) _pHlaeBcServer->PassEventPreParsed(WM_MBUTTONDOWN,0,MY_GET_MPOS);
 	myevent.Skip();
 }
 void CHlaeGameWindow::OnMouseMiddleUp( wxMouseEvent &myevent )
 {
-	_pHlaeBcServer->PassEventPreParsed(WM_MBUTTONUP,0,MY_GET_MPOS);
+	if (_bTransmitAllowed) _pHlaeBcServer->PassEventPreParsed(WM_MBUTTONUP,0,MY_GET_MPOS);
 	myevent.Skip();
 }
 void CHlaeGameWindow::OnMouseRightDown( wxMouseEvent &myevent )
 {
-	_pHlaeBcServer->PassEventPreParsed(WM_RBUTTONDOWN,0,MY_GET_MPOS);
+	if (_bTransmitAllowed) _pHlaeBcServer->PassEventPreParsed(WM_RBUTTONDOWN,0,MY_GET_MPOS);
 	myevent.Skip();
 }
 void CHlaeGameWindow::OnMouseRightUp( wxMouseEvent &myevent )
 {
-	_pHlaeBcServer->PassEventPreParsed(WM_RBUTTONUP,0,MY_GET_MPOS);
+	if (_bTransmitAllowed) _pHlaeBcServer->PassEventPreParsed(WM_RBUTTONUP,0,MY_GET_MPOS);
 	myevent.Skip();
 }
 void CHlaeGameWindow::OnMouseMotion( wxMouseEvent &myevent )
 {
-	_pHlaeBcServer->PassEventPreParsed(WM_MOUSEMOVE,0,MY_GET_MPOS);
+	if (_bTransmitAllowed) _pHlaeBcServer->PassEventPreParsed(WM_MOUSEMOVE,0,MY_GET_MPOS);
 	myevent.Skip();
 }
 void CHlaeGameWindow::OnMouseWheel( wxMouseEvent &myevent )
@@ -154,24 +162,24 @@ void CHlaeGameWindow::OnMouseWheel( wxMouseEvent &myevent )
 #ifndef WM_MOUSEWHEEL
 	#define WM_MOUSEWHEEL                   0x020A
 #endif
-	_pHlaeBcServer->PassEventPreParsed(WM_MOUSEWHEEL,(unsigned int)(myevent.GetWheelRotation()),MY_GET_MPOS);
+	if (_bTransmitAllowed) _pHlaeBcServer->PassEventPreParsed(WM_MOUSEWHEEL,(unsigned int)(myevent.GetWheelRotation()),MY_GET_MPOS);
 	myevent.Skip();
 }
 void CHlaeGameWindow::OnMove( wxMoveEvent &myevent)
 {
 	wxPoint mypos = myevent.GetPosition();
-	_pHlaeBcServer->PassEventPreParsed(WM_MOVE,0,(((unsigned int)(mypos.y)&0x0ffff)<<16)+((unsigned int)(mypos.x)&0x0ffff));
+	if (_bTransmitAllowed) _pHlaeBcServer->PassEventPreParsed(WM_MOVE,0,(((unsigned int)(mypos.y)&0x0ffff)<<16)+((unsigned int)(mypos.x)&0x0ffff));
 	myevent.Skip();
 }
 void CHlaeGameWindow::OnPaint( wxPaintEvent &myevent)
 {
-	_pHlaeBcServer->PassEventPreParsed(WM_PAINT,0,0);
+	if (_bTransmitAllowed) _pHlaeBcServer->PassEventPreParsed(WM_PAINT,0,0);
 	myevent.Skip();
 }
 void CHlaeGameWindow::OnSize( wxSizeEvent &myevent)
 {
 	wxSize mysize = myevent.GetSize();
-	_pHlaeBcServer->PassEventPreParsed(WM_MOVE,SIZE_RESTORED,(((unsigned int)(mysize.GetHeight())&0x0ffff)<<16)+((unsigned int)(mysize.GetWidth())&0x0ffff));
+	if (_bTransmitAllowed) _pHlaeBcServer->PassEventPreParsed(WM_SIZE,SIZE_RESTORED,(((unsigned int)(mysize.GetHeight())&0x0ffff)<<16)+((unsigned int)(mysize.GetWidth())&0x0ffff));
 	myevent.Skip();
 }
 
@@ -179,6 +187,42 @@ void CHlaeGameWindow::OnSize( wxSizeEvent &myevent)
 // Implementation of other class functions:
 //
 
+
+
+void CHlaeGameWindow::CreateInternal(CHlaeBcServer *pHlaeBcServer)
+{
+	_pHlaeBcServer = pHlaeBcServer;
+	_bTransmitAllowed = false;
+
+	// pay attention that we suplly the hwnd here (use the 5 param version),
+	// since _pHlaeBcServer doesn't know the CHlaeGameWindow pointer yet!
+
+	//_pHlaeBcServer->PassEventPreParsed(this->GetHWND(),WM_CREATE,0,0);
+	_bTransmitAllowed = true;
+}
+
+
+bool CHlaeGameWindow::Create(wxWindow *parent,
+                wxWindowID winid,
+                const wxPoint& pos,
+                const wxSize& size,
+                long style,
+                const wxString& name)
+// WARNING: we skipp the WM_CREATE CREATESTRUCT STRUCTURE in lParam
+{
+	bool bRes;
+	// WARNING, wrong order?
+	bRes=wxScrolledWindow::Create(parent,winid,pos,size,style,name);
+	_pHlaeBcServer->PassEventPreParsed(WM_CREATE,0,0);
+	_bTransmitAllowed = true;
+	return bRes;
+}
+
+bool CHlaeGameWindow::Destroy()
+{
+	_pHlaeBcServer->PassEventPreParsed(WM_DESTROY,0,0);
+	return wxScrolledWindow::Destroy();
+}
 /*bool CHlaeGameWindow::ProcessEvent(wxEvent &myevent)
 {
 	bool bRes = false;
