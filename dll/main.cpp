@@ -3,6 +3,12 @@
 
 */
 
+#define MDT_COMPILE_FOR_GUI
+// Comment this out in case of problems.
+// This enables the new code that will check for the HLAE GUI etc..
+// Normally you can leave this defined, but since the public versions
+// don't have the HLAE Gui included anyways, it's save to comment it out.
+
 #include "mdt_debug.h"
 
 #pragma comment(lib,"OpenGL32.lib")
@@ -725,78 +731,6 @@ BOOL APIENTRY my_GetCursorPos(LPPOINT lpPoint)
 	return TRUE;
 }
 
-HWND g_HLGameWindow=NULL;
-
-HWND APIENTRY my_CreateWindowExA(      
-    DWORD dwExStyle,
-    LPCTSTR lpClassName,
-    LPCTSTR lpWindowName,
-    DWORD dwStyle,
-    int x,
-    int y,
-    int nWidth,
-    int nHeight,
-    HWND hWndParent,
-    HMENU hMenu,
-    HINSTANCE hInstance,
-    LPVOID lpParam
-)
-{
-	HWND hwResultWin;
-#ifdef MDT_DEBUG
-	char sbuff[1500];
-	sprintf(sbuff,"dwExStyle: 0x%08x\nlpClassName: %s\nlpWindowName: %s\ndwStyle: 0x%08x\nx: %i\ny: %i\nWidth: %i\nnHeight: %i\nhWndParent: %u\nhMenu: %u\nhInstance: %u\nlpParam: 0x%08x",dwExStyle,lpClassName,lpWindowName,dwStyle,x,y,nWidth,nHeight,hWndParent,hMenu,hInstance,lpParam);
-	MessageBox(NULL,sbuff,"MDT CreateWindowEx",MB_OK|MB_ICONINFORMATION);
-#endif
-
-	if (hWndParent==NULL)
-	{
-		hwResultWin = HlaeBcClt_CreateWindowExA(dwExStyle,lpClassName,lpWindowName,dwStyle,x,y,nWidth,nHeight,hWndParent,hMenu,hInstance,lpParam);
-	}
-	else hwResultWin = CreateWindowEx(dwExStyle,lpClassName,lpWindowName,dwStyle,x,y,nWidth,nHeight,hWndParent,hMenu,hInstance,lpParam);
-
-	g_HLGameWindow = hwResultWin;
-
-	return hwResultWin;
-}
-
-BOOL APIENTRY my_DestroyWindow(      
-    HWND hWnd
-)
-{
-	if (hWnd == g_HLGameWindow)
-	{
-		BOOL bResult;
-		bResult = HlaeBcClt_DestroyWindow(hWnd);
-		HlaeBcCltStop();
-		return bResult;
-	}
-	else
-		return DestroyWindow(hWnd);
-}
-
-ATOM APIENTRY my_RegisterClassA(      
-    CONST WNDCLASS *lpWndClass
-)
-{
-#ifdef MDT_DEBUG
-	char sztemp[1000];
-	if (HIWORD(lpWndClass->lpszClassName))
-	{
-		_snprintf(sztemp,sizeof(sztemp),"ClassName: %s",lpWndClass->lpszClassName);
-		MessageBox(0,sztemp,"RegisterClassA",MB_OK);
-	}
-#endif
-
-	if (HIWORD(lpWndClass) && !lstrcmp(lpWndClass->lpszClassName,"Valve001"))
-	{
-		HlaeBcCltStart(); // start the server here please
-		return HlaeBcClt_RegisterClassA(lpWndClass);
-	}
-	else
-		return RegisterClassA(lpWndClass);
-}
-
 FARPROC (WINAPI *pGetProcAddress)(HMODULE hModule, LPCSTR lpProcName);
 FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 {
@@ -831,14 +765,18 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 		if (!lstrcmp(lpProcName, "glBlendFunc"))
 			return (FARPROC) &my_glBlendFunc;
 
+#ifdef MDT_COMPILE_FOR_GUI
 		if (!lstrcmp(lpProcName, "CreateWindowExA"))
-			return (FARPROC) &my_CreateWindowExA;
-
+			return (FARPROC) &HlaeBcClt_CreateWindowExA;
 		if (!lstrcmp(lpProcName, "DestroyWindow"))
-			return (FARPROC) &my_DestroyWindow;
-
+			return (FARPROC) &HlaeBcClt_DestroyWindow;
 		if (!lstrcmp(lpProcName, "RegisterClassA"))
-			return (FARPROC) &my_RegisterClassA;
+			return (FARPROC) &HlaeBcClt_RegisterClassA;
+		if (!lstrcmp(lpProcName, "GetDC"))
+			return (FARPROC) &HlaeBcClt_GetDC;
+		if (!lstrcmp(lpProcName, "ReleaseDC"))
+			return (FARPROC) &HlaeBcClt_ReleaseDC;
+#endif
 
 	}
 

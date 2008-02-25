@@ -1,6 +1,7 @@
 #include <hlae/auimanager.h>
 #include <hlae/gamewindow.h>
 
+#include <wx/dcclient.h>
 #include <windows.h>
 #include <shared/com/basecom.h>
 
@@ -36,9 +37,12 @@ private:
 	bool _ReturnMessage(HWND hWnd,HWND hwTarget,ULONG dwData,DWORD cbData,PVOID lpData);
 
 	// wrappers:
-	bool _Wrapper_RegisterClassA(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
-	bool _Wrapper_CreateWindowExA(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
-	bool _Wrapper_DestroyWindow(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
+	bool _Wrapper_RegisterClassA(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS); // outdated and unused
+	bool _Wrapper_CreateWindowExA(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS); //outdated and unused
+	bool _Wrapper_DestroyWindow(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS); // outdated and unused
+	bool _Wrapper_GameWndPrepare(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
+	bool _Wrapper_GameWndGetDC(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
+	bool _Wrapper_GameWndRelease(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
 };
 
 
@@ -141,15 +145,12 @@ bool CBCServerInternal::HlaeBcSrvStop()
 
 LRESULT CBCServerInternal::DispatchToClientProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	//if (!(_cl_lpfnWndProc && _cl_hInstance && _hwClient)) return FALSE;
-	if (!(_cl_lpfnWndProc && _hwClient)) return FALSE;
+	if (!_hwClient) return FALSE;
 
 	COPYDATASTRUCT myCopyData;
 
 	static HLAE_BASECOM_CallWndProc_s mycws;
 
-	mycws.hInstance = _cl_hInstance;
-	mycws.lpfnWndProc = _cl_lpfnWndProc;
 	mycws.hwnd = hwnd;
 	mycws.uMsg = uMsg;
 	mycws.wParam = wParam;
@@ -225,6 +226,14 @@ bool CBCServerInternal::_MyOnRecieve(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMy
 		return _Wrapper_RegisterClassA(hWnd,hwSender,pMyCDS);
 	case HLAE_BASECOM_MSGSV_DestroyWindow:
 		return _Wrapper_DestroyWindow(hWnd,hwSender,pMyCDS);
+
+	case HLAE_BASECOM_MSGSV_GameWndPrepare:
+		return _Wrapper_GameWndPrepare(hWnd,hwSender,pMyCDS);
+	case HLAE_BASECOM_MSGSV_GameWndGetDC:
+		return _Wrapper_GameWndGetDC(hWnd,hwSender,pMyCDS);
+	case HLAE_BASECOM_MSGSV_GameWndRelease:
+		return _Wrapper_GameWndRelease(hWnd,hwSender,pMyCDS);
+
 	default:
 		MessageBoxW(hWnd,L"Error: Recieved unkown message.",HLAE_BASECOM_SERVER_ID,MB_OK|MB_ICONERROR);
 	}
@@ -327,6 +336,46 @@ bool CBCServerInternal::_Wrapper_DestroyWindow(HWND hWnd,HWND hwSender,PCOPYDATA
 	return bRes;
 }
 
+bool CBCServerInternal::_Wrapper_GameWndPrepare(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS)
+{
+	bool bRes;
+
+	HLAE_BASECOM_GameWndPrepare_s * pdata = (HLAE_BASECOM_GameWndPrepare_s *)pMyCDS->lpData;
+
+	bRes = _pBase->_Do_GameWndPrepare(pdata->nWidth,pdata->nHeight);
+
+	return bRes;
+}
+
+bool CBCServerInternal::_Wrapper_GameWndGetDC(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS)
+{
+	bool bRes;
+
+	HLAE_BASECOM_RET_GameWndGetDC_s *pRet = new HLAE_BASECOM_RET_GameWndGetDC_s;
+
+	HLAE_BASECOM_GameWndGetDC_s * pdata = (HLAE_BASECOM_GameWndGetDC_s *)pMyCDS->lpData;
+
+	pRet->retResult = (HWND)(_pBase->_Do_GameWndGetDC());
+
+	bRes=_ReturnMessage(hWnd,hwSender,HLAE_BASECOM_MSGCL_RET_GameWndGetDC,sizeof(HLAE_BASECOM_RET_GameWndGetDC_s),pRet);
+
+	delete pRet;
+
+	return bRes;
+}
+
+bool CBCServerInternal::_Wrapper_GameWndRelease(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS)
+{
+	bool bRes;
+
+	HLAE_BASECOM_GameWndRelease_s * pdata = (HLAE_BASECOM_GameWndRelease_s *)pMyCDS->lpData;
+
+	bRes=_pBase->_Do_GameWndRelease();
+
+	return bRes;
+}
+
+
 //
 // the CBCServerInternal global:
 //
@@ -345,6 +394,7 @@ CHlaeBcServer::CHlaeBcServer(wxWindow *parent,hlaeAuiManager *pHlaeAuiManager)
 	_parent = parent;
 	_pHlaeAuiManager = pHlaeAuiManager;
 	_pHlaeGameWindow = NULL;
+	_pHlaeGameWindowDC = NULL;
 
 	if(!g_BCServerInternal.HlaeBcSrvStart(this)) throw "ERROR: HlaeBcSrvStart() failed.";
 
@@ -354,6 +404,7 @@ CHlaeBcServer::CHlaeBcServer(wxWindow *parent,hlaeAuiManager *pHlaeAuiManager)
 CHlaeBcServer::~CHlaeBcServer()
 {
 	g_BCServerInternal.HlaeBcSrvStop();
+	if(_pHlaeGameWindowDC) delete _pHlaeGameWindowDC;
 	if(_pHlaeGameWindow) delete _pHlaeGameWindow;
 }
 
@@ -380,6 +431,8 @@ bool CHlaeBcServer::PassEventToHook(wxEvent &myevent)
 
 void * CHlaeBcServer::_DoCreateWindowExA(char *lpClassNameA,char *lpWindowNameA,int x, int y, int nHeight, int nWidth)
 {
+	return NULL; // code inactive
+
 	if (_pHlaeGameWindow)
 		return NULL; // window already present, we only allow one though
 	else
@@ -399,6 +452,8 @@ void * CHlaeBcServer::_DoCreateWindowExA(char *lpClassNameA,char *lpWindowNameA,
 
 bool CHlaeBcServer::_DoDestroyWindow(WXHWND wxhWnd)
 {
+	return false; // code inactive
+
 	if (!_pHlaeGameWindow) return false;
 
 	if (_pHlaeGameWindow->GetHWND()==wxhWnd)
@@ -407,4 +462,53 @@ bool CHlaeBcServer::_DoDestroyWindow(WXHWND wxhWnd)
 	}
 	else
 		return false;
+}
+
+bool CHlaeBcServer::_Do_GameWndPrepare(int nWidth, int nHeight)
+{
+	if (!_pHlaeGameWindow)
+	{
+		wxString mycaption("Game Window",wxConvUTF8);
+
+		_pHlaeGameWindow =new CHlaeGameWindow(this,_parent,wxID_ANY,wxDefaultPosition,wxSize(200,150),wxHSCROLL | wxVSCROLL,mycaption);
+
+		_pHlaeGameWindow->SetVirtualSize(nWidth,nHeight);
+		
+		_pHlaeGameWindow->SetScrollRate(10,10);
+		_pHlaeAuiManager->AddPane(_pHlaeGameWindow, wxAuiPaneInfo().RightDockable().Float().Caption(mycaption));
+	} else {
+		_pHlaeGameWindow->SetVirtualSize(nWidth,nHeight);
+	}
+
+	return true; // may be a bit more safe in the future, but that's it for now
+}
+
+WXHWND CHlaeBcServer::_Do_GameWndGetDC()
+// returns the DC's HWND, not the DC (because the HDC is not allowed to be shared among threads)
+{
+	if (!_pHlaeGameWindow) return NULL;
+
+    if (!_pHlaeGameWindowDC) _pHlaeGameWindowDC = new wxClientDC(_pHlaeGameWindow);
+
+	_pHlaeGameWindow->DoPrepareDC(*_pHlaeGameWindowDC);
+
+	// draw some shit to for fun, can't hurt:
+	_pHlaeGameWindowDC->SetPen(*wxBLACK_PEN);
+	_pHlaeGameWindowDC->DrawLine(1, 1, 100, 100);
+
+	WXHWND pResult=NULL;
+
+	pResult = (_pHlaeGameWindowDC->GetWindow())->GetHWND();
+
+	char sztemp[200];
+	_snprintf(sztemp,sizeof(sztemp),"DC's WXHWND is: %i (0x%08x)",pResult,pResult);
+	MessageBoxA(NULL,sztemp,"CHlaeBcServer::_Do_GameWndGetDC()",MB_OK|MB_ICONERROR);
+
+    return pResult;
+}
+
+bool CHlaeBcServer::_Do_GameWndRelease()
+{
+	if (!_pHlaeGameWindow) return false;
+	return true; // may be a bit more safe in the future, but that's it for now
 }

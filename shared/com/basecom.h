@@ -22,18 +22,25 @@
 // If the reciever proccessed the message it shall return TRUE to SendMessage
 // otherwise it shall return FALSE to SendMessage
 
+// Some messages are only one-way, however their repsonse code is reserved (commented out)
+
 #define HLAE_BASECOM_MSG_TESTDUMMY				0x00000000
 
 #define HLAE_BASECOM_MSGSV_CreateWindowExA		0x00000001
 #define HLAE_BASECOM_MSGSV_RegisterClassA		0x00000002
 #define HLAE_BASECOM_MSGSV_DestroyWindow		0x00000003
 //#define HLAE_BASECOM_MSGSV_RET_CallWndProc_s	0x00000004
+#define HLAE_BASECOM_MSGSV_GameWndPrepare		0x00000005
+#define HLAE_BASECOM_MSGSV_GameWndGetDC			0x00000006
+#define HLAE_BASECOM_MSGSV_GameWndRelease		0x00000007
 
 #define HLAE_BASECOM_MSGCL_RET_CreateWindowExA	0x00000001
 #define HLAE_BASECOM_MSGCL_RET_RegisterClassA	0x00000002
 #define HLAE_BASECOM_MSGCL_RET_DestroyWindow	0x00000003
 #define HLAE_BASECOM_MSGCL_CallWndProc_s		0x00000004
-
+//#define HLAE_BASECOM_MSGCL_RET_GameWndPrepare	0x00000005
+#define HLAE_BASECOM_MSGCL_RET_GameWndGetDC		0x00000006
+//#define HLAE_BASECOM_MSGCL_RET_GameWndRelease	0x00000007
 //
 // Message Structures:
 //
@@ -81,16 +88,29 @@ struct HLAE_BASECOM_RET_RegisterClassA_s
 
 struct HLAE_BASECOM_CallWndProc_s
 {
-	HINSTANCE hInstance; // might be ignored
-	WNDPROC lpfnWndProc;
     HWND hwnd;
     UINT uMsg;
     WPARAM wParam;
     LPARAM lParam;
 };
 
-// returned directly instead currently (cuz I was too lazy f0lks)
-//struct HLAE_BASECOM_RET_CallWndProc_s
-//{
-//	LRESULT retResult;
-//};
+struct HLAE_BASECOM_GameWndPrepare_s
+{
+	int nWidth;
+	int nHeight;
+};
+
+struct HLAE_BASECOM_GameWndGetDC_s
+{
+    // empty
+};
+
+struct HLAE_BASECOM_RET_GameWndGetDC_s
+{
+	HWND retResult; // MSDN2: Note that the handle to the DC can only be used by a single thread at any one time. This is why we return the Window instead and carry out GetDC and ReleaseDC locally.
+};
+
+struct HLAE_BASECOM_GameWndRelease_s
+{
+	// empty
+};
