@@ -29,18 +29,25 @@
 #define HLAE_BASECOM_MSGSV_CreateWindowExA		0x00000001
 #define HLAE_BASECOM_MSGSV_RegisterClassA		0x00000002
 #define HLAE_BASECOM_MSGSV_DestroyWindow		0x00000003
-//#define HLAE_BASECOM_MSGSV_RET_CallWndProc_s	0x00000004
+//n/a	#define HLAE_BASECOM_MSGSV_RET_CallWndProc_s	0x00000004
 #define HLAE_BASECOM_MSGSV_GameWndPrepare		0x00000005
 #define HLAE_BASECOM_MSGSV_GameWndGetDC			0x00000006
 #define HLAE_BASECOM_MSGSV_GameWndRelease		0x00000007
+//n/a	#define HLAE_BASECOM_MSGSV_RET_WndRectUpdate	0x00000008
+//n/a	#define HLAE_BASECOM_MSGSV_RET_MouseEvent		0x00000009
+//n/a	#define HLAE_BASECOM_MSGCL_RET_KeyBoardEvent	0x0000000A
 
 #define HLAE_BASECOM_MSGCL_RET_CreateWindowExA	0x00000001
 #define HLAE_BASECOM_MSGCL_RET_RegisterClassA	0x00000002
 #define HLAE_BASECOM_MSGCL_RET_DestroyWindow	0x00000003
 #define HLAE_BASECOM_MSGCL_CallWndProc_s		0x00000004
-//#define HLAE_BASECOM_MSGCL_RET_GameWndPrepare	0x00000005
+//n/a	#define HLAE_BASECOM_MSGCL_RET_GameWndPrepare	0x00000005
 #define HLAE_BASECOM_MSGCL_RET_GameWndGetDC		0x00000006
-//#define HLAE_BASECOM_MSGCL_RET_GameWndRelease	0x00000007
+//n/a	#define HLAE_BASECOM_MSGCL_RET_GameWndRelease	0x00000007
+#define HLAE_BASECOM_MSGCL_WndRectUpdate		0x00000008
+#define HLAE_BASECOM_MSGCL_MouseEvent			0x00000009
+#define HLAE_BASECOM_MSGCL_KeyBoardEvent		0x0000000A
+
 //
 // Message Structures:
 //
@@ -113,4 +120,28 @@ struct HLAE_BASECOM_RET_GameWndGetDC_s
 struct HLAE_BASECOM_GameWndRelease_s
 {
 	// empty
+};
+
+struct HLAE_BASECOM_WndRectUpdate_s
+{
+	int iLeft;
+	int iTop;
+	int iWidthVisible;
+	int iHeightVisible;
+	int iWidthTotal;
+	int iHeightTotal;
+};
+
+struct HLAE_BASECOM_MSGCL_MouseEvent_s
+{
+	unsigned int uMsg; // WM_* code
+	unsigned int wParam; // 
+	unsigned short iX; // Virtual coord
+	unsigned short iY; // .
+};
+struct HLAE_BASECOM_MSGCL_KeyBoardEvent_s
+{
+	unsigned int uMsg; // WM_* code
+	unsigned int uKeyCode;
+	unsigned int uKeyFlags;
 };

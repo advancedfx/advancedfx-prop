@@ -23,7 +23,8 @@ public:
 	bool HlaeBcSrvStart(CHlaeBcServer *pBase);
 	bool HlaeBcSrvStop();
 
-	LRESULT DispatchToClientProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	LRESULT DispatchToClientProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam); // outdated
+	LRESULT DispatchStruct(DWORD dwDataCode,DWORD cbDataSize,PVOID lpDataPtr);
 
 private:
 	CHlaeBcServer *_pBase; // coordinator class
@@ -147,18 +148,25 @@ LRESULT CBCServerInternal::DispatchToClientProc(HWND hwnd, UINT uMsg, WPARAM wPa
 {
 	if (!_hwClient) return FALSE;
 
-	COPYDATASTRUCT myCopyData;
-
 	static HLAE_BASECOM_CallWndProc_s mycws;
 
 	mycws.hwnd = hwnd;
 	mycws.uMsg = uMsg;
 	mycws.wParam = wParam;
 	mycws.lParam = lParam;
-	
-	myCopyData.dwData=HLAE_BASECOM_MSGCL_CallWndProc_s;
-	myCopyData.cbData=sizeof(HLAE_BASECOM_CallWndProc_s);
-	myCopyData.lpData=&mycws;
+
+	return DispatchStruct(HLAE_BASECOM_MSGCL_CallWndProc_s,sizeof(HLAE_BASECOM_CallWndProc_s),&mycws);
+}
+
+LRESULT CBCServerInternal::DispatchStruct(DWORD dwDataCode,DWORD cbDataSize,PVOID lpDataPtr)
+{
+	if (!_hwClient) return FALSE;
+
+	COPYDATASTRUCT myCopyData;
+
+	myCopyData.dwData=dwDataCode;
+	myCopyData.cbData=cbDataSize;
+	myCopyData.lpData=lpDataPtr;
 
 	return SendMessageW(
 		_hwClient,
@@ -166,7 +174,6 @@ LRESULT CBCServerInternal::DispatchToClientProc(HWND hwnd, UINT uMsg, WPARAM wPa
 		(WPARAM)g_hwHlaeBcSrvWindow, // identify us as sender
 		(LPARAM)&myCopyData
 	);
-	
 }
 
 LRESULT CALLBACK CBCServerInternal::_HlaeBcSrvWndProc(
@@ -344,6 +351,9 @@ bool CBCServerInternal::_Wrapper_GameWndPrepare(HWND hWnd,HWND hwSender,PCOPYDAT
 
 	bRes = _pBase->_Do_GameWndPrepare(pdata->nWidth,pdata->nHeight);
 
+	// set _hwClient, so Messages will be passed:
+	_hwClient = hwSender;
+
 	return bRes;
 }
 
@@ -371,6 +381,9 @@ bool CBCServerInternal::_Wrapper_GameWndRelease(HWND hWnd,HWND hwSender,PCOPYDAT
 	HLAE_BASECOM_GameWndRelease_s * pdata = (HLAE_BASECOM_GameWndRelease_s *)pMyCDS->lpData;
 
 	bRes=_pBase->_Do_GameWndRelease();
+
+	// reset client handle (so no messages will get passed anymore):
+	_hwClient = NULL;
 
 	return bRes;
 }
@@ -408,6 +421,18 @@ CHlaeBcServer::~CHlaeBcServer()
 	if(_pHlaeGameWindow) delete _pHlaeGameWindow;
 }
 
+void CHlaeBcServer::Do_DoPepareDC()
+{
+    if ( _pHlaeGameWindow && _pHlaeGameWindowDC)
+	{
+		_pHlaeGameWindow->DoPrepareDC(*_pHlaeGameWindowDC);
+
+		// draw some shit to for fun, can't hurt:
+		_pHlaeGameWindowDC->SetPen(*wxBLACK_PEN);
+		_pHlaeGameWindowDC->DrawLine(1, 1, 100, 100);
+	}
+}
+
 bool CHlaeBcServer::PassEventPreParsed(unsigned int umsg,unsigned int wParam,unsigned int lParam)
 {
 	return TRUE == g_BCServerInternal.DispatchToClientProc((HWND)(_pHlaeGameWindow->GetHWND()),(UINT)umsg,(WPARAM)wParam,(LPARAM)lParam);
@@ -418,15 +443,51 @@ bool CHlaeBcServer::PassEventPreParsed(WXHWND hwnd,unsigned int umsg,unsigned in
 	return TRUE == g_BCServerInternal.DispatchToClientProc((HWND)hwnd,(UINT)umsg,(WPARAM)wParam,(LPARAM)lParam);
 }
 
-bool CHlaeBcServer::PassEventToHook(wxEvent &myevent)
+bool CHlaeBcServer::Pass_WndRectUpdate(int iLeft, int iTop, int iWidthVisible, int iHeightVisible, int iWidthTotal, int iHeightTotal)
 {
-	int iId = myevent.GetId();
+	HLAE_BASECOM_WndRectUpdate_s mys;
 
-	UINT uMsg = WM_NULL;
-	LPARAM lParam=NULL;
-	WPARAM wParam=NULL;
+	mys.iLeft = iLeft;
+	mys.iTop = iTop;
+	mys.iWidthVisible = iWidthVisible;
+	mys.iHeightVisible = iHeightVisible;
+	mys.iWidthTotal = iWidthTotal;
+	mys.iHeightTotal = iHeightTotal;
 
-	return false;
+	return TRUE==g_BCServerInternal.DispatchStruct(
+		HLAE_BASECOM_MSGCL_WndRectUpdate,
+		sizeof(mys),
+		&mys
+	);
+}
+bool CHlaeBcServer::Pass_MouseEvent(unsigned int uMsg, unsigned int wParam, unsigned short iX,unsigned short iY)
+{
+	HLAE_BASECOM_MSGCL_MouseEvent_s mys;
+
+	mys.uMsg = uMsg;
+	mys.wParam = wParam;
+	mys.iX = iX;
+	mys.iY = iY;
+
+	return TRUE==g_BCServerInternal.DispatchStruct(
+		HLAE_BASECOM_MSGCL_MouseEvent,
+		sizeof(mys),
+		&mys
+	);
+}
+bool CHlaeBcServer::Pass_KeyBoardEvent(unsigned int uMsg, unsigned int uKeyCode, unsigned int uKeyFlags)
+{
+	HLAE_BASECOM_MSGCL_KeyBoardEvent_s mys;
+
+	mys.uMsg = uMsg;
+	mys.uKeyCode = uKeyCode;
+	mys.uKeyFlags = uKeyFlags;
+
+	return TRUE==g_BCServerInternal.DispatchStruct(
+		HLAE_BASECOM_MSGCL_KeyBoardEvent,
+		sizeof(mys),
+		&mys
+	);
 }
 
 void * CHlaeBcServer::_DoCreateWindowExA(char *lpClassNameA,char *lpWindowNameA,int x, int y, int nHeight, int nWidth)
@@ -466,6 +527,10 @@ bool CHlaeBcServer::_DoDestroyWindow(WXHWND wxhWnd)
 
 bool CHlaeBcServer::_Do_GameWndPrepare(int nWidth, int nHeight)
 {
+	//char sztemp[100];
+	//_snprintf(sztemp,sizeof(sztemp),"nWidth: %i, nHeight: %i",nWidth,nHeight);
+	//MessageBoxA(0,sztemp,"CHlaeBcServer::_Do_GameWndPrepare",MB_OK);
+
 	if (!_pHlaeGameWindow)
 	{
 		wxString mycaption("Game Window",wxConvUTF8);
@@ -473,11 +538,15 @@ bool CHlaeBcServer::_Do_GameWndPrepare(int nWidth, int nHeight)
 		_pHlaeGameWindow =new CHlaeGameWindow(this,_parent,wxID_ANY,wxDefaultPosition,wxSize(200,150),wxHSCROLL | wxVSCROLL,mycaption);
 
 		_pHlaeGameWindow->SetVirtualSize(nWidth,nHeight);
-		
-		_pHlaeGameWindow->SetScrollRate(10,10);
+		//_pHlaeGameWindow->SetScrollRate(10,10);
+		_pHlaeGameWindow->SetScrollbars(1,1,nWidth,nHeight);
+
 		_pHlaeAuiManager->AddPane(_pHlaeGameWindow, wxAuiPaneInfo().RightDockable().Float().Caption(mycaption));
+
 	} else {
 		_pHlaeGameWindow->SetVirtualSize(nWidth,nHeight);
+		//_pHlaeGameWindow->SetScrollRate(10,10);
+		_pHlaeGameWindow->SetScrollbars(1,1,nWidth,nHeight);
 	}
 
 	return true; // may be a bit more safe in the future, but that's it for now
@@ -500,9 +569,9 @@ WXHWND CHlaeBcServer::_Do_GameWndGetDC()
 
 	pResult = (_pHlaeGameWindowDC->GetWindow())->GetHWND();
 
-	char sztemp[200];
-	_snprintf(sztemp,sizeof(sztemp),"DC's WXHWND is: %i (0x%08x)",pResult,pResult);
-	MessageBoxA(NULL,sztemp,"CHlaeBcServer::_Do_GameWndGetDC()",MB_OK|MB_ICONERROR);
+	//char sztemp[200];
+	//_snprintf(sztemp,sizeof(sztemp),"DC's WXHWND is: %i (0x%08x)",pResult,pResult);
+	///MessageBoxA(NULL,sztemp,"CHlaeBcServer::_Do_GameWndGetDC()",MB_OK|MB_ICONERROR);
 
     return pResult;
 }
@@ -510,5 +579,6 @@ WXHWND CHlaeBcServer::_Do_GameWndGetDC()
 bool CHlaeBcServer::_Do_GameWndRelease()
 {
 	if (!_pHlaeGameWindow) return false;
+
 	return true; // may be a bit more safe in the future, but that's it for now
 }

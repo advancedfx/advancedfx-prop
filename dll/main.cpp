@@ -471,9 +471,15 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 {
 	static bool bFirstRun = true;
 
+	HlaeBcCl_AdjustViewPort(x,y,width,height);
+
 #ifdef MDT_DEBUG
 	if (bFirstRun)
-			MessageBox(0,"my_glViewport - FirstRun","MDT_DEBUG",MB_OK|MB_ICONINFORMATION);
+	{
+		char sztemp[50];
+		_snprintf(sztemp,sizeof(sztemp),"x: %i y: %i w: %i h: %i",x,y,width,height);
+		MessageBoxA(0,sztemp,"my_glViewPort - Firstrun",MB_OK|MB_ICONINFORMATION);
+	}
 #endif
 
 	g_bIsSucceedingViewport = true;

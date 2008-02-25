@@ -1,6 +1,17 @@
 #include <windows.h>
 
 //
+// misc functions
+//
+
+// the following are mandatory:
+
+void HlaeBcCl_AdjustViewPort(int &x, int &y, int width, int height);
+// You have to use this one in glViewPort:
+// Not only will this update the Sever's DC with the correct size
+// but also adjust the viewport's x and y to reflect the Server's scrolling properly.
+
+//
 // WinAPI hooks, the Hlae Game Client Dll must install them all!:
 //
 ATOM APIENTRY HlaeBcClt_RegisterClassA(CONST WNDCLASSA *lpWndClass);

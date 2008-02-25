@@ -28,14 +28,16 @@ public:
 	
 	bool Destroy();
 
+	void OnDraw(wxDC &dc);
 	//virtual bool ProcessEvent(wxEvent &myevent); // override command handler
+
 private:
 	DECLARE_EVENT_TABLE()
 
 	CHlaeBcServer *_pHlaeBcServer;
 	bool	_bTransmitAllowed;
 
-	// (other) events:
+	// fot the events table:
 	void OnActivate( wxActivateEvent &myevent );
 	void OnClose( wxCloseEvent &myevent );
 	void OnEraseBackground( wxEraseEvent &myevent );

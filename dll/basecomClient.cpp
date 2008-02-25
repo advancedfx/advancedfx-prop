@@ -2,8 +2,7 @@
 
 #include "shared/com/basecom.h"
 
-#if 1
-//#ifdef MDT_DEBUG
+#if 1//#ifdef MDT_DEBUG
 	#include <stdio.h>
 
 	#include "wrect.h"
@@ -21,27 +20,41 @@ HWND g_hwHlaeBcCltWindow = NULL;
 HWND g_HL_MainWindow = NULL;
 WNDCLASSA *g_HL_WndClassA = NULL;
 
+HLAE_BASECOM_WndRectUpdate_s g_HlaeWindowRect;
+
 LRESULT CALLBACK Hooking_WndProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
-	if (hWnd==NULL || hWnd != g_HL_MainWindow)
-		// this is not the MainWindow we want to control
-		return g_HL_WndClassA->lpfnWndProc(hWnd,uMsg,wParam,lParam);
+	// filter window unspecific messages:
 
 	switch(uMsg)
 	{
 	case WM_CREATE:
-		MessageBoxA(hWnd,"WM_CREATE","Hooking_WndProc fetched",MB_OK|MB_ICONINFORMATION);
+		//MessageBoxA(hWnd,"WM_CREATE","Hooking_WndProc fetched",MB_OK|MB_ICONINFORMATION);
 		return g_HL_WndClassA->lpfnWndProc(hWnd,uMsg,wParam,lParam);
 	case WM_DESTROY:
-		MessageBoxA(hWnd,"WM_DESTROY","Hooking_WndProc fetched",MB_OK|MB_ICONINFORMATION);
+		//MessageBoxA(hWnd,"WM_DESTROY","Hooking_WndProc fetched",MB_OK|MB_ICONINFORMATION);
 		return g_HL_WndClassA->lpfnWndProc(hWnd,uMsg,wParam,lParam);
+	case WM_ACTIVATE:
+	case WM_SETFOCUS:
+	case WM_KILLFOCUS:
+		//MessageBoxA(hWnd,"WM_ACTIVATE | WM_SETFOCUS | WM_KILLFOCUS","Hooking_WndProc fetched",MB_OK|MB_ICONINFORMATION);
+		// tell it we would have handled it:
+		// however this won't trick DirectSound sadly
+		return TRUE;
 	case WM_CLOSE:
-		MessageBoxA(hWnd,"WM_CLOSE","Hooking_WndProc fetched",MB_OK|MB_ICONINFORMATION);
-		return g_HL_WndClassA->lpfnWndProc(hWnd,uMsg,wParam,lParam);
-	default:
+		//MessageBoxA(hWnd,"WM_CLOSE","Hooking_WndProc fetched",MB_OK|MB_ICONINFORMATION);
 		return g_HL_WndClassA->lpfnWndProc(hWnd,uMsg,wParam,lParam);
 	}
-	return FALSE;
+
+	if (hWnd==NULL || hWnd != g_HL_MainWindow)
+		// this is not the MainWindow we want to control
+		return g_HL_WndClassA->lpfnWndProc(hWnd,uMsg,wParam,lParam);
+
+	// filter MainWindow specific messages:
+
+	// blah
+
+	return g_HL_WndClassA->lpfnWndProc(hWnd,uMsg,wParam,lParam);
 }
 
 LRESULT HlaeBcCallWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
@@ -59,8 +72,10 @@ LRESULT HlaeBcCallWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	case WM_KEYDOWN:
 	case WM_CHAR:
 	case WM_KEYUP:
+		//MessageBox(0,"Key Event","Event",MB_OK);
 		break;
 	default:
+		//break;
 		return FALSE; // by default we don't handle them in any way
 	}
 
@@ -83,6 +98,36 @@ LRESULT HlaeBcCallWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	// and finally we return:
 	return lrRet;
 }
+
+// Handlers for events from Server's GameWindow:
+
+LRESULT HlaeBcCl_WndRectUpdate(PVOID lpData)
+{
+	HLAE_BASECOM_WndRectUpdate_s *myps = (HLAE_BASECOM_WndRectUpdate_s *)lpData;
+
+	g_HlaeWindowRect = *myps;
+
+	//char sztemp[100];
+	//_snprintf(sztemp,sizeof(sztemp),"Left: %i\nTop: %i\nWidth visible: %i\nHeight visible: %i\nWidth total: %i\nHeight total: %i",g_HlaeWindowRect.iLeft,g_HlaeWindowRect.iTop,g_HlaeWindowRect.iWidthVisible,g_HlaeWindowRect.iHeightVisible,g_HlaeWindowRect.iWidthTotal,g_HlaeWindowRect.iHeightTotal);
+	//MessageBoxA(0,sztemp,"HlaeBcCl_WndRectUpdate",MB_OK|MB_ICONINFORMATION);
+
+	return TRUE;
+}
+
+LRESULT HlaeBcCl_MouseEvent(PVOID lpData)
+{
+	HLAE_BASECOM_MSGCL_MouseEvent_s *myps = (HLAE_BASECOM_MSGCL_MouseEvent_s *)lpData;
+
+	return g_HL_WndClassA->lpfnWndProc(g_HL_MainWindow,(UINT)(myps->uMsg),(WPARAM)(myps->wParam),(LPARAM)(myps->iY<<16 + myps->iX));
+}
+
+LRESULT HlaeBcCl_KeyBoardEvent(PVOID lpData)
+{
+	HLAE_BASECOM_MSGCL_KeyBoardEvent_s *myps = (HLAE_BASECOM_MSGCL_KeyBoardEvent_s *)lpData;
+
+	return g_HL_WndClassA->lpfnWndProc(g_HL_MainWindow,(UINT)(myps->uMsg),(WPARAM)(myps->uKeyCode),(LPARAM)(myps->uKeyFlags));
+}
+
 
 // In order to understand the source that follows the Microsoft Documentation of WM_COPYDATA might be useful.
 
@@ -145,6 +190,15 @@ LRESULT CALLBACK HlaeBcCltWndProc(
 			case HLAE_BASECOM_MSGCL_RET_GameWndGetDC:
 				if (g_pHlaeBcResultTarget) memcpy(g_pHlaeBcResultTarget,pMyCDS->lpData,sizeof(HLAE_BASECOM_RET_GameWndGetDC_s));
 				return TRUE;
+
+			case HLAE_BASECOM_MSGCL_WndRectUpdate:
+				return HlaeBcCl_WndRectUpdate(pMyCDS->lpData);
+
+			case HLAE_BASECOM_MSGCL_MouseEvent:
+				return HlaeBcCl_MouseEvent(pMyCDS->lpData);
+
+			case HLAE_BASECOM_MSGCL_KeyBoardEvent:
+				return HlaeBcCl_KeyBoardEvent(pMyCDS->lpData);
 
 			default:
 				MessageBoxW(hwnd,L"Unexpected message.",HLAE_BASECOM_CLIENT_ID,MB_OK|MB_ICONERROR);
@@ -327,7 +381,7 @@ ATOM APIENTRY HlaeBcClt_RegisterClassA(CONST WNDCLASSA *lpWndClass)
 #endif
 
 	// quit if it's not the class we want:
-	if (!HIWORD(lpWndClass) || lstrcmp(lpWndClass->lpszClassName,"Valve001"))
+	if (!HIWORD(lpWndClass->lpszClassName) || lstrcmp(lpWndClass->lpszClassName,"Valve001"))
 		return RegisterClassA(lpWndClass);
 
 	ATOM tResult = NULL;
@@ -357,8 +411,8 @@ HWND APIENTRY HlaeBcClt_CreateWindowExA(DWORD dwExStyle,LPCTSTR lpClassName,LPCT
 
 #ifdef MDT_DEBUG
 	char sbuff[1000];
-	sprintf(sbuff,"dwExStyle: 0x%08x\nlpClassName: %s\nlpWindowName: %s\ndwStyle: 0x%08x\nx: %i\ny: %i\nWidth: %i\nnHeight: %i\nhWndParent: %u\nhMenu: %u\nhInstance: %u\nlpParam: 0x%08x",dwExStyle,lpClassName,lpWindowName,dwStyle,x,y,nWidth,nHeight,hWndParent,hMenu,hInstance,lpParam);
-	MessageBox(NULL,sbuff,"MDT CreateWindowEx",MB_OK|MB_ICONINFORMATION);
+	_snprintf(sbuff,sizeof(sbuff),"dwExStyle: 0x%08x\nlpClassName: %s\nlpWindowName: %s\ndwStyle: 0x%08x\nx: %i\ny: %i\nWidth: %i\nnHeight: %i\nhWndParent: %u\nhMenu: %u\nhInstance: %u\nlpParam: 0x%08x",dwExStyle,lpClassName,lpWindowName,dwStyle,x,y,nWidth,nHeight,hWndParent,hMenu,hInstance,lpParam);
+	MessageBoxA(NULL,sbuff,"MDT CreateWindowEx",MB_OK|MB_ICONINFORMATION);
 #endif
 
 	// quit if it's not the window we want:
@@ -410,6 +464,10 @@ HDC APIENTRY HlaeBcClt_GetDC( HWND hWnd )
 	if (hWnd==NULL || hWnd != g_HL_MainWindow)
 		return GetDC(hWnd);
 
+#ifdef MDT_DEBUG
+	MessageBoxA(hWnd,"GetDC for MainWindow requested","HlaeBcClt_GetDC",MB_OK|MB_ICONINFORMATION);
+#endif
+
 	HDC hdcResult;
 	HWND hwndResult;
 
@@ -429,15 +487,43 @@ int APIENTRY HlaeBcClt_ReleaseDC( HWND hWnd, HDC hDC )
 	if (hWnd==NULL || hWnd != g_HL_MainWindow || !g_bHlaeAsumeServerDCPresent)
 		return ReleaseDC(hWnd,hDC);
 
-	MessageBoxA(hWnd,"ReleaseDC requested","HlaeBcClt_GetDC",MB_OK|MB_ICONINFORMATION);
+#ifdef MDT_DEBUG
+	MessageBoxA(hWnd,"ReleaseDC for MainWindow requested","HlaeBcClt_ReleaseDC",MB_OK|MB_ICONINFORMATION);
+#endif
 
 	g_bHlaeAsumeServerDCPresent=false;
 	return ReleaseDC(g_hHlaeServerWnd,hDC); // of course we trick it into the server's window again
 }
 
+
+void HlaeBcCl_AdjustViewPort(int &x, int &y, int width, int height)
+// this will adjust the incoming params accroding to the gamewindow (in case it's DC can be asumed to be present)
+{
+	if(!g_bHlaeAsumeServerDCPresent) return;
+
+	// first check if we need to inform the server about changed coords:
+	if(width!=g_HlaeWindowRect.iWidthTotal || height!=g_HlaeWindowRect.iHeightTotal)
+	{
+		g_HlaeWindowRect.iWidthTotal=width;
+		g_HlaeWindowRect.iHeightTotal=height;
+
+		// update the server!:
+		pEngfuncs->Con_DPrintf("HlaeBcCl_AdjustViewPort: mismatch forced update\n");
+		HlaeBcClt_GameWndPrepare(width,height);
+	}
+	x=x-g_HlaeWindowRect.iLeft;
+	y=y-g_HlaeWindowRect.iHeightTotal+g_HlaeWindowRect.iHeightVisible+g_HlaeWindowRect.iTop;
+
+	// clamp for security:
+	// not implemented you fag!
+}
+
+
 //
 // debug helper:
 //
+
+#ifdef MDT_DEBUG
 
 REGISTER_DEBUGCMD_FUNC(info_devicecontext)
 {
@@ -472,6 +558,7 @@ REGISTER_DEBUGCMD_FUNC(info_devicecontext)
 		ReleaseDC(g_HL_MainWindow,hdcResult);
 	} else pEngfuncs->Con_Printf("HLAE Server DC is used.\nInfo command not available in this Case!\n");
 }
+#endif
 
 // I'll leave this old function source in here for now (may be for historical reasons, don't know):
 // may be leave it in, might be a target for remembering how to do some tricky stuff by design
