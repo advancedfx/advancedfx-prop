@@ -130,6 +130,8 @@ struct HLAE_BASECOM_WndRectUpdate_s
 	int iHeightVisible;
 	int iWidthTotal;
 	int iHeightTotal;
+	int iLeftGlobal;
+	int iTopGlobal;
 };
 
 struct HLAE_BASECOM_MSGCL_MouseEvent_s

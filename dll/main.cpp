@@ -645,6 +645,8 @@ void *InterceptDllCall(HMODULE hModule, char *szDllName, char *szFunctionName, D
 BOOL (APIENTRY *pwglSwapBuffers)(HDC hDC);
 BOOL APIENTRY my_wglSwapBuffers(HDC hDC)
 {
+#ifndef MDT_COMPILE_FOR_GUI
+// only install old gui hooks when not compiling for new GUI
 	static bool bHaveWindowHandle = false;
 
 	if (!bHaveWindowHandle && hDC != 0)
@@ -653,6 +655,7 @@ BOOL APIENTRY my_wglSwapBuffers(HDC hDC)
 		pWndProc = (WNDPROC) SetWindowLong(hWnd, GWL_WNDPROC, (long) my_WndProc);
 		bHaveWindowHandle = true;
 	}
+#endif
 
 	BOOL bResWglSwapBuffers;
 	bool bRecordSwapped=false;
@@ -782,6 +785,10 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 			return (FARPROC) &HlaeBcClt_GetDC;
 		if (!lstrcmp(lpProcName, "ReleaseDC"))
 			return (FARPROC) &HlaeBcClt_ReleaseDC;
+		if (!lstrcmp(lpProcName, "SetCapture"))
+			return (FARPROC) &HlaeBcClt_SetCapture;
+		if (!lstrcmp(lpProcName, "ReleaseCapture"))
+			return (FARPROC) &HlaeBcClt_ReleaseCapture;
 #endif
 
 	}

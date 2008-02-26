@@ -540,6 +540,7 @@ bool CHlaeBcServer::_Do_GameWndPrepare(int nWidth, int nHeight)
 		_pHlaeGameWindow->SetVirtualSize(nWidth,nHeight);
 		//_pHlaeGameWindow->SetScrollRate(10,10);
 		_pHlaeGameWindow->SetScrollbars(1,1,nWidth,nHeight);
+		_pHlaeGameWindow->SetMaxSize(wxSize(nWidth,nHeight));
 
 		_pHlaeAuiManager->AddPane(_pHlaeGameWindow, wxAuiPaneInfo().RightDockable().Float().Caption(mycaption));
 
@@ -547,6 +548,7 @@ bool CHlaeBcServer::_Do_GameWndPrepare(int nWidth, int nHeight)
 		_pHlaeGameWindow->SetVirtualSize(nWidth,nHeight);
 		//_pHlaeGameWindow->SetScrollRate(10,10);
 		_pHlaeGameWindow->SetScrollbars(1,1,nWidth,nHeight);
+		_pHlaeGameWindow->SetMaxSize(wxSize(nWidth,nHeight));
 	}
 
 	return true; // may be a bit more safe in the future, but that's it for now

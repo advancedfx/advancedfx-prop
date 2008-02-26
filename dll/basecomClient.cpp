@@ -20,7 +20,7 @@ HWND g_hwHlaeBcCltWindow = NULL;
 HWND g_HL_MainWindow = NULL;
 WNDCLASSA *g_HL_WndClassA = NULL;
 
-HLAE_BASECOM_WndRectUpdate_s g_HlaeWindowRect;
+HLAE_BASECOM_WndRectUpdate_s g_HlaeWindowRect; // Warning: in the current implementation those values may not represent the actual server's size, since HlaeBc_AdjustViewPort will do some security clamping on them when needed.
 
 LRESULT CALLBACK Hooking_WndProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
@@ -28,22 +28,15 @@ LRESULT CALLBACK Hooking_WndProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 
 	switch(uMsg)
 	{
-	case WM_CREATE:
-		//MessageBoxA(hWnd,"WM_CREATE","Hooking_WndProc fetched",MB_OK|MB_ICONINFORMATION);
-		return g_HL_WndClassA->lpfnWndProc(hWnd,uMsg,wParam,lParam);
-	case WM_DESTROY:
-		//MessageBoxA(hWnd,"WM_DESTROY","Hooking_WndProc fetched",MB_OK|MB_ICONINFORMATION);
-		return g_HL_WndClassA->lpfnWndProc(hWnd,uMsg,wParam,lParam);
 	case WM_ACTIVATE:
 	case WM_SETFOCUS:
 	case WM_KILLFOCUS:
+		// we won't override those messages, since this would give us problems with the mauscapture if we won't allow it to deactivate
+		break; // sorry guys, that's it for now.
 		//MessageBoxA(hWnd,"WM_ACTIVATE | WM_SETFOCUS | WM_KILLFOCUS","Hooking_WndProc fetched",MB_OK|MB_ICONINFORMATION);
 		// tell it we would have handled it:
 		// however this won't trick DirectSound sadly
 		return TRUE;
-	case WM_CLOSE:
-		//MessageBoxA(hWnd,"WM_CLOSE","Hooking_WndProc fetched",MB_OK|MB_ICONINFORMATION);
-		return g_HL_WndClassA->lpfnWndProc(hWnd,uMsg,wParam,lParam);
 	}
 
 	if (hWnd==NULL || hWnd != g_HL_MainWindow)
@@ -53,11 +46,15 @@ LRESULT CALLBACK Hooking_WndProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 	// filter MainWindow specific messages:
 
 	// blah
+	switch (uMsg)
+	{
+	}
 
 	return g_HL_WndClassA->lpfnWndProc(hWnd,uMsg,wParam,lParam);
 }
 
 LRESULT HlaeBcCallWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+// this function is not supported atm / it will reject all requests
 // the server will inform us about specific events regarding the game window,
 // this is our chance to react to them:
 {
@@ -67,17 +64,7 @@ LRESULT HlaeBcCallWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	//
 	// filtering of specific message codes:
 
-	switch(uMsg)
-	{
-	case WM_KEYDOWN:
-	case WM_CHAR:
-	case WM_KEYUP:
-		//MessageBox(0,"Key Event","Event",MB_OK);
-		break;
-	default:
-		//break;
-		return FALSE; // by default we don't handle them in any way
-	}
+	return FALSE; // this function is not supported atm
 
 	// in any case we will replace the hwnd param, since the H-L winproc shall belive it originated from it's own window:
 
@@ -107,10 +94,6 @@ LRESULT HlaeBcCl_WndRectUpdate(PVOID lpData)
 
 	g_HlaeWindowRect = *myps;
 
-	//char sztemp[100];
-	//_snprintf(sztemp,sizeof(sztemp),"Left: %i\nTop: %i\nWidth visible: %i\nHeight visible: %i\nWidth total: %i\nHeight total: %i",g_HlaeWindowRect.iLeft,g_HlaeWindowRect.iTop,g_HlaeWindowRect.iWidthVisible,g_HlaeWindowRect.iHeightVisible,g_HlaeWindowRect.iWidthTotal,g_HlaeWindowRect.iHeightTotal);
-	//MessageBoxA(0,sztemp,"HlaeBcCl_WndRectUpdate",MB_OK|MB_ICONINFORMATION);
-
 	return TRUE;
 }
 
@@ -118,7 +101,7 @@ LRESULT HlaeBcCl_MouseEvent(PVOID lpData)
 {
 	HLAE_BASECOM_MSGCL_MouseEvent_s *myps = (HLAE_BASECOM_MSGCL_MouseEvent_s *)lpData;
 
-	return g_HL_WndClassA->lpfnWndProc(g_HL_MainWindow,(UINT)(myps->uMsg),(WPARAM)(myps->wParam),(LPARAM)(myps->iY<<16 + myps->iX));
+	return g_HL_WndClassA->lpfnWndProc(g_HL_MainWindow,(UINT)(myps->uMsg),(WPARAM)(myps->wParam),(LPARAM)(((myps->iY) << 16) + myps->iX));
 }
 
 LRESULT HlaeBcCl_KeyBoardEvent(PVOID lpData)
@@ -501,23 +484,52 @@ void HlaeBcCl_AdjustViewPort(int &x, int &y, int width, int height)
 {
 	if(!g_bHlaeAsumeServerDCPresent) return;
 
-	// first check if we need to inform the server about changed coords:
-	if(width!=g_HlaeWindowRect.iWidthTotal || height!=g_HlaeWindowRect.iHeightTotal)
-	{
-		g_HlaeWindowRect.iWidthTotal=width;
-		g_HlaeWindowRect.iHeightTotal=height;
+	static int iMyLastWidth=-1;
+	static int iMyLastHeight=-1;
 
+	// firt check if we need to inform the server about changed coords,
+	// this has to be done carefully to avoid pingpongs in case the Server's Window is oversized i.e.
+	// we also prevent updates for 
+	if ((iMyLastWidth!=width || iMyLastHeight != height ) && width > 0 && height > 0)
+	{
+		pEngfuncs->Con_DPrintf("HlaeBcCl_AdjustViewPort: Cached values (%ix%i) outdated, forcing update (%ix%i).\n",iMyLastWidth,iMyLastHeight,width,height);
+
+		iMyLastWidth=width;
+		iMyLastHeight=height;
 		// update the server!:
-		pEngfuncs->Con_DPrintf("HlaeBcCl_AdjustViewPort: mismatch forced update\n");
 		HlaeBcClt_GameWndPrepare(width,height);
 	}
+
+	// now we will apply some clamping to avoid problems
+	// in case the server's window is oversized for some reason:
+	
+	if (g_HlaeWindowRect.iHeightTotal >  height) g_HlaeWindowRect.iHeightTotal = height;
+	if (g_HlaeWindowRect.iWidthTotal >  width) g_HlaeWindowRect.iWidthTotal = width;
+
+	if (g_HlaeWindowRect.iWidthVisible > g_HlaeWindowRect.iWidthTotal) g_HlaeWindowRect.iWidthVisible =  g_HlaeWindowRect.iWidthTotal;
+	if (g_HlaeWindowRect.iHeightVisible >  g_HlaeWindowRect.iWidthTotal) g_HlaeWindowRect.iHeightVisible = g_HlaeWindowRect.iHeightTotal;
+
+
+	// finally we will offset the x and y values for the glViewPort
+	// in order to simulate scrolling:
 	x=x-g_HlaeWindowRect.iLeft;
 	y=y-g_HlaeWindowRect.iHeightTotal+g_HlaeWindowRect.iHeightVisible+g_HlaeWindowRect.iTop;
 
-	// clamp for security:
-	// not implemented you fag!
 }
 
+HWND WINAPI HlaeBcClt_SetCapture( HWND hWnd)
+{
+	if(!g_bHlaeAsumeServerDCPresent) return SetCapture(hWnd);
+
+	return NULL;
+}
+
+BOOL WINAPI HlaeBcClt_ReleaseCapture( VOID )
+{
+	if(!g_bHlaeAsumeServerDCPresent) return ReleaseCapture();
+
+	return TRUE;
+}
 
 //
 // debug helper:

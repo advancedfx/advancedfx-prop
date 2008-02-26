@@ -19,3 +19,5 @@ HWND APIENTRY HlaeBcClt_CreateWindowExA(DWORD dwExStyle,LPCTSTR lpClassName,LPCT
 BOOL APIENTRY HlaeBcClt_DestroyWindow(HWND hWnd);
 HDC APIENTRY HlaeBcClt_GetDC( HWND hWnd );
 int APIENTRY HlaeBcClt_ReleaseDC( HWND hWnd, HDC hDC );
+HWND WINAPI HlaeBcClt_SetCapture( HWND hWnd);
+BOOL WINAPI HlaeBcClt_ReleaseCapture( VOID );

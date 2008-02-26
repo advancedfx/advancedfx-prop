@@ -120,9 +120,6 @@ void CHlaeGameWindow::OnIdle( wxIdleEvent &myevent )
 	myevent.Skip();
 }
 
-// macro for mausposition to lparam wrapping:
-#define MY_GET_MPOS ((unsigned short)(myevent.GetY())<<16) + ((unsigned short)(myevent.GetX()) & 0x0ffff)
-
 void CHlaeGameWindow::OnMouseLeftDown( wxMouseEvent &myevent )
 {
 	int ix,iy;
