@@ -1,4 +1,4 @@
-#include <hlae/auimanager.h>
+#include <hlae/core/layoutmanager.h>
 #include <hlae/gamewindow.h>
 
 #include <wx/dcclient.h>
