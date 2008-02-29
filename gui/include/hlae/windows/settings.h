@@ -8,9 +8,9 @@
 	#include <wx/treectrl.h>
 	#include <wx/dialog.h>
 
-	#include <hlae/settingspages/template.h>
-	#include <hlae/lists/settingspage.h>
-	#include <hlae/lists/settingspageid.h>
+	#include <hlae/windows/settings/template.h>
+	#include <hlae/core/lists/settingspage.h>
+	#include <hlae/core/lists/settingspageid.h>
 
 	class hlaeDialogSettings : public wxDialog
 	{

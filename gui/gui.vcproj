@@ -220,14 +220,6 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\src\app.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\auimanager.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\src\basecomserver.cpp"
 				>
 			</File>
@@ -235,67 +227,65 @@
 				RelativePath=".\src\gamewindow.cpp"
 				>
 			</File>
-			<File
-				RelativePath=".\src\lists.cpp"
-				>
-			</File>
 			<Filter
-				Name="Frames"
+				Name="Core"
 				>
 				<File
-					RelativePath=".\src\frames\main.cpp"
+					RelativePath=".\src\core\app.cpp"
 					>
-					<FileConfiguration
-						Name="Debug|Win32"
+				</File>
+				<File
+					RelativePath=".\src\core\debug.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\core\layoutmanager.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\core\list.cpp"
+					>
+				</File>
+				<Filter
+					Name="Lists"
+					>
+					<File
+						RelativePath=".\src\core\lists\log.cpp"
 						>
-						<Tool
-							Name="VCCLCompilerTool"
-							ObjectFile="$(IntDir)\$(InputName)1.obj"
-							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
+					</File>
+					<File
+						RelativePath=".\src\core\lists\settingspage.cpp"
 						>
-						<Tool
-							Name="VCCLCompilerTool"
-							ObjectFile="$(IntDir)\$(InputName)1.obj"
-							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
-						/>
-					</FileConfiguration>
-				</File>
+					</File>
+				</Filter>
 			</Filter>
 			<Filter
-				Name="ListElements"
+				Name="Windows"
 				>
 				<File
-					RelativePath=".\src\listelements\settingspage.cpp"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="Dialogs"
-				>
-				<File
-					RelativePath=".\src\dialogs\settings.cpp"
+					RelativePath=".\src\windows\console.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\src\dialogs\textinput.cpp"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="SettingsPages"
-				>
-				<File
-					RelativePath=".\src\settingspages\general.cpp"
+					RelativePath=".\src\windows\main.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\src\settingspages\template.cpp"
+					RelativePath=".\src\windows\settings.cpp"
 					>
 				</File>
+				<Filter
+					Name="Settings"
+					>
+					<File
+						RelativePath=".\src\windows\settings\general.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\src\windows\settings\template.cpp"
+						>
+					</File>
+				</Filter>
 			</Filter>
 		</Filter>
 		<Filter
@@ -303,14 +293,6 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath=".\include\hlae\app.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\hlae\auimanager.h"
-				>
-			</File>
 			<File
 				RelativePath=".\include\hlae\basecomserver.h"
 				>
@@ -320,52 +302,72 @@
 				>
 			</File>
 			<Filter
-				Name="Frames"
+				Name="Core"
 				>
 				<File
-					RelativePath=".\include\hlae\frames\main.h"
+					RelativePath=".\include\hlae\core\app.h"
 					>
 				</File>
+				<File
+					RelativePath=".\include\hlae\core\debug.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\hlae\core\layoutmanager.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\hlae\core\list.h"
+					>
+				</File>
+				<Filter
+					Name="Lists"
+					>
+					<File
+						RelativePath=".\include\hlae\core\lists\layout.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\hlae\core\lists\log.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\hlae\core\lists\settingspage.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\hlae\core\lists\settingspageid.h"
+						>
+					</File>
+				</Filter>
 			</Filter>
 			<Filter
-				Name="Lists"
+				Name="Windows"
 				>
 				<File
-					RelativePath=".\include\hlae\lists\layout.h"
+					RelativePath=".\include\hlae\windows\console.h"
 					>
 				</File>
 				<File
-					RelativePath=".\include\hlae\lists\settingspage.h"
+					RelativePath=".\include\hlae\windows\main.h"
 					>
 				</File>
 				<File
-					RelativePath=".\include\hlae\lists\settingspageid.h"
+					RelativePath=".\include\hlae\windows\settings.h"
 					>
 				</File>
-			</Filter>
-			<Filter
-				Name="SettingsPages"
-				>
-				<File
-					RelativePath=".\include\hlae\settingspages\general.h"
+				<Filter
+					Name="Settings"
 					>
-				</File>
-				<File
-					RelativePath=".\include\hlae\settingspages\template.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="Dialogs"
-				>
-				<File
-					RelativePath=".\include\hlae\dialogs\settings.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\hlae\dialogs\textinput.h"
-					>
-				</File>
+					<File
+						RelativePath=".\include\hlae\windows\settings\general.h"
+						>
+					</File>
+					<File
+						RelativePath=".\include\hlae\windows\settings\template.h"
+						>
+					</File>
+				</Filter>
 			</Filter>
 		</Filter>
 	</Files>

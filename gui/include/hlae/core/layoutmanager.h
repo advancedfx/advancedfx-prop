@@ -6,22 +6,22 @@
 
 	class hlaeAuiManager;
 
-	#include <hlae/lists/layout.h>
-	#include <hlae/frames/main.h> 
+	#include <hlae/core/lists/layout.h>
+	#include <hlae/windows/main.h> 
 
 	class hlaeAuiManager : public wxAuiManager {
 
 		private:
 
 			hlaeListLayout* m_layoutlist;
-			hlaeFrameMain* m_parent;
+			hlaeMainWindow* m_parent;
 
 			void UpdateLayoutMenu();
 			void ClearMenu(wxMenu* menu);
 
 		public:
 
-			hlaeAuiManager(hlaeFrameMain* parent);
+			hlaeAuiManager(hlaeMainWindow* parent);
 			~hlaeAuiManager();
 
 			void AddLayout(const wxString& describtion = wxEmptyString,

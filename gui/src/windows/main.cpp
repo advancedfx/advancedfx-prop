@@ -2,19 +2,24 @@
 #include <wx/button.h>
 #include <wx/scrolwin.h>
 
+
 #include <hlae/basecomServer.h>
-#include <hlae/dialogs/settings.h>
+#include <hlae/windows/settings.h>
 
-#include <hlae/frames/main.h>
+#include <hlae/windows/main.h>
+#include <hlae/windows/console.h>
 
-BEGIN_EVENT_TABLE(hlaeFrameMain, wxFrame)
-	EVT_MENU(wxID_EXIT, hlaeFrameMain::OnExit)
-	EVT_MENU(wxID_ABOUT, hlaeFrameMain::OnAbout)
-	EVT_MENU(hlaeFrameMain::hlaeID_SaveLayout, hlaeFrameMain::OnSaveLayout)
-	EVT_MENU(hlaeFrameMain::hlaeID_LayoutManager, hlaeFrameMain::OnLayoutManager)
+#include <hlae/core/debug.h>
+#include <wx/memory.h>
+
+BEGIN_EVENT_TABLE(hlaeMainWindow, wxFrame)
+	EVT_MENU(wxID_EXIT, hlaeMainWindow::OnExit)
+	EVT_MENU(wxID_ABOUT, hlaeMainWindow::OnAbout)
+	EVT_MENU(hlaeMainWindow::hlaeID_SaveLayout, hlaeMainWindow::OnSaveLayout)
+	EVT_MENU(hlaeMainWindow::hlaeID_LayoutManager, hlaeMainWindow::OnLayoutManager)
 END_EVENT_TABLE()
 
-hlaeFrameMain::hlaeFrameMain()
+hlaeMainWindow::hlaeMainWindow()
 		: wxFrame(NULL, wxID_ANY,
 			wxT("Half-Life After Effects - Developer Edition"),
 			wxDefaultPosition, wxSize(800,600))
@@ -29,21 +34,27 @@ hlaeFrameMain::hlaeFrameMain()
 	CreateStatusBar();
     GetStatusBar()->SetStatusText(wxT("Ready"));
 
-	m_auimanager->AddPane(new wxButton(this, wxID_ANY, wxT("test"),
-		wxDefaultPosition, wxSize(20,20), wxNO_BORDER),
-		wxAuiPaneInfo().Left().MinSize(wxSize(100,100)));
+	m_auimanager->AddPane(new hlaeConsoleWindow(this),
+		wxAuiPaneInfo().Bottom().MinSize(wxSize(-1,100)));
 
 	m_auimanager->AddLayout(wxT("Default"),true);
 
 	m_basecom = new CHlaeBcServer(this,m_auimanager);
+
+	// g_debug.SendMessage(wxT("This is a fatal error"), hlaeDEBUG_FATALERROR);
+	g_debug.SendMessage(wxT("This is an error"), hlaeDEBUG_ERROR);
+	g_debug.SendMessage(wxT("This is a warning"), hlaeDEBUG_WARNING);
+	g_debug.SendMessage(wxT("This is verbose output level 1"), hlaeDEBUG_VERBOSE_LEVEL1);
+	g_debug.SendMessage(wxT("This is verbose output level 2"), hlaeDEBUG_VERBOSE_LEVEL2);
+	g_debug.SendMessage(wxT("This is verbose output level 3"), hlaeDEBUG_VERBOSE_LEVEL3);
 }
 
-hlaeFrameMain::~hlaeFrameMain() {
+hlaeMainWindow::~hlaeMainWindow() {
 	delete m_basecom;
 	delete m_auimanager;
 }
 
-void hlaeFrameMain::OnAbout(wxCommandEvent& WXUNUSED(event)) {
+void hlaeMainWindow::OnAbout(wxCommandEvent& WXUNUSED(event)) {
 
 	hlaeDialogSettings* bla = new hlaeDialogSettings(this);
 	bla->Show();
@@ -67,31 +78,31 @@ void hlaeFrameMain::OnAbout(wxCommandEvent& WXUNUSED(event)) {
 
 }
 
-void hlaeFrameMain::OnExit(wxCommandEvent& WXUNUSED(evt)) {
+void hlaeMainWindow::OnExit(wxCommandEvent& WXUNUSED(evt)) {
 	Close(true);
 }
 
-void hlaeFrameMain::OnSaveLayout(wxCommandEvent& WXUNUSED(evt)) {
+void hlaeMainWindow::OnSaveLayout(wxCommandEvent& WXUNUSED(evt)) {
 	m_auimanager->AddLayout();
 }
 
-void hlaeFrameMain::OnLayoutManager(wxCommandEvent& WXUNUSED(evt)) {
+void hlaeMainWindow::OnLayoutManager(wxCommandEvent& WXUNUSED(evt)) {
 	m_auimanager->ShowManager();
 }
 
-wxMenu* hlaeFrameMain::GetWindowMenu() const {
+wxMenu* hlaeMainWindow::GetWindowMenu() const {
 	return m_windowmenu;
 }
 
-wxMenu* hlaeFrameMain::GetToolBarMenuMenu() const {
+wxMenu* hlaeMainWindow::GetToolBarMenuMenu() const {
 	return m_toolbarmenu;
 }
 
-wxMenu* hlaeFrameMain::GetLayoutMenu() const {
+wxMenu* hlaeMainWindow::GetLayoutMenu() const {
 	return m_layoutmenu;
 }
 
-void hlaeFrameMain::CreateMenuBar() {
+void hlaeMainWindow::CreateMenuBar() {
 
 	// initialize the menubar
 	wxMenuBar* menubar = new wxMenuBar;

@@ -1,17 +1,17 @@
-#ifndef _HLAE_FRAMEMAIN_H_
-	#define _HLAE_FRAMEMAIN_H_
+#ifndef _HLAE_MAINWINDOW_H_
+	#define _HLAE_MAINWINDOW_H_
 
 	#include <wx/menu.h>
 	#include <wx/frame.h>
 
 	// this is not very nice, but we currently lack a better solution:
-	class hlaeFrameMain;
+	class hlaeMainWindow;
 	class CHlaeBcServer;
 	
-	#include <hlae/auimanager.h>
+	#include <hlae/core/layoutmanager.h>
 	#include <hlae/basecomServer.h>
 
-	class hlaeFrameMain : public wxFrame {
+	class hlaeMainWindow : public wxFrame {
 
 		private:
 
@@ -36,13 +36,13 @@
 
 		public:
 
-			hlaeFrameMain();
-			~hlaeFrameMain();
+			hlaeMainWindow();
+			~hlaeMainWindow();
 
-			wxMenu* hlaeFrameMain::GetWindowMenu() const;
-			wxMenu* hlaeFrameMain::GetToolBarMenuMenu() const;
-			wxMenu* hlaeFrameMain::GetLayoutMenu() const;
+			wxMenu* hlaeMainWindow::GetWindowMenu() const;
+			wxMenu* hlaeMainWindow::GetToolBarMenuMenu() const;
+			wxMenu* hlaeMainWindow::GetLayoutMenu() const;
 
 		};
 
-#endif // _HLAE_FRAMEMAIN_H_
+#endif // _HLAE_MAINWINDOW_H_

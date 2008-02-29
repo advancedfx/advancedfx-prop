@@ -1,7 +1,7 @@
 #include <wx/statline.h>
 
 #include <hlae/dialogs/settings.h>
-#include <hlae/settingspages/general.h>
+#include <hlae/windows/settings/general.h>
 
 BEGIN_EVENT_TABLE(hlaeDialogSettings, wxDialog)
 	EVT_CHECKBOX(hlaeDialogSettings::hlaeID_AdvancedMode,

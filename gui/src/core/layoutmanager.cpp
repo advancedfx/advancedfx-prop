@@ -1,7 +1,7 @@
-#include <hlae/auimanager.h>
-#include <hlae/dialogs/textinput.h>
+#include <hlae/core/layoutmanager.h>
+#include <hlae/core/debug.h>
 
-hlaeAuiManager::hlaeAuiManager(hlaeFrameMain* parent)
+hlaeAuiManager::hlaeAuiManager(hlaeMainWindow* parent)
 		: wxAuiManager(parent)
 {
 	m_parent = parent;
@@ -48,15 +48,15 @@ void hlaeAuiManager::AddLayout(const wxString& describtion, bool is_predefined) 
 
 		}
 
-		hlaeDialogTextInput* h_textinput = new hlaeDialogTextInput(
+		/* hlaeDialogTextInput* h_textinput = new hlaeDialogTextInput(
 			m_parent, wxT("Please define the name of the layout!"),
 			input);
-		h_textinput->ShowModal();
+		h_textinput->ShowModal();*/
 
-		layout_describtion = h_textinput->GetValue();
-		dialog_canceled = h_textinput->IsCancled();
+		layout_describtion = wxT("Layout"); // h_textinput->GetValue();
+		dialog_canceled = false; // h_textinput->IsCancled();
 
-		delete h_textinput;
+		// delete h_textinput;
 	}
 
 	// add the layout to the list
@@ -92,6 +92,7 @@ bool hlaeAuiManager::AddPane(wxWindow* window, const wxAuiPaneInfo& pane_info) {
 
 	bool result = wxAuiManager::AddPane(window, pane_info);
 	Update();
+	window->Layout();
 	return result;
 
 }
