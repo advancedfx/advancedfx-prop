@@ -52,6 +52,7 @@ void hlaeConsoleWindow::WriteMessage(const wxString& message,
 		}
 
 		m_richtextcrtl->AppendText(wxT("> "));
+		m_richtextcrtl->AppendText(date.Format(wxT("%H:%M ")));
 		m_richtextcrtl->BeginTextColour(colour);
 		m_richtextcrtl->AppendText(message);
 		m_richtextcrtl->EndTextColour();

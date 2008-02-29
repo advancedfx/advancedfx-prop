@@ -235,6 +235,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\include\hlae\core\config.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\core\debug.cpp"
 					>
 				</File>
@@ -262,6 +266,10 @@
 			<Filter
 				Name="Windows"
 				>
+				<File
+					RelativePath=".\src\core\config.cpp"
+					>
+				</File>
 				<File
 					RelativePath=".\src\windows\console.cpp"
 					>

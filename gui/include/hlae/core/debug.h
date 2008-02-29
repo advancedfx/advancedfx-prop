@@ -28,15 +28,15 @@ public:
 	~hlaeDebug();
 
 	void SendMessage(const wxString& message, int debuglevel);
-	void SetConsoleWindow(hlaeConsoleWindow* console_window);
 	void SetApp(hlaeApp* application);
+	void SetConsoleWindow(hlaeConsoleWindow* console_window);
 	void UpdateAllMessages();
-	// void UpdateSettings();
+	void UpdateSettings();
 
 
 private:
 
-	int m_verboselevel;
+	int m_outputlevel;
 	int m_logfilesize;
 
 	wxString* m_logfilepath;

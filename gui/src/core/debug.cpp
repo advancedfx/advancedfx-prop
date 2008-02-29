@@ -2,8 +2,6 @@
 
 #include <hlae/core/debug.h>
 
-#include <hlae/core/lists/layout.h>
-
 hlaeDebug g_debug;
 
 hlaeDebug::hlaeDebug()
@@ -12,7 +10,7 @@ hlaeDebug::hlaeDebug()
 	m_loglist = new hlaeList();
 	m_loglist->DeleteContents(true);
 
-	m_verboselevel = hlaeDEBUG_VERBOSE_LEVEL3;
+	UpdateSettings();
 }
 
 hlaeDebug::~hlaeDebug()
@@ -20,6 +18,14 @@ hlaeDebug::~hlaeDebug()
 	m_loglist->Clear();
 	delete m_loglist;
 }
+
+void hlaeDebug::UpdateSettings()
+{
+	// Load from config
+	m_outputlevel = hlaeDEBUG_VERBOSE_LEVEL3;
+	m_logfilesize = -1;
+}
+
 
 void hlaeDebug::SetConsoleWindow(hlaeConsoleWindow* console_window)
 {
@@ -38,7 +44,7 @@ void hlaeDebug::UpdateMessage(size_t index)
 	
 	int debuglevel = element->GetDebugLevel();
 
-	// Write to console window
+	// Write to console window (if it exists)
 	if (m_consolewindow && (debuglevel != hlaeDEBUG_FATALERROR))
 		m_consolewindow->WriteMessage(element->GetMessage(), element->GetDate(), debuglevel);
 
@@ -48,7 +54,7 @@ void hlaeDebug::UpdateMessage(size_t index)
 
 void hlaeDebug::SendMessage(const wxString& message, int debuglevel)
 {
-	if ((debuglevel <= m_verboselevel)
+	if ((debuglevel <= m_outputlevel)
 		#ifndef _DEBUG
 			&& (debuglevel != hlaeDEBUG_VERBOSE_LEVEL3)
 		#endif
@@ -61,8 +67,8 @@ void hlaeDebug::SendMessage(const wxString& message, int debuglevel)
 	if (debuglevel == hlaeDEBUG_FATALERROR)
 	{
 		wxMessageDialog* msgdgl = new wxMessageDialog(0, message +
-			wxT("\n Half-Life Advanced Effects could not recover from this error. ")
-			wxT("The program will shut down."), wxT("FATAL ERROR"), wxOK | wxICON_ERROR);
+			wxT("\n\nHalf-Life Advanced Effects could not recover from this error. ")
+			wxT("The program will shut down."), wxT("Fatal error"), wxOK | wxICON_ERROR);
 		msgdgl->ShowModal();
 	}
 }
