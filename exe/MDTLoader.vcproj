@@ -24,7 +24,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="c:\rcstamp.exe -u &quot;$(ProjectDir)version.cpp&quot; &quot;$(ProjectDir)MDT.rc&quot;"
+				CommandLine="&quot;../shared/bin/rcstamp.exe&quot;  -u &quot;$(ProjectDir)version.cpp&quot; &quot;$(ProjectDir)MDT.rc&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -91,8 +91,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Versioning..."
-				CommandLine="c:\rcstamp.exe &quot;$(ProjectDir)MDTLoader.rc&quot; *.*.+.0 &quot;$(ProjectDir)version.cpp&quot;"
+				Description=""
+				CommandLine="&quot;../shared/bin/rcstamp.exe&quot;  &quot;$(ProjectDir)MDTLoader.rc&quot; *.*.+.0 &quot;$(ProjectDir)version.cpp&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -105,6 +105,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				CommandLine="&quot;../shared/bin/rcstamp.exe&quot;  -u &quot;$(ProjectDir)version.cpp&quot; &quot;$(ProjectDir)MDT.rc&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -169,6 +170,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				Description=""
+				CommandLine="&quot;../shared/bin/rcstamp.exe&quot;  &quot;$(ProjectDir)MDTLoader.rc&quot; *.*.+.0 &quot;$(ProjectDir)version.cpp&quot;"
 			/>
 		</Configuration>
 	</Configurations>

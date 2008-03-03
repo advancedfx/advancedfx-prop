@@ -1,5 +1,21 @@
-1.1.3.160 (dev)
-- Added: __mirv_listplayers
+1.1.3.312 (developer editon)
+- Added: __mirv_listplayers, __mirv_map_localplayer_install, __map_localplayer_to
+
+This version is for _testing*_ a potential dem_forcehltv fix, where the camera get's stuck.
+
+How to use the fix:
+
+Start the demo with dem_forcehltv 1.
+Enter __mirv_map_localplayer_install into the console to hook the functions the fix needs
+Type __mirv_listplayers into console to see the highest used player index.
+If the highest player index is i.e. 11 then type
+  __map_localplayer_to 12
+into console.
+
+That's it.
+
+*means it's easy to crash everything : )
+
 
 1.1.3.97
 
