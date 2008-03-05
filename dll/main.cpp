@@ -45,6 +45,7 @@
 #include "config_mdtdll.h" // used temporary to load i.e. addresses
 
 #include "newsky.h"
+#include "cmd_tools.h"
 
 #include "basecomClient.h"
 
@@ -54,6 +55,8 @@
 extern Filming g_Filming;
 extern Aiming g_Aiming;
 extern Zooming g_Zooming;
+extern CHlaeCmdTools g_CmdTools;
+
 
 extern UI *gui;
 
@@ -74,10 +77,10 @@ VoidFuncList &GetCmdList()
 void CvarRegister(Void_func_t func) { GetCvarList().push_front(func); }
 void CmdRegister(Void_func_t func) { GetCmdList().push_front(func); }
 
-// Todo - Ini files for these?
-cl_enginefuncs_s* pEngfuncs		= (cl_enginefuncs_s*)	HL_ADDR_CL_ENGINEFUNCS_S;//0x01EA0A08;
-engine_studio_api_s* pEngStudio	= (engine_studio_api_s*)HL_ADDR_ENGINE_STUDIO_API_S;//0x01EBC978;
-playermove_s* ppmove			= (playermove_s*)		HL_ADDR_PLAYERMOVE_S;//0x02D590A0;
+// Various H-L Engine interface (super) Globals:
+cl_enginefuncs_s* pEngfuncs		= (cl_enginefuncs_s*)	HL_ADDR_CL_ENGINEFUNCS_S;
+engine_studio_api_s* pEngStudio	= (engine_studio_api_s*)HL_ADDR_ENGINE_STUDIO_API_S;
+playermove_s* ppmove			= (playermove_s*)		HL_ADDR_PLAYERMOVE_S;
 
 int		g_nViewports = 0;
 bool	g_bIsSucceedingViewport = false;
@@ -96,9 +99,8 @@ static char pg_MDTcfgfile[MDT_MAX_PATH_BYTES+MDT_CFG_FILE_SLEN];
 //  Cvars
 //
 
-
+REGISTER_CVAR(fixforcehltv, "0", 0); // modified by Hook_dem_forcehltv
 REGISTER_CVAR(disableautodirector, "0", 0);
-REGISTER_CVAR(fixforcehltv, "1", 0);
 
 REGISTER_DEBUGCVAR(gl_noclear, "0", 0);
 REGISTER_DEBUGCVAR(movie_oldmatte, "0", 0);
@@ -135,43 +137,43 @@ REGISTER_CMD_FUNC(whereami)
 	pEngfuncs->Con_Printf("Location: %fx %fy %fz\nAngles: %fx %fy %fz\n", ppmove->origin.x, ppmove->origin.y, ppmove->origin.z, angles[0], angles[1], angles[2]);
 }
 
-void PrintDebugPlayerInfo(cl_entity_s *pl)
+void PrintDebugPlayerInfo(cl_entity_s *pl,int itrueindex)
 {
 	static hud_player_info_t m_hpinfo;
 
 	memset(&m_hpinfo,0,sizeof(hud_player_info_t));
 	pEngfuncs->pfnGetPlayerInfo(pl->index,&m_hpinfo);
-	pEngfuncs->Con_Printf("%i (%s): %s, %s, %i, %i, %i, %i, %i, %i\n",pl->index,(pl->curstate.effects & EF_NODRAW) ? "y" : "n",m_hpinfo.name,m_hpinfo.model,m_hpinfo.ping,m_hpinfo.packetloss,m_hpinfo.topcolor,m_hpinfo.bottomcolor,m_hpinfo.spectator,m_hpinfo.thisplayer);
+	pEngfuncs->Con_Printf("%i (%s): %i, %s, %s, %i, %i, %i, %i, %i, %i\n",pl->index,(pl->curstate.effects & EF_NODRAW) ? "y" : "n",itrueindex,m_hpinfo.name,m_hpinfo.model,m_hpinfo.ping,m_hpinfo.packetloss,m_hpinfo.topcolor,m_hpinfo.bottomcolor,m_hpinfo.spectator,m_hpinfo.thisplayer);
 }
 
 REGISTER_DEBUGCMD_FUNC(listplayers)
 {
 	bool bLocalListed=false;
-	int iLocalIndex;
+	int iLocalIndex=-1;
 	cl_entity_s *plocal = pEngfuncs->GetLocalPlayer();
 
-	pEngfuncs->Con_Printf("Listing Players:\nindex (EF_NODRAW): name, model, ping, packetloss, topcolor, bottomcolor, spectator, thisplayer\n");
+	pEngfuncs->Con_Printf("Listing Players (max: %i)\ntrue index (EF_NODRAW): index, name, model, ping, packetloss, topcolor, bottomcolor, spectator, thisplayer\n",pEngfuncs->GetMaxClients());
 	for (int i = 0; i <= pEngfuncs->GetMaxClients(); i++)
 	{
 		cl_entity_t *e = pEngfuncs->GetEntityByIndex(i);
 		if (e && e->player)
 		{
-			PrintDebugPlayerInfo(e);
-			if (e->index==plocal->index)
+			PrintDebugPlayerInfo(e,i);
+			//if (e->index==plocal->index)
+			if (e == plocal)
 			{
 				bLocalListed=true;
-				iLocalIndex=e->index;
+				iLocalIndex=i;//e->index;
 			}
-		}
+		} else if (e == plocal) iLocalIndex=i;
 	}
 
 	if (bLocalListed)
 	{
 		pEngfuncs->Con_Printf("The local player is index %i.\n",iLocalIndex);
-
 	} else {
-		pEngfuncs->Con_Printf("The local player is hidden (not flagged as player):\n");
-		PrintDebugPlayerInfo(plocal);
+		pEngfuncs->Con_Printf("The local player is hidden (not flagged as player):\n",iLocalIndex);
+		PrintDebugPlayerInfo(plocal,iLocalIndex);
 	}
 
 }
@@ -238,6 +240,104 @@ REGISTER_DEBUGCMD_FUNC(forcebuffers)
 
 REGISTER_DEBUGCVAR(deltatime, "1.0", 0);
 
+xcommand_t g_Old_dem_forcehltv = NULL;
+void Hook_dem_forcehltv(void)
+{
+	char *ptmp="";
+	if (pEngfuncs->Cmd_Argc()>=1) ptmp=pEngfuncs->Cmd_Argv(1);
+	pEngfuncs->Cvar_SetValue(PREFIX "fixforcehltv",atof(ptmp));
+	g_Old_dem_forcehltv();
+}
+
+void Hook_startmovie(void)
+{
+	if (g_Filming.isFilming())
+	{
+		pEngfuncs->Con_Printf("Already recording!\n");
+		return;
+	}
+
+	if(pEngfuncs->Cmd_Argc()<3)
+	{
+		pEngfuncs->Con_Printf("startmovie <filename> <fps>\n");
+		return;
+	}
+
+	static char psztemp [513];
+	static char pszpath [256];
+
+	const char *paddpath=NULL;
+	char *pcmdfname=pEngfuncs->Cmd_Argv(1);
+	
+	char *pslashpos = strchr(pcmdfname,'/');
+	char *pbackslashpos = strchr(pcmdfname,'\\');
+
+	if (!(pslashpos || pbackslashpos))
+		paddpath = pEngfuncs->pfnGetGameDirectory();
+		//pEngfuncs->CheckParm( "-game", &paddpath );
+
+	psztemp[sizeof(psztemp)-1]=0;
+	pszpath[sizeof(pszpath)-1]=0;
+	if (paddpath) _snprintf(pszpath,sizeof(pszpath)-1,"%s/%s",paddpath,pcmdfname);
+	else strncpy(pszpath,pcmdfname,sizeof(pszpath)-1);
+
+	_snprintf(psztemp,sizeof(psztemp)-1,"mirv_movie_filename \"%s\"",pszpath);
+
+	pEngfuncs->pfnClientCmd(psztemp);
+
+	pEngfuncs->Cvar_SetValue("mirv_movie_fps",atof(pEngfuncs->Cmd_Argv(2)));
+
+	// command won't have finished here, so we do a evil hack:
+	// we also can't simply free and alloc here, because Quake 1 / H-L piggy backs infos:
+	cvar_t *pIamVictim = pEngfuncs->pfnGetCvarPointer("mirv_movie_filename");
+	char *pIamEvil=pIamVictim->string;
+	pIamVictim->string = pszpath;
+
+	pEngfuncs->Con_DPrintf("game dir: %s\ncvar is: %s\n",pEngfuncs->pfnGetGameDirectory(),pEngfuncs->pfnGetCvarPointer("mirv_movie_filename")->string);
+	g_Filming.Start();
+	pIamVictim->string = pIamEvil;
+}
+
+void Hook_endmovie(void)
+{
+	g_Filming.Stop();
+}
+
+REGISTER_DEBUGCMD_FUNC(debug_cmdaddress)
+{
+	if(pEngfuncs->Cmd_Argc()!=2) return;
+
+	char *parg = pEngfuncs->Cmd_Argv(1);
+
+	void * paddr = (void *)g_CmdTools.GiveCommandFn(parg);
+	pEngfuncs->Con_Printf("%s: 0x%08x\n",parg,paddr);
+}
+
+// >> fixforcehtlv stuff:
+
+/*
+typedef void ( *Cvar_SetValue_t )( char *cvar, float value );
+
+Cvar_SetValue_t detoured_Cvar_SetValue = NULL;
+
+void Hook_Cvar_SetValue( char *cvar, float value )
+{
+	if (!strcmp("maxclients",cvar)) pEngfuncs->Con_Printf(">>>Maxclients: %f\n",value);
+	detoured_Cvar_SetValue(cvar,value);
+}
+
+void Install_Hook_Cvar_SetValue()
+{
+	if (!detoured_Cvar_SetValue)
+		detoured_Cvar_SetValue = (Cvar_SetValue_t)DetourApply((BYTE *)(pEngfuncs->Cvar_SetValue), (BYTE *)Hook_Cvar_SetValue,0x07);
+}
+
+int g_map_localplayer_to = -1;
+
+typedef cl_entity_s *(* GetLocalPlayer_t)( void );
+
+GetLocalPlayer_t detoured_GetLocalPlayer = NULL;
+*/
 void DrawActivePlayers()
 {
 	for (int i = 0; i <= pEngfuncs->GetMaxClients(); i++)
@@ -250,9 +350,114 @@ void DrawActivePlayers()
 
 			if (flDeltaTime < deltatime->value)
 				pEngfuncs->CL_CreateVisibleEntity(ET_PLAYER, e);
+
 		}
 	}
 }
+/*
+cl_entity_s *g_Hook_GetLocalPlayer( void )
+{
+	//pEngfuncs->Con_DPrintf("g_hook_GetLocalPlayer called.\n");
+	static hud_player_info_t m_hpinfo;
+
+	if( fixforcehltv->value != 0.0f && pEngfuncs->IsSpectateOnly() )
+	{
+		bool bReMap=false;
+		if  (g_map_localplayer_to == -1)
+		{
+			// check if there is already a correctly mapped player:
+			cl_entity_s *pe = detoured_GetLocalPlayer();
+
+			if (!pe || pe->player)
+				bReMap=true;
+			else
+			{
+				if (pe->index==0)
+				{
+					bReMap=true;
+				} else {
+					pEngfuncs->Con_DPrintf("HLAE: g_Hook_GetLocalPlayer: using native map: %i.\n",pe->index);
+					g_map_localplayer_to=pe->index;
+				}
+			}
+		} else {
+			// check if the current mapping is still correct:
+			cl_entity_s *e=pEngfuncs->GetEntityByIndex(g_map_localplayer_to);
+
+			if (e) //&& e->player && e->model && e->model->name && e->model->name[0]!=0)
+			{
+				memset(&m_hpinfo,0x0,sizeof(hud_player_info_t));
+				pEngfuncs->pfnGetPlayerInfo(e->index,&m_hpinfo);
+				if (m_hpinfo.model!=NULL) bReMap=true;
+			}
+		}
+
+		if (bReMap)
+		{
+			//pEngfuncs->Con_DPrintf("HLAE: g_Hook_GetLocalPlayer: doing remap.\n");
+			cl_entity_t *e;
+			for (g_map_localplayer_to = 1; g_map_localplayer_to <= pEngfuncs->GetMaxClients(); g_map_localplayer_to++)
+			{
+				e = pEngfuncs->GetEntityByIndex(g_map_localplayer_to);
+
+				if (!e) break;
+				else
+				{
+					memset(&m_hpinfo,0x0,sizeof(hud_player_info_t));
+					pEngfuncs->pfnGetPlayerInfo(e->index,&m_hpinfo);
+					if (m_hpinfo.model==NULL) break;
+				}
+			}
+			pEngfuncs->CL_CreateVisibleEntity(ET_NORMAL,e);
+			pEngfuncs->Con_DPrintf("HLAE: g_Hook_GetLocalPlayer: did remap: %i.\n",g_map_localplayer_to);
+		}
+
+		return pEngfuncs->GetEntityByIndex(g_map_localplayer_to);
+	} else {
+		g_map_localplayer_to = -1;
+		return detoured_GetLocalPlayer();
+	}
+}
+
+void Install_Hook_GetLocalPlayer()
+{
+	if (!detoured_GetLocalPlayer)
+	{
+		// we need an backup of the original function since we still want to call it in our hook
+		detoured_GetLocalPlayer = (GetLocalPlayer_t)DetourApply((BYTE *)(pEngfuncs->GetLocalPlayer), (BYTE *)g_Hook_GetLocalPlayer,0x06);
+	};
+}
+
+void DrawMySelf_InForceHltv()
+// doesn't work yet
+{
+	int i=-1;
+
+	if (detoured_GetLocalPlayer)
+	{
+		cl_entity_s *pe=detoured_GetLocalPlayer(); // dem_forcehltv might trick us!
+		if (pe) i = pe->index;
+		else return;
+	}
+	else
+	{
+		pEngfuncs->Con_Printf("HLAE error: in DrawMySelf_InForceHltv\n");
+		return;
+	}
+	
+
+	cl_entity_t *e = pEngfuncs->GetEntityByIndex(i);
+
+	if (e && e->player && e->model && !(e->curstate.effects & EF_NODRAW))
+	{
+		float flDeltaTime = fabs(pEngfuncs->GetClientTime() - e->curstate.msg_time);
+
+		if (flDeltaTime < deltatime->value)
+			pEngfuncs->CL_CreateVisibleEntity(ET_PLAYER, e);
+	}
+}
+*/
+// <<
 
 bool InMenu()
 {
@@ -506,6 +711,18 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 
 		g_Filming.setScreenSize(screeninfo.iWidth,screeninfo.iHeight);
 
+		// Init the CmdTools (might be a bit later here for hooking some funcs):
+		g_CmdTools.Init(pEngfuncs);
+		pEngfuncs->Con_DPrintf("CommandTree at: 0x%08x\n", g_CmdTools.GiveCommandTreePtr());
+
+		// install some hooks:
+		if (!(g_Old_dem_forcehltv = g_CmdTools.HookCommand("dem_forcehltv",Hook_dem_forcehltv))) pEngfuncs->Con_Printf("HLAE warning: Failed hooking dem_forcehltv");
+		if (!(g_CmdTools.HookCommand("startmovie",Hook_startmovie))) pEngfuncs->Con_Printf("HLAE warning: Failed hooking startmovie");
+		if (!(g_CmdTools.HookCommand("endmovie",Hook_endmovie))) pEngfuncs->Con_Printf("HLAE warning: Failed hooking endmovie");
+
+		//Install_Hook_Cvar_SetValue();
+		//Install_Hook_GetLocalPlayer();
+
 		bFirstRun = false;
 	}
 
@@ -517,8 +734,10 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 
 		// Make sure we can see the local player if dem_forcehltv is on
 		// dem_forcehtlv is not a cvar, so don't bother checking
+		// however mdt tries to keep track a bit of dem_forcehltv
 		if (fixforcehltv->value != 0.0f && pEngfuncs->IsSpectateOnly() && ppmove->iuser1 != 4)
 		{
+			// doesn't work yet: DrawMySelf_InForceHltv();
 			DrawActivePlayers();
 		}
 
