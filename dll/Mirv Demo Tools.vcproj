@@ -182,7 +182,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Post-Build: calling rcstamp ..."
-				CommandLine="&quot;../shared/bin/rcstamp.exe&quot; &quot;$(ProjectDir)Mirv Demo Tool.rc&quot; *.*.*.+ &quot;$(ProjectDir)version.cpp&quot;"
+				CommandLine="&quot;../shared/bin/rcstamp.exe&quot; &quot;$(ProjectDir)Mirv Demo Tool.rc&quot; *.*.4.1 &quot;$(ProjectDir)version.cpp&quot;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -200,6 +200,10 @@
 			</File>
 			<File
 				RelativePath=".\basecomClient.h"
+				>
+			</File>
+			<File
+				RelativePath=".\cmd_tools.h"
 				>
 			</File>
 			<File
@@ -287,6 +291,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\cmd_tools.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\config_mdtdll.cpp"
 				>
 			</File>
@@ -295,7 +303,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\demo_tools.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\demoeditfix.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\demoplayer_interface.cpp"
 				>
 			</File>
 			<File
@@ -328,10 +344,6 @@
 			</File>
 			<File
 				RelativePath=".\newsky.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\temporary_dominik_0004.cpp"
 				>
 			</File>
 			<File
