@@ -1,11 +1,11 @@
-#include <hlae/core/layoutmanager.h>
-#include <hlae/gamewindow.h>
+#include "layout.h"
+#include "gamewindow.h"
 
 #include <wx/dcclient.h>
 #include <windows.h>
 #include <shared/com/basecom.h>
 
-#include <hlae/basecomserver.h>
+#include "basecomserver.h"
 
 // typedef bool (* OnRecieve_t)(class *lpClassPointer,unsigned long dwData,unsigned long cbData,void *lpData);
 

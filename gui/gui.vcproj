@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;include;&quot;$(WXWIN)/include/msvc/&quot;;&quot;$(WXWIN)/include/&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(WXWIN)/include/msvc/&quot;;&quot;$(WXWIN)/include/&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_UNICODE;UNICODE;__WXMSW__;__WXDEBUG__;_WINDOWS;NOPCH"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -139,7 +139,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="3"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;include;&quot;$(WXWIN)/include/msvc/&quot;;&quot;$(WXWIN)/include/&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(WXWIN)/include/msvc/&quot;;&quot;$(WXWIN)/include/&quot;"
 				PreprocessorDefinitions="WIN32;__WXMSW__;_UNICODE;UNICODE;_WINDOWS;NOPCH"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -220,81 +220,41 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\src\basecomserver.cpp"
+				RelativePath=".\basecomserver.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\gamewindow.cpp"
+				RelativePath=".\config.cpp"
 				>
 			</File>
-			<Filter
-				Name="Core"
+			<File
+				RelativePath=".\console.cpp"
 				>
-				<File
-					RelativePath=".\src\core\app.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\include\hlae\core\config.h"
-					>
-				</File>
-				<File
-					RelativePath=".\src\core\debug.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\src\core\layoutmanager.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\src\core\list.cpp"
-					>
-				</File>
-				<Filter
-					Name="Lists"
-					>
-					<File
-						RelativePath=".\src\core\lists\log.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\src\core\lists\settingspage.cpp"
-						>
-					</File>
-				</Filter>
-			</Filter>
-			<Filter
-				Name="Windows"
+			</File>
+			<File
+				RelativePath=".\debug.cpp"
 				>
-				<File
-					RelativePath=".\src\core\config.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\src\windows\console.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\src\windows\main.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\src\windows\settings.cpp"
-					>
-				</File>
-				<Filter
-					Name="Settings"
-					>
-					<File
-						RelativePath=".\src\windows\settings\general.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\src\windows\settings\template.cpp"
-						>
-					</File>
-				</Filter>
-			</Filter>
+			</File>
+			<File
+				RelativePath=".\gamewindow.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\layout.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\list.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\main.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\settings.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -302,81 +262,41 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\include\hlae\basecomserver.h"
+				RelativePath=".\basecomserver.h"
 				>
 			</File>
 			<File
-				RelativePath=".\include\hlae\gamewindow.h"
+				RelativePath=".\config.h"
 				>
 			</File>
-			<Filter
-				Name="Core"
+			<File
+				RelativePath=".\console.h"
 				>
-				<File
-					RelativePath=".\include\hlae\core\app.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\hlae\core\debug.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\hlae\core\layoutmanager.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\hlae\core\list.h"
-					>
-				</File>
-				<Filter
-					Name="Lists"
-					>
-					<File
-						RelativePath=".\include\hlae\core\lists\layout.h"
-						>
-					</File>
-					<File
-						RelativePath=".\include\hlae\core\lists\log.h"
-						>
-					</File>
-					<File
-						RelativePath=".\include\hlae\core\lists\settingspage.h"
-						>
-					</File>
-					<File
-						RelativePath=".\include\hlae\core\lists\settingspageid.h"
-						>
-					</File>
-				</Filter>
-			</Filter>
-			<Filter
-				Name="Windows"
+			</File>
+			<File
+				RelativePath=".\debug.h"
 				>
-				<File
-					RelativePath=".\include\hlae\windows\console.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\hlae\windows\main.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\hlae\windows\settings.h"
-					>
-				</File>
-				<Filter
-					Name="Settings"
-					>
-					<File
-						RelativePath=".\include\hlae\windows\settings\general.h"
-						>
-					</File>
-					<File
-						RelativePath=".\include\hlae\windows\settings\template.h"
-						>
-					</File>
-				</Filter>
-			</Filter>
+			</File>
+			<File
+				RelativePath=".\gamewindow.h"
+				>
+			</File>
+			<File
+				RelativePath=".\layout.h"
+				>
+			</File>
+			<File
+				RelativePath=".\list.h"
+				>
+			</File>
+			<File
+				RelativePath=".\main.h"
+				>
+			</File>
+			<File
+				RelativePath=".\settings.h"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>

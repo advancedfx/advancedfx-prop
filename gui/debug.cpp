@@ -1,8 +1,30 @@
 #include <wx/msgdlg.h>
 
-#include <hlae/core/debug.h>
+#include "debug.h"
 
 hlaeDebug g_debug;
+
+hlaeLogListElement::hlaeLogListElement(const wxString& message, const wxDateTime& date, int debuglevel)
+	: m_message(message), m_date(date), m_debuglevel(debuglevel), wxObject()
+{}
+
+hlaeLogListElement::~hlaeLogListElement()
+{}
+
+const wxDateTime& hlaeLogListElement::GetDate()
+{
+	return m_date;
+}
+
+const wxString& hlaeLogListElement::GetMessage()
+{
+	return m_message;
+}
+
+int hlaeLogListElement::GetDebugLevel()
+{
+	return m_debuglevel;
+}
 
 hlaeDebug::hlaeDebug()
 	: wxObject()
@@ -31,11 +53,6 @@ void hlaeDebug::SetConsoleWindow(hlaeConsoleWindow* console_window)
 {
 	m_consolewindow = console_window;
 	UpdateAllMessages();
-}
-
-void hlaeDebug::SetApp(hlaeApp* application)
-{
-	m_application = application;
 }
 
 void hlaeDebug::UpdateMessage(size_t index)
@@ -67,8 +84,9 @@ void hlaeDebug::SendMessage(const wxString& message, int debuglevel)
 	if (debuglevel == hlaeDEBUG_FATALERROR)
 	{
 		wxMessageDialog* msgdgl = new wxMessageDialog(0, message +
-			wxT("\n\nHalf-Life Advanced Effects could not recover from this error. ")
-			wxT("The program will shut down."), wxT("Fatal error"), wxOK | wxICON_ERROR);
+			wxT("\n\nHalf-Life Advanced Effects may not recover from this error and will crash unexpectly. ")
+			wxT("If the programm is still running, try to save your work and quit the program as soon as possible."),
+			wxT("Fatal error"), wxOK | wxICON_ERROR);
 		msgdgl->ShowModal();
 	}
 }

@@ -1,7 +1,77 @@
-#include <wx/statline.h>
+#include "settings.h"
 
-#include <hlae/windows/settings.h>
-#include <hlae/windows/settings/general.h>
+hlaeSettingsPageTemplate::hlaeSettingsPageTemplate(wxWindow* parent)
+	: wxWindow(parent, wxID_ANY)
+{}
+
+void hlaeSettingsPageTemplate::ShowPage(bool is_advanced)
+{}
+
+void hlaeSettingsPageTemplate::ApplyChanges()
+{}
+
+hlaeSettingsPageGeneral::hlaeSettingsPageGeneral(wxWindow* parent)
+	: hlaeSettingsPageTemplate(parent)
+{}
+
+void hlaeSettingsPageGeneral::ShowPage(bool is_advanced)
+{
+	new wxTextCtrl (this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(400,300));
+	Show();
+}
+
+void hlaeSettingsPageGeneral::ApplyChanges()
+{
+
+}
+
+hlaeListElementSettingsPage::hlaeListElementSettingsPage(
+	hlaeSettingsPageTemplate* page, const wxString& name, bool is_advanced)
+{
+	m_pagelist = new hlaeList;
+	m_pagelist->DeleteContents(true);
+
+	m_page = page;
+	m_name = name;
+	m_isadvanced = is_advanced;
+}
+
+hlaeListElementSettingsPage::~hlaeListElementSettingsPage()
+{
+	m_pagelist->Clear();
+	delete m_pagelist;
+}
+
+bool hlaeListElementSettingsPage::IsAdvanced()
+{
+	return m_isadvanced;
+}
+
+const wxString& hlaeListElementSettingsPage::GetName()
+{
+	return m_name;
+}
+
+hlaeSettingsPageTemplate* hlaeListElementSettingsPage::GetPage()
+{
+	return m_page;
+}
+
+hlaeListElementSettingsPage* hlaeListElementSettingsPage::GetElement(int index)
+{
+	return dynamic_cast<hlaeListElementSettingsPage*>(m_pagelist->Item(index)->GetData());
+}
+
+size_t hlaeListElementSettingsPage::GetCount()
+{
+	return m_pagelist->GetCount();
+}
+
+void hlaeListElementSettingsPage::Append(hlaeListElementSettingsPage* page_element)
+{
+	m_pagelist->Append(page_element);
+}
+
 
 BEGIN_EVENT_TABLE(hlaeDialogSettings, wxDialog)
 	EVT_CHECKBOX(hlaeDialogSettings::hlaeID_AdvancedMode,
@@ -16,8 +86,8 @@ hlaeDialogSettings::hlaeDialogSettings(wxWindow* parent, wxWindowID id, const wx
 	const wxPoint& pos, const wxSize& size)
 	: wxDialog( parent, id, title, pos, size)
 {
-	m_pagelist = new hlaeListSettingsPage;
-	m_pageidlist = new hlaeListSettingsPageID;
+	m_pagelist = new hlaeList;
+	m_pageidlist = new hlaeList;
 	m_lastpage = new hlaeSettingsPageTemplate(this);
 
 	m_pagelist->DeleteContents(true);
@@ -121,10 +191,13 @@ void hlaeDialogSettings::UpdateTreeCtrl()
 	m_treectrl->DeleteAllItems();
 	m_treectrl->AddRoot(wxT("Settings"));
 
-	for (hlaeListSettingsPage::iterator iter = m_pagelist->begin();
+	for (hlaeList::iterator iter = m_pagelist->begin();
 		iter != m_pagelist->end(); iter++)
 	{
-		hlaeListElementSettingsPage* current = *iter;
+		wxObject* object = *iter;
+		hlaeListElementSettingsPage* current = dynamic_cast<hlaeListElementSettingsPage*>(object);
+	
+
 		UpdateTreeCtrlNodes(current, m_treectrl->GetRootItem());
 	}
 }
@@ -158,10 +231,11 @@ void hlaeDialogSettings::OnAdvancedMode(wxCommandEvent& WXUNUSED(evt))
 
 void hlaeDialogSettings::OnSelectionChanged(wxTreeEvent& evt)
 {
-	for (hlaeListSettingsPageID::iterator iter = m_pageidlist->begin();
+	for (hlaeList::iterator iter = m_pageidlist->begin();
 		iter != m_pageidlist->end(); iter++)
 	{
-		hlaeListElementSettingsPageID* current = *iter;
+		wxObject* object = *iter;
+		hlaeListElementSettingsPageID* current = dynamic_cast<hlaeListElementSettingsPageID*>(object);
 	
 		if (evt.GetItem() == current->id)
 		{

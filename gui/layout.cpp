@@ -1,11 +1,13 @@
-#include <hlae/core/layoutmanager.h>
-#include <hlae/core/debug.h>
+#include "layout.h"
+#include "debug.h"
+
+// hlaeAuiManager g_layout;
 
 hlaeAuiManager::hlaeAuiManager(hlaeMainWindow* parent)
 		: wxAuiManager(parent)
 {
 	m_parent = parent;
-	m_layoutlist = new hlaeListLayout();
+	m_layoutlist = new hlaeList();
 	m_layoutlist->DeleteContents(true);
 }
 
@@ -34,10 +36,12 @@ void hlaeAuiManager::AddLayout(const wxString& describtion, bool is_predefined) 
 			// append a number based on the ones of layouts
 			int count = 0;
 
-			for (hlaeListLayout::iterator iter = m_layoutlist->begin();
+			for (hlaeList::iterator iter = m_layoutlist->begin();
 				iter != m_layoutlist->end(); iter++)
 			{
-				hlaeListElementLayout *current = *iter;
+				wxObject* object = *iter;
+				hlaeListElementLayout* current = dynamic_cast<hlaeListElementLayout*>(object);
+
 
 				if (!current->is_predefined) {
 					count++;
@@ -108,10 +112,11 @@ void hlaeAuiManager::UpdateLayoutMenu() {
 	int count1 = 0;
 	int count2 = 0;
 
-	for (hlaeListLayout::iterator iter = m_layoutlist->begin();
+	for (hlaeList::iterator iter = m_layoutlist->begin();
 			iter != m_layoutlist->end(); ++iter)
 	{
-		hlaeListElementLayout *current = *iter;
+		wxObject* object = *iter;
+		hlaeListElementLayout* current = dynamic_cast<hlaeListElementLayout*>(object);
 
 		m_parent->Connect(current->id, wxEVT_COMMAND_MENU_SELECTED,
 			wxCommandEventHandler(hlaeAuiManager::OnLayout),NULL,this);
@@ -123,10 +128,11 @@ void hlaeAuiManager::UpdateLayoutMenu() {
 	}
 
 	// write the layouts defined by the user in the menu
-	for (hlaeListLayout::iterator iter = m_layoutlist->begin();
+	for (hlaeList::iterator iter = m_layoutlist->begin();
 			iter != m_layoutlist->end(); ++iter)
 	{
-		hlaeListElementLayout *current = *iter;
+		wxObject* object = *iter;
+		hlaeListElementLayout* current = dynamic_cast<hlaeListElementLayout*>(object);
 
 		if (!current->is_predefined) {
 			count2++;
@@ -145,10 +151,11 @@ void hlaeAuiManager::ClearMenu(wxMenu* menu) {
 
 void hlaeAuiManager::OnLayout(wxCommandEvent& evt) {
 
-	for (hlaeListLayout::iterator iter = m_layoutlist->begin();
+	for (hlaeList::iterator iter = m_layoutlist->begin();
 			iter != m_layoutlist->end(); iter++)
 	{
-		hlaeListElementLayout *current = *iter;
+		wxObject* object = *iter;
+		hlaeListElementLayout* current = dynamic_cast<hlaeListElementLayout*>(object);
 
 		if (current->id == evt.GetId()) {
 			LoadPerspective(current->layout);

@@ -4,8 +4,8 @@
 #include <wx/scrolwin.h>
 #include <wx/dc.h>
 
-#include <hlae/basecomserver.h>
-#include <hlae/gamewindow.h>
+#include "basecomserver.h"
+#include "gamewindow.h"
 
 
 //

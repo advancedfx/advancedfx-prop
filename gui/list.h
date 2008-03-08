@@ -5,4 +5,4 @@
 
 WX_DECLARE_LIST(wxObject, hlaeList);
 
-#endif // _HLAE_LIST_H_
+#endif

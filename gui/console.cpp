@@ -1,5 +1,5 @@
-#include <hlae/windows/console.h>
-#include <hlae/core/debug.h>
+#include "console.h"
+#include "debug.h"
 
 #include <wx/sizer.h>
 

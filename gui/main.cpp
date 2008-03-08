@@ -3,13 +3,13 @@
 #include <wx/scrolwin.h>
 
 
-#include <hlae/basecomServer.h>
-#include <hlae/windows/settings.h>
+#include "basecomServer.h"
+#include "settings.h"
 
-#include <hlae/windows/main.h>
-#include <hlae/windows/console.h>
+#include "main.h"
+#include "console.h"
 
-#include <hlae/core/debug.h>
+#include "debug.h"
 #include <wx/memory.h>
 
 BEGIN_EVENT_TABLE(hlaeMainWindow, wxFrame)
@@ -131,4 +131,15 @@ void hlaeMainWindow::CreateMenuBar() {
 
 	// associate the menubar to the frame
 	SetMenuBar(menubar);
+}
+
+IMPLEMENT_APP(hlaeApp)
+
+bool hlaeApp::OnInit()
+{
+	hlaeMainWindow* mainframe = new hlaeMainWindow();
+	SetTopWindow(mainframe);
+	mainframe->Show();
+
+	return true;
 }
