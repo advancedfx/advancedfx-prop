@@ -8,8 +8,7 @@
 	// this is not very nice, but we currently lack a better solution:
 	class hlaeMainWindow;
 	class CHlaeBcServer;
-	
-	#include "layout.h"
+
 	#include "basecomServer.h"
 
 class hlaeMainWindow : public wxFrame {
@@ -19,7 +18,6 @@ private:
 		hlaeID_SaveLayout = wxID_HIGHEST+1,
 		hlaeID_LayoutManager
 	};
-	hlaeAuiManager* m_auimanager;
 	CHlaeBcServer* m_basecom;
 	wxMenu* m_windowmenu;
 	wxMenu*	m_toolbarmenu;

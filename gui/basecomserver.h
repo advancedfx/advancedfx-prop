@@ -5,14 +5,14 @@
 //#include <hlae/gamewindow.h>
 #include <wx/dcclient.h>
 
-class hlaeAuiManager;
+class hlaeLayoutManager;
 class CHlaeGameWindow;
 class CBCServerInternal;
 
 class CHlaeBcServer
 {
 public:
-	CHlaeBcServer(wxWindow *parent,hlaeAuiManager *pHlaeAuiManager);
+	CHlaeBcServer(wxWindow *parent);
 	~CHlaeBcServer();
 
 	void Do_DoPepareDC(); // called by gamewindow to inform us, that we should adjust the device origin again.
@@ -29,7 +29,6 @@ public:
 
 private:
 	wxWindow *_parent;
-	hlaeAuiManager *_pHlaeAuiManager;
 	CHlaeGameWindow *_pHlaeGameWindow;
 	wxClientDC *_pHlaeGameWindowDC;
 

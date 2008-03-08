@@ -115,6 +115,8 @@ hlaeConfig::hlaeConfig()
 
 hlaeConfig::~hlaeConfig()
 {
+	delete m_document;
+
 	m_propertylist->Clear();
 	delete m_propertylist;
 }

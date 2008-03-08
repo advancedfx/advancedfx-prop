@@ -83,7 +83,6 @@ public:
 private:
 	hlaeList* m_propertylist;
 	wxXmlDocument* m_document;
-	
 };
 
 extern hlaeConfig g_config;

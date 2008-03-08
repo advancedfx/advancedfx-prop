@@ -1,25 +1,35 @@
 #include "layout.h"
 #include "debug.h"
 
-// hlaeAuiManager g_layout;
+hlaeLayoutManager g_layoutmanager;
 
-hlaeAuiManager::hlaeAuiManager(hlaeMainWindow* parent)
-		: wxAuiManager(parent)
+hlaeLayoutManager::hlaeLayoutManager() : wxObject()
 {
-	m_parent = parent;
+	m_auimanager = new wxAuiManager();
 	m_layoutlist = new hlaeList();
 	m_layoutlist->DeleteContents(true);
 }
 
-hlaeAuiManager::~hlaeAuiManager() {
-
-	UnInit();
-
-	m_layoutlist->Clear();
-	delete m_layoutlist;
+void hlaeLayoutManager::UnInit()
+{
+	m_auimanager->UnInit();
 }
 
-void hlaeAuiManager::AddLayout(const wxString& describtion, bool is_predefined) {
+hlaeLayoutManager::~hlaeLayoutManager()
+{
+	m_layoutlist->Clear();
+	delete m_layoutlist;
+
+	delete m_auimanager;
+}
+
+void hlaeLayoutManager::SetMainWindow(hlaeMainWindow* main_window)
+{
+	m_parent = main_window;
+	m_auimanager->SetManagedWindow(main_window);
+}
+
+void hlaeLayoutManager::AddLayout(const wxString& describtion, bool is_predefined) {
 
 	wxString layout_describtion;
 	bool dialog_canceled = false;
@@ -72,7 +82,7 @@ void hlaeAuiManager::AddLayout(const wxString& describtion, bool is_predefined) 
 		layoutelement->is_predefined = is_predefined;
 		layoutelement->id = wxNewId();
 		layoutelement->describtion = layout_describtion;
-		layoutelement->layout = SavePerspective();
+		layoutelement->layout = m_auimanager->SavePerspective();
 
 		m_layoutlist->Append(layoutelement);
 
@@ -81,27 +91,27 @@ void hlaeAuiManager::AddLayout(const wxString& describtion, bool is_predefined) 
 	UpdateLayoutMenu();
 }
 
-void hlaeAuiManager::RemoveLayout(hlaeListElementLayout* layoutelement) {
+void hlaeLayoutManager::RemoveLayout(hlaeListElementLayout* layoutelement) {
 
 	m_layoutlist->DeleteObject(layoutelement);
 
 }
 
-void hlaeAuiManager::ShowManager()
+void hlaeLayoutManager::ShowManager()
 {
 
 }
 
-bool hlaeAuiManager::AddPane(wxWindow* window, const wxAuiPaneInfo& pane_info) {
+bool hlaeLayoutManager::AddPane(wxWindow* window, const wxAuiPaneInfo& pane_info) {
 
-	bool result = wxAuiManager::AddPane(window, pane_info);
-	Update();
+	bool result = m_auimanager->AddPane(window, pane_info);
+	m_auimanager->Update();
 	window->Layout();
 	return result;
 
 }
 
-void hlaeAuiManager::UpdateLayoutMenu() {
+void hlaeLayoutManager::UpdateLayoutMenu() {
 
 	wxMenu* layoutmenu = m_parent->GetLayoutMenu();
 
@@ -118,8 +128,8 @@ void hlaeAuiManager::UpdateLayoutMenu() {
 		wxObject* object = *iter;
 		hlaeListElementLayout* current = dynamic_cast<hlaeListElementLayout*>(object);
 
-		m_parent->Connect(current->id, wxEVT_COMMAND_MENU_SELECTED,
-			wxCommandEventHandler(hlaeAuiManager::OnLayout),NULL,this);
+		// m_parent->Connect(current->id, wxEVT_COMMAND_MENU_SELECTED,
+		//	wxCommandEventHandler(hlaeLayoutManager::OnLayout), NULL, this);
 
 		if (current->is_predefined) {
 			count1++;
@@ -143,13 +153,13 @@ void hlaeAuiManager::UpdateLayoutMenu() {
 	if (count1 > 0 && count2 > 0) layoutmenu->InsertSeparator(count1);
 }
 
-void hlaeAuiManager::ClearMenu(wxMenu* menu) {
+void hlaeLayoutManager::ClearMenu(wxMenu* menu) {
 	while (menu->GetMenuItemCount() != 0) {
 		menu->Delete(menu->FindItemByPosition(0));
 	}
 }
 
-void hlaeAuiManager::OnLayout(wxCommandEvent& evt) {
+void hlaeLayoutManager::OnLayout(wxCommandEvent& evt) {
 
 	for (hlaeList::iterator iter = m_layoutlist->begin();
 			iter != m_layoutlist->end(); iter++)
@@ -158,7 +168,7 @@ void hlaeAuiManager::OnLayout(wxCommandEvent& evt) {
 		hlaeListElementLayout* current = dynamic_cast<hlaeListElementLayout*>(object);
 
 		if (current->id == evt.GetId()) {
-			LoadPerspective(current->layout);
+			m_auimanager->LoadPerspective(current->layout);
 		}
 	}
 }

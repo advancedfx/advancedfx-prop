@@ -2,12 +2,12 @@
 #include <wx/button.h>
 #include <wx/scrolwin.h>
 
-
 #include "basecomServer.h"
 #include "settings.h"
 
 #include "main.h"
 #include "console.h"
+#include "layout.h"
 
 #include "debug.h"
 #include <wx/memory.h>
@@ -24,7 +24,7 @@ hlaeMainWindow::hlaeMainWindow()
 			wxT("Half-Life After Effects - Developer Edition"),
 			wxDefaultPosition, wxSize(800,600))
 {
-	m_auimanager = new hlaeAuiManager(this);
+	g_layoutmanager.SetMainWindow(this);
 
 	m_toolbarmenu = new wxMenu;
 	m_windowmenu = new wxMenu;
@@ -34,12 +34,12 @@ hlaeMainWindow::hlaeMainWindow()
 	CreateStatusBar();
     GetStatusBar()->SetStatusText(wxT("Ready"));
 
-	m_auimanager->AddPane(new hlaeConsoleWindow(this),
+	g_layoutmanager.AddPane(new hlaeConsoleWindow(this),
 		wxAuiPaneInfo().Bottom().MinSize(wxSize(-1,100)));
 
-	m_auimanager->AddLayout(wxT("Default"),true);
+	g_layoutmanager.AddLayout(wxT("Default"),true);
 
-	m_basecom = new CHlaeBcServer(this,m_auimanager);
+	m_basecom = new CHlaeBcServer(this);
 
 	// g_debug.SendMessage(wxT("This is a fatal error"), hlaeDEBUG_FATALERROR);
 	g_debug.SendMessage(wxT("This is an error"), hlaeDEBUG_ERROR);
@@ -49,9 +49,11 @@ hlaeMainWindow::hlaeMainWindow()
 	g_debug.SendMessage(wxT("This is verbose output level 3"), hlaeDEBUG_VERBOSE_LEVEL3);
 }
 
-hlaeMainWindow::~hlaeMainWindow() {
+hlaeMainWindow::~hlaeMainWindow()
+{
+	g_layoutmanager.UnInit();
+
 	delete m_basecom;
-	delete m_auimanager;
 }
 
 void hlaeMainWindow::OnAbout(wxCommandEvent& WXUNUSED(event)) {
@@ -83,11 +85,11 @@ void hlaeMainWindow::OnExit(wxCommandEvent& WXUNUSED(evt)) {
 }
 
 void hlaeMainWindow::OnSaveLayout(wxCommandEvent& WXUNUSED(evt)) {
-	m_auimanager->AddLayout();
+	g_layoutmanager.AddLayout();
 }
 
 void hlaeMainWindow::OnLayoutManager(wxCommandEvent& WXUNUSED(evt)) {
-	m_auimanager->ShowManager();
+	g_layoutmanager.ShowManager();
 }
 
 wxMenu* hlaeMainWindow::GetWindowMenu() const {
