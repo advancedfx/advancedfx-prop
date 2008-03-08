@@ -40,6 +40,7 @@
 
 #include "mdt_gltools.h" // we want g_Mdt_GlTools for having tools to force Buffers and Stuff like that
 #include "dd_hook.h" // we have to call functions (inGetProcAddress) from here in order to init the hook
+#include "dsound_hook.h"
 
 #include "hl_addresses.h" // address definitions
 #include "config_mdtdll.h" // used temporary to load i.e. addresses
@@ -940,10 +941,10 @@ BOOL APIENTRY my_SetCursorPos(int x, int y)
 // of the screen (to stop player from spinning while in menu)
 BOOL APIENTRY my_GetCursorPos(LPPOINT lpPoint)
 {
-	if (!InMenu())
-		return GetCursorPos(lpPoint);
+	pEngfuncs->Con_Printf("LOBOB");
+	BOOL bRet = HlaeBcCl_GetCursorPos(lpPoint);
 
-	BOOL bRet = GetCursorPos(lpPoint);
+	if (!InMenu())return bRet;
 
 	if (!bRet)
 		return FALSE;
@@ -979,19 +980,26 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 			return (FARPROC) &my_glClear;
 		if (!lstrcmp(lpProcName, "glFrustum"))
 			return (FARPROC) &my_glFrustum;
+		if (!lstrcmp(lpProcName, "glBlendFunc"))
+			return (FARPROC) &my_glBlendFunc;
+
 		if (!lstrcmp(lpProcName, "GetCursorPos"))
 			return (FARPROC) &my_GetCursorPos;
 		if (!lstrcmp(lpProcName, "SetCursorPos"))
+
 			return (FARPROC) &my_SetCursorPos;
 		if (!lstrcmp(lpProcName, "wglSwapBuffers"))
 		{
 			pwglSwapBuffers = (BOOL (APIENTRY *)(HDC hDC)) nResult;
 			return (FARPROC) &my_wglSwapBuffers;
 		}
+
 		if (!lstrcmp(lpProcName,"DirectDrawCreate"))
 			return Hook_DirectDrawCreate(nResult); // give our hook original address and return new (it remembers the original one from it's first call, it also cares about the commandline options (if to force the res or not and does not install the hook if not needed))
-		if (!lstrcmp(lpProcName, "glBlendFunc"))
-			return (FARPROC) &my_glBlendFunc;
+		if (!lstrcmp(lpProcName,"DirectSoundCreate"))
+			return Hook_DirectSoundCreate(nResult);
+		//if (!lstrcmp(lpProcName,"DirectInputCreateA"))
+			// imported but never called?
 
 #ifdef MDT_COMPILE_FOR_GUI
 		if (!lstrcmp(lpProcName, "CreateWindowExA"))

@@ -1,6 +1,5 @@
-#include "basecomClient.h"
-
-#include "shared/com/basecom.h"
+#include <windows.h>
+//#include <winuser.h> // KEYBDINPUT Structure, ...
 
 #if 1//#ifdef MDT_DEBUG
 	#include <stdio.h>
@@ -14,6 +13,10 @@
 	extern cl_enginefuncs_s* pEngfuncs;
 #endif
 
+#include "shared/com/basecom.h"
+
+#include "basecomClient.h"
+
 
 HWND g_hwHlaeBcCltWindow = NULL;
 
@@ -21,6 +24,16 @@ HWND g_HL_MainWindow = NULL;
 WNDCLASSA *g_HL_WndClassA = NULL;
 
 HLAE_BASECOM_WndRectUpdate_s g_HlaeWindowRect; // Warning: in the current implementation those values may not represent the actual server's size, since HlaeBc_AdjustViewPort will do some security clamping on them when needed.
+
+struct
+{
+	int iX;
+	int iY;
+	struct {
+		int iX;
+		int iY;
+	} MouseTarget;
+} g_HL_MainWindow_info;
 
 LRESULT CALLBACK Hooking_WndProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
@@ -48,6 +61,10 @@ LRESULT CALLBACK Hooking_WndProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 	// blah
 	switch (uMsg)
 	{
+	case WM_MOVE:
+		g_HL_MainWindow_info.iX = (int)(short) LOWORD(lParam); 
+		g_HL_MainWindow_info.iY = (int)(short) HIWORD(lParam);
+		break;
 	}
 
 	return g_HL_WndClassA->lpfnWndProc(hWnd,uMsg,wParam,lParam);
@@ -91,7 +108,7 @@ LRESULT HlaeBcCallWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 LRESULT HlaeBcCl_WndRectUpdate(PVOID lpData)
 {
 	HLAE_BASECOM_WndRectUpdate_s *myps = (HLAE_BASECOM_WndRectUpdate_s *)lpData;
-
+	//pEngfuncs->Con_Printf("MoveEvent: %i,%i\n",myps->iLeftGlobal,myps->iTopGlobal);
 	g_HlaeWindowRect = *myps;
 
 	return TRUE;
@@ -101,14 +118,28 @@ LRESULT HlaeBcCl_MouseEvent(PVOID lpData)
 {
 	HLAE_BASECOM_MSGCL_MouseEvent_s *myps = (HLAE_BASECOM_MSGCL_MouseEvent_s *)lpData;
 
-	return g_HL_WndClassA->lpfnWndProc(g_HL_MainWindow,(UINT)(myps->uMsg),(WPARAM)(myps->wParam),(LPARAM)(((myps->iY) << 16) + myps->iX));
+	g_HL_MainWindow_info.MouseTarget.iX = myps->iX;
+	g_HL_MainWindow_info.MouseTarget.iY = myps->iY;
+
+	LRESULT tr = g_HL_WndClassA->lpfnWndProc(g_HL_MainWindow,(UINT)(myps->uMsg),(WPARAM)(myps->wParam),(LPARAM)(((myps->iY) << 16) + myps->iX));
+
+	/*int ix,iy;
+	pEngfuncs->GetMousePosition(&ix,&iy);
+	int dx=g_HL_MainWindow_info.iX+myps->iX;
+	int dy=g_HL_MainWindow_info.iY+myps->iX;
+	pEngfuncs->Con_Printf("MouseEvent: inx=%i,iny=%i,dx=%i,dy=%i (%i,%i)\n",myps->iX,myps->iY,dx,dy,ix,iy);^*/
+
+	return tr;
 }
 
 LRESULT HlaeBcCl_KeyBoardEvent(PVOID lpData)
 {
 	HLAE_BASECOM_MSGCL_KeyBoardEvent_s *myps = (HLAE_BASECOM_MSGCL_KeyBoardEvent_s *)lpData;
 
+	// pEngfuncs->Con_Printf("KeyEvent: %i %i 0x%08x\n",myps->uMsg,myps->uKeyCode,myps->uKeyFlags);
+
 	return g_HL_WndClassA->lpfnWndProc(g_HL_MainWindow,(UINT)(myps->uMsg),(WPARAM)(myps->uKeyCode),(LPARAM)(myps->uKeyFlags));
+
 }
 
 
@@ -402,6 +433,10 @@ HWND APIENTRY HlaeBcClt_CreateWindowExA(DWORD dwExStyle,LPCTSTR lpClassName,LPCT
 	if (hWndParent!=NULL)
 		return CreateWindowExA(dwExStyle,lpClassName,lpWindowName,dwStyle,x,y,nWidth,nHeight,hWndParent,hMenu,hInstance,lpParam);
 
+	// save postion:
+	g_HL_MainWindow_info.iX = x;
+	g_HL_MainWindow_info.iY = y;
+
 	// request the server to prepare the gamewindow and stuff according to our needs:
 	HlaeBcClt_GameWndPrepare(nWidth,nHeight);
 
@@ -517,16 +552,32 @@ void HlaeBcCl_AdjustViewPort(int &x, int &y, int width, int height)
 
 }
 
+BOOL APIENTRY HlaeBcCl_GetCursorPos(LPPOINT lpPoint)
+{
+	BOOL bRet = GetCursorPos(lpPoint);
+	if(!g_hHlaeServerWnd) return bRet;
+
+	POINT dp = *lpPoint;
+
+	// translate mouse into H-L's coords:
+	lpPoint->x=g_HL_MainWindow_info.iX + g_HL_MainWindow_info.MouseTarget.iX;
+	lpPoint->y=g_HL_MainWindow_info.iY + g_HL_MainWindow_info.MouseTarget.iY;
+
+	pEngfuncs->Con_Printf("Mouse (%i%i,) -> (%i,%i)\n",dp.x,dp.y,lpPoint->x,lpPoint->y);
+
+	return bRet;
+}
+
 HWND WINAPI HlaeBcClt_SetCapture( HWND hWnd)
 {
-	if(!g_bHlaeAsumeServerDCPresent) return SetCapture(hWnd);
+	if(!g_hHlaeServerWnd) return SetCapture(hWnd);
 
 	return NULL;
 }
 
 BOOL WINAPI HlaeBcClt_ReleaseCapture( VOID )
 {
-	if(!g_bHlaeAsumeServerDCPresent) return ReleaseCapture();
+	if(!g_hHlaeServerWnd) return ReleaseCapture();
 
 	return TRUE;
 }

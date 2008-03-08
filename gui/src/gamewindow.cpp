@@ -181,10 +181,15 @@ void CHlaeGameWindow::OnMouseWheel( wxMouseEvent &myevent )
 }
 void CHlaeGameWindow::OnMove( wxMoveEvent &myevent)
 {
-	int ix,iy;
-	wxPoint mypos = myevent.GetPosition();
-	CalcUnscrolledPosition(mypos.x,mypos.y,&ix,&iy);
-	if (_bTransmitAllowed) _pHlaeBcServer->Pass_MouseEvent(WM_MOVE,0,ix,iy);
+/*	int isx,isy,ix,iy,iwt,iht,iwv,ihv,igx,igy;
+
+	GetScrollPixelsPerUnit(&isx,&isy);
+	GetViewStart(&ix,&iy);
+	GetVirtualSize(&iwt,&iht);
+	GetClientSize(&iwv,&ihv);
+	GetScreenPosition(&igx,&igy);
+
+	if (_bTransmitAllowed) _pHlaeBcServer->Pass_WndRectUpdate(isx*ix,isy*iy,iwv,ihv,iwt,iht,igx,igy);*/
 	myevent.Skip();
 }
 void CHlaeGameWindow::OnPaint( wxPaintEvent &myevent)
@@ -195,20 +200,15 @@ void CHlaeGameWindow::OnPaint( wxPaintEvent &myevent)
 }
 void CHlaeGameWindow::OnSize( wxSizeEvent &myevent)
 {
-	//int ix,iy,iw,ih;
-	//wxRect mypos = myevent.GetRect();
-	//CalcUnscrolledPosition(mypos.GetLeft(),mypos.GetTop(),&ix,&iy);
-	//CalcUnscrolledPosition(mypos.GetRight(),mypos.GetBottom(),&ix,&ih);
+/*	int isx,isy,ix,iy,iwt,iht,iwv,ihv,igx,igy;
 
-	//GetViewStart(&ix,&iy);
-	//GetVirtualSize(&iw,&ih);
+	GetScrollPixelsPerUnit(&isx,&isy);
+	GetViewStart(&ix,&iy);
+	GetVirtualSize(&iwt,&iht);
+	GetClientSize(&iwv,&ihv);
+	GetScreenPosition(&igx,&igy);
 
-	//char sztemp[50];
-	//_snprintf(sztemp,sizeof(sztemp),"x: %i y: %i w: %i h: %i",ix,iy,ix+iw,iy+ih);
-	//MessageBoxA(0,sztemp,"CHlaeGameWindow::OnSize",MB_OK|MB_ICONINFORMATION);
-
-	//if (_bTransmitAllowed) _pHlaeBcServer->Pass_WndRectUpdate(ix,iy,iw,ih);
-	//if (_bTransmitAllowed) _pHlaeBcServer->PassEventPreParsed(WM_SIZE,SIZE_RESTORED,(((unsigned int)(mysize.GetHeight())&0x0ffff)<<16)+((unsigned int)(mysize.GetWidth())&0x0ffff));
+	if (_bTransmitAllowed) _pHlaeBcServer->Pass_WndRectUpdate(isx*ix,isy*iy,iwv,ihv,iwt,iht,igx,igy);*/
 	myevent.Skip();
 }
 
@@ -257,14 +257,16 @@ bool CHlaeGameWindow::Destroy()
 void CHlaeGameWindow::OnDraw(wxDC &dc)
 {
 	if (_bTransmitAllowed) _pHlaeBcServer->Do_DoPepareDC();
-	int isx,isy,ix,iy,iwt,iht,iwv,ihv;
+
+	int isx,isy,ix,iy,iwt,iht,iwv,ihv,igx,igy;
 
 	GetScrollPixelsPerUnit(&isx,&isy);
 	GetViewStart(&ix,&iy);
 	GetVirtualSize(&iwt,&iht);
 	GetClientSize(&iwv,&ihv);
+	GetScreenPosition(&igx,&igy);
 
-	if (_bTransmitAllowed) _pHlaeBcServer->Pass_WndRectUpdate(isx*ix,isy*iy,iwv,ihv,iwt,iht);
+	if (_bTransmitAllowed) _pHlaeBcServer->Pass_WndRectUpdate(isx*ix,isy*iy,iwv,ihv,iwt,iht,igx,igy);
 }
 
 /*bool CHlaeGameWindow::ProcessEvent(wxEvent &myevent)

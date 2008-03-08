@@ -443,7 +443,7 @@ bool CHlaeBcServer::PassEventPreParsed(WXHWND hwnd,unsigned int umsg,unsigned in
 	return TRUE == g_BCServerInternal.DispatchToClientProc((HWND)hwnd,(UINT)umsg,(WPARAM)wParam,(LPARAM)lParam);
 }
 
-bool CHlaeBcServer::Pass_WndRectUpdate(int iLeft, int iTop, int iWidthVisible, int iHeightVisible, int iWidthTotal, int iHeightTotal)
+bool CHlaeBcServer::Pass_WndRectUpdate(int iLeft, int iTop, int iWidthVisible, int iHeightVisible, int iWidthTotal, int iHeightTotal, int iLeftGlobal, int iTopGlobal)
 {
 	HLAE_BASECOM_WndRectUpdate_s mys;
 
@@ -453,6 +453,8 @@ bool CHlaeBcServer::Pass_WndRectUpdate(int iLeft, int iTop, int iWidthVisible, i
 	mys.iHeightVisible = iHeightVisible;
 	mys.iWidthTotal = iWidthTotal;
 	mys.iHeightTotal = iHeightTotal;
+	mys.iLeftGlobal = iLeftGlobal;
+	mys.iTopGlobal = iTopGlobal;
 
 	return TRUE==g_BCServerInternal.DispatchStruct(
 		HLAE_BASECOM_MSGCL_WndRectUpdate,
@@ -469,7 +471,8 @@ bool CHlaeBcServer::Pass_MouseEvent(unsigned int uMsg, unsigned int wParam, unsi
 	mys.iX = iX;
 	mys.iY = iY;
 
-	return TRUE==g_BCServerInternal.DispatchStruct(
+	// WARNING: HACK HACK! bad hack, we can't decide if the dispatch failed or if it wasn't processed!
+	return FALSE==g_BCServerInternal.DispatchStruct(
 		HLAE_BASECOM_MSGCL_MouseEvent,
 		sizeof(mys),
 		&mys
@@ -483,7 +486,8 @@ bool CHlaeBcServer::Pass_KeyBoardEvent(unsigned int uMsg, unsigned int uKeyCode,
 	mys.uKeyCode = uKeyCode;
 	mys.uKeyFlags = uKeyFlags;
 
-	return TRUE==g_BCServerInternal.DispatchStruct(
+	// WARNING: HACK HACK! bad hack, we can't decide if the dispatch failed or if it wasn't processed!
+	return FALSE==g_BCServerInternal.DispatchStruct(
 		HLAE_BASECOM_MSGCL_KeyBoardEvent,
 		sizeof(mys),
 		&mys
