@@ -508,7 +508,7 @@ void * CHlaeBcServer::_DoCreateWindowExA(char *lpClassNameA,char *lpWindowNameA,
 		_pHlaeGameWindow->SetVirtualSize(nWidth,nHeight);
 		_pHlaeGameWindow->SetScrollRate(10,10);
 		
-		g_layoutmanager.AddPane(_pHlaeGameWindow, wxAuiPaneInfo().RightDockable().Float().Caption(mycaption));
+		g_layoutmanager.AddPane(_pHlaeGameWindow, wxAuiPaneInfo().CentrePane().Caption(mycaption));
 
 		return _pHlaeGameWindow->GetHWND();
 	}
@@ -545,7 +545,7 @@ bool CHlaeBcServer::_Do_GameWndPrepare(int nWidth, int nHeight)
 		_pHlaeGameWindow->SetScrollbars(1,1,nWidth,nHeight);
 		_pHlaeGameWindow->SetMaxSize(wxSize(nWidth,nHeight));
 
-		g_layoutmanager.AddPane(_pHlaeGameWindow, wxAuiPaneInfo().RightDockable().Float().Caption(mycaption));
+		g_layoutmanager.AddPane(_pHlaeGameWindow, wxAuiPaneInfo().CentrePane().Caption(mycaption));
 
 	} else {
 		_pHlaeGameWindow->SetVirtualSize(nWidth,nHeight);

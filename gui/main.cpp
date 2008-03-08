@@ -17,6 +17,7 @@ BEGIN_EVENT_TABLE(hlaeMainWindow, wxFrame)
 	EVT_MENU(wxID_ABOUT, hlaeMainWindow::OnAbout)
 	EVT_MENU(hlaeMainWindow::hlaeID_SaveLayout, hlaeMainWindow::OnSaveLayout)
 	EVT_MENU(hlaeMainWindow::hlaeID_LayoutManager, hlaeMainWindow::OnLayoutManager)
+	EVT_SIZE(hlaeMainWindow::OnSize)
 END_EVENT_TABLE()
 
 hlaeMainWindow::hlaeMainWindow()
@@ -88,9 +89,16 @@ void hlaeMainWindow::OnSaveLayout(wxCommandEvent& WXUNUSED(evt)) {
 	g_layoutmanager.AddLayout();
 }
 
-void hlaeMainWindow::OnLayoutManager(wxCommandEvent& WXUNUSED(evt)) {
-	g_layoutmanager.ShowManager();
+void hlaeMainWindow::OnLayoutManager(wxCommandEvent& WXUNUSED(evt))
+{
+
 }
+
+void hlaeMainWindow::OnSize(wxSizeEvent& evt)
+{
+	Layout();
+}
+
 
 wxMenu* hlaeMainWindow::GetWindowMenu() const {
 	return m_windowmenu;

@@ -27,6 +27,7 @@ private:
 	void OnSaveLayout(wxCommandEvent& evt);
 	void OnLayoutManager(wxCommandEvent& evt);
 	void OnAbout(wxCommandEvent& evt);
+	void OnSize(wxSizeEvent& evt);
 public:
 	hlaeMainWindow();
 	~hlaeMainWindow();
