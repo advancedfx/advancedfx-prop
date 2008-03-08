@@ -223,6 +223,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\dsound_hook.h"
+				>
+			</File>
+			<File
 				RelativePath=".\film_sound.h"
 				>
 			</File>
@@ -316,6 +320,10 @@
 			</File>
 			<File
 				RelativePath=".\detours.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\dsound_hook.cpp"
 				>
 			</File>
 			<File
