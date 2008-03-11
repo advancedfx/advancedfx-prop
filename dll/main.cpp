@@ -960,6 +960,14 @@ BOOL APIENTRY my_GetCursorPos(LPPOINT lpPoint)
 	return TRUE;
 }
 
+HRESULT WINAPI my_DirectInputCreateA(HINSTANCE hinst, DWORD dwVersion, void *ppDI, void *punkOuter)
+{
+	MessageBoxA(0,"my_DirectInputCreateA","Called",MB_OK);
+	//return DirectInputCreateA(hinst,dwVersion,ppDI,punkOuter);
+	return NULL;
+}
+
+
 FARPROC (WINAPI *pGetProcAddress)(HMODULE hModule, LPCSTR lpProcName);
 FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 {
@@ -996,11 +1004,10 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 
 		if (!lstrcmp(lpProcName,"DirectDrawCreate"))
 			return Hook_DirectDrawCreate(nResult); // give our hook original address and return new (it remembers the original one from it's first call, it also cares about the commandline options (if to force the res or not and does not install the hook if not needed))
-		if (!lstrcmp(lpProcName,"DirectSoundCreate"))
-			return Hook_DirectSoundCreate(nResult);
-		//if (!lstrcmp(lpProcName,"DirectInputCreateA"))
-			// imported but never called?
 
+		//if (!lstrcmp(lpProcName,"DirectInputCreateA"))
+			//return (FARPROC) &my_DirectInputCreateA;
+			// DirectInputCreateA" - imported but never called?
 #ifdef MDT_COMPILE_FOR_GUI
 		if (!lstrcmp(lpProcName, "CreateWindowExA"))
 			return (FARPROC) &HlaeBcClt_CreateWindowExA;
@@ -1016,6 +1023,17 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 			return (FARPROC) &HlaeBcClt_SetCapture;
 		if (!lstrcmp(lpProcName, "ReleaseCapture"))
 			return (FARPROC) &HlaeBcClt_ReleaseCapture;
+
+		if (!lstrcmp(lpProcName,"DirectSoundCreate"))
+			return Hook_DirectSoundCreate(nResult);
+
+		if (!lstrcmp(lpProcName, "SetPixelFormat"))
+			return (FARPROC) &HlaeBcClt_SetPixelFormat;
+		if (!lstrcmp(lpProcName, "ChoosePixelFormat"))
+			return (FARPROC) &HlaeBcClt_ChoosePixelFormat;
+		if(!lstrcmp(lpProcName,"wglCreateContext"))
+			return (FARPROC) &HlaeBcClt_wglCreateContext;
+
 #endif
 
 	}

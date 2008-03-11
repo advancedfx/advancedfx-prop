@@ -13,7 +13,7 @@
 	extern cl_enginefuncs_s* pEngfuncs;
 #endif
 
-#include "shared/com/basecom.h"
+#include "../shared/com/basecom.h"
 
 #include "basecomClient.h"
 
@@ -44,12 +44,8 @@ LRESULT CALLBACK Hooking_WndProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 	case WM_ACTIVATE:
 	case WM_SETFOCUS:
 	case WM_KILLFOCUS:
-		// we won't override those messages, since this would give us problems with the mauscapture if we won't allow it to deactivate
-		break; // sorry guys, that's it for now.
-		//MessageBoxA(hWnd,"WM_ACTIVATE | WM_SETFOCUS | WM_KILLFOCUS","Hooking_WndProc fetched",MB_OK|MB_ICONINFORMATION);
-		// tell it we would have handled it:
-		// however this won't trick DirectSound sadly
-		return TRUE;
+		// we won't override those messages, since this would give us problems with the mousecapture if we won't allow it to deactivate
+		break;
 	}
 
 	if (hWnd==NULL || hWnd != g_HL_MainWindow)
@@ -121,13 +117,17 @@ LRESULT HlaeBcCl_MouseEvent(PVOID lpData)
 	g_HL_MainWindow_info.MouseTarget.iX = myps->iX;
 	g_HL_MainWindow_info.MouseTarget.iY = myps->iY;
 
-	LRESULT tr = g_HL_WndClassA->lpfnWndProc(g_HL_MainWindow,(UINT)(myps->uMsg),(WPARAM)(myps->wParam),(LPARAM)(((myps->iY) << 16) + myps->iX));
+	//pEngfuncs->Con_Printf("HlaeBcCl_MouseEvent: (%i,%i)\n",myps->iX,myps->iY);
+
+	pEngfuncs->Con_Printf("OutPorc: 0x%08x - IsProc: 0x%08x\n",(void *)Hooking_WndProc,(void *)(GetWindowLong( g_HL_MainWindow, GWL_WNDPROC )));
+
+	LRESULT tr = FALSE;//g_HL_WndClassA->lpfnWndProc(g_HL_MainWindow,(UINT)(myps->uMsg),(WPARAM)(myps->wParam),(LPARAM)(((myps->iY) << 16) + myps->iX));
 
 	/*int ix,iy;
 	pEngfuncs->GetMousePosition(&ix,&iy);
 	int dx=g_HL_MainWindow_info.iX+myps->iX;
 	int dy=g_HL_MainWindow_info.iY+myps->iX;
-	pEngfuncs->Con_Printf("MouseEvent: inx=%i,iny=%i,dx=%i,dy=%i (%i,%i)\n",myps->iX,myps->iY,dx,dy,ix,iy);^*/
+	pEngfuncs->Con_Printf("MouseEvent: inx=%i,iny=%i,dx=%i,dy=%i (%i,%i)\n",myps->iX,myps->iY,dx,dy,ix,iy);*/
 
 	return tr;
 }
@@ -213,6 +213,11 @@ LRESULT CALLBACK HlaeBcCltWndProc(
 
 			case HLAE_BASECOM_MSGCL_KeyBoardEvent:
 				return HlaeBcCl_KeyBoardEvent(pMyCDS->lpData);
+
+			case HLAE_BASECOM_MSGCL_RET_ChooseNVIDIA	:
+				if (g_pHlaeBcResultTarget) memcpy(g_pHlaeBcResultTarget,pMyCDS->lpData,sizeof(HLAE_BASECOM_RET_ChooseNVIDIA_s));
+				return TRUE;
+
 
 			default:
 				MessageBoxW(hwnd,L"Unexpected message.",HLAE_BASECOM_CLIENT_ID,MB_OK|MB_ICONERROR);
@@ -378,6 +383,41 @@ bool HlaeBcClt_GameWndRelease()
 	return bResult;
 }
 
+bool HlaeBcClt_FormatNVIDIA(int iPixelFormat, CONST PIXELFORMATDESCRIPTOR * ppfd)
+{
+	bool bResult=false;
+	HLAE_BASECOM_FormatNVIDIA_s *mycws = new HLAE_BASECOM_FormatNVIDIA_s;
+
+	mycws->iPixelFormat = iPixelFormat;
+	mycws->pfd = *ppfd;
+
+	bResult=HlaeBcCltSendMessage(HLAE_BASECOM_MSGSV_FormatNVIDIA,sizeof(HLAE_BASECOM_FormatNVIDIA_s),(PVOID)mycws);
+
+	delete mycws;
+	return bResult;
+}
+
+bool HlaeBcClt_ChooseNVIDIA(const PIXELFORMATDESCRIPTOR *ppfd,int *piRet)
+{
+	bool bResult=false;
+
+	HLAE_BASECOM_RET_ChooseNVIDIA_s *mycwret = new HLAE_BASECOM_RET_ChooseNVIDIA_s;
+	HLAE_BASECOM_ChooseNVIDIA_s *mycws = new HLAE_BASECOM_ChooseNVIDIA_s;
+
+	mycws->pfd=*ppfd;
+	
+	if(HlaeBcCltSendMessageRet(HLAE_BASECOM_MSGSV_ChooseNVIDIA,sizeof(HLAE_BASECOM_ChooseNVIDIA_s),(PVOID)mycws,mycwret))
+	{
+		if(piRet) *piRet = mycwret->retResult;
+		bResult=true;
+	}
+
+	delete mycws;
+	delete mycwret;
+
+	return bResult;
+}
+
 //
 // WinAPI hooks for export in the basecomClient.h:
 //
@@ -476,6 +516,8 @@ BOOL APIENTRY HlaeBcClt_DestroyWindow(HWND hWnd)
 bool g_bHlaeAsumeServerDCPresent=false;
 HWND g_hHlaeServerWnd=NULL;
 
+HDC g_HL_HDC=NULL;
+
 HDC APIENTRY HlaeBcClt_GetDC( HWND hWnd )
 {
 	// quit if it's not the window we want:
@@ -496,6 +538,18 @@ HDC APIENTRY HlaeBcClt_GetDC( HWND hWnd )
 	} else
 		hdcResult=GetDC(hWnd);
 
+	/*if (!DuplicateHandle(GetCurrentThread(),hdcResult,GetCurrentProcess(),(HANDLE *)&g_hMappedDC,0,true,DUPLICATE_SAME_ACCESS))
+	{
+		char ptemp[150];
+		int iLastError=GetLastError();
+		_snprintf(ptemp,149,"Duplicate handle failed ( 0x%08x ).\nGetLastError: %u (0x%08x)",hdcResult,iLastError,iLastError);
+		ptemp[149]=0;
+		MessageBoxA(0,ptemp,"HlaeBcClt_SetPixelFormat error:",MB_ICONERROR|MB_OK);
+	}*/
+
+	//if (g_hMappedDC) return g_hMappedDC;
+
+	g_HL_HDC = hdcResult;
 	return hdcResult;
 }
 
@@ -510,6 +564,7 @@ int APIENTRY HlaeBcClt_ReleaseDC( HWND hWnd, HDC hDC )
 #endif
 
 	g_bHlaeAsumeServerDCPresent=false;
+	//if (g_hMappedDC) CloseHandle(g_hMappedDC);
 	return ReleaseDC(g_hHlaeServerWnd,hDC); // of course we trick it into the server's window again
 }
 
@@ -517,7 +572,7 @@ int APIENTRY HlaeBcClt_ReleaseDC( HWND hWnd, HDC hDC )
 void HlaeBcCl_AdjustViewPort(int &x, int &y, int width, int height)
 // this will adjust the incoming params accroding to the gamewindow (in case it's DC can be asumed to be present)
 {
-	if(!g_bHlaeAsumeServerDCPresent) return;
+	if(!g_hHlaeServerWnd) return;
 
 	static int iMyLastWidth=-1;
 	static int iMyLastHeight=-1;
@@ -570,23 +625,94 @@ BOOL APIENTRY HlaeBcCl_GetCursorPos(LPPOINT lpPoint)
 
 HWND WINAPI HlaeBcClt_SetCapture( HWND hWnd)
 {
-	if(!g_hHlaeServerWnd) return SetCapture(hWnd);
+	if(!g_hHlaeServerWnd)
+		return SetCapture(hWnd);
 
 	return NULL;
 }
 
 BOOL WINAPI HlaeBcClt_ReleaseCapture( VOID )
 {
-	if(!g_hHlaeServerWnd) return ReleaseCapture();
+	if(!g_hHlaeServerWnd)
+		return ReleaseCapture();
 
 	return TRUE;
+}
+
+int WINAPI HlaeBcClt_ChoosePixelFormat( HDC  hdc, CONST PIXELFORMATDESCRIPTOR *  ppfd )
+{
+	if(!g_bHlaeAsumeServerDCPresent)
+		return ChoosePixelFormat(hdc,ppfd);
+
+	int iRet=0;
+
+	HlaeBcClt_ChooseNVIDIA(ppfd,&iRet);
+
+	return iRet;
+}
+
+BOOL WINAPI HlaeBcClt_SetPixelFormat(  HDC  hdc,  int  iPixelFormat, CONST PIXELFORMATDESCRIPTOR *  ppfd )
+{
+	BOOL bRet;
+	
+	if(!g_bHlaeAsumeServerDCPresent)//ppfd->dwFlags&PFD_SUPPORT_OPENGL)
+	{
+		bRet = SetPixelFormat(hdc, iPixelFormat, ppfd);
+
+		if (bRet==FALSE)
+		{
+			char ptemp[150];
+			int iLastErr = GetLastError();
+			_snprintf(ptemp,149,"SetPixelFormat request failed.\nGetLastError: %u, 0x%08x",iLastErr,iLastErr);
+			ptemp[149]=0;
+			MessageBoxA(0,ptemp,"HLAE Client error:",MB_ICONERROR|MB_OK);
+		}
+	} else {
+		//pEngfuncs->Con_DPrintf("Marshalling SetPixelFormat to HLAE GUI in order to avoid running into NVIDIA OGL driver bugs ...\n");
+		bRet=HlaeBcClt_FormatNVIDIA(iPixelFormat,ppfd);
+
+		if (bRet==FALSE)
+			MessageBoxA(0,"HLAE GUI Server - SetPixelFormat Failed","HLAE Client error:",MB_ICONERROR|MB_OK);
+	}
+
+	return bRet;
+}
+
+HGLRC WINAPI HlaeBcClt_wglCreateContext(HDC  hdc)
+{
+	HGLRC hRet;
+
+	// this is all crap, instead we need to build our own context and then try wglMakeCurrent
+	
+	if(g_bHlaeAsumeServerDCPresent && hdc == g_HL_HDC)
+	{
+		ReleaseDC( g_hHlaeServerWnd, hdc );
+		hdc = GetDC( g_hHlaeServerWnd );
+
+		//MessageBoxA(0,"CreateContext","lobob",MB_OK);
+		hRet= wglCreateContext(hdc);
+	}
+	else
+		hRet= wglCreateContext(hdc);
+
+	if (!hRet)
+	{
+		char ptemp[200];
+		int iLastErr = GetLastError();
+		_snprintf(ptemp,199,"wglCreateContext request failed.\nGetLastError: %u (0x%08x)\ng_hHlaeServerWnd=0x%08x, hdc =  0x%08x",iLastErr,iLastErr,g_hHlaeServerWnd,hdc);
+		ptemp[199]=0;
+		MessageBoxA(0,ptemp,"HLAE Client error:",MB_ICONERROR|MB_OK);
+	}
+
+	return hRet;
 }
 
 //
 // debug helper:
 //
 
-#ifdef MDT_DEBUG
+#if 1
+//#ifdef MDT_DEBUG
 
 REGISTER_DEBUGCMD_FUNC(info_devicecontext)
 {
@@ -594,7 +720,7 @@ REGISTER_DEBUGCMD_FUNC(info_devicecontext)
 	{
 		HDC hdcResult;
 	
-		GetDC(g_HL_MainWindow);
+		hdcResult=GetDC(g_HL_MainWindow);
 
 		PIXELFORMATDESCRIPTOR *pPfd = new PIXELFORMATDESCRIPTOR;
 

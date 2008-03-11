@@ -30,7 +30,6 @@ public:
 private:
 	wxWindow *_parent;
 	CHlaeGameWindow *_pHlaeGameWindow;
-	wxClientDC *_pHlaeGameWindowDC;
 
 	void * _DoCreateWindowExA(char *lpClassNameA,char *lpWindowNameA,int x, int y, int nHeight, int nWidth); // outdated
 	bool _DoDestroyWindow(WXHWND wxhWnd); // outdated
@@ -38,6 +37,9 @@ private:
 	bool _Do_GameWndPrepare(int nWidth, int nHeight);
 	WXHWND CHlaeBcServer::_Do_GameWndGetDC(); // returns the DC's HWND, not the DC (because the HDC is not allowed to be shared among threads)
 	bool _Do_GameWndRelease();
+	bool _Do_FormatNVIDIA(int iPixelFormat,void *ppfd);
+	int _Do_ChooseNVIDIA(void *ppfd);
 };
+
 
 #endif

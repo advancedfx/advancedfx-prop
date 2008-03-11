@@ -2,6 +2,8 @@
 // Headers for basecom between the core (GUI) and the hook
 //
 
+#include <windows.h>
+
 //
 // Window Identifiers
 //
@@ -35,7 +37,11 @@
 #define HLAE_BASECOM_MSGSV_GameWndRelease		0x00000007
 //n/a	#define HLAE_BASECOM_MSGSV_RET_WndRectUpdate	0x00000008
 //n/a	#define HLAE_BASECOM_MSGSV_RET_MouseEvent		0x00000009
-//n/a	#define HLAE_BASECOM_MSGCL_RET_KeyBoardEvent	0x0000000A
+//n/a	#define HLAE_BASECOM_MSGSV_RET_KeyBoardEvent	0x0000000A
+#define HLAE_BASECOM_MSGSV_FormatNVIDIA			0x0000000B
+#define HLAE_BASECOM_MSGSV_ChooseNVIDIA			0x0000000C
+#define HLAE_BASECOM_QRYSV_AquireGlWindow_s		0x0000000D
+#define HLAE_BASECOM_QRYSV_ReleaseGlWindow_s	0x0000000E
 
 #define HLAE_BASECOM_MSGCL_RET_CreateWindowExA	0x00000001
 #define HLAE_BASECOM_MSGCL_RET_RegisterClassA	0x00000002
@@ -47,6 +53,10 @@
 #define HLAE_BASECOM_MSGCL_WndRectUpdate		0x00000008
 #define HLAE_BASECOM_MSGCL_MouseEvent			0x00000009
 #define HLAE_BASECOM_MSGCL_KeyBoardEvent		0x0000000A
+//#define HLAE_BASECOM_MSGCL_RET_FormatNVIDIA	0x0000000B
+#define HLAE_BASECOM_MSGCL_RET_ChooseNVIDIA		0x0000000C
+#define HLAE_BASECOM_RETCL_AquireGlWindow_s		0x0000000D
+#define HLAE_BASECOM_RETCL_ReleaseGlWindow_s	0x0000000E
 
 //
 // Message Structures:
@@ -146,4 +156,45 @@ struct HLAE_BASECOM_MSGCL_KeyBoardEvent_s
 	unsigned int uMsg; // WM_* code
 	unsigned int uKeyCode;
 	unsigned int uKeyFlags;
+};
+
+struct HLAE_BASECOM_FormatNVIDIA_s
+{
+	int  iPixelFormat;
+	PIXELFORMATDESCRIPTOR pfd;
+};
+
+struct HLAE_BASECOM_ChooseNVIDIA_s
+{
+	PIXELFORMATDESCRIPTOR pfd;
+};
+
+struct HLAE_BASECOM_RET_ChooseNVIDIA_s
+{
+	int retResult;
+};
+
+//
+
+struct HLAE_BASECOM_AquireGlWindow_s
+{
+	int nWidth;
+	int nHeight;
+	int  iPixelFormat;
+	PIXELFORMATDESCRIPTOR pfd;
+};
+
+struct HLAE_BASECOM_RET_AquireGlWindow_s
+{
+	bool retResult;
+};
+
+struct HLAE_BASECOM_ReleaseGlWindow_s
+{
+	// empty
+};
+
+struct HLAE_BASECOM_RET_ReleaseGlWindow_s
+{
+	bool retResult;
 };

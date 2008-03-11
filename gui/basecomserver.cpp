@@ -1,11 +1,19 @@
+#include <windows.h>
+#include <gl/gl.h>
+
+#include <wx/dcclient.h>
+#include <wx/string.h>
+
+#include <shared/com/basecom.h>
+
 #include "layout.h"
 #include "gamewindow.h"
 
-#include <wx/dcclient.h>
-#include <windows.h>
-#include <shared/com/basecom.h>
+#include "debug.h"
+
 
 #include "basecomserver.h"
+
 
 // typedef bool (* OnRecieve_t)(class *lpClassPointer,unsigned long dwData,unsigned long cbData,void *lpData);
 
@@ -44,6 +52,8 @@ private:
 	bool _Wrapper_GameWndPrepare(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
 	bool _Wrapper_GameWndGetDC(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
 	bool _Wrapper_GameWndRelease(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
+	bool _Wrapper_FormatNVIDIA(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
+	bool _Wrapper_ChooseNVIDIA(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
 };
 
 
@@ -240,6 +250,10 @@ bool CBCServerInternal::_MyOnRecieve(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMy
 		return _Wrapper_GameWndGetDC(hWnd,hwSender,pMyCDS);
 	case HLAE_BASECOM_MSGSV_GameWndRelease:
 		return _Wrapper_GameWndRelease(hWnd,hwSender,pMyCDS);
+	case HLAE_BASECOM_MSGSV_FormatNVIDIA:
+		return 	_Wrapper_FormatNVIDIA(hWnd,hwSender,pMyCDS);
+	case HLAE_BASECOM_MSGSV_ChooseNVIDIA:
+		return 	_Wrapper_ChooseNVIDIA(hWnd,hwSender,pMyCDS);
 
 	default:
 		MessageBoxW(hWnd,L"Error: Recieved unkown message.",HLAE_BASECOM_SERVER_ID,MB_OK|MB_ICONERROR);
@@ -388,6 +402,33 @@ bool CBCServerInternal::_Wrapper_GameWndRelease(HWND hWnd,HWND hwSender,PCOPYDAT
 	return bRes;
 }
 
+bool CBCServerInternal::_Wrapper_FormatNVIDIA(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS)
+{
+	bool bRes;
+
+	HLAE_BASECOM_FormatNVIDIA_s * pdata = (HLAE_BASECOM_FormatNVIDIA_s *)pMyCDS->lpData;
+
+	bRes=_pBase->_Do_FormatNVIDIA(pdata->iPixelFormat,(void *)&(pdata->pfd));
+
+	return bRes;
+}
+
+bool CBCServerInternal::_Wrapper_ChooseNVIDIA(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS)
+{
+	bool bRes;
+
+	HLAE_BASECOM_RET_ChooseNVIDIA_s *pRet = new HLAE_BASECOM_RET_ChooseNVIDIA_s;
+
+	HLAE_BASECOM_ChooseNVIDIA_s * pdata = (HLAE_BASECOM_ChooseNVIDIA_s *)pMyCDS->lpData;
+
+	pRet->retResult = _pBase->_Do_ChooseNVIDIA((void *)&(pdata->pfd));
+
+	bRes=_ReturnMessage(hWnd,hwSender,HLAE_BASECOM_MSGCL_RET_ChooseNVIDIA,sizeof(HLAE_BASECOM_RET_ChooseNVIDIA_s),pRet);
+
+	delete pRet;
+
+	return bRes;
+}
 
 //
 // the CBCServerInternal global:
@@ -406,7 +447,6 @@ CHlaeBcServer::CHlaeBcServer(wxWindow *parent)
 {
 	_parent = parent;
 	_pHlaeGameWindow = NULL;
-	_pHlaeGameWindowDC = NULL;
 
 	if(!g_BCServerInternal.HlaeBcSrvStart(this)) throw "ERROR: HlaeBcSrvStart() failed.";
 
@@ -416,20 +456,20 @@ CHlaeBcServer::CHlaeBcServer(wxWindow *parent)
 CHlaeBcServer::~CHlaeBcServer()
 {
 	g_BCServerInternal.HlaeBcSrvStop();
-	if(_pHlaeGameWindowDC) delete _pHlaeGameWindowDC;
 	if(_pHlaeGameWindow) delete _pHlaeGameWindow;
 }
 
 void CHlaeBcServer::Do_DoPepareDC()
 {
-    if ( _pHlaeGameWindow && _pHlaeGameWindowDC)
+    /*if ( _pHlaeGameWindow ) && _pHlaeGameWindowDC)
 	{
 		_pHlaeGameWindow->DoPrepareDC(*_pHlaeGameWindowDC);
+
 
 		// draw some shit to for fun, can't hurt:
 		_pHlaeGameWindowDC->SetPen(*wxBLACK_PEN);
 		_pHlaeGameWindowDC->DrawLine(1, 1, 100, 100);
-	}
+	}*/
 }
 
 bool CHlaeBcServer::PassEventPreParsed(unsigned int umsg,unsigned int wParam,unsigned int lParam)
@@ -562,21 +602,11 @@ WXHWND CHlaeBcServer::_Do_GameWndGetDC()
 {
 	if (!_pHlaeGameWindow) return NULL;
 
-    if (!_pHlaeGameWindowDC) _pHlaeGameWindowDC = new wxClientDC(_pHlaeGameWindow);
-
-	_pHlaeGameWindow->DoPrepareDC(*_pHlaeGameWindowDC);
-
-	// draw some shit to for fun, can't hurt:
-	_pHlaeGameWindowDC->SetPen(*wxBLACK_PEN);
-	_pHlaeGameWindowDC->DrawLine(1, 1, 100, 100);
+	//this->Do_DoPepareDC();
 
 	WXHWND pResult=NULL;
 
-	pResult = (_pHlaeGameWindowDC->GetWindow())->GetHWND();
-
-	//char sztemp[200];
-	//_snprintf(sztemp,sizeof(sztemp),"DC's WXHWND is: %i (0x%08x)",pResult,pResult);
-	///MessageBoxA(NULL,sztemp,"CHlaeBcServer::_Do_GameWndGetDC()",MB_OK|MB_ICONERROR);
+	pResult = _pHlaeGameWindow->GetHWND();
 
     return pResult;
 }
@@ -586,4 +616,60 @@ bool CHlaeBcServer::_Do_GameWndRelease()
 	if (!_pHlaeGameWindow) return false;
 
 	return true; // may be a bit more safe in the future, but that's it for now
+}
+
+bool  CHlaeBcServer::_Do_FormatNVIDIA(int iPixelFormat,void *ppfd)
+{
+	if (!_pHlaeGameWindow ) return false;
+
+	HDC myhdc = (HDC)(_pHlaeGameWindow->GetDCInternal());
+
+	bool bRet=TRUE==::SetPixelFormat(myhdc,iPixelFormat,(PIXELFORMATDESCRIPTOR *)ppfd)==TRUE;
+
+	//char sztemp[100];
+	//sztemp[sizeof(sztemp)-1]=0;
+
+	int iCurFormat = ::GetPixelFormat(myhdc);
+
+	wxString mystr;//(lpWindowNameA,wxConvUTF8);
+	mystr.Printf(wxT("After SetPixelFormat format is: %i\nRequested: %i\nGetLastError: %i"),iCurFormat,iPixelFormat,::GetLastError()); 
+	g_debug.SendMessage(mystr, hlaeDEBUG_VERBOSE_LEVEL3);
+
+/*	#pragma comment(lib,"OpenGL32.lib")
+	#pragma comment(lib,"GLu32.lib")
+	#pragma comment(lib,"GLaux.lib")
+
+	MessageBoxA(0,"Testing wglCreateContext","Servertst",MB_OK);
+
+	HGLRC hRet= wglCreateContext(myhdc);
+
+	if (!hRet)
+	{
+		char ptemp[200];
+		int iLastErr = GetLastError();
+		_snprintf(ptemp,199,"wglCreateContext request failed.\nGetLastError: %u (0x%08x)",iLastErr,iLastErr);
+		ptemp[199]=0;
+		MessageBoxA(0,ptemp,"Servertst",MB_ICONERROR|MB_OK);
+	} else MessageBoxA(0,"OK!","Servertst",MB_OK);*/
+
+	return bRet;
+}
+
+int CHlaeBcServer::_Do_ChooseNVIDIA(void *ppfd)
+{
+	if (!_pHlaeGameWindow) return 0;
+
+	HDC myhdc = (HDC)(_pHlaeGameWindow->GetDCInternal());
+
+	int iRet = ChoosePixelFormat(myhdc,(PIXELFORMATDESCRIPTOR *)ppfd);
+
+	if ((iRet)==0)
+	{
+		int iLastErr = ::GetLastError();
+		wxString mystr;
+		mystr.Printf(wxT("ChoosePixelFormat failed: GameWindowHDC=0x%08x, GetLastError=%u (0x%08x)"),myhdc,iLastErr,iLastErr); 
+		g_debug.SendMessage(mystr, hlaeDEBUG_ERROR);
+	}
+	
+	return iRet;
 }

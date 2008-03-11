@@ -28,6 +28,8 @@ public:
 	
 	bool Destroy();
 
+	WXHDC GetDCInternal(); // used by basecomserver.h
+
 	void OnDraw(wxDC &dc);
 	//virtual bool ProcessEvent(wxEvent &myevent); // override command handler
 
@@ -36,6 +38,8 @@ private:
 
 	CHlaeBcServer *_pHlaeBcServer;
 	bool	_bTransmitAllowed;
+
+	WXHDC _internalHDC;
 
 	// fot the events table:
 	void OnActivate( wxActivateEvent &myevent );
