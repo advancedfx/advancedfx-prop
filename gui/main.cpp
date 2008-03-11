@@ -10,6 +10,7 @@
 #include "layout.h"
 
 #include "debug.h"
+#include "config.h"
 #include <wx/memory.h>
 
 BEGIN_EVENT_TABLE(hlaeMainWindow, wxFrame)
@@ -147,6 +148,9 @@ IMPLEMENT_APP(hlaeApp)
 
 bool hlaeApp::OnInit()
 {
+	// initialize the config system
+	g_config.Initialize();
+
 	hlaeMainWindow* mainframe = new hlaeMainWindow();
 	SetTopWindow(mainframe);
 	mainframe->Show();
