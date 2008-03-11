@@ -12,96 +12,46 @@ const wxString& hlaeConfigListObject::GetName()
 	return m_name;
 }
 
-hlaeConfigListGroup::hlaeConfigListGroup(const wxString& name)
-	: hlaeConfigListObject(name)
+hlaeConfigListData::hlaeConfigListData(const wxString& name, const wxString& default_data) : hlaeConfigListObject(name)
 {
-	m_objectlist = new hlaeList();
-	m_objectlist->DeleteContents(true);
+	m_data = default_data;
+}
+
+void hlaeConfigListData::SetData(const wxString& data)
+{
+	m_data = data;
+}
+
+const wxString& hlaeConfigListData::GetData()
+{
+	return m_data;
+}
+
+hlaeConfigListGroup::hlaeConfigListGroup(const wxString& name) : hlaeConfigListObject(name)
+{
+	m_datalist = new hlaeList();
+	m_datalist->DeleteContents(true);
 }
 
 hlaeConfigListGroup::~hlaeConfigListGroup()
 {
-	m_objectlist->Clear();
-	delete m_objectlist;
+	m_datalist->Clear();
+	delete m_datalist;
 }
 
-void hlaeConfigListGroup::AddObject(hlaeConfigListObject* config_object)
+void hlaeConfigListGroup::AppendObject(hlaeConfigListData* object)
 {
-	m_objectlist->Append(config_object);
+	m_datalist->Append(object);
 }
 
 size_t hlaeConfigListGroup::GetCount()
 {
-	return m_objectlist->GetCount();
+	return m_datalist->GetCount();
 }
 
-hlaeConfigListObject* hlaeConfigListGroup::GetObject(size_t index)
+hlaeConfigListData* hlaeConfigListGroup::GetObject(size_t index)
 {
-	return dynamic_cast<hlaeConfigListObject*>(m_objectlist->Item(index));
-}
-
-hlaeConfigListDataObject::hlaeConfigListDataObject(const wxString& name)
-	: hlaeConfigListObject(name)
-{}
-
-hlaeConfigListIntegerObject::hlaeConfigListIntegerObject(const wxString& name, int integer_value)
-	: hlaeConfigListDataObject(name)
-{
-	m_integervalue = integer_value;
-}
-
-void hlaeConfigListIntegerObject::Parse(const wxString& string)
-{
-}
-
-int hlaeConfigListIntegerObject::GetInteger()
-{
-	return m_integervalue;
-}
-
-hlaeConfigListStringObject::hlaeConfigListStringObject(const wxString& name, const wxString& string_value)
-	: hlaeConfigListDataObject(name)
-{
-	m_stringvalue = string_value;
-}
-
-void hlaeConfigListStringObject::Parse(const wxString& string)
-{
-}
-
-const wxString& hlaeConfigListStringObject::GetString()
-{
-	return m_stringvalue;
-}
-
-hlaeConfigListFloatObject::hlaeConfigListFloatObject(const wxString& name, float float_value)
-	: hlaeConfigListDataObject(name)
-{
-	m_floatvalue = float_value;
-}
-
-void hlaeConfigListFloatObject::Parse(const wxString& string)
-{
-}
-
-float hlaeConfigListFloatObject::GetFloat()
-{
-	return m_floatvalue;
-}
-
-hlaeConfigListDwordObject::hlaeConfigListDwordObject(const wxString& name, wxUint32 dword_value)
-	: hlaeConfigListDataObject(name)
-{
-	m_dwordvalue = dword_value;
-}
-
-void hlaeConfigListDwordObject::Parse(const wxString& string)
-{
-}
-
-wxUint32 hlaeConfigListDwordObject::GetDword()
-{
-	return m_dwordvalue;
+	return dynamic_cast<hlaeConfigListData*>(m_datalist->Item(index));
 }
 
 hlaeConfig::hlaeConfig()
@@ -121,21 +71,59 @@ hlaeConfig::~hlaeConfig()
 	delete m_propertylist;
 }
 
-hlaeConfigListObject* hlaeConfig::GetProperty(const wxString& group_name, const wxString& property_name)
+void hlaeConfig::AppendPropertyGroup(hlaeConfigListGroup* group)
 {
-	/* for (hlaeList::iterator iter = m_propertylist->begin(); iter != m_propertylist->end(); ++iter)
+	m_propertylist->Append(group);
+}
+
+const wxString& hlaeConfig::GetString(const wxString& group_name, const wxString& property_name)
+{
+	return GetPropertyData(GetPropertyGroup(group_name),property_name);
+}
+
+hlaeConfigListGroup* hlaeConfig::GetPropertyGroup(const wxString& group_name)
+{
+	hlaeConfigListGroup* retval;
+
+	for (hlaeList::iterator iter = m_propertylist->begin(); iter != m_propertylist->end(); iter++)
 	{
-		hlaeConfigListGroup* current = *iter;
+		wxObject* object = *iter;
+		hlaeConfigListGroup* current = dynamic_cast<hlaeConfigListGroup*>(object);
 
 		if (current->GetName() == group_name)
 		{
-
+			retval = current;
 			break;
 		}
+
 		if (iter == m_propertylist->end())
 		{
-			g_debug.SendMessage(wxT("Config: There is no group called") + group_name, hlaeDEBUG_FATALERROR);
-			return
-	}*/
-	return 0;
+			g_debug.SendMessage(wxT("Config: There is no group named \"") + group_name + wxT("\"!"), hlaeDEBUG_FATALERROR);
+			retval = 0;
+		}
+	}
+
+	return retval;
+}
+
+const wxString& hlaeConfig::GetPropertyData(hlaeConfigListGroup* group, const wxString& property_name)
+{
+	wxString retval;
+
+	for (size_t i = 0; i < group->GetCount(); i++)
+	{
+		if (group->GetObject(i)->GetName() == property_name)
+		{
+			retval = group->GetObject(i)->GetName();
+			break;
+		}
+
+		if (i + 1 == group->GetCount())
+		{
+			g_debug.SendMessage(wxT("Config: There is no property named \"") + property_name + wxT("\"!"), hlaeDEBUG_FATALERROR);
+			retval = wxT("");
+		}
+	}
+
+	return wxT("");
 }
