@@ -83,7 +83,7 @@ hlaeConfig::~hlaeConfig()
 void hlaeConfig::Initialize()
 {
 	// we have to manually initialize the config system, because if we want to use the debug features
-	// there would be no reference to the global debug vaiable because there are not created at runtime#
+	// there would be no reference to the global debug vaiable because there are not created at runtime
 
 	m_propertylist->DeleteContents(true);
 
@@ -103,13 +103,7 @@ void hlaeConfig::Initialize()
 	AppendPropertyGroup(adresses);
 
 	// check if there is a file to load
-	if (m_filename->FileExists(m_filename->GetFullPath()))
-	{
-		m_document->Load(m_filename->GetFullPath());
-		if (m_document->IsOk()) g_debug.SendMessage(wxT("Config: \"") + m_filename->GetFullPath() +
-			wxT ("\" sucessfully loaded"), hlaeDEBUG_VERBOSE_LEVEL1);
-		// TODO: update data
-	}
+	if (m_filename->FileExists(m_filename->GetFullPath())) Reload();
 	else Flush();
 }
 
@@ -219,4 +213,46 @@ void hlaeConfig::Flush()
 
 	// save the file
 	m_document->Save(m_filename->GetFullPath());
+}
+
+void hlaeConfig::Reload()
+{
+	m_document->Load(m_filename->GetFullPath());
+	if (m_document->IsOk()) g_debug.SendMessage(wxT("Config: \"") + m_filename->GetFullPath() +
+		wxT ("\" sucessfully loaded"), hlaeDEBUG_VERBOSE_LEVEL1);
+
+	wxXmlNode* root_node = m_document->GetRoot();
+	wxXmlNode* group_node = root_node->GetChildren();
+
+	while (group_node != NULL)
+	{
+		// settings
+		if (group_node->GetName() == wxT("settings"))
+		{
+			wxXmlNode* node = group_node->GetChildren();
+
+			while (node != NULL)
+			{
+				if (node->GetName() == wxT("property"))
+				{
+					wxXmlProperty* prop = node->GetProperties();
+
+					while (prop != NULL)
+					{
+						if (prop->GetName() == wxT("name"))
+						{
+							hlaeConfigListData* data = GetPropertyData(GetPropertyGroup(wxT("settings")),
+								prop->GetValue());
+							data->SetData(node->GetContent());
+							break;
+						}
+					}
+				}
+
+				node = group_node->GetNext();
+			}
+		}
+
+		group_node = root_node->GetNext();
+	}
 }

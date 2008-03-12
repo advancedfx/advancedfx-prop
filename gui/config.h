@@ -51,6 +51,7 @@ public:
 	int GetInteger(const wxString& group_name, const wxString& property_name);
 	void RestoreDefaults();
 	void Flush();
+	void Reload();
 private:
 	hlaeConfigListGroup* GetPropertyGroup(const wxString& group_name);
 	hlaeConfigListData* GetPropertyData(hlaeConfigListGroup* group, const wxString& property_name);
