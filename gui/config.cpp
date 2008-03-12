@@ -58,7 +58,7 @@ hlaeConfigListData* hlaeConfigListGroup::GetObject(size_t index)
 size_t hlaeConfigListGroup::GetCount()
 {
 	if (m_datalist->GetCount() == 0)
-		g_debug.SendMessage(wxT("Config: A group named \"") + GetName() + wxT("\" does not have any properties!"),
+		g_debug.SendMessage(wxT("Config: The group named \"") + GetName() + wxT("\" does not have any properties!"),
 		hlaeDEBUG_WARNING);
 	return m_datalist->GetCount();
 }
@@ -112,14 +112,14 @@ void hlaeConfig::AppendPropertyGroup(hlaeConfigListGroup* group)
 	m_propertylist->Append(group);
 }
 
-const wxString& hlaeConfig::GetString(const wxString& group_name, const wxString& property_name)
+const wxString& hlaeConfig::GetPropertyString(const wxString& group_name, const wxString& property_name)
 {
 	return GetPropertyData(GetPropertyGroup(group_name), property_name)->GetData();
 }
 
-int hlaeConfig::GetInteger(const wxString& group_name, const wxString& property_name)
+int hlaeConfig::GetPropertyInteger(const wxString& group_name, const wxString& property_name)
 {
-	return wxAtoi(GetString(group_name, property_name));
+	return wxAtoi(GetPropertyString(group_name, property_name));
 }
 
 hlaeConfigListGroup* hlaeConfig::GetPropertyGroup(const wxString& group_name)
@@ -222,37 +222,49 @@ void hlaeConfig::Reload()
 		wxT ("\" sucessfully loaded"), hlaeDEBUG_VERBOSE_LEVEL1);
 
 	wxXmlNode* root_node = m_document->GetRoot();
-	wxXmlNode* group_node = root_node->GetChildren();
+	wxXmlNode* parent_node = root_node->GetChildren();
 
-	while (group_node != NULL)
+	while (parent_node != NULL)
 	{
 		// settings
-		if (group_node->GetName() == wxT("settings"))
+		if (parent_node->GetName() == wxT("settings"))
 		{
-			wxXmlNode* node = group_node->GetChildren();
-
-			while (node != NULL)
+			// get first group from the root
+			wxXmlNode* group_node = parent_node->GetChildren();
+			// check group nodes
+			while (group_node != NULL)	
 			{
-				if (node->GetName() == wxT("property"))
+				// get first node from the group
+				wxXmlNode* node = group_node->GetChildren();
+				// check property nodes
+				while (node != NULL)
 				{
-					wxXmlProperty* prop = node->GetProperties();
-
-					while (prop != NULL)
+					// only accept (our) "property" tags :)
+					if (node->GetName() == wxT("property"))
 					{
-						if (prop->GetName() == wxT("name"))
+						wxXmlProperty* prop = node->GetProperties();
+						// search properties for the name tag
+						while (prop != NULL)
 						{
-							hlaeConfigListData* data = GetPropertyData(GetPropertyGroup(wxT("settings")),
-								prop->GetValue());
-							data->SetData(node->GetContent());
-							break;
+							// if found update the variable
+							if (prop->GetName() == wxT("name"))
+							{
+								hlaeConfigListData* data = GetPropertyData(GetPropertyGroup(group_node->GetName()),
+									prop->GetValue());
+								data->SetData(node->GetChildren()->GetContent());
+								break;
+							}
+							prop = prop->GetNext();
 						}
 					}
+					// go to the next property element
+					node = node->GetNext();
 				}
-
-				node = group_node->GetNext();
+				// go to the next group
+				group_node = group_node->GetNext();
 			}
+			// (not needed yet) go the next category
+			parent_node = parent_node->GetNext();
 		}
-
-		group_node = root_node->GetNext();
 	}
 }
