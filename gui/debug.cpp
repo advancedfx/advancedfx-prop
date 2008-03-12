@@ -4,7 +4,7 @@
 
 hlaeDebug g_debug;
 
-hlaeLogListElement::hlaeLogListElement(const wxString& message, const wxDateTime& date, int debuglevel)
+hlaeLogListElement::hlaeLogListElement(const wxString& message, const wxDateTime& date, hlaeDEBUG_MessageType_e debuglevel)
 	: m_message(message), m_date(date), m_debuglevel(debuglevel), wxObject()
 {}
 
@@ -44,8 +44,13 @@ hlaeDebug::~hlaeDebug()
 void hlaeDebug::UpdateSettings()
 {
 	// Load from config
-	m_outputlevel = hlaeDEBUG_VERBOSE_LEVEL3;
+	m_outputlevel = hlaeDEBUG_DEFAULTLEVEL;
 	m_logfilesize = -1;
+}
+
+void hlaeDebug::SetOutputLevel(hlaeDEBUG_MessageType_e debuglevel)
+{
+	m_outputlevel = debuglevel;
 }
 
 
@@ -69,11 +74,11 @@ void hlaeDebug::UpdateMessage(size_t index)
 	// TODO
 }
 
-void hlaeDebug::SendMessage(const wxString& message, int debuglevel)
+void hlaeDebug::SendMessage(const wxString& message, hlaeDEBUG_MessageType_e debuglevel)
 {
 	if ((debuglevel <= m_outputlevel)
 		#ifndef _DEBUG
-			&& (debuglevel != hlaeDEBUG_VERBOSE_LEVEL3)
+			&& (debuglevel < hlaeDEBUG_DEBUG)
 		#endif
 		)
 		{

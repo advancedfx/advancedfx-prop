@@ -32,19 +32,25 @@ void hlaeConsoleWindow::WriteMessage(const wxString& message,
 		switch(debuglevel)
 		{
 		case hlaeDEBUG_ERROR:
-			colour = wxColour(170, 0, 0);
+			colour = wxColour(255, 0, 0);
 			break;
 		case hlaeDEBUG_WARNING:
-			colour = wxColour(170, 170, 0);
+			colour = wxColour(255, 127, 0);
+			break;
+		case hlaeDEBUG_INFO:
+			colour = wxColour(0, 127, 0);
 			break;
 		case hlaeDEBUG_VERBOSE_LEVEL1:
-			colour = wxColour(85, 85, 85);
+			colour = wxColour(0, 0, 127);
 			break;
 		case hlaeDEBUG_VERBOSE_LEVEL2:
-			colour = wxColour(0, 0, 170);
+			colour = wxColour(0, 127, 127);
 			break;
 		case hlaeDEBUG_VERBOSE_LEVEL3:
-			colour = wxColour(0, 170, 0);
+			colour = wxColour(127, 127, 127);
+			break;
+		case hlaeDEBUG_DEBUG:
+			colour = wxColour(255, 0, 255);
 			break;
 		default:
 			colour = wxColour(0, 0, 0);
