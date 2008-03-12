@@ -15,10 +15,6 @@
 #include "basecomserver.h"
 
 
-#pragma comment(lib,"OpenGL32.lib")
-#pragma comment(lib,"GLu32.lib")
-#pragma comment(lib,"GLaux.lib")
-
 // typedef bool (* OnRecieve_t)(class *lpClassPointer,unsigned long dwData,unsigned long cbData,void *lpData);
 
 
@@ -50,8 +46,7 @@ private:
 	BOOL _ReturnMessage(HWND hWnd,HWND hwTarget,ULONG dwData,DWORD cbData,PVOID lpData);
 
 	// wrappers:
-	BOOL _Wrapper_AquireGlWindow(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
-	BOOL _Wrapper_ReleaseGlWindow(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
+	BOOL _Wrapper_OnCreateWindow(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
 	BOOL _Wrapper_UpdateWindow(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
 };
 
@@ -235,10 +230,8 @@ BOOL CBCServerInternal::_MyOnRecieve(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMy
 		// no checks performed atm
 		return FALSE;
 
-	case HLAE_BASECOM_QRYSV_AquireGlWindow:
-		return _Wrapper_AquireGlWindow(hWnd,hwSender,pMyCDS);
-	case HLAE_BASECOM_QRYSV_ReleaseGlWindow:
-		return _Wrapper_ReleaseGlWindow(hWnd,hwSender,pMyCDS);
+	case HLAE_BASECOM_QRYSV_OnCreateWindow:
+		return _Wrapper_OnCreateWindow(hWnd,hwSender,pMyCDS);
 	case HLAE_BASECOM_MSGSV_UpdateWindow:
 		return _Wrapper_UpdateWindow(hWnd,hwSender,pMyCDS);
 
@@ -266,34 +259,17 @@ BOOL CBCServerInternal::_ReturnMessage(HWND hWnd,HWND hwTarget,ULONG dwData,DWOR
 	);
 }
 
-BOOL CBCServerInternal::_Wrapper_AquireGlWindow(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS)
+BOOL CBCServerInternal::_Wrapper_OnCreateWindow(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS)
 {
 	BOOL bRes;
 
-	HLAE_BASECOM_RET_AquireGlWindow_s *pRet = new HLAE_BASECOM_RET_AquireGlWindow_s;
+	HLAE_BASECOM_RET_OnCreateWindow_s *pRet = new HLAE_BASECOM_RET_OnCreateWindow_s;
 
-	HLAE_BASECOM_AquireGlWindow_s * pdata = (HLAE_BASECOM_AquireGlWindow_s *)pMyCDS->lpData;
+	HLAE_BASECOM_OnCreateWindow_s * pdata = (HLAE_BASECOM_OnCreateWindow_s *)pMyCDS->lpData;
 
-	pRet->hServerGLRC = (HGLRC)( _pBase->_AquireGlWindow( pdata->nWidth,pdata->nHeight,pdata->iPixelFormat,(void *)&(pdata->pfd),(void **)&(pRet->hServerWND),&(pRet->hSavedDC) ) );
+	pRet->parentWindow = (HWND)( _pBase->_OnCreateWindow( pdata->nWidth,pdata->nHeight ) );
 
-	bRes=_ReturnMessage(hWnd,hwSender,HLAE_BASECOM_RETCL_AquireGlWindow,sizeof(HLAE_BASECOM_RET_AquireGlWindow_s),pRet);
-
-	delete pRet;
-
-	return bRes;
-}
-
-BOOL CBCServerInternal::_Wrapper_ReleaseGlWindow(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS)
-{
-	BOOL bRes;
-
-	HLAE_BASECOM_RET_ReleaseGlWindow_s *pRet = new HLAE_BASECOM_RET_ReleaseGlWindow_s;
-
-	HLAE_BASECOM_ReleaseGlWindow_s * pdata = (HLAE_BASECOM_ReleaseGlWindow_s *)pMyCDS->lpData;
-
-	pRet->retResult = _pBase->_ReleaseGlWindow() ? TRUE : FALSE;
-
-	bRes=_ReturnMessage(hWnd,hwSender,HLAE_BASECOM_RETCL_ReleaseGlWindow,sizeof(HLAE_BASECOM_RET_ReleaseGlWindow_s),pRet);
+	bRes=_ReturnMessage(hWnd,hwSender,HLAE_BASECOM_RETCL_OnCreateWindow,sizeof(HLAE_BASECOM_RET_OnCreateWindow_s),pRet);
 
 	delete pRet;
 
@@ -338,22 +314,8 @@ CHlaeBcServer::CHlaeBcServer(wxWindow *parent)
 
 CHlaeBcServer::~CHlaeBcServer()
 {
-	_ReleaseGlWindow();
 	if(_pHlaeGameWindow) delete _pHlaeGameWindow;
 	g_BCServerInternal.HlaeBcSrvStop();
-}
-
-void CHlaeBcServer::Do_DoPepareDC()
-{
-    /*if ( _pHlaeGameWindow ) && _pHlaeGameWindowDC)
-	{
-		_pHlaeGameWindow->DoPrepareDC(*_pHlaeGameWindowDC);
-
-
-		// draw some shit to for fun, can't hurt:
-		_pHlaeGameWindowDC->SetPen(*wxBLACK_PEN);
-		_pHlaeGameWindowDC->DrawLine(1, 1, 100, 100);
-	}*/
 }
 
 bool CHlaeBcServer::PassEventPreParsed(unsigned int umsg,unsigned int wParam,unsigned int lParam)
@@ -417,16 +379,13 @@ bool CHlaeBcServer::Pass_KeyBoardEvent(unsigned int uMsg, unsigned int uKeyCode,
 	);
 }
 
-
-void * CHlaeBcServer::_AquireGlWindow(int nWidth, int nHeight, int iPixelFormat,const void *ppfd, void **phServerWnd, int *phSavedDC)
+WXHWND CHlaeBcServer::_OnCreateWindow(int nWidth, int nHeight)
 {
-	HDC myhdc;
+	g_debug.SendMessage(wxT("Client connected."), hlaeDEBUG_VERBOSE_LEVEL3);
 
 	if (!_pHlaeGameWindow)
 	{
 		// window not present, create it first:
-		g_debug.SendMessage(wxT("Creating game window"), hlaeDEBUG_VERBOSE_LEVEL3);
-
 		wxString mycaption("Game Window",wxConvUTF8);
 
 		_pHlaeGameWindow =new CHlaeGameWindow(this,_parent,wxID_ANY,wxDefaultPosition,wxSize(200,150),wxHSCROLL | wxVSCROLL,mycaption);
@@ -435,117 +394,33 @@ void * CHlaeBcServer::_AquireGlWindow(int nWidth, int nHeight, int iPixelFormat,
 		_UpdateWindow(nWidth, nHeight);
 		
 		g_layoutmanager.AddPane(_pHlaeGameWindow, wxAuiPaneInfo().CentrePane().Caption(mycaption));
-
-		// first time, so also set the pixelformat:
-		myhdc = ::GetDC( (HWND)(_pHlaeGameWindow->GetHWND()) );
-
-		bool bSucc= TRUE == ::SetPixelFormat(myhdc,iPixelFormat,(PIXELFORMATDESCRIPTOR *)ppfd);
-
-		int iCurFormat = ::GetPixelFormat(myhdc);
-
-		::ReleaseDC((HWND)(_pHlaeGameWindow->GetHWND()),myhdc);
-
-		wxString mystr;
-
-		if (bSucc)
-		{
-			mystr.Printf(wxT("SetPixelFormat succeeded: Requested: %i, Current: %i"),iPixelFormat,iCurFormat); 
-			g_debug.SendMessage(mystr, hlaeDEBUG_VERBOSE_LEVEL3);
-		} else {
-			mystr.Printf(wxT("SetPixelFormat failed: Requested: %i, Current: %i, GetLastError(): %i"),iPixelFormat,iCurFormat,::GetLastError()); 
-			g_debug.SendMessage(mystr, hlaeDEBUG_ERROR);
-
-			return 0; // this is a problem, we can't continue
-		}
+	} else {
+		// adjust size and prepare for drawing:
+		_UpdateWindow(nWidth, nHeight);
 	}
 
-	void *retResult = 0;
-
-	/*if (!_hGLRC)
-	{
-		// no OpenGL Resource Context handle, so create new HGLRC:
-		_pHlaeGameWindow->DoPrepareDC(wxClientDC(_pHlaeGameWindow));
-
-		wxString mystr;
-		HDC myhdc = ::GetDC( (HWND)(_pHlaeGameWindow->GetHWND()) );
-
-		retResult = (void *)(wglCreateContext(myhdc));
-
-		if (!retResult)
-		{
-	
-			mystr.Printf(wxT("wglCreateContext failed: Requested: GetLastError(): %i"),::GetLastError()); 
-			g_debug.SendMessage(mystr, hlaeDEBUG_ERROR);
-		} else {
-			mystr.Printf(wxT("wglCreateContext succeeded: HGLRC: 0x%08x"),retResult); 
-			g_debug.SendMessage(mystr, hlaeDEBUG_VERBOSE_LEVEL3);
-
-			// fill in server window:
-			if (phServerWnd) *phServerWnd = (void *)(_pHlaeGameWindow->GetHWND());
-		}
-
-		::ReleaseDC((HWND)(_pHlaeGameWindow->GetHWND()),myhdc);
-
-		myhdc=::GetDC((HWND)(_pHlaeGameWindow->GetHWND()));
-		mystr.Printf(wxT("GetPixelFormat(myhdc):%i"),::GetPixelFormat(myhdc)); 
-		::ReleaseDC((HWND)(_pHlaeGameWindow->GetHWND()),myhdc);
-		g_debug.SendMessage(mystr, hlaeDEBUG_VERBOSE_LEVEL3);
-
-	}
-
-	wxClientDC *udontfuckwithme = new wxClientDC(_pHlaeGameWindow);
-	_pHlaeGameWindow->DoPrepareDC(*udontfuckwithme);
-	udontfuckwithme->DrawEllipse(0,0,100,100);
-	_pHlaeGameWindow->OnDraw(*udontfuckwithme);
-	delete udontfuckwithme;
-
-	//MessageBoxW((HWND)(_pHlaeGameWindow->GetHWND()),L"CHOOCHOO",L"I am crazy11",MB_OK);
-*/
-	// fill in server window:
-	if (phServerWnd) *phServerWnd = (void *)(_pHlaeGameWindow->GetHWND());
-
+	WXHWND hwRet=_pHlaeGameWindow->GetHWND();
 
 	wxString mystr;
-	int iSavedDC;
-	myhdc=::GetDC((HWND)(_pHlaeGameWindow->GetHWND()));
-	
-	iSavedDC= ::SaveDC(myhdc);
-	::RestoreDC(myhdc,iSavedDC);
-	if (phSavedDC) *phSavedDC = iSavedDC;
+	mystr.Printf(wxT("_OnCreateWindow WXHWND: 0x%08x"),hwRet); 
+	g_debug.SendMessage(mystr, hlaeDEBUG_DEBUG);
 
-	mystr.Printf(wxT("GetPixelFormat(myhdc):%i, ServerWND: 0x%08x"),::GetPixelFormat(myhdc),phServerWnd? *phServerWnd : 0); 
-	::ReleaseDC((HWND)(_pHlaeGameWindow->GetHWND()),myhdc);
-	g_debug.SendMessage(mystr, hlaeDEBUG_VERBOSE_LEVEL3);
-
-	retResult=(void *)1;
-
-	return retResult;
-}
-
-bool CHlaeBcServer::_ReleaseGlWindow()
-{
-	if (!_hGLRC) return false;
-
-	bool retResult = TRUE == wglDeleteContext((HGLRC)_hGLRC);
-	if (!retResult)
-	{
-		wxString mystr;
-		mystr.Printf(wxT("wglDeleteContext failed: Requested: GetLastError(): %i"),::GetLastError()); 
-		g_debug.SendMessage(mystr, hlaeDEBUG_ERROR);
-	} else {
-			g_debug.SendMessage(wxT("wglCreateContext succeeded"), hlaeDEBUG_VERBOSE_LEVEL3);
-	}
-	return retResult;
+	return hwRet;
 }
 
 bool CHlaeBcServer::_UpdateWindow(int nWidth, int nHeight)
 {
+	g_debug.SendMessage(wxT("Client sent window size update."), hlaeDEBUG_VERBOSE_LEVEL3);
 	if (!_pHlaeGameWindow) return false;
 	
 	_pHlaeGameWindow->SetVirtualSize(nWidth,nHeight);
 	//_pHlaeGameWindow->SetScrollRate(10,10);
 	_pHlaeGameWindow->SetScrollbars(1,1,nWidth,nHeight);
 	_pHlaeGameWindow->SetMaxSize(wxSize(nWidth,nHeight));
+
+	// prepare for drawing:
+	wxClientDC dc(_pHlaeGameWindow);
+	_pHlaeGameWindow->DoPrepareDC(dc);
 
 	return true;
 }

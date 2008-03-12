@@ -15,8 +15,6 @@ public:
 	CHlaeBcServer(wxWindow *parent);
 	~CHlaeBcServer();
 
-	void Do_DoPepareDC(); // called by gamewindow to inform us, that we should adjust the device origin again.
-
 	bool PassEventPreParsed(unsigned int umsg,unsigned int wParam,unsigned int lParam); // outdated
 	bool PassEventPreParsed(WXHWND hwnd,unsigned int umsg,unsigned int wParam,unsigned int lParam); // outdated
 
@@ -33,8 +31,7 @@ private:
 	void *_hGLRC;
 
 
-	void * _AquireGlWindow(int nWidth, int nHeight, int iPixelFormat,const void *ppfd, void **phServerWnd, int *phSavedDC);
-	bool _ReleaseGlWindow();
+	WXHWND _OnCreateWindow(int nWidth, int nHeight);
 	bool _UpdateWindow(int nWidth, int nHeight);
 };
 

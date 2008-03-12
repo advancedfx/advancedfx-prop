@@ -127,7 +127,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="../;../shared/microsoft;c:\Libraries/hlsdk/multiplayer/cl_dll;c:\Libraries/hlsdk/multiplayer/common;c:\Libraries/hlsdk/multiplayer/engine;c:\Libraries/hlsdk/multiplayer/pm_shared;c:\Libraries/hlsdk/multiplayer/dlls;$(NOINHERIT)"
+				AdditionalIncludeDirectories="../shared/microsoft;c:\Libraries/hlsdk/multiplayer/cl_dll;c:\Libraries/hlsdk/multiplayer/common;c:\Libraries/hlsdk/multiplayer/engine;c:\Libraries/hlsdk/multiplayer/pm_shared;c:\Libraries/hlsdk/multiplayer/dlls;$(NOINHERIT)"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;MIRVDEMOTOOL_EXPORTS"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"

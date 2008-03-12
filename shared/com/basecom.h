@@ -104,22 +104,20 @@
 #define HLAE_BASECOM_QRYSV_HELLO				0x00000000
 // the server may choose not to reply to HELLO.
 
+#define HLAE_BASECOM_QRYSV_OnCreateWindow		0x00000001
 #define HLAE_BASECOM____SV_WndRectUpdate		0x00000008
 #define HLAE_BASECOM____SV_MouseEvent			0x00000009
 #define HLAE_BASECOM____SV_KeyBoardEvent		0x0000000A
-#define HLAE_BASECOM_QRYSV_AquireGlWindow		0x0000000D
-#define HLAE_BASECOM_QRYSV_ReleaseGlWindow		0x0000000E
 #define HLAE_BASECOM_MSGSV_UpdateWindow			0x0000000F
 
 // basecom client messages:
 
 #define HLAE_BASECOM_RETCL_HELLO				0x00000000
 
+#define HLAE_BASECOM_RETCL_OnCreateWindow		0x00000001
 #define HLAE_BASECOM_MSGCL_WndRectUpdate		0x00000008
 #define HLAE_BASECOM_MSGCL_MouseEvent			0x00000009
 #define HLAE_BASECOM_MSGCL_KeyBoardEvent		0x0000000A
-#define HLAE_BASECOM_RETCL_AquireGlWindow		0x0000000D
-#define HLAE_BASECOM_RETCL_ReleaseGlWindow		0x0000000E
 #define HLAE_BASECOM____CL_UpdateWindow			0x0000000F
 
 //
@@ -140,6 +138,17 @@ struct HLAE_BASECOM_RET_HELLO_s
 {
 	DWORD	dwServerVersion;
 	bool	bConnectionAccepted;
+};
+
+struct HLAE_BASECOM_OnCreateWindow_s
+{
+	int nWidth;
+	int nHeight;
+};
+
+struct HLAE_BASECOM_RET_OnCreateWindow_s
+{
+	HWND parentWindow;
 };
 
 struct HLAE_BASECOM_WndRectUpdate_s
@@ -166,31 +175,6 @@ struct HLAE_BASECOM_MSGCL_KeyBoardEvent_s
 	unsigned int uMsg; // WM_* code
 	unsigned int uKeyCode;
 	unsigned int uKeyFlags;
-};
-
-struct HLAE_BASECOM_AquireGlWindow_s
-{
-	int nWidth;
-	int nHeight;
-	int  iPixelFormat;
-	PIXELFORMATDESCRIPTOR pfd;
-};
-
-struct HLAE_BASECOM_RET_AquireGlWindow_s
-{
-	HGLRC	hServerGLRC;
-	HWND	hServerWND;
-	int		hSavedDC;
-};
-
-struct HLAE_BASECOM_ReleaseGlWindow_s
-{
-	// empty
-};
-
-struct HLAE_BASECOM_RET_ReleaseGlWindow_s
-{
-	BOOL retResult;
 };
 
 struct HLAE_BASECOM_UpdateWindows_s

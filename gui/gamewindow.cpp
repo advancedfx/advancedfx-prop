@@ -260,8 +260,6 @@ bool CHlaeGameWindow::Destroy()
 
 void CHlaeGameWindow::OnDraw(wxDC &dc)
 {
-	if (_bTransmitAllowed) _pHlaeBcServer->Do_DoPepareDC();
-
 	int isx,isy,ix,iy,iwt,iht,iwv,ihv,igx,igy;
 
 	GetScrollPixelsPerUnit(&isx,&isy);
