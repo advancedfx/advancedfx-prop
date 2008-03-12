@@ -18,22 +18,35 @@
 #include "basecomClient.h"
 
 
-HWND g_hwHlaeBcCltWindow = NULL;
+HWND g_hwHlaeBcCltWindow = NULL; // Hlae BaseCom client reciever window
+
+HLAE_BASECOM_WndRectUpdate_s g_HlaeWindowRect; // Warning: in the current implementation those values may not represent the actual server's size, since HlaeBc_AdjustViewPort will do some security clamping on them when needed.
+
+HGLRC g_hHlaeServerGL=NULL;
+HWND  g_hHlaeServerWND=NULL;
 
 HWND g_HL_MainWindow = NULL;
 WNDCLASSA *g_HL_WndClassA = NULL;
-
-HLAE_BASECOM_WndRectUpdate_s g_HlaeWindowRect; // Warning: in the current implementation those values may not represent the actual server's size, since HlaeBc_AdjustViewPort will do some security clamping on them when needed.
 
 struct
 {
 	int iX;
 	int iY;
+	int nWidth;
+	int nHeight;
+
+	HDC hDC;
+
+	int iPixelFormat;
+	PIXELFORMATDESCRIPTOR pfd;
+	
 	struct {
 		int iX;
 		int iY;
 	} MouseTarget;
 } g_HL_MainWindow_info;
+
+
 
 LRESULT CALLBACK Hooking_WndProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
@@ -179,31 +192,9 @@ LRESULT CALLBACK HlaeBcCltWndProc(
 
 			switch(pMyCDS->dwData)
 			{
-			case HLAE_BASECOM_MSG_TESTDUMMY:
-				MessageBoxW(hwnd,L"Got empty test data.",HLAE_BASECOM_CLIENT_ID,MB_OK);
-				return TRUE;
-
-			case HLAE_BASECOM_MSGCL_RET_CreateWindowExA:
-				//MessageBox(0,"TEST","Hello",MB_OK);
-				if (g_pHlaeBcResultTarget) memcpy(g_pHlaeBcResultTarget,pMyCDS->lpData,sizeof(HLAE_BASECOM_RET_CreateWindowExA_s));
-				if(pMyCDS->lpData == NULL) MessageBox(0,"NULL","0000",MB_OK);
-				return TRUE;
-
-			case HLAE_BASECOM_MSGCL_RET_RegisterClassA:
-				if (g_pHlaeBcResultTarget) memcpy(g_pHlaeBcResultTarget,pMyCDS->lpData,sizeof(HLAE_BASECOM_RET_RegisterClassA_s));
-				return TRUE;
-
-			case HLAE_BASECOM_MSGCL_RET_DestroyWindow:
-				if (g_pHlaeBcResultTarget) memcpy(g_pHlaeBcResultTarget,pMyCDS->lpData,sizeof(HLAE_BASECOM_RET_DestroyWindow_s));
-				return TRUE;
-
-			case HLAE_BASECOM_MSGCL_CallWndProc_s:
-				// it's a bit risky, but whatev0r:
-				return HlaeBcCallWndProc(((HLAE_BASECOM_CallWndProc_s *)(pMyCDS->lpData))->hwnd,((HLAE_BASECOM_CallWndProc_s *)(pMyCDS->lpData))->uMsg,((HLAE_BASECOM_CallWndProc_s *)(pMyCDS->lpData))->wParam,((HLAE_BASECOM_CallWndProc_s *)(pMyCDS->lpData))->lParam);
-
-			case HLAE_BASECOM_MSGCL_RET_GameWndGetDC:
-				if (g_pHlaeBcResultTarget) memcpy(g_pHlaeBcResultTarget,pMyCDS->lpData,sizeof(HLAE_BASECOM_RET_GameWndGetDC_s));
-				return TRUE;
+			case HLAE_BASECOM_RETCL_HELLO:
+				// no checks performed atm
+				return FALSE;
 
 			case HLAE_BASECOM_MSGCL_WndRectUpdate:
 				return HlaeBcCl_WndRectUpdate(pMyCDS->lpData);
@@ -214,10 +205,15 @@ LRESULT CALLBACK HlaeBcCltWndProc(
 			case HLAE_BASECOM_MSGCL_KeyBoardEvent:
 				return HlaeBcCl_KeyBoardEvent(pMyCDS->lpData);
 
-			case HLAE_BASECOM_MSGCL_RET_ChooseNVIDIA	:
-				if (g_pHlaeBcResultTarget) memcpy(g_pHlaeBcResultTarget,pMyCDS->lpData,sizeof(HLAE_BASECOM_RET_ChooseNVIDIA_s));
+			case HLAE_BASECOM_RETCL_AquireGlWindow:
+				if (!g_pHlaeBcResultTarget) return FALSE;
+				memcpy(g_pHlaeBcResultTarget,pMyCDS->lpData,sizeof(HLAE_BASECOM_RET_AquireGlWindow_s));
 				return TRUE;
-
+				
+			case HLAE_BASECOM_RETCL_ReleaseGlWindow:
+				if (!g_pHlaeBcResultTarget) return FALSE;
+				memcpy(g_pHlaeBcResultTarget,pMyCDS->lpData,sizeof(HLAE_BASECOM_RET_ReleaseGlWindow_s));
+				return TRUE;
 
 			default:
 				MessageBoxW(hwnd,L"Unexpected message.",HLAE_BASECOM_CLIENT_ID,MB_OK|MB_ICONERROR);
@@ -327,99 +323,75 @@ bool HlaeBcCltSendMessageRet(DWORD dwId,DWORD cbSize,PVOID lpData,void *pResultT
 // So if you modifiy s.th. regarding the returns, you might need to modifiy it
 // too.
 
-bool HlaeBcClt_GameWndPrepare(int nWidth, int nHeight)
-// Query the server to prepare the game window
-// nWidth - desired width
-// nHeight - desired height
-// Returns true if the query was successfull, otherwise false
+HGLRC HlaeBc_AquireGlWindow(int nWidth, int nHeight, int iPixelFormat, CONST PIXELFORMATDESCRIPTOR *  ppfd, HWND *phServerWND, int *phSavedDC )
+// requests the server to Create an OpenGL Resource context (wglCreateContext)
+// returns NULL on fail or the GL Resource Handle on success.
 {
-	bool bResult=false;
-	HLAE_BASECOM_GameWndPrepare_s *mycws = new HLAE_BASECOM_GameWndPrepare_s;
+	HGLRC retResult=NULL;
 
-	mycws->nWidth = nWidth;
-	mycws->nHeight = nHeight;
+	HLAE_BASECOM_RET_AquireGlWindow_s *mycwret = new HLAE_BASECOM_RET_AquireGlWindow_s;
+	HLAE_BASECOM_AquireGlWindow_s *mycws = new HLAE_BASECOM_AquireGlWindow_s;
 
-	bResult=HlaeBcCltSendMessage(HLAE_BASECOM_MSGSV_GameWndPrepare,sizeof(HLAE_BASECOM_GameWndPrepare_s),(PVOID)mycws);
+	mycws->nWidth		= nWidth;
+	mycws->nHeight		= nHeight;
+	mycws->iPixelFormat	= iPixelFormat;
+	mycws->pfd			= *ppfd;
 
-	delete mycws;
-	return bResult;
-}
-
-bool HlaeBcClt_GameWndGetDC(HWND *pretHWND)
-// Query the HDC from the server
-// pretHWND - pointer where the resulting HWND shall be saved
-//            if pretHWND is NULL, the result will be discarded
-//            this returns the DC's HWND, not the DC (because the
-//            HDC is not allowed to be shared among threads)
-// Returns true if the query was successfull, otherwise false
-{
-	bool bResult=false;
-
-	HLAE_BASECOM_RET_GameWndGetDC_s *mycwret = new HLAE_BASECOM_RET_GameWndGetDC_s;
-	HLAE_BASECOM_GameWndGetDC_s *mycws = new HLAE_BASECOM_GameWndGetDC_s;
-	
-	if(HlaeBcCltSendMessageRet(HLAE_BASECOM_MSGSV_GameWndGetDC,sizeof(HLAE_BASECOM_GameWndGetDC_s),(PVOID)mycws,mycwret))
+	if(HlaeBcCltSendMessageRet(HLAE_BASECOM_QRYSV_AquireGlWindow,sizeof(HLAE_BASECOM_AquireGlWindow_s),(PVOID)mycws,mycwret))
 	{
-		if(pretHWND) *pretHWND = mycwret->retResult;
-		bResult=true;
+		retResult = mycwret->hServerGLRC;
+		if (phServerWND) *phServerWND=mycwret->hServerWND;
+		if (phSavedDC) *phSavedDC=mycwret->hSavedDC;
 	}
 
 	delete mycws;
 	delete mycwret;
 
-	return bResult;
+	return retResult;
 }
 
-bool HlaeBcClt_GameWndRelease()
-// Query the server to inform it, that we won't need the GameWindow anymore
-// Returns true if the query was successfull, otherwise false
+BOOL HlaeBc_ReleaseGlWindow()
+// requests the server to release the OpenGL Resource Context (wglDeleteContext)
+// returns FALSE on fail, TRUE otherwise
 {
-	bool bResult=false;
-	HLAE_BASECOM_GameWndRelease_s *mycws = new HLAE_BASECOM_GameWndRelease_s;
+	BOOL retResult=FALSE;
 
-	bResult=HlaeBcCltSendMessage(HLAE_BASECOM_MSGSV_GameWndRelease,sizeof(HLAE_BASECOM_GameWndRelease_s),(PVOID)mycws);
+	HLAE_BASECOM_RET_ReleaseGlWindow_s *mycwret = new HLAE_BASECOM_RET_ReleaseGlWindow_s;
+	HLAE_BASECOM_ReleaseGlWindow_s *mycws = new HLAE_BASECOM_ReleaseGlWindow_s;
 
-	delete mycws;
-	return bResult;
-}
-
-bool HlaeBcClt_FormatNVIDIA(int iPixelFormat, CONST PIXELFORMATDESCRIPTOR * ppfd)
-{
-	bool bResult=false;
-	HLAE_BASECOM_FormatNVIDIA_s *mycws = new HLAE_BASECOM_FormatNVIDIA_s;
-
-	mycws->iPixelFormat = iPixelFormat;
-	mycws->pfd = *ppfd;
-
-	bResult=HlaeBcCltSendMessage(HLAE_BASECOM_MSGSV_FormatNVIDIA,sizeof(HLAE_BASECOM_FormatNVIDIA_s),(PVOID)mycws);
-
-	delete mycws;
-	return bResult;
-}
-
-bool HlaeBcClt_ChooseNVIDIA(const PIXELFORMATDESCRIPTOR *ppfd,int *piRet)
-{
-	bool bResult=false;
-
-	HLAE_BASECOM_RET_ChooseNVIDIA_s *mycwret = new HLAE_BASECOM_RET_ChooseNVIDIA_s;
-	HLAE_BASECOM_ChooseNVIDIA_s *mycws = new HLAE_BASECOM_ChooseNVIDIA_s;
-
-	mycws->pfd=*ppfd;
-	
-	if(HlaeBcCltSendMessageRet(HLAE_BASECOM_MSGSV_ChooseNVIDIA,sizeof(HLAE_BASECOM_ChooseNVIDIA_s),(PVOID)mycws,mycwret))
+	if(HlaeBcCltSendMessageRet(HLAE_BASECOM_QRYSV_ReleaseGlWindow,sizeof(HLAE_BASECOM_ReleaseGlWindow_s),(PVOID)mycws,mycwret))
 	{
-		if(piRet) *piRet = mycwret->retResult;
-		bResult=true;
+		retResult = mycwret->retResult;
 	}
 
 	delete mycws;
 	delete mycwret;
 
-	return bResult;
+	return retResult;
+}
+
+bool HlaeBc_UpdateWindow(int nWidth, int nHeight)
+// informs the server about necessary game window size changes
+// returns false on fail, true otherwise
+{
+	bool retResult = false;
+
+	HLAE_BASECOM_UpdateWindows_s *mycws = new HLAE_BASECOM_UpdateWindows_s;
+
+	mycws->nWidth=nWidth;
+	mycws->nHeight=nHeight;
+	
+	if(HlaeBcCltSendMessage(HLAE_BASECOM_MSGSV_UpdateWindow,sizeof(HLAE_BASECOM_UpdateWindows_s),(PVOID)mycws))
+	{
+		retResult = true;
+	}
+
+	delete mycws;
+	return retResult;
 }
 
 //
-// WinAPI hooks for export in the basecomClient.h:
+// WinAPI and other hooks for export in the basecomClient.h:
 //
 
 ATOM APIENTRY HlaeBcClt_RegisterClassA(CONST WNDCLASSA *lpWndClass)
@@ -477,8 +449,12 @@ HWND APIENTRY HlaeBcClt_CreateWindowExA(DWORD dwExStyle,LPCTSTR lpClassName,LPCT
 	g_HL_MainWindow_info.iX = x;
 	g_HL_MainWindow_info.iY = y;
 
-	// request the server to prepare the gamewindow and stuff according to our needs:
-	HlaeBcClt_GameWndPrepare(nWidth,nHeight);
+	// and size:
+	g_HL_MainWindow_info.nWidth = nWidth;
+	g_HL_MainWindow_info.nHeight = nHeight;
+
+	// pre init some states:
+	g_HL_MainWindow_info.hDC = NULL;
 
 	g_HL_MainWindow = CreateWindowExA(dwExStyle,lpClassName,lpWindowName,dwStyle,x,y,nWidth,nHeight,hWndParent,hMenu,hInstance,lpParam);
 
@@ -488,35 +464,20 @@ HWND APIENTRY HlaeBcClt_CreateWindowExA(DWORD dwExStyle,LPCTSTR lpClassName,LPCT
 
 BOOL APIENTRY HlaeBcClt_DestroyWindow(HWND hWnd)
 {
-	// quit if it's not the window we want:
-	if (hWnd==NULL || hWnd != g_HL_MainWindow)
-		return DestroyWindow(hWnd);
+	if (hWnd!=NULL && hWnd != g_HL_MainWindow)
+	{
+		// H-L main game window being destroyed
 
-#ifdef MDT_DEBUG
-	MessageBoxA(NULL,"I am about to destroy the main window ...","HlaeBcClt_DestroyWindow",MB_OK|MB_ICONINFORMATION);
-#endif
+		// halt client server:
+		HlaeBcCltStop();
 
-	bool bResult;
+		// clean up globals:
+		g_HL_MainWindow = NULL;
+		if(g_HL_WndClassA) delete g_HL_WndClassA; // I asume we won't use it anymore, this might be wrong in some rare cases.
+	}
 
-	bResult = TRUE==DestroyWindow(hWnd);
-
-	// inform server that we won't use it's window anymore:
-	HlaeBcClt_GameWndRelease();
-
-	// halt client server:
-	HlaeBcCltStop();
-
-	// clean up globals:
-	g_HL_MainWindow = NULL;
-	if(g_HL_WndClassA) delete g_HL_WndClassA; // I asume we won't use it anymore, this might be wrong in some rare cases.
-
-	return bResult;
+	return DestroyWindow(hWnd);
 }
-
-bool g_bHlaeAsumeServerDCPresent=false;
-HWND g_hHlaeServerWnd=NULL;
-
-HDC g_HL_HDC=NULL;
 
 HDC APIENTRY HlaeBcClt_GetDC( HWND hWnd )
 {
@@ -524,55 +485,14 @@ HDC APIENTRY HlaeBcClt_GetDC( HWND hWnd )
 	if (hWnd==NULL || hWnd != g_HL_MainWindow)
 		return GetDC(hWnd);
 
-#ifdef MDT_DEBUG
-	MessageBoxA(hWnd,"GetDC for MainWindow requested","HlaeBcClt_GetDC",MB_OK|MB_ICONINFORMATION);
-#endif
-
-	HDC hdcResult;
-	HWND hwndResult;
-
-	if((g_bHlaeAsumeServerDCPresent=HlaeBcClt_GameWndGetDC(&hwndResult)))
-	{
-		g_hHlaeServerWnd=hwndResult; // save handle for HlaeBcClt_ReleaseDC
-		hdcResult=GetDC(hwndResult); // trick it into the server's window
-	} else
-		hdcResult=GetDC(hWnd);
-
-	/*if (!DuplicateHandle(GetCurrentThread(),hdcResult,GetCurrentProcess(),(HANDLE *)&g_hMappedDC,0,true,DUPLICATE_SAME_ACCESS))
-	{
-		char ptemp[150];
-		int iLastError=GetLastError();
-		_snprintf(ptemp,149,"Duplicate handle failed ( 0x%08x ).\nGetLastError: %u (0x%08x)",hdcResult,iLastError,iLastError);
-		ptemp[149]=0;
-		MessageBoxA(0,ptemp,"HlaeBcClt_SetPixelFormat error:",MB_ICONERROR|MB_OK);
-	}*/
-
-	//if (g_hMappedDC) return g_hMappedDC;
-
-	g_HL_HDC = hdcResult;
-	return hdcResult;
+	g_HL_MainWindow_info.hDC = GetDC(hWnd);
+	return g_HL_MainWindow_info.hDC;
 }
-
-int APIENTRY HlaeBcClt_ReleaseDC( HWND hWnd, HDC hDC )
-{
-	// quit if it's not the window we want:
-	if (hWnd==NULL || hWnd != g_HL_MainWindow || !g_bHlaeAsumeServerDCPresent)
-		return ReleaseDC(hWnd,hDC);
-
-#ifdef MDT_DEBUG
-	MessageBoxA(hWnd,"ReleaseDC for MainWindow requested","HlaeBcClt_ReleaseDC",MB_OK|MB_ICONINFORMATION);
-#endif
-
-	g_bHlaeAsumeServerDCPresent=false;
-	//if (g_hMappedDC) CloseHandle(g_hMappedDC);
-	return ReleaseDC(g_hHlaeServerWnd,hDC); // of course we trick it into the server's window again
-}
-
 
 void HlaeBcCl_AdjustViewPort(int &x, int &y, int width, int height)
 // this will adjust the incoming params accroding to the gamewindow (in case it's DC can be asumed to be present)
 {
-	if(!g_hHlaeServerWnd) return;
+	if(!g_hHlaeServerGL) return;
 
 	static int iMyLastWidth=-1;
 	static int iMyLastHeight=-1;
@@ -586,8 +506,9 @@ void HlaeBcCl_AdjustViewPort(int &x, int &y, int width, int height)
 
 		iMyLastWidth=width;
 		iMyLastHeight=height;
-		// update the server!:
-		HlaeBcClt_GameWndPrepare(width,height);
+
+		// update the server:
+		HlaeBc_UpdateWindow(width, height);
 	}
 
 	// now we will apply some clamping to avoid problems
@@ -610,7 +531,7 @@ void HlaeBcCl_AdjustViewPort(int &x, int &y, int width, int height)
 BOOL APIENTRY HlaeBcCl_GetCursorPos(LPPOINT lpPoint)
 {
 	BOOL bRet = GetCursorPos(lpPoint);
-	if(!g_hHlaeServerWnd) return bRet;
+	if(!g_hHlaeServerGL) return bRet;
 
 	POINT dp = *lpPoint;
 
@@ -625,7 +546,7 @@ BOOL APIENTRY HlaeBcCl_GetCursorPos(LPPOINT lpPoint)
 
 HWND WINAPI HlaeBcClt_SetCapture( HWND hWnd)
 {
-	if(!g_hHlaeServerWnd)
+	if(!g_hHlaeServerGL)
 		return SetCapture(hWnd);
 
 	return NULL;
@@ -633,78 +554,102 @@ HWND WINAPI HlaeBcClt_SetCapture( HWND hWnd)
 
 BOOL WINAPI HlaeBcClt_ReleaseCapture( VOID )
 {
-	if(!g_hHlaeServerWnd)
+	if(!g_hHlaeServerGL)
 		return ReleaseCapture();
 
 	return TRUE;
 }
 
-int WINAPI HlaeBcClt_ChoosePixelFormat( HDC  hdc, CONST PIXELFORMATDESCRIPTOR *  ppfd )
-{
-	if(!g_bHlaeAsumeServerDCPresent)
-		return ChoosePixelFormat(hdc,ppfd);
-
-	int iRet=0;
-
-	HlaeBcClt_ChooseNVIDIA(ppfd,&iRet);
-
-	return iRet;
-}
-
 BOOL WINAPI HlaeBcClt_SetPixelFormat(  HDC  hdc,  int  iPixelFormat, CONST PIXELFORMATDESCRIPTOR *  ppfd )
 {
-	BOOL bRet;
+	// copy data for further use:
+	g_HL_MainWindow_info.iPixelFormat = iPixelFormat;
+	g_HL_MainWindow_info.pfd = *ppfd;
 	
-	if(!g_bHlaeAsumeServerDCPresent)//ppfd->dwFlags&PFD_SUPPORT_OPENGL)
+	return SetPixelFormat(hdc, iPixelFormat, ppfd);
+}
+
+HDC g_temp_serverDC=NULL;
+
+HGLRC WINAPI HlaeBcClt_wglCreateContext(HDC  hdc)
+{
+	// return if it's not the window (DC) we want:
+	if (!(g_HL_MainWindow_info.hDC) || hdc != g_HL_MainWindow_info.hDC)
+		return wglCreateContext(hdc);
+
+	int iSavedDC;
+
+	HGLRC hGLRC = HlaeBc_AquireGlWindow(g_HL_MainWindow_info.nWidth,g_HL_MainWindow_info.nHeight,g_HL_MainWindow_info.iPixelFormat,&(g_HL_MainWindow_info.pfd),&g_hHlaeServerWND,&iSavedDC);
+
+	if (hGLRC)
 	{
-		bRet = SetPixelFormat(hdc, iPixelFormat, ppfd);
+		GetLastError();
+		HDC thdc=GetDC(g_hHlaeServerWND);
 
-		if (bRet==FALSE)
+		RestoreDC(thdc,iSavedDC);
+
+		char ppp[200];
+		ppp[sizeof(ppp)-1]=0;
+		_snprintf(ppp,sizeof(ppp)-1,"GetLastError(): %i\nHWND: 0x%08x",GetLastError(),g_hHlaeServerWND);
+		MessageBoxA(g_hHlaeServerWND,ppp,"HlaeBcClt_wglCreateContext",MB_OK|MB_ICONERROR);
+		_snprintf(ppp,sizeof(ppp)-1,"Format 0%08x",GetPixelFormat(thdc));
+		MessageBoxA(g_hHlaeServerWND,ppp,"HlaeBcClt_wglCreateContext",MB_OK|MB_ICONERROR);
+
+
+	/*	LineTo(thdc,1000,1000);
+		
+		g_hHlaeServerGL = wglCreateContext(thdc);
+		hGLRC = g_hHlaeServerGL;
+		if (!hGLRC)
 		{
-			char ptemp[150];
-			int iLastErr = GetLastError();
-			_snprintf(ptemp,149,"SetPixelFormat request failed.\nGetLastError: %u, 0x%08x",iLastErr,iLastErr);
-			ptemp[149]=0;
-			MessageBoxA(0,ptemp,"HLAE Client error:",MB_ICONERROR|MB_OK);
-		}
-	} else {
-		//pEngfuncs->Con_DPrintf("Marshalling SetPixelFormat to HLAE GUI in order to avoid running into NVIDIA OGL driver bugs ...\n");
-		bRet=HlaeBcClt_FormatNVIDIA(iPixelFormat,ppfd);
+			char ptemp[200];
+			ptemp[sizeof(ptemp)-1]=0;
+			_snprintf(ptemp,sizeof(ptemp)-1,"wglCreateContext failed:\nGetLastError(): %i\nServerHWND: 0x%08x\nServerHGLRC: 0x%08x",GetLastError(),g_hHlaeServerWND,g_hHlaeServerGL);
+			MessageBoxA(0,ptemp,"HlaeBcClt_wglCreateContext",MB_OK|MB_ICONERROR);
+		}*/
 
-		if (bRet==FALSE)
-			MessageBoxA(0,"HLAE GUI Server - SetPixelFormat Failed","HLAE Client error:",MB_ICONERROR|MB_OK);
+		ReleaseDC(g_hHlaeServerWND,thdc);
 	}
+	else
+	{
+		hGLRC = wglCreateContext(hdc);
+	}
+
+	return hGLRC;
+}
+
+BOOL WINAPI HlaeBcClt_wglMakeCurrent( HDC  hdc, HGLRC  hglrc )
+{
+	if (!(g_HL_MainWindow_info.hDC) || hdc != g_HL_MainWindow_info.hDC)
+		return wglMakeCurrent(hdc,hglrc);
+
+	HDC thdc=GetDC(g_hHlaeServerWND);
+
+	BOOL bRet=wglMakeCurrent(thdc,g_hHlaeServerGL);
+	if (!bRet)
+	{
+		char ptemp[200];
+		ptemp[sizeof(ptemp)-1]=0;
+		_snprintf(ptemp,sizeof(ptemp)-1,"wglMakeCurrent failed:\nGetLastError(): %i\nGetPixelFormat(): %i\nServerHWND: 0x%08x\nServerHGLRC: 0x%08x",GetLastError(),GetPixelFormat(thdc),g_hHlaeServerWND,g_hHlaeServerGL);
+		MessageBoxA(0,ptemp,"HlaeBcClt_wglMakeCurrent",MB_OK|MB_ICONERROR);
+	}
+
+	ReleaseDC(g_hHlaeServerWND,thdc);
 
 	return bRet;
 }
 
-HGLRC WINAPI HlaeBcClt_wglCreateContext(HDC  hdc)
+BOOL WINAPI HlaeBcClt_wglDeleteContext( HGLRC  hglrc )
 {
-	HGLRC hRet;
+	if(!g_hHlaeServerGL || hglrc!=g_hHlaeServerGL )
+		return wglDeleteContext(hglrc);
 
-	// this is all crap, instead we need to build our own context and then try wglMakeCurrent
-	
-	if(g_bHlaeAsumeServerDCPresent && hdc == g_HL_HDC)
+	if (g_temp_serverDC)
 	{
-		ReleaseDC( g_hHlaeServerWnd, hdc );
-		hdc = GetDC( g_hHlaeServerWnd );
-
-		//MessageBoxA(0,"CreateContext","lobob",MB_OK);
-		hRet= wglCreateContext(hdc);
-	}
-	else
-		hRet= wglCreateContext(hdc);
-
-	if (!hRet)
-	{
-		char ptemp[200];
-		int iLastErr = GetLastError();
-		_snprintf(ptemp,199,"wglCreateContext request failed.\nGetLastError: %u (0x%08x)\ng_hHlaeServerWnd=0x%08x, hdc =  0x%08x",iLastErr,iLastErr,g_hHlaeServerWnd,hdc);
-		ptemp[199]=0;
-		MessageBoxA(0,ptemp,"HLAE Client error:",MB_ICONERROR|MB_OK);
+		ReleaseDC(g_hHlaeServerWND,g_temp_serverDC);
 	}
 
-	return hRet;
+	return HlaeBc_ReleaseGlWindow();
 }
 
 //
@@ -716,7 +661,7 @@ HGLRC WINAPI HlaeBcClt_wglCreateContext(HDC  hdc)
 
 REGISTER_DEBUGCMD_FUNC(info_devicecontext)
 {
-	if (!g_bHlaeAsumeServerDCPresent)
+	if (!g_hHlaeServerGL)
 	{
 		HDC hdcResult;
 	
@@ -725,6 +670,7 @@ REGISTER_DEBUGCMD_FUNC(info_devicecontext)
 		PIXELFORMATDESCRIPTOR *pPfd = new PIXELFORMATDESCRIPTOR;
 
 		char sztemp[2000];
+		sztemp[sizeof(sztemp)-1]=0;
 
 		if (DescribePixelFormat( hdcResult, GetPixelFormat(hdcResult),sizeof(PIXELFORMATDESCRIPTOR),pPfd))
 		{
@@ -745,9 +691,10 @@ REGISTER_DEBUGCMD_FUNC(info_devicecontext)
 		delete pPfd;
 
 		ReleaseDC(g_HL_MainWindow,hdcResult);
-	} else pEngfuncs->Con_Printf("HLAE Server DC is used.\nInfo command not available in this Case!\n");
+	} else pEngfuncs->Con_Printf("HLAE Server GL context is used.\nInfo not available in this case!\n");
 }
 #endif
+
 
 // I'll leave this old function source in here for now (may be for historical reasons, don't know):
 // may be leave it in, might be a target for remembering how to do some tricky stuff by design

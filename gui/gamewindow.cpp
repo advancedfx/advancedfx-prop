@@ -246,8 +246,6 @@ bool CHlaeGameWindow::Create(wxWindow *parent,
 	bRes=wxScrolledWindow::Create(parent,winid,pos,size,style,name);
 	//_pHlaeBcServer->PassEventPreParsed(WM_CREATE,0,0);
 
-	_internalHDC = NULL; // for some reason we can't init it here
-	
 	_bTransmitAllowed = true;
 	return bRes;
 }
@@ -257,17 +255,7 @@ bool CHlaeGameWindow::Destroy()
 	//_pHlaeBcServer->PassEventPreParsed(WM_DESTROY,0,0);
 	_bTransmitAllowed = false;
 
-	::ReleaseDC((HWND) GetHWND(), (HDC) _internalHDC);
-
 	return wxScrolledWindow::Destroy();
-}
-
-WXHDC CHlaeGameWindow::GetDCInternal()
-{
-	// hopefully the dc is present now:
-	if (!_internalHDC) 	_internalHDC = (WXHDC) ::GetDC((HWND) GetHWND());
-
-	return _internalHDC;
 }
 
 void CHlaeGameWindow::OnDraw(wxDC &dc)

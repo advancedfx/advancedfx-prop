@@ -967,7 +967,6 @@ HRESULT WINAPI my_DirectInputCreateA(HINSTANCE hinst, DWORD dwVersion, void *ppD
 	return NULL;
 }
 
-
 FARPROC (WINAPI *pGetProcAddress)(HMODULE hModule, LPCSTR lpProcName);
 FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 {
@@ -978,6 +977,7 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 	{
 		if (!lstrcmp(lpProcName, "GetProcAddress"))
 			return (FARPROC) &newGetProcAddress;
+
 		if (!lstrcmp(lpProcName, "glBegin"))
 			return (FARPROC) &my_glBegin;
 		if (!lstrcmp(lpProcName, "glEnd"))
@@ -1017,8 +1017,6 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 			return (FARPROC) &HlaeBcClt_RegisterClassA;
 		if (!lstrcmp(lpProcName, "GetDC"))
 			return (FARPROC) &HlaeBcClt_GetDC;
-		if (!lstrcmp(lpProcName, "ReleaseDC"))
-			return (FARPROC) &HlaeBcClt_ReleaseDC;
 		if (!lstrcmp(lpProcName, "SetCapture"))
 			return (FARPROC) &HlaeBcClt_SetCapture;
 		if (!lstrcmp(lpProcName, "ReleaseCapture"))
@@ -1029,10 +1027,14 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 
 		if (!lstrcmp(lpProcName, "SetPixelFormat"))
 			return (FARPROC) &HlaeBcClt_SetPixelFormat;
-		if (!lstrcmp(lpProcName, "ChoosePixelFormat"))
-			return (FARPROC) &HlaeBcClt_ChoosePixelFormat;
+
 		if(!lstrcmp(lpProcName,"wglCreateContext"))
 			return (FARPROC) &HlaeBcClt_wglCreateContext;
+		if(!lstrcmp(lpProcName,"wglDeleteContext"))
+			return (FARPROC) &HlaeBcClt_wglDeleteContext;
+
+		if(!lstrcmp(lpProcName,"wglMakeCurrent"))
+			return (FARPROC) &HlaeBcClt_wglMakeCurrent;
 
 #endif
 

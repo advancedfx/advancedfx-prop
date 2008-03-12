@@ -15,6 +15,10 @@
 #include "basecomserver.h"
 
 
+#pragma comment(lib,"OpenGL32.lib")
+#pragma comment(lib,"GLu32.lib")
+#pragma comment(lib,"GLaux.lib")
+
 // typedef bool (* OnRecieve_t)(class *lpClassPointer,unsigned long dwData,unsigned long cbData,void *lpData);
 
 
@@ -31,7 +35,7 @@ public:
 	bool HlaeBcSrvStart(CHlaeBcServer *pBase);
 	bool HlaeBcSrvStop();
 
-	LRESULT DispatchToClientProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam); // outdated
+	LRESULT DispatchToClientProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam); // outdated, not supported anymore
 	LRESULT DispatchStruct(DWORD dwDataCode,DWORD cbDataSize,PVOID lpDataPtr);
 
 private:
@@ -42,18 +46,13 @@ private:
 	HINSTANCE	_cl_hInstance;		// filled by RegisterClassA, used for relaying window messages to the H-L windowproc
 	WNDPROC		_cl_lpfnWndProc;	// .
 
-	bool _MyOnRecieve(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
-	bool _ReturnMessage(HWND hWnd,HWND hwTarget,ULONG dwData,DWORD cbData,PVOID lpData);
+	BOOL _MyOnRecieve(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
+	BOOL _ReturnMessage(HWND hWnd,HWND hwTarget,ULONG dwData,DWORD cbData,PVOID lpData);
 
 	// wrappers:
-	bool _Wrapper_RegisterClassA(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS); // outdated and unused
-	bool _Wrapper_CreateWindowExA(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS); //outdated and unused
-	bool _Wrapper_DestroyWindow(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS); // outdated and unused
-	bool _Wrapper_GameWndPrepare(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
-	bool _Wrapper_GameWndGetDC(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
-	bool _Wrapper_GameWndRelease(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
-	bool _Wrapper_FormatNVIDIA(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
-	bool _Wrapper_ChooseNVIDIA(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
+	BOOL _Wrapper_AquireGlWindow(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
+	BOOL _Wrapper_ReleaseGlWindow(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
+	BOOL _Wrapper_UpdateWindow(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
 };
 
 
@@ -62,7 +61,7 @@ private:
 //
 
 HWND g_hwHlaeBcSrvWindow = NULL;
-bool (CBCServerInternal::*g_OnRecieve)(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS) = NULL;
+BOOL (CBCServerInternal::*g_OnRecieve)(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS) = NULL;
 CBCServerInternal *g_pClass = NULL;
 	
 // USE INTERLOCED ACCES ONLY:
@@ -156,7 +155,8 @@ bool CBCServerInternal::HlaeBcSrvStop()
 
 LRESULT CBCServerInternal::DispatchToClientProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if (!_hwClient) return FALSE;
+	return FALSE;
+	/*if (!_hwClient) return FALSE;
 
 	static HLAE_BASECOM_CallWndProc_s mycws;
 
@@ -165,7 +165,7 @@ LRESULT CBCServerInternal::DispatchToClientProc(HWND hwnd, UINT uMsg, WPARAM wPa
 	mycws.wParam = wParam;
 	mycws.lParam = lParam;
 
-	return DispatchStruct(HLAE_BASECOM_MSGCL_CallWndProc_s,sizeof(HLAE_BASECOM_CallWndProc_s),&mycws);
+	return DispatchStruct(HLAE_BASECOM_MSGCL_CallWndProc_s,sizeof(HLAE_BASECOM_CallWndProc_s),&mycws);*/
 }
 
 LRESULT CBCServerInternal::DispatchStruct(DWORD dwDataCode,DWORD cbDataSize,PVOID lpDataPtr)
@@ -217,10 +217,7 @@ LRESULT CALLBACK CBCServerInternal::_HlaeBcSrvWndProc(
 			PCOPYDATASTRUCT pMyCDS;
 			pMyCDS = (PCOPYDATASTRUCT) lParam;
 			
-			if ((g_pClass->*g_OnRecieve)(hwnd,(HWND)wParam,pMyCDS))
-				return TRUE;
-			else
-				return FALSE;
+			return (g_pClass->*g_OnRecieve)(hwnd,(HWND)wParam,pMyCDS);
  
         default: 
             return DefWindowProc(hwnd, uMsg, wParam, lParam); 
@@ -229,41 +226,31 @@ LRESULT CALLBACK CBCServerInternal::_HlaeBcSrvWndProc(
 	return FALSE;
 }
 
-bool CBCServerInternal::_MyOnRecieve(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS)
+BOOL CBCServerInternal::_MyOnRecieve(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS)
 // we could add some pointer security checks here, they miss currently, we asume data is consitent.
 {
 	switch (pMyCDS->dwData)
 	{
-	case HLAE_BASECOM_MSG_TESTDUMMY:
-		MessageBoxW(hWnd,L"Got empty test data.",HLAE_BASECOM_SERVER_ID,MB_OK);
-		return true;
-	case HLAE_BASECOM_MSGSV_CreateWindowExA:
-		return _Wrapper_CreateWindowExA(hWnd,hwSender,pMyCDS);
-	case HLAE_BASECOM_MSGSV_RegisterClassA:
-		return _Wrapper_RegisterClassA(hWnd,hwSender,pMyCDS);
-	case HLAE_BASECOM_MSGSV_DestroyWindow:
-		return _Wrapper_DestroyWindow(hWnd,hwSender,pMyCDS);
+	case HLAE_BASECOM_QRYSV_HELLO:
+		// no checks performed atm
+		return FALSE;
 
-	case HLAE_BASECOM_MSGSV_GameWndPrepare:
-		return _Wrapper_GameWndPrepare(hWnd,hwSender,pMyCDS);
-	case HLAE_BASECOM_MSGSV_GameWndGetDC:
-		return _Wrapper_GameWndGetDC(hWnd,hwSender,pMyCDS);
-	case HLAE_BASECOM_MSGSV_GameWndRelease:
-		return _Wrapper_GameWndRelease(hWnd,hwSender,pMyCDS);
-	case HLAE_BASECOM_MSGSV_FormatNVIDIA:
-		return 	_Wrapper_FormatNVIDIA(hWnd,hwSender,pMyCDS);
-	case HLAE_BASECOM_MSGSV_ChooseNVIDIA:
-		return 	_Wrapper_ChooseNVIDIA(hWnd,hwSender,pMyCDS);
+	case HLAE_BASECOM_QRYSV_AquireGlWindow:
+		return _Wrapper_AquireGlWindow(hWnd,hwSender,pMyCDS);
+	case HLAE_BASECOM_QRYSV_ReleaseGlWindow:
+		return _Wrapper_ReleaseGlWindow(hWnd,hwSender,pMyCDS);
+	case HLAE_BASECOM_MSGSV_UpdateWindow:
+		return _Wrapper_UpdateWindow(hWnd,hwSender,pMyCDS);
 
 	default:
-		MessageBoxW(hWnd,L"Error: Recieved unkown message.",HLAE_BASECOM_SERVER_ID,MB_OK|MB_ICONERROR);
+		g_debug.SendMessage(wxT("CBCServerInternal::_MyOnRecieve: Recieved unkown message."), hlaeDEBUG_ERROR);
 	}
-	return false;
+	return FALSE;
 }
 
-bool CBCServerInternal::_ReturnMessage(HWND hWnd,HWND hwTarget,ULONG dwData,DWORD cbData,PVOID lpData)
+BOOL CBCServerInternal::_ReturnMessage(HWND hWnd,HWND hwTarget,ULONG dwData,DWORD cbData,PVOID lpData)
 {
-	if(!hwTarget) return false;
+	if(!hwTarget) return FALSE;
 	
 	COPYDATASTRUCT myCopyData;
 	
@@ -271,7 +258,7 @@ bool CBCServerInternal::_ReturnMessage(HWND hWnd,HWND hwTarget,ULONG dwData,DWOR
 	myCopyData.cbData=cbData;
 	myCopyData.lpData=lpData;
 
-	return TRUE==SendMessageW(
+	return SendMessageW(
 		hwTarget,
 		WM_COPYDATA,
 		(WPARAM)hWnd, // identify us as sender
@@ -279,156 +266,51 @@ bool CBCServerInternal::_ReturnMessage(HWND hWnd,HWND hwTarget,ULONG dwData,DWOR
 	);
 }
 
-bool CBCServerInternal::_Wrapper_RegisterClassA(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS)
+BOOL CBCServerInternal::_Wrapper_AquireGlWindow(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS)
 {
-	//MessageBoxW(hWnd,L"recvied",L"Reg",MB_OK);
-	HLAE_BASECOM_RegisterClassA_s * pdata = (HLAE_BASECOM_RegisterClassA_s *)pMyCDS->lpData;
+	BOOL bRes;
 
-	// adjust pointers for piggy backs:
-	if (HIWORD(pdata->lpszClassName))
-		pdata->lpszClassName=(LPCSTR)((char *)pdata + (size_t)(pdata->lpszClassName));
-	else
-		pdata->lpszClassName=NULL;
-	if (HIWORD(pdata->lpszMenuName))
-		pdata->lpszMenuName=(LPCSTR)((char *)pdata + (size_t)(pdata->lpszMenuName));
-	else
-		pdata->lpszMenuName=NULL;
+	HLAE_BASECOM_RET_AquireGlWindow_s *pRet = new HLAE_BASECOM_RET_AquireGlWindow_s;
 
-	// we will just fetch the window proc properties:
-	// although we won't use them.
-	_cl_hInstance = pdata->hInstance;
-	_cl_lpfnWndProc = pdata->lpfnWndProc;
+	HLAE_BASECOM_AquireGlWindow_s * pdata = (HLAE_BASECOM_AquireGlWindow_s *)pMyCDS->lpData;
 
-	//char sztemp[100];
-	//_snprintf(sztemp,sizeof(sztemp),"0x%08x",pdata->lpfnWndProc);
-	//MessageBoxA(0,sztemp,"SV says:",MB_OK);
+	pRet->hServerGLRC = (HGLRC)( _pBase->_AquireGlWindow( pdata->nWidth,pdata->nHeight,pdata->iPixelFormat,(void *)&(pdata->pfd),(void **)&(pRet->hServerWND),&(pRet->hSavedDC) ) );
 
-	// we also fetch the window, since we will need it for transmitting data that shall be passed to the WindowProc function:
-	_hwClient = hwSender;
-
-	//MessageBoxW(hWnd,L"Survived?",L"Reg",MB_OK);
-	return false; // we didn't handle it, let the hook handle it
-}
-
-bool CBCServerInternal::_Wrapper_CreateWindowExA(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS)
-{
-	bool bRes;
-
-	HLAE_BASECOM_RET_CreateWindowExA_s *pRet = new HLAE_BASECOM_RET_CreateWindowExA_s;
-
-	HLAE_BASECOM_CreateWindowExA_s * pdata = (HLAE_BASECOM_CreateWindowExA_s *)pMyCDS->lpData;
-
-	// adjust pointers for piggy backs:
-	if(HIWORD(pdata->lpClassName))
-		pdata->lpClassName=(LPCTSTR)((char *)pdata + (size_t)(pdata->lpClassName));
-	else
-		pdata->lpClassName=NULL;
-	if(HIWORD(pdata->lpWindowName))
-		pdata->lpWindowName=(LPCTSTR)((char *)pdata + (size_t)(pdata->lpWindowName));
-	else
-		pdata->lpWindowName=NULL;
-
-	pRet->retResult = (HWND)_pBase->_DoCreateWindowExA((char *)pdata->lpClassName,(char *)pdata->lpWindowName,pdata->x,pdata->y,pdata->nHeight,pdata->nWidth);
-
-	bRes=_ReturnMessage(hWnd,hwSender,HLAE_BASECOM_MSGCL_RET_CreateWindowExA,sizeof(HLAE_BASECOM_RET_CreateWindowExA_s),pRet);
+	bRes=_ReturnMessage(hWnd,hwSender,HLAE_BASECOM_RETCL_AquireGlWindow,sizeof(HLAE_BASECOM_RET_AquireGlWindow_s),pRet);
 
 	delete pRet;
 
 	return bRes;
 }
 
-bool CBCServerInternal::_Wrapper_DestroyWindow(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS)
+BOOL CBCServerInternal::_Wrapper_ReleaseGlWindow(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS)
 {
-	bool bRes;
+	BOOL bRes;
 
-	HLAE_BASECOM_RET_DestroyWindow_s *pRet = new HLAE_BASECOM_RET_DestroyWindow_s;
+	HLAE_BASECOM_RET_ReleaseGlWindow_s *pRet = new HLAE_BASECOM_RET_ReleaseGlWindow_s;
 
-	HLAE_BASECOM_DestroyWindow_s * pdata = (HLAE_BASECOM_DestroyWindow_s *)pMyCDS->lpData;
+	HLAE_BASECOM_ReleaseGlWindow_s * pdata = (HLAE_BASECOM_ReleaseGlWindow_s *)pMyCDS->lpData;
 
-	if(_pBase->_DoDestroyWindow((WXHWND)pdata->hWnd))
-		pRet->retResult = TRUE;
-	else
-		pRet->retResult = FALSE;
+	pRet->retResult = _pBase->_ReleaseGlWindow() ? TRUE : FALSE;
 
-	bRes=_ReturnMessage(hWnd,hwSender,HLAE_BASECOM_MSGCL_RET_CreateWindowExA,sizeof(HLAE_BASECOM_RET_CreateWindowExA_s),pRet);
+	bRes=_ReturnMessage(hWnd,hwSender,HLAE_BASECOM_RETCL_ReleaseGlWindow,sizeof(HLAE_BASECOM_RET_ReleaseGlWindow_s),pRet);
 
 	delete pRet;
 
 	return bRes;
 }
 
-bool CBCServerInternal::_Wrapper_GameWndPrepare(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS)
+BOOL CBCServerInternal:: _Wrapper_UpdateWindow(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS)
 {
-	bool bRes;
+	BOOL bRes;
 
-	HLAE_BASECOM_GameWndPrepare_s * pdata = (HLAE_BASECOM_GameWndPrepare_s *)pMyCDS->lpData;
+	HLAE_BASECOM_UpdateWindows_s * pdata = (HLAE_BASECOM_UpdateWindows_s *)pMyCDS->lpData;
 
-	bRes = _pBase->_Do_GameWndPrepare(pdata->nWidth,pdata->nHeight);
-
-	// set _hwClient, so Messages will be passed:
-	_hwClient = hwSender;
+	bRes = _pBase->_UpdateWindow(pdata->nWidth,pdata->nHeight) ? TRUE : FALSE;
 
 	return bRes;
 }
 
-bool CBCServerInternal::_Wrapper_GameWndGetDC(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS)
-{
-	bool bRes;
-
-	HLAE_BASECOM_RET_GameWndGetDC_s *pRet = new HLAE_BASECOM_RET_GameWndGetDC_s;
-
-	HLAE_BASECOM_GameWndGetDC_s * pdata = (HLAE_BASECOM_GameWndGetDC_s *)pMyCDS->lpData;
-
-	pRet->retResult = (HWND)(_pBase->_Do_GameWndGetDC());
-
-	bRes=_ReturnMessage(hWnd,hwSender,HLAE_BASECOM_MSGCL_RET_GameWndGetDC,sizeof(HLAE_BASECOM_RET_GameWndGetDC_s),pRet);
-
-	delete pRet;
-
-	return bRes;
-}
-
-bool CBCServerInternal::_Wrapper_GameWndRelease(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS)
-{
-	bool bRes;
-
-	HLAE_BASECOM_GameWndRelease_s * pdata = (HLAE_BASECOM_GameWndRelease_s *)pMyCDS->lpData;
-
-	bRes=_pBase->_Do_GameWndRelease();
-
-	// reset client handle (so no messages will get passed anymore):
-	_hwClient = NULL;
-
-	return bRes;
-}
-
-bool CBCServerInternal::_Wrapper_FormatNVIDIA(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS)
-{
-	bool bRes;
-
-	HLAE_BASECOM_FormatNVIDIA_s * pdata = (HLAE_BASECOM_FormatNVIDIA_s *)pMyCDS->lpData;
-
-	bRes=_pBase->_Do_FormatNVIDIA(pdata->iPixelFormat,(void *)&(pdata->pfd));
-
-	return bRes;
-}
-
-bool CBCServerInternal::_Wrapper_ChooseNVIDIA(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS)
-{
-	bool bRes;
-
-	HLAE_BASECOM_RET_ChooseNVIDIA_s *pRet = new HLAE_BASECOM_RET_ChooseNVIDIA_s;
-
-	HLAE_BASECOM_ChooseNVIDIA_s * pdata = (HLAE_BASECOM_ChooseNVIDIA_s *)pMyCDS->lpData;
-
-	pRet->retResult = _pBase->_Do_ChooseNVIDIA((void *)&(pdata->pfd));
-
-	bRes=_ReturnMessage(hWnd,hwSender,HLAE_BASECOM_MSGCL_RET_ChooseNVIDIA,sizeof(HLAE_BASECOM_RET_ChooseNVIDIA_s),pRet);
-
-	delete pRet;
-
-	return bRes;
-}
 
 //
 // the CBCServerInternal global:
@@ -447,16 +329,18 @@ CHlaeBcServer::CHlaeBcServer(wxWindow *parent)
 {
 	_parent = parent;
 	_pHlaeGameWindow = NULL;
+	_hGLRC = NULL;
 
-	if(!g_BCServerInternal.HlaeBcSrvStart(this)) throw "ERROR: HlaeBcSrvStart() failed.";
-
+	if(!g_BCServerInternal.HlaeBcSrvStart(this))
+		g_debug.SendMessage(wxT("ERROR: HlaeBcSrvStart() failed."),hlaeDEBUG_FATALERROR);
 
 }
 
 CHlaeBcServer::~CHlaeBcServer()
 {
-	g_BCServerInternal.HlaeBcSrvStop();
+	_ReleaseGlWindow();
 	if(_pHlaeGameWindow) delete _pHlaeGameWindow;
+	g_BCServerInternal.HlaeBcSrvStop();
 }
 
 void CHlaeBcServer::Do_DoPepareDC()
@@ -533,143 +417,135 @@ bool CHlaeBcServer::Pass_KeyBoardEvent(unsigned int uMsg, unsigned int uKeyCode,
 	);
 }
 
-void * CHlaeBcServer::_DoCreateWindowExA(char *lpClassNameA,char *lpWindowNameA,int x, int y, int nHeight, int nWidth)
+
+void * CHlaeBcServer::_AquireGlWindow(int nWidth, int nHeight, int iPixelFormat,const void *ppfd, void **phServerWnd, int *phSavedDC)
 {
-	return NULL; // code inactive
-
-	if (_pHlaeGameWindow)
-		return NULL; // window already present, we only allow one though
-	else
-	{
-		wxString mycaption(lpWindowNameA,wxConvUTF8);
-
-		_pHlaeGameWindow =new CHlaeGameWindow(this,_parent,wxID_ANY,wxDefaultPosition,wxSize(200,150),wxHSCROLL | wxVSCROLL,mycaption);
-
-		_pHlaeGameWindow->SetVirtualSize(nWidth,nHeight);
-		_pHlaeGameWindow->SetScrollRate(10,10);
-		
-		g_layoutmanager.AddPane(_pHlaeGameWindow, wxAuiPaneInfo().CentrePane().Caption(mycaption));
-
-		return _pHlaeGameWindow->GetHWND();
-	}
-}
-
-bool CHlaeBcServer::_DoDestroyWindow(WXHWND wxhWnd)
-{
-	return false; // code inactive
-
-	if (!_pHlaeGameWindow) return false;
-
-	if (_pHlaeGameWindow->GetHWND()==wxhWnd)
-	{
-		return _pHlaeGameWindow->Destroy();
-	}
-	else
-		return false;
-}
-
-bool CHlaeBcServer::_Do_GameWndPrepare(int nWidth, int nHeight)
-{
-	//char sztemp[100];
-	//_snprintf(sztemp,sizeof(sztemp),"nWidth: %i, nHeight: %i",nWidth,nHeight);
-	//MessageBoxA(0,sztemp,"CHlaeBcServer::_Do_GameWndPrepare",MB_OK);
+	HDC myhdc;
 
 	if (!_pHlaeGameWindow)
 	{
+		// window not present, create it first:
+		g_debug.SendMessage(wxT("Creating game window"), hlaeDEBUG_VERBOSE_LEVEL3);
+
 		wxString mycaption("Game Window",wxConvUTF8);
 
 		_pHlaeGameWindow =new CHlaeGameWindow(this,_parent,wxID_ANY,wxDefaultPosition,wxSize(200,150),wxHSCROLL | wxVSCROLL,mycaption);
 
-		_pHlaeGameWindow->SetVirtualSize(nWidth,nHeight);
-		//_pHlaeGameWindow->SetScrollRate(10,10);
-		_pHlaeGameWindow->SetScrollbars(1,1,nWidth,nHeight);
-		_pHlaeGameWindow->SetMaxSize(wxSize(nWidth,nHeight));
-
+		// adjust size:
+		_UpdateWindow(nWidth, nHeight);
+		
 		g_layoutmanager.AddPane(_pHlaeGameWindow, wxAuiPaneInfo().CentrePane().Caption(mycaption));
 
-	} else {
-		_pHlaeGameWindow->SetVirtualSize(nWidth,nHeight);
-		//_pHlaeGameWindow->SetScrollRate(10,10);
-		_pHlaeGameWindow->SetScrollbars(1,1,nWidth,nHeight);
-		_pHlaeGameWindow->SetMaxSize(wxSize(nWidth,nHeight));
+		// first time, so also set the pixelformat:
+		myhdc = ::GetDC( (HWND)(_pHlaeGameWindow->GetHWND()) );
+
+		bool bSucc= TRUE == ::SetPixelFormat(myhdc,iPixelFormat,(PIXELFORMATDESCRIPTOR *)ppfd);
+
+		int iCurFormat = ::GetPixelFormat(myhdc);
+
+		::ReleaseDC((HWND)(_pHlaeGameWindow->GetHWND()),myhdc);
+
+		wxString mystr;
+
+		if (bSucc)
+		{
+			mystr.Printf(wxT("SetPixelFormat succeeded: Requested: %i, Current: %i"),iPixelFormat,iCurFormat); 
+			g_debug.SendMessage(mystr, hlaeDEBUG_VERBOSE_LEVEL3);
+		} else {
+			mystr.Printf(wxT("SetPixelFormat failed: Requested: %i, Current: %i, GetLastError(): %i"),iPixelFormat,iCurFormat,::GetLastError()); 
+			g_debug.SendMessage(mystr, hlaeDEBUG_ERROR);
+
+			return 0; // this is a problem, we can't continue
+		}
 	}
 
-	return true; // may be a bit more safe in the future, but that's it for now
-}
+	void *retResult = 0;
 
-WXHWND CHlaeBcServer::_Do_GameWndGetDC()
-// returns the DC's HWND, not the DC (because the HDC is not allowed to be shared among threads)
-{
-	if (!_pHlaeGameWindow) return NULL;
+	/*if (!_hGLRC)
+	{
+		// no OpenGL Resource Context handle, so create new HGLRC:
+		_pHlaeGameWindow->DoPrepareDC(wxClientDC(_pHlaeGameWindow));
 
-	//this->Do_DoPepareDC();
+		wxString mystr;
+		HDC myhdc = ::GetDC( (HWND)(_pHlaeGameWindow->GetHWND()) );
 
-	WXHWND pResult=NULL;
+		retResult = (void *)(wglCreateContext(myhdc));
 
-	pResult = _pHlaeGameWindow->GetHWND();
+		if (!retResult)
+		{
+	
+			mystr.Printf(wxT("wglCreateContext failed: Requested: GetLastError(): %i"),::GetLastError()); 
+			g_debug.SendMessage(mystr, hlaeDEBUG_ERROR);
+		} else {
+			mystr.Printf(wxT("wglCreateContext succeeded: HGLRC: 0x%08x"),retResult); 
+			g_debug.SendMessage(mystr, hlaeDEBUG_VERBOSE_LEVEL3);
 
-    return pResult;
-}
+			// fill in server window:
+			if (phServerWnd) *phServerWnd = (void *)(_pHlaeGameWindow->GetHWND());
+		}
 
-bool CHlaeBcServer::_Do_GameWndRelease()
-{
-	if (!_pHlaeGameWindow) return false;
+		::ReleaseDC((HWND)(_pHlaeGameWindow->GetHWND()),myhdc);
 
-	return true; // may be a bit more safe in the future, but that's it for now
-}
+		myhdc=::GetDC((HWND)(_pHlaeGameWindow->GetHWND()));
+		mystr.Printf(wxT("GetPixelFormat(myhdc):%i"),::GetPixelFormat(myhdc)); 
+		::ReleaseDC((HWND)(_pHlaeGameWindow->GetHWND()),myhdc);
+		g_debug.SendMessage(mystr, hlaeDEBUG_VERBOSE_LEVEL3);
 
-bool  CHlaeBcServer::_Do_FormatNVIDIA(int iPixelFormat,void *ppfd)
-{
-	if (!_pHlaeGameWindow ) return false;
+	}
 
-	HDC myhdc = (HDC)(_pHlaeGameWindow->GetDCInternal());
+	wxClientDC *udontfuckwithme = new wxClientDC(_pHlaeGameWindow);
+	_pHlaeGameWindow->DoPrepareDC(*udontfuckwithme);
+	udontfuckwithme->DrawEllipse(0,0,100,100);
+	_pHlaeGameWindow->OnDraw(*udontfuckwithme);
+	delete udontfuckwithme;
 
-	bool bRet=TRUE==::SetPixelFormat(myhdc,iPixelFormat,(PIXELFORMATDESCRIPTOR *)ppfd)==TRUE;
+	//MessageBoxW((HWND)(_pHlaeGameWindow->GetHWND()),L"CHOOCHOO",L"I am crazy11",MB_OK);
+*/
+	// fill in server window:
+	if (phServerWnd) *phServerWnd = (void *)(_pHlaeGameWindow->GetHWND());
 
-	//char sztemp[100];
-	//sztemp[sizeof(sztemp)-1]=0;
 
-	int iCurFormat = ::GetPixelFormat(myhdc);
+	wxString mystr;
+	int iSavedDC;
+	myhdc=::GetDC((HWND)(_pHlaeGameWindow->GetHWND()));
+	
+	iSavedDC= ::SaveDC(myhdc);
+	::RestoreDC(myhdc,iSavedDC);
+	if (phSavedDC) *phSavedDC = iSavedDC;
 
-	wxString mystr;//(lpWindowNameA,wxConvUTF8);
-	mystr.Printf(wxT("After SetPixelFormat format is: %i\nRequested: %i\nGetLastError: %i"),iCurFormat,iPixelFormat,::GetLastError()); 
+	mystr.Printf(wxT("GetPixelFormat(myhdc):%i, ServerWND: 0x%08x"),::GetPixelFormat(myhdc),phServerWnd? *phServerWnd : 0); 
+	::ReleaseDC((HWND)(_pHlaeGameWindow->GetHWND()),myhdc);
 	g_debug.SendMessage(mystr, hlaeDEBUG_VERBOSE_LEVEL3);
 
-/*	#pragma comment(lib,"OpenGL32.lib")
-	#pragma comment(lib,"GLu32.lib")
-	#pragma comment(lib,"GLaux.lib")
+	retResult=(void *)1;
 
-	MessageBoxA(0,"Testing wglCreateContext","Servertst",MB_OK);
-
-	HGLRC hRet= wglCreateContext(myhdc);
-
-	if (!hRet)
-	{
-		char ptemp[200];
-		int iLastErr = GetLastError();
-		_snprintf(ptemp,199,"wglCreateContext request failed.\nGetLastError: %u (0x%08x)",iLastErr,iLastErr);
-		ptemp[199]=0;
-		MessageBoxA(0,ptemp,"Servertst",MB_ICONERROR|MB_OK);
-	} else MessageBoxA(0,"OK!","Servertst",MB_OK);*/
-
-	return bRet;
+	return retResult;
 }
 
-int CHlaeBcServer::_Do_ChooseNVIDIA(void *ppfd)
+bool CHlaeBcServer::_ReleaseGlWindow()
 {
-	if (!_pHlaeGameWindow) return 0;
+	if (!_hGLRC) return false;
 
-	HDC myhdc = (HDC)(_pHlaeGameWindow->GetDCInternal());
-
-	int iRet = ChoosePixelFormat(myhdc,(PIXELFORMATDESCRIPTOR *)ppfd);
-
-	if ((iRet)==0)
+	bool retResult = TRUE == wglDeleteContext((HGLRC)_hGLRC);
+	if (!retResult)
 	{
-		int iLastErr = ::GetLastError();
 		wxString mystr;
-		mystr.Printf(wxT("ChoosePixelFormat failed: GameWindowHDC=0x%08x, GetLastError=%u (0x%08x)"),myhdc,iLastErr,iLastErr); 
+		mystr.Printf(wxT("wglDeleteContext failed: Requested: GetLastError(): %i"),::GetLastError()); 
 		g_debug.SendMessage(mystr, hlaeDEBUG_ERROR);
+	} else {
+			g_debug.SendMessage(wxT("wglCreateContext succeeded"), hlaeDEBUG_VERBOSE_LEVEL3);
 	}
+	return retResult;
+}
+
+bool CHlaeBcServer::_UpdateWindow(int nWidth, int nHeight)
+{
+	if (!_pHlaeGameWindow) return false;
 	
-	return iRet;
+	_pHlaeGameWindow->SetVirtualSize(nWidth,nHeight);
+	//_pHlaeGameWindow->SetScrollRate(10,10);
+	_pHlaeGameWindow->SetScrollbars(1,1,nWidth,nHeight);
+	_pHlaeGameWindow->SetMaxSize(wxSize(nWidth,nHeight));
+
+	return true;
 }

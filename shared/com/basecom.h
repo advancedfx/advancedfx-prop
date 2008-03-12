@@ -1,5 +1,62 @@
+// Project :  Half-Life Advanced Effects
+// File    :  shared/com/basecom.h
+
+// Authors : last change / first change / name
+
+// 2008-03-11 / 2008-03-11 / Dominik Tugend
+
+
 //
 // Headers for basecom between the core (GUI) and the hook
+//
+
+// The Hlae Basecom system is based on the WM_COPYDATA Win32API service.
+
+// It's designed for synchronous message processing,
+// by using blocking SendMessage calls.
+
+// It's a communication between only one server and one client.
+// Other scenarios are not supported by design.
+
+
+//
+// coding conventions:
+//
+
+// for version checking:
+
+// The HELLO message codes may not be changed.
+// This also applies to the first 32 Bit of the belonging message structures.
+
+
+// returns of the WindowProc:
+
+// If the reciever processed the message it's WindowProc shall return TRUE==1
+// otherwise it shall return FALSE==0.
+// Please note that a FALSE return from SendMessage also happens when the
+// message could not be delivered to the reciever.
+
+// For queries (QRY) a return with TRUE also indicates that the RET message
+// has been successfully delivered.
+
+// Other return values are not allowed.
+// If you need other return values you'll have to supply those in the RET
+// message in response to a query (QRY).
+
+
+// This is to avoid first order loops and deadlocks:
+
+// The processing of a QRY may create one and only one RET message
+// before the WindowProc returns.
+
+// The processing of ANY OTHER MESSAGE must not create any messages
+// before the WindowProc returned.
+
+// Always look out to avoid ping-pong situations.
+
+
+//
+// Includes:
 //
 
 #include <windows.h>
@@ -13,123 +70,76 @@
 #define HLAE_BASECOM_CLIENT_ID HLAE_BASECOM_ID L" Client"
 #define HLAE_BASECOM_CLASSNAME L"HLAEBaseComWindow"
 
+
 //
 // Messages
 //
 
-// HLAE_BASECOM_MSG_+ is understood by both, Server and Client
-// HLAE_BASECOM_MSGSV_+ client -> server
-// HLAE_BASECOM_MSGCL_+ server -> client
+// naming convention:
 
-// If the reciever proccessed the message it shall return TRUE to SendMessage
-// otherwise it shall return FALSE to SendMessage
+// HLAE_BASECOM_xxxSV_+ client -> server
+// HLAE_BASECOM_xxxCL_+ server -> client
 
-// Some messages are only one-way, however their repsonse code is reserved (commented out)
+// where xxx is one of the following:
+// MSG - one way message, no answer expected
+// QRY - query message, answer expected
+// RET - response  message, in reaction to a query message
+// ___ - reserved, may not be used
 
-#define HLAE_BASECOM_MSG_TESTDUMMY				0x00000000
+// The QRY and it's bellonging RET message shall share the same trail (+).
 
-#define HLAE_BASECOM_MSGSV_CreateWindowExA		0x00000001
-#define HLAE_BASECOM_MSGSV_RegisterClassA		0x00000002
-#define HLAE_BASECOM_MSGSV_DestroyWindow		0x00000003
-//n/a	#define HLAE_BASECOM_MSGSV_RET_CallWndProc_s	0x00000004
-#define HLAE_BASECOM_MSGSV_GameWndPrepare		0x00000005
-#define HLAE_BASECOM_MSGSV_GameWndGetDC			0x00000006
-#define HLAE_BASECOM_MSGSV_GameWndRelease		0x00000007
-//n/a	#define HLAE_BASECOM_MSGSV_RET_WndRectUpdate	0x00000008
-//n/a	#define HLAE_BASECOM_MSGSV_RET_MouseEvent		0x00000009
-//n/a	#define HLAE_BASECOM_MSGSV_RET_KeyBoardEvent	0x0000000A
-#define HLAE_BASECOM_MSGSV_FormatNVIDIA			0x0000000B
-#define HLAE_BASECOM_MSGSV_ChooseNVIDIA			0x0000000C
-#define HLAE_BASECOM_QRYSV_AquireGlWindow_s		0x0000000D
-#define HLAE_BASECOM_QRYSV_ReleaseGlWindow_s	0x0000000E
 
-#define HLAE_BASECOM_MSGCL_RET_CreateWindowExA	0x00000001
-#define HLAE_BASECOM_MSGCL_RET_RegisterClassA	0x00000002
-#define HLAE_BASECOM_MSGCL_RET_DestroyWindow	0x00000003
-#define HLAE_BASECOM_MSGCL_CallWndProc_s		0x00000004
-//n/a	#define HLAE_BASECOM_MSGCL_RET_GameWndPrepare	0x00000005
-#define HLAE_BASECOM_MSGCL_RET_GameWndGetDC		0x00000006
-//n/a	#define HLAE_BASECOM_MSGCL_RET_GameWndRelease	0x00000007
+// message code conventions:
+
+// For one-may messages their return code shall be reserved.
+
+// The query and it's response shall use the same message code.
+
+// Appart from that no two (different) messages may share the same messge
+// code.
+
+
+// basecom server messages:
+
+#define HLAE_BASECOM_QRYSV_HELLO				0x00000000
+// the server may choose not to reply to HELLO.
+
+#define HLAE_BASECOM____SV_WndRectUpdate		0x00000008
+#define HLAE_BASECOM____SV_MouseEvent			0x00000009
+#define HLAE_BASECOM____SV_KeyBoardEvent		0x0000000A
+#define HLAE_BASECOM_QRYSV_AquireGlWindow		0x0000000D
+#define HLAE_BASECOM_QRYSV_ReleaseGlWindow		0x0000000E
+#define HLAE_BASECOM_MSGSV_UpdateWindow			0x0000000F
+
+// basecom client messages:
+
+#define HLAE_BASECOM_RETCL_HELLO				0x00000000
+
 #define HLAE_BASECOM_MSGCL_WndRectUpdate		0x00000008
 #define HLAE_BASECOM_MSGCL_MouseEvent			0x00000009
 #define HLAE_BASECOM_MSGCL_KeyBoardEvent		0x0000000A
-//#define HLAE_BASECOM_MSGCL_RET_FormatNVIDIA	0x0000000B
-#define HLAE_BASECOM_MSGCL_RET_ChooseNVIDIA		0x0000000C
-#define HLAE_BASECOM_RETCL_AquireGlWindow_s		0x0000000D
-#define HLAE_BASECOM_RETCL_ReleaseGlWindow_s	0x0000000E
+#define HLAE_BASECOM_RETCL_AquireGlWindow		0x0000000D
+#define HLAE_BASECOM_RETCL_ReleaseGlWindow		0x0000000E
+#define HLAE_BASECOM____CL_UpdateWindow			0x0000000F
 
 //
 // Message Structures:
 //
 
-struct HLAE_BASECOM_CreateWindowExA_s
+// Note: in some cases the delivered messages may contain piggy backed data
+// after the regular structure (i.e. for transmitting strings etc.).
+// The exact format of a message depends on the functions exchanging it and is
+// not defined here.
+
+struct HLAE_BASECOM_HELLO_s
 {
-    DWORD dwExStyle;
-    LPCTSTR lpClassName; // relative (piggy backed)
-    LPCTSTR lpWindowName; // relative (piggy backed)
-    DWORD dwStyle;
-    int x;
-    int y;
-    int nWidth;
-    int nHeight;
-    HWND hWndParent;
-    HMENU hMenu;
-    HINSTANCE hInstance;
-    LPVOID lpParam; // only valid in client process space
+	DWORD dwClientVersion;
 };
 
-struct HLAE_BASECOM_RET_CreateWindowExA_s
+struct HLAE_BASECOM_RET_HELLO_s
 {
-	HWND retResult;
-};
-
-struct HLAE_BASECOM_DestroyWindow_s
-{
-    HWND hWnd;
-};
-
-struct HLAE_BASECOM_RET_DestroyWindow_s
-{
-	BOOL retResult;
-};
-
-typedef WNDCLASSA HLAE_BASECOM_RegisterClassA_s;
-// lpszMenuName // relative (piggy backed)
-// lpszClassName // relative (piggy backed)
-// lpfnWndProc // only valid in client process space
-
-struct HLAE_BASECOM_RET_RegisterClassA_s
-{
-	ATOM retResult;
-};
-
-struct HLAE_BASECOM_CallWndProc_s
-{
-    HWND hwnd;
-    UINT uMsg;
-    WPARAM wParam;
-    LPARAM lParam;
-};
-
-struct HLAE_BASECOM_GameWndPrepare_s
-{
-	int nWidth;
-	int nHeight;
-};
-
-struct HLAE_BASECOM_GameWndGetDC_s
-{
-    // empty
-};
-
-struct HLAE_BASECOM_RET_GameWndGetDC_s
-{
-	HWND retResult; // MSDN2: Note that the handle to the DC can only be used by a single thread at any one time. This is why we return the Window instead and carry out GetDC and ReleaseDC locally.
-};
-
-struct HLAE_BASECOM_GameWndRelease_s
-{
-	// empty
+	DWORD	dwServerVersion;
+	bool	bConnectionAccepted;
 };
 
 struct HLAE_BASECOM_WndRectUpdate_s
@@ -158,24 +168,6 @@ struct HLAE_BASECOM_MSGCL_KeyBoardEvent_s
 	unsigned int uKeyFlags;
 };
 
-struct HLAE_BASECOM_FormatNVIDIA_s
-{
-	int  iPixelFormat;
-	PIXELFORMATDESCRIPTOR pfd;
-};
-
-struct HLAE_BASECOM_ChooseNVIDIA_s
-{
-	PIXELFORMATDESCRIPTOR pfd;
-};
-
-struct HLAE_BASECOM_RET_ChooseNVIDIA_s
-{
-	int retResult;
-};
-
-//
-
 struct HLAE_BASECOM_AquireGlWindow_s
 {
 	int nWidth;
@@ -186,7 +178,9 @@ struct HLAE_BASECOM_AquireGlWindow_s
 
 struct HLAE_BASECOM_RET_AquireGlWindow_s
 {
-	bool retResult;
+	HGLRC	hServerGLRC;
+	HWND	hServerWND;
+	int		hSavedDC;
 };
 
 struct HLAE_BASECOM_ReleaseGlWindow_s
@@ -196,5 +190,11 @@ struct HLAE_BASECOM_ReleaseGlWindow_s
 
 struct HLAE_BASECOM_RET_ReleaseGlWindow_s
 {
-	bool retResult;
+	BOOL retResult;
+};
+
+struct HLAE_BASECOM_UpdateWindows_s
+{
+	int nWidth;
+	int nHeight;
 };
