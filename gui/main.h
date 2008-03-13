@@ -18,7 +18,7 @@ private:
 		hlaeID_SaveLayout = wxID_HIGHEST+1,
 		hlaeID_LayoutManager
 	};
-	CHlaeBcServer* m_basecom;
+	CHlaeGameWindow* m_HlaeGameWindow;
 	wxMenu* m_windowmenu;
 	wxMenu*	m_toolbarmenu;
 	wxMenu*	m_layoutmenu;

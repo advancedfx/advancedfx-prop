@@ -20,8 +20,6 @@
 
 HWND g_hwHlaeBcCltWindow = NULL; // Hlae BaseCom client reciever window
 
-HLAE_BASECOM_WndRectUpdate_s g_HlaeWindowRect; // Warning: in the current implementation those values may not represent the actual server's size, since HlaeBc_AdjustViewPort will do some security clamping on them when needed.
-
 HWND  g_hHlaeServerWND=NULL; // handle to the sever's Game Window Parent
 
 HWND g_HL_MainWindow = NULL; // created by create window
@@ -66,53 +64,38 @@ LRESULT CALLBACK Hooking_WndProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 		g_HL_MainWindow_info.iX = (int)(short) LOWORD(lParam); 
 		g_HL_MainWindow_info.iY = (int)(short) HIWORD(lParam);
 		break;
+	case WM_LBUTTONDOWN:
+	case WM_LBUTTONUP:
+	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
+	case WM_MBUTTONDOWN:
+	case WM_MBUTTONUP:
+		// if the user clicks on us we want the friggin focus:
+		SetFocus(g_HL_MainWindow);
+		break;
 	}
 
 	return g_HL_WndClassA->lpfnWndProc(hWnd,uMsg,wParam,lParam);
 }
 
-LRESULT HlaeBcCallWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
-// this function is not supported atm / it will reject all requests
-// the server will inform us about specific events regarding the game window,
-// this is our chance to react to them:
+//
+// Handlers for events from the Hlae GUI server:
+//
+
+LRESULT HlaeBcCl_OnGameWindowFocus(PVOID lpData)
 {
-	// make sure we have the WindowProc and the H-L MainWindow handle, otherwise quit:
-	if (!(g_HL_WndClassA && g_HL_WndClassA->lpfnWndProc && g_HL_MainWindow)) return FALSE;
+	HLAE_BASECOM_OnGameWindowFocus_s *myps = (HLAE_BASECOM_OnGameWindowFocus_s *)lpData;
 
-	//
-	// filtering of specific message codes:
+	pEngfuncs->Con_DPrintf("Forcing focus ...\n");
 
-	return FALSE; // this function is not supported atm
-
-	// in any case we will replace the hwnd param, since the H-L winproc shall belive it originated from it's own window:
-
-
-	//
-	// after filtering we pass them on to the real proc (in case we didn't quit already):
-
-	LRESULT lrRet = FALSE;
-
-	lrRet = g_HL_WndClassA->lpfnWndProc(hwnd,uMsg,wParam,lParam);
-
-	//
-	// we could examine or modify the result here:
-
-	// blah
-
-	//
-	// and finally we return:
-	return lrRet;
+	return SetFocus(g_HL_MainWindow) ? TRUE : FALSE;
 }
 
-// Handlers for events from Server's GameWindow:
-
-LRESULT HlaeBcCl_WndRectUpdate(PVOID lpData)
+LRESULT HlaeBcCl_OnServerClose(PVOID lpData)
 {
-	HLAE_BASECOM_WndRectUpdate_s *myps = (HLAE_BASECOM_WndRectUpdate_s *)lpData;
-	//pEngfuncs->Con_Printf("MoveEvent: %i,%i\n",myps->iLeftGlobal,myps->iTopGlobal);
-	g_HlaeWindowRect = *myps;
+	HLAE_BASECOM_OnServerClose_s *myps = (HLAE_BASECOM_OnServerClose_s *)lpData;
 
-	return TRUE;
+	return SendMessage(g_HL_MainWindow,WM_CLOSE,NULL,NULL);
 }
 
 LRESULT HlaeBcCl_MouseEvent(PVOID lpData)
@@ -122,26 +105,16 @@ LRESULT HlaeBcCl_MouseEvent(PVOID lpData)
 	g_HL_MainWindow_info.MouseTarget.iX = myps->iX;
 	g_HL_MainWindow_info.MouseTarget.iY = myps->iY;
 
-	//pEngfuncs->Con_Printf("HlaeBcCl_MouseEvent: (%i,%i)\n",myps->iX,myps->iY);
+	pEngfuncs->Con_Printf("HlaeBcCl_MouseEvent: (%i,%i)\n",myps->iX,myps->iY);
 
-	pEngfuncs->Con_Printf("OutPorc: 0x%08x - IsProc: 0x%08x\n",(void *)Hooking_WndProc,(void *)(GetWindowLong( g_HL_MainWindow, GWL_WNDPROC )));
-
-	LRESULT tr = FALSE;//g_HL_WndClassA->lpfnWndProc(g_HL_MainWindow,(UINT)(myps->uMsg),(WPARAM)(myps->wParam),(LPARAM)(((myps->iY) << 16) + myps->iX));
-
-	/*int ix,iy;
-	pEngfuncs->GetMousePosition(&ix,&iy);
-	int dx=g_HL_MainWindow_info.iX+myps->iX;
-	int dy=g_HL_MainWindow_info.iY+myps->iX;
-	pEngfuncs->Con_Printf("MouseEvent: inx=%i,iny=%i,dx=%i,dy=%i (%i,%i)\n",myps->iX,myps->iY,dx,dy,ix,iy);*/
-
-	return tr;
+	return g_HL_WndClassA->lpfnWndProc(g_HL_MainWindow,(UINT)(myps->uMsg),(WPARAM)(myps->wParam),(LPARAM)(((myps->iY) << 16) + myps->iX));
 }
 
 LRESULT HlaeBcCl_KeyBoardEvent(PVOID lpData)
 {
 	HLAE_BASECOM_MSGCL_KeyBoardEvent_s *myps = (HLAE_BASECOM_MSGCL_KeyBoardEvent_s *)lpData;
 
-	// pEngfuncs->Con_Printf("KeyEvent: %i %i 0x%08x\n",myps->uMsg,myps->uKeyCode,myps->uKeyFlags);
+	pEngfuncs->Con_Printf("HlaeBcCl_KeyEvent: %i %i 0x%08x\n",myps->uMsg,myps->uKeyCode,myps->uKeyFlags);
 
 	return g_HL_WndClassA->lpfnWndProc(g_HL_MainWindow,(UINT)(myps->uMsg),(WPARAM)(myps->uKeyCode),(LPARAM)(myps->uKeyFlags));
 
@@ -193,8 +166,11 @@ LRESULT CALLBACK HlaeBcCltWndProc(
 				memcpy(g_pHlaeBcResultTarget,pMyCDS->lpData,sizeof(HLAE_BASECOM_RET_OnCreateWindow_s));
 				return TRUE;
 
-			case HLAE_BASECOM_MSGCL_WndRectUpdate:
-				return HlaeBcCl_WndRectUpdate(pMyCDS->lpData);
+			case HLAE_BASECOM_MSGCL_OnGameWindowFocus:
+				return HlaeBcCl_OnGameWindowFocus(pMyCDS->lpData);
+
+			case HLAE_BASECOM_MSGCL_OnServerClose:
+				return HlaeBcCl_OnServerClose(pMyCDS->lpData);
 
 			case HLAE_BASECOM_MSGCL_MouseEvent:
 				return HlaeBcCl_MouseEvent(pMyCDS->lpData);
@@ -311,6 +287,8 @@ bool HlaeBcCltSendMessageRet(DWORD dwId,DWORD cbSize,PVOID lpData,void *pResultT
 // too.
 
 HWND HlaeBC_OnCreateWindow(int nWidth, int nHeight)
+// informs the server (if present) that we started and are about to create the game window
+// returns the handle of the window we shall use as parent on success, NULL otherwise.
 {
 	HWND retResult=NULL;
 
@@ -328,6 +306,23 @@ HWND HlaeBC_OnCreateWindow(int nWidth, int nHeight)
 	delete mycws;
 	delete mycwret;
 
+	return retResult;
+}
+
+bool HlaeBc_OnDestroyWindow()
+// informs the server that we are about to shut down
+// returns false on fail, true otherwise
+{
+	bool retResult = false;
+
+	HLAE_BASECOM_OnDestroyWindow_s *mycws = new HLAE_BASECOM_OnDestroyWindow_s;
+
+	if(HlaeBcCltSendMessage(HLAE_BASECOM_MSGSV_OnDestroyWindow,sizeof(HLAE_BASECOM_OnDestroyWindow_s),(PVOID)mycws))
+	{
+		retResult = true;
+	}
+
+	delete mycws;
 	return retResult;
 }
 
@@ -455,9 +450,12 @@ HWND APIENTRY HlaeBcClt_CreateWindowExA(DWORD dwExStyle,LPCTSTR lpClassName,LPCT
 
 BOOL APIENTRY HlaeBcClt_DestroyWindow(HWND hWnd)
 {
-	if (hWnd!=NULL && hWnd != g_HL_MainWindow)
+	if (hWnd!=NULL && hWnd == g_HL_MainWindow)
 	{
 		// H-L main game window being destroyed
+
+		// inform GUI server:
+		HlaeBc_OnDestroyWindow();
 
 		// halt client server:
 		HlaeBcCltStop();
@@ -485,8 +483,7 @@ void HlaeBcCl_AdjustViewPort(int x, int y, int width, int height)
 	static int iMyLastHeight=-1;
 
 	// firt check if we need to inform the server about changed coords,
-	// this has to be done carefully to avoid pingpongs in case the Server's Window is oversized i.e.
-	// we also prevent updates for 
+	// this has to be done carefully to avoid useless traffic:
 	if ((iMyLastWidth!=width || iMyLastHeight != height ) && width > 0 && height > 0)
 	{
 		pEngfuncs->Con_DPrintf("HlaeBcCl_AdjustViewPort: Cached values (%ix%i) outdated, forcing update (%ix%i).\n",iMyLastWidth,iMyLastHeight,width,height);
@@ -497,15 +494,6 @@ void HlaeBcCl_AdjustViewPort(int x, int y, int width, int height)
 		// update the server:
 		HlaeBc_UpdateWindow(width, height);
 	}
-
-	// now we will apply some clamping to avoid problems
-	// in case the server's window is oversized for some reason:
-	
-	if (g_HlaeWindowRect.iHeightTotal >  height) g_HlaeWindowRect.iHeightTotal = height;
-	if (g_HlaeWindowRect.iWidthTotal >  width) g_HlaeWindowRect.iWidthTotal = width;
-
-	if (g_HlaeWindowRect.iWidthVisible > g_HlaeWindowRect.iWidthTotal) g_HlaeWindowRect.iWidthVisible =  g_HlaeWindowRect.iWidthTotal;
-	if (g_HlaeWindowRect.iHeightVisible >  g_HlaeWindowRect.iWidthTotal) g_HlaeWindowRect.iHeightVisible = g_HlaeWindowRect.iHeightTotal;
 }
 
 BOOL APIENTRY HlaeBcCl_GetCursorPos(LPPOINT lpPoint)
@@ -539,4 +527,35 @@ BOOL WINAPI HlaeBcClt_ReleaseCapture( VOID )
 		return ReleaseCapture();
 
 	return TRUE;
+}
+
+//
+// Debug info
+//
+
+REGISTER_DEBUGCMD_FUNC(debug_devicecontext)
+{
+	HDC hdcResult;
+
+	hdcResult=GetDC(g_HL_MainWindow);
+
+	PIXELFORMATDESCRIPTOR *pPfd = new PIXELFORMATDESCRIPTOR;
+
+	if (DescribePixelFormat( hdcResult, GetPixelFormat(hdcResult),sizeof(PIXELFORMATDESCRIPTOR),pPfd))
+	{
+
+		pEngfuncs->Con_Printf("DescribePixelFormat says:\nnSize:%u\nnVersion:%u\ndwFlags:0x%08x\niPixelType:%i\ncColorBits:%u\ncRedBits:%u\ncRedShift:%u\ncGreenBits:%u\ncGreenShift:%u\ncBlueBits:%u\ncBlueShift:%u\ncAlphaBits:%u\ncAlphaShift:%u\ncAccumBits:%u\ncAccumRedBits:%u\ncAccumGreenBits:%u\ncAccumBlueBits:%u\ncAccumAlphaBits:%u\ncDepthBits:%u\ncStencilBits:%u\ncAuxBuffers:%u\niLayerType:%i\nbReserved:%u\ndwLayerMask:%u\ndwVisibleMask:%u\ndwDamageMask:%u",
+			pPfd->nSize, pPfd->nVersion, pPfd->dwFlags, pPfd->iPixelType,
+			pPfd->cColorBits, pPfd->cRedBits, pPfd->cRedShift, pPfd->cGreenBits,
+			pPfd->cGreenShift, pPfd->cBlueBits, pPfd->cBlueShift, pPfd->cAlphaBits,
+			pPfd->cAlphaShift, pPfd->cAccumBits, pPfd->cAccumRedBits, pPfd->cAccumGreenBits,
+			pPfd->cAccumBlueBits, pPfd->cAccumAlphaBits, pPfd->cDepthBits, pPfd->cStencilBits,
+			pPfd->cAuxBuffers, pPfd->iLayerType, pPfd->bReserved, pPfd->dwLayerMask,
+			pPfd->dwVisibleMask, pPfd->dwDamageMask);
+
+	} else pEngfuncs->Con_Printf("DescribePixelFormat failed");
+
+	delete pPfd;
+
+	ReleaseDC(g_HL_MainWindow,hdcResult);
 }

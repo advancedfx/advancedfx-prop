@@ -105,7 +105,9 @@
 // the server may choose not to reply to HELLO.
 
 #define HLAE_BASECOM_QRYSV_OnCreateWindow		0x00000001
-#define HLAE_BASECOM____SV_WndRectUpdate		0x00000008
+#define HLAE_BASECOM_MSGSV_OnDestroyWindow		0x00000002
+#define HLAE_BASECOM____SV_OnGameWindowFocus	0x00000007
+#define HLAE_BASECOM____SV_OnServerClose		0x00000008
 #define HLAE_BASECOM____SV_MouseEvent			0x00000009
 #define HLAE_BASECOM____SV_KeyBoardEvent		0x0000000A
 #define HLAE_BASECOM_MSGSV_UpdateWindow			0x0000000F
@@ -115,7 +117,9 @@
 #define HLAE_BASECOM_RETCL_HELLO				0x00000000
 
 #define HLAE_BASECOM_RETCL_OnCreateWindow		0x00000001
-#define HLAE_BASECOM_MSGCL_WndRectUpdate		0x00000008
+#define HLAE_BASECOM____CL_OnDestroyWindow		0x00000002
+#define HLAE_BASECOM_MSGCL_OnGameWindowFocus	0x00000007
+#define HLAE_BASECOM_MSGCL_OnServerClose		0x00000008
 #define HLAE_BASECOM_MSGCL_MouseEvent			0x00000009
 #define HLAE_BASECOM_MSGCL_KeyBoardEvent		0x0000000A
 #define HLAE_BASECOM____CL_UpdateWindow			0x0000000F
@@ -151,16 +155,19 @@ struct HLAE_BASECOM_RET_OnCreateWindow_s
 	HWND parentWindow;
 };
 
-struct HLAE_BASECOM_WndRectUpdate_s
+struct HLAE_BASECOM_OnDestroyWindow_s
 {
-	int iLeft;
-	int iTop;
-	int iWidthVisible;
-	int iHeightVisible;
-	int iWidthTotal;
-	int iHeightTotal;
-	int iLeftGlobal;
-	int iTopGlobal;
+	// empty
+};
+
+struct HLAE_BASECOM_OnGameWindowFocus_s
+{
+	// empty
+};
+
+struct HLAE_BASECOM_OnServerClose_s
+{
+	// empty
 };
 
 struct HLAE_BASECOM_MSGCL_MouseEvent_s

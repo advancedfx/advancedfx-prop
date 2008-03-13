@@ -1,16 +1,15 @@
-1.1.4.1
+1.1.4.1 developer
 
-- Added: Mdt's HLTV fix now fixes viewdemo's camera get's stuck in
-         dem_focehltv 1 mode.
-         After typing spec_mode 3 once, you should be able to move around now
-         (if you aren't able to do that already anyways).
-         
+this version will start only with the gui running
+(if you need a public version uncomment the GUI define at the begin of dll/main.cpp)
+
 - Changed: mirv_fixforcehltv defaults to 0 again, mirv will try to autodetect
-          the dem_forcehltv setting
+           the dem_forcehltv setting and set fixforcehltv accordingly
 
-- Added: Mdt now hooks dem_forcehltv, startmovie, endmovie
+- Added: command hooks: dem_forcehltv, startmovie, endmovie
 
-- Added: __mirv_listplayers, __mirv_debug_cmdaddress
+- Added: __mirv_listplayers, __mirv_debug_cmdaddress,
+         __mirv_debug_devicecontext
 
 
 1.1.3.97

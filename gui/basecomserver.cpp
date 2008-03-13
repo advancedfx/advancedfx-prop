@@ -5,12 +5,9 @@
 #include <wx/string.h>
 
 #include <shared/com/basecom.h>
-
+#include "debug.h"
 #include "layout.h"
 #include "gamewindow.h"
-
-#include "debug.h"
-
 
 #include "basecomserver.h"
 
@@ -47,6 +44,7 @@ private:
 
 	// wrappers:
 	BOOL _Wrapper_OnCreateWindow(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
+	BOOL _Wrapper_OnDestroyWindow(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
 	BOOL _Wrapper_UpdateWindow(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
 };
 
@@ -73,6 +71,7 @@ CBCServerInternal::CBCServerInternal()
 {
 	_cl_hInstance = NULL;
 	_cl_lpfnWndProc = NULL;
+	_hwClient = NULL;
 }
 
 CBCServerInternal::~CBCServerInternal()
@@ -144,6 +143,7 @@ bool CBCServerInternal::HlaeBcSrvStop()
 
 	g_hwHlaeBcSrvWindow = NULL;
 	_pBase = NULL;
+	_hwClient = NULL;
 	InterlockedDecrement(&g_lInstancesActive);
 	return true;
 }
@@ -211,7 +211,7 @@ LRESULT CALLBACK CBCServerInternal::_HlaeBcSrvWndProc(
 
 			PCOPYDATASTRUCT pMyCDS;
 			pMyCDS = (PCOPYDATASTRUCT) lParam;
-			
+
 			return (g_pClass->*g_OnRecieve)(hwnd,(HWND)wParam,pMyCDS);
  
         default: 
@@ -232,6 +232,8 @@ BOOL CBCServerInternal::_MyOnRecieve(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMy
 
 	case HLAE_BASECOM_QRYSV_OnCreateWindow:
 		return _Wrapper_OnCreateWindow(hWnd,hwSender,pMyCDS);
+	case HLAE_BASECOM_MSGSV_OnDestroyWindow:
+		return _Wrapper_OnDestroyWindow(hWnd,hwSender,pMyCDS);
 	case HLAE_BASECOM_MSGSV_UpdateWindow:
 		return _Wrapper_UpdateWindow(hWnd,hwSender,pMyCDS);
 
@@ -262,6 +264,7 @@ BOOL CBCServerInternal::_ReturnMessage(HWND hWnd,HWND hwTarget,ULONG dwData,DWOR
 BOOL CBCServerInternal::_Wrapper_OnCreateWindow(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS)
 {
 	BOOL bRes;
+	if (!_hwClient) _hwClient = hwSender; // allow messages to client
 
 	HLAE_BASECOM_RET_OnCreateWindow_s *pRet = new HLAE_BASECOM_RET_OnCreateWindow_s;
 
@@ -273,6 +276,18 @@ BOOL CBCServerInternal::_Wrapper_OnCreateWindow(HWND hWnd,HWND hwSender,PCOPYDAT
 
 	delete pRet;
 
+	return bRes;
+}
+
+BOOL CBCServerInternal:: _Wrapper_OnDestroyWindow(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS)
+{
+	BOOL bRes;
+
+	HLAE_BASECOM_UpdateWindows_s * pdata = (HLAE_BASECOM_UpdateWindows_s *)pMyCDS->lpData;
+
+	bRes = _pBase->_OnDestroyWindow() ? TRUE : FALSE;
+
+	_hwClient = NULL; // no messages allowed afterwards
 	return bRes;
 }
 
@@ -288,64 +303,68 @@ BOOL CBCServerInternal:: _Wrapper_UpdateWindow(HWND hWnd,HWND hwSender,PCOPYDATA
 }
 
 
-//
-// the CBCServerInternal global:
-//
-
-CBCServerInternal g_BCServerInternal;
-
-
 ///////////////////////////////////////////////////////////////////////////////
 
 //
 // CHlaeBcServer
 //
 
-CHlaeBcServer::CHlaeBcServer(wxWindow *parent)
+CHlaeBcServer::CHlaeBcServer(CHlaeGameWindow *pHlaeGameWindow)
 {
-	_parent = parent;
-	_pHlaeGameWindow = NULL;
-	_hGLRC = NULL;
+#ifdef __DEBUG
+	g_debug.SendMessage(wxT("CHlaeBcServer::CHlaeBcServer ..."), hlaeDEBUG_DEBUG);
+#endif
 
-	if(!g_BCServerInternal.HlaeBcSrvStart(this))
+	_pHlaeGameWindow = pHlaeGameWindow;
+
+	_pBCServerInternal = new CBCServerInternal();
+
+	if(!(_pBCServerInternal->HlaeBcSrvStart(this)))
 		g_debug.SendMessage(wxT("ERROR: HlaeBcSrvStart() failed."),hlaeDEBUG_FATALERROR);
-
 }
 
 CHlaeBcServer::~CHlaeBcServer()
 {
-	if(_pHlaeGameWindow) delete _pHlaeGameWindow;
-	g_BCServerInternal.HlaeBcSrvStop();
+#ifdef __DEBUG
+	g_debug.SendMessage(wxT("CHlaeBcServer::~CHlaeBcServer ..."), hlaeDEBUG_DEBUG);
+#endif
+	_OnGameWindowClose();
+	_pBCServerInternal->HlaeBcSrvStop();
+	delete _pBCServerInternal;
 }
 
 bool CHlaeBcServer::PassEventPreParsed(unsigned int umsg,unsigned int wParam,unsigned int lParam)
 {
-	return TRUE == g_BCServerInternal.DispatchToClientProc((HWND)(_pHlaeGameWindow->GetHWND()),(UINT)umsg,(WPARAM)wParam,(LPARAM)lParam);
+	return TRUE == _pBCServerInternal->DispatchToClientProc((HWND)(_pHlaeGameWindow->GetHWND()),(UINT)umsg,(WPARAM)wParam,(LPARAM)lParam);
 }
 
 bool CHlaeBcServer::PassEventPreParsed(WXHWND hwnd,unsigned int umsg,unsigned int wParam,unsigned int lParam)
 {
-	return TRUE == g_BCServerInternal.DispatchToClientProc((HWND)hwnd,(UINT)umsg,(WPARAM)wParam,(LPARAM)lParam);
+	return TRUE == _pBCServerInternal->DispatchToClientProc((HWND)hwnd,(UINT)umsg,(WPARAM)wParam,(LPARAM)lParam);
 }
 
-bool CHlaeBcServer::Pass_WndRectUpdate(int iLeft, int iTop, int iWidthVisible, int iHeightVisible, int iWidthTotal, int iHeightTotal, int iLeftGlobal, int iTopGlobal)
+bool CHlaeBcServer::OnGameWindowFocus()
 {
-	HLAE_BASECOM_WndRectUpdate_s mys;
+	HLAE_BASECOM_OnGameWindowFocus_s mys;
 
-	mys.iLeft = iLeft;
-	mys.iTop = iTop;
-	mys.iWidthVisible = iWidthVisible;
-	mys.iHeightVisible = iHeightVisible;
-	mys.iWidthTotal = iWidthTotal;
-	mys.iHeightTotal = iHeightTotal;
-	mys.iLeftGlobal = iLeftGlobal;
-	mys.iTopGlobal = iTopGlobal;
-
-	return TRUE==g_BCServerInternal.DispatchStruct(
-		HLAE_BASECOM_MSGCL_WndRectUpdate,
+	return TRUE==_pBCServerInternal->DispatchStruct(
+		HLAE_BASECOM_MSGCL_OnGameWindowFocus,
 		sizeof(mys),
 		&mys
 	);
+	return true;
+}
+
+bool CHlaeBcServer::_OnGameWindowClose()
+{
+	HLAE_BASECOM_OnServerClose_s mys;
+
+	return TRUE==_pBCServerInternal->DispatchStruct(
+		HLAE_BASECOM_MSGCL_OnServerClose,
+		sizeof(mys),
+		&mys
+	);
+	return true;
 }
 bool CHlaeBcServer::Pass_MouseEvent(unsigned int uMsg, unsigned int wParam, unsigned short iX,unsigned short iY)
 {
@@ -357,7 +376,7 @@ bool CHlaeBcServer::Pass_MouseEvent(unsigned int uMsg, unsigned int wParam, unsi
 	mys.iY = iY;
 
 	// WARNING: HACK HACK! bad hack, we can't decide if the dispatch failed or if it wasn't processed!
-	return FALSE==g_BCServerInternal.DispatchStruct(
+	return FALSE==_pBCServerInternal->DispatchStruct(
 		HLAE_BASECOM_MSGCL_MouseEvent,
 		sizeof(mys),
 		&mys
@@ -372,7 +391,7 @@ bool CHlaeBcServer::Pass_KeyBoardEvent(unsigned int uMsg, unsigned int uKeyCode,
 	mys.uKeyFlags = uKeyFlags;
 
 	// WARNING: HACK HACK! bad hack, we can't decide if the dispatch failed or if it wasn't processed!
-	return FALSE==g_BCServerInternal.DispatchStruct(
+	return FALSE==_pBCServerInternal->DispatchStruct(
 		HLAE_BASECOM_MSGCL_KeyBoardEvent,
 		sizeof(mys),
 		&mys
@@ -381,23 +400,10 @@ bool CHlaeBcServer::Pass_KeyBoardEvent(unsigned int uMsg, unsigned int uKeyCode,
 
 WXHWND CHlaeBcServer::_OnCreateWindow(int nWidth, int nHeight)
 {
-	g_debug.SendMessage(wxT("Client connected."), hlaeDEBUG_VERBOSE_LEVEL3);
+	g_debug.SendMessage(wxT("Client connected."), hlaeDEBUG_VERBOSE_LEVEL1);
 
-	if (!_pHlaeGameWindow)
-	{
-		// window not present, create it first:
-		wxString mycaption("Game Window",wxConvUTF8);
-
-		_pHlaeGameWindow =new CHlaeGameWindow(this,_parent,wxID_ANY,wxDefaultPosition,wxSize(200,150),wxHSCROLL | wxVSCROLL,mycaption);
-
-		// adjust size:
-		_UpdateWindow(nWidth, nHeight);
-		
-		g_layoutmanager.AddPane(_pHlaeGameWindow, wxAuiPaneInfo().CentrePane().Caption(mycaption));
-	} else {
-		// adjust size and prepare for drawing:
-		_UpdateWindow(nWidth, nHeight);
-	}
+	// adjust size and prepare for drawing:
+	_UpdateWindow(nWidth, nHeight);
 
 	WXHWND hwRet=_pHlaeGameWindow->GetHWND();
 
@@ -406,6 +412,12 @@ WXHWND CHlaeBcServer::_OnCreateWindow(int nWidth, int nHeight)
 	g_debug.SendMessage(mystr, hlaeDEBUG_DEBUG);
 
 	return hwRet;
+}
+
+bool CHlaeBcServer::_OnDestroyWindow()
+{
+	g_debug.SendMessage(wxT("Client shutting down."), hlaeDEBUG_VERBOSE_LEVEL1);
+	return true;
 }
 
 bool CHlaeBcServer::_UpdateWindow(int nWidth, int nHeight)

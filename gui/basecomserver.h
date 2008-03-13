@@ -1,37 +1,40 @@
 #ifndef HLAE_BASECOMSERVER_H
 #define HLAE_BASECOMSERVER_H
 
-//#include <hlae/auimanager.h>
-//#include <hlae/gamewindow.h>
-#include <wx/dcclient.h>
+//#include "gamewindow.h"
 
-class hlaeLayoutManager;
 class CHlaeGameWindow;
 class CBCServerInternal;
 
 class CHlaeBcServer
 {
 public:
-	CHlaeBcServer(wxWindow *parent);
+	CHlaeBcServer(CHlaeGameWindow * pHlaeGameWindow);
 	~CHlaeBcServer();
+
+	bool Destroy();
 
 	bool PassEventPreParsed(unsigned int umsg,unsigned int wParam,unsigned int lParam); // outdated
 	bool PassEventPreParsed(WXHWND hwnd,unsigned int umsg,unsigned int wParam,unsigned int lParam); // outdated
 
-	// Functions uses by the gamewindow to pass events to the client:
-	bool Pass_WndRectUpdate(int iLeft, int iTop, int iWidthVisible, int iHeightVisible, int iWidthTotal, int iHeightTotal, int iLeftGlobal, int iTopGlobal);
+	// Functions that may be used to pass events to the client:
 	bool Pass_MouseEvent(unsigned int uMsg, unsigned int wParam, unsigned short iX,unsigned short iY);
 	bool Pass_KeyBoardEvent(unsigned int uMsg, unsigned int uKeyCode, unsigned int uKeyFlags);
+
+	bool OnGameWindowFocus();
 
 	friend class CBCServerInternal;
 
 private:
-	wxWindow *_parent;
-	CHlaeGameWindow *_pHlaeGameWindow;
-	void *_hGLRC;
+	CHlaeGameWindow * _pHlaeGameWindow;
 
+	CBCServerInternal * _pBCServerInternal;
 
+	bool _OnGameWindowClose(); // tells the server that it's server game window will be closed to allow it to react and communicate with the client
+
+	// also called by CBCServerInternal:
 	WXHWND _OnCreateWindow(int nWidth, int nHeight);
+	bool _OnDestroyWindow();
 	bool _UpdateWindow(int nWidth, int nHeight);
 };
 

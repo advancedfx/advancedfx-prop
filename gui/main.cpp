@@ -1,17 +1,18 @@
 #include <wx/statusbr.h>
 #include <wx/button.h>
 #include <wx/scrolwin.h>
+#include <wx/memory.h>
 
-#include "basecomServer.h"
+#include "gamewindow.h"
 #include "settings.h"
 
-#include "main.h"
 #include "console.h"
 #include "layout.h"
 
 #include "debug.h"
 #include "config.h"
-#include <wx/memory.h>
+
+#include "main.h" // always include own header last.
 
 BEGIN_EVENT_TABLE(hlaeMainWindow, wxFrame)
 	EVT_MENU(wxID_EXIT, hlaeMainWindow::OnExit)
@@ -41,7 +42,10 @@ hlaeMainWindow::hlaeMainWindow()
 
 	g_layoutmanager.AddLayout(wxT("Default"),true);
 
-	m_basecom = new CHlaeBcServer(this);
+	// create the gamewindow that also manages the communication with the game:
+	m_HlaeGameWindow = new CHlaeGameWindow(this,wxID_ANY,wxDefaultPosition,wxSize(200,150),wxHSCROLL | wxVSCROLL,wxT("Game Window"));
+	g_layoutmanager.AddPane(m_HlaeGameWindow, wxAuiPaneInfo().CentrePane().Caption(wxT("Game Window")));
+
 
 	// g_debug.SendMessage(wxT("This is a fatal error"), hlaeDEBUG_FATALERROR);
 	g_debug.SendMessage(wxT("This is an error"), hlaeDEBUG_ERROR);
@@ -54,8 +58,6 @@ hlaeMainWindow::hlaeMainWindow()
 hlaeMainWindow::~hlaeMainWindow()
 {
 	g_layoutmanager.UnInit();
-
-	delete m_basecom;
 }
 
 void hlaeMainWindow::OnAbout(wxCommandEvent& WXUNUSED(event)) {
