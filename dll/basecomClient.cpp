@@ -86,7 +86,7 @@ LRESULT HlaeBcCl_OnGameWindowFocus(PVOID lpData)
 {
 	HLAE_BASECOM_OnGameWindowFocus_s *myps = (HLAE_BASECOM_OnGameWindowFocus_s *)lpData;
 
-	pEngfuncs->Con_DPrintf("Forcing focus ...\n");
+	pEngfuncs->Con_DPrintf("External force focus request ...\n");
 
 	return SetFocus(g_HL_MainWindow) ? TRUE : FALSE;
 }
@@ -378,7 +378,7 @@ ATOM APIENTRY HlaeBcClt_RegisterClassA(CONST WNDCLASSA *lpWndClass)
 
 	tWndClass->lpfnWndProc = (WNDPROC)Hooking_WndProc; // we want to hook the WindowProc, so we can control the message flow
 
-	tWndClass->style = 0;
+	tWndClass->style = CS_OWNDC;
 	//tWndClass->hCursor = NULL;
 
 	// register our modified copy of the class instead:

@@ -6,8 +6,8 @@
 	#include <wx/menu.h>
 
 	// this is not very nice, but we currently lack a better solution:
-	class hlaeMainWindow;
-	class CHlaeBcServer;
+	//class hlaeMainWindow;
+	//class CHlaeBcServer;
 
 	#include "basecomServer.h"
 
@@ -16,7 +16,8 @@ private:
 	DECLARE_EVENT_TABLE()
 	enum {
 		hlaeID_SaveLayout = wxID_HIGHEST+1,
-		hlaeID_LayoutManager
+		hlaeID_LayoutManager,
+		hlaeID_DemoTools
 	};
 	CHlaeGameWindow* m_HlaeGameWindow;
 	wxMenu* m_windowmenu;
@@ -24,6 +25,7 @@ private:
 	wxMenu*	m_layoutmenu;
 	void CreateMenuBar();
 	void OnExit(wxCommandEvent& evt);
+	void OnDemoTools(wxCommandEvent& evt);
 	void OnSaveLayout(wxCommandEvent& evt);
 	void OnLayoutManager(wxCommandEvent& evt);
 	void OnAbout(wxCommandEvent& evt);

@@ -1,7 +1,7 @@
-Dear MIRV Demo Tool (MDT) user,
+Dear Half-Life Advanced Effects (HLAE) user,
 
 
-You can retrive the latest MDT, infos, reports bugs and post suggestions here:
+You can retrive the latest HLAE, infos, reports bugs and post suggestions here:
 http://www.madabouthats.org/code-mdt/viewforum.php?f=3
 
 
@@ -10,7 +10,7 @@ Epilepsy warning:
   This software will cause fast changing colors and images on your screen.
 
 
-Using the MDT:
+Using the HLAE:
 
   Extract all contents of this archive into a folder you like.
   You should not extract into the game's folder, this is not neccessary.
@@ -28,7 +28,7 @@ Disclaimer:
 
 
 Sincerly,
-your MIRV Demo Tool team.
+your Half-Life Advanced Effects team.
 
 
 
@@ -62,7 +62,7 @@ Greetings:
 You :)
 
 
-The MDT Team:
+The HLAE Team:
 
 MIRVIN_monkey
   the creator and programmer

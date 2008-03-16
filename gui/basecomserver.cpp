@@ -311,7 +311,7 @@ BOOL CBCServerInternal:: _Wrapper_UpdateWindow(HWND hWnd,HWND hwSender,PCOPYDATA
 
 CHlaeBcServer::CHlaeBcServer(CHlaeGameWindow *pHlaeGameWindow)
 {
-#ifdef __DEBUG
+#ifdef _DEBUG
 	g_debug.SendMessage(wxT("CHlaeBcServer::CHlaeBcServer ..."), hlaeDEBUG_DEBUG);
 #endif
 
@@ -325,7 +325,7 @@ CHlaeBcServer::CHlaeBcServer(CHlaeGameWindow *pHlaeGameWindow)
 
 CHlaeBcServer::~CHlaeBcServer()
 {
-#ifdef __DEBUG
+#ifdef _DEBUG
 	g_debug.SendMessage(wxT("CHlaeBcServer::~CHlaeBcServer ..."), hlaeDEBUG_DEBUG);
 #endif
 	_OnGameWindowClose();

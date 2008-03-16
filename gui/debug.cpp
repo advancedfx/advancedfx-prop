@@ -44,7 +44,11 @@ hlaeDebug::~hlaeDebug()
 void hlaeDebug::UpdateSettings()
 {
 	// Load from config
-	m_outputlevel = hlaeDEBUG_DEFAULTLEVEL;
+	#ifndef _DEBUG
+		m_outputlevel = hlaeDEBUG_DEFAULTLEVEL;
+	#else
+		m_outputlevel = hlaeDEBUG_DEBUG;
+	#endif
 	m_logfilesize = -1;
 }
 

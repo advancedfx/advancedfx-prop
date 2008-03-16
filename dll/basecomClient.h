@@ -20,4 +20,5 @@ BOOL APIENTRY HlaeBcCl_GetCursorPos(LPPOINT lpPoint); // Call this in a WINAPI S
 ATOM APIENTRY HlaeBcClt_RegisterClassA(CONST WNDCLASSA *lpWndClass);
 BOOL WINAPI HlaeBcClt_ReleaseCapture( VOID );
 HWND WINAPI HlaeBcClt_SetCapture( HWND hWnd);
+int WINAPI HlaeBcClt_ChoosePixelFormat(HDC hdc, PIXELFORMATDESCRIPTOR *ppfd);
 

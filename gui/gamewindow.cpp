@@ -37,19 +37,17 @@ void CHlaeGameWindow::OnFocus(wxFocusEvent& myevent)
 
 void CHlaeGameWindow::CreateInternal()
 {
-#ifdef __DEBUG
+#ifdef _DEBUG
 	g_debug.SendMessage(wxT("CHlaeGameWindow::CreateInternal ..."), hlaeDEBUG_DEBUG);
 #endif
 
-	bool bRes;
-
 	_pHlaeBcServer = new CHlaeBcServer(this);
-	bRes = bRes && _pHlaeBcServer;
+	if (!_pHlaeBcServer) throw "could not create CHlaeBcServer object";
 }
 
 CHlaeGameWindow::~CHlaeGameWindow()
 {
-#ifdef __DEBUG
+#ifdef _DEBUG
 	g_debug.SendMessage(wxT("CHlaeGameWindow:~CHlaeGameWindow ..."), hlaeDEBUG_DEBUG);
 #endif
 

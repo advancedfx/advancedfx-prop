@@ -941,7 +941,6 @@ BOOL APIENTRY my_SetCursorPos(int x, int y)
 // of the screen (to stop player from spinning while in menu)
 BOOL APIENTRY my_GetCursorPos(LPPOINT lpPoint)
 {
-	pEngfuncs->Con_Printf("LOBOB");
 	BOOL bRet = HlaeBcCl_GetCursorPos(lpPoint);
 
 	if (!InMenu())return bRet;

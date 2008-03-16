@@ -3,6 +3,7 @@
 #include <wx/scrolwin.h>
 #include <wx/memory.h>
 
+#include "demo_tools/demo_tools.h"
 #include "gamewindow.h"
 #include "settings.h"
 
@@ -17,6 +18,7 @@
 BEGIN_EVENT_TABLE(hlaeMainWindow, wxFrame)
 	EVT_MENU(wxID_EXIT, hlaeMainWindow::OnExit)
 	EVT_MENU(wxID_ABOUT, hlaeMainWindow::OnAbout)
+	EVT_MENU(hlaeMainWindow::hlaeID_DemoTools, hlaeMainWindow::OnDemoTools)
 	EVT_MENU(hlaeMainWindow::hlaeID_SaveLayout, hlaeMainWindow::OnSaveLayout)
 	EVT_MENU(hlaeMainWindow::hlaeID_LayoutManager, hlaeMainWindow::OnLayoutManager)
 	EVT_SIZE(hlaeMainWindow::OnSize)
@@ -53,6 +55,7 @@ hlaeMainWindow::hlaeMainWindow()
 	g_debug.SendMessage(wxT("This is verbose output level 1"), hlaeDEBUG_VERBOSE_LEVEL1);
 	g_debug.SendMessage(wxT("This is verbose output level 2"), hlaeDEBUG_VERBOSE_LEVEL2);
 	g_debug.SendMessage(wxT("This is verbose output level 3"), hlaeDEBUG_VERBOSE_LEVEL3);
+	g_debug.SendMessage(wxT("This is a debug message"), hlaeDEBUG_DEBUG);
 }
 
 hlaeMainWindow::~hlaeMainWindow()
@@ -86,6 +89,12 @@ void hlaeMainWindow::OnAbout(wxCommandEvent& WXUNUSED(event)) {
 
 void hlaeMainWindow::OnExit(wxCommandEvent& WXUNUSED(evt)) {
 	Close(true);
+}
+
+void hlaeMainWindow::OnDemoTools(wxCommandEvent& WXUNUSED(evt))
+{
+	CHlaeDemoTools demo_tools(this);
+	demo_tools.Run();
 }
 
 void hlaeMainWindow::OnSaveLayout(wxCommandEvent& WXUNUSED(evt)) {
@@ -133,6 +142,10 @@ void hlaeMainWindow::CreateMenuBar() {
 	view_menu->AppendSubMenu(m_windowmenu, wxT("&Windows"));
 	view_menu->AppendSubMenu(m_toolbarmenu, wxT("&Toolbars"));
 
+	// tools menu
+	wxMenu* tools_menu = new wxMenu;
+	tools_menu->Append(hlaeID_DemoTools, wxT("&Demo Tool"), wxT("Half-Life Demo Tool"));
+
 	// help menu
 	wxMenu* help_menu = new wxMenu;
     help_menu->Append(wxID_ABOUT, wxT("&About..."), wxT("About Half-Life After Effects"));
@@ -140,6 +153,7 @@ void hlaeMainWindow::CreateMenuBar() {
 	// append menus to menubar
 	menubar->Append(file_menu, wxT("&File"));
     menubar->Append(view_menu, wxT("&View"));
+	menubar->Append(tools_menu, wxT("&Tools"));
 	menubar->Append(help_menu, wxT("&?"));
 
 	// associate the menubar to the frame
