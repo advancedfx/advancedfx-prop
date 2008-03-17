@@ -264,23 +264,8 @@ bool CHlaeDemoFix::write_header(wxFile* outfile, const hldemo_header_s * header)
 {
 	size_t iwrite;
 
-	iwrite = sizeof(header->magic);
-	if (iwrite != outfile->Write(header->magic,iwrite)) return false;
-
-	iwrite = sizeof(header->demo_version);
-	if (iwrite != outfile->Write(&(header->demo_version),iwrite)) return false;
-	
-	iwrite = sizeof(header->network_version);
-	if (iwrite != outfile->Write(&(header->network_version),iwrite)) return false;
-
-	iwrite = sizeof(header->map_name);
-	if (iwrite != outfile->Write(header->map_name,iwrite)) return false;
-
-	iwrite = sizeof(header->game_dll);
-	if (iwrite != outfile->Write(header->game_dll,iwrite)) return false;
-
-	iwrite = sizeof(header->dir_offset);
-	if (iwrite != outfile->Write(&(header->dir_offset),iwrite)) return false;
+	iwrite = sizeof(const hldemo_header_s );
+	if (iwrite != outfile->Write(header,iwrite)) return false;
 
 	return true;
 }
