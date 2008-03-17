@@ -15,60 +15,9 @@
 #include <queue>
 
 #include "../debug.h"
+#include "shared/hldemo/hldemo.h"
 
 #include "demo_fix.h"
-
-// char         :  8 bit (signed)
-// unsigned int : 32 bit
-
-const char HLDEMO_MAGIC[8] = { 'H','L','D','E','M','O','\0','\0' };
-const unsigned int HLDEMO_DEMO_VERSION = 5;
-const unsigned int HLDEMO_NETWORK_VERSION = 47;
-
-
-#pragma pack(push)
-#pragma pack(1)
-	struct hldemo_header_s
-	{
-		char magic[8];
-		unsigned int demo_version;
-		unsigned int network_version;
-		char map_name[260];
-		char game_dll[264];
-		unsigned int dir_offset;
-	};
-#pragma pack(pop)
-
-const size_t HLDEMO_HEADER_SIZE = sizeof(hldemo_header_s);
-
-#pragma pack(push)
-#pragma pack(1)
-	struct hldemo_dir_entry_s
-	{
-		unsigned int number;
-		char title[64];
-		unsigned int flags;
-		unsigned int play;
-		float time;
-		unsigned int frames;
-		unsigned int offset;
-		unsigned int length;
-	};
-#pragma pack(pop)
-
-const size_t HLDEMO_DIR_ENTRY_SIZE = sizeof(hldemo_dir_entry_s);
-
-#pragma pack(push)
-#pragma pack(1)
-	struct hldemo_macroblock_header_s
-	{
-		unsigned char type;
-		float time;
-		unsigned int frame;
-	};
-#pragma pack(pop)
-
-const size_t HLDEMO_MACROBLOCK_HEADER_SIZE = sizeof(hldemo_macroblock_header_s);
 
 bool compare_bytes (const char *bytes1, const char *bytes2, size_t ilen)
 {
@@ -153,12 +102,12 @@ bool CHlaeDemoFix::fix_demo ( const wxChar* infilename, const wxChar* outfilenam
 						wxFileOffset fpos = infile->Tell();
 						hldemo_macroblock_header_s mbheader;
 
-						while (HLDEMO_MACROBLOCK_HEADER_SIZE==infile->Read(&mbheader,HLDEMO_MACROBLOCK_HEADER_SIZE) && mbheader.type == 5)
+						while (sizeof(hldemo_macroblock_header_s)==infile->Read(&mbheader,sizeof(hldemo_macroblock_header_s)) && mbheader.type == 5)
 						{
 							lastheader = mbheader;
 							totalframes++;
-							fpos += HLDEMO_MACROBLOCK_HEADER_SIZE;
-							outfile->Write(&mbheader,HLDEMO_MACROBLOCK_HEADER_SIZE);
+							fpos += sizeof(hldemo_macroblock_header_s);
+							outfile->Write(&mbheader,sizeof(hldemo_macroblock_header_s));
 						}
 
 						// rewind behind last stop:
@@ -175,7 +124,7 @@ bool CHlaeDemoFix::fix_demo ( const wxChar* infilename, const wxChar* outfilenam
 							mbheader.type = 0x05;
 							mbheader.frame = totalframes;
 							mbheader.time = lastheader.time;
-							outfile->Write(&mbheader,HLDEMO_MACROBLOCK_HEADER_SIZE);
+							outfile->Write(&mbheader,sizeof(hldemo_macroblock_header_s));
 							totalframes++;
 						} else g_debug.SendMessage(wxT("DemoFix: Found incomplete or unknown message or file end. Asuming file end, ignoring segment (was empty), dropping rest."),hlaeDEBUG_VERBOSE_LEVEL1);
 					} else if (eCopyState==CPMB_USERABORT) {
@@ -227,11 +176,11 @@ bool CHlaeDemoFix::fix_demo ( const wxChar* infilename, const wxChar* outfilenam
 						direntries_que.pop();
 						iNumSegments--;
 
-						outfile->Write(&curentry,HLDEMO_DIR_ENTRY_SIZE);
+						outfile->Write(&curentry,sizeof(hldemo_dir_entry_s));
 					}
 
 					// patch dir_offset in header:
-					outfile->Seek(HLDEMO_HEADER_SIZE-sizeof(unsigned int));
+					outfile->Seek(sizeof(hldemo_header_s)-sizeof(unsigned int));
 					outfile->Write(&fdiroffset,sizeof(unsigned int));
 
 					// that's it guys.
@@ -264,17 +213,16 @@ bool CHlaeDemoFix::read_header(wxFile* infile, hldemo_header_s * header)
 	wxString tstr;
 	size_t iread;
 
-	//iread = sizeof (hldemo_header_s);
-	//if (iread != infile->Read(header,iread)) return false;
+	iread = sizeof (hldemo_header_s);
+	if (iread != infile->Read(header,iread)) return false;
 
-	iread = sizeof (header->magic);
-	if (iread != infile->Read(header->magic,iread)) return false;
-	if (strnlen(header->magic,iread)>=iread) { g_debug.SendMessage(wxT("file identifier malformed"),hlaeDEBUG_ERROR); return false; }
-	if (!compare_bytes(header->magic,HLDEMO_MAGIC,iread)) { g_debug.SendMessage(wxT("file identifier invalid"),hlaeDEBUG_ERROR); return false; }
+	//iread = sizeof (header->magic);
+	//if (iread != infile->Read(header->magic,iread)) return false;
+	if (!compare_bytes(header->magic,HLDEMO_MAGIC,sizeof(HLDEMO_MAGIC))) { g_debug.SendMessage(wxT("file identifier invalid"),hlaeDEBUG_ERROR); return false; }
 	tstr.Printf(wxT("File identifier: %s"),wxString(header->magic,wxConvUTF8)); g_debug.SendMessage(tstr,hlaeDEBUG_VERBOSE_LEVEL2);
 
-	iread = sizeof(header->demo_version);
-	if (iread != infile->Read(&(header->demo_version),iread)) return false;
+	//iread = sizeof(header->demo_version);
+	//if (iread != infile->Read(&(header->demo_version),iread)) return false;
 	if (HLDEMO_DEMO_VERSION != header->demo_version)
 	{
 		tstr.Printf(wxT("Demo version is: %u, but I expected %u. (ignoring)"),header->demo_version,HLDEMO_DEMO_VERSION); g_debug.SendMessage(tstr,hlaeDEBUG_WARNING);
@@ -282,8 +230,8 @@ bool CHlaeDemoFix::read_header(wxFile* infile, hldemo_header_s * header)
 		tstr.Printf(wxT("Demo version: %u"),header->demo_version); g_debug.SendMessage(tstr,hlaeDEBUG_VERBOSE_LEVEL2);
 	}
 
-	iread = sizeof(header->network_version);
-	if (iread != infile->Read(&(header->network_version),iread)) return false;
+	//iread = sizeof(header->network_version);
+	//if (iread != infile->Read(&(header->network_version),iread)) return false;
 	if (HLDEMO_NETWORK_VERSION != header->network_version)
 	{
 		tstr.Printf(wxT("Network version is: %u, but I expected %u. (ignoring)"),header->network_version,HLDEMO_NETWORK_VERSION); g_debug.SendMessage(tstr,hlaeDEBUG_WARNING);
@@ -292,7 +240,7 @@ bool CHlaeDemoFix::read_header(wxFile* infile, hldemo_header_s * header)
 	}
 
 	iread = sizeof(header->map_name);
-	if (iread != infile->Read(header->map_name,iread)) return false;
+	//if (iread != infile->Read(header->map_name,iread)) return false;
 	if (strnlen(header->map_name,iread)>=iread) {
 		g_debug.SendMessage(wxT("map_name string malformed, forcing term \\0"),hlaeDEBUG_WARNING);
 		header->map_name[sizeof(header->map_name)-1]=0;
@@ -300,15 +248,15 @@ bool CHlaeDemoFix::read_header(wxFile* infile, hldemo_header_s * header)
 	tstr.Printf(wxT("Map name: %s"),wxString(header->map_name,wxConvUTF8)); g_debug.SendMessage(tstr,hlaeDEBUG_VERBOSE_LEVEL2);
 
 	iread = sizeof(header->game_dll);
-	if (iread != infile->Read(header->game_dll,iread)) return false;
+	//if (iread != infile->Read(header->game_dll,iread)) return false;
 	if (strnlen(header->game_dll,iread)>=iread) {
 		g_debug.SendMessage(wxT("game_dll string malformed, forcing term \\0"),hlaeDEBUG_WARNING);
 		header->game_dll[sizeof(header->game_dll)-1]=0;
 	}
 	tstr.Printf(wxT("Game DLL: %s"),wxString(header->game_dll,wxConvUTF8)); g_debug.SendMessage(tstr,hlaeDEBUG_VERBOSE_LEVEL2);
 
-	iread = sizeof(header->dir_offset);
-	if (iread != infile->Read(&(header->dir_offset),iread)) return false;
+	//iread = sizeof(header->dir_offset);
+	//if (iread != infile->Read(&(header->dir_offset),iread)) return false;
 	return true;
 }
 
@@ -414,7 +362,7 @@ CHlaeDemoFix::copy_macroblock_e CHlaeDemoFix::copy_macroblock(wxFile* infile, wx
 	fpos=infile->Tell();
 
 	// read macroblock_header:
-	int iread = HLDEMO_MACROBLOCK_HEADER_SIZE;
+	int iread = sizeof(hldemo_macroblock_header_s);
 	if (iread != infile->Read((char *)&macroblock_header,iread)) return RETURN_REWIND(CPMB_ERROR);
 
 	// parse macroblock:
