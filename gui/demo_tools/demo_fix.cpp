@@ -64,6 +64,11 @@ void CHlaeDemoFix::EnableWaterMarks(bool bEnable)
 	_bEnableWaterMarks = bEnable;
 }
 
+unsigned char CHlaeDemoFix::GetHltvFixBell()
+{
+	return _ucHltvFixBell;
+}
+
 void CHlaeDemoFix::AddCommandMapping ( wxString & srcmap, wxString & targetmap)
 {
 	cmd_mapping_s mymapping;
@@ -82,6 +87,8 @@ void CHlaeDemoFix::ClearCommandMap( void )
 
 bool CHlaeDemoFix::Run ( const wxChar* infilename, const wxChar* outfilename)
 {
+	_ucHltvFixBell = 2;
+
 	if (_bEnableDirectoryFix)
 		return fix_demo(infilename,outfilename);
 	else
@@ -566,9 +573,17 @@ CHlaeDemoFix::copy_macroblock_e CHlaeDemoFix::copy_macroblock(wxFile* infile, wx
 
 		if(wxInvalidOffset==infile->Seek(464,wxFromCurrent)) return RETURN_REWIND(CPMB_ERROR);
 		if (4!=infile->Read(&dwreadbytes,4)) return RETURN_REWIND(CPMB_ERROR);
-		if ((ftarget = infile->Tell()+dwreadbytes) > fsize) return RETURN_REWIND(CPMB_ERROR);
 
-		if (!COPY_BYTES(ftarget-fpos)) return CPMB_FATALERROR;
+		if (_bEnableHltvFix)
+		{
+			if ((ftarget = infile->Tell())+dwreadbytes > fsize) return RETURN_REWIND(CPMB_ERROR);
+			if (!COPY_BYTES(ftarget-fpos)) return CPMB_FATALERROR;
+			
+			if (copy_gamedata(infile,outfile,dwreadbytes)!=CPMB_OK) return CPMB_FATALERROR;
+		} else {
+			if ((ftarget = infile->Tell()+dwreadbytes) > fsize) return RETURN_REWIND(CPMB_ERROR);
+			if (!COPY_BYTES(ftarget-fpos)) return CPMB_FATALERROR;
+		}
 		return RETURN_BLOCK(CPMB_OK);
 	case 2:
 		DEBUG_MESSAGE("2 unknown empty")
@@ -684,4 +699,169 @@ CHlaeDemoFix::copy_macroblock_e CHlaeDemoFix::copy_command(wxFile* infile, wxFil
 	}
 
 	return bReturn;
+}
+
+void copy_gamedata_ferror(unsigned char cmdcode, size_t initialpos, unsigned int dwreadorg, unsigned int dwreadlast, unsigned int dwreadbytes)
+{
+	wxString tstr;
+
+	tstr.Printf(wxT("copy_gamedata failed at 0x%08x in block 0x%08x when parsing cmd %i at 0x%08x"),(unsigned int)initialpos+dwreadorg-dwreadbytes,(unsigned int)initialpos,(unsigned int)cmdcode,(unsigned int)initialpos+dwreadorg-dwreadlast );
+	g_debug.SendMessage(tstr,hlaeDEBUG_ERROR);
+}
+CHlaeDemoFix::copy_macroblock_e CHlaeDemoFix::copy_gamedata(wxFile* infile,wxFile* outfile, unsigned int dwreadbytes)
+{
+	// for debugging errors:
+	wxString tstr;
+	unsigned int dwreadorg = dwreadbytes;
+	unsigned int dwreadlast = dwreadbytes;
+	size_t initialpos = infile->Tell();
+
+	unsigned char cmdcode;
+
+	#define PRINT_FERROR(cmdcodethis,returnthis) \
+		( \
+			 copy_gamedata_ferror(cmdcodethis, initialpos, dwreadorg, dwreadlast, dwreadbytes), returnthis \
+		)
+
+	unsigned char ctmp;
+	unsigned int uitmp;
+
+	while (dwreadbytes>0)
+	{
+		dwreadlast = dwreadbytes;
+
+		// get cmd code:
+		if (sizeof(cmdcode) != infile->Read(&cmdcode,sizeof(cmdcode))) return PRINT_FERROR(0,CPMB_FATALERROR);
+		if (sizeof(cmdcode) != outfile->Write(&cmdcode,sizeof(cmdcode))) return PRINT_FERROR(0,CPMB_FATALERROR);
+
+		dwreadbytes--;
+
+		switch (cmdcode)
+		{
+		case svc_nop: // 1
+			continue;
+		
+		case svc_time: // 7
+			if (dwreadbytes<4) break; // invalid, let copy bytes handle it
+			if (!copy_bytes(infile,outfile,4)) return PRINT_FERROR(cmdcode,CPMB_FATALERROR);
+			dwreadbytes-=4;
+			continue;
+		
+		case svc_print: // 8
+			// Read string:
+			while (dwreadbytes>0)
+			{
+				dwreadbytes--;
+				if (sizeof(ctmp) != infile->Read(&ctmp,sizeof(ctmp))) return PRINT_FERROR(cmdcode,CPMB_FATALERROR);
+				if (sizeof(ctmp) != outfile->Write(&ctmp,sizeof(ctmp))) return PRINT_FERROR(cmdcode,CPMB_FATALERROR);
+				if (ctmp==0) break; // string end, get out of here
+			}
+			continue;
+		
+		case svc_serverinfo: // 11
+			uitmp = 4 +		4 + 4 + 16;
+			if (dwreadbytes<uitmp+1) break; // invalid, let copy bytes handle it
+			if (!copy_bytes(infile,outfile,uitmp)) return PRINT_FERROR(cmdcode,CPMB_FATALERROR);
+			dwreadbytes-=uitmp;
+			
+			// now we are at the Holy Grail of maxclients
+			if (sizeof(ctmp) != infile->Read(&ctmp,sizeof(ctmp))) return PRINT_FERROR(cmdcode,CPMB_FATALERROR);
+			if (ctmp<DEMOFIX_MAXPLAYERS)
+			{
+				ctmp++; // add a slut slot
+				_ucHltvFixBell = 0; // ring the bell happy :)
+			} else if (_ucHltvFixBell) _ucHltvFixBell = 1; // ring the bell sad :..(
+			if (sizeof(ctmp) != outfile->Write(&ctmp,sizeof(ctmp))) return PRINT_FERROR(cmdcode,CPMB_FATALERROR);
+
+			tstr.Printf(wxT("dem_forcehltv 1 fix: 0x%08x: serverinfo maxplayers: %u -> %u"),(unsigned int)(infile->Tell()),(unsigned int)(ctmp==DEMOFIX_MAXPLAYERS? ctmp : ctmp-1),(unsigned int)ctmp);
+			g_debug.SendMessage(tstr,hlaeDEBUG_VERBOSE_LEVEL1);
+
+			dwreadbytes-=1;
+			break; // our work is done here, get us out of here!
+		
+		case svc_updateuserinfo: // 13
+			// deactivated cause s.th. in here is too buggy:
+			break; 
+			if (dwreadbytes<5) break; // invalid, let copy bytes handle it
+			if (!copy_bytes(infile,outfile,5)) return PRINT_FERROR(cmdcode,CPMB_FATALERROR);
+			dwreadbytes-=5;
+			// Read string:
+			while (dwreadbytes>0)
+			{
+				dwreadbytes--;
+				if (sizeof(ctmp) != infile->Read(&ctmp,sizeof(ctmp))) return PRINT_FERROR(cmdcode,CPMB_FATALERROR);
+				if (sizeof(ctmp) != outfile->Write(&ctmp,sizeof(ctmp))) return PRINT_FERROR(cmdcode,CPMB_FATALERROR);
+				if (ctmp==0) break; // string end, get out of here
+			}
+			continue;
+
+		//case svc_deltadescription: // 14
+		// i am to lazy to support that now, hope we don't need to parse it before serverinfo : )
+
+		case svc_clientdata: // 15
+			// deactivated cause s.th. in here is too buggy:
+			break; 
+			if (dwreadbytes<5) break; // invalid, let copy bytes handle it
+			if (!copy_bytes(infile,outfile,5)) return PRINT_FERROR(cmdcode,CPMB_FATALERROR);
+			dwreadbytes-=5;
+			// Read string:
+			while (dwreadbytes>0)
+			{
+				dwreadbytes--;
+				if (sizeof(ctmp) != infile->Read(&ctmp,sizeof(ctmp))) return PRINT_FERROR(cmdcode,CPMB_FATALERROR);
+				if (sizeof(ctmp) != outfile->Write(&ctmp,sizeof(ctmp))) return PRINT_FERROR(cmdcode,CPMB_FATALERROR);
+				if (ctmp==0) break; // string end, get out of here
+			}
+			continue;
+
+		case svc_spawnstaticsound: // 29
+			// deactivated cause s.th. in here is too buggy:
+			break; 
+			uitmp = 2 +2 +2 +2 +1 +1 +2 +1 +1;
+			if (dwreadbytes<uitmp) break; // invalid, let copy bytes handle it
+			if (!copy_bytes(infile,outfile,uitmp)) return PRINT_FERROR(cmdcode,CPMB_FATALERROR);
+			dwreadbytes-=uitmp;
+			continue;
+
+		case svc_roomtype: // 37
+			// deactivated cause s.th. in here is too buggy:
+			break; 
+			if (dwreadbytes<2) break; // invalid, let copy bytes handle it
+			if (!copy_bytes(infile,outfile,2)) return PRINT_FERROR(cmdcode,CPMB_FATALERROR);
+			dwreadbytes-=2;
+			continue;
+
+		case svc_resourcerequest: // 45
+			// deactivated cause s.th. in here is too buggy:
+			break; 
+			if (dwreadbytes<8) break; // invalid, let copy bytes handle it
+			if (!copy_bytes(infile,outfile,8)) return PRINT_FERROR(cmdcode,CPMB_FATALERROR);
+			dwreadbytes-=8;
+			continue;			
+
+		case svc_sendextrainfo: // 54
+			// deactivated cause s.th. in here is too buggy:
+			break; 
+			// Read string:
+			while (dwreadbytes>0)
+			{
+				dwreadbytes--;
+				if (sizeof(ctmp) != infile->Read(&ctmp,sizeof(ctmp))) return PRINT_FERROR(cmdcode,CPMB_FATALERROR);
+				if (sizeof(ctmp) != outfile->Write(&ctmp,sizeof(ctmp))) return PRINT_FERROR(cmdcode,CPMB_FATALERROR);
+				if (ctmp==0) break; // string end, get out of here
+			}
+			if (dwreadbytes<1) break; // invalid, let copy bytes handle it
+			dwreadbytes--;
+			if (sizeof(ctmp) != infile->Read(&ctmp,sizeof(ctmp))) return PRINT_FERROR(cmdcode,CPMB_FATALERROR);
+			if (sizeof(ctmp) != outfile->Write(&ctmp,sizeof(ctmp))) return PRINT_FERROR(cmdcode,CPMB_FATALERROR);
+			continue;
+		}
+
+		break; // not handled / unknown, cannot continue
+	}
+
+	// copy unhandled data:
+	if (dwreadbytes>0 && !copy_bytes(infile,outfile,dwreadbytes)) return PRINT_FERROR(0,CPMB_FATALERROR);
+
+	return CPMB_OK;
 }
