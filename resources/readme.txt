@@ -54,6 +54,10 @@ id Software
   for Quake 1 source code
   http://www.idsoftware.com
   
+wxWidgets Project
+  for wxWidgets
+  http://wxwidgets.org
+  
 And everyone that feels he/she/it should have been mentioned here.
 
 

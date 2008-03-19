@@ -4,12 +4,20 @@
 	#include <wx/app.h>
 	#include <wx/frame.h>
 	#include <wx/menu.h>
+	#include <wx/dialog.h>
 
 	// this is not very nice, but we currently lack a better solution:
 	//class hlaeMainWindow;
 	//class CHlaeBcServer;
 
 	#include "basecomServer.h"
+
+class CAboutDialog : public wxDialog 
+{
+	public:
+		CAboutDialog(wxWindow* parent);
+	
+};
 
 class hlaeMainWindow : public wxFrame {
 private:

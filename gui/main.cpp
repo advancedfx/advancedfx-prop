@@ -2,8 +2,9 @@
 #include <wx/button.h>
 #include <wx/scrolwin.h>
 #include <wx/memory.h>
+#include <wx/hyperlink.h>
 
-#include "demo_tools/demo_tools.h"
+// #include "demo_tools/demo_tools.h"
 #include "gamewindow.h"
 #include "settings.h"
 
@@ -16,6 +17,56 @@
 #include "config.h"
 
 #include "main.h" // always include own header last.
+
+CAboutDialog::CAboutDialog(wxWindow* parent)
+: wxDialog(parent, wxID_ANY, wxT("About Half-Life After Effects"), wxDefaultPosition, wxSize(450,350))
+{
+	this->SetSizeHints( wxDefaultSize, wxDefaultSize );
+	
+	wxBoxSizer* bs_main;
+	bs_main = new wxBoxSizer( wxVERTICAL );
+	
+	wxBoxSizer* bs_link;
+	bs_link = new wxBoxSizer( wxVERTICAL );
+	
+	wxStaticText* st_link;
+	st_link = new wxStaticText( this, wxID_ANY, wxT("You can retrive the latest HLAE, infos, reports bugs and post suggestions at"), wxDefaultPosition, wxDefaultSize, 0 );
+	st_link->Wrap( -1 );
+	bs_link->Add( st_link, 0, 0, 5 );
+	
+	wxHyperlinkCtrl* hl_link;
+	hl_link = new wxHyperlinkCtrl( this, wxID_ANY, wxT("http://www.madabouthats.org/code-mdt/viewforum.php?f=3"), wxT("http://www.madabouthats.org/code-mdt/viewforum.php?f=3"), wxDefaultPosition, wxDefaultSize, wxHL_DEFAULT_STYLE );
+	
+	hl_link->SetHoverColour( wxColour( 0, 88, 255 ) );
+	hl_link->SetNormalColour( wxColour( 0, 0, 255 ) );
+	hl_link->SetVisitedColour( wxColour( 0, 0, 255 ) );
+	bs_link->Add( hl_link, 0, 0, 5 );
+	
+	bs_main->Add( bs_link, 0, wxALL|wxEXPAND, 5 );
+	
+	wxScrolledWindow* sw_info;
+	sw_info = new wxScrolledWindow( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxCLIP_CHILDREN|wxVSCROLL );
+	sw_info->SetScrollRate( 5, 5 );
+	wxBoxSizer* bs_info;
+	bs_info = new wxBoxSizer( wxVERTICAL );
+	
+	wxStaticText* st_info;
+	st_info = new wxStaticText( sw_info, wxID_ANY, wxT("Epilepsy warning:\n\n  This software will cause fast changing colors and images on your screen.\n\n\nUsing the HLAE:\n\n  Extract all contents of this archive into a folder you like.\n  You should not extract into the game's folder, this is not neccessary.\n\n  We suggest using Steam's Offline Mode.\n  Please stick to the manuals and tutorials on the web for more information.\n\n\nDisclaimer:\n\n  Altered versions must be cleary marked as such and must not be misrepresented\n  as being the original software.\n  \n  This software is for your enjoyment and you are using it at your own risk.\n\n\nSincerly,\nyour Half-Life Advanced Effects team.\n\n\n\n\nCredits:\n\nIn addition to the mentions in the changelog we want to credit the following\npeople, companys or organistations:\n\nMicrosoft\n  for VC++, MSDN2, Windows, ...\n  http://www.Microsoft.com\n  \nValve\n  for HLSDK\n  http://www.ValveSoftware.com\n  \nMetaMod\n  for HLSDK p3\n  http://www.MetaMod.org\n\nid Software\n  for Quake 1 source code\n  http://www.idsoftware.com\n  \nwxWidgets Project\n  for wxWidgets\n  http://wxwidgets.org\n  \nAnd everyone that feels he/she/it should have been mentioned here.\n\n\nGreetings:\n\nYou :)\n\n\nThe HLAE Team:\n\nMIRVIN_monkey\n  the creator and programmer\n  http://www.madabouthats.org\n  \nripieces\n  programer\n  http://dominik.matrixstorm.com\n  \nneomic\n  programer\n  http://neomic.xail.net/\n\nmsthavoc\n  documentation, testing, community relations\n  http://www.mst-gaming.de"), wxDefaultPosition, wxDefaultSize, 0 );
+	st_info->Wrap( -1 );
+	bs_info->Add( st_info, 0, 0, 5 );
+	
+	sw_info->SetSizer( bs_info );
+	sw_info->Layout();
+	bs_info->Fit( sw_info );
+	bs_main->Add( sw_info, 1, wxALL|wxEXPAND, 5 );
+	
+	wxButton* bt_ok;
+	bt_ok = new wxButton( this, wxID_OK, wxT("OK"), wxDefaultPosition, wxDefaultSize, 0 );
+	bs_main->Add( bt_ok, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5 );
+	
+	this->SetSizer( bs_main );
+	this->Layout();
+}
 
 BEGIN_EVENT_TABLE(hlaeMainWindow, wxFrame)
 	EVT_MENU(wxID_EXIT, hlaeMainWindow::OnExit)
@@ -66,28 +117,10 @@ hlaeMainWindow::~hlaeMainWindow()
 	g_layoutmanager.UnInit();
 }
 
-void hlaeMainWindow::OnAbout(wxCommandEvent& WXUNUSED(event)) {
-
-	hlaeDialogSettings* bla = new hlaeDialogSettings(this);
-	bla->Show();
-
-	/*
-    wxDialog* h_about = new wxDialog(this ,wxID_ANY,
-		wxT("About Half-Life After Effects"), wxDefaultPosition);
-	
-	const wchar_t* text =
-		wxT("Half-Life After Effects:\n")
-		wxT("\n")
-		wxT("...");
-		
-	new wxStaticText(h_about, wxID_ANY, text, wxPoint(10,10));
-	new wxButton(h_about, wxID_OK, wxT("OK"), wxPoint(100,100));
-
-	h_about->ShowModal();
-
-	delete h_about;
-	*/
-
+void hlaeMainWindow::OnAbout(wxCommandEvent& WXUNUSED(event))
+{
+	CAboutDialog* about_dgl = new CAboutDialog(this);
+	about_dgl->Show();
 }
 
 void hlaeMainWindow::OnExit(wxCommandEvent& WXUNUSED(evt)) {
@@ -96,8 +129,8 @@ void hlaeMainWindow::OnExit(wxCommandEvent& WXUNUSED(evt)) {
 
 void hlaeMainWindow::OnDemoTools(wxCommandEvent& WXUNUSED(evt))
 {
-	CHlaeDemoTools demo_tools(this);
-	demo_tools.Run();
+	// CHlaeDemoTools demo_tools(this);
+	// demo_tools.Run();
 }
 
 void hlaeMainWindow::OnSaveLayout(wxCommandEvent& WXUNUSED(evt)) {
