@@ -4,7 +4,7 @@
 #include <wx/memory.h>
 #include <wx/hyperlink.h>
 
-// #include "demo_tools/demo_tools.h"
+#include "demo_tools/demo_tools.h"
 #include "gamewindow.h"
 #include "settings.h"
 
@@ -129,8 +129,8 @@ void hlaeMainWindow::OnExit(wxCommandEvent& WXUNUSED(evt)) {
 
 void hlaeMainWindow::OnDemoTools(wxCommandEvent& WXUNUSED(evt))
 {
-	// CHlaeDemoTools demo_tools(this);
-	// demo_tools.Run();
+	CHlaeDemoTools demo_tools(this);
+	demo_tools.Run();
 }
 
 void hlaeMainWindow::OnSaveLayout(wxCommandEvent& WXUNUSED(evt)) {
