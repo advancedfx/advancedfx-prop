@@ -48,7 +48,8 @@ void CHlaeGameWindow::CreateInternal()
 CHlaeGameWindow::~CHlaeGameWindow()
 {
 #ifdef _DEBUG
-	g_debug.SendMessage(wxT("CHlaeGameWindow:~CHlaeGameWindow ..."), hlaeDEBUG_DEBUG);
+	#pragma message("CHlaeBcServer::~CHlaeBcServer cannot enable debugmessage because g_debug may be not present anymore")
+	//g_debug.SendMessage(wxT("CHlaeGameWindow:~CHlaeGameWindow ..."), hlaeDEBUG_DEBUG);
 #endif
 
 	delete _pHlaeBcServer;

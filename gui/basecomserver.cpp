@@ -326,7 +326,8 @@ CHlaeBcServer::CHlaeBcServer(CHlaeGameWindow *pHlaeGameWindow)
 CHlaeBcServer::~CHlaeBcServer()
 {
 #ifdef _DEBUG
-	g_debug.SendMessage(wxT("CHlaeBcServer::~CHlaeBcServer ..."), hlaeDEBUG_DEBUG);
+	#pragma message("CHlaeBcServer::~CHlaeBcServer cannot enable debugmessage because g_debug may be not present anymore")
+	//g_debug.SendMessage(wxT("CHlaeBcServer::~CHlaeBcServer ..."), hlaeDEBUG_DEBUG);
 #endif
 	_OnGameWindowClose();
 	_pBCServerInternal->HlaeBcSrvStop();
