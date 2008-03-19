@@ -3,7 +3,7 @@
 
 // Authors : last change / first change / name
 
-// 2008-03-15 / 2008-03-14 / Dominik Tugend
+// 2008-03-18 / 2008-03-14 / Dominik Tugend
 
 // Comment: see gui/demo_fix.h
 
@@ -11,7 +11,9 @@
 
 #include <wx/file.h>
 #include <wx/progdlg.h>
+#include <wx/string.h>
 
+#include <list>
 #include <queue>
 
 #include "../debug.h"
@@ -27,10 +29,191 @@ bool compare_bytes (const char *bytes1, const char *bytes2, size_t ilen)
 
 CHlaeDemoFix::CHlaeDemoFix()
 {
+	_bEnableDirectoryFix = false;
+	_bEnableDemoCleanUp = false;
+	_bEnableHltvFix = false;
+	_bEnableWaterMarks = true;
+
+	strncpy(_watermark64, HLAE_WATERMARK64, 64);
+	_watermark64[63]=0;
+	strncpy(_watermark260, HLAE_WATERMARK260, 260);
+	_watermark260[259]=0;
 }
 
 CHlaeDemoFix::~CHlaeDemoFix()
 {
+	ClearCommandMap();
+}
+
+void CHlaeDemoFix::EnableDirectoryFix(bool bEnable)
+{
+	_bEnableDirectoryFix = bEnable;
+}
+void CHlaeDemoFix::EnableDemoCleanUp(bool bEnable)
+{
+	_bEnableDemoCleanUp = bEnable;
+}
+
+void CHlaeDemoFix::EnableHltvFix(bool bEnable)
+{
+	_bEnableHltvFix = bEnable;
+}
+
+void CHlaeDemoFix::EnableWaterMarks(bool bEnable)
+{
+	_bEnableWaterMarks = bEnable;
+}
+
+void CHlaeDemoFix::AddCommandMapping ( wxString & srcmap, wxString & targetmap)
+{
+	cmd_mapping_s mymapping;
+	strncpy(mymapping.src, srcmap.mb_str(wxConvISO8859_1) , sizeof(mymapping.src)-1);
+	mymapping.src[sizeof(mymapping.src)-1]=0;
+	strncpy(mymapping.dst, targetmap.mb_str(wxConvISO8859_1) , sizeof(mymapping.dst)-1);
+	mymapping.dst[sizeof(mymapping.dst)-1]=0;
+
+	_CommandMap.push_front(mymapping);
+}
+
+void CHlaeDemoFix::ClearCommandMap( void )
+{
+	_CommandMap.clear();
+}
+
+bool CHlaeDemoFix::Run ( const wxChar* infilename, const wxChar* outfilename)
+{
+	if (_bEnableDirectoryFix)
+		return fix_demo(infilename,outfilename);
+	else
+		return normal_demo(infilename,outfilename);
+}
+
+bool CHlaeDemoFix::normal_demo ( const wxChar* infilename, const wxChar* outfilename)
+{
+	wxString tempstr;
+	bool bOK=false;
+
+	wxFile *infile = new wxFile(infilename,wxFile::read);
+	wxFile *outfile = new wxFile(outfilename, wxFile::write);
+	wxProgressDialog* tickerdlg = new wxProgressDialog(wxT("DemoTools"),wxT("Starting ..."),(int)(infile->Length()),NULL,wxPD_APP_MODAL|wxPD_SMOOTH|wxPD_CAN_ABORT|wxPD_ELAPSED_TIME|wxPD_ESTIMATED_TIME|wxPD_REMAINING_TIME);
+
+	if (infile->IsOpened() && outfile->IsOpened())
+	{
+		wxString tstr;
+		hldemo_header_s * header = new hldemo_header_s;
+
+		g_debug.SendMessage(wxT("reading demo header ..."),hlaeDEBUG_VERBOSE_LEVEL1);
+
+		if (read_header(infile,header))
+		{
+			if (_bEnableWaterMarks) watermark_header(header);
+
+			if(!(header->dir_offset))
+			{
+				g_debug.SendMessage(wxT("Directory entries not present, aborting. Use DemoFix."),hlaeDEBUG_ERROR);
+			}
+
+			else if (write_header(outfile,header))
+			{
+				bool bSearchNewSegment = true && (infile->Tell() < header->dir_offset);
+				int iNumSegments = 0;
+				copy_macroblock_e eCopyState=CPMB_OKSTOP;
+
+				std::queue<hldemo_dir_entry_s> direntries_que;
+				
+				while (bSearchNewSegment)
+				{
+					tstr.Printf(wxT("Processing segment %i"),iNumSegments);
+					g_debug.SendMessage(tstr,hlaeDEBUG_VERBOSE_LEVEL1);
+
+					tstr.Printf(wxT("Segment: %i"),iNumSegments);
+					tickerdlg->Update(infile->Tell(),tstr);
+
+					hldemo_macroblock_header_s lastheader = { 5, 0.0f, 0 };
+
+					eCopyState = copy_macroblock(infile, outfile, &lastheader);
+
+					while (eCopyState==CPMB_OK && (infile->Tell() < header->dir_offset))
+					{
+						if (! ( tickerdlg->Update(infile->Tell()) ) )
+						{
+							eCopyState=CPMB_USERABORT;
+							break;
+						}
+						eCopyState = copy_macroblock(infile, outfile, &lastheader);
+					}
+					
+					if (eCopyState==CPMB_OKSTOP)
+					{
+						// normal stop
+
+						// munch repeated stops:
+						wxFileOffset fpos = infile->Tell();
+						hldemo_macroblock_header_s mbheader;
+
+						while ( (infile->Tell() < header->dir_offset) &&  sizeof(hldemo_macroblock_header_s)==infile->Read(&mbheader,sizeof(hldemo_macroblock_header_s)) && mbheader.type == 5 )
+						{
+							lastheader = mbheader;
+							fpos += sizeof(hldemo_macroblock_header_s);
+							outfile->Write(&mbheader,sizeof(hldemo_macroblock_header_s));
+						}
+
+						// rewind behind last stop:
+						infile->Seek(fpos);
+
+					} else if (eCopyState==CPMB_ERROR)
+					{
+						g_debug.SendMessage(wxT("DemoFix: Found incomplete or unknown message or file end, aborting. Use DemoFix."),hlaeDEBUG_ERROR);
+					} else if (eCopyState==CPMB_USERABORT) {
+						// fatal error (user abort)
+						g_debug.SendMessage(wxT("DemoFix: User aborted."),hlaeDEBUG_ERROR);
+					} else {
+						// fatal error
+						g_debug.SendMessage(wxT("DemoFix: Cannot recover from last error, failed."),hlaeDEBUG_ERROR);
+					}
+
+					if (eCopyState==CPMB_OKSTOP)
+					{
+						iNumSegments++;
+					}
+
+					bSearchNewSegment = (eCopyState == CPMB_OKSTOP) && (infile->Tell() < header->dir_offset);
+				}
+
+				// no new segments, copy directory entries (if any):
+				if (eCopyState==CPMB_OKSTOP)
+				{
+					tstr.Printf(wxT("copying %i directory entries"),iNumSegments);
+					tickerdlg->Update(infile->Tell(),tstr);
+					g_debug.SendMessage(tstr,hlaeDEBUG_VERBOSE_LEVEL1);
+
+					if(copy_bytes(infile,outfile,infile->Length()-infile->Tell()))
+					{
+						// that's it guys.
+						g_debug.SendMessage(wxT("DemoTools: Finished."),hlaeDEBUG_INFO);
+						tickerdlg->Update(infile->Length());
+						bOK=true;
+					};
+				}
+
+			} else g_debug.SendMessage(wxT("Failed to write demo header."),hlaeDEBUG_ERROR);
+
+		} else g_debug.SendMessage(wxT("Failed to read demo header."),hlaeDEBUG_ERROR);
+
+		delete header;
+
+	} else {
+		if (!(infile->IsOpened())) g_debug.SendMessage(wxT("Could not open input file."),hlaeDEBUG_ERROR);
+		if (!(outfile->IsOpened())) g_debug.SendMessage(wxT("Could not open output file."),hlaeDEBUG_ERROR);
+	}
+
+	delete infile;
+	delete outfile;
+	
+	tickerdlg->Destroy();
+	delete tickerdlg;
+
+	return bOK;
 }
 
 bool CHlaeDemoFix::fix_demo ( const wxChar* infilename, const wxChar* outfilename)
@@ -51,6 +234,8 @@ bool CHlaeDemoFix::fix_demo ( const wxChar* infilename, const wxChar* outfilenam
 
 		if (read_header(infile,header))
 		{
+			if (_bEnableWaterMarks) watermark_header(header);
+
 			if(header->dir_offset)
 			{
 				g_debug.SendMessage(wxT("DemoFix: Directory entries already present, ignoring."),hlaeDEBUG_WARNING);
@@ -185,6 +370,7 @@ bool CHlaeDemoFix::fix_demo ( const wxChar* infilename, const wxChar* outfilenam
 
 					// that's it guys.
 					g_debug.SendMessage(wxT("DemoFix: Finished."),hlaeDEBUG_INFO);
+					tickerdlg->Update(infile->Length());
 					bOK=true;
 				}
 
@@ -219,7 +405,7 @@ bool CHlaeDemoFix::read_header(wxFile* infile, hldemo_header_s * header)
 	//iread = sizeof (header->magic);
 	//if (iread != infile->Read(header->magic,iread)) return false;
 	if (!compare_bytes(header->magic,HLDEMO_MAGIC,sizeof(HLDEMO_MAGIC))) { g_debug.SendMessage(wxT("file identifier invalid"),hlaeDEBUG_ERROR); return false; }
-	tstr.Printf(wxT("File identifier: %s"),wxString(header->magic,wxConvUTF8)); g_debug.SendMessage(tstr,hlaeDEBUG_VERBOSE_LEVEL2);
+	tstr.Printf(wxT("File identifier: %s"),wxString(header->magic,wxConvISO8859_1)); g_debug.SendMessage(tstr,hlaeDEBUG_VERBOSE_LEVEL2);
 
 	//iread = sizeof(header->demo_version);
 	//if (iread != infile->Read(&(header->demo_version),iread)) return false;
@@ -245,7 +431,7 @@ bool CHlaeDemoFix::read_header(wxFile* infile, hldemo_header_s * header)
 		g_debug.SendMessage(wxT("map_name string malformed, forcing term \\0"),hlaeDEBUG_WARNING);
 		header->map_name[sizeof(header->map_name)-1]=0;
 	}
-	tstr.Printf(wxT("Map name: %s"),wxString(header->map_name,wxConvUTF8)); g_debug.SendMessage(tstr,hlaeDEBUG_VERBOSE_LEVEL2);
+	tstr.Printf(wxT("Map name: %s"),wxString(header->map_name,wxConvISO8859_1)); g_debug.SendMessage(tstr,hlaeDEBUG_VERBOSE_LEVEL2);
 
 	iread = sizeof(header->game_dll);
 	//if (iread != infile->Read(header->game_dll,iread)) return false;
@@ -253,11 +439,32 @@ bool CHlaeDemoFix::read_header(wxFile* infile, hldemo_header_s * header)
 		g_debug.SendMessage(wxT("game_dll string malformed, forcing term \\0"),hlaeDEBUG_WARNING);
 		header->game_dll[sizeof(header->game_dll)-1]=0;
 	}
-	tstr.Printf(wxT("Game DLL: %s"),wxString(header->game_dll,wxConvUTF8)); g_debug.SendMessage(tstr,hlaeDEBUG_VERBOSE_LEVEL2);
+	tstr.Printf(wxT("Game DLL: %s"),wxString(header->game_dll,wxConvISO8859_1)); g_debug.SendMessage(tstr,hlaeDEBUG_VERBOSE_LEVEL2);
 
 	//iread = sizeof(header->dir_offset);
 	//if (iread != infile->Read(&(header->dir_offset),iread)) return false;
 	return true;
+}
+
+void CHlaeDemoFix::watermark_header(hldemo_header_s * header)
+{
+	char *tdst1;
+	char *tdst2;
+	char *tmrk=_watermark260;
+	bool bmark1=false;
+	bool bmark2=false;
+
+	tdst1 = header->game_dll;
+	tdst2 = header->map_name;
+	for (int i=0;i<260;i++)
+	{
+		*tdst1 = bmark1 ? *tmrk: *tdst1;
+		*tdst2 = bmark2 ? *tmrk: *tdst2;
+		if (*(tdst1++) == 0) bmark1=true;
+		if (*(tdst2++) == 0) bmark2=true;
+		tmrk++;
+	}
+	
 }
 
 bool CHlaeDemoFix::write_header(wxFile* outfile, const hldemo_header_s * header)
@@ -372,10 +579,16 @@ CHlaeDemoFix::copy_macroblock_e CHlaeDemoFix::copy_macroblock(wxFile* infile, wx
 	case 3:
 		DEBUG_MESSAGE("3 client command")
 
+		if (_bEnableDemoCleanUp)
+		{
+			if((ftarget = infile->Tell()) > fsize) return RETURN_REWIND(CPMB_ERROR);
+			if (!COPY_BYTES(ftarget-fpos)) return CPMB_FATALERROR;
+			if (copy_command(infile,outfile)!=CPMB_OK) return CPMB_FATALERROR;
+		} else {
+			if((ftarget = infile->Tell()+64) > fsize) return RETURN_REWIND(CPMB_ERROR);
+			if (!COPY_BYTES(ftarget-fpos)) return CPMB_FATALERROR;
+		}
 
-		if((ftarget = infile->Tell()+64) > fsize) return RETURN_REWIND(CPMB_ERROR);
-
-		if (!COPY_BYTES(ftarget-fpos)) return CPMB_FATALERROR;
 		return RETURN_BLOCK(CPMB_OK);
 	case 4:
 		DEBUG_MESSAGE("4 unknown data")
@@ -429,4 +642,46 @@ CHlaeDemoFix::copy_macroblock_e CHlaeDemoFix::copy_macroblock(wxFile* infile, wx
 
 	// return OK:
 	return RETURN_REWIND(CPMB_ERROR);
+}
+
+CHlaeDemoFix::copy_macroblock_e CHlaeDemoFix::copy_command(wxFile* infile, wxFile* outfile)
+{
+	copy_macroblock_e bReturn=CPMB_OK;
+	char stmp[64];
+
+	// read:
+	if (64 != infile->Read(stmp,64))
+	{
+		g_debug.SendMessage(wxT("failed reading command from demo"),hlaeDEBUG_ERROR);
+		return CPMB_FATALERROR;
+	}
+
+	// check in debug mode:
+	#ifdef _DEBUG
+		if (strnlen(stmp,64)>=64) g_debug.SendMessage(wxT("demo command not null terminated, forcing \\0"),hlaeDEBUG_WARNING);
+	#endif
+
+	stmp[63]=0; // force term
+
+	// process mappings:
+	for (std::list<cmd_mapping_s>::iterator iter = _CommandMap.begin(); iter != _CommandMap.end(); iter++)
+	{
+		cmd_mapping_s curmap=*iter;
+
+		if (!strcmp(curmap.src,stmp))
+		{
+			if (_bEnableWaterMarks) strcpy(stmp,_watermark64);
+			strcpy(stmp,curmap.dst);
+			break;
+		}
+	}
+
+	// write:
+	if (64 != outfile->Write(stmp,64))
+	{
+		g_debug.SendMessage(wxT("failed writing command to demo"),hlaeDEBUG_ERROR);
+		return CPMB_FATALERROR;
+	}
+
+	return bReturn;
 }
