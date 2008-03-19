@@ -85,7 +85,7 @@ wxString CChoiceList::GetCurrentChoice(const wxString& format)
 
 
 CLauncherDialog::CLauncherDialog(wxWindow* parent) : wxDialog( parent, wxID_ANY,
-	wxT("Half-Life Advanced Effects Launcher"), wxDefaultPosition, wxSize(410,389))
+	wxT("Half-Life Advanced Effects Launcher"), wxDefaultPosition, wxSize(410,402))
 {
 	// Initialize
 
@@ -353,7 +353,7 @@ CLauncherDialog::CLauncherDialog(wxWindow* parent) : wxDialog( parent, wxID_ANY,
 
 	// Load preset
 
-	m_tc_path->SetValue(wxT("C:\\Program Files\\Steam\\SteamApps\\neomic\\counter-strike"));
+	m_tc_path->SetValue(wxT("C:\\Program Files\\Steam\\SteamApps\\neomic\\counter-strike\\hl.exe"));
 	m_c_mod->SetSelection(2);
 	m_c_depth->SetSelection(1);
 	m_tc_width->SetValue(wxT("800"));
@@ -398,7 +398,7 @@ void CLauncherDialog::OnBrowse(wxCommandEvent& WXUNUSED(evt))
 		HLAE_HLDEFAULTPATH,	wxT("hl.exe"), wxT("Half-Life executable (hl.exe)|hl.exe"),
 		wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 	filedgl->ShowModal();
-	wxString path = filedgl->GetDirectory();
+	wxString path = filedgl->GetPath();
 	if (path != HLAE_HLDEFAULTPATH)
 	{
 		m_path = path;
@@ -408,37 +408,50 @@ void CLauncherDialog::OnBrowse(wxCommandEvent& WXUNUSED(evt))
 
 void CLauncherDialog::UpdateCmdline()
 {
+	// Path
+	
+	m_path = m_tc_path->GetValue();
+
+
 	// Standard parameters
-	m_fullcmdline = wxT("-steam -gl -window");
+
+	m_cmdline = wxT("-steam -gl -window");
+
 
 	// Mod parameter
-	m_fullcmdline += m_modchoices->GetCurrentChoice(wxT(" -game %s"));
+
+	m_cmdline += m_modchoices->GetCurrentChoice(wxT(" -game %s"));
+
 
 	// Resolution parameter
+
 	m_depth = m_depthchoices->GetCurrentChoice();
 	m_width = m_tc_width->GetValue();
 	m_height = m_tc_height->GetValue();
 	m_force = m_ch_force->GetValue();
 
-	
 	if (m_force)
 	{
 		if ((m_width != wxT("")) && (m_height != wxT("")) && (m_depth != wxT("")))
-			m_fullcmdline += wxString::Format(wxT(" -mdtres %sx%sx%s"), m_width, m_height, m_depth);
+			m_cmdline += wxString::Format(wxT(" -mdtres %sx%sx%s"), m_width, m_height, m_depth);
 	}
 	else
 	{
-		if (m_width != wxT("")) m_fullcmdline += wxString::Format(wxT(" -w %s"), m_width);
-		if (m_height != wxT("")) m_fullcmdline += wxString::Format(wxT(" -h %s"), m_height);
-		if (m_depth != wxT("")) m_fullcmdline += wxString::Format(wxT(" -%sbpp"), m_depth);
+		if (m_width != wxT("")) m_cmdline += wxString::Format(wxT(" -w %s"), m_width);
+		if (m_height != wxT("")) m_cmdline += wxString::Format(wxT(" -h %s"), m_height);
+		if (m_depth != wxT("")) m_cmdline += wxString::Format(wxT(" -%sbpp"), m_depth);
 	}
 
-	// Additional parameters
-	m_additionalcmdline = wxString::Format(wxT(" %s"), m_tc_additionalcmdline->GetValue());
-	m_fullcmdline += m_additionalcmdline;
 
-	// Write the full cmdline
-	m_tc_fullcmdline->SetValue(m_fullcmdline);
+	// Additional parameters
+
+	m_additionalcmdline = wxString::Format(wxT(" %s"), m_tc_additionalcmdline->GetValue());
+	m_cmdline += m_additionalcmdline;
+
+
+	// Write the full cmdline with path
+
+	m_tc_fullcmdline->SetValue(wxString::Format(wxT("\"%s\" %s"), m_path, m_cmdline));
 }
 
 void CLauncherDialog::OnSavePreset(wxCommandEvent& WXUNUSED(evt))
@@ -455,7 +468,7 @@ void CLauncherDialog::OnLaunch(wxCommandEvent& WXUNUSED(evt))
 {
 	// TODO: Insert launcher code here
 	// path: m_path
-	// cmdline: m_fullcmdline
+	// cmdline: m_cmdline
 
 	Close();
 }

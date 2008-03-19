@@ -50,7 +50,7 @@ private:
 	CChoiceList* m_depthchoices;
 	CChoiceList* m_modchoices;
 
-	wxString m_fullcmdline;
+	wxString m_cmdline;
 
 	// Preset variables
 	wxString m_additionalcmdline;
@@ -59,7 +59,6 @@ private:
 	wxString m_width; 
 	wxString m_height;
 	bool m_force;
-
 
 	enum {
 		ID_Changed = wxID_HIGHEST+1,
@@ -91,7 +90,6 @@ private:
 	void OnChanged(wxCommandEvent& evt);
 	void OnBrowse(wxCommandEvent& evt);
 
-	void UpdateChoice(wxChoice* choice, wxTextCtrl* textctrl);
 	void UpdateCmdline();
 
 public:
