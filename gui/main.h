@@ -17,7 +17,8 @@ private:
 	enum {
 		hlaeID_SaveLayout = wxID_HIGHEST+1,
 		hlaeID_LayoutManager,
-		hlaeID_DemoTools
+		hlaeID_DemoTools,
+		hlaeID_Launch
 	};
 	CHlaeGameWindow* m_HlaeGameWindow;
 	wxMenu* m_windowmenu;
@@ -25,6 +26,7 @@ private:
 	wxMenu*	m_layoutmenu;
 	void CreateMenuBar();
 	void OnExit(wxCommandEvent& evt);
+	void OnLaunch(wxCommandEvent& evt);
 	void OnDemoTools(wxCommandEvent& evt);
 	void OnSaveLayout(wxCommandEvent& evt);
 	void OnLayoutManager(wxCommandEvent& evt);

@@ -7,6 +7,8 @@
 #include "gamewindow.h"
 #include "settings.h"
 
+#include "launcher.h"
+
 #include "console.h"
 #include "layout.h"
 
@@ -18,6 +20,7 @@
 BEGIN_EVENT_TABLE(hlaeMainWindow, wxFrame)
 	EVT_MENU(wxID_EXIT, hlaeMainWindow::OnExit)
 	EVT_MENU(wxID_ABOUT, hlaeMainWindow::OnAbout)
+	EVT_MENU(hlaeMainWindow::hlaeID_Launch, hlaeMainWindow::OnLaunch)
 	EVT_MENU(hlaeMainWindow::hlaeID_DemoTools, hlaeMainWindow::OnDemoTools)
 	EVT_MENU(hlaeMainWindow::hlaeID_SaveLayout, hlaeMainWindow::OnSaveLayout)
 	EVT_MENU(hlaeMainWindow::hlaeID_LayoutManager, hlaeMainWindow::OnLayoutManager)
@@ -101,6 +104,11 @@ void hlaeMainWindow::OnSaveLayout(wxCommandEvent& WXUNUSED(evt)) {
 	g_layoutmanager.AddLayout();
 }
 
+void hlaeMainWindow::OnLaunch(wxCommandEvent& WXUNUSED(evt)) {
+	CLauncherDialog* launch_dialog = new CLauncherDialog(this);
+	launch_dialog->Show();
+}
+
 void hlaeMainWindow::OnLayoutManager(wxCommandEvent& WXUNUSED(evt))
 {
 
@@ -131,6 +139,8 @@ void hlaeMainWindow::CreateMenuBar() {
 
 	// file menu
 	wxMenu* file_menu = new wxMenu;
+	
+	file_menu->Append(hlaeID_Launch, wxT("Launch"));
     file_menu->Append(wxID_EXIT, wxT("E&xit"), wxT("Quit the program"));
 
 	// view menu

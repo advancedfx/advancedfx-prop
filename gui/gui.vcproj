@@ -250,6 +250,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\launcher.h"
+					>
+				</File>
+				<File
 					RelativePath=".\layout.h"
 					>
 				</File>
@@ -289,6 +293,10 @@
 				</File>
 				<File
 					RelativePath=".\gamewindow.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\launcher.cpp"
 					>
 				</File>
 				<File

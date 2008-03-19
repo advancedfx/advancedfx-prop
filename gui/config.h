@@ -49,6 +49,7 @@ public:
 	void AppendPropertyGroup(hlaeConfigListGroup* group);
 	const wxString& GetPropertyString(const wxString& group_name, const wxString& property_name);
 	int GetPropertyInteger(const wxString& group_name, const wxString& property_name);
+	bool GetPropertyBoolean(const wxString& group_name, const wxString& property_name);
 	void RestoreDefaults();
 	void Flush();
 	void Reload();

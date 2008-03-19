@@ -122,6 +122,13 @@ int hlaeConfig::GetPropertyInteger(const wxString& group_name, const wxString& p
 	return wxAtoi(GetPropertyString(group_name, property_name));
 }
 
+bool hlaeConfig::GetPropertyBoolean(const wxString& group_name, const wxString& property_name)
+{
+	wxString string = GetPropertyString(group_name, property_name);
+	if (string == wxT("true")) return true;
+	else return false;
+}
+
 hlaeConfigListGroup* hlaeConfig::GetPropertyGroup(const wxString& group_name)
 {
 	hlaeConfigListGroup* retval;
