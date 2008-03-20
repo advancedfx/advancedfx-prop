@@ -13,7 +13,16 @@
 
 #include "detours.h"
 
+#include <list>
+
 #include "../shared/hldemo/hldemo.h"
+
+std::list<int> g_BlockedVoiceEntsList;
+
+
+//
+//
+//
 
 extern cl_enginefuncs_s *pEngfuncs;
 
@@ -21,13 +30,13 @@ extern cl_enginefuncs_s *pEngfuncs;
 // Addresses:
 //
 
-#define ADDRESS_net_message_cursize 0x02817970
-#define ADDRESS_msg_readcount 0x02d7c908
-#define ADDRESS_CL_ParseServerMessage 0x01d2a270
+#define HL_ADDR_net_message_cursize 0x02817970
+#define HL_ADDR_msg_readcount 0x02d7c908
+#define HL_ADDR_CL_ParseServerMessage 0x01d2a270
 
-#define ADDRESS_CL_ParseServerMessage_CmdRead (ADDRESS_CL_ParseServerMessage + 0x0E3)
-#define DETOURSIZE_CL_ParseServerMessage_CmdRead 0x07
-#define ADDRESS_net_message (ADDRESS_net_message_cursize - 0x10 )
+#define HL_ADDR_CL_ParseServerMessage_CmdRead (HL_ADDR_CL_ParseServerMessage + 0x0E3)
+#define HL_ADDR_DTOURSZ_CL_ParseServerMessage_CmdRead 0x07
+#define HL_ADDR_net_message (HL_ADDR_net_message_cursize - 0x10 )
 
 //
 // Types and structs
@@ -54,8 +63,8 @@ typedef struct sizebuf_s
 
 void Handle_CmdRead_Intercepted(void)
 {
-	int *pmsg_readcount = (int *)ADDRESS_msg_readcount;
-	sizebuf_t * pnet_message = (sizebuf_t *)ADDRESS_net_message;
+	int *pmsg_readcount = (int *)HL_ADDR_msg_readcount;
+	sizebuf_t * pnet_message = (sizebuf_t *)HL_ADDR_net_message;
 
 	int myreadcount=*pmsg_readcount;
 
@@ -69,17 +78,23 @@ void Handle_CmdRead_Intercepted(void)
 
 	switch (uc)
 	{
-	case svc_serverinfo:
+	case svc_voicedata:
 		// 4 + 4 + 4 + 16
-		int myt;
-		unsigned char maxclients;
-		myt = 4 + 4 + 4 + 16;
-		if (myreadcount+myt > pnet_message->cursize)
+		unsigned char ucEntity;
+		if (myreadcount+sizeof(ucEntity) > pnet_message->cursize)
 			return; // msg_badread
 
-		maxclients = (unsigned char)(pnet_message->data[myreadcount+myt]);
-		if (maxclients<MAXCLIENTS) (unsigned char)(pnet_message->data[myreadcount+myt])=maxclients+1;
-
+		ucEntity = (unsigned char)(pnet_message->data[myreadcount]);
+		int iEntity = ucEntity+1;
+		for (std::list<int>::iterator iter = g_BlockedVoiceEntsList.begin(); iter != g_BlockedVoiceEntsList.end(); iter++)
+		{
+			if (*iter==iEntity)
+			{
+				(unsigned char)(pnet_message->data[myreadcount])=MAXCLIENTS;
+				//pEngfuncs->Con_DPrintf("HLAE blocked voice of %i.\n",iEntity);
+				break;
+			}
+		}
 		break;
 	}
 
@@ -89,38 +104,88 @@ void Handle_CmdRead_Intercepted(void)
 // Hooking related
 //
 
-DWORD dwAddress_CL_ParseServerMessage_CmdRead_continue=NULL;
+DWORD dwHL_ADDR_CL_ParseServerMessage_CmdRead_continue=NULL;
 
 __declspec(naked) void tour_CL_ParseServerMessage_CmdRead()
 {
 	Handle_CmdRead_Intercepted();
 	__asm
 	{
-		JMP [dwAddress_CL_ParseServerMessage_CmdRead_continue]
+		JMP [dwHL_ADDR_CL_ParseServerMessage_CmdRead_continue]
 	}
 }
 
 void install_tour_CL_ParseServerMessage_CmdRead()
 {
-	if(dwAddress_CL_ParseServerMessage_CmdRead_continue) return;
+	if(dwHL_ADDR_CL_ParseServerMessage_CmdRead_continue) return;
 
-	dwAddress_CL_ParseServerMessage_CmdRead_continue = (DWORD)DetourApply((BYTE *)ADDRESS_CL_ParseServerMessage_CmdRead,(BYTE *)tour_CL_ParseServerMessage_CmdRead,DETOURSIZE_CL_ParseServerMessage_CmdRead);
+	dwHL_ADDR_CL_ParseServerMessage_CmdRead_continue = (DWORD)DetourApply((BYTE *)HL_ADDR_CL_ParseServerMessage_CmdRead,(BYTE *)tour_CL_ParseServerMessage_CmdRead,HL_ADDR_DTOURSZ_CL_ParseServerMessage_CmdRead);
 
 	// adjust call in detoured part:
-	DWORD *pdwFixAdr = (DWORD *)((char *)dwAddress_CL_ParseServerMessage_CmdRead_continue + 0x02 + 0x01);
+	DWORD *pdwFixAdr = (DWORD *)((char *)dwHL_ADDR_CL_ParseServerMessage_CmdRead_continue + 0x02 + 0x01);
 
 	DWORD dwAdr = *pdwFixAdr;
 
-	dwAdr -= dwAddress_CL_ParseServerMessage_CmdRead_continue - ADDRESS_CL_ParseServerMessage_CmdRead;
+	dwAdr -= dwHL_ADDR_CL_ParseServerMessage_CmdRead_continue - HL_ADDR_CL_ParseServerMessage_CmdRead;
 
 	*pdwFixAdr = dwAdr;
 }
 
-REGISTER_DEBUGCMD_FUNC(test_dem_livetools)
+REGISTER_CMD_FUNC(voice_block)
 {
 	install_tour_CL_ParseServerMessage_CmdRead();
-}
+	
+	bool bShowHelp=true;
+	int icarg=pEngfuncs->Cmd_Argc();
 
+	if (icarg ==2 )
+	{
+		char* pcmd = pEngfuncs->Cmd_Argv(1);
+
+		if (strcmp(pcmd,"list")==0)
+		{
+			bShowHelp=false;
+			pEngfuncs->Con_Printf("Blocked ids: ");
+			for (std::list<int>::iterator iter = g_BlockedVoiceEntsList.begin(); iter != g_BlockedVoiceEntsList.end(); iter++)
+				pEngfuncs->Con_Printf("%i, ",*iter);
+			pEngfuncs->Con_Printf("END.\n");
+		}
+		else if (strcmp(pcmd,"clear")==0)
+		{
+			bShowHelp=false;
+			g_BlockedVoiceEntsList.clear();
+		}
+	} else if (icarg==3) {
+		char* pcmd = pEngfuncs->Cmd_Argv(1);
+		int iid = atoi(pEngfuncs->Cmd_Argv(2));
+
+		if (strcmp(pcmd,"add")==0)
+		{
+			bShowHelp=false;
+			g_BlockedVoiceEntsList.push_back(iid);
+		}
+		else if (strcmp(pcmd,"del")==0)
+		{
+			bShowHelp=false;
+			bool bfound=false;
+			for (std::list<int>::iterator iter = g_BlockedVoiceEntsList.begin(); iter != g_BlockedVoiceEntsList.end(); iter++)
+			{
+				if(*iter==iid)
+				{
+					bfound=true;
+					break;
+				}
+			}
+			if (bfound) pEngfuncs->Con_Printf("Deleted %i from list.\n",iid);
+			else  pEngfuncs->Con_Printf("%i not found in list.\n",iid);
+		}
+	}
+
+	if (bShowHelp)
+	{
+		pEngfuncs->Con_Printf("Usage:\n" PREFIX "voice_block add <id> - adds id to list of blocked entity ids\n" PREFIX "voice_block list\n" PREFIX "voice_block del <id>\n" PREFIX "voice_block clear - clears complete list\n");
+	}
+}
 
 
 /*

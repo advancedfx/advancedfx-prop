@@ -100,6 +100,13 @@ HL_ADDR_ENTRY(paintbuffer,"0x0")
 HL_ADDR_ENTRY(soundtime,"0x0")
 HL_ADDR_ENTRY(paintedtime,"0x0")
 
+HL_ADDR_ENTRY(CL_ParseServerMessage,"0x0")
+HL_ADDR_ENTRY(net_message_cursize,"0x0")
+HL_ADDR_ENTRY(net_message,"0x0")
+HL_ADDR_ENTRY(msg_readcount,"0x0")
+HL_ADDR_ENTRY(CL_ParseServerMessage_CmdRead,"0x0")
+HL_ADDR_ENTRY(DTOURSZ_CL_ParseServerMessage_CmdRead,"0x0")
+
 ///////////////////////////////////////////////////////////////////////////////
 // cHLAddresses
 ///////////////////////////////////////////////////////////////////////////////

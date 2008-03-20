@@ -38,6 +38,13 @@ struct
 	} MouseTarget;
 } g_HL_MainWindow_info;
 
+struct
+{
+	unsigned int ui_rx_packets;
+	unsigned int ui_tx_packets;
+
+} g_message_stats = {0, 0};
+
 LRESULT CALLBACK Hooking_WndProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	// filter window unspecific messages:
@@ -130,7 +137,9 @@ LRESULT CALLBACK HlaeBcCltWndProc(
     UINT uMsg,        // message identifier
     WPARAM wParam,    // first message parameter
     LPARAM lParam)    // second message parameter
-{ 
+{
+	g_message_stats.ui_rx_packets++;
+
     switch (uMsg) 
     { 
         case WM_CREATE: 
@@ -244,6 +253,7 @@ bool HlaeBcCltSendMessage(DWORD dwId,DWORD cbSize,PVOID lpData)
 // this function could be optimized by reducing expensive FindWindowW calls
 {
 	HWND hwServerWindow;
+	g_message_stats.ui_tx_packets++;
 	
 	// curently wastes time:
 	if(!(hwServerWindow=FindWindowW(HLAE_BASECOM_CLASSNAME,HLAE_BASECOM_SERVER_ID)))
@@ -558,4 +568,9 @@ REGISTER_DEBUGCMD_FUNC(debug_devicecontext)
 	delete pPfd;
 
 	ReleaseDC(g_HL_MainWindow,hdcResult);
+}
+
+REGISTER_DEBUGCMD_FUNC(debug_message_stats)
+{
+	pEngfuncs->Con_Printf("HLAE BaseCom Client (includes failed):\ntx packets: %u\nrx packets: %u\n",g_message_stats.ui_tx_packets,g_message_stats.ui_rx_packets);
 }

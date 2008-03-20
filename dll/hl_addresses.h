@@ -273,6 +273,12 @@ extern unsigned long ulHLAddr_p_shm;
 extern unsigned long ulHLAddr_paintbuffer;
 extern unsigned long ulHLAddr_soundtime;
 extern unsigned long ulHLAddr_paintedtime;
+extern unsigned long ulHLAddr_CL_ParseServerMessage;
+extern unsigned long ulHLAddr_net_message_cursize;
+extern unsigned long ulHLAddr_net_message;
+extern unsigned long ulHLAddr_msg_readcount;
+extern unsigned long ulHLAddr_CL_ParseServerMessage_CmdRead;
+extern unsigned long ulHLAddr_DTOURSZ_CL_ParseServerMessage_CmdRead;
 
 //
 // macros for accessing the header exports (for compabtility with old code):
@@ -315,5 +321,12 @@ extern unsigned long ulHLAddr_paintedtime;
 #define HL_ADDR_paintbuffer ulHLAddr_paintbuffer
 #define HL_ADDR_soundtime ulHLAddr_soundtime
 #define HL_ADDR_paintedtime ulHLAddr_paintedtime
+
+#define HL_ADDR_CL_ParseServerMessage ulHLAddr_CL_ParseServerMessage;
+#define HL_ADDR_net_message_cursize ulHLAddr_net_message_cursize;
+#define HL_ADDR_net_message ulHLAddr_net_message;
+#define HL_ADDR_msg_readcount ulHLAddr_msg_readcount;
+#define HL_ADDR_CL_ParseServerMessage_CmdRead ulHLAddr_CL_ParseServerMessage_CmdRead;
+#define HL_ADDR_DTOURSZ_CL_ParseServerMessage_CmdRead ulHLAddr_DTOURSZ_CL_ParseServerMessage_CmdRead;
 
 #endif // #ifndef HL_ADDRESSES_H
