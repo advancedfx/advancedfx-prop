@@ -1,5 +1,8 @@
-#include "launcher.h"
 #include <wx/filedlg.h>
+
+#include "loader.h"
+
+#include "launcher.h"
 
 CChoiceList::CChoiceList()
 {
@@ -469,6 +472,8 @@ void CLauncherDialog::OnLaunch(wxCommandEvent& WXUNUSED(evt))
 	// TODO: Insert launcher code here
 	// path: m_path
 	// cmdline: m_cmdline
+
+	InitLoader(this,m_path,m_cmdline);
 
 	Close();
 }

@@ -16,12 +16,12 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="../build/bin"
-			IntermediateDirectory="../build/hlae/debug"
+			OutputDirectory="../build/bin/"
+			IntermediateDirectory="../build/hlae/debug/"
 			ConfigurationType="1"
 			CharacterSet="2"
 			DeleteExtensionsOnClean="*.*"
-			BuildLogFile="$(IntDir)/BuildLog.html"
+			BuildLogFile="$(IntDir)BuildLog.html"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -47,8 +47,8 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
-				ObjectFile="$(IntDir)\"
-				ProgramDataBaseFileName="$(IntDir)\"
+				ObjectFile="$(IntDir)"
+				ProgramDataBaseFileName="$(IntDir)"
 				XMLDocumentationFileName=""
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
@@ -66,10 +66,10 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="wxmsw28ud_aui.lib wxmsw28ud_html.lib wxmsw28ud_adv.lib wxmsw28ud_core.lib wxbase28ud_xml.lib wxbase28ud.lib wxtiffd.lib wxjpegd.lib wxpngd.lib wxzlibd.lib wxregexud.lib wxexpatd.lib winmm.lib comctl32.lib rpcrt4.lib wsock32.lib odbc32.lib"
-				OutputFile="$(OutDir)/$(InputName).exe"
+				OutputFile="$(OutDir)$(InputName).exe"
 				AdditionalLibraryDirectories="&quot;$(WXWIN)/lib/vc_lib/&quot;"
 				GenerateManifest="true"
-				ManifestFile="$(IntDir)/$(TargetFileName).intermediate.manifest"
+				ManifestFile="$(IntDir)$(TargetFileName).intermediate.manifest"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(TargetDir)$(TargetName).pdb"
 				LinkTimeCodeGeneration="0"
@@ -81,8 +81,8 @@
 			/>
 			<Tool
 				Name="VCManifestTool"
-				OutputManifestFile="$(IntDir)/$(TargetFileName).embed.manifest"
-				ManifestResourceFile="$(IntDir)/$(TargetFileName).embed.manifest.res"
+				OutputManifestFile="$(IntDir)$(TargetFileName).embed.manifest"
+				ManifestResourceFile="$(IntDir)$(TargetFileName).embed.manifest.res"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -113,13 +113,13 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="../build/bin"
-			IntermediateDirectory="../build/hlae/release"
+			OutputDirectory="../build/bin/"
+			IntermediateDirectory="../build/hlae/release/"
 			ConfigurationType="1"
 			CharacterSet="2"
 			DeleteExtensionsOnClean="*.*"
 			WholeProgramOptimization="1"
-			BuildLogFile="$(IntDir)/BuildLog.html"
+			BuildLogFile="$(IntDir)BuildLog.html"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -143,8 +143,8 @@
 				PreprocessorDefinitions="WIN32;__WXMSW__;_UNICODE;UNICODE;_WINDOWS;NOPCH"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
-				ObjectFile="$(IntDir)\"
-				ProgramDataBaseFileName="$(IntDir)\"
+				ObjectFile="$(IntDir)"
+				ProgramDataBaseFileName="$(IntDir)"
 				XMLDocumentationFileName=""
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
@@ -162,10 +162,10 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="wxmsw28u_aui.lib wxmsw28u_html.lib wxmsw28u_adv.lib wxmsw28u_core.lib wxbase28u_xml.lib wxbase28u.lib wxtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib wxregexu.lib wxexpat.lib winmm.lib comctl32.lib rpcrt4.lib wsock32.lib odbc32.lib"
-				OutputFile="$(OutDir)/$(InputName).exe"
+				OutputFile="$(OutDir)$(InputName).exe"
 				AdditionalLibraryDirectories="&quot;$(WXWIN)/lib/vc_lib/&quot;"
 				GenerateManifest="true"
-				ManifestFile="$(IntDir)/$(TargetFileName).intermediate.manifest"
+				ManifestFile="$(IntDir)$(TargetFileName).intermediate.manifest"
 				GenerateDebugInformation="false"
 				ProgramDatabaseFile="$(TargetDir)$(TargetName).pdb"
 				OptimizeReferences="2"
@@ -179,8 +179,8 @@
 			/>
 			<Tool
 				Name="VCManifestTool"
-				OutputManifestFile="$(IntDir)/$(TargetFileName).embed.manifest"
-				ManifestResourceFile="$(IntDir)/$(TargetFileName).embed.manifest.res"
+				OutputManifestFile="$(IntDir)$(TargetFileName).embed.manifest"
+				ManifestResourceFile="$(IntDir)$(TargetFileName).embed.manifest.res"
 				DependencyInformationFile="$(IntDir)mt.dep"
 			/>
 			<Tool
@@ -262,6 +262,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\loader.h"
+					>
+				</File>
+				<File
 					RelativePath=".\main.h"
 					>
 				</File>
@@ -305,6 +309,10 @@
 				</File>
 				<File
 					RelativePath=".\list.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\loader.cpp"
 					>
 				</File>
 				<File
