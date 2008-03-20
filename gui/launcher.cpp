@@ -1,6 +1,7 @@
 #include <wx/filedlg.h>
 
 #include "loader.h"
+#include "config.h"
 
 #include "launcher.h"
 
@@ -35,10 +36,10 @@ void CChoiceList::AddChoice(const wxString& describtion, const wxString& value)
 
 void CChoiceList::Update()
 {
-	if (m_choice->GetCurrentSelection() == 0) m_textctrl->SetEditable(true);
+	if (m_choice->GetCurrentSelection() == 0) m_textctrl->Enable(true);
 	else
 	{
-		m_textctrl->SetEditable(false);
+		m_textctrl->Enable(false);
 		m_textctrl->SetValue(wxT(""));
 	}
 }
@@ -356,13 +357,15 @@ CLauncherDialog::CLauncherDialog(wxWindow* parent) : wxDialog( parent, wxID_ANY,
 
 	// Load preset
 
-	m_tc_path->SetValue(wxT("C:\\Program Files\\Steam\\SteamApps\\neomic\\counter-strike\\hl.exe"));
-	m_c_mod->SetSelection(2);
-	m_c_depth->SetSelection(1);
-	m_tc_width->SetValue(wxT("800"));
-	m_tc_height->SetValue(wxT("600"));
-	m_tc_additionalcmdline->SetValue(wxT("+developer 2"));
-	m_ch_force->SetValue(true);
+	m_tc_path->SetValue(g_config.GetPropertyString(wxT("launcher"), wxT("path")));
+	m_c_mod->SetSelection(g_config.GetPropertyInteger(wxT("launcher"), wxT("modsel")));
+	m_c_depth->SetSelection(g_config.GetPropertyInteger(wxT("launcher"), wxT("depthsel")));
+	m_tc_mod->SetValue(g_config.GetPropertyString(wxT("launcher"), wxT("mod")));
+	m_tc_depth->SetValue(g_config.GetPropertyString(wxT("launcher"), wxT("depthsel")));
+	m_tc_width->SetValue(g_config.GetPropertyString(wxT("launcher"), wxT("width")));
+	m_tc_height->SetValue(g_config.GetPropertyString(wxT("launcher"), wxT("height")));
+	m_tc_additionalcmdline->SetValue(g_config.GetPropertyString(wxT("launcher"), wxT("cmdline")));
+	m_ch_force->SetValue(g_config.GetPropertyBoolean(wxT("launcher"), wxT("force")));
 
 
 	// Update
@@ -452,9 +455,9 @@ void CLauncherDialog::UpdateCmdline()
 	m_cmdline += m_additionalcmdline;
 
 
-	// Write the full cmdline with path
+	// Write the full cmdline
 
-	m_tc_fullcmdline->SetValue(wxString::Format(wxT("\"%s\" %s"), m_path, m_cmdline));
+	m_tc_fullcmdline->SetValue(m_cmdline);
 }
 
 void CLauncherDialog::OnSavePreset(wxCommandEvent& WXUNUSED(evt))
@@ -472,6 +475,27 @@ void CLauncherDialog::OnLaunch(wxCommandEvent& WXUNUSED(evt))
 	// TODO: Insert launcher code here
 	// path: m_path
 	// cmdline: m_cmdline
+
+
+
+	// Save preset
+
+	g_config.SetPropertyString(wxT("launcher"), wxT("path"), m_tc_path->GetValue());
+	g_config.SetPropertyString(wxT("launcher"), wxT("modsel"), wxString::Format(wxT("%i"), m_c_mod->GetCurrentSelection()));
+	g_config.SetPropertyString(wxT("launcher"), wxT("depthsel"), wxString::Format(wxT("%i"), m_c_depth->GetCurrentSelection()));
+	g_config.SetPropertyString(wxT("launcher"), wxT("mod"), m_tc_mod->GetValue());
+	g_config.SetPropertyString(wxT("launcher"), wxT("depth"), m_tc_depth->GetValue());
+	g_config.SetPropertyString(wxT("launcher"), wxT("width"), m_tc_width->GetValue());
+	g_config.SetPropertyString(wxT("launcher"), wxT("height"), m_tc_height->GetValue());
+	g_config.SetPropertyString(wxT("launcher"), wxT("cmdline"), m_tc_additionalcmdline->GetValue());
+
+	wxString force;
+	if (m_ch_force->GetValue()) force = wxT("true");
+	else force = wxT("false");
+
+	g_config.SetPropertyString(wxT("launcher"), wxT("force"), force);
+
+	g_config.Flush();
 
 	InitLoader(this,m_path,m_cmdline);
 

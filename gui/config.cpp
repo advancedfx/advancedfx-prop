@@ -102,6 +102,18 @@ void hlaeConfig::Initialize()
 	adresses->AppendObject(new hlaeConfigListData(wxT("scr"),wxT("0x00000000")));
 	AppendPropertyGroup(adresses);
 
+	hlaeConfigListGroup* launcher = new hlaeConfigListGroup(wxT("launcher"));
+	launcher->AppendObject(new hlaeConfigListData(wxT("path"),wxT("Please select HL.exe...")));
+	launcher->AppendObject(new hlaeConfigListData(wxT("modsel"),wxT("2")));
+	launcher->AppendObject(new hlaeConfigListData(wxT("mod"),wxT("")));
+	launcher->AppendObject(new hlaeConfigListData(wxT("depthsel"),wxT("1")));
+	launcher->AppendObject(new hlaeConfigListData(wxT("depth"),wxT("")));
+	launcher->AppendObject(new hlaeConfigListData(wxT("width"),wxT("800")));
+	launcher->AppendObject(new hlaeConfigListData(wxT("height"),wxT("600")));
+	launcher->AppendObject(new hlaeConfigListData(wxT("force"),wxT("true")));
+	launcher->AppendObject(new hlaeConfigListData(wxT("cmdline"),wxT("-demoedit")));
+	AppendPropertyGroup(launcher);
+
 	// check if there is a file to load
 	if (m_filename->FileExists(m_filename->GetFullPath())) Reload();
 	else Flush();
@@ -128,6 +140,13 @@ bool hlaeConfig::GetPropertyBoolean(const wxString& group_name, const wxString& 
 	if (string == wxT("true")) return true;
 	else return false;
 }
+
+void hlaeConfig::SetPropertyString(const wxString& group_name, const wxString& property_name,
+	const wxString& property_value)
+{
+	GetPropertyData(GetPropertyGroup(group_name), property_name)->SetData(property_value);
+}
+
 
 hlaeConfigListGroup* hlaeConfig::GetPropertyGroup(const wxString& group_name)
 {
@@ -222,6 +241,8 @@ void hlaeConfig::Flush()
 	m_document->Save(m_filename->GetFullPath());
 }
 
+#include <wx/msgdlg.h>
+
 void hlaeConfig::Reload()
 {
 	m_document->Load(m_filename->GetFullPath());
@@ -258,7 +279,13 @@ void hlaeConfig::Reload()
 							{
 								hlaeConfigListData* data = GetPropertyData(GetPropertyGroup(group_node->GetName()),
 									prop->GetValue());
-								data->SetData(node->GetChildren()->GetContent());
+
+								wxString value;
+
+								if (node->GetChildren() != NULL) value = node->GetChildren()->GetContent();
+								else value = wxT("");
+
+								data->SetData(value);
 								break;
 							}
 							prop = prop->GetNext();
