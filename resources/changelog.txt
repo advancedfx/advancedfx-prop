@@ -1,21 +1,32 @@
-2.0 "Half-Life Advanced Effects"
+2.0 pre-release
 
 As always the following text contains many mistakes (as most changelog
 entries) due to lack of time and dedication to writing changelogs.
 
-- Changed: The MDT project has now been renamed to
+- Changed: The MDT project has now been reenamed to
            Half-Life Advanced Effects (HLAE)
 
 - Added: The HLAE Graphical User Interface, which will be extended in the
          future. The GUI is based on wxWidgets ( http://www.wxwidgets.org/ ).
+         
+- Changed: The MDTloader has been integrated into the HLAE Gui.
+           Select File->Launch from the menu to bring it up.
 
-- Added: DemoTools for fixing demos that are borken cause your PC crashed
-         during recording.
-         The tool can be accessed in the "Tools" menu of the GUI.
-         This tool is a migration of the "Half-Life Demo Fix 1.0.1" tool that
-         was released by HLAE team member ripieces in early 2006 and shall
-         replace it. It has been extended to support multi segmented demos,
-         hopefully the migration didn't bring new bugs :)
+- Added: DemoTools: select Tools->Demo Tool form the menu.
+         This tool migrates 2 old tools into the gui:
+         DemoCleanup by MirvinMonkey:
+           Remove scoreboard, commandmenu, ...
+           Added ability to block other commands too.
+         Half-Life Demo Fix by ripieces:
+           Repair demos that were recorded while the game crashed.
+           Added ability to repair more than 2 segments.
+         And adds a new one:
+         dem_forcehltv 1 camera stuck fix:
+           Tries to fix the camera being stuck when using dem_forcehltv 1
+           with some in-eye demos.
+           
+- Added: mirv_voice_block (for John 'VAFarmboy' D.)
+         this command allows blocking the voice data of specific players
 
 - Changed: mirv_fixforcehltv defaults to 0 again, mirv will try to autodetect
            the dem_forcehltv setting and set fixforcehltv accordingly
@@ -24,25 +35,14 @@ entries) due to lack of time and dedication to writing changelogs.
 
 - Added: __mirv_listplayers, __mirv_debug_cmdaddress,
          __mirv_debug_devicecontext
-         
 
-A warm (and wet?) thank you to the following people, teams and organistations:
-
-  To everyone (you) who is reading this.
-  To every HLAE user.
-  To wxWidgets team for wxWidgets.
-  To Microsoft for MSDN2, VC++, Windows, ... .
-  To ID-Software for the Quake 1 source code.
-  To Metamod for HLSDK p3.
-  To Valve for HL, HLSDK.
-  To neomic for the huge amount of work he has done on the GUI.
-  To Mirvin_Monkey for the creation of what now has become HLAE.
-  To myself (ripieces) for wasting so much time on this project.
-  To msthavoc for testing.
-  To Martin Otten for HLTV, viewdemo and demoedit, although he probably never
-     got any of my e-mails.
-  To everyone that feels he/she/it should have been mentioned here.
-  To everyone (you) who is still reading this.
+- Thanks to:
+    Everyone (including you).
+    iD Software, matrixstorm, MetaMod, Microsoft, Valve Software, wxWidgets.
+    Uwe Gierlich for his informations about the Half-Life .dem file format.
+    Mirvin_Monkey for creating the former MDT.
+    neomic for his enormous work on the HLAE Gui.  
+	Myself (ripieces) for wasting so much time on this project.
 
 
 1.1.3.97
