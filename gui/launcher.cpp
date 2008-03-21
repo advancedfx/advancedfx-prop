@@ -361,7 +361,7 @@ CLauncherDialog::CLauncherDialog(wxWindow* parent) : wxDialog( parent, wxID_ANY,
 	m_c_mod->SetSelection(g_config.GetPropertyInteger(wxT("launcher"), wxT("modsel")));
 	m_c_depth->SetSelection(g_config.GetPropertyInteger(wxT("launcher"), wxT("depthsel")));
 	m_tc_mod->SetValue(g_config.GetPropertyString(wxT("launcher"), wxT("mod")));
-	m_tc_depth->SetValue(g_config.GetPropertyString(wxT("launcher"), wxT("depthsel")));
+	m_tc_depth->SetValue(g_config.GetPropertyString(wxT("launcher"), wxT("depth")));
 	m_tc_width->SetValue(g_config.GetPropertyString(wxT("launcher"), wxT("width")));
 	m_tc_height->SetValue(g_config.GetPropertyString(wxT("launcher"), wxT("height")));
 	m_tc_additionalcmdline->SetValue(g_config.GetPropertyString(wxT("launcher"), wxT("cmdline")));
@@ -429,9 +429,15 @@ void CLauncherDialog::UpdateCmdline()
 	m_cmdline += m_modchoices->GetCurrentChoice(wxT(" -game %s"));
 
 
-	// Resolution parameter
+	// Depth parameter (1)
 
 	m_depth = m_depthchoices->GetCurrentChoice();
+
+	if (m_depth != wxT("")) m_cmdline += wxString::Format(wxT(" -%sbpp"), m_depth);
+
+
+	// Resolution parameter
+
 	m_width = m_tc_width->GetValue();
 	m_height = m_tc_height->GetValue();
 	m_force = m_ch_force->GetValue();
@@ -445,7 +451,6 @@ void CLauncherDialog::UpdateCmdline()
 	{
 		if (m_width != wxT("")) m_cmdline += wxString::Format(wxT(" -w %s"), m_width);
 		if (m_height != wxT("")) m_cmdline += wxString::Format(wxT(" -h %s"), m_height);
-		if (m_depth != wxT("")) m_cmdline += wxString::Format(wxT(" -%sbpp"), m_depth);
 	}
 
 
@@ -475,8 +480,6 @@ void CLauncherDialog::OnLaunch(wxCommandEvent& WXUNUSED(evt))
 	// TODO: Insert launcher code here
 	// path: m_path
 	// cmdline: m_cmdline
-
-
 
 	// Save preset
 

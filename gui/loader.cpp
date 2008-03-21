@@ -258,7 +258,7 @@ bool InitLoader(wxWindow *parent, wxString &m_path, wxString &m_cmdline)
 	{
 		while (!g_bSignalDone)
 		{
-			g_debug.SendMessage(wxT("Waiting for LoaderThread ..."), hlaeDEBUG_DEBUG);
+			// g_debug.SendMessage(wxT("Waiting for LoaderThread ..."), hlaeDEBUG_DEBUG);
 			Sleep(500);
 		}
 	}
