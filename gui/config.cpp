@@ -136,9 +136,14 @@ int hlaeConfig::GetPropertyInteger(const wxString& group_name, const wxString& p
 
 bool hlaeConfig::GetPropertyBoolean(const wxString& group_name, const wxString& property_name)
 {
-	wxString string = GetPropertyString(group_name, property_name);
-	if (string == wxT("true")) return true;
-	else return false;
+	bool retval;
+	wxString value = GetPropertyString(group_name, property_name);
+
+	if (value == wxT("true")) retval = true;
+	else if (value == wxT("false")) retval = false;
+	// else TODO: log -> undefined
+
+	return retval;
 }
 
 void hlaeConfig::SetPropertyString(const wxString& group_name, const wxString& property_name,
@@ -147,6 +152,20 @@ void hlaeConfig::SetPropertyString(const wxString& group_name, const wxString& p
 	GetPropertyData(GetPropertyGroup(group_name), property_name)->SetData(property_value);
 }
 
+void hlaeConfig::SetPropertyInteger(const wxString& group_name, const wxString& property_name, int property_value)
+{
+	SetPropertyString(group_name, property_name, wxString::Format(wxT("%i"), property_value));
+}
+
+void hlaeConfig::SetPropertyBoolean(const wxString& group_name, const wxString& property_name, bool property_value)
+{
+	wxString retval;
+
+	if (property_value) retval = wxT("true");
+	else retval = wxT("false");
+
+	SetPropertyString(group_name, property_name, retval);
+}
 
 hlaeConfigListGroup* hlaeConfig::GetPropertyGroup(const wxString& group_name)
 {

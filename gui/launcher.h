@@ -16,7 +16,7 @@
 
 #define HLAE_HLDEFAULTPATH wxT("C:\\Program Files\\Steam\\SteamApps")
 
-struct SChoiceElement : public wxObject
+struct CChoiceElement : public wxObject
 {
 	wxString describtion;
 	wxString value;
@@ -34,11 +34,12 @@ public:
 	CChoiceList();
 	~CChoiceList();
 
-	void Update();
-	void SetControls(wxChoice* choice, wxTextCtrl* textctrl);
-	void AddChoice(const wxString& describtion, const wxString& value);
 	wxArrayString GetChoices();
-	wxString GetCurrentChoice(const wxString& format = wxT("%s"));
+	wxString GetCurrentChoice(const wxString& format);	
+	
+	void AddChoice(const wxString& describtion, const wxString& value);
+	void SetControls(wxChoice* choice, wxTextCtrl* textctrl);
+	void Update();
 
 };
 
@@ -85,8 +86,6 @@ private:
 	void OnLaunch(wxCommandEvent& evt);
 	void OnSavePreset(wxCommandEvent& evt);
 	void OnDeletePreset(wxCommandEvent& evt);
-	void OnChoiceMod(wxCommandEvent& evt);
-	void OnChoiceDepth(wxCommandEvent& evt);
 	void OnChanged(wxCommandEvent& evt);
 	void OnBrowse(wxCommandEvent& evt);
 

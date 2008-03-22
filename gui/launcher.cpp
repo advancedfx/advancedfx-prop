@@ -1,9 +1,10 @@
 #include <wx/filedlg.h>
 
-#include "loader.h"
 #include "config.h"
+#include "loader.h"
 
 #include "launcher.h"
+
 
 CChoiceList::CChoiceList()
 {
@@ -25,7 +26,7 @@ void CChoiceList::SetControls(wxChoice* choice, wxTextCtrl* textctrl)
 
 void CChoiceList::AddChoice(const wxString& describtion, const wxString& value)
 {
-	SChoiceElement* element = new SChoiceElement;
+	CChoiceElement* element = new CChoiceElement;
 
 	element->value = value;
 	element->describtion = describtion;
@@ -33,15 +34,10 @@ void CChoiceList::AddChoice(const wxString& describtion, const wxString& value)
 	m_list->Append(element);
 }
 
-
 void CChoiceList::Update()
 {
 	if (m_choice->GetCurrentSelection() == 0) m_textctrl->Enable(true);
-	else
-	{
-		m_textctrl->Enable(false);
-		m_textctrl->SetValue(wxT(""));
-	}
+	else m_textctrl->Enable(false);
 }
 
 wxArrayString CChoiceList::GetChoices()
@@ -54,7 +50,7 @@ wxArrayString CChoiceList::GetChoices()
 
 	for (size_t i = 0; i < count; i++)
 	{
-		SChoiceElement* element = dynamic_cast<SChoiceElement*>(m_list->Item(i)->GetData());
+		CChoiceElement* element = dynamic_cast<CChoiceElement*>(m_list->Item(i)->GetData());
 
 		wxString format;
 		wxString describtion = element->describtion;
@@ -75,10 +71,7 @@ wxString CChoiceList::GetCurrentChoice(const wxString& format)
 
 	size_t index = m_choice->GetCurrentSelection();
 
-	if (index != 0)
-	{
-		retval = dynamic_cast<SChoiceElement*>(m_list->Item(index)->GetData())->value;
-	}
+	if (index != 0) retval = dynamic_cast<CChoiceElement*>(m_list->Item(index)->GetData())->value;
 	else retval = m_textctrl->GetValue();
 
 	if (retval != wxT("")) retval = wxString::Format(format, retval);
@@ -89,7 +82,7 @@ wxString CChoiceList::GetCurrentChoice(const wxString& format)
 
 
 CLauncherDialog::CLauncherDialog(wxWindow* parent) : wxDialog( parent, wxID_ANY,
-	wxT("Half-Life Advanced Effects Launcher"), wxDefaultPosition, wxSize(410,402))
+	wxT("Half-Life Advanced Effects - Launcher"), wxDefaultPosition, wxSize(410,402))
 {
 	// Initialize
 
@@ -329,14 +322,7 @@ CLauncherDialog::CLauncherDialog(wxWindow* parent) : wxDialog( parent, wxID_ANY,
 
 	// Create the events
 
-	Connect(ID_Changed, wxEVT_COMMAND_TEXT_UPDATED,
-		wxCommandEventHandler(CLauncherDialog::OnChanged));
-	Connect(ID_Changed, wxEVT_COMMAND_CHECKBOX_CLICKED,
-		wxCommandEventHandler(CLauncherDialog::OnChanged));
-	Connect(ID_ChoiceMod, wxEVT_COMMAND_CHOICE_SELECTED,
-		wxCommandEventHandler(CLauncherDialog::OnChoiceMod));
-	Connect(ID_ChoiceDepth, wxEVT_COMMAND_CHOICE_SELECTED,
-		wxCommandEventHandler(CLauncherDialog::OnChoiceDepth));
+	// Buttons
 	Connect(ID_Browse, wxEVT_COMMAND_BUTTON_CLICKED,
 		wxCommandEventHandler(CLauncherDialog::OnBrowse));
 	Connect(ID_SavePreset, wxEVT_COMMAND_BUTTON_CLICKED,
@@ -345,6 +331,15 @@ CLauncherDialog::CLauncherDialog(wxWindow* parent) : wxDialog( parent, wxID_ANY,
 		wxCommandEventHandler(CLauncherDialog::OnDeletePreset));
 	Connect(ID_Launch, wxEVT_COMMAND_BUTTON_CLICKED,
 		wxCommandEventHandler(CLauncherDialog::OnLaunch));
+	// Other Events
+	Connect(ID_Changed, wxEVT_COMMAND_TEXT_UPDATED,
+		wxCommandEventHandler(CLauncherDialog::OnChanged));
+	Connect(ID_Changed, wxEVT_COMMAND_CHECKBOX_CLICKED,
+		wxCommandEventHandler(CLauncherDialog::OnChanged));
+	Connect(ID_ChoiceMod, wxEVT_COMMAND_CHOICE_SELECTED,
+		wxCommandEventHandler(CLauncherDialog::OnChanged));
+	Connect(ID_ChoiceDepth, wxEVT_COMMAND_CHOICE_SELECTED,
+		wxCommandEventHandler(CLauncherDialog::OnChanged));
 
 	SetEscapeId(wxID_CANCEL);
 
@@ -373,6 +368,7 @@ CLauncherDialog::CLauncherDialog(wxWindow* parent) : wxDialog( parent, wxID_ANY,
 	m_modchoices->Update();
 	m_depthchoices->Update();
 
+	UpdateCmdline();
 }
 
 CLauncherDialog::~CLauncherDialog()
@@ -381,20 +377,18 @@ CLauncherDialog::~CLauncherDialog()
 	delete m_modchoices;
 }
 
-void CLauncherDialog::OnChoiceMod(wxCommandEvent& WXUNUSED(evt))
+void CLauncherDialog::OnChanged(wxCommandEvent& evt)
 {
-	m_modchoices->Update();
-	UpdateCmdline();
-}
-
-void CLauncherDialog::OnChoiceDepth(wxCommandEvent& WXUNUSED(evt))
-{
-	m_depthchoices->Update();
-	UpdateCmdline();
-}
-
-void CLauncherDialog::OnChanged(wxCommandEvent& WXUNUSED(evt))
-{
+	switch(evt.GetId())
+	{
+	case ID_ChoiceMod: 
+		m_modchoices->Update();
+		break;
+	case ID_ChoiceDepth:
+		m_depthchoices->Update();
+		break;
+	}
+	
 	UpdateCmdline();
 }
 
@@ -429,9 +423,9 @@ void CLauncherDialog::UpdateCmdline()
 	m_cmdline += m_modchoices->GetCurrentChoice(wxT(" -game %s"));
 
 
-	// Depth parameter (1)
+	// Depth parameter
 
-	m_depth = m_depthchoices->GetCurrentChoice();
+	m_depth = m_depthchoices->GetCurrentChoice(wxT("%s"));
 
 	if (m_depth != wxT("")) m_cmdline += wxString::Format(wxT(" -%sbpp"), m_depth);
 
@@ -465,6 +459,28 @@ void CLauncherDialog::UpdateCmdline()
 	m_tc_fullcmdline->SetValue(m_cmdline);
 }
 
+void CLauncherDialog::OnLaunch(wxCommandEvent& WXUNUSED(evt))
+{
+
+	// Save preset
+
+	g_config.SetPropertyString(wxT("launcher"), wxT("path"), m_tc_path->GetValue());
+	g_config.SetPropertyInteger(wxT("launcher"), wxT("modsel"), m_c_mod->GetCurrentSelection());
+	g_config.SetPropertyInteger(wxT("launcher"), wxT("depthsel"), m_c_depth->GetCurrentSelection());
+	g_config.SetPropertyString(wxT("launcher"), wxT("mod"), m_tc_mod->GetValue());
+	g_config.SetPropertyString(wxT("launcher"), wxT("depth"), m_tc_depth->GetValue());
+	g_config.SetPropertyString(wxT("launcher"), wxT("width"), m_tc_width->GetValue());
+	g_config.SetPropertyString(wxT("launcher"), wxT("height"), m_tc_height->GetValue());
+	g_config.SetPropertyString(wxT("launcher"), wxT("cmdline"), m_tc_additionalcmdline->GetValue());
+	g_config.SetPropertyBoolean(wxT("launcher"), wxT("force"), m_ch_force->GetValue());
+
+	g_config.Flush();
+
+	InitLoader(this, m_path, m_cmdline);
+
+	Close();
+}
+
 void CLauncherDialog::OnSavePreset(wxCommandEvent& WXUNUSED(evt))
 {
 	// TODO
@@ -473,34 +489,4 @@ void CLauncherDialog::OnSavePreset(wxCommandEvent& WXUNUSED(evt))
 void CLauncherDialog::OnDeletePreset(wxCommandEvent& WXUNUSED(evt))
 {
 	// TODO
-}
-
-void CLauncherDialog::OnLaunch(wxCommandEvent& WXUNUSED(evt))
-{
-	// TODO: Insert launcher code here
-	// path: m_path
-	// cmdline: m_cmdline
-
-	// Save preset
-
-	g_config.SetPropertyString(wxT("launcher"), wxT("path"), m_tc_path->GetValue());
-	g_config.SetPropertyString(wxT("launcher"), wxT("modsel"), wxString::Format(wxT("%i"), m_c_mod->GetCurrentSelection()));
-	g_config.SetPropertyString(wxT("launcher"), wxT("depthsel"), wxString::Format(wxT("%i"), m_c_depth->GetCurrentSelection()));
-	g_config.SetPropertyString(wxT("launcher"), wxT("mod"), m_tc_mod->GetValue());
-	g_config.SetPropertyString(wxT("launcher"), wxT("depth"), m_tc_depth->GetValue());
-	g_config.SetPropertyString(wxT("launcher"), wxT("width"), m_tc_width->GetValue());
-	g_config.SetPropertyString(wxT("launcher"), wxT("height"), m_tc_height->GetValue());
-	g_config.SetPropertyString(wxT("launcher"), wxT("cmdline"), m_tc_additionalcmdline->GetValue());
-
-	wxString force;
-	if (m_ch_force->GetValue()) force = wxT("true");
-	else force = wxT("false");
-
-	g_config.SetPropertyString(wxT("launcher"), wxT("force"), force);
-
-	g_config.Flush();
-
-	InitLoader(this,m_path,m_cmdline);
-
-	Close();
 }
