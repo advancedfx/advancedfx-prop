@@ -16,8 +16,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="../build/bin/"
-			IntermediateDirectory="../build/hlae/debug/"
+			OutputDirectory="$(SolutionDir)build\bin\$(ConfigurationName)\"
+			IntermediateDirectory="$(SolutionDir)build\hlae\$(ConfigurationName)\"
 			ConfigurationType="1"
 			CharacterSet="2"
 			DeleteExtensionsOnClean="*.*"
@@ -41,13 +41,13 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(WXWIN)/include/msvc/&quot;;&quot;$(WXWIN)/include/&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(WXWIN)/lib/vc_lib/mswud&quot;;&quot;$(WXWIN)/include/&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_UNICODE;UNICODE;__WXMSW__;__WXDEBUG__;_WINDOWS;NOPCH"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
-				ObjectFile="$(IntDir)"
+				ObjectFile="$(IntDir)obj\"
 				ProgramDataBaseFileName="$(IntDir)"
 				XMLDocumentationFileName=""
 				WarningLevel="3"
@@ -65,35 +65,40 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="wxmsw28ud_aui.lib wxmsw28ud_html.lib wxmsw28ud_adv.lib wxmsw28ud_core.lib wxbase28ud_xml.lib wxbase28ud.lib wxtiffd.lib wxjpegd.lib wxpngd.lib wxzlibd.lib wxregexud.lib wxexpatd.lib winmm.lib comctl32.lib rpcrt4.lib wsock32.lib odbc32.lib"
-				OutputFile="$(OutDir)$(InputName).exe"
+				AdditionalDependencies="wxbase28ud.lib wxbase28ud_xml.lib wxmsw28ud_core.lib wxmsw28ud_adv.lib wxmsw28ud_aui.lib wxmsw28ud_html.lib wxmsw28ud_richtext.lib wxexpatd.lib user32.lib gdi32.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib rpcrt4.lib $(NOINHERIT)"
+				OutputFile="$(OutDir)hlae.exe"
+				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(WXWIN)/lib/vc_lib/&quot;"
 				GenerateManifest="true"
 				ManifestFile="$(IntDir)$(TargetFileName).intermediate.manifest"
+				AdditionalManifestDependencies=""
+				IgnoreAllDefaultLibraries="false"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(TargetDir)$(TargetName).pdb"
 				LinkTimeCodeGeneration="0"
 				ProfileGuidedDatabase=""
+				TurnOffAssemblyGeneration="false"
 				TargetMachine="1"
+				AllowIsolation="true"
 			/>
 			<Tool
 				Name="VCALinkTool"
 			/>
 			<Tool
 				Name="VCManifestTool"
-				OutputManifestFile="$(IntDir)$(TargetFileName).embed.manifest"
-				ManifestResourceFile="$(IntDir)$(TargetFileName).embed.manifest.res"
+				EmbedManifest="true"
+				DependencyInformationFile="$(IntDir)mt.dep"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
 				UseUnicodeResponseFiles="false"
-				SuppressStartupBanner="true"
+				SuppressStartupBanner="false"
 				ValidateIntelliSense="false"
 				OutputDocumentFile=""
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				SuppressStartupBanner="true"
+				SuppressStartupBanner="false"
 				OutputFile=""
 			/>
 			<Tool
@@ -113,8 +118,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="../build/bin/"
-			IntermediateDirectory="../build/hlae/release/"
+			OutputDirectory="$(SolutionDir)build\bin\$(ConfigurationName)\"
+			IntermediateDirectory="$(SolutionDir)build\hlae\$(ConfigurationName)\"
 			ConfigurationType="1"
 			CharacterSet="2"
 			DeleteExtensionsOnClean="*.*"
@@ -139,11 +144,11 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="3"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(WXWIN)/include/msvc/&quot;;&quot;$(WXWIN)/include/&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(WXWIN)/lib/vc_lib/mswu&quot;;&quot;$(WXWIN)/include/&quot;"
 				PreprocessorDefinitions="WIN32;__WXMSW__;_UNICODE;UNICODE;_WINDOWS;NOPCH"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
-				ObjectFile="$(IntDir)"
+				ObjectFile="$(IntDir)obj\"
 				ProgramDataBaseFileName="$(IntDir)"
 				XMLDocumentationFileName=""
 				WarningLevel="3"
@@ -161,11 +166,13 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="wxmsw28u_aui.lib wxmsw28u_html.lib wxmsw28u_adv.lib wxmsw28u_core.lib wxbase28u_xml.lib wxbase28u.lib wxtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib wxregexu.lib wxexpat.lib winmm.lib comctl32.lib rpcrt4.lib wsock32.lib odbc32.lib"
-				OutputFile="$(OutDir)$(InputName).exe"
+				AdditionalDependencies="wxbase28u.lib wxbase28u_xml.lib wxmsw28u_core.lib wxmsw28u_adv.lib wxmsw28u_aui.lib wxmsw28u_richtext.lib wxmsw28u_html.lib wxexpat.lib user32.lib gdi32.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib rpcrt4.lib $(NOINHERIT)"
+				OutputFile="$(OutDir)hlae.exe"
+				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(WXWIN)/lib/vc_lib/&quot;"
 				GenerateManifest="true"
 				ManifestFile="$(IntDir)$(TargetFileName).intermediate.manifest"
+				IgnoreAllDefaultLibraries="false"
 				GenerateDebugInformation="false"
 				ProgramDatabaseFile="$(TargetDir)$(TargetName).pdb"
 				OptimizeReferences="2"
@@ -173,14 +180,14 @@
 				LinkTimeCodeGeneration="1"
 				ProfileGuidedDatabase=""
 				TargetMachine="1"
+				AllowIsolation="true"
 			/>
 			<Tool
 				Name="VCALinkTool"
 			/>
 			<Tool
 				Name="VCManifestTool"
-				OutputManifestFile="$(IntDir)$(TargetFileName).embed.manifest"
-				ManifestResourceFile="$(IntDir)$(TargetFileName).embed.manifest.res"
+				EmbedManifest="true"
 				DependencyInformationFile="$(IntDir)mt.dep"
 			/>
 			<Tool
