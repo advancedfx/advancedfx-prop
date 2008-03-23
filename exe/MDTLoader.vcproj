@@ -16,8 +16,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="../build/bin"
-			IntermediateDirectory="../build/exe/debug"
+			OutputDirectory="$(SolutionDir)build\$(ConfigurationName)\bin\"
+			IntermediateDirectory="$(SolutionDir)build\$(ConfigurationName)\mdtloader\"
 			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			CharacterSet="2"
@@ -91,14 +91,13 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description=""
 				CommandLine="&quot;../shared/bin/rcstamp.exe&quot;  &quot;$(ProjectDir)MDTLoader.rc&quot; *.*.+.0 &quot;$(ProjectDir)version.cpp&quot;"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="../build/bin"
-			IntermediateDirectory="../build/exe/release"
+			OutputDirectory="$(SolutionDir)build\$(ConfigurationName)\bin\"
+			IntermediateDirectory="$(SolutionDir)build\$(ConfigurationName)\mdtloader\"
 			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			CharacterSet="2"
@@ -170,7 +169,6 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description=""
 				CommandLine="&quot;../shared/bin/rcstamp.exe&quot;  &quot;$(ProjectDir)MDTLoader.rc&quot; *.*.+.0 &quot;$(ProjectDir)version.cpp&quot;"
 			/>
 		</Configuration>

@@ -17,8 +17,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="../build/bin"
-			IntermediateDirectory="../build/rcstamp/debug"
+			OutputDirectory="$(SolutionDir)build\$(ConfigurationName)\bin\"
+			IntermediateDirectory="$(SolutionDir)build\$(ConfigurationName)\rcstamp\"
 			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			CharacterSet="2"
@@ -95,8 +95,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="../build/bin"
-			IntermediateDirectory="../build/rcstamp/release"
+			OutputDirectory="$(SolutionDir)build\$(ConfigurationName)\bin\"
+			IntermediateDirectory="$(SolutionDir)build\$(ConfigurationName)\rcstamp\"
 			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			CharacterSet="2"
