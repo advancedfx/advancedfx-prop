@@ -1,4 +1,4 @@
-#include <wx/msgdlg.h>
+#include <wx/wx.h>
 
 #include "debug.h"
 
@@ -29,7 +29,7 @@ int hlaeLogListElement::GetDebugLevel()
 hlaeDebug::hlaeDebug()
 	: wxObject()
 {
-	m_loglist = new hlaeList();
+	m_loglist = new wxList();
 	m_loglist->DeleteContents(true);
 
 	UpdateSettings();
@@ -93,9 +93,9 @@ void hlaeDebug::SendMessage(const wxString& message, hlaeDEBUG_MessageType_e deb
 	if (debuglevel == hlaeDEBUG_FATALERROR)
 	{
 		wxMessageDialog* msgdgl = new wxMessageDialog(0, message +
-			wxT("\n\nHalf-Life Advanced Effects may not recover from this error and will crash unexpectly. ")
-			wxT("If the programm is still running, try to save your work and quit the program as soon as possible."),
-			wxT("Fatal error"), wxOK | wxICON_ERROR);
+			_T("\n\nHalf-Life Advanced Effects may not recover from this error and will crash unexpectly. ")
+			_T("If the programm is still running, try to save your work and quit the program as soon as possible."),
+			_T("Fatal error"), wxOK | wxICON_ERROR);
 		msgdgl->ShowModal();
 	}
 }

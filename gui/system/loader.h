@@ -14,8 +14,7 @@
 
 // Comment: for launching the game and the hook
 
-#include <wx/window.h>
-#include <wx/string.h>
+#include <wx/wx.h>
 
 bool InitLoader(wxWindow *parent, wxString &m_path, wxString &m_cmdline);
 

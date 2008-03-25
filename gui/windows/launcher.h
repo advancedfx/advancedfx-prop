@@ -1,22 +1,13 @@
-#ifndef __HLAE_LAUNCHER__
-#define __HLAE_LAUNCHER__
+#ifndef HLAE_LAUNCHER_H
+#define HLAE_LAUNCHER_H
 
-#include <wx/string.h>
-#include <wx/checkbox.h>
-#include <wx/stattext.h>
-#include <wx/combobox.h>
-#include <wx/button.h>
-#include <wx/sizer.h>
+#include <wx/wx.h>
 #include <wx/statline.h>
-#include <wx/textctrl.h>
-#include <wx/choice.h>
-#include <wx/statbox.h>
-#include <wx/dialog.h>
-#include <wx/list.h>
 
-#define HLAE_HLDEFAULTPATH wxT("C:\\Program Files\\Steam\\SteamApps")
+#include <defines.h>
 
-struct SChoiceElement : public wxObject
+
+struct CChoiceElement : public wxObject
 {
 	wxString describtion;
 	wxString value;
@@ -34,11 +25,12 @@ public:
 	CChoiceList();
 	~CChoiceList();
 
-	void Update();
-	void SetControls(wxChoice* choice, wxTextCtrl* textctrl);
-	void AddChoice(const wxString& describtion, const wxString& value);
 	wxArrayString GetChoices();
-	wxString GetCurrentChoice(const wxString& format = wxT("%s"));
+	wxString GetCurrentChoice(const wxString& format);	
+	
+	void AddChoice(const wxString& describtion, const wxString& value);
+	void SetControls(wxChoice* choice, wxTextCtrl* textctrl);
+	void Update();
 
 };
 
@@ -85,8 +77,6 @@ private:
 	void OnLaunch(wxCommandEvent& evt);
 	void OnSavePreset(wxCommandEvent& evt);
 	void OnDeletePreset(wxCommandEvent& evt);
-	void OnChoiceMod(wxCommandEvent& evt);
-	void OnChoiceDepth(wxCommandEvent& evt);
 	void OnChanged(wxCommandEvent& evt);
 	void OnBrowse(wxCommandEvent& evt);
 

@@ -1,14 +1,9 @@
-// ? #define WIN32_LEAN_AND_MEAN
-#include <windows.h> // necessary for preparsing events
+#include <wx/wx.h>
 
-#include <wx/dc.h>
-#include <wx/dcclient.h>
+#include <system/debug.h>
+#include <system/basecom.h>
 
-#include <wx/scrolwin.h>
-
-#include "debug.h"
-#include "basecomserver.h"
-#include "gamewindow.h"
+#include "game.h"
 
 
 //
@@ -38,7 +33,7 @@ void CHlaeGameWindow::OnFocus(wxFocusEvent& myevent)
 void CHlaeGameWindow::CreateInternal()
 {
 #ifdef _DEBUG
-	g_debug.SendMessage(wxT("CHlaeGameWindow::CreateInternal ..."), hlaeDEBUG_DEBUG);
+	g_debug.SendMessage(_T("CHlaeGameWindow::CreateInternal ..."), hlaeDEBUG_DEBUG);
 #endif
 
 	_pHlaeBcServer = new CHlaeBcServer(this);
@@ -49,7 +44,7 @@ CHlaeGameWindow::~CHlaeGameWindow()
 {
 #ifdef _DEBUG
 	#pragma message("CHlaeGameWindow::~CHlaeGameWindow cannot enable debugmessage because g_debug may be not present anymore")
-	//g_debug.SendMessage(wxT("CHlaeGameWindow:~CHlaeGameWindow ..."), hlaeDEBUG_DEBUG);
+	//g_debug.SendMessage(_T("CHlaeGameWindow:~CHlaeGameWindow ..."), hlaeDEBUG_DEBUG);
 #endif
 
 	delete _pHlaeBcServer;

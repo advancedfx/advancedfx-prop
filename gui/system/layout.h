@@ -1,10 +1,11 @@
-#ifndef _HLAE_LAYOUT_H_
-#define _HLAE_LAYOUT_H_
+#ifndef HLAE_LAYOUT_H
+#define HLAE_LAYOUT_H
 
-#include "list.h"
-#include "main.h"
-
+#include <wx/wx.h>
 #include <wx/aui/aui.h>
+
+#include <windows/hlae.h>
+
 
 class hlaeListElementLayout : public wxObject
 {
@@ -19,7 +20,7 @@ class hlaeLayoutManager : public wxObject
 {
 	private:
 		wxAuiManager* m_auimanager;
-		hlaeList* m_layoutlist;
+		wxList* m_layoutlist;
 		hlaeMainWindow* m_parent;
 		void UpdateLayoutMenu();
 		void ClearMenu(wxMenu* menu);

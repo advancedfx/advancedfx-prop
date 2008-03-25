@@ -1,3 +1,5 @@
+#include <wx/wx.h>
+
 #include "config.h"
 
 hlaeConfig g_config;
@@ -35,7 +37,7 @@ void hlaeConfigListData::RestoreDefault()
 
 hlaeConfigListGroup::hlaeConfigListGroup(const wxString& name) : hlaeConfigListObject(name)
 {
-	m_datalist = new hlaeList();
+	m_datalist = new wxList();
 	m_datalist->DeleteContents(true);
 }
 
@@ -58,7 +60,7 @@ hlaeConfigListData* hlaeConfigListGroup::GetObject(size_t index)
 size_t hlaeConfigListGroup::GetCount()
 {
 	if (m_datalist->GetCount() == 0)
-		g_debug.SendMessage(wxT("Config: The group named \"") + GetName() + wxT("\" does not have any properties!"),
+		g_debug.SendMessage(_T("Config: The group named \"") + GetName() + _T("\" does not have any properties!"),
 		hlaeDEBUG_WARNING);
 	return m_datalist->GetCount();
 }
@@ -67,7 +69,7 @@ hlaeConfig::hlaeConfig()
 	: wxObject()
 {
 	m_document = new wxXmlDocument();
-	m_propertylist = new hlaeList();
+	m_propertylist = new wxList();
 	m_filename = new wxFileName();
 }
 
@@ -89,29 +91,29 @@ void hlaeConfig::Initialize()
 
 	// path and name of the config file
 	m_filename->AssignCwd(); // current work directory
-	m_filename->SetFullName(wxT("config.xml"));
+	m_filename->SetFullName(_T("config.xml"));
 
 	// add the variables
-	hlaeConfigListGroup* general = new hlaeConfigListGroup(wxT("general"));
-	general->AppendObject(new hlaeConfigListData(wxT("advanced_view"),wxT("false")));
-	general->AppendObject(new hlaeConfigListData(wxT("language"),wxT("0")));
+	hlaeConfigListGroup* general = new hlaeConfigListGroup(_T("general"));
+	general->AppendObject(new hlaeConfigListData(_T("advanced_view"),_T("false")));
+	general->AppendObject(new hlaeConfigListData(_T("language"),_T("0")));
 	AppendPropertyGroup(general);
 
-	hlaeConfigListGroup* adresses = new hlaeConfigListGroup(wxT("adresses"));
-	adresses->AppendObject(new hlaeConfigListData(wxT("base"),wxT("0x00000000")));
-	adresses->AppendObject(new hlaeConfigListData(wxT("scr"),wxT("0x00000000")));
+	hlaeConfigListGroup* adresses = new hlaeConfigListGroup(_T("adresses"));
+	adresses->AppendObject(new hlaeConfigListData(_T("base"),_T("0x00000000")));
+	adresses->AppendObject(new hlaeConfigListData(_T("scr"),_T("0x00000000")));
 	AppendPropertyGroup(adresses);
 
-	hlaeConfigListGroup* launcher = new hlaeConfigListGroup(wxT("launcher"));
-	launcher->AppendObject(new hlaeConfigListData(wxT("path"),wxT("Please select HL.exe...")));
-	launcher->AppendObject(new hlaeConfigListData(wxT("modsel"),wxT("2")));
-	launcher->AppendObject(new hlaeConfigListData(wxT("mod"),wxT("")));
-	launcher->AppendObject(new hlaeConfigListData(wxT("depthsel"),wxT("1")));
-	launcher->AppendObject(new hlaeConfigListData(wxT("depth"),wxT("")));
-	launcher->AppendObject(new hlaeConfigListData(wxT("width"),wxT("800")));
-	launcher->AppendObject(new hlaeConfigListData(wxT("height"),wxT("600")));
-	launcher->AppendObject(new hlaeConfigListData(wxT("force"),wxT("true")));
-	launcher->AppendObject(new hlaeConfigListData(wxT("cmdline"),wxT("-demoedit")));
+	hlaeConfigListGroup* launcher = new hlaeConfigListGroup(_T("launcher"));
+	launcher->AppendObject(new hlaeConfigListData(_T("path"),_T("Please select HL.exe...")));
+	launcher->AppendObject(new hlaeConfigListData(_T("modsel"),_T("2")));
+	launcher->AppendObject(new hlaeConfigListData(_T("mod"),_T("")));
+	launcher->AppendObject(new hlaeConfigListData(_T("depthsel"),_T("1")));
+	launcher->AppendObject(new hlaeConfigListData(_T("depth"),_T("")));
+	launcher->AppendObject(new hlaeConfigListData(_T("width"),_T("800")));
+	launcher->AppendObject(new hlaeConfigListData(_T("height"),_T("600")));
+	launcher->AppendObject(new hlaeConfigListData(_T("force"),_T("true")));
+	launcher->AppendObject(new hlaeConfigListData(_T("cmdline"),_T("-demoedit")));
 	AppendPropertyGroup(launcher);
 
 	// check if there is a file to load
@@ -136,9 +138,14 @@ int hlaeConfig::GetPropertyInteger(const wxString& group_name, const wxString& p
 
 bool hlaeConfig::GetPropertyBoolean(const wxString& group_name, const wxString& property_name)
 {
-	wxString string = GetPropertyString(group_name, property_name);
-	if (string == wxT("true")) return true;
-	else return false;
+	bool retval;
+	wxString value = GetPropertyString(group_name, property_name);
+
+	if (value == _T("true")) retval = true;
+	else if (value == _T("false")) retval = false;
+	// else TODO: log -> undefined
+
+	return retval;
 }
 
 void hlaeConfig::SetPropertyString(const wxString& group_name, const wxString& property_name,
@@ -147,6 +154,20 @@ void hlaeConfig::SetPropertyString(const wxString& group_name, const wxString& p
 	GetPropertyData(GetPropertyGroup(group_name), property_name)->SetData(property_value);
 }
 
+void hlaeConfig::SetPropertyInteger(const wxString& group_name, const wxString& property_name, int property_value)
+{
+	SetPropertyString(group_name, property_name, wxString::Format(_T("%i"), property_value));
+}
+
+void hlaeConfig::SetPropertyBoolean(const wxString& group_name, const wxString& property_name, bool property_value)
+{
+	wxString retval;
+
+	if (property_value) retval = _T("true");
+	else retval = _T("false");
+
+	SetPropertyString(group_name, property_name, retval);
+}
 
 hlaeConfigListGroup* hlaeConfig::GetPropertyGroup(const wxString& group_name)
 {
@@ -164,7 +185,7 @@ hlaeConfigListGroup* hlaeConfig::GetPropertyGroup(const wxString& group_name)
 
 		if (i + 1 == m_propertylist->GetCount())
 		{
-			g_debug.SendMessage(wxT("Config: There is no group named \"") + group_name + wxT("\"!"), hlaeDEBUG_FATALERROR);
+			g_debug.SendMessage(_T("Config: There is no group named \"") + group_name + _T("\"!"), hlaeDEBUG_FATALERROR);
 			retval = 0;
 		}
 	}
@@ -188,7 +209,7 @@ hlaeConfigListData* hlaeConfig::GetPropertyData(hlaeConfigListGroup* group, cons
 
 		if (i + 1 == group->GetCount())
 		{
-			g_debug.SendMessage(wxT("Config: There is no data named \"") + property_name + wxT("\"!"), hlaeDEBUG_FATALERROR);
+			g_debug.SendMessage(_T("Config: There is no data named \"") + property_name + _T("\"!"), hlaeDEBUG_FATALERROR);
 			retval = 0;
 		}
 	}
@@ -212,10 +233,10 @@ void hlaeConfig::RestoreDefaults()
 void hlaeConfig::Flush()
 {
 	// add all nodes to the xml tree
-	wxXmlNode* root_node = new wxXmlNode(NULL, wxXML_ELEMENT_NODE, wxT("hlaeconfig"));
+	wxXmlNode* root_node = new wxXmlNode(NULL, wxXML_ELEMENT_NODE, _T("hlaeconfig"));
 	m_document->SetRoot(root_node);
 
-	wxXmlNode* settings_node = new wxXmlNode(NULL, wxXML_ELEMENT_NODE, wxT("settings"));
+	wxXmlNode* settings_node = new wxXmlNode(NULL, wxXML_ELEMENT_NODE, _T("settings"));
 	root_node->AddChild(settings_node);
 
 	// add the groups to the settingsnode
@@ -231,8 +252,8 @@ void hlaeConfig::Flush()
 			hlaeConfigListData* data = group->GetObject(h);
 
 			// add the property node
-			wxXmlNode* node = new wxXmlNode(parent_node, wxXML_ELEMENT_NODE, wxT("property"),
-				wxEmptyString, new wxXmlProperty(wxT("name"), data->GetName()));
+			wxXmlNode* node = new wxXmlNode(parent_node, wxXML_ELEMENT_NODE, _T("property"),
+				wxEmptyString, new wxXmlProperty(_T("name"), data->GetName()));
 			node->AddChild(new wxXmlNode(wxXML_TEXT_NODE, wxEmptyString, data->GetData()));
 		}
 	}
@@ -246,7 +267,7 @@ void hlaeConfig::Flush()
 void hlaeConfig::Reload()
 {
 	m_document->Load(m_filename->GetFullPath());
-	if (m_document->IsOk()) g_debug.SendMessage(wxT("Config: \"") + m_filename->GetFullPath() +
+	if (m_document->IsOk()) g_debug.SendMessage(_T("Config: \"") + m_filename->GetFullPath() +
 		wxT ("\" sucessfully loaded"), hlaeDEBUG_VERBOSE_LEVEL1);
 
 	wxXmlNode* root_node = m_document->GetRoot();
@@ -255,7 +276,7 @@ void hlaeConfig::Reload()
 	while (parent_node != NULL)
 	{
 		// settings
-		if (parent_node->GetName() == wxT("settings"))
+		if (parent_node->GetName() == _T("settings"))
 		{
 			// get first group from the root
 			wxXmlNode* group_node = parent_node->GetChildren();
@@ -268,14 +289,14 @@ void hlaeConfig::Reload()
 				while (node != NULL)
 				{
 					// only accept (our) "property" tags :)
-					if (node->GetName() == wxT("property"))
+					if (node->GetName() == _T("property"))
 					{
 						wxXmlProperty* prop = node->GetProperties();
 						// search properties for the name tag
 						while (prop != NULL)
 						{
 							// if found update the variable
-							if (prop->GetName() == wxT("name"))
+							if (prop->GetName() == _T("name"))
 							{
 								hlaeConfigListData* data = GetPropertyData(GetPropertyGroup(group_node->GetName()),
 									prop->GetValue());
@@ -283,7 +304,7 @@ void hlaeConfig::Reload()
 								wxString value;
 
 								if (node->GetChildren() != NULL) value = node->GetChildren()->GetContent();
-								else value = wxT("");
+								else value = _T("");
 
 								data->SetData(value);
 								break;

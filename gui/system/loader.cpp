@@ -21,27 +21,14 @@
 //   LPTSTR   Where you would use char*.
 //   LPCTSTR   Where you would use const char*. CString provides the operator LPCTSTR to convert between CString and LPCTSTR.
 
-#include <windows.h>
-//#include <stdlib.h>
-//#include <stdio.h>
-#include <malloc.h>
-#include <memory.h>
-#include <tchar.h>
-#include <tlhelp32.h>
-
-#pragma comment(lib, "version.lib")
-
-#include <wx/window.h>
-#include <wx/string.h>
-#include <wx/filefn.h>
+#include <wx/wx.h>
 #include <wx/filename.h>
 
-#include "debug.h"
+#include <defines.h>
+#include <system/debug.h>
 
 #include "loader.h"
 
-#define DLL_NAMEA	"Mirv Demo Tool.dll"
-#define DLL_NAME	wxT(DLL_NAMEA)
 
 PROCESS_INFORMATION g_HLpi;		// global proccessinfo for HL, only valid when HL has been started by LoaderThread and is still runing
 STARTUPINFO g_HLsi;				// I don't know why I made this global, used in LoaderThread
@@ -150,7 +137,7 @@ DWORD WINAPI LoaderThread(void *p)
 	// check if the DLL exists:
 	if (!::wxFileExists(*g_path_dll))
 	{
-		g_debug.SendMessage(DLL_NAME wxT(" not found!"),hlaeDEBUG_ERROR);
+		g_debug.SendMessage(wxString::Format(_T("%s not found!"), _T(HLAE_DLLNAME)), hlaeDEBUG_ERROR);
 		g_bSignalDone=true;
 		return FALSE;
 	}
@@ -160,14 +147,14 @@ DWORD WINAPI LoaderThread(void *p)
 	if (pszVersion)
 	{
 		wxString tstr;
-		tstr.Printf(wxT("Mirv Demo Tool (DLL v%s)"),wxString(pszVersion));
+		tstr.Printf(_T("Mirv Demo Tool (DLL v%s)"),wxString(pszVersion));
 		g_debug.SendMessage(tstr,hlaeDEBUG_INFO);
 	}
 
 	// cunstruct the final launchoptions: "\"PATHWITHEXE\" LAUNCHOPTIONS"
 	wxString strHLfinal;
-	strHLfinal.Printf(wxT("\"%s\" %s"),*g_path_exe,*g_opts_exe);
-	//strHLfinal.Printf(wxT("%s"),*g_path_exe,*g_opts_exe);
+	strHLfinal.Printf(_T("\"%s\" %s"),*g_path_exe,*g_opts_exe);
+	//strHLfinal.Printf(_T("%s"),*g_path_exe,*g_opts_exe);
 
 	// there should be some detecton if HL is already running here:
 	// and if it can be launched (file exists):
@@ -182,9 +169,9 @@ DWORD WINAPI LoaderThread(void *p)
     g_HLsi.cb = sizeof(g_HLsi);
     ZeroMemory( &g_HLpi, sizeof(g_HLpi) );
 
-	g_debug.SendMessage(wxT("Launching Half-Life ..."),hlaeDEBUG_INFO);
+	g_debug.SendMessage(_T("Launching Half-Life ..."),hlaeDEBUG_INFO);
 
-	wxString tstr(wxT(""));
+	wxString tstr(_T(""));
 	const wxChar *ttarget = strHLfinal.c_str();
 	wxChar *mybuff = tstr.GetWriteBuf(strHLfinal.Len());
 	_tcscpy(mybuff,ttarget);
@@ -207,25 +194,25 @@ DWORD WINAPI LoaderThread(void *p)
 		&g_HLsi,
 		&g_HLpi)  )
 	{
-		g_debug.SendMessage(wxT("ERROR: Failed to launch Half-Life."),hlaeDEBUG_ERROR);
+		g_debug.SendMessage(_T("ERROR: Failed to launch Half-Life."),hlaeDEBUG_ERROR);
 		g_bSignalDone=true;
 		return FALSE;
 	}
 
 	tstr.UngetWriteBuf();
 
-	g_debug.SendMessage(wxT("Injecting hook ..."), hlaeDEBUG_VERBOSE_LEVEL3);
+	g_debug.SendMessage(_T("Injecting hook ..."), hlaeDEBUG_VERBOSE_LEVEL3);
 
 	if (!InjectDll(g_HLpi.dwProcessId, g_path_dll->mb_str(wxConvFile)))
-		g_debug.SendMessage(wxT("ERROR: Starting injection failed!"), hlaeDEBUG_ERROR);
+		g_debug.SendMessage(_T("ERROR: Starting injection failed!"), hlaeDEBUG_ERROR);
 
 	Sleep(2000);
 
-	g_debug.SendMessage(wxT("Resuming ..."), hlaeDEBUG_VERBOSE_LEVEL3);
+	g_debug.SendMessage(_T("Resuming ..."), hlaeDEBUG_VERBOSE_LEVEL3);
 	ResumeThread(g_HLpi.hThread);
 
 	// I don't know why, but if we don't send a debug message here, the InitLoader will hang forever:
-	g_debug.SendMessage(wxT("Done, LoaderThread is about to die ..."), hlaeDEBUG_VERBOSE_LEVEL3);
+	g_debug.SendMessage(_T("Done, LoaderThread is about to die ..."), hlaeDEBUG_VERBOSE_LEVEL3);
 
 	g_bSignalDone=true;
 	return TRUE;
@@ -235,7 +222,7 @@ bool InitLoader(wxWindow *parent, wxString &m_path, wxString &m_cmdline)
 {
 	// built dll path:
 	wxString m_cwd(::wxGetCwd());
-	m_cwd+=wxT("\\Mirv Demo Tool.dll");
+	m_cwd+=_T("\\Mirv Demo Tool.dll");
 
 	// built exe dir:
 	wxString m_dir;
@@ -258,7 +245,7 @@ bool InitLoader(wxWindow *parent, wxString &m_path, wxString &m_cmdline)
 	{
 		while (!g_bSignalDone)
 		{
-			g_debug.SendMessage(wxT("Waiting for LoaderThread ..."), hlaeDEBUG_DEBUG);
+			// g_debug.SendMessage(_T("Waiting for LoaderThread ..."), hlaeDEBUG_DEBUG);
 			Sleep(500);
 		}
 	}

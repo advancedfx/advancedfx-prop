@@ -1,3 +1,5 @@
+#include <wx/wx.h>
+
 #include "settings.h"
 
 hlaeSettingsPageTemplate::hlaeSettingsPageTemplate(wxWindow* parent)
@@ -28,7 +30,7 @@ void hlaeSettingsPageGeneral::ApplyChanges()
 hlaeListElementSettingsPage::hlaeListElementSettingsPage(
 	hlaeSettingsPageTemplate* page, const wxString& name, bool is_advanced)
 {
-	m_pagelist = new hlaeList;
+	m_pagelist = new wxList;
 	m_pagelist->DeleteContents(true);
 
 	m_page = page;
@@ -86,8 +88,8 @@ hlaeDialogSettings::hlaeDialogSettings(wxWindow* parent, wxWindowID id, const wx
 	const wxPoint& pos, const wxSize& size)
 	: wxDialog( parent, id, title, pos, size)
 {
-	m_pagelist = new hlaeList;
-	m_pageidlist = new hlaeList;
+	m_pagelist = new wxList;
+	m_pageidlist = new wxList;
 	m_lastpage = new hlaeSettingsPageTemplate(this);
 
 	m_pagelist->DeleteContents(true);
@@ -119,20 +121,20 @@ hlaeDialogSettings::hlaeDialogSettings(wxWindow* parent, wxWindowID id, const wx
 	wxFlexGridSizer* fgSizer2 = new wxFlexGridSizer(1, 2, 0, 0);
 	fgSizer2->AddGrowableCol(0);
 	
-	m_chkAdvanced = new wxCheckBox( this, hlaeID_AdvancedMode, wxT("Advanced Settings"),
+	m_chkAdvanced = new wxCheckBox( this, hlaeID_AdvancedMode, _T("Advanced Settings"),
 		wxDefaultPosition, wxDefaultSize, 0 );
 	
 	fgSizer2->Add(m_chkAdvanced, 0, wxALIGN_CENTER_VERTICAL | wxEXPAND, 5 );
 
 	wxBoxSizer* bSizer = new wxBoxSizer(wxHORIZONTAL);
 	
-	m_btnOK = new wxButton( this, wxID_OK, wxT("OK"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_btnOK = new wxButton( this, wxID_OK, _T("OK"), wxDefaultPosition, wxDefaultSize, 0 );
 	bSizer->Add( m_btnOK, 0, wxLEFT, 5 );
 	
-	m_btnCancel = new wxButton( this, wxID_CANCEL, wxT("Cancel"));
+	m_btnCancel = new wxButton( this, wxID_CANCEL, _T("Cancel"));
 	bSizer->Add( m_btnCancel, 0, wxLEFT, 5 );
 	
-	m_btnApply = new wxButton( this, wxID_APPLY, wxT("Apply"));
+	m_btnApply = new wxButton( this, wxID_APPLY, _T("Apply"));
 	bSizer->Add( m_btnApply, 0, wxLEFT, 5 );
 
 	fgSizer2->Add(bSizer, 1, 0, 5);
@@ -148,17 +150,17 @@ hlaeDialogSettings::hlaeDialogSettings(wxWindow* parent, wxWindowID id, const wx
 	// All settingspages
 
 	hlaeListElementSettingsPage* node_general =	new hlaeListElementSettingsPage(
-		new hlaeSettingsPageGeneral(this), wxT("General"), false);
+		new hlaeSettingsPageGeneral(this), _T("General"), false);
 	node_general->Append(new hlaeListElementSettingsPage(
-		new hlaeSettingsPageGeneral(this), wxT("Menu 1"), false));
+		new hlaeSettingsPageGeneral(this), _T("Menu 1"), false));
 	node_general->Append(new hlaeListElementSettingsPage(
-		new hlaeSettingsPageGeneral(this), wxT("Menu 2"), false));
+		new hlaeSettingsPageGeneral(this), _T("Menu 2"), false));
 	m_pagelist->Append(node_general);
 
 	hlaeListElementSettingsPage* node_advanced = new hlaeListElementSettingsPage(
-		new hlaeSettingsPageGeneral(this), wxT("Advanced"), true);
+		new hlaeSettingsPageGeneral(this), _T("Advanced"), true);
 	node_advanced->Append(new hlaeListElementSettingsPage(
-		new hlaeSettingsPageGeneral(this),wxT("Advanced"), true));
+		new hlaeSettingsPageGeneral(this),_T("Advanced"), true));
 	m_pagelist->Append(node_advanced);
 
 	// Update the control
@@ -189,9 +191,9 @@ void hlaeDialogSettings::UpdateTreeCtrl()
 {
 	m_pageidlist->Clear();
 	m_treectrl->DeleteAllItems();
-	m_treectrl->AddRoot(wxT("Settings"));
+	m_treectrl->AddRoot(_T("Settings"));
 
-	for (hlaeList::iterator iter = m_pagelist->begin();
+	for (wxList::iterator iter = m_pagelist->begin();
 		iter != m_pagelist->end(); iter++)
 	{
 		wxObject* object = *iter;
@@ -231,7 +233,7 @@ void hlaeDialogSettings::OnAdvancedMode(wxCommandEvent& WXUNUSED(evt))
 
 void hlaeDialogSettings::OnSelectionChanged(wxTreeEvent& evt)
 {
-	for (hlaeList::iterator iter = m_pageidlist->begin();
+	for (wxList::iterator iter = m_pageidlist->begin();
 		iter != m_pageidlist->end(); iter++)
 	{
 		wxObject* object = *iter;

@@ -1,9 +1,9 @@
 #ifndef HLAE_GAMEWINDOW_H
 #define HLAE_GAMEWINDOW_H
 
-#include <wx/scrolwin.h>
+#include <wx/wx.h>
 
-#include "basecomserver.h"
+#include <system/basecom.h>
 
 class CHlaeGameWindow : public wxScrolledWindow
 {

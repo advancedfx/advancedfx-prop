@@ -1,14 +1,10 @@
-#ifndef _HLAE_DIALOGSETTINGS_H_
-#define _HLAE_DIALOGSETTINGS_H_
+#ifndef HLAE_SETTINGS_H
+#define HLAE_SETTINGS_H
 
-#include "list.h"
-
-#include <wx/sizer.h>
-#include <wx/button.h>
-#include <wx/checkbox.h>
-#include <wx/treectrl.h>
-#include <wx/dialog.h>
+#include <wx/wx.h>
 #include <wx/statline.h>
+#include <wx/treectrl.h>
+
 
 class hlaeSettingsPageTemplate : public wxWindow 
 {
@@ -29,7 +25,7 @@ class hlaeSettingsPageGeneral : public hlaeSettingsPageTemplate
 class hlaeListElementSettingsPage : public wxObject
 {
 	private:
-		hlaeList* m_pagelist;
+		wxList* m_pagelist;
 		bool m_isadvanced;
 		wxString m_name;
 		hlaeSettingsPageTemplate* m_page;
@@ -73,8 +69,8 @@ class hlaeDialogSettings : public wxDialog
 		void UpdateTreeCtrl();
 		void UpdateTreeCtrlNodes(hlaeListElementSettingsPage* node, wxTreeItemId id);
 
-		hlaeList* m_pagelist;
-		hlaeList* m_pageidlist;
+		wxList* m_pagelist;
+		wxList* m_pageidlist;
 		hlaeSettingsPageTemplate* m_lastpage;
 		bool m_advancedmode;
 
@@ -88,7 +84,7 @@ class hlaeDialogSettings : public wxDialog
 	public:
 
 		hlaeDialogSettings( wxWindow* parent, wxWindowID id = wxID_ANY,
-			const wxString& title = wxT("Settings"),
+			const wxString& title = _T("Settings"),
 			const wxPoint& pos = wxDefaultPosition,
 			const wxSize& size = wxSize( 564,427 ));
 		~hlaeDialogSettings();

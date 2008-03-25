@@ -3,6 +3,8 @@
 
 //#include "gamewindow.h"
 
+#include <wx/wx.h>
+
 class CHlaeGameWindow;
 class CBCServerInternal;
 

@@ -1,12 +1,11 @@
-#ifndef _HLAE_DEBUG_H_
-#define _HLAE_DEBUG_H_
+#ifndef HLAE_DEBUG_H
+#define HLAE_DEBUG_H
 
-#include "list.h"
-#include "console.h"
-#include "main.h"
+#include <wx/wx.h>
 
-#include <wx/string.h>
-#include <wx/datetime.h>
+#include <windows/console.h>
+#include <windows/hlae.h>
+
 
 enum hlaeDEBUG_MessageType_e {
 	hlaeDEBUG_FATALERROR=1,
@@ -49,7 +48,7 @@ private:
 	int m_logfilesize;
 	wxString* m_logfilepath;
 	hlaeConsoleWindow* m_consolewindow;
-	hlaeList* m_loglist;
+	wxList* m_loglist;
 	void UpdateMessage(size_t index);
 };
 

@@ -1,11 +1,12 @@
-#ifndef _HLAE_CONFIG_H_
-#define _HLAE_CONFIG_H_
+#ifndef HLAE_CONFIG_H
+#define HLAE_CONFIG_H
 
-#include "debug.h"
-#include "list.h"
-
+#include <wx/wx.h>
 #include <wx/filename.h>
 #include <wx/xml/xml.h>
+
+#include <system/debug.h>
+
 
 class hlaeConfigListObject : public wxObject
 {
@@ -37,7 +38,7 @@ public:
 	hlaeConfigListData* GetObject(size_t index);
 	size_t GetCount();
 private:
-	hlaeList* m_datalist;
+	wxList* m_datalist;
 };
 
 class hlaeConfig : public wxObject
@@ -48,6 +49,8 @@ public:
 	void Initialize();
 	void AppendPropertyGroup(hlaeConfigListGroup* group);
 	void SetPropertyString (const wxString& group_name, const wxString& property_name, const wxString& property_value);
+	void SetPropertyInteger (const wxString& group_name, const wxString& property_name, int property_value);
+	void SetPropertyBoolean (const wxString& group_name, const wxString& property_name, bool property_value);
 	const wxString& GetPropertyString(const wxString& group_name, const wxString& property_name);
 	int GetPropertyInteger(const wxString& group_name, const wxString& property_name);
 	bool GetPropertyBoolean(const wxString& group_name, const wxString& property_name);
@@ -57,7 +60,7 @@ public:
 private:
 	hlaeConfigListGroup* GetPropertyGroup(const wxString& group_name);
 	hlaeConfigListData* GetPropertyData(hlaeConfigListGroup* group, const wxString& property_name);
-	hlaeList* m_propertylist;
+	wxList* m_propertylist;
 	wxFileName* m_filename;
 	wxXmlDocument* m_document;
 };

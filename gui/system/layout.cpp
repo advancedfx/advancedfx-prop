@@ -1,12 +1,16 @@
+#include <wx/wx.h>
+
+#include <system/debug.h>
+
 #include "layout.h"
-#include "debug.h"
+
 
 hlaeLayoutManager g_layoutmanager;
 
 hlaeLayoutManager::hlaeLayoutManager() : wxObject()
 {
 	m_auimanager = new wxAuiManager();
-	m_layoutlist = new hlaeList();
+	m_layoutlist = new wxList();
 	m_layoutlist->DeleteContents(true);
 }
 
@@ -46,7 +50,7 @@ void hlaeLayoutManager::AddLayout(const wxString& describtion, bool is_predefine
 			// append a number based on the ones of layouts
 			int count = 0;
 
-			for (hlaeList::iterator iter = m_layoutlist->begin();
+			for (wxList::iterator iter = m_layoutlist->begin();
 				iter != m_layoutlist->end(); iter++)
 			{
 				wxObject* object = *iter;
@@ -58,16 +62,16 @@ void hlaeLayoutManager::AddLayout(const wxString& describtion, bool is_predefine
 				}
 			}
 
-			input = wxT("Layout ") + wxString::Format(wxT("%i"),count+1);
+			input = _T("Layout ") + wxString::Format(_T("%i"),count+1);
 
 		}
 
 		/* hlaeDialogTextInput* h_textinput = new hlaeDialogTextInput(
-			m_parent, wxT("Please define the name of the layout!"),
+			m_parent, _T("Please define the name of the layout!"),
 			input);
 		h_textinput->ShowModal();*/
 
-		layout_describtion = wxT("Layout"); // h_textinput->GetValue();
+		layout_describtion = _T("Layout"); // h_textinput->GetValue();
 		dialog_canceled = false; // h_textinput->IsCancled();
 
 		// delete h_textinput;
@@ -122,7 +126,7 @@ void hlaeLayoutManager::UpdateLayoutMenu() {
 	int count1 = 0;
 	int count2 = 0;
 
-	for (hlaeList::iterator iter = m_layoutlist->begin();
+	for (wxList::iterator iter = m_layoutlist->begin();
 			iter != m_layoutlist->end(); ++iter)
 	{
 		wxObject* object = *iter;
@@ -138,7 +142,7 @@ void hlaeLayoutManager::UpdateLayoutMenu() {
 	}
 
 	// write the layouts defined by the user in the menu
-	for (hlaeList::iterator iter = m_layoutlist->begin();
+	for (wxList::iterator iter = m_layoutlist->begin();
 			iter != m_layoutlist->end(); ++iter)
 	{
 		wxObject* object = *iter;
@@ -161,7 +165,7 @@ void hlaeLayoutManager::ClearMenu(wxMenu* menu) {
 
 void hlaeLayoutManager::OnLayout(wxCommandEvent& evt) {
 
-	for (hlaeList::iterator iter = m_layoutlist->begin();
+	for (wxList::iterator iter = m_layoutlist->begin();
 			iter != m_layoutlist->end(); iter++)
 	{
 		wxObject* object = *iter;

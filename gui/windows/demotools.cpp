@@ -9,21 +9,14 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-
-
+#include <wx/wx.h>
 #include <wx/wizard.h>
-#include <wx/stattext.h>
-#include <wx/textctrl.h>
-#include <wx/checkbox.h>
 #include <wx/filepicker.h>
-#include <wx/sizer.h>
-#include <wx/msgdlg.h>
 
-#include "demo_fix.h"
-#include "../debug.h"
+#include <system/demofix.h>
+#include <system/debug.h>
 
-#include "demo_tools.h"
-
+#include "demotools.h"
 
 //
 // The hlaeDemoWizard classes:
@@ -44,7 +37,7 @@ public:
         wxBoxSizer *mainSizer = new wxBoxSizer(wxVERTICAL);
 
         mainSizer->Add(
-			new wxStaticText(this, wxID_ANY, wxT("Please select the tasks you want to carry out (at least one):")),
+			new wxStaticText(this, wxID_ANY, _T("Please select the tasks you want to carry out (at least one):")),
             0, // No vertical stretching
             wxALL,
             5 // Border width
@@ -53,38 +46,38 @@ public:
 		mainSizer->AddSpacer(5);
 
 		m_check_democleanup = new wxCheckBox(this, wxID_ANY,
-			wxT("Demo&Cleanup:")
+			_T("Demo&Cleanup:")
 		);
         mainSizer->Add( m_check_democleanup, 0, wxALL, 5 );
 		mainSizer->Add(new wxStaticText(this, wxID_ANY,
-			wxT("Allows you to remove scoreboard and commandmenus.")
+			_T("Allows you to remove scoreboard and commandmenus.")
 		), 0, wxLEFT|wxRIGHT|wxBOTTOM, 5 );
 
 		mainSizer->AddSpacer(5);
 
 		m_check_demofix = new wxCheckBox(this, wxID_ANY
-			,wxT("Demo&Fix:")
+			,_T("Demo&Fix:")
 		);
         mainSizer->Add( m_check_demofix, 0, wxALL, 5 );
 		mainSizer->Add(new wxStaticText(this, wxID_ANY,
-			wxT("Don't use it if you don't need it.\n")
-			wxT("When the game crashes while the demo is being recorded the demo can't be played because\n")
-			wxT("the directory entries are missing or malformed.\n")
-			wxT("In this case viewdemo reports \"WARNING! Demo had bogus number of directory entries!\"\n")
-			wxT("This fix tries to rebuild the directory entries and thus fixes such demos.")
+			_T("Don't use it if you don't need it.\n")
+			_T("When the game crashes while the demo is being recorded the demo can't be played because\n")
+			_T("the directory entries are missing or malformed.\n")
+			_T("In this case viewdemo reports \"WARNING! Demo had bogus number of directory entries!\"\n")
+			_T("This fix tries to rebuild the directory entries and thus fixes such demos.")
 		), 0, wxLEFT|wxRIGHT|wxBOTTOM, 5 );
 
 		mainSizer->AddSpacer(5);
 
 		m_check_forcehltvfix = new wxCheckBox(this, wxID_ANY,
-			wxT("dem_force&hltv getting stuck fix:")
+			_T("dem_force&hltv getting stuck fix:")
 		);
         mainSizer->Add( m_check_forcehltvfix, 0, wxALL, 5 );
 		mainSizer->Add(new wxStaticText(this, wxID_ANY,
-			wxT("Don't use it if you don't need it.\n")
-			wxT("In some cases when using dem_forcehltv 1 the camera get's stuck and can't be moved.\n")
-			wxT("Also typing spec_mode 3 can't free it in this case. This fix tries to add an extra\n")
-			wxT("player slot for the dem_forcehltv spectator and thus usually fixes the problem.")
+			_T("Don't use it if you don't need it.\n")
+			_T("In some cases when using dem_forcehltv 1 the camera get's stuck and can't be moved.\n")
+			_T("Also typing spec_mode 3 can't free it in this case. This fix tries to add an extra\n")
+			_T("player slot for the dem_forcehltv spectator and thus usually fixes the problem.")
 		), 0, wxLEFT|wxRIGHT|wxBOTTOM, 5 );
 
 
@@ -133,41 +126,41 @@ public:
 
         mainSizer->Add(
 			new wxStaticText(this, wxID_ANY,
-			wxT("DemoCleanup:\n")
-			wxT("\n")
-			wxT("By default the scoreboard and the commandmenu are removed.\n")
-			wxT("If that is fine with you just continue to the next page (Click Next)")
+			_T("DemoCleanup:\n")
+			_T("\n")
+			_T("By default the scoreboard and the commandmenu are removed.\n")
+			_T("If that is fine with you just continue to the next page (Click Next)")
 			), 0, wxALL, 5 );
 
 		mainSizer->AddSpacer(5);
 
 		wxBoxSizer *myAsizer = new wxBoxSizer(wxHORIZONTAL);
-		m_cmdAsrc = new wxTextCtrl(this, wxID_ANY, wxT("+showscores"));
-		m_cmdAdst = new wxTextCtrl(this, wxID_ANY, wxT("+sh0wscores"));
+		m_cmdAsrc = new wxTextCtrl(this, wxID_ANY, _T("+showscores"));
+		m_cmdAdst = new wxTextCtrl(this, wxID_ANY, _T("+sh0wscores"));
 		myAsizer->Add(m_cmdAsrc, 0, 0, 0);
-		myAsizer->Add(new wxStaticText(this,wxID_ANY,wxT("->")), 0, wxLEFT|wxRIGHT , 5);
+		myAsizer->Add(new wxStaticText(this,wxID_ANY,_T("->")), 0, wxLEFT|wxRIGHT , 5);
 		myAsizer->Add(m_cmdAdst, 0, 0, 0);
 		mainSizer->Add(myAsizer, 0, wxALL, 5);
 
 		wxBoxSizer *myBsizer = new wxBoxSizer(wxHORIZONTAL);
-		m_cmdBsrc = new wxTextCtrl(this, wxID_ANY, wxT("+commandmenu"));
-		m_cmdBdst = new wxTextCtrl(this, wxID_ANY, wxT("+c0mmandmenu"));
+		m_cmdBsrc = new wxTextCtrl(this, wxID_ANY, _T("+commandmenu"));
+		m_cmdBdst = new wxTextCtrl(this, wxID_ANY, _T("+c0mmandmenu"));
 		myBsizer->Add(m_cmdBsrc, 0, 0, 0);
-		myBsizer->Add(new wxStaticText(this,wxID_ANY,wxT("->")), 0, wxLEFT|wxRIGHT , 5);
+		myBsizer->Add(new wxStaticText(this,wxID_ANY,_T("->")), 0, wxLEFT|wxRIGHT , 5);
 		myBsizer->Add(m_cmdBdst, 0, 0, 0);
 		mainSizer->Add(myBsizer, 0, wxALL, 5);
 
 		wxBoxSizer *myCsizer = new wxBoxSizer(wxHORIZONTAL);
-		m_cmdCsrc = new wxTextCtrl(this, wxID_ANY, wxT(""));
-		m_cmdCdst = new wxTextCtrl(this, wxID_ANY, wxT("yet unused"));
+		m_cmdCsrc = new wxTextCtrl(this, wxID_ANY, _T(""));
+		m_cmdCdst = new wxTextCtrl(this, wxID_ANY, _T("yet unused"));
 		myCsizer->Add(m_cmdCsrc, 0, 0, 0);
-		myCsizer->Add(new wxStaticText(this,wxID_ANY,wxT("->")), 0, wxLEFT|wxRIGHT , 5);
+		myCsizer->Add(new wxStaticText(this,wxID_ANY,_T("->")), 0, wxLEFT|wxRIGHT , 5);
 		myCsizer->Add(m_cmdCdst, 0, 0, 0);
 		mainSizer->Add(myCsizer, 0, wxALL, 5);
 
         mainSizer->Add(
 			new wxStaticText(this, wxID_ANY,
-			wxT("If the left of the two fields in a row is empty, the row is ignored.")
+			_T("If the left of the two fields in a row is empty, the row is ignored.")
 			), 0, wxALL, 5 );
 
 		SetSizer(mainSizer);
@@ -218,25 +211,25 @@ public:
 
         mainSizer->Add(
 			new wxStaticText(this, wxID_ANY,
-			wxT("FileSelect:")
+			_T("FileSelect:")
 			), 0, wxALL, 5 );
 
 		mainSizer->AddSpacer(5);
 
-		wxChar *myfilext=wxT("Half-Life demo (*.dem)|*.dem");
+		wxChar *myfilext=_T("Half-Life demo (*.dem)|*.dem");
 
-		wxBoxSizer *srcSizer = new wxStaticBoxSizer(wxVERTICAL,this,wxT(" demo to fix "));
-		m_srcfile = new wxFilePickerCtrl( this, wxID_ANY, wxEmptyString, wxT("Select demo to fix ..."), myfilext, wxDefaultPosition, wxDefaultSize,wxFLP_USE_TEXTCTRL|wxFLP_OPEN|wxFLP_FILE_MUST_EXIST );
+		wxBoxSizer *srcSizer = new wxStaticBoxSizer(wxVERTICAL,this,_T(" demo to fix "));
+		m_srcfile = new wxFilePickerCtrl( this, wxID_ANY, wxEmptyString, _T("Select demo to fix ..."), myfilext, wxDefaultPosition, wxDefaultSize,wxFLP_USE_TEXTCTRL|wxFLP_OPEN|wxFLP_FILE_MUST_EXIST );
 		srcSizer->Add(m_srcfile, 0, wxALL|wxEXPAND, 5);
 		mainSizer->Add(srcSizer, 0, wxALL|wxEXPAND, 5);
 
 		mainSizer->AddSpacer(5);
 
-		wxBoxSizer *dstSizer = new wxStaticBoxSizer(wxVERTICAL,this,wxT(" file to save to "));
-		m_dstfile = new wxFilePickerCtrl( this, wxID_ANY, wxEmptyString, wxT("Select name to save to ..."), myfilext, wxDefaultPosition, wxDefaultSize,wxFLP_USE_TEXTCTRL|wxFLP_SAVE|wxFLP_OVERWRITE_PROMPT );
+		wxBoxSizer *dstSizer = new wxStaticBoxSizer(wxVERTICAL,this,_T(" file to save to "));
+		m_dstfile = new wxFilePickerCtrl( this, wxID_ANY, wxEmptyString, _T("Select name to save to ..."), myfilext, wxDefaultPosition, wxDefaultSize,wxFLP_USE_TEXTCTRL|wxFLP_SAVE|wxFLP_OVERWRITE_PROMPT );
 		dstSizer->Add(m_dstfile, 0, wxALL|wxEXPAND, 5);
 		m_watermark = new wxCheckBox(this, wxID_ANY,
-			wxT("add HLAE watermarks")
+			_T("add HLAE watermarks")
 		);
 		m_watermark->SetValue(true);
 		dstSizer->Add(m_watermark, 0, wxALL, 5);
@@ -395,18 +388,18 @@ void CHlaeDemoTools::Run()
 
 				if ( (_DemoFix->GetHltvFixBell()) == 1)
 				{
-					mymsg = wxT("Found serverinfo, but could not add the additonal slot (maxplayers already reached)");
+					mymsg = _T("Found serverinfo, but could not add the additonal slot (maxplayers already reached)");
 				} else {
-					mymsg = wxT("Serverinfo not found, so no place to add the additonal slot.\nIf it's very important please report with a download link to your demo\nin the HLAE Community Help and Tips Forum.");
+					mymsg = _T("Serverinfo not found, so no place to add the additonal slot.\nIf it's very important please report with a download link to your demo\nin the HLAE Community Help and Tips Forum.");
 				}
 
-				wxMessageDialog mymsgdlg(_parent,mymsg,wxT("demo_forcehltv 1 slot fix failed:"),wxOK|wxICON_ERROR);
+				wxMessageDialog mymsgdlg(_parent,mymsg,_T("demo_forcehltv 1 slot fix failed:"),wxOK|wxICON_ERROR);
 				mymsgdlg.ShowModal();
 				mymsgdlg.Destroy();
 			}
 		}
 	} else {
-		g_debug.SendMessage(wxT("User abborted."),hlaeDEBUG_VERBOSE_LEVEL3);
+		g_debug.SendMessage(_T("User abborted."),hlaeDEBUG_VERBOSE_LEVEL3);
 	}
 
 	DlgWizard.Destroy();

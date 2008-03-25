@@ -7,8 +7,8 @@
 
 // Comment: Contains the demo fix wizard.
 
-#ifndef HLAE_DEMO_TOOLS_H
-#define HLAE_DEMO_TOOLS_H
+#ifndef HLAE_DEMOTOOLS_H
+#define HLAE_DEMOTOOLS_H
 
 class CHlaeDemoFix;
 

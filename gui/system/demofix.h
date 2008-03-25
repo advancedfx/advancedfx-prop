@@ -1,5 +1,5 @@
-#ifndef HLAE_DEMO_FIX_H
-#define HLAE_DEMO_FIX_H
+#ifndef HLAE_DEMOFIX_H
+#define HLAE_DEMOFIX_H
 
 // Project :  Half-Life Advanced Effects
 // File    :  gui/demo_fix.cpp
@@ -12,7 +12,9 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <wx/wx.h>
 #include <wx/file.h>
+
 #include <list>
 
 // forward declerations:

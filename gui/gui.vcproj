@@ -16,11 +16,12 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="../build/bin/"
-			IntermediateDirectory="../build/hlae/debug/"
+			OutputDirectory="$(SolutionDir)build\$(ConfigurationName)\bin\"
+			IntermediateDirectory="$(SolutionDir)build\$(ConfigurationName)\hlae\"
 			ConfigurationType="1"
-			CharacterSet="2"
+			CharacterSet="1"
 			DeleteExtensionsOnClean="*.*"
+			WholeProgramOptimization="0"
 			BuildLogFile="$(IntDir)BuildLog.html"
 			>
 			<Tool
@@ -41,13 +42,17 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(WXWIN)/include/msvc/&quot;;&quot;$(WXWIN)/include/&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_UNICODE;UNICODE;__WXMSW__;__WXDEBUG__;_WINDOWS;NOPCH"
+				WholeProgramOptimization="false"
+				AdditionalIncludeDirectories="&quot;$(WXWIN)/include/&quot;;&quot;$(ProjectDir)&quot;;&quot;$(SolutionDir)&quot;;&quot;$(WXWIN)/lib/vc_lib/mswud&quot;"
+				PreprocessorDefinitions="WIN32;_DEBUG;_UNICODE;UNICODE;__WXMSW__;__WXDEBUG__;_WINDOWS"
+				StringPooling="false"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				UsePrecompiledHeader="0"
-				ObjectFile="$(IntDir)"
+				EnableFunctionLevelLinking="true"
+				UsePrecompiledHeader="1"
+				PrecompiledHeaderThrough="wx/wx.h"
+				ObjectFile="$(IntDir)obj\"
 				ProgramDataBaseFileName="$(IntDir)"
 				XMLDocumentationFileName=""
 				WarningLevel="3"
@@ -65,35 +70,40 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="wxmsw28ud_aui.lib wxmsw28ud_html.lib wxmsw28ud_adv.lib wxmsw28ud_core.lib wxbase28ud_xml.lib wxbase28ud.lib wxtiffd.lib wxjpegd.lib wxpngd.lib wxzlibd.lib wxregexud.lib wxexpatd.lib winmm.lib comctl32.lib rpcrt4.lib wsock32.lib odbc32.lib"
-				OutputFile="$(OutDir)$(InputName).exe"
+				AdditionalDependencies="wxbase28ud.lib wxbase28ud_xml.lib wxmsw28ud_core.lib wxmsw28ud_adv.lib wxmsw28ud_aui.lib wxexpatd.lib version.lib user32.lib gdi32.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib rpcrt4.lib $(NOINHERIT)"
+				OutputFile="$(OutDir)hlae.exe"
+				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(WXWIN)/lib/vc_lib/&quot;"
 				GenerateManifest="true"
 				ManifestFile="$(IntDir)$(TargetFileName).intermediate.manifest"
+				AdditionalManifestDependencies=""
+				IgnoreAllDefaultLibraries="false"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(TargetDir)$(TargetName).pdb"
 				LinkTimeCodeGeneration="0"
 				ProfileGuidedDatabase=""
+				TurnOffAssemblyGeneration="false"
 				TargetMachine="1"
+				AllowIsolation="true"
 			/>
 			<Tool
 				Name="VCALinkTool"
 			/>
 			<Tool
 				Name="VCManifestTool"
-				OutputManifestFile="$(IntDir)$(TargetFileName).embed.manifest"
-				ManifestResourceFile="$(IntDir)$(TargetFileName).embed.manifest.res"
+				EmbedManifest="true"
+				DependencyInformationFile="$(IntDir)mt.dep"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
 				UseUnicodeResponseFiles="false"
-				SuppressStartupBanner="true"
+				SuppressStartupBanner="false"
 				ValidateIntelliSense="false"
 				OutputDocumentFile=""
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				SuppressStartupBanner="true"
+				SuppressStartupBanner="false"
 				OutputFile=""
 			/>
 			<Tool
@@ -113,10 +123,10 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="../build/bin/"
-			IntermediateDirectory="../build/hlae/release/"
+			OutputDirectory="$(SolutionDir)build\$(ConfigurationName)\bin\"
+			IntermediateDirectory="$(SolutionDir)build\$(ConfigurationName)\hlae\"
 			ConfigurationType="1"
-			CharacterSet="2"
+			CharacterSet="1"
 			DeleteExtensionsOnClean="*.*"
 			WholeProgramOptimization="1"
 			BuildLogFile="$(IntDir)BuildLog.html"
@@ -138,12 +148,15 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="3"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(WXWIN)/include/msvc/&quot;;&quot;$(WXWIN)/include/&quot;"
+				Optimization="1"
+				WholeProgramOptimization="true"
+				AdditionalIncludeDirectories="&quot;$(WXWIN)/include/&quot;;&quot;$(ProjectDir)&quot;;&quot;$(SolutionDir)&quot;;&quot;$(WXWIN)/lib/vc_lib/mswu&quot;"
 				PreprocessorDefinitions="WIN32;__WXMSW__;_UNICODE;UNICODE;_WINDOWS;NOPCH"
+				StringPooling="true"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
-				ObjectFile="$(IntDir)"
+				PrecompiledHeaderThrough=""
+				ObjectFile="$(IntDir)obj\"
 				ProgramDataBaseFileName="$(IntDir)"
 				XMLDocumentationFileName=""
 				WarningLevel="3"
@@ -161,11 +174,13 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="wxmsw28u_aui.lib wxmsw28u_html.lib wxmsw28u_adv.lib wxmsw28u_core.lib wxbase28u_xml.lib wxbase28u.lib wxtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib wxregexu.lib wxexpat.lib winmm.lib comctl32.lib rpcrt4.lib wsock32.lib odbc32.lib"
-				OutputFile="$(OutDir)$(InputName).exe"
+				AdditionalDependencies="wxbase28u.lib wxbase28u_xml.lib wxmsw28u_core.lib wxmsw28u_adv.lib wxmsw28u_aui.lib wxexpat.lib version.lib user32.lib gdi32.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib rpcrt4.lib $(NOINHERIT)"
+				OutputFile="$(OutDir)hlae.exe"
+				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(WXWIN)/lib/vc_lib/&quot;"
 				GenerateManifest="true"
 				ManifestFile="$(IntDir)$(TargetFileName).intermediate.manifest"
+				IgnoreAllDefaultLibraries="false"
 				GenerateDebugInformation="false"
 				ProgramDatabaseFile="$(TargetDir)$(TargetName).pdb"
 				OptimizeReferences="2"
@@ -173,14 +188,14 @@
 				LinkTimeCodeGeneration="1"
 				ProfileGuidedDatabase=""
 				TargetMachine="1"
+				AllowIsolation="true"
 			/>
 			<Tool
 				Name="VCALinkTool"
 			/>
 			<Tool
 				Name="VCManifestTool"
-				OutputManifestFile="$(IntDir)$(TargetFileName).embed.manifest"
-				ManifestResourceFile="$(IntDir)$(TargetFileName).embed.manifest.res"
+				EmbedManifest="true"
 				DependencyInformationFile="$(IntDir)mt.dep"
 			/>
 			<Tool
@@ -223,56 +238,69 @@
 				UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 				>
 				<File
-					RelativePath=".\basecomserver.h"
+					RelativePath=".\defines.h"
 					>
 				</File>
-				<File
-					RelativePath=".\config.h"
+				<Filter
+					Name="windows"
 					>
-					<FileConfiguration
-						Name="Debug|Win32"
+					<File
+						RelativePath=".\windows\console.h"
 						>
-						<Tool
-							Name="VCCustomBuildTool"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath=".\console.h"
+					</File>
+					<File
+						RelativePath=".\windows\demotools.h"
+						>
+					</File>
+					<File
+						RelativePath=".\windows\game.h"
+						>
+					</File>
+					<File
+						RelativePath=".\windows\hlae.h"
+						>
+					</File>
+					<File
+						RelativePath=".\windows\launcher.h"
+						>
+					</File>
+					<File
+						RelativePath=".\windows\settings.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="system"
 					>
-				</File>
-				<File
-					RelativePath=".\debug.h"
-					>
-				</File>
-				<File
-					RelativePath=".\gamewindow.h"
-					>
-				</File>
-				<File
-					RelativePath=".\launcher.h"
-					>
-				</File>
-				<File
-					RelativePath=".\layout.h"
-					>
-				</File>
-				<File
-					RelativePath=".\list.h"
-					>
-				</File>
-				<File
-					RelativePath=".\loader.h"
-					>
-				</File>
-				<File
-					RelativePath=".\main.h"
-					>
-				</File>
-				<File
-					RelativePath=".\settings.h"
-					>
-				</File>
+					<File
+						RelativePath=".\system\app.h"
+						>
+					</File>
+					<File
+						RelativePath=".\system\basecom.h"
+						>
+					</File>
+					<File
+						RelativePath=".\system\config.h"
+						>
+					</File>
+					<File
+						RelativePath=".\system\debug.h"
+						>
+					</File>
+					<File
+						RelativePath=".\system\demofix.h"
+						>
+					</File>
+					<File
+						RelativePath=".\system\layout.h"
+						>
+					</File>
+					<File
+						RelativePath=".\system\loader.h"
+						>
+					</File>
+				</Filter>
 			</Filter>
 			<Filter
 				Name="Source Files"
@@ -280,76 +308,66 @@
 				UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 				>
 				<File
-					RelativePath=".\basecomserver.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\config.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\console.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\debug.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\gamewindow.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\launcher.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\layout.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\list.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\loader.cpp"
-					>
-				</File>
-				<File
 					RelativePath=".\main.cpp"
 					>
 				</File>
-				<File
-					RelativePath=".\settings.cpp"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="demo_tools"
-				>
 				<Filter
-					Name="Header Files"
-					Filter="h"
+					Name="windows"
 					>
 					<File
-						RelativePath=".\demo_tools\demo_fix.h"
+						RelativePath=".\windows\console.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\demo_tools\demo_tools.h"
+						RelativePath=".\windows\demotools.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\windows\game.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\windows\hlae.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\windows\launcher.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\windows\settings.cpp"
 						>
 					</File>
 				</Filter>
 				<Filter
-					Name="Source Files"
-					Filter="cpp"
+					Name="system"
 					>
 					<File
-						RelativePath=".\demo_tools\demo_fix.cpp"
+						RelativePath=".\system\app.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\demo_tools\demo_tools.cpp"
+						RelativePath=".\system\basecom.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\system\config.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\system\debug.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\system\demofix.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\system\layout.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\system\loader.cpp"
 						>
 					</File>
 				</Filter>

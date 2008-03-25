@@ -1,15 +1,13 @@
-#include <windows.h>
-#include <gl/gl.h>
-
-#include <wx/dcclient.h>
-#include <wx/string.h>
+#include <wx/wx.h>
 
 #include <shared/com/basecom.h>
-#include "debug.h"
-#include "layout.h"
-#include "gamewindow.h"
+#include <system/debug.h>
+#include <system/layout.h>
+#include <windows/game.h>
 
-#include "basecomserver.h"
+#include "basecom.h"
+
+
 
 
 // typedef bool (* OnRecieve_t)(class *lpClassPointer,unsigned long dwData,unsigned long cbData,void *lpData);
@@ -238,7 +236,7 @@ BOOL CBCServerInternal::_MyOnRecieve(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMy
 		return _Wrapper_UpdateWindow(hWnd,hwSender,pMyCDS);
 
 	default:
-		g_debug.SendMessage(wxT("CBCServerInternal::_MyOnRecieve: Recieved unkown message."), hlaeDEBUG_ERROR);
+		g_debug.SendMessage(_T("CBCServerInternal::_MyOnRecieve: Recieved unkown message."), hlaeDEBUG_ERROR);
 	}
 	return FALSE;
 }
@@ -312,7 +310,7 @@ BOOL CBCServerInternal:: _Wrapper_UpdateWindow(HWND hWnd,HWND hwSender,PCOPYDATA
 CHlaeBcServer::CHlaeBcServer(CHlaeGameWindow *pHlaeGameWindow)
 {
 #ifdef _DEBUG
-	g_debug.SendMessage(wxT("CHlaeBcServer::CHlaeBcServer ..."), hlaeDEBUG_DEBUG);
+	g_debug.SendMessage(_T("CHlaeBcServer::CHlaeBcServer ..."), hlaeDEBUG_DEBUG);
 #endif
 
 	_pHlaeGameWindow = pHlaeGameWindow;
@@ -320,14 +318,14 @@ CHlaeBcServer::CHlaeBcServer(CHlaeGameWindow *pHlaeGameWindow)
 	_pBCServerInternal = new CBCServerInternal();
 
 	if(!(_pBCServerInternal->HlaeBcSrvStart(this)))
-		g_debug.SendMessage(wxT("ERROR: HlaeBcSrvStart() failed."),hlaeDEBUG_FATALERROR);
+		g_debug.SendMessage(_T("ERROR: HlaeBcSrvStart() failed."),hlaeDEBUG_FATALERROR);
 }
 
 CHlaeBcServer::~CHlaeBcServer()
 {
 #ifdef _DEBUG
 	#pragma message("CHlaeBcServer::~CHlaeBcServer cannot enable debugmessage because g_debug may be not present anymore")
-	//g_debug.SendMessage(wxT("CHlaeBcServer::~CHlaeBcServer ..."), hlaeDEBUG_DEBUG);
+	//g_debug.SendMessage(_T("CHlaeBcServer::~CHlaeBcServer ..."), hlaeDEBUG_DEBUG);
 #endif
 	_OnGameWindowClose();
 	_pBCServerInternal->HlaeBcSrvStop();
@@ -401,7 +399,7 @@ bool CHlaeBcServer::Pass_KeyBoardEvent(unsigned int uMsg, unsigned int uKeyCode,
 
 WXHWND CHlaeBcServer::_OnCreateWindow(int nWidth, int nHeight)
 {
-	g_debug.SendMessage(wxT("Client connected."), hlaeDEBUG_VERBOSE_LEVEL1);
+	g_debug.SendMessage(_T("Client connected."), hlaeDEBUG_VERBOSE_LEVEL1);
 
 	// adjust size and prepare for drawing:
 	_UpdateWindow(nWidth, nHeight);
@@ -409,7 +407,7 @@ WXHWND CHlaeBcServer::_OnCreateWindow(int nWidth, int nHeight)
 	WXHWND hwRet=_pHlaeGameWindow->GetHWND();
 
 	wxString mystr;
-	mystr.Printf(wxT("_OnCreateWindow WXHWND: 0x%08x"),hwRet); 
+	mystr.Printf(_T("_OnCreateWindow WXHWND: 0x%08x"),hwRet); 
 	g_debug.SendMessage(mystr, hlaeDEBUG_DEBUG);
 
 	return hwRet;
@@ -417,13 +415,13 @@ WXHWND CHlaeBcServer::_OnCreateWindow(int nWidth, int nHeight)
 
 bool CHlaeBcServer::_OnDestroyWindow()
 {
-	g_debug.SendMessage(wxT("Client shutting down."), hlaeDEBUG_VERBOSE_LEVEL1);
+	g_debug.SendMessage(_T("Client shutting down."), hlaeDEBUG_VERBOSE_LEVEL1);
 	return true;
 }
 
 bool CHlaeBcServer::_UpdateWindow(int nWidth, int nHeight)
 {
-	g_debug.SendMessage(wxT("Client sent window size update."), hlaeDEBUG_VERBOSE_LEVEL3);
+	g_debug.SendMessage(_T("Client sent window size update."), hlaeDEBUG_VERBOSE_LEVEL3);
 	if (!_pHlaeGameWindow) return false;
 	
 	_pHlaeGameWindow->SetVirtualSize(nWidth,nHeight);
