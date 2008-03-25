@@ -61,7 +61,7 @@ void hlaeConsoleWindow::WriteMessage(const wxString& message,
 		}
 
 		// if uncommented the program will run into multithreading problems
-		// TODO: fix this with queue
+		// TODO: solve multithreading problems
 
 		/* if (m_textcrtl->GetNumberOfLines() != 1) m_textcrtl->AppendText(_T("\n"));
 		m_textcrtl->AppendText(date.Format(_T("[%H:%M] ")));

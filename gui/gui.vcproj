@@ -289,7 +289,7 @@
 						>
 					</File>
 					<File
-						RelativePath=".\system\demo_fix.h"
+						RelativePath=".\system\demofix.h"
 						>
 					</File>
 					<File
@@ -359,7 +359,7 @@
 						>
 					</File>
 					<File
-						RelativePath=".\system\demo_fix.cpp"
+						RelativePath=".\system\demofix.cpp"
 						>
 					</File>
 					<File

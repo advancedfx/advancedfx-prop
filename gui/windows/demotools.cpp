@@ -13,7 +13,7 @@
 #include <wx/wizard.h>
 #include <wx/filepicker.h>
 
-#include <system/demo_fix.h>
+#include <system/demofix.h>
 #include <system/debug.h>
 
 #include "demotools.h"
