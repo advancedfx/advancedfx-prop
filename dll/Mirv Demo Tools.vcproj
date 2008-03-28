@@ -182,7 +182,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Post-Build: calling rcstamp ..."
-				CommandLine="&quot;../shared/bin/rcstamp.exe&quot; &quot;$(ProjectDir)Mirv Demo Tool.rc&quot; *.*.4.1 &quot;$(ProjectDir)version.cpp&quot;"
+				CommandLine="&quot;../shared/bin/rcstamp.exe&quot; &quot;$(ProjectDir)Mirv Demo Tool.rc&quot; *.*.*.+ &quot;$(ProjectDir)version.cpp&quot;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -260,6 +260,10 @@
 			</File>
 			<File
 				RelativePath=".\resource.h"
+				>
+			</File>
+			<File
+				RelativePath=".\supportrender.h"
 				>
 			</File>
 			<File
@@ -352,6 +356,10 @@
 			</File>
 			<File
 				RelativePath=".\newsky.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\supportrender.cpp"
 				>
 			</File>
 			<File

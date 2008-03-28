@@ -12,6 +12,7 @@ Description : see mdt_gltools.h
 #include <gl\glu.h>
 #include <gl\glaux.h>
 
+#include "supportrender.h" // for switching rendering target (important for recording)
 #include "mdt_media.h" // We Mant RAWGLPICS and other media interfaces
 #include "film_sound.h"
 
@@ -43,6 +44,8 @@ private:
 	enum FILMING_STATE { FS_INACTIVE, FS_STARTING, FS_ACTIVE };
 
 private:
+	CHlaeSupportRender *_pSupportRender;
+
 	CFilmSound _FilmSound; // our sound filming class
 	bool _bExportingSound;
 
@@ -117,6 +120,11 @@ private:
 public:
 	Filming();
 	~Filming();
+
+	void SupplySupportRenderer(CHlaeSupportRender *pSupportRender)
+	{
+		_pSupportRender = pSupportRender;
+	}
 
 	void Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer);
 	DRAW_RESULT shouldDraw(GLenum mode);

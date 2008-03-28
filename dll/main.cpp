@@ -3,11 +3,10 @@
 
 */
 
-#define MDT_COMPILE_FOR_GUI
-// Comment this out in case of problems.
-// This enables the new code that will check for the HLAE GUI etc..
-// Normally you can leave this defined, but since the public versions
-// don't have the HLAE Gui included anyways, it's save to comment it out.
+#define MDT_COMPILE_FOR_GUI 1
+// 0 - disables HLAE gui specific code
+// 1 - enables the new code that will check for the HLAE GUI etc..
+
 
 #include "mdt_debug.h"
 
@@ -38,6 +37,8 @@
 #include "cmdregister.h"
 #include "ui.h"
 
+#include "supportrender.h" // off-screen recording support
+
 #include "mdt_gltools.h" // we want g_Mdt_GlTools for having tools to force Buffers and Stuff like that
 #include "dd_hook.h" // we have to call functions (inGetProcAddress) from here in order to init the hook
 #include "dsound_hook.h"
@@ -58,6 +59,7 @@ extern Aiming g_Aiming;
 extern Zooming g_Zooming;
 extern CHlaeCmdTools g_CmdTools;
 
+CHlaeSupportRender *g_pSupportRender = NULL;
 
 extern UI *gui;
 
@@ -314,31 +316,6 @@ REGISTER_DEBUGCMD_FUNC(debug_cmdaddress)
 	pEngfuncs->Con_Printf("%s: 0x%08x\n",parg,paddr);
 }
 
-// >> fixforcehtlv stuff:
-
-/*
-typedef void ( *Cvar_SetValue_t )( char *cvar, float value );
-
-Cvar_SetValue_t detoured_Cvar_SetValue = NULL;
-
-void Hook_Cvar_SetValue( char *cvar, float value )
-{
-	if (!strcmp("maxclients",cvar)) pEngfuncs->Con_Printf(">>>Maxclients: %f\n",value);
-	detoured_Cvar_SetValue(cvar,value);
-}
-
-void Install_Hook_Cvar_SetValue()
-{
-	if (!detoured_Cvar_SetValue)
-		detoured_Cvar_SetValue = (Cvar_SetValue_t)DetourApply((BYTE *)(pEngfuncs->Cvar_SetValue), (BYTE *)Hook_Cvar_SetValue,0x07);
-}
-
-int g_map_localplayer_to = -1;
-
-typedef cl_entity_s *(* GetLocalPlayer_t)( void );
-
-GetLocalPlayer_t detoured_GetLocalPlayer = NULL;
-*/
 void DrawActivePlayers()
 {
 	for (int i = 0; i <= pEngfuncs->GetMaxClients(); i++)
@@ -355,110 +332,6 @@ void DrawActivePlayers()
 		}
 	}
 }
-/*
-cl_entity_s *g_Hook_GetLocalPlayer( void )
-{
-	//pEngfuncs->Con_DPrintf("g_hook_GetLocalPlayer called.\n");
-	static hud_player_info_t m_hpinfo;
-
-	if( fixforcehltv->value != 0.0f && pEngfuncs->IsSpectateOnly() )
-	{
-		bool bReMap=false;
-		if  (g_map_localplayer_to == -1)
-		{
-			// check if there is already a correctly mapped player:
-			cl_entity_s *pe = detoured_GetLocalPlayer();
-
-			if (!pe || pe->player)
-				bReMap=true;
-			else
-			{
-				if (pe->index==0)
-				{
-					bReMap=true;
-				} else {
-					pEngfuncs->Con_DPrintf("HLAE: g_Hook_GetLocalPlayer: using native map: %i.\n",pe->index);
-					g_map_localplayer_to=pe->index;
-				}
-			}
-		} else {
-			// check if the current mapping is still correct:
-			cl_entity_s *e=pEngfuncs->GetEntityByIndex(g_map_localplayer_to);
-
-			if (e) //&& e->player && e->model && e->model->name && e->model->name[0]!=0)
-			{
-				memset(&m_hpinfo,0x0,sizeof(hud_player_info_t));
-				pEngfuncs->pfnGetPlayerInfo(e->index,&m_hpinfo);
-				if (m_hpinfo.model!=NULL) bReMap=true;
-			}
-		}
-
-		if (bReMap)
-		{
-			//pEngfuncs->Con_DPrintf("HLAE: g_Hook_GetLocalPlayer: doing remap.\n");
-			cl_entity_t *e;
-			for (g_map_localplayer_to = 1; g_map_localplayer_to <= pEngfuncs->GetMaxClients(); g_map_localplayer_to++)
-			{
-				e = pEngfuncs->GetEntityByIndex(g_map_localplayer_to);
-
-				if (!e) break;
-				else
-				{
-					memset(&m_hpinfo,0x0,sizeof(hud_player_info_t));
-					pEngfuncs->pfnGetPlayerInfo(e->index,&m_hpinfo);
-					if (m_hpinfo.model==NULL) break;
-				}
-			}
-			pEngfuncs->CL_CreateVisibleEntity(ET_NORMAL,e);
-			pEngfuncs->Con_DPrintf("HLAE: g_Hook_GetLocalPlayer: did remap: %i.\n",g_map_localplayer_to);
-		}
-
-		return pEngfuncs->GetEntityByIndex(g_map_localplayer_to);
-	} else {
-		g_map_localplayer_to = -1;
-		return detoured_GetLocalPlayer();
-	}
-}
-
-void Install_Hook_GetLocalPlayer()
-{
-	if (!detoured_GetLocalPlayer)
-	{
-		// we need an backup of the original function since we still want to call it in our hook
-		detoured_GetLocalPlayer = (GetLocalPlayer_t)DetourApply((BYTE *)(pEngfuncs->GetLocalPlayer), (BYTE *)g_Hook_GetLocalPlayer,0x06);
-	};
-}
-
-void DrawMySelf_InForceHltv()
-// doesn't work yet
-{
-	int i=-1;
-
-	if (detoured_GetLocalPlayer)
-	{
-		cl_entity_s *pe=detoured_GetLocalPlayer(); // dem_forcehltv might trick us!
-		if (pe) i = pe->index;
-		else return;
-	}
-	else
-	{
-		pEngfuncs->Con_Printf("HLAE error: in DrawMySelf_InForceHltv\n");
-		return;
-	}
-	
-
-	cl_entity_t *e = pEngfuncs->GetEntityByIndex(i);
-
-	if (e && e->player && e->model && !(e->curstate.effects & EF_NODRAW))
-	{
-		float flDeltaTime = fabs(pEngfuncs->GetClientTime() - e->curstate.msg_time);
-
-		if (flDeltaTime < deltatime->value)
-			pEngfuncs->CL_CreateVisibleEntity(ET_PLAYER, e);
-	}
-}
-*/
-// <<
 
 bool InMenu()
 {
@@ -710,9 +583,42 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 		pEngfuncs->pfnGetScreenInfo(&screeninfo);
 		pEngfuncs->Con_DPrintf("ScreenRes: %dx%d\n", screeninfo.iWidth, screeninfo.iHeight);
 
+		// Init support renderer:
+		g_pSupportRender = new CHlaeSupportRender(HlaeBc_GetGameWindow(), screeninfo.iWidth, screeninfo.iHeight);
+
+		bool bHasFBO;
+		CHlaeSupportRender::ERenderTarget eRenderTarget=CHlaeSupportRender::RT_GAMEWINDOW;
+
+		bHasFBO = g_pSupportRender->Has_EXT_FrameBufferObject();
+
+		if(bHasFBO)
+			pEngfuncs->Con_DPrintf("EXT_FrameBufferObject found\n");
+		else
+		{
+			pEngfuncs->Con_DPrintf("EXT_FrameBufferObject not found.\n");
+			eRenderTarget = CHlaeSupportRender::RT_OWNCONTEXT;
+		}
+
+		if (pEngfuncs->CheckParm("-hlaerenownc", NULL ))
+		{
+			pEngfuncs->Con_DPrintf("RenderTarget: using own DisplayContext\n");
+			eRenderTarget = CHlaeSupportRender::RT_OWNCONTEXT;
+		}
+		else if (bHasFBO && pEngfuncs->CheckParm("-hlaerenfbo", NULL ))
+		{
+			pEngfuncs->Con_DPrintf("RenderTarget: using own FrameBufferObject\n");
+			eRenderTarget = CHlaeSupportRender::RT_FRAMEBUFFEROBJECT;
+		} else
+			pEngfuncs->Con_DPrintf("RenderTarget: using default game context\n");
+
+		g_pSupportRender->SetRenderTarget( eRenderTarget, true );
+
+		
+		g_Filming.SupplySupportRenderer(g_pSupportRender);
+
 		g_Filming.setScreenSize(screeninfo.iWidth,screeninfo.iHeight);
 
-		// Init the CmdTools (might be a bit later here for hooking some funcs):
+		// Init the CmdTools (might be a bit late here for hooking some funcs):
 		g_CmdTools.Init(pEngfuncs);
 		pEngfuncs->Con_DPrintf("CommandTree at: 0x%08x\n", g_CmdTools.GiveCommandTreePtr());
 
@@ -720,9 +626,6 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 		if (!(g_Old_dem_forcehltv = g_CmdTools.HookCommand("dem_forcehltv",Hook_dem_forcehltv))) pEngfuncs->Con_Printf("HLAE warning: Failed hooking dem_forcehltv");
 		if (!(g_CmdTools.HookCommand("startmovie",Hook_startmovie))) pEngfuncs->Con_Printf("HLAE warning: Failed hooking startmovie");
 		if (!(g_CmdTools.HookCommand("endmovie",Hook_endmovie))) pEngfuncs->Con_Printf("HLAE warning: Failed hooking endmovie");
-
-		//Install_Hook_Cvar_SetValue();
-		//Install_Hook_GetLocalPlayer();
 
 		bFirstRun = false;
 	}
@@ -865,7 +768,7 @@ void *InterceptDllCall(HMODULE hModule, char *szDllName, char *szFunctionName, D
 BOOL (APIENTRY *pwglSwapBuffers)(HDC hDC);
 BOOL APIENTRY my_wglSwapBuffers(HDC hDC)
 {
-#ifndef MDT_COMPILE_FOR_GUI
+#if MDT_COMPILE_FOR_GUI != 1
 // only install old gui hooks when not compiling for new GUI
 	static bool bHaveWindowHandle = false;
 
@@ -997,7 +900,7 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 		if (!lstrcmp(lpProcName,"DirectDrawCreate"))
 			return Hook_DirectDrawCreate(nResult); // give our hook original address and return new (it remembers the original one from it's first call, it also cares about the commandline options (if to force the res or not and does not install the hook if not needed))
 
-#ifdef MDT_COMPILE_FOR_GUI
+#if MDT_COMPILE_FOR_GUI == 1
 		if (!lstrcmp(lpProcName, "CreateWindowExA"))
 			return (FARPROC) &HlaeBcClt_CreateWindowExA;
 		if (!lstrcmp(lpProcName, "DestroyWindow"))
@@ -1074,6 +977,7 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 		}
 		case DLL_PROCESS_DETACH:
 		{
+			if (g_pSupportRender) delete g_pSupportRender;
 			break;
 		}
 		case DLL_THREAD_ATTACH:

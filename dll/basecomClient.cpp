@@ -540,6 +540,15 @@ BOOL WINAPI HlaeBcClt_ReleaseCapture( VOID )
 }
 
 //
+// support functions:
+//
+
+HWND HlaeBc_GetGameWindow(void)
+{
+	return g_HL_MainWindow;
+}
+
+//
 // Debug info
 //
 

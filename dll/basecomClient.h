@@ -1,10 +1,8 @@
 #include <windows.h>
 
 //
-// misc functions
+// mandatory functions
 //
-
-// the following are mandatory:
 
 void HlaeBcCl_AdjustViewPort(int x, int y, int width, int height);
 // You have to use this one in glViewPort:
@@ -20,5 +18,9 @@ BOOL APIENTRY HlaeBcCl_GetCursorPos(LPPOINT lpPoint); // Call this in a WINAPI S
 ATOM APIENTRY HlaeBcClt_RegisterClassA(CONST WNDCLASSA *lpWndClass);
 BOOL WINAPI HlaeBcClt_ReleaseCapture( VOID );
 HWND WINAPI HlaeBcClt_SetCapture( HWND hWnd);
-int WINAPI HlaeBcClt_ChoosePixelFormat(HDC hdc, PIXELFORMATDESCRIPTOR *ppfd);
 
+//
+// support functions
+//
+
+HWND HlaeBc_GetGameWindow(void);
