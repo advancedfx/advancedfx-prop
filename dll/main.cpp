@@ -59,7 +59,7 @@ extern Aiming g_Aiming;
 extern Zooming g_Zooming;
 extern CHlaeCmdTools g_CmdTools;
 
-CHlaeSupportRender *g_pSupportRender = NULL;
+CHlaeSupportRender *g_pSupportRender = NULL; // inited in basecomClient.cpp
 
 extern UI *gui;
 
@@ -550,8 +550,6 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 {
 	static bool bFirstRun = true;
 
-	HlaeBcCl_AdjustViewPort(x,y,width,height);
-
 #ifdef MDT_DEBUG
 	if (bFirstRun)
 	{
@@ -583,37 +581,6 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 		pEngfuncs->pfnGetScreenInfo(&screeninfo);
 		pEngfuncs->Con_DPrintf("ScreenRes: %dx%d\n", screeninfo.iWidth, screeninfo.iHeight);
 
-		// Init support renderer:
-		g_pSupportRender = new CHlaeSupportRender(HlaeBc_GetGameWindow(), screeninfo.iWidth, screeninfo.iHeight);
-
-		bool bHasFBO;
-		CHlaeSupportRender::ERenderTarget eRenderTarget=CHlaeSupportRender::RT_GAMEWINDOW;
-
-		bHasFBO = g_pSupportRender->Has_EXT_FrameBufferObject();
-
-		if(bHasFBO)
-			pEngfuncs->Con_DPrintf("EXT_FrameBufferObject found\n");
-		else
-		{
-			pEngfuncs->Con_DPrintf("EXT_FrameBufferObject not found.\n");
-			eRenderTarget = CHlaeSupportRender::RT_OWNCONTEXT;
-		}
-
-		if (pEngfuncs->CheckParm("-hlaerenownc", NULL ))
-		{
-			pEngfuncs->Con_DPrintf("RenderTarget: using own DisplayContext\n");
-			eRenderTarget = CHlaeSupportRender::RT_OWNCONTEXT;
-		}
-		else if (bHasFBO && pEngfuncs->CheckParm("-hlaerenfbo", NULL ))
-		{
-			pEngfuncs->Con_DPrintf("RenderTarget: using own FrameBufferObject\n");
-			eRenderTarget = CHlaeSupportRender::RT_FRAMEBUFFEROBJECT;
-		} else
-			pEngfuncs->Con_DPrintf("RenderTarget: using default game context\n");
-
-		g_pSupportRender->SetRenderTarget( eRenderTarget, true );
-
-		
 		g_Filming.SupplySupportRenderer(g_pSupportRender);
 
 		g_Filming.setScreenSize(screeninfo.iWidth,screeninfo.iHeight);
@@ -810,7 +777,7 @@ BOOL APIENTRY my_wglSwapBuffers(HDC hDC)
 	}
 
 	// do the switching of buffers as requersted:
-	if (!bRecordSwapped) bResWglSwapBuffers = (*pwglSwapBuffers)(hDC);
+	if (!bRecordSwapped) bResWglSwapBuffers = g_pSupportRender->hlaeSwapBuffers(hDC); //(*pwglSwapBuffers)(hDC);
 
 	// no we have captured the image (by default from backbuffer) and display it on the front, now we can prepare the new backbuffer image if required.
 
@@ -844,7 +811,7 @@ BOOL APIENTRY my_SetCursorPos(int x, int y)
 // of the screen (to stop player from spinning while in menu)
 BOOL APIENTRY my_GetCursorPos(LPPOINT lpPoint)
 {
-	BOOL bRet = HlaeBcCl_GetCursorPos(lpPoint);
+	BOOL bRet = GetCursorPos(lpPoint);
 
 	if (!InMenu())return bRet;
 
@@ -889,7 +856,6 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 		if (!lstrcmp(lpProcName, "GetCursorPos"))
 			return (FARPROC) &my_GetCursorPos;
 		if (!lstrcmp(lpProcName, "SetCursorPos"))
-
 			return (FARPROC) &my_SetCursorPos;
 		if (!lstrcmp(lpProcName, "wglSwapBuffers"))
 		{
@@ -909,6 +875,14 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 			return (FARPROC) &HlaeBcClt_RegisterClassA;
 		if (!lstrcmp(lpProcName, "SetWindowPos"))
 			return (FARPROC) &HlaeBcClt_SetWindowPos;
+		if (!lstrcmp(lpProcName, "wglCreateContext"))
+			return (FARPROC) &HlaeBcClt_wglCreateContext;
+		if (!lstrcmp(lpProcName, "wglDeleteContext"))
+			return (FARPROC) &HlaeBcClt_wglDeleteContext;
+		if (!lstrcmp(lpProcName, "wglMakeCurrent"))
+			return (FARPROC) &HlaeBcClt_wglMakeCurrent;
+		if (!lstrcmp(lpProcName, "ReleaseDC"))
+			return (FARPROC) &HlaeBcClt_ReleaseDC;
 
 		if (!lstrcmp(lpProcName,"DirectSoundCreate"))
 			return Hook_DirectSoundCreate(nResult);
@@ -977,7 +951,6 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 		}
 		case DLL_PROCESS_DETACH:
 		{
-			if (g_pSupportRender) delete g_pSupportRender;
 			break;
 		}
 		case DLL_THREAD_ATTACH:

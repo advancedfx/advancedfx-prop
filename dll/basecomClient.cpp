@@ -13,9 +13,16 @@
 	extern cl_enginefuncs_s* pEngfuncs;
 #endif
 
+#include "supportrender.h"
+
 #include "../shared/com/basecom.h"
 
 #include "basecomClient.h"
+
+extern CHlaeSupportRender *g_pSupportRender;
+
+// forward definition:
+HGLRC Init_Support_Renderer(HWND hMainWindow, HDC hMainWindowDC, int iWidth, int iHeight);
 
 
 HWND g_hwHlaeBcCltWindow = NULL; // Hlae BaseCom client reciever window
@@ -31,6 +38,14 @@ struct
 	int iY;
 	int nWidth;
 	int nHeight;
+
+	HDC hDc;
+
+	struct {
+		// some values are cached so they last longer than the render target:
+		CHlaeSupportRender::ERenderTarget oldTarget;
+		HDC oldOwnDC;
+	} SupportRenderInfo;
 	
 	struct {
 		int iX;
@@ -457,7 +472,7 @@ HWND APIENTRY HlaeBcClt_CreateWindowExA(DWORD dwExStyle,LPCTSTR lpClassName,LPCT
 	return g_HL_MainWindow;
 
 }
-
+#include <gl/gl.h>
 BOOL APIENTRY HlaeBcClt_DestroyWindow(HWND hWnd)
 {
 	if (hWnd!=NULL && hWnd == g_HL_MainWindow)
@@ -473,6 +488,8 @@ BOOL APIENTRY HlaeBcClt_DestroyWindow(HWND hWnd)
 		// clean up globals:
 		g_HL_MainWindow = NULL;
 		if(g_HL_WndClassA) delete g_HL_WndClassA; // I asume we won't use it anymore, this might be wrong in some rare cases.
+
+		if (g_pSupportRender) delete g_pSupportRender;
 	}
 
 	return DestroyWindow(hWnd);
@@ -481,46 +498,16 @@ BOOL APIENTRY HlaeBcClt_DestroyWindow(HWND hWnd)
 BOOL WINAPI HlaeBcClt_SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, UINT uFlags)
 {
 	if (!g_hHlaeServerWND || hWnd==NULL || hWnd != g_HL_MainWindow ) return SetWindowPos(hWnd, hWndInsertAfter, X, Y, cx, cy, uFlags);
-	return SetWindowPos(hWnd,HWND_TOP,0,0,cx,cy,uFlags);//SWP_SHOWWINDOW);
-}
 
-void HlaeBcCl_AdjustViewPort(int x, int y, int width, int height)
-// if we are using the server's gui, then we will use this to inform it about the size
-{
-	if(!g_hHlaeServerWND) return;
-
-	static int iMyLastWidth=-1;
-	static int iMyLastHeight=-1;
-
-	// firt check if we need to inform the server about changed coords,
-	// this has to be done carefully to avoid useless traffic:
-	if ((iMyLastWidth!=width || iMyLastHeight != height ) && width > 0 && height > 0)
+	if ( !(uFlags & SWP_NOSIZE) && (cx != g_HL_MainWindow_info.nWidth || cy != g_HL_MainWindow_info.nHeight ) )
 	{
-		pEngfuncs->Con_DPrintf("HlaeBcCl_AdjustViewPort: Cached values (%ix%i) outdated, forcing update (%ix%i).\n",iMyLastWidth,iMyLastHeight,width,height);
-
-		iMyLastWidth=width;
-		iMyLastHeight=height;
-
-		// update the server:
-		HlaeBc_UpdateWindow(width, height);
+		// contains size info
+		pEngfuncs->Con_DPrintf("Updating window size: %ix%i",cx,cy);
+		g_HL_MainWindow_info.nWidth=cx;
+		g_HL_MainWindow_info.nHeight=cy;
+		HlaeBc_UpdateWindow(cx,cy);
 	}
-}
-
-BOOL APIENTRY HlaeBcCl_GetCursorPos(LPPOINT lpPoint)
-{
-	BOOL bRet = GetCursorPos(lpPoint);
-	return bRet;
-	//if(!g_hHlaeServerGL) return bRet;
-
-	POINT dp = *lpPoint;
-
-	// translate mouse into H-L's coords:
-	lpPoint->x=g_HL_MainWindow_info.iX + g_HL_MainWindow_info.MouseTarget.iX;
-	lpPoint->y=g_HL_MainWindow_info.iY + g_HL_MainWindow_info.MouseTarget.iY;
-
-	pEngfuncs->Con_Printf("Mouse (%i%i,) -> (%i,%i)\n",dp.x,dp.y,lpPoint->x,lpPoint->y);
-
-	return bRet;
+	return SetWindowPos(hWnd,HWND_TOP,0,0,cx,cy,uFlags);//SWP_SHOWWINDOW);
 }
 
 HWND WINAPI HlaeBcClt_SetCapture( HWND hWnd)
@@ -539,9 +526,116 @@ BOOL WINAPI HlaeBcClt_ReleaseCapture( VOID )
 	return TRUE;
 }
 
+HGLRC WINAPI HlaeBcClt_wglCreateContext(HDC hDc)
+{
+	g_HL_MainWindow_info.hDc = hDc;
+	HGLRC tHGLRC = Init_Support_Renderer( g_HL_MainWindow, g_HL_MainWindow_info.hDc, g_HL_MainWindow_info.nWidth, g_HL_MainWindow_info.nHeight );
+
+	if (tHGLRC && g_pSupportRender)
+	{
+		g_HL_MainWindow_info.SupportRenderInfo.oldTarget = g_pSupportRender->GetRenderTarget();
+		if (CHlaeSupportRender::RT_OWNCONTEXT == g_HL_MainWindow_info.SupportRenderInfo.oldTarget)
+			g_HL_MainWindow_info.SupportRenderInfo.oldOwnDC = g_pSupportRender->GetOwnContextHDC();
+		else
+			g_HL_MainWindow_info.SupportRenderInfo.oldOwnDC = NULL;
+	}
+
+	return tHGLRC;
+}
+
+BOOL WINAPI HlaeBcClt_wglMakeCurrent(HDC hDc, HGLRC hGlRc)
+{
+	if (hGlRc && g_pSupportRender && g_pSupportRender->GetHGLRC() == hGlRc)
+		return g_pSupportRender->hlaeMakeCurrent(hDc, hGlRc);
+
+	BOOL bRet = wglMakeCurrent(hDc, hGlRc);
+
+	return bRet;
+
+}
+
+BOOL WINAPI HlaeBcClt_wglDeleteContext(HGLRC hGlRc)
+{
+	if (hGlRc && g_pSupportRender && g_pSupportRender->GetHGLRC() == hGlRc)
+		return g_pSupportRender->hlaeDeleteContext(hGlRc);
+
+	return wglDeleteContext(hGlRc);
+}
+
+int WINAPI HlaeBcClt_ReleaseDC( HWND hWnd, HDC hDc)
+{
+	return ReleaseDC(hWnd, hDc);
+}
+
 //
 // support functions:
 //
+
+HGLRC Init_Support_Renderer(HWND hMainWindow, HDC hMainWindowDC, int iWidth, int iHeight)
+{
+	if(g_pSupportRender)
+		return NULL; // already created
+	
+	// determine desired target renderer:
+	CHlaeSupportRender::ERenderTarget eRenderTarget = CHlaeSupportRender::RT_GAMEWINDOW;
+	CHlaeSupportRender::ERenderTarget eRenderTarget2 = CHlaeSupportRender::RT_NULL;
+
+	char *pStart=NULL;
+
+	if (pEngfuncs->CheckParm("-hlaerender", &pStart ))
+	{
+		if (!lstrcmp(pStart,"ownc"))
+		{
+			pEngfuncs->Con_DPrintf("RenderTarget: user wants RT_OWNCONTEXT\n");
+			eRenderTarget = CHlaeSupportRender::RT_OWNCONTEXT;
+		} else if (!lstrcmp(pStart,"fbo"))
+		{
+			pEngfuncs->Con_DPrintf("RenderTarget: user wants RT_FRAMEBUFFEROBJECT\n");
+			eRenderTarget = CHlaeSupportRender::RT_FRAMEBUFFEROBJECT;
+		} else if (!lstrcmp(pStart,"fboownc"))
+		{
+			pEngfuncs->Con_DPrintf("RenderTarget: user wants RT_FRAMEBUFFEROBJECT or RT_OWNCONTEXT\n");
+			eRenderTarget = CHlaeSupportRender::RT_FRAMEBUFFEROBJECT;
+			eRenderTarget2 = CHlaeSupportRender::RT_OWNCONTEXT;
+		}
+	}
+	if (eRenderTarget == CHlaeSupportRender::RT_GAMEWINDOW)
+		pEngfuncs->Con_DPrintf("RenderTarget: using default RT_GAMEWINDOW\n");
+
+	// Init support renderer:
+	g_pSupportRender = new CHlaeSupportRender(hMainWindow, iWidth, iHeight);
+
+	HGLRC tHGLRC;
+	unsigned short usTries = 0;
+	tHGLRC = g_pSupportRender->hlaeCreateContext(eRenderTarget,hMainWindowDC);
+	if (!tHGLRC && CHlaeSupportRender::RT_NULL != eRenderTarget2)
+	{
+		usTries++;
+		tHGLRC = g_pSupportRender->hlaeCreateContext(eRenderTarget,hMainWindowDC);
+	}
+
+	if (eRenderTarget == CHlaeSupportRender::RT_FRAMEBUFFEROBJECT || usTries>=1 && eRenderTarget2 == CHlaeSupportRender::RT_FRAMEBUFFEROBJECT)
+	{
+		CHlaeSupportRender::EFboSupport eHasFBO;
+		eHasFBO = g_pSupportRender->Has_EXT_FrameBufferObject();
+		if(eHasFBO == CHlaeSupportRender::FBOS_NO )
+			pEngfuncs->Con_DPrintf("EXT_FrameBufferObject supported.\n");
+		else if(eHasFBO == CHlaeSupportRender::FBOS_YES )
+			pEngfuncs->Con_DPrintf("EXT_FrameBufferObject not supported.\n");
+		else
+			pEngfuncs->Con_DPrintf("EXT_FrameBufferObject support could not be evaluated.\n");
+	}
+	else
+		pEngfuncs->Con_DPrintf("EXT_FrameBufferObject support was not questioned.\n");
+
+	if (!tHGLRC && ( usTries==0 && eRenderTarget!=CHlaeSupportRender::RT_GAMEWINDOW || usTries==1 && eRenderTarget2!=CHlaeSupportRender::RT_GAMEWINDOW ))
+	{
+		MessageBoxA(0,"All targets failed, trying RT_GAMEWINDOW","Init_Support_Renderer",MB_OK|MB_ICONERROR);
+		tHGLRC = g_pSupportRender->hlaeCreateContext(CHlaeSupportRender::RT_GAMEWINDOW,hMainWindowDC);
+	}
+
+	return tHGLRC;
+}
 
 HWND HlaeBc_GetGameWindow(void)
 {

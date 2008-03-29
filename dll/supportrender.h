@@ -20,9 +20,6 @@
 //   be considered to be supported by the customer's GL implementation or to
 //   work as expected.
 //
-//   The idea is to switch the target during recording only, so that the user
-//   still has some of the performance he is used to when not recroding.
-//
 //   The following targets are supported by the class:
 //
 //   RT_GAMEWINDOW:
@@ -49,90 +46,120 @@
 //    a GL_RGBA and a GL_DEPTH_COMPONENT RenderBuffer Object, so no stenceling
 //    is buffered at the moment).
 
+#include <windows.h>
+
 class CHlaeSupportRender
+// please read the comment at the top of this file for further usuage instructions
 {
 public:
 	enum ERenderTarget
 	{
-		RT_GAMEWINDOW,
-		RT_OWNCONTEXT,
-		RT_FRAMEBUFFEROBJECT
+		RT_NULL, // not set yet
+		RT_GAMEWINDOW, // read comment at top of file
+		RT_OWNCONTEXT, // .
+		RT_FRAMEBUFFEROBJECT // .
 	};
 
-	CHlaeSupportRender(void *hGameWindow, int iWidth, int iHeight);
-	// prepares the targets:
-	//   DisplayTarget - always RT_GAMEWINDOW
-	//   RenderTarget - defaults to RT_GAMEWINDOW
+	enum EFboSupport
+	{
+		FBOS_UNKNOWN, // could not be determined (yet)
+		FBOS_NO, // EXT_framebuffer_object is not supported
+		FBOS_YES // EXT_framebuffer_object is supported
+	};
+
+	CHlaeSupportRender(HWND hGameWindow, int iWidth, int iHeight);
+	// defaults RenderTarget to RT_NULL
 	// hGameWindow - HWND Window Handle of the GameWindow
 	// iWidth - total width in pixels of the image data (GameResolution)
 	// iHeight - total height in pixels of the image data (GameResolution)
 
 	~CHlaeSupportRender();
-	// will switch to DisplayTarget, restore render target to RT_GAMEWINDOW and clean up.
+	// if RenderTarget is different from RT_NULL hlaeDeleteContext will be implecitly called on destroy
 
-	bool Has_EXT_FrameBufferObject();
-	// returns true if EXT_framebuffer_object supported (doesn't mean it supports all we will need though), otherwise false
+	EFboSupport Has_EXT_FrameBufferObject();
+	// will only return s.th. useful when a RT_FRAMEBUFFEROBJECT target was created or the creation attempt at least advanced far enough
+	// returns
+    //   FBOS_YES     : if EXT_framebuffer_object supported (doesn't mean it supports all we will need though)
+	//   FBOS_NO      : if not supported 
+	//   FBOS_UNKNOWN : the support may not be determined before the context has been created
 
-	ERenderTarget SetRenderTarget (ERenderTarget newRenderTarget, bool bSoftFallBack=true);
-	// use this to set a new render target, call only occassionally (overhead),
-	// Make sure it's safe to call it (don't call while things are still rendered (i.e. between glBegin and glEnd))
-	// Returns: the new render target (if s.th. went wrong this can be different from the requested target)
-	// newRenderTarget - the desired target, for more info read the comments at the top of this file
-	// bSoftFallBack - if true and newRenderTarget is RT_FRAMEBUFFEROBJECT and it is not available, SetTarget will try RT_OWNCONTEXT before falling back to the default target
+	ERenderTarget GetRenderTarget();
+	// returns the current RenderTarget
 
+	HGLRC GetHGLRC();
+	// returns handle to the current HGLRC or NULL on error
+
+	HDC	GetOwnContextHDC();
+	// only valid when RenderTarget is RT_OWNCONTEXT
+	// returns the handle to the internal HDC or NULL on error
+
+	HGLRC hlaeCreateContext (ERenderTarget eRenderTarget, HDC hGameWindowDC);
+	// this should be placed in a wglCreateContext hook
+	// ATTENTION: Make sure you use this for the right HDC and the right CreateContext call only!
+	// ATTENTION: If there is already a managed render target, the call will fail!
+	// returns NULL on fail, otherwise the OpenGLContext device handle
+	// eRenderTarget -> read the comment at the top of this file
+	// hGameWindowDC -> DC That we shall derive from
 	//
-	// rendering control:
-	//
-
 	// To speed up rendering you can:
-	// - avoid unnecessary switches between RenderTarget and DisplayTarget,
-	//   especially with RT_OWNCONTEXT these can be a bit expensive
+	// - avoid using RT_OWNCONTEXT (use RT_FRAMEBUFFEROBJECT or RT_GAMEWINDOW instead whenever possible)
 	// - reduce calls to DisplayRenderTarget in case you don't need to display every frame
+	
+	BOOL hlaeDeleteContext (HGLRC hGlRc);
+	// this should be placed in a wglDelteContext hook
+	// ATTENTION: If no render target is present (RT_NULL) or hGlRc is not the one managed by this class, this call will fail.
+	// may also be called ~CHlaeSupportRender() is RenderTarget is different from RT_NULL
 
-	void SwitchToRenderTarget(void);
-	// Shall be called before any rendering starts that shall be carried out on the rendertarget
-	// Make sure it's safe to call it (don't call while things are still rendered (i.e. between glBegin and glEnd))
+	BOOL hlaeMakeCurrent(HDC hGameWindowDC, HGLRC hGlRc);
+	// this should be placed in a wglMakeCurrent hook
+	// ATTENTION: If no render target is present (RT_NULL) or hGlRc is not the one managed by this class, this call will fail.
 
-	void SwitchToDisplayTarget(void);
-	// Shall be called before any rendering starts that shall be carried out on the DisplayTarget.
-	// The DisplayTarget is always RT_GAMEWINDOW
-	// Make sure it's safe to call it (don't call while things are still rendered (i.e. between glBegin and glEnd))
-
-	void DisplayRenderTarget(void);
-	// Displays the (color buffer) contents of RenderTarget on the DisplayTarget.
-	// The DisplayTarget is always RT_GAMEWINDOW
-	// Make sure it's safe to call it (don't call while things are still rendered (i.e. between glBegin and glEnd))
+	BOOL hlaeSwapBuffers(HDC hGameWindowDC);
+	// this should be placed in a [wgl]SwapBuffers hook
+	// ATTENTION: If no render target is present (RT_NULL) this call will fail.
+	// ATTENTION: the caller has to make sure, that the context that is to be swapped is the right one
 
 private:
 	ERenderTarget _eRenderTarget;
 
-	void *_hGameWindow;
+	HWND _hGameWindow;
 	int _iWidth;
 	int _iHeight;
 
-	bool _bFBOsupported; // EXT_framebuffer_object supported?
-	
-	// for FrameBufferObject:
-	bool _bHaveFramBufferObject;
-	unsigned int _frameBuffer;
-	unsigned int _depthRenderBuffer;
-	unsigned int _rgbaRenderBuffer;
+	EFboSupport _eFBOsupported; // EXT_framebuffer_object support check
 
-	// for OwnContext:
-	bool _bHaveOwnContext;
-	void *_hOwnContextDC;
-	void *_hOwnContextGLRC;
-	void *_hOwnContextBITMAP;
-	void *_hGameContextDC;
-	void *_hGameContextGLRC;
+	// shared:
+	HGLRC	_ownHGLRC;
 
-	bool _CreateFrameBuffer();
-	bool _ReleaseFrameBuffer();
+	// for FrameBufferObject only:
+	struct _FrameBufferObject_s
+	{
+		unsigned int _frameBuffer;
+		unsigned int _depthRenderBuffer;
+		unsigned int _rgbaRenderBuffer;
+	} _FrameBufferObject_r;
 
-	bool _CreateOwnContext();
-	bool _ReleaseOwnContext();
+	// for OwnContext only:
+	struct _OwnContext_s
+	{
+		HDC		ownHDC;
+		HBITMAP	ownHBITMAP;
+	} _OwnContext_r;
 
-	void _CleanUp(void);
+	// functions:
+
+	HGLRC	_Create_RT_GAMEWINDOW (HDC hGameWindowDC);
+	BOOL	_Delete_RT_GAMEWINDOW ();
+	BOOL	_MakeCurrent_RT_GAMEWINDOW (HDC hGameWindowDC);
+
+	HGLRC	_Create_RT_OWNCONTEXT (HDC hGameWindowDC);
+	BOOL	_Delete_RT_OWNCONTEXT ();
+	BOOL	_MakeCurrent_RT_OWNCONTEXT (HDC hGameWindowDC);
+	BOOL	_SwapBuffers_RT_GAMEWINDOW (HDC hGameWindowDC);
+
+	HGLRC	_Create_RT_FRAMEBUFFEROBJECT (HDC hGameWindowDC);
+	BOOL	_Delete_RT_FRAMEBUFFEROBJECT ();
+	BOOL	_MakeCurrent_RT_FRAMEBUFFEROBJECT (HDC hGameWindowDC);
 };
 
 #endif
