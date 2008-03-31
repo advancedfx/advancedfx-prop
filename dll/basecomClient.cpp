@@ -534,8 +534,8 @@ HGLRC WINAPI HlaeBcClt_wglCreateContext(HDC hDc)
 	if (tHGLRC && g_pSupportRender)
 	{
 		g_HL_MainWindow_info.SupportRenderInfo.oldTarget = g_pSupportRender->GetRenderTarget();
-		if (CHlaeSupportRender::RT_OWNCONTEXT == g_HL_MainWindow_info.SupportRenderInfo.oldTarget)
-			g_HL_MainWindow_info.SupportRenderInfo.oldOwnDC = g_pSupportRender->GetOwnContextHDC();
+		if (CHlaeSupportRender::RT_MEMORYDC == g_HL_MainWindow_info.SupportRenderInfo.oldTarget)
+			g_HL_MainWindow_info.SupportRenderInfo.oldOwnDC = g_pSupportRender->GetInternalHDC();
 		else
 			g_HL_MainWindow_info.SupportRenderInfo.oldOwnDC = NULL;
 	}
@@ -578,25 +578,19 @@ HGLRC Init_Support_Renderer(HWND hMainWindow, HDC hMainWindowDC, int iWidth, int
 	
 	// determine desired target renderer:
 	CHlaeSupportRender::ERenderTarget eRenderTarget = CHlaeSupportRender::RT_GAMEWINDOW;
-	CHlaeSupportRender::ERenderTarget eRenderTarget2 = CHlaeSupportRender::RT_NULL;
 
 	char *pStart=NULL;
 
 	if (pEngfuncs->CheckParm("-hlaerender", &pStart ))
 	{
-		if (!lstrcmp(pStart,"ownc"))
+		if (!lstrcmp(pStart,"memdc"))
 		{
-			pEngfuncs->Con_DPrintf("RenderTarget: user wants RT_OWNCONTEXT\n");
-			eRenderTarget = CHlaeSupportRender::RT_OWNCONTEXT;
+			pEngfuncs->Con_DPrintf("RenderTarget: user wants RT_MEMORYDC;\n");
+			eRenderTarget = CHlaeSupportRender::RT_MEMORYDC;
 		} else if (!lstrcmp(pStart,"fbo"))
 		{
 			pEngfuncs->Con_DPrintf("RenderTarget: user wants RT_FRAMEBUFFEROBJECT\n");
 			eRenderTarget = CHlaeSupportRender::RT_FRAMEBUFFEROBJECT;
-		} else if (!lstrcmp(pStart,"fboownc"))
-		{
-			pEngfuncs->Con_DPrintf("RenderTarget: user wants RT_FRAMEBUFFEROBJECT or RT_OWNCONTEXT\n");
-			eRenderTarget = CHlaeSupportRender::RT_FRAMEBUFFEROBJECT;
-			eRenderTarget2 = CHlaeSupportRender::RT_OWNCONTEXT;
 		}
 	}
 	if (eRenderTarget == CHlaeSupportRender::RT_GAMEWINDOW)
@@ -606,33 +600,10 @@ HGLRC Init_Support_Renderer(HWND hMainWindow, HDC hMainWindowDC, int iWidth, int
 	g_pSupportRender = new CHlaeSupportRender(hMainWindow, iWidth, iHeight);
 
 	HGLRC tHGLRC;
-	unsigned short usTries = 0;
 	tHGLRC = g_pSupportRender->hlaeCreateContext(eRenderTarget,hMainWindowDC);
-	if (!tHGLRC && CHlaeSupportRender::RT_NULL != eRenderTarget2)
-	{
-		usTries++;
-		tHGLRC = g_pSupportRender->hlaeCreateContext(eRenderTarget,hMainWindowDC);
-	}
 
-	if (eRenderTarget == CHlaeSupportRender::RT_FRAMEBUFFEROBJECT || usTries>=1 && eRenderTarget2 == CHlaeSupportRender::RT_FRAMEBUFFEROBJECT)
-	{
-		CHlaeSupportRender::EFboSupport eHasFBO;
-		eHasFBO = g_pSupportRender->Has_EXT_FrameBufferObject();
-		if(eHasFBO == CHlaeSupportRender::FBOS_NO )
-			pEngfuncs->Con_DPrintf("EXT_FrameBufferObject supported.\n");
-		else if(eHasFBO == CHlaeSupportRender::FBOS_YES )
-			pEngfuncs->Con_DPrintf("EXT_FrameBufferObject not supported.\n");
-		else
-			pEngfuncs->Con_DPrintf("EXT_FrameBufferObject support could not be evaluated.\n");
-	}
-	else
-		pEngfuncs->Con_DPrintf("EXT_FrameBufferObject support was not questioned.\n");
-
-	if (!tHGLRC && ( usTries==0 && eRenderTarget!=CHlaeSupportRender::RT_GAMEWINDOW || usTries==1 && eRenderTarget2!=CHlaeSupportRender::RT_GAMEWINDOW ))
-	{
-		MessageBoxA(0,"All targets failed, trying RT_GAMEWINDOW","Init_Support_Renderer",MB_OK|MB_ICONERROR);
-		tHGLRC = g_pSupportRender->hlaeCreateContext(CHlaeSupportRender::RT_GAMEWINDOW,hMainWindowDC);
-	}
+	if (!tHGLRC)
+		MessageBoxA(0,"hlaeCreateContext failed.","Init_Support_Renderer ERROR",MB_OK|MB_ICONERROR);
 
 	return tHGLRC;
 }

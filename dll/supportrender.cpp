@@ -67,23 +67,18 @@ PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVEXTPROC glGetFramebufferAttachmentParame
 PFNGLGENERATEMIPMAPEXTPROC glGenerateMipmapEXT = NULL;
 
 CHlaeSupportRender::EFboSupport InstallFrameBufferExtentsion(void)
-// do not install before a context has been created, because
-// in this case glGetString will not work (return 0)
+// ATTENTION:
+//   do not install before a context has been created, because
+//   in this case glGetString will not work (return 0)
 {
 	if (g_bEXT_framebuffer_object) return CHlaeSupportRender::FBOS_YES;
-
-	if (!wglGetCurrentContext())
-	{
-		ERROR_MESSAGE("InstallFrameBufferExtentsion called before context was installed")
-		return CHlaeSupportRender::FBOS_UNKNOWN;
-	}
 
 	CHlaeSupportRender::EFboSupport retTemp=CHlaeSupportRender::FBOS_NO;
 	char *pExtStr = (char *)(glGetString( GL_EXTENSIONS ));
 	if (!pExtStr)
 	{
 		retTemp = CHlaeSupportRender::FBOS_UNKNOWN;
-		ERROR_MESSAGE("glGetString failed!")
+		ERROR_MESSAGE("glGetString failed!\nInstallFrameBufferExtentsion called before context was currrent?")
 	}
 	else if (strstr( pExtStr, "EXT_framebuffer_object" ))
 	{
@@ -158,12 +153,24 @@ HGLRC CHlaeSupportRender::GetHGLRC()
 	return _ownHGLRC;
 }
 
-HDC	CHlaeSupportRender::GetOwnContextHDC()
+HDC	CHlaeSupportRender::GetInternalHDC()
 {
-	if (RT_OWNCONTEXT != _eRenderTarget)
-		return NULL;
+	switch (_eRenderTarget)
+	{
+	case RT_MEMORYDC:
+		return _MemoryDc_r.ownHDC;
+	case RT_HIDDENWINDOW:
+		return _HiddenWindow_r.ownHDC;
+	}
+	return NULL;
+}
 
-	return _OwnContext_r.ownHDC;
+HWND CHlaeSupportRender::GetInternalHWND()
+{
+	if (_eRenderTarget == RT_HIDDENWINDOW)
+		return _HiddenWindow_r.ownHWND;
+
+	return NULL;
 }
 
 HGLRC CHlaeSupportRender::hlaeCreateContext (ERenderTarget eRenderTarget, HDC hGameWindowDC)
@@ -181,8 +188,8 @@ HGLRC CHlaeSupportRender::hlaeCreateContext (ERenderTarget eRenderTarget, HDC hG
 		return NULL;
 	case RT_GAMEWINDOW:
 		return _Create_RT_GAMEWINDOW (hGameWindowDC);
-	case RT_OWNCONTEXT:
-		return _Create_RT_OWNCONTEXT (hGameWindowDC);
+	case RT_MEMORYDC:
+		return _Create_RT_MEMORYDC (hGameWindowDC);
 	case RT_FRAMEBUFFEROBJECT:
 		return _Create_RT_FRAMEBUFFEROBJECT (hGameWindowDC);
 	}
@@ -208,8 +215,8 @@ BOOL CHlaeSupportRender::hlaeDeleteContext (HGLRC hGlRc)
 	{
 	case RT_GAMEWINDOW:
 		return _Delete_RT_GAMEWINDOW ();
-	case RT_OWNCONTEXT:
-		return _Delete_RT_OWNCONTEXT ();
+	case RT_MEMORYDC:
+		return _Delete_RT_MEMORYDC ();
 	case RT_FRAMEBUFFEROBJECT:
 		return _Delete_RT_FRAMEBUFFEROBJECT ();
 	}
@@ -234,9 +241,9 @@ BOOL CHlaeSupportRender::hlaeMakeCurrent(HDC hGameWindowDC, HGLRC hGlRc)
 	switch (_eRenderTarget)
 	{
 	case RT_GAMEWINDOW:
-		return _MakeCurrent_RT_GAMEWINDOW (hGameWindowDC);
-	case RT_OWNCONTEXT:
-		return _MakeCurrent_RT_OWNCONTEXT (hGameWindowDC);
+		return wglMakeCurrent(hGameWindowDC,_ownHGLRC);
+	case RT_MEMORYDC:
+		return _MakeCurrent_RT_MEMORYDC (hGameWindowDC);
 	case RT_FRAMEBUFFEROBJECT:
 		return _MakeCurrent_RT_FRAMEBUFFEROBJECT (hGameWindowDC);
 	}
@@ -257,8 +264,8 @@ BOOL CHlaeSupportRender::hlaeSwapBuffers(HDC hGameWindowDC)
 	{
 	case RT_GAMEWINDOW:
 		return SwapBuffers (hGameWindowDC);
-	case RT_OWNCONTEXT:
-		return _SwapBuffers_RT_GAMEWINDOW (hGameWindowDC);
+	case RT_MEMORYDC:
+		return _SwapBuffers_RT_MEMORYDC (hGameWindowDC);
 	case RT_FRAMEBUFFEROBJECT:
 		return SwapBuffers (hGameWindowDC);
 	}
@@ -266,36 +273,6 @@ BOOL CHlaeSupportRender::hlaeSwapBuffers(HDC hGameWindowDC)
 	ERROR_MESSAGE("cannot SwapBuffers unknown target")
 	return FALSE;
 }
-
-/*void CHlaeSupportRender::SwitchToRenderTarget(void)
-{
-	switch(_eRenderTarget)
-	{
-	case RT_OWNCONTEXT:
-		glPushAttrib(GL_ALL_ATTRIB_BITS);
-		wglMakeCurrent((HDC)_hOwnContextDC,(HGLRC)_hOwnContextGLRC);
-		glPopAttrib();
-		break;
-	case RT_FRAMEBUFFEROBJECT:
-		glBindFramebufferEXT( GL_FRAMEBUFFER_EXT,_frameBuffer );
-		break;
-	};
-}
-
-void CHlaeSupportRender::SwitchToDisplayTarget(void)
-{
-	switch(_eRenderTarget)
-	{
-	case RT_OWNCONTEXT:
-		glPushAttrib(GL_ALL_ATTRIB_BITS);
-		wglMakeCurrent((HDC)_hGameContextDC,(HGLRC)_hGameContextGLRC);
-		glPopAttrib();
-		break;
-	case RT_FRAMEBUFFEROBJECT:
-		glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0 );
-		break;
-	};
-}*/
 
 HGLRC CHlaeSupportRender::_Create_RT_GAMEWINDOW (HDC hGameWindowDC)
 {
@@ -319,34 +296,29 @@ BOOL CHlaeSupportRender::_Delete_RT_GAMEWINDOW ()
 	return wbRet;
 }
 
-BOOL CHlaeSupportRender::_MakeCurrent_RT_GAMEWINDOW (HDC hGameWindowDC)
+HGLRC CHlaeSupportRender::_Create_RT_MEMORYDC (HDC hGameWindowDC)
 {
-	return wglMakeCurrent(hGameWindowDC,_ownHGLRC);
-}
-
-HGLRC CHlaeSupportRender::_Create_RT_OWNCONTEXT (HDC hGameWindowDC)
-{
-	_OwnContext_r.ownHDC = CreateCompatibleDC(hGameWindowDC);
-	if (!_OwnContext_r.ownHDC)
+	_MemoryDc_r.ownHDC = CreateCompatibleDC(hGameWindowDC);
+	if (!_MemoryDc_r.ownHDC)
 	{
 		ERROR_MESSAGE_LE("could not create compatible context")
 		return NULL;
 	}
 
-    _OwnContext_r.ownHBITMAP = CreateCompatibleBitmap ( hGameWindowDC, _iWidth, _iHeight );
-	if (!_OwnContext_r.ownHBITMAP)
+    _MemoryDc_r.ownHBITMAP = CreateCompatibleBitmap ( hGameWindowDC, _iWidth, _iHeight );
+	if (!_MemoryDc_r.ownHBITMAP)
 	{
 		ERROR_MESSAGE_LE("could not create compatible bitmap")
-		DeleteDC(_OwnContext_r.ownHDC);
+		DeleteDC(_MemoryDc_r.ownHDC);
 		return NULL;
 	}
 
-    HGDIOBJ tobj = SelectObject ( _OwnContext_r.ownHDC, _OwnContext_r.ownHBITMAP );
+    HGDIOBJ tobj = SelectObject ( _MemoryDc_r.ownHDC, _MemoryDc_r.ownHBITMAP );
 	if (!tobj || tobj == HGDI_ERROR)
 	{
 		ERROR_MESSAGE_LE("could not select bitmap")
-		DeleteObject(_OwnContext_r.ownHBITMAP);
-		DeleteDC(_OwnContext_r.ownHDC);
+		DeleteObject(_MemoryDc_r.ownHBITMAP);
+		DeleteDC(_MemoryDc_r.ownHDC);
 		return NULL;
 	}
 
@@ -357,42 +329,42 @@ HGLRC CHlaeSupportRender::_Create_RT_OWNCONTEXT (HDC hGameWindowDC)
 	ppfd->dwFlags = (ppfd->dwFlags & !( (DWORD)PFD_DRAW_TO_WINDOW | (DWORD)PFD_DOUBLEBUFFER  )) | PFD_DRAW_TO_BITMAP;
 	//ppfd->dwFlags = PFD_DRAW_TO_BITMAP | PFD_SUPPORT_OPENGL | PFD_GENERIC_ACCELERATED;
 
-	iPixelFormat = ChoosePixelFormat(_OwnContext_r.ownHDC,ppfd);
+	iPixelFormat = ChoosePixelFormat(_MemoryDc_r.ownHDC,ppfd);
 	if (iPixelFormat == 0)
 	{
 		ERROR_MESSAGE_LE("could not choose PixelFormat")
 		delete ppfd;
-		DeleteObject(_OwnContext_r.ownHBITMAP);
-		DeleteDC(_OwnContext_r.ownHDC);
+		DeleteObject(_MemoryDc_r.ownHBITMAP);
+		DeleteDC(_MemoryDc_r.ownHDC);
 		return NULL;
 	}
 
-	if (TRUE != SetPixelFormat(_OwnContext_r.ownHDC,iPixelFormat,ppfd))
+	if (TRUE != SetPixelFormat(_MemoryDc_r.ownHDC,iPixelFormat,ppfd))
 	{
 		ERROR_MESSAGE_LE("could not Set PixelFormat")
 		delete ppfd;
-		DeleteObject(_OwnContext_r.ownHBITMAP);
-		DeleteDC(_OwnContext_r.ownHDC);
+		DeleteObject(_MemoryDc_r.ownHBITMAP);
+		DeleteDC(_MemoryDc_r.ownHDC);
 		return NULL;
 	}
 
 	delete ppfd;
 
-	_ownHGLRC = wglCreateContext(_OwnContext_r.ownHDC);
+	_ownHGLRC = wglCreateContext(_MemoryDc_r.ownHDC);
 	if (!_ownHGLRC)
 	{
 		ERROR_MESSAGE_LE("could not create own context")
-		DeleteObject(_OwnContext_r.ownHBITMAP);
-		DeleteDC(_OwnContext_r.ownHDC);
+		DeleteObject(_MemoryDc_r.ownHBITMAP);
+		DeleteDC(_MemoryDc_r.ownHDC);
 		return NULL;
 	}
 
-	_eRenderTarget=RT_OWNCONTEXT;
+	_eRenderTarget=RT_MEMORYDC;
 
 	return _ownHGLRC;
 }
 
-BOOL CHlaeSupportRender::_Delete_RT_OWNCONTEXT ()
+BOOL CHlaeSupportRender::_Delete_RT_MEMORYDC ()
 {
 	BOOL wbRet = wglDeleteContext(_ownHGLRC);
 	
@@ -402,83 +374,113 @@ BOOL CHlaeSupportRender::_Delete_RT_OWNCONTEXT ()
 	_eRenderTarget=RT_NULL;
 	_ownHGLRC=NULL;
 
-	DeleteObject(_OwnContext_r.ownHBITMAP);
-	DeleteDC(_OwnContext_r.ownHDC);
+	DeleteObject(_MemoryDc_r.ownHBITMAP);
+	DeleteDC(_MemoryDc_r.ownHDC);
 
 	return wbRet;
 }
 
-BOOL CHlaeSupportRender::_MakeCurrent_RT_OWNCONTEXT (HDC hGameWindowDC)
+BOOL CHlaeSupportRender::_MakeCurrent_RT_MEMORYDC (HDC hGameWindowDC)
 {
-	return wglMakeCurrent( _OwnContext_r.ownHDC, _ownHGLRC );
+	return wglMakeCurrent( _MemoryDc_r.ownHDC, _ownHGLRC );
 }
 
-BOOL CHlaeSupportRender::_SwapBuffers_RT_GAMEWINDOW (HDC hGameWindowDC)
+BOOL CHlaeSupportRender::_SwapBuffers_RT_MEMORYDC (HDC hGameWindowDC)
 {
 	BOOL bwRet=FALSE;
-	bwRet=BitBlt(hGameWindowDC,0,0,_iWidth,_iHeight,_OwnContext_r.ownHDC,0,0,SRCCOPY);
+	bwRet=BitBlt(hGameWindowDC,0,0,_iWidth,_iHeight,_MemoryDc_r.ownHDC,0,0,SRCCOPY);
 	//SwapBuffers(hGameWindowDC);
 	return bwRet;
 }
 
 HGLRC CHlaeSupportRender::_Create_RT_FRAMEBUFFEROBJECT (HDC hGameWindowDC)
 {
-	return NULL;
+	_ownHGLRC = wglCreateContext(hGameWindowDC);
+	
+	if(_ownHGLRC) _eRenderTarget=RT_FRAMEBUFFEROBJECT;
+
+	return _ownHGLRC;
 }
 
 BOOL CHlaeSupportRender::_Delete_RT_FRAMEBUFFEROBJECT ()
 {
-	return FALSE;
+	_Delete_RT_FRAMEBUFFEROBJECT_onlyFBO ();
+
+	BOOL wbRet = wglDeleteContext(_ownHGLRC);
+
+	if (TRUE != wbRet)
+		return wbRet;
+
+	_eRenderTarget=RT_NULL;
+	_ownHGLRC=NULL;
+	
+	return wbRet;
 }
 
 BOOL CHlaeSupportRender::_MakeCurrent_RT_FRAMEBUFFEROBJECT (HDC hGameWindowDC)
 {
-	return FALSE;
-}
+	BOOL bwResult = wglMakeCurrent( hGameWindowDC, _ownHGLRC );
 
+	// since we have a current context we can also query the extensions now:
+	// (WHY DOES THIS NOT WORK EARLIER BTW?, CAN WE DETECT THAT EARLIER?)
+	_eFBOsupported = InstallFrameBufferExtentsion();
 
-/* bool CHlaeSupportRender::_CreateFrameBuffer()
-{
-	if (!_bFBOsupported || _bHaveFramBufferObject)
+	if (FBOS_YES != _eFBOsupported)
 	{
-		if (!_bFBOsupported) ERROR_MESSAGE("FBO not supported OR already present")
-		return false;
+		if (FBOS_NO == _eFBOsupported)
+			ERROR_MESSAGE("EXT_FrameBufferObject not supported!\nFalling back to RT_GAMEWINDOW ...")
+		else
+			ERROR_MESSAGE("EXT_FrameBufferObject support could not be evaluated!\nFalling back to RT_GAMEWINDOW ...")
+		
+		_eRenderTarget = RT_GAMEWINDOW;
+
+		return bwResult;
 	}
 
-	glGenFramebuffersEXT( 1, &_frameBuffer );
+	// create FrameBufferObject:
+	glGenFramebuffersEXT( 1, &_FrameBufferObject_r.FBOid );
 
-	glGenRenderbuffersEXT( 1, &_depthRenderBuffer );
-	glBindRenderbufferEXT( GL_RENDERBUFFER_EXT, _depthRenderBuffer );
+	// create depthRenderBuffer:
+	glGenRenderbuffersEXT( 1, &_FrameBufferObject_r.depthRenderBuffer );
+	glBindRenderbufferEXT( GL_RENDERBUFFER_EXT, _FrameBufferObject_r.depthRenderBuffer );
 	glRenderbufferStorageEXT( GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT, _iWidth, _iHeight );
-	glFramebufferRenderbufferEXT( GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, _depthRenderBuffer );
 
-	glGenRenderbuffersEXT( 1, &_rgbaRenderBuffer );
-	glBindRenderbufferEXT( GL_RENDERBUFFER_EXT, _rgbaRenderBuffer );
+	// create rgbaRenderBuffer:
+	glGenRenderbuffersEXT( 1, &_FrameBufferObject_r.rgbaRenderBuffer );
+	glBindRenderbufferEXT( GL_RENDERBUFFER_EXT, _FrameBufferObject_r.rgbaRenderBuffer );
 	glRenderbufferStorageEXT( GL_RENDERBUFFER_EXT, GL_RGBA, _iWidth, _iHeight );
-	glFramebufferRenderbufferEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, _rgbaRenderBuffer );
 
+	// bind and setup FrameBufferObject (select buffers):
+	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, _FrameBufferObject_r.FBOid );
+	glFramebufferRenderbufferEXT( GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, _FrameBufferObject_r.depthRenderBuffer );
+	glFramebufferRenderbufferEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, _FrameBufferObject_r.rgbaRenderBuffer );
+
+	// check if FBO status is complete:
 	if (GL_FRAMEBUFFER_COMPLETE_EXT != glCheckFramebufferStatusEXT( GL_FRAMEBUFFER_EXT ))
 	{
-		ERROR_MESSAGE("FBO status not complete")
-		return false;
+		ERROR_MESSAGE("FrameBufferObject status not complete\nFalling back to RT_GAMEWINDOW ...")
+
+		_Delete_RT_FRAMEBUFFEROBJECT_onlyFBO ();
+
+		_eRenderTarget=RT_GAMEWINDOW;
+
+		return bwResult;
 	}
+		
 
-	return true;
+	return bwResult;
 }
 
-bool CHlaeSupportRender::_ReleaseFrameBuffer()
+void CHlaeSupportRender::_Delete_RT_FRAMEBUFFEROBJECT_onlyFBO ()
 {
-	if (!_bHaveFramBufferObject) return false;
+	if (_FrameBufferObject_r.FBOid)
+	{
+		glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0 );
 
-	_bHaveFramBufferObject = false;
+		glDeleteFramebuffersEXT( 1, &_FrameBufferObject_r.FBOid );
+		_FrameBufferObject_r.FBOid = 0;
 
-	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0 );
-
-	glDeleteFramebuffersEXT( 1, &_frameBuffer );
-
-	glDeleteRenderbuffersEXT( 1, &_rgbaRenderBuffer );
-	glDeleteRenderbuffersEXT( 1, &_depthRenderBuffer );
-
-	return true;
+		glDeleteRenderbuffersEXT( 1, &_FrameBufferObject_r.rgbaRenderBuffer );
+		glDeleteRenderbuffersEXT( 1, &_FrameBufferObject_r.depthRenderBuffer );
+	}
 }
-*/
