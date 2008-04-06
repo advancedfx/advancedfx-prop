@@ -581,7 +581,9 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 		pEngfuncs->pfnGetScreenInfo(&screeninfo);
 		pEngfuncs->Con_DPrintf("ScreenRes: %dx%d\n", screeninfo.iWidth, screeninfo.iHeight);
 
+#if MDT_COMPILE_FOR_GUI
 		g_Filming.SupplySupportRenderer(g_pSupportRender);
+#endif
 
 		g_Filming.setScreenSize(screeninfo.iWidth,screeninfo.iHeight);
 
@@ -777,7 +779,12 @@ BOOL APIENTRY my_wglSwapBuffers(HDC hDC)
 	}
 
 	// do the switching of buffers as requersted:
-	if (!bRecordSwapped) bResWglSwapBuffers = g_pSupportRender->hlaeSwapBuffers(hDC); //(*pwglSwapBuffers)(hDC);
+	if (!bRecordSwapped)
+#if MDT_COMPILE_FOR_GUI 
+		bResWglSwapBuffers = g_pSupportRender->hlaeSwapBuffers(hDC);
+#else
+		bResWglSwapBuffers = (*pwglSwapBuffers)(hDC);
+#endif
 
 	// no we have captured the image (by default from backbuffer) and display it on the front, now we can prepare the new backbuffer image if required.
 
