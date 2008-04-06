@@ -279,6 +279,12 @@ extern unsigned long ulHLAddr_net_message;
 extern unsigned long ulHLAddr_msg_readcount;
 extern unsigned long ulHLAddr_CL_ParseServerMessage_CmdRead;
 extern unsigned long ulHLAddr_DTOURSZ_CL_ParseServerMessage_CmdRead;
+extern unsigned long ulHLAddr_GetClientColor;
+extern unsigned long ulHLAddr_DTOURSZ_GetClientColor;
+extern unsigned long ulHLAddr_unkInlineClientColorA;
+extern unsigned long ulHLAddr_SZ_unkInlineClientColorA;
+extern unsigned long ulHLAddr_unkInlineClientColorV;
+extern unsigned long ulHLAddr_SZ_unkInlineClientColorV;
 
 //
 // macros for accessing the header exports (for compabtility with old code):
@@ -322,11 +328,19 @@ extern unsigned long ulHLAddr_DTOURSZ_CL_ParseServerMessage_CmdRead;
 #define HL_ADDR_soundtime ulHLAddr_soundtime
 #define HL_ADDR_paintedtime ulHLAddr_paintedtime
 
-#define HL_ADDR_CL_ParseServerMessage ulHLAddr_CL_ParseServerMessage;
-#define HL_ADDR_net_message_cursize ulHLAddr_net_message_cursize;
-#define HL_ADDR_net_message ulHLAddr_net_message;
-#define HL_ADDR_msg_readcount ulHLAddr_msg_readcount;
-#define HL_ADDR_CL_ParseServerMessage_CmdRead ulHLAddr_CL_ParseServerMessage_CmdRead;
-#define HL_ADDR_DTOURSZ_CL_ParseServerMessage_CmdRead ulHLAddr_DTOURSZ_CL_ParseServerMessage_CmdRead;
+#define HL_ADDR_CL_ParseServerMessage ulHLAddr_CL_ParseServerMessage
+#define HL_ADDR_net_message_cursize ulHLAddr_net_message_cursize
+#define HL_ADDR_net_message ulHLAddr_net_message
+#define HL_ADDR_msg_readcount ulHLAddr_msg_readcount
+#define HL_ADDR_CL_ParseServerMessage_CmdRead ulHLAddr_CL_ParseServerMessage_CmdRead
+#define HL_ADDR_DTOURSZ_CL_ParseServerMessage_CmdRead ulHLAddr_DTOURSZ_CL_ParseServerMessage_CmdRead
+
+#define HL_ADDR_GetClientColor ulHLAddr_GetClientColor
+#define HL_ADDR_DTOURSZ_GetClientColor ulHLAddr_DTOURSZ_GetClientColor
+#define HL_ADDR_unkInlineClientColorA ulHLAddr_unkInlineClientColorA
+#define HL_ADDR_SZ_unkInlineClientColorA ulHLAddr_SZ_unkInlineClientColorA
+#define HL_ADDR_unkInlineClientColorV ulHLAddr_unkInlineClientColorV
+#define HL_ADDR_SZ_unkInlineClientColorV ulHLAddr_SZ_unkInlineClientColorV
+
 
 #endif // #ifndef HL_ADDRESSES_H

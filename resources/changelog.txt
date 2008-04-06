@@ -1,3 +1,16 @@
+2.0.0.2
+
+This time we got some colors for L. 'spunge' M.:
+
+Added: mirv_playercolors
+  This allows to control the hudtext player colors per playerid.
+  For each playerid the following colors can be controlled idenpendently:
+    attacker's deathnotice color,
+    victim's deathnotice color,
+    head-up color (overview + playername head-up).
+  For more information enter the command into console or see HLAE wiki.
+
+
 2.0 pre-release
 
 As always the following text contains many mistakes (as most changelog

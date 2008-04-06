@@ -1,4 +1,3 @@
-#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include "wrect.h"
 #include "cl_dll.h"
@@ -11,6 +10,7 @@
 #include "entity_types.h"
 #include "cmdregister.h"
 
+#include "hl_addresses.h"
 #include "detours.h"
 
 #include <list>
@@ -25,7 +25,7 @@ std::list<int> g_BlockedVoiceEntsList;
 //
 
 extern cl_enginefuncs_s *pEngfuncs;
-
+/*
 //
 // Addresses:
 //
@@ -36,7 +36,7 @@ extern cl_enginefuncs_s *pEngfuncs;
 
 #define HL_ADDR_CL_ParseServerMessage_CmdRead (HL_ADDR_CL_ParseServerMessage + 0x0E3)
 #define HL_ADDR_DTOURSZ_CL_ParseServerMessage_CmdRead 0x07
-#define HL_ADDR_net_message (HL_ADDR_net_message_cursize - 0x10 )
+#define HL_ADDR_net_message (HL_ADDR_net_message_cursize - 0x10 )*/
 
 //
 // Types and structs

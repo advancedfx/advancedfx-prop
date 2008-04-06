@@ -97,7 +97,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Post-Build: calling rcstamp ..."
-				CommandLine="&quot;../shared/bin/rcstamp.exe&quot; &quot;$(ProjectDir)Mirv Demo Tool.rc&quot; *.*.*.+ &quot;$(ProjectDir)version.cpp&quot;"
+				CommandLine="&quot;../shared/bin/rcstamp.exe&quot; &quot;$(ProjectDir)Mirv Demo Tool.rc&quot; *.*.*.2 &quot;$(ProjectDir)version.cpp&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -182,7 +182,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Post-Build: calling rcstamp ..."
-				CommandLine="&quot;../shared/bin/rcstamp.exe&quot; &quot;$(ProjectDir)Mirv Demo Tool.rc&quot; *.*.*.+ &quot;$(ProjectDir)version.cpp&quot;"
+				CommandLine="&quot;../shared/bin/rcstamp.exe&quot; &quot;$(ProjectDir)Mirv Demo Tool.rc&quot; *.*.*.2 &quot;$(ProjectDir)version.cpp&quot;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -360,6 +360,10 @@
 			</File>
 			<File
 				RelativePath=".\supportrender.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\teamcolor.cpp"
 				>
 			</File>
 			<File

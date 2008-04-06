@@ -267,7 +267,7 @@ BOOL CHlaeSupportRender::hlaeSwapBuffers(HDC hGameWindowDC)
 	case RT_MEMORYDC:
 		return _SwapBuffers_RT_MEMORYDC (hGameWindowDC);
 	case RT_FRAMEBUFFEROBJECT:
-		return SwapBuffers (hGameWindowDC);
+		return _SwapBuffers_RT_FRAMEBUFFEROBJECT (hGameWindowDC);
 	}
 
 	ERROR_MESSAGE("cannot SwapBuffers unknown target")
@@ -469,6 +469,29 @@ BOOL CHlaeSupportRender::_MakeCurrent_RT_FRAMEBUFFEROBJECT (HDC hGameWindowDC)
 		
 
 	return bwResult;
+}
+
+BOOL CHlaeSupportRender::_SwapBuffers_RT_FRAMEBUFFEROBJECT (HDC hGameWindowDC)
+{
+	BOOL bwRet=FALSE;
+
+	glClearColor(0.0f, 0.1f,0.0f,1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0 ); // switch to window-system frambuffer obj
+
+	glViewport(0,0,_iWidth,_iHeight); // set-up the viewport
+	
+	glFlush(); // tell OGL to finish lingering commands in the pipe
+
+	bwRet = SwapBuffers(hGameWindowDC); // swap window display
+
+	// bind our FBO back for rendering:
+	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, _FrameBufferObject_r.FBOid );
+	glFramebufferRenderbufferEXT( GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, _FrameBufferObject_r.depthRenderBuffer );
+	glFramebufferRenderbufferEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, _FrameBufferObject_r.rgbaRenderBuffer );
+
+	return bwRet;
 }
 
 void CHlaeSupportRender::_Delete_RT_FRAMEBUFFEROBJECT_onlyFBO ()

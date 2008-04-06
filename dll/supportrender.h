@@ -5,7 +5,7 @@
 // File    :  dll/supportrender.h
 
 // Authors : last change / first change / name
-// 2008-03-28 / 2008-03-27 / Dominik Tugend
+// 2008-03-31 / 2008-03-27 / Dominik Tugend
 
 // Comment:
 //   Due to the OpenGL FrameBuffer contents depending on the Pixel OwnerShip
@@ -39,6 +39,7 @@
 //    users, but may be also very SLOW (not accelerated) for many of them.
 //
 //  RT_FRAMEBUFFEROBJECT:
+//    http://www.opengl.org/registry/specs/EXT/framebuffer_object.txt
 //    This is actually what we are longing for, however this requires the
 //    EXT_framebuffers_object OpenGL extension (implemented at least to fit
 //    our needs to render to RenderBuffer Objects), which is not present in
@@ -49,6 +50,10 @@
 //    If not present or not fully implemented to our needs, this target will
 //    switch to RT_GAMEWINDOW (if possible) in the first hlaeMakeCurrent call,
 //    currently a error box informing the user will pop up.
+//    For technical reasons the drawing on the game window has to happen
+//    using the texture units (if we want to avoid slow copies over system
+//    memory), read "(42) What set of framebuffer targets should the initial
+//    extension support?" in the EXT specs for the reasons.
 
 #include <windows.h>
 
@@ -188,6 +193,7 @@ private:
 	HGLRC	_Create_RT_FRAMEBUFFEROBJECT (HDC hGameWindowDC);
 	BOOL	_Delete_RT_FRAMEBUFFEROBJECT ();
 	BOOL	_MakeCurrent_RT_FRAMEBUFFEROBJECT (HDC hGameWindowDC); // this may instantly change target back to RT_GAMEWINDOW
+	BOOL	_SwapBuffers_RT_FRAMEBUFFEROBJECT (HDC hGameWindowDC);
 	void	_Delete_RT_FRAMEBUFFEROBJECT_onlyFBO ();
 };
 
