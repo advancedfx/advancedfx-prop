@@ -29,8 +29,6 @@ REGISTER_DEBUGCVAR(depth_bias, "0", 0);
 REGISTER_DEBUGCVAR(depth_scale, "1", 0);
 REGISTER_DEBUGCVAR(gl_force_noztrick, "1", 0);
 
-REGISTER_DEBUGCVAR(movie_oldcapture, "0", 0);
-
 REGISTER_DEBUGCVAR(print_pos, "0", 0);
 
 REGISTER_CVAR(crop_height, "-1", 0);
@@ -47,7 +45,6 @@ REGISTER_CVAR(fx_wh_noquads, "0", 0);
 REGISTER_CVAR(fx_wh_tint_enable, "0", 0);
 REGISTER_CVAR(fx_wh_xtendvis, "1", 0);
 
-REGISTER_CVAR(movie_customdump, "1", 0)
 REGISTER_CVAR(movie_clearscreen, "0", 0);
 REGISTER_CVAR(movie_depthdump, "0", 0);
 REGISTER_CVAR(movie_export_cammotion, "0", 0);
@@ -76,21 +73,19 @@ Filming g_Filming;
 
 //>> added 20070922 >>
 
-typedef void (* HL_unknownFunc_t) ( void );
-//GL_Set2D_t detoured_GL_Set2D=NULL;
 R_RenderView__t	detoured_R_RenderView_=NULL;
-//V_RenderView_t	detoured_V_RenderView=NULL;
-//SCR_UpdateScreen_t	detoured_SCR_UpdateScreen=NULL;
-//HL_unknownFunc_t detoured_unknown=NULL;
 
-//#define ADDRESS_unkown 0x01d50960
-//#define DETOURSIZE_unknown 6
+/*
 
-//#define ADDRESS_V_RenderView HL_ADDR_V_RenderView
-//#define DETOURSIZE_V_RenderView 0x5
-//#define ADDRESS_GL_Set2D HL_ADDR_GL_Set2D
-//#define DETOURSIZE_GL_Set2D 9
+01dd0370 SCR_UpdateScreen:
+...
+01dd041e e83d74f8ff      call    launcher!CreateInterface+0x956471 (01d57860) == SCR_SetUpToDrawConsole ()
+01dd0423 e8a8480000      call    launcher!CreateInterface+0x9d38e1 (01dd4cd0) == V_RenderView
+01dd0428 e823b5f8ff      call    launcher!CreateInterface+0x95a561 (01d5b950) == GL_Set2D
 
+V_RenderView calls 01d51d90 R_RenderView
+
+*/
 
 // >> Hooking the HUD functions  >>
 
@@ -409,27 +404,6 @@ void touring_R_RenderView_(void)
 	memcpy (p_r_refdef->vieworg,oldorigin,3*sizeof(float));
 	memcpy (p_r_refdef->viewangles,oldangles,3*sizeof(float));
 }
-/*
-void touring_unknown(void)
-{
-	static int ifakeframe=0;
-	static char tmptag[10];
-
-	//pEngfuncs->Con_Printf("Called GL_Set2d (%i times) during tracking.\n",GL_2DCalls);
-	if (g_Filming.isFilming()&&g_Filming.bWantsHudCapture)
-	{
-		GL_2DCalls++;
-		sprintf(tmptag,"dbg%i",GL_2DCalls);
-		g_Filming.Capture(tmptag,ifakeframe,g_Filming.BUFFER::COLOR);
-	}
-	detoured_unknown();
-	if (g_Filming.isFilming()&&g_Filming.bWantsHudCapture)
-	{
-		GL_2DCalls++;
-		sprintf(tmptag,"dbg%i",GL_2DCalls);
-		g_Filming.Capture(tmptag,ifakeframe,g_Filming.BUFFER::COLOR);
-	}
-}*/
 
 
 //
@@ -506,12 +480,6 @@ REGISTER_CMD_FUNC(cameraofs_cs)
 		pEngfuncs->Con_Printf("Usage: " PREFIX "cameraofs_cs <right> <up> <forward>\nNot neccessary for stereo mode, use mirv_movie_stereo instead\n");
 }
 
-bool Filming::bNewRequestMethod()
-{ return _bNewRequestMethod; }
-
-void Filming::bNewRequestMethod(bool bSet)
-{ if (m_iFilmingState == FS_INACTIVE) _bNewRequestMethod = bSet; };
-
 //bool Filming::bNoMatteInterpolation()
 //{ return _bNoMatteInterpolation; }
 
@@ -545,7 +513,6 @@ Filming::Filming()
 		m_bInWireframe = false;
 
 		// added 20070922:
-		_bNewRequestMethod = true;
 		//_bNoMatteInterpolation = true;
 		_bEnableStereoMode = false;
 		_cameraofs.right = 0;
@@ -597,11 +564,6 @@ float Filming::GetStereoOffset()
 Filming::STEREO_STATE Filming::GetStereoState()
 {
 	return _stereo_state;
-}
-
-bool Filming::bCustomDump()
-{
-	return (movie_customdump->value != 0.0);
 }
 
 Filming::HUD_REQUEST_STATE Filming::giveHudRqState()
@@ -676,11 +638,9 @@ void Filming::Start()
 
 	// retrive some cvars:
 	_fStereoOffset = movie_stereo_centerdist->value;
-	_bNewRequestMethod = (movie_oldcapture->value != 1.0)&&(movie_customdump->value != 0.0);
-	if (!_bNewRequestMethod) pEngfuncs->Con_Printf("Warning: Using old RequestMethod!\nThe new method is only available with __mirv_movie_oldcapture 0 and mirv_movie_customdump 1.\n");
-	_bEnableStereoMode = (movie_stereomode->value != 0.0) && _bNewRequestMethod; // we also have to be able to use R_RenderView
+	_bEnableStereoMode = (movie_stereomode->value != 0.0); // we also have to be able to use R_RenderView
 	//_bNoMatteInterpolation = (matte_nointerp->value == 0.0);
-	_bCamMotion = (movie_export_cammotion->value != 0.0) && _bNewRequestMethod;
+	_bCamMotion = (movie_export_cammotion->value != 0.0);
 	_bSimulate = (movie_simulate->value != 0.0);
 	_bSimulate2 = _bSimulate && (movie_simulate->value != 2.0);
 
@@ -692,20 +652,12 @@ void Filming::Start()
 	if (_bCamMotion && !_bSimulate2) MotionFile_Begin();
 
 	// if we want to use R_RenderView and we have not already done that, we need to set it up now:
-	if (_bNewRequestMethod)
-	{
-		// we want to use it, so make sure we have it:
-		if (!detoured_R_RenderView_&&((HL_ADDR_R_RenderView_)!=NULL))
-		{
-			// we don't have it yet and the addres is not NULL (which might be an intended cfg setting)
-			detoured_R_RenderView_ = (R_RenderView__t) DetourApply((BYTE *)HL_ADDR_R_RenderView_, (BYTE *)touring_R_RenderView_, (int)HL_ADDR_DTOURSZ_R_RenderView_);
-			install_Hud_tours(); // wil automaticall check if already installed or not
 
-			//detoured_V_RenderView = (V_RenderView_t) DetourApply((BYTE *)ADDRESS_V_RenderView, (BYTE *)touring_V_RenderView, (int)DETOURSIZE_V_RenderView);
-			//detoured_SCR_UpdateScreen = (SCR_UpdateScreen_t) DetourApply((BYTE *)HL_ADDR_SCR_UpdateScreen, (BYTE *)touring_SCR_UpdateScreen, (int)DETOURSIZE_SCR_UpdateScreen);
-			//detoured_GL_Set2D = (GL_Set2D_t) DetourApply((BYTE *)ADDRESS_GL_Set2D, (BYTE *)touring_GL_Set2D, (int)DETOURSIZE_GL_Set2D);
-			//detoured_unknown = (HL_unknownFunc_t) DetourApply((BYTE *)ADDRESS_unkown, (BYTE *)touring_unknown, (int)DETOURSIZE_unknown);
-		}
+	if ( !detoured_R_RenderView_ )
+	{
+		// we don't have it yet and the addres is not NULL (which might be an intended cfg setting)
+		detoured_R_RenderView_ = (R_RenderView__t) DetourApply((BYTE *)HL_ADDR_R_RenderView_, (BYTE *)touring_R_RenderView_, (int)HL_ADDR_DTOURSZ_R_RenderView_);
+		install_Hud_tours(); // wil automaticall check if already installed or not
 	}
 
 	// make sure some states used in recordBuffers are set properly:
@@ -985,79 +937,11 @@ Filming::DRAW_RESULT Filming::shouldDrawDuringWorldMatte(GLenum mode)
 	return DR_NORMAL;
 }
 
-void Filming::_old_recordBuffers()
-{
-	// If this is a none swapping one then force to the correct stage.
-	// Otherwise continue working wiht the stage that this frame has
-	// been rendered with.
-	if (movie_splitstreams->value < 3.0f)
-		m_iMatteStage = (MATTE_STAGE) ((int) MS_ALL + (int) max(movie_splitstreams->value, 0.0f));
-
-	// If we've only just started, delay until the next scene so that
-	// the first frame is drawn correctly
-	if (m_iFilmingState == FS_STARTING)
-	{
-		glClearColor(m_MatteColour[0], m_MatteColour[1], m_MatteColour[2], 1.0f); // don't forget to set our clear color
-		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-		m_iFilmingState = FS_ACTIVE;
-		return;
-	}
-
-	bool bSplitting = (movie_splitstreams->value == 3.0f);
-	float flTime = 1.0f / max(movie_fps->value, 1.0f);
-
-	static char *pszTitles[] = { "all", "world", "entity" };
-	static char *pszDepthTitles[] = { "depthall", "depthworld", "depthall" };
-
-	// Are we doing our own screenshot stuff
-	bool bCustomDumps = (movie_customdump->value != 0);
-	bool bDepthDumps = (movie_depthdump->value != 0);
-
-	if (bCustomDumps)
-		Capture(pszTitles[m_iMatteStage], m_nFrames, COLOR);
-
-	if (bDepthDumps)
-		Capture(pszDepthTitles[m_iMatteStage], m_nFrames, DEPTH);
-
-	float flNextFrameDuration = flTime;
-
-	// If splitting, fill out the rest of the fps
-	if (bSplitting)
-	{
-		// We want as little time to pass as possible until the next frame
-		// is drawn, so the difference is tiny.
-		if (m_iMatteStage == MS_WORLD)
-		{
-			flNextFrameDuration = MIN_FRAME_DURATION;
-			m_iMatteStage = MS_ENTITY;
-		}
-		// Make up the rest of the time so that their fps is met.
-		// Also increase the frame count
-		else
-		{
-			flNextFrameDuration = flTime - MIN_FRAME_DURATION;
-			m_iMatteStage = MS_WORLD;
-			m_nFrames++;
-		}
-	}
-	else
-		m_nFrames++;
-
-	// Make sure the next frame time isn't invalid
-	flNextFrameDuration = max(flNextFrameDuration, MIN_FRAME_DURATION);
-
-	pEngfuncs->Cvar_SetValue("host_framerate", flNextFrameDuration);
-}
-
 bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 // be sure to read the comments to _bRecordBuffers_FirstCall in filming.h, because this is fundamental for undertanding what the **** is going on here
 // currently like the old code we relay on some user changable values, however we should lock those during filming to avoid crashes caused by the user messing around (not implemented yet)
 {
-	if (!_bNewRequestMethod)
-	{
-		_old_recordBuffers();
-		return false;
-	} else if (!_bRecordBuffers_FirstCall)
+	if (!_bRecordBuffers_FirstCall)
 	{
 		pEngfuncs->Con_Printf("WARNING: Unexpected recordBuffers request, this should not happen!");
 	}
@@ -1098,7 +982,6 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 	static char *pszDepthTitles[] = { "depthall", "depthworld", "depthall" };
 
 	// Are we doing our own screenshot stuff
-	bool bCustomDumps = (movie_customdump->value != 0);
 	bool bDepthDumps = (movie_depthdump->value != 0);
 
 	if (bWantsHudCapture)
@@ -1118,8 +1001,8 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 	do
 	{
 		// capture stage:
-		if (bCustomDumps && !_bSimulate) Capture(pszTitles[m_iMatteStage], m_nFrames, COLOR);
-		if (bDepthDumps && !_bSimulate2) Capture(pszDepthTitles[m_iMatteStage], m_nFrames, DEPTH);
+		if (!_bSimulate) Capture(pszTitles[m_iMatteStage], m_nFrames, COLOR);
+		if (!_bSimulate2) Capture(pszDepthTitles[m_iMatteStage], m_nFrames, DEPTH);
 
 		if (_pSupportRender)
 			*bSwapRes = _pSupportRender->hlaeSwapBuffers(hSwapHDC);
@@ -1136,8 +1019,8 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 			touring_R_RenderView_(); // rerender frame instant!!!!
 
 			// capture stage:
-			if (bCustomDumps && !_bSimulate) Capture(pszTitles[m_iMatteStage], m_nFrames, COLOR);
-			if (bDepthDumps && !_bSimulate2) Capture(pszDepthTitles[m_iMatteStage], m_nFrames, DEPTH);
+			if (!_bSimulate) Capture(pszTitles[m_iMatteStage], m_nFrames, COLOR);
+			if (!_bSimulate2) Capture(pszDepthTitles[m_iMatteStage], m_nFrames, DEPTH);
 			if (_pSupportRender)
 				*bSwapRes = _pSupportRender->hlaeSwapBuffers(hSwapHDC);
 			else

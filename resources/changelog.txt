@@ -1,3 +1,9 @@
+?
+
+- removed:
+  __mirv_movie_oldcapture, mirv_movie_customdump
+
+
 2.0.0.2
 
 This time we got some colors for L. 'spunge' M.:

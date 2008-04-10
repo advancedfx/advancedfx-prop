@@ -793,7 +793,7 @@ BOOL APIENTRY my_wglSwapBuffers(HDC hDC)
 		// we are filming, do required clearing and restore buffers:
 
 		// carry out preparerations on the backbuffer for the next frame:
-		if (g_Filming.bCustomDump()) g_Filming.clearBuffers();
+		g_Filming.clearBuffers();
 
 		// restore saved buffers:
 		g_Mdt_GlTools.AdjustDrawBuffer(g_Mdt_GlTools.m_iSavedDrawBuff,false);

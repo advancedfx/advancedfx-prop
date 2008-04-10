@@ -9,36 +9,6 @@ Description : Address defintions inside Half-Life until we have an better system
 #ifndef HL_ADDRESSES_H
 #define HL_ADDRESSES_H
 
-/*
-//
-// g_hl_addresses - this structure holds the actual addresses:
-//
-
-typedef struct hl_addresses_s
-// be carefull when you change s.th. here and keep hl_addresses_s and g_hl_addresses in sync
-{
-	// engine addresses directly visible to the client.dll:
-	char *p_cl_enginefuncs_s;
-	char *p_engine_studio_api_s;
-	char *p_playermove_s;
-
-	// engine addresses:
-	char *p_SCR_UpdateScreen;
-
-	char *p_SCR_SetUpToDrawConsole;
-	char *p_V_RenderView;
-	char *p_R_RenderView_;
-	char *p_GL_Set2D;
-	char *p_r_refdef;
-
-	// client.dll addresses:
-	char *p_HudSpectator_tfc;
-	char *p_HudSpectator_cmp_tfc; // actually I think that shouldn't be defined globally
-
-} hl_addresses_t;
-
-extern hl_addresses_t g_hl_addresses;*/
-
 #include <list>
 #include <string>
 
@@ -251,7 +221,6 @@ extern unsigned long ulHLAddr_p_cl_enginefuncs_s;
 extern unsigned long ulHLAddr_p_enginefuncs_s;
 extern unsigned long ulHLAddr_p_engine_studio_api_s;
 extern unsigned long ulHLAddr_p_playermove_s;
-extern unsigned long ulHLAddr_SCR_UpdateScreen;
 extern unsigned long ulHLAddr_HUD_TOURIN;
 extern unsigned long ulHLAddr_HUD_TOUROUT;
 extern unsigned long ulHLAddr_R_RenderView_;
@@ -296,7 +265,6 @@ extern unsigned long ulHLAddr_SZ_unkInlineClientColorV;
 
 #define HL_ADDR_PLAYERMOVE_S ulHLAddr_p_playermove_s
 
-#define HL_ADDR_SCR_UpdateScreen ulHLAddr_SCR_UpdateScreen
 #define HL_ADDR_HUD_TOURIN ulHLAddr_HUD_TOURIN
 #define HL_ADDR_HUD_TOUROUT ulHLAddr_HUD_TOUROUT
 

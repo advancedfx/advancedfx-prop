@@ -23,10 +23,6 @@ Description : see mdt_gltools.h
 // I could have also moved this into the class, but I didn't want to mess around with static members and stuff etc.
 typedef void (*R_RenderView__t)( void );
 extern R_RenderView__t detoured_R_RenderView_; // filming.cpp
-typedef void (*V_RenderView_t)( void );
-extern V_RenderView_t detoured_V_RenderView; // filming.cpp
-typedef void (*SCR_UpdateScreen_t)( void );
-extern SCR_UpdateScreen_t detoured_SCR_UpdateScreen; // filming.cpp
 
 class Filming
 {
@@ -73,7 +69,6 @@ private:
 
 	// added 20070922:
 	struct _cameraofs_s { float right; float up; float forward; } _cameraofs;
-	bool	_bNewRequestMethod; // if we have R_RenderView etc available
 	//bool	_bNoMatteInterpolation;
 	bool	_bEnableStereoMode;
 	float	_fStereoOffset;
@@ -175,14 +170,11 @@ public:
 	void SupplyCamMotion(float Xposition,float Yposition,float Zposition,float Zrotation,float Xrotation,float Yrotation); // used by R_RenderView_ to supply Camera Motion Data
 
 	bool bWantsHudCapture; // used by R_RenderView to prepare HUD Captures
-	bool bCustomDump();
 
 	void OnHudBeginEvent(); // called by Hud Begin tour
 	bool OnHudEndEvnet(); // called by Hud End tour, if pDoLoop is true the toor will cause an loop, otherwise it will continue normal HL code operation
 
 	// I don't know why I wrote these, may be remove them again if u want (but I like em heh):
-	bool bNewRequestMethod();
-	void bNewRequestMethod(bool bSet);	// if R_RenderView is not available set this to false, cannot be set during filming
 	//bool bNoMatteInterpolation();
 	//void bNoMatteInterpolation (bool bSet); // if the Interpolation should check for Matte Color on Entity streams (if enabled Matte Color will not be blended, instead it will be overwritten)
 	void bEnableStereoMode(bool bSet); // if you enable stereo mode MDT will take left and right images using the stereofs you set
