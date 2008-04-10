@@ -437,6 +437,25 @@ BOOL CHlaeSupportRender::_MakeCurrent_RT_FRAMEBUFFEROBJECT (HDC hGameWindowDC)
 		return bwResult;
 	}
 
+	// create rgbaRenderTexture:
+	glGenTextures( 1, &_FrameBufferObject_r.rgbaRenderTexture );
+	glBindTexture( GL_TEXTURE_2D, _FrameBufferObject_r.rgbaRenderTexture );
+	glGetError();
+	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, _iWidth, _iHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0 );
+	if (glGetError()!=0)
+	{
+		ERROR_MESSAGE("Failed to create texture with required properties!\nFalling back to RT_GAMEWINDOW ...")
+		glDeleteTextures( 1, &_FrameBufferObject_r.rgbaRenderTexture );
+
+		_eRenderTarget = RT_GAMEWINDOW;
+
+		return bwResult;
+	}
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+
 	// create FrameBufferObject:
 	glGenFramebuffersEXT( 1, &_FrameBufferObject_r.FBOid );
 
@@ -445,15 +464,10 @@ BOOL CHlaeSupportRender::_MakeCurrent_RT_FRAMEBUFFEROBJECT (HDC hGameWindowDC)
 	glBindRenderbufferEXT( GL_RENDERBUFFER_EXT, _FrameBufferObject_r.depthRenderBuffer );
 	glRenderbufferStorageEXT( GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT, _iWidth, _iHeight );
 
-	// create rgbaRenderBuffer:
-	glGenRenderbuffersEXT( 1, &_FrameBufferObject_r.rgbaRenderBuffer );
-	glBindRenderbufferEXT( GL_RENDERBUFFER_EXT, _FrameBufferObject_r.rgbaRenderBuffer );
-	glRenderbufferStorageEXT( GL_RENDERBUFFER_EXT, GL_RGBA, _iWidth, _iHeight );
-
-	// bind and setup FrameBufferObject (select buffers):
+	// bind and setup FrameBufferObject (select buffers / textures):
 	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, _FrameBufferObject_r.FBOid );
+	glFramebufferTexture2DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, _FrameBufferObject_r.rgbaRenderTexture, 0 );
 	glFramebufferRenderbufferEXT( GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, _FrameBufferObject_r.depthRenderBuffer );
-	glFramebufferRenderbufferEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, _FrameBufferObject_r.rgbaRenderBuffer );
 
 	// check if FBO status is complete:
 	if (GL_FRAMEBUFFER_COMPLETE_EXT != glCheckFramebufferStatusEXT( GL_FRAMEBUFFER_EXT ))
@@ -475,21 +489,31 @@ BOOL CHlaeSupportRender::_SwapBuffers_RT_FRAMEBUFFEROBJECT (HDC hGameWindowDC)
 {
 	BOOL bwRet=FALSE;
 
-	glClearColor(0.0f, 0.1f,0.0f,1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
-
+	// display our image:
 	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0 ); // switch to window-system frambuffer obj
-
 	glViewport(0,0,_iWidth,_iHeight); // set-up the viewport
-	
-	glFlush(); // tell OGL to finish lingering commands in the pipe
+
+	glClearColor( 0.0f, 0.0f, 0.0f, 1.0f ); // clear image
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT ); // .
+	glLoadIdentity(); // reset the view
+
+	GLfloat glfHalfWidth = _iWidth / 2;
+	GLfloat glfHalfHeight = _iHeight / 2;
+	glBindTexture(GL_TEXTURE_2D, _FrameBufferObject_r.depthRenderBuffer );
+	glBegin(GL_QUADS); // .
+		glTexCoord2f( 0.0f, 0.0f ); glVertex2f( -glfHalfWidth, -glfHalfHeight );
+		glTexCoord2f( 1.0f, 0.0f ); glVertex2f(  glfHalfWidth, -glfHalfHeight );
+		glTexCoord2f( 1.0f, 1.0f ); glVertex2f(  glfHalfWidth,  glfHalfHeight );
+		glTexCoord2f( 0.0f, 1.0f ); glVertex2f( -glfHalfWidth,  glfHalfHeight );
+	glEnd();
+	glBindTexture(GL_TEXTURE_2D, 0 );
 
 	bwRet = SwapBuffers(hGameWindowDC); // swap window display
 
 	// bind our FBO back for rendering:
 	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, _FrameBufferObject_r.FBOid );
+	glFramebufferTexture2DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, _FrameBufferObject_r.rgbaRenderTexture, 0 );
 	glFramebufferRenderbufferEXT( GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, _FrameBufferObject_r.depthRenderBuffer );
-	glFramebufferRenderbufferEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, _FrameBufferObject_r.rgbaRenderBuffer );
 
 	return bwRet;
 }
@@ -503,7 +527,7 @@ void CHlaeSupportRender::_Delete_RT_FRAMEBUFFEROBJECT_onlyFBO ()
 		glDeleteFramebuffersEXT( 1, &_FrameBufferObject_r.FBOid );
 		_FrameBufferObject_r.FBOid = 0;
 
-		glDeleteRenderbuffersEXT( 1, &_FrameBufferObject_r.rgbaRenderBuffer );
+		glDeleteTextures( 1, &_FrameBufferObject_r.rgbaRenderTexture );
 		glDeleteRenderbuffersEXT( 1, &_FrameBufferObject_r.depthRenderBuffer );
 	}
 }

@@ -157,7 +157,7 @@ private:
 	{
 		unsigned int FBOid;
 		unsigned int depthRenderBuffer;
-		unsigned int rgbaRenderBuffer;
+		unsigned int rgbaRenderTexture;
 	} _FrameBufferObject_r;
 
 	// for MemoryDc only:
