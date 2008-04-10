@@ -351,6 +351,38 @@ bool HlaeBc_OnDestroyWindow()
 	return retResult;
 }
 
+bool HlaeBc_OnFilmingStart()
+// returns false on fail, true otherwise
+{
+	bool retResult = false;
+
+	HLAE_BASECOM_OnFilmingStart_s *mycws = new HLAE_BASECOM_OnFilmingStart_s;
+
+	if(HlaeBcCltSendMessage(HLAE_BASECOM_MSGSV_OnFilmingStart,sizeof(HLAE_BASECOM_OnFilmingStart_s),(PVOID)mycws))
+	{
+		retResult = true;
+	}
+
+	delete mycws;
+	return retResult;
+}
+
+bool HlaeBc_OnFilmingStop()
+// returns false on fail, true otherwise
+{
+	bool retResult = false;
+
+	HLAE_BASECOM_OnFilmingStop_s *mycws = new HLAE_BASECOM_OnFilmingStop_s;
+
+	if(HlaeBcCltSendMessage(HLAE_BASECOM_MSGSV_OnFilmingStop,sizeof(HLAE_BASECOM_OnFilmingStop_s),(PVOID)mycws))
+	{
+		retResult = true;
+	}
+
+	delete mycws;
+	return retResult;
+}
+
 bool HlaeBc_UpdateWindow(int nWidth, int nHeight)
 // informs the server about necessary game window size changes
 // returns false on fail, true otherwise

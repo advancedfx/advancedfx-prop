@@ -35,6 +35,8 @@ class hlaeLayoutManager : public wxObject
 		void ShowManager();
 		bool AddPane(wxWindow* window, const wxAuiPaneInfo& pane_info);
 		void OnLayout(wxCommandEvent& evt);
+
+		wxAuiManager* GetAuiManager() { return m_auimanager; };
 };
 
 extern hlaeLayoutManager g_layoutmanager;

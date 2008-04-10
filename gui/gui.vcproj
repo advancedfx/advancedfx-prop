@@ -241,8 +241,22 @@
 					RelativePath=".\defines.h"
 					>
 				</File>
+			</Filter>
+			<Filter
+				Name="Source Files"
+				Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
+				UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
+				>
+				<File
+					RelativePath=".\main.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="windows"
+				>
 				<Filter
-					Name="windows"
+					Name="Header Files"
 					>
 					<File
 						RelativePath=".\windows\console.h"
@@ -270,7 +284,39 @@
 					</File>
 				</Filter>
 				<Filter
-					Name="system"
+					Name="Source Files"
+					>
+					<File
+						RelativePath=".\windows\console.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\windows\demotools.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\windows\game.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\windows\hlae.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\windows\launcher.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\windows\settings.cpp"
+						>
+					</File>
+				</Filter>
+			</Filter>
+			<Filter
+				Name="system"
+				>
+				<Filter
+					Name="Header Files"
 					>
 					<File
 						RelativePath=".\system\app.h"
@@ -301,46 +347,8 @@
 						>
 					</File>
 				</Filter>
-			</Filter>
-			<Filter
-				Name="Source Files"
-				Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
-				UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
-				>
-				<File
-					RelativePath=".\main.cpp"
-					>
-				</File>
 				<Filter
-					Name="windows"
-					>
-					<File
-						RelativePath=".\windows\console.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\windows\demotools.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\windows\game.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\windows\hlae.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\windows\launcher.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\windows\settings.cpp"
-						>
-					</File>
-				</Filter>
-				<Filter
-					Name="system"
+					Name="Source Files"
 					>
 					<File
 						RelativePath=".\system\app.cpp"

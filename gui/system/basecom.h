@@ -32,11 +32,21 @@ private:
 
 	CBCServerInternal * _pBCServerInternal;
 
-	bool _OnGameWindowClose(); // tells the server that it's server game window will be closed to allow it to react and communicate with the client
+	struct OnFilmingTemp_s
+	{
+		bool bUndocked;
+		bool bPaneHasCloseButton;
+		int iOldWidth;
+		int iOldHeight;
+	} _OnFilmingTemp;
 
+	bool _OnGameWindowClose(); // tells the server that it's server game window will be closed to allow it to react and communicate with the client
+	
 	// also called by CBCServerInternal:
 	WXHWND _OnCreateWindow(int nWidth, int nHeight);
 	bool _OnDestroyWindow();
+	bool _OnFilmingStart();
+	bool _OnFilmingStop();
 	bool _UpdateWindow(int nWidth, int nHeight);
 };
 

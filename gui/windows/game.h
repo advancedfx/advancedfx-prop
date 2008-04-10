@@ -8,6 +8,8 @@
 class CHlaeGameWindow : public wxScrolledWindow
 {
 public:
+	bool bUndockOnFilming; // default false
+
 	CHlaeGameWindow( wxWindow *parent,
                      wxWindowID winid = wxID_ANY,
                      const wxPoint& pos = wxDefaultPosition,

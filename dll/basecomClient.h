@@ -4,9 +4,13 @@
 // mandatory functions
 //
 
-//void HlaeBcCl_AdjustViewPort(int x, int y, int width, int height);
-// You have to use this one in glViewPort:
-// will update the Sever's DC with the correct size
+bool HlaeBc_OnFilmingStart();
+// Shall be called i.e. by the Filming system to inform the Server that we are about to start filming
+// returns false on fail, true otherwise
+
+bool HlaeBc_OnFilmingStop();
+// Shall be called i.e. by the Filming system to inform the Server that we stop filming
+// returns false on fail, true otherwise
 
 //
 // WinAPI hooks, the Hlae Game Client Dll must install them all!:

@@ -36,6 +36,8 @@ void CHlaeGameWindow::CreateInternal()
 	g_debug.SendMessage(_T("CHlaeGameWindow::CreateInternal ..."), hlaeDEBUG_DEBUG);
 #endif
 
+	bUndockOnFilming = false;
+
 	_pHlaeBcServer = new CHlaeBcServer(this);
 	if (!_pHlaeBcServer) throw "could not create CHlaeBcServer object";
 }

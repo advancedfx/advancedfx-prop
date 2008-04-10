@@ -95,7 +95,8 @@ hlaeMainWindow::hlaeMainWindow()
 
 	// create the gamewindow that also manages the communication with the game:
 	m_HlaeGameWindow = new CHlaeGameWindow(this,wxID_ANY,wxDefaultPosition,wxSize(200,150),wxHSCROLL | wxVSCROLL,_T("Game Window"));
-	g_layoutmanager.AddPane(m_HlaeGameWindow, wxAuiPaneInfo().CentrePane().Caption(_T("Game Window")));
+	m_HlaeGameWindow->bUndockOnFilming = true;
+	g_layoutmanager.AddPane(m_HlaeGameWindow, wxAuiPaneInfo().CenterPane().Caption(_T("Game Window")));
 
 
 	// g_debug.SendMessage(_T("This is a fatal error"), hlaeDEBUG_FATALERROR);

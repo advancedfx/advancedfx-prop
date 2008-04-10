@@ -1,4 +1,5 @@
 #include <wx/wx.h>
+#include <wx/aui/aui.h>
 
 #include <shared/com/basecom.h>
 #include <system/debug.h>
@@ -43,6 +44,8 @@ private:
 	// wrappers:
 	BOOL _Wrapper_OnCreateWindow(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
 	BOOL _Wrapper_OnDestroyWindow(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
+	BOOL _Wrapper_OnFilmingStart(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
+	BOOL _Wrapper_OnFilmingStop(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
 	BOOL _Wrapper_UpdateWindow(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS);
 };
 
@@ -232,6 +235,10 @@ BOOL CBCServerInternal::_MyOnRecieve(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMy
 		return _Wrapper_OnCreateWindow(hWnd,hwSender,pMyCDS);
 	case HLAE_BASECOM_MSGSV_OnDestroyWindow:
 		return _Wrapper_OnDestroyWindow(hWnd,hwSender,pMyCDS);
+	case HLAE_BASECOM_MSGSV_OnFilmingStart:
+		return _Wrapper_OnFilmingStart(hWnd,hwSender,pMyCDS);
+	case HLAE_BASECOM_MSGSV_OnFilmingStop:
+		return _Wrapper_OnFilmingStop(hWnd,hwSender,pMyCDS);
 	case HLAE_BASECOM_MSGSV_UpdateWindow:
 		return _Wrapper_UpdateWindow(hWnd,hwSender,pMyCDS);
 
@@ -281,11 +288,33 @@ BOOL CBCServerInternal:: _Wrapper_OnDestroyWindow(HWND hWnd,HWND hwSender,PCOPYD
 {
 	BOOL bRes;
 
-	HLAE_BASECOM_UpdateWindows_s * pdata = (HLAE_BASECOM_UpdateWindows_s *)pMyCDS->lpData;
+	HLAE_BASECOM_OnDestroyWindow_s * pdata = (HLAE_BASECOM_OnDestroyWindow_s *)pMyCDS->lpData;
 
 	bRes = _pBase->_OnDestroyWindow() ? TRUE : FALSE;
 
 	_hwClient = NULL; // no messages allowed afterwards
+	return bRes;
+}
+
+BOOL CBCServerInternal:: _Wrapper_OnFilmingStart(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS)
+{
+	BOOL bRes;
+
+	HLAE_BASECOM_OnFilmingStart_s * pdata = (HLAE_BASECOM_OnFilmingStart_s *)pMyCDS->lpData;
+
+	bRes = _pBase->_OnFilmingStart() ? TRUE : FALSE;
+
+	return bRes;
+}
+
+BOOL CBCServerInternal:: _Wrapper_OnFilmingStop(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS)
+{
+	BOOL bRes;
+
+	HLAE_BASECOM_OnFilmingStop_s * pdata = (HLAE_BASECOM_OnFilmingStop_s *)pMyCDS->lpData;
+
+	bRes = _pBase->_OnFilmingStop() ? TRUE : FALSE;
+
 	return bRes;
 }
 
@@ -312,6 +341,8 @@ CHlaeBcServer::CHlaeBcServer(CHlaeGameWindow *pHlaeGameWindow)
 #ifdef _DEBUG
 	g_debug.SendMessage(_T("CHlaeBcServer::CHlaeBcServer ..."), hlaeDEBUG_DEBUG);
 #endif
+
+	_OnFilmingTemp.bUndocked = false;
 
 	_pHlaeGameWindow = pHlaeGameWindow;
 
@@ -416,6 +447,61 @@ WXHWND CHlaeBcServer::_OnCreateWindow(int nWidth, int nHeight)
 bool CHlaeBcServer::_OnDestroyWindow()
 {
 	g_debug.SendMessage(_T("Client shutting down."), hlaeDEBUG_VERBOSE_LEVEL1);
+	return true;
+}
+
+bool CHlaeBcServer::_OnFilmingStart()
+{
+	g_debug.SendMessage(_T("Client starts filming."), hlaeDEBUG_VERBOSE_LEVEL2);
+
+	if (! (_pHlaeGameWindow->bUndockOnFilming) )
+	{
+		_OnFilmingTemp.bUndocked = false;
+		return true;
+	}
+
+	_OnFilmingTemp.bUndocked = true;
+
+	wxAuiManager *auimanager = g_layoutmanager.GetAuiManager();
+	wxAuiPaneInfo& myPane = auimanager->GetPane(_pHlaeGameWindow);
+	if (! (myPane.IsOk()) ) g_debug.SendMessage(_T("Could not retrive GamePane"), hlaeDEBUG_ERROR);
+
+	_OnFilmingTemp.bPaneHasCloseButton = myPane.HasCloseButton();
+
+	int ix1,iy1,iw,ih,iw1,ih1;
+
+	_pHlaeGameWindow->GetVirtualSize(&iw,&ih);
+	_pHlaeGameWindow->Scroll(0,0);
+	_pHlaeGameWindow->GetSize( &_OnFilmingTemp.iOldWidth, &_OnFilmingTemp.iOldHeight );
+	myPane.CloseButton(false).Float().FloatingPosition(0,0).FloatingSize(iw+100,ih+100).Caption(wxT("Recording ..."));
+	auimanager->Update();
+
+	ix1=0; iy1=0;
+	//_pHlaeGameWindow->SetClientSize(iw,ih);
+	_pHlaeGameWindow->ClientToScreen(&ix1,&iy1);
+	myPane.FloatingPosition(-ix1,-iy1);
+	auimanager->Update();
+
+	return true;
+}
+bool CHlaeBcServer:: _OnFilmingStop()
+{
+	g_debug.SendMessage(_T("Client stops filming."), hlaeDEBUG_VERBOSE_LEVEL2);
+
+	if (!_OnFilmingTemp.bUndocked)
+		return true;
+
+	_OnFilmingTemp.bUndocked = false;
+
+	wxAuiManager *auimanager = g_layoutmanager.GetAuiManager();
+	wxAuiPaneInfo& myPane = auimanager->GetPane(_pHlaeGameWindow);
+	
+	_pHlaeGameWindow->SetSize( _OnFilmingTemp.iOldWidth, _OnFilmingTemp.iOldHeight );
+
+	myPane.CenterPane().Caption(_T("Game Window"));
+	if (_OnFilmingTemp.bPaneHasCloseButton) myPane.CloseButton(true);
+	auimanager->Update();
+
 	return true;
 }
 
