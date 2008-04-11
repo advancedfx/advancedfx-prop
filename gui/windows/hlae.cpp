@@ -12,7 +12,6 @@
 
 #include "hlae.h"
 
-
 CAboutDialog::CAboutDialog(wxWindow* parent)
 : wxDialog(parent, wxID_ANY, _T("About Half-Life After Effects"), wxDefaultPosition, wxSize(450,350))
 {
@@ -79,6 +78,8 @@ hlaeMainWindow::hlaeMainWindow()
 			wxDefaultPosition, wxSize(800,600))
 {
 	g_layoutmanager.SetMainWindow(this);
+
+	this->SetIcon( wxIcon(wxICON(hlaeICON_AAA)) );
 
 	m_toolbarmenu = new wxMenu;
 	m_windowmenu = new wxMenu;

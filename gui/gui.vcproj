@@ -64,6 +64,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
+				AdditionalIncludeDirectories="&quot;$(WXWIN)/include/&quot;"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -168,6 +169,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
+				AdditionalIncludeDirectories="&quot;$(WXWIN)/include/&quot;"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -379,6 +381,27 @@
 						>
 					</File>
 				</Filter>
+			</Filter>
+			<Filter
+				Name="Resource Files"
+				Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx"
+				>
+				<File
+					RelativePath=".\gui.ico"
+					>
+				</File>
+				<File
+					RelativePath=".\gui.rc"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCResourceCompilerTool"
+							Culture="1033"
+						/>
+					</FileConfiguration>
+				</File>
 			</Filter>
 		</Filter>
 	</Files>
