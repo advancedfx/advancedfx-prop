@@ -18,6 +18,8 @@
 #include "detours.h" // we want to use Detourapply
 #include "in_defs.h" // PITCH YAW ROLL // HL1 sdk
 
+#include "basecomclient.h" // OnFilmingStart(), OnFilmingStop()
+
 
 extern cl_enginefuncs_s *pEngfuncs;
 extern engine_studio_api_s *pEngStudio;
@@ -625,6 +627,8 @@ void Filming::setScreenSize(GLint w, GLint h)
 
 void Filming::Start()
 {
+	HlaeBc_OnFilmingStart(); // inform Hlae Server GUI
+
 	// Different filename, so save it and reset the take count
 	if (strncmp(movie_filename->string, m_szFilename, sizeof(m_szFilename) - 1) != 0)
 	{
@@ -718,6 +722,8 @@ void Filming::Start()
 
 void Filming::Stop()
 {
+	HlaeBc_OnFilmingStop(); // inform Hlae Server GUI
+
 	if (_bCamMotion) MotionFile_End();
 	
 	m_nFrames = 0;
@@ -1002,7 +1008,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 	{
 		// capture stage:
 		if (!_bSimulate) Capture(pszTitles[m_iMatteStage], m_nFrames, COLOR);
-		if (!_bSimulate2) Capture(pszDepthTitles[m_iMatteStage], m_nFrames, DEPTH);
+		if (bDepthDumps && !_bSimulate2) Capture(pszDepthTitles[m_iMatteStage], m_nFrames, DEPTH);
 
 		if (_pSupportRender)
 			*bSwapRes = _pSupportRender->hlaeSwapBuffers(hSwapHDC);
@@ -1020,7 +1026,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 
 			// capture stage:
 			if (!_bSimulate) Capture(pszTitles[m_iMatteStage], m_nFrames, COLOR);
-			if (!_bSimulate2) Capture(pszDepthTitles[m_iMatteStage], m_nFrames, DEPTH);
+			if (bDepthDumps && !_bSimulate2) Capture(pszDepthTitles[m_iMatteStage], m_nFrames, DEPTH);
 			if (_pSupportRender)
 				*bSwapRes = _pSupportRender->hlaeSwapBuffers(hSwapHDC);
 			else
