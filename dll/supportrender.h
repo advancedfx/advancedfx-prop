@@ -39,6 +39,7 @@
 //    users, but may be also very SLOW (not accelerated) for many of them.
 //
 //  RT_FRAMEBUFFEROBJECT:
+//    For technical reasons this uses a hardcoded texture id: FBO_TEXUTRE_ID
 //    http://www.opengl.org/registry/specs/EXT/framebuffer_object.txt
 //    This is actually what we are longing for, however this requires the
 //    EXT_framebuffers_object OpenGL extension (implemented at least to fit
@@ -60,6 +61,9 @@
 class CHlaeSupportRender
 {
 public:
+	// FBO texture ID: (gen textures won't do, because H-L will overwrite it
+	#define FBO_TEXUTRE_ID 21337
+
 	enum ERenderTarget
 	{
 		RT_NULL, // not set yet
