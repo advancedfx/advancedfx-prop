@@ -5,91 +5,145 @@
 #include <wx/statline.h>
 #include <wx/treectrl.h>
 
+#include <vector>
 
-class hlaeSettingsPageTemplate : public wxWindow 
+using namespace std; 
+
+
+enum hlaeSettingsPageID_e
 {
+	ID_LastPage,
+	ID_General,
+	ID_Advanced
+};
+
+
+class hlaeSettingsPageBase : public wxWindow
+{
+
 public:
-	hlaeSettingsPageTemplate(wxWindow* parent);
-	virtual void ShowPage(bool is_advanced);
+
+	hlaeSettingsPageBase(wxWindow* parent);
+	virtual void ApplyChanges() = 0;
+};
+
+
+class hlaeSettingsPageGeneral : public hlaeSettingsPageBase
+{
+
+public:
+
+	hlaeSettingsPageGeneral(wxWindow* parent);
 	virtual void ApplyChanges();
 };
 
-class hlaeSettingsPageGeneral : public hlaeSettingsPageTemplate 
-{
-	public:
-		hlaeSettingsPageGeneral(wxWindow* parent);
-		void ShowPage(bool is_advanced);
-		void ApplyChanges();
-};
 
-class hlaeListElementSettingsPage : public wxObject
+class hlaeSettingsPageAdvanced : public hlaeSettingsPageBase
 {
-	private:
-		wxList* m_pagelist;
-		bool m_isadvanced;
-		wxString m_name;
-		hlaeSettingsPageTemplate* m_page;
 
-	public:
-		hlaeListElementSettingsPage(hlaeSettingsPageTemplate* window,
-			const wxString& name, bool is_advanced);
-		~hlaeListElementSettingsPage();
-		bool IsAdvanced();
-		const wxString& GetName();
-		hlaeSettingsPageTemplate* GetPage();
-		void Append(hlaeListElementSettingsPage* page_element);
-		hlaeListElementSettingsPage* GetElement(int index);
-		size_t GetCount();
-};
-
-class hlaeListElementSettingsPageID : public wxObject
-{
 public:
-	wxTreeItemId id;
-	hlaeSettingsPageTemplate* page;
+
+	hlaeSettingsPageAdvanced(wxWindow* parent);
+	virtual void ApplyChanges();
 };
 
-class hlaeDialogSettings : public wxDialog
+
+class hlaeSettingsBaseElement
 {
-	private:
 
-		DECLARE_EVENT_TABLE()
+public:
 
-		enum {
-			hlaeID_AdvancedMode = wxID_HIGHEST+1,
-			hlaeID_SelectionChanged
-		};
+	hlaeSettingsBaseElement(hlaeSettingsPageBase* page, hlaeSettingsPageID_e page_id); 
 
-		void OnAdvancedMode(wxCommandEvent& evt);
-		void OnApply(wxCommandEvent& evt);
-		void OnOK(wxCommandEvent& evt);
-		void OnSelectionChanged(wxTreeEvent& evt);
+	hlaeSettingsPageID_e GetPageID();
+	hlaeSettingsPageBase* GetPage();
 
-		void CreateForm();
-		void UpdateTreeCtrl();
-		void UpdateTreeCtrlNodes(hlaeListElementSettingsPage* node, wxTreeItemId id);
+protected:
 
-		wxList* m_pagelist;
-		wxList* m_pageidlist;
-		hlaeSettingsPageTemplate* m_lastpage;
-		bool m_advancedmode;
-
-		wxTreeCtrl* m_treectrl;
-		wxFlexGridSizer* m_pagesizer;
-		wxCheckBox* m_chkAdvanced;
-		wxButton* m_btnOK;
-		wxButton* m_btnCancel;
-		wxButton* m_btnApply;
-	
-	public:
-
-		hlaeDialogSettings( wxWindow* parent, wxWindowID id = wxID_ANY,
-			const wxString& title = _T("Settings"),
-			const wxPoint& pos = wxDefaultPosition,
-			const wxSize& size = wxSize( 564,427 ));
-		~hlaeDialogSettings();
-		void Append(hlaeListElementSettingsPage* page_element);
-	
+	hlaeSettingsPageID_e m_pageid;
+	hlaeSettingsPageBase* m_page;
 };
 
-#endif // _HLAE_DIALOGSETTINGS_H_
+
+class hlaeSettingsListElement : public hlaeSettingsBaseElement
+{
+
+public:
+
+	hlaeSettingsListElement(hlaeSettingsPageBase* page, hlaeSettingsPageID_e page_id,
+		wxTreeItemId tree_id);
+
+	wxTreeItemId GetTreeID();
+
+private:
+
+	wxTreeItemId m_treeid;
+
+};
+
+
+class hlaeSettingsTreeElement : public hlaeSettingsBaseElement
+{
+
+public:
+
+	hlaeSettingsTreeElement(hlaeSettingsPageBase* page, const wxString& name,
+		hlaeSettingsPageID_e page_id, bool is_advanced);
+
+	size_t GetSubpagesCount();
+
+	void AppendSubpage(const hlaeSettingsTreeElement& subpage_element);
+	const hlaeSettingsTreeElement& GetSubpage(size_t index);
+
+	bool IsAdvanced();
+	wxString GetName();
+
+private:
+
+	bool m_isadvanced;
+	wxString m_name;
+	vector<hlaeSettingsTreeElement> m_subpagetree;
+};
+
+
+class hlaeSettingsDialog : public wxDialog
+{
+
+public:
+
+	hlaeSettingsDialog(wxWindow* parent, hlaeSettingsPageID_e page_id);
+
+private:
+
+	enum
+	{
+		ID_AdvancedMode = wxID_HIGHEST+1,
+		ID_OK,
+		ID_Apply,
+		ID_SelectionChanged
+	};
+
+	bool m_advancedmode;
+	hlaeSettingsPageBase* m_lastpage;
+	
+	wxBoxSizer* m_bs_treebook;
+	wxTreeCtrl* m_treectrl;
+	wxCheckBox* m_ch_advancedview;
+
+	// this represents the structure in the menu
+	vector<hlaeSettingsTreeElement> m_pagetree;
+	// for better access to the ids
+	vector<hlaeSettingsListElement> m_pagelist;
+
+	void ApplyChanges();
+
+	void UpdateTreeCtrl();
+	void UpdateTreeCtrlNodes(hlaeSettingsTreeElement element, wxTreeItemId id);
+
+	void OnSelectionChanged(wxTreeEvent& evt);
+	void OnAdvancedMode(wxCommandEvent& evt);
+	void OnApply(wxCommandEvent& evt);
+	void OnOK(wxCommandEvent& evt);
+};
+
+#endif

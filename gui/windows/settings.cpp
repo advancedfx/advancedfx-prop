@@ -1,255 +1,376 @@
 #include <wx/wx.h>
+#include <wx/hyperlink.h>
+
+#include <system/config.h>
+#include <defines.h>
 
 #include "settings.h"
 
-hlaeSettingsPageTemplate::hlaeSettingsPageTemplate(wxWindow* parent)
-	: wxWindow(parent, wxID_ANY)
-{}
 
-void hlaeSettingsPageTemplate::ShowPage(bool is_advanced)
-{}
-
-void hlaeSettingsPageTemplate::ApplyChanges()
-{}
-
-hlaeSettingsPageGeneral::hlaeSettingsPageGeneral(wxWindow* parent)
-	: hlaeSettingsPageTemplate(parent)
-{}
-
-void hlaeSettingsPageGeneral::ShowPage(bool is_advanced)
+hlaeSettingsPageBase::hlaeSettingsPageBase(wxWindow* parent) : wxWindow(parent, wxID_ANY)
 {
-	new wxTextCtrl (this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(400,300));
-	Show();
+	Hide();
+}
+
+
+hlaeSettingsPageGeneral::hlaeSettingsPageGeneral(wxWindow* parent) : hlaeSettingsPageBase(parent)
+{
+	this->SetSizeHints( wxDefaultSize, wxDefaultSize );
+	
+	wxBoxSizer* bs_main;
+	bs_main = new wxBoxSizer( wxVERTICAL );
+	
+	wxBoxSizer* bs_link;
+	bs_link = new wxBoxSizer( wxVERTICAL );
+	
+	wxStaticText* st_link;
+	st_link = new wxStaticText( this, wxID_ANY, wxT("You can retrive the latest HLAE, infos, reports bugs and post suggestions at"), wxDefaultPosition, wxDefaultSize, 0 );
+	st_link->Wrap( -1 );
+	bs_link->Add( st_link, 0, 0, 5 );
+	
+	wxHyperlinkCtrl* hl_link;
+	hl_link = new wxHyperlinkCtrl( this, wxID_ANY, wxT("http://www.madabouthats.org/code-mdt/viewforum.php?f=3"), wxT("http://www.madabouthats.org/code-mdt/viewforum.php?f=3"), wxDefaultPosition, wxDefaultSize, wxHL_DEFAULT_STYLE );
+	
+	hl_link->SetHoverColour( wxColour( 0, 88, 255 ) );
+	hl_link->SetNormalColour( wxColour( 0, 0, 255 ) );
+	hl_link->SetVisitedColour( wxColour( 0, 0, 255 ) );
+	bs_link->Add( hl_link, 0, 0, 5 );
+	
+	bs_main->Add( bs_link, 0, wxALL|wxEXPAND, 5 );
+	
+	wxScrolledWindow* sw_info;
+	sw_info = new wxScrolledWindow( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxCLIP_CHILDREN|wxVSCROLL );
+	sw_info->SetScrollRate( 5, 5 );
+	wxBoxSizer* bs_info;
+	bs_info = new wxBoxSizer( wxVERTICAL );
+	
+	wxStaticText* st_info;
+	st_info = new wxStaticText( sw_info, wxID_ANY, wxT("Epilepsy warning:\n\n  This software will cause fast changing colors and images on your screen.\n\n\nUsing the HLAE:\n\n  Extract all contents of this archive into a folder you like.\n  You should not extract into the game's folder, this is not neccessary.\n\n  We suggest using Steam's Offline Mode.\n  Please stick to the manuals and tutorials on the web for more information.\n\n\nDisclaimer:\n\n  Altered versions must be cleary marked as such and must not be misrepresented\n  as being the original software.\n  \n  This software is for your enjoyment and you are using it at your own risk.\n\n\nSincerly,\nyour Half-Life Advanced Effects team.\n\n\n\n\nCredits:\n\nIn addition to the mentions in the changelog we want to credit the following\npeople, companys or organistations:\n\nMicrosoft\n  for VC++, MSDN2, Windows, ...\n  http://www.Microsoft.com\n  \nValve\n  for HLSDK\n  http://www.ValveSoftware.com\n  \nMetaMod\n  for HLSDK p3\n  http://www.MetaMod.org\n\nid Software\n  for Quake 1 source code\n  http://www.idsoftware.com\n  \nwxWidgets Project\n  for wxWidgets\n  http://wxwidgets.org\n  \nAnd everyone that feels he/she/it should have been mentioned here.\n\n\nGreetings:\n\nYou :)\n\n\nThe HLAE Team:\n\nMIRVIN_monkey\n  the creator and programmer\n  http://www.madabouthats.org\n  \nripieces\n  programer\n  http://dominik.matrixstorm.com\n  \nneomic\n  programer\n  http://neomic.xail.net/\n\nmsthavoc\n  documentation, testing, community relations\n  http://www.mst-gaming.de"), wxDefaultPosition, wxDefaultSize, 0 );
+	st_info->Wrap( -1 );
+	bs_info->Add( st_info, 0, 0, 5 );
+	
+	sw_info->SetSizer( bs_info );
+	sw_info->Layout();
+	bs_info->Fit( sw_info );
+	bs_main->Add( sw_info, 1, wxALL|wxEXPAND, 5 );
+	
+	wxButton* bt_ok;
+	bt_ok = new wxButton( this, wxID_OK, wxT("OK"), wxDefaultPosition, wxDefaultSize, 0 );
+	bs_main->Add( bt_ok, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5 );
+	
+	this->SetSizer( bs_main );
+	this->Layout();
 }
 
 void hlaeSettingsPageGeneral::ApplyChanges()
 {
-
+	// Save settings
 }
 
-hlaeListElementSettingsPage::hlaeListElementSettingsPage(
-	hlaeSettingsPageTemplate* page, const wxString& name, bool is_advanced)
-{
-	m_pagelist = new wxList;
-	m_pagelist->DeleteContents(true);
 
+hlaeSettingsPageAdvanced::hlaeSettingsPageAdvanced(wxWindow* parent) : hlaeSettingsPageBase(parent)
+{
+	this->SetSizeHints( wxDefaultSize, wxDefaultSize );
+	
+	wxBoxSizer* bs_main;
+	bs_main = new wxBoxSizer( wxVERTICAL );
+	
+	wxBoxSizer* bs_link;
+	bs_link = new wxBoxSizer( wxVERTICAL );
+	
+	wxStaticText* st_link;
+	st_link = new wxStaticText( this, wxID_ANY, wxT("You can retrive the latest HLAE, infos, reports bugs and post suggestions at"), wxDefaultPosition, wxDefaultSize, 0 );
+	st_link->Wrap( -1 );
+	bs_link->Add( st_link, 0, 0, 5 );
+	
+	wxHyperlinkCtrl* hl_link;
+	hl_link = new wxHyperlinkCtrl( this, wxID_ANY, wxT("http://www.madabouthats.org/code-mdt/viewforum.php?f=3"), wxT("http://www.madabouthats.org/code-mdt/viewforum.php?f=3"), wxDefaultPosition, wxDefaultSize, wxHL_DEFAULT_STYLE );
+	
+	hl_link->SetHoverColour( wxColour( 0, 88, 255 ) );
+	hl_link->SetNormalColour( wxColour( 0, 0, 255 ) );
+	hl_link->SetVisitedColour( wxColour( 0, 0, 255 ) );
+	bs_link->Add( hl_link, 0, 0, 5 );
+	
+	bs_main->Add( bs_link, 0, wxALL|wxEXPAND, 5 );
+	
+	wxScrolledWindow* sw_info;
+	sw_info = new wxScrolledWindow( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxCLIP_CHILDREN|wxVSCROLL );
+	sw_info->SetScrollRate( 5, 5 );
+	wxBoxSizer* bs_info;
+	bs_info = new wxBoxSizer( wxVERTICAL );
+	
+	wxStaticText* st_info;
+	st_info = new wxStaticText( sw_info, wxID_ANY, wxT("Epilepsy warning:\n\n  This software will cause fast changing colors and images on your screen.\n\n\nUsing the HLAE:\n\n  Extract all contents of this archive into a folder you like.\n  You should not extract into the game's folder, this is not neccessary.\n\n  We suggest using Steam's Offline Mode.\n  Please stick to the manuals and tutorials on the web for more information.\n\n\nDisclaimer:\n\n  Altered versions must be cleary marked as such and must not be misrepresented\n  as being the original software.\n  \n  This software is for your enjoyment and you are using it at your own risk.\n\n\nSincerly,\nyour Half-Life Advanced Effects team.\n\n\n\n\nCredits:\n\nIn addition to the mentions in the changelog we want to credit the following\npeople, companys or organistations:\n\nMicrosoft\n  for VC++, MSDN2, Windows, ...\n  http://www.Microsoft.com\n  \nValve\n  for HLSDK\n  http://www.ValveSoftware.com\n  \nMetaMod\n  for HLSDK p3\n  http://www.MetaMod.org\n\nid Software\n  for Quake 1 source code\n  http://www.idsoftware.com\n  \nwxWidgets Project\n  for wxWidgets\n  http://wxwidgets.org\n  \nAnd everyone that feels he/she/it should have been mentioned here.\n\n\nGreetings:\n\nYou :)\n\n\nThe HLAE Team:\n\nMIRVIN_monkey\n  the creator and programmer\n  http://www.madabouthats.org\n  \nripieces\n  programer\n  http://dominik.matrixstorm.com\n  \nneomic\n  programer\n  http://neomic.xail.net/\n\nmsthavoc\n  documentation, testing, community relations\n  http://www.mst-gaming.de"), wxDefaultPosition, wxDefaultSize, 0 );
+	st_info->Wrap( -1 );
+	bs_info->Add( st_info, 0, 0, 5 );
+	
+	sw_info->SetSizer( bs_info );
+	sw_info->Layout();
+	bs_info->Fit( sw_info );
+	bs_main->Add( sw_info, 1, wxALL|wxEXPAND, 5 );
+	
+	wxButton* bt_ok;
+	bt_ok = new wxButton( this, wxID_OK, wxT("OK 2 :)"), wxDefaultPosition, wxDefaultSize, 0 );
+	bs_main->Add( bt_ok, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5 );
+	
+	this->SetSizer( bs_main );
+	this->Layout();
+}
+
+void hlaeSettingsPageAdvanced::ApplyChanges()
+{
+	// Save settings
+}
+
+
+hlaeSettingsBaseElement::hlaeSettingsBaseElement(hlaeSettingsPageBase* page,
+	hlaeSettingsPageID_e page_id)
+{
 	m_page = page;
-	m_name = name;
-	m_isadvanced = is_advanced;
+	m_pageid = page_id;
 }
 
-hlaeListElementSettingsPage::~hlaeListElementSettingsPage()
+hlaeSettingsPageID_e hlaeSettingsBaseElement::GetPageID()
 {
-	m_pagelist->Clear();
-	delete m_pagelist;
+	return m_pageid;
 }
 
-bool hlaeListElementSettingsPage::IsAdvanced()
-{
-	return m_isadvanced;
-}
-
-const wxString& hlaeListElementSettingsPage::GetName()
-{
-	return m_name;
-}
-
-hlaeSettingsPageTemplate* hlaeListElementSettingsPage::GetPage()
+hlaeSettingsPageBase* hlaeSettingsBaseElement::GetPage()
 {
 	return m_page;
 }
 
-hlaeListElementSettingsPage* hlaeListElementSettingsPage::GetElement(int index)
+
+hlaeSettingsListElement::hlaeSettingsListElement(hlaeSettingsPageBase* page,
+	hlaeSettingsPageID_e page_id, wxTreeItemId tree_id) : hlaeSettingsBaseElement(page, page_id)
 {
-	return dynamic_cast<hlaeListElementSettingsPage*>(m_pagelist->Item(index)->GetData());
+	m_treeid = tree_id;
 }
 
-size_t hlaeListElementSettingsPage::GetCount()
+wxTreeItemId hlaeSettingsListElement::GetTreeID()
 {
-	return m_pagelist->GetCount();
-}
-
-void hlaeListElementSettingsPage::Append(hlaeListElementSettingsPage* page_element)
-{
-	m_pagelist->Append(page_element);
+	return m_treeid;
 }
 
 
-BEGIN_EVENT_TABLE(hlaeDialogSettings, wxDialog)
-	EVT_CHECKBOX(hlaeDialogSettings::hlaeID_AdvancedMode,
-		hlaeDialogSettings::OnAdvancedMode)
-	EVT_BUTTON(wxID_APPLY, hlaeDialogSettings::OnApply)
-	EVT_BUTTON(wxID_OK, hlaeDialogSettings::OnOK)
-	EVT_TREE_SEL_CHANGED(hlaeDialogSettings::hlaeID_SelectionChanged,
-		hlaeDialogSettings::OnSelectionChanged)
-END_EVENT_TABLE()
-
-hlaeDialogSettings::hlaeDialogSettings(wxWindow* parent, wxWindowID id, const wxString& title,
-	const wxPoint& pos, const wxSize& size)
-	: wxDialog( parent, id, title, pos, size)
+hlaeSettingsTreeElement::hlaeSettingsTreeElement(hlaeSettingsPageBase* page, const wxString& name,
+		hlaeSettingsPageID_e page_id, bool is_advanced) : hlaeSettingsBaseElement(page, page_id)
 {
-	m_pagelist = new wxList;
-	m_pageidlist = new wxList;
-	m_lastpage = new hlaeSettingsPageTemplate(this);
+	m_name = name;
+	m_isadvanced = is_advanced;
+}
 
-	m_pagelist->DeleteContents(true);
-	m_pageidlist->DeleteContents(true);
+size_t hlaeSettingsTreeElement::GetSubpagesCount()
+{
+	return m_subpagetree.size();
+}
+
+void hlaeSettingsTreeElement::AppendSubpage(const hlaeSettingsTreeElement& subpage_element)
+{
+	m_subpagetree.push_back(subpage_element);
+}
+
+const hlaeSettingsTreeElement& hlaeSettingsTreeElement::GetSubpage(size_t index)
+{
+	return m_subpagetree.at(index);
+}
+
+bool hlaeSettingsTreeElement::IsAdvanced()
+{
+	return m_isadvanced;
+}
+
+wxString hlaeSettingsTreeElement::GetName()
+{
+	return m_name;
+}
 
 
-	wxFlexGridSizer* fgSizer1 = new wxFlexGridSizer(4, 1, 0, 0);
-	fgSizer1->AddGrowableRow(0);
-	fgSizer1->AddGrowableCol(0);
+hlaeSettingsDialog::hlaeSettingsDialog(wxWindow* parent, hlaeSettingsPageID_e page_id)
+	: wxDialog(parent, wxID_ANY, wxString::Format(_T("%s%sSettings"),_T(HLAE_NAME),
+	_T(HLAE_TITLESEPERATOR)), wxDefaultPosition, wxSize(640,480))
+{
+	// Prepare
+
+	hlaeSettingsTreeElement node_general = hlaeSettingsTreeElement(
+		new hlaeSettingsPageGeneral(this), _T("General"), ID_General, false);
+	node_general.AppendSubpage(hlaeSettingsTreeElement(
+		new hlaeSettingsPageGeneral(this), _T("Menu 1"), ID_General, false));
+	node_general.AppendSubpage(hlaeSettingsTreeElement(
+		new hlaeSettingsPageGeneral(this), _T("Menu 2"), ID_General, false));
+	m_pagetree.push_back(node_general);
+
+	hlaeSettingsTreeElement node_advanced =	hlaeSettingsTreeElement(
+		new hlaeSettingsPageAdvanced(this), _T("Advanced"), ID_Advanced, true);
+	node_advanced.AppendSubpage(hlaeSettingsTreeElement(
+		new hlaeSettingsPageAdvanced(this), _T("Advanced"), ID_Advanced, true));
+	m_pagetree.push_back(node_advanced);
 
 
-	m_pagesizer = new wxFlexGridSizer(1, 2, 0, 0);
-	m_pagesizer->AddGrowableCol(1);
-	m_pagesizer->AddGrowableRow(0);
+	// Create the window
 
-	m_treectrl = new wxTreeCtrl(this, hlaeID_SelectionChanged, wxDefaultPosition,
-		wxSize(125,-1), wxTR_HAS_BUTTONS | wxTR_HIDE_ROOT | wxTR_LINES_AT_ROOT);
-
-	m_pagesizer->Add(m_treectrl, 0, wxRIGHT | wxEXPAND, 5);
-	m_pagesizer->Add(m_lastpage, 0, wxLEFT | wxALIGN_CENTER , 5);
-
-	fgSizer1->Add(m_pagesizer, 0, wxALL | wxEXPAND, 5);
-
-
-	fgSizer1->Add( new wxStaticLine( this, wxID_ANY, wxDefaultPosition, wxDefaultSize,
-		wxLI_HORIZONTAL ), 0, wxEXPAND, 5);
-
-
-	wxFlexGridSizer* fgSizer2 = new wxFlexGridSizer(1, 2, 0, 0);
-	fgSizer2->AddGrowableCol(0);
+	this->SetSizeHints( wxDefaultSize, wxDefaultSize );
 	
-	m_chkAdvanced = new wxCheckBox( this, hlaeID_AdvancedMode, _T("Advanced Settings"),
-		wxDefaultPosition, wxDefaultSize, 0 );
+	wxBoxSizer* bs_main;
+	bs_main = new wxBoxSizer( wxVERTICAL );
 	
-	fgSizer2->Add(m_chkAdvanced, 0, wxALIGN_CENTER_VERTICAL | wxEXPAND, 5 );
-
-	wxBoxSizer* bSizer = new wxBoxSizer(wxHORIZONTAL);
+	m_bs_treebook = new wxBoxSizer( wxHORIZONTAL );
 	
-	m_btnOK = new wxButton( this, wxID_OK, _T("OK"), wxDefaultPosition, wxDefaultSize, 0 );
-	bSizer->Add( m_btnOK, 0, wxLEFT, 5 );
+	m_treectrl = new wxTreeCtrl( this, ID_SelectionChanged, wxDefaultPosition, wxSize( 150,-1 ), wxTR_DEFAULT_STYLE|wxTR_HIDE_ROOT|wxTR_SINGLE );
+	m_bs_treebook->Add( m_treectrl, 0, wxEXPAND, 5 );
 	
-	m_btnCancel = new wxButton( this, wxID_CANCEL, _T("Cancel"));
-	bSizer->Add( m_btnCancel, 0, wxLEFT, 5 );
+	bs_main->Add( m_bs_treebook, 1, wxALL|wxEXPAND, 5 );
 	
-	m_btnApply = new wxButton( this, wxID_APPLY, _T("Apply"));
-	bSizer->Add( m_btnApply, 0, wxLEFT, 5 );
+	wxStaticLine* sl_main;
+	sl_main = new wxStaticLine( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL );
+	bs_main->Add( sl_main, 0, wxEXPAND, 5 );
+	
+	wxFlexGridSizer* fg_input;
+	fg_input = new wxFlexGridSizer( 2, 2, 0, 0 );
+	fg_input->AddGrowableCol( 0 );
+	fg_input->AddGrowableRow( 1 );
+	fg_input->SetFlexibleDirection( wxBOTH );
+	fg_input->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
+	
+	m_ch_advancedview = new wxCheckBox( this, ID_AdvancedMode, wxT("Advanced View"), wxDefaultPosition, wxDefaultSize, 0 );
+	
+	fg_input->Add( m_ch_advancedview, 0, wxALIGN_CENTER_VERTICAL, 5 );
+	
+	wxBoxSizer* bs_buttons;
+	bs_buttons = new wxBoxSizer( wxHORIZONTAL );
+	
+	wxButton* bt_ok;
+	bt_ok = new wxButton( this, ID_OK, wxT("OK"), wxDefaultPosition, wxDefaultSize, 0 );
+	bt_ok->SetDefault(); 
+	bs_buttons->Add( bt_ok, 0, 0, 5 );
+	
+	wxButton* bt_cancel;
+	bt_cancel = new wxButton( this, wxID_CANCEL, wxT("Cancel"), wxDefaultPosition, wxDefaultSize, 0 );
+	bs_buttons->Add( bt_cancel, 0, wxLEFT, 5 );
+	
+	wxButton* bt_apply;
+	bt_apply = new wxButton( this, ID_Apply, wxT("Apply"), wxDefaultPosition, wxDefaultSize, 0 );
+	bs_buttons->Add( bt_apply, 0, wxLEFT, 5 );
+	
+	fg_input->Add( bs_buttons, 1, 0, 5 );
+	
+	bs_main->Add( fg_input, 0, wxALL|wxEXPAND, 5 );
+	
+	this->SetSizer( bs_main );
+	this->Layout();
 
-	fgSizer2->Add(bSizer, 1, 0, 5);
 
-	fgSizer1->Add(fgSizer2, 1, wxALL|wxEXPAND, 5);
+	// Create the events
 
-	SetSizer(fgSizer1);
-
-	Layout();
+	Connect(ID_AdvancedMode, wxEVT_COMMAND_CHECKBOX_CLICKED,
+		wxCommandEventHandler(hlaeSettingsDialog::OnAdvancedMode));
+	Connect(ID_OK, wxEVT_COMMAND_BUTTON_CLICKED,
+		wxCommandEventHandler(hlaeSettingsDialog::OnOK));
+	Connect(ID_Apply, wxEVT_COMMAND_BUTTON_CLICKED,
+		wxCommandEventHandler(hlaeSettingsDialog::OnApply));
+	Connect(ID_SelectionChanged, wxEVT_COMMAND_TREE_SEL_CHANGED,
+		wxTreeEventHandler(hlaeSettingsDialog::OnSelectionChanged));
 
 	SetEscapeId(wxID_CANCEL);
 
-	// All settingspages
 
-	hlaeListElementSettingsPage* node_general =	new hlaeListElementSettingsPage(
-		new hlaeSettingsPageGeneral(this), _T("General"), false);
-	node_general->Append(new hlaeListElementSettingsPage(
-		new hlaeSettingsPageGeneral(this), _T("Menu 1"), false));
-	node_general->Append(new hlaeListElementSettingsPage(
-		new hlaeSettingsPageGeneral(this), _T("Menu 2"), false));
-	m_pagelist->Append(node_general);
+	// Set controls
 
-	hlaeListElementSettingsPage* node_advanced = new hlaeListElementSettingsPage(
-		new hlaeSettingsPageGeneral(this), _T("Advanced"), true);
-	node_advanced->Append(new hlaeListElementSettingsPage(
-		new hlaeSettingsPageGeneral(this),_T("Advanced"), true));
-	m_pagelist->Append(node_advanced);
+	m_advancedmode = g_config.GetPropertyBoolean(_T("general"), _T("advanced_view"));
+	m_ch_advancedview->SetValue(m_advancedmode);
 
-	// Update the control
+
+	// Update
+
 	UpdateTreeCtrl();
+
+
+	// Set the startup page
+
+	m_lastpage = m_pagelist.at(0).GetPage();
+
+	m_bs_treebook->Add(m_lastpage, 1, wxLEFT , 5);
+
+	m_lastpage->Show();
+
+	m_bs_treebook->Layout();
+	m_lastpage->Layout();
 }
 
-hlaeDialogSettings::~hlaeDialogSettings()
+void hlaeSettingsDialog::UpdateTreeCtrl()
 {
-	m_pagelist->Clear();
-	m_pageidlist->Clear();
+	m_pagelist.erase(m_pagelist.begin(), m_pagelist.end());
 
-	delete m_pagelist;
-	delete m_pageidlist;
-}
-
-void hlaeDialogSettings::OnApply(wxCommandEvent& WXUNUSED(evt))
-{
-	m_lastpage->ApplyChanges();
-}
-
-void hlaeDialogSettings::OnOK(wxCommandEvent& WXUNUSED(evt))
-{
-	m_lastpage->ApplyChanges();
-	Close();
-}
-
-void hlaeDialogSettings::UpdateTreeCtrl()
-{
-	m_pageidlist->Clear();
 	m_treectrl->DeleteAllItems();
 	m_treectrl->AddRoot(_T("Settings"));
 
-	for (wxList::iterator iter = m_pagelist->begin();
-		iter != m_pagelist->end(); iter++)
+	for (vector<hlaeSettingsTreeElement>::iterator iter = m_pagetree.begin();
+		iter != m_pagetree.end(); iter++)
 	{
-		wxObject* object = *iter;
-		hlaeListElementSettingsPage* current = dynamic_cast<hlaeListElementSettingsPage*>(object);
-	
-
-		UpdateTreeCtrlNodes(current, m_treectrl->GetRootItem());
+		UpdateTreeCtrlNodes(*iter, m_treectrl->GetRootItem());
 	}
 }
 
-void hlaeDialogSettings::UpdateTreeCtrlNodes(hlaeListElementSettingsPage* node,
-	wxTreeItemId id)
+void hlaeSettingsDialog::UpdateTreeCtrlNodes(hlaeSettingsTreeElement element, wxTreeItemId id)
 {
-	if (!node->IsAdvanced() || m_advancedmode)
+	if (!element.IsAdvanced() || m_advancedmode)
 	{
-		wxTreeItemId sub_id = m_treectrl->AppendItem(id, node->GetName());
+		wxTreeItemId sub_id = m_treectrl->AppendItem(id, element.GetName());
 
-		hlaeListElementSettingsPageID* pageid_element = new hlaeListElementSettingsPageID;
+		m_pagelist.push_back(hlaeSettingsListElement(element.GetPage(), element.GetPageID(), sub_id));
 
-		hlaeSettingsPageTemplate* page = node->GetPage();
-		page->Hide();
-
-		pageid_element->page = page;
-		pageid_element->id = sub_id;
-		m_pageidlist->Append(pageid_element);
-
-		for (unsigned int i = 0; i < node->GetCount(); i++)
-			UpdateTreeCtrlNodes(node->GetElement(i), sub_id);
-	}
-}
-
-void hlaeDialogSettings::OnAdvancedMode(wxCommandEvent& WXUNUSED(evt))
-{
-	m_advancedmode = m_chkAdvanced->IsChecked();
-	UpdateTreeCtrl();
-}
-
-void hlaeDialogSettings::OnSelectionChanged(wxTreeEvent& evt)
-{
-	for (wxList::iterator iter = m_pageidlist->begin();
-		iter != m_pageidlist->end(); iter++)
-	{
-		wxObject* object = *iter;
-		hlaeListElementSettingsPageID* current = dynamic_cast<hlaeListElementSettingsPageID*>(object);
-	
-		if (evt.GetItem() == current->id)
+		for (size_t i = 0; i < element.GetSubpagesCount(); i++)
 		{
+			UpdateTreeCtrlNodes(element.GetSubpage(i), sub_id);
+		}
+	}
+}
+
+void hlaeSettingsDialog::OnSelectionChanged(wxTreeEvent& evt)
+{
+	for (vector<hlaeSettingsListElement>::iterator iter = m_pagelist.begin();
+		iter != m_pagelist.end(); iter++)
+	{
+		hlaeSettingsListElement current = *iter;
+	
+		if (evt.GetItem() == current.GetTreeID())
+		{
+			hlaeSettingsPageBase* current_page = current.GetPage();
+
+			m_bs_treebook->Replace(m_lastpage, current_page);
+
 			m_lastpage->Hide();
-			current->page->ShowPage(m_advancedmode);
+			current_page->Show();
 
-			m_pagesizer->Replace(m_lastpage, current->page);
-			m_pagesizer->Layout();
+			m_bs_treebook->Layout();
+			current_page->Layout();
 
-			m_lastpage = current->page;
+			m_lastpage = current_page;
 
 			break;
 		}
 	}
+}
+
+void hlaeSettingsDialog::OnAdvancedMode(wxCommandEvent& evt)
+{
+	m_advancedmode = m_ch_advancedview->IsChecked();
+	UpdateTreeCtrl();
+}
+void hlaeSettingsDialog::OnOK(wxCommandEvent& evt)
+{
+	ApplyChanges();
+	Close(true);
+}
+
+void hlaeSettingsDialog::OnApply(wxCommandEvent& evt)
+{
+	ApplyChanges();
+}
+
+void hlaeSettingsDialog::ApplyChanges()
+{
+	m_lastpage->ApplyChanges();
+	g_config.SetPropertyBoolean(_T("general"), _T("advanced_view"), m_ch_advancedview->GetValue());
+	g_config.Flush();
 }
