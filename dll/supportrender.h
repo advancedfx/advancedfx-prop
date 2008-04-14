@@ -39,7 +39,6 @@
 //    users, but may be also very SLOW (not accelerated) for many of them.
 //
 //  RT_FRAMEBUFFEROBJECT:
-//    For technical reasons this uses a hardcoded texture id: FBO_TEXUTRE_ID
 //    http://www.opengl.org/registry/specs/EXT/framebuffer_object.txt
 //    This is actually what we are longing for, however this requires the
 //    EXT_framebuffers_object OpenGL extension (implemented at least to fit
@@ -55,6 +54,9 @@
 //    using the texture units (if we want to avoid slow copies over system
 //    memory), read "(42) What set of framebuffer targets should the initial
 //    extension support?" in the EXT specs for the reasons.
+//    For technical reasons this uses a hardcoded texture id: FBO_TEXUTRE_ID
+//    This target also depends on the correct calling of hlaeOnFilmingStart()
+//    and hlaeOnFilmingStop()
 
 #include <windows.h>
 
@@ -85,9 +87,11 @@ public:
 	// hGameWindow - HWND Window Handle of the GameWindow
 	// iWidth - total width in pixels of the image data (GameResolution)
 	// iHeight - total height in pixels of the image data (GameResolution)
+	// MANDATORY for these targets: all;
 
 	~CHlaeSupportRender();
 	// if RenderTarget is different from RT_NULL hlaeDeleteContext will be implecitly called on destroy
+	// MANDATORY for these targets: all;
 
 	EFboSupport Has_EXT_FrameBufferObject();
 	// will only return s.th. useful when hlaeMakeCurrent was called after
@@ -112,7 +116,7 @@ public:
 	// returns the handle to the internal HWND, or NULL on error
 
 	//
-	// Functions that need to be called by wgl* (windows gl extension) hooks:
+	// Functions that need to be called by the hook:
 	//   (with a few exceptions)
 	//
 
@@ -123,6 +127,7 @@ public:
 	// returns NULL on fail, otherwise the OpenGLContext device handle
 	// eRenderTarget -> read the comment at the top of this file
 	// hGameWindowDC -> DC That we shall derive from
+	// MANDATORY for these targets: all;
 	//
 	// To speed up rendering you can:
 	// - avoid using RT_MEMORYDC (use RT_FRAMEBUFFEROBJECT or RT_GAMEWINDOW instead whenever possible)
@@ -132,17 +137,27 @@ public:
 	// this should be placed in a wglDelteContext hook
 	// ATTENTION: If no render target is present (RT_NULL) or hGlRc is not the one managed by this class, this call will fail.
 	// may also be called ~CHlaeSupportRender() is RenderTarget is different from RT_NULL
+	// MANDATORY for these targets: all;
 
 	BOOL hlaeMakeCurrent(HDC hGameWindowDC, HGLRC hGlRc);
 	// this should be placed in a wglMakeCurrent hook
-	// This function is obligatory for these targets: RT_GAMEWINDOW;
 	// ATTENTION: If no render target is present (RT_NULL) or hGlRc is not the one managed by this class, this call will fail.
+	// MANDATORY for these targets: RT_MEMORYDC, RT_FRAMEBUFFEROBJECT;
 
 	BOOL hlaeSwapBuffers(HDC hGameWindowDC);
 	// this should be placed in a [wgl]SwapBuffers hook
-	// This function is obligatory for these targets: RT_GAMEWINDOW, RT_FRAMEBUFFEROBJECT;
 	// ATTENTION: If no render target is present (RT_NULL) this call will fail.
 	// ATTENTION: the caller has to make sure, that the context that is to be swapped is the right one
+	// MANDATORY for these targets: RT_MEMORYDC, RT_FRAMEBUFFEROBJECT;
+
+	void hlaeOnFilmingStart();
+	// should be called by the hook filming system to switch into filming mode (might be slower)
+	// ATTENTION: for technical reasons this may react delayed by one frame! So better drop one frame to be sure.
+	// MANDATORY for these targets: RT_FRAMEBUFFEROBJECT;
+
+	void hlaeOnFilmingStop();
+	// should be called by the hook filming system to leave filming mode
+	// MANDATORY for these targets: RT_FRAMEBUFFEROBJECT;
 
 private:
 	ERenderTarget _eRenderTarget;
@@ -155,6 +170,12 @@ private:
 
 	// shared:
 	HGLRC	_ownHGLRC;
+
+	struct _FilmingState_s
+	{
+		bool isFilming; // this is what we are currently doing
+		bool wantsFilming; // this is what the filming system says us to do
+	} _FilmingState_r;
 
 	// for FrameBufferObject only:
 	struct _FrameBufferObject_s

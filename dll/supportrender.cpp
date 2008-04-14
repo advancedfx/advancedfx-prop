@@ -131,6 +131,9 @@ CHlaeSupportRender::CHlaeSupportRender(HWND hGameWindow, int iWidth, int iHeight
 	_eFBOsupported = FBOS_UNKNOWN;
 
 	_ownHGLRC = NULL;
+
+	_FilmingState_r.isFilming = false;
+	_FilmingState_r.wantsFilming = false;
 }
 
 CHlaeSupportRender::~CHlaeSupportRender()
@@ -274,6 +277,17 @@ BOOL CHlaeSupportRender::hlaeSwapBuffers(HDC hGameWindowDC)
 	ERROR_MESSAGE("cannot SwapBuffers unknown target")
 	return FALSE;
 }
+
+void CHlaeSupportRender::hlaeOnFilmingStart()
+{
+	_FilmingState_r.wantsFilming = true;
+}
+
+void CHlaeSupportRender::hlaeOnFilmingStop()
+{
+	_FilmingState_r.wantsFilming = false;
+}
+
 
 HGLRC CHlaeSupportRender::_Create_RT_GAMEWINDOW (HDC hGameWindowDC)
 {
@@ -482,128 +496,161 @@ BOOL CHlaeSupportRender::_MakeCurrent_RT_FRAMEBUFFEROBJECT (HDC hGameWindowDC)
 
 		return bwResult;
 	}
-		
+
+	// prepare filming mode (in case someone wants to start instantly):
+
+	if (_FilmingState_r.wantsFilming)
+		_FilmingState_r.isFilming = true;
+	else
+	{
+		glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0 ); // bind system display buffers
+		_FilmingState_r.isFilming = false;
+	};
 
 	return bwResult;
 }
 
 BOOL CHlaeSupportRender::_SwapBuffers_RT_FRAMEBUFFEROBJECT (HDC hGameWindowDC)
 // thx to mst havoc for extensive testing!
+// Uh yeah and Gavin, don't be surprised in case you recognize s.th. from your ui.cpp here :D
 {
 	BOOL bwRet=FALSE;
-	struct
+
+	if (_FilmingState_r.isFilming)
 	{
-		GLint matrixmode;
-		GLint polygonmode[2];
-		GLfloat colours[4];
-		GLint texture2d;
-		GLboolean alpha;
-		GLboolean lighting;
-		GLboolean texture;
-		GLboolean blend;
-		GLboolean cull;
-		GLboolean depth;
-	} stateBackup;
+		struct
+		{
+			GLint matrixmode;
+			GLint polygonmode[2];
+			GLfloat colours[4];
+			GLint texture2d;
+			GLboolean alpha;
+			GLboolean lighting;
+			GLboolean texture;
+			GLboolean blend;
+			GLboolean cull;
+			GLboolean depth;
+		} stateBackup;
 
-	//
-	// switch to window-system frambuffer obj:
-	//
-	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0 );
+		//
+		// switch to window-system frambuffer obj:
+		//
+		glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0 );
 
-	//
-	// Backup old state of things we are going to change:
-	//
+		//
+		// Backup old state of things we are going to change:
+		//
 
-	glGetIntegerv(GL_MATRIX_MODE, &stateBackup.matrixmode);
-	glGetIntegerv(GL_POLYGON_MODE, stateBackup.polygonmode);
-	glGetFloatv(GL_CURRENT_COLOR, stateBackup.colours);
-	glGetIntegerv(GL_TEXTURE_BINDING_2D, &stateBackup.texture2d);
+		glGetIntegerv(GL_MATRIX_MODE, &stateBackup.matrixmode);
+		glGetIntegerv(GL_POLYGON_MODE, stateBackup.polygonmode);
+		glGetFloatv(GL_CURRENT_COLOR, stateBackup.colours);
+		glGetIntegerv(GL_TEXTURE_BINDING_2D, &stateBackup.texture2d);
 
-	stateBackup.alpha = glIsEnabled(GL_ALPHA_TEST);
-	stateBackup.lighting = glIsEnabled(GL_LIGHTING);
-	stateBackup.texture = glIsEnabled(GL_TEXTURE_2D);
-	stateBackup.blend = glIsEnabled(GL_BLEND);
-	stateBackup.cull = glIsEnabled(GL_CULL_FACE);
-	stateBackup.depth = glIsEnabled(GL_DEPTH_TEST);
+		stateBackup.alpha = glIsEnabled(GL_ALPHA_TEST);
+		stateBackup.lighting = glIsEnabled(GL_LIGHTING);
+		stateBackup.texture = glIsEnabled(GL_TEXTURE_2D);
+		stateBackup.blend = glIsEnabled(GL_BLEND);
+		stateBackup.cull = glIsEnabled(GL_CULL_FACE);
+		stateBackup.depth = glIsEnabled(GL_DEPTH_TEST);
 
-	//
-	// Set new states and draw:
-	//
+		//
+		// Set new states and draw:
+		//
 
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	//glDrawBuffer(GL_BACK);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		//glDrawBuffer(GL_BACK);
 
-	// Change projection matrix to orth
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadIdentity();
-	gluOrtho2D(0, _iWidth, _iHeight, 0);
+		// Change projection matrix to orth
+		glMatrixMode(GL_PROJECTION);
+		glPushMatrix();
+		glLoadIdentity();
+		gluOrtho2D(0, _iWidth, _iHeight, 0);
 
-	// Back to model for rendering
-	glMatrixMode(GL_MODELVIEW);
-	//glPushMatrix();
-	glLoadIdentity();
+		// Back to model for rendering
+		glMatrixMode(GL_MODELVIEW);
+		//glPushMatrix();
+		glLoadIdentity();
 
-	glDisable(GL_ALPHA_TEST);
-	glDisable(GL_LIGHTING);
-	glEnable(GL_TEXTURE_2D);
-	glDisable(GL_BLEND);
-	glDisable(GL_CULL_FACE);
-	glDisable(GL_DEPTH_TEST);
+		glDisable(GL_ALPHA_TEST);
+		glDisable(GL_LIGHTING);
+		glEnable(GL_TEXTURE_2D);
+		glDisable(GL_BLEND);
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_DEPTH_TEST);
 
-	glColor4f(1.0f,1.0f,1.0f,1.0f);
-	
-	glBindTexture(GL_TEXTURE_2D, _FrameBufferObject_r.rgbaRenderTexture ); // bind fbo texture
-	//glBindTexture(GL_TEXTURE_2D, 0 );
+		glColor4f(1.0f,1.0f,1.0f,1.0f);
+		
+		glBindTexture(GL_TEXTURE_2D, _FrameBufferObject_r.rgbaRenderTexture ); // bind fbo texture
 
-	// Draw fbo texture quad on screen:
-	glBegin(GL_QUADS);
-		glTexCoord2f(0.0f, 1.0f); glVertex3f(    0.0f,     0.0f, 0.0f);	// Top Left
-		glTexCoord2f(1.0f, 1.0f); glVertex3f( _iWidth,     0.0f, 0.0f);	// Top Right
-		glTexCoord2f(1.0f, 0.0f); glVertex3f( _iWidth, _iHeight, 0.0f);	// Bottom Right
-		glTexCoord2f(0.0f, 0.0f); glVertex3f(    0.0f, _iHeight, 0.0f);	// Bottom Left
-	glEnd();
-	
+		// Draw fbo texture quad on screen:
+		glBegin(GL_QUADS);
+			glTexCoord2f(0.0f, 1.0f); glVertex3f(    0.0f,     0.0f, 0.0f);	// Top Left
+			glTexCoord2f(1.0f, 1.0f); glVertex3f( _iWidth,     0.0f, 0.0f);	// Top Right
+			glTexCoord2f(1.0f, 0.0f); glVertex3f( _iWidth, _iHeight, 0.0f);	// Bottom Right
+			glTexCoord2f(0.0f, 0.0f); glVertex3f(    0.0f, _iHeight, 0.0f);	// Bottom Left
+		glEnd();
+		
 
-	//
-	// swap window display:
-	//
+		//
+		// swap window display:
+		//
 
-	bwRet = SwapBuffers(hGameWindowDC); 
+		bwRet = SwapBuffers(hGameWindowDC); 
 
-	//
-	// Restore old states:
-	//
+		//
+		// Restore old states:
+		//
 
-	glColor4fv(stateBackup.colours);
-	glPolygonMode(stateBackup.polygonmode[0],stateBackup.polygonmode[1]);
-	glBindTexture(GL_TEXTURE_2D,stateBackup.texture2d);
+		glColor4fv(stateBackup.colours);
+		glPolygonMode(stateBackup.polygonmode[0],stateBackup.polygonmode[1]);
+		glBindTexture(GL_TEXTURE_2D,stateBackup.texture2d);
 
-	#define GLSETENABLED(cap,mode) if (mode) glEnable(cap);
-	#define GLSETDISABLED(cap,mode) if(!mode) glDisable(cap);
-	GLSETENABLED(	GL_ALPHA_TEST, stateBackup.alpha )
-	GLSETENABLED(	GL_LIGHTING, stateBackup.lighting )
-	GLSETDISABLED(	GL_TEXTURE_2D, stateBackup.texture )
-	GLSETENABLED(	GL_CULL_FACE, stateBackup.cull )
-	GLSETENABLED(	GL_DEPTH_TEST, stateBackup.depth )
-	GLSETENABLED(	GL_BLEND, stateBackup.blend )
+		#define GLSETENABLED(cap,mode) if (mode) glEnable(cap);
+		#define GLSETDISABLED(cap,mode) if(!mode) glDisable(cap);
+		GLSETENABLED(	GL_ALPHA_TEST,	stateBackup.alpha )
+		GLSETENABLED(	GL_LIGHTING,	stateBackup.lighting )
+		GLSETDISABLED(	GL_TEXTURE_2D,	stateBackup.texture )
+		GLSETENABLED(	GL_CULL_FACE,	stateBackup.cull )
+		GLSETENABLED(	GL_DEPTH_TEST,	stateBackup.depth )
+		GLSETENABLED(	GL_BLEND,		stateBackup.blend )
 
-	//glPopMatrix();
+		//glPopMatrix();
 
-	// Reset the projection matrix
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
+		// Reset the projection matrix
+		glMatrixMode(GL_PROJECTION);
+		glPopMatrix();
 
-	// Back to whatever we were before
-	glMatrixMode(stateBackup.matrixmode);
+		// Back to whatever we were before
+		glMatrixMode(stateBackup.matrixmode);
 
-	//
-	// bind our FBO back for rendering:
-	//
-	
-	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, _FrameBufferObject_r.FBOid );
-	glFramebufferTexture2DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, _FrameBufferObject_r.rgbaRenderTexture, 0 );
-	glFramebufferRenderbufferEXT( GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, _FrameBufferObject_r.depthRenderBuffer );
+		//
+		// bind our FBO back for rendering:
+		//
+		
+		glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, _FrameBufferObject_r.FBOid );
+		// I guess this is not required, cause the attachment state is maintained by the OGL EXT, so I commented it out:
+		//glFramebufferTexture2DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, _FrameBufferObject_r.rgbaRenderTexture, 0 );
+		//glFramebufferRenderbufferEXT( GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, _FrameBufferObject_r.depthRenderBuffer );
+
+	} // endif (_FilmingState_r.isFilming)
+	else
+		bwRet = SwapBuffers(hGameWindowDC); // only swap display
+
+	if (_FilmingState_r.isFilming != _FilmingState_r.wantsFilming)
+	{
+		// change of filming mode requested
+
+		if (_FilmingState_r.wantsFilming)
+		{
+			// enter filming mode
+			glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, _FrameBufferObject_r.FBOid ); // switch main render target to our FBO
+			_FilmingState_r.isFilming = true;
+		} else {
+			// leave filming mode
+			glBindFramebufferEXT( GL_FRAMEBUFFER_EXT,0 ); // switch main render target back to system buffers
+			_FilmingState_r.isFilming = false;
+		}
+	}
 
 	return bwRet;
 }
