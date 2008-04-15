@@ -991,7 +991,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 		m_iFilmingState = FS_ACTIVE;
 
 		_bRecordBuffers_FirstCall = true;
-		return false;
+		return true;
 	}
 
 	bool bSplitting = (movie_splitstreams->value == 3.0f);
