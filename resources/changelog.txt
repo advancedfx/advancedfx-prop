@@ -3,6 +3,12 @@
 - removed:
   __mirv_movie_oldcapture, mirv_movie_customdump
 
+2.0.0.3
+
+
++ Adapted HLAE to the 2008-04-14 H-L engine update
+  (updated mdt_addresses.ini)
+
 
 2.0.0.2
 
