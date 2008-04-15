@@ -628,6 +628,8 @@ void Filming::setScreenSize(GLint w, GLint h)
 void Filming::Start()
 {
 	HlaeBc_OnFilmingStart(); // inform Hlae Server GUI
+	if (_pSupportRender)
+		_pSupportRender->hlaeOnFilmingStart();
 
 	// Different filename, so save it and reset the take count
 	if (strncmp(movie_filename->string, m_szFilename, sizeof(m_szFilename) - 1) != 0)
@@ -722,6 +724,8 @@ void Filming::Start()
 
 void Filming::Stop()
 {
+	if (_pSupportRender)
+		_pSupportRender->hlaeOnFilmingStart();
 	HlaeBc_OnFilmingStop(); // inform Hlae Server GUI
 
 	if (_bCamMotion) MotionFile_End();
