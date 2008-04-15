@@ -969,13 +969,22 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 	// the first frame is drawn correctly
 	if (m_iFilmingState == FS_STARTING)
 	{
+		// we drop this frame and prepare the next one:
+
 		if (movie_separate_hud->value!=0.0)
 		{
 			bWantsHudCapture = true; // signal for R_RenderView
 			m_iMatteStage = MS_ALL; // override matte stage
 			_HudRqState = HUDRQ_CAPTURE_COLOR; // signal we want an color capture
 		}
+
+		// execute swap already (support render might need preparations for first frame):
+		if (_pSupportRender)
+			*bSwapRes = _pSupportRender->hlaeSwapBuffers(hSwapHDC);
+		else
+			*bSwapRes=SwapBuffers(hSwapHDC);
 		
+		// prepare and clear for render:
 		glClearColor(m_MatteColour[0], m_MatteColour[1], m_MatteColour[2], 1.0f); // don't forget to set our clear color
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
