@@ -243,7 +243,23 @@ REGISTER_DEBUGCMD_FUNC(forcebuffers)
 
 REGISTER_DEBUGCVAR(deltatime, "1.0", 0);
 
+xcommand_t g_Old_connect = NULL;
+void Hook_connect(void)
+{
+	int imbret = MessageBoxA(NULL,
+		"WARNING: You are about to connect to a server.\n"
+		"It is strongly recommended to NOT connect to any server while HLAE is running!\n"
+		"\n"
+		"Press NO (recommended) to abort connecting.\n"
+		"Press Yes to continue connecting.\n"
+		,"Game tries to connect",
+		MB_YESNO|MB_ICONWARNING|MB_DEFBUTTON2
+	);
+	if (imbret == IDYES) g_Old_connect();
+}
+
 xcommand_t g_Old_dem_forcehltv = NULL;
+
 void Hook_dem_forcehltv(void)
 {
 	char *ptmp="";
@@ -592,6 +608,7 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 		pEngfuncs->Con_DPrintf("CommandTree at: 0x%08x\n", g_CmdTools.GiveCommandTreePtr());
 
 		// install some hooks:
+		if (!(g_Old_connect = g_CmdTools.HookCommand("connect",Hook_connect))) pEngfuncs->Con_Printf("HLAE warning: Failed hooking connect");
 		if (!(g_Old_dem_forcehltv = g_CmdTools.HookCommand("dem_forcehltv",Hook_dem_forcehltv))) pEngfuncs->Con_Printf("HLAE warning: Failed hooking dem_forcehltv");
 		if (!(g_CmdTools.HookCommand("startmovie",Hook_startmovie))) pEngfuncs->Con_Printf("HLAE warning: Failed hooking startmovie");
 		if (!(g_CmdTools.HookCommand("endmovie",Hook_endmovie))) pEngfuncs->Con_Printf("HLAE warning: Failed hooking endmovie");

@@ -1,7 +1,17 @@
 ?
 
-- removed:
+Changed:
+  HLAE hooks the connect command, to warn the user in case the user selects to
+  join a server while HLAE is running (which is strongly not recommended).
+  HLAE may fetch some but not all attempts, so as always: better count on your
+  brain before you have to count on the airbag ;)
+  
+
+Removed:
   __mirv_movie_oldcapture, mirv_movie_customdump
+  
+Thanks to msthavoc and MN|vadoskin for testing
+
 
 2.0.0.3
 
