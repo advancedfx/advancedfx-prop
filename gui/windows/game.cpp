@@ -24,6 +24,7 @@ END_EVENT_TABLE()
 void CHlaeGameWindow::OnFocus(wxFocusEvent& myevent)
 {
 	if (_pHlaeBcServer) _pHlaeBcServer->OnGameWindowFocus();
+	myevent.Skip();
 }
 
 //

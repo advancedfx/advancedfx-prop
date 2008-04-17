@@ -13,7 +13,7 @@
 #include "hlae.h"
 
 CAboutDialog::CAboutDialog(wxWindow* parent)
-: wxDialog(parent, wxID_ANY, _T("About Half-Life After Effects"), wxDefaultPosition, wxSize(450,350))
+: wxDialog(parent, wxID_ANY, _T("About ") _T( HLAE_NAME ), wxDefaultPosition, wxSize(450,350))
 {
 	this->SetSizeHints( wxDefaultSize, wxDefaultSize );
 	
@@ -74,7 +74,7 @@ END_EVENT_TABLE()
 
 hlaeMainWindow::hlaeMainWindow()
 		: wxFrame(NULL, wxID_ANY,
-			_T("Half-Life After Effects - Developer Edition"),
+		_T( HLAE_NAME ) _T(" ") _T( HLAE_VERSIONSTR) _T( " ( ") _T(__DATE__)  _T(" ") _T(__TIME__) _T (" )"),
 			wxDefaultPosition, wxSize(800,600))
 {
 	g_layoutmanager.SetMainWindow(this);
@@ -187,7 +187,7 @@ void hlaeMainWindow::CreateMenuBar() {
 
 	// help menu
 	wxMenu* help_menu = new wxMenu;
-    help_menu->Append(wxID_ABOUT, _T("&About..."), _T("About Half-Life After Effects"));
+    help_menu->Append(wxID_ABOUT, _T("&About..."), _T("About ") _T(HLAE_NAME) );
 
 	// append menus to menubar
 	menubar->Append(file_menu, _T("&File"));

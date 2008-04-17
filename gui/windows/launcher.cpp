@@ -502,6 +502,7 @@ void CLauncherDialog::OnLaunch(wxCommandEvent& WXUNUSED(evt))
 	g_config.SetPropertyString(_T("launcher"), _T("height"), m_tc_height->GetValue());
 	g_config.SetPropertyString(_T("launcher"), _T("cmdline"), m_tc_additionalcmdline->GetValue());
 	g_config.SetPropertyBoolean(_T("launcher"), _T("force"), m_ch_force->GetValue());
+	g_config.SetPropertyInteger(_T("launcher"), _T("capturemethod"), m_c_capturemode->GetCurrentSelection());
 
 	g_config.Flush();
 
