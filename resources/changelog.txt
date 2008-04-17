@@ -1,3 +1,10 @@
+HLAE 2.0.1.1
+
+Added missing file to download, in case you already downloaded 2.0.1
+please re-download!
+Sorry : )
+
+
 HLAE 2.0.1
 
 This is release is mainly for making the HLAE Gui more reliable, thus we'll
