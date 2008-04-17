@@ -2,8 +2,9 @@
 #include <wx/aui/aui.h>
 
 #include <shared/com/basecom.h>
-#include <system/debug.h>
-#include <system/layout.h>
+#include <system/debug.h> // g_debug
+#include <system/config.h> // g_config
+#include <system/layout.h> // g_layout
 #include <windows/game.h>
 
 #include "basecom.h"
@@ -440,6 +441,9 @@ WXHWND CHlaeBcServer::_OnCreateWindow(int nWidth, int nHeight)
 	wxString mystr;
 	mystr.Printf(_T("_OnCreateWindow WXHWND: 0x%08x"),hwRet); 
 	g_debug.SendMessage(mystr, hlaeDEBUG_DEBUG);
+
+	// adjust undock gamewindow setting from current launcher setting:
+	_pHlaeGameWindow->bUndockOnFilming = 1 == g_config.GetPropertyInteger(_T("launcher"), _T("capturemethod"));
 
 	return hwRet;
 }
