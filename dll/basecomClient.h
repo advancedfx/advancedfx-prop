@@ -18,12 +18,12 @@ bool HlaeBc_OnFilmingStop();
 HWND APIENTRY HlaeBcClt_CreateWindowExA(DWORD dwExStyle,LPCTSTR lpClassName,LPCTSTR lpWindowName,DWORD dwStyle,int x,int y,int nWidth,int nHeight,HWND hWndParent,HMENU hMenu,HINSTANCE hInstance,LPVOID lpParam);
 BOOL APIENTRY HlaeBcClt_DestroyWindow(HWND hWnd);
 BOOL WINAPI HlaeBcClt_SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, UINT uFlags);
-//BOOL APIENTRY HlaeBcCl_GetCursorPos(LPPOINT lpPoint); // Call this in a WINAPI SetCursorPos hook
 ATOM APIENTRY HlaeBcClt_RegisterClassA(CONST WNDCLASSA *lpWndClass);
 
 BOOL WINAPI HlaeBcClt_ReleaseCapture( VOID );
 HWND WINAPI HlaeBcClt_SetCapture( HWND hWnd);
 
+BOOL  WINAPI HlaeBcClt_SetPixelFormat(HDC hdc, int format, CONST PIXELFORMATDESCRIPTOR * ppfd);
 HGLRC WINAPI HlaeBcClt_wglCreateContext(HDC);
 BOOL WINAPI HlaeBcClt_wglDeleteContext(HGLRC hGlRc);
 BOOL WINAPI HlaeBcClt_wglMakeCurrent(HDC, HGLRC);

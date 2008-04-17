@@ -66,10 +66,8 @@ LRESULT CALLBACK Hooking_WndProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 
 	switch(uMsg)
 	{
-	case WM_ACTIVATE:
-	case WM_SETFOCUS:
 	case WM_KILLFOCUS:
-		// we won't override those messages, since this would give us problems with the mousecapture if we won't allow it to deactivate
+		pEngfuncs->Con_DPrintf("WM_KILLFOCUS:\n");
 		break;
 	}
 
@@ -556,6 +554,25 @@ BOOL WINAPI HlaeBcClt_ReleaseCapture( VOID )
 		return ReleaseCapture();
 
 	return TRUE;
+}
+
+BOOL  WINAPI HlaeBcClt_SetPixelFormat(HDC hdc, int format, CONST PIXELFORMATDESCRIPTOR * ppfd)
+{
+	BOOL bRet;
+
+	PIXELFORMATDESCRIPTOR *myppfd;
+	memcpy(&myppfd,&ppfd,sizeof(PIXELFORMATDESCRIPTOR *)); // we intentionally void the const paradigm here
+
+	if (pEngfuncs->CheckParm("-hlaealpha8", NULL ))
+	{
+		// we intentionally void the const paradigm here:
+		myppfd->cAlphaBits = 8; // request alpha bit planes (generic implementation doesn't support that)
+		myppfd->cAlphaShift = 24;
+	}
+
+	bRet= SetPixelFormat(hdc,format,myppfd);
+
+	return bRet;
 }
 
 HGLRC WINAPI HlaeBcClt_wglCreateContext(HDC hDc)

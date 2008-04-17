@@ -250,7 +250,7 @@ void InstallHook_GetClientColor( void )
 }
 
 
-REGISTER_CMD_FUNC(playercolors)
+REGISTER_CMD_FUNC(playercolors_cs)
 
 {
 	InstallHook_GetClientColor();
@@ -424,6 +424,7 @@ REGISTER_CMD_FUNC(playercolors)
 	if (bShowHelp)
 	{
 		pEngfuncs->Con_Printf(
+			"This command only works in cstrike.\n"
 			"Targets (insert for <traget> in the commands):\n"
 			"\tg - general text (playername head-up, map overview)\n"
 			"\ta - attacker text of the deathnotice (frags)\n"

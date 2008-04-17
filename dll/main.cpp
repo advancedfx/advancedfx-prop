@@ -3,11 +3,6 @@
 
 */
 
-#define MDT_COMPILE_FOR_GUI 1
-// 0 - disables HLAE gui specific code
-// 1 - enables the new code that will check for the HLAE GUI etc..
-
-
 #include "mdt_debug.h"
 
 #pragma comment(lib,"OpenGL32.lib")
@@ -87,7 +82,6 @@ playermove_s* ppmove			= (playermove_s*)		HL_ADDR_PLAYERMOVE_S;
 
 int		g_nViewports = 0;
 bool	g_bIsSucceedingViewport = false;
-bool	g_bMenu = false;
 
 #define MDT_MAX_PATH_BYTES 1025
 #define MDT_CFG_FILE "mdt_addresses.ini"
@@ -111,27 +105,6 @@ REGISTER_DEBUGCVAR(movie_oldmatte, "0", 0);
 //
 // Commands
 //
-
-#if 0
-REGISTER_CMD_FUNC(menu)
-{
-	g_bMenu = !g_bMenu;
-
-	// If we leave the gui then reset the mouse position so view doesn't jump
-	if (!g_bMenu)
-		SetCursorPos(pEngfuncs->GetWindowCenterX(), pEngfuncs->GetWindowCenterY());
-}
-#endif
-
-void ToggleMenu()
-{
-	g_bMenu = !g_bMenu;
-
-	// If we leave the gui then reset the mouse position so view doesn't jump
-	if (!g_bMenu)
-		SetCursorPos(pEngfuncs->GetWindowCenterX(), pEngfuncs->GetWindowCenterY());
-}
-
 
 REGISTER_CMD_FUNC(whereami)
 {
@@ -349,65 +322,6 @@ void DrawActivePlayers()
 	}
 }
 
-bool InMenu()
-{
-	// TODO - CHECK THAT WE'RE NOT IN MAIN MENU SCREEN
-	return g_bMenu;
-}
-
-//
-//
-//
-
-WNDPROC pWndProc;
-
-LRESULT APIENTRY my_WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	static int old_wParam = 0;
-
-	if (InMenu())
-	{
-		switch (uMsg)
-		{
-		case WM_KEYDOWN:
-		case WM_KEYUP:
-			if (wParam == VK_ESCAPE)
-			{
-				ToggleMenu();
-				return 0;
-			}
-			return 0;
-
-		case WM_LBUTTONDOWN:
-			gui->MouseDown(MOUSE_BUTTON1);
-			return 0;
-
-		case WM_LBUTTONUP:
-			gui->MouseUp(MOUSE_BUTTON1);
-			return 0;
-
-		case WM_RBUTTONDOWN:
-			gui->MouseDown(MOUSE_BUTTON2);
-			return 0;
-
-		case WM_RBUTTONUP:
-			gui->MouseUp(MOUSE_BUTTON2);
-			return 0;
-
-		case WM_MOUSEMOVE:
-			if ((old_wParam & MK_LBUTTON) ^ (wParam & MK_LBUTTON))
-				(wParam & MK_LBUTTON) ? gui->MouseDown(MOUSE_BUTTON1) : gui->MouseUp(MOUSE_BUTTON1);
-			if ((old_wParam & MK_RBUTTON) ^ (wParam & MK_RBUTTON))
-				(wParam & MK_LBUTTON) ? gui->MouseDown(MOUSE_BUTTON1) : gui->MouseUp(MOUSE_BUTTON1);
-
-			old_wParam = wParam;
-			return 0;
-		}
-	}
-
-	return CallWindowProc(pWndProc, hwnd, uMsg, wParam, lParam);
-}
-
 //
 //	OpenGl Hooking
 //
@@ -597,9 +511,7 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 		pEngfuncs->pfnGetScreenInfo(&screeninfo);
 		pEngfuncs->Con_DPrintf("ScreenRes: %dx%d\n", screeninfo.iWidth, screeninfo.iHeight);
 
-#if MDT_COMPILE_FOR_GUI
 		g_Filming.SupplySupportRenderer(g_pSupportRender);
-#endif
 
 		g_Filming.setScreenSize(screeninfo.iWidth,screeninfo.iHeight);
 
@@ -754,18 +666,6 @@ void *InterceptDllCall(HMODULE hModule, char *szDllName, char *szFunctionName, D
 BOOL (APIENTRY *pwglSwapBuffers)(HDC hDC);
 BOOL APIENTRY my_wglSwapBuffers(HDC hDC)
 {
-#if MDT_COMPILE_FOR_GUI != 1
-// only install old gui hooks when not compiling for new GUI
-	static bool bHaveWindowHandle = false;
-
-	if (!bHaveWindowHandle && hDC != 0)
-	{
-		HWND hWnd = WindowFromDC(hDC);
-		pWndProc = (WNDPROC) SetWindowLong(hWnd, GWL_WNDPROC, (long) my_WndProc);
-		bHaveWindowHandle = true;
-	}
-#endif
-
 	BOOL bResWglSwapBuffers;
 	bool bRecordSwapped=false;
 
@@ -788,20 +688,9 @@ BOOL APIENTRY my_wglSwapBuffers(HDC hDC)
 		bRecordSwapped = g_Filming.recordBuffers(hDC,&bResWglSwapBuffers);
 	}
 
-	// Obviously use 
-	if (InMenu())
-	{
-		gui->Update(pEngfuncs->GetClientTime());
-		gui->Render(screeninfo.iWidth, screeninfo.iHeight);
-	}
-
 	// do the switching of buffers as requersted:
 	if (!bRecordSwapped)
-#if MDT_COMPILE_FOR_GUI 
-		bResWglSwapBuffers = g_pSupportRender->hlaeSwapBuffers(hDC);
-#else
 		bResWglSwapBuffers = (*pwglSwapBuffers)(hDC);
-#endif
 
 	// no we have captured the image (by default from backbuffer) and display it on the front, now we can prepare the new backbuffer image if required.
 
@@ -818,39 +707,6 @@ BOOL APIENTRY my_wglSwapBuffers(HDC hDC)
 	}
 
 	return bResWglSwapBuffers;
-}
-
-
-
-// Don't let HL reset the cursor position if we're in our own gui
-BOOL APIENTRY my_SetCursorPos(int x, int y)
-{
-	if (InMenu())
-		return 1;
-
-	return SetCursorPos(x, y);
-}
-
-// Get the mouse position for our menu and tell HL that the mouse is in the centre
-// of the screen (to stop player from spinning while in menu)
-BOOL APIENTRY my_GetCursorPos(LPPOINT lpPoint)
-{
-	BOOL bRet = GetCursorPos(lpPoint);
-
-	if (!InMenu())return bRet;
-
-	if (!bRet)
-		return FALSE;
-
-	int iMidx = pEngfuncs->GetWindowCenterX();
-	int iMidy = pEngfuncs->GetWindowCenterY();
-
-	gui->UpdateMouse((int) lpPoint->x - (iMidx - 800 / 2),
-					 (int) lpPoint->y - (iMidy - 600 / 2));
-
-	lpPoint->x = (long) iMidx;
-	lpPoint->y = (long) iMidy;
-	return TRUE;
 }
 
 FARPROC (WINAPI *pGetProcAddress)(HMODULE hModule, LPCSTR lpProcName);
@@ -877,10 +733,6 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 		if (!lstrcmp(lpProcName, "glBlendFunc"))
 			return (FARPROC) &my_glBlendFunc;
 
-		if (!lstrcmp(lpProcName, "GetCursorPos"))
-			return (FARPROC) &my_GetCursorPos;
-		if (!lstrcmp(lpProcName, "SetCursorPos"))
-			return (FARPROC) &my_SetCursorPos;
 		if (!lstrcmp(lpProcName, "wglSwapBuffers"))
 		{
 			pwglSwapBuffers = (BOOL (APIENTRY *)(HDC hDC)) nResult;
@@ -890,7 +742,6 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 		if (!lstrcmp(lpProcName,"DirectDrawCreate"))
 			return Hook_DirectDrawCreate(nResult); // give our hook original address and return new (it remembers the original one from it's first call, it also cares about the commandline options (if to force the res or not and does not install the hook if not needed))
 
-#if MDT_COMPILE_FOR_GUI == 1
 		if (!lstrcmp(lpProcName, "CreateWindowExA"))
 			return (FARPROC) &HlaeBcClt_CreateWindowExA;
 		if (!lstrcmp(lpProcName, "DestroyWindow"))
@@ -899,6 +750,8 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 			return (FARPROC) &HlaeBcClt_RegisterClassA;
 		if (!lstrcmp(lpProcName, "SetWindowPos"))
 			return (FARPROC) &HlaeBcClt_SetWindowPos;
+		if (!lstrcmp(lpProcName, "SetPixelFormat"))
+			return (FARPROC) &HlaeBcClt_SetPixelFormat;
 		if (!lstrcmp(lpProcName, "wglCreateContext"))
 			return (FARPROC) &HlaeBcClt_wglCreateContext;
 		if (!lstrcmp(lpProcName, "wglDeleteContext"))
@@ -915,7 +768,6 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 			//return (FARPROC) &my_DirectInputCreateA;
 			// DirectInputCreateA" - imported but never called?
 			// Half-Life uses DirectInputCreateW (uni code) instead
-#endif
 
 	}
 

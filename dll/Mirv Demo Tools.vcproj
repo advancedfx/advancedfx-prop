@@ -267,10 +267,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ui.h"
-				>
-			</File>
-			<File
 				RelativePath=".\zooming.h"
 				>
 			</File>
@@ -364,10 +360,6 @@
 			</File>
 			<File
 				RelativePath=".\teamcolor.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ui.cpp"
 				>
 			</File>
 			<File
