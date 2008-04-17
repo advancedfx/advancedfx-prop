@@ -35,6 +35,7 @@ Removed:
   
 Thanks to:
    msthavoc and MN|vadoskin for testing
+   neomic and ripieces for coding
    Valve for not suing us( yet).
    The HLAE forum users for their creative input, we hope we'll
    be able to add at least some of the things being suggested in the future,
