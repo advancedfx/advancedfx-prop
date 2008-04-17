@@ -1,16 +1,44 @@
-?
+HLAE 2.0.1
 
-Changed:
+This is release is mainly for making the HLAE Gui more reliable, thus we'll
+also stop offering two different versions (stable and pre-release). 
+
+Added:
+  Support for rendering to other targets than the default window buffer.
+  The most important one is EXT_framebuffer_object, which allows off-screen
+  rendering for cards that support it:
+  This fixes problems with missing contents in the capture (i.e. due parts of
+  the window not being visible), which especially happened to NVIDIA card
+  users.
+  The new target(s) can be selected from the HLAE File->Launch dialog.
+
+Added:
   HLAE hooks the connect command, to warn the user in case the user selects to
   join a server while HLAE is running (which is strongly not recommended).
   HLAE may fetch some but not all attempts, so as always: better count on your
   brain before you have to count on the airbag ;)
+
+Added:
+  -hlaealpha8 launchoption
+  This is only relevant in case you capture the hud_alpha stream atm.
+  It's not required in case you already use EXT_framebuffer_object.
+  If you don't have problems with the hud_alpha stream, don't use this option.
   
+Added:
+  Icon (thx to guys that programed Inkscape and GIMP 2)
+
+Renamed:
+  mirv_placyercolors to mirv_placercolors_cs
 
 Removed:
-  __mirv_movie_oldcapture, mirv_movie_customdump
+  __mirv_movie_oldcapture, mirv_movie_customdump, mirv_menu
   
-Thanks to msthavoc and MN|vadoskin for testing
+Thanks to:
+   msthavoc and MN|vadoskin for testing
+   Valve for not suing us( yet).
+   The HLAE forum users for their creative input, we hope we'll
+   be able to add at least some of the things being suggested in the future,
+   but we won't promise anything( as always).
 
 
 2.0.0.3
