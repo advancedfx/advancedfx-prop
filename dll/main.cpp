@@ -56,8 +56,6 @@ extern CHlaeCmdTools g_CmdTools;
 
 CHlaeSupportRender *g_pSupportRender = NULL; // inited in basecomClient.cpp
 
-extern UI *gui;
-
 extern const char *pszFileVersion;
 
 typedef std::list <Void_func_t> VoidFuncList;
@@ -504,8 +502,6 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 			(*i++)();
 
 		pEngfuncs->Con_Printf("Mirv Demo Tool v%s (%s) Loaded\nBy Mirvin_Monkey 02/05/2004\n\n", pszFileVersion, __DATE__);
-
-		gui->Initialise();
 
 		screeninfo.iSize = sizeof(SCREENINFO);
 		pEngfuncs->pfnGetScreenInfo(&screeninfo);
