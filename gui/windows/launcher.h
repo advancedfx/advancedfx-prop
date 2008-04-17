@@ -41,6 +41,7 @@ private:
 
 	CChoiceList* m_depthchoices;
 	CChoiceList* m_modchoices;
+	CChoiceList* m_capturemodechoices;
 
 	wxString m_cmdline;
 
@@ -66,6 +67,7 @@ private:
 	wxCheckBox* m_ch_force;
 	wxTextCtrl* m_tc_path;
 	wxChoice* m_c_mod;
+	wxChoice* m_c_capturemode;
 	wxTextCtrl* m_tc_mod;
 	wxTextCtrl* m_tc_width;
 	wxTextCtrl* m_tc_height;
