@@ -686,7 +686,12 @@ BOOL APIENTRY my_wglSwapBuffers(HDC hDC)
 
 	// do the switching of buffers as requersted:
 	if (!bRecordSwapped)
-		bResWglSwapBuffers = (*pwglSwapBuffers)(hDC);
+	{
+		if (g_pSupportRender)
+			bResWglSwapBuffers = g_pSupportRender->hlaeSwapBuffers(hDC);
+		else
+			bResWglSwapBuffers = (*pwglSwapBuffers)(hDC);
+	}
 
 	// no we have captured the image (by default from backbuffer) and display it on the front, now we can prepare the new backbuffer image if required.
 
