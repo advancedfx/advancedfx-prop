@@ -725,7 +725,7 @@ void Filming::Start()
 void Filming::Stop()
 {
 	if (_pSupportRender)
-		_pSupportRender->hlaeOnFilmingStart();
+		_pSupportRender->hlaeOnFilmingStop();
 	HlaeBc_OnFilmingStop(); // inform Hlae Server GUI
 
 	if (_bCamMotion) MotionFile_End();
