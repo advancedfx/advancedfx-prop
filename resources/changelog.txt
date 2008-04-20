@@ -1,3 +1,10 @@
+HLAE 2.0.1.2
+
+Fixed:
+  Bug that affect performance when using FBO (still bad FPS after filming
+  was stopped in case switching FBOs is slow on the gfx card).
+
+
 HLAE 2.0.1.1
 
 Added missing file to download, in case you already downloaded 2.0.1
