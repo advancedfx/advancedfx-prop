@@ -114,7 +114,7 @@ void hlaeConfig::Initialize()
 	launcher->AppendObject(new hlaeConfigListData(_T("height"),_T("600")));
 	launcher->AppendObject(new hlaeConfigListData(_T("force"),_T("true")));
 	launcher->AppendObject(new hlaeConfigListData(_T("cmdline"),_T("-demoedit")));
-	launcher->AppendObject(new hlaeConfigListData(_T("capturemethod"),_T("0")));
+	launcher->AppendObject(new hlaeConfigListData(_T("capturemethod"),_T("1")));
 	AppendPropertyGroup(launcher);
 
 	// check if there is a file to load
