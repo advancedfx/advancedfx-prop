@@ -52,3 +52,8 @@ CHlaeGameWindow::~CHlaeGameWindow()
 
 	delete _pHlaeBcServer;
 }
+
+void CHlaeGameWindow::OnHlaeActivate(bool bActive)
+{
+	if (_pHlaeBcServer) _pHlaeBcServer->OnHlaeActivate(bActive);
+}

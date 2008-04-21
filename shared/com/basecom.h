@@ -108,6 +108,7 @@
 #define HLAE_BASECOM_MSGSV_OnDestroyWindow		0x00000002
 #define HLAE_BASECOM_MSGSV_OnFilmingStart		0x00000003
 #define HLAE_BASECOM_MSGSV_OnFilmingStop		0x00000004
+#define HLAE_BASECOM____SV_OnServerActivate		0x00000006
 #define HLAE_BASECOM____SV_OnGameWindowFocus	0x00000007
 #define HLAE_BASECOM____SV_OnServerClose		0x00000008
 #define HLAE_BASECOM____SV_MouseEvent			0x00000009
@@ -122,6 +123,7 @@
 #define HLAE_BASECOM____CL_OnDestroyWindow		0x00000002
 #define HLAE_BASECOM____CL_OnFilmingStart		0x00000003
 #define HLAE_BASECOM____CL_OnFilmingStop		0x00000004
+#define HLAE_BASECOM_MSGCL_OnServerActivate		0x00000006
 #define HLAE_BASECOM_MSGCL_OnGameWindowFocus	0x00000007
 #define HLAE_BASECOM_MSGCL_OnServerClose		0x00000008
 #define HLAE_BASECOM_MSGCL_MouseEvent			0x00000009
@@ -172,6 +174,11 @@ struct HLAE_BASECOM_OnFilmingStart_s
 struct HLAE_BASECOM_OnFilmingStop_s
 {
 	// empty
+};
+
+struct HLAE_BASECOM_OnServerActivate_s
+{
+	bool bActive;
 };
 
 struct HLAE_BASECOM_OnGameWindowFocus_s

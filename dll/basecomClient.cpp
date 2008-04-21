@@ -55,6 +55,11 @@ struct
 	bool bUndockOnFilming;
 } g_HL_MainWindow_info;
 
+bool g_bIsUndocked = false; // undocked i.e. due to filming in Undock capture mode?
+
+bool g_bHoldingActivate = false; // activation event that still needs to be delivered after the window is docked again
+bool g_bHoldedActivate; // last value on hold
+
 struct
 {
 	unsigned int ui_rx_packets;
@@ -68,9 +73,12 @@ LRESULT CALLBACK Hooking_WndProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 
 	switch(uMsg)
 	{
-	case WM_KILLFOCUS:
-		pEngfuncs->Con_DPrintf("WM_KILLFOCUS:\n");
+	/*case WM_ACTIVATEAPP:
+		pEngfuncs->Con_DPrintf("WM_ACTIVATEAPP\n");
 		break;
+	case WM_ACTIVATE:
+		pEngfuncs->Con_DPrintf("WM_ACTIVATE\n");
+		break;*/
 	}
 
 	if (hWnd==NULL || hWnd != g_HL_MainWindow)
@@ -103,6 +111,34 @@ LRESULT CALLBACK Hooking_WndProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 //
 // Handlers for events from the Hlae GUI server:
 //
+
+LRESULT HlaeBcCl_OnServerActivate(PVOID lpData)
+{
+	HLAE_BASECOM_OnServerActivate_s *myps = (HLAE_BASECOM_OnServerActivate_s *)lpData;
+
+	g_bHoldedActivate = myps->bActive;
+
+	if (g_bIsUndocked)
+	{
+		// cannot deliver now, put last message on hold:
+		g_bHoldingActivate = true;
+		pEngfuncs->Con_DPrintf("HlaeBcCl_OnServerActivate: %i (on hold)\n",myps->bActive);
+		return TRUE;
+	}
+	else
+		pEngfuncs->Con_DPrintf("HlaeBcCl_OnServerActivate: %i\n",myps->bActive);
+
+	if(g_bHoldedActivate)
+	{
+		SendMessage(g_HL_MainWindow,WM_ACTIVATEAPP, TRUE ,NULL);
+		SendMessage(g_HL_MainWindow,WM_ACTIVATE, WA_ACTIVE ,NULL);
+	} else {
+		SendMessage(g_HL_MainWindow,WM_ACTIVATE, WA_INACTIVE ,NULL);
+		SendMessage(g_HL_MainWindow,WM_ACTIVATEAPP, FALSE ,NULL);
+	}
+
+	return TRUE;
+}
 
 LRESULT HlaeBcCl_OnGameWindowFocus(PVOID lpData)
 {
@@ -189,6 +225,9 @@ LRESULT CALLBACK HlaeBcCltWndProc(
 				if (!g_pHlaeBcResultTarget) return FALSE;
 				memcpy(g_pHlaeBcResultTarget,pMyCDS->lpData,sizeof(HLAE_BASECOM_RET_OnCreateWindow_s));
 				return TRUE;
+
+			case HLAE_BASECOM_MSGCL_OnServerActivate:
+				return HlaeBcCl_OnServerActivate(pMyCDS->lpData);
 
 			case HLAE_BASECOM_MSGCL_OnGameWindowFocus:
 				return HlaeBcCl_OnGameWindowFocus(pMyCDS->lpData);
@@ -373,6 +412,7 @@ bool HlaeBc_OnFilmingStart()
 
 	if (g_HL_MainWindow_info.bUndockOnFilming)
 	{
+		g_bIsUndocked = true;
 		g_HlaeOnFilming_r.bUndocked = true;
 
 		// get old style and parent:
@@ -408,6 +448,15 @@ bool HlaeBc_OnFilmingStop()
 		SetWindowLongPtr( g_HL_MainWindow, GWL_STYLE, g_HlaeOnFilming_r.dwStyle ); // WS_CHILD has to be set first
 		SetParent( g_HL_MainWindow, g_HlaeOnFilming_r.hwParent );
 		SetWindowPos( g_HL_MainWindow, HWND_TOP, 0, 0, 0, 0, SWP_FRAMECHANGED|SWP_NOSIZE|SWP_SHOWWINDOW);
+
+		g_bIsUndocked = false;
+		g_HlaeOnFilming_r.bUndocked = false;
+		if (g_bHoldingActivate)
+		{
+			// deliver last activate in case it's on hold:
+			g_bHoldingActivate = false;
+			SendMessage(g_HL_MainWindow,WM_ACTIVATE,g_bHoldedActivate ? WA_ACTIVE : WA_INACTIVE ,NULL);
+		}
 	}
 
 	return retResult;

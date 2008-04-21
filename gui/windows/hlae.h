@@ -29,6 +29,7 @@ private:
 	wxMenu*	m_toolbarmenu;
 	wxMenu*	m_layoutmenu;
 	void CreateMenuBar();
+
 	void OnExit(wxCommandEvent& evt);
 	void OnLaunch(wxCommandEvent& evt);
 	void OnDemoTools(wxCommandEvent& evt);
@@ -42,6 +43,9 @@ public:
 	wxMenu* hlaeMainWindow::GetWindowMenu() const;
 	wxMenu* hlaeMainWindow::GetToolBarMenuMenu() const;
 	wxMenu* hlaeMainWindow::GetLayoutMenu() const;
+
+	// wxEvents:
+	void OnActivate( wxActivateEvent &myevent);
 };
 
 #endif // _HLAE_MAINWINDOW_H_

@@ -381,7 +381,19 @@ bool CHlaeBcServer::OnGameWindowFocus()
 		sizeof(mys),
 		&mys
 	);
-	return true;
+}
+
+bool CHlaeBcServer::OnHlaeActivate(bool bActive)
+{
+	HLAE_BASECOM_OnServerActivate_s mys;
+
+	mys.bActive = bActive;
+
+	return TRUE==_pBCServerInternal->DispatchStruct(
+		HLAE_BASECOM_MSGCL_OnServerActivate,
+		sizeof(mys),
+		&mys
+	);
 }
 
 bool CHlaeBcServer::_OnGameWindowClose()

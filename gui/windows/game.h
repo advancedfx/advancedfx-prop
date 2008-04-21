@@ -23,8 +23,10 @@ public:
 
 	CHlaeGameWindow::~CHlaeGameWindow();
 
+	// Events supplied by the main window:
+	void OnHlaeActivate( bool bActive );
 
-	// Events:
+	// wxEvents:
 	void OnFocus(wxFocusEvent& myevent);
 	
 private:

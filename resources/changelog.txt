@@ -1,6 +1,7 @@
 HLAE 2.0.1.3
 
 * Improved behaviour of 'Undock' capture mode.
+* Fixed game behaviour when window is deactivated (i.e. due to windows key, etc.).
 
 
 HLAE 2.0.1.2

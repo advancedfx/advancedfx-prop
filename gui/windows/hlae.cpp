@@ -63,6 +63,7 @@ CAboutDialog::CAboutDialog(wxWindow* parent)
 }
 
 BEGIN_EVENT_TABLE(hlaeMainWindow, wxFrame)
+	EVT_ACTIVATE(OnActivate) 
 	EVT_MENU(wxID_EXIT, hlaeMainWindow::OnExit)
 	EVT_MENU(wxID_ABOUT, hlaeMainWindow::OnAbout)
 	EVT_MENU(hlaeMainWindow::hlaeID_Launch, hlaeMainWindow::OnLaunch)
@@ -159,6 +160,22 @@ wxMenu* hlaeMainWindow::GetToolBarMenuMenu() const {
 
 wxMenu* hlaeMainWindow::GetLayoutMenu() const {
 	return m_layoutmenu;
+}
+
+void hlaeMainWindow::OnActivate( wxActivateEvent &myevent)
+{
+	if (myevent.GetActive())
+	{
+		SetStatusText(wxT("Active"));
+	}
+	else
+	{
+		SetStatusText(wxT("Inactive"));
+	}
+
+	m_HlaeGameWindow->OnHlaeActivate(myevent.GetActive());
+
+	myevent.Skip();
 }
 
 void hlaeMainWindow::CreateMenuBar() {
