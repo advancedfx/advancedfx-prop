@@ -75,11 +75,11 @@ public:
 		RT_FRAMEBUFFEROBJECT // .
 	};
 
-	enum EFboSupport
+	enum EExtSupport
 	{
-		FBOS_UNKNOWN, // could not be determined (yet)
-		FBOS_NO, // EXT_framebuffer_object is not supported
-		FBOS_YES // EXT_framebuffer_object is supported
+		EXTS_UNKOWN, // could not be determined (yet)
+		EXTS_NO, // is not supported
+		EXTS_YES //is supported
 	};
 
 	CHlaeSupportRender(HWND hGameWindow, int iWidth, int iHeight);
@@ -93,13 +93,13 @@ public:
 	// if RenderTarget is different from RT_NULL hlaeDeleteContext will be implecitly called on destroy
 	// MANDATORY for these targets: all;
 
-	EFboSupport Has_EXT_FrameBufferObject();
+	EExtSupport Has_EXT_FrameBufferObject();
 	// will only return s.th. useful when hlaeMakeCurrent was called after
 	// hlaeCreateContext was called successfully with RT_FRAMEBUFFEROBJECT as eRenderTarget
 	// returns
-    //   FBOS_YES     : EXT_framebuffer_object supported (doesn't mean it supports all we will need though)
-	//   FBOS_NO      : not supported 
-	//   FBOS_UNKNOWN : was unable to determine support (error, or called to early)
+    //   EXTS_YES     : EXT_framebuffer_object supported (doesn't mean it supports all we will need though)
+	//   EXTS_NO      : not supported 
+	//   EXTS_UNKOWN : was unable to determine support (error, or called to early)
 
 	ERenderTarget GetRenderTarget();
 	// returns the current RenderTarget
@@ -166,7 +166,7 @@ private:
 	int _iWidth;
 	int _iHeight;
 
-	EFboSupport _eFBOsupported; // EXT_framebuffer_object support check
+	EExtSupport _EExtSupported; // EXT_framebuffer_object support check
 
 	// shared:
 	HGLRC	_ownHGLRC;

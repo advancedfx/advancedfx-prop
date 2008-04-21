@@ -51,6 +51,8 @@ struct
 		int iX;
 		int iY;
 	} MouseTarget;
+
+	bool bUndockOnFilming;
 } g_HL_MainWindow_info;
 
 struct
@@ -349,6 +351,12 @@ bool HlaeBc_OnDestroyWindow()
 	return retResult;
 }
 
+struct {
+	DWORD dwStyle;
+	HWND hwParent;
+	bool bUndocked;
+} g_HlaeOnFilming_r = { 0, 0, false };
+
 bool HlaeBc_OnFilmingStart()
 // returns false on fail, true otherwise
 {
@@ -362,6 +370,21 @@ bool HlaeBc_OnFilmingStart()
 	}
 
 	delete mycws;
+
+	if (g_HL_MainWindow_info.bUndockOnFilming)
+	{
+		g_HlaeOnFilming_r.bUndocked = true;
+
+		// get old style and parent:
+		g_HlaeOnFilming_r.dwStyle = GetWindowLongPtr( g_HL_MainWindow, GWL_STYLE );
+		g_HlaeOnFilming_r.hwParent = GetParent( g_HL_MainWindow );
+
+		// set new parent and style (see SetParent() on MSDN2, why we do it in this order):
+		SetParent( g_HL_MainWindow, NULL );
+		SetWindowLongPtr( g_HL_MainWindow, GWL_STYLE, WS_POPUP );
+		SetWindowPos( g_HL_MainWindow, HWND_TOPMOST, 0, 0, 0, 0, SWP_FRAMECHANGED|SWP_NOSIZE|SWP_SHOWWINDOW);
+	}
+
 	return retResult;
 }
 
@@ -378,6 +401,15 @@ bool HlaeBc_OnFilmingStop()
 	}
 
 	delete mycws;
+
+	if (g_HlaeOnFilming_r.bUndocked)
+	{
+		// restore old style and parent (see SetParent() on MSDN2, why we do it in this order):
+		SetWindowLongPtr( g_HL_MainWindow, GWL_STYLE, g_HlaeOnFilming_r.dwStyle ); // WS_CHILD has to be set first
+		SetParent( g_HL_MainWindow, g_HlaeOnFilming_r.hwParent );
+		SetWindowPos( g_HL_MainWindow, HWND_TOP, 0, 0, 0, 0, SWP_FRAMECHANGED|SWP_NOSIZE|SWP_SHOWWINDOW);
+	}
+
 	return retResult;
 }
 
@@ -628,6 +660,8 @@ HGLRC Init_Support_Renderer(HWND hMainWindow, HDC hMainWindowDC, int iWidth, int
 	// determine desired target renderer:
 	CHlaeSupportRender::ERenderTarget eRenderTarget = CHlaeSupportRender::RT_GAMEWINDOW;
 
+	g_HL_MainWindow_info.bUndockOnFilming = false;
+
 	char *pStart=NULL;
 
 	if (pEngfuncs->CheckParm("-hlaerender", &pStart ))
@@ -640,6 +674,10 @@ HGLRC Init_Support_Renderer(HWND hMainWindow, HDC hMainWindowDC, int iWidth, int
 		{
 			pEngfuncs->Con_DPrintf("RenderTarget: user wants RT_FRAMEBUFFEROBJECT\n");
 			eRenderTarget = CHlaeSupportRender::RT_FRAMEBUFFEROBJECT;
+		} else if (!lstrcmp(pStart,"undock"))
+		{
+			pEngfuncs->Con_DPrintf("CaptureMode: undock\n");
+			g_HL_MainWindow_info.bUndockOnFilming = true;
 		}
 	}
 	if (eRenderTarget == CHlaeSupportRender::RT_GAMEWINDOW)

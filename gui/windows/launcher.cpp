@@ -106,7 +106,7 @@ CLauncherDialog::CLauncherDialog(wxWindow* parent) : wxDialog( parent, wxID_ANY,
 	m_depthchoices->AddChoice(_T("Low"), _T("16"));
 
 	m_capturemodechoices->AddChoice(_T("None"), _T(""));
-	m_capturemodechoices->AddChoice(_T("Undock"), _T(""));
+	m_capturemodechoices->AddChoice(_T("Undock"), _T("undock"));
 	m_capturemodechoices->AddChoice(_T("Framebufferobject"), _T("fbo"));
 	m_capturemodechoices->AddChoice(_T("MemoryDC"), _T("memdc"));
 

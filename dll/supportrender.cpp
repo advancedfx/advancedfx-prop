@@ -39,6 +39,36 @@ char g_ErrorMessageBuffer[300];
 		MessageBoxA(0, g_ErrorMessageBuffer, "SupportRender:",MB_OK|MB_ICONERROR); \
 	}
 
+//
+// WGL_ARB_extensions_string
+//
+//
+// http://opengl.org/registry/specs/ARB/wgl_extensions_string.txt
+//
+
+typedef const char * (APIENTRYP PFNWGLEXTENSIONSSTRINGARBPROC) (HDC hdc);
+
+PFNWGLEXTENSIONSSTRINGARBPROC wglGetExtensionsStringARB = NULL;
+
+CHlaeSupportRender::EExtSupport g_WGL_ARB_extensions_string = CHlaeSupportRender::EXTS_UNKOWN;
+
+CHlaeSupportRender::EExtSupport Install_WGL_ARB_extensions_string(void)
+{
+	if (g_WGL_ARB_extensions_string != CHlaeSupportRender::EXTS_UNKOWN)
+		return g_WGL_ARB_extensions_string;
+
+	wglGetExtensionsStringARB =(PFNWGLEXTENSIONSSTRINGARBPROC) wglGetProcAddress( "wglGetExtensionsStringARB" );
+
+	bool bOK = wglGetExtensionsStringARB ? true : false;
+
+	if (bOK)
+		g_WGL_ARB_extensions_string = CHlaeSupportRender::EXTS_YES;
+	else
+		g_WGL_ARB_extensions_string = CHlaeSupportRender::EXTS_NO;
+
+	return g_WGL_ARB_extensions_string;
+}
+
 
 //
 // EXT_framebuffer_object
@@ -47,7 +77,7 @@ char g_ErrorMessageBuffer[300];
 // http://www.opengl.org/registry/specs/EXT/framebuffer_object.txt
 //
 
-bool g_bEXT_framebuffer_object=false;
+bool g_EXT_framebuffer_object=false;
 
 PFNGLISRENDERBUFFEREXTPROC glIsRenderbufferEXT = NULL;
 PFNGLBINDRENDERBUFFEREXTPROC glBindRenderbufferEXT = NULL;
@@ -67,19 +97,19 @@ PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC glFramebufferRenderbufferEXT = NULL;
 PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVEXTPROC glGetFramebufferAttachmentParameterivEXT = NULL;
 PFNGLGENERATEMIPMAPEXTPROC glGenerateMipmapEXT = NULL;
 
-CHlaeSupportRender::EFboSupport InstallFrameBufferExtentsion(void)
+CHlaeSupportRender::EExtSupport Install_EXT_framebuffer_object(void)
 // ATTENTION:
 //   do not install before a context has been created, because
 //   in this case glGetString will not work (return 0)
 {
-	if (g_bEXT_framebuffer_object) return CHlaeSupportRender::FBOS_YES;
+	if (g_EXT_framebuffer_object) return CHlaeSupportRender::EXTS_YES;
 
-	CHlaeSupportRender::EFboSupport retTemp=CHlaeSupportRender::FBOS_NO;
+	CHlaeSupportRender::EExtSupport retTemp=CHlaeSupportRender::EXTS_NO;
 	char *pExtStr = (char *)(glGetString( GL_EXTENSIONS ));
 	if (!pExtStr)
 	{
-		retTemp = CHlaeSupportRender::FBOS_UNKNOWN;
-		ERROR_MESSAGE("glGetString failed!\nInstallFrameBufferExtentsion called before context was currrent?")
+		retTemp = CHlaeSupportRender::EXTS_UNKOWN;
+		ERROR_MESSAGE("glGetString failed!\nInstall_EXT_framebuffer_object called before context was currrent?")
 	}
 	else if (strstr( pExtStr, "EXT_framebuffer_object" ))
 	{
@@ -107,14 +137,82 @@ CHlaeSupportRender::EFboSupport InstallFrameBufferExtentsion(void)
 			&& glDeleteFramebuffersEXT && glGenFramebuffersEXT && glCheckFramebufferStatusEXT && glFramebufferTexture1DEXT
 			&& glFramebufferTexture2DEXT && glFramebufferTexture3DEXT && glFramebufferRenderbufferEXT && glGetFramebufferAttachmentParameterivEXT
 			&& glGenerateMipmapEXT
-		) retTemp = CHlaeSupportRender::FBOS_YES;
-
+		) retTemp = CHlaeSupportRender::EXTS_YES;
 
 	}
 
-	g_bEXT_framebuffer_object = CHlaeSupportRender::FBOS_YES == retTemp;
+	g_EXT_framebuffer_object = CHlaeSupportRender::EXTS_YES == retTemp;
 
 	return retTemp;
+}
+
+//
+// WGL_ARB_pbuffer
+//
+//
+// http://opengl.org/registry/specs/ARB/wgl_pbuffer.txt
+//
+
+#define WGL_DRAW_TO_PBUFFER_ARB              0x202D
+#define WGL_DRAW_TO_PBUFFER_ARB              0x202D
+#define WGL_MAX_PBUFFER_PIXELS_ARB           0x202E
+#define WGL_MAX_PBUFFER_WIDTH_ARB            0x202F
+#define WGL_MAX_PBUFFER_HEIGHT_ARB           0x2030
+#define WGL_PBUFFER_LARGEST_ARB              0x2033
+#define WGL_PBUFFER_WIDTH_ARB                0x2034
+#define WGL_PBUFFER_HEIGHT_ARB               0x2035
+#define WGL_PBUFFER_LOST_ARB                 0x2036
+
+DECLARE_HANDLE(HPBUFFERARB);
+
+/// typedef const char * (APIENTRYP PFNWGLEXTENSIONSSTRINGARBPROC) (HDC hdc);
+
+typedef HPBUFFERARB (APIENTRYP PFNWGLCREATEPBUFFERARBPROC) (HDC hDC, int iPixelFormat, int iWidth, int iHeight, const int *piAttribList);
+typedef HDC (APIENTRYP PFNWGLGETPBUFFERDCARBPROC) (HPBUFFERARB hPbuffer);
+typedef int (APIENTRYP PFNWGLRELEASEPBUFFERDCARBPROC) (HPBUFFERARB hPbuffer, HDC hDC);
+typedef BOOL (APIENTRYP PFNWGLDESTROYPBUFFERARBPROC) (HPBUFFERARB hPbuffer);
+typedef BOOL (APIENTRYP PFNWGLQUERYPBUFFERARB) (HPBUFFERARB hPbuffer, int iAttribute, int *piValue);
+
+CHlaeSupportRender::EExtSupport g_WGL_ARB_pbuffer = CHlaeSupportRender::EXTS_UNKOWN;
+
+PFNWGLCREATEPBUFFERARBPROC wglCreatePbufferARB = NULL;
+PFNWGLCREATEPBUFFERARBPROC wglGetPbufferDCARB = NULL;
+PFNWGLCREATEPBUFFERARBPROC wglReleasePbufferDCARB = NULL;
+PFNWGLCREATEPBUFFERARBPROC wglDestroyPbufferARB = NULL;
+PFNWGLCREATEPBUFFERARBPROC wglQueryPbufferARB = NULL;
+
+CHlaeSupportRender::EExtSupport Install_WGL_ARB_pbuffer(void)
+{
+	if (g_WGL_ARB_pbuffer != CHlaeSupportRender::EXTS_UNKOWN)
+		return g_WGL_ARB_pbuffer;
+
+	// check extension string first:
+	char * extensions = (char *) (wglGetExtensionsStringARB( wglGetCurrentDC() ));
+	if (!extensions)
+	{
+		ERROR_MESSAGE("wglGetExtensionsStringARB failed.")
+		return g_WGL_ARB_pbuffer = CHlaeSupportRender::EXTS_UNKOWN;
+	} else if (!strstr( extensions, "WGL_ARB_pbuffer" ))
+	{
+		ERROR_MESSAGE("WGL_ARB_pbuffer not supported.")
+		return g_WGL_ARB_pbuffer = CHlaeSupportRender::EXTS_NO;
+	}
+
+	// retrive functions
+	wglCreatePbufferARB = (PFNWGLCREATEPBUFFERARBPROC) wglGetProcAddress("wglCreatePbufferARB");
+	wglGetPbufferDCARB = (PFNWGLCREATEPBUFFERARBPROC) wglGetProcAddress("wglGetPbufferDCARB");
+	wglReleasePbufferDCARB = (PFNWGLCREATEPBUFFERARBPROC) wglGetProcAddress("wglReleasePbufferDCARB");
+	wglDestroyPbufferARB = (PFNWGLCREATEPBUFFERARBPROC) wglGetProcAddress("wglDestroyPbufferARB");
+	wglQueryPbufferARB = (PFNWGLCREATEPBUFFERARBPROC) wglGetProcAddress("wglQueryPbufferARB");
+
+	if (
+		wglCreatePbufferARB && wglGetPbufferDCARB && wglReleasePbufferDCARB && wglDestroyPbufferARB
+		&& wglQueryPbufferARB
+	)
+		return g_WGL_ARB_pbuffer = CHlaeSupportRender::EXTS_YES;
+	
+	ERROR_MESSAGE("One or more WGL_ARB_pbuffer functions could not be initalized.")
+	return g_WGL_ARB_pbuffer = CHlaeSupportRender::EXTS_NO;
 }
 
 //
@@ -128,7 +226,7 @@ CHlaeSupportRender::CHlaeSupportRender(HWND hGameWindow, int iWidth, int iHeight
 	_iHeight = iHeight;
 
 	_eRenderTarget = RT_NULL;
-	_eFBOsupported = FBOS_UNKNOWN;
+	_EExtSupported = EXTS_UNKOWN;
 
 	_ownHGLRC = NULL;
 
@@ -142,9 +240,9 @@ CHlaeSupportRender::~CHlaeSupportRender()
 	_eRenderTarget = RT_NULL;
 }
 
-CHlaeSupportRender::EFboSupport CHlaeSupportRender::Has_EXT_FrameBufferObject()
+CHlaeSupportRender::EExtSupport CHlaeSupportRender::Has_EXT_FrameBufferObject()
 {
-	return _eFBOsupported;
+	return _EExtSupported;
 }
 
 CHlaeSupportRender::ERenderTarget CHlaeSupportRender::GetRenderTarget()
@@ -438,11 +536,11 @@ BOOL CHlaeSupportRender::_MakeCurrent_RT_FRAMEBUFFEROBJECT (HDC hGameWindowDC)
 
 	// since we have a current context we can also query the extensions now:
 	// (WHY DOES THIS NOT WORK EARLIER BTW?, CAN WE DETECT THAT EARLIER?)
-	_eFBOsupported = InstallFrameBufferExtentsion();
+	_EExtSupported = Install_EXT_framebuffer_object();
 
-	if (FBOS_YES != _eFBOsupported)
+	if (EXTS_YES != _EExtSupported)
 	{
-		if (FBOS_NO == _eFBOsupported)
+		if (EXTS_NO == _EExtSupported)
 			ERROR_MESSAGE("EXT_FrameBufferObject not supported!\nFalling back to RT_GAMEWINDOW ...")
 		else
 			ERROR_MESSAGE("EXT_FrameBufferObject support could not be evaluated!\nFalling back to RT_GAMEWINDOW ...")

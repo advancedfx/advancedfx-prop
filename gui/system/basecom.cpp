@@ -343,8 +343,6 @@ CHlaeBcServer::CHlaeBcServer(CHlaeGameWindow *pHlaeGameWindow)
 	g_debug.SendMessage(_T("CHlaeBcServer::CHlaeBcServer ..."), hlaeDEBUG_DEBUG);
 #endif
 
-	_OnFilmingTemp.bUndocked = false;
-
 	_pHlaeGameWindow = pHlaeGameWindow;
 
 	_pBCServerInternal = new CBCServerInternal();
@@ -458,53 +456,11 @@ bool CHlaeBcServer::_OnFilmingStart()
 {
 	g_debug.SendMessage(_T("Client starts filming."), hlaeDEBUG_VERBOSE_LEVEL2);
 
-	if (! (_pHlaeGameWindow->bUndockOnFilming) )
-	{
-		_OnFilmingTemp.bUndocked = false;
-		return true;
-	}
-
-	_OnFilmingTemp.bUndocked = true;
-
-	wxAuiManager *auimanager = g_layoutmanager.GetAuiManager();
-	wxAuiPaneInfo& myPane = auimanager->GetPane(_pHlaeGameWindow);
-	if (! (myPane.IsOk()) ) g_debug.SendMessage(_T("Could not retrive GamePane"), hlaeDEBUG_ERROR);
-
-	_OnFilmingTemp.bPaneHasCloseButton = myPane.HasCloseButton();
-
-	int ix1,iy1,iw,ih,iw1,ih1;
-
-	_pHlaeGameWindow->GetVirtualSize(&iw,&ih);
-	_pHlaeGameWindow->Scroll(0,0);
-	_pHlaeGameWindow->GetSize( &_OnFilmingTemp.iOldWidth, &_OnFilmingTemp.iOldHeight );
-	myPane.CloseButton(false).Float().FloatingPosition(0,0).FloatingSize(iw+100,ih+100).Caption(wxT("Recording ..."));
-	auimanager->Update();
-
-	ix1=0; iy1=0;
-	//_pHlaeGameWindow->SetClientSize(iw,ih);
-	_pHlaeGameWindow->ClientToScreen(&ix1,&iy1);
-	myPane.FloatingPosition(-ix1,-iy1);
-	auimanager->Update();
-
 	return true;
 }
 bool CHlaeBcServer:: _OnFilmingStop()
 {
 	g_debug.SendMessage(_T("Client stops filming."), hlaeDEBUG_VERBOSE_LEVEL2);
-
-	if (!_OnFilmingTemp.bUndocked)
-		return true;
-
-	_OnFilmingTemp.bUndocked = false;
-
-	wxAuiManager *auimanager = g_layoutmanager.GetAuiManager();
-	wxAuiPaneInfo& myPane = auimanager->GetPane(_pHlaeGameWindow);
-	
-	_pHlaeGameWindow->SetSize( _OnFilmingTemp.iOldWidth, _OnFilmingTemp.iOldHeight );
-
-	myPane.CenterPane().Caption(_T("Game Window"));
-	if (_OnFilmingTemp.bPaneHasCloseButton) myPane.CloseButton(true);
-	auimanager->Update();
 
 	return true;
 }

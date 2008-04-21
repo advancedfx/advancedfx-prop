@@ -2,8 +2,6 @@ Microsoft Visual Studio Solution File, Format Version 9.00
 # Visual Studio 2005
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Mirv Demo Tool", "dll\Mirv Demo Tools.vcproj", "{B5B38F84-EE5E-4B8E-A0B3-5AE3DC669896}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MDTLoader", "exe\MDTLoader.vcproj", "{ED914089-6510-4418-B994-F05D397907AE}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rcstamp", "rcstamp\rcstamp.vcproj", "{0AC711F3-F9E4-4CDD-969A-BA73A281A06C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{89F04152-3DF3-4C02-9AA4-97195E909EB3}"
@@ -43,10 +41,6 @@ Global
 		{B5B38F84-EE5E-4B8E-A0B3-5AE3DC669896}.Debug|Win32.Build.0 = Debug|Win32
 		{B5B38F84-EE5E-4B8E-A0B3-5AE3DC669896}.Release|Win32.ActiveCfg = Release|Win32
 		{B5B38F84-EE5E-4B8E-A0B3-5AE3DC669896}.Release|Win32.Build.0 = Release|Win32
-		{ED914089-6510-4418-B994-F05D397907AE}.Debug|Win32.ActiveCfg = Debug|Win32
-		{ED914089-6510-4418-B994-F05D397907AE}.Debug|Win32.Build.0 = Debug|Win32
-		{ED914089-6510-4418-B994-F05D397907AE}.Release|Win32.ActiveCfg = Release|Win32
-		{ED914089-6510-4418-B994-F05D397907AE}.Release|Win32.Build.0 = Release|Win32
 		{0AC711F3-F9E4-4CDD-969A-BA73A281A06C}.Debug|Win32.ActiveCfg = Debug|Win32
 		{0AC711F3-F9E4-4CDD-969A-BA73A281A06C}.Debug|Win32.Build.0 = Debug|Win32
 		{0AC711F3-F9E4-4CDD-969A-BA73A281A06C}.Release|Win32.ActiveCfg = Release|Win32

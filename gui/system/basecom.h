@@ -32,14 +32,6 @@ private:
 
 	CBCServerInternal * _pBCServerInternal;
 
-	struct OnFilmingTemp_s
-	{
-		bool bUndocked;
-		bool bPaneHasCloseButton;
-		int iOldWidth;
-		int iOldHeight;
-	} _OnFilmingTemp;
-
 	bool _OnGameWindowClose(); // tells the server that it's server game window will be closed to allow it to react and communicate with the client
 	
 	// also called by CBCServerInternal:
