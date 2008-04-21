@@ -24,6 +24,7 @@ public:
 	bool Pass_KeyBoardEvent(unsigned int uMsg, unsigned int uKeyCode, unsigned int uKeyFlags);
 
 	bool OnGameWindowFocus();
+	bool OnHlaeActivate(bool bActive);
 
 	friend class CBCServerInternal;
 
