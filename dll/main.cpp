@@ -751,8 +751,8 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 			return (FARPROC) &HlaeBcClt_RegisterClassA;
 		if (!lstrcmp(lpProcName, "SetWindowPos"))
 			return (FARPROC) &HlaeBcClt_SetWindowPos;
-		if (!lstrcmp(lpProcName, "SetPixelFormat"))
-			return (FARPROC) &HlaeBcClt_SetPixelFormat;
+		if (!lstrcmp(lpProcName, "ChoosePixelFormat"))
+			return (FARPROC) &HlaeBcClt_ChoosePixelFormat;
 		if (!lstrcmp(lpProcName, "wglCreateContext"))
 			return (FARPROC) &HlaeBcClt_wglCreateContext;
 		if (!lstrcmp(lpProcName, "wglDeleteContext"))

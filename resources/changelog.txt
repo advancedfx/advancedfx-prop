@@ -1,3 +1,14 @@
+HLAE 2.0.1.4
+
+* Fixed -hlaealpha8 not working
+* Added __mirv_movie_fpscap
+    1: default
+    0: disables the 1000 fps cap on mirv_movie_fps for testing purposes
+
+Greetz and thanks to:
+  MN|VadoskiN, juGGaKNot, you.
+
+
 HLAE 2.0.1.3
 
 * Improved behaviour of 'Undock' capture mode.

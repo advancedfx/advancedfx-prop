@@ -23,7 +23,7 @@ ATOM APIENTRY HlaeBcClt_RegisterClassA(CONST WNDCLASSA *lpWndClass);
 BOOL WINAPI HlaeBcClt_ReleaseCapture( VOID );
 HWND WINAPI HlaeBcClt_SetCapture( HWND hWnd);
 
-BOOL  WINAPI HlaeBcClt_SetPixelFormat(HDC hdc, int format, CONST PIXELFORMATDESCRIPTOR * ppfd);
+int WINAPI HlaeBcClt_ChoosePixelFormat( HDC hdc, CONST PIXELFORMATDESCRIPTOR *ppfd);
 HGLRC WINAPI HlaeBcClt_wglCreateContext(HDC);
 BOOL WINAPI HlaeBcClt_wglDeleteContext(HGLRC hGlRc);
 BOOL WINAPI HlaeBcClt_wglMakeCurrent(HDC, HGLRC);

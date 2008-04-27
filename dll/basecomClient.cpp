@@ -91,8 +91,8 @@ LRESULT CALLBACK Hooking_WndProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 	switch (uMsg)
 	{
 	case WM_MOVE:
-		g_HL_MainWindow_info.iX = (int)(short) LOWORD(lParam); 
-		g_HL_MainWindow_info.iY = (int)(short) HIWORD(lParam);
+		g_HL_MainWindow_info.MouseTarget.iX = (int)(short) LOWORD(lParam); 
+		g_HL_MainWindow_info.MouseTarget.iY = (int)(short) HIWORD(lParam);
 		break;
 	case WM_LBUTTONDOWN:
 	case WM_LBUTTONUP:
@@ -637,9 +637,9 @@ BOOL WINAPI HlaeBcClt_ReleaseCapture( VOID )
 	return TRUE;
 }
 
-BOOL  WINAPI HlaeBcClt_SetPixelFormat(HDC hdc, int format, CONST PIXELFORMATDESCRIPTOR * ppfd)
+int WINAPI HlaeBcClt_ChoosePixelFormat( HDC hdc, CONST PIXELFORMATDESCRIPTOR *ppfd)
 {
-	BOOL bRet;
+	int iRet;
 
 	PIXELFORMATDESCRIPTOR *myppfd;
 	memcpy(&myppfd,&ppfd,sizeof(PIXELFORMATDESCRIPTOR *)); // we intentionally void the const paradigm here
@@ -651,9 +651,9 @@ BOOL  WINAPI HlaeBcClt_SetPixelFormat(HDC hdc, int format, CONST PIXELFORMATDESC
 		myppfd->cAlphaShift = 24;
 	}
 
-	bRet= SetPixelFormat(hdc,format,myppfd);
+	iRet= ChoosePixelFormat(hdc,myppfd);
 
-	return bRet;
+	return iRet;
 }
 
 HGLRC WINAPI HlaeBcClt_wglCreateContext(HDC hDc)

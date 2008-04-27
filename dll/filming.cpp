@@ -30,7 +30,7 @@ extern float clamp(float, float, float);
 REGISTER_DEBUGCVAR(depth_bias, "0", 0);
 REGISTER_DEBUGCVAR(depth_scale, "1", 0);
 REGISTER_DEBUGCVAR(gl_force_noztrick, "1", 0);
-
+REGISTER_DEBUGCVAR(movie_fpscap, "1", 0);
 REGISTER_DEBUGCVAR(print_pos, "0", 0);
 
 REGISTER_CVAR(crop_height, "-1", 0);
@@ -995,7 +995,8 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 	}
 
 	bool bSplitting = (movie_splitstreams->value == 3.0f);
-	float flTime = max(1.0f / max(movie_fps->value, 1.0f), MIN_FRAME_DURATION);
+	float flTime = 1.0f / max(movie_fps->value, 1.0f);
+	if (movie_fpscap->value) flTime =  max(flTime, MIN_FRAME_DURATION);
 
 	static char *pszTitles[] = { "all", "world", "entity" };
 	static char *pszDepthTitles[] = { "depthall", "depthworld", "depthall" };
@@ -1088,7 +1089,9 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 			// advancing frame, update sound system
 
 			// calculate desired target time while keeping the rerrors low:
-			unsigned long ulUsedFps = (unsigned long)min(max(movie_fps->value,1.0f),1.0f/MIN_FRAME_DURATION);
+			unsigned long ulUsedFps = (unsigned long)max(movie_fps->value,1.0f);
+			if (movie_fpscap->value && (ulUsedFps > (unsigned long)(1.0f/MIN_FRAME_DURATION)))
+				ulUsedFps = (unsigned long)(1.0f/MIN_FRAME_DURATION);
 			// this relays on movie_fps staying constant during recording btw!
 
 			// calculate absoulute time we are already recording while keeping rounding errors low:
@@ -1207,7 +1210,8 @@ void Filming::_MotionFile_BeginContent(FILE *pFile,char *pAdditonalTag,long &ulT
 	ulTPos = ftell(pFile);
 	fputs("Frames: 0123456789A\n",pFile);
 
-	float flTime = max(1.0f / max(movie_fps->value, 1.0f), MIN_FRAME_DURATION);
+	float flTime = 1.0f / max(movie_fps->value, 1.0f);
+	if (movie_fpscap->value) flTime = max(flTime, MIN_FRAME_DURATION);
 	_snprintf(szTmp, sizeof(szTmp) - 1,"Frame Time: %f\n",flTime);
 	fputs(szTmp,pFile);
 }
