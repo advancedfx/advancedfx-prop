@@ -1,3 +1,13 @@
+HLAE 2.0.1.5
+
+* linked MS VC++ Runtime to the hlae.exe to avoid users being unable
+  to launch HLAE (They saw the error message "This application has failed
+  to start because the application configuration is incorrect. Reinstalling
+  the application may fix this problem.")
+  Not the nicest way to fix this, but does it for now.
+  Thx to azrazr for testing.
+
+
 HLAE 2.0.1.4
 
 * Fixed -hlaealpha8 not working
