@@ -98,7 +98,7 @@ CLauncherDialog::CLauncherDialog(wxWindow* parent) : wxDialog( parent, wxID_ANY,
 	m_modchoices->AddChoice(_T("Half-Life"), _T(""));
 	m_modchoices->AddChoice(_T("Counter-Strike"), _T("cstrike"));
 	m_modchoices->AddChoice(_T("Day of Defeat"), _T("dod"));
-	m_modchoices->AddChoice(_T("Team Fortress Classic"), _T("tcf"));
+	m_modchoices->AddChoice(_T("Team Fortress Classic"), _T("tfc"));
 
 	m_depthchoices->AddChoice(_T("(Custom)"), _T(""));
 	m_depthchoices->AddChoice(_T("High"), _T("32"));
