@@ -16,6 +16,8 @@ Description : see mdt_gltools.h
 #include "mdt_media.h" // We Mant RAWGLPICS and other media interfaces
 #include "film_sound.h"
 
+#include <list>
+
 //#include "eiface_mdt.h"
 
 // added 20070922:
@@ -112,6 +114,8 @@ private:
 
 	float _fx_whRGBf[3];
 
+	bool _InMatteEntities(int iid);
+
 public:
 	Filming();
 	~Filming();
@@ -135,6 +139,12 @@ public:
 	bool checkClear(GLbitfield mask);
 
 	Filming::DRAW_RESULT doWireframe(GLenum mode);
+
+	struct matte_entities_s
+	{
+		bool bNotEmpty;
+		::std::list<int> ids;
+	} matte_entities_r;
 
 	// WH fx:
 	void DoWorldFxBegin(GLenum mode); // begin and end have to maintain the order

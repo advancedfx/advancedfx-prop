@@ -1,3 +1,13 @@
+HLAE 2.0.1.6
+
+* Added mirv_matte_entities to improve and thus replace mirv_movie_onlyentity,
+  enter mirv_matte_entities into console for more info.
+  
+* Removed mirv_movie_onlyentity
+
+* Fixed typo in launcher that would cause problems when launching TFC mod
+
+
 HLAE 2.0.1.5
 
 * linked MS VC++ Runtime to the hlae.exe to avoid users being unable

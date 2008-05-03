@@ -8,10 +8,11 @@
 #include "pm_defs.h"
 #include "cvardef.h"
 #include "entity_types.h"
-
 #include "supportrender.h"
-
 #include "cmdregister.h"
+
+#include <list>
+
 #include "filming.h"
 
 #include "hl_addresses.h" // we want to access addressese (i.e. R_RenderView)
@@ -66,9 +67,9 @@ REGISTER_CVAR(movie_stereo_yawdegrees,"0.02",0);
 REGISTER_CVAR(movie_swapdoors, "0", 0);
 REGISTER_CVAR(movie_swapweapon, "0", 0);
 REGISTER_CVAR(movie_splitstreams, "0", 0);
-REGISTER_CVAR(movie_onlyentity, "0", 0);
 REGISTER_CVAR(movie_wireframe, "0", 0);
 REGISTER_CVAR(movie_wireframesize, "1", 0);
+
 
 // Our filming singleton
 Filming g_Filming;
@@ -545,6 +546,8 @@ Filming::Filming()
 	_fx_whRGBf[2]=1.0f;
 
 	 bRequestingMatteTextUpdate=false;
+
+	 matte_entities_r.bNotEmpty=false; // by default empty
 }
 
 Filming::~Filming()
@@ -851,11 +854,28 @@ Filming::DRAW_RESULT Filming::shouldDraw(GLenum mode)
 		return shouldDrawDuringWorldMatte(mode);
 }
 
+bool Filming::_InMatteEntities(int iid)
+{
+	bool bFound=false;
+
+	std::list<int>::iterator iterend = matte_entities_r.ids.end();
+	for (std::list<int>::iterator iter = matte_entities_r.ids.begin(); iter != iterend; iter++)
+	{
+		if (*iter == iid)
+		{
+			bFound=true;
+			break;
+		}
+	}
+
+	return bFound;
+}
+
 Filming::DRAW_RESULT Filming::shouldDrawDuringEntityMatte(GLenum mode)
 {
 	bool bSwapWeapon = (movie_swapweapon->value != 0);
 	bool bSwapDoors = (movie_swapdoors->value != 0);
-	int iOnlyActor = (int) movie_onlyentity->value;
+	bool bOnlyActors = matte_entities_r.bNotEmpty;
 
 	// GL_POLYGON is a worldbrush
 	if (mode == GL_POLYGON)
@@ -889,8 +909,8 @@ Filming::DRAW_RESULT Filming::shouldDrawDuringEntityMatte(GLenum mode)
 			if (bSwapWeapon && strncmp("models/v_", ce->model->name, 9) == 0)
 				return DR_HIDE;
 
-			// We have selected 1 ent only to be visible and its not this
-			if (iOnlyActor != 0 && iOnlyActor != ce->index)
+			// We have selected ents to be visible alone and none of those
+			if (bOnlyActors && !_InMatteEntities(ce->index))
 				return DR_MASK;
 		}	
 		// This is some sort of func thing so matte effect it
@@ -907,7 +927,7 @@ Filming::DRAW_RESULT Filming::shouldDrawDuringWorldMatte(GLenum mode)
 {
 	bool bSwapWeapon = (movie_swapweapon->value != 0);
 	bool bSwapDoors = (movie_swapdoors->value != 0);
-	int iOnlyActor = (int) movie_onlyentity->value;
+	bool bOnlyActors = matte_entities_r.bNotEmpty;
 
 	// Worldbrush stuff
 	if (mode == GL_POLYGON)
@@ -935,9 +955,9 @@ Filming::DRAW_RESULT Filming::shouldDrawDuringWorldMatte(GLenum mode)
 			if (bSwapWeapon && strncmp("models/v_", ce->model->name, 9) == 0)
 				return DR_NORMAL;
 
-			// We have selected 1 ent only to be on the ent only layer and its not this
-			if (iOnlyActor != 0 && iOnlyActor != ce->index)
-				return DR_NORMAL;
+			// We have selected ents to be visible alone and none of those
+			if (bOnlyActors && !_InMatteEntities(ce->index))
+				return DR_MASK;
 
 			if (!bKeepDueToSpecialCondition)
 				return DR_HIDE;
@@ -1425,4 +1445,66 @@ REGISTER_CMD_FUNC(fx_wh_tint_colorf)
 
 	// ensure that the values are within the falid range
 	g_Filming.setWhTintColor(clamp(flRed, 0.0f, 1.0f),clamp(flGreen, 0.0f, 1.0f),clamp(flBlue, 0.0f, 1.0f));
+}
+
+REGISTER_CMD_FUNC(matte_entities)
+
+{
+	bool bShowHelp=true;
+	int icarg=pEngfuncs->Cmd_Argc();
+
+	if (icarg>=2)
+	{
+		char *pcmd = pEngfuncs->Cmd_Argv(1);
+
+		if (!lstrcmp(pcmd ,"list") && icarg==2)
+		{
+			// list
+			pEngfuncs->Con_Printf("Ids: ");
+			std::list<int>::iterator iterend = g_Filming.matte_entities_r.ids.end();
+			for (std::list<int>::iterator iter = g_Filming.matte_entities_r.ids.begin(); iter != iterend; iter++)
+			{
+				pEngfuncs->Con_Printf("%i, ",*iter);
+			}
+			pEngfuncs->Con_Printf("\n");
+			bShowHelp=false;
+		}
+		else if (!lstrcmp(pcmd ,"add") && icarg==3)
+		{
+			// add
+			int iid = atoi(pEngfuncs->Cmd_Argv(2));
+			g_Filming.matte_entities_r.ids.push_front(iid);
+			g_Filming.matte_entities_r.bNotEmpty=true;
+			bShowHelp=false;
+		}
+		else if (!lstrcmp(pcmd ,"del") && icarg==3)
+		{
+			// del
+			int iid = atoi(pEngfuncs->Cmd_Argv(2));
+			g_Filming.matte_entities_r.ids.remove(iid);
+			g_Filming.matte_entities_r.bNotEmpty=!(g_Filming.matte_entities_r.ids.empty());
+			bShowHelp=false;
+		}
+		else if (!lstrcmp(pcmd ,"clear") && icarg==2)
+		{
+			// clear
+			g_Filming.matte_entities_r.ids.clear();
+			g_Filming.matte_entities_r.bNotEmpty=false;
+			bShowHelp=false;
+		}
+	}
+
+	if (bShowHelp)
+	{
+		pEngfuncs->Con_Printf(
+			"Allows to restrict the matte to a list of entities only.\n"
+			"If the list is empty (default) all show up.\n"
+			"\n"
+			"Commands:\n"
+			"\t" PREFIX "matte_entities list - displays current list\n"
+			"\t" PREFIX "matte_entities add <id> - adds entity with id <id> to the list\n"
+			"\t" PREFIX "matte_entities del <id> - removes <id> from the list\n"
+			"\t" PREFIX "matte_entities clear - clears all items from the list\n"
+		);
+	}
 }
