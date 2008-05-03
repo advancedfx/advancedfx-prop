@@ -18,35 +18,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "resources", "resources", "{
 		resources\readme.txt = resources\readme.txt
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "shared", "shared", "{AFC2C13F-9436-4EA2-96DA-58C56E5505DA}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "hldemo", "hldemo", "{74E4CF86-013F-4703-9C18-F271BE165184}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Header Files", "Header Files", "{B3AB1BCC-642B-473F-BC89-D637158F236E}"
-	ProjectSection(SolutionItems) = preProject
-		shared\hldemo\hldemo.h = shared\hldemo\hldemo.h
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "basecom", "basecom", "{D7835AF0-1298-451B-97B1-9D09DAE8EB75}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Header Files", "Header Files", "{5D0E44D4-54AC-4359-8C87-1E27891B5B13}"
-	ProjectSection(SolutionItems) = preProject
-		shared\com\basecom.h = shared\com\basecom.h
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "hlaeobj", "hlaeobj", "{982E87A0-1451-40DC-83E1-6D19E7C4F971}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Header Files", "Header Files", "{DC2AF57D-D3D8-4DC2-8D1B-70C25A603368}"
-	ProjectSection(SolutionItems) = preProject
-		shared\hlaeobj\hlaedata.h = shared\hlaeobj\hlaedata.h
-		shared\hlaeobj\hlaeobj.h = shared\hlaeobj\hlaeobj.h
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Source Files", "Source Files", "{70781E70-208C-41F7-8D9D-F6584C32F406}"
-	ProjectSection(SolutionItems) = preProject
-		shared\hlaeobj\hlaedata.cpp = shared\hlaeobj\hlaedata.cpp
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -68,14 +39,5 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{74E4CF86-013F-4703-9C18-F271BE165184} = {AFC2C13F-9436-4EA2-96DA-58C56E5505DA}
-		{D7835AF0-1298-451B-97B1-9D09DAE8EB75} = {AFC2C13F-9436-4EA2-96DA-58C56E5505DA}
-		{982E87A0-1451-40DC-83E1-6D19E7C4F971} = {AFC2C13F-9436-4EA2-96DA-58C56E5505DA}
-		{B3AB1BCC-642B-473F-BC89-D637158F236E} = {74E4CF86-013F-4703-9C18-F271BE165184}
-		{5D0E44D4-54AC-4359-8C87-1E27891B5B13} = {D7835AF0-1298-451B-97B1-9D09DAE8EB75}
-		{DC2AF57D-D3D8-4DC2-8D1B-70C25A603368} = {982E87A0-1451-40DC-83E1-6D19E7C4F971}
-		{70781E70-208C-41F7-8D9D-F6584C32F406} = {982E87A0-1451-40DC-83E1-6D19E7C4F971}
 	EndGlobalSection
 EndGlobal
