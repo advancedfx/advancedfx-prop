@@ -957,7 +957,7 @@ Filming::DRAW_RESULT Filming::shouldDrawDuringWorldMatte(GLenum mode)
 
 			// We have selected ents to be visible alone and none of those
 			if (bOnlyActors && !_InMatteEntities(ce->index))
-				return DR_MASK;
+				return DR_HIDE;
 
 			if (!bKeepDueToSpecialCondition)
 				return DR_HIDE;
