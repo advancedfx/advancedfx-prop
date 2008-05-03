@@ -404,6 +404,62 @@
 				</File>
 			</Filter>
 		</Filter>
+		<Filter
+			Name="shared"
+			>
+			<Filter
+				Name="hldemo"
+				>
+				<Filter
+					Name="Header Files"
+					Filter=".h"
+					>
+					<File
+						RelativePath="..\shared\hldemo\hldemo.h"
+						>
+					</File>
+				</Filter>
+			</Filter>
+			<Filter
+				Name="hlaeobj"
+				>
+				<Filter
+					Name="Header Files"
+					Filter=".h"
+					>
+					<File
+						RelativePath="..\shared\hlaeobj\hlaedata.h"
+						>
+					</File>
+					<File
+						RelativePath="..\shared\hlaeobj\hlaeobj.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="Source Files"
+					Filter=".cpp"
+					>
+					<File
+						RelativePath="..\shared\hlaeobj\hlaedata.cpp"
+						>
+					</File>
+				</Filter>
+			</Filter>
+			<Filter
+				Name="basecom"
+				>
+				<Filter
+					Name="Header Files"
+					Filter=".h"
+					>
+					<File
+						RelativePath="..\shared\com\basecom.h"
+						>
+					</File>
+				</Filter>
+			</Filter>
+		</Filter>
 	</Files>
 	<Globals>
 	</Globals>

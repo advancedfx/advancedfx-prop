@@ -6,29 +6,45 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rcstamp", "rcstamp\rcstamp.
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{89F04152-3DF3-4C02-9AA4-97195E909EB3}"
 	ProjectSection(SolutionItems) = preProject
-		resources\changelog.txt = resources\changelog.txt
 		info.txt = info.txt
-		resources\mdt_addresses.ini = resources\mdt_addresses.ini
-		resources\readme.txt = resources\readme.txt
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "shared", "shared", "{9EFD84D5-DFA9-4A6C-8148-EAF559459BCD}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "com", "com", "{AF538BB2-FD7C-4431-8150-097D24116F54}"
-	ProjectSection(SolutionItems) = preProject
-		shared\com\basecom.h = shared\com\basecom.h
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Half-Life Advanced Effects", "gui\gui.vcproj", "{6083B0F5-854B-4DC9-B2AD-B983384ECA10}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "hldemo", "hldemo", "{957E0AB9-4E42-443E-A2B5-F2A7B53759CB}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "resources", "resources", "{606E3AF1-4D65-4266-9B67-10D989EEE0DE}"
+	ProjectSection(SolutionItems) = preProject
+		resources\changelog.txt = resources\changelog.txt
+		resources\mdt_addresses.ini = resources\mdt_addresses.ini
+		resources\readme.txt = resources\readme.txt
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "shared", "shared", "{AFC2C13F-9436-4EA2-96DA-58C56E5505DA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "hldemo", "hldemo", "{74E4CF86-013F-4703-9C18-F271BE165184}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Header Files", "Header Files", "{B3AB1BCC-642B-473F-BC89-D637158F236E}"
 	ProjectSection(SolutionItems) = preProject
 		shared\hldemo\hldemo.h = shared\hldemo\hldemo.h
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ogl", "ogl", "{F6904D1D-6A7D-49C3-808A-4E7DCE01815A}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "basecom", "basecom", "{D7835AF0-1298-451B-97B1-9D09DAE8EB75}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Header Files", "Header Files", "{5D0E44D4-54AC-4359-8C87-1E27891B5B13}"
 	ProjectSection(SolutionItems) = preProject
-		shared\ogl\glext.h = shared\ogl\glext.h
+		shared\com\basecom.h = shared\com\basecom.h
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "hlaeobj", "hlaeobj", "{982E87A0-1451-40DC-83E1-6D19E7C4F971}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Header Files", "Header Files", "{DC2AF57D-D3D8-4DC2-8D1B-70C25A603368}"
+	ProjectSection(SolutionItems) = preProject
+		shared\hlaeobj\hlaedata.h = shared\hlaeobj\hlaedata.h
+		shared\hlaeobj\hlaeobj.h = shared\hlaeobj\hlaeobj.h
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Source Files", "Source Files", "{70781E70-208C-41F7-8D9D-F6584C32F406}"
+	ProjectSection(SolutionItems) = preProject
+		shared\hlaeobj\hlaedata.cpp = shared\hlaeobj\hlaedata.cpp
 	EndProjectSection
 EndProject
 Global
@@ -54,8 +70,12 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{AF538BB2-FD7C-4431-8150-097D24116F54} = {9EFD84D5-DFA9-4A6C-8148-EAF559459BCD}
-		{957E0AB9-4E42-443E-A2B5-F2A7B53759CB} = {9EFD84D5-DFA9-4A6C-8148-EAF559459BCD}
-		{F6904D1D-6A7D-49C3-808A-4E7DCE01815A} = {9EFD84D5-DFA9-4A6C-8148-EAF559459BCD}
+		{74E4CF86-013F-4703-9C18-F271BE165184} = {AFC2C13F-9436-4EA2-96DA-58C56E5505DA}
+		{D7835AF0-1298-451B-97B1-9D09DAE8EB75} = {AFC2C13F-9436-4EA2-96DA-58C56E5505DA}
+		{982E87A0-1451-40DC-83E1-6D19E7C4F971} = {AFC2C13F-9436-4EA2-96DA-58C56E5505DA}
+		{B3AB1BCC-642B-473F-BC89-D637158F236E} = {74E4CF86-013F-4703-9C18-F271BE165184}
+		{5D0E44D4-54AC-4359-8C87-1E27891B5B13} = {D7835AF0-1298-451B-97B1-9D09DAE8EB75}
+		{DC2AF57D-D3D8-4DC2-8D1B-70C25A603368} = {982E87A0-1451-40DC-83E1-6D19E7C4F971}
+		{70781E70-208C-41F7-8D9D-F6584C32F406} = {982E87A0-1451-40DC-83E1-6D19E7C4F971}
 	EndGlobalSection
 EndGlobal
