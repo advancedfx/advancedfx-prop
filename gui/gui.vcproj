@@ -48,7 +48,7 @@
 				StringPooling="false"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="1"
 				PrecompiledHeaderThrough="wx/wx.h"
