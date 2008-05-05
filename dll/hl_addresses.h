@@ -230,6 +230,7 @@ extern unsigned long ulHLAddr_DTOURSZ_R_MarkLeaves;
 extern unsigned long ulHLAddr_p_r_refdef;
 extern unsigned long ulHLAddr_HudSpectator_tfc;
 extern unsigned long ulHLAddr_HudSpectator_cmp_tfc;
+extern unsigned long ulHLAddr_UpdateSpectatorPanel_checkjmp_tfc;
 extern unsigned long ulHLAddr_UnkIGAWorld;
 extern unsigned long ulHLAddr_DTOURSZ_UnkIGAWorld;
 extern unsigned long ulHLAddr_GetSoundtime;
@@ -278,6 +279,8 @@ extern unsigned long ulHLAddr_SZ_unkInlineClientColorV;
 
 #define HL_ADDR_HUDSPECTATOR_FUNC_TFC ulHLAddr_HudSpectator_tfc
 #define HL_ADDR_HUDSPECTATOR_CMPA0_TFC ulHLAddr_HudSpectator_cmp_tfc
+
+#define HL_ADDR_UpdateSpectatorPanel_checkjmp_tfc ulHLAddr_UpdateSpectatorPanel_checkjmp_tfc
 
 #define HL_ADDR_UnkIGAWorld ulHLAddr_UnkIGAWorld
 #define HL_ADDR_DTOURSZ_UnkIGAWorld ulHLAddr_DTOURSZ_UnkIGAWorld

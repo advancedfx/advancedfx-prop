@@ -1,3 +1,8 @@
+HLAE 2.0.1.7
+
+* Added mirv_tfc_specmenu - allows to disable and enable spectator menu in Team Fortress Classic
+
+
 HLAE 2.0.1.6
 
 * Added mirv_matte_entities to improve and thus replace mirv_movie_onlyentity,

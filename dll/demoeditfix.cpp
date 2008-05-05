@@ -156,3 +156,41 @@ REGISTER_CMD_FUNC(demoedit_fix)
 	else
 		pEngfuncs->Con_Printf("Usage: " PREFIX "demoedit_fix tfc\n");
 }
+
+//
+// TFC HLTV menu removal
+//
+
+/* Hints:
+void TeamFortressViewport::UpdateSpectatorPanel()
+
+0:010> s -a hl L4000000 "#Spec_Mode%d"
+0197802c  23 53 70 65 63 5f 4d 6f-64 65 25 64 00 00 00 00  #Spec_Mode%d....
+
+....
+
+*/
+
+REGISTER_CMD_FUNC(tfc_specmenu)
+{
+	if (pEngfuncs->Cmd_Argc() == 2)
+	{
+		int iOn = atoi(pEngfuncs->Cmd_Argv(1));
+
+		DWORD dwProt;
+		unsigned short *usCheck = (unsigned short *) HL_ADDR_UpdateSpectatorPanel_checkjmp_tfc;
+		VirtualProtect(usCheck, 2, PAGE_READWRITE, &dwProt);
+		if (iOn)
+		{
+			*usCheck = 0x840f; // original JE code
+		}
+		else
+		{
+			*usCheck = 0xE990; // NOP + JMP opcode
+		}
+		VirtualProtect(usCheck, 2, dwProt, 0);
+
+	}
+	else
+		pEngfuncs->Con_Printf("Usage: " PREFIX "tfc_specmenu 0 (disable) / 1 (enable)\n");
+}
