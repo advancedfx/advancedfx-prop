@@ -18,6 +18,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "resources", "resources", "{
 		resources\readme.txt = resources\readme.txt
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hlae", "hlae\hlae.vcproj", "{CF9B4385-F921-4168-92D4-31DF94AC36FB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -36,6 +38,10 @@ Global
 		{6083B0F5-854B-4DC9-B2AD-B983384ECA10}.Debug|Win32.Build.0 = Debug|Win32
 		{6083B0F5-854B-4DC9-B2AD-B983384ECA10}.Release|Win32.ActiveCfg = Release|Win32
 		{6083B0F5-854B-4DC9-B2AD-B983384ECA10}.Release|Win32.Build.0 = Release|Win32
+		{CF9B4385-F921-4168-92D4-31DF94AC36FB}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CF9B4385-F921-4168-92D4-31DF94AC36FB}.Debug|Win32.Build.0 = Debug|Win32
+		{CF9B4385-F921-4168-92D4-31DF94AC36FB}.Release|Win32.ActiveCfg = Release|Win32
+		{CF9B4385-F921-4168-92D4-31DF94AC36FB}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
