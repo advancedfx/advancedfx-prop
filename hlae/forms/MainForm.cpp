@@ -9,7 +9,7 @@ using namespace hlae;
 
 void MainForm::MyCreate()
 {
-	hlaeBaseComServer = new ::CHlaeBcServer( this->Handle );
+	hlaeBaseComServer = new ::CHlaeBcServer( this->toolStripContainer1->ContentPanel );
 }
 
 void MainForm::MyDestroy()

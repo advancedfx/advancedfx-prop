@@ -43,8 +43,6 @@ namespace hlae {
 			}
 		}
 
-		virtual void OnFormClosed( FormClosedEventArgs^ e ) override;
-
 	private: System::Windows::Forms::GroupBox^  groupBoxGame;
 
 	private: System::Windows::Forms::TextBox^  textBoxExe;
@@ -165,6 +163,7 @@ namespace hlae {
 			this->buttonExe->TabIndex = 1;
 			this->buttonExe->Text = L"Browse ...";
 			this->buttonExe->UseVisualStyleBackColor = true;
+			this->buttonExe->Click += gcnew System::EventHandler(this, &Launcher::buttonExe_Click);
 			// 
 			// textBoxExe
 			// 
@@ -369,6 +368,7 @@ namespace hlae {
 			this->buttonOK->TabIndex = 1;
 			this->buttonOK->Text = L"L&aunch";
 			this->buttonOK->UseVisualStyleBackColor = true;
+			this->buttonOK->Click += gcnew System::EventHandler(this, &Launcher::buttonOK_Click);
 			// 
 			// buttonCancel
 			// 
@@ -416,5 +416,9 @@ namespace hlae {
 
 		}
 #pragma endregion
-	};
+	private: System::Void buttonOK_Click(System::Object^  sender, System::EventArgs^  e);
+	private: System::Void buttonExe_Click(System::Object^  sender, System::EventArgs^  e);
+
+
+};
 }

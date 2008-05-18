@@ -5,10 +5,17 @@
 
 
 using namespace hlae;
+using namespace System::Windows::Forms;
 
-void Launcher::OnFormClosed( FormClosedEventArgs^ e )
+System::Void Launcher::buttonOK_Click(System::Object^  sender, System::EventArgs^  e)
 {
 	InitLoader( 0, this->textBoxExe->Text, this->textBoxCmdPrev->Text );
+}
 
-	Form::OnFormClosed( e ); // call base class
+System::Void Launcher::buttonExe_Click(System::Object^  sender, System::EventArgs^  e)
+{
+	if (System::Windows::Forms::DialogResult::OK == openFileDialogExe->ShowDialog(this))
+	{
+		this->textBoxExe->Text = openFileDialogExe->FileName;
+	}
 }

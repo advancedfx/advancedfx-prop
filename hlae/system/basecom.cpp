@@ -339,9 +339,10 @@ BOOL CBCServerInternal:: _Wrapper_UpdateWindow(HWND hWnd,HWND hwSender,PCOPYDATA
 #pragma managed
 //
 
-CHlaeBcServer::CHlaeBcServer( System::IntPtr hwndGameWindowParent )
+CHlaeBcServer::CHlaeBcServer( System::Windows::Forms::ToolStripContentPanel ^gameWindowParent )
 {
-	_hwndGameWindowParent = hwndGameWindowParent.ToPointer();
+	_gameWindowParent = System::Runtime::InteropServices::GCHandle::Alloc( gameWindowParent );
+	_hwndGameWindowParent = gameWindowParent->Handle.ToPointer();
 
 	_pBCServerInternal = new CBCServerInternal();
 
@@ -354,6 +355,7 @@ CHlaeBcServer::~CHlaeBcServer()
 	_OnGameWindowClose();
 	_pBCServerInternal->HlaeBcSrvStop();
 	delete _pBCServerInternal;
+	_gameWindowParent.Free();
 }
 
 //
@@ -459,11 +461,21 @@ bool CHlaeBcServer:: _OnFilmingStop()
 	return true;
 }
 
+//
+#pragma managed
+//
+
 bool CHlaeBcServer::_UpdateWindow(int nWidth, int nHeight)
 {
+	((System::Windows::Forms::ToolStripContentPanel^)_gameWindowParent.Target)->AutoScrollMinSize = System::Drawing::Size( nWidth, nHeight );
 	return true;
 }
 
 //
 #pragma unmanaged
+//
+
+
+//
+#pragma managed
 //

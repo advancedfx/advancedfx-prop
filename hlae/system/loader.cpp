@@ -26,8 +26,8 @@
 #pragma unmanaged
 
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
 #include <tchar.h>
+#include <windows.h>
 #include <stdlib.h> // remove later, for _itot
 
 #pragma comment(lib, "version.lib") // GEtFileVersion...
@@ -38,16 +38,21 @@ STARTUPINFO g_HLsi;				// I don't know why I made this global, used in LoaderThr
 
 #define CREATE_THREAD_ACCESS (PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ)
 
-HRESULT InjectDll(DWORD pID, const char *dllName)
-// This function does not accept unicode.
-// You may supply dllName as MBCS though (if you are not coding for win95).
+HRESULT InjectDll(DWORD pID, LPCTSTR dllName)
 {
 	HANDLE hProc = OpenProcess(CREATE_THREAD_ACCESS, FALSE, pID);
 
 	if (!hProc)
 		return FALSE;
 
-	LPVOID lLoadLibraryAddr = (LPVOID) GetProcAddress(GetModuleHandleA("kernel32.dll"),"LoadLibraryA");	
+	LPVOID lLoadLibraryAddr = (LPVOID) GetProcAddress(
+		GetModuleHandle( _T("kernel32.dll") ),
+#ifdef _UNICODE
+		"LoadLibraryW"
+#elif
+		"LoadLibraryA"
+#endif
+		);	
 
 	if (!lLoadLibraryAddr)
 	{
@@ -55,7 +60,7 @@ HRESULT InjectDll(DWORD pID, const char *dllName)
 		return FALSE;
 	}
 
-	LPVOID lArgAddress = VirtualAllocEx(hProc, NULL, strlen(dllName) + 1, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE); 
+	LPVOID lArgAddress = VirtualAllocEx(hProc, NULL, sizeof( _TCHAR ) * (_tcsclen(dllName) + 1), MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE); 
 
 	if (!lArgAddress)
 	{
@@ -63,11 +68,11 @@ HRESULT InjectDll(DWORD pID, const char *dllName)
 		return FALSE;
 	}
 
-	BOOL bResult = WriteProcessMemory(hProc, lArgAddress, dllName, strlen(dllName) + 1, NULL);
+	BOOL bResult = WriteProcessMemory(hProc, lArgAddress, dllName, sizeof( _TCHAR ) * (_tcsclen(dllName) + 1), NULL);
 
 	if (!bResult)
 	{
-		VirtualFreeEx(hProc, lArgAddress, strlen(dllName) + 1, MEM_RELEASE|MEM_DECOMMIT);
+		VirtualFreeEx(hProc, lArgAddress, sizeof( _TCHAR ) * (_tcsclen(dllName) + 1), MEM_RELEASE|MEM_DECOMMIT);
 		CloseHandle(hProc);
 		return FALSE;
 	}
@@ -76,12 +81,12 @@ HRESULT InjectDll(DWORD pID, const char *dllName)
 
 	if (!hThread)
 	{
-		VirtualFreeEx(hProc, lArgAddress, strlen(dllName) + 1, MEM_RELEASE|MEM_DECOMMIT);
+		VirtualFreeEx(hProc, lArgAddress, sizeof( _TCHAR ) * (_tcsclen(dllName) + 1), MEM_RELEASE|MEM_DECOMMIT);
 		CloseHandle(hProc);
 		return FALSE;
 	}
 
-	VirtualFreeEx(hProc, lArgAddress, strlen(dllName) + 1, MEM_RELEASE|MEM_DECOMMIT);
+	VirtualFreeEx(hProc, lArgAddress, sizeof( _TCHAR ) * (_tcsclen(dllName) + 1), MEM_RELEASE|MEM_DECOMMIT);
 	CloseHandle(hProc);
 
 	return TRUE;
@@ -131,6 +136,8 @@ bool g_bSignalDone=false;
 
 DWORD WINAPI LoaderThread(void *p)
 {
+	MessageBox(0,g_path_dll,_T("g_path_dll"),MB_OK|MB_ICONINFORMATION);
+
 	//
 	// Phase 1: Launch Half-Life
 	//
@@ -200,8 +207,7 @@ DWORD WINAPI LoaderThread(void *p)
 
 	//g_debug.SendMessage(_T("Injecting hook ..."), hlaeDEBUG_VERBOSE_LEVEL3);
 
-	MessageBox( 0, g_path_dll, _T("Injecting ..."), MB_OK|MB_ICONINFORMATION );
-	if (!InjectDll(g_HLpi.dwProcessId, (const char *)g_path_dll))
+	if (!InjectDll(g_HLpi.dwProcessId, g_path_dll))
 		MessageBox( 0, _T("Starting injection failed."), _T("Error"), MB_OK|MB_ICONERROR );
 		//;
 		//g_debug.SendMessage(_T("ERROR: Starting injection failed!"), hlaeDEBUG_ERROR);
@@ -224,7 +230,7 @@ using namespace System::Runtime::InteropServices;
 
 bool InitLoader(unsigned int uiUnused, System::String ^m_path,System::String ^m_cmdline)
 {
-	System::String ^strAppDir = gcnew System::String( System::Environment::CurrentDirectory );
+	System::String ^strAppDir = gcnew System::String( System::Windows::Forms::Application::StartupPath );
 	
 	System::Text::StringBuilder ^strDllPathB = gcnew System::Text::StringBuilder( strAppDir );
 	strDllPathB->Append( "\\Mirv Demo Tool.dll" );
