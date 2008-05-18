@@ -17,7 +17,7 @@ hlae.cpp
     This is the main application source file.
     Contains the code to display the form.
 
-Form1.h
+forms/MainForm.h
     Contains the implementation of your form class and InitializeComponent() function.
 
 AssemblyInfo.cpp

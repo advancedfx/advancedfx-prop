@@ -198,95 +198,165 @@
 			Name="hlae"
 			>
 			<Filter
-				Name="Header Files"
-				Filter="h;hpp;hxx;hm;inl;inc;xsd"
-				UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
-				>
-				<File
-					RelativePath=".\Form1.h"
-					FileType="3"
-					>
-					<File
-						RelativePath=".\Form1.resX"
-						SubType="Designer"
-						>
-					</File>
-				</File>
-				<File
-					RelativePath=".\resource.h"
-					>
-				</File>
-				<File
-					RelativePath=".\stdafx.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="Resource Files"
-				Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
-				UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
-				>
-				<File
-					RelativePath=".\app.ico"
-					>
-				</File>
-				<File
-					RelativePath=".\app.rc"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="Source Files"
-				Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
-				UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
-				>
-				<File
-					RelativePath=".\AssemblyInfo.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\hlae.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\stdafx.cpp"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="1"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="1"
-						/>
-					</FileConfiguration>
-				</File>
-			</Filter>
-			<Filter
 				Name="system"
 				>
 				<Filter
-					Name="Header Files"
+					Name="."
+					>
+					<Filter
+						Name="Header Files"
+						>
+						<File
+							RelativePath=".\system\basecom.h"
+							>
+						</File>
+						<File
+							RelativePath=".\system\loader.h"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="Source Files"
+						>
+						<File
+							RelativePath=".\system\basecom.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\system\loader.cpp"
+							>
+						</File>
+					</Filter>
+				</Filter>
+			</Filter>
+			<Filter
+				Name="."
+				>
+				<Filter
+					Name="Resource Files"
+					Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
+					UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 					>
 					<File
-						RelativePath=".\system\loader.h"
+						RelativePath=".\app.ico"
+						>
+					</File>
+					<File
+						RelativePath=".\app.rc"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="Header Files"
+					Filter="h;hpp;hxx;hm;inl;inc;xsd"
+					UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
+					>
+					<File
+						RelativePath=".\resource.h"
+						>
+					</File>
+					<File
+						RelativePath=".\stdafx.h"
 						>
 					</File>
 				</Filter>
 				<Filter
 					Name="Source Files"
+					Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
+					UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 					>
 					<File
-						RelativePath=".\system\loader.cpp"
+						RelativePath=".\AssemblyInfo.cpp"
 						>
 					</File>
+					<File
+						RelativePath=".\hlae.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\stdafx.cpp"
+						>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								UsePrecompiledHeader="1"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Release|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								UsePrecompiledHeader="1"
+							/>
+						</FileConfiguration>
+					</File>
+				</Filter>
+			</Filter>
+			<Filter
+				Name="forms"
+				>
+				<Filter
+					Name="."
+					>
+					<Filter
+						Name="Header Files"
+						Filter="h"
+						>
+						<File
+							RelativePath=".\forms\Launcher.h"
+							FileType="3"
+							>
+							<File
+								RelativePath=".\forms\Launcher.resx"
+								SubType="Designer"
+								>
+							</File>
+						</File>
+						<File
+							RelativePath=".\forms\MainForm.h"
+							FileType="3"
+							>
+							<File
+								RelativePath=".\forms\MainForm.resx"
+								SubType="Designer"
+								>
+							</File>
+						</File>
+					</Filter>
+					<Filter
+						Name="Source Files"
+						Filter="cpp"
+						>
+						<File
+							RelativePath=".\forms\Launcher.cpp"
+							>
+							<FileConfiguration
+								Name="Debug|Win32"
+								>
+								<Tool
+									Name="VCCLCompilerTool"
+									ObjectFile="$(IntDir)\$(InputName)1.obj"
+									XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+								/>
+							</FileConfiguration>
+							<FileConfiguration
+								Name="Release|Win32"
+								>
+								<Tool
+									Name="VCCLCompilerTool"
+									ObjectFile="$(IntDir)\$(InputName)1.obj"
+									XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+								/>
+							</FileConfiguration>
+						</File>
+						<File
+							RelativePath=".\forms\MainForm.cpp"
+							>
+						</File>
+					</Filter>
 				</Filter>
 			</Filter>
 		</Filter>

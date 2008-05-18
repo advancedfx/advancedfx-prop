@@ -200,9 +200,10 @@ DWORD WINAPI LoaderThread(void *p)
 
 	//g_debug.SendMessage(_T("Injecting hook ..."), hlaeDEBUG_VERBOSE_LEVEL3);
 
-	//if (!InjectDll(g_HLpi.dwProcessId, (const char *)g_path_dll))
-	//	MessageBox( 0, _T("Starting injection failed."), _T("Error"), MB_OK|MB_ICONERROR );
-		;
+	MessageBox( 0, g_path_dll, _T("Injecting ..."), MB_OK|MB_ICONINFORMATION );
+	if (!InjectDll(g_HLpi.dwProcessId, (const char *)g_path_dll))
+		MessageBox( 0, _T("Starting injection failed."), _T("Error"), MB_OK|MB_ICONERROR );
+		//;
 		//g_debug.SendMessage(_T("ERROR: Starting injection failed!"), hlaeDEBUG_ERROR);
 
 	Sleep(2000);

@@ -1,5 +1,3 @@
-#include "stdafx.h"
-
 #ifndef HLAE_LOADER_H
 #define HLAE_LOADER_H
 
