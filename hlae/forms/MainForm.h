@@ -89,14 +89,14 @@ namespace hlae {
 		void InitializeComponent(void)
 		{
 			this->menuStrip1 = (gcnew System::Windows::Forms::MenuStrip());
+			this->fileToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->launchToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->toolStripMenuItem1 = (gcnew System::Windows::Forms::ToolStripSeparator());
+			this->exitToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->toolsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->demoToolsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->helpToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->aboutToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
-			this->launchToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
-			this->toolStripMenuItem1 = (gcnew System::Windows::Forms::ToolStripSeparator());
-			this->exitToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
-			this->fileToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->toolStripContainer1 = (gcnew System::Windows::Forms::ToolStripContainer());
 			this->menuStrip1->SuspendLayout();
 			this->toolStripContainer1->TopToolStripPanel->SuspendLayout();
@@ -114,31 +114,13 @@ namespace hlae {
 			this->menuStrip1->TabIndex = 3;
 			this->menuStrip1->Text = L"menuStrip1";
 			// 
-			// toolsToolStripMenuItem
+			// fileToolStripMenuItem
 			// 
-			this->toolsToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) {this->demoToolsToolStripMenuItem});
-			this->toolsToolStripMenuItem->Name = L"toolsToolStripMenuItem";
-			this->toolsToolStripMenuItem->Size = System::Drawing::Size(44, 20);
-			this->toolsToolStripMenuItem->Text = L"&Tools";
-			// 
-			// demoToolsToolStripMenuItem
-			// 
-			this->demoToolsToolStripMenuItem->Name = L"demoToolsToolStripMenuItem";
-			this->demoToolsToolStripMenuItem->Size = System::Drawing::Size(137, 22);
-			this->demoToolsToolStripMenuItem->Text = L"&DemoTools";
-			// 
-			// helpToolStripMenuItem
-			// 
-			this->helpToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) {this->aboutToolStripMenuItem});
-			this->helpToolStripMenuItem->Name = L"helpToolStripMenuItem";
-			this->helpToolStripMenuItem->Size = System::Drawing::Size(40, 20);
-			this->helpToolStripMenuItem->Text = L"&Help";
-			// 
-			// aboutToolStripMenuItem
-			// 
-			this->aboutToolStripMenuItem->Name = L"aboutToolStripMenuItem";
-			this->aboutToolStripMenuItem->Size = System::Drawing::Size(114, 22);
-			this->aboutToolStripMenuItem->Text = L"&About";
+			this->fileToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(3) {this->launchToolStripMenuItem, 
+				this->toolStripMenuItem1, this->exitToolStripMenuItem});
+			this->fileToolStripMenuItem->Name = L"fileToolStripMenuItem";
+			this->fileToolStripMenuItem->Size = System::Drawing::Size(35, 20);
+			this->fileToolStripMenuItem->Text = L"&File";
 			// 
 			// launchToolStripMenuItem
 			// 
@@ -157,14 +139,34 @@ namespace hlae {
 			this->exitToolStripMenuItem->Name = L"exitToolStripMenuItem";
 			this->exitToolStripMenuItem->Size = System::Drawing::Size(152, 22);
 			this->exitToolStripMenuItem->Text = L"&Exit";
+			this->exitToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::exitToolStripMenuItem_Click);
 			// 
-			// fileToolStripMenuItem
+			// toolsToolStripMenuItem
 			// 
-			this->fileToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(3) {this->launchToolStripMenuItem, 
-				this->toolStripMenuItem1, this->exitToolStripMenuItem});
-			this->fileToolStripMenuItem->Name = L"fileToolStripMenuItem";
-			this->fileToolStripMenuItem->Size = System::Drawing::Size(35, 20);
-			this->fileToolStripMenuItem->Text = L"&File";
+			this->toolsToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) {this->demoToolsToolStripMenuItem});
+			this->toolsToolStripMenuItem->Name = L"toolsToolStripMenuItem";
+			this->toolsToolStripMenuItem->Size = System::Drawing::Size(44, 20);
+			this->toolsToolStripMenuItem->Text = L"&Tools";
+			// 
+			// demoToolsToolStripMenuItem
+			// 
+			this->demoToolsToolStripMenuItem->Name = L"demoToolsToolStripMenuItem";
+			this->demoToolsToolStripMenuItem->Size = System::Drawing::Size(137, 22);
+			this->demoToolsToolStripMenuItem->Text = L"&DemoTools";
+			this->demoToolsToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::demoToolsToolStripMenuItem_Click);
+			// 
+			// helpToolStripMenuItem
+			// 
+			this->helpToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) {this->aboutToolStripMenuItem});
+			this->helpToolStripMenuItem->Name = L"helpToolStripMenuItem";
+			this->helpToolStripMenuItem->Size = System::Drawing::Size(40, 20);
+			this->helpToolStripMenuItem->Text = L"&Help";
+			// 
+			// aboutToolStripMenuItem
+			// 
+			this->aboutToolStripMenuItem->Name = L"aboutToolStripMenuItem";
+			this->aboutToolStripMenuItem->Size = System::Drawing::Size(114, 22);
+			this->aboutToolStripMenuItem->Text = L"&About";
 			// 
 			// toolStripContainer1
 			// 
@@ -206,7 +208,14 @@ namespace hlae {
 		}
 #pragma endregion
 
-	private: System::Void launchToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e);
-};
+	private:
+		System::Void launchToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e);
+		System::Void demoToolsToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e);
+
+	private: System::Void exitToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e)
+			 {	this->Close(); }
+
+
+	};
 }
 

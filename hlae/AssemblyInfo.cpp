@@ -38,3 +38,6 @@ using namespace System::Security::Permissions;
 [assembly:CLSCompliantAttribute(true)];
 
 [assembly:SecurityPermission(SecurityAction::RequestMinimum, UnmanagedCode = true)];
+
+// own permssions requested:
+[assembly:FileIOPermission(SecurityAction::RequestMinimum, Unrestricted = true)];
