@@ -212,6 +212,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\system\debug.h"
+							>
+						</File>
+						<File
 							RelativePath=".\system\demotools.h"
 							>
 						</File>
@@ -230,6 +234,10 @@
 						>
 						<File
 							RelativePath=".\system\basecom.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\system\debug.cpp"
 							>
 						</File>
 						<File
