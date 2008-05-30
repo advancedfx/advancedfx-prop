@@ -1,11 +1,12 @@
 #pragma once
 #if 0
+#define HLAE_DEBUG_READY 1
 
 //  debug.h - Debug system
 //  Copyright (c) Half-Life Advanced Effects project
 
 //  Last changes:
-//	2008-05-29 by dominik.matrixstorm.com
+//	2008-05-30 by dominik.matrixstorm.com
 
 //  First changes:
 //	2008-05-28 by dominik.matrixstorm.com
@@ -50,6 +51,13 @@ enum class DebugMessageState
 	DMS_IGNORED
 };
 
+enum class DebugFilterSetting
+{
+	DFS_DEFAULT=0,
+	DFS_IGNORE,
+	DFS_NODROP
+};
+
 enum class LogFileState
 {
 	none,
@@ -76,19 +84,54 @@ enum class DebugAttachState
 
 ref class DebugMaster; // forward decleration
 
-ref class DebugControl : ListView
+ref class DebugListenerBridge
 {
 public:
-	DebugControl();
-	DebugControl( DebugMaster ^debugMaster );
-	~DebugControl();
+	void DoDeattach( DebugMaster ^debugMaster );
+public:
+	delegate void DoDeattachDelegate( DebugMaster ^debugMaster );
+	DebugListenerBridge( DoDeattachDelegate doDeattachDelegate );
+private:
+	DoDeattachDelegate doDeattachDelegate;
+};
 
-	DebugAttachState GetAttachState();
-	DebugAttachState Attach( DebugMaster ^debugMaster  );
+//  DebugListener:
+//
+//  Base class for attaching to one or several debugMasters and recieving.
+abstract ref class DebugListener
+{
+public:
+	//
+	// Threadsafe functions:
+	//
+	abstract DebugMessageState SpewMessage(
+		DebugMaster ^debugMaster,
+		System::String ^debugMessage,
+		DebugMessageType debugMessageType
+	);
+
+	DebugAttachState Attach( DebugMaster ^debugMaster );
+	DebugAttachState Deattach( DebugMaster ^debugMaster );
 	DebugAttachState Deattach();
 
+	DebugAttachState GetAttachState( DebugMaster ^debugMaster );
+	DebugAttachState GetAttachState();
+
+	//
+	// non threadsafe functions:
+	//
+
+	DebugListener();
+	DebugListener( DebugMaster ^debugMaster );
+	~DebugListener();
+
 private:
-	DebugMessageState SpewMessage( System::String ^debugMessage, DebugMessageType debugMessageType );
+	DebugListenerBridge debugListenerBridge;
+	System::Collections::Generic::LinkedList<debugMaster ^> debugMasters; // SyncRoot is used for locking
+
+	void InitDebugListener();
+
+	void DoDeattach( DebugMaster ^debugMaster ); // threadsafe
 };
 
 
@@ -143,43 +186,23 @@ public:
 	// Threadsafe functions:
 	//
 
-	//  Posts a debug message.
-	//	Params:
-	//		debugMessage // String message to post
-	//		debugMessageType // DebugMessageType
-	//  Result:
-	//    DebugMessageState
 	DebugMessageState PostMessage( System::String ^debugMessage, DebugMessageType debugMessageType );
 
 	//  Result:
 	//    the last tracked DebugQueueState since the last time this function was called.
-	//    DQS_OK would mean there was no problem noticed since the last time the
-	//    function was called.
-	DebugQueueState GetLastDebugQueueState();
+	DebugQueueState GetLastQueueState();
 
-	//  Sets a new LogFile where things will be written out too from cache.
-	//  Things already written out or lost remain lost.
-	//  Params:
-	//    logfilePath // new filepath to write to
-	//  Result:
-	//    LFS_OK in case there was no problem so far
-	LogFileState SetLogFile( System::String ^logFilePath );
+	DebugFilterSetting GetFilter( DebugMessageType debugMessageType );
+	void SetFilter( DebugMessageType debugMessageTyp, DebugFilterSetting debugFilterSetting );
 
-	//  Result:
-	//    the logfile state
-	LogFileState GetLogFileState();
-
-	//  If you don't want to write to any logfile any longer call this.
-	void UnsetLogFile();
+	void RegisterListener( DebugListenerBridge^ debugListenerBridge);
 
 	//
 	//  non threadsafe functions:
 	//
 
-	//  Constructs a DebugMaster object.
 	DebugMaster();
 
-	//  Destructs a DebugMaster object.
 	~DebugMaster();
 
 private:
@@ -187,26 +210,11 @@ private:
 	// Threadsafe functions:
 	//
 
-	//  Attaches a DebugControl to which DebugMessages shall be written out.
-	//  Params:
-	//    textBox // the text box to attach
-	//  Result:
-	//    InvalidTextBoxHandle on error, otherwise a handle
-	//  Remarks:
-	//    The HlaeDebugMaster should be the only one accessing that box.
-	//    Before the box is deleted DeattachTextBox has to be called with the handle.
-	DebugAttachState AttachDebugControl( DebugControl ^debugControl );
-
-	//  Deattaches a DebugControl from the debugging system.
-	//  Params:
-	//    textBoxHandle // the handle of the box to be deattached
-	DebugAttachState DeattachDebugControl( DebugControl ^debugControl );
 
 	//
 	//  non threadsafe functions:
 	//
 
-	//  Initiates the DebugMaster object.
 	void InitDebugMaster(
 		unsigned int maxMessages,
 		unsigned int thresholdMinMessages,
@@ -216,7 +224,25 @@ private:
 		unsigned int thresholdMaxSumLengths,
 		unsigned int thresholdMinIdleMilliSeconds
 	); 
+
 private:
+	unsigned int maxMessages,
+	unsigned int thresholdMinMessages,
+	unsigned int thresholdMaxMessages,
+	unsigned int maxSumLengths,
+	unsigned int thresholdMinSumLengths,
+	unsigned int thresholdMaxSumLengths,
+	unsigned int thresholdMinIdleMilliSeconds
+	unsigned int curSumLenghts;
+
+	DebugFilterSetting filterError;
+	DebugFilterSetting filterWarning;
+	DebugFilterSetting filterInfo;
+	DebugFilterSetting filterVerbose;
+	DebugFilterSetting filterDebug;
+
+	System::Collections::Generic::Queue<System::String ^> messageQue; // SyncRoot is used for locking
+
 };
 
 }	// namespace debug
