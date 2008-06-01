@@ -84,35 +84,35 @@ enum class DebugAttachState
 
 ref class DebugMaster; // forward decleration
 
+delegate void MasterDeattachDelegate( DebugMaster ^debugMaster );
+delegate DebugMessageState MasterMessageDelegate( DebugMaster ^debugMaster, System::String ^debugMessage, DebugMessageType debugMessageType ); 
+
 ref class DebugListenerBridge
 {
 public:
-	void DoDeattach( DebugMaster ^debugMaster );
+	void MasterDeattach( DebugMaster ^debugMaster );
+	DebugMessageState MasterMessage( DebugMaster ^debugMaster, System::String ^debugMessage, DebugMessageType debugMessageType ); 
 public:
-	delegate void DoDeattachDelegate( DebugMaster ^debugMaster );
-	DebugListenerBridge( DoDeattachDelegate doDeattachDelegate );
+	DebugListenerBridge( MasterDeattachDelegate ^masterDeattachDelegate, MasterMessageDelegate ^masterMessageDelegate );
 private:
-	DoDeattachDelegate doDeattachDelegate;
+	MasterDeattachDelegate ^masterDeattachDelegate;
+	MasterMessageDelegate ^masterMessageDelegate;
 };
 
 //  DebugListener:
 //
-//  Base class for attaching to one or several debugMasters and recieving.
-abstract ref class DebugListener
+//  Abstract base class for attaching to one or several debugMasters and recieving.
+//  Deriving classes should only override OnSpewMessage 
+ref class DebugListener abstract
 {
 public:
 	//
 	// Threadsafe functions:
 	//
-	abstract DebugMessageState SpewMessage(
-		DebugMaster ^debugMaster,
-		System::String ^debugMessage,
-		DebugMessageType debugMessageType
-	);
 
 	DebugAttachState Attach( DebugMaster ^debugMaster );
-	DebugAttachState Deattach( DebugMaster ^debugMaster );
-	DebugAttachState Deattach();
+	void Deattach( DebugMaster ^debugMaster );
+	void Deattach();
 
 	DebugAttachState GetAttachState( DebugMaster ^debugMaster );
 	DebugAttachState GetAttachState();
@@ -121,18 +121,38 @@ public:
 	// non threadsafe functions:
 	//
 
-	DebugListener();
-	DebugListener( DebugMaster ^debugMaster );
+	DebugListener( bool bInterLockOnSpewMessage );
+	DebugListener( bool bInterLockOnSpewMessage, DebugMaster ^debugMaster );
 	~DebugListener();
 
+	//  Override this to process a incoming message
+	//  IF bInterLockOnSpewMessage was set true on class creation:
+	//  The call is already interlocked, thus you can asume the function is not
+	//  called again before you finihed processing.
+	virtual DebugMessageState OnSpewMessage(
+		DebugMaster ^debugMaster,
+		System::String ^debugMessage,
+		DebugMessageType debugMessageType
+	);
+
 private:
-	DebugListenerBridge debugListenerBridge;
-	System::Collections::Generic::LinkedList<debugMaster ^> debugMasters; // SyncRoot is used for locking
+	bool bInterLockOnSpewMessage;
+	System::Object ^spewMessageSyncer; // object pointer is used for locking
+	DebugListenerBridge ^debugListenerBridge;
+	System::Collections::Generic::LinkedList<DebugMaster ^> ^debugMasters; // object pointer is used for locking
 
-	void InitDebugListener();
+	void InitDebugListener( bool bInterLockOnSpewMessage );
 
-	void DoDeattach( DebugMaster ^debugMaster ); // threadsafe
+	void MasterDeattach( DebugMaster ^debugMaster ); // threadsafe
+	DebugMessageState MasterMessage( DebugMaster ^debugMaster, System::String ^debugMessage, DebugMessageType debugMessageType ); // threadsafe
 };
+
+(*ref class DebugScheduler
+{
+	// DebugMasters use these to register and unregister autonomically
+	MasterAdd( );
+	MasterRemove( );
+};*)
 
 
 //  DebugMaster:
@@ -193,9 +213,10 @@ public:
 	DebugQueueState GetLastQueueState();
 
 	DebugFilterSetting GetFilter( DebugMessageType debugMessageType );
-	void SetFilter( DebugMessageType debugMessageTyp, DebugFilterSetting debugFilterSetting );
+	void SetFilter( DebugMessageType debugMessageType, DebugFilterSetting debugFilterSetting );
 
-	void RegisterListener( DebugListenerBridge^ debugListenerBridge);
+	DebugAttachState RegisterListener( DebugListenerBridge ^debugListenerBridge );
+	void UnregisterListener( DebugListenerBridge ^debugListenerBridge );
 
 	//
 	//  non threadsafe functions:
@@ -226,14 +247,18 @@ private:
 	); 
 
 private:
-	unsigned int maxMessages,
-	unsigned int thresholdMinMessages,
-	unsigned int thresholdMaxMessages,
-	unsigned int maxSumLengths,
-	unsigned int thresholdMinSumLengths,
-	unsigned int thresholdMaxSumLengths,
-	unsigned int thresholdMinIdleMilliSeconds
+	// access to those is interlocked using messageQue:
+	unsigned int maxMessages;
+	unsigned int thresholdMinMessages;
+	unsigned int thresholdMaxMessages;
+	unsigned int maxSumLengths;
+	unsigned int thresholdMinSumLengths;
+	unsigned int thresholdMaxSumLengths;
+	unsigned int thresholdMinIdleMilliSeconds;
 	unsigned int curSumLenghts;
+
+	DebugQueueState debugQueueState;
+	System::Object ^debugQueueStateSyncer; // object pointer is used for locking read-set operations to debugQueueState
 
 	DebugFilterSetting filterError;
 	DebugFilterSetting filterWarning;
@@ -241,8 +266,9 @@ private:
 	DebugFilterSetting filterVerbose;
 	DebugFilterSetting filterDebug;
 
-	System::Collections::Generic::Queue<System::String ^> messageQue; // SyncRoot is used for locking
+	System::Collections::Generic::Queue<System::String ^> ^messageQue; // object pointer is used for locking
 
+	System::Collections::Generic::LinkedList<DebugListenerBridge ^> ^listenerBridges; // object pointer is used for locking, also specific list members are used for interlocking (so they won't get removed while a message is being posted)
 };
 
 }	// namespace debug

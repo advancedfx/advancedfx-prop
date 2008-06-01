@@ -18,32 +18,145 @@ using namespace System::Threading;
 using namespace hlae;
 using namespace hlae::debug;
 
+////////////////////////////////////////////////////////////////////////////////
 //
 //  DebugListenerBridge:
 //
 
-DebugListenerBridge::DebugListenerBridge( DoDeattachDelegate doDeattachDelegate )
+DebugListenerBridge::DebugListenerBridge( MasterDeattachDelegate ^masterDeattachDelegate, MasterMessageDelegate ^masterMessageDelegate )
 {
-	this->doDeattachDelegate = doDeattachDelegate;
+	this->masterDeattachDelegate = masterDeattachDelegate;
+	this->masterMessageDelegate = masterMessageDelegate;
 }
 
-void DebugListenerBridge::DoDeattach( DebugMaster ^debugMaster )
+void DebugListenerBridge::MasterDeattach( DebugMaster ^debugMaster )
 {
-	doDeattachDelegate( debugMaster );
+	masterDeattachDelegate( debugMaster );
 }
 
+DebugMessageState DebugListenerBridge::MasterMessage( DebugMaster ^debugMaster, System::String ^debugMessage, DebugMessageType debugMessageType )
+{
+	return masterMessageDelegate( debugMaster, debugMessage, debugMessageType );
+}
+
+////////////////////////////////////////////////////////////////////////////////
 //
 //  DebugListener:
 //
 
-DebugListener::DebugListener()
+DebugAttachState DebugListener::Attach( DebugMaster ^debugMaster )
 {
-	InitDebugListener();
+	DebugAttachState debugAttachState = DebugAttachState::none;
+	
+
+	try
+	{
+		Monitor::Enter( debugMasters );
+
+		System::Collections::Generic::LinkedListNode<DebugMaster ^> ^node =  debugMasters->Find( debugMaster );
+		if( !node )
+		{
+			debugAttachState = debugMaster->RegisterListener( this->debugListenerBridge );
+			if ( DebugAttachState::DAS_ATTACHED == debugAttachState )
+				debugMasters->AddFirst( debugMaster );
+		}
+	}
+	finally 
+	{
+		Monitor::Exit( debugMasters );
+	}
+
+	return debugAttachState;
 }
 
-DebugListener::DebugListener( DebugMaster ^debugMaster )
+void DebugListener::Deattach( DebugMaster ^debugMaster )
 {
-	InitDebugListener();
+	try
+	{
+		Monitor::Enter( debugMasters );
+
+		System::Collections::Generic::LinkedListNode<DebugMaster ^> ^node =  debugMasters->Find( debugMaster );
+		if( node )
+		{
+			debugMaster->UnregisterListener( this->debugListenerBridge );
+			debugMasters->Remove( node );
+		}
+	}
+	finally 
+	{
+		Monitor::Exit( debugMasters );
+	}
+}
+
+void DebugListener::Deattach()
+{
+	try
+	{
+		Monitor::Enter( debugMasters );
+
+		while( 0 < debugMasters->Count )
+		{
+			debugMasters->First->Value->UnregisterListener( this->debugListenerBridge );
+			debugMasters->RemoveFirst();
+		}
+	}
+	finally 
+	{
+		Monitor::Exit( debugMasters );
+	}
+}
+
+DebugAttachState DebugListener::GetAttachState( DebugMaster ^debugMaster )
+{
+	DebugAttachState debugAttachState = DebugAttachState::none;
+
+	try 
+	{
+		Monitor::Enter( debugMasters );
+
+		System::Collections::Generic::LinkedListNode<DebugMaster ^> ^node =  debugMasters->Find( debugMaster );
+		if( node )
+			debugAttachState = DebugAttachState::DAS_ATTACHED;
+		else
+			debugAttachState = DebugAttachState::DAS_DEATTACHED;
+	}
+	finally 
+	{
+		Monitor::Exit( debugMasters );
+	}
+
+	return debugAttachState;
+}
+
+DebugAttachState DebugListener::GetAttachState()
+{
+	DebugAttachState debugAttachState = DebugAttachState::none;
+
+	try 
+	{
+		Monitor::Enter( debugMasters );
+
+		if( 0<debugMasters->Count )
+			debugAttachState = DebugAttachState::DAS_ATTACHED;
+		else
+			debugAttachState = DebugAttachState::DAS_DEATTACHED;
+	}
+	finally 
+	{
+		Monitor::Exit( debugMasters );
+	}
+
+	return debugAttachState;
+}
+
+DebugListener::DebugListener( bool bInterLockOnSpewMessage )
+{
+	InitDebugListener( bInterLockOnSpewMessage );
+}
+
+DebugListener::DebugListener( bool bInterLockOnSpewMessage, DebugMaster ^debugMaster )
+{
+	InitDebugListener( bInterLockOnSpewMessage );
 	Attach( debugMaster );
 }
 
@@ -52,12 +165,80 @@ DebugListener::~DebugListener()
 	Deattach();
 }
 
+DebugMessageState DebugListener::OnSpewMessage(
+		DebugMaster ^debugMaster,
+		System::String ^debugMessage,
+		DebugMessageType debugMessageType
+)
+{
+	return DebugMessageState::DMS_FAILED;
+}
 
+
+void DebugListener::InitDebugListener( bool bInterLockOnSpewMessage )
+{
+	this->bInterLockOnSpewMessage = bInterLockOnSpewMessage;
+
+	debugListenerBridge = gcnew DebugListenerBridge( gcnew MasterDeattachDelegate( this, &hlae::debug::DebugListener::MasterDeattach ), gcnew MasterMessageDelegate( this, &hlae::debug::DebugListener::MasterMessage ) );
+	debugMasters = gcnew System::Collections::Generic::LinkedList<DebugMaster ^>;
+
+	spewMessageSyncer = gcnew System::Object;
+}
+
+void DebugListener::MasterDeattach( DebugMaster ^debugMaster )
+{
+	try
+	{
+		Monitor::Enter( debugMasters );
+		System::Collections::Generic::LinkedListNode<DebugMaster ^> ^node =  debugMasters->Find( debugMaster );
+		if( node )
+			debugMasters->Remove( node );
+	}
+	finally 
+	{
+		Monitor::Exit( debugMasters );
+	}
+}
+
+DebugMessageState DebugListener::MasterMessage( DebugMaster ^debugMaster, System::String ^debugMessage, DebugMessageType debugMessageType )
+{
+	DebugMessageState debugMessageState = DebugMessageState::none;
+	if ( bInterLockOnSpewMessage )
+	{
+
+		try
+		{
+			Monitor::Enter( spewMessageSyncer );
+
+			debugMessageState = OnSpewMessage( debugMaster, debugMessage, debugMessageType );
+		}
+		finally
+		{
+			Monitor::Exit( spewMessageSyncer );
+		}
+	} else
+		debugMessageState =  OnSpewMessage( debugMaster, debugMessage, debugMessageType );
+
+	return debugMessageState;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 //
 //  DebugMaster:
 //
 
-DebugMaster::DebugFilterSetting DebugMaster::GetDebugFilter( DebugMessageType debugMessageType )
+DebugMessageState DebugMaster::PostMessage( System::String ^debugMessage, DebugMessageType debugMessageType )
+{
+	// not implemented yet
+	return DebugMessageState::DMS_FAILED;
+}
+
+DebugQueueState DebugMaster::GetLastQueueState()
+{
+	return debugQueueState;
+}
+
+DebugFilterSetting DebugMaster::GetFilter( DebugMessageType debugMessageType )
 {
 	switch (debugMessageType)
 	{
@@ -71,12 +252,11 @@ DebugMaster::DebugFilterSetting DebugMaster::GetDebugFilter( DebugMessageType de
 		return filterVerbose;
 	case DebugMessageType::DMT_DEBUG:
 		return filterDebug;
-	default:
 	}
-	return DebugMessageType::none;
+	return DebugFilterSetting::DFS_DEFAULT;
 }
 
-void DebugMaster::SetDebugFilter( DebugMessageType debugMessageTyp, DebugFilterSetting debugFilterSetting )
+void DebugMaster::SetFilter( DebugMessageType debugMessageType, DebugFilterSetting debugFilterSetting )
 {
 	switch ( debugFilterSetting )
 	{
@@ -104,7 +284,87 @@ void DebugMaster::SetDebugFilter( DebugMessageType debugMessageTyp, DebugFilterS
 	case DebugMessageType::DMT_DEBUG:
 		filterDebug = debugFilterSetting ;
 		break;
-	default:
+	}
+}
+
+DebugAttachState DebugMaster::RegisterListener( DebugListenerBridge ^debugListenerBridge )
+{
+	DebugAttachState debugAttachState = DebugAttachState::none;
+	try
+	{
+		Monitor::Enter( listenerBridges );
+
+		System::Collections::Generic::LinkedListNode<DebugListenerBridge ^> ^node =  listenerBridges->Find( debugListenerBridge );
+		if( !node )
+			listenerBridges->AddFirst( debugListenerBridge );
+
+		return DebugAttachState::DAS_ATTACHED;
+	}
+	finally
+	{
+		Monitor::Exit( listenerBridges );
+	}
+	return debugAttachState;
+}
+
+void DebugMaster::UnregisterListener( DebugListenerBridge ^debugListenerBridge )
+{
+	try
+	{
+		Monitor::Enter( listenerBridges );
+		System::Collections::Generic::LinkedListNode<DebugListenerBridge ^> ^node =  listenerBridges->Find( debugListenerBridge );
+		if( node )
+		{
+			// we also need to interlock the listener bridge itself to make sure the master does currently not perform operations on it (i.e. posting a message):
+			// WARNING: this code is easily breakable and need to be in harmony with the DebugWorker code!
+
+			DebugListenerBridge ^thebridge = node->Value;
+			try
+			{
+				Monitor::Enter( thebridge );
+				listenerBridges->Remove( node );
+			}
+			finally
+			{
+				Monitor::Exit( thebridge );
+			}
+		}
+	}
+	finally
+	{
+		Monitor::Exit( listenerBridges );
+	}
+}
+
+DebugMaster::DebugMaster()
+{
+	InitDebugMaster(
+		2000,
+		10,
+		500,
+		200000,
+		1000,
+		50000,
+		1000
+	);
+}
+
+DebugMaster::~DebugMaster()
+{
+	// inform listeners about the master deattach and unregister them:
+	try
+	{
+		Monitor::Enter( listenerBridges );
+
+		while( 0 < listenerBridges->Count )
+		{
+			listenerBridges->First->Value->MasterDeattach( this );
+			listenerBridges->RemoveFirst();
+		}
+	}
+	finally 
+	{
+		Monitor::Exit( listenerBridges );
 	}
 }
 
@@ -126,12 +386,18 @@ void DebugMaster::InitDebugMaster(
 	this->thresholdMaxSumLengths = thresholdMaxSumLengths;
 	this->thresholdMinIdleMilliSeconds = thresholdMinIdleMilliSeconds;
 
-	SetDebugFilter( filterError, DebugFilterSetting::DFS_NODROP );
-	SetDebugFilter( filterWarning, DebugFilterSetting::DFS_DEFAULT );
-	SetDebugFilter( filterInfo, DebugFilterSetting::DFS_DEFAULT );
-	SetDebugFilter( filterVerbose, DebugFilterSetting::DFS_DEFAULT );
-	SetDebugFilter( filterDebug, DebugFilterSetting::DFS_DEFAULT );
-	SetDebugFilter( filterError, DebugFilterSetting::DFS_DEFAULT );
+	SetFilter( DebugMessageType::DMT_ERROR, DebugFilterSetting::DFS_NODROP );
+	SetFilter( DebugMessageType::DMT_WARNING, DebugFilterSetting::DFS_DEFAULT );
+	SetFilter( DebugMessageType::DMT_INFO, DebugFilterSetting::DFS_DEFAULT );
+	SetFilter( DebugMessageType::DMT_VERBOSE, DebugFilterSetting::DFS_DEFAULT );
+	SetFilter( DebugMessageType::DMT_DEBUG, DebugFilterSetting::DFS_DEFAULT );
+	SetFilter( DebugMessageType::DMT_ERROR, DebugFilterSetting::DFS_DEFAULT );
 
+	messageQue = gcnew System::Collections::Generic::Queue<System::String ^>;
+	listenerBridges = gcnew System::Collections::Generic::LinkedList<DebugListenerBridge ^>;
+
+	debugQueueStateSyncer = gcnew System::Object();
+	debugQueueState = DebugQueueState::DQS_OK;
 }
+
 #endif
