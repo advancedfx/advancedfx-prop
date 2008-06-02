@@ -1,12 +1,10 @@
 #pragma once
-#if 0
-#define HLAE_DEBUG_READY 1
 
 //  debug.h - Debug system
 //  Copyright (c) Half-Life Advanced Effects project
 
 //  Last changes:
-//	2008-05-30 by dominik.matrixstorm.com
+//	2008-06-02 by dominik.matrixstorm.com
 
 //  First changes:
 //	2008-05-28 by dominik.matrixstorm.com
@@ -21,6 +19,13 @@
 //    Functions not explicetly marked as threadsafe must not be asumed to be
 //    threadsafe.
 //
+//    By "threadsafe" I mean it's safe to call those functions from different
+//    threads during the class liftime.
+//    The class will care about locking, syncing and stuff.
+//
+//    The threadsafety starts when the class has been created and ends before
+//    the class is being destroyed.
+//
 //  Some of the classes are extensively documented, make sure to update
 //  the documentation in case your changes require that, also be aware that
 //  users of the clase might already make asumptions from the previous
@@ -29,6 +34,7 @@
 
 using namespace System;
 using namespace System::Windows::Forms;
+using namespace System::Threading;
 
 namespace hlae {
 namespace debug {
@@ -82,16 +88,22 @@ enum class DebugAttachState
 	DAS_ATTACHFAILED
 };
 
+ref struct DebugMessage
+{
+	System::String ^string;
+	DebugMessageType type;
+};
+
 ref class DebugMaster; // forward decleration
 
 delegate void MasterDeattachDelegate( DebugMaster ^debugMaster );
-delegate DebugMessageState MasterMessageDelegate( DebugMaster ^debugMaster, System::String ^debugMessage, DebugMessageType debugMessageType ); 
+delegate DebugMessageState MasterMessageDelegate( DebugMaster ^debugMaster, DebugMessage ^debugMessage ); 
 
 ref class DebugListenerBridge
 {
 public:
 	void MasterDeattach( DebugMaster ^debugMaster );
-	DebugMessageState MasterMessage( DebugMaster ^debugMaster, System::String ^debugMessage, DebugMessageType debugMessageType ); 
+	DebugMessageState MasterMessage( DebugMaster ^debugMaster, DebugMessage ^debugMessage ); 
 public:
 	DebugListenerBridge( MasterDeattachDelegate ^masterDeattachDelegate, MasterMessageDelegate ^masterMessageDelegate );
 private:
@@ -131,8 +143,7 @@ public:
 	//  called again before you finihed processing.
 	virtual DebugMessageState OnSpewMessage(
 		DebugMaster ^debugMaster,
-		System::String ^debugMessage,
-		DebugMessageType debugMessageType
+		DebugMessage ^debugMessage
 	);
 
 private:
@@ -144,18 +155,16 @@ private:
 	void InitDebugListener( bool bInterLockOnSpewMessage );
 
 	void MasterDeattach( DebugMaster ^debugMaster ); // threadsafe
-	DebugMessageState MasterMessage( DebugMaster ^debugMaster, System::String ^debugMessage, DebugMessageType debugMessageType ); // threadsafe
+	DebugMessageState MasterMessage( DebugMaster ^debugMaster, DebugMessage ^debugMessage ); // threadsafe
 };
 
-(*ref class DebugScheduler
-{
-	// DebugMasters use these to register and unregister autonomically
-	MasterAdd( );
-	MasterRemove( );
-};*)
-
-
 //  DebugMaster:
+//
+//  About threadsafe functions:
+//    The threadsafety starts when the class has been created and ends before
+//    the class is being destroyed.
+//    Thus you want to make sure that i.e. no more PostmMssage calls happen
+//    when the DebugMaster class is destroyed.
 //
 //  The debug system handles debug messages and how to save them to a file and
 //  deliver them to a UI display (DebugControl).
@@ -179,6 +188,7 @@ private:
 //       Incoming messages are either dropped or the PostMessage call is
 //       blocked until the delivery of the current message has been
 //       carried out.
+//    If the class is shutting down all messages will fail.
 //    Otherwise the message is enqued.
 //
 //  The message que is "full" when:
@@ -189,16 +199,18 @@ private:
 //    - The que is full and a incoming message may not be dropped
 //
 //  Delivery of the que is trigered by the following events:
-//    - The que is congested
+//    - The que is congested (please see difference between "full" and
+//      "congested" above)
 //    - thresholdMaxMessages has been hit
 //    - thresholdMaxSumLengths has been hit
+//    - thresholdMinIdleMilliSeconds has been hit
 //
 //  Delivery works as follows:
 //  A worker thread is triggered, pops out a message of the que and delivers it.
 //  The work thread repeats this operation until one of the following conditions are met:
 //    - number of qued messages <= thresholdMinMessages
 //    - sum of the qued messages' lengths <= thresholdMinSumLengths
-//    - in case the delivery was requested due to 
+//    - in case the delivery was requested due to congestion until the que is empty
 ref class DebugMaster
 {
 public:
@@ -246,6 +258,8 @@ private:
 		unsigned int thresholdMinIdleMilliSeconds
 	); 
 
+	void DebugWorker();
+
 private:
 	// access to those is interlocked using messageQue:
 	unsigned int maxMessages;
@@ -266,11 +280,18 @@ private:
 	DebugFilterSetting filterVerbose;
 	DebugFilterSetting filterDebug;
 
-	System::Collections::Generic::Queue<System::String ^> ^messageQue; // object pointer is used for locking
+	System::Collections::Generic::Queue<DebugMessage ^> ^messageQue; // object pointer is used for locking
 
 	System::Collections::Generic::LinkedList<DebugListenerBridge ^> ^listenerBridges; // object pointer is used for locking, also specific list members are used for interlocking (so they won't get removed while a message is being posted)
+
+	bool congestionMode;
+	System::Object ^congestionModeSyncer; // object pointer is used for locking and syncing
+
+	System::Object ^debugWorkerTrigger; // object pointer is used for signalling
+
+	bool systemShuttingDown;
+	Thread^ debugWorkerThread; // also used for syncing on class shutdown
 };
 
 }	// namespace debug
 }	// namespace hlae
-#endif

@@ -4,13 +4,12 @@
 //  Copyright (c) Half-Life Advanced Effects project
 
 //  Last changes:
-//	2008-05-30 by dominik.matrixstorm.com
+//	2008-06-02 by dominik.matrixstorm.com
 
 //  First changes:
 //	2008-05-28 by dominik.matrixstorm.com
 
 #include "debug.h"
-#if HLAE_DEBUG_READY
 
 using namespace System;
 using namespace System::Windows::Forms;
@@ -34,9 +33,9 @@ void DebugListenerBridge::MasterDeattach( DebugMaster ^debugMaster )
 	masterDeattachDelegate( debugMaster );
 }
 
-DebugMessageState DebugListenerBridge::MasterMessage( DebugMaster ^debugMaster, System::String ^debugMessage, DebugMessageType debugMessageType )
+DebugMessageState DebugListenerBridge::MasterMessage( DebugMaster ^debugMaster, DebugMessage ^debugMessage )
 {
-	return masterMessageDelegate( debugMaster, debugMessage, debugMessageType );
+	return masterMessageDelegate( debugMaster, debugMessage );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -167,8 +166,7 @@ DebugListener::~DebugListener()
 
 DebugMessageState DebugListener::OnSpewMessage(
 		DebugMaster ^debugMaster,
-		System::String ^debugMessage,
-		DebugMessageType debugMessageType
+		DebugMessage ^debugMessage
 )
 {
 	return DebugMessageState::DMS_FAILED;
@@ -200,7 +198,7 @@ void DebugListener::MasterDeattach( DebugMaster ^debugMaster )
 	}
 }
 
-DebugMessageState DebugListener::MasterMessage( DebugMaster ^debugMaster, System::String ^debugMessage, DebugMessageType debugMessageType )
+DebugMessageState DebugListener::MasterMessage( DebugMaster ^debugMaster, DebugMessage ^debugMessage )
 {
 	DebugMessageState debugMessageState = DebugMessageState::none;
 	if ( bInterLockOnSpewMessage )
@@ -210,14 +208,14 @@ DebugMessageState DebugListener::MasterMessage( DebugMaster ^debugMaster, System
 		{
 			Monitor::Enter( spewMessageSyncer );
 
-			debugMessageState = OnSpewMessage( debugMaster, debugMessage, debugMessageType );
+			debugMessageState = OnSpewMessage( debugMaster, debugMessage );
 		}
 		finally
 		{
 			Monitor::Exit( spewMessageSyncer );
 		}
 	} else
-		debugMessageState =  OnSpewMessage( debugMaster, debugMessage, debugMessageType );
+		debugMessageState =  OnSpewMessage( debugMaster, debugMessage );
 
 	return debugMessageState;
 }
@@ -229,8 +227,24 @@ DebugMessageState DebugListener::MasterMessage( DebugMaster ^debugMaster, System
 
 DebugMessageState DebugMaster::PostMessage( System::String ^debugMessage, DebugMessageType debugMessageType )
 {
-	// not implemented yet
-	return DebugMessageState::DMS_FAILED;
+	return  DebugMessageState::DMS_FAILED; // not implemented yet
+
+	/*
+	// ignore ignored messages:
+	if( DebugFilterSetting::DFS_IGNORE == GetFilter( debugMessageType  ))
+		return DebugMessageState::DMS_IGNORED;
+
+	DebugMessageState debugMessageState = DebugMessageState::DMS_FAILED;
+
+	try
+	{
+		Mointor::Enter( )
+	}
+	finally
+	{
+	}
+
+	return debugMessageState;*/
 }
 
 DebugQueueState DebugMaster::GetLastQueueState()
@@ -351,6 +365,24 @@ DebugMaster::DebugMaster()
 
 DebugMaster::~DebugMaster()
 {
+	//  Singal class shutdown:
+	systemShuttingDown = true;
+
+	// Trigger the debug worker:
+	try
+	{
+		Monitor::Enter( debugWorkerTrigger );
+		Monitor::Pulse( debugWorkerTrigger );
+	}
+	finally
+	{
+		Monitor::Exit( debugWorkerTrigger );
+	}
+
+
+	// Wait for the DebugWorker thread to stop:
+	debugWorkerThread->Join();
+
 	// inform listeners about the master deattach and unregister them:
 	try
 	{
@@ -393,11 +425,107 @@ void DebugMaster::InitDebugMaster(
 	SetFilter( DebugMessageType::DMT_DEBUG, DebugFilterSetting::DFS_DEFAULT );
 	SetFilter( DebugMessageType::DMT_ERROR, DebugFilterSetting::DFS_DEFAULT );
 
-	messageQue = gcnew System::Collections::Generic::Queue<System::String ^>;
+	messageQue = gcnew System::Collections::Generic::Queue<DebugMessage ^>;
 	listenerBridges = gcnew System::Collections::Generic::LinkedList<DebugListenerBridge ^>;
 
 	debugQueueStateSyncer = gcnew System::Object();
 	debugQueueState = DebugQueueState::DQS_OK;
+
+	congestionModeSyncer = gcnew System::Object();
+	congestionMode = false;
+
+	System::Object ^debugWorkerTrigger = gcnew System::Object();
+
+	systemShuttingDown = false;
+
+	// Start up the debug worker:
+	debugWorkerThread = gcnew Thread (gcnew ThreadStart( this, &DebugMaster::DebugWorker ));
 }
 
-#endif
+void DebugMaster::DebugWorker()
+{
+	while (!systemShuttingDown)
+	{
+		bool bTimeElapsed =	false;
+		try
+		{
+			Monitor::Enter( debugWorkerTrigger );
+			bTimeElapsed =	!(Monitor::Wait( debugWorkerTrigger, thresholdMinIdleMilliSeconds ));
+		}
+		finally
+		{
+			Monitor::Exit( debugWorkerTrigger );
+		}
+
+		bool bCongestionMode = false;
+		try
+		{
+			Monitor::Enter( congestionModeSyncer );
+			bCongestionMode = congestionMode;
+		}
+		finally
+		{
+			Monitor::Exit( congestionModeSyncer );
+		}
+
+		bool bEmptyIt = bTimeElapsed | bCongestionMode;
+
+		bool bDoWork=false;
+		DebugMessage ^workMessage=nullptr;
+
+		do
+		{
+			// check if we still need work to do
+			try
+			{
+				Monitor::Enter( messageQue );
+
+				bDoWork=false;
+				bDoWork |= (unsigned int)(messageQue->Count) >= thresholdMinSumLengths;
+				bDoWork |= curSumLenghts >= thresholdMinSumLengths;
+				bDoWork |= bEmptyIt && (messageQue->Count > 0);
+
+				if (bDoWork)
+				{
+					workMessage = messageQue->Dequeue();
+				}
+			}
+			finally
+			{
+				Monitor::Exit( messageQue );
+			}
+
+			if (bDoWork && workMessage)
+			{
+				// deliver the message:
+				try
+				{
+					Monitor::Enter( listenerBridges );
+
+					for each( DebugListenerBridge ^bridge in listenerBridges )
+					{
+						bridge->MasterMessage( this, workMessage );
+					}
+				}
+				finally
+				{
+					Monitor::Exit( listenerBridges );
+				}
+			}
+		}
+		while( bDoWork );
+		
+		if( bCongestionMode )
+		{
+			try
+			{
+				Monitor::Enter( congestionModeSyncer );
+				Monitor::PulseAll( congestionMode );
+			}
+			finally
+			{
+				Monitor::Exit( congestionModeSyncer );
+		}
+		}
+	}
+}
