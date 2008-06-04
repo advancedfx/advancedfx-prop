@@ -114,7 +114,9 @@ private:
 //  DebugListener:
 //
 //  Abstract base class for attaching to one or several debugMasters and recieving.
-//  Deriving classes should only override OnSpewMessage 
+//  Deriving classes should provide a OnSpewMessage delegate.
+//  Also they shouldn't block too long on OnSpewMessage or the queue will get
+//  full since messages are not delivered.
 ref class DebugListener abstract
 {
 public:
@@ -137,14 +139,16 @@ public:
 	DebugListener( bool bInterLockOnSpewMessage, DebugMaster ^debugMaster );
 	~DebugListener();
 
+public:
 	//  Override this to process a incoming message
 	//  IF bInterLockOnSpewMessage was set true on class creation:
 	//  The call is already interlocked, thus you can asume the function is not
 	//  called again before you finihed processing.
-	virtual DebugMessageState OnSpewMessage(
+	delegate DebugMessageState OnSpewMessageDelegate(
 		DebugMaster ^debugMaster,
 		DebugMessage ^debugMessage
 	);
+	OnSpewMessageDelegate ^OnSpewMessage;
 
 private:
 	bool bInterLockOnSpewMessage;
@@ -156,6 +160,57 @@ private:
 
 	void MasterDeattach( DebugMaster ^debugMaster ); // threadsafe
 	DebugMessageState MasterMessage( DebugMaster ^debugMaster, DebugMessage ^debugMessage ); // threadsafe
+};
+
+//  ExampleDebugListener
+//
+//  This is just an Example and not very usefull, since it blocks and thus will overflow the que
+//  very soon : )
+ref class ExampleDebugListener : DebugListener
+{
+public:
+	ExampleDebugListener(DebugMaster ^debugMaster) : DebugListener( true, debugMaster )
+	{
+		// Provide new SpewMessage:
+		OnSpewMessage = gcnew OnSpewMessageDelegate( this, &ExampleDebugListener::MySpewMessage );	
+	};
+
+private:
+	DebugMessageState MySpewMessage(
+		DebugMaster ^debugMaster,
+		DebugMessage ^debugMessage
+	)
+	{
+		System::String ^tmsg= "Unknown Message Type:" ;
+
+		switch( debugMessage->type )
+		{
+		case DebugMessageType::DMT_ERROR:
+			tmsg= "Error:" ;
+			break;
+		case DebugMessageType::DMT_WARNING:
+			tmsg= "Warning:" ;
+			break;
+		case DebugMessageType::DMT_INFO:
+			tmsg=  "Info:" ;
+			break;
+		case DebugMessageType::DMT_VERBOSE:
+			tmsg= "Verbose:" ;
+			break;
+		case DebugMessageType::DMT_DEBUG:
+			tmsg= "Debug:" ;
+			break;
+		}
+
+
+		System::Windows::Forms::MessageBox::Show(
+			debugMessage->string, tmsg,
+            MessageBoxButtons::OK		
+		);	
+
+		return DebugMessageState::DMS_POSTED;
+	}
+
 };
 
 //  DebugMaster:
@@ -234,7 +289,18 @@ public:
 	//  non threadsafe functions:
 	//
 
-	DebugMaster();
+	DebugMaster()
+	{
+		InitDebugMaster(
+			2000,
+			10,
+			500,
+			200000,
+			1000,
+			50000,
+			1000
+		);
+	}
 
 	~DebugMaster();
 

@@ -164,15 +164,6 @@ DebugListener::~DebugListener()
 	Deattach();
 }
 
-DebugMessageState DebugListener::OnSpewMessage(
-		DebugMaster ^debugMaster,
-		DebugMessage ^debugMessage
-)
-{
-	return DebugMessageState::DMS_FAILED;
-}
-
-
 void DebugListener::InitDebugListener( bool bInterLockOnSpewMessage )
 {
 	this->bInterLockOnSpewMessage = bInterLockOnSpewMessage;
@@ -181,6 +172,8 @@ void DebugListener::InitDebugListener( bool bInterLockOnSpewMessage )
 	debugMasters = gcnew System::Collections::Generic::LinkedList<DebugMaster ^>;
 
 	spewMessageSyncer = gcnew System::Object;
+
+	OnSpewMessage = nullptr;
 }
 
 void DebugListener::MasterDeattach( DebugMaster ^debugMaster )
@@ -200,6 +193,9 @@ void DebugListener::MasterDeattach( DebugMaster ^debugMaster )
 
 DebugMessageState DebugListener::MasterMessage( DebugMaster ^debugMaster, DebugMessage ^debugMessage )
 {
+	if (nullptr == OnSpewMessage)
+		return DebugMessageState::DMS_FAILED;
+
 	DebugMessageState debugMessageState = DebugMessageState::none;
 	if ( bInterLockOnSpewMessage )
 	{
@@ -371,7 +367,7 @@ DebugAttachState DebugMaster::RegisterListener( DebugListenerBridge ^debugListen
 		if( !node )
 			listenerBridges->AddFirst( debugListenerBridge );
 
-		return DebugAttachState::DAS_ATTACHED;
+		debugAttachState = DebugAttachState::DAS_ATTACHED;
 	}
 	finally
 	{
@@ -388,38 +384,13 @@ void DebugMaster::UnregisterListener( DebugListenerBridge ^debugListenerBridge )
 		System::Collections::Generic::LinkedListNode<DebugListenerBridge ^> ^node =  listenerBridges->Find( debugListenerBridge );
 		if( node )
 		{
-			// we also need to interlock the listener bridge itself to make sure the master does currently not perform operations on it (i.e. posting a message):
-			// WARNING: this code is easily breakable and need to be in harmony with the DebugWorker code!
-
-			DebugListenerBridge ^thebridge = node->Value;
-			try
-			{
-				Monitor::Enter( thebridge );
-				listenerBridges->Remove( node );
-			}
-			finally
-			{
-				Monitor::Exit( thebridge );
-			}
+			listenerBridges->Remove( node );
 		}
 	}
 	finally
 	{
 		Monitor::Exit( listenerBridges );
 	}
-}
-
-DebugMaster::DebugMaster()
-{
-	InitDebugMaster(
-		2000,
-		10,
-		500,
-		200000,
-		1000,
-		50000,
-		1000
-	);
 }
 
 DebugMaster::~DebugMaster()
@@ -493,12 +464,14 @@ void DebugMaster::InitDebugMaster(
 	congestionModeSyncer = gcnew System::Object();
 	congestionMode = false;
 
-	System::Object ^debugWorkerTrigger = gcnew System::Object();
+	debugWorkerTrigger = gcnew System::Object();
 
 	systemShuttingDown = false;
 
 	// Start up the debug worker:
 	debugWorkerThread = gcnew Thread (gcnew ThreadStart( this, &DebugMaster::DebugWorker ));
+	debugWorkerThread->Name = "hlae::debug::DebugMaster::DebugWorker";
+	debugWorkerThread->Start();
 }
 
 void DebugMaster::DebugWorker()
