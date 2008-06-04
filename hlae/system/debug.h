@@ -4,7 +4,7 @@
 //  Copyright (c) Half-Life Advanced Effects project
 
 //  Last changes:
-//	2008-06-02 by dominik.matrixstorm.com
+//	2008-06-04 by dominik.matrixstorm.com
 
 //  First changes:
 //	2008-05-28 by dominik.matrixstorm.com
@@ -181,8 +181,8 @@ private:
 //	  If the que is full and the filter allows dropping the message, the
 //      message is dropped.
 //    If the que is full and the filter is set to not allow dropping the
-//       message, the que is delivered and if message still does not fit into
-//       the now empty que it is delivered directly, otherwise it is enqued.
+//       message, and the message is delivered directly, even if the message
+//		 could never fit into the queue. (The queue was "congested".)
 //       Please be aware that this situation means a significant performance
 //       hit:
 //       Incoming messages are either dropped or the PostMessage call is
@@ -218,7 +218,7 @@ public:
 	// Threadsafe functions:
 	//
 
-	DebugMessageState PostMessage( System::String ^debugMessage, DebugMessageType debugMessageType );
+	DebugMessageState PostMessage( System::String ^debugMessageString, DebugMessageType debugMessageType );
 
 	//  Result:
 	//    the last tracked DebugQueueState since the last time this function was called.
@@ -259,6 +259,8 @@ private:
 	); 
 
 	void DebugWorker();
+
+	void PostWomen( DebugMessage ^debugMessage );
 
 private:
 	// access to those is interlocked using messageQue:

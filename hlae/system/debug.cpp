@@ -4,7 +4,7 @@
 //  Copyright (c) Half-Life Advanced Effects project
 
 //  Last changes:
-//	2008-06-02 by dominik.matrixstorm.com
+//	2008-06-04 by dominik.matrixstorm.com
 
 //  First changes:
 //	2008-05-28 by dominik.matrixstorm.com
@@ -225,26 +225,85 @@ DebugMessageState DebugListener::MasterMessage( DebugMaster ^debugMaster, DebugM
 //  DebugMaster:
 //
 
-DebugMessageState DebugMaster::PostMessage( System::String ^debugMessage, DebugMessageType debugMessageType )
+DebugMessageState DebugMaster::PostMessage( System::String ^debugMessageString, DebugMessageType debugMessageType )
 {
-	return  DebugMessageState::DMS_FAILED; // not implemented yet
-
-	/*
 	// ignore ignored messages:
 	if( DebugFilterSetting::DFS_IGNORE == GetFilter( debugMessageType  ))
 		return DebugMessageState::DMS_IGNORED;
 
 	DebugMessageState debugMessageState = DebugMessageState::DMS_FAILED;
 
+	bool bTriggerWorker=false;
 	try
 	{
-		Mointor::Enter( )
+		Monitor::Enter( messageQue );
+
+		bool bQueueFull=false;
+		bQueueFull |= (unsigned int)(messageQue->Count) >= maxMessages;
+		bQueueFull |= curSumLenghts >= maxSumLengths;
+
+		if ( bQueueFull )
+		{
+			if ( DebugFilterSetting::DFS_NODROP == GetFilter( debugMessageType ) )
+			{
+
+				debugQueueState =DebugQueueState::DQS_WASCONGESTED;
+
+				// Don't even think about triggering that lazy debug worker,
+				// we better please the PostWomen ourself:
+
+				DebugMessage ^workMessage=nullptr;
+				while (messageQue->Count > 0)
+				{
+					workMessage = messageQue->Dequeue();
+					if (workMessage)
+					{
+						PostWomen( workMessage );
+					}
+				}
+
+				// now post the message that congested the queue directly:
+				workMessage = gcnew DebugMessage();
+				workMessage->string = debugMessageString; // we pass the string directly
+				workMessage->type = debugMessageType;
+				PostWomen( workMessage );
+			} else {
+				if ( DebugQueueState::DQS_OK == debugQueueState)
+					debugQueueState =DebugQueueState::DQS_WASFULL;
+
+				// dropped and thus failed ( default result )
+			}
+		} else {
+			DebugMessage ^queueMessage = gcnew DebugMessage();
+			queueMessage->string = gcnew System::String( debugMessageString ); // we store a copy of the string
+			queueMessage->type = debugMessageType;
+
+			messageQue->Enqueue( queueMessage );
+		}
 	}
 	finally
 	{
+		bTriggerWorker |= (unsigned int)(messageQue->Count) >= thresholdMinSumLengths;
+		bTriggerWorker |= curSumLenghts >= thresholdMinSumLengths;
+
+		Monitor::Exit( messageQue );
 	}
 
-	return debugMessageState;*/
+	if (bTriggerWorker)
+	{
+		// Trigger the debug worker:
+		try
+		{
+			Monitor::Enter( debugWorkerTrigger );
+			Monitor::Pulse( debugWorkerTrigger );
+		}
+		finally
+		{
+			Monitor::Exit( debugWorkerTrigger );
+		}
+	}
+
+	return debugMessageState;
 }
 
 DebugQueueState DebugMaster::GetLastQueueState()
@@ -369,6 +428,7 @@ DebugMaster::~DebugMaster()
 	systemShuttingDown = true;
 
 	// Trigger the debug worker:
+	// FLAW WARNING: his step might need rework, since the DebugWorker might miss the trigger and thus we would have to wait until it triggers itself due to timeout
 	try
 	{
 		Monitor::Enter( debugWorkerTrigger );
@@ -378,7 +438,6 @@ DebugMaster::~DebugMaster()
 	{
 		Monitor::Exit( debugWorkerTrigger );
 	}
-
 
 	// Wait for the DebugWorker thread to stop:
 	debugWorkerThread->Join();
@@ -457,25 +516,12 @@ void DebugMaster::DebugWorker()
 			Monitor::Exit( debugWorkerTrigger );
 		}
 
-		bool bCongestionMode = false;
-		try
-		{
-			Monitor::Enter( congestionModeSyncer );
-			bCongestionMode = congestionMode;
-		}
-		finally
-		{
-			Monitor::Exit( congestionModeSyncer );
-		}
-
-		bool bEmptyIt = bTimeElapsed | bCongestionMode;
-
 		bool bDoWork=false;
 		DebugMessage ^workMessage=nullptr;
 
 		do
 		{
-			// check if we still need work to do
+			// check if we still hace work to do
 			try
 			{
 				Monitor::Enter( messageQue );
@@ -483,11 +529,14 @@ void DebugMaster::DebugWorker()
 				bDoWork=false;
 				bDoWork |= (unsigned int)(messageQue->Count) >= thresholdMinSumLengths;
 				bDoWork |= curSumLenghts >= thresholdMinSumLengths;
-				bDoWork |= bEmptyIt && (messageQue->Count > 0);
+				bDoWork |= bTimeElapsed && (messageQue->Count > 0);
+				bDoWork &= (messageQue->Count > 0);
 
 				if (bDoWork)
 				{
 					workMessage = messageQue->Dequeue();
+					if (workMessage)
+						curSumLenghts -= workMessage->string->Length;
 				}
 			}
 			finally
@@ -498,34 +547,27 @@ void DebugMaster::DebugWorker()
 			if (bDoWork && workMessage)
 			{
 				// deliver the message:
-				try
-				{
-					Monitor::Enter( listenerBridges );
-
-					for each( DebugListenerBridge ^bridge in listenerBridges )
-					{
-						bridge->MasterMessage( this, workMessage );
-					}
-				}
-				finally
-				{
-					Monitor::Exit( listenerBridges );
-				}
+				PostWomen( workMessage );
 			}
 		}
 		while( bDoWork );
-		
-		if( bCongestionMode )
+
+	}
+}
+
+void DebugMaster::PostWomen( DebugMessage ^debugMessage )
+{
+	try
+	{
+		Monitor::Enter( listenerBridges );
+
+		for each( DebugListenerBridge ^bridge in listenerBridges )
 		{
-			try
-			{
-				Monitor::Enter( congestionModeSyncer );
-				Monitor::PulseAll( congestionMode );
-			}
-			finally
-			{
-				Monitor::Exit( congestionModeSyncer );
+			bridge->MasterMessage( this, debugMessage );
 		}
-		}
+	}
+	finally
+	{
+		Monitor::Exit( listenerBridges );
 	}
 }
