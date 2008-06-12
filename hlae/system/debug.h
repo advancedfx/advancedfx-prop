@@ -4,7 +4,7 @@
 //  Copyright (c) Half-Life Advanced Effects project
 
 //  Last changes:
-//	2008-06-04 by dominik.matrixstorm.com
+//	2008-06-12 by dominik.matrixstorm.com
 
 //  First changes:
 //	2008-05-28 by dominik.matrixstorm.com
@@ -38,6 +38,13 @@ using namespace System::Threading;
 
 namespace hlae {
 namespace debug {
+
+#ifdef _DEBUG
+	#define DEBUG_MESSAGE(refdebugmaster,refstring) \
+		refdebugmaster->PostMessage( refstring, hlae::debug::DebugMessageType::DMT_DEBUG )
+#else
+	#define DEBUG_MESSAGE(refdebugmaster,refstring)
+#endif
 
 enum class DebugMessageType
 {
@@ -214,6 +221,9 @@ private:
 };
 
 //  DebugMaster:
+//
+//	Dispose has to be explicetely called on this class, otherwise the app might
+//	not terminate because the thread will get no signal to terminate.
 //
 //  About threadsafe functions:
 //    The threadsafety starts when the class has been created and ends before

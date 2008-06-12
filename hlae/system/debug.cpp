@@ -4,7 +4,7 @@
 //  Copyright (c) Half-Life Advanced Effects project
 
 //  Last changes:
-//	2008-06-04 by dominik.matrixstorm.com
+//	2008-06-12 by dominik.matrixstorm.com
 
 //  First changes:
 //	2008-05-28 by dominik.matrixstorm.com
@@ -452,7 +452,11 @@ void DebugMaster::InitDebugMaster(
 	SetFilter( DebugMessageType::DMT_WARNING, DebugFilterSetting::DFS_DEFAULT );
 	SetFilter( DebugMessageType::DMT_INFO, DebugFilterSetting::DFS_DEFAULT );
 	SetFilter( DebugMessageType::DMT_VERBOSE, DebugFilterSetting::DFS_DEFAULT );
+#ifdef _DEBUG
 	SetFilter( DebugMessageType::DMT_DEBUG, DebugFilterSetting::DFS_DEFAULT );
+#else
+	SetFilter( DebugMessageType::DMT_DEBUG, DebugFilterSetting::DFS_IGNORE );
+#endif
 	SetFilter( DebugMessageType::DMT_ERROR, DebugFilterSetting::DFS_DEFAULT );
 
 	messageQue = gcnew System::Collections::Generic::Queue<DebugMessage ^>;
