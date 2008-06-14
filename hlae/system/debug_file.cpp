@@ -27,6 +27,24 @@ FileDebugListener::FileDebugListener(DebugMaster ^debugMaster, System::String ^p
 FileDebugListener::~FileDebugListener()
 {
 	if(logFile) delete logFile;
+	logFile = nullptr;
+}
+
+void FileDebugListener::Flush()
+{
+	if(logFile)
+	{
+		try
+		{
+			Monitor::Enter( spewMessageSyncer );
+
+			logFile->Flush();
+		}
+		finally
+		{
+			Monitor::Exit( spewMessageSyncer );
+		}
+	}
 }
 
 DebugMessageState FileDebugListener::MySpewMessage( DebugMaster ^debugMaster, DebugMessage ^debugMessage )

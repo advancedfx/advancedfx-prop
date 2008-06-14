@@ -1,23 +1,25 @@
 #include <stdafx.h>
 
-// Project :  Half-Life Advanced Effects
-// File    :  gui/demo_fix.cpp
+//  debug.h - Debug system
+//  Copyright (c) Half-Life Advanced Effects project
 
-// Authors : last change / first change / name
 
-// 2008-05-23 / 2008-03-14 / Dominik Tugend
+//  Last changes:
+//  2008-06-14 by dominik.matrixstorm.com
 
-// Comment: see gui/demo_fix.h
+//  First changes:
+//  2008-03-14 by dominik.matrixstorm.com
 
-///////////////////////////////////////////////////////////////////////////////
+//  Comment: see gui/demo_fix.h
 
 #include "demotools.h"
+#include <system/debug.h>
 #include <forms/ProgressDialog.h>
 #include <tchar.h>
 #include <shared/hldemo/hldemo_clr.h>
 
-
 using namespace hlae;
+using namespace hlae::debug;
 
 bool compare_bytes (const char *bytes1, const char *bytes2, size_t ilen)
 {
@@ -25,9 +27,10 @@ bool compare_bytes (const char *bytes1, const char *bytes2, size_t ilen)
 	return true;
 }
 
-CHlaeDemoFix::CHlaeDemoFix(System::Windows::Forms::Form ^parent)
+CHlaeDemoFix::CHlaeDemoFix(System::Windows::Forms::Form ^parent, DebugMaster ^debugMaster)
 {
 	_parent = parent;
+	this->debugMaster = debugMaster;
 
 	_bEnableDirectoryFix = false;
 	_bEnableDemoCleanUp = false;
@@ -136,7 +139,7 @@ bool CHlaeDemoFix::normal_demo ( System::String ^infilename, System::String ^out
 		infile = gcnew System::IO::BinaryReader( System::IO::File::Open( infilename, System::IO::FileMode::Open, System::IO::FileAccess::Read ) );
 	} catch (System::Exception ^e)
 	{
-		System::Console::WriteLine("Exception when opening inputfile: {0}",e);
+		ERROR_MESSAGE( debugMaster, System::String::Format("Exception when opening inputfile: {0}",e) );
 		return false;
 	}
 
@@ -146,7 +149,7 @@ bool CHlaeDemoFix::normal_demo ( System::String ^infilename, System::String ^out
 	}
 	catch (System::Exception ^e)
 	{
-		System::Console::WriteLine("Exception when opening outputfile: {0}",e);
+		ERROR_MESSAGE( debugMaster, System::String::Format("Exception when opening outfile: {0}",e) );
 		delete infile;
 		return false;
 	}
@@ -161,7 +164,7 @@ bool CHlaeDemoFix::normal_demo ( System::String ^infilename, System::String ^out
 		//wxString tstr;
 		hldemo_header_s ^header = gcnew hldemo_header_s; 
 
-		//g_debug.SendMessage(_T("reading demo header ..."),hlaeDEBUG_VERBOSE_LEVEL1);
+		VERBOSE_MESSAGE( debugMaster, "reading demo header ..." );
 
 		if (read_header(infile,header))
 		{
@@ -169,7 +172,7 @@ bool CHlaeDemoFix::normal_demo ( System::String ^infilename, System::String ^out
 
 			if(!(header->dir_offset))
 			{
-				//g_debug.SendMessage(_T("Directory entries not present, aborting. Use DemoFix."),hlaeDEBUG_ERROR);
+				ERROR_MESSAGE( debugMaster, "Directory entries not present, aborting. Use DemoFix.");
 			}
 			else if (write_header(outfile,header))
 			{
@@ -182,8 +185,7 @@ bool CHlaeDemoFix::normal_demo ( System::String ^infilename, System::String ^out
 
 				while (bSearchNewSegment)
 				{
-					//tstr.Printf(_T("Processing segment %i"),iNumSegments);
-					//g_debug.SendMessage(tstr,hlaeDEBUG_VERBOSE_LEVEL1);
+					VERBOSE_MESSAGE( debugMaster, System::String::Format( "Processing segment {0}",iNumSegments) );
 
 					//tstr.Printf(_T("Segment: %i"),iNumSegments);
 					//tickerdlg->Update(infile->Tell(),tstr);
@@ -226,13 +228,13 @@ bool CHlaeDemoFix::normal_demo ( System::String ^infilename, System::String ^out
 
 					} else if (eCopyState==copy_macroblock_e::CPMB_ERROR)
 					{
-						//g_debug.SendMessage(_T("DemoFix: Found incomplete or unknown message or file end, aborting. Use DemoFix."),hlaeDEBUG_ERROR);
+						ERROR_MESSAGE( debugMaster, "DemoFix: Found incomplete or unknown message or file end, aborting. Use DemoFix." );
 					} else if (eCopyState==copy_macroblock_e::CPMB_USERABORT) {
 						// fatal error (user abort)
-						//g_debug.SendMessage(_T("DemoFix: User aborted."),hlaeDEBUG_ERROR);
+						ERROR_MESSAGE( debugMaster, "DemoFix: User aborted." );
 					} else {
 						// fatal error
-						//g_debug.SendMessage(_T("DemoFix: Cannot recover from last error, failed."),hlaeDEBUG_ERROR);
+						ERROR_MESSAGE( debugMaster, "DemoFix: Cannot recover from last error, failed." );
 					}
 
 					if (eCopyState==copy_macroblock_e::CPMB_OKSTOP)
@@ -248,26 +250,26 @@ bool CHlaeDemoFix::normal_demo ( System::String ^infilename, System::String ^out
 				{
 					//tstr.Printf(_T("copying %i directory entries"),iNumSegments);
 					//tickerdlg->Update(infile->BaseStream->Position,tstr);
-					//g_debug.SendMessage(tstr,hlaeDEBUG_VERBOSE_LEVEL1);
+					VERBOSE_MESSAGE( debugMaster, System::String::Format("copying {0} directory entries",iNumSegments) );
 
 					if(copy_bytes(infile,outfile,infile->BaseStream->Length - infile->BaseStream->Position))
 					{
 						// that's it guys.
-						//g_debug.SendMessage(_T("DemoTools: Finished."),hlaeDEBUG_INFO);
+						INFO_MESSAGE( debugMaster, "DemoTools: Finished.");
 						//tickerdlg->Update(infile->Length());
 						bOK=true;
 					};
 				}
 
-			} //else g_debug.SendMessage(_T("Failed to write demo header."),hlaeDEBUG_ERROR);
+			} else ERROR_MESSAGE( debugMaster, "Failed to write demo header." );
 
-		} //else g_debug.SendMessage(_T("Failed to read demo header."),hlaeDEBUG_ERROR);
+		} else ERROR_MESSAGE( debugMaster, "Failed to read demo header." );
 
 		delete header;
 
 	} else {
-		//if (!(infile->CanRead && infile->CanSeek)) g_debug.SendMessage(_T("Could not open input file."),hlaeDEBUG_ERROR);
-		//if (!(outfile->CanWrite && outfile->CanSeek)) g_debug.SendMessage(_T("Could not open output file."),hlaeDEBUG_ERROR);
+		if (!(infile->BaseStream->CanRead && infile->BaseStream->CanSeek)) ERROR_MESSAGE( debugMaster, "Could not open input file for reading and seeking." );
+		if (!(infile->BaseStream->CanWrite && infile->BaseStream->CanSeek)) ERROR_MESSAGE( debugMaster, "Could not open output file for writing and seeking." );
 	}
 
 	delete infile;
@@ -291,19 +293,21 @@ bool CHlaeDemoFix::fix_demo ( System::String ^infilename, System::String ^outfil
 		infile = gcnew System::IO::BinaryReader( System::IO::File::Open( infilename, System::IO::FileMode::Open, System::IO::FileAccess::Read ) );
 	} catch (System::Exception ^e)
 	{
-		System::Console::WriteLine("Exception when opening inputfile: {0}",e);
+		ERROR_MESSAGE( debugMaster, System::String::Format("Exception when opening inputfile: {0}",e) );
 		return false;
 	}
+
 	try
 	{
-		outfile = gcnew System::IO::BinaryWriter( System::IO::File::Open( outfilename, System::IO::FileMode::CreateNew, System::IO::FileAccess::Write ) );
+		outfile = gcnew System::IO::BinaryWriter( System::IO::File::Open( outfilename, System::IO::FileMode::Create, System::IO::FileAccess::Write ) );
 	}
 	catch (System::Exception ^e)
 	{
-		System::Console::WriteLine("Exception when opening outputfile: {0}",e);
+		ERROR_MESSAGE( debugMaster, System::String::Format("Exception when opening outfile: {0}",e) );
 		delete infile;
 		return false;
 	}
+
 	//wxProgressDialog* tickerdlg = new wxProgressDialog(_T("DemoFix"),_T("Starting ..."),(int)(infile->Length()),NULL,wxPD_APP_MODAL|wxPD_SMOOTH|wxPD_CAN_ABORT|wxPD_ELAPSED_TIME|wxPD_ESTIMATED_TIME|wxPD_REMAINING_TIME);
 
 	if (
@@ -314,7 +318,7 @@ bool CHlaeDemoFix::fix_demo ( System::String ^infilename, System::String ^outfil
 		//wxString tstr;
 		hldemo_header_s ^header = gcnew hldemo_header_s();
 
-		//g_debug.SendMessage(_T("DemoFix: reading demo header ..."),hlaeDEBUG_VERBOSE_LEVEL1);
+		VERBOSE_MESSAGE( debugMaster, "DemoFix: reading demo header ..." );
 
 		if (read_header(infile,header))
 		{
@@ -322,7 +326,7 @@ bool CHlaeDemoFix::fix_demo ( System::String ^infilename, System::String ^outfil
 
 			if(header->dir_offset)
 			{
-				//g_debug.SendMessage(_T("DemoFix: Directory entries already present, ignoring."),hlaeDEBUG_WARNING);
+				WARNING_MESSAGE( debugMaster, "DemoFix: Directory entries already present, ignoring." );
 				header->dir_offset = 0;
 			}
 
@@ -336,8 +340,7 @@ bool CHlaeDemoFix::fix_demo ( System::String ^infilename, System::String ^outfil
 				
 				while (bSearchNewSegment)
 				{
-					//tstr.Printf(_T("Scanning for segment %i"),iNumSegments);
-					//g_debug.SendMessage(tstr,hlaeDEBUG_VERBOSE_LEVEL1);
+					VERBOSE_MESSAGE( debugMaster, System::String::Format("Scanning for segment {0}",iNumSegments) );
 
 					//tstr.Printf(_T("Segment: %i"),iNumSegments);
 					//tickerdlg->Update(infile->Tell(),tstr);
@@ -391,7 +394,7 @@ bool CHlaeDemoFix::fix_demo ( System::String ^infilename, System::String ^outfil
 						// some error, we drop the rest and add the missing stop:
 						if (totalframes>0)
 						{
-							//g_debug.SendMessage(_T("DemoFix: Found incomplete or unknown message or file end. Asuming file end, finishing segment (appending STOP), dropping rest."),hlaeDEBUG_VERBOSE_LEVEL1);
+							VERBOSE_MESSAGE( debugMaster, "DemoFix: Found incomplete or unknown message or file end. Asuming file end, finishing segment (appending STOP), dropping rest." );
 							hldemo_macroblock_header_s ^mbheader = gcnew hldemo_macroblock_header_s();
 
 							mbheader->type = 0x05;
@@ -399,13 +402,13 @@ bool CHlaeDemoFix::fix_demo ( System::String ^infilename, System::String ^outfil
 							mbheader->time = lastheader->time;
 							mbheader->write( outfile );
 							totalframes++;
-						} //else g_debug.SendMessage(_T("DemoFix: Found incomplete or unknown message or file end. Asuming file end, ignoring segment (was empty), dropping rest."),hlaeDEBUG_VERBOSE_LEVEL1);
+						} else VERBOSE_MESSAGE( debugMaster, "DemoFix: Found incomplete or unknown message or file end. Asuming file end, ignoring segment (was empty), dropping rest." );
 					} else if (eCopyState==copy_macroblock_e::CPMB_USERABORT) {
 						// fatal error (user abort)
-						//g_debug.SendMessage(_T("DemoFix: User aborted."),hlaeDEBUG_ERROR);
+						ERROR_MESSAGE( debugMaster, "DemoFix: User aborted." );
 					} else {
 						// fatal error
-						//g_debug.SendMessage(_T("DemoFix: Cannot recover from last error, failed."),hlaeDEBUG_ERROR);
+						ERROR_MESSAGE( debugMaster, "DemoFix: Cannot recover from last error, failed." );
 					}
 
 					if ((eCopyState==copy_macroblock_e::CPMB_OKSTOP || eCopyState==copy_macroblock_e::CPMB_ERROR)&&totalframes>0)
@@ -451,8 +454,7 @@ bool CHlaeDemoFix::fix_demo ( System::String ^infilename, System::String ^outfil
 					//tickerdlg->Update(infile->Tell(),tstr);
 					unsigned int fdiroffset = outfile->BaseStream->Position; // remember offset of directory entries
 
-					//tstr.Printf(_T("DemoFix: building directroy entries for %i segments ..."),iNumSegments);
-					//g_debug.SendMessage(tstr,hlaeDEBUG_VERBOSE_LEVEL1);
+					VERBOSE_MESSAGE( debugMaster, System::String::Format("DemoFix: building directroy entries for {0} segments ...", iNumSegments) );
 
 					outfile->Write( iNumSegments ); // write number of directroy entries;
 
@@ -471,20 +473,20 @@ bool CHlaeDemoFix::fix_demo ( System::String ^infilename, System::String ^outfil
 					outfile->Write( fdiroffset );
 
 					// that's it guys.
-					//g_debug.SendMessage(_T("DemoFix: Finished."),hlaeDEBUG_INFO);
+					INFO_MESSAGE( debugMaster, "DemoFix: Finished." );
 					//tickerdlg->Update(infile->Length());
 					bOK=true;
 				}
 
-			} //else g_debug.SendMessage(_T("DemoFix: Failed to write demo header."),hlaeDEBUG_ERROR);
+			} else ERROR_MESSAGE( debugMaster, "DemoFix: Failed to write demo header." );
 
-		} //else g_debug.SendMessage(_T("DemoFix: Failed to read demo header."),hlaeDEBUG_ERROR);
+		} else ERROR_MESSAGE( debugMaster, "DemoFix: Failed to read demo header." );
 
 		delete header;
 
 	} else {
-		//if (!(infile->CanRead && infile->CanSeek)) g_debug.SendMessage(_T("Could not open input file."),hlaeDEBUG_ERROR);
-		//if (!(outfile->CanWrite && outfile->CanSeek)) g_debug.SendMessage(_T("Could not open output file."),hlaeDEBUG_ERROR);
+		if (!(infile->BaseStream->CanRead && infile->BaseStream->CanSeek)) ERROR_MESSAGE( debugMaster, "Could not open input file for reading and seeking." );
+		if (!(infile->BaseStream->CanWrite && infile->BaseStream->CanSeek)) ERROR_MESSAGE( debugMaster, "Could not open output file for writing and seeking." );
 	}
 
 	delete infile;
@@ -501,6 +503,7 @@ bool CHlaeDemoFix::read_header( System::IO::BinaryReader ^infile, hldemo_header_
 	int ilen;
 	int i;
 	bool bOk;
+	System::Text::Encoding^ encoding = System::Text::Encoding::UTF8;
 
 	//wxString tstr;
 
@@ -511,27 +514,27 @@ bool CHlaeDemoFix::read_header( System::IO::BinaryReader ^infile, hldemo_header_
 		bOk = bOk && (header->magic[i] == HLDEMO_MAGIC[i]);
 	if (! bOk )
 	{
-		//g_debug.SendMessage(_T("file identifier invalid"),hlaeDEBUG_ERROR);
+		ERROR_MESSAGE( debugMaster, "DemoTools: file identifier invalid" );
 		return false;
 	}
-	//tstr.Printf(_T("File identifier: %s"),wxString(header->magic,wxConvISO8859_1)); g_debug.SendMessage(tstr,hlaeDEBUG_VERBOSE_LEVEL2);
+	VERBOSE_MESSAGE( debugMaster, System::String::Format( "File identifier: {0}", encoding->GetString(header->magic)) );
 
 	//iread = sizeof(header->demo_version);
 	//if (iread != infile->Read(&(header->demo_version),iread)) return false;
 	if (HLDEMO_DEMO_VERSION != header->demo_version)
 	{
-		//tstr.Printf(_T("Demo version is: %u, but I expected %u. (ignoring)"),header->demo_version,HLDEMO_DEMO_VERSION); g_debug.SendMessage(tstr,hlaeDEBUG_WARNING);
+		WARNING_MESSAGE( debugMaster, System::String::Format("Demo version is: {0}, but I expected {1}. (ignoring)",header->demo_version,HLDEMO_DEMO_VERSION) );
 	} else {
-		//tstr.Printf(_T("Demo version: %u"),header->demo_version); g_debug.SendMessage(tstr,hlaeDEBUG_VERBOSE_LEVEL2);
+		VERBOSE_MESSAGE( debugMaster, System::String::Format("Demo version: {0}",header->demo_version) );
 	}
 
 	//iread = sizeof(header->network_version);
 	//if (iread != infile->Read(&(header->network_version),iread)) return false;
 	if (HLDEMO_NETWORK_VERSION != header->network_version)
 	{
-		//tstr.Printf(_T("Network version is: %u, but I expected %u. (ignoring)"),header->network_version,HLDEMO_NETWORK_VERSION); g_debug.SendMessage(tstr,hlaeDEBUG_WARNING);
+		WARNING_MESSAGE( debugMaster, System::String::Format("Network version is: {0}, but I expected {1}. (ignoring)",header->network_version,HLDEMO_NETWORK_VERSION) );
 	} else {
-		//tstr.Printf(_T("Network version: %u"),header->network_version); g_debug.SendMessage(tstr,hlaeDEBUG_VERBOSE_LEVEL2);
+		VERBOSE_MESSAGE( debugMaster, System::String::Format("Network version: {0}",header->network_version) );
 	}
 
 	ilen=header->map_name->Length;
@@ -545,10 +548,10 @@ bool CHlaeDemoFix::read_header( System::IO::BinaryReader ^infile, hldemo_header_
 	;
 	if (!bOk)
 	{
-		//g_debug.SendMessage(_T("map_name string malformed, forcing term \\0"),hlaeDEBUG_WARNING);
+		WARNING_MESSAGE( debugMaster, "map_name string malformed, forcing term \\0" );
 		header->map_name[ilen-1]=0;
 	}
-	//tstr.Printf(_T("Map name: %s"),wxString(header->map_name,wxConvISO8859_1)); g_debug.SendMessage(tstr,hlaeDEBUG_VERBOSE_LEVEL2);
+	VERBOSE_MESSAGE( debugMaster, System::String::Format("Map name: {0}", encoding->GetString(header->map_name)) );
 
 	ilen=header->game_dll->Length;
 	bOk=false;
@@ -561,10 +564,10 @@ bool CHlaeDemoFix::read_header( System::IO::BinaryReader ^infile, hldemo_header_
 	;
 	if (!bOk)
 	{
-		//g_debug.SendMessage(_T("game_dll string malformed, forcing term \\0"),hlaeDEBUG_WARNING);
+		WARNING_MESSAGE( debugMaster, "game_dll string malformed, forcing term \\0" );
 		header->game_dll[ilen-1]=0;
 	}
-	//tstr.Printf(_T("Game DLL: %s"),wxString(header->game_dll,wxConvISO8859_1)); g_debug.SendMessage(tstr,hlaeDEBUG_VERBOSE_LEVEL2);
+	VERBOSE_MESSAGE( debugMaster, System::String::Format("Game DLL: {0}", encoding->GetString(header->game_dll)) );
 
 	//iread = sizeof(header->dir_offset);
 	//if (iread != infile->Read(&(header->dir_offset),iread)) return false;
@@ -584,7 +587,7 @@ void CHlaeDemoFix::watermark_header(hldemo_header_s ^header)
 		if (bMark2)
 			header->map_name[i] = _watermark260[i];
 		else
-			bMark1 = 0 == header->map_name[i];
+			bMark2 = 0 == header->map_name[i];
 	}
 }
 
@@ -617,7 +620,7 @@ bool CHlaeDemoFix::copy_bytes( System::IO::BinaryReader ^infile, System::IO::Bin
 			cbCopy -= readbytes;
 		} catch ( System::Exception ^e )
 		{
-			Console::WriteLine( "Generic Exception when copying bytes: {0}", e );
+			ERROR_MESSAGE( debugMaster, System::String::Format("Generic Exception when copying bytes: {0}", e) );
 			bRes=false;
 			break;
 		}
@@ -653,15 +656,12 @@ CHlaeDemoFix::copy_macroblock_e CHlaeDemoFix::copy_macroblock( System::IO::Binar
 		(pblock_header ? (void)(pblock_header=macroblock_header) : (void)0 ), returnthis \
 		)
 
-	// #if 0
-	// 	#pragma message("warning: CHlaeDemoFix::copy_macroblock_e: DebugMessages enabled, this can be extremely slow!")
-	// 	wxString tstr;
-	// 	#define DEBUG_MESSAGE(thismsg) \
-	// 	tstr.Printf(_T("0x%08x: %s"),(unsigned int)fpos,wxString(_T(thismsg))); \
-	// 		g_debug.SendMessage(tstr, hlaeDEBUG_DEBUG);
-	// #else
-		#define DEBUG_MESSAGE(thismsg)
-	// #endif
+	#if HLAE_HLDEM_ENABLESLOWDEBUG
+		#pragma message("warning: CHlaeDemoFix::copy_macroblock_e: DebugMessages enabled, this can be extremely slow!")
+		#define MYDEBUGMESSAGE(thismsg) DEBUG_MESSAGE( debugMaster, System::String::Format( "{0}: {1}",(unsigned int)fpos,thismsg) );
+	#else
+		#define MYDEBUGMESSAGE(thismsg)
+	#endif
 
 	// get filesize and backup filepos:
 	fsize=infile->BaseStream->Length;
@@ -676,10 +676,10 @@ CHlaeDemoFix::copy_macroblock_e CHlaeDemoFix::copy_macroblock( System::IO::Binar
 	{
 	case 0:
 	case 1:
-		DEBUG_MESSAGE("0/1 game data")
+		MYDEBUGMESSAGE("0/1 game data")
 
 		if (infile->BaseStream->Seek(464,System::IO::SeekOrigin::Current) > fsize) return RETURN_REWIND(copy_macroblock_e::CPMB_ERROR);
-		try { infile->ReadUInt32(); } catch ( System::Exception ^) { return RETURN_REWIND(copy_macroblock_e::CPMB_ERROR); }
+		try { dwreadbytes = infile->ReadUInt32(); } catch ( System::Exception ^) { return RETURN_REWIND(copy_macroblock_e::CPMB_ERROR); }
 
 		if (_bEnableHltvFix)
 		{
@@ -693,13 +693,13 @@ CHlaeDemoFix::copy_macroblock_e CHlaeDemoFix::copy_macroblock( System::IO::Binar
 		}
 		return RETURN_BLOCK(copy_macroblock_e::CPMB_OK);
 	case 2:
-		DEBUG_MESSAGE("2 unknown empty")
+		MYDEBUGMESSAGE("2 unknown empty")
 
 		ftarget = infile->BaseStream->Position;
 		if (!COPY_BYTES(ftarget-fpos)) return copy_macroblock_e::CPMB_FATALERROR;
 		return RETURN_BLOCK(copy_macroblock_e::CPMB_OK);
 	case 3:
-		DEBUG_MESSAGE("3 client command")
+		MYDEBUGMESSAGE("3 client command")
 
 		if (_bEnableDemoCleanUp)
 		{
@@ -713,34 +713,34 @@ CHlaeDemoFix::copy_macroblock_e CHlaeDemoFix::copy_macroblock( System::IO::Binar
 
 		return RETURN_BLOCK(copy_macroblock_e::CPMB_OK);
 	case 4:
-		DEBUG_MESSAGE("4 unknown data")
+		MYDEBUGMESSAGE("4 unknown data")
 
 		if((ftarget=infile->BaseStream->Position+32) > fsize) return RETURN_REWIND(copy_macroblock_e::CPMB_ERROR);
 
 		if (!COPY_BYTES(ftarget-fpos)) return copy_macroblock_e::CPMB_FATALERROR;
 		return RETURN_BLOCK(copy_macroblock_e::CPMB_OK);
 	case 5:
-		DEBUG_MESSAGE("5 last in segment")
+		MYDEBUGMESSAGE("5 last in segment")
 
 		ftarget = infile->BaseStream->Position;
 		if (!COPY_BYTES(ftarget-fpos)) return copy_macroblock_e::CPMB_FATALERROR;
 		return RETURN_BLOCK(copy_macroblock_e::CPMB_OKSTOP);
 	case 6:
-		DEBUG_MESSAGE("6 unknown")
+		MYDEBUGMESSAGE("6 unknown")
 
 		if((ftarget=infile->BaseStream->Position+84) > fsize) return RETURN_REWIND(copy_macroblock_e::CPMB_ERROR);
 
 		if (!COPY_BYTES(ftarget-fpos)) return copy_macroblock_e::CPMB_FATALERROR;
 		return RETURN_BLOCK(copy_macroblock_e::CPMB_OK);
 	case 7:
-		DEBUG_MESSAGE("7 unknown")
+		MYDEBUGMESSAGE("7 unknown")
 
 		if((ftarget=infile->BaseStream->Position+8) > fsize) return RETURN_REWIND(copy_macroblock_e::CPMB_ERROR);
 
 		if (!COPY_BYTES(ftarget-fpos)) return copy_macroblock_e::CPMB_FATALERROR;
 		return RETURN_BLOCK(copy_macroblock_e::CPMB_OK);
 	case 8:
-		DEBUG_MESSAGE("8 sound")
+		MYDEBUGMESSAGE("8 sound")
 
 		if(infile->BaseStream->Seek(4,System::IO::SeekOrigin::Current) > fsize) return RETURN_REWIND(copy_macroblock_e::CPMB_ERROR);
 		try { dwreadbytes = infile->ReadUInt32(); } catch (System::Exception ^) { return RETURN_REWIND(copy_macroblock_e::CPMB_ERROR); }
@@ -750,7 +750,7 @@ CHlaeDemoFix::copy_macroblock_e CHlaeDemoFix::copy_macroblock( System::IO::Binar
 		if (!COPY_BYTES(ftarget-fpos)) return copy_macroblock_e::CPMB_FATALERROR;
 		return RETURN_BLOCK(copy_macroblock_e::CPMB_OK);
 	case 9:
-		DEBUG_MESSAGE("9 dynamic length data")
+		MYDEBUGMESSAGE("9 dynamic length data")
 
 		try { dwreadbytes = infile->ReadUInt32(); } catch (System::Exception ^) { return RETURN_REWIND(copy_macroblock_e::CPMB_ERROR); }
 		if ((ftarget = infile->BaseStream->Position+dwreadbytes) > fsize) return RETURN_REWIND(copy_macroblock_e::CPMB_ERROR);
@@ -760,7 +760,7 @@ CHlaeDemoFix::copy_macroblock_e CHlaeDemoFix::copy_macroblock( System::IO::Binar
 	}
 
 	// unsupported block type
-	DEBUG_MESSAGE("unknown block type")
+	MYDEBUGMESSAGE("unknown block type")
 
 	// return OK:
 	return RETURN_REWIND(copy_macroblock_e::CPMB_ERROR);
@@ -774,7 +774,7 @@ CHlaeDemoFix::copy_macroblock_e CHlaeDemoFix::copy_command( System::IO::BinaryRe
 	// read:
 	try { stmp = infile->ReadBytes( 64 ); } catch (System::Exception ^)
 	{
-		//g_debug.SendMessage(_T("failed reading command from demo"),hlaeDEBUG_ERROR);
+		ERROR_MESSAGE( debugMaster, "failed reading command from demo" );
 		return copy_macroblock_e::CPMB_FATALERROR;
 	}
 
@@ -814,20 +814,13 @@ CHlaeDemoFix::copy_macroblock_e CHlaeDemoFix::copy_command( System::IO::BinaryRe
 	// write:
 	try { outfile->Write( stmp ); } catch (System::Exception ^)
 	{
-		//g_debug.SendMessage(_T("failed writing command to demo"),hlaeDEBUG_ERROR);
+		ERROR_MESSAGE( debugMaster, "failed writing command to demo" );
 		return copy_macroblock_e::CPMB_FATALERROR;
 	}
 
 	return bReturn;
 }
 
-void copy_gamedata_ferror(unsigned char cmdcode, size_t initialpos, unsigned int dwreadorg, unsigned int dwreadlast, unsigned int dwreadbytes)
-{
-	//wxString tstr;
-
-	//tstr.Printf(_T("copy_gamedata failed at 0x%08x in block 0x%08x when parsing cmd %i at 0x%08x"),(unsigned int)initialpos+dwreadorg-dwreadbytes,(unsigned int)initialpos,(unsigned int)cmdcode,(unsigned int)initialpos+dwreadorg-dwreadlast );
-	//g_debug.SendMessage(tstr,hlaeDEBUG_ERROR);
-}
 CHlaeDemoFix::copy_macroblock_e CHlaeDemoFix::copy_gamedata( System::IO::BinaryReader ^infile, System::IO::BinaryWriter ^outfile, unsigned int dwreadbytes )
 {
 	// for debugging errors:
@@ -840,7 +833,8 @@ CHlaeDemoFix::copy_macroblock_e CHlaeDemoFix::copy_gamedata( System::IO::BinaryR
 
 	#define PRINT_FERROR(cmdcodethis,returnthis) \
 		( \
-			 copy_gamedata_ferror(cmdcodethis, initialpos, dwreadorg, dwreadlast, dwreadbytes), returnthis \
+			ERROR_MESSAGE( debugMaster, System::String::Format("DemoTools: copy_gamedata failed at {0} in block {1} when parsing cmd {2} at {3}",(unsigned int)initialpos+dwreadorg-dwreadbytes,(unsigned int)initialpos,(unsigned int)cmdcode,(unsigned int)initialpos+dwreadorg-dwreadlast) ) \
+			, returnthis \
 		)
 
 	unsigned char ctmp;
@@ -903,8 +897,7 @@ CHlaeDemoFix::copy_macroblock_e CHlaeDemoFix::copy_gamedata( System::IO::BinaryR
 			} else if (_ucHltvFixBell) _ucHltvFixBell = 1; // ring the bell sad :..(
 			try { outfile->Write( ctmp ); } catch (System::Exception ^) { return PRINT_FERROR(cmdcode,copy_macroblock_e::CPMB_FATALERROR); }
 
-			//tstr.Printf(_T("dem_forcehltv 1 fix: 0x%08x: serverinfo maxplayers: %u -> %u"),(unsigned int)(infile->Tell()),(unsigned int)(ctmp==DEMOFIX_MAXPLAYERS? ctmp : ctmp-1),(unsigned int)ctmp);
-			//g_debug.SendMessage(tstr,hlaeDEBUG_VERBOSE_LEVEL1);
+			VERBOSE_MESSAGE( debugMaster, System::String::Format("dem_forcehltv 1 fix: {0}: serverinfo maxplayers: {1} -> {2}",(unsigned int)(infile->BaseStream->Position),(unsigned int)(ctmp==DEMOFIX_MAXPLAYERS? ctmp : ctmp-1),(unsigned int)ctmp) );
 
 			dwreadbytes-=1;
 			break; // our work is done here, get us out of here!

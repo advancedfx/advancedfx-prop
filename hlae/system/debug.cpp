@@ -254,6 +254,7 @@ DebugMessageState DebugMaster::PostMessage( System::String ^debugMessageString, 
 					workMessage = messageQue->Dequeue();
 					if (workMessage)
 					{
+						curSumLenghts -= workMessage->string->Length;
 						PostWomen( workMessage );
 					}
 				}
@@ -275,6 +276,7 @@ DebugMessageState DebugMaster::PostMessage( System::String ^debugMessageString, 
 			queueMessage->type = debugMessageType;
 
 			messageQue->Enqueue( queueMessage );
+			curSumLenghts += queueMessage->string->Length;
 		}
 	}
 	finally
@@ -300,6 +302,31 @@ DebugMessageState DebugMaster::PostMessage( System::String ^debugMessageString, 
 	}
 
 	return debugMessageState;
+}
+
+void DebugMaster::Flush( )
+{
+	try
+	{
+		Monitor::Enter( messageQue );
+
+		// Flush it directly to the PostWomen:
+
+		DebugMessage ^workMessage=nullptr;
+		while (messageQue->Count > 0)
+		{
+			workMessage = messageQue->Dequeue();
+			if (workMessage)
+			{
+				curSumLenghts -= workMessage->string->Length;
+				PostWomen( workMessage );
+			}
+		}
+	}
+	finally
+	{
+		Monitor::Exit( messageQue );
+	}
 }
 
 DebugQueueState DebugMaster::GetLastQueueState()

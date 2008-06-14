@@ -19,7 +19,7 @@ namespace hlae {
 	///          the designers will not be able to interact properly with localized
 	///          resources associated with this form.
 	/// </summary>
-	public ref class DemoToolsWiz1 : public System::Windows::Forms::Form
+	ref class DemoToolsWiz1 : public System::Windows::Forms::Form
 	{
 	public:
 		DemoToolsWiz1(void)

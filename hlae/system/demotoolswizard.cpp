@@ -1,4 +1,5 @@
 #include <stdafx.h>
+#include <system/debug.h>
 #include "demotoolswizard.h"
 #include <forms/DemoToolsWiz1.h>
 #include <forms/DemoToolsWiz2.h>
@@ -7,10 +8,14 @@
 
 using namespace System;
 using namespace System::Windows::Forms;
-using namespace hlae;
 
-DemoToolsWizard::DemoToolsWizard( System::Windows::Forms::Form ^parentWindow )
+using namespace hlae;
+using namespace hlae::debug;
+
+DemoToolsWizard::DemoToolsWizard( System::Windows::Forms::Form ^parentWindow, DebugMaster ^debugMaster)
 {
+	this->debugMaster = debugMaster;
+
 	DemoToolsWiz1 ^wiz1 = gcnew DemoToolsWiz1();
 	DemoToolsWiz2 ^wiz2 = gcnew DemoToolsWiz2();
 	DemoToolsWiz3 ^wiz3 = gcnew DemoToolsWiz3();
@@ -65,7 +70,7 @@ DemoToolsWizard::DemoToolsWizard( System::Windows::Forms::Form ^parentWindow )
 	if (iShowDialog==3)
 	{
 		// Finished
-		CHlaeDemoFix ^dtool = gcnew CHlaeDemoFix( parentWindow );
+		CHlaeDemoFix ^dtool = gcnew CHlaeDemoFix( parentWindow, debugMaster );
 
 		dtool->EnableDirectoryFix( wiz1->bCheckedFix() );
 		dtool->EnableHltvFix( wiz1->bCheckedStuck() );

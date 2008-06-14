@@ -11,25 +11,25 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-//#include <wx/wx.h>
-//#include <wx/file.h>
-
-//#include <list>
-
-// forward declerations:
+#include <system/debug.h>
 
 using namespace System;
+using namespace hlae::debug;
 
 namespace hlae {
+
+#define HLAE_HLDEM_ENABLESLOWDEBUG 0
+// this enables additional (slow) messages, which are also pretty many, so you
+// might want to use debug mode and set no drop in menu ;)
 
 ref struct hldemo_header_s;
 ref struct hldemo_macroblock_header_s;
 
-public ref class CHlaeDemoFix
+ref class CHlaeDemoFix
 {
 public:
 	#define DEMOFIX_MAXPLAYERS 32
-	CHlaeDemoFix(System::Windows::Forms::Form ^parent);
+	CHlaeDemoFix(System::Windows::Forms::Form ^parent, DebugMaster ^debugMaster);
 	~CHlaeDemoFix();
 
 	void EnableDirectoryFix() { EnableDirectoryFix(true); };
@@ -73,7 +73,7 @@ private:
 	#define HLAE_WATERMARK64 "It is so great! I simply love it <3: Half-Life Advanced Effects"
 	#define HLAE_WATERMARK260 "Half-Life Advanced Effects is great! I love Half-Life Advanced Effects! I really love Half-Life Advanced Effects! Did I already say how much I love Half-Life Advanced Effects? Dude, Half-Life Advanced Effects is really great! I luv Half-Life Advanced Effects!"
 
-	System::Console ^_democonsole;
+	DebugMaster ^debugMaster;
 
 	enum class copy_macroblock_e
 	{

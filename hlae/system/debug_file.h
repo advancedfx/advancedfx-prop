@@ -17,11 +17,13 @@ namespace debug {
 //	FileDebugListener
 //	
 //	Dispose has to be explicetely called on this class, otherwise it might miss file contents.
-ref class FileDebugListener : DebugListener
+ref class FileDebugListener : public DebugListener
 {
 public:
 	FileDebugListener(DebugMaster ^debugMaster, System::String ^path);
 	~FileDebugListener();
+
+	void Flush();
 
 private:
 	DebugMessageState MySpewMessage( DebugMaster ^debugMaster, DebugMessage ^debugMessage );

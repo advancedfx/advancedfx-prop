@@ -19,7 +19,7 @@ namespace hlae {
 	///          the designers will not be able to interact properly with localized
 	///          resources associated with this form.
 	/// </summary>
-	public ref class Launcher : public System::Windows::Forms::Form
+	ref class Launcher : public System::Windows::Forms::Form
 	{
 	public:
 		Launcher(void)

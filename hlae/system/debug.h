@@ -39,9 +39,13 @@ using namespace System::Threading;
 namespace hlae {
 namespace debug {
 
+#define ERROR_MESSAGE(refdebugmaster,refstring) refdebugmaster->PostMessage( refstring, hlae::debug::DebugMessageType::DMT_ERROR )
+#define WARNING_MESSAGE(refdebugmaster,refstring) refdebugmaster->PostMessage( refstring, hlae::debug::DebugMessageType::DMT_WARNING )
+#define INFO_MESSAGE(refdebugmaster,refstring) refdebugmaster->PostMessage( refstring, hlae::debug::DebugMessageType::DMT_INFO )
+#define VERBOSE_MESSAGE(refdebugmaster,refstring) refdebugmaster->PostMessage( refstring, hlae::debug::DebugMessageType::DMT_DEBUG )
+
 #ifdef _DEBUG
-	#define DEBUG_MESSAGE(refdebugmaster,refstring) \
-		refdebugmaster->PostMessage( refstring, hlae::debug::DebugMessageType::DMT_DEBUG )
+	#define DEBUG_MESSAGE(refdebugmaster,refstring) refdebugmaster->PostMessage( refstring, hlae::debug::DebugMessageType::DMT_DEBUG )
 #else
 	#define DEBUG_MESSAGE(refdebugmaster,refstring)
 #endif
@@ -146,7 +150,7 @@ public:
 	DebugListener( bool bInterLockOnSpewMessage, DebugMaster ^debugMaster );
 	~DebugListener();
 
-public:
+protected:
 	//  Override this to process a incoming message
 	//  IF bInterLockOnSpewMessage was set true on class creation:
 	//  The call is already interlocked, thus you can asume the function is not
@@ -157,9 +161,11 @@ public:
 	);
 	OnSpewMessageDelegate ^OnSpewMessage;
 
-private:
+protected:
 	bool bInterLockOnSpewMessage;
 	System::Object ^spewMessageSyncer; // object pointer is used for locking
+
+private:
 	DebugListenerBridge ^debugListenerBridge;
 	System::Collections::Generic::LinkedList<DebugMaster ^> ^debugMasters; // object pointer is used for locking
 
@@ -284,6 +290,8 @@ public:
 	//
 
 	DebugMessageState PostMessage( System::String ^debugMessageString, DebugMessageType debugMessageType );
+
+	void Flush(); // empties the queue directly, only for debuging, this should not be called due to perfomance impacts
 
 	//  Result:
 	//    the last tracked DebugQueueState since the last time this function was called.

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <system/debug.h>
+#include <system/debug_file.h>
+
 class CHlaeBcServer; // forward decleration
 
 namespace hlae {
@@ -11,6 +14,8 @@ namespace hlae {
 	using namespace System::Data;
 	using namespace System::Drawing;
 
+	using namespace hlae::debug;
+
 	/// <summary>
 	/// Summary for MainFOrm
 	///
@@ -20,14 +25,27 @@ namespace hlae {
 	///          the designers will not be able to interact properly with localized
 	///          resources associated with this form.
 	/// </summary>
-	public ref class MainForm : public System::Windows::Forms::Form
+	ref class MainForm : public System::Windows::Forms::Form
 	{
 	public:
-		MainForm(void)
+		MainForm(DebugMaster ^debugMaster, FileDebugListener ^debugFile)
 		{
+			this->debugMaster = debugMaster;
+			this->debugFile = debugFile;
+
 			InitializeComponent();
 			
-			// custom bellow this line
+			this->Icon = System::Drawing::Icon::ExtractAssociatedIcon(System::Windows::Forms::Application::ExecutablePath );
+
+			#ifdef _DEBUG
+				// Enable Debug Menu
+				this->menuStrip1->SuspendLayout();
+
+				this->debugToolStripMenuItem->Visible = true;
+
+				this->menuStrip1->ResumeLayout(false);
+				this->menuStrip1->PerformLayout();
+			#endif
 
 			MyCreate();
 		}
@@ -39,8 +57,6 @@ namespace hlae {
 		~MainForm()
 		{
 			MyDestroy();
-
-			// custom above this line
 
 			if (components)
 			{
@@ -54,6 +70,8 @@ namespace hlae {
 
 	private:
 		CHlaeBcServer *hlaeBaseComServer;
+		DebugMaster ^debugMaster;
+		FileDebugListener ^debugFile;
 
 	private: System::Windows::Forms::MenuStrip^  menuStrip1;
 
@@ -70,6 +88,9 @@ namespace hlae {
 	private: System::Windows::Forms::ToolStripSeparator^  toolStripMenuItem1;
 	private: System::Windows::Forms::ToolStripMenuItem^  exitToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripContainer^  toolStripContainer1;
+	private: System::Windows::Forms::ToolStripMenuItem^  debugToolStripMenuItem;
+	private: System::Windows::Forms::ToolStripMenuItem^  flushLogFileToolStripMenuItem;
+	private: System::Windows::Forms::ToolStripMenuItem^  neverDropMessagesToolStripMenuItem;
 
 
 
@@ -97,7 +118,10 @@ namespace hlae {
 			this->demoToolsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->helpToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->aboutToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->debugToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->flushLogFileToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->toolStripContainer1 = (gcnew System::Windows::Forms::ToolStripContainer());
+			this->neverDropMessagesToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->menuStrip1->SuspendLayout();
 			this->toolStripContainer1->TopToolStripPanel->SuspendLayout();
 			this->toolStripContainer1->SuspendLayout();
@@ -106,8 +130,8 @@ namespace hlae {
 			// menuStrip1
 			// 
 			this->menuStrip1->Dock = System::Windows::Forms::DockStyle::None;
-			this->menuStrip1->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(3) {this->fileToolStripMenuItem, 
-				this->toolsToolStripMenuItem, this->helpToolStripMenuItem});
+			this->menuStrip1->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(4) {this->fileToolStripMenuItem, 
+				this->toolsToolStripMenuItem, this->helpToolStripMenuItem, this->debugToolStripMenuItem});
 			this->menuStrip1->Location = System::Drawing::Point(0, 0);
 			this->menuStrip1->Name = L"menuStrip1";
 			this->menuStrip1->Size = System::Drawing::Size(292, 24);
@@ -125,19 +149,19 @@ namespace hlae {
 			// launchToolStripMenuItem
 			// 
 			this->launchToolStripMenuItem->Name = L"launchToolStripMenuItem";
-			this->launchToolStripMenuItem->Size = System::Drawing::Size(152, 22);
+			this->launchToolStripMenuItem->Size = System::Drawing::Size(119, 22);
 			this->launchToolStripMenuItem->Text = L"&Launch";
 			this->launchToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::launchToolStripMenuItem_Click);
 			// 
 			// toolStripMenuItem1
 			// 
 			this->toolStripMenuItem1->Name = L"toolStripMenuItem1";
-			this->toolStripMenuItem1->Size = System::Drawing::Size(149, 6);
+			this->toolStripMenuItem1->Size = System::Drawing::Size(116, 6);
 			// 
 			// exitToolStripMenuItem
 			// 
 			this->exitToolStripMenuItem->Name = L"exitToolStripMenuItem";
-			this->exitToolStripMenuItem->Size = System::Drawing::Size(152, 22);
+			this->exitToolStripMenuItem->Size = System::Drawing::Size(119, 22);
 			this->exitToolStripMenuItem->Text = L"&Exit";
 			this->exitToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::exitToolStripMenuItem_Click);
 			// 
@@ -165,8 +189,24 @@ namespace hlae {
 			// aboutToolStripMenuItem
 			// 
 			this->aboutToolStripMenuItem->Name = L"aboutToolStripMenuItem";
-			this->aboutToolStripMenuItem->Size = System::Drawing::Size(114, 22);
+			this->aboutToolStripMenuItem->Size = System::Drawing::Size(152, 22);
 			this->aboutToolStripMenuItem->Text = L"&About";
+			// 
+			// debugToolStripMenuItem
+			// 
+			this->debugToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {this->flushLogFileToolStripMenuItem, 
+				this->neverDropMessagesToolStripMenuItem});
+			this->debugToolStripMenuItem->Name = L"debugToolStripMenuItem";
+			this->debugToolStripMenuItem->Size = System::Drawing::Size(50, 20);
+			this->debugToolStripMenuItem->Text = L"Debug";
+			this->debugToolStripMenuItem->Visible = false;
+			// 
+			// flushLogFileToolStripMenuItem
+			// 
+			this->flushLogFileToolStripMenuItem->Name = L"flushLogFileToolStripMenuItem";
+			this->flushLogFileToolStripMenuItem->Size = System::Drawing::Size(189, 22);
+			this->flushLogFileToolStripMenuItem->Text = L"Flush log file";
+			this->flushLogFileToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::flushLogFileToolStripMenuItem_Click);
 			// 
 			// toolStripContainer1
 			// 
@@ -187,6 +227,14 @@ namespace hlae {
 			// toolStripContainer1.TopToolStripPanel
 			// 
 			this->toolStripContainer1->TopToolStripPanel->Controls->Add(this->menuStrip1);
+			// 
+			// neverDropMessagesToolStripMenuItem
+			// 
+			this->neverDropMessagesToolStripMenuItem->CheckOnClick = true;
+			this->neverDropMessagesToolStripMenuItem->Name = L"neverDropMessagesToolStripMenuItem";
+			this->neverDropMessagesToolStripMenuItem->Size = System::Drawing::Size(189, 22);
+			this->neverDropMessagesToolStripMenuItem->Text = L"Never drop messages";
+			this->neverDropMessagesToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::neverDropMessagesToolStripMenuItem_Click);
 			// 
 			// MainForm
 			// 
@@ -216,6 +264,9 @@ namespace hlae {
 			 {	this->Close(); }
 
 
-	};
+	private: System::Void flushLogFileToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e)
+			 {	if( debugFile ) debugFile->Flush(); }
+	private: System::Void neverDropMessagesToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e);
+};
 }
 

@@ -19,7 +19,7 @@ namespace hlae {
 	///          the designers will not be able to interact properly with localized
 	///          resources associated with this form.
 	/// </summary>
-	public ref class DemoToolsWiz3 : public System::Windows::Forms::Form
+	ref class DemoToolsWiz3 : public System::Windows::Forms::Form
 	{
 	public:
 		DemoToolsWiz3(void)
@@ -208,7 +208,8 @@ namespace hlae {
 			// checkBoxMarks
 			// 
 			this->checkBoxMarks->AutoSize = true;
-			this->checkBoxMarks->Enabled = false;
+			this->checkBoxMarks->Checked = true;
+			this->checkBoxMarks->CheckState = System::Windows::Forms::CheckState::Checked;
 			this->checkBoxMarks->Location = System::Drawing::Point(12, 52);
 			this->checkBoxMarks->Name = L"checkBoxMarks";
 			this->checkBoxMarks->Size = System::Drawing::Size(135, 17);
