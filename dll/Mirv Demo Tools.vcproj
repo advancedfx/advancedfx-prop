@@ -294,6 +294,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\sampling.h"
+					>
+				</File>
+				<File
 					RelativePath=".\supportrender.h"
 					>
 				</File>
@@ -383,6 +387,10 @@
 				</File>
 				<File
 					RelativePath=".\newsky.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\sampling.cpp"
 					>
 				</File>
 				<File

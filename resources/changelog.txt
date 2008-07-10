@@ -1,3 +1,10 @@
+HLAE x.x.x.x
+
+* removed __mirv_movie_fpscap - fps are not capped anymore by default, users
+  may now set as they want or till the program blows up or causes a division
+  by zero error :)
+
+
 HLAE 2.0.1.7
 
 * Added mirv_tfc_specmenu - allows to disable and enable spectator menu in Team Fortress Classic
