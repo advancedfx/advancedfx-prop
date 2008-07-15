@@ -326,6 +326,13 @@ void DrawActivePlayers()
 
 struct glBegin_saved_s {
 	bool restore;
+	GLboolean b_GL_DEPTH_TEST;
+	GLint i_GL_DEPTH_FUNC;
+} g_glBegin_saved;
+
+/* deprecated ******************************************************************
+struct glBegin_saved_s {
+	bool restore;
 	//GLclampf fColorv [4];
 	GLint i_GL_TEXTURE_ENV_MODE;
 	GLint i_GL_TEXTURE_BINDING_2D;
@@ -364,6 +371,7 @@ void doGenMatteTex()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 }
+****************************************************************** deprecated */
 
 void APIENTRY my_glBegin(GLenum mode)
 {
@@ -390,9 +398,20 @@ void APIENTRY my_glBegin(GLenum mode)
 		return;
 
 	else if (res == Filming::DR_MASK)
-	{	
+	{
 		if (movie_oldmatte->value==1.0f)
 			glColorMask(FALSE, FALSE, FALSE, TRUE); // this is illegal, since you can't asume a specific drawing order of polygons
+		else if(Filming::MS_ENTITY == g_Filming.GetMatteStage());
+		{
+			g_glBegin_saved.restore = true;
+			glGetBooleanv(GL_DEPTH_TEST,&(g_glBegin_saved.b_GL_DEPTH_TEST));
+			glGetIntegerv(GL_DEPTH_FUNC,&(g_glBegin_saved.i_GL_DEPTH_FUNC));
+
+			glColorMask(FALSE, FALSE, FALSE, TRUE);
+			glEnable(GL_DEPTH_FUNC);
+			glDepthFunc(GL_LEQUAL);
+		}
+/* deprecated ******************************************************************
 		else
 		{
 			// save some old environment properties we will overwrite:
@@ -423,6 +442,7 @@ void APIENTRY my_glBegin(GLenum mode)
 
 			g_glBegin_saved.restore = true; // we request to restore parts of the environment after glEnd()
 		}
+****************************************************************** deprecated */
 	}
 	else if (!g_Filming.bWantsHudCapture)
 		glColorMask(TRUE, TRUE, TRUE, TRUE); // BlendFunc for additive sprites needs special controll, don't override it
@@ -436,11 +456,20 @@ void APIENTRY my_glEnd(void)
 
 	if (g_glBegin_saved.restore)
 	{
+		g_glBegin_saved.restore = false;
+		if(!g_glBegin_saved.b_GL_DEPTH_TEST)
+			glDisable(GL_DEPTH_FUNC);
+		glDepthFunc(g_glBegin_saved.i_GL_DEPTH_FUNC);
+	}
+/* deprecated ******************************************************************
+	if (g_glBegin_saved.restore)
+	{
 		// restore old texture mode:
 		glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,g_glBegin_saved.i_GL_TEXTURE_ENV_MODE);
 		glBindTexture(GL_TEXTURE_2D,g_glBegin_saved.i_GL_TEXTURE_BINDING_2D);
 		g_glBegin_saved.restore=false;
 	}
+****************************************************************** deprecated */
 
 	g_Filming.DoWorldFxEnd();
 }

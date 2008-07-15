@@ -579,6 +579,11 @@ Filming::HUD_REQUEST_STATE Filming::giveHudRqState()
 	return _HudRqState;
 }
 
+Filming::MATTE_STAGE Filming::GetMatteStage()
+{
+	return m_iMatteStage;
+}
+
 void Filming::OnHudBeginEvent()
 {
 	//MessageBox(NULL,"IN","HUD Event",MB_OK);
@@ -977,12 +982,10 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 	}
 	_bRecordBuffers_FirstCall = false;
 
-	// If this is a none swapping one then force to the correct stage.
-	// Otherwise continue working wiht the stage that this frame has
-	// been rendered with.
-	if ((0.0f <= movie_splitstreams->value)&&(movie_splitstreams->value < 3.0f))
-		m_iMatteStage = (MATTE_STAGE) ((int) MS_ALL + (int) max(movie_splitstreams->value, 0.0f));
-	else
+
+	m_iMatteStage = MS_ALL;
+
+	if( movie_splitstreams->value >= 1)
 		m_iMatteStage = MS_WORLD;
 
 	// If we've only just started, delay until the next scene so that
@@ -1014,7 +1017,6 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 		return true;
 	}
 
-	bool bSplitting = (movie_splitstreams->value == 3.0f);
 	float flTime = 1.0f / max(movie_fps->value, 1.0f);
 	// if (movie_fpscap->value) flTime =  max(flTime, MIN_FRAME_DURATION);
 
@@ -1040,9 +1042,12 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 
 	do
 	{
-		// capture stage:
-		if (!_bSimulate) Capture(pszTitles[m_iMatteStage], m_nFrames, COLOR);
-		if (bDepthDumps && !_bSimulate2) Capture(pszDepthTitles[m_iMatteStage], m_nFrames, DEPTH);
+		// capture ALL OR WORLD:
+		if( movie_splitstreams->value != 2)
+		{
+			if (!_bSimulate) Capture(pszTitles[m_iMatteStage], m_nFrames, COLOR);
+			if (bDepthDumps && !_bSimulate2) Capture(pszDepthTitles[m_iMatteStage], m_nFrames, DEPTH);
+		}
 
 		if (_pSupportRender)
 			*bSwapRes = _pSupportRender->hlaeSwapBuffers(hSwapHDC);
@@ -1051,7 +1056,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 
 		if (_bSimulate && movie_simulate_delay->value > 0) Sleep((DWORD)movie_simulate_delay->value);
 
-		if (bSplitting)
+		if( movie_splitstreams->value >= 2)
 		{
 			m_iMatteStage = MS_ENTITY;
 
@@ -1147,7 +1152,10 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 void Filming::clearBuffers()
 {
 	// Now we do our clearing!
-	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	if(m_iMatteStage!=MS_ENTITY)
+		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	else
+		glClear(GL_COLOR_BUFFER_BIT);
 
 	// well for some reason gavin forced gl_clear 1, but we don't relay on it anyways (which is good, cause the in ineye demo mode the engine will reforce it to 0 anyways):
 	pEngfuncs->Cvar_SetValue("gl_clear", 1); // reforce (I am not sure if this is a good position)

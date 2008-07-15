@@ -36,9 +36,9 @@ public:
 	enum STEREO_STATE { STS_LEFT, STS_RIGHT };
 	enum BUFFER { COLOR, DEPTH, ALPHA };
 	enum HUD_REQUEST_STATE { HUDRQ_NORMAL,HUDRQ_HIDE,HUDRQ_CAPTURE_COLOR,HUDRQ_CAPTURE_ALPHA };
+	enum MATTE_STAGE { MS_ALL, MS_WORLD, MS_ENTITY };
 
 private:
-	enum MATTE_STAGE { MS_ALL, MS_WORLD, MS_ENTITY };
 	enum FILMING_STATE { FS_INACTIVE, FS_STARTING, FS_ACTIVE };
 
 private:
@@ -168,6 +168,8 @@ public:
 
 	//
 	HUD_REQUEST_STATE giveHudRqState();
+
+	MATTE_STAGE GetMatteStage();
 
 	bool bRequestingMatteTextUpdate;
 

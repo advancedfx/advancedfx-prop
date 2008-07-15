@@ -5,11 +5,13 @@
 
 // Authors : last change / first change / name
 
-// 2008-07-10 / 2008-07-10 / Dominik Tugend
+// 2008-07-12 / 2008-07-10 / Dominik Tugend
 
 // Comment: sampling related classes
 
 ////////////////////////////////////////////////////////////////////////////////
+
+#include <list>
 
 namespace hlae
 {
@@ -17,84 +19,126 @@ namespace hlae
 namespace sampler
 {
 
+typedef void * FrameId_t;
+typedef void * SampleId_t;
 
-struct S_SampleFormatDescription
-{
-
-};
-
-struct C_SampleFormat
-{
-	S_SampleFormatDescription GetFormatDescription();
-};
-
-class C_FrameSampler
+class ISampleMaster
 {
 public:
-	enum E_SampleMethod
+	virtual void * I_GetSampleData( SampleId_t sampleId ) = 0;
+	virtual void   I_ReleaseSample( SampleId_t sampleId ) = 0;
+};
+
+class IFrameMaster
+{
+public:
+	virtual void I_SamplerConnect( ISampleMaster* interfaceSampleMaster )=0;
+
+	virtual bool I_CreateFrame(FrameId_t &getFrameId) = 0;
+	virtual bool I_NewSample(FrameId_t frameid, float frame_time, SampleId_t sampleId) = 0; 
+	virtual bool I_FinishFrame(FrameId_t frameid) = 0;
+};
+
+class CSampleMaster : public ISampleMaster
+{
+public:
+	enum SamplerError_e
 	{
-		//	Class chooses setting
-		E_SM_default,
-
-		E_SM_int_const,
-
-		E_SM_int_linear
+		SE_NONE,
+		SE_ERROR,
+		SE_STATE_ERROR,
+		SE_TIME_ERROR,
+		SE_CREATEFRAME_FAILED
 	};
 
-	enum E_SamplerState
-	{
-		E_SS_none,
-		E_SS_okay,
-		E_SS_error
-	};
-
-
-	C_FrameSampler();
-	~C_FrameSampler();
-
+public:
+	CSampleMaster();
+	~CSampleMaster();
 
 	// Prepares the class for sampling data, any previous settings are discarded
-	E_SamplerState BeginSampling(
-		const C_SampleFormat &SampleFormat,
-		const E_SampleMethod SampleMethod
+	bool BeginSampling(
+		IFrameMaster *interfaceFrameMaster,
+		float time_start,
+		float frames_per_second, // >0
+		float offset_window_begin, // <= 0
+		float offset_window_end // >= 0
 	);
 
 	//	Ends sampling, discards any current data or settings and frees memory
-	E_SamplerState EndSampling()
-	{
-		// todo
-		return E_SS_error;
-	};
-
-
-	//	Tells the class that we are about to begin a new frame
-	E_SamplerState BeginFrame();
+	bool EndSampling( float time_end );
 
 	//	Supplies data to be sampled for the current frame.
 	//	The data has to be compatible with the SampleFormat set in BeginSampling
 	//	WARNING: no range / buffer checking etc.
-	E_SamplerState SupplySample( const void *pData );
+	bool Sample( float time, const void *pData, unsigned long cbDataSize );
 
-	// Tells the class that the current frame is finished
-	E_SamplerState EndFrame();
+	SamplerError_e HadError();
 
-
-	E_SamplerState Get_SamplerState();
-
+public:
+	// ISampleMaster:
+	(void *) I_GetSampleData( SampleId_t sampleId );
+	void     I_ReleaseSample( SampleId_t sampleId );
 
 private:
-	E_SamplerState m_SamplerState;
-
-	struct S_SamplerSettings
+	enum SamplerState_e
 	{
-		S_SampleFormatDescription SampleFormat;
-		E_SampleMethod SampleMethod;
-	} m_SamplerSettings;
+		SS_IDLE,
+		SS_SAMPLING,
+	};
+
+	struct Frame_s
+	{
+		FrameId_t frameId;
+		struct
+		{
+			float base_time;
+			float window_min;
+			float window_max;
+			float window_delta;
+		} time;
+	};
+
+	struct Sample_s
+	{
+		unsigned long ul_RefCount;
+		void *pData;
+	};
+
+private:
+	SamplerState_e m_SamplerState;
+	SamplerError_e m_SamplerError;
+
+	struct
+	{
+		IFrameMaster *interfaceFrameMaster;
+		float time_start;
+		float frames_per_second;
+		float offset_window_begin;
+		float offset_window_end;
+	} m_setting;
+
+	std::list<Frame_s *> frames;
+
+	struct
+	{
+		float time_min;
+		unsigned long frame_count;
+	} m_time;
+
+private:
+	void RaiseError();
+	void RaiseError( SamplerError_e errorcode );
+
+	bool Finish_Frames_OutOfScope(float time);
+	bool Create_Frames_NewInScope(float time);
+
+
 };
 
-}
 
-}
+}	// namespace sampler
+
+}	// namespace hlae
 
 
 /*
@@ -107,4 +151,12 @@ rgb | avg_rgb | luma_srgb
 
 mirv_sample method
 int_const | int_linear
+
+
+1. Sample weight function: const, avg, srgb_luma
+2. Frame weight function:
+   - defined from [0,1]
+   - values [0,1]
+   - stretch factor (determines frame overlapping)
+   - functions: rectangle, gauss approx
 */
