@@ -525,9 +525,9 @@ void BGRSampler::Accum( Frame_s *pframe, bool bTwoPoint, float frame_time, Sampl
 					pfdata[2] += fFrameWeight*pData[2];
 				} else {
 					float fcw = fFrameWeight*((fColorWeight[0]*pData[0]+fColorWeight[1]*pData[1]+fColorWeight[2]*pData[2])/255);
-					pfdata[0] += fcw*255;//pData[0];
-					pfdata[1] += fcw*255;//pData[1];
-					pfdata[2] += fcw*255;//pData[2];
+					pfdata[0] += fcw*pData[0];
+					pfdata[1] += fcw*pData[1];
+					pfdata[2] += fcw*pData[2];
 				}
 			}
 
