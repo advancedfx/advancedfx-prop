@@ -36,9 +36,14 @@ public:
 
 	virtual bool I_CreateFrame(FrameId_t &getFrameId) = 0;
 	virtual bool I_NewSample(FrameId_t frameid, float frame_time, SampleId_t sampleId) = 0; 
-	virtual bool I_FinishFrame(FrameId_t frameid) = 0;
+	virtual bool I_FinishFrame(FrameId_t frameid, float time_end) = 0;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+//
+//  CSampleMaster
+//
+//
 class CSampleMaster : public ISampleMaster
 {
 public:
@@ -73,6 +78,8 @@ public:
 	bool Sample( float time, const void *pData, unsigned long cbDataSize );
 
 	SamplerError_e HadError();
+
+	unsigned long GetTracker();
 
 public:
 	// ISampleMaster:
@@ -115,6 +122,7 @@ private:
 		float frames_per_second;
 		float offset_window_begin;
 		float offset_window_end;
+		float overlap;
 	} m_setting;
 
 	std::list<Frame_s *> frames;
@@ -125,6 +133,8 @@ private:
 		unsigned long frame_count;
 	} m_time;
 
+	unsigned long m_tracker;
+
 private:
 	void RaiseError();
 	void RaiseError( SamplerError_e errorcode );
@@ -132,6 +142,90 @@ private:
 	bool Finish_Frames_OutOfScope(float time);
 	bool Create_Frames_NewInScope(float time);
 
+
+};
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  BGRSampler
+//
+//  Asumes 8 bit BGR data without any alignment.
+//
+//
+class BGRSampler : public IFrameMaster
+{
+public:
+	enum SampleMethod_e
+	{
+		SM_INT_RECTANGLE,
+		SM_INT_TRAPEZOID
+	};
+
+	enum ColorMethod_e
+	{
+		CM_RGB,
+		CM_AVERAGE,
+		CM_SRGB_LUMA
+	};
+
+	enum FrameFunction_e
+	{
+		FF_RECTANGLE,
+		FF_GAUSS
+	};
+
+	typedef bool (*OnPrintFrame_t)(unsigned long id, void *prgbdata, int iWidht, int iHeight);
+
+	BGRSampler(
+		int iWidth,
+		int iHeight,
+		SampleMethod_e sampleMethod,
+		ColorMethod_e colorMethod,
+		FrameFunction_e frameFunction,
+		OnPrintFrame_t OnPrintFrame
+	);
+	~BGRSampler();
+
+	unsigned long GetTracker();
+
+	// IFrameMaster:
+	void I_SamplerConnect( ISampleMaster* interfaceSampleMaster );
+
+	bool I_CreateFrame(FrameId_t &getFrameId);
+	bool I_NewSample(FrameId_t frameid, float frame_time, SampleId_t sampleId); 
+	bool I_FinishFrame(FrameId_t frameid, float time_end);
+
+private:
+	struct Frame_s
+	{
+		float fWhitePoint[3];
+		unsigned long id;
+		float *pfdata;
+		SampleId_t	oldsample;
+		float oldtime;
+		unsigned long layers;
+	};
+
+	struct Setting_s
+	{
+		int iWidth;
+		int iHeight;
+		SampleMethod_e sampleMethod;
+		ColorMethod_e colorMethod;
+		FrameFunction_e frameFunction;
+		OnPrintFrame_t OnPrintFrame;
+		void * OnPrintFrame_this;
+	} m_setting;
+
+	ISampleMaster* m_interfaceSampleMaster;
+
+	unsigned long m_frames;
+	
+	void Accum( Frame_s *pframe, bool bTwoPoint, float frame_time, SampleId_t sampleId );
+	
+	void PrintAccu( Frame_s *pframe, float time_end );
+
+	unsigned long m_tracker;
 
 };
 
@@ -150,10 +244,10 @@ mirv_sample colorhandling
 rgb | avg_rgb | luma_srgb
 
 mirv_sample method
-int_const | int_linear
+int_rectangle, int_trapezoid, 
 
 
-1. Sample weight function: const, avg, srgb_luma
+1. Sample weight function: rgb, avg_rgb, srgb_luma
 2. Frame weight function:
    - defined from [0,1]
    - values [0,1]

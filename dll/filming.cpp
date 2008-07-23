@@ -15,12 +15,15 @@
 
 #include "filming.h"
 
+#include "sampling.h"
+
 #include "hl_addresses.h" // we want to access addressese (i.e. R_RenderView)
 #include "detours.h" // we want to use Detourapply
 #include "in_defs.h" // PITCH YAW ROLL // HL1 sdk
 
 #include "basecomclient.h" // OnFilmingStart(), OnFilmingStop()
 
+using namespace hlae::sampler;
 
 extern cl_enginefuncs_s *pEngfuncs;
 extern engine_studio_api_s *pEngStudio;
@@ -31,8 +34,8 @@ extern float clamp(float, float, float);
 REGISTER_DEBUGCVAR(depth_bias, "0", 0);
 REGISTER_DEBUGCVAR(depth_scale, "1", 0);
 REGISTER_DEBUGCVAR(gl_force_noztrick, "1", 0);
-//REGISTER_DEBUGCVAR(movie_fpscap, "1", 0);
 REGISTER_DEBUGCVAR(print_pos, "0", 0);
+REGISTER_DEBUGCVAR(print_frame, "0", 0);
 
 REGISTER_CVAR(crop_height, "-1", 0);
 REGISTER_CVAR(crop_yofs, "-1", 0);
@@ -69,6 +72,13 @@ REGISTER_CVAR(movie_swapweapon, "0", 0);
 REGISTER_CVAR(movie_splitstreams, "0", 0);
 REGISTER_CVAR(movie_wireframe, "0", 0);
 REGISTER_CVAR(movie_wireframesize, "1", 0);
+
+REGISTER_CVAR(sample_enable, "0", 0);
+REGISTER_CVAR(sample_sps, "180", 0);
+REGISTER_DEBUGCVAR(sample_smethod, "1", 0);
+REGISTER_DEBUGCVAR(sample_ffunc, "0", 0);
+REGISTER_DEBUGCVAR(sample_colorh, "0", 0);
+REGISTER_DEBUGCVAR(sample_addoverlap, "0", 0);
 
 
 // Our filming singleton
@@ -548,6 +558,8 @@ Filming::Filming()
 	 bRequestingMatteTextUpdate=false;
 
 	 matte_entities_r.bNotEmpty=false; // by default empty
+
+	 m_sampling.bEnable = false; // not enabled by default
 }
 
 Filming::~Filming()
@@ -625,7 +637,10 @@ bool Filming::OnHudEndEvnet()
 }
 
 
-//<< added 
+bool OnPrintFrame(unsigned long id, void *prgbdata, int iWidht, int iHeight)
+{
+	return g_Filming.OnPrintFrame(id,prgbdata, iWidht, iHeight);
+}
 
 void Filming::setScreenSize(GLint w, GLint h)
 {
@@ -635,6 +650,10 @@ void Filming::setScreenSize(GLint w, GLint h)
 
 void Filming::Start()
 {
+	m_frames = 0;
+	m_fps = max(movie_fps->value,1.0f);
+	m_time = 0;
+
 	HlaeBc_OnFilmingStart(); // inform Hlae Server GUI
 	if (_pSupportRender)
 		_pSupportRender->hlaeOnFilmingStart();
@@ -728,21 +747,46 @@ void Filming::Start()
 
 	// indicate sound export if requested:
 	_bExportingSound = !_bSimulate2 && (movie_export_sound->value!=0.0f);
+
+	
+	// start up sampling system:
+	m_sampling.bEnable = 1 == sample_enable->value && 0 == movie_splitstreams->value && 0 == movie_depthdump->value && 0 == movie_separate_hud->value;
+	if( m_sampling.bEnable )
+	{
+		m_fps = max(sample_sps->value,1.0f);
+		m_sampling.out_fps = max(movie_fps->value,1.0f);
+
+		float overlap=sample_addoverlap->value;
+		if( 0!= sample_ffunc->value ) overlap += 0.5; // Gauss active, overlap a bit
+
+		m_sampling.bgrsampler = new BGRSampler(
+			m_iWidth,
+			m_iHeight,
+			0 == sample_smethod->value ? BGRSampler::SM_INT_RECTANGLE : BGRSampler::SM_INT_TRAPEZOID,
+			0 == sample_colorh->value ? BGRSampler::CM_RGB : (1 == sample_colorh->value ? BGRSampler::CM_AVERAGE : BGRSampler::CM_SRGB_LUMA),
+			0 == sample_ffunc->value ? BGRSampler::FF_RECTANGLE : BGRSampler::FF_GAUSS,
+			&::OnPrintFrame
+		);
+		m_sampling.samplemaster = new CSampleMaster();
+		m_sampling.samplemaster->BeginSampling(
+			m_sampling.bgrsampler,
+			m_time,
+			m_sampling.out_fps,
+			-overlap,
+			+overlap
+		);
+	}
 }
 
 void Filming::Stop()
 {
 	if (_pSupportRender)
 		_pSupportRender->hlaeOnFilmingStop();
+
 	HlaeBc_OnFilmingStop(); // inform Hlae Server GUI
 
 	if (_bCamMotion) MotionFile_End();
 	
-	m_nFrames = 0;
-	m_iFilmingState = FS_INACTIVE;
-	m_nTakes++;
-	_HudRqState=HUDRQ_NORMAL;
-
 	// stop sound system if exporting sound:
 	if (_bExportingSound)
 	{
@@ -750,12 +794,69 @@ void Filming::Stop()
 		_bExportingSound = false;
 	}
 
+	// shutdown sampling system if it was enabled:
+	if( m_sampling.bEnable )
+	{
+		pEngfuncs->Con_DPrintf("pre-finshed trackers:\n\tsamplemaster: %i\n\tframemaster: %i\n",m_sampling.samplemaster->GetTracker(),m_sampling.bgrsampler->GetTracker());
+		m_sampling.samplemaster->EndSampling(m_time);
+
+		// Output trackers as debug console text:
+		pEngfuncs->Con_DPrintf("finshed trackers (take #%i):\n\tsamplemaster: %i\n\tframemaster: %i\n",m_nTakes,m_sampling.samplemaster->GetTracker(),m_sampling.bgrsampler->GetTracker());
+
+		delete m_sampling.samplemaster;
+		delete m_sampling.bgrsampler;
+
+		m_sampling.bEnable = false;
+	}
+
+	m_nFrames = 0;
+	m_iFilmingState = FS_INACTIVE;
+	m_nTakes++;
+	_HudRqState=HUDRQ_NORMAL;
+
 	// Need to reset this otherwise everything will run crazy fast
 	pEngfuncs->Cvar_SetValue("host_framerate", 0);
 }
 
+bool Filming::OnPrintFrame(unsigned long id, void *prgbdata, int iWidht, int iHeight)
+{
+	// only supports BGR data atm!:
+	char cDepth = 2;
+	int nBits = 3;
+
+	const char *pszFileTag = "samp";
+	char* pszStereotag="";
+
+	char szFilename[196];
+	_snprintf(szFilename, sizeof(szFilename) - 1, "%s_%02d_%s%s_%05d.tga", m_szFilename, m_nTakes, pszFileTag, pszStereotag, id);
+
+	unsigned char szTgaheader[12] = { 0, 0, cDepth, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+	unsigned char szHeader[6] = { (int) (iWidht % 256), (int) (iWidht / 256), (int) (iHeight % 256), (int) (iHeight / 256), 8 * nBits, 0 };
+
+	FILE *pImage;
+
+	if ((pImage = fopen(szFilename, "wb")) != NULL)
+	{
+		fwrite(szTgaheader, sizeof(unsigned char), 12, pImage);
+		fwrite(szHeader, sizeof(unsigned char), 6, pImage);
+
+		fwrite(prgbdata, sizeof(unsigned char), iWidht * iHeight * nBits, pImage);
+
+		fclose(pImage);
+	}
+
+	return true;
+}
+
 void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
 {
+	if(print_frame->value)
+	{
+		char stmp[7+33]="Frame: 01234567890123456789012345678901";
+		itoa(m_nFrames,stmp+7,10);
+		pEngfuncs->pfnCenterPrint(stmp);
+	}
+
 	char cDepth = (iBuffer == COLOR ? 2 : 3); //? problem if depth caputre and bits >8?
 	int iMovieBitDepth = (int)(movie_depthdump->value);
 
@@ -836,7 +937,15 @@ void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
 		}
 	}
 
-	if ((pImage = fopen(szFilename, "wb")) != NULL)
+	if( m_iMatteStage==MS_ALL && iBuffer == COLOR && m_sampling.bEnable )
+	{
+		m_sampling.samplemaster->Sample(
+			m_time,
+			m_GlRawPic.GetPointer(),
+			 m_iWidth * m_iCropHeight * nBits
+		);
+	}
+	else if ((pImage = fopen(szFilename, "wb")) != NULL)
 	{
 		fwrite(szTgaheader, sizeof(unsigned char), 12, pImage);
 		fwrite(szHeader, sizeof(unsigned char), 6, pImage);
@@ -1017,8 +1126,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 		return true;
 	}
 
-	float flTime = 1.0f / max(movie_fps->value, 1.0f);
-	// if (movie_fpscap->value) flTime =  max(flTime, MIN_FRAME_DURATION);
+	float flTime = ((m_frames+1)/m_fps)-(m_frames/m_fps); // pay attention when changing s.th. here because of handling of precision errors!
 
 	static char *pszTitles[] = { "all", "world", "entity" };
 	static char *pszDepthTitles[] = { "depthall", "depthworld", "depthall" };
@@ -1087,6 +1195,8 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 
 	} while (_stereo_state!=STS_LEFT);
 
+	// update time past the frame time:
+	m_time += flTime;
 	
 	//
 	// Sound system handling:
@@ -1104,7 +1214,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 			char szFilename[196];
 			_snprintf(szFilename, sizeof(szFilename) - 1, "%s_%02d_sound.wav", m_szFilename, m_nTakes);
 
-			_bExportingSound = _FilmSound.Start(szFilename,flTime,movie_sound_volume->value);
+			_bExportingSound = _FilmSound.Start(szFilename,m_time,movie_sound_volume->value);
 			// the soundsystem will get deactivated here, if it fails
 			//pEngfuncs->Con_Printf("sound t: %f\n",flTime);
 
@@ -1113,26 +1223,12 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 		} else {
 			// advancing frame, update sound system
 
-			// calculate desired target time while keeping the rerrors low:
-			unsigned long ulUsedFps = (unsigned long)max(movie_fps->value,1.0f);
-			
-			// if (movie_fpscap->value && (ulUsedFps > (unsigned long)(1.0f/MIN_FRAME_DURATION)))
-			// 	ulUsedFps = (unsigned long)(1.0f/MIN_FRAME_DURATION);
-
-			// this relays on movie_fps staying constant during recording btw!
-
-			// calculate absoulute time we are already recording while keeping rounding errors low:
-			unsigned long ulSecsPassed = (m_nFrames+1) / ulUsedFps;
-			unsigned long ulSubFrames = (m_nFrames+1) % ulUsedFps; // number of residuing frames that are less than those for a second
-			float flAsumedTime = (float)ulSecsPassed + flTime*ulSubFrames;
-
-			//pEngfuncs->Con_Printf("sound t: %f\n",flAsumedTime);
-
-			_FilmSound.AdvanceFrame(flAsumedTime);
+			_FilmSound.AdvanceFrame(m_time);
 		}
 	}
 
 	m_nFrames++;
+	m_frames = m_nFrames;
 	
 	float flNextFrameDuration = flTime;
 	pEngfuncs->Cvar_SetValue("host_framerate", flNextFrameDuration);
@@ -1240,7 +1336,7 @@ void Filming::_MotionFile_BeginContent(FILE *pFile,char *pAdditonalTag,long &ulT
 	ulTPos = ftell(pFile);
 	fputs("Frames: 0123456789A\n",pFile);
 
-	float flTime = 1.0f / max(movie_fps->value, 1.0f);
+	float flTime = 1.0f / m_fps;
 	//if (movie_fpscap->value) flTime = max(flTime, MIN_FRAME_DURATION);
 	_snprintf(szTmp, sizeof(szTmp) - 1,"Frame Time: %f\n",flTime);
 	fputs(szTmp,pFile);

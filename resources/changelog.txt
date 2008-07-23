@@ -1,8 +1,13 @@
-HLAE x.x.x.x
+HLAE 2.0.1.8
 
 * removed __mirv_movie_fpscap - fps are not capped anymore by default, users
   may now set as they want or till the program blows up or causes a division
   by zero error :)
+  
+* matte system changes:
+  The matte system has undergone slight internal changes in oder to prepare
+  planned features and also to fix the annoyances / problems of the
+  previous implementations
 
 
 HLAE 2.0.1.7

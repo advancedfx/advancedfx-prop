@@ -15,8 +15,12 @@ Description : see mdt_gltools.h
 #include "supportrender.h" // for switching rendering target (important for recording)
 #include "mdt_media.h" // We Mant RAWGLPICS and other media interfaces
 #include "film_sound.h"
+#include "sampling.h"
 
 #include <list>
+
+using namespace hlae::sampler;
+
 
 //#include "eiface_mdt.h"
 
@@ -116,6 +120,19 @@ private:
 
 	bool _InMatteEntities(int iid);
 
+	struct Sampling_s
+	{
+		bool bEnable;
+		float out_fps;
+		BGRSampler *bgrsampler;
+		CSampleMaster *samplemaster;
+	} m_sampling;
+
+	// framing system:
+	float m_fps;
+	unsigned long m_frames;
+	float m_time;
+
 public:
 	Filming();
 	~Filming();
@@ -193,6 +210,10 @@ public:
 
 	void SetCameraOfs(float right, float up, float forward); // you can set an static cameraofs here, however during stereomode it should be 0
 	void SetStereoOfs(float left_and_rightofs); // will be used in stereo mode to displace the camera left and right, suggested values are between 1.0 - 1.4, value should be positive, otherewise you would switch left and right cam
+
+
+	bool OnPrintFrame(unsigned long id, void *prgbdata, int iWidht, int iHeight);
+
 };
 
 #endif
