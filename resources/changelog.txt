@@ -1,3 +1,54 @@
+HLAE 2.0.2.0
+
+Thanks to Martin Vaissie for beta testing.
+
+There was no time for spell checking this changelog entry, sorry.
+
+* Added EXPERIMENTAL sampling system (main image stream only)
+  A short description is appended bellow, a more extended description
+  can be found in the HLAE Wiki (not finished yet) in Manual named
+  'Sampling System' soon.
+
+The sampling system only works when no additional image streams
+  are enabled. (At least for now)
+
+mirv_movie_fps
+  determines the fps outputted (default 30)
+
+mirv_sample_enable
+  0: disabled (default)
+  1: enable test sampling system
+
+mirv_sammple_sps
+  Samples Per Second, this is the FPS the game
+  will be captured at (default 180)
+
+__mirv_sample_smethod
+  Integral approximation method
+  0: 1 point (rectangle)
+  1: 2 point (trapezoid) (default)
+
+__mirv_sample_ffunc
+  FrameFunction, rates the signifcance of a sample based on
+  when in relation to the middle of the frame it comes in
+  0: const / rectangle (default)
+  1: gauss like (lineary interpolated table with 2*128 entries)
+
+__mirv_sample_colorh
+  0: RedGreenBlue are handled independant (default)
+  1: RGB are equally scaled by their average (not sure why I added this)
+  2: RGB are equally scaled by their sRGB Luma value (not sure why I added this)
+
+__mirv_sample_addoverlap
+  Additionally overlaps the frames.
+  Actually this makes sense for the gauss frame function only
+  in my opinion (you might want to add 1-2 additionally here for gauss),
+
+  
+Greetz:
+  Martin Vaissie
+
+
 HLAE 2.0.1.8
 
 * removed __mirv_movie_fpscap - fps are not capped anymore by default, users

@@ -757,7 +757,7 @@ void Filming::Start()
 		m_sampling.out_fps = max(movie_fps->value,1.0f);
 
 		float overlap=sample_addoverlap->value;
-		if( 0!= sample_ffunc->value ) overlap += 0.5; // Gauss active, overlap a bit
+		// don't add if( 0!= sample_ffunc->value ) overlap += 0.5; // Gauss active, overlap a bit
 
 		m_sampling.bgrsampler = new BGRSampler(
 			m_iWidth,
