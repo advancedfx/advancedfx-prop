@@ -124,6 +124,8 @@ bool CSampleMaster::BeginSampling(
 	m_SamplerState = SS_SAMPLING;
 
 	interfaceFrameMaster->I_SamplerConnect( this );
+
+	return true;
 }
 
 bool CSampleMaster::Sample( float time, const void *pData, unsigned long cbDataSize )
@@ -420,13 +422,19 @@ bool BGRSampler::I_FinishFrame(FrameId_t frameid, float time_end)
 {
 	Frame_s* pframe=((Frame_s *)frameid);
 
-	if( (SM_INT_TRAPEZOID == m_setting.sampleMethod) && ( 1 == pframe->layers ) )
+	if( (SM_INT_TRAPEZOID == m_setting.sampleMethod) && ( 1 <= pframe->layers ) )
 	{
-		// accumulate a single lingering sample that has not been interpolated
-		// yet due to lack of a previous smaple
-		Accum(pframe,false,pframe->oldtime,pframe->oldsample);
+		if( 1 == pframe->layers )
+		{
+			// accumulate a single lingering sample that has not been interpolated
+			// yet due to lack of a previous smaple
+			Accum(pframe,false,pframe->oldtime,pframe->oldsample);
+		}
+
+		// Free sample memory:
 		m_interfaceSampleMaster->I_ReleaseSample(pframe->oldsample);
 	}
+
 	PrintAccu(pframe, time_end);
 
 	delete pframe->pfdata;
