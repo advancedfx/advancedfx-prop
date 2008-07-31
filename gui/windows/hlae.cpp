@@ -90,8 +90,8 @@ hlaeMainWindow::hlaeMainWindow()
 	CreateStatusBar();
     GetStatusBar()->SetStatusText(_T("Ready"));
 
-	g_layoutmanager.AddPane(new hlaeConsoleWindow(this),
-		wxAuiPaneInfo().Bottom().MinSize(wxSize(-1,100)));
+//	g_layoutmanager.AddPane(new hlaeConsoleWindow(this),
+//		wxAuiPaneInfo().Bottom().MinSize(wxSize(-1,100)));
 
 	g_layoutmanager.AddLayout(_T("Default"),true);
 

@@ -394,6 +394,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\screenfade.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\supportrender.cpp"
 					>
 				</File>

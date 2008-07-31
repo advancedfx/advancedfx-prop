@@ -1,3 +1,15 @@
+HLAE 2.0.2.1
+
+* improved dem_forcehltv 1 fix behaviour: the player that recorded the
+  in-eye demo may also now be seen from other's in-eye as users would
+  expect from the fix
+
+* fixed typo / bug that would waste rendering time and might enable depth
+  comparision in unwanted situations
+  
+* removed unused output panel in old public gui
+
+
 HLAE 2.0.2.0
 
 Thanks to Martin Vaissie for beta testing.

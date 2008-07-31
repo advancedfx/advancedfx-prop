@@ -86,7 +86,7 @@ HL_ADDR_ENTRY(SZ_unkInlineClientColorA,"0x0")
 HL_ADDR_ENTRY(unkInlineClientColorV,"0x0")
 HL_ADDR_ENTRY(SZ_unkInlineClientColorV,"0x0")
 
-
+HL_ADDR_ENTRY(DTOURSZ_cl_enginefuncs_pfnScreenFade,"0x0")
 
 ///////////////////////////////////////////////////////////////////////////////
 // cHLAddresses

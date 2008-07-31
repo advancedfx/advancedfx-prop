@@ -305,11 +305,16 @@ REGISTER_DEBUGCMD_FUNC(debug_cmdaddress)
 
 void DrawActivePlayers()
 {
+	bool bNotInEye = ppmove->iuser1 != 4;
+	int iwatched = ppmove->iuser2;
+
 	for (int i = 0; i <= pEngfuncs->GetMaxClients(); i++)
 	{
 		cl_entity_t *e = pEngfuncs->GetEntityByIndex(i);
 
-		if (e && e->player && e->model && !(e->curstate.effects & EF_NODRAW))
+		if(!e) continue;
+
+		if (e && e->player && e->model && !(e->curstate.effects & EF_NODRAW) && (bNotInEye || e->index != iwatched))
 		{
 			float flDeltaTime = fabs(pEngfuncs->GetClientTime() - e->curstate.msg_time);
 
@@ -401,7 +406,7 @@ void APIENTRY my_glBegin(GLenum mode)
 	{
 		if (movie_oldmatte->value==1.0f)
 			glColorMask(FALSE, FALSE, FALSE, TRUE); // this is illegal, since you can't asume a specific drawing order of polygons
-		else if(Filming::MS_ENTITY == g_Filming.GetMatteStage());
+		else if(Filming::MS_ENTITY == g_Filming.GetMatteStage())
 		{
 			g_glBegin_saved.restore = true;
 			glGetBooleanv(GL_DEPTH_TEST,&(g_glBegin_saved.b_GL_DEPTH_TEST));
@@ -562,11 +567,8 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 		// Make sure we can see the local player if dem_forcehltv is on
 		// dem_forcehtlv is not a cvar, so don't bother checking
 		// however mdt tries to keep track a bit of dem_forcehltv
-		if (fixforcehltv->value != 0.0f && pEngfuncs->IsSpectateOnly() && ppmove->iuser1 != 4)
-		{
-			// doesn't work yet: DrawMySelf_InForceHltv();
+		if ( fixforcehltv->value != 0.0f && pEngfuncs->IsSpectateOnly() )
 			DrawActivePlayers();
-		}
 
 		// Always get rid of auto_director
 		if (disableautodirector->value != 0.0f)
