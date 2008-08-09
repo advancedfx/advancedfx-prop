@@ -1,3 +1,14 @@
+HLAE 2.0.2.2
+
+* added mirv_disable_specmenu 0|1
+  Supported modifications: ag, tfc, ns, valve(Half-Life)
+  The mods cstrike and dod are not supported since they don't use the old
+  specmenu and i.e. for cstrike the specmenu can be hidden by modifiying a
+  .res file (see various game movie making sites for more info).
+
+* removed mirv_tfc_specmenu command which is replaced by mirv_disable_specmenu
+
+
 HLAE 2.0.2.1
 
 * improved dem_forcehltv 1 fix behaviour: the player that recorded the

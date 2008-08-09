@@ -77,7 +77,10 @@ HL_ADDR_ENTRY(msg_readcount,"0x0")
 HL_ADDR_ENTRY(CL_ParseServerMessage_CmdRead,"0x0")
 HL_ADDR_ENTRY(DTOURSZ_CL_ParseServerMessage_CmdRead,"0x0")
 
+HL_ADDR_ENTRY(UpdateSpectatorPanel_checkjmp_ag_clofs,"0x0")
 HL_ADDR_ENTRY(UpdateSpectatorPanel_checkjmp_tfc,"0x0")
+HL_ADDR_ENTRY(UpdateSpectatorPanel_checkjmp_ns_clofs,"0x0")
+HL_ADDR_ENTRY(UpdateSpectatorPanel_checkjmp_valve,"0x0")
 
 HL_ADDR_ENTRY(GetClientColor,"0x0")
 HL_ADDR_ENTRY(DTOURSZ_GetClientColor,"0x0")

@@ -171,16 +171,45 @@ void TeamFortressViewport::UpdateSpectatorPanel()
 
 */
 
-REGISTER_CMD_FUNC(tfc_specmenu)
+REGISTER_CMD_FUNC(disable_specmenu)
 {
-	if (pEngfuncs->Cmd_Argc() == 2)
+	const char *gamedir = pEngfuncs->pfnGetGameDirectory();
+	unsigned short *usCheck = NULL;
+
+	if( !strcmp("ag",gamedir) )
+	{
+		usCheck = (unsigned short *)((unsigned char *)(GetModuleHandle("client.dll")) + HL_ADDR_UpdateSpectatorPanel_checkjmp_ag_clofs);
+	}
+	else if( !strcmp("tfc",gamedir) )
+	{
+		usCheck = (unsigned short *) HL_ADDR_UpdateSpectatorPanel_checkjmp_tfc;
+	}
+	else if( !strcmp("ns",gamedir) )
+	{
+		usCheck = (unsigned short *)((unsigned char *)(GetModuleHandle("client.dll")) + HL_ADDR_UpdateSpectatorPanel_checkjmp_ns_clofs);
+	}
+	else if( !strcmp("valve",gamedir) )
+	{
+		usCheck = (unsigned short *) HL_ADDR_UpdateSpectatorPanel_checkjmp_valve;
+	}
+
+	pEngfuncs->Con_DPrintf("0x%08x\n",usCheck);
+
+	if (!usCheck)
+	{
+		pEngfuncs->Con_Printf(
+			"Sorry, your mod (%s) is not supported for this command.\n"
+			"May be you can remove the spec menu by modifing a .res file like for cstrike?\n",
+			gamedir
+		);
+	}
+	else if (pEngfuncs->Cmd_Argc() == 2)
 	{
 		int iOn = atoi(pEngfuncs->Cmd_Argv(1));
 
 		DWORD dwProt;
-		unsigned short *usCheck = (unsigned short *) HL_ADDR_UpdateSpectatorPanel_checkjmp_tfc;
 		VirtualProtect(usCheck, 2, PAGE_READWRITE, &dwProt);
-		if (iOn)
+		if (!iOn)
 		{
 			*usCheck = 0x840f; // original JE code
 		}
@@ -193,4 +222,5 @@ REGISTER_CMD_FUNC(tfc_specmenu)
 	}
 	else
 		pEngfuncs->Con_Printf("Usage: " PREFIX "tfc_specmenu 0 (disable) / 1 (enable)\n");
+
 }
