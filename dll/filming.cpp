@@ -1155,14 +1155,14 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 		{
 			if (!_bSimulate) Capture(pszTitles[m_iMatteStage], m_nFrames, COLOR);
 			if (bDepthDumps && !_bSimulate2) Capture(pszDepthTitles[m_iMatteStage], m_nFrames, DEPTH);
+
+			if (_pSupportRender) 
+				*bSwapRes = _pSupportRender->hlaeSwapBuffers(hSwapHDC);
+			else
+				*bSwapRes=SwapBuffers(hSwapHDC);
+
+			if (_bSimulate && movie_simulate_delay->value > 0) Sleep((DWORD)movie_simulate_delay->value);
 		}
-
-		if (_pSupportRender)
-			*bSwapRes = _pSupportRender->hlaeSwapBuffers(hSwapHDC);
-		else
-			*bSwapRes=SwapBuffers(hSwapHDC);
-
-		if (_bSimulate && movie_simulate_delay->value > 0) Sleep((DWORD)movie_simulate_delay->value);
 
 		if( movie_splitstreams->value >= 2)
 		{

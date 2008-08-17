@@ -34,7 +34,6 @@
 
 #include "supportrender.h" // off-screen recording support
 
-#include "mdt_gltools.h" // we want g_Mdt_GlTools for having tools to force Buffers and Stuff like that
 #include "dd_hook.h" // we have to call functions (inGetProcAddress) from here in order to init the hook
 #include "dsound_hook.h"
 
@@ -162,54 +161,6 @@ REGISTER_DEBUGCMD_FUNC(info)
 	pEngfuncs->Con_Printf("GL_VERSION: %s\n",glGetString(GL_VERSION));
 	pEngfuncs->Con_Printf("GL_EXTENSIONS: %s\n",glGetString(GL_EXTENSIONS));
 	pEngfuncs->Con_Printf("<<<< <<<< <<<< <<<<\n");
-}
-
-REGISTER_DEBUGCMD_FUNC(forcebuffers)
-{
-	const char* cBType_AppDecides = "APP_DECIDES";
-	
-	if (pEngfuncs->Cmd_Argc() != 3)
-	{
-		// user didn't supply 2 arguments, so give him some info about the command:
-		pEngfuncs->Con_Printf("Useage: " DEBUG_PREFIX "forcebuffers <readbuffer_type> <drawbuffer_type\n");
-
-		const char* cCurReadBuf = cBType_AppDecides; // when forcing is off that means the app decides
-		const char* cCurDrawBuf = cBType_AppDecides; // .
-
-		if (g_Mdt_GlTools.m_bForceReadBuff) cCurReadBuf = g_Mdt_GlTools.GetReadBufferStr();
-		if (g_Mdt_GlTools.m_bForceDrawBuff) cCurDrawBuf = g_Mdt_GlTools.GetDrawBufferStr();
-
-		pEngfuncs->Con_Printf("Current: " DEBUG_PREFIX "forcebuffers %s %s\n",cCurReadBuf,cCurDrawBuf);
-		pEngfuncs->Con_Printf("Available Types: %s",cBType_AppDecides); // also add APP_DECIDES
-
-		for (int i=0;i<SIZE_Mdt_GlTools_GlBuffs;i++)
-		{
-			const char* cBuffType=cMdt_GlTools_GlBuffStrings[i];
-			pEngfuncs->Con_Printf(", %s",cBuffType); // is not first so add comma
-
-		}
-
-		pEngfuncs->Con_Printf("\n");
-	} else {
-		// user supplied 2 argument's try to set it
-
-		const char* cReadBuffStr = pEngfuncs->Cmd_Argv(1);
-		const char* cDrawBuffStr = pEngfuncs->Cmd_Argv(2);
-
-		// the following code checks for each buffer if the user wants either let app decide (then it turns force off) or if he wants to set a specific type (on success it turns force on and otherwise prints an error):
-		// ReadBuffer (for reading color buffers from GL):
-		if (!stricmp(cBType_AppDecides,cReadBuffStr)) g_Mdt_GlTools.m_bForceReadBuff=false;
-		else if (g_Mdt_GlTools.SetReadBufferFromStr(cReadBuffStr))  g_Mdt_GlTools.m_bForceReadBuff=true;
-		else pEngfuncs->Con_Printf("Error: Failed to set ReadBuffer, supplied buffer type not valid.\n");
-		// DrawBuffer (for definig the target GL color buffer for pixel writing functions etc.):
-		if (!stricmp(cBType_AppDecides,cDrawBuffStr)) g_Mdt_GlTools.m_bForceDrawBuff=false;
-		else if (g_Mdt_GlTools.SetDrawBufferFromStr(cDrawBuffStr))  g_Mdt_GlTools.m_bForceDrawBuff=true;
-		else pEngfuncs->Con_Printf("Error: Failed to set DrawBuffer, supplied buffer type not valid.\n");
-	}
-
-
-
-	return;
 }
 
 REGISTER_DEBUGCVAR(deltatime, "1.0", 0);
@@ -703,14 +654,6 @@ BOOL APIENTRY my_wglSwapBuffers(HDC hDC)
 	{
 		// we are filming, force buffers and capture our image:
 		
-		// save current buffers:
-		g_Mdt_GlTools.SaveDrawBuffer();
-		g_Mdt_GlTools.SaveReadBuffer();
-
-		// force selected buffers(if any):
-		g_Mdt_GlTools.AdjustReadBuffer();
-		g_Mdt_GlTools.AdjustDrawBuffer();
-		
 		// record the selected buffer (capture):
 		bRecordSwapped = g_Filming.recordBuffers(hDC,&bResWglSwapBuffers);
 	}
@@ -732,10 +675,6 @@ BOOL APIENTRY my_wglSwapBuffers(HDC hDC)
 
 		// carry out preparerations on the backbuffer for the next frame:
 		g_Filming.clearBuffers();
-
-		// restore saved buffers:
-		g_Mdt_GlTools.AdjustDrawBuffer(g_Mdt_GlTools.m_iSavedDrawBuff,false);
-		g_Mdt_GlTools.AdjustReadBuffer(g_Mdt_GlTools.m_iSavedReadBuff,false);
 	}
 
 	return bResWglSwapBuffers;

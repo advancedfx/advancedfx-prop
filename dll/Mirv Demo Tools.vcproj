@@ -274,10 +274,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mdt_gltools.h"
-					>
-				</File>
-				<File
 					RelativePath=".\mdt_media.h"
 					>
 				</File>
@@ -375,10 +371,6 @@
 				</File>
 				<File
 					RelativePath=".\main.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\mdt_gltools.cpp"
 					>
 				</File>
 				<File

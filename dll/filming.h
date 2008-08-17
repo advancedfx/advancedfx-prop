@@ -87,8 +87,6 @@ private:
 	// On the other hand we might have triggered a new frame our self by doing an manual call to R_RenderView, in that case _bRecordBuffers_FirstCall is false!!
 	// The second case usually can only happen when we have the R_RenderView hook and therefore the code connected to it enabled (which is the defualt).
 
-	void _old_recordBuffers(); // unused
-
 	HUD_REQUEST_STATE _HudRqState;
 
 	struct _cammotion_s
