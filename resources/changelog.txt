@@ -1,3 +1,24 @@
+HLAE 2.0.3.0
+
+* Added ability to block screen blends: mirv_fx_noblend 1
+  This will i.e. block Counter-Strike 1.6 flash grenades.
+
+* appended historical changelogs to the changelog
+
+CU in November or somewhen.
+Thx to 'juggaknot' for having helped moderating the forum a bit.
+PS: MIRVIN_Monkey rulz!
+
+
+HLAE 2.0.2.3
+
+* removed coded that was probably never used in practical operation
+  that would support reading from other buffers than GL_BACK
+  
+* when splitstreams is 2 the world frame that still gets rendered for
+  technical reasons is not displayed anymore to avoid user confusion
+
+
 HLAE 2.0.2.2
 
 * added mirv_disable_specmenu 0|1
@@ -710,3 +731,104 @@ are not solved yet and remain the same as in previous versions.
 1.0.57.0 DLL
 
 - This is where this changelog starts.
+
+
+---- historical changelogs appended bellow ----
+
+
+30-05-07 - v1.0 (1.0.57.0)
+
+Fixed: MDT has had a pretty big rewrite and so a lot of bugs are now fixed. If
+       you've ever had problems with matte, splitstreams, zooming, or anything
+       else then give these another try.
+
+Added: A new loader! The old one is still available here:
+       http://www.madabouthats.org/downloads/mdt-old-loader.zip
+       Please email me if you have trouble with the new one.
+
+Added: mirv_fixforcehltv 0|1 cvar.
+       This fixes the fact that if you watch one of your own demos with
+       dem_forcehltv 1 (which lets you watch it as if its a hltv demo) you
+       can't see your own player. Now you can, hurray.
+
+Added: mirv_movie_wireframe 0|1|2|3 cvar.
+       mirv_movie_wireframelength n
+       Lets you draw the world (1), entities (2) or everything (3) in retro
+       wireframes.
+
+Changed: Depth dumping now dumps separate world and entity dumps if you are
+         using splitstreams.
+
+Changed: mirv_matte_setcolor r g b
+         Now takes values from 0 to 100.
+
+Changed: mirv_zoom_max n
+         This has now become: mirv_zoom_optical n and
+                              mirv_zoom_digital n
+         Both takes values 0 to 100.
+
+Changed: mirv_movie_customdumps
+         This is now ON by default.
+
+Changed: mirv_movie_clearscreen
+         This is now OFF by default
+
+         
+24-05-07 - v0.44
+Added: mirv_fixforcehltv - draws your player model when dem_forcehltv is enabled with
+       viewdemo. Now you can have hltv-style shots from your very own first person demos!
+Change: Various improvements under the hood
+Fixed: Viewport getting out of sync
+
+21-05-07 - v0.43
+Change: Removed the singleplayer-only cvar fix since it broke some demos.
+
+17-05-07 - v0.42
+Added: Allowed singleplayer-only cvars to work while playing demos
+       (e.g. gl_wireframe, gl_drawentities, etc)
+Fixed: Some buffer overflows
+
+19-04-07 - v0.41
+Added: mirv_disableautodirector - set this to 1 if autospectator keeps stealing control from you.
+       This was on by default in previous mirvs, now you'll need to set it explicitly.
+Added: mirv_demoedit_fix tfc - use this command to fix the demoedit interface in TFC - thanks to ripieces
+       for his involvement with this
+         
+14-03-07 - v0.37
+Updated offsets. Still not got round to storing them in external file.
+Have also un-UPX packed the loader, hopefully this will fix the false virus alarms.
+
+30-10-06 - v0.36
+Updated offsets. I should store them in an external file to save having to recompile each time, really.
+
+14-07-06 - v0.35
+Added mirv_movie_fps for custom dump movies
+Added mirv_movie_clearscreen to disable HUD removal
+
+19-03-06 - v0.34
+Updated offsets, yarrrr
+
+17-01-06 - v0.33
+Updated offsets
+
+05-12-05 - v0.32
+Updated offsets
+
+26-11-05 - v0.31
+Updated offsets
+
+24-09-05 - v0.3
+Fixed issue with aiming with multiple entities
+Fixed issue with swapweapon breaking
+
+24-09-05 - v0.26
+Updated offsets, updated SDK version
+
+30-08-05 - v0.25
+Added zooming (see instructions below)
+
+17-08-05 - v0.21
+Updated offsets
+
+11-06-05 - v0.2
+Updated offsets
