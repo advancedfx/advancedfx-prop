@@ -103,6 +103,17 @@ REGISTER_DEBUGCVAR(movie_oldmatte, "0", 0);
 // Commands
 //
 
+// i.e. TFC may trigger -toggle in unwanted situations, i.e.
+// when the toggle is bound to any key and the user resumes into the game
+REGISTER_CMD_FUNC_BEGIN(test_togglebug)
+{
+	pEngfuncs->Con_Printf("+toggle / CALLED BEGIN\n");
+}
+REGISTER_CMD_FUNC_END(test_togglebug)
+{
+	pEngfuncs->Con_Printf("-toggle / CALLED END\n");
+}
+
 REGISTER_CMD_FUNC(whereami)
 {
 	float angles[3];
@@ -116,7 +127,7 @@ void PrintDebugPlayerInfo(cl_entity_s *pl,int itrueindex)
 
 	memset(&m_hpinfo,0,sizeof(hud_player_info_t));
 	pEngfuncs->pfnGetPlayerInfo(pl->index,&m_hpinfo);
-	pEngfuncs->Con_Printf("%i (%s): %i, %s, %s, %i, %i, %i, %i, %i, %i\n",pl->index,(pl->curstate.effects & EF_NODRAW) ? "y" : "n",itrueindex,m_hpinfo.name,m_hpinfo.model,m_hpinfo.ping,m_hpinfo.packetloss,m_hpinfo.topcolor,m_hpinfo.bottomcolor,m_hpinfo.spectator,m_hpinfo.thisplayer);
+	pEngfuncs->Con_Printf("%i (%s): %i, %s, %s, %i, %i, %i, %i, %i, %i\n",itrueindex,(pl->curstate.effects & EF_NODRAW) ? "y" : "n",pl->index,m_hpinfo.name,m_hpinfo.model,m_hpinfo.ping,m_hpinfo.packetloss,m_hpinfo.topcolor,m_hpinfo.bottomcolor,m_hpinfo.spectator,m_hpinfo.thisplayer);
 }
 
 REGISTER_DEBUGCMD_FUNC(listplayers)
@@ -680,6 +691,8 @@ BOOL APIENTRY my_wglSwapBuffers(HDC hDC)
 	return bResWglSwapBuffers;
 }
 
+//FILE *f1=NULL;
+
 FARPROC (WINAPI *pGetProcAddress)(HMODULE hModule, LPCSTR lpProcName);
 FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 {
@@ -688,6 +701,11 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 
 	if (HIWORD(lpProcName))
 	{
+		//if( !f1 ) f1=fopen("mdt_log.txt","wb");
+		//fprintf(f1,"%s\n",lpProcName);
+		//fflush(f1);
+
+
 		if (!lstrcmp(lpProcName, "GetProcAddress"))
 			return (FARPROC) &newGetProcAddress;
 
@@ -712,7 +730,7 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 
 		if (!lstrcmp(lpProcName,"DirectDrawCreate"))
 			return Hook_DirectDrawCreate(nResult); // give our hook original address and return new (it remembers the original one from it's first call, it also cares about the commandline options (if to force the res or not and does not install the hook if not needed))
-
+/*
 		if (!lstrcmp(lpProcName, "CreateWindowExA"))
 			return (FARPROC) &HlaeBcClt_CreateWindowExA;
 		if (!lstrcmp(lpProcName, "DestroyWindow"))
@@ -731,15 +749,15 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 			return (FARPROC) &HlaeBcClt_wglMakeCurrent;
 		if (!lstrcmp(lpProcName, "ReleaseDC"))
 			return (FARPROC) &HlaeBcClt_ReleaseDC;
-
-		if (!lstrcmp(lpProcName,"DirectSoundCreate"))
-			return Hook_DirectSoundCreate(nResult);
+*/
+		//if (!lstrcmp(lpProcName,"DirectSoundCreate"))
+		//	return Hook_DirectSoundCreate(nResult);
 
 		//if (!lstrcmp(lpProcName,"DirectInputCreateA"))
 			//return (FARPROC) &my_DirectInputCreateA;
 			// DirectInputCreateA" - imported but never called?
 			// Half-Life uses DirectInputCreateW (uni code) instead
-
+			// (Steam's vgui)
 	}
 
 	return nResult;

@@ -258,7 +258,9 @@ extern unsigned long ulHLAddr_unkInlineClientColorA;
 extern unsigned long ulHLAddr_SZ_unkInlineClientColorA;
 extern unsigned long ulHLAddr_unkInlineClientColorV;
 extern unsigned long ulHLAddr_SZ_unkInlineClientColorV;
-extern unsigned long ulHLAddr_DTOURSZ_cl_enginefuncs_pfnScreenFade;
+extern unsigned long ulHLAddr_R_PolyBlend;
+extern unsigned long ulHLAddr_DTOURSZ_R_PolyBlend;
+
 
 //
 // macros for accessing the header exports (for compabtility with old code):
@@ -320,7 +322,7 @@ extern unsigned long ulHLAddr_DTOURSZ_cl_enginefuncs_pfnScreenFade;
 #define HL_ADDR_unkInlineClientColorV ulHLAddr_unkInlineClientColorV
 #define HL_ADDR_SZ_unkInlineClientColorV ulHLAddr_SZ_unkInlineClientColorV
 
-#define HL_ADDR_DTOURSZ_cl_enginefuncs_pfnScreenFade ulHLAddr_DTOURSZ_cl_enginefuncs_pfnScreenFade
-
+#define HL_ADDR_R_PolyBlend ulHLAddr_R_PolyBlend
+#define HL_ADDR_DTOURSZ_R_PolyBlend ulHLAddr_DTOURSZ_R_PolyBlend
 
 #endif // #ifndef HL_ADDRESSES_H

@@ -8,6 +8,7 @@
 	#include "cl_dll.h"
 	#include "cdll_int.h"
 
+	#include "cvardef.h"
 	#include "cmdregister.h"
 
 	extern cl_enginefuncs_s* pEngfuncs;
@@ -67,6 +68,8 @@ struct
 
 } g_message_stats = {0, 0};
 
+REGISTER_DEBUGCVAR(debug_blockkeys, "0", 0);
+
 LRESULT CALLBACK Hooking_WndProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	// filter window unspecific messages:
@@ -103,6 +106,9 @@ LRESULT CALLBACK Hooking_WndProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 		// if the user clicks on us we want the friggin focus:
 		SetFocus(g_HL_MainWindow);
 		break;
+	case WM_KEYDOWN:
+	case WM_KEYUP:
+		if( debug_blockkeys->value != 0 ) return NULL;
 	}
 
 	return g_HL_WndClassA->lpfnWndProc(hWnd,uMsg,wParam,lParam);
@@ -563,7 +569,7 @@ HWND APIENTRY HlaeBcClt_CreateWindowExA(DWORD dwExStyle,LPCTSTR lpClassName,LPCT
 
 	// modifiy some properities to our needs:
 	dwStyle = WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CHILD;
-	dwExStyle = 0;
+	dwExStyle = WS_EX_NOPARENTNOTIFY;
 	hWndParent = useParent;
 	x = 0;
 	y = 0;
@@ -783,4 +789,13 @@ REGISTER_DEBUGCMD_FUNC(debug_devicecontext)
 REGISTER_DEBUGCMD_FUNC(debug_message_stats)
 {
 	pEngfuncs->Con_Printf("HLAE BaseCom Client (includes failed):\ntx packets: %u\nrx packets: %u\n",g_message_stats.ui_tx_packets,g_message_stats.ui_rx_packets);
+}
+
+REGISTER_DEBUGCMD_FUNC(debug_rehookwnd)
+{
+	if( Hooking_WndProc != (WNDPROC)GetWindowLong( (HWND)g_HL_MainWindow, GWL_WNDPROC ))
+		pEngfuncs->Con_Printf("S.th. hooked us!\n");
+	else
+		pEngfuncs->Con_Printf("We seem to be at top.\n");
+	SetWindowLongPtr( (HWND)g_HL_MainWindow, GWL_WNDPROC, (LONG)Hooking_WndProc );
 }

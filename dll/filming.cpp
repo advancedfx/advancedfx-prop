@@ -477,6 +477,38 @@ void InstallHook_UnkIGAWorld()
 }
 
 //
+//	R_PolyBlend hook (usefull for flashhack etc.)
+//
+
+typedef void (*R_PolyBlend_t) (void);
+R_PolyBlend_t detoured_R_PolyBlend = NULL;
+
+bool g_b_R_PolyBlend_block = false;
+
+void touring_R_PolyBlend (void)
+{
+	if( !g_b_R_PolyBlend_block ) detoured_R_PolyBlend();
+}
+
+void InstallHook_R_PolyBlend()
+{
+	if (!detoured_R_PolyBlend && (HL_ADDR_R_PolyBlend!=NULL))
+			detoured_R_PolyBlend = (R_PolyBlend_t) DetourApply((BYTE *)HL_ADDR_R_PolyBlend, (BYTE *)touring_R_PolyBlend, (int)HL_ADDR_DTOURSZ_R_PolyBlend);
+}
+
+REGISTER_CMD_FUNC(fx_noblend)
+{
+	InstallHook_R_PolyBlend();
+	if( 2 == pEngfuncs->Cmd_Argc() )
+	{
+		int i = atoi(pEngfuncs->Cmd_Argv(1));
+		g_b_R_PolyBlend_block = i == 1;
+	} else {
+		pEngfuncs->Con_Printf("Usage:\n" PREFIX "fx_noblend 0/1 = normal/block blends\n");
+	}
+}
+
+//
 // // // //
 //
 

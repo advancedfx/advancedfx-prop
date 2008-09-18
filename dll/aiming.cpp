@@ -112,6 +112,7 @@ void Aiming::Start()
 
 void Aiming::Stop()
 {
+	pEngfuncs->Con_DPrintf("Stopped aiming!\n");
 	m_bActive = false;
 }
 
@@ -140,7 +141,7 @@ bool Aiming::getValidTarget(Vector &outTarget)
 {
 	cl_entity_t *them = NULL;
 
-	bool bActive, bVisible, bLowerPriority, bFirstEntity = true;
+	bool bLowerPriority, bFirstEntity = true;
 	float vis;
 	int msg;
 
@@ -172,9 +173,6 @@ bool Aiming::getValidTarget(Vector &outTarget)
 		//  When the entity starts failing, we keep returning the last updated
 		//  coords until the linger time runs out, after which we just return false
 		//  and the cameraman can do whatever
-
-		// Reset the state of this entity
-		bActive = bVisible = bLowerPriority = false;
 
 		int i = (*iter);
 
@@ -293,6 +291,7 @@ void Aiming::aim()
 
 		reaim.x = idealaim.x - angles[1];
 		reaim.y = idealaim.y - angles[0];
+		reaim.z = 0;
 
 		// For when angles are on the 359..0 crossover
 		if (reaim.x > 180.0f)
