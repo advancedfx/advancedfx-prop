@@ -29,7 +29,7 @@ CAboutDialog::CAboutDialog(wxWindow* parent)
 	bs_link->Add( st_link, 0, 0, 5 );
 	
 	wxHyperlinkCtrl* hl_link;
-	hl_link = new wxHyperlinkCtrl( this, wxID_ANY, _T("http://www.madabouthats.org/code-mdt/viewforum.php?f=3"), _T("http://www.madabouthats.org/code-mdt/viewforum.php?f=3"), wxDefaultPosition, wxDefaultSize, wxHL_DEFAULT_STYLE );
+	hl_link = new wxHyperlinkCtrl( this, wxID_ANY, _T("http://advancedfx.org/"), _T("http://advancedfx.org/"), wxDefaultPosition, wxDefaultSize, wxHL_DEFAULT_STYLE );
 	
 	hl_link->SetHoverColour( wxColour( 0, 88, 255 ) );
 	hl_link->SetNormalColour( wxColour( 0, 0, 255 ) );

@@ -2,7 +2,7 @@ Dear Half-Life Advanced Effects (HLAE) user,
 
 
 You can retrive the latest HLAE, infos, reports bugs and post suggestions here:
-http://www.madabouthats.org/code-mdt/viewforum.php?f=3
+http://advancedfx.org/
 
 
 Epilepsy warning:

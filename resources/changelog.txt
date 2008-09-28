@@ -1,3 +1,30 @@
+HLAE 2.1.0.0
+
+* fixed potential flaws related to the matte system,
+  thus upgrading is recommended
+
+- removed mirv_movie_oldmatte
+
+* Improved the wallhack / vision xtension.
+  Users should notice complete visibilty of players for HLTV demos
+  when using the wh effect i.e. (the way it was intended to be in the first
+  place :)
+
++ added mirv_fx_xtendvis, default 0
+  Can be used to extend the vision (i.e. usefull for HLTV demos)
+  when mirv_wh_enable is 0, otherwise it will be overriden.
+
++ added mirv_matte_xray, default 0
+  If enabled elements otherwise masked (i.e. walls) will be completely hidden
+  from the entity stream
+  could be usefull in combination with mirv_fx_xtendvis!
+
++ extended mirv_movie_swapweapon: 2 will force it to the entity stream
+  
+Check HLAE's Command Reference in the online manual for more information
+(see http://advancedfx.org/ ).
+
+
 HLAE 2.0.3.0
 
 * Added ability to block screen blends: mirv_fx_noblend 1

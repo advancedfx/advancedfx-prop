@@ -3,6 +3,8 @@
 
 */
 
+#define MIRV_COMPILE_OLDLAUNCHER 0
+
 #include "mdt_debug.h"
 
 #pragma comment(lib,"OpenGL32.lib")
@@ -97,7 +99,6 @@ REGISTER_CVAR(fixforcehltv, "0", 0); // modified by Hook_dem_forcehltv
 REGISTER_CVAR(disableautodirector, "0", 0);
 
 REGISTER_DEBUGCVAR(gl_noclear, "0", 0);
-REGISTER_DEBUGCVAR(movie_oldmatte, "0", 0);
 
 //
 // Commands
@@ -105,11 +106,11 @@ REGISTER_DEBUGCVAR(movie_oldmatte, "0", 0);
 
 // i.e. TFC may trigger -toggle in unwanted situations, i.e.
 // when the toggle is bound to any key and the user resumes into the game
-REGISTER_CMD_FUNC_BEGIN(test_togglebug)
+REGISTER_CMD_FUNC_BEGIN(debug_toggletest)
 {
 	pEngfuncs->Con_Printf("+toggle / CALLED BEGIN\n");
 }
-REGISTER_CMD_FUNC_END(test_togglebug)
+REGISTER_CMD_FUNC_END(debug_toggletest)
 {
 	pEngfuncs->Con_Printf("-toggle / CALLED END\n");
 }
@@ -295,50 +296,8 @@ struct glBegin_saved_s {
 	bool restore;
 	GLboolean b_GL_DEPTH_TEST;
 	GLint i_GL_DEPTH_FUNC;
+	GLboolean b_ColorWriteMask[4];
 } g_glBegin_saved;
-
-/* deprecated ******************************************************************
-struct glBegin_saved_s {
-	bool restore;
-	//GLclampf fColorv [4];
-	GLint i_GL_TEXTURE_ENV_MODE;
-	GLint i_GL_TEXTURE_BINDING_2D;
-
-	// those are accessed idenpendently from restore:
-} g_glBegin_saved;
-
-union my_glMatteTexture_t {
-	struct {
-		GLbyte px1[4];
-		GLbyte px2[4];
-		GLbyte px3[4];
-		GLbyte px4[4];
-	} px;
-	GLbyte data[16];
-} my_glMatteTexture;
-
-GLuint my_tex_dude;
-bool bMatteTextureBound=false;
-
-void doGenMatteTex()
-{
-	my_glMatteTexture.px.px1[0]=255*g_Filming.m_MatteColour[0];
-	my_glMatteTexture.px.px1[1]=255*g_Filming.m_MatteColour[1];
-	my_glMatteTexture.px.px1[2]=255*g_Filming.m_MatteColour[2];
-	my_glMatteTexture.px.px1[3]=255;
-
-	memcpy(my_glMatteTexture.px.px2,my_glMatteTexture.px.px1,4);
-	memcpy(my_glMatteTexture.px.px3,my_glMatteTexture.px.px1,4);
-	memcpy(my_glMatteTexture.px.px4,my_glMatteTexture.px.px1,4);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, my_glMatteTexture.data);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-}
-****************************************************************** deprecated */
 
 void APIENTRY my_glBegin(GLenum mode)
 {
@@ -366,50 +325,17 @@ void APIENTRY my_glBegin(GLenum mode)
 
 	else if (res == Filming::DR_MASK)
 	{
-		if (movie_oldmatte->value==1.0f)
-			glColorMask(FALSE, FALSE, FALSE, TRUE); // this is illegal, since you can't asume a specific drawing order of polygons
-		else if(Filming::MS_ENTITY == g_Filming.GetMatteStage())
+		if(Filming::MS_ENTITY == g_Filming.GetMatteStage())
 		{
 			g_glBegin_saved.restore = true;
 			glGetBooleanv(GL_DEPTH_TEST,&(g_glBegin_saved.b_GL_DEPTH_TEST));
 			glGetIntegerv(GL_DEPTH_FUNC,&(g_glBegin_saved.i_GL_DEPTH_FUNC));
+			glGetBooleanv(GL_COLOR_WRITEMASK, g_glBegin_saved.b_ColorWriteMask);
 
 			glColorMask(FALSE, FALSE, FALSE, TRUE);
-			glEnable(GL_DEPTH_FUNC);
 			glDepthFunc(GL_LEQUAL);
+			glEnable(GL_DEPTH_TEST);
 		}
-/* deprecated ******************************************************************
-		else
-		{
-			// save some old environment properties we will overwrite:
-			glGetIntegerv(GL_TEXTURE_BINDING_2D,&g_glBegin_saved.i_GL_TEXTURE_BINDING_2D);
-			glGetTexEnviv(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,&g_glBegin_saved.i_GL_TEXTURE_ENV_MODE);
-
-			if (!bMatteTextureBound)
-			{
-				glGenTextures(1,&my_tex_dude);
-				glBindTexture(GL_TEXTURE_2D,my_tex_dude);
-
-				doGenMatteTex();
-
-				bMatteTextureBound=true;
-
-			} else {
-				glBindTexture(GL_TEXTURE_2D,my_tex_dude);
-				if (g_Filming.bRequestingMatteTextUpdate)
-				{
-					doGenMatteTex();
-					g_Filming.bRequestingMatteTextUpdate = false;
-				}
-			}
-
-			glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_REPLACE);
-
-			glColorMask(TRUE, TRUE, TRUE, TRUE); // we need it to be drawn
-
-			g_glBegin_saved.restore = true; // we request to restore parts of the environment after glEnd()
-		}
-****************************************************************** deprecated */
 	}
 	else if (!g_Filming.bWantsHudCapture)
 		glColorMask(TRUE, TRUE, TRUE, TRUE); // BlendFunc for additive sprites needs special controll, don't override it
@@ -425,18 +351,10 @@ void APIENTRY my_glEnd(void)
 	{
 		g_glBegin_saved.restore = false;
 		if(!g_glBegin_saved.b_GL_DEPTH_TEST)
-			glDisable(GL_DEPTH_FUNC);
+			glDisable(GL_DEPTH_TEST);
 		glDepthFunc(g_glBegin_saved.i_GL_DEPTH_FUNC);
+		glColorMask(g_glBegin_saved.b_ColorWriteMask[0], g_glBegin_saved.b_ColorWriteMask[1], g_glBegin_saved.b_ColorWriteMask[2], g_glBegin_saved.b_ColorWriteMask[3]);
 	}
-/* deprecated ******************************************************************
-	if (g_glBegin_saved.restore)
-	{
-		// restore old texture mode:
-		glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,g_glBegin_saved.i_GL_TEXTURE_ENV_MODE);
-		glBindTexture(GL_TEXTURE_2D,g_glBegin_saved.i_GL_TEXTURE_BINDING_2D);
-		g_glBegin_saved.restore=false;
-	}
-****************************************************************** deprecated */
 
 	g_Filming.DoWorldFxEnd();
 }
@@ -730,7 +648,8 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 
 		if (!lstrcmp(lpProcName,"DirectDrawCreate"))
 			return Hook_DirectDrawCreate(nResult); // give our hook original address and return new (it remembers the original one from it's first call, it also cares about the commandline options (if to force the res or not and does not install the hook if not needed))
-/*
+
+#if !(MIRV_COMPILE_OLDLAUNCHER)
 		if (!lstrcmp(lpProcName, "CreateWindowExA"))
 			return (FARPROC) &HlaeBcClt_CreateWindowExA;
 		if (!lstrcmp(lpProcName, "DestroyWindow"))
@@ -749,7 +668,8 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 			return (FARPROC) &HlaeBcClt_wglMakeCurrent;
 		if (!lstrcmp(lpProcName, "ReleaseDC"))
 			return (FARPROC) &HlaeBcClt_ReleaseDC;
-*/
+#endif
+
 		//if (!lstrcmp(lpProcName,"DirectSoundCreate"))
 		//	return Hook_DirectSoundCreate(nResult);
 

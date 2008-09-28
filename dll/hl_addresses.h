@@ -225,8 +225,8 @@ extern unsigned long ulHLAddr_HUD_TOURIN;
 extern unsigned long ulHLAddr_HUD_TOUROUT;
 extern unsigned long ulHLAddr_R_RenderView_;
 extern unsigned long ulHLAddr_DTOURSZ_R_RenderView_;
-extern unsigned long ulHLAddr_R_MarkLeaves;
-extern unsigned long ulHLAddr_DTOURSZ_R_MarkLeaves;
+extern unsigned long ulHLAddr_Mod_LeafPVS;
+extern unsigned long ulHLAddr_DTOURSZ_Mod_LeafPVS;
 extern unsigned long ulHLAddr_p_r_refdef;
 extern unsigned long ulHLAddr_HudSpectator_tfc;
 extern unsigned long ulHLAddr_HudSpectator_cmp_tfc;
@@ -278,9 +278,6 @@ extern unsigned long ulHLAddr_DTOURSZ_R_PolyBlend;
 #define HL_ADDR_R_RenderView_ ulHLAddr_R_RenderView_
 #define HL_ADDR_DTOURSZ_R_RenderView_ ulHLAddr_DTOURSZ_R_RenderView_
 
-#define HL_ADDR_R_MarkLeaves ulHLAddr_R_MarkLeaves
-#define HL_ADDR_DTOURSZ_R_MarkLeaves ulHLAddr_DTOURSZ_R_MarkLeaves
-
 #define HL_ADDR_r_refdef ulHLAddr_p_r_refdef
 
 #define HL_ADDR_HUDSPECTATOR_FUNC_TFC ulHLAddr_HudSpectator_tfc
@@ -324,5 +321,8 @@ extern unsigned long ulHLAddr_DTOURSZ_R_PolyBlend;
 
 #define HL_ADDR_R_PolyBlend ulHLAddr_R_PolyBlend
 #define HL_ADDR_DTOURSZ_R_PolyBlend ulHLAddr_DTOURSZ_R_PolyBlend
+
+#define HL_ADDR_Mod_LeafPVS ulHLAddr_Mod_LeafPVS
+#define HL_ADDR_DTOURSZ_Mod_LeafPVS ulHLAddr_DTOURSZ_Mod_LeafPVS
 
 #endif // #ifndef HL_ADDRESSES_H

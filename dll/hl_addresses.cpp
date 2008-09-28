@@ -46,8 +46,8 @@ HL_ADDR_ENTRY(HUD_TOUROUT,"0x0")
 HL_ADDR_ENTRY(R_RenderView_,"0x0")
 HL_ADDR_ENTRY(DTOURSZ_R_RenderView_,"0x0")
 
-HL_ADDR_ENTRY(R_MarkLeaves,"0x0")
-HL_ADDR_ENTRY(DTOURSZ_R_MarkLeaves,"0x0")
+HL_ADDR_ENTRY(Mod_LeafPVS,"0x0")
+HL_ADDR_ENTRY(DTOURSZ_Mod_LeafPVS,"0x0")
 
 HL_ADDR_ENTRY(p_r_refdef,"0x0")
 HL_ADDR_ENTRY(HudSpectator_tfc,"0x0")

@@ -159,6 +159,8 @@ public:
 	{
 		bool bNotEmpty;
 		::std::list<int> ids;
+		bool b_doors;
+		bool b_weapon;
 	} matte_entities_r;
 
 	// WH fx:

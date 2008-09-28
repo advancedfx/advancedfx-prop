@@ -51,6 +51,10 @@ REGISTER_CVAR(fx_wh_noquads, "0", 0);
 REGISTER_CVAR(fx_wh_tint_enable, "0", 0);
 REGISTER_CVAR(fx_wh_xtendvis, "1", 0);
 
+REGISTER_CVAR(fx_xtendvis, "0", 0);
+
+REGISTER_CVAR(matte_xray, "0", 0);
+
 REGISTER_CVAR(movie_clearscreen, "0", 0);
 REGISTER_CVAR(movie_depthdump, "0", 0);
 REGISTER_CVAR(movie_export_cammotion, "0", 0);
@@ -420,7 +424,7 @@ void touring_R_RenderView_(void)
 
 
 //
-// R_MarkLeaves WH related stuff:
+// Mod_LeafPVS WH related stuff:
 //
 
 // Hints:
@@ -439,23 +443,27 @@ void touring_R_RenderView_(void)
 // (see Q1 source for more help):
 // 
 // 01edcdb4 --> r_novis.value
+//
+// R_MarkLeafs leads to Mod_LeafPVS
 
-typedef void (*R_MarkLeaves_t)(void);
-R_MarkLeaves_t detoured_R_MarkLeaves;
+typedef byte * (*Mod_LeafPVS_t)(mleaf_t *leaf, model_t *model);
+Mod_LeafPVS_t detoured_Mod_LeafPVS;
 
-void touring_R_MarkLeaves (void)
+byte * touring_Mod_LeafPVS (mleaf_t *leaf, model_t *model)
 {
-	// (Re-)force r_novis 1 if requested!:	
-	if (fx_wh_enable->value && fx_wh_xtendvis->value)
-			pEngfuncs->Cvar_SetValue("r_novis", 1.0f);
+//	static byte	decompressed[MAX_MAP_LEAFS/8];
 
-	detoured_R_MarkLeaves();
+	// (Re-)force r_novis 1 if requested!:	
+	if(( fx_wh_enable->value == 0.0f && fx_xtendvis->value != 0.0f)||(fx_wh_enable->value != 0.0f && fx_wh_xtendvis->value != 0.0f) )
+		return detoured_Mod_LeafPVS( model->leafs, model);
+
+	return detoured_Mod_LeafPVS( leaf, model);
 }
 
-void InstallHook_R_MarLeaves()
+void InstallHook_Mod_LeafPVS()
 {
-	if (!detoured_R_MarkLeaves && (HL_ADDR_R_MarkLeaves!=NULL))
-		detoured_R_MarkLeaves = (R_MarkLeaves_t) DetourApply((BYTE *)HL_ADDR_R_MarkLeaves, (BYTE *)touring_R_MarkLeaves, (int)HL_ADDR_DTOURSZ_R_MarkLeaves);
+	if (!detoured_Mod_LeafPVS && (HL_ADDR_Mod_LeafPVS!=NULL))
+		detoured_Mod_LeafPVS = (Mod_LeafPVS_t) DetourApply((BYTE *)HL_ADDR_Mod_LeafPVS, (BYTE *)touring_Mod_LeafPVS, (int)HL_ADDR_DTOURSZ_Mod_LeafPVS);
 }
 
 //
@@ -710,7 +718,7 @@ void Filming::Start()
 	_bSimulate2 = _bSimulate && (movie_simulate->value != 2.0);
 
 	// make sure the R_MarLeaves is hooked:
-	InstallHook_R_MarLeaves();
+	InstallHook_Mod_LeafPVS();
 
 	InstallHook_UnkIGAWorld(); // Install InGameAdvertisment World Ads Blcok
 
@@ -848,6 +856,9 @@ void Filming::Stop()
 
 	// Need to reset this otherwise everything will run crazy fast
 	pEngfuncs->Cvar_SetValue("host_framerate", 0);
+
+	// in case our code is broken [again] we better also reset the mask here: : )
+	glColorMask(TRUE, TRUE, TRUE, TRUE);
 }
 
 bool Filming::OnPrintFrame(unsigned long id, void *prgbdata, int iWidht, int iHeight)
@@ -994,8 +1005,12 @@ Filming::DRAW_RESULT Filming::shouldDraw(GLenum mode)
 		return DR_NORMAL;
 
 	else if (m_iMatteStage == MS_ENTITY)
-		return shouldDrawDuringEntityMatte(mode);
-
+	{
+		Filming::DRAW_RESULT res = shouldDrawDuringEntityMatte(mode);
+		if(  matte_xray->value && res == Filming::DR_MASK )
+			res = Filming::DR_HIDE;
+		return res;
+	}
 	else 
 		return shouldDrawDuringWorldMatte(mode);
 }
@@ -1020,6 +1035,7 @@ bool Filming::_InMatteEntities(int iid)
 Filming::DRAW_RESULT Filming::shouldDrawDuringEntityMatte(GLenum mode)
 {
 	bool bSwapWeapon = (movie_swapweapon->value != 0);
+	bool bForceWeapon = (movie_swapweapon->value == 2);
 	bool bSwapDoors = (movie_swapdoors->value != 0);
 	bool bOnlyActors = matte_entities_r.bNotEmpty;
 
@@ -1053,7 +1069,7 @@ Filming::DRAW_RESULT Filming::shouldDrawDuringEntityMatte(GLenum mode)
 			// Actually do we want to do that?
 			// edit: No, not for now as it breaks
 			if (bSwapWeapon && strncmp("models/v_", ce->model->name, 9) == 0)
-				return DR_HIDE;
+				return bForceWeapon ? DR_NORMAL : DR_HIDE;
 
 			// We have selected ents to be visible alone and none of those
 			if (bOnlyActors && !_InMatteEntities(ce->index))
@@ -1071,7 +1087,7 @@ Filming::DRAW_RESULT Filming::shouldDrawDuringEntityMatte(GLenum mode)
 
 Filming::DRAW_RESULT Filming::shouldDrawDuringWorldMatte(GLenum mode)
 {
-	bool bSwapWeapon = (movie_swapweapon->value != 0);
+	bool bSwapWeapon = (movie_swapweapon->value != 0) && (movie_swapweapon->value != 2);
 	bool bSwapDoors = (movie_swapdoors->value != 0);
 	bool bOnlyActors = matte_entities_r.bNotEmpty;
 
@@ -1095,8 +1111,6 @@ Filming::DRAW_RESULT Filming::shouldDrawDuringWorldMatte(GLenum mode)
 		// Studio models need only apply
 		if (ce && ce->model && ce->model->type == mod_studio)
 		{
-			bool bKeepDueToSpecialCondition = false;
-
 			// This is the viewmodel so hide it from ent-only if they want it to be shown as normal
 			if (bSwapWeapon && strncmp("models/v_", ce->model->name, 9) == 0)
 				return DR_NORMAL;
@@ -1105,8 +1119,7 @@ Filming::DRAW_RESULT Filming::shouldDrawDuringWorldMatte(GLenum mode)
 			if (bOnlyActors && !_InMatteEntities(ce->index))
 				return DR_NORMAL;
 
-			if (!bKeepDueToSpecialCondition)
-				return DR_HIDE;
+			return DR_HIDE;
 		}	
 	}
 
@@ -1280,7 +1293,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 void Filming::clearBuffers()
 {
 	// Now we do our clearing!
-	if(m_iMatteStage!=MS_ENTITY)
+	if(m_iMatteStage!=MS_ENTITY || matte_xray->value)
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 	else
 		glClear(GL_COLOR_BUFFER_BIT);

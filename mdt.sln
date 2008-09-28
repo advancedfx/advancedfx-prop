@@ -18,7 +18,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "resources", "resources", "{
 		resources\readme.txt = resources\readme.txt
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hlae", "hlae\hlae.vcproj", "{CF9B4385-F921-4168-92D4-31DF94AC36FB}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Half-Life Advanced Effects .NET", "hlae\hlae.vcproj", "{CF9B4385-F921-4168-92D4-31DF94AC36FB}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MDTLoader", "exe\MDTLoader.vcproj", "{ED914089-6510-4418-B994-F05D397907AE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,6 +44,10 @@ Global
 		{CF9B4385-F921-4168-92D4-31DF94AC36FB}.Debug|Win32.Build.0 = Debug|Win32
 		{CF9B4385-F921-4168-92D4-31DF94AC36FB}.Release|Win32.ActiveCfg = Release|Win32
 		{CF9B4385-F921-4168-92D4-31DF94AC36FB}.Release|Win32.Build.0 = Release|Win32
+		{ED914089-6510-4418-B994-F05D397907AE}.Debug|Win32.ActiveCfg = Debug|Win32
+		{ED914089-6510-4418-B994-F05D397907AE}.Debug|Win32.Build.0 = Debug|Win32
+		{ED914089-6510-4418-B994-F05D397907AE}.Release|Win32.ActiveCfg = Release|Win32
+		{ED914089-6510-4418-B994-F05D397907AE}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

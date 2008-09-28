@@ -253,6 +253,74 @@
 					RelativePath=".\main.cpp"
 					>
 				</File>
+				<Filter
+					Name="system"
+					>
+					<Filter
+						Name="Header Files"
+						>
+						<File
+							RelativePath=".\system\app.h"
+							>
+						</File>
+						<File
+							RelativePath=".\system\basecom.h"
+							>
+						</File>
+						<File
+							RelativePath=".\system\config.h"
+							>
+						</File>
+						<File
+							RelativePath=".\system\debug.h"
+							>
+						</File>
+						<File
+							RelativePath=".\system\demofix.h"
+							>
+						</File>
+						<File
+							RelativePath=".\system\layout.h"
+							>
+						</File>
+						<File
+							RelativePath=".\system\loader.h"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="Source Files"
+						>
+						<File
+							RelativePath=".\system\app.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\system\basecom.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\system\config.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\system\debug.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\system\demofix.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\system\layout.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\system\loader.cpp"
+							>
+						</File>
+					</Filter>
+				</Filter>
 			</Filter>
 			<Filter
 				Name="windows"
@@ -310,74 +378,6 @@
 					</File>
 					<File
 						RelativePath=".\windows\settings.cpp"
-						>
-					</File>
-				</Filter>
-			</Filter>
-			<Filter
-				Name="system"
-				>
-				<Filter
-					Name="Header Files"
-					>
-					<File
-						RelativePath=".\system\app.h"
-						>
-					</File>
-					<File
-						RelativePath=".\system\basecom.h"
-						>
-					</File>
-					<File
-						RelativePath=".\system\config.h"
-						>
-					</File>
-					<File
-						RelativePath=".\system\debug.h"
-						>
-					</File>
-					<File
-						RelativePath=".\system\demofix.h"
-						>
-					</File>
-					<File
-						RelativePath=".\system\layout.h"
-						>
-					</File>
-					<File
-						RelativePath=".\system\loader.h"
-						>
-					</File>
-				</Filter>
-				<Filter
-					Name="Source Files"
-					>
-					<File
-						RelativePath=".\system\app.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\system\basecom.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\system\config.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\system\debug.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\system\demofix.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\system\layout.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\system\loader.cpp"
 						>
 					</File>
 				</Filter>
