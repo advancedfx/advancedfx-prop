@@ -1,17 +1,25 @@
 // hlae.cpp : main project file.
 
 #include "stdafx.h"
+
 #include "system/debug.h"
 #include "system/debug_file.h"
+#include "system/config.h"
+#include "system/globals.h"
+
 #include "forms/MainForm.h"
 
 using namespace hlae;
 using namespace hlae::debug;
+using namespace hlae::config;
+using namespace hlae::globals;
 
 
 [STAThreadAttribute]
 int main(array<System::String ^> ^args)
 {
+	String ^BaseDir = System::Windows::Forms::Application::StartupPath;
+
 	// Init debug system:
 	DebugMaster ^debugMaster = gcnew DebugMaster();
 	FileDebugListener^ debugFile = nullptr;
@@ -25,10 +33,18 @@ int main(array<System::String ^> ^args)
 	Application::EnableVisualStyles();
 	Application::SetCompatibleTextRenderingDefault(false); 
 
-	INFO_MESSAGE( debugMaster, "Debug Message System online started." );
+	INFO_MESSAGE( debugMaster, "Debug Message System online" );
+
+	// start up config system:
+	CConfigMaster ^ConfigMaster = gcnew CConfigMaster( debugMaster, String::Concat( BaseDir,"\\hlaeconfig.xml") );
+
+	// fill in globals:
+	CGlobals ^Globals = gcnew CGlobals();
+	Globals->debugMaster = debugMaster;
+	Globals->ConfigMaster = ConfigMaster;
 
 	// Create the main window and run it
-	Application::Run(gcnew MainForm(debugMaster,debugFile));
+	Application::Run(gcnew MainForm(Globals,debugFile));
 
 	// shutdown debug system:
 

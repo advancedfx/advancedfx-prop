@@ -136,7 +136,7 @@ bool g_bSignalDone=false;
 
 DWORD WINAPI LoaderThread(void *p)
 {
-	MessageBox(0,g_path_dll,_T("g_path_dll"),MB_OK|MB_ICONINFORMATION);
+	//MessageBox(0,g_path_dll,_T("g_path_dll"),MB_OK|MB_ICONINFORMATION);
 
 	//
 	// Phase 1: Launch Half-Life
@@ -268,7 +268,6 @@ bool InitLoader(unsigned int uiUnused, System::String ^m_path,System::String ^m_
 	Marshal::FreeHGlobal( (System::IntPtr)g_opts_exe );
 	Marshal::FreeHGlobal( (System::IntPtr)g_path_exe );
 	Marshal::FreeHGlobal( (System::IntPtr)g_path_dll );
-
 
 	return true;
 }

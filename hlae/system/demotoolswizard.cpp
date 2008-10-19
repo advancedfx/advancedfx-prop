@@ -1,20 +1,25 @@
 #include <stdafx.h>
+
 #include <system/debug.h>
-#include "demotoolswizard.h"
+#include <system/globals.h>
+
 #include <forms/DemoToolsWiz1.h>
 #include <forms/DemoToolsWiz2.h>
 #include <forms/DemoToolsWiz3.h>
 #include <system/demotools.h>
 
+#include "demotoolswizard.h"
+
 using namespace System;
 using namespace System::Windows::Forms;
 
 using namespace hlae;
+using namespace hlae::globals;
 using namespace hlae::debug;
 
-DemoToolsWizard::DemoToolsWizard( System::Windows::Forms::Form ^parentWindow, DebugMaster ^debugMaster)
+DemoToolsWizard::DemoToolsWizard( System::Windows::Forms::Form ^parentWindow, CGlobals ^Globals)
 {
-	this->debugMaster = debugMaster;
+	this->debugMaster = Globals->debugMaster;
 
 	DemoToolsWiz1 ^wiz1 = gcnew DemoToolsWiz1();
 	DemoToolsWiz2 ^wiz2 = gcnew DemoToolsWiz2();

@@ -2,6 +2,7 @@
 
 #include <system/debug.h>
 #include <system/debug_file.h>
+#include <system/globals.h>
 
 class CHlaeBcServer; // forward decleration
 
@@ -15,6 +16,7 @@ namespace hlae {
 	using namespace System::Drawing;
 
 	using namespace hlae::debug;
+	using namespace hlae::globals;
 
 	/// <summary>
 	/// Summary for MainFOrm
@@ -28,9 +30,9 @@ namespace hlae {
 	ref class MainForm : public System::Windows::Forms::Form
 	{
 	public:
-		MainForm(DebugMaster ^debugMaster, FileDebugListener ^debugFile)
+		MainForm(CGlobals ^Globals, FileDebugListener ^debugFile)
 		{
-			this->debugMaster = debugMaster;
+			this->Globals = Globals;
 			this->debugFile = debugFile;
 
 			InitializeComponent();
@@ -70,7 +72,7 @@ namespace hlae {
 
 	private:
 		CHlaeBcServer *hlaeBaseComServer;
-		DebugMaster ^debugMaster;
+		CGlobals ^Globals;
 		FileDebugListener ^debugFile;
 
 	private: System::Windows::Forms::MenuStrip^  menuStrip1;

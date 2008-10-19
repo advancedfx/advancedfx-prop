@@ -5,19 +5,28 @@ build/
   in a subfolder, the binary and debug headers go into the bin subfolder
 
 dll/
-  Project for the MDT dll that is injected into the engine
+  Project for the current "Mirv Demo Tool.dll" that is injected into the engine
   
 exe/
-  Project for the MDT loader
+  Project for the old-style Mirv Demo Tool loader
+  
+gui/
+  Project for the old wxWidgets based GUI
+  
+hlae/
+  Project for the new .NET based HLAE GUI
+  
+misc/
+  miscellaneous
   
 rcstamp/
   Source for the modified rcstamp tool.
   
-shared/
-  files and source code used in more than one project go here
-  
 resources/
   files that should be packaged with an release, curently you have to copy them manually!
+  
+shared/
+  files and source code used in more than one project go here
   
 mdt.sln
   Solution file for Microsoft Visual Studio 2003 .NET (VC++) which organizes the different projects.

@@ -1,3 +1,13 @@
+HLAE 2.1.0.1
+
++ simplified mirv_movie_depthdump behaviour (moved old logic to
+  new deug command __mirv_depth_bpp)
+  
+* added __mirv_depth_bpp
+
+* added mirv_depth_streams, allows to mask out streams
+
+
 HLAE 2.1.0.0
 
 * fixed potential flaws related to the matte system,

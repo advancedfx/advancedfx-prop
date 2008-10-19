@@ -212,6 +212,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\system\config.h"
+							>
+						</File>
+						<File
 							RelativePath=".\system\debug.h"
 							>
 						</File>
@@ -225,6 +229,10 @@
 						</File>
 						<File
 							RelativePath=".\system\demotoolswizard.h"
+							>
+						</File>
+						<File
+							RelativePath=".\system\globals.h"
 							>
 						</File>
 						<File

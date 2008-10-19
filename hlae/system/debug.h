@@ -42,7 +42,7 @@ namespace debug {
 #define ERROR_MESSAGE(refdebugmaster,refstring) refdebugmaster->PostMessage( refstring, hlae::debug::DebugMessageType::DMT_ERROR )
 #define WARNING_MESSAGE(refdebugmaster,refstring) refdebugmaster->PostMessage( refstring, hlae::debug::DebugMessageType::DMT_WARNING )
 #define INFO_MESSAGE(refdebugmaster,refstring) refdebugmaster->PostMessage( refstring, hlae::debug::DebugMessageType::DMT_INFO )
-#define VERBOSE_MESSAGE(refdebugmaster,refstring) refdebugmaster->PostMessage( refstring, hlae::debug::DebugMessageType::DMT_DEBUG )
+#define VERBOSE_MESSAGE(refdebugmaster,refstring) refdebugmaster->PostMessage( refstring, hlae::debug::DebugMessageType::DMT_VERBOSE )
 
 #ifdef _DEBUG
 	#define DEBUG_MESSAGE(refdebugmaster,refstring) refdebugmaster->PostMessage( refstring, hlae::debug::DebugMessageType::DMT_DEBUG )

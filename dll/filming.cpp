@@ -32,6 +32,7 @@ extern playermove_s *ppmove;
 extern float clamp(float, float, float);
 
 REGISTER_DEBUGCVAR(depth_bias, "0", 0);
+REGISTER_DEBUGCVAR(depth_bpp, "8", 0);
 REGISTER_DEBUGCVAR(depth_scale, "1", 0);
 REGISTER_DEBUGCVAR(gl_force_noztrick, "1", 0);
 REGISTER_DEBUGCVAR(print_pos, "0", 0);
@@ -41,6 +42,7 @@ REGISTER_CVAR(crop_height, "-1", 0);
 REGISTER_CVAR(crop_yofs, "-1", 0);
 
 REGISTER_CVAR(depth_logarithmic, "32", 0);
+REGISTER_CVAR(depth_streams, "3", 0);
 
 REGISTER_CVAR(fx_lightmap, "0", 0);
 
@@ -901,7 +903,7 @@ void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
 	}
 
 	char cDepth = (iBuffer == COLOR ? 2 : 3); //? problem if depth caputre and bits >8?
-	int iMovieBitDepth = (int)(movie_depthdump->value);
+	int iMovieBitDepth = (int)(depth_bpp->value);
 
 	GLenum eGLBuffer = (iBuffer == COLOR ? GL_BGR_EXT : (iBuffer == ALPHA ? GL_ALPHA : GL_DEPTH_COMPONENT));
 	GLenum eGLtype = ((iBuffer == COLOR)||(iBuffer == ALPHA)? GL_UNSIGNED_BYTE : GL_FLOAT);
@@ -1178,6 +1180,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 
 	// Are we doing our own screenshot stuff
 	bool bDepthDumps = (movie_depthdump->value != 0);
+	int iDepthStreams = (int)depth_streams->value;
 
 	if (bWantsHudCapture)
 	{
@@ -1199,7 +1202,8 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 		if( movie_splitstreams->value != 2)
 		{
 			if (!_bSimulate) Capture(pszTitles[m_iMatteStage], m_nFrames, COLOR);
-			if (bDepthDumps && !_bSimulate2) Capture(pszDepthTitles[m_iMatteStage], m_nFrames, DEPTH);
+			if (bDepthDumps && !_bSimulate2 && iDepthStreams & 0x1)
+				Capture(pszDepthTitles[m_iMatteStage], m_nFrames, DEPTH);
 
 			if (_pSupportRender) 
 				*bSwapRes = _pSupportRender->hlaeSwapBuffers(hSwapHDC);
@@ -1218,7 +1222,8 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 
 			// capture stage:
 			if (!_bSimulate) Capture(pszTitles[m_iMatteStage], m_nFrames, COLOR);
-			if (bDepthDumps && !_bSimulate2) Capture(pszDepthTitles[m_iMatteStage], m_nFrames, DEPTH);
+			if (bDepthDumps && !_bSimulate2 && iDepthStreams & 0x2)
+				Capture(pszDepthTitles[m_iMatteStage], m_nFrames, DEPTH);
 			if (_pSupportRender)
 				*bSwapRes = _pSupportRender->hlaeSwapBuffers(hSwapHDC);
 			else
