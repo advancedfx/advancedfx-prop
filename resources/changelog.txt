@@ -1,6 +1,4 @@
-HLAE 2.1.5.3
-
-"Quantum of solace"
+HLAE 2.1.5.6 ( now without debug messages popping up lol :)
 
 This update addresses the latest Steam update.
 
