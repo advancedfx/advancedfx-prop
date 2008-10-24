@@ -68,6 +68,8 @@ You :)
 
 The HLAE Team:
 
+Current members:
+
 MIRVIN_monkey
   the creator and programmer
   http://www.madabouthats.org
@@ -76,10 +78,21 @@ ripieces
   programer
   http://dominik.matrixstorm.com
   
+msthavoc
+  documentation, testing, tools, community
+  http://www.mst-gaming.de
+  
+juggaknot
+  forum, community
+
+
+Past members:
+
 neomic
   programer
   http://neomic.xail.net/
 
-msthavoc
-  documentation, testing, community relations
-  http://www.mst-gaming.de
+
+Passed members:
+
+none yet

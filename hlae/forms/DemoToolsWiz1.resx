@@ -118,15 +118,13 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="labelDemoFix.Text" xml:space="preserve">
-    <value>Don't use it if you don't need it.
-When the game crashes while the demo is being recorded the demo can't be played
+    <value>When the game crashes while the demo is being recorded the demo can't be played
 because the directory entries are missing or malformed.
 In this case viewdemo reports: "WARNING! Demo had bogus number of directory entries!"
 This fix tries to rebuild the directory entries and thus fixes such demos.</value>
   </data>
   <data name="labelStuckFix.Text" xml:space="preserve">
-    <value>Don't use it if you don't need it.
-In some cases when using dem_forcehltv 1 the camera get's stuck and can't be moved.
+    <value>In some cases when using dem_forcehltv 1 the camera get's stuck and can't be moved.
 Also typing spec_mode 3 can't free it in this case. This fix tries to add an extra
 player slot for the dem_forcehltv spectator and thus usually fixes the problem.</value>
   </data>

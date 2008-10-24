@@ -21,7 +21,7 @@ public:
 	bool bLoadOk();
 	bool bAddressesApplied();
 
-    bool LoadAndApplyAddresses(); // loads and applies the addresses
+    bool LoadAndApplyAddresses(HMODULE hHwDll); // loads and applies the addresses
 
 private:
 	#define CONFIG_MDTDLL_MAX_CFGSTRLEN 200

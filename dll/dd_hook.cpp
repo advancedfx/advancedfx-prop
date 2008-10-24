@@ -188,6 +188,11 @@ HRESULT WINAPI myDirectDrawCreate(
 
 	if(g_dd_hook_bForceEnabled&&(hResult==DD_OK)&&lplpDD)
 	{
+
+#ifdef MDT_DEBUG
+		MessageBox(0,"myDirectDrawCreate - about to patch","MDT_DEBUG",MB_OK|MB_ICONINFORMATION);
+#endif
+
 		//static char test[100];
 		//DWORD **newlpDD=(DWORD **)*lplpDD;
 		//sprintf(test,"Address: 0x%08x",*(*newlpDD+8));
@@ -236,6 +241,10 @@ FARPROC WINAPI Hook_DirectDrawCreate(FARPROC fpOldAddress)
 #ifdef MDT_DEBUG
 	MessageBox(0,"Hook_DirectDrawCreate - called","MDT_DEBUG",MB_OK|MB_ICONINFORMATION);
 #endif
+
+	if( !fpOldAddress )
+		return fpOldAddress;
+
 	if (!g_oldDirectDrawCreate) g_oldDirectDrawCreate=(DirectDrawCreate_t)fpOldAddress; // save old address for us
 	return (FARPROC)myDirectDrawCreate; // set our hooked struct
 }

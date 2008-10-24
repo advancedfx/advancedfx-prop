@@ -28,7 +28,7 @@ DemoToolsWizard::DemoToolsWizard( System::Windows::Forms::Form ^parentWindow, CG
 	DialogResult dResult;
 	int iShowDialog = 0;
 
-	while (iShowDialog>=0 && iShowDialog<3)
+	while (iShowDialog>=0 && iShowDialog != 3)
 	{
 		switch (iShowDialog)
 		{
@@ -58,7 +58,8 @@ DemoToolsWizard::DemoToolsWizard( System::Windows::Forms::Form ^parentWindow, CG
 			switch (dResult)
 			{
 			case DialogResult::No:
-				iShowDialog = wiz1->bCheckedCleanup() ? 1 : 0;
+				iShowDialog =
+					wiz1->bCheckedCleanup() ? 1 : 0;
 				break;
 			case DialogResult::Yes:
 				iShowDialog = 3;
@@ -75,11 +76,34 @@ DemoToolsWizard::DemoToolsWizard( System::Windows::Forms::Form ^parentWindow, CG
 	if (iShowDialog==3)
 	{
 		// Finished
+		iShowDialog = -1;
+
 		CHlaeDemoFix ^dtool = gcnew CHlaeDemoFix( parentWindow, debugMaster );
 
 		dtool->EnableDirectoryFix( wiz1->bCheckedFix() );
 		dtool->EnableHltvFix( wiz1->bCheckedStuck() );
 		dtool->EnableWaterMarks( wiz3->bCheckedMarks() );
+
+		if( wiz1->bCheckedDemoHeader() )
+		{
+			//dtool->bSet_GameDll = true;
+			dtool->bSet_GameDll = false;
+			//dtool->strSet_GameDll = "cstrike_beta";
+
+			dtool->bSet_NetworkVersion = true;
+			dtool->uiSet_NetWorkVersion = 48;
+
+			dtool->bSet_ProtocolVersion = true;
+			dtool->ui_ProtoVersion = 48;
+
+			//dtool->bFuckOff = true;
+			dtool->bFuckOff = false;
+		} else {
+			dtool->bSet_GameDll = false;
+			dtool->bSet_NetworkVersion = false;
+			dtool->bSet_ProtocolVersion = false;
+			dtool->bFuckOff = false;
+		}
 
 		if (wiz1->bCheckedCleanup())
 		{

@@ -9,8 +9,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		info.txt = info.txt
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Half-Life Advanced Effects", "gui\gui.vcproj", "{6083B0F5-854B-4DC9-B2AD-B983384ECA10}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "resources", "resources", "{606E3AF1-4D65-4266-9B67-10D989EEE0DE}"
 	ProjectSection(SolutionItems) = preProject
 		resources\changelog.txt = resources\changelog.txt
@@ -19,8 +17,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "resources", "resources", "{
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Half-Life Advanced Effects .NET", "hlae\hlae.vcproj", "{CF9B4385-F921-4168-92D4-31DF94AC36FB}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MDTLoader", "exe\MDTLoader.vcproj", "{ED914089-6510-4418-B994-F05D397907AE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,18 +32,10 @@ Global
 		{0AC711F3-F9E4-4CDD-969A-BA73A281A06C}.Debug|Win32.Build.0 = Debug|Win32
 		{0AC711F3-F9E4-4CDD-969A-BA73A281A06C}.Release|Win32.ActiveCfg = Release|Win32
 		{0AC711F3-F9E4-4CDD-969A-BA73A281A06C}.Release|Win32.Build.0 = Release|Win32
-		{6083B0F5-854B-4DC9-B2AD-B983384ECA10}.Debug|Win32.ActiveCfg = Debug|Win32
-		{6083B0F5-854B-4DC9-B2AD-B983384ECA10}.Debug|Win32.Build.0 = Debug|Win32
-		{6083B0F5-854B-4DC9-B2AD-B983384ECA10}.Release|Win32.ActiveCfg = Release|Win32
-		{6083B0F5-854B-4DC9-B2AD-B983384ECA10}.Release|Win32.Build.0 = Release|Win32
 		{CF9B4385-F921-4168-92D4-31DF94AC36FB}.Debug|Win32.ActiveCfg = Debug|Win32
 		{CF9B4385-F921-4168-92D4-31DF94AC36FB}.Debug|Win32.Build.0 = Debug|Win32
 		{CF9B4385-F921-4168-92D4-31DF94AC36FB}.Release|Win32.ActiveCfg = Release|Win32
 		{CF9B4385-F921-4168-92D4-31DF94AC36FB}.Release|Win32.Build.0 = Release|Win32
-		{ED914089-6510-4418-B994-F05D397907AE}.Debug|Win32.ActiveCfg = Debug|Win32
-		{ED914089-6510-4418-B994-F05D397907AE}.Debug|Win32.Build.0 = Debug|Win32
-		{ED914089-6510-4418-B994-F05D397907AE}.Release|Win32.ActiveCfg = Release|Win32
-		{ED914089-6510-4418-B994-F05D397907AE}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -16,7 +16,10 @@ cHLAddresses g_HLAddresses;
 #define HL_ADDR_VAR(name) \
 	cHLAddressEntry HLAddrObj_##name(&g_HLAddresses,#name);
 
-// Variables:
+// special Variables:
+HL_ADDR_VAR(_HW_DLL)
+
+// free Variables:
 HL_ADDR_VAR(_v0)
 HL_ADDR_VAR(_v1)
 HL_ADDR_VAR(_v2)

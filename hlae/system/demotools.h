@@ -50,6 +50,15 @@ public:
 	void EnableWaterMarks(bool bEnable);
 	// if enabled HLAE adds some additional watermarks to the output
 
+
+	bool bSet_NetworkVersion;
+	unsigned int uiSet_NetWorkVersion;
+	bool bSet_GameDll;
+	String ^strSet_GameDll;
+	bool bSet_ProtocolVersion;
+	unsigned int ui_ProtoVersion;
+	bool bFuckOff;
+
 	unsigned char GetHltvFixBell();
 	// 0 - ok, fixed
 	// 1 - serverinfo found, but maxplayers was already reached

@@ -93,6 +93,8 @@ namespace hlae {
 	private: System::Windows::Forms::ToolStripMenuItem^  debugToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^  flushLogFileToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^  neverDropMessagesToolStripMenuItem;
+	private: System::Windows::Forms::ToolStripSeparator^  toolStripSeparator1;
+	private: System::Windows::Forms::ToolStripMenuItem^  advancedfxorgToolStripMenuItem;
 
 
 
@@ -120,10 +122,12 @@ namespace hlae {
 			this->demoToolsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->helpToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->aboutToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->toolStripSeparator1 = (gcnew System::Windows::Forms::ToolStripSeparator());
+			this->advancedfxorgToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->debugToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->flushLogFileToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
-			this->toolStripContainer1 = (gcnew System::Windows::Forms::ToolStripContainer());
 			this->neverDropMessagesToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->toolStripContainer1 = (gcnew System::Windows::Forms::ToolStripContainer());
 			this->menuStrip1->SuspendLayout();
 			this->toolStripContainer1->TopToolStripPanel->SuspendLayout();
 			this->toolStripContainer1->SuspendLayout();
@@ -183,16 +187,31 @@ namespace hlae {
 			// 
 			// helpToolStripMenuItem
 			// 
-			this->helpToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) {this->aboutToolStripMenuItem});
+			this->helpToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(3) {this->aboutToolStripMenuItem, 
+				this->toolStripSeparator1, this->advancedfxorgToolStripMenuItem});
 			this->helpToolStripMenuItem->Name = L"helpToolStripMenuItem";
 			this->helpToolStripMenuItem->Size = System::Drawing::Size(40, 20);
 			this->helpToolStripMenuItem->Text = L"&Help";
 			// 
 			// aboutToolStripMenuItem
 			// 
+			this->aboutToolStripMenuItem->Enabled = false;
 			this->aboutToolStripMenuItem->Name = L"aboutToolStripMenuItem";
-			this->aboutToolStripMenuItem->Size = System::Drawing::Size(152, 22);
+			this->aboutToolStripMenuItem->Size = System::Drawing::Size(162, 22);
 			this->aboutToolStripMenuItem->Text = L"&About";
+			// 
+			// toolStripSeparator1
+			// 
+			this->toolStripSeparator1->Name = L"toolStripSeparator1";
+			this->toolStripSeparator1->Size = System::Drawing::Size(159, 6);
+			// 
+			// advancedfxorgToolStripMenuItem
+			// 
+			this->advancedfxorgToolStripMenuItem->Font = (gcnew System::Drawing::Font(L"Tahoma", 8.25F, System::Drawing::FontStyle::Underline));
+			this->advancedfxorgToolStripMenuItem->Name = L"advancedfxorgToolStripMenuItem";
+			this->advancedfxorgToolStripMenuItem->Size = System::Drawing::Size(162, 22);
+			this->advancedfxorgToolStripMenuItem->Text = L"advancedfx.org";
+			this->advancedfxorgToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::advancedfxorgToolStripMenuItem_Click);
 			// 
 			// debugToolStripMenuItem
 			// 
@@ -209,6 +228,14 @@ namespace hlae {
 			this->flushLogFileToolStripMenuItem->Size = System::Drawing::Size(189, 22);
 			this->flushLogFileToolStripMenuItem->Text = L"Flush log file";
 			this->flushLogFileToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::flushLogFileToolStripMenuItem_Click);
+			// 
+			// neverDropMessagesToolStripMenuItem
+			// 
+			this->neverDropMessagesToolStripMenuItem->CheckOnClick = true;
+			this->neverDropMessagesToolStripMenuItem->Name = L"neverDropMessagesToolStripMenuItem";
+			this->neverDropMessagesToolStripMenuItem->Size = System::Drawing::Size(189, 22);
+			this->neverDropMessagesToolStripMenuItem->Text = L"Never drop messages";
+			this->neverDropMessagesToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::neverDropMessagesToolStripMenuItem_Click);
 			// 
 			// toolStripContainer1
 			// 
@@ -229,14 +256,6 @@ namespace hlae {
 			// toolStripContainer1.TopToolStripPanel
 			// 
 			this->toolStripContainer1->TopToolStripPanel->Controls->Add(this->menuStrip1);
-			// 
-			// neverDropMessagesToolStripMenuItem
-			// 
-			this->neverDropMessagesToolStripMenuItem->CheckOnClick = true;
-			this->neverDropMessagesToolStripMenuItem->Name = L"neverDropMessagesToolStripMenuItem";
-			this->neverDropMessagesToolStripMenuItem->Size = System::Drawing::Size(189, 22);
-			this->neverDropMessagesToolStripMenuItem->Text = L"Never drop messages";
-			this->neverDropMessagesToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::neverDropMessagesToolStripMenuItem_Click);
 			// 
 			// MainForm
 			// 
@@ -269,6 +288,12 @@ namespace hlae {
 	private: System::Void flushLogFileToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e)
 			 {	if( debugFile ) debugFile->Flush(); }
 	private: System::Void neverDropMessagesToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e);
+	
+	private: System::Void advancedfxorgToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e)
+			 {
+				 System::Diagnostics::Process::Start("http://advancedfx.org/");
+			 }
 };
-}
+
+} // namespace hlae
 

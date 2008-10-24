@@ -1,3 +1,41 @@
+HLAE 2.1.5.3
+
+"Quantum of solace"
+
+This update addresses the latest Steam update.
+
+* rolls out the .NET 2.0 based launcher (former 2008-10-19 beta)
+  Thus Microsoft .NET 2.0 framework is required.
+
+* updated hooking functions and addresses system
+
+* temporarily deactivated mirv_playercolors_cs
+
+Please let us know in case you spot any new]errors
+which we might have caused due to being in a hurry!
+
+The following features might be currently not available:
+- mirv_playercolors_cs
+
+Tip: For converting demos to new protocol you can use
+     FragMonkey's COL DemoPlayer.
+     You can try HLAE's own function but it isn't
+     100% complete yet.
+
+Greetings: FragMonkey, HLAE team and 5.5.
+
+
+HLAE 2.1.5.2 BETA (2008-10-22)
+
+* Extended demo tools:
+  experimental conversion of ineye demos
+  from CS 1.6 to CS 1.6 beta.
+  This is mainly for proof of concept since we have evidence that it is likely
+  that Valve will release the final beta
+  in such a way that a 3rd party tool won't be neccessary anymore by then.
+  
+
+
 HLAE 2.1.0.1
 
 + simplified mirv_movie_depthdump behaviour (moved old logic to

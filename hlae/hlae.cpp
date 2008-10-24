@@ -18,6 +18,12 @@ using namespace hlae::globals;
 [STAThreadAttribute]
 int main(array<System::String ^> ^args)
 {
+	// Enabling Windows XP visual effects before any controls are created
+	Application::EnableVisualStyles();
+	Application::SetCompatibleTextRenderingDefault(false); 
+
+	//
+
 	String ^BaseDir = System::Windows::Forms::Application::StartupPath;
 
 	// Init debug system:
@@ -28,10 +34,6 @@ int main(array<System::String ^> ^args)
 	// attach a fileListener in debug mode:
 	debugFile = gcnew FileDebugListener( debugMaster, "hlae.log.txt" );
 #endif
-
-	// Enabling Windows XP visual effects before any controls are created
-	Application::EnableVisualStyles();
-	Application::SetCompatibleTextRenderingDefault(false); 
 
 	INFO_MESSAGE( debugMaster, "Debug Message System online" );
 

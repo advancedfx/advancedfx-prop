@@ -49,11 +49,18 @@ bool cConfig_mdtdll::bLoadOk()
 	return _bLoadOk;
 }
 
-bool cConfig_mdtdll::LoadAndApplyAddresses()
+bool cConfig_mdtdll::LoadAndApplyAddresses(HMODULE hHwDll)
 {
 	if (!_bLoadOk) return false;
 
-	// currently we us ini instead:
+	// fill in module handle in variable:
+	cHLAddressEntry *pentry = g_HLAddresses.GiveEntry("_HW_DLL");
+	if( pentry )
+	{
+		pentry->SetValue((unsigned long)hHwDll);
+	}
+	else return false;
+
 
 	bool bres = false;
 

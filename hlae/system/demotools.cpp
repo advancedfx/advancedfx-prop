@@ -569,6 +569,29 @@ bool CHlaeDemoFix::read_header( System::IO::BinaryReader ^infile, hldemo_header_
 	}
 	VERBOSE_MESSAGE( debugMaster, System::String::Format("Game DLL: {0}", encoding->GetString(header->game_dll)) );
 
+	// apply header overrides:
+
+	if( this->bSet_NetworkVersion )
+	{
+		header->network_version = this->uiSet_NetWorkVersion;
+	}
+
+	if( this->bSet_GameDll )
+	{
+		System::Text::Encoding^ uenc = System::Text::Encoding::Unicode;
+		array<unsigned char> ^trgt = uenc->GetBytes( this->strSet_GameDll );
+
+		trgt = System::Text::Encoding::Convert( System::Text::Encoding::Unicode, System::Text::Encoding::UTF8, trgt);
+		int i;
+		int l = trgt->Length;
+		if( l > 259 ) l = 259;
+		for( i=0; i < l; i++)
+		{
+			header->game_dll[i] = trgt[i];
+		}
+		header->game_dll[i] = 0;
+	}
+
 	//iread = sizeof(header->dir_offset);
 	//if (iread != infile->Read(&(header->dir_offset),iread)) return false;
 	return true;
@@ -681,7 +704,7 @@ CHlaeDemoFix::copy_macroblock_e CHlaeDemoFix::copy_macroblock( System::IO::Binar
 		if (infile->BaseStream->Seek(464,System::IO::SeekOrigin::Current) > fsize) return RETURN_REWIND(copy_macroblock_e::CPMB_ERROR);
 		try { dwreadbytes = infile->ReadUInt32(); } catch ( System::Exception ^) { return RETURN_REWIND(copy_macroblock_e::CPMB_ERROR); }
 
-		if (_bEnableHltvFix)
+		if (_bEnableHltvFix || this->bSet_ProtocolVersion )
 		{
 			if ((ftarget = infile->BaseStream->Position)+dwreadbytes > fsize) return RETURN_REWIND(copy_macroblock_e::CPMB_ERROR);
 			if (!COPY_BYTES(ftarget-fpos)) return copy_macroblock_e::CPMB_FATALERROR;
@@ -839,6 +862,7 @@ CHlaeDemoFix::copy_macroblock_e CHlaeDemoFix::copy_gamedata( System::IO::BinaryR
 
 	unsigned char ctmp;
 	unsigned int uitmp;
+	unsigned short ustmp;
 
 	while (dwreadbytes>0)
 	{
@@ -883,8 +907,24 @@ CHlaeDemoFix::copy_macroblock_e CHlaeDemoFix::copy_gamedata( System::IO::BinaryR
 			continue;
 		
 		case svc_serverinfo: // 11
-			uitmp = 4 +		4 + 4 + 16;
+			DEBUG_MESSAGE( debugMaster, System::String::Format("found svc_serverinfo at {0}",(unsigned int)initialpos+dwreadorg-dwreadbytes));
+			uitmp = 4 +		4 + 4 + 16;					
 			if (dwreadbytes<uitmp+1) break; // invalid, let copy bytes handle it
+
+			if( this->bSet_ProtocolVersion )
+			{
+				try {
+					ustmp = infile->ReadUInt16();
+					ustmp = (unsigned short)(this->ui_ProtoVersion);
+					outfile->Write( ustmp );
+					uitmp -= 2;
+					dwreadbytes -= 2;
+				} catch (System::Exception ^)
+				{
+					return PRINT_FERROR(cmdcode,copy_macroblock_e::CPMB_FATALERROR);
+				}
+			}
+
 			if (!copy_bytes(infile,outfile,uitmp)) return PRINT_FERROR(cmdcode,copy_macroblock_e::CPMB_FATALERROR);
 			dwreadbytes-=uitmp;
 			
@@ -892,7 +932,7 @@ CHlaeDemoFix::copy_macroblock_e CHlaeDemoFix::copy_gamedata( System::IO::BinaryR
 			try { ctmp = infile->ReadByte(); } catch (System::Exception ^) { return PRINT_FERROR(cmdcode,copy_macroblock_e::CPMB_FATALERROR); }
 			if (ctmp<DEMOFIX_MAXPLAYERS)
 			{
-				ctmp++; // add a slut slot
+				if( this->_bEnableHltvFix ) ctmp++; // add a slut slot
 				_ucHltvFixBell = 0; // ring the bell happy :)
 			} else if (_ucHltvFixBell) _ucHltvFixBell = 1; // ring the bell sad :..(
 			try { outfile->Write( ctmp ); } catch (System::Exception ^) { return PRINT_FERROR(cmdcode,copy_macroblock_e::CPMB_FATALERROR); }
@@ -900,6 +940,29 @@ CHlaeDemoFix::copy_macroblock_e CHlaeDemoFix::copy_gamedata( System::IO::BinaryR
 			VERBOSE_MESSAGE( debugMaster, System::String::Format("dem_forcehltv 1 fix: {0}: serverinfo maxplayers: {1} -> {2}",(unsigned int)(infile->BaseStream->Position),(unsigned int)(ctmp==DEMOFIX_MAXPLAYERS? ctmp : ctmp-1),(unsigned int)ctmp) );
 
 			dwreadbytes-=1;
+
+			if( this->bFuckOff )
+			{
+				// Copy "till end of "cstrike":
+				uitmp = 9;
+				if (!copy_bytes(infile,outfile,uitmp)) return PRINT_FERROR(cmdcode,copy_macroblock_e::CPMB_FATALERROR);
+				dwreadbytes-=uitmp;
+
+				// patch blocklength:
+				size_t mcurpos = outfile->BaseStream->Position;
+				outfile->Seek( - (infile->BaseStream->Position - initialpos) - 4, System::IO::SeekOrigin::Current );
+				outfile->Write( dwreadorg +5 );
+				outfile->Seek( mcurpos, System::IO::SeekOrigin::Begin );
+
+				// insert "_beta":
+				ctmp = '_'; outfile->Write(ctmp);
+				ctmp = 'b'; outfile->Write(ctmp);
+				ctmp = 'e'; outfile->Write(ctmp);
+				ctmp = 't'; outfile->Write(ctmp);
+				ctmp = 'a'; outfile->Write(ctmp);
+
+			}
+
 			break; // our work is done here, get us out of here!
 		
 		case svc_updateuserinfo: // 13

@@ -52,6 +52,9 @@ namespace hlae {
 				delete components;
 			}
 		}
+	private: System::Windows::Forms::CheckBox^  checkBoxStartDocked;
+
+	protected: 
 
 	private:
 		CGlobals ^Globals;
@@ -129,6 +132,7 @@ namespace hlae {
 			this->labelResWidth = (gcnew System::Windows::Forms::Label());
 			this->checkBoxResForce = (gcnew System::Windows::Forms::CheckBox());
 			this->groupBoxMisc = (gcnew System::Windows::Forms::GroupBox());
+			this->checkBoxStartDocked = (gcnew System::Windows::Forms::CheckBox());
 			this->checkBoxVisbility = (gcnew System::Windows::Forms::CheckBox());
 			this->checkBoxDesktopRes = (gcnew System::Windows::Forms::CheckBox());
 			this->checkBoxForceAlpha = (gcnew System::Windows::Forms::CheckBox());
@@ -283,6 +287,7 @@ namespace hlae {
 			// 
 			// groupBoxMisc
 			// 
+			this->groupBoxMisc->Controls->Add(this->checkBoxStartDocked);
 			this->groupBoxMisc->Controls->Add(this->checkBoxVisbility);
 			this->groupBoxMisc->Controls->Add(this->checkBoxDesktopRes);
 			this->groupBoxMisc->Controls->Add(this->checkBoxForceAlpha);
@@ -294,6 +299,19 @@ namespace hlae {
 			this->groupBoxMisc->TabIndex = 6;
 			this->groupBoxMisc->TabStop = false;
 			this->groupBoxMisc->Text = L"Advanced Settings";
+			// 
+			// checkBoxStartDocked
+			// 
+			this->checkBoxStartDocked->AutoSize = true;
+			this->checkBoxStartDocked->Checked = true;
+			this->checkBoxStartDocked->CheckState = System::Windows::Forms::CheckState::Checked;
+			this->checkBoxStartDocked->Enabled = false;
+			this->checkBoxStartDocked->Location = System::Drawing::Point(259, 65);
+			this->checkBoxStartDocked->Name = L"checkBoxStartDocked";
+			this->checkBoxStartDocked->Size = System::Drawing::Size(87, 17);
+			this->checkBoxStartDocked->TabIndex = 5;
+			this->checkBoxStartDocked->Text = L"Start docked";
+			this->checkBoxStartDocked->UseVisualStyleBackColor = true;
 			// 
 			// checkBoxVisbility
 			// 

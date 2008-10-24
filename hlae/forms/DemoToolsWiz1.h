@@ -43,13 +43,19 @@ namespace hlae {
 			return this->checkBoxStuck->Checked;
 		}
 
+		bool bCheckedDemoHeader( void )
+		{
+			return this->checkBoxDemoHeader->Checked;
+		}
+
 	private:
 		void doUpdateNext ( void )
 		{
 			this->buttonNext->Enabled =
 				this->checkBoxCleanup->Checked
 				|| this->checkBoxFix->Checked
-				|| this->checkBoxStuck->Checked;
+				|| this->checkBoxStuck->Checked
+				|| this->checkBoxDemoHeader->Checked;
 		}
 
 	protected:
@@ -73,6 +79,9 @@ namespace hlae {
 	private: System::Windows::Forms::Button^  buttonCancel;
 	private: System::Windows::Forms::Button^  buttonNext;
 	private: System::Windows::Forms::Button^  buttonPrev;
+	private: System::Windows::Forms::Label^  labelDemoHeader;
+	private: System::Windows::Forms::CheckBox^  checkBoxDemoHeader;
+
 
 	private:
 		/// <summary>
@@ -97,6 +106,8 @@ namespace hlae {
 			this->buttonCancel = (gcnew System::Windows::Forms::Button());
 			this->buttonNext = (gcnew System::Windows::Forms::Button());
 			this->buttonPrev = (gcnew System::Windows::Forms::Button());
+			this->labelDemoHeader = (gcnew System::Windows::Forms::Label());
+			this->checkBoxDemoHeader = (gcnew System::Windows::Forms::CheckBox());
 			this->SuspendLayout();
 			// 
 			// checkBoxCleanup
@@ -108,29 +119,29 @@ namespace hlae {
 			this->checkBoxCleanup->TabIndex = 0;
 			this->checkBoxCleanup->Text = L"DemoCleanUp:";
 			this->checkBoxCleanup->UseVisualStyleBackColor = true;
-			this->checkBoxCleanup->CheckedChanged += gcnew System::EventHandler(this, &DemoToolsWiz1::checkBoxCleanup_CheckedChanged);
+			this->checkBoxCleanup->CheckedChanged += gcnew System::EventHandler(this, &DemoToolsWiz1::checkBoxXXX_CheckedChanged);
 			// 
 			// checkBoxFix
 			// 
 			this->checkBoxFix->AutoSize = true;
-			this->checkBoxFix->Location = System::Drawing::Point(21, 76);
+			this->checkBoxFix->Location = System::Drawing::Point(21, 72);
 			this->checkBoxFix->Name = L"checkBoxFix";
 			this->checkBoxFix->Size = System::Drawing::Size(70, 17);
 			this->checkBoxFix->TabIndex = 3;
 			this->checkBoxFix->Text = L"DemoFix:";
 			this->checkBoxFix->UseVisualStyleBackColor = true;
-			this->checkBoxFix->CheckedChanged += gcnew System::EventHandler(this, &DemoToolsWiz1::checkBoxFix_CheckedChanged);
+			this->checkBoxFix->CheckedChanged += gcnew System::EventHandler(this, &DemoToolsWiz1::checkBoxXXX_CheckedChanged);
 			// 
 			// checkBoxStuck
 			// 
 			this->checkBoxStuck->AutoSize = true;
-			this->checkBoxStuck->Location = System::Drawing::Point(21, 189);
+			this->checkBoxStuck->Location = System::Drawing::Point(21, 166);
 			this->checkBoxStuck->Name = L"checkBoxStuck";
 			this->checkBoxStuck->Size = System::Drawing::Size(138, 17);
 			this->checkBoxStuck->TabIndex = 5;
 			this->checkBoxStuck->Text = L"dem_forcehltv stuck fix:";
 			this->checkBoxStuck->UseVisualStyleBackColor = true;
-			this->checkBoxStuck->CheckedChanged += gcnew System::EventHandler(this, &DemoToolsWiz1::checkBoxStuck_CheckedChanged);
+			this->checkBoxStuck->CheckedChanged += gcnew System::EventHandler(this, &DemoToolsWiz1::checkBoxXXX_CheckedChanged);
 			// 
 			// labelCleanUp
 			// 
@@ -144,18 +155,18 @@ namespace hlae {
 			// labelDemoFix
 			// 
 			this->labelDemoFix->AutoSize = true;
-			this->labelDemoFix->Location = System::Drawing::Point(18, 100);
+			this->labelDemoFix->Location = System::Drawing::Point(18, 96);
 			this->labelDemoFix->Name = L"labelDemoFix";
-			this->labelDemoFix->Size = System::Drawing::Size(433, 65);
+			this->labelDemoFix->Size = System::Drawing::Size(433, 52);
 			this->labelDemoFix->TabIndex = 4;
 			this->labelDemoFix->Text = resources->GetString(L"labelDemoFix.Text");
 			// 
 			// labelStuckFix
 			// 
 			this->labelStuckFix->AutoSize = true;
-			this->labelStuckFix->Location = System::Drawing::Point(18, 212);
+			this->labelStuckFix->Location = System::Drawing::Point(18, 189);
 			this->labelStuckFix->Name = L"labelStuckFix";
-			this->labelStuckFix->Size = System::Drawing::Size(421, 52);
+			this->labelStuckFix->Size = System::Drawing::Size(421, 39);
 			this->labelStuckFix->TabIndex = 6;
 			this->labelStuckFix->Text = resources->GetString(L"labelStuckFix.Text");
 			// 
@@ -191,9 +202,31 @@ namespace hlae {
 			this->buttonPrev->Text = L"< Back";
 			this->buttonPrev->UseVisualStyleBackColor = true;
 			// 
+			// labelDemoHeader
+			// 
+			this->labelDemoHeader->AutoSize = true;
+			this->labelDemoHeader->Location = System::Drawing::Point(18, 268);
+			this->labelDemoHeader->Name = L"labelDemoHeader";
+			this->labelDemoHeader->Size = System::Drawing::Size(113, 13);
+			this->labelDemoHeader->TabIndex = 10;
+			this->labelDemoHeader->Text = L"(not 100% finsihed yet)";
+			// 
+			// checkBoxDemoHeader
+			// 
+			this->checkBoxDemoHeader->AutoSize = true;
+			this->checkBoxDemoHeader->Location = System::Drawing::Point(21, 248);
+			this->checkBoxDemoHeader->Name = L"checkBoxDemoHeader";
+			this->checkBoxDemoHeader->Size = System::Drawing::Size(316, 17);
+			this->checkBoxDemoHeader->TabIndex = 9;
+			this->checkBoxDemoHeader->Text = L"Convert to new Demo Version (HLTV will most likely not work)";
+			this->checkBoxDemoHeader->UseVisualStyleBackColor = true;
+			this->checkBoxDemoHeader->CheckedChanged += gcnew System::EventHandler(this, &DemoToolsWiz1::checkBoxXXX_CheckedChanged);
+			// 
 			// DemoToolsWiz1
 			// 
 			this->ClientSize = System::Drawing::Size(474, 335);
+			this->Controls->Add(this->labelDemoHeader);
+			this->Controls->Add(this->checkBoxDemoHeader);
 			this->Controls->Add(this->buttonPrev);
 			this->Controls->Add(this->buttonNext);
 			this->Controls->Add(this->buttonCancel);
@@ -218,12 +251,7 @@ namespace hlae {
 #pragma endregion
 
 	private:
-		System::Void checkBoxCleanup_CheckedChanged(System::Object^  sender, System::EventArgs^  e)
+		System::Void checkBoxXXX_CheckedChanged(System::Object^  sender, System::EventArgs^  e)
 		{ doUpdateNext(); }
-		System::Void checkBoxFix_CheckedChanged(System::Object^  sender, System::EventArgs^  e)
-		{ doUpdateNext(); }
-		System::Void checkBoxStuck_CheckedChanged(System::Object^  sender, System::EventArgs^  e)
-		{ doUpdateNext(); }
-
 	};
 }

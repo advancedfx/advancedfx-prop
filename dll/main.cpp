@@ -392,19 +392,14 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 {
 	static bool bFirstRun = true;
 
-#ifdef MDT_DEBUG
-	if (bFirstRun)
-	{
-		char sztemp[50];
-		_snprintf(sztemp,sizeof(sztemp),"x: %i y: %i w: %i h: %i",x,y,width,height);
-		MessageBoxA(0,sztemp,"my_glViewPort - Firstrun",MB_OK|MB_ICONINFORMATION);
-	}
-#endif
-
 	g_bIsSucceedingViewport = true;
 
 	if (bFirstRun)
 	{
+#ifdef MDT_DEBUG
+		MessageBox(0,"First my_glViewport","MDT_DEBUG",MB_OK|MB_ICONINFORMATION);
+#endif
+
 		// Register the commands
 		std::list<Void_func_t>::iterator i = GetCmdList().begin();
 		while (i != GetCmdList().end())
@@ -509,6 +504,41 @@ void APIENTRY my_glBlendFunc (GLenum sfactor, GLenum dfactor)
 // Hooking
 //
 
+bool Mdt_LoadAddressConfig(HMODULE hHwDll)
+{
+	cConfig_mdtdll* pg_Config_mdtdll;
+	
+	// the very first thing we have to do is to set the addresses from the config, cuz really much stuff relays on that:
+	g_hMDTDLL = GetModuleHandle(DLL_NAME);
+	pg_MDTpath[0]=NULL;
+	if (g_hMDTDLL) GetModuleFileName(g_hMDTDLL,pg_MDTpath,MDT_MAX_PATH_BYTES-1);
+
+	retriveMDTConfigFile(pg_MDTpath,pg_MDTcfgfile);
+	// not allowed before addresses are validied pEngfuncs->Con_Printf("Path: %s | %s \n",pg_MDTpath,pg_MDTcfgfile);
+
+	bool bCfgres = false;
+
+	if (g_hMDTDLL)
+	{
+		pg_Config_mdtdll = new cConfig_mdtdll(pg_MDTcfgfile);
+		bCfgres = pg_Config_mdtdll->LoadAndApplyAddresses( hHwDll );
+
+		if (!bCfgres) MessageBox(0,"mdt_addresses.ini syntax or semantics were invalid.\nTrying to continue ...","MDT_WARNING",MB_OK|MB_ICONEXCLAMATION);
+
+		// update unregistered local copies manually:
+		pEngfuncs		= (cl_enginefuncs_s*)	HL_ADDR_CL_ENGINEFUNCS_S;
+		pEngStudio	= (engine_studio_api_s*)HL_ADDR_ENGINE_STUDIO_API_S;
+		ppmove			= (playermove_s*)		HL_ADDR_PLAYERMOVE_S;
+
+
+	} else MessageBox(0,"Could not locate mdt_addresses.ini.","MDT_ERROR",MB_OK|MB_ICONHAND);
+
+	
+	delete pg_Config_mdtdll;
+
+	return bCfgres;
+}
+
 #pragma warning(disable: 4312)
 #pragma warning(disable: 4311)
 #define MakePtr(cast, ptr, addValue) (cast)((DWORD)(ptr) + (DWORD)(addValue))
@@ -523,12 +553,9 @@ void *InterceptDllCall(HMODULE hModule, char *szDllName, char *szFunctionName, D
 	DWORD dwOldProtect2;
 	void *pOldFunction;
 
-#ifdef MDT_DEBUG
-	MessageBox(0,"InterceptDllCall - starting","MDT_DEBUG",MB_OK|MB_ICONINFORMATION);
-#endif
 
 	if (!(pOldFunction = GetProcAddress(GetModuleHandle(szDllName), szFunctionName)))
-		return 0;
+		return NULL;
 
 	pDosHeader = (PIMAGE_DOS_HEADER) hModule;
 	if (pDosHeader->e_magic != IMAGE_DOS_SIGNATURE)
@@ -557,10 +584,6 @@ void *InterceptDllCall(HMODULE hModule, char *szDllName, char *szFunctionName, D
 			VirtualProtect((void *) &pThunk->u1.Function, sizeof(DWORD), PAGE_EXECUTE_READWRITE, &dwOldProtect);
 			pThunk->u1.Function = (DWORD) pNewFunction;
 			VirtualProtect((void *) &pThunk->u1.Function, sizeof(DWORD), dwOldProtect, &dwOldProtect2);
-
-#ifdef MDT_DEBUG
-	MessageBox(0,"InterceptDllCall - finished as desired","MDT_DEBUG",MB_OK|MB_ICONINFORMATION);
-#endif
 
 			return pOldFunction;
 		}
@@ -609,9 +632,8 @@ BOOL APIENTRY my_wglSwapBuffers(HDC hDC)
 	return bResWglSwapBuffers;
 }
 
-//FILE *f1=NULL;
 
-FARPROC (WINAPI *pGetProcAddress)(HMODULE hModule, LPCSTR lpProcName);
+//FARPROC (WINAPI *pGetProcAddress)(HMODULE hModule, LPCSTR lpProcName);
 FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 {
 	FARPROC nResult;
@@ -619,10 +641,22 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 
 	if (HIWORD(lpProcName))
 	{
-		//if( !f1 ) f1=fopen("mdt_log.txt","wb");
-		//fprintf(f1,"%s\n",lpProcName);
-		//fflush(f1);
+#ifdef MDT_DEBUG
+		static bool bFirst = true;
+		static FILE *f1=NULL;
+		static char ttt[100];
 
+		if( bFirst )
+		{
+			MessageBox(0,"First getProcAddress","MDT_DEBUG",MB_OK|MB_ICONINFORMATION);
+			bFirst = false;
+		}
+		if( !f1 ) f1=fopen("mdt_log.txt","wb");
+		GetModuleFileName(hModule,ttt,99);
+		fprintf(f1,"%s %s\n",ttt, lpProcName);
+		fflush(f1);
+
+#endif
 
 		if (!lstrcmp(lpProcName, "GetProcAddress"))
 			return (FARPROC) &newGetProcAddress;
@@ -632,7 +666,9 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 		if (!lstrcmp(lpProcName, "glEnd"))
 			return (FARPROC) &my_glEnd;
 		if (!lstrcmp(lpProcName, "glViewport"))
+		{
 			return (FARPROC) &my_glViewport;
+		}
 		if (!lstrcmp(lpProcName, "glClear"))
 			return (FARPROC) &my_glClear;
 		if (!lstrcmp(lpProcName, "glFrustum"))
@@ -646,29 +682,14 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 			return (FARPROC) &my_wglSwapBuffers;
 		}
 
-		if (!lstrcmp(lpProcName,"DirectDrawCreate"))
-			return Hook_DirectDrawCreate(nResult); // give our hook original address and return new (it remembers the original one from it's first call, it also cares about the commandline options (if to force the res or not and does not install the hook if not needed))
-
-#if !(MIRV_COMPILE_OLDLAUNCHER)
-		if (!lstrcmp(lpProcName, "CreateWindowExA"))
-			return (FARPROC) &HlaeBcClt_CreateWindowExA;
-		if (!lstrcmp(lpProcName, "DestroyWindow"))
-			return (FARPROC) &HlaeBcClt_DestroyWindow;
-		if (!lstrcmp(lpProcName, "RegisterClassA"))
-			return (FARPROC) &HlaeBcClt_RegisterClassA;
-		if (!lstrcmp(lpProcName, "SetWindowPos"))
-			return (FARPROC) &HlaeBcClt_SetWindowPos;
-		if (!lstrcmp(lpProcName, "ChoosePixelFormat"))
-			return (FARPROC) &HlaeBcClt_ChoosePixelFormat;
 		if (!lstrcmp(lpProcName, "wglCreateContext"))
 			return (FARPROC) &HlaeBcClt_wglCreateContext;
 		if (!lstrcmp(lpProcName, "wglDeleteContext"))
 			return (FARPROC) &HlaeBcClt_wglDeleteContext;
 		if (!lstrcmp(lpProcName, "wglMakeCurrent"))
 			return (FARPROC) &HlaeBcClt_wglMakeCurrent;
-		if (!lstrcmp(lpProcName, "ReleaseDC"))
-			return (FARPROC) &HlaeBcClt_ReleaseDC;
-#endif
+
+
 
 		//if (!lstrcmp(lpProcName,"DirectSoundCreate"))
 		//	return Hook_DirectSoundCreate(nResult);
@@ -681,41 +702,59 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 	}
 
 	return nResult;
+
+
 }
 
-bool Mdt_LoadAddressConfig()
+HMODULE (WINAPI *p_LoadLibraryA)( LPCSTR lpLibFileName );
+HMODULE WINAPI new_LoadLibraryA( LPCSTR lpLibFileName )
 {
-	cConfig_mdtdll* pg_Config_mdtdll;
-	
-	// the very first thing we have to do is to set the addresses from the config, cuz really much stuff relays on that:
-	g_hMDTDLL = GetModuleHandle(DLL_NAME);
-	pg_MDTpath[0]=NULL;
-	if (g_hMDTDLL) GetModuleFileName(g_hMDTDLL,pg_MDTpath,MDT_MAX_PATH_BYTES-1);
+		static bool bFirstLoad = true;
 
-	retriveMDTConfigFile(pg_MDTpath,pg_MDTcfgfile);
-	// not allowed before addresses are validied pEngfuncs->Con_Printf("Path: %s | %s \n",pg_MDTpath,pg_MDTcfgfile);
+		if( bFirstLoad && !lstrcmp( lpLibFileName, "hw.dll") )
+		{
+			bFirstLoad = false;
+			HMODULE hRet = LoadLibraryA( lpLibFileName );//LoadLibraryEx( lpLibFileName, NULL, DONT_RESOLVE_DLL_REFERENCES );
 
-	bool bCfgres = false;
+			if( hRet )
+			{
+				// load addresses form config:
+				Mdt_LoadAddressConfig( hRet );
 
-	if (g_hMDTDLL)
-	{
-		pg_Config_mdtdll = new cConfig_mdtdll(pg_MDTcfgfile);
-		bCfgres = pg_Config_mdtdll->LoadAndApplyAddresses();
+				bool bIcepOk = true;
 
-		if (!bCfgres) MessageBox(0,"mdt_addresses.ini syntax or semantics were invalid.\nTrying to continue ...","MDT_WARNING",MB_OK|MB_ICONEXCLAMATION);
+				// Intercept GetProcAddress:
+				if( !InterceptDllCall( hRet, "Kernel32.dll", "GetProcAddress", (DWORD) &newGetProcAddress) ) bIcepOk = false;
 
-		// update unregistered local copies manually:
-		pEngfuncs		= (cl_enginefuncs_s*)	HL_ADDR_CL_ENGINEFUNCS_S;
-		pEngStudio	= (engine_studio_api_s*)HL_ADDR_ENGINE_STUDIO_API_S;
-		ppmove			= (playermove_s*)		HL_ADDR_PLAYERMOVE_S;
+				// we have to manually intercept things windows already loaded with the LoadLibrary call:
 
+				// replace DirectDraw:
+				FARPROC old_dd = GetProcAddress( GetModuleHandle("ddraw.dll"), "DirectDrawCreate" );
+				if( old_dd )
+				{
+					FARPROC new_dd = Hook_DirectDrawCreate(old_dd);
+					if( !InterceptDllCall( hRet, "ddraw.dll", "DirectDrawCreate", (DWORD) new_dd) ) bIcepOk = false;
+					
+				} else {
+					MessageBox(0,"Querying DirectDraw failed.","MDT_ERROR",MB_OK|MB_ICONHAND);
+					bIcepOk = false;
+				}
 
-	} else MessageBox(0,"Could not locate mdt_addresses.ini.","MDT_ERROR",MB_OK|MB_ICONHAND);
+				// WindowAPI related:
+				if( !InterceptDllCall( hRet, "User32.dll", "CreateWindowExA", (DWORD) &HlaeBcClt_CreateWindowExA) ) bIcepOk = false;
+				if( !InterceptDllCall( hRet, "User32.dll", "DestroyWindow", (DWORD) &HlaeBcClt_DestroyWindow) ) bIcepOk = false;
+				if( !InterceptDllCall( hRet, "User32.dll", "RegisterClassA", (DWORD) &HlaeBcClt_RegisterClassA) ) bIcepOk = false;
+				if( !InterceptDllCall( hRet, "User32.dll", "SetWindowPos", (DWORD) &HlaeBcClt_SetWindowPos) ) bIcepOk = false;
+				if( !InterceptDllCall( hRet, "gdi32.dll", "ChoosePixelFormat", (DWORD) &HlaeBcClt_ChoosePixelFormat) ) bIcepOk = false;
+				if( !InterceptDllCall( hRet, "User32.dll", "ReleaseDC", (DWORD) &HlaeBcClt_ReleaseDC) ) bIcepOk = false;
 
-	
-	delete pg_Config_mdtdll;
+				if( !bIcepOk ) MessageBox(0,"One or more interceptions failed","MDT_ERROR",MB_OK|MB_ICONHAND);
+			}
 
-	return bCfgres;
+			return hRet;
+		}
+
+		return LoadLibraryA( lpLibFileName );
 }
 
 bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
@@ -728,10 +767,12 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 			MessageBox(0,"DllMain - DLL_PROCESS_ATTACH","MDT_DEBUG",MB_OK|MB_ICONINFORMATION);
 #endif
 			// Intercept GetProcAddress:
-			pGetProcAddress = (FARPROC(WINAPI *)(HMODULE, LPCSTR)) InterceptDllCall(GetModuleHandle(NULL), "Kernel32.dll", "GetProcAddress", (DWORD) &newGetProcAddress);
+			//pGetProcAddress = (FARPROC(WINAPI *)(HMODULE, LPCSTR)) InterceptDllCall(GetModuleHandle(NULL), "Kernel32.dll", "GetProcAddress", (DWORD) &newGetProcAddress);
 
-			// load addresses form config:
-			Mdt_LoadAddressConfig();
+			// Intercept LoadLibraryA:
+			p_LoadLibraryA = (HMODULE(WINAPI *)( LPCSTR )) InterceptDllCall(GetModuleHandle(NULL), "Kernel32.dll", "LoadLibraryA", (DWORD) &new_LoadLibraryA);
+			if( !p_LoadLibraryA ) MessageBox(0,"Base interception failed","MDT_ERROR",MB_OK|MB_ICONHAND);
+
 			break;
 		}
 		case DLL_PROCESS_DETACH:

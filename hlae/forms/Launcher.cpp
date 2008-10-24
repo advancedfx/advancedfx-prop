@@ -47,6 +47,9 @@ System::Void Launcher::buttonOK_Click(System::Object^  sender, System::EventArgs
 
 	// advanced
 
+	if( this->checkBoxForceAlpha->Checked )
+		cmds = String::Concat( cmds, " -mdtalpha8" );
+
 	i1 = this->comboBoxRenderMode->SelectedIndex;
 	if( 1 == i1 )
 		cmds = String::Concat( cmds, " -mdtrender fbo" );
@@ -56,6 +59,9 @@ System::Void Launcher::buttonOK_Click(System::Object^  sender, System::EventArgs
 
 	if( this->checkBoxVisbility->Checked )
 		cmds = String::Concat( cmds, " -mdtoptvis" );
+
+	if( this->checkBoxStartDocked->Checked )
+		cmds = String::Concat( cmds, " -mdtdocked" );
 
 	s1 = this->textBoxCmdAdd->Text;
 	if( 0 < s1->Length)
@@ -95,6 +101,7 @@ System::Void Launcher::ConfigRead()
 	this->checkBoxForceAlpha->Checked = lcfg->ForceAlpha;
 	this->checkBoxDesktopRes->Checked = lcfg->OptimizeDesktopRes;
 	this->checkBoxVisbility->Checked = lcfg->OptimizeVisibilty;
+	this->checkBoxStartDocked->Checked = lcfg->StartDocked;
 	//
 	if( lcfg->RenderMode < this->comboBoxRenderMode->Items->Count )
 		this->comboBoxRenderMode->SelectedIndex = lcfg->RenderMode;
@@ -115,11 +122,12 @@ System::Void Launcher::ConfigWrite()
 		lcfg->GfxForce = this->checkBoxResForce->Checked;
 		UInt16::TryParse( this->textBoxResWidth->Text, lcfg->GfxWidth );
 		UInt16::TryParse( this->textBoxResHeight->Text, lcfg->GfxHeight );
-		Byte::TryParse( this->comboBoxResDepth->Text, lcfg->GfxBpp );
+		Byte::TryParse( this->comboBoxResDepth->Text->Split(' ',1)[0], lcfg->GfxBpp );
 		// Advanced Settings:
 		lcfg->ForceAlpha = this->checkBoxForceAlpha->Checked;
 		lcfg->OptimizeDesktopRes = this->checkBoxDesktopRes->Checked;
 		lcfg->OptimizeVisibilty = this->checkBoxVisbility->Checked;
+		lcfg->StartDocked = this->checkBoxStartDocked->Checked;
 		lcfg->RenderMode = this->comboBoxRenderMode->SelectedIndex;
 	}
 

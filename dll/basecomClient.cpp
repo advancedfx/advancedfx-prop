@@ -1,5 +1,6 @@
 #include <windows.h>
 //#include <winuser.h> // KEYBDINPUT Structure, ...
+#include "mdt_debug.h"
 
 #if 1//#ifdef MDT_DEBUG
 	#include <stdio.h>
@@ -645,12 +646,17 @@ BOOL WINAPI HlaeBcClt_ReleaseCapture( VOID )
 
 int WINAPI HlaeBcClt_ChoosePixelFormat( HDC hdc, CONST PIXELFORMATDESCRIPTOR *ppfd)
 {
+
+#ifdef MDT_DEBUG
+	MessageBoxA(NULL,"HlaeBcClt_ChoosePixelFormat","MDT_DEBUG",MB_OK|MB_ICONINFORMATION);
+#endif
+
 	int iRet;
 
 	PIXELFORMATDESCRIPTOR *myppfd;
 	memcpy(&myppfd,&ppfd,sizeof(PIXELFORMATDESCRIPTOR *)); // we intentionally void the const paradigm here
 
-	if (pEngfuncs->CheckParm("-hlaealpha8", NULL ))
+	if (pEngfuncs->CheckParm("-mdtalpha8", NULL ))
 	{
 		// we intentionally void the const paradigm here:
 		myppfd->cAlphaBits = 8; // request alpha bit planes (generic implementation doesn't support that)
@@ -664,6 +670,11 @@ int WINAPI HlaeBcClt_ChoosePixelFormat( HDC hdc, CONST PIXELFORMATDESCRIPTOR *pp
 
 HGLRC WINAPI HlaeBcClt_wglCreateContext(HDC hDc)
 {
+
+#ifdef MDT_DEBUG
+	MessageBoxA(NULL,"HlaeBcClt_wglCreateContext","MDT_DEBUG",MB_OK|MB_ICONINFORMATION);
+#endif
+
 	g_HL_MainWindow_info.hDc = hDc;
 	HGLRC tHGLRC = Init_Support_Renderer( g_HL_MainWindow, g_HL_MainWindow_info.hDc, g_HL_MainWindow_info.nWidth, g_HL_MainWindow_info.nHeight );
 
@@ -716,10 +727,14 @@ HGLRC Init_Support_Renderer(HWND hMainWindow, HDC hMainWindowDC, int iWidth, int
 	CHlaeSupportRender::ERenderTarget eRenderTarget = CHlaeSupportRender::RT_GAMEWINDOW;
 
 	g_HL_MainWindow_info.bUndockOnFilming = false;
+	if (pEngfuncs->CheckParm("-mdtoptvis", NULL ))
+	{
+		g_HL_MainWindow_info.bUndockOnFilming = true;
+	}
 
 	char *pStart=NULL;
 
-	if (pEngfuncs->CheckParm("-hlaerender", &pStart ))
+	if (pEngfuncs->CheckParm("-mdtrender", &pStart ))
 	{
 		if (!lstrcmp(pStart,"memdc"))
 		{
@@ -729,10 +744,6 @@ HGLRC Init_Support_Renderer(HWND hMainWindow, HDC hMainWindowDC, int iWidth, int
 		{
 			pEngfuncs->Con_DPrintf("RenderTarget: user wants RT_FRAMEBUFFEROBJECT\n");
 			eRenderTarget = CHlaeSupportRender::RT_FRAMEBUFFEROBJECT;
-		} else if (!lstrcmp(pStart,"undock"))
-		{
-			pEngfuncs->Con_DPrintf("CaptureMode: undock\n");
-			g_HL_MainWindow_info.bUndockOnFilming = true;
 		}
 	}
 	if (eRenderTarget == CHlaeSupportRender::RT_GAMEWINDOW)
