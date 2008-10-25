@@ -1,37 +1,31 @@
-HLAE 2.1.5.6 ( now without debug messages popping up lol :)
+HLAE 2.1.5.8
 
-This update addresses the latest Steam update.
+* updated addresses (second 2008-10-24 Steam HL1 Engine update)
+
+Greetings:
+  Mirvin_Monkey, FragMonkey and 5.5.
+
+Thanks to:
+  juGGaKNot (HLAE Team) and msthavoc (HLAE Team)
+  for helping with testing.
+
+Tip:
+  You can also use FragMonkeys COL DemoPlayer to convert old demos:
+  http://lacomplexity.thecgs.com/coL_16_Player_-_Update_Proof
+  HLAE has such a feature too, but it is not 100% complete yet and
+  might not work in some cases.
+
+
+HLAE 2.1.5.6
 
 * rolls out the .NET 2.0 based launcher (former 2008-10-19 beta)
   Thus Microsoft .NET 2.0 framework is required.
 
 * updated hooking functions and addresses system
+  (2008-10-24 Steam HL1 Engine update)
 
-* temporarily deactivated mirv_playercolors_cs
-
-Please let us know in case you spot any new]errors
-which we might have caused due to being in a hurry!
-
-The following features might be currently not available:
-- mirv_playercolors_cs
-
-Tip: For converting demos to new protocol you can use
-     FragMonkey's COL DemoPlayer.
-     You can try HLAE's own function but it isn't
-     100% complete yet.
-
-Greetings: FragMonkey, HLAE team and 5.5.
-
-
-HLAE 2.1.5.2 BETA (2008-10-22)
-
-* Extended demo tools:
-  experimental conversion of ineye demos
-  from CS 1.6 to CS 1.6 beta.
-  This is mainly for proof of concept since we have evidence that it is likely
-  that Valve will release the final beta
-  in such a way that a 3rd party tool won't be neccessary anymore by then.
-  
+Please note:
+  mirv_playercolors_cs might be temporarily inavailable
 
 
 HLAE 2.1.0.1
