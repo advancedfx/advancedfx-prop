@@ -184,12 +184,36 @@ void Hook_connect(void)
 		"WARNING: You are about to connect to a server.\n"
 		"It is strongly recommended to NOT connect to any server while HLAE is running!\n"
 		"\n"
-		"Press NO (recommended) to abort connecting.\n"
-		"Press Yes to continue connecting.\n"
+		"You have the following options now:\n"
+		"Press Yes\n"
+		"\tto continue connecting.\n"
+		"Press NO (recommended)\n"
+		"\tto abort connecting (HLAE will terminate and lock-up the game).\n"
+		"Cancel\n"
+		"\tdoes the same as No\n"
+		"\n"
+		"Do you want to continue connecting?\n"
 		,"Game tries to connect",
-		MB_YESNO|MB_ICONWARNING|MB_DEFBUTTON2
+		MB_YESNOCANCEL|MB_ICONWARNING|MB_DEFBUTTON2
 	);
-	if (imbret == IDYES) g_Old_connect();
+	if(imbret != IDYES)
+	{
+		// do everything we can to abbort connection:
+		do
+		{
+			try
+			{
+				HANDLE hproc = OpenProcess( PROCESS_TERMINATE, true, GetCurrentProcessId() );
+				TerminateProcess(hproc, 1);
+				CloseHandle(hproc);
+			} catch (...)
+			{
+				do MessageBox(NULL,"Please terminate the game manually in the taskmanager!","Cannot terminate, please help:",MB_OK|MB_ICONERROR);
+				while (true);
+			}
+		} while(true);
+	}
+	else if (imbret == IDYES) g_Old_connect();
 }
 
 xcommand_t g_Old_dem_forcehltv = NULL;

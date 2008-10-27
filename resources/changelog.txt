@@ -1,3 +1,20 @@
+HLAE 2.1.5.10
+
+* changed behaviour upon game connecting to a server
+  (More safety for those that prefer working airbags in case sanity fails. :)
+
+
+HLAE 2.1.5.9
+
+Updating is recommended!
+
+* fixed miscalculated p_r_refdef value for in the mdt_addresses.ini
+  that could cause a crash upon recording
+  
+Thanks to "spunge" for reporting the bug on the forums
+and helping us debugging it down! :)
+
+
 HLAE 2.1.5.8
 
 * updated addresses (second 2008-10-24 Steam HL1 Engine update)
