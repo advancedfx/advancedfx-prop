@@ -53,6 +53,7 @@ namespace hlae {
 			}
 		}
 	private: System::Windows::Forms::CheckBox^  checkBoxStartDocked;
+	private: System::Windows::Forms::CheckBox^  checkBoxFullScreen;
 
 	protected: 
 
@@ -124,6 +125,7 @@ namespace hlae {
 			this->textBoxExe = (gcnew System::Windows::Forms::TextBox());
 			this->labelExe = (gcnew System::Windows::Forms::Label());
 			this->groupBoxRes = (gcnew System::Windows::Forms::GroupBox());
+			this->checkBoxFullScreen = (gcnew System::Windows::Forms::CheckBox());
 			this->comboBoxResDepth = (gcnew System::Windows::Forms::ComboBox());
 			this->labelResDepth = (gcnew System::Windows::Forms::Label());
 			this->textBoxResHeight = (gcnew System::Windows::Forms::TextBox());
@@ -211,6 +213,7 @@ namespace hlae {
 			// 
 			// groupBoxRes
 			// 
+			this->groupBoxRes->Controls->Add(this->checkBoxFullScreen);
 			this->groupBoxRes->Controls->Add(this->comboBoxResDepth);
 			this->groupBoxRes->Controls->Add(this->labelResDepth);
 			this->groupBoxRes->Controls->Add(this->textBoxResHeight);
@@ -224,6 +227,17 @@ namespace hlae {
 			this->groupBoxRes->TabIndex = 5;
 			this->groupBoxRes->TabStop = false;
 			this->groupBoxRes->Text = L"Graphic Resolution";
+			// 
+			// checkBoxFullScreen
+			// 
+			this->checkBoxFullScreen->AutoSize = true;
+			this->checkBoxFullScreen->Location = System::Drawing::Point(358, 32);
+			this->checkBoxFullScreen->Name = L"checkBoxFullScreen";
+			this->checkBoxFullScreen->Size = System::Drawing::Size(98, 17);
+			this->checkBoxFullScreen->TabIndex = 7;
+			this->checkBoxFullScreen->Text = L"fullscren (hack)";
+			this->checkBoxFullScreen->UseVisualStyleBackColor = true;
+			this->checkBoxFullScreen->Click += gcnew System::EventHandler(this, &Launcher::checkBoxFullScreen_Click);
 			// 
 			// comboBoxResDepth
 			// 
@@ -451,7 +465,26 @@ namespace hlae {
 #pragma endregion
 	private: System::Void buttonOK_Click(System::Object^  sender, System::EventArgs^  e);
 	private: System::Void buttonExe_Click(System::Object^  sender, System::EventArgs^  e);
-
-
+private: System::Void checkBoxFullScreen_Click(System::Object^  sender, System::EventArgs^  e) {
+			if( this->checkBoxFullScreen->Checked )
+			{
+				System::Windows::Forms::DialogResult dr = MessageBox::Show(
+					"Switching to fullscreen is not recommended:\n"
+					"- It may damage your hardware or software\n"
+					"- It may produce unexpected results\n"
+					"- This feature might go away in the future\n"
+					"\n"
+					"Do you really want to switch to fullscreen?",
+					"Fullscreen is experimental, are you sure?",
+					MessageBoxButtons::YesNo,
+					MessageBoxIcon::Warning
+				);
+				if( System::Windows::Forms::DialogResult::Yes == dr )
+				{					
+					this->checkBoxVisbility->Checked = false;
+				}
+				else this->checkBoxFullScreen->Checked = false;
+			}
+		 }
 };
 }

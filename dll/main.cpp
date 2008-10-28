@@ -3,8 +3,6 @@
 
 */
 
-#define MIRV_COMPILE_OLDLAUNCHER 0
-
 #include "mdt_debug.h"
 
 #pragma comment(lib,"OpenGL32.lib")

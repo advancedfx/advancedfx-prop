@@ -62,6 +62,8 @@ bool g_bIsUndocked = false; // undocked i.e. due to filming in Undock capture mo
 bool g_bHoldingActivate = false; // activation event that still needs to be delivered after the window is docked again
 bool g_bHoldedActivate; // last value on hold
 
+bool g_bFullScreenCheatMode = false;
+
 struct
 {
 	unsigned int ui_rx_packets;
@@ -509,6 +511,13 @@ ATOM APIENTRY HlaeBcClt_RegisterClassA(CONST WNDCLASSA *lpWndClass)
 	if (!HIWORD(lpWndClass->lpszClassName) || lstrcmp(lpWndClass->lpszClassName,"Valve001"))
 		return RegisterClassA(lpWndClass);
 
+	// check for fullscreen cheatcode:
+	if( pEngfuncs->CheckParm("-mdtfull",NULL) )
+	{
+		g_bFullScreenCheatMode = true;
+		return RegisterClassA( lpWndClass );
+	}
+
 	ATOM tResult = NULL;
 	WNDCLASSA *tWndClass= new WNDCLASSA;
 
@@ -552,6 +561,9 @@ HWND APIENTRY HlaeBcClt_CreateWindowExA(DWORD dwExStyle,LPCTSTR lpClassName,LPCT
 	MessageBoxA(NULL,sbuff,"MDT CreateWindowEx",MB_OK|MB_ICONINFORMATION);
 #endif
 
+	if( g_bFullScreenCheatMode )
+		return CreateWindowExA( dwExStyle, lpClassName, lpWindowName, dwStyle, x, y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam );
+
 	// quit if it's not the window we want:
 	if (hWndParent!=NULL)
 		return CreateWindowExA(dwExStyle,lpClassName,lpWindowName,dwStyle,x,y,nWidth,nHeight,hWndParent,hMenu,hInstance,lpParam);
@@ -593,6 +605,9 @@ HWND APIENTRY HlaeBcClt_CreateWindowExA(DWORD dwExStyle,LPCTSTR lpClassName,LPCT
 #include <gl/gl.h>
 BOOL APIENTRY HlaeBcClt_DestroyWindow(HWND hWnd)
 {
+	if( g_bFullScreenCheatMode )
+		return DestroyWindow( hWnd );
+
 	if (hWnd!=NULL && hWnd == g_HL_MainWindow)
 	{
 		// H-L main game window being destroyed
@@ -615,6 +630,9 @@ BOOL APIENTRY HlaeBcClt_DestroyWindow(HWND hWnd)
 
 BOOL WINAPI HlaeBcClt_SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, UINT uFlags)
 {
+	if( g_bFullScreenCheatMode )
+		return SetWindowPos( hWnd, hWndInsertAfter, X, Y, cx, cy, uFlags );
+
 	if (!g_hHlaeServerWND || hWnd==NULL || hWnd != g_HL_MainWindow ) return SetWindowPos(hWnd, hWndInsertAfter, X, Y, cx, cy, uFlags);
 
 	if ( !(uFlags & SWP_NOSIZE) && (cx != g_HL_MainWindow_info.nWidth || cy != g_HL_MainWindow_info.nHeight ) )
@@ -727,7 +745,7 @@ HGLRC Init_Support_Renderer(HWND hMainWindow, HDC hMainWindowDC, int iWidth, int
 	CHlaeSupportRender::ERenderTarget eRenderTarget = CHlaeSupportRender::RT_GAMEWINDOW;
 
 	g_HL_MainWindow_info.bUndockOnFilming = false;
-	if (pEngfuncs->CheckParm("-mdtoptvis", NULL ))
+	if ( g_bFullScreenCheatMode && pEngfuncs->CheckParm("-mdtoptvis", NULL ) )
 	{
 		g_HL_MainWindow_info.bUndockOnFilming = true;
 	}

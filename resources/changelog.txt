@@ -1,3 +1,10 @@
+HLAE 2.1.5.11
+
+* fixed mirv_fx_noblend address
+* re-added temporary fullscreen option (use with care,
+  might go away in the future again)
+
+
 HLAE 2.1.5.10
 
 * changed behaviour upon game connecting to a server

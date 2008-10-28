@@ -20,8 +20,14 @@ System::Void Launcher::buttonOK_Click(System::Object^  sender, System::EventArgs
 	String ^cmds, ^s1, ^s2, ^s3;
 	int i1;
 
-	cmds = String::Concat(
-		"-steam -gl -window -game ",
+	cmds = String::Concat("-steam -gl ");
+	
+	if( this->checkBoxFullScreen->Checked )
+		cmds = String::Concat(cmds," -window");
+	else
+		cmds = String::Concat(cmds," -full -mdtfull");
+
+	cmds = String::Concat( cmds, " -game ",
 		this->comboBoxModSel->Text->Split(' ',1)[0]
 	);
 
@@ -105,7 +111,8 @@ System::Void Launcher::ConfigRead()
 	//
 	if( lcfg->RenderMode < this->comboBoxRenderMode->Items->Count )
 		this->comboBoxRenderMode->SelectedIndex = lcfg->RenderMode;
-	
+	//
+	checkBoxFullScreen->Checked = lcfg->FullScreen;
 }
 
 System::Void Launcher::ConfigWrite()
@@ -129,6 +136,7 @@ System::Void Launcher::ConfigWrite()
 		lcfg->OptimizeVisibilty = this->checkBoxVisbility->Checked;
 		lcfg->StartDocked = this->checkBoxStartDocked->Checked;
 		lcfg->RenderMode = this->comboBoxRenderMode->SelectedIndex;
+		lcfg->FullScreen = this->checkBoxFullScreen->Checked;
 	}
 
 	Globals->ConfigMaster->BackUp();
