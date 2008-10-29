@@ -23,9 +23,9 @@ System::Void Launcher::buttonOK_Click(System::Object^  sender, System::EventArgs
 	cmds = String::Concat("-steam -gl ");
 	
 	if( this->checkBoxFullScreen->Checked )
-		cmds = String::Concat(cmds," -window");
-	else
 		cmds = String::Concat(cmds," -full -mdtfull");
+	else
+		cmds = String::Concat(cmds," -window");
 
 	cmds = String::Concat( cmds, " -game ",
 		this->comboBoxModSel->Text->Split(' ',1)[0]

@@ -1,3 +1,8 @@
+HLAE 2.1.5.12
+
+* fixed bug that would invert the fullscreen checkbox behaviour
+
+
 HLAE 2.1.5.11
 
 * fixed mirv_fx_noblend address

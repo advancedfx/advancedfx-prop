@@ -745,7 +745,7 @@ HGLRC Init_Support_Renderer(HWND hMainWindow, HDC hMainWindowDC, int iWidth, int
 	CHlaeSupportRender::ERenderTarget eRenderTarget = CHlaeSupportRender::RT_GAMEWINDOW;
 
 	g_HL_MainWindow_info.bUndockOnFilming = false;
-	if ( g_bFullScreenCheatMode && pEngfuncs->CheckParm("-mdtoptvis", NULL ) )
+	if ( !g_bFullScreenCheatMode && pEngfuncs->CheckParm("-mdtoptvis", NULL ) )
 	{
 		g_HL_MainWindow_info.bUndockOnFilming = true;
 	}
@@ -827,4 +827,9 @@ REGISTER_DEBUGCMD_FUNC(debug_rehookwnd)
 	else
 		pEngfuncs->Con_Printf("We seem to be at top.\n");
 	SetWindowLongPtr( (HWND)g_HL_MainWindow, GWL_WNDPROC, (LONG)Hooking_WndProc );
+}
+
+REGISTER_DEBUGCMD_FUNC(debug_getcommandline)
+{
+	pEngfuncs->Con_Printf("GetCommandLine(): %s\n",GetCommandLine());
 }
