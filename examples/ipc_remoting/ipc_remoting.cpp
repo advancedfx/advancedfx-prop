@@ -3,7 +3,7 @@
 //	This is the Half-Life Advanced Effects remoting example (C++).
 //
 //	It assumes that HLAE has been already launched with the -ipcremote option,
-//  the user has made his default settings already (path to game etc.)
+//  the user has made his or her default settings already (path to game etc.)
 //  and the game has not been launched yet.
 //
 //	The sample is puzzled together out of various Microsoft Developer Network
@@ -46,9 +46,7 @@ public:
 	String ^ GetCustomArgs();
 
 	//  Launch
-	//    Launches the engine
-	//	  Warning: HLAE currently does no checks if the game is running etc.,
-	//    so you might want to check if hl.exe is already running yourself.
+	//    Tells HLAE to launch the engine
 	//  Returns:
 	//    false on error, otherwise true
 	bool Launch();
