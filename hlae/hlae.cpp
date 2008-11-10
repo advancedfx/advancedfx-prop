@@ -7,6 +7,7 @@
 #include "system/config.h"
 #include "system/globals.h"
 
+
 #include "forms/MainForm.h"
 
 using namespace hlae;
@@ -25,6 +26,7 @@ int main(array<System::String ^> ^args)
 	//
 
 	String ^BaseDir = System::Windows::Forms::Application::StartupPath;
+	String ^cmdLine = System::Environment::CommandLine;
 
 	// Init debug system:
 	DebugMaster ^debugMaster = gcnew DebugMaster();
@@ -47,6 +49,9 @@ int main(array<System::String ^> ^args)
 
 	// Create the main window and run it
 	Application::Run(gcnew MainForm(Globals,debugFile));
+
+	// remove globals:
+	delete Globals;
 
 	// shutdown debug system:
 

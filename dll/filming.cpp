@@ -1297,6 +1297,9 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 
 void Filming::clearBuffers()
 {
+	// Make sure the mask colour is still correct
+	glClearColor(m_MatteColour[0], m_MatteColour[1], m_MatteColour[2], 1.0f);
+
 	// Now we do our clearing!
 	if(m_iMatteStage!=MS_ENTITY || matte_xray->value)
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);

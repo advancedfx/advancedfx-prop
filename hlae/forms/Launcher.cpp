@@ -20,7 +20,7 @@ System::Void Launcher::buttonOK_Click(System::Object^  sender, System::EventArgs
 	String ^cmds, ^s1, ^s2, ^s3;
 	int i1;
 
-	cmds = String::Concat("-steam -gl ");
+	cmds = String::Concat("-steam -gl");
 	
 	if( this->checkBoxFullScreen->Checked )
 		cmds = String::Concat(cmds," -full -mdtfull");
@@ -77,7 +77,17 @@ System::Void Launcher::buttonOK_Click(System::Object^  sender, System::EventArgs
 
 	VERBOSE_MESSAGE(Globals->debugMaster,String::Concat("launching \"",s1,"\" with: ",cmds));
 
-	InitLoader( 0, s1, cmds );
+	array<System::Diagnostics::Process^>^procs = System::Diagnostics::Process::GetProcessesByName( "hl" );
+	if(0 < procs->Length)
+	{
+		MessageBox::Show(
+			"hl.exe is already running, cannot launch. Please terminate hl.exe.",
+			"Error",
+			MessageBoxButtons::OK,
+			MessageBoxIcon::Error
+		);
+	}
+	else InitLoader( 0, s1, cmds );
 
 	// backup config
 	ConfigWrite();

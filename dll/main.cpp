@@ -288,6 +288,42 @@ REGISTER_DEBUGCMD_FUNC(debug_cmdaddress)
 	pEngfuncs->Con_Printf("%s: 0x%08x\n",parg,paddr);
 }
 
+REGISTER_DEBUGCMD_FUNC(debug_spec)
+{
+	pEngfuncs->Con_Printf(
+		"iuser1: %i\n"
+		"iuser2: %i\n",
+		ppmove->iuser1,
+		ppmove->iuser2
+	);
+
+	if(pEngfuncs->Cmd_Argc()!=2) return;
+	int idx = atoi(pEngfuncs->Cmd_Argv(1));
+
+	cl_entity_t *e = pEngfuncs->GetEntityByIndex(idx);
+
+	if (e)
+		pEngfuncs->Con_Printf(" e");
+	else
+		return;
+	if(e->player)
+		pEngfuncs->Con_Printf(" player");
+	else
+		return;
+	if(e->model)
+		pEngfuncs->Con_Printf(" model");
+	else
+		return;
+	if(!(e->curstate.effects & EF_NODRAW))
+		pEngfuncs->Con_Printf(" NODRAW");
+	else
+		return;
+
+	float flDeltaTime = fabs(pEngfuncs->GetClientTime() - e->curstate.msg_time);
+	pEngfuncs->Con_Printf(" time:%f\n", flDeltaTime);
+
+}
+
 void DrawActivePlayers()
 {
 	bool bNotInEye = ppmove->iuser1 != 4;
@@ -304,8 +340,9 @@ void DrawActivePlayers()
 			float flDeltaTime = fabs(pEngfuncs->GetClientTime() - e->curstate.msg_time);
 
 			if (flDeltaTime < deltatime->value)
+			{
 				pEngfuncs->CL_CreateVisibleEntity(ET_PLAYER, e);
-
+			}
 		}
 	}
 }

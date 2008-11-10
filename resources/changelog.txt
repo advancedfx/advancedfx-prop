@@ -1,3 +1,21 @@
+HLAE 2.1.6.0
+
+* added crappy check to the launcher if hl is already running
+
+* fixed potential flaw that could lead to matte color not being
+  reforced as glClearColor (thanks to user "yes.")
+  
+* added possibilty for other tools (i.e. DemoPlayers) to interface
+  with HLAE. This feature will be documented in the HLAEwiki
+  online manual in the appendix section (including source code)
+
+
+HLAE 2.1.5.13
+
+* fixed wrong p_playermove_s address:
+  (affects aiming system and 1st person detection in fixforcehltv mode)
+
+
 HLAE 2.1.5.12
 
 * fixed bug that would invert the fullscreen checkbox behaviour

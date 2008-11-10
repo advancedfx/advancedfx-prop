@@ -19,6 +19,12 @@ using namespace hlae;
 using namespace hlae::debug;
 using namespace hlae::config;
 
+//	CGlobals
+//
+//	The following rules apply when using CGlobals:
+//	1) They are only valid during Application::Run
+//	2) They may not change during Application::Run
+//	3) Only threadsafe functions of exposed structures may be used
 ref class CGlobals
 {
 public:

@@ -239,6 +239,10 @@
 							RelativePath=".\system\loader.h"
 							>
 						</File>
+						<File
+							RelativePath=".\system\remoting.h"
+							>
+						</File>
 					</Filter>
 					<Filter
 						Name="Source Files"

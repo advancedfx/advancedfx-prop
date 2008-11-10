@@ -3,6 +3,7 @@
 #include <system/debug.h>
 #include <system/debug_file.h>
 #include <system/globals.h>
+#include <system/remoting.h>
 
 class CHlaeBcServer; // forward decleration
 
@@ -17,6 +18,7 @@ namespace hlae {
 
 	using namespace hlae::debug;
 	using namespace hlae::globals;
+	using namespace hlae::remoting;
 
 	/// <summary>
 	/// Summary for MainFOrm
@@ -72,6 +74,7 @@ namespace hlae {
 
 	private:
 		CHlaeBcServer *hlaeBaseComServer;
+		HlaeRemoting ^remotingSystem;
 		CGlobals ^Globals;
 		FileDebugListener ^debugFile;
 

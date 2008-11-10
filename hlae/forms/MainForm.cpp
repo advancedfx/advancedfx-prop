@@ -8,14 +8,23 @@
 
 using namespace hlae;
 using namespace hlae::debug;
+using namespace hlae::remoting;
 
 void MainForm::MyCreate()
 {
 	hlaeBaseComServer = new ::CHlaeBcServer( this->toolStripContainer1->ContentPanel );
+
+	// start up public remoting system (if requested):
+	if( System::Environment::CommandLine->Contains( "-ipcremote" ) )
+		remotingSystem = gcnew HlaeRemoting( Globals );
 }
 
 void MainForm::MyDestroy()
 {
+	// shutdown remoting system (if it was started):
+	if( remotingSystem )
+		delete remotingSystem;
+
 	delete hlaeBaseComServer;
 }
 
