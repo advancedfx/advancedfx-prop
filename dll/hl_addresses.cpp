@@ -92,8 +92,15 @@ HL_ADDR_ENTRY(SZ_unkInlineClientColorA,"0x0")
 HL_ADDR_ENTRY(unkInlineClientColorV,"0x0")
 HL_ADDR_ENTRY(SZ_unkInlineClientColorV,"0x0")
 
+HL_ADDR_ENTRY(CLOFS_UnkCstrikeCrosshairFn,"0x0")
+HL_ADDR_ENTRY(DTOURSZ_UnkCstrikeCrosshairFn,"0x0")
+HL_ADDR_ENTRY(CLOFS_UnkCstrikeCh_mul_fac,"0x0")
+HL_ADDR_ENTRY(CLOFS_UnkCstrikeCh_add_fac,"0x0")
+
 HL_ADDR_ENTRY(R_PolyBlend,"0x0")
 HL_ADDR_ENTRY(DTOURSZ_R_PolyBlend,"0x0")
+
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // cHLAddresses

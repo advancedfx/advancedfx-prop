@@ -334,6 +334,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\cstrike_ch.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\dd_hook.cpp"
 					>
 				</File>

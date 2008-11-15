@@ -73,9 +73,10 @@ void CvarRegister(Void_func_t func) { GetCvarList().push_front(func); }
 void CmdRegister(Void_func_t func) { GetCmdList().push_front(func); }
 
 // Various H-L Engine interface (super) Globals:
-cl_enginefuncs_s* pEngfuncs		= (cl_enginefuncs_s*)	HL_ADDR_CL_ENGINEFUNCS_S;
-engine_studio_api_s* pEngStudio	= (engine_studio_api_s*)HL_ADDR_ENGINE_STUDIO_API_S;
-playermove_s* ppmove			= (playermove_s*)		HL_ADDR_PLAYERMOVE_S;
+//   (they are filled when the addresses system is loaded)
+cl_enginefuncs_s* pEngfuncs		= (cl_enginefuncs_s*)	NULL;
+engine_studio_api_s* pEngStudio	= (engine_studio_api_s*)NULL;
+playermove_s* ppmove			= (playermove_s*)		NULL;
 
 int		g_nViewports = 0;
 bool	g_bIsSucceedingViewport = false;

@@ -221,6 +221,6 @@ REGISTER_CMD_FUNC(disable_specmenu)
 
 	}
 	else
-		pEngfuncs->Con_Printf("Usage: " PREFIX "tfc_specmenu 0 (disable) / 1 (enable)\n");
+		pEngfuncs->Con_Printf("Usage: " PREFIX "disable_specmenu 0 (disable) / 1 (enable)\n");
 
 }

@@ -1,3 +1,29 @@
+HLAE 2.2.1.0
+
+* added cstrike crosshair fix:
+  
+  mirv_crosshair_fps n
+    set n to the fps (sps in case you use the sampling system)
+    you will be recording your movie at.
+    
+    Related debug command: __mirv_crosshair_base_fps
+    (HLAE / Mirv will scale the crosshair cool-down from
+    __mirv_crosshair_base_fps to mirv_crosshair_fps)
+
+  Well you wanted it, there you have it.
+
+* various tweaks
+
+* restored mirv_playercolors_cs
+  (In case noone claims to use this command we'll most likely remove
+  it sooner or later, since updating it is a mess :)
+
+Greetings:
+  Mirvin_Monkey (where ever you may sneak around)
+  FragMonkey, juGGaKNot, msthavoc
+  S.o. related to 1999-2001 (I am not 100% sure who is who).
+
+
 HLAE 2.1.6.0
 
 * added crappy check to the launcher if hl is already running

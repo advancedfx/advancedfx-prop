@@ -169,8 +169,8 @@ namespace hlae {
 			// comboBoxModSel
 			// 
 			this->comboBoxModSel->FormattingEnabled = true;
-			this->comboBoxModSel->Items->AddRange(gcnew cli::array< System::Object^  >(3) {L"cstrike (Counter-Strike)", L"dod (Day of Defeat)", 
-				L"tfc (Team Fortress Classic)"});
+			this->comboBoxModSel->Items->AddRange(gcnew cli::array< System::Object^  >(4) {L"cstrike (Counter-Strike)", L"dod (Day of Defeat)", 
+				L"tfc (Team Fortress Classic)", L"valve (Half-Life)"});
 			this->comboBoxModSel->Location = System::Drawing::Point(112, 51);
 			this->comboBoxModSel->Name = L"comboBoxModSel";
 			this->comboBoxModSel->Size = System::Drawing::Size(224, 21);

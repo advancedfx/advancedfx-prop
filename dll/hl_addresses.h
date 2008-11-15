@@ -258,6 +258,10 @@ extern unsigned long ulHLAddr_unkInlineClientColorA;
 extern unsigned long ulHLAddr_SZ_unkInlineClientColorA;
 extern unsigned long ulHLAddr_unkInlineClientColorV;
 extern unsigned long ulHLAddr_SZ_unkInlineClientColorV;
+extern unsigned long ulHLAddr_CLOFS_UnkCstrikeCrosshairFn;
+extern unsigned long ulHLAddr_DTOURSZ_UnkCstrikeCrosshairFn;
+extern unsigned long ulHLAddr_CLOFS_UnkCstrikeCh_mul_fac;
+extern unsigned long ulHLAddr_CLOFS_UnkCstrikeCh_add_fac;
 extern unsigned long ulHLAddr_R_PolyBlend;
 extern unsigned long ulHLAddr_DTOURSZ_R_PolyBlend;
 
@@ -318,6 +322,11 @@ extern unsigned long ulHLAddr_DTOURSZ_R_PolyBlend;
 #define HL_ADDR_SZ_unkInlineClientColorA ulHLAddr_SZ_unkInlineClientColorA
 #define HL_ADDR_unkInlineClientColorV ulHLAddr_unkInlineClientColorV
 #define HL_ADDR_SZ_unkInlineClientColorV ulHLAddr_SZ_unkInlineClientColorV
+
+#define HL_ADDR_CLOFS_UnkCstrikeCrosshairFn ulHLAddr_CLOFS_UnkCstrikeCrosshairFn
+#define HL_ADDR_DTOURSZ_UnkCstrikeCrosshairFn ulHLAddr_DTOURSZ_UnkCstrikeCrosshairFn
+#define HL_ADDR_CLOFS_UnkCstrikeCh_mul_fac ulHLAddr_CLOFS_UnkCstrikeCh_mul_fac
+#define HL_ADDR_CLOFS_UnkCstrikeCh_add_fac ulHLAddr_CLOFS_UnkCstrikeCh_add_fac
 
 #define HL_ADDR_R_PolyBlend ulHLAddr_R_PolyBlend
 #define HL_ADDR_DTOURSZ_R_PolyBlend ulHLAddr_DTOURSZ_R_PolyBlend

@@ -141,23 +141,25 @@ DWORD dwJmp_unkInlineClientColorV=0;
 
 __declspec(naked) void tour_unkInlineClientColorA()
 {
-	// clientIndex is supplied in ebx and color pointer has to be teturned in ecx
+	// clientIndex is supplied in ebp and color pointer has to be teturned in ecx
 	__asm
 	{
-		PUSH	edx ; preserve other c++ registers
+		PUSH	ebx ; preserve other c++ registers
+		PUSH	edx ; .
 		PUSH	esi ; .
 		PUSH	edi ; .
 
 		PUSH	eax
-		PUSH	ebx ; push clientIndex on stack
+		PUSH	ebp ; push clientIndex on stack
 		CALL	New_unkInlineClientColorA
-		POP		ebx
-		MOV		ecx, eax ; move result back towhere it belongs
+		POP		ebp
+		MOV		ecx, eax ; move result back to where it belongs
 		POP		eax
 
 		POP		edi
 		POP		esi
 		POP		edx
+		POP		ebx
 
 		JMP		[dwJmp_unkInlineClientColorA] ; jump back into HL code
 	};
@@ -165,16 +167,15 @@ __declspec(naked) void tour_unkInlineClientColorA()
 
 __declspec(naked) void tour_unkInlineClientColorV()
 {
-	// clientIndex is supplied in eax and color pointer has to be teturned in eax
+	// clientIndex is supplied in ebx and color pointer has to be teturned in eax
 	__asm
 	{
-		PUSH	ebx ; preserve other c++ registers
-		PUSH	ecx ; .
+		PUSH	ecx ; preserve other c++ registers
 		PUSH	edx ; .
 		PUSH	esi ; .
 		PUSH	edi ; .
 
-		PUSH	eax ; push clientIndex on stack
+		PUSH	ebx ; push clientIndex on stack
 		CALL	New_unkInlineClientColorV
 		ADD		esp, 0x04
 
@@ -182,7 +183,6 @@ __declspec(naked) void tour_unkInlineClientColorV()
 		POP		esi
 		POP		edx
 		POP		ecx
-		POP		ebx
 
 		JMP		[dwJmp_unkInlineClientColorV]
 	};
@@ -192,7 +192,24 @@ void InstallHook_GetClientColor( void )
 {
 	if (!g_bHooked)
 	{
+
+		const char *gamedir = pEngfuncs->pfnGetGameDirectory();
+		DWORD dwClientDLL = NULL;
+
+		if( !strcmp("cstrike",gamedir) )
+		{
+			dwClientDLL = (DWORD)GetModuleHandle("client.dll");
+			pEngfuncs->Con_DPrintf("0x%08x\n",dwClientDLL);
+		}
+		else
+		{
+			pEngfuncs->Con_Printf( "Sorry, your mod (%s) is not supported for this command.\n",	gamedir );
+			return; // quit
+		}
+
 		g_bHooked = true;
+
+		int i_ok_cnt = 0;
 
 		// prepare color struct:
 		g_NewColors.defaultactive = false;
@@ -201,57 +218,66 @@ void InstallHook_GetClientColor( void )
 
 		// hook GetClientColor:
 		if (HL_ADDR_GetClientColor!=NULL)
-			g_Hooked_GetClientColor = (GetClientColor_t) DetourApply((BYTE *)HL_ADDR_GetClientColor, (BYTE *)Hooking_GetClientColor, (int)HL_ADDR_DTOURSZ_GetClientColor);
+		{
+			g_Hooked_GetClientColor = (GetClientColor_t) DetourApply((BYTE *)(dwClientDLL + HL_ADDR_GetClientColor), (BYTE *)Hooking_GetClientColor, (int)HL_ADDR_DTOURSZ_GetClientColor);
+			i_ok_cnt++;
+		}
 
 		// replace unkInlineClientColorA (Attacker frag coloring):
 		if (HL_ADDR_unkInlineClientColorA != NULL)
 		{
-			dwJmp_unkInlineClientColorA = HL_ADDR_unkInlineClientColorA + HL_ADDR_SZ_unkInlineClientColorA;
+			dwJmp_unkInlineClientColorA = (dwClientDLL + HL_ADDR_unkInlineClientColorA) + HL_ADDR_SZ_unkInlineClientColorA;
 
 			DWORD dwOldProt;
 
-			VirtualProtect( (void *)HL_ADDR_unkInlineClientColorA, HL_ADDR_SZ_unkInlineClientColorA, PAGE_READWRITE, &dwOldProt);
+			VirtualProtect( (void *)(dwClientDLL + HL_ADDR_unkInlineClientColorA), HL_ADDR_SZ_unkInlineClientColorA, PAGE_READWRITE, &dwOldProt);
 
 			// make many NOPs:
-			memset( (void *)HL_ADDR_unkInlineClientColorA, asmNOP, HL_ADDR_SZ_unkInlineClientColorA);
+			memset( (void *)(dwClientDLL + HL_ADDR_unkInlineClientColorA), asmNOP, HL_ADDR_SZ_unkInlineClientColorA);
 
 			// jmp on the naked guy:
 			unsigned char ucJMPE9 = asmJMP;
-			DWORD dwAddress = (DWORD)tour_unkInlineClientColorA - (DWORD)HL_ADDR_unkInlineClientColorA - JMP32_SZ;
-			memcpy( (void *)HL_ADDR_unkInlineClientColorA, &ucJMPE9, sizeof(unsigned char));
-			memcpy( (char *)HL_ADDR_unkInlineClientColorA+1, &dwAddress, sizeof(DWORD));
+			DWORD dwAddress = (DWORD)tour_unkInlineClientColorA - (DWORD)(dwClientDLL + HL_ADDR_unkInlineClientColorA) - JMP32_SZ;
+			memcpy( (void *)(dwClientDLL + HL_ADDR_unkInlineClientColorA), &ucJMPE9, sizeof(unsigned char));
+			memcpy( (char *)(dwClientDLL + HL_ADDR_unkInlineClientColorA)+1, &dwAddress, sizeof(DWORD));
 
-			VirtualProtect( (void *)HL_ADDR_unkInlineClientColorA, HL_ADDR_SZ_unkInlineClientColorA, dwOldProt, NULL);
+			VirtualProtect( (void *)(dwClientDLL + HL_ADDR_unkInlineClientColorA), HL_ADDR_SZ_unkInlineClientColorA, dwOldProt, NULL);
+
+			i_ok_cnt++;
 		}
 
 		// replace unkInlineClientColorV (Victim frag coloring):
 		if (HL_ADDR_unkInlineClientColorV != NULL)
 		{
-			dwJmp_unkInlineClientColorV = HL_ADDR_unkInlineClientColorV + HL_ADDR_SZ_unkInlineClientColorV;
+			dwJmp_unkInlineClientColorV = (dwClientDLL + HL_ADDR_unkInlineClientColorV) + HL_ADDR_SZ_unkInlineClientColorV;
 
 			DWORD dwOldProt;
 
-			VirtualProtect( (void *)HL_ADDR_unkInlineClientColorV, HL_ADDR_SZ_unkInlineClientColorV, PAGE_READWRITE, &dwOldProt);
+			VirtualProtect( (void *)(dwClientDLL + HL_ADDR_unkInlineClientColorV), HL_ADDR_SZ_unkInlineClientColorV, PAGE_READWRITE, &dwOldProt);
 
 			// make many NOPs:
-			memset( (void *)HL_ADDR_unkInlineClientColorV, asmNOP, HL_ADDR_SZ_unkInlineClientColorV);
+			memset( (void *)(dwClientDLL + HL_ADDR_unkInlineClientColorV), asmNOP, HL_ADDR_SZ_unkInlineClientColorV);
 
 			// jmp on the naked guy:
 			unsigned char ucJMPE9 = asmJMP;
-			DWORD dwAddress = (DWORD)tour_unkInlineClientColorV - (DWORD)HL_ADDR_unkInlineClientColorV - JMP32_SZ;
-			memcpy( (void *)HL_ADDR_unkInlineClientColorV, &ucJMPE9, sizeof(unsigned char));
-			memcpy( (char *)HL_ADDR_unkInlineClientColorV+1, &dwAddress, sizeof(DWORD));
+			DWORD dwAddress = (DWORD)tour_unkInlineClientColorV - (DWORD)(dwClientDLL + HL_ADDR_unkInlineClientColorV) - JMP32_SZ;
+			memcpy( (void *)(dwClientDLL + HL_ADDR_unkInlineClientColorV), &ucJMPE9, sizeof(unsigned char));
+			memcpy( (char *)(dwClientDLL + HL_ADDR_unkInlineClientColorV)+1, &dwAddress, sizeof(DWORD));
 
-			VirtualProtect( (void *)HL_ADDR_unkInlineClientColorV, HL_ADDR_SZ_unkInlineClientColorV, dwOldProt, NULL);
+			VirtualProtect( (void *)(dwClientDLL + HL_ADDR_unkInlineClientColorV), HL_ADDR_SZ_unkInlineClientColorV, dwOldProt, NULL);
+
+			i_ok_cnt++;
 		}
 
-
+		if( i_ok_cnt != 3 )
+		{
+			pEngfuncs->Con_Printf("WARNING: only %i of %i hooks were enabled.\n" );
+		}
 	}
 }
 
 
 REGISTER_CMD_FUNC(playercolors_cs)
-
 {
 	InstallHook_GetClientColor();
 	bool bShowHelp=true;
@@ -425,6 +451,9 @@ REGISTER_CMD_FUNC(playercolors_cs)
 	{
 		pEngfuncs->Con_Printf(
 			"This command only works in cstrike.\n"
+			"\n"
+			"Colors: <Red>, <Green> and <Blue> are floating point values between 0.0 to 1.0\n"
+			"\n"
 			"Targets (insert for <traget> in the commands):\n"
 			"\tg - general text (playername head-up, map overview)\n"
 			"\ta - attacker text of the deathnotice (frags)\n"
@@ -472,84 +501,83 @@ float *GetClientColor( int clientIndex )
 
 ----
 
+client.dll: 0x0D4A0000
+
 g_ColorBlue:
 
-019e662c 9a 99 19 3f cd cc 4c 3f 00 00 80 3f 00 00 80 3f 00 00 80 3e 00 00 80
+0d5877a4 9a 99 19 3f cd cc 4c 3f 00 00 80 3f 00 00 80 3f 00 00 80 3e 00 00 80
 
-0:000> s launcher 4000000 2c 66 9e 01
-01945036  2c 66 9e 01 c3 b8 50 66-9e 01 c3 b8 44 66 9e 01  ,f....Pf....Df..
-019455fe  2c 66 9e 01 eb 13 b9 50-66 9e 01 eb 0c b9 44 66  ,f.....Pf.....Df
-01945688  2c 66 9e 01 eb 13 b8 50-66 9e 01 eb 0c b8 44 66  ,f.....Pf.....Df
+0:016> s client L1000000 a4 77 58 0d
+0d4e5cf6  a4 77 58 0d c3 b8 c8 77-58 0d c3 b8 bc 77 58 0d  .wX....wX....wX.
+0d4e62bf  a4 77 58 0d eb 13 b9 c8-77 58 0d eb 0c b9 bc 77  .wX.....wX.....w
+0d4e6343  a4 77 58 0d eb 13 b8 c8-77 58 0d eb 0c b8 bc 77  .wX.....wX.....w
 
 01945035 b82c669e01      mov     eax,offset launcher!CreateInterface+0x5e523d (019e662c)
 0194503a c3              ret
 
 after ret:
 
-01964776 55              push    ebp
-01964777 e89408feff      call    launcher!CreateInterface+0x543c21 (01945010)
-0196477c 83c40c          add     esp,0Ch
+0d54a1dc 50              push    eax
+0d54a1dd e8eebaf9ff      call    client!F+0x950 (0d4e5cd0)
+0d54a1e2 8bf0            mov     esi,eax
 
 
-(01945036-1) --> GetClientColor function (uses in CS by HeadUp + Overview)
-01945010 8b442404        mov     eax,dword ptr [esp+4]
-01945014 8d0c40          lea     ecx,[eax+eax*2]
-01945017 8d1488          lea     edx,[eax+ecx*4]
-0194501a 0fbf04d59a99a201 movsx   eax,word ptr launcher!CreateInterface+0x6285ab (01a2999a)[edx*8]
-01945022 48              dec     eax
-01945023 83f803          cmp     eax,3
-01945026 771f            ja      launcher!CreateInterface+0x543c58 (01945047)
-01945028 ff248550509401  jmp     dword ptr launcher!CreateInterface+0x543c61 (01945050)[eax*4]
-0194502f b838669e01      mov     eax,offset launcher!CreateInterface+0x5e5249 (019e6638)
-01945034 c3              ret
-01945035 b82c669e01      mov     eax,offset launcher!CreateInterface+0x5e523d (019e662c)
-0194503a c3              ret
-0194503b b850669e01      mov     eax,offset launcher!CreateInterface+0x5e5261 (019e6650)
-01945040 c3              ret
-01945041 b844669e01      mov     eax,offset launcher!CreateInterface+0x5e5255 (019e6644)
-01945046 c3              ret
-01945047 b85c669e01      mov     eax,offset launcher!CreateInterface+0x5e526d (019e665c)
-0194504c c3              ret
-0194504d .
+0d4e5cd0 --> GetClientColor function (uses in CS by HeadUp + Overview)
 
-(019455fe-1) --> inline function, used for attacker?
-019455db 8d0c5b          lea     ecx,[ebx+ebx*2]
-019455de 8d148b          lea     edx,[ebx+ecx*4]
-019455e1 0fbf0cd59a99a201 movsx   ecx,word ptr launcher!CreateInterface+0x6285ab (01a2999a)[edx*8]
-019455e9 49              dec     ecx
-019455ea 83f903          cmp     ecx,3
-019455ed 7723            ja      launcher!CreateInterface+0x544223 (01945612)
-019455ef ff248d345a9401  jmp     dword ptr launcher!CreateInterface+0x544645 (01945a34)[ecx*4]
-019455f6 b938669e01      mov     ecx,offset launcher!CreateInterface+0x5e5249 (019e6638)
-019455fb eb1a            jmp     launcher!CreateInterface+0x544228 (01945617)
-019455fd b92c669e01      mov     ecx,offset launcher!CreateInterface+0x5e523d (019e662c)
-01945602 eb13            jmp     launcher!CreateInterface+0x544228 (01945617)
-01945604 b950669e01      mov     ecx,offset launcher!CreateInterface+0x5e5261 (019e6650)
-01945609 eb0c            jmp     launcher!CreateInterface+0x544228 (01945617)
-0194560b b944669e01      mov     ecx,offset launcher!CreateInterface+0x5e5255 (019e6644)
-01945610 eb05            jmp     launcher!CreateInterface+0x544228 (01945617)
-01945612 b95c669e01      mov     ecx,offset launcher!CreateInterface+0x5e526d (019e665c)
-01945617 .
---> playerid in ebx, return in ecx
+0d4e5cd0 8b442404        mov     eax,dword ptr [esp+4]
+0d4e5cd4 8d0c40          lea     ecx,[eax+eax*2]
+0d4e5cd7 8d1488          lea     edx,[eax+ecx*4]
+0d4e5cda 0fbf04d50ab35c0d movsx   eax,word ptr client!V_CalcRefdef+0xbcdba (0d5cb30a)[edx*8]
+0d4e5ce2 48              dec     eax
+0d4e5ce3 83f803          cmp     eax,3
+0d4e5ce6 771f            ja      client!F+0x987 (0d4e5d07)
+0d4e5ce8 ff2485105d4e0d  jmp     dword ptr client!F+0x990 (0d4e5d10)[eax*4]
 
-(01945688-1) --> inline function, used for defender?
-01945665 8d1440          lea     edx,[eax+eax*2]
-01945668 8d0490          lea     eax,[eax+edx*4]
-0194566b 0fbf04c59a99a201 movsx   eax,word ptr launcher!CreateInterface+0x6285ab (01a2999a)[eax*8]
-01945673 48              dec     eax
-01945674 83f803          cmp     eax,3
-01945677 7723            ja      launcher!CreateInterface+0x5442ad (0194569c)
-01945679 ff2485445a9401  jmp     dword ptr launcher!CreateInterface+0x544655 (01945a44)[eax*4]
-01945680 b838669e01      mov     eax,offset launcher!CreateInterface+0x5e5249 (019e6638)
-01945685 eb1a            jmp     launcher!CreateInterface+0x5442b2 (019456a1)
-01945687 b82c669e01      mov     eax,offset launcher!CreateInterface+0x5e523d (019e662c)
-0194568c eb13            jmp     launcher!CreateInterface+0x5442b2 (019456a1)
-0194568e b850669e01      mov     eax,offset launcher!CreateInterface+0x5e5261 (019e6650)
-01945693 eb0c            jmp     launcher!CreateInterface+0x5442b2 (019456a1)
-01945695 b844669e01      mov     eax,offset launcher!CreateInterface+0x5e5255 (019e6644)
-0194569a eb05            jmp     launcher!CreateInterface+0x5442b2 (019456a1)
-0194569c b85c669e01      mov     eax,offset launcher!CreateInterface+0x5e526d (019e665c)
-019456a1.
---> playerid in eax, return in eax
+...
+
+(0d4e62bf) --> used by inline function, used for attacker:
+
+0d4e629a 8d546d00        lea     edx,[ebp+ebp*2]
+0d4e629e 8d4c9500        lea     ecx,[ebp+edx*4]
+0d4e62a2 0fbf0ccd0ab35c0d movsx   ecx,word ptr client!V_CalcRefdef+0xbcdba (0d5cb30a)[ecx*8]
+0d4e62aa 49              dec     ecx
+0d4e62ab 83f903          cmp     ecx,3
+0d4e62ae 7723            ja      client!F+0xf53 (0d4e62d3)
+0d4e62b0 ff248df8664e0d  jmp     dword ptr client!F+0x1378 (0d4e66f8)[ecx*4]
+0d4e62b7 b9b077580d      mov     ecx,offset client!V_CalcRefdef+0x79260 (0d5877b0)
+0d4e62bc eb1a            jmp     client!F+0xf58 (0d4e62d8)
+0d4e62be b9a477580d      mov     ecx,offset client!V_CalcRefdef+0x79254 (0d5877a4)
+0d4e62c3 eb13            jmp     client!F+0xf58 (0d4e62d8)
+0d4e62c5 b9c877580d      mov     ecx,offset client!V_CalcRefdef+0x79278 (0d5877c8)
+0d4e62ca eb0c            jmp     client!F+0xf58 (0d4e62d8)
+0d4e62cc b9bc77580d      mov     ecx,offset client!V_CalcRefdef+0x7926c (0d5877bc)
+0d4e62d1 eb05            jmp     client!F+0xf58 (0d4e62d8)
+0d4e62d3 b9d477580d      mov     ecx,offset client!V_CalcRefdef+0x79284 (0d5877d4)
+0d4e62d8 .
+
+--> playerid in ebp, return in ecx
+
+
+(0d54a1e2) --> used by inline function, used for defender?
+
+0d4e6320 8d045b          lea     eax,[ebx+ebx*2]
+0d4e6323 8d1483          lea     edx,[ebx+eax*4]
+0d4e6326 0fbf04d50ab35c0d movsx   eax,word ptr client!V_CalcRefdef+0xbcdba (0d5cb30a)[edx*8]
+0d4e632e 48              dec     eax
+0d4e632f 83f803          cmp     eax,3
+0d4e6332 7723            ja      client!F+0xfd7 (0d4e6357)
+0d4e6334 ff248508674e0d  jmp     dword ptr client!F+0x1388 (0d4e6708)[eax*4]
+0d4e633b b8b077580d      mov     eax,offset client!V_CalcRefdef+0x79260 (0d5877b0)
+0d4e6340 eb1a            jmp     client!F+0xfdc (0d4e635c)
+0d4e6342 b8a477580d      mov     eax,offset client!V_CalcRefdef+0x79254 (0d5877a4)
+0d4e6347 eb13            jmp     client!F+0xfdc (0d4e635c)
+0d4e6349 b8c877580d      mov     eax,offset client!V_CalcRefdef+0x79278 (0d5877c8)
+0d4e634e eb0c            jmp     client!F+0xfdc (0d4e635c)
+0d4e6350 b8bc77580d      mov     eax,offset client!V_CalcRefdef+0x7926c (0d5877bc)
+0d4e6355 eb05            jmp     client!F+0xfdc (0d4e635c)
+0d4e6357 b8d477580d      mov     eax,offset client!V_CalcRefdef+0x79284 (0d5877d4)
+0d4e635c .
+
+--> playerid in ebx, return in eax
 
 */
