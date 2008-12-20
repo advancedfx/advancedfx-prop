@@ -1,5 +1,5 @@
 #include <stdafx.h>
-#include "basecom.h"
+#include "BasecomServer.h"
 
 //
 #pragma unmanaged
@@ -25,7 +25,6 @@ public:
 	bool HlaeBcSrvStart(CHlaeBcServer *pBase);
 	bool HlaeBcSrvStop();
 
-	LRESULT DispatchToClientProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam); // outdated, not supported anymore
 	LRESULT DispatchStruct(DWORD dwDataCode,DWORD cbDataSize,PVOID lpDataPtr);
 
 private:
@@ -147,21 +146,6 @@ bool CBCServerInternal::HlaeBcSrvStop()
 	return true;
 }
 
-LRESULT CBCServerInternal::DispatchToClientProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	return FALSE;
-	/*if (!_hwClient) return FALSE;
-
-	static HLAE_BASECOM_CallWndProc_s mycws;
-
-	mycws.hwnd = hwnd;
-	mycws.uMsg = uMsg;
-	mycws.wParam = wParam;
-	mycws.lParam = lParam;
-
-	return DispatchStruct(HLAE_BASECOM_MSGCL_CallWndProc_s,sizeof(HLAE_BASECOM_CallWndProc_s),&mycws);*/
-}
-
 LRESULT CBCServerInternal::DispatchStruct(DWORD dwDataCode,DWORD cbDataSize,PVOID lpDataPtr)
 {
 	if (!_hwClient) return FALSE;
@@ -221,8 +205,8 @@ LRESULT CALLBACK CBCServerInternal::_HlaeBcSrvWndProc(
 }
 
 BOOL CBCServerInternal::_MyOnRecieve(HWND hWnd,HWND hwSender,PCOPYDATASTRUCT pMyCDS)
-// we could add some pointer security checks here, they miss currently, we asume data is consitent.
 {
+	// we could add some pointer security checks here, they miss currently, we asume data is consitent.
 	switch (pMyCDS->dwData)
 	{
 	case HLAE_BASECOM_QRYSV_HELLO:
@@ -362,40 +346,6 @@ CHlaeBcServer::~CHlaeBcServer()
 #pragma unmanaged
 //
 
-bool CHlaeBcServer::PassEventPreParsed(unsigned int umsg,unsigned int wParam,unsigned int lParam)
-{
-	return TRUE == _pBCServerInternal->DispatchToClientProc((HWND)(_hwndGameWindowParent),(UINT)umsg,(WPARAM)wParam,(LPARAM)lParam);
-}
-
-bool CHlaeBcServer::PassEventPreParsed(unsigned int hwnd,unsigned int umsg,unsigned int wParam,unsigned int lParam)
-{
-	return TRUE == _pBCServerInternal->DispatchToClientProc((HWND)hwnd,(UINT)umsg,(WPARAM)wParam,(LPARAM)lParam);
-}
-
-bool CHlaeBcServer::OnGameWindowFocus()
-{
-	HLAE_BASECOM_OnGameWindowFocus_s mys;
-
-	return TRUE==_pBCServerInternal->DispatchStruct(
-		HLAE_BASECOM_MSGCL_OnGameWindowFocus,
-		sizeof(mys),
-		&mys
-	);
-}
-
-bool CHlaeBcServer::OnHlaeActivate(bool bActive)
-{
-	HLAE_BASECOM_OnServerActivate_s mys;
-
-	mys.bActive = bActive;
-
-	return TRUE==_pBCServerInternal->DispatchStruct(
-		HLAE_BASECOM_MSGCL_OnServerActivate,
-		sizeof(mys),
-		&mys
-	);
-}
-
 bool CHlaeBcServer::_OnGameWindowClose()
 {
 	HLAE_BASECOM_OnServerClose_s mys;
@@ -406,37 +356,6 @@ bool CHlaeBcServer::_OnGameWindowClose()
 		&mys
 	);
 	return true;
-}
-bool CHlaeBcServer::Pass_MouseEvent(unsigned int uMsg, unsigned int wParam, unsigned short iX,unsigned short iY)
-{
-	HLAE_BASECOM_MSGCL_MouseEvent_s mys;
-
-	mys.uMsg = uMsg;
-	mys.wParam = wParam;
-	mys.iX = iX;
-	mys.iY = iY;
-
-	// WARNING: HACK HACK! bad hack, we can't decide if the dispatch failed or if it wasn't processed!
-	return FALSE==_pBCServerInternal->DispatchStruct(
-		HLAE_BASECOM_MSGCL_MouseEvent,
-		sizeof(mys),
-		&mys
-	);
-}
-bool CHlaeBcServer::Pass_KeyBoardEvent(unsigned int uMsg, unsigned int uKeyCode, unsigned int uKeyFlags)
-{
-	HLAE_BASECOM_MSGCL_KeyBoardEvent_s mys;
-
-	mys.uMsg = uMsg;
-	mys.uKeyCode = uKeyCode;
-	mys.uKeyFlags = uKeyFlags;
-
-	// WARNING: HACK HACK! bad hack, we can't decide if the dispatch failed or if it wasn't processed!
-	return FALSE==_pBCServerInternal->DispatchStruct(
-		HLAE_BASECOM_MSGCL_KeyBoardEvent,
-		sizeof(mys),
-		&mys
-	);
 }
 
 void *CHlaeBcServer::_OnCreateWindow(int nWidth, int nHeight)

@@ -89,7 +89,7 @@ public:
 		RememberChanges = true;
 		// Advanced Settings:
 		ForceAlpha = false;
-		OptimizeDesktopRes = true;
+		OptimizeDesktopRes = false;
 		OptimizeVisibilty = true;
 		StartDocked = true;
 		FullScreen = false;

@@ -4,7 +4,7 @@
 #include "Launcher.h"
 #include <system/debug.h>
 #include <system/demotoolswizard.h>
-#include <system/basecom.h>
+#include <system/BasecomServer.h>
 
 using namespace hlae;
 using namespace hlae::debug;

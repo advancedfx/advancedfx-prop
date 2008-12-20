@@ -14,7 +14,7 @@
 
 #include "demotools.h"
 #include <system/debug.h>
-#include <forms/ProgressDialog.h>
+//#include <forms/ProgressDialog.h>
 #include <tchar.h>
 #include <shared/hldemo/hldemo_clr.h>
 
