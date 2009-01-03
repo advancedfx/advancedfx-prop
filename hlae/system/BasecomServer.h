@@ -6,7 +6,7 @@ class CBCServerInternal;
 class CHlaeBcServer
 {
 public:
-	CHlaeBcServer( System::Windows::Forms::ToolStripContentPanel ^gameWindowParent );
+	CHlaeBcServer( System::Windows::Forms::Panel ^gameWindowParent );
 	~CHlaeBcServer();
 
 	bool Destroy();

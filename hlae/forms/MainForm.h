@@ -1,10 +1,12 @@
 #pragma once
 
+#include <forms/calculator.h>
+#include <forms/UpdaterForm.h>
+#include <controls/HlaeConsole.h>
 #include <system/debug.h>
 #include <system/debug_file.h>
 #include <system/globals.h>
 #include <system/remoting.h>
-#include <forms/calculator.h>
 
 class CHlaeBcServer; // forward decleration
 
@@ -42,6 +44,28 @@ namespace hlae {
 			
 			this->Icon = System::Drawing::Icon::ExtractAssociatedIcon(System::Windows::Forms::Application::ExecutablePath );
 
+			//
+			// Setup HLAE Console:
+
+			this->splitContainerSecondary->Panel2->SuspendLayout();
+			this->splitContainerSecondary->SuspendLayout();
+			this->splitContainerPrimary->Panel2->SuspendLayout();
+			this->splitContainerPrimary->SuspendLayout();
+			this->SuspendLayout();
+
+			this->hlaeConsole = (gcnew HlaeConsole(this->Globals->debugMaster));
+			this->splitContainerSecondary->Panel2->Controls->Add(this->hlaeConsole);
+			this->hlaeConsole->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->hlaeConsole->Location = System::Drawing::Point(0, 0);
+			this->hlaeConsole->Name = L"hlaeConsole";
+
+			this->splitContainerSecondary->Panel2->ResumeLayout(false);
+			this->splitContainerSecondary->ResumeLayout(false);
+			this->splitContainerPrimary->Panel2->ResumeLayout(false);
+			this->splitContainerPrimary->ResumeLayout(false);
+			this->ResumeLayout(false);
+			this->PerformLayout();
+
 			#ifdef _DEBUG
 				// Enable Debug Menu
 				this->menuStrip1->SuspendLayout();
@@ -78,10 +102,7 @@ namespace hlae {
 		HlaeRemoting ^remotingSystem;
 		CGlobals ^Globals;
 		FileDebugListener ^debugFile;
-
-
-
-
+		HlaeConsole ^hlaeConsole;
 
 
 	private: System::Windows::Forms::MenuStrip^  menuStrip1;
@@ -91,55 +112,28 @@ namespace hlae {
 	private: System::Windows::Forms::ToolStripMenuItem^  exitToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^  viewToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^  dockGameToolStripMenuItem;
-	private: System::Windows::Forms::ToolStripMenuItem^  externalConsoleToolStripMenuItem;
+	private: System::Windows::Forms::ToolStripMenuItem^  viewConsoleToolStripMenuItem;
+
 	private: System::Windows::Forms::ToolStripMenuItem^  toolsToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^  demoToolsToolStripMenuItem;
+	private: System::Windows::Forms::ToolStripMenuItem^  calculatorsToolStripMenuItem;
+	private: System::Windows::Forms::ToolStripMenuItem^  fileSizeToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^  helpToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^  advancedfxorgToolStripMenuItem;
+	private: System::Windows::Forms::ToolStripSeparator^  toolStripMenuItem2;
+	private: System::Windows::Forms::ToolStripMenuItem^  checkForUpdateToolStripMenuItem;
+
+
 	private: System::Windows::Forms::ToolStripMenuItem^  debugToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^  flushLogFileToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^  neverDropMessagesToolStripMenuItem;
-	private: System::Windows::Forms::ToolStripContainer^  toolStripContainer1;
-
-	private: System::Windows::Forms::ToolStripPanel^  BottomToolStripPanel;
-	private: System::Windows::Forms::ToolStripPanel^  TopToolStripPanel;
-	private: System::Windows::Forms::ToolStripPanel^  RightToolStripPanel;
-	private: System::Windows::Forms::ToolStripPanel^  LeftToolStripPanel;
-	private: System::Windows::Forms::ToolStripContentPanel^  ContentPanel;
-	private: System::Windows::Forms::ToolStripMenuItem^  checkForUpdateToolStripMenuItem;
-	private: System::Windows::Forms::ToolStripSeparator^  toolStripMenuItem2;
-	private: System::Windows::Forms::ToolStripMenuItem^  calculatorsToolStripMenuItem;
-	private: System::Windows::Forms::ToolStripMenuItem^  fileSizeToolStripMenuItem;
-	private: System::Windows::Forms::ToolStripSeparator^  toolStripMenuItem3;
-	private: System::Windows::Forms::ToolStripMenuItem^  aboutToolStripMenuItem;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	private: System::Windows::Forms::ToolStripPanel^  toolStripPanelTop;
+	private: System::Windows::Forms::SplitContainer^  splitContainerPrimary;
+	private: System::Windows::Forms::SplitContainer^  splitContainerSecondary;
+	private: System::Windows::Forms::Panel^  panelGame;
+	private: System::Windows::Forms::ToolStripMenuItem^  statusBarToolStripMenuItem;
+	private: System::Windows::Forms::ToolStripPanel^  toolStripPanelBottom;
+	private: System::Windows::Forms::StatusStrip^  statusStripMain;
 
 
 
@@ -158,11 +152,7 @@ namespace hlae {
 		/// </summary>
 		void InitializeComponent(void)
 		{
-			this->BottomToolStripPanel = (gcnew System::Windows::Forms::ToolStripPanel());
-			this->TopToolStripPanel = (gcnew System::Windows::Forms::ToolStripPanel());
-			this->RightToolStripPanel = (gcnew System::Windows::Forms::ToolStripPanel());
-			this->LeftToolStripPanel = (gcnew System::Windows::Forms::ToolStripPanel());
-			this->ContentPanel = (gcnew System::Windows::Forms::ToolStripContentPanel());
+			System::ComponentModel::ComponentResourceManager^  resources = (gcnew System::ComponentModel::ComponentResourceManager(MainForm::typeid));
 			this->menuStrip1 = (gcnew System::Windows::Forms::MenuStrip());
 			this->fileToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->launchToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
@@ -170,7 +160,8 @@ namespace hlae {
 			this->exitToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->viewToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->dockGameToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
-			this->externalConsoleToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->viewConsoleToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->statusBarToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->toolsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->demoToolsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->calculatorsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
@@ -179,52 +170,23 @@ namespace hlae {
 			this->advancedfxorgToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->toolStripMenuItem2 = (gcnew System::Windows::Forms::ToolStripSeparator());
 			this->checkForUpdateToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
-			this->toolStripMenuItem3 = (gcnew System::Windows::Forms::ToolStripSeparator());
-			this->aboutToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->debugToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->flushLogFileToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->neverDropMessagesToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
-			this->toolStripContainer1 = (gcnew System::Windows::Forms::ToolStripContainer());
+			this->toolStripPanelTop = (gcnew System::Windows::Forms::ToolStripPanel());
+			this->splitContainerPrimary = (gcnew System::Windows::Forms::SplitContainer());
+			this->splitContainerSecondary = (gcnew System::Windows::Forms::SplitContainer());
+			this->panelGame = (gcnew System::Windows::Forms::Panel());
+			this->toolStripPanelBottom = (gcnew System::Windows::Forms::ToolStripPanel());
+			this->statusStripMain = (gcnew System::Windows::Forms::StatusStrip());
 			this->menuStrip1->SuspendLayout();
-			this->toolStripContainer1->TopToolStripPanel->SuspendLayout();
-			this->toolStripContainer1->SuspendLayout();
+			this->toolStripPanelTop->SuspendLayout();
+			this->splitContainerPrimary->Panel2->SuspendLayout();
+			this->splitContainerPrimary->SuspendLayout();
+			this->splitContainerSecondary->Panel1->SuspendLayout();
+			this->splitContainerSecondary->SuspendLayout();
+			this->toolStripPanelBottom->SuspendLayout();
 			this->SuspendLayout();
-			// 
-			// BottomToolStripPanel
-			// 
-			this->BottomToolStripPanel->Location = System::Drawing::Point(0, 0);
-			this->BottomToolStripPanel->Name = L"BottomToolStripPanel";
-			this->BottomToolStripPanel->Orientation = System::Windows::Forms::Orientation::Horizontal;
-			this->BottomToolStripPanel->RowMargin = System::Windows::Forms::Padding(3, 0, 0, 0);
-			this->BottomToolStripPanel->Size = System::Drawing::Size(0, 0);
-			// 
-			// TopToolStripPanel
-			// 
-			this->TopToolStripPanel->Location = System::Drawing::Point(0, 0);
-			this->TopToolStripPanel->Name = L"TopToolStripPanel";
-			this->TopToolStripPanel->Orientation = System::Windows::Forms::Orientation::Horizontal;
-			this->TopToolStripPanel->RowMargin = System::Windows::Forms::Padding(3, 0, 0, 0);
-			this->TopToolStripPanel->Size = System::Drawing::Size(0, 0);
-			// 
-			// RightToolStripPanel
-			// 
-			this->RightToolStripPanel->Location = System::Drawing::Point(0, 0);
-			this->RightToolStripPanel->Name = L"RightToolStripPanel";
-			this->RightToolStripPanel->Orientation = System::Windows::Forms::Orientation::Horizontal;
-			this->RightToolStripPanel->RowMargin = System::Windows::Forms::Padding(3, 0, 0, 0);
-			this->RightToolStripPanel->Size = System::Drawing::Size(0, 0);
-			// 
-			// LeftToolStripPanel
-			// 
-			this->LeftToolStripPanel->Location = System::Drawing::Point(0, 0);
-			this->LeftToolStripPanel->Name = L"LeftToolStripPanel";
-			this->LeftToolStripPanel->Orientation = System::Windows::Forms::Orientation::Horizontal;
-			this->LeftToolStripPanel->RowMargin = System::Windows::Forms::Padding(3, 0, 0, 0);
-			this->LeftToolStripPanel->Size = System::Drawing::Size(0, 0);
-			// 
-			// ContentPanel
-			// 
-			this->ContentPanel->Size = System::Drawing::Size(292, 174);
 			// 
 			// menuStrip1
 			// 
@@ -235,7 +197,7 @@ namespace hlae {
 			this->menuStrip1->Name = L"menuStrip1";
 			this->menuStrip1->Size = System::Drawing::Size(492, 24);
 			this->menuStrip1->TabIndex = 3;
-			this->menuStrip1->Text = L"menuStrip1";
+			this->menuStrip1->Text = L"menuStripMain";
 			// 
 			// fileToolStripMenuItem
 			// 
@@ -266,8 +228,8 @@ namespace hlae {
 			// 
 			// viewToolStripMenuItem
 			// 
-			this->viewToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {this->dockGameToolStripMenuItem, 
-				this->externalConsoleToolStripMenuItem});
+			this->viewToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(3) {this->dockGameToolStripMenuItem, 
+				this->viewConsoleToolStripMenuItem, this->statusBarToolStripMenuItem});
 			this->viewToolStripMenuItem->Name = L"viewToolStripMenuItem";
 			this->viewToolStripMenuItem->Size = System::Drawing::Size(41, 20);
 			this->viewToolStripMenuItem->Text = L"&View";
@@ -280,13 +242,21 @@ namespace hlae {
 			this->dockGameToolStripMenuItem->Size = System::Drawing::Size(138, 22);
 			this->dockGameToolStripMenuItem->Text = L"&Dock Game";
 			// 
-			// externalConsoleToolStripMenuItem
+			// viewConsoleToolStripMenuItem
 			// 
-			this->externalConsoleToolStripMenuItem->Checked = true;
-			this->externalConsoleToolStripMenuItem->CheckState = System::Windows::Forms::CheckState::Checked;
-			this->externalConsoleToolStripMenuItem->Name = L"externalConsoleToolStripMenuItem";
-			this->externalConsoleToolStripMenuItem->Size = System::Drawing::Size(138, 22);
-			this->externalConsoleToolStripMenuItem->Text = L"&Console";
+			this->viewConsoleToolStripMenuItem->CheckOnClick = true;
+			this->viewConsoleToolStripMenuItem->Name = L"viewConsoleToolStripMenuItem";
+			this->viewConsoleToolStripMenuItem->Size = System::Drawing::Size(138, 22);
+			this->viewConsoleToolStripMenuItem->Text = L"&Console";
+			this->viewConsoleToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::externalConsoleToolStripMenuItem_Click);
+			// 
+			// statusBarToolStripMenuItem
+			// 
+			this->statusBarToolStripMenuItem->CheckOnClick = true;
+			this->statusBarToolStripMenuItem->Name = L"statusBarToolStripMenuItem";
+			this->statusBarToolStripMenuItem->Size = System::Drawing::Size(138, 22);
+			this->statusBarToolStripMenuItem->Text = L"&Status Bar";
+			this->statusBarToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::statusBarToolStripMenuItem_Click);
 			// 
 			// toolsToolStripMenuItem
 			// 
@@ -299,7 +269,7 @@ namespace hlae {
 			// demoToolsToolStripMenuItem
 			// 
 			this->demoToolsToolStripMenuItem->Name = L"demoToolsToolStripMenuItem";
-			this->demoToolsToolStripMenuItem->Size = System::Drawing::Size(152, 22);
+			this->demoToolsToolStripMenuItem->Size = System::Drawing::Size(138, 22);
 			this->demoToolsToolStripMenuItem->Text = L"&DemoTools";
 			this->demoToolsToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::demoToolsToolStripMenuItem_Click);
 			// 
@@ -307,20 +277,20 @@ namespace hlae {
 			// 
 			this->calculatorsToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) {this->fileSizeToolStripMenuItem});
 			this->calculatorsToolStripMenuItem->Name = L"calculatorsToolStripMenuItem";
-			this->calculatorsToolStripMenuItem->Size = System::Drawing::Size(152, 22);
+			this->calculatorsToolStripMenuItem->Size = System::Drawing::Size(138, 22);
 			this->calculatorsToolStripMenuItem->Text = L"&Calculators";
 			// 
 			// fileSizeToolStripMenuItem
 			// 
 			this->fileSizeToolStripMenuItem->Name = L"fileSizeToolStripMenuItem";
-			this->fileSizeToolStripMenuItem->Size = System::Drawing::Size(152, 22);
+			this->fileSizeToolStripMenuItem->Size = System::Drawing::Size(123, 22);
 			this->fileSizeToolStripMenuItem->Text = L"&File Size";
 			this->fileSizeToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::fileSizeToolStripMenuItem_Click);
 			// 
 			// helpToolStripMenuItem
 			// 
-			this->helpToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(5) {this->advancedfxorgToolStripMenuItem, 
-				this->toolStripMenuItem2, this->checkForUpdateToolStripMenuItem, this->toolStripMenuItem3, this->aboutToolStripMenuItem});
+			this->helpToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(3) {this->advancedfxorgToolStripMenuItem, 
+				this->toolStripMenuItem2, this->checkForUpdateToolStripMenuItem});
 			this->helpToolStripMenuItem->Name = L"helpToolStripMenuItem";
 			this->helpToolStripMenuItem->Size = System::Drawing::Size(40, 20);
 			this->helpToolStripMenuItem->Text = L"&Help";
@@ -343,17 +313,7 @@ namespace hlae {
 			this->checkForUpdateToolStripMenuItem->Name = L"checkForUpdateToolStripMenuItem";
 			this->checkForUpdateToolStripMenuItem->Size = System::Drawing::Size(174, 22);
 			this->checkForUpdateToolStripMenuItem->Text = L"Check for &Updates";
-			// 
-			// toolStripMenuItem3
-			// 
-			this->toolStripMenuItem3->Name = L"toolStripMenuItem3";
-			this->toolStripMenuItem3->Size = System::Drawing::Size(171, 6);
-			// 
-			// aboutToolStripMenuItem
-			// 
-			this->aboutToolStripMenuItem->Name = L"aboutToolStripMenuItem";
-			this->aboutToolStripMenuItem->Size = System::Drawing::Size(174, 22);
-			this->aboutToolStripMenuItem->Text = L"&About";
+			this->checkForUpdateToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::checkForUpdateToolStripMenuItem_Click);
 			// 
 			// debugToolStripMenuItem
 			// 
@@ -379,40 +339,102 @@ namespace hlae {
 			this->neverDropMessagesToolStripMenuItem->Text = L"Never drop messages";
 			this->neverDropMessagesToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::neverDropMessagesToolStripMenuItem_Click);
 			// 
-			// toolStripContainer1
+			// toolStripPanelTop
 			// 
+			this->toolStripPanelTop->Controls->Add(this->menuStrip1);
+			this->toolStripPanelTop->Dock = System::Windows::Forms::DockStyle::Top;
+			this->toolStripPanelTop->Location = System::Drawing::Point(0, 0);
+			this->toolStripPanelTop->Name = L"toolStripPanelTop";
+			this->toolStripPanelTop->Orientation = System::Windows::Forms::Orientation::Horizontal;
+			this->toolStripPanelTop->RowMargin = System::Windows::Forms::Padding(3, 0, 0, 0);
+			this->toolStripPanelTop->Size = System::Drawing::Size(492, 24);
 			// 
-			// toolStripContainer1.ContentPanel
+			// splitContainerPrimary
 			// 
-			this->toolStripContainer1->ContentPanel->Size = System::Drawing::Size(492, 349);
-			this->toolStripContainer1->Dock = System::Windows::Forms::DockStyle::Fill;
-			this->toolStripContainer1->Location = System::Drawing::Point(0, 0);
-			this->toolStripContainer1->Name = L"toolStripContainer1";
-			this->toolStripContainer1->RightToolStripPanelVisible = false;
-			this->toolStripContainer1->Size = System::Drawing::Size(492, 373);
-			this->toolStripContainer1->TabIndex = 4;
-			this->toolStripContainer1->Text = L"toolStripContainer1";
+			this->splitContainerPrimary->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->splitContainerPrimary->Location = System::Drawing::Point(0, 24);
+			this->splitContainerPrimary->Name = L"splitContainerPrimary";
 			// 
-			// toolStripContainer1.TopToolStripPanel
+			// splitContainerPrimary.Panel1
 			// 
-			this->toolStripContainer1->TopToolStripPanel->Controls->Add(this->menuStrip1);
+			this->splitContainerPrimary->Panel1->BackgroundImageLayout = System::Windows::Forms::ImageLayout::Zoom;
+			this->splitContainerPrimary->Panel1Collapsed = true;
+			// 
+			// splitContainerPrimary.Panel2
+			// 
+			this->splitContainerPrimary->Panel2->Controls->Add(this->splitContainerSecondary);
+			this->splitContainerPrimary->Size = System::Drawing::Size(492, 349);
+			this->splitContainerPrimary->SplitterDistance = 183;
+			this->splitContainerPrimary->TabIndex = 6;
+			// 
+			// splitContainerSecondary
+			// 
+			this->splitContainerSecondary->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->splitContainerSecondary->Location = System::Drawing::Point(0, 0);
+			this->splitContainerSecondary->Name = L"splitContainerSecondary";
+			this->splitContainerSecondary->Orientation = System::Windows::Forms::Orientation::Horizontal;
+			// 
+			// splitContainerSecondary.Panel1
+			// 
+			this->splitContainerSecondary->Panel1->Controls->Add(this->panelGame);
+			this->splitContainerSecondary->Panel2Collapsed = true;
+			this->splitContainerSecondary->Size = System::Drawing::Size(492, 349);
+			this->splitContainerSecondary->SplitterDistance = 248;
+			this->splitContainerSecondary->TabIndex = 0;
+			// 
+			// panelGame
+			// 
+			this->panelGame->BackColor = System::Drawing::Color::Gray;
+			this->panelGame->BackgroundImage = (cli::safe_cast<System::Drawing::Image^  >(resources->GetObject(L"panelGame.BackgroundImage")));
+			this->panelGame->BackgroundImageLayout = System::Windows::Forms::ImageLayout::Zoom;
+			this->panelGame->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->panelGame->Location = System::Drawing::Point(0, 0);
+			this->panelGame->Name = L"panelGame";
+			this->panelGame->Size = System::Drawing::Size(492, 349);
+			this->panelGame->TabIndex = 0;
+			// 
+			// toolStripPanelBottom
+			// 
+			this->toolStripPanelBottom->Controls->Add(this->statusStripMain);
+			this->toolStripPanelBottom->Dock = System::Windows::Forms::DockStyle::Bottom;
+			this->toolStripPanelBottom->Location = System::Drawing::Point(0, 373);
+			this->toolStripPanelBottom->Name = L"toolStripPanelBottom";
+			this->toolStripPanelBottom->Orientation = System::Windows::Forms::Orientation::Horizontal;
+			this->toolStripPanelBottom->RowMargin = System::Windows::Forms::Padding(3, 0, 0, 0);
+			this->toolStripPanelBottom->Size = System::Drawing::Size(492, 0);
+			// 
+			// statusStripMain
+			// 
+			this->statusStripMain->Dock = System::Windows::Forms::DockStyle::None;
+			this->statusStripMain->Location = System::Drawing::Point(0, 0);
+			this->statusStripMain->Name = L"statusStripMain";
+			this->statusStripMain->Size = System::Drawing::Size(202, 22);
+			this->statusStripMain->TabIndex = 0;
+			this->statusStripMain->Visible = false;
 			// 
 			// MainForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(492, 373);
-			this->Controls->Add(this->toolStripContainer1);
+			this->Controls->Add(this->splitContainerPrimary);
+			this->Controls->Add(this->toolStripPanelTop);
+			this->Controls->Add(this->toolStripPanelBottom);
 			this->MainMenuStrip = this->menuStrip1;
 			this->Name = L"MainForm";
 			this->Text = L"Half-Life Advanced Effects";
 			this->menuStrip1->ResumeLayout(false);
 			this->menuStrip1->PerformLayout();
-			this->toolStripContainer1->TopToolStripPanel->ResumeLayout(false);
-			this->toolStripContainer1->TopToolStripPanel->PerformLayout();
-			this->toolStripContainer1->ResumeLayout(false);
-			this->toolStripContainer1->PerformLayout();
+			this->toolStripPanelTop->ResumeLayout(false);
+			this->toolStripPanelTop->PerformLayout();
+			this->splitContainerPrimary->Panel2->ResumeLayout(false);
+			this->splitContainerPrimary->ResumeLayout(false);
+			this->splitContainerSecondary->Panel1->ResumeLayout(false);
+			this->splitContainerSecondary->ResumeLayout(false);
+			this->toolStripPanelBottom->ResumeLayout(false);
+			this->toolStripPanelBottom->PerformLayout();
 			this->ResumeLayout(false);
+			this->PerformLayout();
 
 		}
 #pragma endregion
@@ -437,7 +459,16 @@ private: System::Void fileSizeToolStripMenuItem_Click(System::Object^  sender, S
 			 calcu::Form1 ^calcu = gcnew calcu::Form1();
 			 calcu->Show(this);
 		 }
-};
-
+private: System::Void externalConsoleToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
+			 this->splitContainerSecondary->Panel2Collapsed = !(this->viewConsoleToolStripMenuItem->Checked);
+		 }
+private: System::Void statusBarToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
+			 this->statusStripMain->Visible = this->statusBarToolStripMenuItem->Checked;
+		 }
+private: System::Void checkForUpdateToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
+			 UpdaterForm ^uf = gcnew UpdaterForm(Globals);
+			 uf->Show(this);
+		 }
+	}; // MainForm
 } // namespace hlae
 

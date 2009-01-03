@@ -64,6 +64,8 @@ bool g_bHoldedActivate; // last value on hold
 
 bool g_bFullScreenCheatMode = false;
 
+bool g_bIsActive = false;
+
 struct
 {
 	unsigned int ui_rx_packets;
@@ -75,17 +77,9 @@ REGISTER_DEBUGCVAR(debug_blockkeys, "0", 0);
 
 LRESULT CALLBACK Hooking_WndProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
-	// filter window unspecific messages:
-
-	switch(uMsg)
-	{
-	/*case WM_ACTIVATEAPP:
-		pEngfuncs->Con_DPrintf("WM_ACTIVATEAPP\n");
-		break;
-	case WM_ACTIVATE:
-		pEngfuncs->Con_DPrintf("WM_ACTIVATE\n");
-		break;*/
-	}
+	//
+	// one could filter window unspecific messages here
+	//
 
 	if (hWnd==NULL || hWnd != g_HL_MainWindow)
 		// this is not the MainWindow we want to control
@@ -96,18 +90,42 @@ LRESULT CALLBACK Hooking_WndProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 	// blah
 	switch (uMsg)
 	{
+	case WM_ACTIVATE:
+		if( LOWORD(wParam) == WA_INACTIVE )
+			g_bIsActive = false;
+		break;
 	case WM_MOVE:
 		g_HL_MainWindow_info.MouseTarget.iX = (int)(short) LOWORD(lParam); 
 		g_HL_MainWindow_info.MouseTarget.iY = (int)(short) HIWORD(lParam);
 		break;
-	case WM_LBUTTONDOWN:
-	case WM_LBUTTONUP:
-	case WM_RBUTTONDOWN:
-	case WM_RBUTTONUP:
-	case WM_MBUTTONDOWN:
-	case WM_MBUTTONUP:
-		// if the user clicks on us we want the friggin focus:
-		SetFocus(g_HL_MainWindow);
+	case WM_MOUSEACTIVATE:
+		pEngfuncs->Con_DPrintf("WM_MOUSEACTIAVTE\n");
+		if( !g_bFullScreenCheatMode && !g_bIsUndocked && !g_bIsActive)
+		{
+			// Client Windows won't recieve window activation events, so we will fake them
+			g_bIsActive = true;
+			LRESULT lr = g_HL_WndClassA->lpfnWndProc(hWnd,uMsg,wParam,lParam); // pass on WM_MOUSEACTIVATE
+			g_HL_WndClassA->lpfnWndProc(g_HL_MainWindow,WM_ACTIVATEAPP, TRUE, NULL);
+			g_HL_WndClassA->lpfnWndProc(g_HL_MainWindow,WM_ACTIVATE, WA_ACTIVE, NULL);//lParam);
+			// Don't let strange mods like Natural Selection mess with us:
+			ShowCursor(TRUE);
+			return lr;
+		}
+		// Don't let strange mods like Natural Selection mess with us:
+		ShowCursor(TRUE);
+		break;
+	case WM_SETFOCUS:
+		pEngfuncs->Con_DPrintf("WM_SETFOCUS\n");
+		break;
+	case WM_KILLFOCUS:
+		pEngfuncs->Con_DPrintf("WM_KILLFOCUS\n");
+		if( !g_bFullScreenCheatMode && !g_bIsUndocked && g_bIsActive)
+		{
+			g_bIsActive = false;
+			g_HL_WndClassA->lpfnWndProc(g_HL_MainWindow,WM_ACTIVATE, WA_INACTIVE, NULL);//lParam);
+			g_HL_WndClassA->lpfnWndProc(g_HL_MainWindow,WM_ACTIVATEAPP, FALSE, NULL);
+			return g_HL_WndClassA->lpfnWndProc(hWnd,uMsg,wParam,lParam); // PASS ON WM_KILLFOCUS
+		}
 		break;
 	case WM_KEYDOWN:
 	case WM_KEYUP:
@@ -121,6 +139,7 @@ LRESULT CALLBACK Hooking_WndProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 // Handlers for events from the Hlae GUI server:
 //
 
+/*
 LRESULT HlaeBcCl_OnServerActivate(PVOID lpData)
 {
 	HLAE_BASECOM_OnServerActivate_s *myps = (HLAE_BASECOM_OnServerActivate_s *)lpData;
@@ -157,6 +176,7 @@ LRESULT HlaeBcCl_OnGameWindowFocus(PVOID lpData)
 
 	return SetFocus(g_HL_MainWindow) ? TRUE : FALSE;
 }
+*/
 
 LRESULT HlaeBcCl_OnServerClose(PVOID lpData)
 {
@@ -165,6 +185,7 @@ LRESULT HlaeBcCl_OnServerClose(PVOID lpData)
 	return SendMessage(g_HL_MainWindow,WM_CLOSE,NULL,NULL);
 }
 
+/*
 LRESULT HlaeBcCl_MouseEvent(PVOID lpData)
 {
 	HLAE_BASECOM_MSGCL_MouseEvent_s *myps = (HLAE_BASECOM_MSGCL_MouseEvent_s *)lpData;
@@ -177,6 +198,7 @@ LRESULT HlaeBcCl_MouseEvent(PVOID lpData)
 	return g_HL_WndClassA->lpfnWndProc(g_HL_MainWindow,(UINT)(myps->uMsg),(WPARAM)(myps->wParam),(LPARAM)(((myps->iY) << 16) + myps->iX));
 }
 
+// not used anymore:
 LRESULT HlaeBcCl_KeyBoardEvent(PVOID lpData)
 {
 	HLAE_BASECOM_MSGCL_KeyBoardEvent_s *myps = (HLAE_BASECOM_MSGCL_KeyBoardEvent_s *)lpData;
@@ -186,6 +208,7 @@ LRESULT HlaeBcCl_KeyBoardEvent(PVOID lpData)
 	return g_HL_WndClassA->lpfnWndProc(g_HL_MainWindow,(UINT)(myps->uMsg),(WPARAM)(myps->uKeyCode),(LPARAM)(myps->uKeyFlags));
 
 }
+*/
 
 
 // In order to understand the source that follows the Microsoft Documentation of WM_COPYDATA might be useful.
@@ -235,20 +258,8 @@ LRESULT CALLBACK HlaeBcCltWndProc(
 				memcpy(g_pHlaeBcResultTarget,pMyCDS->lpData,sizeof(HLAE_BASECOM_RET_OnCreateWindow_s));
 				return TRUE;
 
-			case HLAE_BASECOM_MSGCL_OnServerActivate:
-				return HlaeBcCl_OnServerActivate(pMyCDS->lpData);
-
-			case HLAE_BASECOM_MSGCL_OnGameWindowFocus:
-				return HlaeBcCl_OnGameWindowFocus(pMyCDS->lpData);
-
 			case HLAE_BASECOM_MSGCL_OnServerClose:
 				return HlaeBcCl_OnServerClose(pMyCDS->lpData);
-
-			case HLAE_BASECOM_MSGCL_MouseEvent:
-				return HlaeBcCl_MouseEvent(pMyCDS->lpData);
-
-			case HLAE_BASECOM_MSGCL_KeyBoardEvent:
-				return HlaeBcCl_KeyBoardEvent(pMyCDS->lpData);
 
 			default:
 				MessageBoxW(hwnd,L"Unexpected message.",HLAE_BASECOM_CLIENT_ID,MB_OK|MB_ICONERROR);
@@ -820,16 +831,32 @@ REGISTER_DEBUGCMD_FUNC(debug_message_stats)
 	pEngfuncs->Con_Printf("HLAE BaseCom Client (includes failed):\ntx packets: %u\nrx packets: %u\n",g_message_stats.ui_tx_packets,g_message_stats.ui_rx_packets);
 }
 
-REGISTER_DEBUGCMD_FUNC(debug_rehookwnd)
+REGISTER_DEBUGCMD_FUNC(debug_wndproc_isontop)
 {
 	if( Hooking_WndProc != (WNDPROC)GetWindowLong( (HWND)g_HL_MainWindow, GWL_WNDPROC ))
 		pEngfuncs->Con_Printf("S.th. hooked us!\n");
 	else
 		pEngfuncs->Con_Printf("We seem to be at top.\n");
+}
+
+REGISTER_DEBUGCMD_FUNC(debug_wndproc_rehook)
+{
 	SetWindowLongPtr( (HWND)g_HL_MainWindow, GWL_WNDPROC, (LONG)Hooking_WndProc );
 }
 
 REGISTER_DEBUGCMD_FUNC(debug_getcommandline)
 {
 	pEngfuncs->Con_Printf("GetCommandLine(): %s\n",GetCommandLine());
+}
+
+REGISTER_DEBUGCMD_FUNC(debug_activateapp_on)
+{
+	SendMessage(g_HL_MainWindow,WM_ACTIVATEAPP, TRUE ,NULL);
+	SendMessage(g_HL_MainWindow,WM_ACTIVATE, WA_ACTIVE ,NULL);
+}
+
+REGISTER_DEBUGCMD_FUNC(debug_activateapp_off)
+{
+	SendMessage(g_HL_MainWindow,WM_ACTIVATE, WA_INACTIVE ,NULL);
+	SendMessage(g_HL_MainWindow,WM_ACTIVATEAPP, FALSE ,NULL);
 }

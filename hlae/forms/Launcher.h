@@ -330,10 +330,10 @@ namespace hlae {
 			// checkBoxVisbility
 			// 
 			this->checkBoxVisbility->AutoSize = true;
-			this->checkBoxVisbility->Location = System::Drawing::Point(10, 65);
+			this->checkBoxVisbility->Location = System::Drawing::Point(10, 42);
 			this->checkBoxVisbility->Name = L"checkBoxVisbility";
 			this->checkBoxVisbility->Size = System::Drawing::Size(195, 17);
-			this->checkBoxVisbility->TabIndex = 2;
+			this->checkBoxVisbility->TabIndex = 1;
 			this->checkBoxVisbility->Text = L"Optimize window visibilty on capture";
 			this->checkBoxVisbility->UseVisualStyleBackColor = true;
 			// 
@@ -341,10 +341,10 @@ namespace hlae {
 			// 
 			this->checkBoxDesktopRes->AutoSize = true;
 			this->checkBoxDesktopRes->Enabled = false;
-			this->checkBoxDesktopRes->Location = System::Drawing::Point(10, 42);
+			this->checkBoxDesktopRes->Location = System::Drawing::Point(10, 65);
 			this->checkBoxDesktopRes->Name = L"checkBoxDesktopRes";
 			this->checkBoxDesktopRes->Size = System::Drawing::Size(155, 17);
-			this->checkBoxDesktopRes->TabIndex = 1;
+			this->checkBoxDesktopRes->TabIndex = 4;
 			this->checkBoxDesktopRes->Text = L"Optimize desktop resolution";
 			this->checkBoxDesktopRes->UseVisualStyleBackColor = true;
 			// 
@@ -366,7 +366,7 @@ namespace hlae {
 			this->comboBoxRenderMode->Location = System::Drawing::Point(259, 32);
 			this->comboBoxRenderMode->Name = L"comboBoxRenderMode";
 			this->comboBoxRenderMode->Size = System::Drawing::Size(181, 21);
-			this->comboBoxRenderMode->TabIndex = 4;
+			this->comboBoxRenderMode->TabIndex = 3;
 			// 
 			// labelRenderMode
 			// 
@@ -374,7 +374,7 @@ namespace hlae {
 			this->labelRenderMode->Location = System::Drawing::Point(256, 16);
 			this->labelRenderMode->Name = L"labelRenderMode";
 			this->labelRenderMode->Size = System::Drawing::Size(72, 13);
-			this->labelRenderMode->TabIndex = 3;
+			this->labelRenderMode->TabIndex = 2;
 			this->labelRenderMode->Text = L"RenderMode:";
 			// 
 			// groupBoxCmdOpts

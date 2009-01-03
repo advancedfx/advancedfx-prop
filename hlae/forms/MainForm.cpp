@@ -12,7 +12,7 @@ using namespace hlae::remoting;
 
 void MainForm::MyCreate()
 {
-	hlaeBaseComServer = new ::CHlaeBcServer( this->toolStripContainer1->ContentPanel );
+	hlaeBaseComServer = new ::CHlaeBcServer( this->panelGame );
 
 	// start up public remoting system (if requested):
 	if( System::Environment::CommandLine->Contains( "-ipcremote" ) )

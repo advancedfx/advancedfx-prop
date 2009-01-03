@@ -3,7 +3,7 @@
 
 // Authors : last change / first change / name
 
-// 2008-03-11 / 2008-03-11 / Dominik Tugend
+// 2008-12-11 / 2008-03-11 / Dominik Tugend
 
 
 //
@@ -17,6 +17,10 @@
 
 // It's a communication between only one server and one client.
 // Other scenarios are not supported by design.
+
+// This communication is only suitable for passing small amounts of data
+// occassionally. If this doesn't suite your scenario then separate
+// communication channels need to be established.
 
 
 //
@@ -39,7 +43,7 @@
 // For queries (QRY) a return with TRUE also indicates that the RET message
 // has been successfully delivered.
 
-// Other return values are not allowed.
+// Other return value conventions are not allowed.
 // If you need other return values you'll have to supply those in the RET
 // message in response to a query (QRY).
 
@@ -62,6 +66,13 @@
 #include <windows.h>
 
 //
+//	Version Identifiers:
+//
+
+#define HLAE_BASECOM_VERSION_SERVER 1
+#define HLAE_BASECOM_VERSION_CLIENT 1
+
+//
 // Window Identifiers
 //
 
@@ -69,7 +80,6 @@
 #define HLAE_BASECOM_SERVER_ID HLAE_BASECOM_ID L" Server"
 #define HLAE_BASECOM_CLIENT_ID HLAE_BASECOM_ID L" Client"
 #define HLAE_BASECOM_CLASSNAME L"HLAEBaseComWindow"
-
 
 //
 // Messages
@@ -99,23 +109,20 @@
 // code.
 
 
-// basecom server messages:
+// baswcom client -> server messages:
 
 #define HLAE_BASECOM_QRYSV_HELLO				0x00000000
-// the server may choose not to reply to HELLO.
 
 #define HLAE_BASECOM_QRYSV_OnCreateWindow		0x00000001
 #define HLAE_BASECOM_MSGSV_OnDestroyWindow		0x00000002
 #define HLAE_BASECOM_MSGSV_OnFilmingStart		0x00000003
 #define HLAE_BASECOM_MSGSV_OnFilmingStop		0x00000004
-#define HLAE_BASECOM____SV_OnServerActivate		0x00000006
-#define HLAE_BASECOM____SV_OnGameWindowFocus	0x00000007
 #define HLAE_BASECOM____SV_OnServerClose		0x00000008
-#define HLAE_BASECOM____SV_MouseEvent			0x00000009
-#define HLAE_BASECOM____SV_KeyBoardEvent		0x0000000A
+#define HLAE_BASECOM____SV_DockWindow			0x00000009
+#define HLAE_BASECOM____SV_ConsoleCommand		0x0000000A
 #define HLAE_BASECOM_MSGSV_UpdateWindow			0x0000000F
 
-// basecom client messages:
+// basecom server -> client messages:
 
 #define HLAE_BASECOM_RETCL_HELLO				0x00000000
 
@@ -123,11 +130,9 @@
 #define HLAE_BASECOM____CL_OnDestroyWindow		0x00000002
 #define HLAE_BASECOM____CL_OnFilmingStart		0x00000003
 #define HLAE_BASECOM____CL_OnFilmingStop		0x00000004
-#define HLAE_BASECOM_MSGCL_OnServerActivate		0x00000006
-#define HLAE_BASECOM_MSGCL_OnGameWindowFocus	0x00000007
 #define HLAE_BASECOM_MSGCL_OnServerClose		0x00000008
-#define HLAE_BASECOM_MSGCL_MouseEvent			0x00000009
-#define HLAE_BASECOM_MSGCL_KeyBoardEvent		0x0000000A
+#define HLAE_BASECOM_MSGCL_DockWindow			0x00000009
+#define HLAE_BASECOM_MSGCL_ConsoleCommand		0x0000000A
 #define HLAE_BASECOM____CL_UpdateWindow			0x0000000F
 
 //
@@ -176,33 +181,9 @@ struct HLAE_BASECOM_OnFilmingStop_s
 	// empty
 };
 
-struct HLAE_BASECOM_OnServerActivate_s
-{
-	bool bActive;
-};
-
-struct HLAE_BASECOM_OnGameWindowFocus_s
-{
-	// empty
-};
-
 struct HLAE_BASECOM_OnServerClose_s
 {
 	// empty
-};
-
-struct HLAE_BASECOM_MSGCL_MouseEvent_s
-{
-	unsigned int uMsg; // WM_* code
-	unsigned int wParam; // 
-	unsigned short iX; // Virtual coord
-	unsigned short iY; // .
-};
-struct HLAE_BASECOM_MSGCL_KeyBoardEvent_s
-{
-	unsigned int uMsg; // WM_* code
-	unsigned int uKeyCode;
-	unsigned int uKeyFlags;
 };
 
 struct HLAE_BASECOM_UpdateWindows_s

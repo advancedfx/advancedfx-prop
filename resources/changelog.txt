@@ -1,4 +1,4 @@
-HLAE 2.2.1.0
+HLAE 2.2.1.0 (2008-11-15)
 
 * added cstrike crosshair fix:
   
@@ -24,7 +24,7 @@ Greetings:
   S.o. related to 1999-2001 (I am not 100% sure who is who).
 
 
-HLAE 2.1.6.0
+HLAE 2.1.6.0 (2008-11-10)
 
 * added crappy check to the launcher if hl is already running
 
@@ -36,25 +36,25 @@ HLAE 2.1.6.0
   online manual in the appendix section (including source code)
 
 
-HLAE 2.1.5.13
+HLAE 2.1.5.13 (2008-11-02)
 
 * fixed wrong p_playermove_s address:
   (affects aiming system and 1st person detection in fixforcehltv mode)
 
 
-HLAE 2.1.5.12
+HLAE 2.1.5.12 (2008-10-29)
 
 * fixed bug that would invert the fullscreen checkbox behaviour
 
 
-HLAE 2.1.5.11
+HLAE 2.1.5.11 (2008-10-28)
 
 * fixed mirv_fx_noblend address
 * re-added temporary fullscreen option (use with care,
   might go away in the future again)
 
 
-HLAE 2.1.5.10
+HLAE 2.1.5.10 (2008-10-27)
 
 * changed behaviour upon game connecting to a server
   (More safety for those that prefer working airbags in case sanity fails. :)
@@ -71,7 +71,7 @@ Thanks to "spunge" for reporting the bug on the forums
 and helping us debugging it down! :)
 
 
-HLAE 2.1.5.8
+HLAE 2.1.5.8 (2008-10-25)
 
 * updated addresses (second 2008-10-24 Steam HL1 Engine update)
 
@@ -89,7 +89,7 @@ Tip:
   might not work in some cases.
 
 
-HLAE 2.1.5.6
+HLAE 2.1.5.6 (2008-10-25)
 
 * rolls out the .NET 2.0 based launcher (former 2008-10-19 beta)
   Thus Microsoft .NET 2.0 framework is required.
@@ -101,7 +101,7 @@ Please note:
   mirv_playercolors_cs might be temporarily inavailable
 
 
-HLAE 2.1.0.1
+HLAE 2.1.0.1 (2008-10-14)
 
 + simplified mirv_movie_depthdump behaviour (moved old logic to
   new deug command __mirv_depth_bpp)
@@ -111,7 +111,7 @@ HLAE 2.1.0.1
 * added mirv_depth_streams, allows to mask out streams
 
 
-HLAE 2.1.0.0
+HLAE 2.1.0.0 (2008-09-28)
 
 * fixed potential flaws related to the matte system,
   thus upgrading is recommended
@@ -138,7 +138,7 @@ Check HLAE's Command Reference in the online manual for more information
 (see http://advancedfx.org/ ).
 
 
-HLAE 2.0.3.0
+HLAE 2.0.3.0 (2008-09-18)
 
 * Added ability to block screen blends: mirv_fx_noblend 1
   This will i.e. block Counter-Strike 1.6 flash grenades.
@@ -150,7 +150,7 @@ Thx to 'juggaknot' for having helped moderating the forum a bit.
 PS: MIRVIN_Monkey rulz!
 
 
-HLAE 2.0.2.3
+HLAE 2.0.2.3 (2008-08-17)
 
 * removed coded that was probably never used in practical operation
   that would support reading from other buffers than GL_BACK
@@ -159,7 +159,7 @@ HLAE 2.0.2.3
   technical reasons is not displayed anymore to avoid user confusion
 
 
-HLAE 2.0.2.2
+HLAE 2.0.2.2 (2008-08-10)
 
 * added mirv_disable_specmenu 0|1
   Supported modifications: ag, tfc, ns, valve(Half-Life)
@@ -170,7 +170,7 @@ HLAE 2.0.2.2
 * removed mirv_tfc_specmenu command which is replaced by mirv_disable_specmenu
 
 
-HLAE 2.0.2.1
+HLAE 2.0.2.1 (2008-08-01)
 
 * improved dem_forcehltv 1 fix behaviour: the player that recorded the
   in-eye demo may also now be seen from other's in-eye as users would
@@ -182,7 +182,7 @@ HLAE 2.0.2.1
 * removed unused output panel in old public gui
 
 
-HLAE 2.0.2.0
+HLAE 2.0.2.0 (2008-07-25)
 
 Thanks to Martin Vaissie for beta testing.
 
@@ -233,7 +233,7 @@ Greetz:
   Martin Vaissie
 
 
-HLAE 2.0.1.8
+HLAE 2.0.1.8 (2008-07-15)
 
 * removed __mirv_movie_fpscap - fps are not capped anymore by default, users
   may now set as they want or till the program blows up or causes a division
@@ -245,12 +245,12 @@ HLAE 2.0.1.8
   previous implementations
 
 
-HLAE 2.0.1.7
+HLAE 2.0.1.7 (2008-05-05)
 
 * Added mirv_tfc_specmenu - allows to disable and enable spectator menu in Team Fortress Classic
 
 
-HLAE 2.0.1.6
+HLAE 2.0.1.6 (2008-05-03)
 
 * Added mirv_matte_entities to improve and thus replace mirv_movie_onlyentity,
   enter mirv_matte_entities into console for more info.
@@ -260,7 +260,7 @@ HLAE 2.0.1.6
 * Fixed typo in launcher that would cause problems when launching TFC mod
 
 
-HLAE 2.0.1.5
+HLAE 2.0.1.5 (2008-04-29)
 
 * linked MS VC++ Runtime to the hlae.exe to avoid users being unable
   to launch HLAE (They saw the error message "This application has failed
@@ -270,7 +270,7 @@ HLAE 2.0.1.5
   Thx to azrazr for testing.
 
 
-HLAE 2.0.1.4
+HLAE 2.0.1.4 (2008-04-27)
 
 * Fixed -hlaealpha8 not working
 * Added __mirv_movie_fpscap
@@ -281,27 +281,27 @@ Greetz and thanks to:
   MN|VadoskiN, juGGaKNot, you.
 
 
-HLAE 2.0.1.3
+HLAE 2.0.1.3 (2008-04-21)
 
 * Improved behaviour of 'Undock' capture mode.
 * Fixed game behaviour when window is deactivated (i.e. due to windows key, etc.).
 
 
-HLAE 2.0.1.2
+HLAE 2.0.1.2 (2008-04-19)
 
 Fixed:
   Bug that affect performance when using FBO (still bad FPS after filming
   was stopped in case switching FBOs is slow on the gfx card).
 
 
-HLAE 2.0.1.1
+HLAE 2.0.1.1 (2008-04-17)
 
 Added missing file to download, in case you already downloaded 2.0.1
 please re-download!
 Sorry : )
 
 
-HLAE 2.0.1
+HLAE 2.0.1.0 (2008-04-17)
 
 This is release is mainly for making the HLAE Gui more reliable, thus we'll
 also stop offering two different versions (stable and pre-release). 
@@ -345,14 +345,13 @@ Thanks to:
    but we won't promise anything( as always).
 
 
-2.0.0.3
-
+HLAE 2.0.0.3 (2008-04-06)
 
 + Adapted HLAE to the 2008-04-14 H-L engine update
   (updated mdt_addresses.ini)
 
 
-2.0.0.2
+HLAE 2.0.0.2 (2008-04-06)
 
 This time we got some colors for L. 'spunge' M.:
 
@@ -365,7 +364,7 @@ Added: mirv_playercolors
   For more information enter the command into console or see HLAE wiki.
 
 
-2.0 pre-release
+HLAE 2.0.0.0 pre-release (2008-03-21)
 
 As always the following text contains many mistakes (as most changelog
 entries) due to lack of time and dedication to writing changelogs.
@@ -412,26 +411,26 @@ entries) due to lack of time and dedication to writing changelogs.
 	Myself (ripieces) for wasting so much time on this project.
 
 
-1.1.3.97
+MDT 1.1.3.97 (2008-02-06)
 
 - Changed: Exposed more of MDTs internas to the mdt_addresses.ini to make it
-           more community friendly and increase potential for customisation
+           more community friendly and increase potential for customization
 
-1.1.3.95
+MDT 1.1.3.95 (2008-02-06)
 
 - Fixed: fixed the fix
 
 
-1.1.3.93
+MDT 1.1.3.93 (2008-02-05)
 
-- Fixed: ´Problems / crashes with resolutions when the width was not dividable
-          by 4. Mdt should handle those properly now, however the performance
-          of those may be a bit worse than those that are dividable by 4. (Bug
-          reported by s0nkite). Please be aware that several codecs and video
-          editing programs might not support these resolutions. 
+- Fixed: Problems / crashes with resolutions when the width was not dividable
+         by 4. Mdt should handle those properly now, however the performance
+         of those may be a bit worse than those that are dividable by 4. (Bug
+         reported by s0nkite). Please be aware that several codecs and video
+         editing programs might not support these resolutions. 
 
 
-1.1.3.46
+MDT 1.1.3.46 (2008-02-01)
 
 - Added: mirv_aim_offset right up forward
          Allows to set a offset relative to the entites origin and orientation.
@@ -441,7 +440,7 @@ entries) due to lack of time and dedication to writing changelogs.
          Those allow to adjust the camera man aiming simulation parameters.
          (Only used when mirv_aim_snapto is 0)
 
-1.1.3.1
+MDT 1.1.3.1 (2008-01-31)
 
 The MDT Loader.exe has been updated and will try to remember some of the
 settings made when launching a game with it in extended mode and will set
@@ -449,7 +448,7 @@ them for the next time. Except the selection of the loader mode all loader
 settings should be remembered.
 
 
-1.1.3.0
+MDT 1.1.3.0 (2008-01-26)
 
 - Added: mirv_fx_skyhd 0|1
          0 - off
@@ -467,12 +466,12 @@ settings should be remembered.
           High Defintion skybox feature in MDT and creating the example sky.
 
 
-1.1.2.21
+MDT 1.1.2.21 (2008-01-10)
 
 - Fixed: crashbug after recording when using sound export with the latest
          Steam update.
 
-1.1.2.20
+MDT 1.1.2.20 (2008-01-10)
 
 - Fixed: adapated MDT to the latest Steam update.
          If you happen to find eatures of MDT that are still borken, then
@@ -485,7 +484,7 @@ With kind regards
 the MDT team.
 
 
-1.1.2.0
+MDT 1.1.2.0 (2008-01-10)
 
 - Added: mirv_movie_noadverts 0|1
          You need to start recording before you can see a difference.
@@ -493,7 +492,7 @@ the MDT team.
          during movie recording.
          
 
-1.1.1.96
+MDT 1.1.1.96 (2008-01-05)
 
 - Fixed: Flaw in new matte system that would cause problems with detail textures.
 
@@ -501,7 +500,7 @@ Note, you might need to disable r_detailtextures in case you use the
 mirv_fx_lightmap feature.
 
 
-1.1.1.87
+MDT 1.1.1.87 (2007-12-30)
 
 - Changed: The matte system to avoid some problems with players not masked in
            the entity stream. In case the new method is causing problems you
@@ -522,7 +521,7 @@ mirv_fx_lightmap feature.
            hiding them
 
 
-1.1.1.0 XMAS 2007
+MDT 1.1.1.0 XMAS 2007 (2007-12-24)
 
 Hello, this is a special Christmas release :D
 
@@ -602,7 +601,7 @@ have fun, cya next year.
   Half-Life Adavanced Effects : )
   
 
-1.1.0.29
+MDT 1.1.0.29 (2007-12-08)
 
 - Fixed: Various bugs that would affect stereo camera captures and
          mirv_movie_cameraofs_cs.
@@ -616,7 +615,7 @@ have fun, cya next year.
 - Thanks: msthavoc (mst-gaming.de) for testing.
 
 
-1.1.0.25
+MDT 1.1.0.25 (2007-11-02)
 
 - Fixed: Typo that would prevent the aiming system from ever being turned off.
 
@@ -628,7 +627,7 @@ have fun, cya next year.
          problems when using very high fps when recording.
 
 
-1.1.0.0
+MDT 1.1.0.0 (2007-10-25)
 
 Well there have been so many additions to MDT in the past, so that is why we
 are counting the minor version number 1up :)
@@ -649,7 +648,7 @@ But even better there is some candy in it:
 Cheers!
 
 
-1.0.60.251
+MDT 1.0.60.251 (2007-10-20)
 
 - Added: mirv_movie_simulate 0|1
          If set to 1 recording will not create any files (simulation mode), if
@@ -660,7 +659,7 @@ Cheers!
 - Thanks: cRZYFST (style-productions.net)
 
 
-1.0.60.249
+MDT 1.0.60.249 (2007-10-18)
 
 - Changed: exporting motion data in stereo mode will create two files now since
            several programs had problems with handling BVH files with two roots
@@ -669,7 +668,7 @@ Cheers!
 - Thanks: msthavoc for testing.
 
 
-1.0.60.248
+MDT 1.0.60.248 (2007-10-18)
 
 - Changed: internal changes to the address config system.
 
@@ -685,7 +684,7 @@ Cheers!
          Valve defines 1 Unit in H-L 1 / CS 1.6 as 1 Inch.
         
 
-1.0.60.152
+MDT 1.0.60.152 (2007-09-27)
 
 - Added: mirv_movie_separate_hud 0|1|2
          Set to 1 if you want to have an separate hud stream (, there should be
@@ -702,7 +701,7 @@ Cheers!
 I'd say one of the caziest versions ever : P
 
 
-1.0.60.41
+MDT 1.0.60.41 (2007-09-23)
 
 - Changed: New stream capturing system, now there will be no delay (was 1ms)
            between the streams anymore.
@@ -718,18 +717,18 @@ The HUD problems (only the (left) worldstream has the HUD if it is enabled)
 are not solved yet and remain the same as in previous versions.
 
 
-1.0.60.9
+MDT 1.0.60.9 (2007-09-21)
 
 - Added: Ini system draft. Currently addresses can be changed manually.
 
-1.0.60.7
+MDT 1.0.60.7 (2007-09-13)
 
 - Fixed: Valve's Steam community release broke MDT.
          We (MIRVIN_Monkey, ripieces, neomic) hope this update makes MDT
          working for you again :)
 
 
-1.0.60.0 UNOFFICIAL
+MDT 1.0.60.0 UNOFFICIAL (2007-09-11)
 
 - Added: Capability to force resolutions, currently focused on windowed mode.
          The loader has been extended to reflect and support those additions.
@@ -749,7 +748,7 @@ are not solved yet and remain the same as in previous versions.
 - Greets: code-mdt forum Guys :)
 
 
-1.0.59.0 UNOFFICIAL
+MDT 1.0.59.0 UNOFFICIAL (2007-09-03)
 
 - Changed: changed the capture point of images and the matte color clearing
 
@@ -765,14 +764,14 @@ are not solved yet and remain the same as in previous versions.
           testing and providing his system for tests :-)
 
 
-1.0.58.309 DLL UNOFFICIAL
+MDT 1.0.58.309 DLL UNOFFICIAL (2007-08-28)
 
 - Fixed: mirv_cameraofs_cs should now work in ineye demos too
 
 - Thanks: msthavoc (Cyanide-Pictures.de) for testing
 
 
-1.0.58.268 DLL UNOFFICIAL
+MDT 1.0.58.268 DLL UNOFFICIAL (2007-08-26)
 
 - Added: mirv_cameraofs_cs
          Can be used in Counter-Strike 1.6 to move the final view in x y z,
@@ -786,7 +785,7 @@ are not solved yet and remain the same as in previous versions.
 - Thanks: msthavoc (Cyanide-Pictures.de)
 
 
-1.0.58.158 DLL UNOFFICIAL
+MDT 1.0.58.158 DLL UNOFFICIAL (2007-08-03)
 
 - Added: __mirv_depth_fixempty (default 0)
          If you have one of those card's where you get an empty DepthDump
@@ -848,7 +847,7 @@ are not solved yet and remain the same as in previous versions.
           msthavoc (Cyanide-Pictures.de), dios (hanshenschel.de)
 
 
-1.0.58.87 DLL UNOFFICIAL
+MDT 1.0.58.87 DLL UNOFFICIAL (2007-07-10)
 
 - Added: mirv_fixemptydumps:
          Several ATI card users reported problems with empty MDT output when
@@ -868,7 +867,7 @@ are not solved yet and remain the same as in previous versions.
           related to the empty dumps problem, thx guys!
 
 
-1.0.57.0 DLL
+MDT 1.0.57.0 DLL (2007-05-30)
 
 - This is where this changelog starts.
 

@@ -238,6 +238,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ReadMe.txt"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -364,6 +368,16 @@
 						>
 					</File>
 				</File>
+				<File
+					RelativePath=".\forms\UpdaterForm.h"
+					FileType="3"
+					>
+					<File
+						RelativePath=".\forms\UpdaterForm.resx"
+						SubType="Designer"
+						>
+					</File>
+				</File>
 			</Filter>
 			<Filter
 				Name="resources"
@@ -444,6 +458,10 @@
 					RelativePath=".\system\remoting.h"
 					>
 				</File>
+				<File
+					RelativePath=".\system\updater.h"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<Filter
@@ -466,10 +484,6 @@
 				</File>
 			</Filter>
 		</Filter>
-		<File
-			RelativePath=".\ReadMe.txt"
-			>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>

@@ -525,16 +525,18 @@ void DebugMaster::DebugWorker()
 
 		do
 		{
-			// check if we still hace work to do
+			// check if we still have work to do
 			try
 			{
 				Monitor::Enter( messageQue );
 
-				bDoWork=false;
-				bDoWork |= (unsigned int)(messageQue->Count) >= thresholdMinSumLengths;
-				bDoWork |= curSumLenghts >= thresholdMinSumLengths;
-				bDoWork |= bTimeElapsed && (messageQue->Count > 0);
-				bDoWork &= (messageQue->Count > 0);
+				// determine if there is work to do:
+				bDoWork = false;
+				bDoWork = bDoWork || (unsigned int)(messageQue->Count) >= thresholdMinMessages; // minimum Message thereshold active
+				bDoWork = bDoWork || curSumLenghts >= thresholdMinSumLengths; // ninimum message len thereshold active
+				bDoWork = bDoWork || bTimeElapsed; // idle time passed, deliver anyways
+				bDoWork = bDoWork && (messageQue->Count > 0); // there must be at least 1 message
+				bDoWork = bDoWork && (listenerBridges->Count > 0); // there must be at least [about, not interlocked] 1 listener
 
 				if (bDoWork)
 				{

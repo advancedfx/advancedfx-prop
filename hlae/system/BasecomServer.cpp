@@ -323,7 +323,7 @@ BOOL CBCServerInternal:: _Wrapper_UpdateWindow(HWND hWnd,HWND hwSender,PCOPYDATA
 #pragma managed
 //
 
-CHlaeBcServer::CHlaeBcServer( System::Windows::Forms::ToolStripContentPanel ^gameWindowParent )
+CHlaeBcServer::CHlaeBcServer( System::Windows::Forms::Panel ^gameWindowParent )
 {
 	_gameWindowParent = System::Runtime::InteropServices::GCHandle::Alloc( gameWindowParent );
 	_hwndGameWindowParent = gameWindowParent->Handle.ToPointer();
@@ -386,7 +386,7 @@ bool CHlaeBcServer:: _OnFilmingStop()
 
 bool CHlaeBcServer::_UpdateWindow(int nWidth, int nHeight)
 {
-	((System::Windows::Forms::ToolStripContentPanel^)_gameWindowParent.Target)->AutoScrollMinSize = System::Drawing::Size( nWidth, nHeight );
+	((System::Windows::Forms::Panel ^)_gameWindowParent.Target)->AutoScrollMinSize = System::Drawing::Size( nWidth, nHeight );
 	return true;
 }
 

@@ -150,7 +150,6 @@ public:
 	DebugListener( bool bInterLockOnSpewMessage, DebugMaster ^debugMaster );
 	~DebugListener();
 
-protected:
 	//  Override this to process a incoming message
 	//  IF bInterLockOnSpewMessage was set true on class creation:
 	//  The call is already interlocked, thus you can asume the function is not
@@ -159,6 +158,8 @@ protected:
 		DebugMaster ^debugMaster,
 		DebugMessage ^debugMessage
 	);
+
+protected:
 	OnSpewMessageDelegate ^OnSpewMessage;
 
 protected:
