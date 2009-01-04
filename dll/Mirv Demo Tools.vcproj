@@ -342,6 +342,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\decals_hook.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\demo_tools.cpp"
 					>
 				</File>

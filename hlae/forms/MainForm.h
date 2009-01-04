@@ -310,6 +310,7 @@ namespace hlae {
 			// 
 			// checkForUpdateToolStripMenuItem
 			// 
+			this->checkForUpdateToolStripMenuItem->Enabled = false;
 			this->checkForUpdateToolStripMenuItem->Name = L"checkForUpdateToolStripMenuItem";
 			this->checkForUpdateToolStripMenuItem->Size = System::Drawing::Size(174, 22);
 			this->checkForUpdateToolStripMenuItem->Text = L"Check for &Updates";

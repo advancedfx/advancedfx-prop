@@ -1,3 +1,20 @@
+HLAE 2.2.2.0 (2009-01-04)
+
+* added mirv_noadverts, replaces and fixes mirv_movie_noadverts
+  In order for this to work the map must be loaded / you must be ingame
+
+* added __mirv_noadverts_decal
+
+* added mirv_decalfilter
+
+* added crappy caclulator to the tools menu
+
+* internal tweaks
+
+Greetings:
+  Anthony Perfetto (style-productions.net)
+
+
 HLAE 2.2.1.0 (2008-11-15)
 
 * added cstrike crosshair fix:

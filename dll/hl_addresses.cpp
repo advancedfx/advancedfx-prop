@@ -56,9 +56,6 @@ HL_ADDR_ENTRY(p_r_refdef,"0x0")
 HL_ADDR_ENTRY(HudSpectator_tfc,"0x0")
 HL_ADDR_ENTRY(HudSpectator_cmp_tfc,"0x0")
 
-HL_ADDR_ENTRY(UnkIGAWorld,"0x0")
-HL_ADDR_ENTRY(DTOURSZ_UnkIGAWorld,"0x0")
-
 HL_ADDR_ENTRY(GetSoundtime,"0x0")
 HL_ADDR_ENTRY(DTOURSZ_GetSoundtime,"0x0")
 
@@ -100,7 +97,8 @@ HL_ADDR_ENTRY(CLOFS_UnkCstrikeCh_add_fac,"0x0")
 HL_ADDR_ENTRY(R_PolyBlend,"0x0")
 HL_ADDR_ENTRY(DTOURSZ_R_PolyBlend,"0x0")
 
-
+HL_ADDR_ENTRY(UnkGetDecalTexture,"0x0")
+HL_ADDR_ENTRY(DTOURSZ_UnkGetDecalTexture,"0x0")
 
 ///////////////////////////////////////////////////////////////////////////////
 // cHLAddresses

@@ -234,8 +234,6 @@ extern unsigned long ulHLAddr_UpdateSpectatorPanel_checkjmp_ag_clofs;
 extern unsigned long ulHLAddr_UpdateSpectatorPanel_checkjmp_tfc;
 extern unsigned long ulHLAddr_UpdateSpectatorPanel_checkjmp_ns_clofs;
 extern unsigned long ulHLAddr_UpdateSpectatorPanel_checkjmp_valve;
-extern unsigned long ulHLAddr_UnkIGAWorld;
-extern unsigned long ulHLAddr_DTOURSZ_UnkIGAWorld;
 extern unsigned long ulHLAddr_GetSoundtime;
 extern unsigned long ulHLAddr_DTOURSZ_GetSoundtime;
 extern unsigned long ulHLAddr_S_PaintChannels;
@@ -264,6 +262,8 @@ extern unsigned long ulHLAddr_CLOFS_UnkCstrikeCh_mul_fac;
 extern unsigned long ulHLAddr_CLOFS_UnkCstrikeCh_add_fac;
 extern unsigned long ulHLAddr_R_PolyBlend;
 extern unsigned long ulHLAddr_DTOURSZ_R_PolyBlend;
+extern unsigned long ulHLAddr_UnkGetDecalTexture;
+extern unsigned long ulHLAddr_DTOURSZ_UnkGetDecalTexture;
 
 
 //
@@ -291,9 +291,6 @@ extern unsigned long ulHLAddr_DTOURSZ_R_PolyBlend;
 #define HL_ADDR_UpdateSpectatorPanel_checkjmp_tfc ulHLAddr_UpdateSpectatorPanel_checkjmp_tfc
 #define HL_ADDR_UpdateSpectatorPanel_checkjmp_ns_clofs ulHLAddr_UpdateSpectatorPanel_checkjmp_ns_clofs
 #define HL_ADDR_UpdateSpectatorPanel_checkjmp_valve ulHLAddr_UpdateSpectatorPanel_checkjmp_valve
-
-#define HL_ADDR_UnkIGAWorld ulHLAddr_UnkIGAWorld
-#define HL_ADDR_DTOURSZ_UnkIGAWorld ulHLAddr_DTOURSZ_UnkIGAWorld
 
 #define HL_ADDR_GetSoundtime ulHLAddr_GetSoundtime
 #define HL_ADDR_DTOURSZ_GetSoundtime ulHLAddr_DTOURSZ_GetSoundtime
@@ -333,5 +330,9 @@ extern unsigned long ulHLAddr_DTOURSZ_R_PolyBlend;
 
 #define HL_ADDR_Mod_LeafPVS ulHLAddr_Mod_LeafPVS
 #define HL_ADDR_DTOURSZ_Mod_LeafPVS ulHLAddr_DTOURSZ_Mod_LeafPVS
+
+#define HL_ADDR_UnkGetDecalTexture ulHLAddr_UnkGetDecalTexture
+#define HL_ADDR_DTOURSZ_UnkGetDecalTexture ulHLAddr_DTOURSZ_UnkGetDecalTexture
+
 
 #endif // #ifndef HL_ADDRESSES_H
