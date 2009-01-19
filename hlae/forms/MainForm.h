@@ -120,7 +120,7 @@ namespace hlae {
 	private: System::Windows::Forms::ToolStripMenuItem^  fileSizeToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^  helpToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^  advancedfxorgToolStripMenuItem;
-	private: System::Windows::Forms::ToolStripSeparator^  toolStripMenuItem2;
+
 	private: System::Windows::Forms::ToolStripMenuItem^  checkForUpdateToolStripMenuItem;
 
 
@@ -168,7 +168,6 @@ namespace hlae {
 			this->fileSizeToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->helpToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->advancedfxorgToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
-			this->toolStripMenuItem2 = (gcnew System::Windows::Forms::ToolStripSeparator());
 			this->checkForUpdateToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->debugToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->flushLogFileToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
@@ -239,14 +238,15 @@ namespace hlae {
 			this->dockGameToolStripMenuItem->Checked = true;
 			this->dockGameToolStripMenuItem->CheckState = System::Windows::Forms::CheckState::Checked;
 			this->dockGameToolStripMenuItem->Name = L"dockGameToolStripMenuItem";
-			this->dockGameToolStripMenuItem->Size = System::Drawing::Size(138, 22);
+			this->dockGameToolStripMenuItem->Size = System::Drawing::Size(152, 22);
 			this->dockGameToolStripMenuItem->Text = L"&Dock Game";
+			this->dockGameToolStripMenuItem->Visible = false;
 			// 
 			// viewConsoleToolStripMenuItem
 			// 
 			this->viewConsoleToolStripMenuItem->CheckOnClick = true;
 			this->viewConsoleToolStripMenuItem->Name = L"viewConsoleToolStripMenuItem";
-			this->viewConsoleToolStripMenuItem->Size = System::Drawing::Size(138, 22);
+			this->viewConsoleToolStripMenuItem->Size = System::Drawing::Size(152, 22);
 			this->viewConsoleToolStripMenuItem->Text = L"&Console";
 			this->viewConsoleToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::externalConsoleToolStripMenuItem_Click);
 			// 
@@ -254,8 +254,9 @@ namespace hlae {
 			// 
 			this->statusBarToolStripMenuItem->CheckOnClick = true;
 			this->statusBarToolStripMenuItem->Name = L"statusBarToolStripMenuItem";
-			this->statusBarToolStripMenuItem->Size = System::Drawing::Size(138, 22);
+			this->statusBarToolStripMenuItem->Size = System::Drawing::Size(152, 22);
 			this->statusBarToolStripMenuItem->Text = L"&Status Bar";
+			this->statusBarToolStripMenuItem->Visible = false;
 			this->statusBarToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::statusBarToolStripMenuItem_Click);
 			// 
 			// toolsToolStripMenuItem
@@ -269,7 +270,7 @@ namespace hlae {
 			// demoToolsToolStripMenuItem
 			// 
 			this->demoToolsToolStripMenuItem->Name = L"demoToolsToolStripMenuItem";
-			this->demoToolsToolStripMenuItem->Size = System::Drawing::Size(138, 22);
+			this->demoToolsToolStripMenuItem->Size = System::Drawing::Size(152, 22);
 			this->demoToolsToolStripMenuItem->Text = L"&DemoTools";
 			this->demoToolsToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::demoToolsToolStripMenuItem_Click);
 			// 
@@ -277,7 +278,7 @@ namespace hlae {
 			// 
 			this->calculatorsToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) {this->fileSizeToolStripMenuItem});
 			this->calculatorsToolStripMenuItem->Name = L"calculatorsToolStripMenuItem";
-			this->calculatorsToolStripMenuItem->Size = System::Drawing::Size(138, 22);
+			this->calculatorsToolStripMenuItem->Size = System::Drawing::Size(152, 22);
 			this->calculatorsToolStripMenuItem->Text = L"&Calculators";
 			// 
 			// fileSizeToolStripMenuItem
@@ -289,8 +290,8 @@ namespace hlae {
 			// 
 			// helpToolStripMenuItem
 			// 
-			this->helpToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(3) {this->advancedfxorgToolStripMenuItem, 
-				this->toolStripMenuItem2, this->checkForUpdateToolStripMenuItem});
+			this->helpToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {this->advancedfxorgToolStripMenuItem, 
+				this->checkForUpdateToolStripMenuItem});
 			this->helpToolStripMenuItem->Name = L"helpToolStripMenuItem";
 			this->helpToolStripMenuItem->Size = System::Drawing::Size(40, 20);
 			this->helpToolStripMenuItem->Text = L"&Help";
@@ -303,17 +304,13 @@ namespace hlae {
 			this->advancedfxorgToolStripMenuItem->Text = L"advancedfx.org";
 			this->advancedfxorgToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::advancedfxorgToolStripMenuItem_Click);
 			// 
-			// toolStripMenuItem2
-			// 
-			this->toolStripMenuItem2->Name = L"toolStripMenuItem2";
-			this->toolStripMenuItem2->Size = System::Drawing::Size(171, 6);
-			// 
 			// checkForUpdateToolStripMenuItem
 			// 
 			this->checkForUpdateToolStripMenuItem->Enabled = false;
 			this->checkForUpdateToolStripMenuItem->Name = L"checkForUpdateToolStripMenuItem";
 			this->checkForUpdateToolStripMenuItem->Size = System::Drawing::Size(174, 22);
 			this->checkForUpdateToolStripMenuItem->Text = L"Check for &Updates";
+			this->checkForUpdateToolStripMenuItem->Visible = false;
 			this->checkForUpdateToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::checkForUpdateToolStripMenuItem_Click);
 			// 
 			// debugToolStripMenuItem

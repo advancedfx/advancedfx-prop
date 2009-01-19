@@ -135,7 +135,7 @@ REGISTER_CMD_FUNC(fx_skyhd)
 {
 	if (pEngfuncs->Cmd_Argc() != 2)
 	{
-		pEngfuncs->Con_Printf("Useage: " PREFIX "Please refer to the changelog / HLAEwiki for more information.");
+		pEngfuncs->Con_Printf("Usage: " PREFIX "fx_skyhd 0|1\nPlease refer to the changelog / HLAEwiki for more information.");
 		return;
 	}
 

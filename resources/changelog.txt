@@ -1,13 +1,22 @@
+HLAE 2.2.3.1 (2009-01-19)
+
+* added mirv_movie_bmp,
+  if set to 1 mirv will export Windows V3 bitmaps (.bmp)
+  instead of tgas with best effort
+
+* tweaked TGA header output (pallette entry size as suggested by msthavoc)
+
+* changed launcher: made selection of custom mods more obvious again
+
+
 HLAE 2.2.2.0 (2009-01-04)
 
 * added mirv_noadverts, replaces and fixes mirv_movie_noadverts
   In order for this to work the map must be loaded / you must be ingame
 
-* added __mirv_noadverts_decal
-
 * added mirv_decalfilter
 
-* added crappy caclulator to the tools menu
+* added crappy calculator to the tools menu
 
 * internal tweaks
 

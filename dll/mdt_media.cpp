@@ -182,7 +182,7 @@ CMdt_Media_RAWGLPIC::~CMdt_Media_RAWGLPIC()
 }
 
 // DoGlReadPixels:
-bool CMdt_Media_RAWGLPIC::DoGlReadPixels(int iXofs, int iYofs, int iWidth, int iHeight, GLenum eGLformat, GLenum eGLtype)
+bool CMdt_Media_RAWGLPIC::DoGlReadPixels(int iXofs, int iYofs, int iWidth, int iHeight, GLenum eGLformat, GLenum eGLtype, bool bRepack)
 {
 #ifdef MDT_DEBUG
 	static char sztmp[2000];
@@ -257,7 +257,7 @@ bool CMdt_Media_RAWGLPIC::DoGlReadPixels(int iXofs, int iYofs, int iWidth, int i
 	MessageBox(0,sztmp,"glReadPixels DEBUG",MB_OK);
 #endif
 
-	if (uiRowSize != uiRowPackSize)
+	if (bRepack && (uiRowSize != uiRowPackSize))
 	{
 		// postprocess (it would be better to post process it when outputting, since  this way we have overhead)
 		unsigned char* pTsrc=_pBuffer;

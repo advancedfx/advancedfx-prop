@@ -39,7 +39,7 @@ In addition to the mentions in the changelog we want to credit the following
 people, companys or organistations:
 
 Microsoft
-  for VC++, MSDN2, Windows, ...
+  for VC++, MSDN Library, ...
   http://www.Microsoft.com
   
 Valve
@@ -53,11 +53,7 @@ MetaMod
 id Software
   for Quake 1 source code
   http://www.idsoftware.com
-  
-wxWidgets Project
-  for wxWidgets
-  http://wxwidgets.org
-  
+
 And everyone that feels he/she/it should have been mentioned here.
 
 

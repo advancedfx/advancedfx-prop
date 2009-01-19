@@ -107,7 +107,33 @@ System::Void Launcher::ConfigRead()
 
 	this->checkBoxRemeber->Checked = lcfg->RememberChanges;
 	this->textBoxExe->Text = lcfg->GamePath;
-	this->comboBoxModSel->Text = lcfg->Modification;
+
+	int iInd = -1;
+	for( int i = 0; i < this->comboBoxModSel->Items->Count; i++)
+	{
+
+		System::String ^stext = this->comboBoxModSel->Items[i]->ToString();
+		stext = stext->Split(' ',1)[0];
+
+		if(0 == System::String::Compare(stext,lcfg->Modification))
+		{
+			iInd = i;
+			break;
+		}
+	}
+
+	if(iInd<0 || iInd >= this->comboBoxModSel->Items->Count-1)
+	{
+		this->textBoxCustMod->Enabled = true;
+		this->comboBoxModSel->SelectedIndex = this->comboBoxModSel->Items->Count - 1;
+		this->textBoxCustMod->Text = lcfg->Modification;
+	}
+	else
+	{
+		this->textBoxCustMod->Enabled = false;
+		this->comboBoxModSel->SelectedIndex = iInd;
+	}
+
 	this->textBoxCmdAdd->Text = lcfg->CustomCmdLine;
 	this->checkBoxResForce->Checked = lcfg->GfxForce;
 	this->textBoxResWidth->Text = lcfg->GfxWidth.ToString();
@@ -134,7 +160,14 @@ System::Void Launcher::ConfigWrite()
 	if( lcfg->RememberChanges )
 	{
 		lcfg->GamePath = this->textBoxExe->Text;
-		lcfg->Modification = this->comboBoxModSel->Text->Split(' ',1)[0];
+
+		if( this->comboBoxModSel->SelectedIndex ==  this->comboBoxModSel->Items->Count-1)
+		{
+			lcfg->Modification = this->textBoxCustMod->Text;
+		} else {
+			lcfg->Modification = this->comboBoxModSel->Text->Split(' ',1)[0];
+		}
+
 		lcfg->CustomCmdLine = this->textBoxCmdAdd->Text;
 		lcfg->GfxForce = this->checkBoxResForce->Checked;
 		UInt16::TryParse( this->textBoxResWidth->Text, lcfg->GfxWidth );

@@ -23,6 +23,8 @@
 
 #include "basecomclient.h" // OnFilmingStart(), OnFilmingStop()
 
+#include "RawOutput.h"
+
 using namespace hlae::sampler;
 
 extern cl_enginefuncs_s *pEngfuncs;
@@ -31,43 +33,43 @@ extern playermove_s *ppmove;
 
 extern float clamp(float, float, float);
 
+
 REGISTER_DEBUGCVAR(depth_bias, "0", 0);
 REGISTER_DEBUGCVAR(depth_bpp, "8", 0);
 REGISTER_DEBUGCVAR(depth_scale, "1", 0);
 REGISTER_DEBUGCVAR(gl_force_noztrick, "1", 0);
-REGISTER_DEBUGCVAR(print_pos, "0", 0);
+REGISTER_DEBUGCVAR(sample_addoverlap, "0", 0);
+REGISTER_DEBUGCVAR(sample_colorh, "0", 0);
+REGISTER_DEBUGCVAR(sample_ffunc, "0", 0);
+REGISTER_DEBUGCVAR(sample_smethod, "1", 0);
 REGISTER_DEBUGCVAR(print_frame, "0", 0);
+REGISTER_DEBUGCVAR(print_pos, "0", 0);
+
 
 REGISTER_CVAR(crop_height, "-1", 0);
 REGISTER_CVAR(crop_yofs, "-1", 0);
-
 REGISTER_CVAR(depth_logarithmic, "32", 0);
 REGISTER_CVAR(depth_streams, "3", 0);
-
 REGISTER_CVAR(fx_lightmap, "0", 0);
-
 REGISTER_CVAR(fx_wh_enable, "0", 0);
 REGISTER_CVAR(fx_wh_alpha, "0.5", 0);
 REGISTER_CVAR(fx_wh_additive, "1", 0);
 REGISTER_CVAR(fx_wh_noquads, "0", 0);
 REGISTER_CVAR(fx_wh_tint_enable, "0", 0);
 REGISTER_CVAR(fx_wh_xtendvis, "1", 0);
-
 REGISTER_CVAR(fx_xtendvis, "0", 0);
-
 REGISTER_CVAR(matte_xray, "0", 0);
-
 REGISTER_CVAR(movie_clearscreen, "0", 0);
+REGISTER_CVAR(movie_bmp, "0", 0);
 REGISTER_CVAR(movie_depthdump, "0", 0);
 REGISTER_CVAR(movie_export_cammotion, "0", 0);
 REGISTER_CVAR(movie_export_sound, "0", 0); // should default to 1, but I don't want to mess up other updates
-REGISTER_CVAR(movie_sound_volume, "0.5", 0); // volume 0.8 is CS 1.6 default
 REGISTER_CVAR(movie_filename, "untitled", 0);
 REGISTER_CVAR(movie_fps, "30", 0);
-
 REGISTER_CVAR(movie_separate_hud, "0", 0);
 REGISTER_CVAR(movie_simulate, "0", 0);
 REGISTER_CVAR(movie_simulate_delay, "0", 0);
+REGISTER_CVAR(movie_sound_volume, "0.5", 0); // volume 0.8 is CS 1.6 default
 REGISTER_CVAR(movie_stereomode,"0",0);
 REGISTER_CVAR(movie_stereo_centerdist,"1.3",0);
 REGISTER_CVAR(movie_stereo_yawdegrees,"0.02",0);
@@ -76,13 +78,9 @@ REGISTER_CVAR(movie_swapweapon, "0", 0);
 REGISTER_CVAR(movie_splitstreams, "0", 0);
 REGISTER_CVAR(movie_wireframe, "0", 0);
 REGISTER_CVAR(movie_wireframesize, "1", 0);
-
 REGISTER_CVAR(sample_enable, "0", 0);
 REGISTER_CVAR(sample_sps, "180", 0);
-REGISTER_DEBUGCVAR(sample_smethod, "1", 0);
-REGISTER_DEBUGCVAR(sample_ffunc, "0", 0);
-REGISTER_DEBUGCVAR(sample_colorh, "0", 0);
-REGISTER_DEBUGCVAR(sample_addoverlap, "0", 0);
+
 
 
 // Our filming singleton
@@ -843,32 +841,27 @@ void Filming::Stop()
 
 bool Filming::OnPrintFrame(unsigned long id, void *prgbdata, int iWidht, int iHeight)
 {
+	bool bBMP = 0.0f != movie_bmp->value;
+
 	// only supports BGR data atm!:
 	char cDepth = 2;
-	int nBits = 3;
+	int nBits = 24;
 
 	const char *pszFileTag = "samp";
 	char* pszStereotag="";
 
 	char szFilename[196];
-	_snprintf(szFilename, sizeof(szFilename) - 1, "%s_%02d_%s%s_%05d.tga", m_szFilename, m_nTakes, pszFileTag, pszStereotag, id);
+	_snprintf(szFilename, sizeof(szFilename) - 1, "%s_%02d_%s%s_%05d.%s", m_szFilename, m_nTakes, pszFileTag, pszStereotag, id, bBMP ? "bmp" : "tga");
 
-	unsigned char szTgaheader[12] = { 0, 0, cDepth, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-	unsigned char szHeader[6] = { (int) (iWidht % 256), (int) (iWidht / 256), (int) (iHeight % 256), (int) (iHeight / 256), 8 * nBits, 0 };
-
-	FILE *pImage;
-
-	if ((pImage = fopen(szFilename, "wb")) != NULL)
+	
+	if( bBMP )
 	{
-		fwrite(szTgaheader, sizeof(unsigned char), 12, pImage);
-		fwrite(szHeader, sizeof(unsigned char), 6, pImage);
-
-		fwrite(prgbdata, sizeof(unsigned char), iWidht * iHeight * nBits, pImage);
-
-		fclose(pImage);
+		return WriteRawBitmap((unsigned char *)prgbdata,szFilename,iWidht,iHeight,nBits,
+			true); // restore align from sampler
 	}
 
-	return true;
+	return WriteRawTarga((unsigned char *)prgbdata,szFilename,iWidht,iHeight,nBits,
+		false); // always color
 }
 
 void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
@@ -880,32 +873,21 @@ void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
 		pEngfuncs->pfnCenterPrint(stmp);
 	}
 
-	char cDepth = (iBuffer == COLOR ? 2 : 3); //? problem if depth caputre and bits >8?
+	bool bBMP = 0.0f != movie_bmp->value;
+
 	int iMovieBitDepth = (int)(depth_bpp->value);
 
 	GLenum eGLBuffer = (iBuffer == COLOR ? GL_BGR_EXT : (iBuffer == ALPHA ? GL_ALPHA : GL_DEPTH_COMPONENT));
 	GLenum eGLtype = ((iBuffer == COLOR)||(iBuffer == ALPHA)? GL_UNSIGNED_BYTE : GL_FLOAT);
-	int nBits = ((iBuffer == COLOR ) ? 3 : (iBuffer == ALPHA ? 1:(iMovieBitDepth==32?4:(iMovieBitDepth==24?3:(iMovieBitDepth==16?2:1)))));
-
-	char* pszStereotag="";
-	if (_bEnableStereoMode&&!bWantsHudCapture)
-	{
-		// if we are not capturing the hud and are in stereo mode add the proper tag:
-		if (_stereo_state==STS_LEFT) pszStereotag="_left"; else pszStereotag="_right";
-	}
-
-	char szFilename[196];
-	_snprintf(szFilename, sizeof(szFilename) - 1, "%s_%02d_%s%s_%05d.tga", m_szFilename, m_nTakes, pszFileTag, pszStereotag, iFileNumber);
-
-	unsigned char szTgaheader[12] = { 0, 0, cDepth, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-	unsigned char szHeader[6] = { (int) (m_iWidth % 256), (int) (m_iWidth / 256), (int) (m_iCropHeight % 256), (int) (m_iCropHeight / 256), 8 * nBits, 0 };
-
-	FILE *pImage;
+	int nBitsDiv8 = ((iBuffer == COLOR ) ? 3 : (iBuffer == ALPHA ? 1:(iMovieBitDepth==32?4:(iMovieBitDepth==24?3:(iMovieBitDepth==16?2:1)))));
 
 	//// in case we want to check if the buffer's are set:
 	//GLint iTemp,iTemp2; glGetIntegerv(GL_READ_BUFFER,&iTemp); glGetIntegerv(GL_DRAW_BUFFER,&iTemp2); pEngfuncs->Con_Printf(">>Read:  0x%08x, Draw:  0x%08x \n",iTemp,iTemp2);
 
-	bool bReadOk = m_GlRawPic.DoGlReadPixels(0, m_iCropYOfs, m_iWidth, m_iCropHeight, eGLBuffer, eGLtype);
+
+	bool bSampledStream = m_iMatteStage==MS_ALL && iBuffer == COLOR && m_sampling.bEnable;
+
+	bool bReadOk = m_GlRawPic.DoGlReadPixels(0, m_iCropYOfs, m_iWidth, m_iCropHeight, eGLBuffer, eGLtype, !bBMP || bSampledStream);
 	if (!bReadOk)
 	{
 		pEngfuncs->Con_Printf("MDT ERROR: failed to capture take %05d, Errorcode: %d.\n",m_nTakes,m_GlRawPic.GetLastUnhandledError());
@@ -927,7 +909,7 @@ void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
 		float tfloat;
 		unsigned int tuint;
 
-		unsigned int mymax=(1<<(8*nBits))-1;
+		unsigned int mymax=(1<<(8*nBitsDiv8))-1;
 
 		float logscale=depth_logarithmic->value;
 
@@ -953,29 +935,47 @@ void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
 			tfloat*=mymax; // scale to int's max. value
 			tuint = max(min((unsigned int)tfloat,mymax),0); // floor,clamp and convert to the desired data type
 
-			memmove(t_pBuffer,&tuint,nBits);
+			memmove(t_pBuffer,&tuint,nBitsDiv8);
 				
-			t_pBuffer+=nBits;
+			t_pBuffer+=nBitsDiv8;
 			t_pBuffer2+=sizeof(float);
 		}
 	}
 
-	if( m_iMatteStage==MS_ALL && iBuffer == COLOR && m_sampling.bEnable )
+	if( bSampledStream )
 	{
+		// pass on to sampling system:
+
 		m_sampling.samplemaster->Sample(
 			m_time,
 			m_GlRawPic.GetPointer(),
-			 m_iWidth * m_iCropHeight * nBits
+			 m_iWidth * m_iCropHeight * nBitsDiv8
 		);
 	}
-	else if ((pImage = fopen(szFilename, "wb")) != NULL)
+	else
 	{
-		fwrite(szTgaheader, sizeof(unsigned char), 12, pImage);
-		fwrite(szHeader, sizeof(unsigned char), 6, pImage);
+		// write out directly:
 
-		fwrite(m_GlRawPic.GetPointer(), sizeof(unsigned char), m_iWidth * m_iCropHeight * nBits, pImage);
+		bool bColor = iBuffer == COLOR;
 
-		fclose(pImage);
+		// construct filename:
+		char* pszStereotag="";
+		if (_bEnableStereoMode&&!bWantsHudCapture)
+		{
+			// if we are not capturing the hud and are in stereo mode add the proper tag:
+			if (_stereo_state==STS_LEFT) pszStereotag="_left"; else pszStereotag="_right";
+		}
+		char szFilename[196];
+		_snprintf(szFilename, sizeof(szFilename) - 1, "%s_%02d_%s%s_%05d.%s", m_szFilename, m_nTakes, pszFileTag, pszStereotag, iFileNumber, bBMP ? "bmp" : "tga");
+
+		if( bBMP )
+		{
+			WriteRawBitmap(m_GlRawPic.GetPointer(),szFilename,m_iWidth,m_iCropHeight,8*nBitsDiv8,
+				false); // align is still 4 byte probably
+			return;
+		}
+
+		WriteRawTarga(m_GlRawPic.GetPointer(),szFilename,m_iWidth,m_iCropHeight,8*nBitsDiv8,!bColor);
 	}
 }
 

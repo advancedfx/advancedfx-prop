@@ -54,6 +54,8 @@ namespace hlae {
 		}
 	private: System::Windows::Forms::CheckBox^  checkBoxStartDocked;
 	private: System::Windows::Forms::CheckBox^  checkBoxFullScreen;
+	private: System::Windows::Forms::TextBox^  textBoxCustMod;
+
 
 	protected: 
 
@@ -119,6 +121,7 @@ namespace hlae {
 		void InitializeComponent(void)
 		{
 			this->groupBoxGame = (gcnew System::Windows::Forms::GroupBox());
+			this->textBoxCustMod = (gcnew System::Windows::Forms::TextBox());
 			this->comboBoxModSel = (gcnew System::Windows::Forms::ComboBox());
 			this->labelModSel = (gcnew System::Windows::Forms::Label());
 			this->buttonExe = (gcnew System::Windows::Forms::Button());
@@ -154,6 +157,7 @@ namespace hlae {
 			// 
 			// groupBoxGame
 			// 
+			this->groupBoxGame->Controls->Add(this->textBoxCustMod);
 			this->groupBoxGame->Controls->Add(this->comboBoxModSel);
 			this->groupBoxGame->Controls->Add(this->labelModSel);
 			this->groupBoxGame->Controls->Add(this->buttonExe);
@@ -166,15 +170,26 @@ namespace hlae {
 			this->groupBoxGame->TabStop = false;
 			this->groupBoxGame->Text = L"Game";
 			// 
+			// textBoxCustMod
+			// 
+			this->textBoxCustMod->Enabled = false;
+			this->textBoxCustMod->Location = System::Drawing::Point(342, 51);
+			this->textBoxCustMod->Name = L"textBoxCustMod";
+			this->textBoxCustMod->Size = System::Drawing::Size(113, 20);
+			this->textBoxCustMod->TabIndex = 5;
+			this->textBoxCustMod->Text = L"custom";
+			// 
 			// comboBoxModSel
 			// 
+			this->comboBoxModSel->DropDownStyle = System::Windows::Forms::ComboBoxStyle::DropDownList;
 			this->comboBoxModSel->FormattingEnabled = true;
-			this->comboBoxModSel->Items->AddRange(gcnew cli::array< System::Object^  >(4) {L"cstrike (Counter-Strike)", L"dod (Day of Defeat)", 
-				L"tfc (Team Fortress Classic)", L"valve (Half-Life)"});
+			this->comboBoxModSel->Items->AddRange(gcnew cli::array< System::Object^  >(5) {L"cstrike (Counter-Strike)", L"dod (Day of Defeat)", 
+				L"tfc (Team Fortress Classic)", L"valve (Half-Life)", L"Other modification:"});
 			this->comboBoxModSel->Location = System::Drawing::Point(112, 51);
 			this->comboBoxModSel->Name = L"comboBoxModSel";
 			this->comboBoxModSel->Size = System::Drawing::Size(224, 21);
 			this->comboBoxModSel->TabIndex = 4;
+			this->comboBoxModSel->SelectedIndexChanged += gcnew System::EventHandler(this, &Launcher::comboBoxModSel_SelectedIndexChanged);
 			// 
 			// labelModSel
 			// 
@@ -485,6 +500,15 @@ private: System::Void checkBoxFullScreen_Click(System::Object^  sender, System::
 				}
 				else this->checkBoxFullScreen->Checked = false;
 			}
+		 }
+
+private: System::Void comboBoxModSel_SelectedIndexChanged(System::Object^  sender, System::EventArgs^  e) {
+			 if( this->comboBoxModSel->SelectedIndex ==  this->comboBoxModSel->Items->Count-1)
+			 {
+				 this->textBoxCustMod->Enabled = true;
+			 } else {
+				 this->textBoxCustMod->Enabled = false;
+			 }
 		 }
 };
 }

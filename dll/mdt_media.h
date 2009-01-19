@@ -86,7 +86,9 @@ public:
 	~CMdt_Media_RAWGLPIC();	// destructor
 
 	// glReadPixels - we always use glCoords here
-	bool			DoGlReadPixels(int iXofs, int iYofs, int iWidth, int iHeight, GLenum eGLformat, GLenum eGLtype);
+
+	// bRepack - DoGlReadPixels assumes GL_PACKALIGNMENT to be 4. if true, it will repack the data in memory and remove spaces (good 4 tga raw output, bad 4 raw bitmap)
+	bool			DoGlReadPixels(int iXofs, int iYofs, int iWidth, int iHeight, GLenum eGLformat, GLenum eGLtype, bool bRepack);
 //	void			RepeatGlReadPixels();				  // equals DoGlReadPixels(0,0)
 //	void			RepeatGlReadPixels(int iXofs, int iYofs); // performfs glReadPixels with an optional offset and the params you have set when this class was created
 

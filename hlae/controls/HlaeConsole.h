@@ -104,8 +104,8 @@ public ref class HlaeConsole : public System::Windows::Forms::UserControl
 			return bPosted ? DebugMessageState::DMS_POSTED : DebugMessageState::DMS_FAILED ;
 		}
 
-	private: System::Windows::Forms::Button^  buttonSend;
-	private: System::Windows::Forms::TextBox^  textBoxCommand;
+
+
 
 	private:
 		/// <summary>
@@ -120,32 +120,8 @@ public ref class HlaeConsole : public System::Windows::Forms::UserControl
 		/// </summary>
 		void InitializeComponent(void)
 		{
-			this->buttonSend = (gcnew System::Windows::Forms::Button());
-			this->textBoxCommand = (gcnew System::Windows::Forms::TextBox());
 			this->textBoxLog = (gcnew System::Windows::Forms::TextBox());
 			this->SuspendLayout();
-			// 
-			// buttonSend
-			// 
-			this->buttonSend->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Right));
-			this->buttonSend->Enabled = false;
-			this->buttonSend->FlatStyle = System::Windows::Forms::FlatStyle::Popup;
-			this->buttonSend->Location = System::Drawing::Point(377, 198);
-			this->buttonSend->Name = L"buttonSend";
-			this->buttonSend->Size = System::Drawing::Size(74, 20);
-			this->buttonSend->TabIndex = 1;
-			this->buttonSend->Text = L"Send";
-			// 
-			// textBoxCommand
-			// 
-			this->textBoxCommand->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Left) 
-				| System::Windows::Forms::AnchorStyles::Right));
-			this->textBoxCommand->BorderStyle = System::Windows::Forms::BorderStyle::FixedSingle;
-			this->textBoxCommand->Enabled = false;
-			this->textBoxCommand->Location = System::Drawing::Point(0, 198);
-			this->textBoxCommand->Name = L"textBoxCommand";
-			this->textBoxCommand->Size = System::Drawing::Size(371, 20);
-			this->textBoxCommand->TabIndex = 0;
 			// 
 			// textBoxLog
 			// 
@@ -159,7 +135,7 @@ public ref class HlaeConsole : public System::Windows::Forms::UserControl
 			this->textBoxLog->Name = L"textBoxLog";
 			this->textBoxLog->ReadOnly = true;
 			this->textBoxLog->ScrollBars = System::Windows::Forms::ScrollBars::Both;
-			this->textBoxLog->Size = System::Drawing::Size(454, 192);
+			this->textBoxLog->Size = System::Drawing::Size(454, 225);
 			this->textBoxLog->TabIndex = 2;
 			this->textBoxLog->WordWrap = false;
 			// 
@@ -168,8 +144,6 @@ public ref class HlaeConsole : public System::Windows::Forms::UserControl
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->Controls->Add(this->textBoxLog);
-			this->Controls->Add(this->buttonSend);
-			this->Controls->Add(this->textBoxCommand);
 			this->Name = L"HlaeConsole";
 			this->Size = System::Drawing::Size(454, 225);
 			this->ResumeLayout(false);
