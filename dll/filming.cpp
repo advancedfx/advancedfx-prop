@@ -82,74 +82,14 @@ REGISTER_CVAR(sample_enable, "0", 0);
 REGISTER_CVAR(sample_sps, "180", 0);
 
 
-
 // Our filming singleton
 Filming g_Filming;
 
-//>> added 20070922 >>
+//
+//
+//
 
 R_RenderView__t	detoured_R_RenderView_=NULL;
-
-/*
-
-01dd0370 SCR_UpdateScreen:
-...
-01dd041e e83d74f8ff      call    launcher!CreateInterface+0x956471 (01d57860) == SCR_SetUpToDrawConsole ()
-01dd0423 e8a8480000      call    launcher!CreateInterface+0x9d38e1 (01dd4cd0) == V_RenderView
-01dd0428 e823b5f8ff      call    launcher!CreateInterface+0x95a561 (01d5b950) == GL_Set2D
-
-V_RenderView calls 01d51d90 R_RenderView
-
-*/
-
-// >> Hooking the HUD functions  >>
-
-// >> fyi >>
-
-// relevant excerpt from HL's SCR_UpdateScreen after the first GL_Set2D() call
-
-// 01dd0442 7535            jne     launcher!CreateInterface+0x9cf08a (01dd0479)
-
-// Hud Begin
-
-// 01dd0444 a1603fe002      mov     eax,dword ptr [launcher!CreateInterface+0x1a02b71 (02e03f60)]
-// 01dd0449 c644240c00      mov     byte ptr [esp+0Ch],0
-// 01dd044e 83f801          cmp     eax,1
-// 01dd0451 7505            jne     launcher!CreateInterface+0x9cf069 (01dd0458)
-// 01dd0453 c644240c01      mov     byte ptr [esp+0Ch],1
-// 01dd0458 6a00            push    0
-
-// drawing stuff before ingame hud:
-
-// 01dd045a e80105f8ff      call    launcher!CreateInterface+0x94f571 (01d50960)
-// 01dd045f 8b4c2410        mov     ecx,dword ptr [esp+10h]
-// 01dd0463 81e1ff000000    and     ecx,0FFh
-// 01dd0469 51              push    ecx
-
-// main ingame hud
-
-// 01dd046a e83184f4ff      call    launcher!CreateInterface+0x9174b1 (01d188a0)
-// 01dd046f 6a01            push    1
-
-// past main hud
-
-// 01dd0471 e8ea04f8ff      call    launcher!CreateInterface+0x94f571 (01d50960)
-// 01dd0476 83c40c          add     esp,0Ch
-
-// Hud End
-
-// 01dd0479 a1b00c8302      mov     eax,dword ptr [launcher!CreateInterface+0x142f8c1 (02830cb0)]
-
-// << fyi <<
-
-// okay,´this is what we do:
-//
-// we place two __declspec(naked) detours:
-// 1st: on 01dd0444
-// 2nd: on 01dd0479
-//
-// the first will care about calling an g_Filming.Onxxx Event Function
-// the 2nd will also call an event function and depending on it's result either jump to the first one (doing a loop) or just continue normal op
 
 // asm related definitons we will use:
 #define asmNOP 0x90 // opcode for NOP
@@ -157,28 +97,22 @@ V_RenderView calls 01d51d90 R_RenderView
 #define JMP32_SZ 5	// the size of JMP <address>
 
 bool bHudToursInstalled=false;
-char pHudTours_begin[5+JMP32_SZ]; // for detouring before jumping into tour_HudBegin
-char pHudTours_end[5+JMP32_SZ];	// for detouring on finally leaving tour_HudEnd (when no loop was requested)
 
-DWORD dwAddress_TourIn_Back = 0;
-DWORD dwAddress_HudTours_begin=(DWORD)pHudTours_begin;
-DWORD dwAddress_HudTours_end=(DWORD)pHudTours_end;
-
-bool bHudBeginCalled=false;
+LPVOID g_lpCode_TourIn_Continue = 0;
+LPVOID g_lpCode_TourOut_Continue = 0;
+LPVOID g_lpCode_HudTours_Loop = 0;
 
 __declspec(naked) void tour_HudBegin()
 {
-	bHudBeginCalled=true;
 	g_Filming.OnHudBeginEvent();
 	__asm
 	{
-		JMP [dwAddress_TourIn_Back]
+		JMP [g_lpCode_TourIn_Continue]
 	}
 }
 
 __declspec(naked) void tour_HudEnd()
 {
-	// I am not sure, may be we should adjust the stackspace here, acutally some of our function might operate in the HL stack space lol :O
 	__asm
 	{
 		PUSH eax
@@ -187,12 +121,12 @@ __declspec(naked) void tour_HudEnd()
 	{
 		__asm {
 			POP EAX
-			JMP [dwAddress_HudTours_begin]
+			JMP [g_lpCode_HudTours_Loop]
 		}
 	} else {
 		__asm {
 			POP EAX
-			JMP [ dwAddress_HudTours_end]
+			JMP [g_lpCode_TourOut_Continue]
 		}
 	}
 }
@@ -206,52 +140,99 @@ void install_Hud_tours()
 
 	bHudToursInstalled=true;
 
-	// fill tourin return address:
-	dwAddress_TourIn_Back = (DWORD)HL_ADDR_HUD_TOURIN +5;
-    
-	// get access top the code in the code segment:
-	char *pCodeAccess=(char *)HL_ADDR_HUD_TOURIN;
-	DWORD dwOldProtect;
-	VirtualProtect(pCodeAccess,(HL_ADDR_HUD_TOUROUT - HL_ADDR_HUD_TOURIN)+5,PAGE_READWRITE,&dwOldProtect);
-
+	unsigned char ucTemp;
 	DWORD dwTemp;
 
-	// Detour of HudIn:
+	//
+	//	Get access to code where detours will be applied:
+	//
 
-	// copy the in code we want to detour and place a jump onto the inhook func:
-	memcpy(pHudTours_begin,pCodeAccess,5); // copy the mov
-	pHudTours_begin[5]=asmJMP; // place JMP opcode
-	dwTemp=(DWORD)tour_HudBegin - ((DWORD)pHudTours_begin+5) - JMP32_SZ; // and supply the address
-	memcpy(pHudTours_begin+6,&dwTemp,sizeof(DWORD));// .
+	DWORD dwOldProtIn, dwOlProtOut;
+	LPVOID pCodeTourIn = (LPVOID)HL_ADDR_HUD_TOURIN;
+	LPVOID pCodeTourOut = (LPVOID)HL_ADDR_HUD_TOUROUT;
+	size_t dwCodeSizeIn = 0x05;
+	size_t dwCodeSizeOut = 0x05;
 
-	// replace the mov with a jump on our code hook:
-	pCodeAccess[0]=asmJMP;
-	dwTemp=(DWORD)pHudTours_begin - (DWORD)pCodeAccess - JMP32_SZ;
-	memcpy(pCodeAccess+1,&dwTemp,sizeof(DWORD));
-
-	// Detour HudOut:
-	char *pOutAccess=(char *)HL_ADDR_HUD_TOUROUT;
-
-	// save the code (the 5 byte move eax,[addr]) we have to exec later when leaving our loop:
-	memcpy(pHudTours_end,pOutAccess,5);
-	// and make it Jump back into the original Code:
-	pHudTours_end[5]=asmJMP;
-	dwTemp=((DWORD)pOutAccess+5) - ((DWORD)pHudTours_end+5) - JMP32_SZ;
-	memcpy(pHudTours_end+6,&dwTemp,sizeof(DWORD));
-
-	//memset(pOutAccess,0,5);
-	//memcpy(pOutAccess,pHudTours_end,5);
-
-	// now place the JMP onto our introducing end hook tour into the original code:
-	pOutAccess[0]=asmJMP;
-	dwTemp=(DWORD)tour_HudEnd  - (DWORD)pOutAccess - JMP32_SZ;
-	memcpy(pOutAccess+1,&dwTemp,sizeof(DWORD));
+	VirtualProtect( pCodeTourIn, dwCodeSizeIn, PAGE_READWRITE, &dwOldProtIn );
+	VirtualProtect( pCodeTourOut, dwCodeSizeOut, PAGE_READWRITE, &dwOlProtOut );
 
 	//
-	// that's it.
 
-	// restore olde code access:
-	VirtualProtect(pCodeAccess,(HL_ADDR_HUD_TOUROUT - HL_ADDR_HUD_TOURIN)+5,dwOldProtect,NULL);
+	g_lpCode_HudTours_Loop = pCodeTourIn; // FILL IN ADDRESS
+
+	//
+	//	detour In:
+	//
+
+	// create continue code:
+
+	// get mem that is never freed:
+	LPVOID pDetouredCodeIn = (LPVOID)malloc(dwCodeSizeIn + JMP32_SZ);
+
+	g_lpCode_TourIn_Continue = pDetouredCodeIn; // FILL IN ADDRESS
+
+	// copy the original mov instruction:
+	memcpy(pDetouredCodeIn,pCodeTourIn,dwCodeSizeIn);
+
+	// create jump back to continue in original code:
+	ucTemp = asmJMP;
+	memcpy((unsigned char *)pDetouredCodeIn + dwCodeSizeIn,&ucTemp,1);
+	dwTemp = (DWORD)pCodeTourIn - (DWORD)pDetouredCodeIn  - JMP32_SZ;
+	memcpy((unsigned char *)pDetouredCodeIn + dwCodeSizeIn + 1,&dwTemp,4);
+
+	// detour original code to jump to the tour_HudBegin func:
+	ucTemp = asmJMP;
+	memcpy(pCodeTourIn,&ucTemp,1);
+	dwTemp=(DWORD)&tour_HudBegin - (DWORD)pCodeTourIn - JMP32_SZ;
+	memcpy((unsigned char *)pCodeTourIn+1,&dwTemp,4);
+
+	//
+	//	detour Out:
+	//
+
+	// create continue code:
+
+	// get mem that is never freed:
+	LPVOID pDetouredCodeOut = (LPVOID)malloc(dwCodeSizeOut + JMP32_SZ);
+
+	g_lpCode_TourOut_Continue = pDetouredCodeOut; // FILL IN ADDRESS
+
+	// copy the original function call:
+	memcpy(pDetouredCodeOut,pCodeTourOut,dwCodeSizeOut);
+
+	// patch the call address:
+	memcpy(&dwTemp,(unsigned char*)pDetouredCodeOut+1,4),
+	dwTemp -= (DWORD)pDetouredCodeOut - (DWORD)pCodeTourOut;
+	memcpy((unsigned char*)pDetouredCodeOut+1,&dwTemp,4);
+
+	// create jump back to continue in original code:
+	ucTemp = asmJMP;
+	memcpy((unsigned char *)pDetouredCodeOut + dwCodeSizeOut,&ucTemp,1);
+	dwTemp = (DWORD)pCodeTourOut - (DWORD)pDetouredCodeOut  - JMP32_SZ;
+	memcpy((unsigned char *)pDetouredCodeOut + dwCodeSizeOut + 1,&dwTemp,4);
+
+	// detour original code to jump to the tour_HudBegin func:
+	ucTemp = asmJMP;
+	memcpy(pCodeTourOut,&ucTemp,1);
+	dwTemp=(DWORD)&tour_HudEnd - (DWORD)pCodeTourOut - JMP32_SZ;
+	memcpy((unsigned char *)pCodeTourOut+1,&dwTemp,4);
+
+	//
+	//	Restore code access:
+	//
+
+	VirtualProtect( pCodeTourIn, dwCodeSizeIn, dwOldProtIn, NULL );
+	VirtualProtect( pCodeTourOut, dwCodeSizeOut, dwOlProtOut, NULL );
+
+	//
+	// print Debug info:
+
+	pEngfuncs->Con_DPrintf(
+		"Detoured in: 0x%08x\n"
+		"Detoured out: 0x%8x\n",
+		(DWORD)pCodeTourIn,
+		(DWORD)pCodeTourOut
+	);
 }
 
 // << Hooking the HUD functions  <<

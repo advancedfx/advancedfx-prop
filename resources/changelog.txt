@@ -1,3 +1,8 @@
+HLAE 2.2.3.2 (2009-01-25)
+
+* changed mirv_movie_separate_hud (should fix missing awp ch problem)
+
+
 HLAE 2.2.3.1 (2009-01-19)
 
 * added mirv_movie_bmp,
