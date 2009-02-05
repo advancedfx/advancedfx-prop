@@ -1,3 +1,17 @@
+HLAE 2.2.3.4 (2009-02-05)
+
+* fixed and improved mirv_crosshair_fps (cstrike crosshair fix):
+  - it should be accurate now
+  - when enabled there should be no difference between hudalpha and hudcolor
+    streams
+  For more information read the online manual / command reference.
+
+
+HLAE 2.2.3.3 (2009-01-29)
+
+* fixed bug with selection of custom mods (thx to Fana)
+
+
 HLAE 2.2.3.2 (2009-01-25)
 
 * changed mirv_movie_separate_hud (should fix missing awp ch problem)

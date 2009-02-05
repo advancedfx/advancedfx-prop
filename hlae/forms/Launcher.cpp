@@ -27,9 +27,12 @@ System::Void Launcher::buttonOK_Click(System::Object^  sender, System::EventArgs
 	else
 		cmds = String::Concat(cmds," -window");
 
-	cmds = String::Concat( cmds, " -game ",
-		this->comboBoxModSel->Text->Split(' ',1)[0]
-	);
+	i1 = comboBoxModSel->SelectedIndex;
+	if( i1<0 || i1 >= this->comboBoxModSel->Items->Count-1 )
+		s1 = this->textBoxCustMod->Text;
+	else
+		s1 = this->comboBoxModSel->Text->Split(' ',1)[0];
+	cmds = String::Concat( cmds, " -game ", s1 );
 
 	// gfx settings
 	s1 = this->comboBoxResDepth->Text;

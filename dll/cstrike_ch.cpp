@@ -25,9 +25,13 @@
 #include "hl_addresses.h"
 #include "detours.h"
 
+#include "filming.h"
+
 extern cl_enginefuncs_s *pEngfuncs;
 extern engine_studio_api_s* pEngStudio;
 extern playermove_s* ppmove;
+
+extern Filming g_Filming;
 
 // client.dll: 0x0D4c0000
 // 0x93C4
@@ -44,40 +48,55 @@ double g_fChTargetFps = 0;
 double *g_f_ch_mul_fac = NULL;
 double *g_f_ch_add_fac = NULL;
 
+double g_f_SubFrameTime = 0;
+
 void __stdcall CrosshairFix_Hooking_Func(  DWORD *this_ptr, float fUnkTime, DWORD dwUnkWeaponCode )
 {
-	DWORD dwOldPort1,dwOldPort2;
-	double fOldMulFac, fOldAddFac;
-	bool bChanged = false;
 
 	if(g_bBlockCh)
 	{
-		bChanged = true;
-		VirtualProtect(g_f_ch_mul_fac,sizeof(double),PAGE_READWRITE,&dwOldPort1);
-		VirtualProtect(g_f_ch_add_fac,sizeof(double),PAGE_READWRITE,&dwOldPort2);
+		// detect if we are in a multipass for the hud and thus don't want any cooldown:
+		bool b_SecondHudPass = Filming::HUDRQ_CAPTURE_ALPHA == g_Filming.giveHudRqState();
 
-		fOldMulFac = *g_f_ch_mul_fac;
-		fOldAddFac = *g_f_ch_add_fac;
-		double facc = g_fChTargetFps != 0.0f ? crosshair_base_fps->value / g_fChTargetFps : 1.0f;
+		if(!b_SecondHudPass )
+			g_f_SubFrameTime += g_fChTargetFps != 0.0f ? crosshair_base_fps->value / g_fChTargetFps : 1.0f;
 
-		//pEngfuncs->Con_DPrintf("Old: %f, %f\n",*g_f_ch_mul_fac,*g_f_ch_add_fac);
+		if( b_SecondHudPass || g_f_SubFrameTime < 1.0f)
+		{
+			// do not apply any cool down, just make it drawn:
 
-		*g_f_ch_mul_fac = fOldMulFac * facc;
-		*g_f_ch_add_fac = fOldAddFac * facc;
+			DWORD dwOldPort1,dwOldPort2;
+			double fOldMulFac, fOldAddFac;
 
-		//pEngfuncs->Con_DPrintf("NEw: %f, %f\n",*g_f_ch_mul_fac,*g_f_ch_add_fac);
+			VirtualProtect(g_f_ch_mul_fac,sizeof(double),PAGE_READWRITE,&dwOldPort1);
+			VirtualProtect(g_f_ch_add_fac,sizeof(double),PAGE_READWRITE,&dwOldPort2);
+
+			fOldMulFac = *g_f_ch_mul_fac;
+			fOldAddFac = *g_f_ch_add_fac;
+
+			*g_f_ch_mul_fac = 0.0f;
+			*g_f_ch_add_fac = 0.0f;
+
+			g_pfnCrosshairFix_Hooked_Func( this_ptr, fUnkTime, dwUnkWeaponCode );
+
+			*g_f_ch_mul_fac = fOldMulFac;
+			*g_f_ch_add_fac = fOldAddFac;
+
+			VirtualProtect(g_f_ch_mul_fac,sizeof(double),dwOldPort1,NULL);
+			VirtualProtect(g_f_ch_add_fac,sizeof(double),dwOldPort2,NULL);
+
+		} else {
+			// apply cooldown:
+			while( g_f_SubFrameTime >= 1.0f )
+			{
+				g_pfnCrosshairFix_Hooked_Func( this_ptr, fUnkTime, dwUnkWeaponCode );
+
+				g_f_SubFrameTime -= 1.0f;
+			}
+		}
 	}
-	
-	g_pfnCrosshairFix_Hooked_Func( this_ptr, fUnkTime, dwUnkWeaponCode );
-
-	if( bChanged )
-	{
-		*g_f_ch_mul_fac = fOldMulFac;
-		*g_f_ch_add_fac = fOldAddFac;
-
-		VirtualProtect(g_f_ch_mul_fac,sizeof(double),dwOldPort1,NULL);
-		VirtualProtect(g_f_ch_add_fac,sizeof(double),dwOldPort2,NULL);
-	}
+	else
+		g_pfnCrosshairFix_Hooked_Func( this_ptr, fUnkTime, dwUnkWeaponCode );
 }
 
 void CrosshairFix_Install()

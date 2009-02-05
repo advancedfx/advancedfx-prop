@@ -43,7 +43,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../shared/microsoft;c:\Libraries/hlsdk/multiplayer/cl_dll;c:\Libraries/hlsdk/multiplayer/common;c:\Libraries/hlsdk/multiplayer/engine;c:\Libraries/hlsdk/multiplayer/pm_shared;c:\Libraries/hlsdk/multiplayer/dlls;$(NOINHERIT)"
+				AdditionalIncludeDirectories="..;../shared/microsoft;c:\Libraries/hlsdk/multiplayer/cl_dll;c:\Libraries/hlsdk/multiplayer/common;c:\Libraries/hlsdk/multiplayer/engine;c:\Libraries/hlsdk/multiplayer/pm_shared;c:\Libraries/hlsdk/multiplayer/dlls;$(NOINHERIT)"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;MIRVDEMOTOOL_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -127,7 +127,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="../shared/microsoft;c:\Libraries/hlsdk/multiplayer/cl_dll;c:\Libraries/hlsdk/multiplayer/common;c:\Libraries/hlsdk/multiplayer/engine;c:\Libraries/hlsdk/multiplayer/pm_shared;c:\Libraries/hlsdk/multiplayer/dlls;$(NOINHERIT)"
+				AdditionalIncludeDirectories="..;../shared/microsoft;c:\Libraries/hlsdk/multiplayer/cl_dll;c:\Libraries/hlsdk/multiplayer/common;c:\Libraries/hlsdk/multiplayer/engine;c:\Libraries/hlsdk/multiplayer/pm_shared;c:\Libraries/hlsdk/multiplayer/dlls;$(NOINHERIT)"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;MIRVDEMOTOOL_EXPORTS"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -182,7 +182,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Post-Build: calling rcstamp ..."
-				CommandLine="&quot;../shared/bin/rcstamp.exe&quot; &quot;$(ProjectDir)Mirv Demo Tool.rc&quot; 1.2.3.4 &quot;$(ProjectDir)version.cpp&quot;"
+				CommandLine="&quot;../shared/bin/rcstamp.exe&quot; &quot;$(ProjectDir)Mirv Demo Tool.rc&quot; *.*.*.+ &quot;$(ProjectDir)version.cpp&quot;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -195,225 +195,199 @@
 			<Filter
 				Name="basecom"
 				>
-				<Filter
-					Name="Header Files"
+				<File
+					RelativePath="..\shared\com\basecom.h"
 					>
-					<File
-						RelativePath="..\shared\com\basecom.h"
-						>
-					</File>
-				</Filter>
+				</File>
 			</Filter>
 			<Filter
 				Name="hldemo"
 				>
-				<Filter
-					Name="Header Files"
+				<File
+					RelativePath="..\shared\hldemo\hldemo.h"
 					>
-					<File
-						RelativePath="..\shared\hldemo\hldemo.h"
-						>
-					</File>
-				</Filter>
+				</File>
 			</Filter>
 		</Filter>
 		<Filter
 			Name="dll"
 			>
-			<Filter
-				Name="Header Files"
-				Filter="h;hpp;hxx;hm;inl;inc;xsd"
-				UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
+			<File
+				RelativePath=".\aiming.cpp"
 				>
-				<File
-					RelativePath=".\aiming.h"
-					>
-				</File>
-				<File
-					RelativePath=".\basecomClient.h"
-					>
-				</File>
-				<File
-					RelativePath=".\cmd_tools.h"
-					>
-				</File>
-				<File
-					RelativePath=".\cmdregister.h"
-					>
-				</File>
-				<File
-					RelativePath=".\config_mdtdll.h"
-					>
-				</File>
-				<File
-					RelativePath=".\dd_hook.h"
-					>
-				</File>
-				<File
-					RelativePath=".\detours.h"
-					>
-				</File>
-				<File
-					RelativePath=".\dsound_hook.h"
-					>
-				</File>
-				<File
-					RelativePath=".\film_sound.h"
-					>
-				</File>
-				<File
-					RelativePath=".\filming.h"
-					>
-				</File>
-				<File
-					RelativePath=".\hl_addresses.h"
-					>
-				</File>
-				<File
-					RelativePath=".\mdt_debug.h"
-					>
-				</File>
-				<File
-					RelativePath=".\mdt_media.h"
-					>
-				</File>
-				<File
-					RelativePath=".\newsky.h"
-					>
-				</File>
-				<File
-					RelativePath=".\RawOutput.h"
-					>
-				</File>
-				<File
-					RelativePath=".\register.h"
-					>
-				</File>
-				<File
-					RelativePath=".\resource.h"
-					>
-				</File>
-				<File
-					RelativePath=".\sampling.h"
-					>
-				</File>
-				<File
-					RelativePath=".\supportrender.h"
-					>
-				</File>
-				<File
-					RelativePath=".\zooming.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="Resource Files"
-				Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx"
-				UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
+			</File>
+			<File
+				RelativePath=".\aiming.h"
 				>
-				<File
-					RelativePath=".\Mirv Demo Tool.rc"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="Source Files"
-				Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
-				UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
+			</File>
+			<File
+				RelativePath=".\basecomClient.cpp"
 				>
-				<File
-					RelativePath=".\aiming.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\basecomClient.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\cmd_tools.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\config_mdtdll.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\cstrike_ch.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\dd_hook.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\decals_hook.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\demo_tools.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\demoeditfix.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\detours.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\dsound_hook.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\film_sound.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\filming.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\hl_addresses.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\main.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\mdt_media.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\newsky.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\RawOutput.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\sampling.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\supportrender.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\teamcolor.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\version.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\zooming.cpp"
-					>
-				</File>
-			</Filter>
+			</File>
+			<File
+				RelativePath=".\basecomClient.h"
+				>
+			</File>
+			<File
+				RelativePath=".\cmd_tools.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\cmd_tools.h"
+				>
+			</File>
+			<File
+				RelativePath=".\cmdregister.h"
+				>
+			</File>
+			<File
+				RelativePath=".\config_mdtdll.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\config_mdtdll.h"
+				>
+			</File>
+			<File
+				RelativePath=".\cstrike_ch.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\dd_hook.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\dd_hook.h"
+				>
+			</File>
+			<File
+				RelativePath=".\decals_hook.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\demo_tools.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\demoeditfix.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\detours.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\detours.h"
+				>
+			</File>
+			<File
+				RelativePath=".\dsound_hook.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\dsound_hook.h"
+				>
+			</File>
+			<File
+				RelativePath=".\film_sound.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\film_sound.h"
+				>
+			</File>
+			<File
+				RelativePath=".\filming.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\filming.h"
+				>
+			</File>
+			<File
+				RelativePath=".\hl_addresses.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\hl_addresses.h"
+				>
+			</File>
+			<File
+				RelativePath=".\main.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\mdt_debug.h"
+				>
+			</File>
+			<File
+				RelativePath=".\mdt_media.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\mdt_media.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Mirv Demo Tool.rc"
+				>
+			</File>
+			<File
+				RelativePath=".\newsky.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\newsky.h"
+				>
+			</File>
+			<File
+				RelativePath=".\RawOutput.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\RawOutput.h"
+				>
+			</File>
+			<File
+				RelativePath=".\register.h"
+				>
+			</File>
+			<File
+				RelativePath=".\resource.h"
+				>
+			</File>
+			<File
+				RelativePath=".\sampling.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\sampling.h"
+				>
+			</File>
+			<File
+				RelativePath=".\supportrender.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\supportrender.h"
+				>
+			</File>
+			<File
+				RelativePath=".\teamcolor.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\version.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\zooming.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\zooming.h"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>
