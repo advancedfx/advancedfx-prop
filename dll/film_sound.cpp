@@ -13,9 +13,21 @@ Description : see film_sound.h
 //
 
 // HLSDK, qboolean, Vector, vec_3t, ...:
+
+// BEGIN HLSDK includes
+//
+// HACK: prevent cldll_int.h from messing the HSPRITE definition,
+// HLSDK's HSPRITE --> MDTHACKED_HSPRITE
+#pragma push_macro("HSPRITE")
+#define HSPRITE MDTHACKED_HSPRITE
+//
 #include "wrect.h" 
 #include "cl_dll.h"
 #include "cdll_int.h"
+//
+#undef HSPRITE
+#pragma pop_macro("HSPRITE")
+// END HLSDK includes
 
 #include "film_sound.h"
 #include "hl_addresses.h"

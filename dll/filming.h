@@ -10,7 +10,6 @@ Description : see mdt_gltools.h
 #include <windows.h>
 #include <gl\gl.h>
 #include <gl\glu.h>
-#include <gl\glaux.h>
 
 #include "supportrender.h" // for switching rendering target (important for recording)
 #include "mdt_media.h" // We Mant RAWGLPICS and other media interfaces

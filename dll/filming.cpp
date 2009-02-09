@@ -1,13 +1,25 @@
+// BEGIN HLSDK includes
+//
+// HACK: prevent cldll_int.h from messing the HSPRITE definition,
+// HLSDK's HSPRITE --> MDTHACKED_HSPRITE
+#pragma push_macro("HSPRITE")
+#define HSPRITE MDTHACKED_HSPRITE
+//
+#include <wrect.h>
+#include <cl_dll.h>
+#include <cdll_int.h>
+#include <r_efx.h>
+#include <com_model.h>
+#include <r_studioint.h>
+#include <pm_defs.h>
+#include <cvardef.h>
+#include <entity_types.h>
+#include <in_defs.h> // PITCH YAW ROLL // HL1 sdk
+//
+#undef HSPRITE
+#pragma pop_macro("HSPRITE")
+// END HLSDK includes
 
-#include "wrect.h"
-#include "cl_dll.h"
-#include "cdll_int.h"
-#include "r_efx.h"
-#include "com_model.h"
-#include "r_studioint.h"
-#include "pm_defs.h"
-#include "cvardef.h"
-#include "entity_types.h"
 #include "supportrender.h"
 #include "cmdregister.h"
 
@@ -19,7 +31,6 @@
 
 #include "hl_addresses.h" // we want to access addressese (i.e. R_RenderView)
 #include "detours.h" // we want to use Detourapply
-#include "in_defs.h" // PITCH YAW ROLL // HL1 sdk
 
 #include "basecomclient.h" // OnFilmingStart(), OnFilmingStop()
 

@@ -41,3 +41,4 @@ using namespace System::Security::Permissions;
 
 // own permssions requested:
 [assembly:FileIOPermission(SecurityAction::RequestMinimum, Unrestricted = true)];
+[assembly:FileDialogPermission(SecurityAction::RequestMinimum, Unrestricted = true)];

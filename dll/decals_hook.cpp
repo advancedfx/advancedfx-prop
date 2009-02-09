@@ -1,10 +1,20 @@
+// BEGIN HLSDK includes
+//
+// HACK: prevent cldll_int.h from messing the HSPRITE definition,
+// HLSDK's HSPRITE --> MDTHACKED_HSPRITE
+#pragma push_macro("HSPRITE")
+#define HSPRITE MDTHACKED_HSPRITE
+//
 #include <wrect.h>
 #include <cl_dll.h>
 #include <cdll_int.h>
 #include <cvardef.h>
-
 #include <com_model.h> // texture_t
 #include <r_efx.h>
+//
+#undef HSPRITE
+#pragma pop_macro("HSPRITE")
+// END HLSDK includes
 
 #include "cmdregister.h"
 #include "hl_addresses.h"

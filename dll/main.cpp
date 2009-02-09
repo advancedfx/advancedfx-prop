@@ -7,14 +7,19 @@
 
 #pragma comment(lib,"OpenGL32.lib")
 #pragma comment(lib,"GLu32.lib")
-#pragma comment(lib,"GLaux.lib")
 
 #include <windows.h>
 #include <winbase.h>
 #include <gl\gl.h>
 #include <gl\glu.h>
-#include <gl\glaux.h>
 
+// BEGIN HLSDK includes
+//
+// HACK: prevent cldll_int.h from messing the HSPRITE definition,
+// HLSDK's HSPRITE --> MDTHACKED_HSPRITE
+#pragma push_macro("HSPRITE")
+#define HSPRITE MDTHACKED_HSPRITE
+//
 #include <wrect.h>
 #include <cl_dll.h>
 #include <cdll_int.h>
@@ -24,6 +29,10 @@
 #include <pm_defs.h>
 #include <cvardef.h>
 #include <entity_types.h>
+//
+#undef HSPRITE
+#pragma pop_macro("HSPRITE")
+// END HLSDK includes
 
 #include "detours.h"
 #include "filming.h"

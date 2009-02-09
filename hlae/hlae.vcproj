@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="9,00"
 	Name="Half-Life Advanced Effects .NET"
 	ProjectGUID="{CF9B4385-F921-4168-92D4-31DF94AC36FB}"
 	RootNamespace="hlae"
 	Keyword="ManagedCProj"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -66,6 +67,8 @@
 				AssemblyDebug="1"
 				SubSystem="2"
 				EntryPointSymbol="main"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -85,9 +88,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -143,6 +143,8 @@
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				EntryPointSymbol="main"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -164,9 +166,6 @@
 				Name="VCAppVerifierTool"
 			/>
 			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
@@ -175,54 +174,37 @@
 		<AssemblyReference
 			RelativePath="System.dll"
 			AssemblyName="System, Version=2.0.0.0, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL"
+			MinFrameworkVersion="131072"
 		/>
 		<AssemblyReference
 			RelativePath="System.Data.dll"
 			AssemblyName="System.Data, Version=2.0.0.0, PublicKeyToken=b77a5c561934e089, processorArchitecture=x86"
+			MinFrameworkVersion="131072"
 		/>
 		<AssemblyReference
 			RelativePath="System.Drawing.dll"
 			AssemblyName="System.Drawing, Version=2.0.0.0, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
+			MinFrameworkVersion="131072"
 		/>
 		<AssemblyReference
 			RelativePath="System.Windows.Forms.dll"
 			AssemblyName="System.Windows.Forms, Version=2.0.0.0, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL"
+			MinFrameworkVersion="131072"
 		/>
 		<AssemblyReference
 			RelativePath="System.XML.dll"
 			AssemblyName="System.Xml, Version=2.0.0.0, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL"
-		/>
-		<AssemblyReference
-			RelativePath="CrystalDecisions.Windows.Forms.dll"
-			AssemblyName="CrystalDecisions.Windows.Forms, Version=10.2.3600.0, PublicKeyToken=692fbea5521e1304, processorArchitecture=MSIL"
-		/>
-		<AssemblyReference
-			RelativePath="CrystalDecisions.Shared.dll"
-			AssemblyName="CrystalDecisions.Shared, Version=10.2.3600.0, PublicKeyToken=692fbea5521e1304, processorArchitecture=MSIL"
-		/>
-		<AssemblyReference
-			RelativePath="CrystalDecisions.ReportSource.dll"
-			AssemblyName="CrystalDecisions.ReportSource, Version=10.2.3600.0, PublicKeyToken=692fbea5521e1304, processorArchitecture=MSIL"
-		/>
-		<AssemblyReference
-			RelativePath="CrystalDecisions.CrystalReports.Engine.dll"
-			AssemblyName="CrystalDecisions.CrystalReports.Engine, Version=10.2.3600.0, PublicKeyToken=692fbea5521e1304, processorArchitecture=MSIL"
+			MinFrameworkVersion="131072"
 		/>
 		<AssemblyReference
 			RelativePath="System.Web.dll"
 			AssemblyName="System.Web, Version=2.0.0.0, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=IA64"
+			MinFrameworkVersion="131072"
 		/>
 		<AssemblyReference
 			RelativePath="System.Web.Services.dll"
 			AssemblyName="System.Web.Services, Version=2.0.0.0, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
-		/>
-		<AssemblyReference
-			RelativePath="CrystalDecisions.Enterprise.Framework.dll"
-			AssemblyName="CrystalDecisions.Enterprise.Framework, Version=10.2.3600.0, PublicKeyToken=692fbea5521e1304, processorArchitecture=MSIL"
-		/>
-		<AssemblyReference
-			RelativePath="CrystalDecisions.Enterprise.InfoStore.dll"
-			AssemblyName="CrystalDecisions.Enterprise.InfoStore, Version=10.2.3600.0, PublicKeyToken=692fbea5521e1304, processorArchitecture=MSIL"
+			MinFrameworkVersion="131072"
 		/>
 	</References>
 	<Files>

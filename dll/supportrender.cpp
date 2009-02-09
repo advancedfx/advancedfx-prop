@@ -13,15 +13,26 @@
 #include <gl\glu.h>
 #include "../shared\ogl\glext.h"
 
-#include "wrect.h"
-#include "cl_dll.h"
-#include "cdll_int.h"
-//#include "r_efx.h"
-//#include "com_model.h"
-//#include "r_studioint.h"
-//#include "pm_defs.h"
-//#include "cvardef.h"
-//#include "entity_types.h"
+// BEGIN HLSDK includes
+//
+// HACK: prevent cldll_int.h from messing the HSPRITE definition,
+// HLSDK's HSPRITE --> MDTHACKED_HSPRITE
+#pragma push_macro("HSPRITE")
+#define HSPRITE MDTHACKED_HSPRITE
+//
+#include <wrect.h>
+#include <cl_dll.h>
+#include <cdll_int.h>
+//#include <r_efx.h>
+//#include <com_model.h>
+//#include <r_studioint.h>
+//#include <pm_defs.h>
+//#include <cvardef.h>
+//#include <entity_types.h>
+//
+#undef HSPRITE
+#pragma pop_macro("HSPRITE")
+// END HLSDK includes
 
 #include "supportrender.h"
 

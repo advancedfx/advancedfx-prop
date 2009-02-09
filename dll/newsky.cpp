@@ -4,10 +4,21 @@ Half-Life Advanced Effects project
 
 #include "newsky.h"
 
+// BEGIN HLSDK includes
+//
+// HACK: prevent cldll_int.h from messing the HSPRITE definition,
+// HLSDK's HSPRITE --> MDTHACKED_HSPRITE
+#pragma push_macro("HSPRITE")
+#define HSPRITE MDTHACKED_HSPRITE
+//
 #include <wrect.h>
 #include <cl_dll.h>
 #include <cdll_int.h>
 #include <cvardef.h>
+//
+#undef HSPRITE
+#pragma pop_macro("HSPRITE")
+// END HLSDK includes
 
 #include "cmdregister.h"
 
@@ -17,6 +28,85 @@ Half-Life Advanced Effects project
 #define SKY_TEX 0x16a8
 
 extern cl_enginefuncs_s *pEngfuncs;
+
+///////////////////////////////////////////////////////////////////////////////
+
+int	skytexorder[6] = {0,1,2,3,4,5};
+char *suf[6] = {"rt", "bk", "lf", "ft", "up", "dn"};
+
+typedef struct skyimage_s {
+	LONG width;
+	LONG height;
+	void *data;
+} skyimage_t;
+
+// this is only useful when GL is working on a 4 byte boundary:
+skyimage_t *LoadSky(const char *pszFileName)
+{
+	skyimage_t *pSkyImage;
+	FILE *pFile;
+	BITMAPINFOHEADER bmInfoH;
+	BITMAPFILEHEADER bmFileH;
+	size_t cbSize;
+
+	if(!(pSkyImage = (skyimage_t *)malloc(sizeof(skyimage_t))))
+	{
+		pEngfuncs->Con_Printf("Error: Out of memory\n",pszFileName);
+		return 0;
+	}
+
+	if (
+		!(pFile = fopen(pszFileName, "rb")) // could not open file
+		|| fseek(pFile,0,SEEK_END) // could not seek to file end
+		|| !(cbSize = ftell(pFile)) // file size is zero
+		|| fseek(pFile,0,SEEK_SET) // could not seek back
+	)
+	{
+		pEngfuncs->Con_Printf("Error: cold not open sky image %s.\n",pszFileName);
+		free(pSkyImage);
+		return 0;
+	}
+
+	if(
+		1 != fread(&bmFileH,sizeof(BITMAPFILEHEADER),1,pFile) // could not read bitmap header
+		|| bmFileH.bfType != 0x4d42 // is not a bitmap "BM"
+		|| 1 != fread(&bmInfoH,sizeof(BITMAPINFOHEADER),1,pFile) // could not read bitmap header
+		|| 24 != bmInfoH.biBitCount // not 24 bit
+		|| cbSize < bmInfoH.biSizeImage // file or imagesize is corrupted (file too short)
+		|| fseek(pFile,bmFileH.bfOffBits,SEEK_SET) // could not seek to bitmap data
+	)
+	{
+		pEngfuncs->Con_Printf("Error: unsupported format in sky image %s.\n",pszFileName);
+		fclose(pFile);
+		free(pSkyImage);
+		return 0;
+	}
+
+	pSkyImage->width = bmInfoH.biWidth;
+	pSkyImage->height = bmInfoH.biHeight;
+
+	if(!(pSkyImage->data = (void *)malloc(bmInfoH.biSizeImage)))
+	{
+		pEngfuncs->Con_Printf("Error: Out of memory\n",pszFileName);
+		fclose(pFile);
+		free(pSkyImage);
+		return 0;
+	}
+
+	if(bmInfoH.biSizeImage != fread(pSkyImage->data,1,bmInfoH.biSizeImage,pFile))
+	{
+		pEngfuncs->Con_Printf("Error: failed reading imagedate from sky image %s.\n",pszFileName);
+		free(pSkyImage->data);
+		fclose(pFile);
+		free(pSkyImage);
+		return 0;
+	}
+
+	fclose(pFile);
+
+	return pSkyImage;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // CNewSky
@@ -29,9 +119,6 @@ CNewSky::CNewSky()
 
 	memset(_SkyTextures,0,6*sizeof(GLuint)); // no textures yet
 }
-
-int	skytexorder[6] = {0,1,2,3,4,5};
-char *suf[6] = {"rt", "bk", "lf", "ft", "up", "dn"};
 
 void CNewSky::DetectAndProcessSky(GLenum mode)
 {
@@ -61,16 +148,16 @@ bool CNewSky::ReloadTexturesFromFile()
 {
 	bool bRes=false;
 	
-	AUX_RGBImageRec *SkyTextures[6];
+	skyimage_s *SkyTextures[6];
 
-	memset(SkyTextures,0,6* sizeof(AUX_RGBImageRec *));
+	memset(SkyTextures,0,6* sizeof(skyimage_t *));
 
-	SkyTextures[skytexorder[0]]=auxDIBImageLoad("mdtskyrt.bmp");
-	SkyTextures[skytexorder[1]]=auxDIBImageLoad("mdtskybk.bmp");
-	SkyTextures[skytexorder[2]]=auxDIBImageLoad("mdtskylf.bmp");
-	SkyTextures[skytexorder[3]]=auxDIBImageLoad("mdtskyft.bmp");
-	SkyTextures[skytexorder[4]]=auxDIBImageLoad("mdtskyup.bmp");
-	SkyTextures[skytexorder[5]]=auxDIBImageLoad("mdtskydn.bmp");
+	SkyTextures[skytexorder[0]]=LoadSky("mdtskyrt.bmp");
+	SkyTextures[skytexorder[1]]=LoadSky("mdtskybk.bmp");
+	SkyTextures[skytexorder[2]]=LoadSky("mdtskylf.bmp");
+	SkyTextures[skytexorder[3]]=LoadSky("mdtskyft.bmp");
+	SkyTextures[skytexorder[4]]=LoadSky("mdtskyup.bmp");
+	SkyTextures[skytexorder[5]]=LoadSky("mdtskydn.bmp");
 
 	bRes = SkyTextures[0] && SkyTextures[1] && SkyTextures[2] && SkyTextures[3] && SkyTextures[4] && SkyTextures[5];
 
@@ -85,7 +172,7 @@ bool CNewSky::ReloadTexturesFromFile()
 		{
 			glBindTexture(GL_TEXTURE_2D, _SkyTextures[i]);
 
-			glTexImage2D(GL_TEXTURE_2D, 0, 3, SkyTextures[i]->sizeX, SkyTextures[i]->sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, SkyTextures[i]->data);
+			glTexImage2D(GL_TEXTURE_2D, 0, 3, SkyTextures[i]->width, SkyTextures[i]->height, 0, GL_BGR_EXT, GL_UNSIGNED_BYTE, SkyTextures[i]->data);
 
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
