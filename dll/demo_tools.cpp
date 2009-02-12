@@ -32,12 +32,14 @@
 
 std::list<int> g_BlockedVoiceEntsList;
 
-
 //
 //
 //
 
 extern cl_enginefuncs_s *pEngfuncs;
+
+REGISTER_DEBUGCVAR(voice_invalidid, "255", 0);
+
 /*
 //
 // Addresses:
@@ -103,7 +105,7 @@ void Handle_CmdRead_Intercepted(void)
 		{
 			if (*iter==iEntity)
 			{
-				(unsigned char)(pnet_message->data[myreadcount])=MAXCLIENTS;
+				(unsigned char)(pnet_message->data[myreadcount])= (unsigned char)(voice_invalidid->value);//MAXCLIENTS;
 				//pEngfuncs->Con_DPrintf("HLAE blocked voice of %i.\n",iEntity);
 				break;
 			}
