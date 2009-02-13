@@ -1,3 +1,12 @@
+HLAE 2.2.3.6 (2009-02-13)
+
+* improved mirv_voice_block
+  
+* changed IDE to VC++ 2008 Express Ed.
+
+* fixed private side by side CRT assembly version mismatch
+  
+
 HLAE 2.2.3.4 (2009-02-05)
 
 * fixed and improved mirv_crosshair_fps (cstrike crosshair fix):

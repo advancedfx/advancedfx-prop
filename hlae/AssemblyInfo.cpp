@@ -31,11 +31,11 @@ using namespace System::Security::Permissions;
 // You can specify all the value or you can default the Revision and Build Numbers
 // by using the '*' as shown below:
 
-[assembly:AssemblyVersionAttribute("1.0.*")];
+[assembly:AssemblyVersion("1.0.*")];
 
 [assembly:ComVisible(false)];
 
-[assembly:CLSCompliantAttribute(true)];
+[assembly:CLSCompliant(true)];
 
 [assembly:SecurityPermission(SecurityAction::RequestMinimum, UnmanagedCode = true)];
 

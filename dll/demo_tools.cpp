@@ -80,37 +80,57 @@ void Handle_CmdRead_Intercepted(void)
 {
 	int *pmsg_readcount = (int *)HL_ADDR_msg_readcount;
 	sizebuf_t * pnet_message = (sizebuf_t *)HL_ADDR_net_message;
-
 	int myreadcount=*pmsg_readcount;
 
-	// now similar to Quake's MSG_ReadByte():
+	bool bScan = true;
 
-	if (myreadcount+1 > pnet_message->cursize)
-		return; // msg_badread
-
-	unsigned char uc = (unsigned char)(pnet_message->data[myreadcount]);
-	myreadcount++;
-
-	switch (uc)
+	while(bScan)
 	{
-	case svc_voicedata:
-		// 4 + 4 + 4 + 16
-		unsigned char ucEntity;
-		if (myreadcount+sizeof(ucEntity) > pnet_message->cursize)
-			return; // msg_badread
 
-		ucEntity = (unsigned char)(pnet_message->data[myreadcount]);
-		int iEntity = ucEntity+1;
-		for (std::list<int>::iterator iter = g_BlockedVoiceEntsList.begin(); iter != g_BlockedVoiceEntsList.end(); iter++)
+		// now similar to Quake's MSG_ReadByte():
+
+		if (myreadcount+1 > pnet_message->cursize)
+			return; // msg_badread or end of stream
+
+		unsigned char uc = (unsigned char)(pnet_message->data[myreadcount]);
+		myreadcount++;
+
+		switch (uc)
 		{
-			if (*iter==iEntity)
+		case svc_voicedata:
+			// 4 + 4 + 4 + 16
+			unsigned char ucEntity;
+			unsigned short uscbSize;
+			int iEntity;
+
+			if (myreadcount+sizeof(ucEntity)+sizeof(uscbSize) > pnet_message->cursize)
+				return; // msg_badread
+
+			ucEntity = (unsigned char)(pnet_message->data[myreadcount]);
+			myreadcount++;
+			uscbSize = (unsigned short)(pnet_message->data[myreadcount]);
+			myreadcount += 2+ uscbSize;
+
+			if (myreadcount > pnet_message->cursize)
+				return; // msg_badread
+
+			iEntity = ucEntity+1;
+			for (std::list<int>::iterator iter = g_BlockedVoiceEntsList.begin(); iter != g_BlockedVoiceEntsList.end(); iter++)
 			{
-				(unsigned char)(pnet_message->data[myreadcount])= (unsigned char)(voice_invalidid->value);//MAXCLIENTS;
-				//pEngfuncs->Con_DPrintf("HLAE blocked voice of %i.\n",iEntity);
-				break;
+				if (*iter==iEntity)
+				{
+					// blocked, skip the message:
+					DWORD dwOldProt;
+					VirtualProtect(pmsg_readcount,sizeof(int),PAGE_READWRITE,&dwOldProt);
+					*pmsg_readcount = myreadcount;
+					VirtualProtect(pmsg_readcount,sizeof(int),dwOldProt,0);
+					break;
+				}
 			}
+			break;
+		default:
+			bScan=false;
 		}
-		break;
 	}
 
 }
@@ -201,6 +221,14 @@ REGISTER_CMD_FUNC(voice_block)
 		pEngfuncs->Con_Printf("Usage:\n" PREFIX "voice_block add <id> - adds id to list of blocked entity ids\n" PREFIX "voice_block list\n" PREFIX "voice_block del <id>\n" PREFIX "voice_block clear - clears complete list\n");
 	}
 }
+
+
+/* sample svc_voicdata (including message code):
+35 10 14 00 19 c5 67 32 bb ff f1 c2 9f 6c 26 87 9b bf 3f f2 b4 50 29 53
+(unsigend char) 0x35 --> svc_voicedata
+(unsigned short) 0x0014 --> 14 bytes of data follow
+... data 
+*/
 
 
 /*
