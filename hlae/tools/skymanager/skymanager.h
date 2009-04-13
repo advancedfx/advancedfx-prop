@@ -65,7 +65,7 @@ namespace hlae {
 	private: System::Windows::Forms::GroupBox^  groupRotate;
 
 	private: System::Windows::Forms::Button^  butRot;
-	private: System::Windows::Forms::PictureBox^  picImage;
+
 
 	private:
 		CGlobals ^Globals;
@@ -79,6 +79,9 @@ namespace hlae {
 	private: System::Windows::Forms::OpenFileDialog^  openImageDialog;
 	private: System::Windows::Forms::RadioButton^  radioPreFlat;
 	private: System::Windows::Forms::RadioButton^  radioPrePer;
+	private: System::Windows::Forms::Panel^  picImage;
+	private: System::Windows::Forms::Panel^  picPreview;
+
 
 
 	private: System::Windows::Forms::FolderBrowserDialog^  folderBrowserDialog;
@@ -159,13 +162,13 @@ namespace hlae {
 		}
 
 		// does not catch exceptions
-		void WirteHlaeImage(Bitmap ^ bmpF, String ^ fileName)
+		void WriteHlaeImage(Bitmap ^ bmpF, String ^ fileName)
 		{
 			bmpF->Save(fileName, Imaging::ImageFormat::Bmp);
 
 		}
 
-	private: System::Windows::Forms::PictureBox^  picPreview;
+
 	private: System::Windows::Forms::GroupBox^  groupPreview;
 	private: System::Windows::Forms::GroupBox^  groupSelect;
 	private: System::Windows::Forms::RadioButton^  radioSelRight;
@@ -190,7 +193,6 @@ namespace hlae {
 		/// </summary>
 		void InitializeComponent(void)
 		{
-			this->picPreview = (gcnew System::Windows::Forms::PictureBox());
 			this->groupPreview = (gcnew System::Windows::Forms::GroupBox());
 			this->radioPreFlat = (gcnew System::Windows::Forms::RadioButton());
 			this->radioPrePer = (gcnew System::Windows::Forms::RadioButton());
@@ -214,33 +216,18 @@ namespace hlae {
 			this->butMirHorz = (gcnew System::Windows::Forms::Button());
 			this->buttonLoad = (gcnew System::Windows::Forms::Button());
 			this->groupImage = (gcnew System::Windows::Forms::GroupBox());
-			this->picImage = (gcnew System::Windows::Forms::PictureBox());
+			this->picImage = (gcnew System::Windows::Forms::Panel());
 			this->groupRotate = (gcnew System::Windows::Forms::GroupBox());
 			this->butRot = (gcnew System::Windows::Forms::Button());
 			this->openImageDialog = (gcnew System::Windows::Forms::OpenFileDialog());
 			this->folderBrowserDialog = (gcnew System::Windows::Forms::FolderBrowserDialog());
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->picPreview))->BeginInit();
+			this->picPreview = (gcnew System::Windows::Forms::Panel());
 			this->groupPreview->SuspendLayout();
 			this->groupSelect->SuspendLayout();
 			this->groupMirror->SuspendLayout();
 			this->groupImage->SuspendLayout();
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->picImage))->BeginInit();
 			this->groupRotate->SuspendLayout();
 			this->SuspendLayout();
-			// 
-			// picPreview
-			// 
-			this->picPreview->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom) 
-				| System::Windows::Forms::AnchorStyles::Left) 
-				| System::Windows::Forms::AnchorStyles::Right));
-			this->picPreview->BorderStyle = System::Windows::Forms::BorderStyle::FixedSingle;
-			this->picPreview->Location = System::Drawing::Point(3, 1);
-			this->picPreview->Name = L"picPreview";
-			this->picPreview->Size = System::Drawing::Size(200, 200);
-			this->picPreview->TabIndex = 0;
-			this->picPreview->TabStop = false;
-			this->picPreview->Paint += gcnew System::Windows::Forms::PaintEventHandler(this, &skymanager::PaintPicPreview);
-			this->picPreview->ClientSizeChanged += gcnew System::EventHandler(this, &skymanager::picPreview_SizeChanged);
 			// 
 			// groupPreview
 			// 
@@ -516,8 +503,7 @@ namespace hlae {
 			this->picImage->Location = System::Drawing::Point(8, 18);
 			this->picImage->Name = L"picImage";
 			this->picImage->Size = System::Drawing::Size(100, 100);
-			this->picImage->TabIndex = 8;
-			this->picImage->TabStop = false;
+			this->picImage->TabIndex = 3;
 			this->picImage->Paint += gcnew System::Windows::Forms::PaintEventHandler(this, &skymanager::PaintPicImage);
 			// 
 			// groupRotate
@@ -551,28 +537,39 @@ namespace hlae {
 			this->folderBrowserDialog->Description = L"Select the game folder where hl.exe is located";
 			this->folderBrowserDialog->RootFolder = System::Environment::SpecialFolder::MyComputer;
 			// 
+			// picPreview
+			// 
+			this->picPreview->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom) 
+				| System::Windows::Forms::AnchorStyles::Left) 
+				| System::Windows::Forms::AnchorStyles::Right));
+			this->picPreview->BorderStyle = System::Windows::Forms::BorderStyle::FixedSingle;
+			this->picPreview->Location = System::Drawing::Point(3, 1);
+			this->picPreview->Name = L"picPreview";
+			this->picPreview->Size = System::Drawing::Size(200, 200);
+			this->picPreview->TabIndex = 4;
+			this->picPreview->Paint += gcnew System::Windows::Forms::PaintEventHandler(this, &skymanager::PaintPicPreview);
+			this->picPreview->ClientSizeChanged += gcnew System::EventHandler(this, &skymanager::picPreview_ClientSizeChanged);
+			// 
 			// skymanager
 			// 
 			this->AcceptButton = this->buttonExport;
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(492, 373);
+			this->Controls->Add(this->picPreview);
 			this->Controls->Add(this->buttonExport);
 			this->Controls->Add(this->groupImage);
 			this->Controls->Add(this->groupSelect);
 			this->Controls->Add(this->groupPreview);
-			this->Controls->Add(this->picPreview);
 			this->MinimumSize = System::Drawing::Size(500, 400);
 			this->Name = L"skymanager";
 			this->ShowIcon = false;
 			this->SizeGripStyle = System::Windows::Forms::SizeGripStyle::Show;
 			this->Text = L"HLAE Sky Manager";
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->picPreview))->EndInit();
 			this->groupPreview->ResumeLayout(false);
 			this->groupSelect->ResumeLayout(false);
 			this->groupMirror->ResumeLayout(false);
 			this->groupImage->ResumeLayout(false);
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->picImage))->EndInit();
 			this->groupRotate->ResumeLayout(false);
 			this->ResumeLayout(false);
 
@@ -581,8 +578,8 @@ namespace hlae {
 
 
 private: System::Void PaintPicPreview(System::Object^  sender, System::Windows::Forms::PaintEventArgs^  e) {
-			int w = e->ClipRectangle.Width - 1;
-			int h = e->ClipRectangle.Height - 1;
+			 int w = picPreview->ClientSize.Width - 1;
+			int h = picPreview->ClientSize.Height - 1;
 
 			Point ptBkLeft, ptBkRight,ptBkDown;
 			Point ptRtLeft, ptRtRight,ptRtDown;
@@ -762,7 +759,7 @@ private: System::Void PaintPicImage(System::Object^  sender, System::Windows::Fo
 			if(!img)
 				 return;
 
-			e->Graphics->DrawImage(img,e->ClipRectangle.Left,e->ClipRectangle.Top,e->ClipRectangle.Width,e->ClipRectangle.Height);
+			e->Graphics->DrawImage(img,0,0,picImage->ClientSize.Width,picImage->ClientSize.Height);
 		 }
 
 private: System::Void Prev_CheckedChanged(System::Object^  sender, System::EventArgs^  e) {
@@ -782,9 +779,6 @@ private: System::Void Sel_CheckedChanged(System::Object^  sender, System::EventA
 			 picImage->Refresh();
 			 picPreview->Refresh();
 		 }
-private: System::Void picPreview_SizeChanged(System::Object^  sender, System::EventArgs^  e) {
-			 picPreview->Refresh();
-		 }
 private: System::Void ImageOpClick(System::Object^  sender, System::EventArgs^  e) {
 			Bitmap ^img;
 
@@ -796,8 +790,13 @@ private: System::Void ImageOpClick(System::Object^  sender, System::EventArgs^  
 				{
 					imageFront->RotateFlip(Drawing::RotateFlipType::RotateNoneFlipX);
 					imageBack->RotateFlip(Drawing::RotateFlipType::RotateNoneFlipX);
-					imageDown->RotateFlip(Drawing::RotateFlipType::RotateNoneFlipX);
-					imageUp->RotateFlip(Drawing::RotateFlipType::RotateNoneFlipX);
+
+					imageDown->RotateFlip(Drawing::RotateFlipType::RotateNoneFlipY);
+					imageUp->RotateFlip(Drawing::RotateFlipType::RotateNoneFlipY);
+
+
+					imageRight->RotateFlip(Drawing::RotateFlipType::RotateNoneFlipX);
+					imageLeft->RotateFlip(Drawing::RotateFlipType::RotateNoneFlipX);
 
 					img = imageRight;
 					imageRight = imageLeft;
@@ -807,8 +806,12 @@ private: System::Void ImageOpClick(System::Object^  sender, System::EventArgs^  
 				{
 					imageFront->RotateFlip(Drawing::RotateFlipType::RotateNoneFlipY);
 					imageLeft->RotateFlip(Drawing::RotateFlipType::RotateNoneFlipY);
+
 					imageBack->RotateFlip(Drawing::RotateFlipType::RotateNoneFlipY);
 					imageRight->RotateFlip(Drawing::RotateFlipType::RotateNoneFlipY);
+
+					imageDown->RotateFlip(Drawing::RotateFlipType::RotateNoneFlipY);
+					imageUp->RotateFlip(Drawing::RotateFlipType::RotateNoneFlipY);
 
 					img = imageDown;
 					imageDown = imageUp;
@@ -822,8 +825,8 @@ private: System::Void ImageOpClick(System::Object^  sender, System::EventArgs^  
 					imageFront = imageLeft;
 					imageLeft = img;
 
-					imageUp->RotateFlip(Drawing::RotateFlipType::Rotate270FlipNone);
-					imageDown->RotateFlip(Drawing::RotateFlipType::Rotate90FlipNone);
+					imageUp->RotateFlip(Drawing::RotateFlipType::Rotate90FlipNone);
+					imageDown->RotateFlip(Drawing::RotateFlipType::Rotate270FlipNone);
 				}
 
 			 }
@@ -922,12 +925,12 @@ private: System::Void buttonExport_Click(System::Object^  sender, System::EventA
 				{
 					str = folderBrowserDialog->SelectedPath ;
 
-					WirteHlaeImage(imageBack , String::Concat(str,"\\mdtskybk.bmp"));
-					WirteHlaeImage(imageDown , String::Concat(str,"\\mdtskydn.bmp"));
-					WirteHlaeImage(imageFront, String::Concat(str,"\\mdtskyft.bmp"));
-					WirteHlaeImage(imageLeft , String::Concat(str,"\\mdtskylf.bmp"));
-					WirteHlaeImage(imageRight, String::Concat(str,"\\mdtskyrt.bmp"));
-					WirteHlaeImage(imageUp   , String::Concat(str,"\\mdtskyup.bmp"));
+					WriteHlaeImage(imageBack , String::Concat(str,"\\mdtskybk.bmp"));
+					WriteHlaeImage(imageDown , String::Concat(str,"\\mdtskydn.bmp"));
+					WriteHlaeImage(imageFront, String::Concat(str,"\\mdtskyft.bmp"));
+					WriteHlaeImage(imageLeft , String::Concat(str,"\\mdtskylf.bmp"));
+					WriteHlaeImage(imageRight, String::Concat(str,"\\mdtskyrt.bmp"));
+					WriteHlaeImage(imageUp   , String::Concat(str,"\\mdtskyup.bmp"));
 				}
 			}
 			 catch(Exception ^e)
@@ -942,6 +945,9 @@ private: System::Void buttonExport_Click(System::Object^  sender, System::EventA
 					 MessageBoxIcon::Error
 				);
 			 };
+		 }
+private: System::Void picPreview_ClientSizeChanged(System::Object^  sender, System::EventArgs^  e) {
+			 picPreview->Refresh();
 		 }
 };
 }

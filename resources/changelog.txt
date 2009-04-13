@@ -1,3 +1,8 @@
+HLAE 2.2.5.1 (2009-04-13)
+
+* polished Sky Manger
+
+
 HLAE 2.2.5.0 (2009-04-13)
 
 * added HLAE Sky Manager, located in Tools menu,
