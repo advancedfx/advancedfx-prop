@@ -2,6 +2,9 @@
 
 #include <forms/calculator.h>
 #include <forms/UpdaterForm.h>
+
+#include <tools/skymanager/skymanager.h>
+
 #include <controls/HlaeConsole.h>
 #include <system/debug.h>
 #include <system/debug_file.h>
@@ -134,6 +137,7 @@ namespace hlae {
 	private: System::Windows::Forms::ToolStripMenuItem^  statusBarToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripPanel^  toolStripPanelBottom;
 	private: System::Windows::Forms::StatusStrip^  statusStripMain;
+private: System::Windows::Forms::ToolStripMenuItem^  skyManagerToolStripMenuItem;
 
 
 
@@ -178,6 +182,7 @@ namespace hlae {
 			this->panelGame = (gcnew System::Windows::Forms::Panel());
 			this->toolStripPanelBottom = (gcnew System::Windows::Forms::ToolStripPanel());
 			this->statusStripMain = (gcnew System::Windows::Forms::StatusStrip());
+			this->skyManagerToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->menuStrip1->SuspendLayout();
 			this->toolStripPanelTop->SuspendLayout();
 			this->splitContainerPrimary->Panel2->SuspendLayout();
@@ -238,7 +243,7 @@ namespace hlae {
 			this->dockGameToolStripMenuItem->Checked = true;
 			this->dockGameToolStripMenuItem->CheckState = System::Windows::Forms::CheckState::Checked;
 			this->dockGameToolStripMenuItem->Name = L"dockGameToolStripMenuItem";
-			this->dockGameToolStripMenuItem->Size = System::Drawing::Size(152, 22);
+			this->dockGameToolStripMenuItem->Size = System::Drawing::Size(138, 22);
 			this->dockGameToolStripMenuItem->Text = L"&Dock Game";
 			this->dockGameToolStripMenuItem->Visible = false;
 			// 
@@ -246,7 +251,7 @@ namespace hlae {
 			// 
 			this->viewConsoleToolStripMenuItem->CheckOnClick = true;
 			this->viewConsoleToolStripMenuItem->Name = L"viewConsoleToolStripMenuItem";
-			this->viewConsoleToolStripMenuItem->Size = System::Drawing::Size(152, 22);
+			this->viewConsoleToolStripMenuItem->Size = System::Drawing::Size(138, 22);
 			this->viewConsoleToolStripMenuItem->Text = L"&Console";
 			this->viewConsoleToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::externalConsoleToolStripMenuItem_Click);
 			// 
@@ -254,15 +259,15 @@ namespace hlae {
 			// 
 			this->statusBarToolStripMenuItem->CheckOnClick = true;
 			this->statusBarToolStripMenuItem->Name = L"statusBarToolStripMenuItem";
-			this->statusBarToolStripMenuItem->Size = System::Drawing::Size(152, 22);
+			this->statusBarToolStripMenuItem->Size = System::Drawing::Size(138, 22);
 			this->statusBarToolStripMenuItem->Text = L"&Status Bar";
 			this->statusBarToolStripMenuItem->Visible = false;
 			this->statusBarToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::statusBarToolStripMenuItem_Click);
 			// 
 			// toolsToolStripMenuItem
 			// 
-			this->toolsToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {this->demoToolsToolStripMenuItem, 
-				this->calculatorsToolStripMenuItem});
+			this->toolsToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(3) {this->demoToolsToolStripMenuItem, 
+				this->calculatorsToolStripMenuItem, this->skyManagerToolStripMenuItem});
 			this->toolsToolStripMenuItem->Name = L"toolsToolStripMenuItem";
 			this->toolsToolStripMenuItem->Size = System::Drawing::Size(44, 20);
 			this->toolsToolStripMenuItem->Text = L"&Tools";
@@ -410,6 +415,13 @@ namespace hlae {
 			this->statusStripMain->TabIndex = 0;
 			this->statusStripMain->Visible = false;
 			// 
+			// skyManagerToolStripMenuItem
+			// 
+			this->skyManagerToolStripMenuItem->Name = L"skyManagerToolStripMenuItem";
+			this->skyManagerToolStripMenuItem->Size = System::Drawing::Size(152, 22);
+			this->skyManagerToolStripMenuItem->Text = L"Sky Manager";
+			this->skyManagerToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::skyManagerToolStripMenuItem_Click);
+			// 
 			// MainForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
@@ -467,6 +479,10 @@ private: System::Void checkForUpdateToolStripMenuItem_Click(System::Object^  sen
 			 UpdaterForm ^uf = gcnew UpdaterForm(Globals);
 			 uf->Show(this);
 		 }
-	}; // MainForm
+	private: System::Void skyManagerToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
+				 skymanager ^sm = gcnew skymanager(Globals);
+				 sm->Show(this);
+			 }
+}; // MainForm
 } // namespace hlae
 

@@ -31,7 +31,8 @@ extern cl_enginefuncs_s *pEngfuncs;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-int	skytexorder[6] = {0,1,2,3,4,5};
+
+int skyorder[6] = {0,1,2,3,4,5};
 char *suf[6] = {"rt", "bk", "lf", "ft", "up", "dn"};
 
 typedef struct skyimage_s {
@@ -41,13 +42,14 @@ typedef struct skyimage_s {
 } skyimage_t;
 
 // this is only useful when GL is working on a 4 byte boundary:
-skyimage_t *LoadSky(const char *pszFileName)
+skyimage_t *LoadSky(const char *pszFileName, bool bFlipY)
 {
 	skyimage_t *pSkyImage;
+	void *pTmpLine;
 	FILE *pFile;
 	BITMAPINFOHEADER bmInfoH;
 	BITMAPFILEHEADER bmFileH;
-	size_t cbSize;
+	size_t cbSize, cbImageSize, cbLineSize;
 
 	if(!(pSkyImage = (skyimage_t *)malloc(sizeof(skyimage_t))))
 	{
@@ -62,7 +64,7 @@ skyimage_t *LoadSky(const char *pszFileName)
 		|| fseek(pFile,0,SEEK_SET) // could not seek back
 	)
 	{
-		pEngfuncs->Con_Printf("Error: cold not open sky image %s.\n",pszFileName);
+		pEngfuncs->Con_Printf("Error: could not open sky image %s.\n",pszFileName);
 		free(pSkyImage);
 		return 0;
 	}
@@ -85,24 +87,58 @@ skyimage_t *LoadSky(const char *pszFileName)
 	pSkyImage->width = bmInfoH.biWidth;
 	pSkyImage->height = bmInfoH.biHeight;
 
-	if(!(pSkyImage->data = (void *)malloc(bmInfoH.biSizeImage)))
+	cbImageSize = bmInfoH.biSizeImage;
+
+	if(!cbImageSize)
+		cbImageSize = cbSize-bmFileH.bfOffBits;
+
+	cbLineSize = pSkyImage->height ? cbImageSize / pSkyImage->height : 0;
+
+	if(cbImageSize <= 0 || cbImageSize > cbSize || !cbLineSize)
+	{
+		pEngfuncs->Con_Printf("Error: Image empty or probably corrupted.\n",pszFileName);
+		fclose(pFile);
+		return 0;
+	}
+
+	pSkyImage->data = (void *)malloc(cbImageSize);
+	pTmpLine =  (void *)malloc(cbLineSize);
+	if(!pSkyImage->data || !pTmpLine)
 	{
 		pEngfuncs->Con_Printf("Error: Out of memory\n",pszFileName);
 		fclose(pFile);
+		free(pTmpLine);
 		free(pSkyImage);
 		return 0;
 	}
 
-	if(bmInfoH.biSizeImage != fread(pSkyImage->data,1,bmInfoH.biSizeImage,pFile))
+	if(cbImageSize != fread(pSkyImage->data,1,cbImageSize,pFile))
 	{
 		pEngfuncs->Con_Printf("Error: failed reading imagedate from sky image %s.\n",pszFileName);
 		free(pSkyImage->data);
 		fclose(pFile);
+		free(pTmpLine);
 		free(pSkyImage);
 		return 0;
 	}
 
 	fclose(pFile);
+
+	if(bFlipY)
+	{
+		unsigned char bytes[3];
+		unsigned int iH = pSkyImage->height; 
+		for(int iY=0; iY<(iH>>1); iY++)
+		{
+			void *pUp = (void *)((unsigned char *)(pSkyImage->data) + iY*cbLineSize);
+			void *pDn = (void *)((unsigned char *)(pSkyImage->data) + (iH-iY-1)*cbLineSize);
+			memcpy(pTmpLine, pUp, cbLineSize);
+			memcpy(pUp, pDn, cbLineSize);
+			memcpy(pDn, pTmpLine, cbLineSize);
+		}
+	}
+
+	free(pTmpLine);
 
 	return pSkyImage;
 }
@@ -116,6 +152,7 @@ CNewSky::CNewSky()
 	_iSkyQuadsCount = 7; // no sky processing in progress
 	_bWantCustomSky = false; // user does not want CustomSky (or s.th. went rong)
 	_bWantReload = true; // by default we need to load
+	_bOldFormat = true;
 
 	memset(_SkyTextures,0,6*sizeof(GLuint)); // no textures yet
 }
@@ -152,12 +189,12 @@ bool CNewSky::ReloadTexturesFromFile()
 
 	memset(SkyTextures,0,6* sizeof(skyimage_t *));
 
-	SkyTextures[skytexorder[0]]=LoadSky("mdtskyrt.bmp");
-	SkyTextures[skytexorder[1]]=LoadSky("mdtskybk.bmp");
-	SkyTextures[skytexorder[2]]=LoadSky("mdtskylf.bmp");
-	SkyTextures[skytexorder[3]]=LoadSky("mdtskyft.bmp");
-	SkyTextures[skytexorder[4]]=LoadSky("mdtskyup.bmp");
-	SkyTextures[skytexorder[5]]=LoadSky("mdtskydn.bmp");
+	SkyTextures[skyorder[0]]=LoadSky("mdtskyrt.bmp", !_bOldFormat);
+	SkyTextures[skyorder[1]]=LoadSky("mdtskybk.bmp", !_bOldFormat);
+	SkyTextures[skyorder[2]]=LoadSky("mdtskylf.bmp", !_bOldFormat);
+	SkyTextures[skyorder[3]]=LoadSky("mdtskyft.bmp", !_bOldFormat);
+	SkyTextures[skyorder[4]]=LoadSky("mdtskyup.bmp", !_bOldFormat);
+	SkyTextures[skyorder[5]]=LoadSky("mdtskydn.bmp", !_bOldFormat);
 
 	bRes = SkyTextures[0] && SkyTextures[1] && SkyTextures[2] && SkyTextures[3] && SkyTextures[4] && SkyTextures[5];
 
@@ -205,8 +242,9 @@ void CNewSky::EnsureGLTextureIndices()
 }
 
 
-void CNewSky::User_ForceReload(bool bEnableCustomSky)
+void CNewSky::User_ForceReload(bool bEnableCustomSky, bool bOldFormat)
 {
+	_bOldFormat = bOldFormat;
 	_bWantReload = true;
 	_bWantCustomSky = bEnableCustomSky;
 }
@@ -222,9 +260,11 @@ REGISTER_CMD_FUNC(fx_skyhd)
 {
 	if (pEngfuncs->Cmd_Argc() != 2)
 	{
-		pEngfuncs->Con_Printf("Usage: " PREFIX "fx_skyhd 0|1\nPlease refer to the changelog / HLAEwiki for more information.");
+		pEngfuncs->Con_Printf("Usage: " PREFIX "fx_skyhd 0|1|2\nSee manual for more information.");
 		return;
 	}
 
-	g_NewSky.User_ForceReload(atoi(pEngfuncs->Cmd_Argv(1))!=0);
+	int iarg = atoi(pEngfuncs->Cmd_Argv(1));
+
+	g_NewSky.User_ForceReload(iarg != 0, 2==iarg);
 };

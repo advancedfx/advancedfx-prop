@@ -15,9 +15,10 @@ public:
 	CNewSky();
 	void DetectAndProcessSky(GLenum mode); // this should be called from glBegin, so our class has a chance to detect the
 
-	void User_ForceReload(bool bEnableCustomSky);
+	void User_ForceReload(bool bEnableCustomSky, bool bOldFormat);
 private:
 	int _iSkyQuadsCount;
+	bool _bOldFormat;
 	bool _bWantCustomSky;
 	bool _bWantReload;
 

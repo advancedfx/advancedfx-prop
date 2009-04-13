@@ -1,3 +1,16 @@
+HLAE 2.2.5.0 (2009-04-13)
+
+* added HLAE Sky Manager, located in Tools menu,
+
+* mirv_fx_skyhd: fixed 24rgb bitmap loading bug
+
+* mirv_fx_skyhd:
+  1 - load sky from files (HLAE Sky Manger + Terragen compatible)
+  2 - for loading old HLAE skies
+  
+Thx to msthavoc and juGGaKNot for testing.
+
+  
 HLAE 2.2.3.6 (2009-02-13)
 
 * improved mirv_voice_block

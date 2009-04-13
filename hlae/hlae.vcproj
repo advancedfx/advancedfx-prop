@@ -445,6 +445,23 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="tools"
+				>
+				<Filter
+					Name="skymanager"
+					>
+					<File
+						RelativePath=".\tools\skymanager\skymanager.h"
+						FileType="3"
+						>
+						<File
+							RelativePath=".\tools\skymanager\skymanager.resx"
+							>
+						</File>
+					</File>
+				</Filter>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="shared"

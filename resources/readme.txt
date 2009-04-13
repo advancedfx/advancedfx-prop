@@ -1,7 +1,7 @@
 Dear Half-Life Advanced Effects (HLAE) user,
 
 
-You can retrive the latest HLAE, infos, reports bugs and post suggestions here:
+You can retrive the latest HLAE, infos, report bugs and post suggestions here:
 http://advancedfx.org/
 
 
@@ -10,7 +10,7 @@ Epilepsy warning:
   This software will cause fast changing colors and images on your screen.
 
 
-Using the HLAE:
+Using HLAE:
 
   Extract all contents of this archive into a folder you like.
   You should not extract into the game's folder, this is not neccessary.
