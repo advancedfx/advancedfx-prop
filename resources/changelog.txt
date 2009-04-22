@@ -1,3 +1,16 @@
+HLAE 2.2.5.3 (2009-04-22)
+
+* adapted to Steam Update (20th Aprill 2009)
+
+* changed some address label names in mdt_addresses.ini
+
+Thanks to forum users that helped testing the unofficial nightly build:
+neyloc, Zealot, endless, ...
+
+If you still happen to find features not working,
+please contact us in the Bug Reporting forums.
+
+
 HLAE 2.2.5.1 (2009-04-13)
 
 * polished Sky Manger

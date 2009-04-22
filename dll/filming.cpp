@@ -305,7 +305,7 @@ void touring_R_RenderView_(void)
 // this is our R_RemderView hook
 // pay attention, cuz it will have heavy interaction with our filming singelton!
 {
-	refdef_t* p_r_refdef=(refdef_t*)HL_ADDR_r_refdef; // pointer to r_refdef global struct
+	refdef_t* p_r_refdef=(refdef_t*)HL_ADDR_refdef; // pointer to r_refdef global struct
 
 	static vec3_t oldorigin;
 	static vec3_t oldangles;
@@ -699,7 +699,7 @@ void Filming::Start()
 	if ( !detoured_R_RenderView_ )
 	{
 		// we don't have it yet and the addres is not NULL (which might be an intended cfg setting)
-		detoured_R_RenderView_ = (R_RenderView__t) DetourApply((BYTE *)HL_ADDR_R_RenderView_, (BYTE *)touring_R_RenderView_, (int)HL_ADDR_DTOURSZ_R_RenderView_);
+		detoured_R_RenderView_ = (R_RenderView__t) DetourApply((BYTE *)HL_ADDR_R_RenderView, (BYTE *)touring_R_RenderView_, (int)HL_ADDR_DTOURSZ_R_RenderView);
 		install_Hud_tours(); // wil automaticall check if already installed or not
 	}
 

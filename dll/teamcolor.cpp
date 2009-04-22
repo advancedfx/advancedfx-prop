@@ -156,19 +156,21 @@ __declspec(naked) void tour_unkInlineClientColorA()
 	// clientIndex is supplied in ebp and color pointer has to be teturned in ecx
 	__asm
 	{
-		PUSH	ebx ; preserve other c++ registers
-		PUSH	edx ; .
-		PUSH	esi ; .
-		PUSH	edi ; .
+		; preserve other c++ registers:
+		; PUSH	eax
+		PUSH	ebx
+		; PUSH	ecx
+		PUSH	edx
+		PUSH	esi
+		; PUSH	edi
 
 		PUSH	eax
-		PUSH	ebp ; push clientIndex on stack
+		PUSH	edi ; push clientIndex on stack
 		CALL	New_unkInlineClientColorA
-		POP		ebp
+		POP		edi
 		MOV		ecx, eax ; move result back to where it belongs
 		POP		eax
 
-		POP		edi
 		POP		esi
 		POP		edx
 		POP		ebx
@@ -182,10 +184,13 @@ __declspec(naked) void tour_unkInlineClientColorV()
 	// clientIndex is supplied in ebx and color pointer has to be teturned in eax
 	__asm
 	{
-		PUSH	ecx ; preserve other c++ registers
-		PUSH	edx ; .
-		PUSH	esi ; .
-		PUSH	edi ; .
+		; preserve other c++ registers:
+		; PUSH	eax
+		; PUSH	ebx
+		PUSH	ecx
+		PUSH	edx
+		PUSH	esi
+		PUSH	edi
 
 		PUSH	ebx ; push clientIndex on stack
 		CALL	New_unkInlineClientColorV
@@ -568,6 +573,7 @@ after ret:
 0d4e62d8 .
 
 --> playerid in ebp, return in ecx
+--> we will detour this full block
 
 
 (0d54a1e2) --> used by inline function, used for defender?
@@ -591,5 +597,6 @@ after ret:
 0d4e635c .
 
 --> playerid in ebx, return in eax
+--> we will detour this full block
 
 */

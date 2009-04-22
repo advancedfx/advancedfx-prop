@@ -46,13 +46,13 @@ HL_ADDR_ENTRY(p_playermove_s,"0x0")
 HL_ADDR_ENTRY(HUD_TOURIN,"0x0")
 HL_ADDR_ENTRY(HUD_TOUROUT,"0x0")
 
-HL_ADDR_ENTRY(R_RenderView_,"0x0")
-HL_ADDR_ENTRY(DTOURSZ_R_RenderView_,"0x0")
+HL_ADDR_ENTRY(R_RenderView,"0x0")
+HL_ADDR_ENTRY(DTOURSZ_R_RenderView,"0x0")
 
 HL_ADDR_ENTRY(Mod_LeafPVS,"0x0")
 HL_ADDR_ENTRY(DTOURSZ_Mod_LeafPVS,"0x0")
 
-HL_ADDR_ENTRY(p_r_refdef,"0x0")
+HL_ADDR_ENTRY(r_refdef,"0x0")
 HL_ADDR_ENTRY(HudSpectator_tfc,"0x0")
 HL_ADDR_ENTRY(HudSpectator_cmp_tfc,"0x0")
 
@@ -65,7 +65,7 @@ HL_ADDR_ENTRY(DTOURSZ_S_PaintChannels,"0x0")
 HL_ADDR_ENTRY(S_TransferPaintBuffer,"0x0")
 HL_ADDR_ENTRY(DTOURSZ_S_TransferPaintBuffer,"0x0")
 
-HL_ADDR_ENTRY(p_shm,"0x0")
+HL_ADDR_ENTRY(shm,"0x0")
 HL_ADDR_ENTRY(paintbuffer,"0x0")
 HL_ADDR_ENTRY(soundtime,"0x0")
 HL_ADDR_ENTRY(paintedtime,"0x0")

@@ -360,7 +360,7 @@ REGISTER_CMD_FUNC(decalfilter)
 // simplified noadverts command for the user
 
 REGISTER_DEBUGCVAR(noadverts_newdecal, "{littleman", 0);
-REGISTER_DEBUGCVAR(noadverts_mask, "{iga\\*", 0);
+REGISTER_DEBUGCVAR(noadverts_mask, "{^IGA_\\*", 0);
 
 REGISTER_CMD_FUNC(noadverts)
 {

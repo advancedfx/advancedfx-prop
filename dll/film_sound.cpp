@@ -144,7 +144,7 @@ void CFilmSound::_touring_S_PaintChannels(int endtime)
 
 		// retrive sound info structure:
 		static volatile dma_HL_t *shm;
-		shm =*(dma_HL_t **)HL_ADDR_p_shm;
+		shm =*(dma_HL_t **)HL_ADDR_shm;
 
 		// calculate mix ahead of current position:
 		static int currPaintedTime; // do not assert here, statics are only asserted once (at which time?)
@@ -206,7 +206,7 @@ void CFilmSound::_touring_S_TransferPaintBuffer(int endtime)
 		static int paintedtime;
 		paintedtime= *(int *)HL_ADDR_paintedtime; //this should be == _lsoc_paintedtime
 		static volatile dma_HL_t *shm;
-		shm=*(dma_HL_t **)HL_ADDR_p_shm;
+		shm=*(dma_HL_t **)HL_ADDR_shm;
 		static portable_samplepair_t *paintbuffer;
 		paintbuffer = (portable_samplepair_t *)HL_ADDR_paintbuffer;
 
@@ -395,7 +395,7 @@ bool CFilmSound::Start(char *pszFileName,float fTargetTime,float fUseVolume)
 		_fUseVolume=fUseVolume;
 
 		// retrive sound info structure (since we need the samples per second value == shm->Valve_speed):
-		volatile dma_HL_t *shm=*(dma_HL_t **)HL_ADDR_p_shm;
+		volatile dma_HL_t *shm=*(dma_HL_t **)HL_ADDR_shm;
 
 		if(!(_pWaveFile=_fBeginWave(pszFileName,shm->Valve_speed))) // we use Quake speed since we capture the internal mixer
 			return false; // on fail return false

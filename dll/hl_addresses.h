@@ -223,11 +223,11 @@ extern unsigned long ulHLAddr_p_engine_studio_api_s;
 extern unsigned long ulHLAddr_p_playermove_s;
 extern unsigned long ulHLAddr_HUD_TOURIN;
 extern unsigned long ulHLAddr_HUD_TOUROUT;
-extern unsigned long ulHLAddr_R_RenderView_;
-extern unsigned long ulHLAddr_DTOURSZ_R_RenderView_;
+extern unsigned long ulHLAddr_R_RenderView;
+extern unsigned long ulHLAddr_DTOURSZ_R_RenderView;
 extern unsigned long ulHLAddr_Mod_LeafPVS;
 extern unsigned long ulHLAddr_DTOURSZ_Mod_LeafPVS;
-extern unsigned long ulHLAddr_p_r_refdef;
+extern unsigned long ulHLAddr_r_refdef;
 extern unsigned long ulHLAddr_HudSpectator_tfc;
 extern unsigned long ulHLAddr_HudSpectator_cmp_tfc;
 extern unsigned long ulHLAddr_UpdateSpectatorPanel_checkjmp_ag_clofs;
@@ -240,7 +240,7 @@ extern unsigned long ulHLAddr_S_PaintChannels;
 extern unsigned long ulHLAddr_DTOURSZ_S_PaintChannels;
 extern unsigned long ulHLAddr_S_TransferPaintBuffer;
 extern unsigned long ulHLAddr_DTOURSZ_S_TransferPaintBuffer;
-extern unsigned long ulHLAddr_p_shm;
+extern unsigned long ulHLAddr_shm;
 extern unsigned long ulHLAddr_paintbuffer;
 extern unsigned long ulHLAddr_soundtime;
 extern unsigned long ulHLAddr_paintedtime;
@@ -279,10 +279,10 @@ extern unsigned long ulHLAddr_DTOURSZ_UnkGetDecalTexture;
 #define HL_ADDR_HUD_TOURIN ulHLAddr_HUD_TOURIN
 #define HL_ADDR_HUD_TOUROUT ulHLAddr_HUD_TOUROUT
 
-#define HL_ADDR_R_RenderView_ ulHLAddr_R_RenderView_
-#define HL_ADDR_DTOURSZ_R_RenderView_ ulHLAddr_DTOURSZ_R_RenderView_
+#define HL_ADDR_R_RenderView ulHLAddr_R_RenderView
+#define HL_ADDR_DTOURSZ_R_RenderView ulHLAddr_DTOURSZ_R_RenderView
 
-#define HL_ADDR_r_refdef ulHLAddr_p_r_refdef
+#define HL_ADDR_refdef ulHLAddr_r_refdef
 
 #define HL_ADDR_HUDSPECTATOR_FUNC_TFC ulHLAddr_HudSpectator_tfc
 #define HL_ADDR_HUDSPECTATOR_CMPA0_TFC ulHLAddr_HudSpectator_cmp_tfc
@@ -301,7 +301,7 @@ extern unsigned long ulHLAddr_DTOURSZ_UnkGetDecalTexture;
 #define HL_ADDR_S_TransferPaintBuffer ulHLAddr_S_TransferPaintBuffer
 #define HL_ADDR_DTOURSZ_S_TransferPaintBuffer ulHLAddr_DTOURSZ_S_TransferPaintBuffer
 
-#define HL_ADDR_p_shm ulHLAddr_p_shm
+#define HL_ADDR_shm ulHLAddr_shm
 #define HL_ADDR_paintbuffer ulHLAddr_paintbuffer
 #define HL_ADDR_soundtime ulHLAddr_soundtime
 #define HL_ADDR_paintedtime ulHLAddr_paintedtime
