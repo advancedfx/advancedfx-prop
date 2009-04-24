@@ -1,3 +1,18 @@
+HLAE 2.2.5.6 (2009-04-23T20:25Z)
+
+* squashed old bugs related to using a width not dividable by 4
+
+
+HLAE 2.2.5.5 (2009-04-23T14:21Z)
+
+* fixed mistake in R_RenderView address
+
+
+HLAE 2.2.5.4 (2009-04-23)
+
+* apapted to Counter-Strike 1.6 update (22th Aprill 2009)
+
+
 HLAE 2.2.5.3 (2009-04-22)
 
 * adapted to Steam Update (20th Aprill 2009)

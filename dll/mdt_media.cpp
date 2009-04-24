@@ -220,7 +220,7 @@ bool CMdt_Media_RAWGLPIC::DoGlReadPixels(int iXofs, int iYofs, int iWidth, int i
 
 	if (_uiSize & 0x03)
 		// is not divideable by 4 (has remainder)
-		_uiSize = 0x04 + (_uiSize & ~(unsigned int)0x03); //+= 4-(_uiSize & 0x03);// fill up to 4
+		_uiSize = (1+ (_uiSize >> 2))<<2; // fill up to 4
 
 	unsigned int uiRowPackSize = _uiSize;
 
@@ -260,15 +260,20 @@ bool CMdt_Media_RAWGLPIC::DoGlReadPixels(int iXofs, int iYofs, int iWidth, int i
 	if (bRepack && (uiRowSize != uiRowPackSize))
 	{
 		// postprocess (it would be better to post process it when outputting, since  this way we have overhead)
-		unsigned char* pTsrc=_pBuffer;
+		unsigned char* pTsrc=_pBuffer+uiRowPackSize;
 		unsigned char* pTdst=_pBuffer+uiRowSize;
 		int iT=1;
 
 		while (iT<_iHeight)
 		{
+			unsigned int uR = 0;
+			while(uR < uiRowSize)
+			{
+				pTdst[uR] = pTsrc[uR];
+				uR++;
+			}
 			pTsrc+=uiRowPackSize;
 			pTdst+=uiRowSize;
-			memcpy(pTdst,pTsrc,uiRowSize);
 			iT++;
 		}
 	}

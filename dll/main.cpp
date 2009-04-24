@@ -174,12 +174,17 @@ REGISTER_DEBUGCMD_FUNC(listplayers)
 // _mirv_info - Print some informations into the console that might be usefull. when people want to report problems they should copy the console output of the command.
 REGISTER_DEBUGCMD_FUNC(info)
 {
+	GLint gi;
 	pEngfuncs->Con_Printf(">>>> >>>> >>>> >>>>\n");
 	pEngfuncs->Con_Printf("MDT_DLL_VERSION: v%s (%s)\n", pszFileVersion, __DATE__);
 	pEngfuncs->Con_Printf("GL_VENDOR: %s\n",glGetString(GL_VENDOR));
 	pEngfuncs->Con_Printf("GL_RENDERER: %s\n",glGetString(GL_RENDERER));
 	pEngfuncs->Con_Printf("GL_VERSION: %s\n",glGetString(GL_VERSION));
 	pEngfuncs->Con_Printf("GL_EXTENSIONS: %s\n",glGetString(GL_EXTENSIONS));
+	glGetIntegerv(GL_PACK_ROW_LENGTH,&gi);
+	pEngfuncs->Con_Printf("GL_PACK_ROW_LENGTH: %i\n",gi);
+	glGetIntegerv(GL_PACK_ALIGNMENT,&gi);
+	pEngfuncs->Con_Printf("GL_PACK_ALIGNMENT: %i\n",gi);
 	pEngfuncs->Con_Printf("<<<< <<<< <<<< <<<<\n");
 }
 

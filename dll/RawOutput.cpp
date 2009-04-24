@@ -162,17 +162,19 @@ bool WriteRawBitmap(
 		inLineSize *= usWidth;
 		LONG realLineSize = bmInfoH.biSizeImage / usHeight;
 		int iPaddings = realLineSize-inLineSize;
-		char pad='P';
+		char pad=0x00;
+		char pad2=0xFF;
 
 		if(iPaddings>0)
 		{
 
 			for( LONG line=0; line<usHeight; line++)
 			{
-				fwrite(pData, sizeof(unsigned char), bmInfoH.biSizeImage, pFile);
+				fwrite(pData, sizeof(unsigned char), inLineSize, pFile);
 				pData += inLineSize;
 				
-				for(int i=0;i<iPaddings;i++) fwrite(&pad, sizeof(char), 1 ,pFile);
+				for(int i=0;i<iPaddings;i++)
+					fwrite(&pad, 1, 1, pFile);
 			}
 
 		}

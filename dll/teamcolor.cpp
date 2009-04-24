@@ -162,15 +162,16 @@ __declspec(naked) void tour_unkInlineClientColorA()
 		; PUSH	ecx
 		PUSH	edx
 		PUSH	esi
-		; PUSH	edi
+		PUSH	edi
 
 		PUSH	eax
-		PUSH	edi ; push clientIndex on stack
+		PUSH	ebp ; push clientIndex on stack
 		CALL	New_unkInlineClientColorA
-		POP		edi
+		POP		ebp
 		MOV		ecx, eax ; move result back to where it belongs
 		POP		eax
 
+		POP		edi
 		POP		esi
 		POP		edx
 		POP		ebx
