@@ -1,3 +1,11 @@
+HLAE 2.2.5.7 (2009-05-20T07:50Z)
+
+* adapted mdt_addresses.ini to Steam / CS 1.6 Update (19th May 2009)
+
+We did not have time for testing the new addresses, please report broken features that
+worked previously.
+
+
 HLAE 2.2.5.6 (2009-04-23T20:25Z)
 
 * squashed old bugs related to using a width not dividable by 4

@@ -790,6 +790,9 @@ HMODULE WINAPI new_LoadLibraryA( LPCSTR lpLibFileName )
 			bFirstLoad = false;
 			HMODULE hRet = LoadLibraryA( lpLibFileName );//LoadLibraryEx( lpLibFileName, NULL, DONT_RESOLVE_DLL_REFERENCES );
 
+#ifdef MDT_DEBUG
+			MessageBox(0,"new_LoadLibraryA","MDT_DEBUG",MB_OK|MB_ICONINFORMATION);
+#endif
 			if( hRet )
 			{
 				// load addresses form config:
@@ -823,6 +826,7 @@ HMODULE WINAPI new_LoadLibraryA( LPCSTR lpLibFileName )
 				if( !InterceptDllCall( hRet, "User32.dll", "ReleaseDC", (DWORD) &HlaeBcClt_ReleaseDC) ) bIcepOk = false;
 
 				if( !bIcepOk ) MessageBox(0,"One or more interceptions failed","MDT_ERROR",MB_OK|MB_ICONHAND);
+
 			}
 
 			return hRet;
