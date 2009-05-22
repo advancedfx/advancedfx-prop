@@ -32,6 +32,8 @@ extern float clamp(float i, float min, float max);
 
 REGISTER_CVAR(zoom_optical, "20", 0);
 REGISTER_CVAR(zoom_digital, "100", 0);
+REGISTER_CVAR(zoom_digital_x, "0.5", 0);
+REGISTER_CVAR(zoom_digital_y, "0.5", 0);
 REGISTER_CVAR(zoom_speed, "200", 0);
 
 // Our zooming singleton
@@ -49,8 +51,8 @@ void Zooming::adjustViewportParams(GLint &x, GLint &y, GLsizei &width, GLsizei &
 	float flZoomAmountX = t * iDims[0] + (1.0f - t) * width;
 	float flZoomAmountY = flZoomAmountX * ((float) height / width);
 
-	x -= (int) ((flZoomAmountX - width) * 0.5f);
-	y -= (int) ((flZoomAmountY - height) * 0.5f);
+	x -= (int) ((flZoomAmountX - width) * clamp(zoom_digital_x->value, 0.0f, 1.0f));
+	y -= (int) ((flZoomAmountY - height) * clamp(zoom_digital_y->value, 0.0f, 1.0f)) ;
 	width = (int) flZoomAmountX;
 	height = (int) flZoomAmountY;
 }
@@ -65,9 +67,9 @@ void Zooming::adjustFrustumParams(GLdouble &left, GLdouble &right, GLdouble &bot
 	GLdouble m_flZoomY = m_flZoomX * (top / right);
 
 	left	= -m_flZoomX;
-	right	=  m_flZoomX;
+	right	= +m_flZoomX;
 	bottom	= -m_flZoomY;
-	top		=  m_flZoomY;
+	top		= +m_flZoomY;
 }
 
 void Zooming::handleZoom()
