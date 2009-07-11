@@ -1,5 +1,4 @@
 
-#include <windows.h>
 #include "detours.h"
 
 #define JMP32_SZ	5	// the size of JMP <address>
@@ -11,12 +10,55 @@
 #define PUSH_EAX	0x50
 #define PUSH_ECX	0x51
 
+
+void MdtMemAccessBegin(LPVOID lpAddress, size_t size, MdtMemBlockInfos *mdtMemBlockInfos)
+{
+	MEMORY_BASIC_INFORMATION mbi;
+	MdtMemBlockInfo mbi2;
+	DWORD dwDummy;
+
+	LPVOID lpEnd = (BYTE *)lpAddress + size;
+
+	while(lpAddress < lpEnd)
+	{
+		if(VirtualQuery(lpAddress, &mbi, sizeof(mbi)))
+		{
+			mbi2.BaseAddress = mbi.BaseAddress;
+			mbi2.Protect = mbi.Protect;
+			mbi2.RegionSize = mbi.RegionSize;
+
+			mdtMemBlockInfos->push_back(mbi2);
+		} else
+			break;
+
+		lpAddress = (BYTE *)mbi.BaseAddress + mbi.RegionSize;
+	}
+
+	for(int i=0; i < mdtMemBlockInfos->size(); i++) {
+		mbi2 = mdtMemBlockInfos->at(i);
+		VirtualProtect(mbi2.BaseAddress, mbi2.RegionSize, PAGE_READWRITE, &dwDummy);
+	}
+}
+
+void MdtMemAccessEnd(MdtMemBlockInfos *mdtMemBlockInfos)
+{
+	MdtMemBlockInfo mbi2;
+	DWORD dwDummy;
+
+	for(int i=0; i < mdtMemBlockInfos->size(); i++) {
+		mbi2 = mdtMemBlockInfos->at(i);
+		VirtualProtect(mbi2.BaseAddress, mbi2.RegionSize, mbi2.Protect, &dwDummy);
+	}
+}
+
 // Detour
 void *DetourApply(BYTE *orig, BYTE *hook, int len)
 {
-	DWORD dwProt = 0;
+	MdtMemBlockInfos mbis;
 	BYTE *jmp = (BYTE*)malloc(len+JMP32_SZ);
-	VirtualProtect(orig, len, PAGE_READWRITE, &dwProt);
+
+	MdtMemAccessBegin(orig, len, &mbis);
+
 	memcpy(jmp, orig, len);
 
 	jmp += len; // increment to the end of the copied bytes
@@ -27,16 +69,18 @@ void *DetourApply(BYTE *orig, BYTE *hook, int len)
 	orig[0] = JMP;
 	*(DWORD*)(orig+1) = (DWORD)(hook - orig) - JMP32_SZ;
 
-	VirtualProtect(orig, len, dwProt, 0);
+	MdtMemAccessEnd(&mbis);
+
 	return (jmp-len);
 }
 
 void *DetourClassFunc(BYTE *src, const BYTE *dst, const int len)
 {
 	BYTE *jmp = (BYTE*)malloc(len+JMP32_SZ+POPREG_SZ+POPREG_SZ+POPREG_SZ);
+	MdtMemBlockInfos mbis;
 
-	DWORD dwBack;
-	VirtualProtect(src, len, PAGE_READWRITE, &dwBack);
+	MdtMemAccessBegin(src, len, &mbis);
+
 	memcpy(jmp+3, src, len);
 
 	// calculate callback function call
@@ -55,7 +99,7 @@ void *DetourClassFunc(BYTE *src, const BYTE *dst, const int len)
 
 	memset(src+8, NOP, len - 8);
 
-	VirtualProtect(src, len, dwBack, &dwBack);
+	MdtMemAccessEnd(&mbis);
 
 	return jmp;
 }

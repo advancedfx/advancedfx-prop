@@ -120,10 +120,10 @@ void Handle_CmdRead_Intercepted(void)
 				if (*iter==iEntity)
 				{
 					// blocked, skip the message:
-					DWORD dwOldProt;
-					VirtualProtect(pmsg_readcount,sizeof(int),PAGE_READWRITE,&dwOldProt);
+					MdtMemBlockInfos mbis;
+					MdtMemAccessBegin(pmsg_readcount, sizeof(int), &mbis);
 					*pmsg_readcount = myreadcount;
-					VirtualProtect(pmsg_readcount,sizeof(int),dwOldProt,0);
+					MdtMemAccessEnd(&mbis);
 					break;
 				}
 			}

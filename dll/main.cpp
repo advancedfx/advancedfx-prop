@@ -107,6 +107,7 @@ REGISTER_CVAR(fixforcehltv, "0", 0); // modified by Hook_dem_forcehltv
 REGISTER_CVAR(disableautodirector, "0", 0);
 
 REGISTER_DEBUGCVAR(gl_noclear, "0", 0);
+REGISTER_DEBUGCVAR(gl_previewclear, "1", 0);
 
 //
 // Commands
@@ -623,8 +624,7 @@ void *InterceptDllCall(HMODULE hModule, char *szDllName, char *szFunctionName, D
 	PIMAGE_NT_HEADERS pNTHeader;
 	PIMAGE_IMPORT_DESCRIPTOR pImportDesc;
 	PIMAGE_THUNK_DATA pThunk;
-	DWORD dwOldProtect;
-	DWORD dwOldProtect2;
+	MdtMemBlockInfos mbis;
 	void *pOldFunction;
 
 
@@ -655,9 +655,9 @@ void *InterceptDllCall(HMODULE hModule, char *szDllName, char *szFunctionName, D
 	{
 		if (pThunk->u1.Function == (DWORD)pOldFunction)
 		{
-			VirtualProtect((void *) &pThunk->u1.Function, sizeof(DWORD), PAGE_EXECUTE_READWRITE, &dwOldProtect);
+			MdtMemAccessBegin((void *) &pThunk->u1.Function, sizeof(DWORD), &mbis);
 			pThunk->u1.Function = (DWORD) pNewFunction;
-			VirtualProtect((void *) &pThunk->u1.Function, sizeof(DWORD), dwOldProtect, &dwOldProtect2);
+			MdtMemAccessEnd(&mbis);
 
 			return pOldFunction;
 		}
@@ -702,6 +702,9 @@ BOOL APIENTRY my_wglSwapBuffers(HDC hDC)
 		// carry out preparerations on the backbuffer for the next frame:
 		g_Filming.clearBuffers();
 	}
+	else if(gl_previewclear->value)
+		g_Filming.clearBuffers();
+
 
 	return bResWglSwapBuffers;
 }

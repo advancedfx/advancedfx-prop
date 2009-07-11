@@ -246,9 +246,9 @@ void InstallHook_GetClientColor( void )
 		{
 			dwJmp_unkInlineClientColorA = (dwClientDLL + HL_ADDR_unkInlineClientColorA) + HL_ADDR_SZ_unkInlineClientColorA;
 
-			DWORD dwOldProt;
+			MdtMemBlockInfos mbis;
 
-			VirtualProtect( (void *)(dwClientDLL + HL_ADDR_unkInlineClientColorA), HL_ADDR_SZ_unkInlineClientColorA, PAGE_READWRITE, &dwOldProt);
+			MdtMemAccessBegin( (void *)(dwClientDLL + HL_ADDR_unkInlineClientColorA), HL_ADDR_SZ_unkInlineClientColorA, &mbis);
 
 			// make many NOPs:
 			memset( (void *)(dwClientDLL + HL_ADDR_unkInlineClientColorA), asmNOP, HL_ADDR_SZ_unkInlineClientColorA);
@@ -259,7 +259,7 @@ void InstallHook_GetClientColor( void )
 			memcpy( (void *)(dwClientDLL + HL_ADDR_unkInlineClientColorA), &ucJMPE9, sizeof(unsigned char));
 			memcpy( (char *)(dwClientDLL + HL_ADDR_unkInlineClientColorA)+1, &dwAddress, sizeof(DWORD));
 
-			VirtualProtect( (void *)(dwClientDLL + HL_ADDR_unkInlineClientColorA), HL_ADDR_SZ_unkInlineClientColorA, dwOldProt, NULL);
+			MdtMemAccessEnd(&mbis);
 
 			i_ok_cnt++;
 		}
@@ -269,9 +269,9 @@ void InstallHook_GetClientColor( void )
 		{
 			dwJmp_unkInlineClientColorV = (dwClientDLL + HL_ADDR_unkInlineClientColorV) + HL_ADDR_SZ_unkInlineClientColorV;
 
-			DWORD dwOldProt;
+			MdtMemBlockInfos mbis;
 
-			VirtualProtect( (void *)(dwClientDLL + HL_ADDR_unkInlineClientColorV), HL_ADDR_SZ_unkInlineClientColorV, PAGE_READWRITE, &dwOldProt);
+			MdtMemAccessBegin( (void *)(dwClientDLL + HL_ADDR_unkInlineClientColorV), HL_ADDR_SZ_unkInlineClientColorV, &mbis);
 
 			// make many NOPs:
 			memset( (void *)(dwClientDLL + HL_ADDR_unkInlineClientColorV), asmNOP, HL_ADDR_SZ_unkInlineClientColorV);
@@ -282,7 +282,7 @@ void InstallHook_GetClientColor( void )
 			memcpy( (void *)(dwClientDLL + HL_ADDR_unkInlineClientColorV), &ucJMPE9, sizeof(unsigned char));
 			memcpy( (char *)(dwClientDLL + HL_ADDR_unkInlineClientColorV)+1, &dwAddress, sizeof(DWORD));
 
-			VirtualProtect( (void *)(dwClientDLL + HL_ADDR_unkInlineClientColorV), HL_ADDR_SZ_unkInlineClientColorV, dwOldProt, NULL);
+			MdtMemAccessEnd(&mbis);
 
 			i_ok_cnt++;
 		}

@@ -77,11 +77,11 @@ void __stdcall CrosshairFix_Hooking_Func(  DWORD *this_ptr, float fUnkTime, DWOR
 		{
 			// do not apply any cool down, just make it drawn:
 
-			DWORD dwOldPort1,dwOldPort2;
+			MdtMemBlockInfos mbisMul, mbisAdd;
 			double fOldMulFac, fOldAddFac;
 
-			VirtualProtect(g_f_ch_mul_fac,sizeof(double),PAGE_READWRITE,&dwOldPort1);
-			VirtualProtect(g_f_ch_add_fac,sizeof(double),PAGE_READWRITE,&dwOldPort2);
+			MdtMemAccessBegin(g_f_ch_mul_fac, sizeof(double), &mbisMul);
+			MdtMemAccessBegin(g_f_ch_add_fac, sizeof(double), &mbisAdd);
 
 			fOldMulFac = *g_f_ch_mul_fac;
 			fOldAddFac = *g_f_ch_add_fac;
@@ -94,8 +94,8 @@ void __stdcall CrosshairFix_Hooking_Func(  DWORD *this_ptr, float fUnkTime, DWOR
 			*g_f_ch_mul_fac = fOldMulFac;
 			*g_f_ch_add_fac = fOldAddFac;
 
-			VirtualProtect(g_f_ch_mul_fac,sizeof(double),dwOldPort1,NULL);
-			VirtualProtect(g_f_ch_add_fac,sizeof(double),dwOldPort2,NULL);
+			MdtMemAccessEnd(&mbisAdd);
+			MdtMemAccessEnd(&mbisMul);
 
 		} else {
 			// apply cooldown:

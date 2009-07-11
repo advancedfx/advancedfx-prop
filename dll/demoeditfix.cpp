@@ -78,12 +78,12 @@ void PatchDMFunction(int dm_address, int dm_size, int bounds_address)
 	orig_DirectorMessage = (DirectorMessage_t) DetourClassFunc((BYTE *) dm_address /*DM_ADDR*/, (BYTE *) hook_DirectorMessage, dm_size /*8*/);
 
 	// TODO Change size check from 0A to whatever it shold be
-	DWORD dwProt;
+	MdtMemBlockInfos mbis;
 	BYTE *bCheck = (BYTE *) bounds_address /*A0_ADDR*/;
 
-	VirtualProtect(bCheck, 1, PAGE_READWRITE, &dwProt);
+	MdtMemAccessBegin(bCheck, 1, &mbis);
 	*bCheck = 0x10;
-	VirtualProtect(bCheck, 1, dwProt, 0);
+	MdtMemAccessEnd(&mbis);
 }
 
 REGISTER_DEBUGCMD_FUNC(demoedit_addmapping)
@@ -217,8 +217,8 @@ REGISTER_CMD_FUNC(disable_specmenu)
 	{
 		int iOn = atoi(pEngfuncs->Cmd_Argv(1));
 
-		DWORD dwProt;
-		VirtualProtect(usCheck, 2, PAGE_READWRITE, &dwProt);
+		MdtMemBlockInfos mbis;
+		MdtMemAccessBegin(usCheck, 2, &mbis);
 		if (!iOn)
 		{
 			*usCheck = 0x840f; // original JE code
@@ -227,7 +227,7 @@ REGISTER_CMD_FUNC(disable_specmenu)
 		{
 			*usCheck = 0xE990; // NOP + JMP opcode
 		}
-		VirtualProtect(usCheck, 2, dwProt, 0);
+		MdtMemAccessEnd(&mbis);
 
 	}
 	else

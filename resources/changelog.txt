@@ -1,3 +1,20 @@
+HLAE 2.2.5.9 (2009-07-11T07:40)
+
+* adressed flaw(s) with memory access protection handling
+  which could cause HLAE to crash
+
+* added __mirv_gl_previewclear (default 1) so wireframe can be previewed
+  without having to use mirv_movie_simulate 1
+
+Thanks: RADiANCE | atom0s (eXtalia | Wiccaan)
+Greetz: RobuLuS
+
+
+HLAE 2.2.5.8 (2009-05-22T15:29Z)
+
+* added mirv_zoom_digital_x, mirv_zoom_digital_y
+
+
 HLAE 2.2.5.7 (2009-05-20T07:50Z)
 
 * adapted mdt_addresses.ini to Steam / CS 1.6 Update (19th May 2009)

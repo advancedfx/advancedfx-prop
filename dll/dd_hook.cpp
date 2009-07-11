@@ -8,6 +8,8 @@ Description : See dd_hook.h
 
 #include "mdt_debug.h"
 
+#include "detours.h"
+
 #include "dd_hook.h"
 #include <ddraw.h>
 #include <stdio.h>
@@ -60,11 +62,11 @@ void FixCallBackFunction (DWORD *HalfLifeCallBackAddr)
 
 	static char	jmp36 [2]	= {(CHAR)0xEB,(CHAR)0x36};
 	DWORD		*writeAddr	= HalfLifeCallBackAddr+0x04; // 4*0x04 = 0x10 
-	DWORD		dwOldProt;
+	MdtMemBlockInfos mbis;
 
-	VirtualProtect((DWORD *)writeAddr,2,PAGE_READWRITE,&dwOldProt);
+	MdtMemAccessBegin((DWORD *)writeAddr,2, &mbis);
 	memcpy((DWORD *)writeAddr,jmp36,2);
-	VirtualProtect((DWORD *)writeAddr,2,dwOldProt,NULL);
+	MdtMemAccessEnd(&mbis);
 }
 
 HRESULT WINAPI myEnumModesCallback(

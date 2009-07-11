@@ -35,11 +35,11 @@ HRESULT STDMETHODCALLTYPE myCreateSoundBuffer(void *mythis, LPCDSBUFFERDESC lpcD
 
 	// since H-L will reaccess the DSBufferDesc we supply we will change their buffer's flags directly:
 	// we just circumvent the const defintion here:
-	//DWORD dwOldProt;
+	//MdtMemBlockInfos mbis;
 	DWORD *dwAddr=(DWORD *)lpcDSBufferDesc; 
-	//VirtualProtect(dwAddr,sizeof(DSBUFFERDESC),PAGE_READWRITE,&dwOldProt);
+	//MdtMemAccessBegin(dwAddr, sizeof(DSBUFFERDESC), &mbis);
 	((DSBUFFERDESC *)dwAddr)->dwFlags |= DSBCAPS_STICKYFOCUS;
-	//VirtualProtect(dwAddr,sizeof(DSBUFFERDESC),dwOldProt,NULL);
+	//MdtMemAccessEnd(&mbis);
 
 
 	HRESULT hResult=g_oldCreateSoundBuffer(mythis, lpcDSBufferDesc, lplpDirectSoundBuffer, pUnkOuter );

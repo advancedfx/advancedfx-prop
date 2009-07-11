@@ -158,14 +158,14 @@ void install_Hud_tours()
 	//	Get access to code where detours will be applied:
 	//
 
-	DWORD dwOldProtIn, dwOlProtOut;
+	MdtMemBlockInfos mbisIn, mbisOut;
 	LPVOID pCodeTourIn = (LPVOID)HL_ADDR_HUD_TOURIN;
 	LPVOID pCodeTourOut = (LPVOID)HL_ADDR_HUD_TOUROUT;
 	size_t dwCodeSizeIn = 0x05;
 	size_t dwCodeSizeOut = 0x05;
 
-	VirtualProtect( pCodeTourIn, dwCodeSizeIn, PAGE_READWRITE, &dwOldProtIn );
-	VirtualProtect( pCodeTourOut, dwCodeSizeOut, PAGE_READWRITE, &dwOlProtOut );
+	MdtMemAccessBegin( pCodeTourIn, dwCodeSizeIn, &mbisIn );
+	MdtMemAccessBegin( pCodeTourOut, dwCodeSizeOut, &mbisOut );
 
 	//
 
@@ -232,8 +232,8 @@ void install_Hud_tours()
 	//	Restore code access:
 	//
 
-	VirtualProtect( pCodeTourIn, dwCodeSizeIn, dwOldProtIn, NULL );
-	VirtualProtect( pCodeTourOut, dwCodeSizeOut, dwOlProtOut, NULL );
+	MdtMemAccessEnd(&mbisOut);
+	MdtMemAccessEnd(&mbisIn);
 
 	//
 	// print Debug info:
