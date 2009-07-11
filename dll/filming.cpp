@@ -115,9 +115,14 @@ LPVOID g_lpCode_HudTours_Loop = 0;
 
 __declspec(naked) void tour_HudBegin()
 {
+	__asm
+	{
+		PUSH ECX ; used by c++ to get g_Filming addr
+	}
 	g_Filming.OnHudBeginEvent();
 	__asm
 	{
+		POP ECX
 		JMP [g_lpCode_TourIn_Continue]
 	}
 }
@@ -126,16 +131,19 @@ __declspec(naked) void tour_HudEnd()
 {
 	__asm
 	{
-		PUSH eax
+		PUSH EAX ; c++ ret value
+		PUSH ECX ; used by c++ to get g_Filming addr
 	}
 	if(g_Filming.OnHudEndEvnet())
 	{
 		__asm {
+			POP ECX
 			POP EAX
 			JMP [g_lpCode_HudTours_Loop]
 		}
 	} else {
 		__asm {
+			POP ECX
 			POP EAX
 			JMP [g_lpCode_TourOut_Continue]
 		}
@@ -178,7 +186,7 @@ void install_Hud_tours()
 	// create continue code:
 
 	// get mem that is never freed:
-	LPVOID pDetouredCodeIn = (LPVOID)malloc(dwCodeSizeIn + JMP32_SZ);
+	LPVOID pDetouredCodeIn = (LPVOID)MdtAllocExecuteableMemory(dwCodeSizeIn + JMP32_SZ);
 
 	g_lpCode_TourIn_Continue = pDetouredCodeIn; // FILL IN ADDRESS
 
@@ -204,7 +212,7 @@ void install_Hud_tours()
 	// create continue code:
 
 	// get mem that is never freed:
-	LPVOID pDetouredCodeOut = (LPVOID)malloc(dwCodeSizeOut + JMP32_SZ);
+	LPVOID pDetouredCodeOut = (LPVOID)MdtAllocExecuteableMemory(dwCodeSizeOut + JMP32_SZ);
 
 	g_lpCode_TourOut_Continue = pDetouredCodeOut; // FILL IN ADDRESS
 

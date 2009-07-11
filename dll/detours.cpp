@@ -10,6 +10,16 @@
 #define PUSH_EAX	0x50
 #define PUSH_ECX	0x51
 
+LPVOID MdtAllocExecuteableMemory(size_t size)
+{
+	DWORD dwDummy;
+	LPVOID mem = malloc(size);
+
+	VirtualProtect(mem, size, PAGE_EXECUTE_READWRITE, &dwDummy);
+
+	return mem;
+}
+
 
 void MdtMemAccessBegin(LPVOID lpAddress, size_t size, MdtMemBlockInfos *mdtMemBlockInfos)
 {
@@ -55,7 +65,7 @@ void MdtMemAccessEnd(MdtMemBlockInfos *mdtMemBlockInfos)
 void *DetourApply(BYTE *orig, BYTE *hook, int len)
 {
 	MdtMemBlockInfos mbis;
-	BYTE *jmp = (BYTE*)malloc(len+JMP32_SZ);
+	BYTE *jmp = (BYTE*)MdtAllocExecuteableMemory(len+JMP32_SZ);
 
 	MdtMemAccessBegin(orig, len, &mbis);
 
@@ -76,7 +86,7 @@ void *DetourApply(BYTE *orig, BYTE *hook, int len)
 
 void *DetourClassFunc(BYTE *src, const BYTE *dst, const int len)
 {
-	BYTE *jmp = (BYTE*)malloc(len+JMP32_SZ+POPREG_SZ+POPREG_SZ+POPREG_SZ);
+	BYTE *jmp = (BYTE*)MdtAllocExecuteableMemory(len+JMP32_SZ+POPREG_SZ+POPREG_SZ+POPREG_SZ);
 	MdtMemBlockInfos mbis;
 
 	MdtMemAccessBegin(src, len, &mbis);

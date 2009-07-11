@@ -16,3 +16,4 @@ void *DetourClassFunc(BYTE *src, const BYTE *dst, const int len);
 
 void MdtMemAccessBegin(LPVOID lpAddress, size_t size, MdtMemBlockInfos *mdtMemBlockInfos);
 void MdtMemAccessEnd(MdtMemBlockInfos *mdtMemBlockInfos);
+LPVOID MdtAllocExecuteableMemory(size_t size);

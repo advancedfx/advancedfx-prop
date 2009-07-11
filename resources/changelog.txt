@@ -1,13 +1,19 @@
-HLAE 2.2.5.9 (2009-07-11T07:40)
+HLAE 2.2.5.10 (2009-07-11T16:00Z)
 
-* adressed flaw(s) with memory access protection handling
+* fixed further related quirks
+
+Thanks to RobuLuS for helping with testing.
+
+
+HLAE 2.2.5.9 (2009-07-11T07:40Z)
+
+* addressed flaw(s) with memory access protection handling
   which could cause HLAE to crash
 
 * added __mirv_gl_previewclear (default 1) so wireframe can be previewed
   without having to use mirv_movie_simulate 1
 
-Thanks: RADiANCE | atom0s (eXtalia | Wiccaan)
-Greetz: RobuLuS
+Thanks to RADiANCE.atom0s (eXtalia.Wiccaan).
 
 
 HLAE 2.2.5.8 (2009-05-22T15:29Z)
