@@ -156,6 +156,8 @@ __declspec(naked) void tour_unkInlineClientColorA()
 	// clientIndex is supplied in ebp and color pointer has to be teturned in ecx
 	__asm
 	{
+		; playerid is in ebp, result must be in eax
+
 		; preserve other c++ registers:
 		; PUSH	eax
 		PUSH	ebx
@@ -185,6 +187,8 @@ __declspec(naked) void tour_unkInlineClientColorV()
 	// clientIndex is supplied in ebx and color pointer has to be teturned in eax
 	__asm
 	{
+		; playerid is in ebx, result must be in eax
+
 		; preserve other c++ registers:
 		; PUSH	eax
 		; PUSH	ebx
