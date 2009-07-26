@@ -248,9 +248,9 @@ namespace hlae {
 			this->checkBoxFullScreen->AutoSize = true;
 			this->checkBoxFullScreen->Location = System::Drawing::Point(358, 32);
 			this->checkBoxFullScreen->Name = L"checkBoxFullScreen";
-			this->checkBoxFullScreen->Size = System::Drawing::Size(98, 17);
+			this->checkBoxFullScreen->Size = System::Drawing::Size(104, 17);
 			this->checkBoxFullScreen->TabIndex = 7;
-			this->checkBoxFullScreen->Text = L"fullscren (hack)";
+			this->checkBoxFullScreen->Text = L"fullscreen (hack)";
 			this->checkBoxFullScreen->UseVisualStyleBackColor = true;
 			this->checkBoxFullScreen->Click += gcnew System::EventHandler(this, &Launcher::checkBoxFullScreen_Click);
 			// 
