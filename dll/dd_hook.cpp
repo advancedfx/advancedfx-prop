@@ -234,7 +234,7 @@ HRESULT WINAPI myDirectDrawCreate(
 		
 		// replace the old EnumDisplayMode address with our own one:
 
-		// this is strange but this is to overcome the problem that Visual C++ says ((DWORD)&functionPointer == (DWORD)functionPointer) is TRUE:
+		// Don't froget that in C++ per definition (DWORD)&functionPointer == (DWORD)functionPointer:
 		DWORD uDontFuckWithMe = (DWORD)myEnumDisplayModes; // not with me u bastard of a compiler thingee
 		memcpy(newDDiface+8,&uDontFuckWithMe,4);
 

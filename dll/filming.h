@@ -29,11 +29,11 @@ using namespace hlae::sampler;
 typedef void (*R_RenderView__t)( void );
 extern R_RenderView__t detoured_R_RenderView_; // filming.cpp
 
+
+// Filming /////////////////////////////////////////////////////////////////////
+
 class Filming
 {
-private:
-	#define MIN_FRAME_DURATION 0.001f
-
 public:
 	enum DRAW_RESULT { DR_NORMAL, DR_HIDE, DR_MASK };
 	enum STEREO_STATE { STS_LEFT, STS_RIGHT };
@@ -41,96 +41,6 @@ public:
 	enum HUD_REQUEST_STATE { HUDRQ_NORMAL,HUDRQ_HIDE,HUDRQ_CAPTURE_COLOR,HUDRQ_CAPTURE_ALPHA };
 	enum MATTE_STAGE { MS_ALL, MS_WORLD, MS_ENTITY };
 
-private:
-	enum FILMING_STATE { FS_INACTIVE, FS_STARTING, FS_ACTIVE };
-
-private:
-	CHlaeSupportRender *_pSupportRender;
-
-	CFilmSound _FilmSound; // our sound filming class
-	bool _bExportingSound;
-
-	char m_szFilename[256];
-
-	unsigned int m_nTakes;
-	unsigned int m_nFrames;
-
-	int m_iWidth, m_iHeight;
-	int m_iCropYOfs,m_iCropHeight; // used to determine the output params (after cropping)
-
-	bool m_bActive;
-
-	CMdt_Media_RAWGLPIC m_GlRawPic;
-
-	MATTE_STAGE m_iMatteStage;
-
-	FILMING_STATE m_iFilmingState;
-
-	DRAW_RESULT shouldDrawDuringWorldMatte(GLenum mode);
-	DRAW_RESULT shouldDrawDuringEntityMatte(GLenum mode);
-
-	bool m_bInWireframe;
-	GLenum m_iLastMode;
-
-	// added 20070922:
-	struct _cameraofs_s { float right; float up; float forward; } _cameraofs;
-	//bool	_bNoMatteInterpolation;
-	bool	_bEnableStereoMode;
-	float	_fStereoOffset;
-
-	STEREO_STATE _stereo_state;
-
-	// it is very important to understand this and the things connected to it right:
-	bool _bRecordBuffers_FirstCall; 
-	// On the one hand Filming::recordBuffres() can get called because the engine advanced in time and rendered an new frame, in this case _bRecordBuffers_FirstCall is true
-	// On the other hand we might have triggered a new frame our self by doing an manual call to R_RenderView, in that case _bRecordBuffers_FirstCall is false!!
-	// The second case usually can only happen when we have the R_RenderView hook and therefore the code connected to it enabled (which is the defualt).
-
-	HUD_REQUEST_STATE _HudRqState;
-
-	struct _cammotion_s
-	{
-		float Xposition;
-		float Yposition;
-		float Zposition;
-		float Zrotation;
-		float Xrotation;
-		float Yrotation;
-	} _cammotion;
-
-	bool _bCamMotion;
-	FILE *pMotionFile, *pMotionFile2;
-	long _lMotionTPos,_lMotionTPos2;
-
-	void _MotionFile_BeginContent(FILE *pFile,char *pAdditonalTag,long &ulTPos);
-	void MotionFile_Begin();
-	void MotionFile_Frame();
-	void MotionFile_End();
-
-	bool _bSimulate;
-	bool _bSimulate2;
-
-	bool _bWorldFxDisableBlend;
-	bool _bWorldFxEnableDepth;
-
-	float _fx_whRGBf[3];
-
-	bool _InMatteEntities(int iid);
-
-	struct Sampling_s
-	{
-		bool bEnable;
-		float out_fps;
-		BGRSampler *bgrsampler;
-		CSampleMaster *samplemaster;
-	} m_sampling;
-
-	// framing system:
-	float m_fps;
-	unsigned long m_frames;
-	float m_time;
-
-public:
 	Filming();
 	~Filming();
 
@@ -195,7 +105,6 @@ public:
 	float GetStereoOffset(); // returns current stereoofs
 	bool bEnableStereoMode();
 	STEREO_STATE GetStereoState();
-	void SupplyCamMotion(float Xposition,float Yposition,float Zposition,float Zrotation,float Xrotation,float Yrotation); // used by R_RenderView_ to supply Camera Motion Data
 
 	bool bWantsHudCapture; // used by R_RenderView to prepare HUD Captures
 
@@ -212,6 +121,83 @@ public:
 
 
 	bool OnPrintFrame(unsigned long id, void *prgbdata, int iWidht, int iHeight);
+
+	float GetDebugClientTime();
+
+
+private:
+	#define MIN_FRAME_DURATION 0.001f
+
+	enum FILMING_STATE { FS_INACTIVE, FS_STARTING, FS_ACTIVE };
+
+	float m_StartClientTime;
+
+	CHlaeSupportRender *_pSupportRender;
+
+	CFilmSound _FilmSound; // our sound filming class
+	bool _bExportingSound;
+
+	char m_szFilename[256];
+
+	unsigned int m_nTakes;
+	unsigned int m_nFrames;
+
+	int m_iWidth, m_iHeight;
+	int m_iCropYOfs,m_iCropHeight; // used to determine the output params (after cropping)
+
+	bool m_bActive;
+
+	CMdt_Media_RAWGLPIC m_GlRawPic;
+
+	MATTE_STAGE m_iMatteStage;
+
+	FILMING_STATE m_iFilmingState;
+
+	DRAW_RESULT shouldDrawDuringWorldMatte(GLenum mode);
+	DRAW_RESULT shouldDrawDuringEntityMatte(GLenum mode);
+
+	bool m_bInWireframe;
+	GLenum m_iLastMode;
+
+	// added 20070922:
+	struct _cameraofs_s { float right; float up; float forward; } _cameraofs;
+	//bool	_bNoMatteInterpolation;
+	bool	_bEnableStereoMode;
+	float	_fStereoOffset;
+
+	STEREO_STATE _stereo_state;
+
+	// it is very important to understand this and the things connected to it right:
+	bool _bRecordBuffers_FirstCall; 
+	// On the one hand Filming::recordBuffres() can get called because the engine advanced in time and rendered an new frame, in this case _bRecordBuffers_FirstCall is true
+	// On the other hand we might have triggered a new frame our self by doing an manual call to R_RenderView, in that case _bRecordBuffers_FirstCall is false!!
+	// The second case usually can only happen when we have the R_RenderView hook and therefore the code connected to it enabled (which is the defualt).
+
+	HUD_REQUEST_STATE _HudRqState;
+
+	bool _bSimulate;
+	bool _bSimulate2;
+
+	bool _bWorldFxDisableBlend;
+	bool _bWorldFxEnableDepth;
+
+	float _fx_whRGBf[3];
+
+	bool _InMatteEntities(int iid);
+
+	struct Sampling_s
+	{
+		bool bEnable;
+		float out_fps;
+		BGRSampler *bgrsampler;
+		CSampleMaster *samplemaster;
+	} m_sampling;
+
+	// framing system:
+	float m_fps;
+	unsigned long m_frames;
+	float m_time;
+
 
 };
 

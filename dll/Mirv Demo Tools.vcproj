@@ -228,6 +228,22 @@
 				>
 			</File>
 			<File
+				RelativePath=".\camexport.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\camexport.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\hlae-beta\dll\camimport.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\hlae-beta\dll\camimport.h"
+				>
+			</File>
+			<File
 				RelativePath=".\cmd_tools.cpp"
 				>
 			</File>

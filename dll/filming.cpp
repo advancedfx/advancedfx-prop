@@ -23,6 +23,9 @@
 #include "supportrender.h"
 #include "cmdregister.h"
 
+#include "camimport.h"
+#include "camexport.h"
+
 #include <list>
 
 #include "filming.h"
@@ -56,6 +59,7 @@ REGISTER_DEBUGCVAR(sample_smethod, "1", 0);
 REGISTER_DEBUGCVAR(print_frame, "0", 0);
 REGISTER_DEBUGCVAR(print_pos, "0", 0);
 
+REGISTER_CVAR(camexport_mode, "0", 0);
 
 REGISTER_CVAR(crop_height, "-1", 0);
 REGISTER_CVAR(crop_yofs, "-1", 0);
@@ -73,7 +77,6 @@ REGISTER_CVAR(matte_xray, "0", 0);
 REGISTER_CVAR(movie_clearscreen, "0", 0);
 REGISTER_CVAR(movie_bmp, "0", 0);
 REGISTER_CVAR(movie_depthdump, "0", 0);
-REGISTER_CVAR(movie_export_cammotion, "0", 0);
 REGISTER_CVAR(movie_export_sound, "0", 0); // should default to 1, but I don't want to mess up other updates
 REGISTER_CVAR(movie_filename, "untitled", 0);
 REGISTER_CVAR(movie_fps, "30", 0);
@@ -322,6 +325,22 @@ void touring_R_RenderView_(void)
 	memcpy (oldorigin,p_r_refdef->vieworg,3*sizeof(float));
 	memcpy (oldangles,p_r_refdef->viewangles,3*sizeof(float));
 
+	//
+	// override by cammotion import:
+	if(g_CamImport.IsActive())
+	{
+		static float ftmp[6];
+	
+		if(g_CamImport.GetCamPositon(g_Filming.GetDebugClientTime(),ftmp))
+		{
+			p_r_refdef->vieworg[1] = -ftmp[0];
+			p_r_refdef->vieworg[2] = +ftmp[1];
+			p_r_refdef->vieworg[0] = -ftmp[2];
+			p_r_refdef->viewangles[ROLL] = -ftmp[3];
+			p_r_refdef->viewangles[PITCH] = -ftmp[4];
+			p_r_refdef->viewangles[YAW] = +ftmp[5];
+		}
+	}
 
 	// >> begin calculate transform vectors
 	// we have to calculate our own transformation vectors from the angles and can not use pparams->forward etc., because in spectator mode they might be not present:
@@ -359,11 +378,28 @@ void touring_R_RenderView_(void)
 
 	// << end calculate transform vectors
 
-	// apply our displacement (this code is similar to HL1SDK/multiplayer/cl_dll/view.cpp/V_CalcNormalRefdef):
-	float fDispRight, fDispUp, fDispForward;
-	float fYaw=0;
+	// (this code is similar to HL1SDK/multiplayer/cl_dll/view.cpp/V_CalcNormalRefdef)
 
-	g_Filming.GetCameraOfs(&fDispRight,&fDispUp,&fDispForward);
+	//
+	// apply displacement :
+	{
+		float fDispRight, fDispUp, fDispForward;
+
+		g_Filming.GetCameraOfs(&fDispRight,&fDispUp,&fDispForward);
+
+		for ( int i=0 ; i<3 ; i++ )
+		{
+			p_r_refdef->vieworg[i] += fDispForward*forward[i] + fDispRight*right[i] + fDispUp*up[i];
+		}
+	}
+
+	if(g_CamExport.HasFileMain()) g_CamExport.WriteMainFrame(
+		-p_r_refdef->vieworg[1], +p_r_refdef->vieworg[2], -p_r_refdef->vieworg[0],
+		-p_r_refdef->viewangles[ROLL], -p_r_refdef->viewangles[PITCH], +p_r_refdef->viewangles[YAW]
+	);
+
+	//
+	// Apply Stereo mode:
 
 	// one note on the stereoyawing:
 	// it may look simple, but it is only simple since the H-L engine carrys the yawing out as last rotation and after that translates
@@ -371,24 +407,42 @@ void touring_R_RenderView_(void)
 
 	if (g_Filming.bEnableStereoMode()&&(g_Filming.isFilming()))
 	{
-		if (g_Filming.GetStereoState()==Filming::STS_LEFT)
+		float fDispRight;
+		Filming::STEREO_STATE sts =g_Filming.GetStereoState(); 
+
+		if(sts ==Filming::STS_LEFT)
 		{
 			// left
-			fDispRight-=movie_stereo_centerdist->value; // left displacement
-			p_r_refdef->viewangles[YAW]-= movie_stereo_yawdegrees->value; // turn right
+			fDispRight = movie_stereo_centerdist->value; // left displacement
+			p_r_refdef->viewangles[YAW] -= movie_stereo_yawdegrees->value; // turn right
 		}
 		else
 		{
 			// right
-			fDispRight+=movie_stereo_centerdist->value; // right displacement
-			p_r_refdef->viewangles[YAW]+= movie_stereo_yawdegrees->value; // turn left
+			fDispRight = movie_stereo_centerdist->value; // right displacement
+			p_r_refdef->viewangles[YAW] += movie_stereo_yawdegrees->value; // turn left
 		}
+
+		// apply displacement:
+		for ( int i=0 ; i<3 ; i++ )
+		{
+			p_r_refdef->vieworg[i] += fDispRight*right[i];
+		}
+
+		// export:
+		if(sts ==Filming::STS_LEFT && g_CamExport.HasFileLeft())
+			g_CamExport.WriteLeftFrame(
+				-p_r_refdef->vieworg[1], +p_r_refdef->vieworg[2], -p_r_refdef->vieworg[0],
+				-p_r_refdef->viewangles[ROLL], -p_r_refdef->viewangles[PITCH], +p_r_refdef->viewangles[YAW]
+			);
+		else if(g_CamExport.HasFileRight())
+			g_CamExport.WriteRightFrame(
+				-p_r_refdef->vieworg[1], +p_r_refdef->vieworg[2], -p_r_refdef->vieworg[0],
+				-p_r_refdef->viewangles[ROLL], -+p_r_refdef->viewangles[PITCH], +p_r_refdef->viewangles[YAW]
+			);
+
 	}
 
-	for ( int i=0 ; i<3 ; i++ )
-	{
-		p_r_refdef->vieworg[i] += fDispForward*forward[i] + fDispRight*right[i] + fDispUp*up[i];
-	}
 
 	if(print_pos->value!=0.0)
 		pEngfuncs->Con_Printf("(%f,%f,%f) (%f,%f,%f)\n",
@@ -400,14 +454,6 @@ void touring_R_RenderView_(void)
 			p_r_refdef->viewangles[ROLL]
 		);
 
-	g_Filming.SupplyCamMotion(
-		+p_r_refdef->vieworg[1],
-		+p_r_refdef->vieworg[2],
-		-p_r_refdef->vieworg[0],
-		-p_r_refdef->viewangles[ROLL],
-		+p_r_refdef->viewangles[PITCH],
-		+p_r_refdef->viewangles[YAW]
-	);
 
 	//
 	// call original R_RenderView_
@@ -564,10 +610,6 @@ Filming::Filming()
 
 		_HudRqState = HUDRQ_NORMAL;
 
-		_bCamMotion = false;
-		pMotionFile = NULL;
-		pMotionFile2 = NULL;
-
 		_bSimulate = false;
 		_bSimulate2 = false;
 
@@ -593,6 +635,15 @@ void Filming::GetCameraOfs(float *right, float *up, float *forward)
 	*up = _cameraofs.up;
 	*forward = _cameraofs.forward;
 }
+
+float Filming::GetDebugClientTime()
+{
+	if(m_iFilmingState != FS_INACTIVE)
+		return m_StartClientTime + m_time;
+
+	return pEngfuncs->GetClientTime();
+}
+
 float Filming::GetStereoOffset()
 {
 	return _fStereoOffset;
@@ -686,6 +737,7 @@ void Filming::Start()
 	}
 
 	m_nFrames = 0;
+	m_StartClientTime = pEngfuncs->GetClientTime();
 	m_iFilmingState = FS_STARTING;
 	m_iMatteStage = MS_WORLD;
 
@@ -693,14 +745,21 @@ void Filming::Start()
 	_fStereoOffset = movie_stereo_centerdist->value;
 	_bEnableStereoMode = (movie_stereomode->value != 0.0); // we also have to be able to use R_RenderView
 	//_bNoMatteInterpolation = (matte_nointerp->value == 0.0);
-	_bCamMotion = (movie_export_cammotion->value != 0.0);
 	_bSimulate = (movie_simulate->value != 0.0);
 	_bSimulate2 = _bSimulate && (movie_simulate->value != 2.0);
 
 	// make sure the R_MarLeaves is hooked:
 	InstallHook_Mod_LeafPVS();
 
-	if (_bCamMotion && !_bSimulate2) MotionFile_Begin();
+	// setup camexport:
+	if (!_bSimulate2) {
+		float fc = camexport_mode->value;
+		float frameTime = 1.0f / m_fps;
+
+		if(fc && fc != 2.0f) g_CamExport.BeginFileMain(m_szFilename, m_nTakes, frameTime);
+		if(fc && fc >= 2.0f) g_CamExport.BeginFileLeft(m_szFilename, m_nTakes, frameTime);
+		if(fc && fc >= 2.0f) g_CamExport.BeginFileRight(m_szFilename, m_nTakes, frameTime);
+	}
 
 	// if we want to use R_RenderView and we have not already done that, we need to set it up now:
 
@@ -803,7 +862,8 @@ void Filming::Stop()
 
 	HlaeBc_OnFilmingStop(); // inform Hlae Server GUI
 
-	if (_bCamMotion) MotionFile_End();
+	// stop camera motion export:
+	g_CamExport.EndFiles();
 	
 	// stop sound system if exporting sound:
 	if (_bExportingSound)
@@ -1212,8 +1272,6 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 			m_iMatteStage = MS_WORLD;
 		}
 
-		if (_bCamMotion && !_bSimulate2) MotionFile_Frame();
-	
 		if (_bEnableStereoMode && (_stereo_state==STS_LEFT))
 		{
 			_stereo_state=STS_RIGHT;
@@ -1341,85 +1399,6 @@ Filming::DRAW_RESULT Filming::doWireframe(GLenum mode)
 	glLineWidth(movie_wireframesize->value);
 
 	return DR_NORMAL;
-}
-
-void Filming::SupplyCamMotion(float Xposition,float Yposition,float Zposition,float Zrotation,float Xrotation,float Yrotation)
-{
-	_cammotion.Xposition=Xposition;
-	_cammotion.Yposition=Yposition;
-	_cammotion.Zposition=Zposition;
-	_cammotion.Zrotation=Zrotation;
-	_cammotion.Xrotation=Xrotation;
-	_cammotion.Yrotation=Yrotation;
-}
-
-void Filming::_MotionFile_BeginContent(FILE *pFile,char *pAdditonalTag,long &ulTPos)
-{
-	char szTmp[196];
-
-	fputs("HIERARCHY\n",pFile);
-
-	fputs("ROOT MdtCam",pFile);
-	fputs(pAdditonalTag,pFile);
-	fputs("\n{\n\tOFFSET 0.00 0.00 0.00\n\tCHANNELS 6 Xposition Yposition Zposition Zrotation Xrotation Yrotation\n\tEnd Site\n\t{\n\t\tOFFSET 0.00 0.00 -1.00\n\t}\n}\n",pFile);
-
-	fputs("MOTION\n",pFile);
-	ulTPos = ftell(pFile);
-	fputs("Frames: 0123456789A\n",pFile);
-
-	float flTime = 1.0f / m_fps;
-	//if (movie_fpscap->value) flTime = max(flTime, MIN_FRAME_DURATION);
-	_snprintf(szTmp, sizeof(szTmp) - 1,"Frame Time: %f\n",flTime);
-	fputs(szTmp,pFile);
-}
-
-void Filming::MotionFile_Begin()
-{
-	char szTmp[196];
-
-	_snprintf(szTmp, sizeof(szTmp) - 1, "%s_%02d_motion%s.bvh", m_szFilename, m_nTakes,_bEnableStereoMode ? "_left" : "");
-
-	if ((pMotionFile = fopen(szTmp, "wb")) != NULL)
-		_MotionFile_BeginContent(pMotionFile,_bEnableStereoMode ? "Left" : "",_lMotionTPos);
-
-	if (_bEnableStereoMode)
-	{
-
-		_snprintf(szTmp, sizeof(szTmp) - 1, "%s_%02d_motion_right.bvh", m_szFilename, m_nTakes);
-
-		if ((pMotionFile2 = fopen(szTmp, "wb")) != NULL)
-			_MotionFile_BeginContent(pMotionFile2,"Right",_lMotionTPos2);
-	}
-
-}
-void Filming::MotionFile_Frame()
-{
-	char pszT[249];
-	_snprintf(pszT,sizeof(pszT)-1,"%f %f %f %f %f %f\n",_cammotion.Xposition,_cammotion.Yposition,_cammotion.Zposition,_cammotion.Zrotation,_cammotion.Xrotation,_cammotion.Yrotation);
-
-	if (pMotionFile&&(!_bEnableStereoMode || _stereo_state == STS_LEFT)) fputs(pszT,pMotionFile);
-	else if(pMotionFile2 && _bEnableStereoMode && _stereo_state == STS_RIGHT)  fputs(pszT,pMotionFile2);
-
-}
-void Filming::MotionFile_End()
-{
-	char pTmp[100];
-
-	if (pMotionFile){
-		fseek(pMotionFile,_lMotionTPos,SEEK_SET);
-		_snprintf(pTmp,sizeof(pTmp)-1,"Frames: %11i",m_nFrames);
-		fputs(pTmp,pMotionFile);
-		fclose(pMotionFile);
-		pMotionFile=NULL;
-	}
-
-	if (pMotionFile2){
-		fseek(pMotionFile2,_lMotionTPos2,SEEK_SET);
-		_snprintf(pTmp,sizeof(pTmp)-1,"Frames: %11i",m_nFrames);
-		fputs(pTmp,pMotionFile2);
-		fclose(pMotionFile2);
-		pMotionFile2=NULL;
-	}
 }
 
 void Filming::DoWorldFxBegin(GLenum mode)

@@ -1,7 +1,7 @@
 Dear Half-Life Advanced Effects (HLAE) user,
 
 
-You can retrive the latest HLAE, infos, report bugs and post suggestions here:
+You can retrieve the latest HLAE, infos, report bugs and post suggestions here:
 http://advancedfx.org/
 
 
@@ -13,7 +13,7 @@ Epilepsy warning:
 Using HLAE:
 
   Extract all contents of this archive into a folder you like.
-  You should not extract into the game's folder, this is not neccessary.
+  You should not extract into the game's folder, this is not necessary.
 
   We suggest using Steam's Offline Mode.
   Please stick to the manuals and tutorials on the web for more information.
@@ -21,13 +21,13 @@ Using HLAE:
 
 Disclaimer:
 
-  Altered versions must be cleary marked as such and must not be misrepresented
+  Altered versions must be clearly marked as such and must not be misrepresented
   as being the original software.
   
   This software is for your enjoyment and you are using it at your own risk.
 
 
-Sincerly,
+Sincerely,
 your Half-Life Advanced Effects team.
 
 
@@ -36,7 +36,7 @@ your Half-Life Advanced Effects team.
 Credits:
 
 In addition to the mentions in the changelog we want to credit the following
-people, companys or organistations:
+people, companies or organizations:
 
 Microsoft
   for VC++, MSDN Library, ...
@@ -71,7 +71,7 @@ MIRVIN_monkey
   http://www.madabouthats.org
   
 ripieces
-  programer
+  programmer
   http://dominik.matrixstorm.com
   
 msthavoc
@@ -85,7 +85,7 @@ juggaknot
 Past members:
 
 neomic
-  programer
+  programmer
   http://neomic.xail.net/
 
 
