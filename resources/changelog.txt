@@ -1,12 +1,11 @@
-HLAE 2.2.5.13 (2009-08-31TZ)
+HLAE 2.2.5.14 (2009-09-01T07:26Z)
 
-* added mirv_camimport_* features from experimental HLAE BETA tree
+* added mirv_camimport_* features from HLAE BETA branch
  
 * replaced mirv_movie_export_cammotion with mirv_camexport_*
 
 * fixed sign of Xposition and Xrotation
-  msthavoc plans to update the import plugins accordingly
-  (you will have to redownload them)
+  The HLAE camera motion import plugins need to be updated.
 
 
 HLAE 2.2.5.12 (2009-07-17T06:22Z)

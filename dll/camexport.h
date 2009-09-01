@@ -35,7 +35,7 @@ private:
 	FILE * m_pMotionFile;
 	long m_lMotionTPos;
 
-	void BeginContent(FILE *pFile ,char const * pAdditonalTag, float frameTime, long &ulTPos);
+	void BeginContent(FILE *pFile ,char const * pRootName, float frameTime, long &ulTPos);
 
 };
 

@@ -65,14 +65,14 @@ BvhExport::~BvhExport()
 	}
 }
 
-void BvhExport::BeginContent(FILE *pFile, char const * pAdditonalTag, float frameTime, long &ulTPos)
+void BvhExport::BeginContent(FILE *pFile, char const * pRootName, float frameTime, long &ulTPos)
 {
 	char szTmp[196];
 
 	fputs("HIERARCHY\n",pFile);
 
-	fputs("ROOT MdtCam",pFile);
-	fputs(pAdditonalTag,pFile);
+	fputs("ROOT ",pFile);
+	fputs(pRootName,pFile);
 	fputs("\n{\n\tOFFSET 0.00 0.00 0.00\n\tCHANNELS 6 Xposition Yposition Zposition Zrotation Xrotation Yrotation\n\tEnd Site\n\t{\n\t\tOFFSET 0.00 0.00 -1.00\n\t}\n}\n",pFile);
 
 	fputs("MOTION\n",pFile);
