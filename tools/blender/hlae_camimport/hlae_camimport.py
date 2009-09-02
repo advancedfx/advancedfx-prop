@@ -9,7 +9,7 @@ Tip: 'Import HLAE camera motion data'
 
 __author__ = "ripieces"
 __url__ = "advancedfx.org"
-__version__ = "0.0.0.1 (2009-09-02T18:20Z)"
+__version__ = "0.0.0.2 (2009-09-02T19:20Z)"
 
 __bpydoc__ = """\
 HLAE camera motion Import
@@ -136,14 +136,14 @@ def BuildTargetVector(Xpos, Ypos, Zpos, Zrot, Xrot, Yrot, forwardLen):
 	
 	fvec = Blender.Mathutils.Vector(0, 0, -forwardLen)
 	
-	fvec = Blender.Mathutils.VecMultMat(fvec, MRX) # pitch
-	fvec = Blender.Mathutils.VecMultMat(fvec, MRZ) # yaw
-	fvec = Blender.Mathutils.VecMultMat(fvec, MRY) # roll
+	fvec = fvec * MRX # pitch
+	fvec = fvec * MRZ # yaw
+	fvec = fvec * MRY # roll
 	
 	return lvec + fvec
 
 
-def ReadFile(fileName, scale, forwardLen):
+def ReadFile(fileName, scale, forwardLen, camFov):
 	file = open(fileName, 'rU')
 	
 	rootName = ReadRootName(file)
@@ -229,6 +229,7 @@ def ReadFile(fileName, scale, forwardLen):
 	aCt[BCS.TARGET] = obTgt
 	
 	cam = Blender.Camera.New('persp', rootName);
+	cam.angle = camFov;
 	obCam = scn.objects.new(cam)
 
 	aCt = obCam.constraints.append(BCT.FOLLOWPATH)
@@ -250,20 +251,23 @@ def ReadFile(fileName, scale, forwardLen):
 def load_HlaeCamMotion(fileName):
 	UI_Scale = Blender.Draw.Create(0.01)
 	UI_ForwardLen = Blender.Draw.Create(0.5)
+	UI_Fov = Blender.Draw.Create(90.0)
 
 	UI_block = []	
-	UI_block.append(("Scale:", UI_Scale, 0.001, 10, 'Scaling'))
-	UI_block.append(("Forward:", UI_ForwardLen, 0.001, 10, 'Length of forward vector (determines distance of curves)'))
+	UI_block.append(("Scale:", UI_Scale, 0.001, 10.0, 'Scaling'))
+	UI_block.append(("Forward:", UI_ForwardLen, 0.001, 10.0, 'Length of forward vector (determines distance of curves)'))
+	UI_block.append(("FOV:", UI_Fov, 10.0, 170.0, 'Field of view to set for the camera (in degrees)'))
 	
 	if not Blender.Draw.PupBlock('HLAE camera motion import', UI_block):
 		return
 			
 	IMP_Scale = UI_Scale.val
 	IMP_ForwardLen = UI_ForwardLen.val
+	IMP_Fov = UI_Fov.val
 
-	print 'Importing', fileName, 'Scale =', IMP_Scale, 'Forward =', IMP_ForwardLen
+	print 'Importing', fileName, 'Scale =', IMP_Scale, 'Forward =', IMP_ForwardLen, 'FOV =', IMP_Fov
 	
-	if ReadFile(fileName, IMP_Scale, IMP_ForwardLen):
+	if ReadFile(fileName, IMP_Scale, IMP_ForwardLen, IMP_Fov):
 		print 'Done.'
 	else:
 		print 'FAILED';
