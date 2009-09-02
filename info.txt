@@ -14,9 +14,6 @@ examples/
 exe/
   Project for the old-style Mirv Demo Tool loader
   
-gui/
-  Project for the old wxWidgets based GUI
-  
 hlae/
   Project for the new .NET based HLAE GUI
   
@@ -32,8 +29,11 @@ resources/
 shared/
   files and source code used in more than one project go here
   
+tools/
+  small tools not part of the hlae core download
+  
 mdt.sln
-  Solution file for Microsoft Visual Studio 2003 .NET (VC++) which organizes the different projects.
+  Solution file for Microsoft Visual Studio 2008 .NET (VC++) which organizes the different projects.
   
 info.txt
   This file.

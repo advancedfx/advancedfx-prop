@@ -1,7 +1,0 @@
-// not required #include "resource.h"
-
-hlaeICON_AAA ICON "gui.ico"
-
-// wxWidgets:
-#define wxUSE_NO_MANIFEST 1
-// not required, we can include later if we want #include <wx/msw/wx.rc>
