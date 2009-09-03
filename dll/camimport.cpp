@@ -28,7 +28,7 @@ extern Filming g_Filming;
 
 CCamImport g_CamImport;
 
-REGISTER_DEBUGCMD_FUNC(beta_camimport_load)
+REGISTER_CMD_FUNC(camimport_load)
 {
 	int ic =  pEngfuncs->Cmd_Argc();
 
@@ -49,16 +49,16 @@ REGISTER_DEBUGCMD_FUNC(beta_camimport_load)
 		else
 			pEngfuncs->Con_Printf("ERROR.\n");
 	} else {
-		pEngfuncs->Con_Printf("Usage:\n" DEBUG_PREFIX "camimport_load <bvhfile> [<basetime>]\n");
+		pEngfuncs->Con_Printf("Usage:\n" PREFIX "camimport_load <bvhfile> [<basetime>]\n");
 	}
 }
 
-REGISTER_DEBUGCMD_FUNC(beta_camimport_end)
+REGISTER_CMD_FUNC(camimport_end)
 {
 	g_CamImport.CloseMotionFile();
 }
 
-REGISTER_DEBUGCMD_FUNC(beta_camimport_basetime)
+REGISTER_CMD_FUNC(camimport_basetime)
 {
 	if(2 == pEngfuncs->Cmd_Argc())
 	{
@@ -67,7 +67,7 @@ REGISTER_DEBUGCMD_FUNC(beta_camimport_basetime)
 		else
 			g_CamImport.SetBaseTime(atof(pEngfuncs->Cmd_Argv(1)));
 	} else {
-		pEngfuncs->Con_Printf("Usage:\n" DEBUG_PREFIX "camimport_load (<basetime>|current)\nCurrent: %f",g_CamImport.GetBaseTime());
+		pEngfuncs->Con_Printf("Usage:\n" PREFIX "camimport_basetime (<basetime>|current)\nCurrent: %f",g_CamImport.GetBaseTime());
 	}
 }
 

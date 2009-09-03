@@ -236,11 +236,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\hlae-beta\dll\camimport.cpp"
+				RelativePath=".\camimport.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\hlae-beta\dll\camimport.h"
+				RelativePath=".\camimport.h"
 				>
 			</File>
 			<File
