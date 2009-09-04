@@ -9,7 +9,7 @@ Tip: 'Import HLAE camera motion data'
 
 __author__ = "ripieces"
 __url__ = "advancedfx.org"
-__version__ = "0.0.0.2 (2009-09-02T19:20Z)"
+__version__ = "0.0.0.4 (2009-09-04T14:44Z)"
 
 __bpydoc__ = """\
 HLAE camera motion Import
@@ -21,10 +21,17 @@ For more info see http://www.advancedfx.org/
 # Copyright (c) advancedfx.org
 #
 # Last changes:
-# 2009-09-01 by dominik.matrixstorm.com
+# 2009-09-04 by dominik.matrixstorm.com
 #
 # First changes:
 # 2009-09-01 by dominik.matrixstorm.com
+
+
+# 0.01745329251994329576923690768488...
+DEG2RAD = 0.01745329252
+
+# 3.141592653589793238462643383279...
+PIE = 3.14159265358979323846264338328
 
 
 import Blender
@@ -125,25 +132,9 @@ def ReadFrame(file, channels):
 	Yrot = float(line[channels[5]])
 	
 	return [Xpos, Ypos, Zpos, Zrot, Xrot, Yrot]
+	
 
-	
-def BuildTargetVector(Xpos, Ypos, Zpos, Zrot, Xrot, Yrot, forwardLen):
-	MRX = Blender.Mathutils.RotationMatrix(Xrot, 3, "x")
-	MRY = Blender.Mathutils.RotationMatrix(Yrot, 3, "y")
-	MRZ = Blender.Mathutils.RotationMatrix(Zrot, 3, "z")
-	
-	lvec = Blender.Mathutils.Vector(Xpos, Ypos, Zpos)
-	
-	fvec = Blender.Mathutils.Vector(0, 0, -forwardLen)
-	
-	fvec = fvec * MRX # pitch
-	fvec = fvec * MRZ # yaw
-	fvec = fvec * MRY # roll
-	
-	return lvec + fvec
-
-
-def ReadFile(fileName, scale, forwardLen, camFov):
+def ReadFile(fileName, scale, camFov, rotFix):
 	file = open(fileName, 'rU')
 	
 	rootName = ReadRootName(file)
@@ -163,85 +154,71 @@ def ReadFile(fileName, scale, forwardLen, camFov):
 		SetError('Could not locate "Frame Time:" entry.')
 		return False
 
-	# build the curve:	
-	crvLoc = Blender.Curve.New(rootName +'_CLoc')
-	crvTgt = Blender.Curve.New(rootName +'_CTgt')
+	# build the IPO curves:
+	ipo = Blender.Ipo.New('Object', rootName+'_Ipo')
+	CrvLocX = ipo.addCurve('LocX')
+	CrvLocY = ipo.addCurve('LocY')
+	CrvLocZ = ipo.addCurve('LocZ')
+	CrvRotX = ipo.addCurve('RotX')
+	CrvRotY = ipo.addCurve('RotY')
+	CrvRotZ = ipo.addCurve('RotZ')
 	
-	nrbLoc = False
-	nrbTgt = False
+	frameCount = 0
 			
 	while True:
 		frame = ReadFrame(file, channels)
 		if not frame:
 			break;
 			
-		BXP = frame[0] *scale
-		BYP = frame[1] *scale
-		BZP = frame[2] *scale
-
-		BZR = frame[3]
-		BXR = frame[4]
-		BYR = frame[5]
+		frameCount += 1
 		
-		VLOC = [BXP, BYP, BZP, 1]
+		BTT = float(frameCount)
 
-		tgt = BuildTargetVector(BXP, BYP, BZP, BZR, BXR, BYR, forwardLen)
-		VTGT = [tgt[0], tgt[1], tgt[2], 1]
+		BXP =  frame[0] *scale # Bvh_XP
+		BYP = -frame[2] *scale # Bvh_ZP
+		BZP =  frame[1] *scale # Bvh_YP 
+
+		BYR = -frame[3] # Bvh_ZR
+		BXR =  frame[4] # Bvh_XR
+		BZR =  frame[5] # Bvh_YR
 		
-		if not nrbLoc:
-			crvLoc.appendNurb(VLOC)
-			nrbLoc = crvLoc[0]
-			nrbLoc.setType(0) # Poly
-		else:
-			nrbLoc.append(VLOC)
-			
-		if not nrbTgt:
-			crvTgt.appendNurb(VTGT)
-			nrbTgt = crvTgt[0]
-			nrbTgt.setType(0) # Poly
-		else:
-			nrbTgt.append(VTGT)
-			
+		if rotFix:
+			BT = BXP
+			BXP = BYP
+			BYP = -BT
+			BZR -= 90.0
+		
+		BXR += 90.0 #  fix blender camera to point up at z
+
+		BXP = float(BXP)
+		BYP = float(BYP)
+		BZP = float(BZP)
+		BXR = float(BXR) / 10.0
+		BYR = float(BYR) / 10.0
+		BZR = float(BZR) / 10.0
+		
+		CrvLocX.append((BTT, BXP))
+		CrvLocY.append((BTT, BYP))
+		CrvLocZ.append((BTT, BZP))
+
+		CrvRotX.append((BTT, BXR))
+		CrvRotY.append((BTT, BYR))
+		CrvRotZ.append((BTT, BZR))
+		
 	# setup scene
 		
 	scn = Blender.Scene.GetCurrent()
 	scn.objects.selected = []
 	
-	# 1.570796326794896619231321691639...
-	halfPie = 1.5707963267
-	
-	obLoc = scn.objects.new(crvLoc)
-	obLoc.RotX = halfPie
-	obLoc.RotZ = -halfPie
-	
-	obTgt = scn.objects.new(crvTgt)
-	obTgt.RotX = halfPie
-	obTgt.RotZ = -halfPie
-	
-	BCS = Blender.Constraint.Settings
-	BCT = Blender.Constraint.Type
-	
-	obAim = scn.objects.new('Empty')
-	obAim.name=rootName +'_Aim'
-
-	aCt = obAim.constraints.append(BCT.FOLLOWPATH)
-	aCt.name = 'Follow'
-	aCt[BCS.TARGET] = obTgt
-	
 	cam = Blender.Camera.New('persp', rootName);
 	cam.angle = camFov;
+	
 	obCam = scn.objects.new(cam)
 
-	aCt = obCam.constraints.append(BCT.FOLLOWPATH)
-	aCt.name = 'Follow'
-	aCt[BCS.TARGET] = obLoc
-
-	aCt = obCam.constraints.append(BCT.TRACKTO)
-	aCt.name = 'Track'
-	aCt[BCS.TARGET] = obAim
-	aCt[BCS.TRACK] = BCS.TRACKNEGZ
-	aCt[BCS.UP] = BCS.UPY
-
+	obCam.setIpo(ipo)
+	
+	#
+	
 	scn.update(1)
 	Blender.Window.RedrawAll()
 	
@@ -250,24 +227,24 @@ def ReadFile(fileName, scale, forwardLen, camFov):
 
 def load_HlaeCamMotion(fileName):
 	UI_Scale = Blender.Draw.Create(0.01)
-	UI_ForwardLen = Blender.Draw.Create(0.5)
 	UI_Fov = Blender.Draw.Create(90.0)
+	UI_Fix = Blender.Draw.Create(True)
 
 	UI_block = []	
 	UI_block.append(("Scale:", UI_Scale, 0.001, 10.0, 'Scaling'))
-	UI_block.append(("Forward:", UI_ForwardLen, 0.001, 10.0, 'Length of forward vector (determines distance of curves)'))
 	UI_block.append(("FOV:", UI_Fov, 10.0, 170.0, 'Field of view to set for the camera (in degrees)'))
+	UI_block.append(("-90deg fix", UI_Fix, 'Matches wrong BSP viewer map rotation'))
 	
 	if not Blender.Draw.PupBlock('HLAE camera motion import', UI_block):
 		return
 			
 	IMP_Scale = UI_Scale.val
-	IMP_ForwardLen = UI_ForwardLen.val
 	IMP_Fov = UI_Fov.val
+	IMP_Fix = UI_Fix.val
 
-	print 'Importing', fileName, 'Scale =', IMP_Scale, 'Forward =', IMP_ForwardLen, 'FOV =', IMP_Fov
+	print 'Importing', fileName, 'Scale =', IMP_Scale, 'FOV =', IMP_Fov, 'Fix =', IMP_Fix
 	
-	if ReadFile(fileName, IMP_Scale, IMP_ForwardLen, IMP_Fov):
+	if ReadFile(fileName, IMP_Scale, IMP_Fov, IMP_Fix):
 		print 'Done.'
 	else:
 		print 'FAILED';
