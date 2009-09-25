@@ -34,7 +34,7 @@ public:
 	//[DefaultValue("cstrike")]
 	String ^Modification;
 
-	//[DefaultValue("-demoedit")]
+	//[DefaultValue("+toggleconsole")]
 	String ^CustomCmdLine;
 
 	//[DefaultValue(true)]
@@ -81,7 +81,7 @@ public:
 	{
 		GamePath = "please select";
 		Modification ="cstrike";
-		CustomCmdLine = "-demoedit";
+		CustomCmdLine = "+toggleconsole";
 		GfxForce = true;
 		GfxWidth = 800;
 		GfxHeight = 600;

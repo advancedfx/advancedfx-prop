@@ -242,10 +242,17 @@ bool InitLoader(unsigned int uiUnused, System::String ^m_path,System::String ^m_
 	strOptsB->Append( "\" " );
 	strOptsB->Append( m_cmdline );
 
-	g_path_dll = (LPTSTR)(int)Marshal::StringToHGlobalAuto( strDllPathB->ToString() );
-	g_path_exe = (LPTSTR)(int)Marshal::StringToHGlobalAuto( m_path );
-	g_opts_exe = (LPTSTR)(int)Marshal::StringToHGlobalAuto( strOptsB->ToString() );
-	g_dir_exe = (LPTSTR)(int)Marshal::StringToHGlobalAuto( strExeDir );
+#ifdef _UNICODE
+	g_path_dll = (LPTSTR)(int)Marshal::StringToHGlobalUni( strDllPathB->ToString() );
+	g_path_exe = (LPTSTR)(int)Marshal::StringToHGlobalUni( m_path );
+	g_opts_exe = (LPTSTR)(int)Marshal::StringToHGlobalUni( strOptsB->ToString() );
+	g_dir_exe = (LPTSTR)(int)Marshal::StringToHGlobalUni( strExeDir );
+#else
+	g_path_dll = (LPTSTR)(int)Marshal::StringToHGlobalAnsi( strDllPathB->ToString() );
+	g_path_exe = (LPTSTR)(int)Marshal::StringToHGlobalAnsi( m_path );
+	g_opts_exe = (LPTSTR)(int)Marshal::StringToHGlobalAnsi( strOptsB->ToString() );
+	g_dir_exe = (LPTSTR)(int)Marshal::StringToHGlobalAnsi( strExeDir );
+#endif
 
 	//g_debug.SendMessage(g_path_dll, hlaeDEBUG_DEBUG);
 	//g_debug.SendMessage(g_path_exe, hlaeDEBUG_DEBUG);

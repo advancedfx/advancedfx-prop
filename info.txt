@@ -11,9 +11,6 @@ examples/
   Example projects (i.e. IPC Rremoting), that are not part of the main
   HLAE suite.
   
-exe/
-  Project for the old-style Mirv Demo Tool loader
-  
 hlae/
   Project for the new .NET based HLAE GUI
   

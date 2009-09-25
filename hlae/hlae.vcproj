@@ -452,6 +452,10 @@
 					Name="skymanager"
 					>
 					<File
+						RelativePath=".\tools\skymanager\skymanager.cpp"
+						>
+					</File>
+					<File
 						RelativePath=".\tools\skymanager\skymanager.h"
 						FileType="3"
 						>

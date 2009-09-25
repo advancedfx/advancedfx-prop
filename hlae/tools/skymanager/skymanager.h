@@ -10,6 +10,10 @@ using namespace System::Windows::Forms;
 using namespace System::Data;
 using namespace System::Drawing;
 
+using namespace hlae;
+using namespace hlae::globals;
+
+
 
 namespace hlae {
 
@@ -81,11 +85,41 @@ namespace hlae {
 	private: System::Windows::Forms::RadioButton^  radioPrePer;
 	private: System::Windows::Forms::Panel^  picImage;
 	private: System::Windows::Forms::Panel^  picPreview;
+	private: System::Windows::Forms::Label^  labelHint;
 
 
 
 	private: System::Windows::Forms::FolderBrowserDialog^  folderBrowserDialog;
 
+	private:
+		ref struct CubeSide {
+			PointF btLeft;
+			PointF btRight;
+			PointF tpRight;
+			PointF tpLeft;
+		};
+		ref struct CubeSides {
+			CubeSide back;
+			CubeSide right;
+			CubeSide front;
+			CubeSide left;
+			CubeSide up;
+			CubeSide down;			
+		};
+
+		void CoordToViewPoint(PointF % coordPoint, int sx, int sy, Point % viewPoint);
+
+		void GetCubeCoordsFlat(CubeSides % outCoords);
+
+		void LoadImage();
+
+		System::Drawing::Bitmap ^LoadTaragaFile(System::String ^ filePath);
+
+		void PaintPicPreview(System::Object^  sender, System::Windows::Forms::PaintEventArgs^  e);
+
+		bool PointInRect(Drawing::Point % point, int invSx, int invSy, CubeSide % cs);
+
+		void SkySelection(Point point);
 
 		void CreateInitialImages()
 		{
@@ -203,6 +237,7 @@ namespace hlae {
 			this->checkPreFront = (gcnew System::Windows::Forms::CheckBox());
 			this->checkPreLeft = (gcnew System::Windows::Forms::CheckBox());
 			this->groupSelect = (gcnew System::Windows::Forms::GroupBox());
+			this->labelHint = (gcnew System::Windows::Forms::Label());
 			this->radioSelSky = (gcnew System::Windows::Forms::RadioButton());
 			this->radioSelRight = (gcnew System::Windows::Forms::RadioButton());
 			this->radioSelBack = (gcnew System::Windows::Forms::RadioButton());
@@ -344,6 +379,7 @@ namespace hlae {
 			// groupSelect
 			// 
 			this->groupSelect->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Right));
+			this->groupSelect->Controls->Add(this->labelHint);
 			this->groupSelect->Controls->Add(this->radioSelSky);
 			this->groupSelect->Controls->Add(this->radioSelRight);
 			this->groupSelect->Controls->Add(this->radioSelBack);
@@ -357,6 +393,16 @@ namespace hlae {
 			this->groupSelect->TabIndex = 0;
 			this->groupSelect->TabStop = false;
 			this->groupSelect->Text = L"Image Selection";
+			// 
+			// labelHint
+			// 
+			this->labelHint->AutoSize = true;
+			this->labelHint->ForeColor = System::Drawing::SystemColors::ControlDarkDark;
+			this->labelHint->Location = System::Drawing::Point(115, 83);
+			this->labelHint->Name = L"labelHint";
+			this->labelHint->Size = System::Drawing::Size(147, 13);
+			this->labelHint->TabIndex = 7;
+			this->labelHint->Text = L"Hint: (double) click the image.";
 			// 
 			// radioSelSky
 			// 
@@ -528,8 +574,8 @@ namespace hlae {
 			// 
 			// openImageDialog
 			// 
-			this->openImageDialog->Filter = L"Windows Bitmap (.bmp)|*.bmp|Joint Photographic Experts Group (.jpg)|*.jpg|All fil" 
-				L"es|*.*";
+			this->openImageDialog->Filter = L"(*.bmp) Windows Bitmap|*.bmp|(*.jpg) Joint Photographic Experts Group|*.jpg|(*.tg" 
+				L"a) Truevison TGA (uncompressed color 24/32bit)|*.tga|(*.*) All files|*.*";
 			this->openImageDialog->Title = L"Select an image file ...";
 			// 
 			// folderBrowserDialog
@@ -548,6 +594,8 @@ namespace hlae {
 			this->picPreview->Size = System::Drawing::Size(200, 200);
 			this->picPreview->TabIndex = 4;
 			this->picPreview->Paint += gcnew System::Windows::Forms::PaintEventHandler(this, &skymanager::PaintPicPreview);
+			this->picPreview->MouseDoubleClick += gcnew System::Windows::Forms::MouseEventHandler(this, &skymanager::picPreview_MouseDoubleClick);
+			this->picPreview->MouseClick += gcnew System::Windows::Forms::MouseEventHandler(this, &skymanager::picPreview_MouseClick);
 			this->picPreview->ClientSizeChanged += gcnew System::EventHandler(this, &skymanager::picPreview_ClientSizeChanged);
 			// 
 			// skymanager
@@ -568,6 +616,7 @@ namespace hlae {
 			this->Text = L"HLAE Sky Manager";
 			this->groupPreview->ResumeLayout(false);
 			this->groupSelect->ResumeLayout(false);
+			this->groupSelect->PerformLayout();
 			this->groupMirror->ResumeLayout(false);
 			this->groupImage->ResumeLayout(false);
 			this->groupRotate->ResumeLayout(false);
@@ -575,177 +624,6 @@ namespace hlae {
 
 		}
 #pragma endregion
-
-
-private: System::Void PaintPicPreview(System::Object^  sender, System::Windows::Forms::PaintEventArgs^  e) {
-			 int w = picPreview->ClientSize.Width - 1;
-			int h = picPreview->ClientSize.Height - 1;
-
-			Point ptBkLeft, ptBkRight,ptBkDown;
-			Point ptRtLeft, ptRtRight,ptRtDown;
-			Point ptFtLeft, ptFtRight,ptFtDown;
-			Point ptLfLeft, ptLfRight,ptLfDown;
-			Point ptUpLeft, ptUpRight,ptUpDown;
-			Point ptDnLeft, ptDnRight,ptDnDown;
-
-			bool bDAll = false;
-
-			if(this->radioPrePer->Checked)
-			{
-				Point ptBoxUpLeft   = Point(0         , h >> 2);
-				Point ptBoxUpTop    = Point(w >> 1    , 0);
-				Point ptBoxUpRight  = Point(w         , h >> 2);
-				Point ptBoxUpBottom = Point(w >> 1    , (h>>1));
-
-				Point ptBoxDnLeft   = Point(0         , (h*3) >> 2);
-				Point ptBoxDnTop    = Point(w >> 1    , (h>>1));
-				Point ptBoxDnRight  = Point(w         , (h*3) >> 2);
-				Point ptBoxDnBottom = Point(w >> 1    , h);
-
-				ptBkLeft  = ptBoxUpLeft;
-				ptBkRight = ptBoxUpTop;
-				ptBkDown  = ptBoxDnLeft;
-
-				ptRtLeft  = ptBoxUpTop;
-				ptRtRight = ptBoxUpRight;
-				ptRtDown  = ptBoxDnTop;
-
-				ptFtLeft  = ptBoxUpRight;
-				ptFtRight = ptBoxUpBottom;
-				ptFtDown  = ptBoxDnRight;
-
-				ptLfLeft  = ptBoxUpBottom;
-				ptLfRight = ptBoxUpLeft;
-				ptLfDown  = ptBoxDnBottom;
-				
-				ptUpLeft  = ptBoxUpLeft;
-				ptUpRight = ptBoxUpBottom;
-				ptUpDown  = ptBoxUpTop;
-
-				ptDnLeft  = ptBoxDnTop;
-				ptDnRight = ptBoxDnRight;
-				ptDnDown  = ptBoxDnLeft;
-
-			} else {
-				bDAll = true;
-
-				array<int> ^ iY = { 0, (1*h)/3, (2*h)/3, h };
-				array<int> ^ iX = { 0, (1*w)/4, (2*w)/4, (3*w)/4, w };
-
-				ptBkLeft  = Point(iX[0],iY[1]);
-				ptBkRight = Point(iX[1],iY[1]);
-				ptBkDown  = Point(iX[0],iY[2]);
-
-				ptRtLeft  = Point(iX[1],iY[1]);
-				ptRtRight = Point(iX[2],iY[1]);
-				ptRtDown  = Point(iX[1],iY[2]);
-
-				ptFtLeft  = Point(iX[2],iY[1]);
-				ptFtRight = Point(iX[3],iY[1]);
-				ptFtDown  = Point(iX[2],iY[2]);
-
-				ptLfLeft  = Point(iX[3],iY[1]);
-				ptLfRight = Point(iX[4],iY[1]);
-				ptLfDown  = Point(iX[3],iY[2]);
-				
-				ptUpLeft  = Point(iX[1],iY[0]);
-				ptUpRight = Point(iX[2],iY[0]);
-				ptUpDown  = Point(iX[1],iY[1]);
-
-				ptDnLeft  = Point(iX[1],iY[2]);
-				ptDnRight = Point(iX[2],iY[2]);
-				ptDnDown  = Point(iX[1],iY[3]);
-			}
-
-			Drawing::Pen ^spen = gcnew Drawing::Pen(System::Drawing::Color::Red);
-
-			// Draw Images:
-
-			// Draw Down:
-			if(bDAll || this->checkPreDown->Checked)
-			{
-				array<Point>^ pta = {ptDnLeft, ptDnRight, ptDnDown };
-				e->Graphics->DrawImage(imageDown, pta);
-			}
-			// Draw Back:
-			if(bDAll || this->checkPreBack->Checked)
-			{
-				array<Point>^ pta = {ptBkLeft, ptBkRight, ptBkDown };
-				e->Graphics->DrawImage(imageBack, pta);
-			}
-			// Draw Right:
-			if(bDAll || this->checkPreRight->Checked)
-			{
-				array<Point>^ pta = {ptRtLeft, ptRtRight, ptRtDown };
-				e->Graphics->DrawImage(imageRight, pta);
-			}
-			// Draw Left:
-			if(bDAll || this->checkPreLeft->Checked)
-			{
-				array<Point>^ pta = {ptLfLeft, ptLfRight, ptLfDown };
-				e->Graphics->DrawImage(imageLeft, pta);
-			}
-			// Draw Front:
-			if(bDAll || this->checkPreFront->Checked)
-			{
-				array<Point>^ pta = {ptFtLeft, ptFtRight, ptFtDown };
-				e->Graphics->DrawImage(imageFront, pta);
-			}
-			// Draw Up:
-			if(bDAll || this->checkPreUp->Checked)
-			{
-				array<Point>^ pta = {ptUpLeft, ptUpRight, ptUpDown };
-				e->Graphics->DrawImage(imageUp, pta);
-			}
-
-			// Draw Selection:
-
-			bool bSelAll = this->radioSelSky->Checked;
-
-			// Draw Down:
-			if(bSelAll || this->radioSelDown->Checked)
-			{
-				Point ptT = Point(ptDnRight.X +ptDnDown.X - ptDnLeft.X, ptDnRight.Y +ptDnDown.Y - ptDnLeft.Y);
-				array<Point>^ pta = {ptDnLeft, ptDnRight, ptT, ptDnDown };
-				e->Graphics->DrawPolygon(spen, pta);
-			}
-			// Draw Left:
-			if(bSelAll || this->radioSelLeft->Checked)
-			{
-				Point ptT = Point(ptLfRight.X +ptLfDown.X - ptLfLeft.X, ptLfRight.Y +ptLfDown.Y - ptLfLeft.Y);
-				array<Point>^ pta = {ptLfLeft, ptLfRight, ptT, ptLfDown };
-				e->Graphics->DrawPolygon(spen, pta);
-			}
-			// Draw Front:
-			if(bSelAll || this->radioSelFront->Checked)
-			{
-				Point ptT = Point(ptFtRight.X +ptFtDown.X - ptFtLeft.X, ptFtRight.Y +ptFtDown.Y - ptFtLeft.Y);
-				array<Point>^ pta = {ptFtLeft, ptFtRight, ptT, ptFtDown };
-				e->Graphics->DrawPolygon(spen, pta);
-			}
-			// Draw Back:
-			if(bSelAll || this->radioSelBack->Checked)
-			{
-				Point ptT = Point(ptBkRight.X +ptBkDown.X - ptBkLeft.X, ptBkRight.Y +ptBkDown.Y - ptBkLeft.Y);
-				array<Point>^ pta = {ptBkLeft, ptBkRight, ptT, ptBkDown };
-				e->Graphics->DrawPolygon(spen, pta);
-			}
-			// Draw Right:
-			if(bSelAll || this->radioSelRight->Checked)
-			{
-				Point ptT = Point(ptRtRight.X +ptRtDown.X - ptRtLeft.X, ptRtRight.Y +ptRtDown.Y - ptRtLeft.Y);
-				array<Point>^ pta = {ptRtLeft, ptRtRight, ptT, ptRtDown };
-				e->Graphics->DrawPolygon(spen, pta);
-			}
-			// Draw Up:
-			if(bSelAll || this->radioSelUp->Checked)
-			{
-				Point ptT = Point(ptUpRight.X +ptUpDown.X - ptUpLeft.X, ptUpRight.Y +ptUpDown.Y - ptUpLeft.Y);
-				array<Point>^ pta = {ptUpLeft, ptUpRight, ptT, ptUpDown };
-				e->Graphics->DrawPolygon(spen, pta);
-			};
-			
-		 }
 
 private: System::Void PaintPicImage(System::Object^  sender, System::Windows::Forms::PaintEventArgs^  e) {
 		
@@ -771,6 +649,8 @@ private: System::Void Prev_CheckedChanged(System::Object^  sender, System::Event
 			 this->checkPreRight->Enabled = bE;
 			 this->checkPreUp->Enabled = bE;
 			 this->checkPreDown->Enabled = bE;
+
+			 this->labelHint->Visible = !bE;
 
 			 picPreview->Refresh();
 		 }
@@ -848,74 +728,11 @@ private: System::Void ImageOpClick(System::Object^  sender, System::EventArgs^  
  			 picImage->Refresh();
 			 picPreview->Refresh();
 		 }
-private: System::Void buttonLoad_Click(System::Object^  sender, System::EventArgs^  e) {
-			 if(Windows::Forms::DialogResult::OK == openImageDialog->ShowDialog(this) )
-			 {
-				 Image ^img;
-				 try
-				 {
-					 img = Image::FromFile(openImageDialog->FileName);
-				 }
-				 catch(...)
-				 {
-					 img = nullptr;
-					 MessageBox::Show(
-						 "Loading image file failed.",
-						 "Error",
-						 MessageBoxButtons::OK,
-						 MessageBoxIcon::Error
-					);
-				 };
+private:
+	System::Void buttonLoad_Click(System::Object^  sender, System::EventArgs^  e) {
+		LoadImage();
+ }
 
-				 if(img)
-				 {
-					int iw = img->Size.Width;
-					int ih = img->Size.Height;
-					
-					Bitmap ^bmp = gcnew Bitmap(iw, ih, Imaging::PixelFormat::Format24bppRgb);
-					Graphics ^gfx = Graphics::FromImage(bmp);
-					gfx->DrawImage(img, 0, 0, iw, ih);
-
-					// make sure the file is unlocked:
-					delete img;					
-
-					// Down:
-					if(this->radioSelDown->Checked)
-					{
-						imageDown = bmp;
-					}
-					// Left:
-					else if(this->radioSelLeft->Checked)
-					{
-						imageLeft = bmp;
-					}
-					// Front:
-					else if(this->radioSelFront->Checked)
-					{
-						imageFront = bmp;
-					}
-					// Back:
-					else if(this->radioSelBack->Checked)
-					{
-						imageBack = bmp;
-					}
-					// Right:
-					else if(this->radioSelRight->Checked)
-					{
-						imageRight = bmp;
-					}
-					// Up:
-					else if(this->radioSelUp->Checked)
-					{
-						imageUp = bmp;
-					}
-
- 					 picImage->Refresh();
-					 picPreview->Refresh();
-
-				 }
-			 }
-		 }
 private: System::Void buttonExport_Click(System::Object^  sender, System::EventArgs^  e) {
 			try
 			{
@@ -949,5 +766,8 @@ private: System::Void buttonExport_Click(System::Object^  sender, System::EventA
 private: System::Void picPreview_ClientSizeChanged(System::Object^  sender, System::EventArgs^  e) {
 			 picPreview->Refresh();
 		 }
+private: System::Void picPreview_MouseClick(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e);
+
+private: System::Void picPreview_MouseDoubleClick(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e);
 };
 }
