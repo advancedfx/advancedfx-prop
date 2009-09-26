@@ -1,14 +1,13 @@
 HLAE 2.2.5.15 (2009-09-25T11:11Z)
 
-* removed "-demoedit" from the default launch options due to
-  DemoEdit being the source of outrageous memory usage and
-  thus performance hits and instability, while making users
-  wrongly asume HLAE being the source of the problem
+* removed "-demoedit" from the default launch options
+  since it may cause high memory usage, performance hits
+  and instabilty, while only a share of HLAE users use it
   
-* added: skymanager:
-	now supports a few .tga formats (24/32bit color uncompressed),
-    flat mode single click selects image / sky,
-    flat mode double click imports image
+* improved skymanager:
+  now supports a few .tga formats (24/32bit color uncompressed),
+  flat mode single click selects image / sky,
+  flat mode double click imports image
 
 Thanks to: Joakim, juGGaKNot, msthavoc
 

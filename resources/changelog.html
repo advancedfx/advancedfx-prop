@@ -1,0 +1,1760 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+  "http://www.w3.org/TR/html4/loose.dtd">
+
+<html>
+<head>
+<title>Half-Life Advanced Effects changelog</title>
+<style type="text/css">
+body {
+	background:#E0E0E0;
+}
+c_entry {
+	display:block;
+	background:#FFFFFF;
+	border-color:#808080;
+	border-style:solid;
+	border-width:1px;
+	margin-top:16pt;
+	margin-bottom:16pt;
+}
+c_title {
+	background-color:#E0E0FF;
+	display:block;
+	font-family:monospace;
+	font-weight:bold;
+}
+c_version {
+	display:inline;
+}
+c_time {
+	display:inline;
+}
+c_notelist {
+	background-color:#EFFFE0;
+	display:block;
+	font-family:monospace;
+}
+c_note:before {
+	content:"? ";
+	background-color:#FFFFE0;
+	font-weight:bold;
+}
+c_note {
+	display:block;
+	margin-top:8pt;
+	margin-bottom:8pt;
+}
+c_note.added:before {
+	content:"* ";
+}
+c_note.fixed:before {
+	content:"+ ";
+}
+c_note.removed:before {
+	content:"- ";
+}
+c_note.replaced:before {
+	content:"R ";
+}
+c_note.updated:before {
+	content:"U ";
+}
+</style>
+</head>
+<body>
+
+
+<h1>Half-Life Advanced Effects changelog</h1>
+
+<c_entry>
+<c_title>HLAE <c_version>2.2.5.15</c_version> (<c_time>2009-09-25T11:11Z</c_time>)</c_title>
+<c_notelist>
+<c_note class="removed">
+removed "-demoedit" from the default launch options
+since it may cause high memory usage, performance hits
+and instabilty, while only a share of HLAE users use it
+</c_note>
+<c_note class="updated">
+improved skymanager:
+now supports a few .tga formats (24/32bit color uncompressed),
+flat mode single click selects image / sky,
+flat mode double click imports image
+</c_note>
+</c_notelist>
+Thanks to: Joakim, juGGaKNot, msthavoc
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.2.5.14</c_version> (<c_time>2009-09-01T07:26Z</c_time>)</c_title>
+<c_notelist>
+<c_note class="added">
+added mirv_camimport_* features from HLAE BETA branch
+</c_note>
+<c_note class="replaced">
+replaced mirv_movie_export_cammotion with mirv_camexport_*
+</c_note>
+<c_note class="fixed">
+fixed sign of Xposition and Xrotation
+The HLAE camera motion import plugins need to be updated.
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.2.5.12</c_version> (<c_time>2009-07-17T06:22Z</c_time>)</c_title>
+<c_notelist>
+<c_note class="fixed">
+fixed typo in an address which would affect mirv_voice_block
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.2.5.11</c_version> (<c_time>2009-07-16T18:18Z</c_time>)</c_title>
+<c_notelist>
+<c_note class="updated">
+adapted addresses to Steam update (15th of July 2009)
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.2.5.10</c_version> (<c_time>2009-07-11T16:00Z</c_time>)</c_title>
+<c_notelist>
+<c_note class="fixed">
+fixed further related quirks
+</c_note>
+</c_notelist>
+Thanks to RobuLuS for helping with testing.
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.2.5.9</c_version> (<c_time>2009-07-11T07:40Z</c_time>)</c_title>
+<c_notelist>
+<c_note class="fixed">
+addressed flaw(s) with memory access protection handling
+which could cause HLAE to crash
+</c_note>
+<c_note class="added">
+added __mirv_gl_previewclear (default 1) so wireframe can be previewed
+without having to use mirv_movie_simulate 1
+</c_note>
+</c_notelist>
+Thanks to RADiANCE.atom0s (eXtalia.Wiccaan).
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.2.5.8</c_version> (<c_time>2009-05-22T15:29Z</c_time>)</c_title>
+<c_notelist>
+<c_note class="added">
+added mirv_zoom_digital_x, mirv_zoom_digital_y
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.2.5.7</c_version> (<c_time>2009-05-20T07:50Z</c_time>)</c_title>
+<c_notelist>
+<c_note class="adapted">
+adapted mdt_addresses.ini to Steam / CS 1.6 Update (19th May 2009)
+</c_note>
+</c_notelist>
+We did not have time for testing the new addresses, please report broken
+features that worked previously.
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.2.5.6</c_version> (<c_time>2009-04-23T20:25Z</c_time>)</c_title>
+<c_notelist>
+<c_note class="fixed">
+squashed old bugs related to using a width not dividable by 4
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.2.5.5</c_version> (<c_time>2009-04-23T14:21Z</c_time>)</c_title>
+<c_notelist>
+<c_note class="fixed">
+fixed mistake in R_RenderView address
+</c_note>
+</c_notelist>
+</c_entry>
+
+<c_entry>
+<c_title>HLAE <c_version>2.2.5.4</c_version> (<c_time>2009-04-23</c_time>)</c_title>
+<c_notelist>
+<c_note class="updated">
+adapted to Counter-Strike 1.6 update (22th April 2009)
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.2.5.3</c_version> (<c_time>2009-04-22</c_time>)</c_title>
+<c_notelist>
+<c_note class="updated">
+adapted to Steam Update (20th April 2009)
+</c_note>
+<c_note class="updated">
+changed some address label names in mdt_addresses.ini
+</c_note>
+</c_notelist>
+Thanks to forum users that helped testing the unofficial nightly build:<br />
+neyloc, Zealot, endless, ...<br />
+<br />
+If you still happen to find features not working,
+please contact us in the Bug Reporting forums.
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.2.5.1</c_version> (<c_time>2009-04-13</c_time>)</c_title>
+<c_notelist>
+<c_note class="updated">
+polished Sky Manger
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.2.5.0</c_version> (<c_time>2009-04-13</c_time>)</c_title>
+<c_notelist>
+<c_note class="updated">
+added HLAE Sky Manager, located in Tools menu,
+</c_note>
+<c_note class="updated">
+mirv_fx_skyhd: fixed 24rgb bitmap loading bug
+</c_note>
+<c_note class="updated">
+mirv_fx_skyhd:<br />
+  1 - load sky from files (HLAE Sky Manger + Terragen compatible)<br />
+  2 - for loading old HLAE skies<br />
+</c_note>
+</c_notelist>
+Thx to msthavoc and juGGaKNot for testing.
+</c_entry>
+
+  
+<c_entry>
+<c_title>HLAE <c_version>2.2.3.6</c_version> (<c_time>2009-02-13</c_time>)</c_title>
+<c_notelist>
+<c_note class="updated">
+improved mirv_voice_block
+</c_note> 
+<c_note class="updated">
+changed IDE to VC++ 2008 Express Ed.
+</c_note>
+<c_note class="fixed">
+fixed private side by side CRT assembly version mismatch
+</c_note>
+</c_notelist>
+</c_entry>
+  
+
+<c_entry>
+<c_title>HLAE <c_version>2.2.3.4</c_version> (<c_time>2009-02-05</c_time>)</c_title>
+<c_notelist>
+<c_note class="fixed">
+fixed and improved mirv_crosshair_fps (cstrike crosshair fix):<br />
+  - it should be accurate now<br />
+  - when enabled there should be no difference between hudalpha and hudcolor
+    streams<br />
+  For more information read the online manual / command reference.
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.2.3.3</c_version> (<c_time>2009-01-29</c_time>)</c_title>
+<c_notelist>
+<c_note class="fixed">
+fixed bug with selection of custom mods (thx to Fana)
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.2.3.2</c_version> (<c_time>2009-01-25</c_time>)</c_title>
+<c_notelist>
+<c_note class="fixed">
+changed mirv_movie_separate_hud (should fix missing awp ch problem)
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.2.3.1</c_version> (<c_time>2009-01-19</c_time>)</c_title>
+<c_notelist>
+<c_note class="added">
+added mirv_movie_bmp,
+  if set to 1 mirv will export Windows V3 bitmaps (.bmp)
+  instead of tgas with best effort
+</c_note>
+<c_note class="updated">
+tweaked TGA header output (palette entry size as suggested by msthavoc)
+</c_note>
+<c_note class="updated">
+changed launcher: made selection of custom mods more obvious again
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.2.2.0</c_version> (<c_time>2009-01-04</c_time>)</c_title>
+<c_notelist>
+<c_note class="added">
+added mirv_noadverts, replaces and fixes mirv_movie_noadverts.
+  In order for this to work the map must be loaded / you must be ingame.
+</c_note>
+<c_note class="added">
+added mirv_decalfilter
+</c_note>
+<c_note class="added">
+added crappy calculator to the tools menu
+</c_note>
+<c_note class="updated">
+internal tweaks
+</c_note>
+</c_notelist>
+Greetings:
+  Anthony Perfetto (style-productions.net)
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.2.1.0</c_version> (<c_time>2008-11-15</c_time>)</c_title>
+<c_notelist>
+<c_note class="added">
+added cstrike crosshair fix:<br />
+  <br />
+  mirv_crosshair_fps n<br />
+    set n to the fps (sps in case you use the sampling system)
+    you will be recording your movie at.<br />
+    <br />
+    Related debug command: __mirv_crosshair_base_fps
+    (HLAE / Mirv will scale the crosshair cool-down from
+    __mirv_crosshair_base_fps to mirv_crosshair_fps)<br />
+	<br />
+	Well you wanted it, there you have it.
+</c_note>
+<c_note class="updated">
+various tweaks
+</c_note>
+<c_note class="fixed">
+restored mirv_playercolors_cs
+  (In case no one claims to use this command we'll most likely remove
+  it sooner or later, since updating it is a mess :)
+</c_note>
+</c_notelist>
+Greetings:<br />
+  Mirvin_Monkey (where ever you may sneak around)<br />
+  FragMonkey, juGGaKNot, msthavoc<br />
+  S.o. related to 1999-2001 (I am not 100% sure who is who).
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.1.6.0</c_version> (<c_time>2008-11-10</c_time>)</c_title>
+<c_notelist>
+<c_note class="added">
+added crappy check to the launcher if HL is already running
+</c_note>
+<c_note class="fixed">
+fixed potential flaw that could lead to matte color not being
+  reforced as glClearColor (thanks to user "yes.")
+</c_note>
+<c_note class="added">
+added possibility for other tools (i.e. demo players) to interface
+  with HLAE. This feature will be documented in the HLAEwiki
+  online manual in the appendix section (including source code)
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.1.5.13</c_version> (<c_time>2008-11-02</c_time>)</c_title>
+<c_notelist>
+<c_note class="fixed">
+fixed wrong p_playermove_s address:
+  (affects aiming system and 1st person detection in fixforcehltv mode)
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.1.5.12</c_version> (<c_time>2008-10-29</c_time>)</c_title>
+<c_notelist>
+<c_note class="fixed">
+fixed bug that would invert the fullscreen checkbox behavior
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.1.5.11</c_version> (<c_time>2008-10-28</c_time>)</c_title>
+<c_notelist>
+<c_note class="fixed">
+fixed mirv_fx_noblend address
+</c_note>
+<c_note class="added">
+re-added temporary fullscreen option (use with care,
+  might go away in the future again)
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.1.5.10</c_version> (<c_time>2008-10-27</c_time>)</c_title>
+<c_notelist>
+<c_note class="updated">
+changed behavior upon game connecting to a server
+  (More safety for those that prefer working airbags in case sanity fails. :)
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.1.5.9</c_version></c_title>
+Updating is recommended!
+<c_notelist>
+<c_note class="fixed">
+fixed miscalculated p_r_refdef value for in the mdt_addresses.ini
+  that could cause a crash upon recording
+</c_note>
+</c_notelist>
+Thanks to "spunge" for reporting the bug on the forums
+and helping us debugging it down! :)
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.1.5.8</c_version> (<c_time>2008-10-25</c_time>)</c_title>
+<c_notelist>
+<c_note class="updated">
+updated addresses (second 2008-10-24 Steam HL1 Engine update)
+</c_note>
+</c_notelist>
+Greetings:<br />
+  Mirvin_Monkey, FragMonkey and 5.5.<br />
+<br />
+Thanks to:<br />
+  juGGaKNot (HLAE Team) and msthavoc (HLAE Team)
+  for helping with testing.<br />
+<br />
+Tip:<br />
+  You can also use FragMonkeys COL DemoPlayer to convert old demos:<br /> http://lacomplexity.thecgs.com/coL_16_Player_-_Update_Proof<br />
+  HLAE has such a feature too, but it is not 100% complete yet and
+  might not work in some cases.
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.1.5.6</c_version> (<c_time>2008-10-25</c_time>)</c_title>
+<c_notelist>
+<c_note class="updated">
+rolls out the .NET 2.0 based launcher (former 2008-10-19 beta)
+  Thus Microsoft .NET 2.0 framework is required.
+</c_note>
+<c_note class="updated">
+updated hooking functions and addresses system
+  (2008-10-24 Steam HL1 Engine update)
+</c_note>
+</c_notelist>
+Please note:
+  mirv_playercolors_cs might be temporarily inavailable
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.1.0.1</c_version> (<c_time>2008-10-14</c_time>)</c_title>
+<c_notelist>
+<c_note class="updated">
+simplified mirv_movie_depthdump behavior (moved old logic to
+  new deug command __mirv_depth_bpp)
+</c_note>
+<c_note class="added">  
+added __mirv_depth_bpp
+</c_note>
+<c_note class="added">
+added mirv_depth_streams, allows to mask out streams
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.1.0.0</c_version> (<c_time>2008-09-28</c_time>)</c_title>
+<c_notelist>
+<c_note class="fixed">
+fixed potential flaws related to the matte system,
+  thus upgrading is recommended
+</c_note>
+<c_note class="removed">
+removed mirv_movie_oldmatte
+</c_note>
+<c_note class="updated">
+Improved the wallhack / vision extension.
+  Users should notice complete visibility of players for HLTV demos
+  when using the wh effect i.e. (the way it was intended to be in the first
+  place :)
+</c_note>
+<c_note class="added">
+added mirv_fx_xtendvis, default 0
+  Can be used to extend the vision (i.e. useful for HLTV demos)
+  when mirv_wh_enable is 0, otherwise it will be overridden.
+</c_note>
+<c_note class="added">
+added mirv_matte_xray, default 0
+  If enabled elements otherwise masked (i.e. walls) will be completely hidden
+  from the entity stream
+  could be useful in combination with mirv_fx_xtendvis!
+</c_note>
+<c_note class="added">
+extended mirv_movie_swapweapon: 2 will force it to the entity stream
+</c_note>
+</c_notelist>
+Check HLAE's Command Reference in the online manual for more information
+(see http://advancedfx.org/ ).
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.0.3.0</c_version> (<c_time>2008-09-18</c_time>)</c_title>
+<c_notelist>
+<c_note class="added">
+Added ability to block screen blends: mirv_fx_noblend 1
+  This will i.e. block Counter-Strike 1.6 flash grenades.
+</c_note>
+<c_note class="updated">
+appended historical changelogs to the changelog
+</c_note>
+</c_notelist>
+CU in November or somewhen.<br />
+Thx to 'juggaknot' for having helped moderating the forum a bit.<br />
+PS: MIRVIN_Monkey rulz!
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.0.2.3</c_version> (<c_time>2008-08-17</c_time>)</c_title>
+<c_notelist>
+<c_note class="removed">
+removed code that was probably never used in practical operation,
+  that would support reading from other buffers than GL_BACK
+</c_note>
+<c_note class="updated">  
+when splitstreams is 2 the world frame that still gets rendered for
+  technical reasons is not displayed anymore to avoid user confusion
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.0.2.2</c_version> (<c_time>2008-08-10</c_time>)</c_title>
+<c_notelist>
+<c_note class="added">  
+added mirv_disable_specmenu 0|1<br />
+  Supported modifications: ag, tfc, ns, valve(Half-Life).
+  The mods cstrike and dod are not supported since they don't use the old
+  specmenu and i.e. for cstrike the specmenu can be hidden by modifying a
+  .res file (see various game movie making sites for more info).
+</c_note>
+<c_note class="removed">
+removed mirv_tfc_specmenu command which is replaced by mirv_disable_specmenu
+</c_note>
+</c_notelist>
+</c_entry>
+
+<c_entry>
+<c_title>HLAE <c_version>2.0.2.1</c_version> (<c_time>2008-08-01</c_time>)</c_title>
+<c_notelist>
+<c_note class="updated">  
+improved dem_forcehltv 1 fix behaviour: the player that recorded the
+  in-eye demo may also now be seen from other's in-eye as users would
+  expect from the fix
+</c_note>
+<c_note class="fixed">  
+fixed typo / bug that would waste rendering time and might enable depth
+  comparison in unwanted situations
+</c_note>
+<c_note class="removed">   
+removed unused output panel in old public gui
+</c_note>
+</c_notelist>
+</c_entry>
+
+<c_entry>
+<c_title>HLAE <c_version>2.0.2.0</c_version> (<c_time>2008-07-25</c_time>)</c_title>
+Thanks to Martin Vaissie for beta testing.
+
+There was no time for spell checking this changelog entry, sorry.
+<c_notelist>
+<c_note class="added">  
+Added EXPERIMENTAL sampling system (main image stream only).
+  A short description is appended bellow, a more extended description
+  can be found in the HLAE Wiki (not finished yet) in Manual named
+  'Sampling System' soon.<br />
+<br />
+The sampling system only works when no additional image streams
+  are enabled. (At least for now)<br />
+<br />
+mirv_movie_fps<br />
+  determines the fps outputted (default 30)<br />
+
+mirv_sample_enable<br />
+  0: disabled (default)<br />
+  1: enable test sampling system<br />
+<br />
+mirv_sammple_sps<br />
+  Samples Per Second, this is the FPS the game
+  will be captured at (default 180)<br />
+<br />
+__mirv_sample_smethod<br />
+  Integral approximation method<br />
+  0: 1 point (rectangle)<br />
+  1: 2 point (trapezoid) (default)<br />
+<br />
+__mirv_sample_ffunc<br />
+  FrameFunction, rates the significance of a sample based on
+  when in relation to the middle of the frame it comes in.<br />
+  0: const / rectangle (default)<br />
+  1: gauss like (linearly interpolated table with 2*128 entries)<br />
+<br />
+__mirv_sample_colorh<br />
+  0: RedGreenBlue are handled independent (default)<br />
+  1: RGB are equally scaled by their average (not sure why I added this)<br />
+  2: RGB are equally scaled by their sRGB Luma value (not sure why I added this)<br />
+<br />
+__mirv_sample_addoverlap<br />
+  Additionally overlaps the frames.
+  Actually this makes sense for the gauss frame function only
+  in my opinion (you might want to add 1-2 additionally here for gauss),<br />
+</c_note>
+</c_notelist>
+Greetz:
+  Martin Vaissie
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.0.1.8</c_version> (<c_time>2008-07-15</c_time>)</c_title>
+<c_notelist>
+<c_note class="removed">  
+removed __mirv_movie_fpscap - fps are not capped anymore by default, users
+  may now set as they want or till the program blows up or causes a division
+  by zero error :)
+</c_note>  
+<c_note class="updated">  
+matte system changes:
+  The matte system has undergone slight internal changes in oder to prepare
+  planned features and also to fix the annoyances / problems of the
+  previous implementations
+</c_note>  
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.0.1.7</c_version> (<c_time>2008-05-05</c_time>)</c_title>
+<c_notelist>
+<c_note class="added">  
+Added mirv_tfc_specmenu - allows to disable and enable spectator menu in Team Fortress Classic
+</c_note>  
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.0.1.6</c_version> (<c_time>2008-05-03</c_time>)</c_title>
+<c_notelist>
+<c_note class="added">  
+Added mirv_matte_entities to improve and thus replace mirv_movie_onlyentity,
+  enter mirv_matte_entities into console for more info.
+</c_note>   
+<c_note class="removed">  
+Removed mirv_movie_onlyentity
+</c_note> 
+<c_note class="fixed">  
+Fixed typo in launcher that would cause problems when launching TFC mod
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.0.1.5</c_version> (<c_time>2008-04-29</c_time>)</c_title>
+<c_notelist>
+<c_note class="fixed">  
+linked MS VC++ Runtime to the hlae.exe to avoid users being unable
+  to launch HLAE (They saw the error message "This application has failed
+  to start because the application configuration is incorrect. Reinstalling
+  the application may fix this problem.")
+  Not the nicest way to fix this, but does it for now.
+  Thx to azrazr for testing.
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.0.1.4</c_version> (<c_time>2008-04-27</c_time>)</c_title>
+<c_notelist>
+<c_note class="fixed">  
+Fixed -hlaealpha8 not working
+</c_note>
+<c_note class="added">  
+Added __mirv_movie_fpscap<br />
+    1: default<br />
+    0: disables the 1000 fps cap on mirv_movie_fps for testing purposes
+</c_note>
+</c_notelist>
+Greetz and thanks to:
+  MN|VadoskiN, juGGaKNot, you.
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.0.1.3</c_version> (<c_time>2008-04-21</c_time>)</c_title>
+<c_notelist>
+<c_note class="updated">  
+Improved behaviour of 'Undock' capture mode.
+</c_note>
+<c_note class="fixed">  
+Fixed game behaviour when window is deactivated (i.e. due to windows key,
+  etc.).
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.0.1.2</c_version> (<c_time>2008-04-19</c_time>)</c_title>
+<c_notelist>
+<c_note class="fixed">  
+Fixed:
+  Bug that affected performance when using FBO (still bad FPS after filming
+  was stopped in case switching FBOs is slow on the gfx card).
+</c_note>
+</c_notelist>
+</c_entry>
+
+<c_entry>
+<c_title>HLAE <c_version>2.0.1.1</c_version> (<c_time>2008-04-17</c_time>)</c_title>
+<c_notelist>
+<c_note class="fixed">  
+Added missing file to download, in case you already downloaded 2.0.1
+please re-download!
+Sorry : )
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.0.1.0</c_version> (<c_time>2008-04-17</c_time>)</c_title>
+This is release is mainly for making the HLAE Gui more reliable, thus we'll
+also stop offering two different versions (stable and pre-release). 
+<c_notelist>
+<c_note class="added">  
+Added:
+  Support for rendering to other targets than the default window buffer.
+  The most important one is EXT_framebuffer_object, which allows off-screen
+  rendering for cards that support it:
+  This fixes problems with missing contents in the capture (i.e. due parts of
+  the window not being visible), which especially happened to NVIDIA card
+  users.
+  The new target(s) can be selected from the HLAE File->Launch dialog.
+</c_note>
+<c_note class="added">  
+Added:
+  HLAE hooks the connect command, to warn the user in case the user selects to
+  join a server while HLAE is running (which is strongly not recommended).
+  HLAE may fetch some but not all attempts, so as always: better count on your
+  brain before you have to count on the airbag ;)
+</c_note>
+<c_note class="added">  
+Added:
+  -hlaealpha8 launchoption<br />
+  This is only relevant in case you capture the hud_alpha stream atm.
+  It's not required in case you already use EXT_framebuffer_object.
+  If you don't have problems with the hud_alpha stream, don't use this option.
+</c_note>
+<c_note class="added">  
+Added:
+  Icon (thx to guys that programed Inkscape and GIMP 2)
+</c_note>
+<c_note class="updated">  
+Renamed:
+  mirv_placyercolors to mirv_placercolors_cs
+</c_note>
+<c_note class="removed">  
+Removed:
+  __mirv_movie_oldcapture, mirv_movie_customdump, mirv_menu
+</c_note>
+</c_notelist>
+ Thanks to:
+   msthavoc and MN|vadoskin for testing,
+   neomic and ripieces for coding,
+   Valve for not suing us( yet).
+   The HLAE forum users for their creative input, we hope we'll
+   be able to add at least some of the things being suggested in the future,
+   but we won't promise anything( as always).
+</c_entry>
+
+<c_entry>
+<c_title>HLAE <c_version>2.0.0.3</c_version> (<c_time>2008-04-06</c_time>)</c_title>
+<c_notelist>
+<c_note class="updated">  
+Adapted HLAE to the 2008-04-14 H-L engine update
+  (updated mdt_addresses.ini)
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.0.0.2</c_version> (<c_time>2008-04-06</c_time>)</c_title>
+This time we got some colors for L. 'spunge' M.:
+<c_notelist>
+<c_note class="added">  
+Added: mirv_playercolors<br />
+  This allows to control the hudtext player colors per playerid.<br />
+  For each playerid the following colors can be controlled independently:
+    attacker's deathnotice color,
+    victim's deathnotice color,
+    head-up color (overview + playername head-up).<br />
+  For more information enter the command into console or see HLAE wiki.
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>HLAE <c_version>2.0.0.0</c_version> pre-release (<c_time>2008-03-21</c_time>)</c_title>
+As always the following text contains many mistakes (as most changelog
+entries) due to lack of time and dedication to writing changelogs.
+<c_notelist>
+<c_note class="updated">  
+Changed: The MDT project has now been renamed to
+           Half-Life Advanced Effects (HLAE)
+</c_note>
+<c_note class="added">  
+Added: The HLAE Graphical User Interface, which will be extended in the
+         future. The GUI is based on wxWidgets ( http://www.wxwidgets.org/ ).
+</c_note>         
+<c_note class="updated">  
+Changed: The MDTloader has been integrated into the HLAE Gui.
+           Select File->Launch from the menu to bring it up.
+</c_note>
+<c_note class="added">  
+Added: DemoTools: select Tools->Demo Tool form the menu.<br />
+         This tool migrates 2 old tools into the GUI:<br />
+         DemoCleanup by MirvinMonkey:<br />
+           Remove scoreboard, commandmenu, ...<br />
+           Added ability to block other commands too.<br />
+         Half-Life Demo Fix by ripieces:<br />
+           Repair demos that were recorded while the game crashed.
+           Added ability to repair more than 2 segments.<br />
+         And adds a new one:<br />
+         dem_forcehltv 1 camera stuck fix:<br />
+           Tries to fix the camera being stuck when using dem_forcehltv 1
+           with some in-eye demos.<br />
+</c_note>  
+<c_note class="added">  
+Added: mirv_voice_block (for John 'VAFarmboy' D.)<br />
+         this command allows blocking the voice data of specific players
+</c_note>  
+<c_note class="updated">  
+Changed: mirv_fixforcehltv defaults to 0 again, mirv will try to autodetect
+           the dem_forcehltv setting and set fixforcehltv accordingly
+</c_note>  
+<c_note class="added">  
+Added: command hooks: dem_forcehltv, startmovie, endmovie
+</c_note>  
+<c_note class="added">  
+Added: __mirv_listplayers, __mirv_debug_cmdaddress,
+         __mirv_debug_devicecontext
+</c_note>  
+</c_notelist>
+Thanks to:
+    Everyone (including you).
+    iD Software, matrixstorm, MetaMod, Microsoft, Valve Software, wxWidgets.
+    Uwe Gierlich for his informations about the Half-Life .dem file format.
+    Mirvin_Monkey for creating the former MDT.
+    neomic for his enormous work on the HLAE Gui.  
+	Myself (ripieces) for wasting so much time on this project.
+</c_entry>
+
+
+<c_entry>
+<c_title>MDT <c_version>1.1.3.97</c_version> (<c_time>2008-02-06</c_time>)</c_title>
+<c_notelist>
+<c_note class="updated">  
+Changed: Exposed more of MDTs internas to the mdt_addresses.ini to make it
+           more community friendly and increase potential for customization
+</c_note>  
+</c_notelist>
+</c_entry>
+
+		   
+<c_entry>
+<c_title>MDT <c_version>1.1.3.95</c_version> (<c_time>2008-02-06</c_time>)</c_title>
+<c_notelist>
+<c_note class="fixed">  
+Fixed: fixed the fix
+</c_note>  
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>MDT <c_version>1.1.3.93</c_version> (<c_time>2008-02-05</c_time>)</c_title>
+<c_notelist>
+<c_note class="fixed">  
+Fixed: Problems / crashes with resolutions when the width was not dividable
+         by 4. MDT should handle those properly now, however the performance
+         of those may be a bit worse than those that are dividable by 4. (Bug
+         reported by s0nkite). Please be aware that several codecs and video
+         editing programs might not support these resolutions. 
+</c_note>  
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>MDT <c_version>1.1.3.46</c_version> (<c_time>2008-02-01</c_time>)</c_title>
+<c_notelist>
+<c_note class="added">
+Added: mirv_aim_offset right up forward<br />
+         Allows to set a offset relative to the entities origin and orientation.
+         Example: mirv_aim_offset 0 16.5 -20 would aim behind a players head
+</c_note>  
+<c_note class="added">
+Added: __mirv_aim_maxspeed, __mirv_aim_accel, __mirv_aim_deaccel<br />
+         Those allow to adjust the camera man aiming simulation parameters.
+         (Only used when mirv_aim_snapto is 0)
+</c_note>  
+</c_notelist>
+</c_entry>
+
+		 
+<c_entry>
+<c_title>MDT <c_version>1.1.3.1</c_version> (<c_time>2008-01-31</c_time>)</c_title>
+<c_notelist>
+<c_note class="updated">
+The MDT Loader.exe has been updated and will try to remember some of the
+settings made when launching a game with it in extended mode and will set
+them for the next time. Except the selection of the loader mode all loader
+settings should be remembered.
+</c_note>  
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>MDT <c_version>1.1.3.0</c_version> (<c_time>2008-01-26</c_time>)</c_title>
+<c_notelist>
+<c_note class="added">
+Added: mirv_fx_skyhd 0|1<br />
+         0 - off<br />
+         1 - on:<br />
+         MDT will look in the folder where the HL.exe of your game is located
+         for the files mdtskyrt.bmp, mdtskybk.bmp, mdtskylf.bmp, mdtskyft.bmp,
+         mdtskyup.bmp, mdtskydn.bmp and use those to replace the skybox.
+         Those work basically the same like the original skies, except that they
+         are 24 bit TrueColor bitmaps, can have a higher resolution
+         (i.e. 512x512) and are turned upside-down.
+         This MDT version will include a example sky for testing and
+         understanding. For later versions refer to the HLAEwiki instead then.
+</c_note>  
+</c_notelist>
+Greetz: C-M | s0nkite for going on my nerves and wanting a friggin
+          High Defintion skybox feature in MDT and creating the example sky.
+</c_entry>
+
+
+<c_entry>
+<c_title>MDT <c_version>1.1.2.21</c_version> (<c_time>2008-01-10</c_time>)</c_title>
+<c_notelist>
+<c_note class="fixed">
+Fixed: crashbug after recording when using sound export with the latest
+         Steam update.
+</c_note>
+</c_notelist>
+</c_entry>
+
+		 
+<c_entry>
+<c_title>MDT <c_version>1.1.2.20</c_version> (<c_time>2008-01-10</c_time>)</c_title>
+<c_notelist>
+<c_note class="fixed">
+Fixed: adapted MDT to the latest Steam update.
+         If you happen to find features of MDT that are still broken, then
+         please report those to the forum:
+         http://www.madabouthats.org/code-mdt/index.php
+</c_note>
+<c_note class="fixed">
+Fixed: some minor changes in the handling of the mdt_addresses.ini
+</c_note>
+</c_notelist>
+With kind regards
+the MDT team.
+</c_entry>
+
+
+<c_entry>
+<c_title>MDT <c_version>1.1.2.0</c_version> (<c_time>2008-01-10</c_time>)</c_title>
+<c_notelist>
+<c_note class="added">
+Added: mirv_movie_noadverts 0|1<br />
+         You need to start recording before you can see a difference.
+         This allows to remove the InGame Advertisements (IGAs) in levels
+         during movie recording.
+</c_note>
+</c_notelist>
+</c_entry>
+         
+
+<c_entry>
+<c_title>MDT <c_version>1.1.1.96</c_version> (<c_time>2008-01-05</c_time>)</c_title>
+<c_notelist>
+<c_note class="fixed">
+Fixed: Flaw in new matte system that would cause problems with detail
+  textures.
+</c_note>
+</c_notelist>
+Note, you might need to disable r_detailtextures in case you use the
+mirv_fx_lightmap feature.
+</c_entry>
+
+
+<c_entry>
+<c_title>MDT <c_version>1.1.1.87</c_version> (<c_time>2007-12-30</c_time>)</c_title>
+<c_notelist>
+<c_note class="updated">
+Changed: The matte system to avoid some problems with players not masked in
+           the entity stream. In case the new method is causing problems you
+           can use the old method by setting __mirv_movie_oldmatte 1
+</c_note>
+<c_note class="updated">
+Changed: mirv_movie_simulate<br />
+   0 - anything is saved to disk<br />
+   1 - nothing is saved to disk(only simulate)<br />
+   2 - except the splitstreams (all / world / matte) anything
+	   additionally activated is still exported, useful if you only
+	   want to capture sound i.e. and don't want the images (although
+	   I wonder why you want sound without images)
+</c_note>
+<c_note class="added">
+Added: mirv_fx_lightmap (experimental)<br />
+         0 = off (default), 1 = show light maps, 2 = fullbright (no light maps)
+</c_note>
+<c_note class="updated">
+Changed: mirv_movie_only_entity now tries to mask other entities instead of
+    hiding them
+</c_note>
+</c_notelist>		   
+</c_entry>
+
+
+<c_entry>
+<c_title>MDT <c_version>1.1.1.0</c_version> XMAS 2007 (<c_time>2007-12-24</c_time>)</c_title>
+Hello, this is a special Christmas release :D<br />
+<br />
+At first we want to hint you to the HLAEwiki*, which already contains the Mirv
+Demo Tool command reference and will be extended in the future:
+http://www.hhg-clan.de/hlae/wiki<br />
+<br />
+Along some bonus tools you normally have to download separately (check the bonus
+folder in the zip) we also added some sweet extra candy to MDT itself:<br />
+<br />
+A built-in WallHack system : P
+<c_notelist>
+<c_note class="added">
+mirv_fx_wh_enable 0|1<br />
+  Default: 0<br />
+  Enable / Disable built in wh system.<br />
+  <br />
+  The wall hack system WILL ONLY WORK PROPERLY WHEN MDT IS IN RECORDING MODE:
+  To preview the final result you can use mirv_movie_simulate 1 (please
+  reffer to the HLAEwiki entry for more info on that command).<br />
+  <br />
+  All transparency stuff is not applied to the entity stream, but all other
+  streams. So there will be problems with the world depthdump when the wh is
+  enabled, because the z-Buffer check on walls is disabled to make the wh work.
+</c_note>
+<c_note class="added">
+mirv:fx_wh_alpha 0.0 - 1.0<br />
+  Default: 0.5<br />
+  Controls the alpha blending value of the walls (higher value = less
+  transparency)
+</c_note>
+<c_note class="added">
+mirv_fx_wh_additive 0|1<br />
+  Default: 1<br />
+  If enabled this blends the walls additive. The non additive mode (0) might
+  look a bit wrong in some cases due to OpenGL limitations (polygons overlap
+  in wrong order) but still looks good I guess, so try both : )
+</c_note>
+<c_note class="added">
+mirv_fx_wh_noquads 0|1<br />
+  Default: 0<br />
+  If enabled it makes some things like sprites etc. completely invisible.
+</c_note>
+<c_note class="added">
+mirv_fx_wh_tint_enable 0|1<br />
+  Default: 0<br />
+  If enabled the walls etc. will be tinted in a specific color you
+  can supply with the mirv_fx_wh_tint_colorf command.
+</c_note>
+<c_note class="added">
+mirv_fx_wh_tint_colorf 0.0-1.0 0.0-1.0 0.0-1.0<br />
+  Default: 0.0 0.5 1.0<br />
+  Allows to set a specific color for tinting the walls.
+  The 3 values are floating point values between 0.0 and 1.0
+  The order is R G B.
+</c_note>
+<c_note class="added">
+mirv_fx_wh_xtendvis 0|1<br />
+  Default: 1<br />
+  When enabled, this forces Half-Life to ignore the visibility checks.
+  This means you can see all walls and this is especially helpful
+  for HLTV demos, because in those you can see the CTs at their spawn
+  from the T spawn on de_dust2 and so on xD
+  (The use for in-eye demos is limited, except that your player hacked the
+  server :P
+  So in case the wh shows too much walls, then set it to 0, so you will
+  have the default H-L vis check enabled again :)
+</c_note>
+</c_notelist> 
+Thanks and greets too:<br />
+<br />
+C-M|s0nkite ( www.mattepainting.gr )<br />
+  for supplying the merry_xmas.jpg that is included in the download!<br />
+<br />
+msthavoc ( www.mst-gaming.de )<br />
+  for helping now and then with testing mdt and making tutorials :)<br />
+<br />
+<br />
+<br />
+Merry X-Mas to you guys then,<br />
+have fun, cya next year.<br />
+<br />
+* it's HLAEwiki, because MDT might get renamed in the far away future to
+  Half-Life Advanced Effects : )
+</c_entry>
+
+
+<c_entry>
+<c_title>MDT <c_version>1.1.0.29</c_version> (<c_time>2007-12-08</c_time>)</c_title>
+<c_notelist>
+<c_note class="fixed">
+Fixed: Various bugs that would affect stereo camera captures and
+         mirv_movie_cameraofs_cs.
+</c_note>
+<c_note class="fixed">
+Fixed: Bug that would cause MDT to ignore the pEngfuncs entry in the
+         addresses.ini config file on initialization.
+</c_note>
+<c_note class="updated">
+Changed: Default values for stereo cam mode, but you might want to use your
+           own anyways.
+</c_note>
+</c_notelist>
+Thanks: msthavoc (mst-gaming.de) for testing.
+</c_entry>
+
+
+<c_entry>
+<c_title>MDT <c_version>1.1.0.25</c_version> (<c_time>2007-11-02</c_time>)</c_title>
+<c_notelist>
+<c_note class="fixed">
+Fixed: Typo that would prevent the aiming system from ever being turned off.
+</c_note>
+<c_note class="fixed">
+Fixed: The aiming system assumed entities to be dead to early due to lack of
+         updates from the H-L network stream when it was paused (i.e. due to
+         dem_pause 1).
+         The aiming system now tries to detect, if the stream is paused.
+         However the detection is not perfect yet plus there might be still
+         problems when using very high fps when recording.
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>MDT <c_version>1.1.0.0</c_version> (<c_time>2007-10-25</c_time>)</c_title>
+Well there have been so many additions to MDT in the past, so that is why we
+are counting the minor version number 1up :)<br />
+<br />
+But even better there is some candy in it:
+<c_notelist>
+<c_note class="added">
+Added: mirv_movie_export_sound 0|1<br />
+         If set to 1 the experimental sound recording system is enabled which
+         will record the sound to a .wav in 22.050 kHz 16 Bit stereo quality.
+         It is recommended to turn s_eax and s_a3d of (set both to 0.0),
+         because it wasn't designed for those, but you can try if you want :)
+         With mirv_sound_volume (default 0.5) you can control the
+         clamping of the sound before it is outputted (this is necessary to
+         avoid hitting the peeks). The default value should be ok.
+</c_note>
+</c_notelist>
+Greetz: everyone that wants to be greeted + GabeN + MartinO :P<br />
+<br />
+Cheers!
+</c_entry>
+
+
+<c_entry>
+<c_title>MDT <c_version>1.0.60.251</c_version> (<c_time>2007-10-20</c_time>)</c_title>
+<c_notelist>
+<c_note class="added">
+Added: mirv_movie_simulate 0|1<br />
+	If set to 1 recording will not create any files (simulation mode), if
+	it runs too fast you can supply an additional delay in milli seconds
+	with mirv_movie_simulate_delay (1000 ms = 1 sec), be careful with
+	the delay ;)
+</c_note>
+</c_notelist>
+Thanks: cRZYFST (style-productions.net)
+</c_entry>
+
+
+<c_entry>
+<c_title>MDT <c_version>1.0.60.249</c_version> (<c_time>2007-10-18</c_time>)</c_title>
+<c_notelist>
+<c_note class="updated">
+Changed: exporting motion data in stereo mode will create two files now since
+	several programs had problems with handling BVH files with two roots
+	(not to mention an typo that was present in stereo mode heh).
+</c_note>
+</c_notelist>
+Thanks: msthavoc for testing.
+</c_entry>
+
+
+<c_entry>
+<c_title>MDT <c_version>1.0.60.248</c_version> (<c_time>2007-10-18</c_time>)</c_title>
+<c_notelist>
+<c_note class="updated">
+Changed: internal changes to the address config system.
+</c_note>
+<c_note class="updated">
+Changed: removed dependency on msvcp71.dll
+</c_note>
+<c_note class="added">
+Added: mirv_movie_export_cammotion 0|1<br />
+	creates Biovision (BVH) compatible motion data that can be imported
+	i.e. in Blender and 3ds Max.
+	The file will contain one root / bone named MdtCam in normal mode or
+	two roots / bones named MdtCamLeft and MdtCamRight in stereo mode.
+	The bone origin (head) is the view origin and the bone's end site (tip)
+	points 1 Unit into the forward direction.
+	Valve defines 1 Unit in H-L 1 / CS 1.6 as 1 Inch.
+</c_note>
+</c_notelist>
+</c_entry>
+        
+
+<c_entry>
+<c_title>MDT <c_version>1.0.60.152</c_version> (<c_time>2007-09-27</c_time>)</c_title>
+<c_notelist>
+<c_note class="added">
+Added: mirv_movie_separate_hud 0|1|2<br />
+         Set to 1 if you want to have an separate hud stream (, there should be
+         no hud on any of the other streams then).
+         By default there is also an "hudalpha" stream which you should use
+         to blend an black layer bellow and draw the "hudcolor" stream additive
+         onto it (since not all HUD elements are additive).
+         You can turn the hudalpha stream off if you don't need it by using
+	     mirv_movie_separate_hud 2 instead.
+</c_note>
+<c_note class="updated">
+Changed: Naming of output files to:
+           Name_Take#_StreamType[_StereoType]_Frame#.tga
+</c_note>
+</c_notelist>          
+I'd say one of the craziest versions ever : P
+</c_entry>
+
+
+<c_entry>
+<c_title>MDT <c_version>1.0.60.41</c_version> (<c_time>2007-09-23</c_time>)</c_title>
+<c_notelist>
+<c_note class="updated">
+Changed: New stream capturing system, now there will be no delay (was 1ms)
+           between the streams anymore.
+           If there are problems u can use the old one with
+           __mirv_movie_oldcapture 1 (is 0 by default).
+</c_note>
+<c_note class="added">
+Added: mirv_movie_stereomode, mirv_movie_stereo_centerdist and
+         mirv_movie_stereo_yawdegrees for faking stereo captures.
+         (True stereo captures would require adjustments of the projection.)
+         Set mirv_movie_stereomode 1 to enable stereo capturing.
+</c_note>
+</c_notelist>
+The HUD problems (only the (left) worldstream has the HUD if it is enabled)
+are not solved yet and remain the same as in previous versions.
+</c_entry>
+
+
+<c_entry>
+<c_title>MDT <c_version>1.0.60.9</c_version> (<c_time>2007-09-21</c_time>)</c_title>
+<c_notelist>
+<c_note class="added">
+Added: Ini system draft. Currently addresses can be changed manually.
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>MDT <c_version>1.0.60.7</c_version> (<c_time>2007-09-13</c_time>)</c_title>
+<c_notelist>
+<c_note class="fixed">
+Fixed: Valve's Steam community release broke MDT.
+         We (MIRVIN_Monkey, ripieces, neomic) hope this update makes MDT
+         working for you again :)
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>MDT <c_version>1.0.60.0</c_version> UNOFFICIAL (<c_time>2007-09-11</c_time>)</c_title>
+<c_notelist>
+<c_note class="added">
+Added: Capability to force resolutions, currently focused on windowed mode.
+	The loader has been extended to reflect and support those additions.
+	You will find a GUI for forcing specific resolutions when you switch
+	the MDT loader to extended mode.
+	Note: There are problems with forcing fullscreen (windowed mode is
+	recommended). Also the color depth seems to be limited to the desktop
+	depth or the last depth you selected in your game. And the Height has
+	to be 480 Pixels or greater. And the ingame isn't adjusted (You will
+	see what I mean when using an extreme Widht and a small Height).
+	However the bottom line is: You wanted to be able to force wide
+	screen resolutions (i.e. 800x500) and here it is (and it wasn't 
+	too easy :)
+</c_note>
+</c_notelist>
+Thanks: msthavoc (Cyanide-Pictures.de) for testing<br />
+Greets: code-mdt forum Guys :)
+</c_entry>
+
+
+<c_entry>
+<c_title>MDT <c_version>1.0.59.0</c_version> UNOFFICIAL (<c_time>2007-09-03</c_time>)</c_title>
+<c_notelist>
+<c_note class="updated">
+Changed: changed the capture point of images and the matte color clearing
+</c_note>
+<c_note class="updated">
+Changed: modified detection of game resolution
+</c_note>
+<c_note class="updated">
+Changed: MDT now automatically forces gl_ztrick 0 by default in order to make
+  sure depthdumps retrieve normalized depthdata
+</c_note>
+<c_note class="added">
+Added: __mirv_gl_force_noztrick, __mirv_gl_noclear for debugging (you should
+  leave them on the default values)
+</c_note>
+<c_note class="removed">
+Removed: __mirv_depth_fixempty
+</c_note>
+</c_notelist>
+Thanks: really big thanks to msthavoc (Cyanide-Pictures.de) for helping with
+          testing and providing his system for tests :-)
+</c_entry>
+
+
+<c_entry>
+<c_title>MDT <c_version>1.0.58.309</c_version> DLL UNOFFICIAL (<c_time>2007-08-28</c_time>)</c_title>
+<c_notelist>
+<c_note class="fixed">
+Fixed: mirv_cameraofs_cs should now work in ineye demos too
+</c_note>
+</c_notelist>
+Thanks: msthavoc (Cyanide-Pictures.de) for testing
+</c_entry>
+
+
+<c_entry>
+<c_title>MDT <c_version>1.0.58.268</c_version> DLL UNOFFICIAL (<c_time>2007-08-26</c_time>)</c_title>
+<c_notelist>
+<c_note class="added">
+Added: mirv_cameraofs_cs
+         Can be used in Counter-Strike 1.6 to move the final view in x y z,
+         I.e. mirv_cameraofs_cs 1.5 0 -10 would move the view 1.5 units to the
+         right and 10 units backwards.
+         This can be usefull if you want to do stereo captures, because in this
+         case you could record a scene twice and use a negative x value in the
+         first pass to move the camera slighlty left and a positive x value in
+         the second pass to move the camera slightly right.
+</c_note>
+</c_notelist>
+Thanks: msthavoc (Cyanide-Pictures.de)
+</c_entry>
+
+
+<c_entry>
+<c_title>MDT <c_version>1.0.58.158</c_version> DLL UNOFFICIAL (<c_time>2007-08-03</c_time>)</c_title>
+<c_notelist>
+<c_note class="added">
+Added: __mirv_depth_fixempty (default 0)<br />
+	If you have one of those card's where you get an empty DepthDump
+	(because those have problems with GL_FLOAT) you can try
+	__mirv_depth_fixempty 1
+	GL (this will try to retrieve the depth with GL_UNSIGNED_INT instead
+	However if 0 works fine for you take 0, 1 is slower!
+</c_note>
+<c_note class="updated">
+Changed: tried to reduce impact of Half-Life Client timing problems on the
+	mirv_zoom_ stuff by preventing changes when deltatime gets negative
+	(meaning the zoom will not pop back anymore and will stay fully
+	zoomed when u are zoomed in, however on zooming stuttering can
+	still occur)
+</c_note>
+<c_note>
+Hint: this seems to be a common problem with HLTV demos, althoug it's hardly
+	noticeable:
+	the client timing problems (which also happen when not using MDT) can
+	also cause player models to stutter etc. (we don't know if and when we
+	can fix it, since the origin of the problem is probably on Valve's end).
+	However you can reduce stuttering when setting cl_clockreset to a value
+	higher than the number of seconds the scene you want to record lasts.
+	(I.e. if you plan to record bellow 1 minute you can set it to 60,
+	however we have no idea what side effects this could cause, so may be
+	note the default value first before changing it (I think it's 0.1 or
+	so)).
+</c_note>
+<c_note class="added">
+Added: mirv_crop_height (default -1)<br />
+	-1 means no (height) cropping will be applied
+	you can specify an outputheight you want the images to be cropped to.
+	(if you have a black line at the top of your images you can use this
+	to cut it off by suppling the correct value (you can leave
+	mirv_crop_yofs on -1 in this case)).
+</c_note>
+<c_note class="added">
+Added: mirv_crop_yofs (default -1)<br />
+	-1 will automatically center any cropping action (so you can easily
+	crop 4:3 down to 16:9 and stuff like that), other values crop value
+	lines of from the top
+</c_note>
+<c_note class="updated">
+Changed: mirv_matte_setcolor (renamed from the BE mirv_matte_setcolour) now
+           accepts values from 0 - 255 (r g b), like it was before MDT 1.0
+</c_note>
+<c_note class="added">
+Added: mirv_matte_setcolorf - this allows directly setting the color using
+         the usual GL float values (0.0 - 1.0)
+</c_note>
+<c_note class="added">
+Added: In order to improve the fix for avoiding empty dumps that occurred on
+         some grfx cards (ATI Radeon X800, ASUS ATI x1600xt, Geforce FX 5600,
+         ...) a system has been added to force GL to read from and draw to
+         specific buffers. This system is enabled by default now and set to
+         work on the GL_BACK buffer. You can control and even turn off this
+         system with the new __mirv_forcebuffers command (type it in console
+         and press enter for more infos)
+</c_note>
+<c_note class="removed">
+Removed: mirv_movie_fixemptydumps is now obsolete (due to the new system)
+</c_note>
+<c_note class="added">
+Added: __mirv_info:<br />
+         People should use this command and copy the info it prints to the
+         console when reporting bugs.
+</c_note>
+</c_notelist>
+Thanks: For testing and reporting details about bugs:
+          msthavoc (Cyanide-Pictures.de), dios (hanshenschel.de)
+</c_entry>
+
+
+<c_entry>
+<c_title>MDT <c_version>1.0.58.87</c_version> DLL UNOFFICIAL (<c_time>2007-07-10</c_time>)</c_title>
+<c_notelist>
+<c_note class="added">
+Added: mirv_fixemptydumps:<br />
+	Several ATI card users reported problems with empty MDT output when
+	AntiAliasing is enabled (i.e. ATI Radeon X800 or  asus ati x1600xt
+	both Catalys 7.6). This hopefully fixes it, you can also try this
+	option if you have problems with other cards.
+	values: 0(Default), 1=enable fix (seems to work fine with AAx2 and
+	AAx4 however on a Radeon X800 there are problems with AAx6 (messed
+	up image)
+</c_note>
+<c_note class="added">
+Added: mirv_depth_logarithmic; Values:  0 = use linear scale (old method),
+         any other x = use a logrithmic scale where x specifies how fast the
+         distance grows, default     : 32
+</c_note>
+</c_notelist>
+Thanks: Thanks to Slize (Creative-Movies.de) for testing and feedback and
+	especially entrioN (AirWalk-Media.com) for a massive amount of testing
+	related to the empty dumps problem, thx guys!
+</c_entry>
+
+
+<h1>Historical changelogs bellow</h1>
+
+
+<c_entry>
+<c_title>MDT <c_version>1.0.57.0</c_version> (<c_time>2007-05-30</c_time>)</c_title>
+<c_notelist>
+<c_note class="fixed">
+Fixed: MDT has had a pretty big rewrite and so a lot of bugs are now fixed. If
+       you've ever had problems with matte, splitstreams, zooming, or anything
+       else then give these another try.
+</c_note>
+<c_note class="added">
+Added: A new loader! The old one is still available here:
+       http://www.madabouthats.org/downloads/mdt-old-loader.zip
+       Please email me if you have trouble with the new one.
+</c_note>
+<c_note class="added">
+Added: mirv_fixforcehltv 0|1 cvar.
+       This fixes the fact that if you watch one of your own demos with
+       dem_forcehltv 1 (which lets you watch it as if its a hltv demo) you
+       can't see your own player. Now you can, hurray.
+</c_note>
+<c_note class="added">
+Added: mirv_movie_wireframe 0|1|2|3 cvar.
+       mirv_movie_wireframelength n
+       Lets you draw the world (1), entities (2) or everything (3) in retro
+       wireframes.
+</c_note>
+<c_note class="updated">
+Changed: Depth dumping now dumps separate world and entity dumps if you are
+         using splitstreams.
+</c_note>
+<c_note class="updated">
+Changed: mirv_matte_setcolor r g b
+         Now takes values from 0 to 100.
+</c_note>
+<c_note class="updated">
+Changed: mirv_zoom_max n
+         This has now become: mirv_zoom_optical n and
+                              mirv_zoom_digital n
+         Both takes values 0 to 100.
+</c_note>
+<c_note class="updated">
+Changed: mirv_movie_customdumps
+         This is now ON by default.
+</c_note>
+<c_note class="updated">
+Changed: mirv_movie_clearscreen
+         This is now OFF by default
+</c_note>
+</c_notelist>
+</c_entry>
+
+         
+<c_entry>
+<c_title>MDT <c_version>0.44</c_version> (<c_time>2007-05-24</c_time>)</c_title>
+<c_notelist>
+<c_note class="added">
+Added: mirv_fixforcehltv - draws your player model when dem_forcehltv is enabled with
+       viewdemo. Now you can have hltv-style shots from your very own first person demos!
+</c_note>
+<c_note class="updated">
+Change: Various improvements under the hood
+</c_note>
+<c_note class="fixed">
+Fixed: Viewport getting out of sync
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>MDT <c_version>0.43</c_version> (<c_time>2007-05-21</c_time>)</c_title>
+<c_notelist>
+<c_note class="removed">
+Change: Removed the singleplayer-only cvar fix since it broke some demos.
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>MDT <c_version>0.42</c_version> (<c_time>2007-05-17</c_time>)</c_title>
+<c_notelist>
+<c_note class="added">
+Added: Allowed singleplayer-only cvars to work while playing demos
+       (e.g. gl_wireframe, gl_drawentities, etc)
+</c_note>
+<c_note class="fixed">
+Fixed: Some buffer overflows
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>MDT <c_version>0.41</c_version> (<c_time>2007-04-19</c_time>)</c_title>
+<c_notelist>
+<c_note class="added">
+Added: mirv_disableautodirector - set this to 1 if autospectator keeps stealing control from you.
+       This was on by default in previous mirvs, now you'll need to set it explicitly.
+</c_note>
+<c_note class="added">
+Added: mirv_demoedit_fix tfc - use this command to fix the demoedit interface in TFC - thanks to ripieces
+       for his involvement with this
+</c_note>
+</c_notelist>
+</c_entry>
+
+         
+<c_entry>
+<c_title>MDT <c_version>0.37</c_version> (<c_time>2007-03-14</c_time>)</c_title>
+<c_notelist>
+<c_note class="updated">
+Updated offsets. Still not got round to storing them in external file.
+</c_note>
+<c_note class="updated">
+Have also un-UPX packed the loader, hopefully this will fix the false virus alarms.
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>MDT <c_version>0.36</c_version> (<c_time>2006-10-30</c_time>)</c_title>
+<c_notelist>
+<c_note class="updated">
+Updated offsets. I should store them in an external file to save having to recompile each time, really.
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>MDT <c_version>0.35</c_version> (<c_time>2006-07-14</c_time>)</c_title>
+<c_notelist>
+<c_note class="added">
+Added mirv_movie_fps for custom dump movies
+</c_note>
+<c_note class="added">
+Added mirv_movie_clearscreen to disable HUD removal
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>MDT <c_version>0.34</c_version> (<c_time>2006-03-19</c_time>)</c_title>
+<c_notelist>
+<c_note class="updated">
+Updated offsets, yarrrr
+</c_note>
+</c_notelist>
+</c_entry>
+
+<c_entry>
+<c_title>MDT <c_version>0.33</c_version> (<c_time>2006-01-17</c_time>)</c_title>
+<c_notelist>
+<c_note class="updated">
+Updated offsets
+</c_note>
+</c_notelist>
+</c_entry>
+
+<c_entry>
+<c_title>MDT <c_version>0.32</c_version> (<c_time>2005-12-05</c_time>)</c_title>
+<c_notelist>
+<c_note class="updated">
+Updated offsets
+</c_note>
+</c_notelist>
+</c_entry>
+
+<c_entry>
+<c_title>MDT <c_version>0.31</c_version> (<c_time>2005-11-26</c_time>)</c_title>
+<c_notelist>
+<c_note class="updated">
+Updated offsets
+</c_note>
+</c_notelist>
+</c_entry>
+
+<c_entry>
+<c_title>MDT <c_version>0.3</c_version> (<c_time>2005-09-24</c_time>)</c_title>
+<c_notelist>
+<c_note class="fixed">
+Fixed issue with aiming with multiple entities
+</c_note>
+<c_note class="fixed">
+Fixed issue with swapweapon breaking
+</c_note>
+</c_notelist>
+</c_entry>
+
+<c_entry>
+<c_title>MDT <c_version>0.26</c_version> (<c_time>2005-09-24</c_time>)</c_title>
+<c_notelist>
+<c_note class="updated">
+Updated offsets, updated SDK version
+</c_note>
+</c_notelist>
+</c_entry>
+
+<c_entry>
+<c_title>MDT <c_version>0.25</c_version> (<c_time>2005-08-30</c_time>)</c_title>
+<c_notelist>
+<c_note class="added">
+Added zooming (see instructions below)
+</c_note>
+</c_notelist>
+</c_entry>
+
+<c_entry>
+<c_title>MDT <c_version>0.21</c_version> (<c_time>2005-08-17</c_time>)</c_title>
+<c_notelist>
+<c_note class="updated">
+Updated offsets
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+<c_entry>
+<c_title>MDT <c_version>0.2</c_version> (<c_time>2005-06-11</c_time>)</c_title>
+<c_notelist>
+<c_note class="updated">
+Updated offsets
+</c_note>
+</c_notelist>
+</c_entry>
+
+
+</body>
+</html>
