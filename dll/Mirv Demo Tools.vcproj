@@ -288,14 +288,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\detours.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\detours.h"
-				>
-			</File>
-			<File
 				RelativePath=".\dsound_hook.cpp"
 				>
 			</File>
@@ -423,6 +415,22 @@
 				RelativePath="..\resources\readme.txt"
 				>
 			</File>
+		</Filter>
+		<Filter
+			Name="hooks"
+			>
+			<Filter
+				Name="shared"
+				>
+				<File
+					RelativePath="..\hooks\shared\detours.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\hooks\shared\detours.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 	</Files>
 	<Globals>

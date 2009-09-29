@@ -3,13 +3,15 @@
 #include <forms/calculator.h>
 #include <forms/UpdaterForm.h>
 
-#include <tools/skymanager/skymanager.h>
-
 #include <controls/HlaeConsole.h>
 #include <system/debug.h>
 #include <system/debug_file.h>
 #include <system/globals.h>
 #include <system/remoting.h>
+
+#include <tools/customloader/CustomLoader.h>
+#include <tools/skymanager/skymanager.h>
+
 
 class CHlaeBcServer; // forward decleration
 
@@ -138,6 +140,9 @@ namespace hlae {
 	private: System::Windows::Forms::ToolStripPanel^  toolStripPanelBottom;
 	private: System::Windows::Forms::StatusStrip^  statusStripMain;
 private: System::Windows::Forms::ToolStripMenuItem^  skyManagerToolStripMenuItem;
+private: System::Windows::Forms::ToolStripSeparator^  toolStripMenuItem2;
+private: System::Windows::Forms::ToolStripMenuItem^  developerToolStripMenuItem;
+private: System::Windows::Forms::ToolStripMenuItem^  customLoaderToolStripMenuItem;
 
 
 
@@ -170,6 +175,7 @@ private: System::Windows::Forms::ToolStripMenuItem^  skyManagerToolStripMenuItem
 			this->demoToolsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->calculatorsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->fileSizeToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->skyManagerToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->helpToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->advancedfxorgToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->checkForUpdateToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
@@ -182,7 +188,9 @@ private: System::Windows::Forms::ToolStripMenuItem^  skyManagerToolStripMenuItem
 			this->panelGame = (gcnew System::Windows::Forms::Panel());
 			this->toolStripPanelBottom = (gcnew System::Windows::Forms::ToolStripPanel());
 			this->statusStripMain = (gcnew System::Windows::Forms::StatusStrip());
-			this->skyManagerToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->developerToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->customLoaderToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->toolStripMenuItem2 = (gcnew System::Windows::Forms::ToolStripSeparator());
 			this->menuStrip1->SuspendLayout();
 			this->toolStripPanelTop->SuspendLayout();
 			this->splitContainerPrimary->Panel2->SuspendLayout();
@@ -266,8 +274,8 @@ private: System::Windows::Forms::ToolStripMenuItem^  skyManagerToolStripMenuItem
 			// 
 			// toolsToolStripMenuItem
 			// 
-			this->toolsToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(3) {this->demoToolsToolStripMenuItem, 
-				this->calculatorsToolStripMenuItem, this->skyManagerToolStripMenuItem});
+			this->toolsToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(5) {this->demoToolsToolStripMenuItem, 
+				this->calculatorsToolStripMenuItem, this->skyManagerToolStripMenuItem, this->toolStripMenuItem2, this->developerToolStripMenuItem});
 			this->toolsToolStripMenuItem->Name = L"toolsToolStripMenuItem";
 			this->toolsToolStripMenuItem->Size = System::Drawing::Size(44, 20);
 			this->toolsToolStripMenuItem->Text = L"&Tools";
@@ -289,9 +297,16 @@ private: System::Windows::Forms::ToolStripMenuItem^  skyManagerToolStripMenuItem
 			// fileSizeToolStripMenuItem
 			// 
 			this->fileSizeToolStripMenuItem->Name = L"fileSizeToolStripMenuItem";
-			this->fileSizeToolStripMenuItem->Size = System::Drawing::Size(123, 22);
+			this->fileSizeToolStripMenuItem->Size = System::Drawing::Size(152, 22);
 			this->fileSizeToolStripMenuItem->Text = L"&File Size";
 			this->fileSizeToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::fileSizeToolStripMenuItem_Click);
+			// 
+			// skyManagerToolStripMenuItem
+			// 
+			this->skyManagerToolStripMenuItem->Name = L"skyManagerToolStripMenuItem";
+			this->skyManagerToolStripMenuItem->Size = System::Drawing::Size(152, 22);
+			this->skyManagerToolStripMenuItem->Text = L"Sky Manager";
+			this->skyManagerToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::skyManagerToolStripMenuItem_Click);
 			// 
 			// helpToolStripMenuItem
 			// 
@@ -415,12 +430,24 @@ private: System::Windows::Forms::ToolStripMenuItem^  skyManagerToolStripMenuItem
 			this->statusStripMain->TabIndex = 0;
 			this->statusStripMain->Visible = false;
 			// 
-			// skyManagerToolStripMenuItem
+			// developerToolStripMenuItem
 			// 
-			this->skyManagerToolStripMenuItem->Name = L"skyManagerToolStripMenuItem";
-			this->skyManagerToolStripMenuItem->Size = System::Drawing::Size(152, 22);
-			this->skyManagerToolStripMenuItem->Text = L"Sky Manager";
-			this->skyManagerToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::skyManagerToolStripMenuItem_Click);
+			this->developerToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) {this->customLoaderToolStripMenuItem});
+			this->developerToolStripMenuItem->Name = L"developerToolStripMenuItem";
+			this->developerToolStripMenuItem->Size = System::Drawing::Size(152, 22);
+			this->developerToolStripMenuItem->Text = L"Developer";
+			// 
+			// customLoaderToolStripMenuItem
+			// 
+			this->customLoaderToolStripMenuItem->Name = L"customLoaderToolStripMenuItem";
+			this->customLoaderToolStripMenuItem->Size = System::Drawing::Size(154, 22);
+			this->customLoaderToolStripMenuItem->Text = L"CustomLoader";
+			this->customLoaderToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::customLoaderToolStripMenuItem_Click);
+			// 
+			// toolStripMenuItem2
+			// 
+			this->toolStripMenuItem2->Name = L"toolStripMenuItem2";
+			this->toolStripMenuItem2->Size = System::Drawing::Size(149, 6);
 			// 
 			// MainForm
 			// 
@@ -483,6 +510,9 @@ private: System::Void checkForUpdateToolStripMenuItem_Click(System::Object^  sen
 				 skymanager ^sm = gcnew skymanager(Globals);
 				 sm->Show(this);
 			 }
+private: System::Void customLoaderToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
+			 RunCustomLoader(this);
+		 }
 }; // MainForm
 } // namespace hlae
 

@@ -154,10 +154,10 @@ DWORD WINAPI LoaderThread(void *p)
 
 	if (!pszVersion)
 	{
-		MessageBox( 0, _T("Could not retrive mdt dll version info."), _T("Error"), MB_OK|MB_ICONERROR );
+//		MessageBox( 0, _T("Could not retrive mdt dll version info."), _T("Error"), MB_OK|MB_ICONERROR );
 		//g_debug.SendMessage(wxString::Format(_T("Could not retrive info from %s."), _T(HLAE_DLLNAME)), hlaeDEBUG_ERROR);
-		g_bSignalDone=true;
-		return FALSE;
+//		g_bSignalDone=true;
+//		return FALSE;
 	} else {
 		//wxString tstr;
 		//tstr.Printf(_T("Mirv Demo Tool (DLL v%s)"),wxString(pszVersion));
@@ -226,38 +226,40 @@ DWORD WINAPI LoaderThread(void *p)
 
 #pragma managed
 
+using namespace System;
 using namespace System::Runtime::InteropServices;
 
-bool InitLoader(unsigned int uiUnused, System::String ^m_path,System::String ^m_cmdline)
+bool InitLoader(unsigned int uiUnused, System::String ^m_path, System::String ^m_cmdline)
 {
-	System::String ^strAppDir = gcnew System::String( System::Windows::Forms::Application::StartupPath );
-	
-	System::Text::StringBuilder ^strDllPathB = gcnew System::Text::StringBuilder( strAppDir );
-	strDllPathB->Append( "\\Mirv Demo Tool.dll" );
+	return CustomLoader(
+		String::Concat(System::Windows::Forms::Application::StartupPath, "\\Mirv Demo Tool.dll"),
+		m_path,
+		m_cmdline
+	);
 
-	System::String ^strExeDir = gcnew System::String( System::IO::Path::GetDirectoryName( m_path ) );
+}
+
+bool CustomLoader(System::String ^ hookPath, System::String ^ programPath, System::String ^ cmdline)
+{
+
+	System::String ^strExeDir = gcnew System::String( System::IO::Path::GetDirectoryName( programPath ) );
 
 	System::Text::StringBuilder ^strOptsB = gcnew System::Text::StringBuilder( "\"" );
-	strOptsB->Append( m_path );
+	strOptsB->Append( programPath );
 	strOptsB->Append( "\" " );
-	strOptsB->Append( m_cmdline );
+	strOptsB->Append( cmdline );
 
 #ifdef _UNICODE
-	g_path_dll = (LPTSTR)(int)Marshal::StringToHGlobalUni( strDllPathB->ToString() );
-	g_path_exe = (LPTSTR)(int)Marshal::StringToHGlobalUni( m_path );
+	g_path_dll = (LPTSTR)(int)Marshal::StringToHGlobalUni( hookPath->ToString() );
+	g_path_exe = (LPTSTR)(int)Marshal::StringToHGlobalUni( programPath );
 	g_opts_exe = (LPTSTR)(int)Marshal::StringToHGlobalUni( strOptsB->ToString() );
 	g_dir_exe = (LPTSTR)(int)Marshal::StringToHGlobalUni( strExeDir );
 #else
-	g_path_dll = (LPTSTR)(int)Marshal::StringToHGlobalAnsi( strDllPathB->ToString() );
-	g_path_exe = (LPTSTR)(int)Marshal::StringToHGlobalAnsi( m_path );
+	g_path_dll = (LPTSTR)(int)Marshal::StringToHGlobalAnsi( hookPath->ToString() );
+	g_path_exe = (LPTSTR)(int)Marshal::StringToHGlobalAnsi( programPath );
 	g_opts_exe = (LPTSTR)(int)Marshal::StringToHGlobalAnsi( strOptsB->ToString() );
 	g_dir_exe = (LPTSTR)(int)Marshal::StringToHGlobalAnsi( strExeDir );
 #endif
-
-	//g_debug.SendMessage(g_path_dll, hlaeDEBUG_DEBUG);
-	//g_debug.SendMessage(g_path_exe, hlaeDEBUG_DEBUG);
-	//g_debug.SendMessage(g_opts_exe, hlaeDEBUG_DEBUG);
-	//g_debug.SendMessage(g_dir_exe, hlaeDEBUG_DEBUG);
 
 	g_bSignalDone = false;
 	HANDLE hThread = CreateThread(0, 0, LoaderThread, 0, 0, 0);

@@ -8,7 +8,7 @@ Description : See dd_hook.h
 
 #include "mdt_debug.h"
 
-#include "detours.h"
+#include <hooks/shared/detours.h>
 
 #include "dd_hook.h"
 #include <ddraw.h>

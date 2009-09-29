@@ -8,6 +8,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Half-Life Advanced Effects 
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ipc_remoting", "examples\ipc_remoting\ipc_remoting.vcproj", "{43CD67D1-16AB-4F78-BEAA-61C2989220DB}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SourceHook", "hooks\SourceHook\SourceHook.vcproj", "{3B8B10B2-05E6-4D15-8022-65D3D60DCCCD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -30,6 +32,10 @@ Global
 		{43CD67D1-16AB-4F78-BEAA-61C2989220DB}.Debug|Win32.Build.0 = Debug|Win32
 		{43CD67D1-16AB-4F78-BEAA-61C2989220DB}.Release|Win32.ActiveCfg = Release|Win32
 		{43CD67D1-16AB-4F78-BEAA-61C2989220DB}.Release|Win32.Build.0 = Release|Win32
+		{3B8B10B2-05E6-4D15-8022-65D3D60DCCCD}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3B8B10B2-05E6-4D15-8022-65D3D60DCCCD}.Debug|Win32.Build.0 = Debug|Win32
+		{3B8B10B2-05E6-4D15-8022-65D3D60DCCCD}.Release|Win32.ActiveCfg = Release|Win32
+		{3B8B10B2-05E6-4D15-8022-65D3D60DCCCD}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

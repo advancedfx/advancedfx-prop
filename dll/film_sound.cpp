@@ -31,7 +31,7 @@ Description : see film_sound.h
 
 #include "film_sound.h"
 #include "hl_addresses.h"
-#include "detours.h" // detouring funcs
+#include <hooks/shared/detours.h> // detouring funcs
 
 
 // for debug:

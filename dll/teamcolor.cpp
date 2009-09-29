@@ -22,7 +22,7 @@
 #include "cmdregister.h"
 
 #include "hl_addresses.h"
-#include "detours.h"
+#include <hooks/shared/detours.h>
 
 #include <list>
 

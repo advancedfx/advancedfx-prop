@@ -34,7 +34,7 @@
 #pragma pop_macro("HSPRITE")
 // END HLSDK includes
 
-#include "detours.h"
+#include <hooks/shared/detours.h>
 #include "filming.h"
 #include "aiming.h"
 #include "zooming.h"

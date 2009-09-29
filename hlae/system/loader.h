@@ -1,19 +1,17 @@
-#ifndef HLAE_LOADER_H
-#define HLAE_LOADER_H
+#pragma once
 
-// When time clean LoaderThread etcl up a bit please!
+// Copyright (c) advancedfx.org
 //
-// Project :  Half-Life Advanced Effects
-// File    :  gui/loader.cpp
-// Changed :  2008-03-20
-// Created :  2008-03-19
+// Last changes:
+// 2009-09-29 by dominik.matrixstorm.com
+//
+// First changes:
+// 2008-03-19 by dominik.matrixstorm.com
+// 2007 by Gavin Bramhill
 
-// Authors : last change / first change / name
-// 2008-03-20 / 2008-03-19 / Dominik Tugend
-// 2007 / / Gavin Bramhill
-
-// Comment: for launching the game and the hook
+// Description:
+// For launching the game and the hook.
 
 bool InitLoader(unsigned int uiUnused, System::String ^m_path, System::String ^m_cmdline);
 
-#endif
+bool CustomLoader(System::String ^ hookPath, System::String ^ programPath, System::String ^ cmdline);

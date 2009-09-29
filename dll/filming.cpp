@@ -33,7 +33,7 @@
 #include "sampling.h"
 
 #include "hl_addresses.h" // we want to access addressese (i.e. R_RenderView)
-#include "detours.h" // we want to use Detourapply
+#include <hooks/shared/detours.h> // we want to use Detourapply
 
 #include "basecomclient.h" // OnFilmingStart(), OnFilmingStop()
 

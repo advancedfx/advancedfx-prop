@@ -1,5 +1,5 @@
 
-#include "detours.h"
+#include <hooks/shared/detours.h>
 
 #define JMP32_SZ	5	// the size of JMP <address>
 #define POPREG_SZ	1	// the size of a POP <reg>

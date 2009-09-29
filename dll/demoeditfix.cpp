@@ -21,7 +21,7 @@
 
 #include <map>
 
-#include "detours.h"
+#include <hooks/shared/detours.h>
 #include "cmdregister.h"
 
 #include "hl_addresses.h"

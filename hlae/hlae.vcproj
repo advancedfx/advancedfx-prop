@@ -465,6 +465,27 @@
 						</File>
 					</File>
 				</Filter>
+				<Filter
+					Name="customloader"
+					>
+					<File
+						RelativePath=".\tools\customloader\CustomLoader.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\tools\customloader\CustomLoader.h"
+						>
+					</File>
+					<File
+						RelativePath=".\tools\customloader\CustomLoaderForm.h"
+						FileType="3"
+						>
+						<File
+							RelativePath=".\tools\customloader\CustomLoaderForm.resx"
+							>
+						</File>
+					</File>
+				</Filter>
 			</Filter>
 		</Filter>
 		<Filter
