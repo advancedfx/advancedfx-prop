@@ -171,6 +171,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\MirvCommands.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\SourceInterfaces.cpp"
 					>
 				</File>

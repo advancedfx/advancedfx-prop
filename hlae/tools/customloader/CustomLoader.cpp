@@ -36,6 +36,8 @@ bool RunCustomLoader(System::Windows::Forms::IWin32Window ^ owner) {
 		cfg->ProgramPath = frm->Program;
 		cfg->CmdLine = frm->CmdLine;
 
+		HlaeConfig::BackUp();
+
 		if(CustomLoader(frm->HookDll, frm->Program, frm->CmdLine))
 			return true;
 

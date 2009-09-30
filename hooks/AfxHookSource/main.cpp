@@ -33,8 +33,6 @@ void ErrorBox() {
 }
 
 
-IVEngineClient_012 * g_VEngineClient = 0;
-ICvar_003 * g_Cvar = 0;
 bool g_FirstLauncherDllCall = false;
 HMODULE g_hClientDll = 0;
 HMODULE g_hEngineDll = 0;
@@ -96,13 +94,28 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 				if(g_hClientDll)
 					return nResult; // already hooked
 
+				//MessageBox(0,"client.dll","Info",MB_OK);
+
 				g_hClientDll = hModule;
 
 				CreateInterfaceFn appSystemFactory = Sys_GetFactory(reinterpret_cast<CSysModule *>(g_hEngineDll));
 
 				if(appSystemFactory) {
-					g_VEngineClient = (IVEngineClient_012 *)appSystemFactory( VENGINE_CLIENT_INTERFACE_VERSION_012, NULL );
+ 					g_VEngineClient = (IVEngineClient_012 *)appSystemFactory( VENGINE_CLIENT_INTERFACE_VERSION_012, NULL );
+					if(!g_VEngineClient)
+						ErrorBox("Could not get interface " VENGINE_CLIENT_INTERFACE_VERSION_012);
+
 					g_Cvar = (ICvar_003 *)appSystemFactory( VENGINE_CVAR_INTERFACE_VERSION_003, NULL );
+					if(!g_Cvar)
+						ErrorBox("Could not get interface " VENGINE_CVAR_INTERFACE_VERSION_003);
+
+					// Allow Console commands to register:
+					MdtConCommands::RegisterCommands(g_Cvar);
+
+//					g_VEngineClient->Con_NPrintf(
+//						0,
+//						"advancedfx.org: AfxHookSource " __DATE__ __TIME__ " loaded.\n"
+//					);
 				}
 				else
 					ErrorBox();

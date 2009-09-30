@@ -40,7 +40,7 @@ void *InterceptDllCall(HMODULE hModule, char *szDllName, char *szFunctionName, D
 	while (pImportDesc->Name)
 	{
 		char *szModuleName = MakePtr(char *, pDosHeader, pImportDesc->Name);
-		if (!stricmp(szModuleName, szDllName))
+		if (!_stricmp(szModuleName, szDllName))
 			break;
 		pImportDesc++;
 	}

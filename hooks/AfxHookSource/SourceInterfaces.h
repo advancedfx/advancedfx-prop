@@ -8,8 +8,10 @@
 // shortened
 //
 
-#define  FORCEINLINE			__forceinline
+#define FORCEINLINE __forceinline
 #define FORCEINLINE_CVAR FORCEINLINE
+
+#define FCVAR_NONE				0 
 
 #define CREATEINTERFACE_PROCNAME	"CreateInterface"
 
@@ -26,6 +28,14 @@ typedef float vec_t;
 
 
 typedef void ( *FnChangeCallback_003 )( ConVar_003 *var, char const *pOldString );
+
+typedef void ( *FnCommandCallback_003 )( void );
+
+#define COMMAND_COMPLETION_MAXITEMS_003		64
+#define COMMAND_COMPLETION_ITEM_LENGTH_003	64
+
+typedef int  ( *FnCommandCompletionCallback_003 )( char const *partial, char commands[ COMMAND_COMPLETION_MAXITEMS_003 ][ COMMAND_COMPLETION_ITEM_LENGTH_003 ] );
+
 
 
 
@@ -46,9 +56,13 @@ public:
 
 // ConCommandBase_003 /////////////////////////////////////////////////////////////
 
-class ConCommandBase_003 abstract
+class MdtConCommands;
+
+class ConCommandBase_003
 {
 public:
+	friend MdtConCommands; // ugly hack, just like Valve did, cuz the interface / class design is fucked up
+
 	ConCommandBase_003( void );
 	ConCommandBase_003( char const *pName, char const *pHelpString = 0, int flags = 0 );
 
@@ -74,16 +88,76 @@ public:
 	virtual bool				IsRegistered( void ) const;
 
 	// Global methods
+
 	static ConCommandBase_003 const	*GetCommands( void );
 	static void					AddToList( ConCommandBase_003 *var );
 	static void					RemoveFlaggedCommands( int flag );
+
+	/// <remarks> not implemented </remarks>
 	static void					RevertFlaggedCvars( int flag );
+
 	static ConCommandBase_003 const	*FindCommand( char const *name );
+
+protected:
+	static ConCommandBase_003 * GetMdtCommands( void );
+	ConCommandBase_003 * GetMdtNext();
+	bool MdtRegisterCommand();
+
+private:
+	static ConCommandBase_003 * m_CommandRoot;
+	bool m_IsRegistered;
+	ConCommandBase_003 * m_Next;
+	int m_Flags;
+	char * m_HelpText;
+	char * m_Name;
+
 };
+
+
+// MdtConCommands //////////////////////////////////////////////////////////////
+
+class ICvar_003;
+
+class MdtConCommands {
+public:
+	static bool ConCommandBase_003_RegisterCommand(ConCommandBase_003 * command);
+
+	static void RegisterCommands(ICvar_003 * cvarIface);
+
+private:
+	static ICvar_003 * m_CvarIface;
+
+};
+
+
+// ConCommand_003 //////////////////////////////////////////////////////////////
+
+class ConCommand_003 : public ConCommandBase_003
+{
+public:
+	ConCommand_003( void );
+	ConCommand_003( char const *pName, FnCommandCallback_003 callback, char const *pHelpString = 0, int flags = 0, FnCommandCompletionCallback_003 completionFunc = 0 );
+
+	virtual						~ConCommand_003( void );
+
+	virtual	bool				IsCommand( void ) const;
+
+	virtual int					AutoCompleteSuggest( char const *partial, char commands[ COMMAND_COMPLETION_MAXITEMS_003 ][ COMMAND_COMPLETION_ITEM_LENGTH_003 ] );
+
+	virtual bool				CanAutoComplete( void );
+
+	// Invoke the function
+	virtual void				Dispatch( void );
+
+private:
+	FnCommandCallback_003			m_Callback;
+	FnCommandCompletionCallback_003	m_CompletionFunc;
+};
+
 
 // ConVar_003 //////////////////////////////////////////////////////////////////
 
-class ConVar_003 abstract : public ConCommandBase_003
+class ConVar_003 : public ConCommandBase_003
 {
 public:
 	ConVar_003( char const *pName, char const *pDefaultValue, int flags = 0);
@@ -599,3 +673,9 @@ public:
 	virtual void _UNUSEDFN() = 0; // SetGamestatsData
 	virtual void _UNUSEDFN() = 0; // GetGamestatsData
 };
+
+
+// Interfaces as globals for now:
+
+extern IVEngineClient_012 * g_VEngineClient;
+extern ICvar_003 * g_Cvar;
