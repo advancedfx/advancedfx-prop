@@ -10,14 +10,12 @@
 
 
 #include <system/debug.h>
-#include <system/config.h>
 
 namespace hlae {
 namespace globals {
 
 using namespace hlae;
 using namespace hlae::debug;
-using namespace hlae::config;
 
 //	CGlobals
 //
@@ -29,7 +27,6 @@ ref class CGlobals
 {
 public:
 	DebugMaster^ debugMaster;
-	CConfigMaster^ ConfigMaster;
 };
 
 } // namespace globals

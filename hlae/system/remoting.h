@@ -24,7 +24,6 @@ using namespace System::Runtime::Remoting::Channels;
 using namespace System::Runtime::Remoting::Channels::Ipc;
 
 using namespace hlae::debug;
-using namespace hlae::config;
 using namespace hlae::globals;
 
 #define HLAE_REMOTING_OBJ_URI_HlaeRemote_1 "Hlae.Remote.1"
@@ -87,12 +86,12 @@ public:
 
 	virtual String ^ GetCustomArgs()
 	{
-		return globals->ConfigMaster->Config->Settings->Launcher->CustomCmdLine;
+		return HlaeConfig::Config->Settings->Launcher->CustomCmdLine;
 	}
 
 	virtual bool Launch()
 	{
-		return LaunchEx( globals->ConfigMaster->Config->Settings->Launcher->CustomCmdLine );
+		return LaunchEx( HlaeConfig::Config->Settings->Launcher->CustomCmdLine );
 	}
 
 	virtual bool LaunchEx( String^ OverrideCustomArgs )
@@ -106,7 +105,7 @@ public:
 		String ^cmds, ^s1, ^s2, ^s3;
 		int i1;
 
-		CLauncher ^lcfg = globals->ConfigMaster->Config->Settings->Launcher;
+		CfgLauncher ^lcfg = HlaeConfig::Config->Settings->Launcher;
 
 		cmds = String::Concat("-steam -gl");
 		

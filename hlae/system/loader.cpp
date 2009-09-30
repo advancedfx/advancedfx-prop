@@ -232,7 +232,7 @@ using namespace System::Runtime::InteropServices;
 bool InitLoader(unsigned int uiUnused, System::String ^m_path, System::String ^m_cmdline)
 {
 	return CustomLoader(
-		String::Concat(System::Windows::Forms::Application::StartupPath, "\\Mirv Demo Tool.dll"),
+		String::Concat(System::Windows::Forms::Application::StartupPath, "\\AfxHookGoldSrc.dll"),
 		m_path,
 		m_cmdline
 	);

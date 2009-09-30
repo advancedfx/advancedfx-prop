@@ -736,7 +736,7 @@ private:
 private: System::Void buttonExport_Click(System::Object^  sender, System::EventArgs^  e) {
 			try
 			{
-				String ^ str = Globals->ConfigMaster->Config->Settings->Launcher->GamePath;
+				String ^ str = HlaeConfig::Config->Settings->Launcher->GamePath;
 				folderBrowserDialog->SelectedPath = IO::Path::GetDirectoryName(str);
 				if(Windows::Forms::DialogResult::OK == folderBrowserDialog->ShowDialog(this))
 				{

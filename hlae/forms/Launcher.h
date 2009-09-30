@@ -5,7 +5,6 @@
 
 using namespace hlae;
 using namespace hlae::globals;
-using namespace hlae::config;
 
 using namespace System;
 using namespace System::ComponentModel;

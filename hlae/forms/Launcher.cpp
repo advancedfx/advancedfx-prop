@@ -10,7 +10,6 @@
 using namespace hlae;
 using namespace hlae::globals;
 using namespace hlae::debug;
-using namespace hlae::config;
 
 using namespace System::Windows::Forms;
 
@@ -106,7 +105,7 @@ System::Void Launcher::buttonExe_Click(System::Object^  sender, System::EventArg
 
 System::Void Launcher::ConfigRead()
 {
-	CLauncher ^lcfg = Globals->ConfigMaster->Config->Settings->Launcher;
+	CfgLauncher ^lcfg = HlaeConfig::Config->Settings->Launcher;
 
 	this->checkBoxRemeber->Checked = lcfg->RememberChanges;
 	this->textBoxExe->Text = lcfg->GamePath;
@@ -156,7 +155,7 @@ System::Void Launcher::ConfigRead()
 
 System::Void Launcher::ConfigWrite()
 {
-	CLauncher ^lcfg = Globals->ConfigMaster->Config->Settings->Launcher;
+	CfgLauncher ^lcfg = HlaeConfig::Config->Settings->Launcher;
 
 	lcfg->RememberChanges = this->checkBoxRemeber->Checked;
 
@@ -185,5 +184,5 @@ System::Void Launcher::ConfigWrite()
 		lcfg->FullScreen = this->checkBoxFullScreen->Checked;
 	}
 
-	Globals->ConfigMaster->BackUp();
+	HlaeConfig::BackUp();
 }

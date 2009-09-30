@@ -30,9 +30,18 @@ namespace hlae {
 			//
 		}
 
-		property String ^ HookDll { String ^ get() { return this->textDll->Text; } }
-		property String ^ Program { String ^ get() { return this->textProgram->Text; } }
-		property String ^ CmdLine { String ^ get() { return this->textCmdLine->Text; } }
+		property String ^ HookDll {
+			String ^ get() { return this->textDll->Text; }
+			void set(String ^ value) { this->textDll->Text = value; }
+		}
+		property String ^ Program {
+			String ^ get() { return this->textProgram->Text; }
+			void set(String ^ value) { this->textProgram->Text = value; }
+		}
+		property String ^ CmdLine {
+			String ^ get() { return this->textCmdLine->Text; }
+			void set(String ^ value) { this->textCmdLine->Text = value; }
+		}
 
 	protected:
 		/// <summary>

@@ -8,24 +8,19 @@
 // Authors : last change / first change / name
 // 2008-10-18 / 2008-10-18 / Dominik Tugend
 
-//#using <System.Xml.dll>
-//#using <System.dll>
-
-#include <system/debug.h>
-
-using namespace hlae;
-using namespace hlae::debug;
 
 using namespace System;
 using namespace System::ComponentModel;
 using namespace System::IO;
+using namespace System::Threading;
 using namespace System::Xml;
 using namespace System::Xml::Serialization;
 
-namespace hlae {
-namespace config {
+using namespace hlae;
 
-public ref class CLauncher
+namespace hlae {
+
+public ref class CfgLauncher
 {
 public:
 	//[DefaultValue("please select")]
@@ -97,35 +92,55 @@ public:
 	}
 };
 
-public ref class CSettings
+
+public ref class CfgCustomLoader
 {
 public:
-	CLauncher ^Launcher;
+	String ^ HookDllPath;
+	String ^ ProgramPath;
+	String ^ CmdLine;
 
 public:
-	CSettings()
+	void Default()
 	{
-		Launcher = gcnew CLauncher();
+		HookDllPath = "";
+		ProgramPath = "";
+		CmdLine = "-steam -game cstrike";
+	}
+};
+
+public ref class CfgSettings
+{
+public:
+	CfgLauncher ^Launcher;
+	CfgCustomLoader ^ CustomLoader;
+
+public:
+	CfgSettings()
+	{
+		Launcher = gcnew CfgLauncher();
+		CustomLoader = gcnew CfgCustomLoader();
 	}
 	void Default()
 	{
 		Launcher->Default();
+		CustomLoader->Default();
 	}
 
 };
 
 [XmlRootAttribute("HlaeConfig")]
-public ref class CConfig
+public ref class CfgConfig
 {
 public:
 	//[DefaultValue("unknown")]
 	String ^Version;
-	CSettings ^Settings;
+	CfgSettings ^Settings;
 
 public:
-	CConfig()
+	CfgConfig()
 	{
-		Settings = gcnew CSettings();
+		Settings = gcnew CfgSettings();
 		Default();
 	}
 	void Default()
@@ -135,78 +150,76 @@ public:
 	}
 };
 
-ref class CConfigMaster
+ref class HlaeConfig
 {
 public:
-	CConfig ^Config;
-
-public:
-
-	CConfigMaster( DebugMaster ^debugMaster, String ^CfgPath )
+	static void Load(String ^ cfgPath)
 	{
-		this->debugMaster = debugMaster;
-		this->CfgPath = CfgPath;
-		WriteFileSyncer = gcnew System::Object();
+		m_CfgPath = cfgPath;
+		m_WriteFileSyncer = gcnew System::Object();
 
-		VERBOSE_MESSAGE( debugMaster, "Creating CConfigMaster" );
-
-		if( System::IO::File::Exists( CfgPath ) )
+		if( System::IO::File::Exists( cfgPath ) )
 		{
 			// Read config:
-			XmlSerializer^ serializer = gcnew XmlSerializer( CConfig::typeid );
-			FileStream^ fs = gcnew FileStream( CfgPath, FileMode::Open );
+			XmlSerializer^ serializer = gcnew XmlSerializer( CfgConfig::typeid );
+			FileStream^ fs = gcnew FileStream( cfgPath, FileMode::Open );
 
-			Config = dynamic_cast<CConfig^>(serializer->Deserialize( fs ));
+			m_Config = dynamic_cast<CfgConfig ^>(serializer->Deserialize( fs ));
 
 			fs->Close();
 		} else {
-			Config = gcnew CConfig();
+			m_Config = gcnew CfgConfig();
 		}
+
 		// always write back so we have the newest config version:
 		BackUp();
 	}
 
 	// Threadsafe (won't crash due to concurring calls, config logic is not maintained of course)
-	bool BackUp()
+	static bool BackUp()
 	{
-		return WriteToFile( CfgPath );
+		return WriteToFile( m_CfgPath );
 	}
 
 	// Threadsafe (won't crash due to concurring calls, config logic is not maintained of course)
-	bool BackUp( String ^FilePath )
+	static bool BackUp( String ^FilePath )
 	{
 		return WriteToFile( FilePath );
 	}
 
+	static property CfgConfig ^ Config {
+		CfgConfig ^ get() { return m_Config; }
+	}
+
 private:
-	System::Object ^WriteFileSyncer;
-	DebugMaster ^debugMaster;
-	String ^CfgPath;
+	static String ^ m_CfgPath;
+	static CfgConfig ^ m_Config;
+	static System::Object ^ m_WriteFileSyncer;
 
 	// Threadsafe (won't crash due to concurring calls, config logic is not maintained of course)
-	bool WriteToFile( String ^FilePath )
+	static bool WriteToFile( String ^FilePath )
 	{
 		bool bOk=false;
 
 		try
 		{
-			Monitor::Enter( WriteFileSyncer );
+			Monitor::Enter( m_WriteFileSyncer );
 
-			XmlSerializer^ serializer = gcnew XmlSerializer( CConfig::typeid );
+			XmlSerializer^ serializer = gcnew XmlSerializer( CfgConfig::typeid );
 			TextWriter^ writer = gcnew StreamWriter( FilePath );
-			serializer->Serialize( writer, Config );
+			serializer->Serialize( writer, m_Config );
 			writer->Close();
 
 			bOk = true;
 		}
 		finally
 		{
-			Monitor::Exit( WriteFileSyncer );
+			Monitor::Exit( m_WriteFileSyncer );
 		}
 
 		return bOk;
 	}
 };
 
-} // namespace config
 } // namespace hlae 
+

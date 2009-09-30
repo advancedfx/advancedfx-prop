@@ -12,7 +12,6 @@
 
 using namespace hlae;
 using namespace hlae::debug;
-using namespace hlae::config;
 using namespace hlae::globals;
 
 
@@ -40,12 +39,11 @@ int main(array<System::String ^> ^args)
 	INFO_MESSAGE( debugMaster, "Debug Message System online" );
 
 	// start up config system:
-	CConfigMaster ^ConfigMaster = gcnew CConfigMaster( debugMaster, String::Concat( BaseDir,"\\hlaeconfig.xml") );
+	HlaeConfig::Load(String::Concat( BaseDir,"\\hlaeconfig.xml"));
 
 	// fill in globals:
 	CGlobals ^Globals = gcnew CGlobals();
 	Globals->debugMaster = debugMaster;
-	Globals->ConfigMaster = ConfigMaster;
 
 	// Create the main window and run it
 	Application::Run(gcnew MainForm(Globals,debugFile));
