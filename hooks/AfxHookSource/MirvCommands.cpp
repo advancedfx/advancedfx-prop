@@ -12,12 +12,20 @@
 // Hint: for now commands are registered upon the first client.dll CreateInterface() call
 
 #include "SourceInterfaces.h"
+#include "WrpVEngineClient.h"
+#include "WrpConsole.h"
+
+#include <windows.h>
+
+
+extern WrpVEngineClient * g_VEngineClient;
 
 
 // mirv_testcommand ////////////////////////////////////////////////////////////
 
 void mirv_testcommand_callback() {
+	MessageBox(0, "MirvTestCommand called", "AFX_DEBUG", MB_OK|MB_ICONINFORMATION);
 	g_VEngineClient->ClientCmd("echo MirvTestCommand called");
 }
 
-ConCommand_003 mirv_testcommand("mirv_testcommand", &mirv_testcommand_callback, "Calls the test command");
+WrpConCommand mirv_testcommand("mirv_testcommand", &mirv_testcommand_callback, "Calls the test command");

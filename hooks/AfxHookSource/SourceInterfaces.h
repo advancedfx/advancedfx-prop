@@ -1,12 +1,19 @@
 #pragma once
 
-#define _UNUSEDFN2(x,y) x##y
-#define _UNUSEDFN1(x,y) _UNUSEDFN2(x,y)
-#define _UNUSEDFN _UNUSEDFN1(_UNUSED_, __LINE__)
+// Copyright (c) advancedfx.org
+//
+// Last changes:
+// 2009-10-02 by dominik.matrixstorm.com
+//
+// First changes:
+// 2009-09-30 by dominik.matrixstorm.com
 
-//
-// shortened
-//
+// Based on Source engine SDK:
+// Copyright (c) 1996-2005, Valve Corporation, All rights reserved
+
+// Description:
+// Interface definitions for accessing the Source engine.
+
 
 #define FORCEINLINE __forceinline
 #define FORCEINLINE_CVAR FORCEINLINE
@@ -17,25 +24,12 @@
 
 
 class CSysModule;
-class ConVar_003;
 
 typedef void* (*CreateInterfaceFn)(const char *pName, int *pReturnCode);
 
 CreateInterfaceFn Sys_GetFactory( CSysModule *pModule );
 
-
 typedef float vec_t;
-
-
-typedef void ( *FnChangeCallback_003 )( ConVar_003 *var, char const *pOldString );
-
-typedef void ( *FnCommandCallback_003 )( void );
-
-#define COMMAND_COMPLETION_MAXITEMS_003		64
-#define COMMAND_COMPLETION_ITEM_LENGTH_003	64
-
-typedef int  ( *FnCommandCompletionCallback_003 )( char const *partial, char commands[ COMMAND_COMPLETION_MAXITEMS_003 ][ COMMAND_COMPLETION_ITEM_LENGTH_003 ] );
-
 
 
 
@@ -54,15 +48,61 @@ public:
 };
 
 
-// ConCommandBase_003 /////////////////////////////////////////////////////////////
 
-class MdtConCommands;
+// Command / Cvar related:
 
-class ConCommandBase_003
+class ConVar_003;
+
+typedef void ( *FnChangeCallback_003 )( ConVar_003 *var, char const *pOldString );
+typedef void ( *FnCommandCallback_003 )( void );
+
+
+#define COMMAND_COMPLETION_MAXITEMS_004 64
+#define COMMAND_COMPLETION_ITEM_LENGTH_004 64
+
+class CCommand_004;
+class ConVar_004;
+class IConVar_004;
+
+typedef void ( *FnChangeCallback_t_004 )( IConVar_004 *var, const char *pOldValue, float flOldValue );
+typedef void ( *FnCommandCallbackV1_t_004 )( void );
+typedef void ( *FnCommandCallback_t_004 )( const CCommand_004 &command );
+
+typedef int CVarDLLIdentifier_t_004;
+
+class ICommandCallback_004
 {
 public:
-	friend MdtConCommands; // ugly hack, just like Valve did, cuz the interface / class design is fucked up
+	virtual void CommandCallback( const CCommand_004 &command ) = 0;
+};
 
+
+
+// IConCommandBaseAccessor_003 /////////////////////////////////////////////////////
+
+class ConCommandBase_003;
+
+class IConCommandBaseAccessor_003
+{
+public:
+	virtual bool RegisterConCommandBase( ConCommandBase_003 *pVar )=0;
+};
+
+
+// ConCommandBase_003 /////////////////////////////////////////////////////////////
+
+class WrpConCommands;
+
+/// <remarks> DO NOT CHANGE WITHOUT KNOWING WHAT YOU DO, DIRECTLY ACCESSED BY SOURCE ENGINE! </remarks>
+/// <comments> I guess if Valve used a non determisitic C++ compiler they would
+///		be screwed when sharing such classes among various compile units.
+///		this also means we are screwed too easily when using a different compiler.
+///		</comments>
+class ConCommandBase_003
+{
+	friend WrpConCommands; // ugly hack, just like Valve did
+
+public:
 	ConCommandBase_003( void );
 	ConCommandBase_003( char const *pName, char const *pHelpString = 0, int flags = 0 );
 
@@ -88,62 +128,58 @@ public:
 	virtual bool				IsRegistered( void ) const;
 
 	// Global methods
-
-	static ConCommandBase_003 const	*GetCommands( void );
-	static void					AddToList( ConCommandBase_003 *var );
-	static void					RemoveFlaggedCommands( int flag );
-
-	/// <remarks> not implemented </remarks>
-	static void					RevertFlaggedCvars( int flag );
-
-	static ConCommandBase_003 const	*FindCommand( char const *name );
+	static void _NOT_IMPLEMENTED_GetCommands( void );
+	static void	_NOT_IMPLEMENTED_AddToList( void );
+	static void	_NOT_IMPLEMENTED_RemoveFlaggedCommands( void );
+	static void	_NOT_IMPLEMENTED_RevertFlaggedCvars( void );
+	static void _NOT_IMPLEMENTED_FindCommand( void );
 
 protected:
-	static ConCommandBase_003 * GetMdtCommands( void );
-	ConCommandBase_003 * GetMdtNext();
-	bool MdtRegisterCommand();
+	virtual void Create(char const *pName, char const *pHelpString = 0, int flags = 0 );
 
-private:
-	static ConCommandBase_003 * m_CommandRoot;
-	bool m_IsRegistered;
+	virtual void Init();
+
+	void _NOT_IMPLEMENTED_CopyString( void );
+
 	ConCommandBase_003 * m_Next;
-	int m_Flags;
-	char * m_HelpText;
-	char * m_Name;
 
-};
-
-
-// MdtConCommands //////////////////////////////////////////////////////////////
-
-class ICvar_003;
-
-class MdtConCommands {
-public:
-	static bool ConCommandBase_003_RegisterCommand(ConCommandBase_003 * command);
-
-	static void RegisterCommands(ICvar_003 * cvarIface);
+	static ConCommandBase_003		*s_pConCommandBases;
+	static IConCommandBaseAccessor_003	*s_pAccessor;
 
 private:
-	static ICvar_003 * m_CvarIface;
+	bool m_IsRegistered;
+	char * m_Name;
+	char * m_HelpText;
+	int m_Flags;
 
 };
 
 
 // ConCommand_003 //////////////////////////////////////////////////////////////
 
+/// <remarks> DO NOT CHANGE WITHOUT KNOWING WHAT YOU DO, DIRECTLY ACCESSED BY SOURCE ENGINE! </remarks>
+/// <comments> I guess if Valve used a non determisitic C++ compiler they would
+///		be screwed when sharing such classes among various compile units.
+///		this also means we are screwed too easily when using a different compiler.
+///		</comments>
 class ConCommand_003 : public ConCommandBase_003
 {
 public:
+	typedef ConCommandBase_003 BaseClass;
+
 	ConCommand_003( void );
-	ConCommand_003( char const *pName, FnCommandCallback_003 callback, char const *pHelpString = 0, int flags = 0, FnCommandCompletionCallback_003 completionFunc = 0 );
+
+	/// <remarks> tweaked since we don't support completition </remarks>
+	ConCommand_003( char const *pName, FnCommandCallback_003 callback, char const *pHelpString = 0, int flags = 0);
 
 	virtual						~ConCommand_003( void );
 
 	virtual	bool				IsCommand( void ) const;
 
-	virtual int					AutoCompleteSuggest( char const *partial, char commands[ COMMAND_COMPLETION_MAXITEMS_003 ][ COMMAND_COMPLETION_ITEM_LENGTH_003 ] );
+	/// <remarks> we don't support autocompletition, thus we always return 0 </remarks>
+	virtual int					AutoCompleteSuggest(void * dummy1, void * dummy2);
 
+	/// <remarks> we don't support autocompletition, thus we always return false </remarks>
 	virtual bool				CanAutoComplete( void );
 
 	// Invoke the function
@@ -151,57 +187,119 @@ public:
 
 private:
 	FnCommandCallback_003			m_Callback;
-	FnCommandCompletionCallback_003	m_CompletionFunc;
 };
 
 
-// ConVar_003 //////////////////////////////////////////////////////////////////
+// IConCommandBaseAccessor_004 /////////////////////////////////////////////////
 
-class ConVar_003 : public ConCommandBase_003
+class ConCommandBase_004;
+
+class IConCommandBaseAccessor_004
 {
 public:
-	ConVar_003( char const *pName, char const *pDefaultValue, int flags = 0);
-	ConVar_003( char const *pName, char const *pDefaultValue, int flags, char const *pHelpString );
-	ConVar_003( char const *pName, char const *pDefaultValue, int flags, char const *pHelpString, bool bMin, float fMin, bool bMax, float fMax );
-	ConVar_003( char const *pName, char const *pDefaultValue, int flags, char const *pHelpString, FnChangeCallback_003 callback );
-	ConVar_003( char const *pName, char const *pDefaultValue, int flags, char const *pHelpString, bool bMin, float fMin, bool bMax, float fMax, FnChangeCallback_003 callback );
+	virtual bool RegisterConCommandBase( ConCommandBase_004 *pVar ) = 0;
+};
 
-	virtual						~ConVar_003( void );
+// ConCommandBase_004 //////////////////////////////////////////////////////////
 
-	virtual bool				IsBitSet( int flag ) const;
-	virtual char const*			GetHelpText( void ) const;
-	virtual bool				IsRegistered( void ) const;
-	virtual char const			*GetName( void ) const;
-	virtual void				AddFlags( int flags );
+/// <remarks> DO NOT CHANGE WITHOUT KNOWING WHAT YOU DO, DIRECTLY ACCESSED BY SOURCE ENGINE! </remarks>
+/// <comments> I guess if Valve used a non determisitic C++ compiler they would
+///		be screwed when sharing such classes among various compile units.
+///		this also means we are screwed too easily when using a different compiler.
+///		</comments>
+class ConCommandBase_004
+{
+	friend WrpConCommands; // ugly hack, just like Valve did
+
+public:
+	ConCommandBase_004( void );
+	ConCommandBase_004( const char *pName, const char *pHelpString = 0, int flags = 0 );
+
+	virtual						~ConCommandBase_004( void );
+
 	virtual	bool				IsCommand( void ) const;
 
-	// Install a change callback (there shouldn't already be one....)
-	void InstallChangeCallback( FnChangeCallback_003 callback );
+	// Check flag
+	virtual bool				IsFlagSet( int flag ) const;
+	// Set flag
+	virtual void				AddFlags( int flags );
 
-	// Retrieve value
-	FORCEINLINE_CVAR float			GetFloat( void ) const;
-	FORCEINLINE_CVAR int				GetInt( void ) const;
-	FORCEINLINE_CVAR bool			GetBool() const {  return !!GetInt(); }
-	FORCEINLINE_CVAR char const	   *GetString( void ) const;
+	// Return name of cvar
+	virtual const char			*GetName( void ) const;
 
-	// Any function that allocates/frees memory needs to be virtual or else you'll have crashes
-	//  from alloc/free across dll/exe boundaries.
+	// Return help text for cvar
+	virtual const char			*GetHelpText( void ) const;
+
+	// Deal with next pointer
+	const ConCommandBase_004		*GetNext( void ) const;
+	ConCommandBase_004				*GetNext( void );
 	
-	// These just call into the IConCommandBaseAccessor to check flags and set the var (which ends up calling InternalSetValue).
-	virtual void				SetValue( char const *value );
-	virtual void				SetValue( float value );
-	virtual void				SetValue( int value );
-	
-	// Reset to default value
-	void						Revert( void );
+	virtual bool				IsRegistered( void ) const;
 
-	// True if it has a min/max setting
-	bool						GetMin( float& minVal ) const;
-	bool						GetMax( float& maxVal ) const;
-	char const					*GetDefault( void ) const;
+	// Returns the DLL identifier
+	virtual CVarDLLIdentifier_t_004	GetDLLIdentifier() const;
 
-	static void					RevertAll( void );
+protected:
+	virtual void Create(const char *pName, const char *pHelpString = 0, int flags = 0);
+
+	// Used internally by OneTimeInit to initialize/shutdown
+	virtual void Init();
+	void _NOT_IMPLEMENTED_Shutdown();
+
+	void _NOT_IMPLEMENTED_CopyString( void );
+
+	static ConCommandBase_004 *s_pConCommandBases;
+	static IConCommandBaseAccessor_004 *s_pAccessor;
+
+private:
+	ConCommandBase_004 * m_Next;
+	bool m_IsRegistered;
+	char * m_Name;
+	char * m_HelpText;
+	int m_Flags;
 };
+
+
+// ConCommand_004 //////////////////////////////////////////////////////////////
+
+class ConCommand_004 : public ConCommandBase_004
+{
+public:
+	typedef ConCommandBase_004 BaseClass;
+
+	/// <remarks> tweaked since we don't support completition </remarks>
+	ConCommand_004(const char *pName, FnCommandCallbackV1_t_004 callback,  const char *pHelpString = 0, int flags = 0);
+
+	/// <remarks> tweaked since we don't support completition </remarks>
+	ConCommand_004(const char *pName, FnCommandCallback_t_004 callback, const char *pHelpString = 0, int flags = 0);
+
+	/// <remarks> tweaked since we don't support completition </remarks>
+	ConCommand_004(const char *pName, ICommandCallback_004 *pCallback, const char *pHelpString = 0, int flags = 0);
+
+	virtual ~ConCommand_004(void);
+
+	virtual	bool IsCommand(void) const;
+
+	/// <remarks> we don't support autocompletition, thus we always return 0 </remarks>
+	virtual int AutoCompleteSuggest(void * dummy1, void * dummy2);
+
+	/// <remarks> we don't support autocompletition, thus we always return false </remarks>
+	virtual bool CanAutoComplete( void );
+
+	virtual void Dispatch( const CCommand_004 &command );
+
+private:
+	union
+	{
+		FnCommandCallbackV1_t_004 m_fnCommandCallbackV1;
+		FnCommandCallback_t_004 m_fnCommandCallback;
+		ICommandCallback_004 *m_pCommandCallback; 
+	};
+
+	bool m_bUsingNewCommandCallback : 1;
+	bool m_bUsingCommandCallbackInterface : 1;
+};
+
 
 
 // IAppSystem //////////////////////////////////////////////////////////////////
@@ -261,6 +359,55 @@ public:
 	virtual void			CallGlobalChangeCallback( ConVar_003 *var, char const *pOldString ) = 0;
 };
 
+// ICvar_004 ///////////////////////////////////////////////////////////////////
+
+#define VENGINE_CVAR_INTERFACE_VERSION_004 "VEngineCvar004"
+
+class ICvar_004 abstract : public IAppSystem
+{
+public:
+	// Allocate a unique DLL identifier
+	virtual CVarDLLIdentifier_t_004 AllocateDLLIdentifier() = 0;
+
+	// Register, unregister commands
+	virtual void			RegisterConCommand( ConCommandBase_004 *pCommandBase ) = 0;
+	virtual void			UnregisterConCommand( ConCommandBase_004 *pCommandBase ) = 0;
+	virtual void			UnregisterConCommands( CVarDLLIdentifier_t_004 id ) = 0;
+
+	// If there is a +<varname> <value> on the command line, this returns the value.
+	// Otherwise, it returns NULL.
+	virtual const char*		GetCommandLineValue( const char *pVariableName ) = 0;
+
+	// Try to find the cvar pointer by name
+	virtual ConCommandBase_004 *FindCommandBase( const char *name ) = 0;
+	virtual const ConCommandBase_004 *FindCommandBase( const char *name ) const = 0;
+	virtual ConVar_004			*FindVar ( const char *var_name ) = 0;
+	virtual const ConVar_004	*FindVar ( const char *var_name ) const = 0;
+	virtual ConCommand_004		*FindCommand( const char *name ) = 0;
+	virtual const ConCommand_004 *FindCommand( const char *name ) const = 0;
+
+	// Get first ConCommandBase to allow iteration
+	virtual ConCommandBase_004	*GetCommands( void ) = 0;
+	virtual const ConCommandBase_004 *GetCommands( void ) const = 0;
+
+	// Install a global change callback (to be called when any convar changes) 
+	virtual void			InstallGlobalChangeCallback( FnChangeCallback_t_004 callback ) = 0;
+	virtual void			RemoveGlobalChangeCallback( FnChangeCallback_t_004 callback ) = 0;
+	virtual void			CallGlobalChangeCallbacks( ConVar_004 *var, const char *pOldString, float flOldValue ) = 0;
+
+	virtual void _UNUSED_InstallConsoleDisplayFunc(void)=0;
+	virtual void _UNUSED_RemoveConsoleDisplayFunc(void)=0;
+	virtual void _UNUSED_ConsoleColorPrintf(void)=0;
+	virtual void _UNUSED_ConsolePrintf(void)=0;
+	virtual void _UNUSED_ConsoleDPrintf(void)=0;
+	virtual void _UNUSED_RevertFlaggedConVars(void)=0;
+	virtual void _UNUSED_InstallCVarQuery(void)=0;
+
+#if defined( _X360 )
+	virtual void _UNUSED_PublishToVXConsole(void)=0;
+#endif
+};
+
 
 // IVEngineClient_012 //////////////////////////////////////////////////////////
 
@@ -269,11 +416,11 @@ public:
 class IVEngineClient_012 abstract
 {
 public:
-	virtual void _UNUSEDFN() = 0; // GetIntersectingSurfaces
-	virtual void _UNUSEDFN() = 0; // GetLightForPoint
-	virtual void _UNUSEDFN() = 0; // TraceLineMaterialAndLighting
-	virtual void _UNUSEDFN() = 0; // ParseFile
-	virtual void _UNUSEDFN() = 0; // CopyFile
+	virtual void _UNUSED_GetIntersectingSurfaces(void)=0;
+	virtual void _UNUSED_GetLightForPoint(void)=0;
+	virtual void _UNUSED_TraceLineMaterialAndLighting(void)=0;
+	virtual void _UNUSED_ParseFile(void)=0;
+	virtual void _UNUSED_CopyFile(void)=0;
 
 	// Gets the dimensions of the game window
 	virtual void				GetScreenSize( int& width, int& height ) = 0;
@@ -283,18 +430,15 @@ public:
 	// Inserts szCmdString into the command buffer as if it was typed by the client to his/her console.
 	virtual void				ClientCmd( const char *szCmdString ) = 0;
 
-	virtual void _UNUSEDFN() = 0; // GetPlayerInfo
-
-	virtual void _UNUSEDFN() = 0; // GetPlayerForUserID
-
-	virtual void _UNUSEDFN() = 0; // TextMessageGet
+	virtual void _UNUSED_GetPlayerInfo(void)=0;
+	virtual void _UNUSED_GetPlayerForUserID(void)=0;
+	virtual void _UNUSED_TextMessageGet(void)=0;
 
 	// Returns true if the console is visible
 	virtual bool				Con_IsVisible( void ) = 0;
 
-	virtual void _UNUSEDFN() = 0; // GetLocalPlayer
-
-	virtual void _UNUSEDFN() = 0; // LoadModel
+	virtual void _UNUSED_GetLocalPlayer(void)=0;
+	virtual void _UNUSED_LoadModel(void)=0;
 
 	// Get accurate, sub-frame clock ( profiling use )
 	virtual float				Time( void ) = 0; 
@@ -302,9 +446,9 @@ public:
 	// Get the exact server timesstamp ( server time ) from the last message received from the server
 	virtual float				GetLastTimeStamp( void ) = 0; 
 
-	virtual void _UNUSEDFN() = 0; // GetSentence
-	virtual void _UNUSEDFN() = 0; // GetSentenceLength
-	virtual void _UNUSEDFN() = 0; // IsStreaming
+	virtual void _UNUSED_GetSentence(void)=0;
+	virtual void _UNUSED_GetSentenceLength(void)=0;
+	virtual void _UNUSED_IsStreaming(void)=0;
 
 	// Copy current view orientation into va
 	virtual void				GetViewAngles( QAngle& va ) = 0;
@@ -314,12 +458,10 @@ public:
 	// Retrieve the current game's maxclients setting
 	virtual int					GetMaxClients( void ) = 0;
 
-	virtual void _UNUSEDFN() = 0; // Key_Event
-
-	virtual void _UNUSEDFN() = 0; // Key_LookupBinding
-
-	virtual void _UNUSEDFN() = 0; // StartKeyTrapMode
-	virtual void _UNUSEDFN() = 0; // CheckDoneKeyTrapping
+	virtual void _UNUSED_Key_Event(void)=0;
+	virtual void _UNUSED_Key_LookupBinding(void)=0;
+	virtual void _UNUSED_StartKeyTrapMode(void)=0;
+	virtual void _UNUSED_CheckDoneKeyTrapping(void)=0;
 
 	// Returns true if the player is fully connected and active in game (i.e, not still loading)
 	virtual bool				IsInGame( void ) = 0;
@@ -332,78 +474,61 @@ public:
 	//  numbered lines starting at position 0
 	virtual void				Con_NPrintf( int pos, const char *fmt, ... ) = 0;
 	
-	virtual void _UNUSEDFN() = 0; // Con_NXPrintf
-
-	// During ConCommand processing functions, use this function to get the total # of tokens passed to the command parser
-	virtual int					Cmd_Argc( void ) = 0;	
-	// During ConCommand processing, this API is used to access each argument passed to the parser
-	virtual const char			*Cmd_Argv( int arg ) = 0;
-
-	virtual void _UNUSEDFN() = 0; // IsBoxVisible
-
-	virtual void _UNUSEDFN() = 0; // IsBoxInViewCluster
-	
-	virtual void _UNUSEDFN() = 0; // CullBox
-
-	// Allow the sound system to paint additional data (during lengthy rendering operations) to prevent stuttering sound.
-	virtual void				Sound_ExtraUpdate( void ) = 0;
+	virtual void _UNUSED_Con_NXPrintf(void)=0;
+	virtual void _UNUSED_Cmd_Argc(void)=0;
+	virtual void _UNUSED_Cmd_Argv(void)=0;
+	virtual void _UNUSED_IsBoxVisible(void)=0;
+	virtual void _UNUSED_IsBoxInViewCluster(void)=0;
+	virtual void _UNUSED_CullBox(void)=0;
+	virtual void _UNUSED_Sound_ExtraUpdate(void)=0;
 
 	// Get the current game directory ( e.g., hl2, tf2, cstrike, hl1 )
 	virtual const char			*GetGameDirectory( void ) = 0;
 
-	virtual void _UNUSEDFN() = 0; // WorldToScreenMatrix
-	virtual void _UNUSEDFN() = 0; // WorldToViewMatrix
-	virtual void _UNUSEDFN() = 0; // GameLumpVersion
-	virtual void _UNUSEDFN() = 0; // GameLumpSize
-	virtual void _UNUSEDFN() = 0; // LoadGameLump
-	virtual void _UNUSEDFN() = 0; // LevelLeafCount
-	virtual void _UNUSEDFN() = 0; // GetBSPTreeQuery
-	virtual void _UNUSEDFN() = 0; // LinearToGamma
-	virtual void _UNUSEDFN() = 0; // LightStyleValue
-	virtual void _UNUSEDFN() = 0; // ComputeDynamicLighting
-	virtual void _UNUSEDFN() = 0; // GetAmbientLightColor
-
-	// Returns the dx support level
-	virtual int			GetDXSupportLevel() = 0;
-
-	// GR - returns the HDR support status
-	virtual bool        SupportsHDR() = 0;
-
-	virtual void _UNUSEDFN() = 0; // Mat_Stub
+	virtual void _UNUSED_WorldToScreenMatrix(void)=0;
+	virtual void _UNUSED_WorldToViewMatrix(void)=0;
+	virtual void _UNUSED_GameLumpVersion(void)=0;
+	virtual void _UNUSED_GameLumpSize(void)=0;
+	virtual void _UNUSED_LoadGameLump(void)=0;
+	virtual void _UNUSED_LevelLeafCount(void)=0;
+	virtual void _UNUSED_GetBSPTreeQuery(void)=0;
+	virtual void _UNUSED_LinearToGamma(void)=0;
+	virtual void _UNUSED_LightStyleValue(void)=0;
+	virtual void _UNUSED_ComputeDynamicLighting(void)=0;
+	virtual void _UNUSED_GetAmbientLightColor(void)=0;
+	virtual void _UNUSED_GetDXSupportLevel(void)=0;
+	virtual void _UNUSED_SupportsHDR(void)=0;
+	virtual void _UNUSED_Mat_Stub(void)=0;
 
 	// Get the name of the current map
 	virtual char const	*GetLevelName( void ) = 0;
 #ifndef _XBOX
-	virtual void _UNUSEDFN() = 0; // GetVoiceTweakAPI
+	virtual void _UNUSED_GetVoiceTweakAPI(void)=0;
 #endif
 	// Tell engine stats gathering system that the rendering frame is beginning/ending
 	virtual void		EngineStats_BeginFrame( void ) = 0;
 	virtual void		EngineStats_EndFrame( void ) = 0;
 	
-	virtual void _UNUSEDFN() = 0; // FireEvents
-	virtual void _UNUSEDFN() = 0; // GetLeavesArea
-	virtual void _UNUSEDFN() = 0; // DoesBoxTouchAreaFrustum
-	virtual void _UNUSEDFN() = 0; // SetHearingOrigin
-	virtual void _UNUSEDFN() = 0; // SentenceGroupPick
-	virtual void _UNUSEDFN() = 0; // SentenceGroupPickSequential
-	virtual void _UNUSEDFN() = 0; // SentenceIndexFromName
-	virtual void _UNUSEDFN() = 0; // SentenceNameFromIndex
-	virtual void _UNUSEDFN() = 0; // SentenceGroupIndexFromName
-	virtual void _UNUSEDFN() = 0; // SentenceGroupNameFromIndex
-	virtual void _UNUSEDFN() = 0; // SentenceLength
-	virtual void _UNUSEDFN() = 0; // ComputeLighting
-	virtual void _UNUSEDFN() = 0; // ActivateOccluder
-	virtual void _UNUSEDFN() = 0; // IsOccluded
-
-	// The save restore system allocates memory from a shared memory pool, use this allocator to allocate/free saverestore 
-	//  memory.
-	virtual void		*SaveAllocMemory( size_t num, size_t size ) = 0;
-	virtual void		SaveFreeMemory( void *pSaveMem ) = 0;
-
-	virtual void _UNUSEDFN() = 0; // GetNetChannelInfo
-	virtual void _UNUSEDFN() = 0; // DebugDrawPhysCollide
-	virtual void _UNUSEDFN() = 0; // CheckPoint
-	virtual void _UNUSEDFN() = 0; // DrawPortals
+	virtual void _UNUSED_FireEvents(void)=0;
+	virtual void _UNUSED_GetLeavesArea(void)=0;
+	virtual void _UNUSED_DoesBoxTouchAreaFrustum(void)=0;
+	virtual void _UNUSED_SetHearingOrigin(void)=0;
+	virtual void _UNUSED_SentenceGroupPick(void)=0;
+	virtual void _UNUSED_SentenceGroupPickSequential(void)=0;
+	virtual void _UNUSED_SentenceIndexFromName(void)=0;
+	virtual void _UNUSED_SentenceNameFromIndex(void)=0;
+	virtual void _UNUSED_SentenceGroupIndexFromName(void)=0;
+	virtual void _UNUSED_SentenceGroupNameFromIndex(void)=0;
+	virtual void _UNUSED_SentenceLength(void)=0;
+	virtual void _UNUSED_ComputeLighting(void)=0;
+	virtual void _UNUSED_ActivateOccluder(void)=0;
+	virtual void _UNUSED_IsOccluded(void)=0;
+	virtual void _UNUSED_SaveAllocMemory(void)=0;
+	virtual void _UNUSED_SaveFreeMemory(void)=0;
+	virtual void _UNUSED_GetNetChannelInfo(void)=0;
+	virtual void _UNUSED_DebugDrawPhysCollide(void)=0;
+	virtual void _UNUSED_CheckPoint(void)=0;
+	virtual void _UNUSED_DrawPortals(void)=0;
 
 	// Determine whether the client is playing back or recording a demo
 	virtual bool		IsPlayingDemo( void ) = 0;
@@ -420,14 +545,10 @@ public:
 	// returns the name of the background level
 	virtual void		GetMainMenuBackgroundName( char *dest, int destlen ) = 0;
 
-	virtual void _UNUSEDFN() = 0; // SetOcclusionParameters
-
-	virtual void _UNUSEDFN() = 0; // GetUILanguage
-
-	virtual void _UNUSEDFN() = 0; // IsSkyboxVisibleFromPoint
-
-	// Get the pristine map entity lump string.  (e.g., used by CS to reload the map entities when restarting a round.)
-	virtual const char*	GetMapEntitiesString() = 0;
+	virtual void _UNUSED_SetOcclusionParameters(void)=0;
+	virtual void _UNUSED_GetUILanguage(void)=0;
+	virtual void _UNUSED_IsSkyboxVisibleFromPoint(void)=0;
+	virtual void _UNUSED_GetMapEntitiesString(void)=0;
 
 	// Is the engine in map edit mode ?
 	virtual bool		IsInEditMode( void ) = 0;
@@ -435,16 +556,15 @@ public:
 	// current screen aspect ratio (eg. 4.0f/3.0f, 16.0f/9.0f)
 	virtual float		GetScreenAspectRatio() = 0;
 
-	virtual void _UNUSEDFN() = 0; //SteamRefreshLogin
-	virtual void _UNUSEDFN() = 0; //SteamProcessCall
+	virtual void _UNUSED_SteamRefreshLogin(void)=0;
+	virtual void _UNUSED_SteamProcessCall(void)=0;
 
 	// allow other modules to know about engine versioning (one use is a proxy for network compatability)
 	virtual unsigned int	GetEngineBuildNumber() = 0; // engines build
 	virtual const char *	GetProductVersionString() = 0; // mods version number (steam.inf)
 
-	virtual int		GetLastPressedEngineKey( void ) = 0;
-
-	virtual void _UNUSEDFN() = 0; //GrabPreColorCorrectedFrame
+	virtual void _UNUSED_GetLastPressedEngineKey(void)=0;
+	virtual void _UNUSED_GrabPreColorCorrectedFrame(void)=0;
 
 	virtual bool			IsHammerRunning( ) const = 0;
 
@@ -452,11 +572,11 @@ public:
 	// And then executes the command string immediately (vs ClientCmd() which executes in the next frame)
 	virtual void			ExecuteClientCmd( const char *szCmdString ) = 0;
 
-	virtual void _UNUSEDFN() = 0; // MapHasHDRLighting
+	virtual void _UNUSED_MapHasHDRLighting(void)=0;
 
 	virtual int	GetAppID() = 0;
 
-	virtual void _UNUSEDFN() = 0; // GetLightForPointFast
+	virtual void _UNUSED_GetLightForPointFast(void)=0;
 };
 
 
@@ -468,11 +588,11 @@ public:
 class IVEngineClient_013 abstract
 {
 public:
-	virtual void _UNUSEDFN() = 0; // GetIntersectingSurfaces
-	virtual void _UNUSEDFN() = 0; // GetLightForPoint
-	virtual void _UNUSEDFN() = 0; // TraceLineMaterialAndLighting
-	virtual void _UNUSEDFN() = 0; // ParseFile
-	virtual void _UNUSEDFN() = 0; // CopyFile
+	virtual void _UNUSED_GetIntersectingSurfaces(void)=0;
+	virtual void _UNUSED_GetLightForPoint(void)=0;
+	virtual void _UNUSED_TraceLineMaterialAndLighting(void)=0;
+	virtual void _UNUSED_ParseFile(void)=0;
+	virtual void _UNUSED_CopyFile(void)=0;
 
 	// Gets the dimensions of the game window
 	virtual void				GetScreenSize( int& width, int& height ) = 0;
@@ -484,17 +604,15 @@ public:
 	//       Call ClientCmd_Unrestricted to have access to FCVAR_CLIENTCMD_CAN_EXECUTE vars.
 	virtual void				ClientCmd( const char *szCmdString ) = 0;
 
-	virtual void _UNUSEDFN() = 0; // GetPlayerInfo
-	virtual void _UNUSEDFN() = 0; // GetPlayerForUserID
-	virtual void _UNUSEDFN() = 0; // TextMessageGet
+	virtual void _UNUSED_GetPlayerInfo(void)=0;
+	virtual void _UNUSED_GetPlayerForUserID(void)=0;
+	virtual void _UNUSED_TextMessageGet(void)=0;
 
 	// Returns true if the console is visible
 	virtual bool				Con_IsVisible( void ) = 0;
 
-	// Get the entity index of the local player
-	virtual int					GetLocalPlayer( void ) = 0;
-
-	virtual void _UNUSEDFN() = 0; // LoadModel
+	virtual void _UNUSED_GetLocalPlayer(void)=0;
+	virtual void _UNUSED_LoadModel(void)=0;
 
 	// Get accurate, sub-frame clock ( profiling use )
 	virtual float				Time( void ) = 0; 
@@ -502,9 +620,9 @@ public:
 	// Get the exact server timesstamp ( server time ) from the last message received from the server
 	virtual float				GetLastTimeStamp( void ) = 0; 
 
-	virtual void _UNUSEDFN() = 0; // GetSentence
-	virtual void _UNUSEDFN() = 0; // GetSentenceLength
-	virtual void _UNUSEDFN() = 0; // IsStreaming
+	virtual void _UNUSED_GetSentence(void)=0;
+	virtual void _UNUSED_GetSentenceLength(void)=0;
+	virtual void _UNUSED_IsStreaming(void)=0;
 
 	// Copy current view orientation into va
 	virtual void				GetViewAngles( QAngle& va ) = 0;
@@ -514,10 +632,10 @@ public:
 	// Retrieve the current game's maxclients setting
 	virtual int					GetMaxClients( void ) = 0;
 
-	virtual void _UNUSEDFN() = 0; // Key_LookupBinding
-	virtual void _UNUSEDFN() = 0; // Key_BindingForKey
-	virtual void _UNUSEDFN() = 0; // StartKeyTrapMode
-	virtual void _UNUSEDFN() = 0; // CheckDoneKeyTrapping
+	virtual void _UNUSED_Key_LookupBinding(void)=0;
+	virtual void _UNUSED_Key_BindingForKey(void)=0;
+	virtual void _UNUSED_StartKeyTrapMode(void)=0;
+	virtual void _UNUSED_CheckDoneKeyTrapping(void)=0;
 
 	// Returns true if the player is fully connected and active in game (i.e, not still loading)
 	virtual bool				IsInGame( void ) = 0;
@@ -530,65 +648,60 @@ public:
 	//  numbered lines starting at position 0
 	virtual void				Con_NPrintf( int pos, const char *fmt, ... ) = 0;
 	
-	virtual void _UNUSEDFN() = 0; // Con_NXPrintf
-	virtual void _UNUSEDFN() = 0; // IsBoxVisible
-	virtual void _UNUSEDFN() = 0; // IsBoxInViewCluster
-	virtual void _UNUSEDFN() = 0; // CullBox
-	virtual void _UNUSEDFN() = 0; // Sound_ExtraUpdate
+	virtual void _UNUSED_Con_NXPrintf(void)=0;
+	virtual void _UNUSED_IsBoxVisible(void)=0;
+	virtual void _UNUSED_IsBoxInViewCluster(void)=0;
+	virtual void _UNUSED_CullBox(void)=0;
+	virtual void _UNUSED_Sound_ExtraUpdate(void)=0;
 
 	// Get the current game directory ( e.g., hl2, tf2, cstrike, hl1 )
 	virtual const char			*GetGameDirectory( void ) = 0;
 
-	virtual void _UNUSEDFN() = 0; // WorldToScreenMatrix
-	virtual void _UNUSEDFN() = 0; // WorldToViewMatrix
-	virtual void _UNUSEDFN() = 0; // GameLumpVersion
-	virtual void _UNUSEDFN() = 0; // GameLumpSize
-	virtual void _UNUSEDFN() = 0; // LoadGameLump
-	virtual void _UNUSEDFN() = 0; // LevelLeafCount
-	virtual void _UNUSEDFN() = 0; // GetBSPTreeQuery
-	virtual void _UNUSEDFN() = 0; // LinearToGamma
-	virtual void _UNUSEDFN() = 0; // LightStyleValue
-	virtual void _UNUSEDFN() = 0; // ComputeDynamicLighting
-	virtual void _UNUSEDFN() = 0; // GetAmbientLightColor
-	virtual void _UNUSEDFN() = 0; // GetDXSupportLevel
-	virtual void _UNUSEDFN() = 0; // SupportsHDR
-	virtual void _UNUSEDFN() = 0; // Mat_Stub
+	virtual void _UNUSED_WorldToScreenMatrix(void)=0;
+	virtual void _UNUSED_WorldToViewMatrix(void)=0;
+	virtual void _UNUSED_GameLumpVersion(void)=0;
+	virtual void _UNUSED_GameLumpSize(void)=0;
+	virtual void _UNUSED_LoadGameLump(void)=0;
+	virtual void _UNUSED_LevelLeafCount(void)=0;
+	virtual void _UNUSED_GetBSPTreeQuery(void)=0;
+	virtual void _UNUSED_LinearToGamma(void)=0;
+	virtual void _UNUSED_LightStyleValue(void)=0;
+	virtual void _UNUSED_ComputeDynamicLighting(void)=0;
+	virtual void _UNUSED_GetAmbientLightColor(void)=0;
+	virtual void _UNUSED_GetDXSupportLevel(void)=0;
+	virtual void _UNUSED_SupportsHDR(void)=0;
+	virtual void _UNUSED_Mat_Stub(void)=0;
+	virtual void _UNUSED_GetChapterName(void)=0;
 
-	// Get the name of the current map
-	virtual void GetChapterName( char *pchBuff, int iMaxLength ) = 0;
 	virtual char const	*GetLevelName( void ) = 0;
 
 #if !defined( NO_VOICE )
-	virtual void _UNUSEDFN() = 0; // GetVoiceTweakAPI
+	virtual void _UNUSED_GetVoiceTweakAPI(void)=0;
 #endif
 	// Tell engine stats gathering system that the rendering frame is beginning/ending
 	virtual void		EngineStats_BeginFrame( void ) = 0;
 	virtual void		EngineStats_EndFrame( void ) = 0;
 	
-	virtual void _UNUSEDFN() = 0; // FireEvents
-	virtual void _UNUSEDFN() = 0; // GetLeavesArea
-	virtual void _UNUSEDFN() = 0; // DoesBoxTouchAreaFrustum
-	virtual void _UNUSEDFN() = 0; // SetAudioState
-	virtual void _UNUSEDFN() = 0; // SentenceGroupPick
-	virtual void _UNUSEDFN() = 0; // SentenceGroupPickSequential
-	virtual void _UNUSEDFN() = 0; // SentenceIndexFromName
-	virtual void _UNUSEDFN() = 0; // SentenceNameFromIndex
-	virtual void _UNUSEDFN() = 0; // SentenceGroupIndexFromName
-	virtual void _UNUSEDFN() = 0; // SentenceGroupNameFromIndex
-	virtual void _UNUSEDFN() = 0; // SentenceLength
-	virtual void _UNUSEDFN() = 0; // ComputeLighting
-	virtual void _UNUSEDFN() = 0; // ActivateOccluder
-	virtual void _UNUSEDFN() = 0; // IsOccluded
-
-	// The save restore system allocates memory from a shared memory pool, use this allocator to allocate/free saverestore 
-	//  memory.
-	virtual void		*SaveAllocMemory( size_t num, size_t size ) = 0;
-	virtual void		SaveFreeMemory( void *pSaveMem ) = 0;
-
-	virtual void _UNUSEDFN() = 0; // GetNetChannelInfo
-	virtual void _UNUSEDFN() = 0; // DebugDrawPhysCollide
-	virtual void _UNUSEDFN() = 0; // CheckPoint
-	virtual void _UNUSEDFN() = 0; // DrawPortals
+	virtual void _UNUSED_FireEvents(void)=0;
+	virtual void _UNUSED_GetLeavesArea(void)=0;
+	virtual void _UNUSED_DoesBoxTouchAreaFrustum(void)=0;
+	virtual void _UNUSED_SetAudioState(void)=0;
+	virtual void _UNUSED_SentenceGroupPick(void)=0;
+	virtual void _UNUSED_SentenceGroupPickSequential(void)=0;
+	virtual void _UNUSED_SentenceIndexFromName(void)=0;
+	virtual void _UNUSED_SentenceNameFromIndex(void)=0;
+	virtual void _UNUSED_SentenceGroupIndexFromName(void)=0;
+	virtual void _UNUSED_SentenceGroupNameFromIndex(void)=0;
+	virtual void _UNUSED_SentenceLength(void)=0;
+	virtual void _UNUSED_ComputeLighting(void)=0;
+	virtual void _UNUSED_ActivateOccluder(void)=0;
+	virtual void _UNUSED_IsOccluded(void)=0;
+	virtual void _UNUSED_SaveAllocMemory(void)=0;
+	virtual void _UNUSED_SaveFreeMemory(void)=0;
+	virtual void _UNUSED_GetNetChannelInfo(void)=0;
+	virtual void _UNUSED_DebugDrawPhysCollide(void)=0;
+	virtual void _UNUSED_CheckPoint(void)=0;
+	virtual void _UNUSED_DrawPortals(void)=0;
 
 	// Determine whether the client is playing back or recording a demo
 	virtual bool		IsPlayingDemo( void ) = 0;
@@ -605,10 +718,10 @@ public:
 	// returns the name of the background level
 	virtual void		GetMainMenuBackgroundName( char *dest, int destlen ) = 0;
 
-	virtual void _UNUSEDFN() = 0; // SetOcclusionParameters
-	virtual void _UNUSEDFN() = 0; // GetUILanguage
-	virtual void _UNUSEDFN() = 0; // IsSkyboxVisibleFromPoint
-	virtual void _UNUSEDFN() = 0; // GetMapEntitiesString
+	virtual void _UNUSED_SetOcclusionParameters(void)=0;
+	virtual void _UNUSED_GetUILanguage(void)=0;
+	virtual void _UNUSED_IsSkyboxVisibleFromPoint(void)=0;
+	virtual void _UNUSED_GetMapEntitiesString(void)=0;
 
 	// Is the engine in map edit mode ?
 	virtual bool		IsInEditMode( void ) = 0;
@@ -616,14 +729,14 @@ public:
 	// current screen aspect ratio (eg. 4.0f/3.0f, 16.0f/9.0f)
 	virtual float		GetScreenAspectRatio() = 0;
 
-	virtual void _UNUSEDFN() = 0; // REMOVED_SteamRefreshLogin
-	virtual void _UNUSEDFN() = 0; // REMOVED_SteamProcessCall
+	virtual void _UNUSED_REMOVED_SteamRefreshLogin(void)=0;
+	virtual void _UNUSED_REMOVED_SteamProcessCall(void)=0;
 
 	// allow other modules to know about engine versioning (one use is a proxy for network compatability)
 	virtual unsigned int	GetEngineBuildNumber() = 0; // engines build
 	virtual const char *	GetProductVersionString() = 0; // mods version number (steam.inf)
 
-	virtual void _UNUSEDFN() = 0; // GrabPreColorCorrectedFrame
+	virtual void _UNUSED_GrabPreColorCorrectedFrame(void)=0;
 
 	virtual bool			IsHammerRunning( ) const = 0;
 
@@ -633,49 +746,178 @@ public:
 	// Note: this is NOT checked against the FCVAR_CLIENTCMD_CAN_EXECUTE vars.
 	virtual void			ExecuteClientCmd( const char *szCmdString ) = 0;
 
-	virtual void _UNUSEDFN() = 0; // MapHasHDRLighting
+	virtual void _UNUSED_MapHasHDRLighting(void)=0;
 
 	virtual int	GetAppID() = 0;
 
-	virtual void _UNUSEDFN() = 0; // GetLightForPointFast
-
-	// This version does NOT check against FCVAR_CLIENTCMD_CAN_EXECUTE.
-	virtual void			ClientCmd_Unrestricted( const char *szCmdString ) = 0;
-	
-	// This used to be accessible through the cl_restrict_server_commands cvar.
-	// By default, Valve games restrict the server to only being able to execute commands marked with FCVAR_SERVER_CAN_EXECUTE.
-	// By default, mods are allowed to execute any server commands, and they can restrict the server's ability to execute client
-	// commands with this function.
-	virtual void			SetRestrictServerCommands( bool bRestrict ) = 0;
-	
-	// If set to true (defaults to true for Valve games and false for others), then IVEngineClient::ClientCmd
-	// can only execute things marked with FCVAR_CLIENTCMD_CAN_EXECUTE.
-	virtual void			SetRestrictClientCommands( bool bRestrict ) = 0;
-
-	virtual void _UNUSEDFN() = 0; // SetOverlayBindProxy
-	virtual void _UNUSEDFN() = 0; // CopyFrameBufferToMaterial
-	virtual void _UNUSEDFN() = 0; // ChangeTeam
-	virtual void _UNUSEDFN() = 0; // ReadConfiguration
-	virtual void _UNUSEDFN() = 0; // SetAchievementMgr
-	virtual void _UNUSEDFN() = 0; // GetAchievementMgr
-	virtual void _UNUSEDFN() = 0; // MapLoadFailed
-	virtual void _UNUSEDFN() = 0; // SetMapLoadFailed
-	
-	virtual bool			IsLowViolence() = 0;
-
-	virtual void _UNUSEDFN() = 0; // GetMostRecentSaveGame
-	virtual void _UNUSEDFN() = 0; // SetMostRecentSaveGame
-	virtual void _UNUSEDFN() = 0; // StartXboxExitingProcess
-	virtual void _UNUSEDFN() = 0; // IsSaveInProgress
-	virtual void _UNUSEDFN() = 0; // OnStorageDeviceAttached
-	virtual void _UNUSEDFN() = 0; // OnStorageDeviceDetached
-	virtual void _UNUSEDFN() = 0; // ResetDemoInterpolation
-	virtual void _UNUSEDFN() = 0; // SetGamestatsData
-	virtual void _UNUSEDFN() = 0; // GetGamestatsData
+	virtual void _UNUSED_GetLightForPointFast(void)=0;
+	virtual void _UNUSED_ClientCmd_Unrestricted(void)=0;
+	virtual void _UNUSED_SetRestrictServerCommands(void)=0;
+	virtual void _UNUSED_SetRestrictClientCommands(void)=0;
+	virtual void _UNUSED_SetOverlayBindProxy(void)=0;
+	virtual void _UNUSED_CopyFrameBufferToMaterial(void)=0;
+	virtual void _UNUSED_ChangeTeam(void)=0;
+	virtual void _UNUSED_ReadConfiguration(void)=0;
+	virtual void _UNUSED_SetAchievementMgr(void)=0;
+	virtual void _UNUSED_GetAchievementMgr(void)=0;
+	virtual void _UNUSED_MapLoadFailed(void)=0;
+	virtual void _UNUSED_SetMapLoadFailed(void)=0;
+	virtual void _UNUSED_IsLowViolence(void)=0;
+	virtual void _UNUSED_GetMostRecentSaveGame(void)=0;
+	virtual void _UNUSED_SetMostRecentSaveGame(void)=0;
+	virtual void _UNUSED_StartXboxExitingProcess(void)=0;
+	virtual void _UNUSED_IsSaveInProgress(void)=0;
+	virtual void _UNUSED_OnStorageDeviceAttached(void)=0;
+	virtual void _UNUSED_OnStorageDeviceDetached(void)=0;
+	virtual void _UNUSED_ResetDemoInterpolation(void)=0;
+	virtual void _UNUSED_SetGamestatsData(void)=0;
+	virtual void _UNUSED_GetGamestatsData(void)=0;
 };
 
 
-// Interfaces as globals for now:
+// IBaseClientDLL //////////////////////////////////////////////////////////////
 
-extern IVEngineClient_012 * g_VEngineClient;
-extern ICvar_003 * g_Cvar;
+#define CLIENT_DLL_INTERFACE_VERSION_013 "VClient013"
+
+class CGlobalVarsBase;
+
+class IBaseClientDLL_013 abstract
+{
+public:
+	// Called once when the client DLL is loaded
+	virtual int				Init( CreateInterfaceFn appSystemFactory, 
+									CreateInterfaceFn physicsFactory,
+									CGlobalVarsBase *pGlobals ) = 0;
+
+	// Called once when the client DLL is being unloaded
+	virtual void			Shutdown( void ) = 0;
+	
+	virtual void _UNUSED_LevelInitPreEntity(void)=0;
+	virtual void _UNUSED_LevelInitPostEntity(void)=0;
+	virtual void _UNUSED_LevelShutdown(void)=0;
+	virtual void _UNUSED_GetAllClasses(void)=0;
+	virtual void _UNUSED_HudVidInit(void)=0;
+	virtual void _UNUSED_HudProcessInput(void)=0;
+	virtual void _UNUSED_HudUpdate(void)=0;
+	virtual void _UNUSED_HudReset(void)=0;
+	virtual void _UNUSED_HudText(void)=0;
+	virtual void _UNUSED_IN_ActivateMouse(void)=0;
+	virtual void _UNUSED_IN_DeactivateMouse(void)=0;
+	virtual void _UNUSED_IN_MouseEvent (void)=0;
+	virtual void _UNUSED_IN_Accumulate (void)=0;
+	virtual void _UNUSED_IN_ClearStates (void)=0;
+	virtual void _UNUSED_IN_IsKeyDown(void)=0;
+	virtual void _UNUSED_IN_KeyEvent(void)=0;
+	virtual void _UNUSED_CreateMove(void)=0;
+	virtual void _UNUSED_ExtraMouseSample(void)=0;
+	virtual void _UNUSED_WriteUsercmdDeltaToBuffer(void)=0;
+	virtual void _UNUSED_EncodeUserCmdToBuffer(void)=0;
+	virtual void _UNUSED_DecodeUserCmdFromBuffer(void)=0;
+	virtual void _UNUSED_View_Render(void)=0;
+	virtual void _UNUSED_RenderView(void)=0;
+	virtual void _UNUSED_View_Fade(void)=0;
+	virtual void _UNUSED_SetCrosshairAngle(void)=0;
+	virtual void _UNUSED_InitSprite(void)=0;
+	virtual void _UNUSED_ShutdownSprite(void)=0;
+	virtual void _UNUSED_GetSpriteSize(void)=0;
+	virtual void _UNUSED_VoiceStatus(void)=0;
+	virtual void _UNUSED_InstallStringTableCallback(void)=0;
+	virtual void _UNUSED_FrameStageNotify(void)=0;
+	virtual void _UNUSED_DispatchUserMessage(void)=0;
+	virtual void _UNUSED_SaveInit(void)=0;
+	virtual void _UNUSED_SaveWriteFields(void)=0;
+	virtual void _UNUSED_SaveReadFields(void)=0;
+	virtual void _UNUSED_PreSave(void)=0;
+	virtual void _UNUSED_Save(void)=0;
+	virtual void _UNUSED_WriteSaveHeaders(void)=0;
+	virtual void _UNUSED_ReadRestoreHeaders(void)=0;
+	virtual void _UNUSED_Restore(void)=0;
+	virtual void _UNUSED_DispatchOnRestore(void)=0;
+	virtual void _UNUSED_GetStandardRecvProxies(void)=0;
+	virtual void _UNUSED_WriteSaveGameScreenshot(void)=0;
+	virtual void _UNUSED_EmitSentenceCloseCaption(void)=0;
+	virtual void _UNUSED_EmitCloseCaption(void)=0;
+	virtual void _UNUSED_CanRecordDemo(void)=0;
+	virtual void _UNUSED_WriteSaveGameScreenshotOfSize(void)=0;
+	virtual void _UNUSED_RenderViewEx(void)=0;
+	virtual void _UNUSED_GetPlayerView(void)=0;
+};
+
+
+// IBaseClientDll_015 //////////////////////////////////////////////////////////
+
+
+#define CLIENT_DLL_INTERFACE_VERSION_015		"VClient015"
+
+class CGlobalVarsBase;
+
+class IBaseClientDLL_015 abstract
+{
+public:
+	// Called once when the client DLL is loaded
+	virtual int				Init( CreateInterfaceFn appSystemFactory, 
+									CreateInterfaceFn physicsFactory,
+									CGlobalVarsBase *pGlobals ) = 0;
+
+	virtual void			PostInit() = 0;
+
+	// Called once when the client DLL is being unloaded
+	virtual void			Shutdown( void ) = 0;
+	
+	virtual void _UNUSED_LevelInitPreEntity(void)=0;
+	virtual void _UNUSED_LevelInitPostEntity(void)=0;
+	virtual void _UNUSED_LevelShutdown(void)=0;
+	virtual void _UNUSED_GetAllClasses(void)=0;
+	virtual void _UNUSED_HudVidInit(void)=0;
+	virtual void _UNUSED_HudProcessInput(void)=0;
+	virtual void _UNUSED_HudUpdate(void)=0;
+	virtual void _UNUSED_HudReset(void)=0;
+	virtual void _UNUSED_HudText(void)=0;
+	virtual void _UNUSED_IN_ActivateMouse(void)=0;
+	virtual void _UNUSED_IN_DeactivateMouse(void)=0;
+	virtual void _UNUSED_IN_Accumulate(void)=0;
+	virtual void _UNUSED_IN_ClearStates(void)=0;
+	virtual void _UNUSED_IN_IsKeyDown(void)=0;
+	virtual void _UNUSED_IN_KeyEvent(void)=0;
+	virtual void _UNUSED_CreateMove(void)=0;
+	virtual void _UNUSED_ExtraMouseSample(void)=0;
+	virtual void _UNUSED_WriteUsercmdDeltaToBuffer(void)=0;
+	virtual void _UNUSED_EncodeUserCmdToBuffer(void)=0;
+	virtual void _UNUSED_DecodeUserCmdFromBuffer(void)=0;
+	virtual void _UNUSED_View_Render(void)=0;
+	virtual void _UNUSED_RenderView(void)=0;
+	virtual void _UNUSED_View_Fade(void)=0;
+	virtual void _UNUSED_SetCrosshairAngle(void)=0;
+	virtual void _UNUSED_InitSprite(void)=0;
+	virtual void _UNUSED_ShutdownSprite(void)=0;
+	virtual void _UNUSED_GetSpriteSize(void)=0;
+	virtual void _UNUSED_VoiceStatus(void)=0;
+	virtual void _UNUSED_InstallStringTableCallback(void)=0;
+	virtual void _UNUSED_FrameStageNotify(void)=0;
+	virtual void _UNUSED_DispatchUserMessage(void)=0;
+	virtual void _UNUSED_SaveInit(void)=0;
+	virtual void _UNUSED_SaveWriteFields(void)=0;
+	virtual void _UNUSED_SaveReadFields(void)=0;
+	virtual void _UNUSED_PreSave(void)=0;
+	virtual void _UNUSED_Save(void)=0;
+	virtual void _UNUSED_WriteSaveHeaders(void)=0;
+	virtual void _UNUSED_ReadRestoreHeaders(void)=0;
+	virtual void _UNUSED_Restore(void)=0;
+	virtual void _UNUSED_DispatchOnRestore(void)=0;
+	virtual void _UNUSED_GetStandardRecvProxies(void)=0;
+	virtual void _UNUSED_WriteSaveGameScreenshot(void)=0;
+	virtual void _UNUSED_EmitSentenceCloseCaption(void)=0;
+	virtual void _UNUSED_EmitCloseCaption(void)=0;
+	virtual void _UNUSED_CanRecordDemo(void)=0;
+	virtual void _UNUSED_WriteSaveGameScreenshotOfSize(void)=0;
+	virtual void _UNUSED_GetPlayerView(void)=0;
+	virtual void _UNUSED_SetupGameProperties(void)=0;
+	virtual void _UNUSED_GetPresenceID(void)=0;
+	virtual void _UNUSED_GetPropertyIdString(void)=0;
+	virtual void _UNUSED_GetPropertyDisplayString(void)=0;
+#ifdef _WIN32
+	virtual void _UNUSED_StartStatsReporting(void)=0;
+#endif
+	virtual void _UNUSED_InvalidateMdlCache(void)=0;
+	virtual void _UNUSED_IN_SetSampleTime(void)=0;
+};

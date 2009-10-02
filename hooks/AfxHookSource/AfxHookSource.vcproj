@@ -186,6 +186,22 @@
 					RelativePath=".\stdafx.h"
 					>
 				</File>
+				<File
+					RelativePath=".\WrpConsole.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\WrpConsole.h"
+					>
+				</File>
+				<File
+					RelativePath=".\WrpVEngineClient.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\WrpVEngineClient.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="shared"
