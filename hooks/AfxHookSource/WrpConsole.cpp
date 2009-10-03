@@ -56,14 +56,19 @@ char const * WrpConCommand::GetName() {
 ICvar_003 * WrpConCommands::m_CvarIface_003 = 0;
 ICvar_004 * WrpConCommands::m_CvarIface_004 = 0;
 WrpConCommandsListEntry * WrpConCommands::m_CommandListRoot = 0;
+IVEngineClient_012 * WrpConCommands::m_VEngineClient_012 = 0;
 
+IVEngineClient_012 * WrpConCommands::GetVEngineClient_012() {
+	return m_VEngineClient_012;
+}
 
-void WrpConCommands::RegisterCommands(ICvar_003 * cvarIface) {
+void WrpConCommands::RegisterCommands(ICvar_003 * cvarIface, IVEngineClient_012 * vEngineClientInterface) {
 	if(m_CvarIface_003)
 		// already registered the current list
 		return;
 
 	m_CvarIface_003 = cvarIface;
+	m_VEngineClient_012 = vEngineClientInterface;
 	ConCommandBase_003::s_pAccessor = new WrpConCommandsRegistrar_003();
 
 	for(WrpConCommandsListEntry * entry = m_CommandListRoot; entry; entry = entry->Next) {

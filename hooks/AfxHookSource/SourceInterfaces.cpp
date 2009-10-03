@@ -14,6 +14,8 @@
 
 #include "SourceInterfaces.h"
 
+#include "WrpConsole.h"
+
 #include <windows.h>
 
 
@@ -30,10 +32,72 @@ CreateInterfaceFn Sys_GetFactory( CSysModule *pModule )
 	return reinterpret_cast<CreateInterfaceFn>(GetProcAddress( hDLL, CREATEINTERFACE_PROCNAME ));
 }
 
+//
+// Helpers for wrapping command args:
+
+// ArgsFromConCommand_003 //////////////////////////////////////////////////////
+
+class ArgsFromConCommand_003 :
+	public IWrpCommandArgs
+{
+public:
+	/// <comments> implements IWrpCommandArgs </comments>
+	virtual int ArgC();
+
+	/// <comments> implements IWrpCommandArgs </comments>
+	virtual char const * ArgV(int i);
+
+	void DoNothing() {}
+};
+
+int ArgsFromConCommand_003::ArgC() {
+	return WrpConCommands::GetVEngineClient_012()->Cmd_Argc();
+}
+
+char const * ArgsFromConCommand_003::ArgV(int i) {
+	return WrpConCommands::GetVEngineClient_012()->Cmd_Argv(i);
+}
+
+ArgsFromConCommand_003 g_ArgsFromConCommand_003;
+
+// ArgsFromCCommand_004 ////////////////////////////////////////////////////////
+
+class ArgsFromCCommand_004 :
+	public IWrpCommandArgs
+{
+public:
+	/// <remarks> SetCommand must have been supplied with the command arg first </remarks>
+	/// <comments> implements IWrpCommandArgs </comments>
+	virtual int ArgC();
+
+	/// <remarks> SetCommand must have been supplied with the command arg first </remarks>
+	/// <comments> implements IWrpCommandArgs </comments>
+	virtual char const * ArgV(int i);
+
+	void SetCommand(CCommand_004 const * cmd);
+
+private:
+	CCommand_004 const * m_Cmd;
+
+};
+
+int ArgsFromCCommand_004::ArgC() {
+	return m_Cmd->ArgC();
+}
+
+char const * ArgsFromCCommand_004::ArgV(int i) {
+	return (m_Cmd->ArgV())[i];
+}
+
+void ArgsFromCCommand_004::SetCommand(CCommand_004 const * cmd) {
+	m_Cmd = cmd;
+}
+
+ArgsFromCCommand_004 g_ArgsFromCCommand_004; // I dunno why () wouldn't work, crzy shit.
 
 // ConCommand_003 //////////////////////////////////////////////////////////////
 
-ConCommand_003::ConCommand_003( char const *pName, FnCommandCallback_003 callback, char const *pHelpString, int flags)
+ConCommand_003::ConCommand_003( char const *pName, WrpCommandCallback callback, char const *pHelpString, int flags)
 {
 	Create(pName, callback, pHelpString, flags);
 }
@@ -41,7 +105,7 @@ ConCommand_003::ConCommand_003( char const *pName, FnCommandCallback_003 callbac
 ConCommand_003::~ConCommand_003( void ) {
 }
 
-void ConCommand_003::Create( char const *pName, FnCommandCallback_003 callback, char const *pHelpString, int flags) {
+void ConCommand_003::Create( char const *pName, WrpCommandCallback callback, char const *pHelpString, int flags) {
 	m_Callback = callback;
 
 	BaseClass::Create(pName, pHelpString, flags);
@@ -61,9 +125,8 @@ bool ConCommand_003::CanAutoComplete( void ) {
 }
 
 void ConCommand_003::Dispatch( void ) {
-	MessageBox(0, "ConCommand_003::Dispatch", "AFX_DEBUG", MB_OK);
 	if(m_Callback)
-		m_Callback();
+		m_Callback((IWrpCommandArgs *)&g_ArgsFromConCommand_003);
 }
 
 
@@ -80,7 +143,7 @@ ConCommand_004::ConCommand_004(const char *pName, FnCommandCallbackV1_t_004 call
 	BaseClass::Create( pName, pHelpString, flags );
 }
 
-ConCommand_004::ConCommand_004(const char *pName, FnCommandCallback_t_004 callback, const char *pHelpString, int flags)
+ConCommand_004::ConCommand_004(const char *pName, WrpCommandCallback callback, const char *pHelpString, int flags)
 {
 	// Set the callback
 	m_fnCommandCallback = callback;
@@ -120,7 +183,8 @@ void ConCommand_004::Dispatch( const CCommand_004 &command )
 	{
 		if ( m_fnCommandCallback )
 		{
-			( *m_fnCommandCallback )( command );
+			g_ArgsFromCCommand_004.SetCommand(&command);
+			m_fnCommandCallback((IWrpCommandArgs *)&g_ArgsFromCCommand_004);
 			return;
 		}
 	}

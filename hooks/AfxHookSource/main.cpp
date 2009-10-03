@@ -60,7 +60,7 @@ void MySetup(CreateInterfaceFn appSystemFactory) {
 	static bool bFirstRun = true;
 
 	if(bFirstRun) {
-		void * iface;
+		void *iface , *iface2;
 
 		bFirstRun = false;
 
@@ -73,8 +73,11 @@ void MySetup(CreateInterfaceFn appSystemFactory) {
 
 		if(iface = appSystemFactory( VENGINE_CVAR_INTERFACE_VERSION_004, NULL ))
 			WrpConCommands::RegisterCommands((ICvar_004 *)iface);
-		else if(iface = appSystemFactory( VENGINE_CVAR_INTERFACE_VERSION_003, NULL ))
-			WrpConCommands::RegisterCommands((ICvar_003 *)iface);
+		else if(
+			(iface = appSystemFactory( VENGINE_CVAR_INTERFACE_VERSION_003, NULL ))
+			&& (iface2 = appSystemFactory(VENGINE_CLIENT_INTERFACE_VERSION_012, NULL))
+		)
+			WrpConCommands::RegisterCommands((ICvar_003 *)iface, (IVEngineClient_012 *)iface2);
 		else
 			ErrorBox("Could not get a supported VEngineCvar interface.");
 	}

@@ -56,11 +56,14 @@ public:
 
 // Command / Cvar related:
 
+// we hack around a bit here:
+class IWrpCommandArgs;
+typedef void (*WrpCommandCallback)(IWrpCommandArgs * args);
+
 class ConVar_003;
 
 typedef void ( *FnChangeCallback_003 )( ConVar_003 *var, char const *pOldString );
 typedef void ( *FnCommandCallback_003 )( void );
-
 
 #define COMMAND_COMPLETION_MAXITEMS_004 64
 #define COMMAND_COMPLETION_ITEM_LENGTH_004 64
@@ -174,8 +177,8 @@ public:
 
 	ConCommand_003( void );
 
-	/// <remarks> tweaked since we don't support completition </remarks>
-	ConCommand_003( char const *pName, FnCommandCallback_003 callback, char const *pHelpString = 0, int flags = 0);
+	/// <remarks> tweaked since we don't support completition and use a callback wrapper </remarks>
+	ConCommand_003( char const *pName, WrpCommandCallback callback, char const *pHelpString = 0, int flags = 0);
 
 	virtual						~ConCommand_003( void );
 
@@ -191,9 +194,9 @@ public:
 	virtual void				Dispatch( void );
 
 private:
-	FnCommandCallback_003			m_Callback;
+	WrpCommandCallback			m_Callback;
 
-	virtual void				Create( char const *pName, FnCommandCallback_003 callback, char const *pHelpString = 0, int flags = 0);
+	virtual void				Create( char const *pName, WrpCommandCallback callback, char const *pHelpString = 0, int flags = 0);
 
 };
 
@@ -267,7 +270,6 @@ private:
 	int m_Flags;
 };
 
-
 // ConCommand_004 //////////////////////////////////////////////////////////////
 
 class ConCommand_004 : public ConCommandBase_004
@@ -278,8 +280,8 @@ public:
 	/// <remarks> tweaked since we don't support completition </remarks>
 	ConCommand_004(const char *pName, FnCommandCallbackV1_t_004 callback,  const char *pHelpString = 0, int flags = 0);
 
-	/// <remarks> tweaked since we don't support completition </remarks>
-	ConCommand_004(const char *pName, FnCommandCallback_t_004 callback, const char *pHelpString = 0, int flags = 0);
+	/// <remarks> tweaked since we don't support completition and use a callback wrapper </remarks>
+	ConCommand_004(const char *pName, WrpCommandCallback callback, const char *pHelpString = 0, int flags = 0);
 
 	/// <remarks> tweaked since we don't support completition </remarks>
 	ConCommand_004(const char *pName, ICommandCallback_004 *pCallback, const char *pHelpString = 0, int flags = 0);
@@ -300,7 +302,7 @@ private:
 	union
 	{
 		FnCommandCallbackV1_t_004 m_fnCommandCallbackV1;
-		FnCommandCallback_t_004 m_fnCommandCallback;
+		WrpCommandCallback m_fnCommandCallback;
 		ICommandCallback_004 *m_pCommandCallback; 
 	};
 
@@ -308,6 +310,93 @@ private:
 	bool m_bUsingCommandCallbackInterface : 1;
 };
 
+
+/// <comments> This is really not my fault, this is the way Valve did it!
+///		If you ever wondered who passes s.th. depeding on compiler
+///		optimization etc. among DLLs and different compile units
+///		- well the Source SDK does - and this time not even
+///		anything virtual here - hahahahahha just gr8.
+///		</comments>
+///	<remarks> Do not implement this or s.th. we just use this to access
+///		the class memory in the source engine. </remarks>
+class CCommand_004 abstract
+{
+public:
+	/// <remarks> NOT_IMPLEMENTED </remarks>
+	CCommand_004(void);
+
+	/// <remarks> NOT_IMPLEMENTED </remarks>
+	CCommand_004(void *, void *);
+
+	void _NOT_IMPLEMENTED_Tokenize(void);
+	void _NOT_IMPLEMENTED_Reset(void);
+
+	int ArgC() const;
+	const char **ArgV() const;
+	const char *ArgS() const;					// All args that occur after the 0th arg, in string form
+	const char *GetCommandString() const;		// The entire command in string form, including the 0th arg
+	const char *operator[]( int nIndex ) const;	// Gets at arguments
+	const char *Arg( int nIndex ) const;		// Gets at arguments
+	
+	void _NOT_IMPLEMENTED_FindArg(void) const;
+	void _NOT_IMPLEMENTED_FindArgInt(void) const;
+
+	static int MaxCommandLength();
+	static void _NOT_IMPLEMENTED_DefaultBreakSet(void);
+
+private:
+	enum
+	{
+		COMMAND_MAX_ARGC = 64,
+		COMMAND_MAX_LENGTH = 512,
+	};
+
+	int		m_nArgc;
+	int		m_nArgv0Size;
+	char	m_pArgSBuffer[ COMMAND_MAX_LENGTH ];
+	char	m_pArgvBuffer[ COMMAND_MAX_LENGTH ];
+	const char*	m_ppArgv[ COMMAND_MAX_ARGC ];
+};
+
+inline int CCommand_004::MaxCommandLength()
+{
+	return COMMAND_MAX_LENGTH - 1;
+}
+
+inline int CCommand_004::ArgC() const
+{
+	return m_nArgc;
+}
+
+inline const char **CCommand_004::ArgV() const
+{
+	return m_nArgc ? (const char**)m_ppArgv : 0;
+}
+
+inline const char *CCommand_004::ArgS() const
+{
+	return m_nArgv0Size ? &m_pArgSBuffer[m_nArgv0Size] : "";
+}
+
+inline const char *CCommand_004::GetCommandString() const
+{
+	return m_nArgc ? m_pArgSBuffer : "";
+}
+
+inline const char *CCommand_004::Arg( int nIndex ) const
+{
+	// FIXME: Many command handlers appear to not be particularly careful
+	// about checking for valid argc range. For now, we're going to
+	// do the extra check and return an empty string if it's out of range
+	if ( nIndex < 0 || nIndex >= m_nArgc )
+		return "";
+	return m_ppArgv[nIndex];
+}
+
+inline const char *CCommand_004::operator[]( int nIndex ) const
+{
+	return Arg( nIndex );
+}
 
 
 // IAppSystem //////////////////////////////////////////////////////////////////
@@ -483,8 +572,12 @@ public:
 	virtual void				Con_NPrintf( int pos, const char *fmt, ... ) = 0;
 	
 	virtual void _UNUSED_Con_NXPrintf(void)=0;
-	virtual void _UNUSED_Cmd_Argc(void)=0;
-	virtual void _UNUSED_Cmd_Argv(void)=0;
+
+	// During ConCommand processing functions, use this function to get the total # of tokens passed to the command parser
+	virtual int					Cmd_Argc( void ) = 0;	
+	// During ConCommand processing, this API is used to access each argument passed to the parser
+	virtual const char			*Cmd_Argv( int arg ) = 0;
+
 	virtual void _UNUSED_IsBoxVisible(void)=0;
 	virtual void _UNUSED_IsBoxInViewCluster(void)=0;
 	virtual void _UNUSED_CullBox(void)=0;
