@@ -99,7 +99,7 @@ void MdtMemAccessBegin(LPVOID lpAddress, size_t size, MdtMemBlockInfos *mdtMemBl
 		lpAddress = (BYTE *)mbi.BaseAddress + mbi.RegionSize;
 	}
 
-	for(int i=0; i < mdtMemBlockInfos->size(); i++) {
+	for(size_t i=0; i < mdtMemBlockInfos->size(); i++) {
 		mbi2 = mdtMemBlockInfos->at(i);
 		VirtualProtect(mbi2.BaseAddress, mbi2.RegionSize, PAGE_READWRITE, &dwDummy);
 	}
@@ -110,7 +110,7 @@ void MdtMemAccessEnd(MdtMemBlockInfos *mdtMemBlockInfos)
 	MdtMemBlockInfo mbi2;
 	DWORD dwDummy;
 
-	for(int i=0; i < mdtMemBlockInfos->size(); i++) {
+	for(size_t i=0; i < mdtMemBlockInfos->size(); i++) {
 		mbi2 = mdtMemBlockInfos->at(i);
 		VirtualProtect(mbi2.BaseAddress, mbi2.RegionSize, mbi2.Protect, &dwDummy);
 	}

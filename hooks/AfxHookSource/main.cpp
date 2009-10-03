@@ -77,36 +77,29 @@ void MySetup(CreateInterfaceFn appSystemFactory) {
 			WrpConCommands::RegisterCommands((ICvar_003 *)iface);
 		else
 			ErrorBox("Could not get a supported VEngineCvar interface.");
-
-		// Allow Console commands to register:
-		if(g_VEngineClient) {
-//				MessageBox(0, g_VEngineClient->GetLevelName(), "TEST", MB_OK|MB_ICONINFORMATION);
-
-			g_VEngineClient->ClientCmd("echo \"// ----------------\"");
-			g_VEngineClient->ClientCmd("echo \"// AfxHookSource " __DATE__ " "__TIME__ "\"");
-			g_VEngineClient->ClientCmd("echo \"// Copyright (c) advancedfx.org\"");
-			g_VEngineClient->ClientCmd("echo \"// ----------------\"");
-		}
 	}
 }
 
-typedef int (__thiscall * Client_Init_t)(void *this_ptr, CreateInterfaceFn appSystemFactory, CreateInterfaceFn physicsFactory, CGlobalVarsBase *pGlobals);
-Client_Init_t old_Client_Init;
+void * old_Client_Init;
 
-// todo
-//__declspec(naked) {
-int	__stdcall new_Client_Init(CreateInterfaceFn appSystemFactory, CreateInterfaceFn physicsFactory, CGlobalVarsBase *pGlobals) {
-
-	void *this_ptr;
+int __stdcall new_Client_Init(DWORD *this_ptr, CreateInterfaceFn appSystemFactory, CreateInterfaceFn physicsFactory, CGlobalVarsBase *pGlobals) {
+	static bool bFirstCall = true;
+	int myret;
 
 	__asm {
-		mov this_ptr,ecx
+		MOV ecx, pGlobals
+		PUSH ecx
+		MOV ecx, physicsFactory
+		PUSH ecx
+		MOV ecx, appSystemFactory
+		PUSH ecx
+
+		MOV ecx, this_ptr		
+		CALL old_Client_Init
+		MOV	myret, eax
 	}
 
 	ErrorBox("Hello World.");
-
-	static bool bFirstCall = true;
-	int iRet = old_Client_Init(this_ptr, appSystemFactory, physicsFactory, pGlobals);
 
 	if(bFirstCall) {
 		bFirstCall = false;
@@ -114,39 +107,60 @@ int	__stdcall new_Client_Init(CreateInterfaceFn appSystemFactory, CreateInterfac
 		MySetup(appSystemFactory);
 	}
 
-	return iRet;
+	return myret;
+}
+
+__declspec(naked) void hook_Client_Init() {
+	static unsigned char * tempMem[8];
+	__asm {
+		POP eax
+		MOV tempMem[0], eax
+		MOV tempMem[4], ecx
+
+		PUSH ecx
+		CALL new_Client_Init
+
+		MOV ecx, tempMem[4]
+		PUSH 0
+		PUSH eax
+		MOV eax, tempMem[0]
+		MOV [esp+4], eax
+		POP eax
+
+		RET
+	}
 }
 
 CreateInterfaceFn old_Client_CreateInterface = 0;
 void* new_Client_CreateInterface(const char *pName, int *pReturnCode) {
 	static bool bFirstCall = true;
+	MdtMemBlockInfos mbis;
 
 	void * pRet = old_Client_CreateInterface(pName, pReturnCode);
 
 	if(bFirstCall) {
 		bFirstCall = false;
 
-		void * iface;
+		void * iface = NULL;
 
 		if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_015, NULL)) {
-			ErrorBox("me15");
-			DWORD dwAdr = **(DWORD **)iface; // access first funtion in VTable
-			old_Client_Init = DetourClassFunc(
-				(BYTE *) dw,
-				(BYTE *) new_Client_Init,
-				0x0A
-			);		}
+//			ErrorBox("me15");
+
+		}
 		else if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_013, NULL)) {
-			ErrorBox("me13");
-			DWORD dwAdr = **(DWORD **)iface; // access first funtion in VTable
-			old_Client_Init = DetourClassFunc(
-				(BYTE *) dw,
-				(BYTE *) new_Client_Init,
-				0x0A
-			);
+//			ErrorBox("me13");
+		}
+
+		if(iface) {
+			void **padr =  *(void ***)iface;
+			old_Client_Init = *padr;
+			MdtMemAccessBegin(padr, sizeof(void *), &mbis);
+			*padr = (void *)hook_Client_Init;
+			MdtMemAccessEnd(&mbis);
 		}
 		else
-			ErrorBox("Could not get a supported VClient interface.");
+			throw "Could not get a supported VClient interface.";
+
 	}
 
 	return pRet;

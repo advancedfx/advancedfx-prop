@@ -14,6 +14,7 @@
 #include "SourceInterfaces.h"
 #include "WrpVEngineClient.h"
 #include "WrpConsole.h"
+#include "WrpVEngineClient.h"
 
 #include <windows.h>
 
@@ -21,11 +22,13 @@
 extern WrpVEngineClient * g_VEngineClient;
 
 
-// mirv_testcommand ////////////////////////////////////////////////////////////
-
-void mirv_testcommand_callback() {
-	MessageBox(0, "MirvTestCommand called", "AFX_DEBUG", MB_OK|MB_ICONINFORMATION);
-	g_VEngineClient->ClientCmd("echo MirvTestCommand called");
+CON_COMMAND(mirv_info, "shows information about mirv") {
+	g_VEngineClient->ExecuteClientCmd("echo \"//\"");
+	g_VEngineClient->ExecuteClientCmd("echo \"// AfxHookSource " __DATE__ " "__TIME__ "\" by ripieces and msthavoc");
+	g_VEngineClient->ExecuteClientCmd("echo \"// Copyright (c) advancedfx.org\"");
+	g_VEngineClient->ExecuteClientCmd("echo \"//\"");
 }
 
-WrpConCommand mirv_testcommand("mirv_testcommand", &mirv_testcommand_callback, "Calls the test command");
+CON_COMMAND(mirv_test, "test") {
+	g_VEngineClient->Con_NPrintf(1,"THIS IS A TEST BITCHES!");
+}

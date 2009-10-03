@@ -35,13 +35,18 @@ CreateInterfaceFn Sys_GetFactory( CSysModule *pModule )
 
 ConCommand_003::ConCommand_003( char const *pName, FnCommandCallback_003 callback, char const *pHelpString, int flags)
 {
+	Create(pName, callback, pHelpString, flags);
+}
+
+ConCommand_003::~ConCommand_003( void ) {
+}
+
+void ConCommand_003::Create( char const *pName, FnCommandCallback_003 callback, char const *pHelpString, int flags) {
 	m_Callback = callback;
 
 	BaseClass::Create(pName, pHelpString, flags);
 }
 
-ConCommand_003::~ConCommand_003( void ) {
-}
 
 bool ConCommand_003::IsCommand( void ) const {
 	return true;
@@ -185,8 +190,11 @@ void ConCommandBase_003::Create(char const *pName, char const *pHelpString, int 
 	m_Next = 0;
 
 	// AddToList:
-	this->SetNext(s_pConCommandBases);
-	s_pConCommandBases = this;
+	// This will not work for some reason if part of the list
+	// is already live, may be it's a mistake
+	// in the Source SDK.
+	//	m_Next = s_pConCommandBases;
+	//	s_pConCommandBases = this;
 
 	// If List is already live, register Instantly:
 	if ( s_pAccessor )
@@ -212,7 +220,7 @@ bool ConCommandBase_003::IsCommand(void) const {
 }
 
 bool ConCommandBase_003::IsBitSet( int flag ) const {
-	return 0 != (m_Flags | flag);
+	return 0 != (m_Flags & flag);
 }
 
 void ConCommandBase_003::AddFlags( int flags ) {
@@ -310,8 +318,11 @@ void ConCommandBase_004::Create(const char *pName, const char *pHelpString, int 
 	m_Next = 0;
 
 	// AddToList:
-	m_Next = s_pConCommandBases;
-	s_pConCommandBases = this;
+	// This will not work for some reason if part of the list
+	// is already live, may be it's a mistake
+	// in the Source SDK.
+	//m_Next = s_pConCommandBases;
+	//s_pConCommandBases = this;
 
 	// If List is already live, register Instantly:
 	if ( s_pAccessor )
@@ -337,7 +348,7 @@ bool ConCommandBase_004::IsCommand(void) const {
 }
 
 bool ConCommandBase_004::IsFlagSet( int flag ) const {
-	return 0 != (m_Flags | flag);
+	return 0 != (m_Flags & flag);
 }
 
 void ConCommandBase_004::AddFlags( int flags ) {

@@ -26,7 +26,6 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				Description=""
 				CommandLine=""
 			/>
 			<Tool
@@ -96,7 +95,6 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description=""
 				CommandLine=""
 			/>
 		</Configuration>
@@ -110,7 +108,6 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				Description=""
 				CommandLine=""
 			/>
 			<Tool
@@ -180,7 +177,6 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description=""
 				CommandLine=""
 			/>
 		</Configuration>
@@ -195,7 +191,7 @@
 				Name="basecom"
 				>
 				<File
-					RelativePath="..\shared\com\basecom.h"
+					RelativePath="..\..\shared\com\basecom.h"
 					>
 				</File>
 			</Filter>
@@ -203,7 +199,7 @@
 				Name="hldemo"
 				>
 				<File
-					RelativePath="..\shared\hldemo\hldemo.h"
+					RelativePath="..\..\shared\hldemo\hldemo.h"
 					>
 				</File>
 			</Filter>
@@ -212,15 +208,15 @@
 			Name="resources"
 			>
 			<File
-				RelativePath="..\resources\changelog.txt"
+				RelativePath="..\..\resources\changelog.txt"
 				>
 			</File>
 			<File
-				RelativePath="..\resources\mdt_addresses.ini"
+				RelativePath="..\..\resources\mdt_addresses.ini"
 				>
 			</File>
 			<File
-				RelativePath="..\resources\readme.txt"
+				RelativePath="..\..\resources\readme.txt"
 				>
 			</File>
 		</Filter>

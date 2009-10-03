@@ -78,3 +78,14 @@ private:
 	static ICvar_004 * m_CvarIface_004;
 	static WrpConCommandsListEntry * m_CommandListRoot;
 };
+
+
+#define CON_COMMAND( name, description ) \
+   static void name(); \
+   static WrpConCommand name##_command( #name, name, description ); \
+   static void name()
+
+#define CON_COMMAND_F( name, description, flags ) \
+   static void name(); \
+   static WrpConCommand name##_command( #name, name, description, flags ); \
+   static void name()

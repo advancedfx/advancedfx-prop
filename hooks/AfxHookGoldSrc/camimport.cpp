@@ -71,6 +71,29 @@ REGISTER_CMD_FUNC(camimport_basetime)
 	}
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+/// <remarks> If pz is 0, the function returns </remarks>
+void CrLfZ2LfZ(char * pz) {
+	if(!pz)
+		return;
+
+	while(char c = *pz) {
+		if(
+			'\r' == c
+			&& '\n' == *(pz+1)
+			&& '\0' == *(pz+2)
+		) 
+			// \r\n\0
+			*pz = '\n';
+			*(pz+1) = '\0';
+			break;
+		}
+
+		pz++;
+	}
+}
+
 
 // CCamImport //////////////////////////////////////////////////////////////////
 
@@ -160,7 +183,7 @@ bool CCamImport::GetCamPositon(float fTimeOfs, float outCamdata[6])
 			if(0<iSeekFrames)
 			{
 				// seek forward
-				pc = fgets(ms_readbuff,sizeof(ms_readbuff)/sizeof(char),m_File);
+				pc = CrLfZ2LfZ(fgets(ms_readbuff,sizeof(ms_readbuff)/sizeof(char),m_File));
 				if(!pc)
 				{
 					// read error
@@ -208,7 +231,7 @@ bool CCamImport::GetCamPositon(float fTimeOfs, float outCamdata[6])
 	}
 
 	// read current frame:
-	pc = fgets(ms_readbuff,sizeof(ms_readbuff)/sizeof(char),m_File);
+	pc = CrLfZ2LfZ(fgets(ms_readbuff,sizeof(ms_readbuff)/sizeof(char),m_File));
 	if(!pc)
 	{
 		// read error
@@ -272,7 +295,7 @@ bool CCamImport::LoadMotionFile(char const * pszFileName)
 		return false;
 
 	// check if this could be a valid BVH file:
-	pc = fgets(ms_readbuff,sizeof(ms_readbuff)/sizeof(char),m_File);
+	pc = CrLfZ2LfZ(fgets(ms_readbuff,sizeof(ms_readbuff)/sizeof(char),m_File));
 	if(!pc || strcmp(ms_readbuff,"HIERARCHY\n"))
 	{
 		fclose(m_File);
@@ -283,7 +306,7 @@ bool CCamImport::LoadMotionFile(char const * pszFileName)
 	pc2 = 0;
 	while(!pc2)
 	{
-		pc = fgets(ms_readbuff,sizeof(ms_readbuff)/sizeof(char),m_File);
+		pc = CrLfZ2LfZ(fgets(ms_readbuff,sizeof(ms_readbuff)/sizeof(char),m_File));
 		if(!pc)
 		{
 			fclose(m_File);
@@ -319,7 +342,7 @@ bool CCamImport::LoadMotionFile(char const * pszFileName)
 	pc2 = 0;
 	while(!pc2)
 	{
-		pc = fgets(ms_readbuff,sizeof(ms_readbuff)/sizeof(char),m_File);
+		pc = CrLfZ2LfZ(fgets(ms_readbuff,sizeof(ms_readbuff)/sizeof(char),m_File));
 		if(!pc)
 		{
 			fclose(m_File);
@@ -330,7 +353,7 @@ bool CCamImport::LoadMotionFile(char const * pszFileName)
 	}
 
 	// read frames:
-	pc = fgets(ms_readbuff,sizeof(ms_readbuff)/sizeof(char),m_File);
+	pc = CrLfZ2LfZ(fgets(ms_readbuff,sizeof(ms_readbuff)/sizeof(char),m_File));
 	if(!pc || strcmp(ms_readbuff,"Frames:") <= 0)
 	{
 		fclose(m_File);
@@ -340,7 +363,7 @@ bool CCamImport::LoadMotionFile(char const * pszFileName)
 	m_Frames = atoi(pc);
 
 	// read frame time:
-	pc = fgets(ms_readbuff,sizeof(ms_readbuff)/sizeof(char),m_File);
+	pc = CrLfZ2LfZ(fgets(ms_readbuff,sizeof(ms_readbuff)/sizeof(char),m_File));
 	if(!pc || strcmp(ms_readbuff,"Frame Time:") <= 0)
 	{
 		fclose(m_File);

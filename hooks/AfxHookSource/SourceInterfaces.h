@@ -19,6 +19,11 @@
 #define FORCEINLINE_CVAR FORCEINLINE
 
 #define FCVAR_NONE				0 
+#define FCVAR_UNREGISTERED		(1<<0)
+#define FCVAR_DEVELOPMENTONLY	(1<<1)
+#define FCVAR_GAMEDLL			(1<<2)
+#define FCVAR_CLIENTDLL			(1<<3)
+#define FCVAR_HIDDEN			(1<<4)
 
 #define CREATEINTERFACE_PROCNAME	"CreateInterface"
 
@@ -187,6 +192,9 @@ public:
 
 private:
 	FnCommandCallback_003			m_Callback;
+
+	virtual void				Create( char const *pName, FnCommandCallback_003 callback, char const *pHelpString = 0, int flags = 0);
+
 };
 
 
