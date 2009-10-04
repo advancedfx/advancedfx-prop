@@ -22,14 +22,6 @@
 extern WrpVEngineClient * g_VEngineClient;
 
 
-CON_COMMAND(mirv_info, "shows information about mirv") {
-	g_VEngineClient->ExecuteClientCmd("echo \"//\"");
-	g_VEngineClient->ExecuteClientCmd("echo \"// AfxHookSource " __DATE__ " "__TIME__ "\" by ripieces and msthavoc");
-	g_VEngineClient->ExecuteClientCmd("echo \"// Copyright (c) advancedfx.org\"");
-	g_VEngineClient->ExecuteClientCmd("echo \"//\"");
-	g_VEngineClient->Con_NPrintf(1,"TEST");
-}
-
 CON_COMMAND(mirv_xexec, "unrestricted client command execution: mirv_xexec <as you would have typed here>") {
 	unsigned int len=0;
 	char *ttt, *ct;

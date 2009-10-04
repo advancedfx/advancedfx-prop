@@ -54,8 +54,6 @@ void ErrorBox() {
 }
 
 
-HMODULE g_hEngineDll = 0;
-
 void MySetup(CreateInterfaceFn appSystemFactory) {
 	static bool bFirstRun = true;
 
@@ -64,22 +62,36 @@ void MySetup(CreateInterfaceFn appSystemFactory) {
 
 		bFirstRun = false;
 
-		if(iface = appSystemFactory(VENGINE_CLIENT_INTERFACE_VERSION_013, NULL))
+		Tier0_Msg("| VEngineClient: ");
+		if(iface = appSystemFactory(VENGINE_CLIENT_INTERFACE_VERSION_013, NULL)) {
+			Tier0_Msg(VENGINE_CLIENT_INTERFACE_VERSION_013 "\n");
 			g_VEngineClient = new WrpVEngineClient_013((IVEngineClient_013 *)iface);
-		else if(iface = appSystemFactory(VENGINE_CLIENT_INTERFACE_VERSION_012, NULL))
+		}
+		else if(iface = appSystemFactory(VENGINE_CLIENT_INTERFACE_VERSION_012, NULL)) {
+			Tier0_Msg(VENGINE_CLIENT_INTERFACE_VERSION_012 "\n");
 			g_VEngineClient = new WrpVEngineClient_012((IVEngineClient_012 *)iface);
-		else
+		}
+		else {
+			Tier0_Msg("(FAILED)" "\n");
 			ErrorBox("Could not get a supported VEngineClient interface.");
+		}
 
-		if(iface = appSystemFactory( VENGINE_CVAR_INTERFACE_VERSION_004, NULL ))
+		Tier0_Msg("| VEngineCvar: ");
+		if(iface = appSystemFactory( VENGINE_CVAR_INTERFACE_VERSION_004, NULL )) {
+			Tier0_Msg(VENGINE_CVAR_INTERFACE_VERSION_004 "\n");
 			WrpConCommands::RegisterCommands((ICvar_004 *)iface);
+		}
 		else if(
 			(iface = appSystemFactory( VENGINE_CVAR_INTERFACE_VERSION_003, NULL ))
 			&& (iface2 = appSystemFactory(VENGINE_CLIENT_INTERFACE_VERSION_012, NULL))
-		)
+		) {
+			Tier0_Msg(VENGINE_CVAR_INTERFACE_VERSION_003 " & " VENGINE_CLIENT_INTERFACE_VERSION_012 "\n");
 			WrpConCommands::RegisterCommands((ICvar_003 *)iface, (IVEngineClient_012 *)iface2);
-		else
+		}
+		else {
+			Tier0_Msg("(FAILED)" "\n");
 			ErrorBox("Could not get a supported VEngineCvar interface.");
+		}
 	}
 }
 
@@ -101,8 +113,6 @@ int __stdcall new_Client_Init(DWORD *this_ptr, CreateInterfaceFn appSystemFactor
 		CALL old_Client_Init
 		MOV	myret, eax
 	}
-
-	ErrorBox("Hello World.");
 
 	if(bFirstCall) {
 		bFirstCall = false;
@@ -146,12 +156,31 @@ void* new_Client_CreateInterface(const char *pName, int *pReturnCode) {
 
 		void * iface = NULL;
 
-		if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_015, NULL)) {
-//			ErrorBox("me15");
+		Tier0_Msg(
+			"|" "\n"
+			"| AfxHookSource ("  __DATE__ " "__TIME__ ")" "\n"
+			"| Copyright (c) advancedfx.org" "\n"
+			"|" "\n"
+			"| Setting up ..." "\n"
+		);
 
+
+		Tier0_Msg("| VClient: ");
+		if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_015, NULL)) {
+			Tier0_Msg(CLIENT_DLL_INTERFACE_VERSION_015 "\n");
 		}
 		else if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_013, NULL)) {
-//			ErrorBox("me13");
+			Tier0_Msg(CLIENT_DLL_INTERFACE_VERSION_013 "\n");
+		}
+		else if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_012, NULL)) {
+			Tier0_Msg(CLIENT_DLL_INTERFACE_VERSION_012 "\n");
+		}
+		else if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_011, NULL)) {
+			Tier0_Msg(CLIENT_DLL_INTERFACE_VERSION_011 "\n");
+		}
+		else {
+			Tier0_Msg("(FAILED)" "\n");
+			ErrorBox("Could not get a supported VClient interface.");
 		}
 
 		if(iface) {
@@ -161,8 +190,6 @@ void* new_Client_CreateInterface(const char *pName, int *pReturnCode) {
 			*padr = (void *)hook_Client_Init;
 			MdtMemAccessEnd(&mbis);
 		}
-		else
-			throw "Could not get a supported VClient interface.";
 
 	}
 
@@ -170,9 +197,36 @@ void* new_Client_CreateInterface(const char *pName, int *pReturnCode) {
 }
 
 
+HMODULE g_H_ClientDll = 0;
+
+FARPROC WINAPI new_Engine_GetProcAddress(HMODULE hModule, LPCSTR lpProcName)
+{
+	FARPROC nResult;
+	nResult = GetProcAddress(hModule, lpProcName);
+
+	if (HIWORD(lpProcName))
+	{
+		if (!lstrcmp(lpProcName, "GetProcAddress"))
+			return (FARPROC) &new_Engine_GetProcAddress;
+
+		if (
+			hModule == g_H_ClientDll
+			&& !lstrcmp(lpProcName, "CreateInterface")
+		) {
+			old_Client_CreateInterface = (CreateInterfaceFn)nResult;
+			return (FARPROC) &new_Client_CreateInterface;
+		}
+
+	}
+
+	return nResult;
+
+
+}
+
+
 HMODULE WINAPI new_LoadLibraryA(LPCSTR lpLibFileName);
 HMODULE WINAPI new_LoadLibraryExA(LPCSTR lpLibFileName, HANDLE hFile, DWORD dwFlags);
-
 
 void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName) {
 
@@ -187,7 +241,7 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName) {
 	// do not use messageboxes here, there is some friggin hooking going on in between by the
 	// Surce engine.
 
-	if(bFirstLaucher && StringEndsWith( lpLibFileName, "bin\\launcher.dll"))
+	if(bFirstLaucher && StringEndsWith( lpLibFileName, "launcher.dll"))
 	{
 		bFirstLaucher = false;
 
@@ -195,7 +249,7 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName) {
 		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryA", (DWORD) &new_LoadLibraryA);
 	}
 	else
-	if(bFirstFileSystemSteam && StringEndsWith( lpLibFileName, "bin\\filesystem_steam.dll"))
+	if(bFirstFileSystemSteam && StringEndsWith( lpLibFileName, "filesystem_steam.dll"))
 	{
 		bFirstFileSystemSteam = false;
 
@@ -203,25 +257,20 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName) {
 		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryA", (DWORD) &new_LoadLibraryA);
 	}
 	else
-	if(bFirstEngine && StringEndsWith( lpLibFileName, "bin\\engine.dll"))
+	if(bFirstEngine && StringEndsWith( lpLibFileName, "engine.dll"))
 	{
 		bFirstEngine = false;
 
-		g_hEngineDll = hModule;
-
+		InterceptDllCall(hModule, "Kernel32.dll", "GetProcAddress", (DWORD) &new_Engine_GetProcAddress);
 		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryExA", (DWORD) &new_LoadLibraryExA);
 		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryA", (DWORD) &new_LoadLibraryA);
 	}
 	else
-	if(bFirstClient && StringEndsWith( lpLibFileName, "bin\\client.dll"))
+	if(bFirstClient && StringEndsWith( lpLibFileName, "client.dll"))
 	{
 		bFirstClient = false;
 
-		//
-		// hook client!CreateInterface
-
-		CreateInterfaceFn clientFactory = Sys_GetFactory(reinterpret_cast<CSysModule *>(hModule));
-		old_Client_CreateInterface = (CreateInterfaceFn)DetourApply((BYTE *)clientFactory, (BYTE *)&new_Client_CreateInterface, 0x09);
+		g_H_ClientDll = hModule;
 	}
 
 
@@ -250,6 +299,8 @@ HMODULE WINAPI new_LoadLibraryExA(LPCSTR lpLibFileName, HANDLE hFile, DWORD dwFl
 
 bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 {
+	HMODULE hTier0;
+
 	switch (fdwReason) 
 	{ 
 		case DLL_PROCESS_ATTACH:
@@ -257,7 +308,17 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 #ifdef _DEBUG
 			MessageBox(0,"DllMain - DLL_PROCESS_ATTACH", "AFX_DEBUG", MB_OK|MB_ICONINFORMATION);
 #endif
-			ErrorBox("BREAK");
+			hTier0 = LoadLibraryA("bin\\tier0.dll");
+			Tier0_Msg = (Tier0MsgFn)GetProcAddress(hTier0, "Msg");
+			Tier0_DMsg = (Tier0DMsgFn)GetProcAddress(hTier0, "DMsg");
+			Tier0_Warning = (Tier0MsgFn)GetProcAddress(hTier0, "Warning");
+			Tier0_DWarning = (Tier0DMsgFn)GetProcAddress(hTier0, "DWarning");
+			Tier0_Log = (Tier0MsgFn)GetProcAddress(hTier0, "Log");
+			Tier0_DLog = (Tier0DMsgFn)GetProcAddress(hTier0, "DLog");
+			Tier0_Error = (Tier0MsgFn)GetProcAddress(hTier0, "Error");
+			Tier0_ConMsg = (Tier0MsgFn)GetProcAddress(hTier0, "ConMsg");
+			Tier0_ConWarning = (Tier0MsgFn)GetProcAddress(hTier0, "ConWarning");
+			Tier0_ConLog = (Tier0MsgFn)GetProcAddress(hTier0, "ConLog");
 
 			if(!(
 				InterceptDllCall(GetModuleHandle(NULL), "Kernel32.dll", "LoadLibraryExA", (DWORD) &new_LoadLibraryExA)

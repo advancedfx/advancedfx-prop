@@ -21,6 +21,20 @@
 
 static int s_nDLLIdentifier = -1;
 
+Tier0MsgFn Tier0_Msg=0;
+Tier0DMsgFn Tier0_DMsg=0;
+Tier0MsgFn Tier0_Warning=0;
+Tier0DMsgFn Tier0_DWarning=0;
+Tier0MsgFn Tier0_Log=0;
+Tier0DMsgFn Tier0_DLog=0;
+Tier0MsgFn Tier0_Error=0;
+
+Tier0MsgFn Tier0_ConMsg=0;
+Tier0MsgFn Tier0_ConWarning=0;
+Tier0MsgFn Tier0_ConLog=0;
+Tier0MsgFn Tier0_ConDMsg=0;
+Tier0MsgFn Tier0_ConDWarning=0;
+Tier0MsgFn Tier0_ConDLog=0;
 
 CreateInterfaceFn Sys_GetFactory( CSysModule *pModule )
 {

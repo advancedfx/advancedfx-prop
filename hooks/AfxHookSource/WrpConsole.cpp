@@ -127,11 +127,7 @@ bool WrpConCommands::WrpConCommandsRegistrar_003_Register( ConCommandBase_003 *p
 	if(!m_CvarIface_003)
 		return false;
 
-	MessageBox(0, "WrpConCommands::WrpConCommandsRegistrar_003_Register", "AFX_DEBUG", MB_OK);
-
-	if(pVar->GetNext()) {
-		MessageBox(0, pVar->GetNext()->GetName(), "HAS NEXT:", MB_OK);
-	}
+//	MessageBox(0, "WrpConCommands::WrpConCommandsRegistrar_003_Register", "AFX_DEBUG", MB_OK);
 
 	m_CvarIface_003->RegisterConCommandBase(pVar);
 	return true;
@@ -142,7 +138,7 @@ bool WrpConCommands::WrpConCommandsRegistrar_004_Register( ConCommandBase_004 *p
 	if(!m_CvarIface_004)
 		return false;
 
-	MessageBox(0, "WrpConCommands::WrpConCommandsRegistrar_004_Register", "AFX_DEBUG", MB_OK);
+//	MessageBox(0, "WrpConCommands::WrpConCommandsRegistrar_004_Register", "AFX_DEBUG", MB_OK);
 
 	m_CvarIface_004->RegisterConCommand(pVar);
 	return true;

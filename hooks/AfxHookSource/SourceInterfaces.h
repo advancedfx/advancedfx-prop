@@ -14,6 +14,27 @@
 // Description:
 // Interface definitions for accessing the Source engine.
 
+typedef char tier0_char;
+
+typedef void (*Tier0MsgFn)( const tier0_char* pMsg, ... );
+typedef void (*Tier0DMsgFn)( const tier0_char *pGroupName, int level, const tier0_char *pMsg, ... );
+
+// debug and message fns, available after tier0.dll has been loaded:
+extern Tier0MsgFn Tier0_Msg;
+extern Tier0DMsgFn Tier0_DMsg;
+extern Tier0MsgFn Tier0_Warning;
+extern Tier0DMsgFn Tier0_DWarning;
+extern Tier0MsgFn Tier0_Log;
+extern Tier0DMsgFn Tier0_DLog;
+extern Tier0MsgFn Tier0_Error;
+
+extern Tier0MsgFn Tier0_ConMsg;
+extern Tier0MsgFn Tier0_ConWarning;
+extern Tier0MsgFn Tier0_ConLog;
+extern Tier0MsgFn Tier0_ConDMsg;
+extern Tier0MsgFn Tier0_ConDWarning;
+extern Tier0MsgFn Tier0_ConDLog;
+
 
 #define FORCEINLINE __forceinline
 #define FORCEINLINE_CVAR FORCEINLINE
@@ -52,7 +73,7 @@ public:
 	// shortened.
 };
 
-
+class CGlobalVarsBase;
 
 // Command / Cvar related:
 
@@ -431,6 +452,9 @@ public:
 
 #define VENGINE_CVAR_INTERFACE_VERSION_003 "VEngineCvar003"
 
+/// <comments>
+///		Supported by: Counter-Strike Source
+///		</comments>
 class ICvar_003 abstract : public IAppSystem
 {
 public:
@@ -460,6 +484,9 @@ public:
 
 #define VENGINE_CVAR_INTERFACE_VERSION_004 "VEngineCvar004"
 
+/// <comments>
+///		Supported by: Portal First Slice
+///		</comments>
 class ICvar_004 abstract : public IAppSystem
 {
 public:
@@ -510,6 +537,9 @@ public:
 
 #define VENGINE_CLIENT_INTERFACE_VERSION_012		"VEngineClient012"
 
+/// <comments>
+///		Supported by: Counter-Strike Source
+///		</comments>
 class IVEngineClient_012 abstract
 {
 public:
@@ -685,7 +715,9 @@ public:
 
 #define VENGINE_CLIENT_INTERFACE_VERSION_013 "VEngineClient013"
 
-// Engine -> Client.dll
+/// <comments>
+///		Supported by: Portal First Slice
+///		</comments>
 class IVEngineClient_013 abstract
 {
 public:
@@ -876,12 +908,142 @@ public:
 };
 
 
-// IBaseClientDLL //////////////////////////////////////////////////////////////
+// IBaseClientDLL_011 //////////////////////////////////////////////////////////
+
+#define CLIENT_DLL_INTERFACE_VERSION_011		"VClient011"
+
+class IBaseClientDLL_011 abstract
+{
+public:
+	// Called once when the client DLL is loaded
+	virtual int				Init( CreateInterfaceFn appSystemFactory, 
+									CreateInterfaceFn physicsFactory,
+									CGlobalVarsBase *pGlobals ) = 0;
+
+	// Called once when the client DLL is being unloaded
+	virtual void			Shutdown( void ) = 0;
+	
+	virtual void _UNUSED_LevelInitPreEntity(void)=0;
+	virtual void _UNUSED_LevelInitPostEntity(void)=0;
+	virtual void _UNUSED_LevelShutdown(void)=0;
+	virtual void _UNUSED_GetAllClasses(void)=0;
+	virtual void _UNUSED_HudVidInit(void)=0;
+	virtual void _UNUSED_HudProcessInput(void)=0;
+	virtual void _UNUSED_HudUpdate(void)=0;
+	virtual void _UNUSED_HudReset(void)=0;
+	virtual void _UNUSED_HudText(void)=0;
+	virtual void _UNUSED_IN_ActivateMouse(void)=0;
+	virtual void _UNUSED_IN_DeactivateMouse(void)=0;
+	virtual void _UNUSED_IN_MouseEvent(void)=0;
+	virtual void _UNUSED_IN_Accumulate(void)=0;
+	virtual void _UNUSED_IN_ClearStates(void)=0;
+	virtual void _UNUSED_IN_IsKeyDown(void)=0;
+	virtual void _UNUSED_IN_KeyEvent(void)=0;
+	virtual void _UNUSED_CreateMove(void)=0;
+	virtual void _UNUSED_ExtraMouseSample(void)=0;
+	virtual void _UNUSED_WriteUsercmdDeltaToBuffer(void)=0;
+	virtual void _UNUSED_EncodeUserCmdToBuffer(void)=0;
+	virtual void _UNUSED_DecodeUserCmdFromBuffer(void)=0;
+	virtual void _UNUSED_View_Render(void)=0;
+	virtual void _UNUSED_RenderView(void)=0;
+	virtual void _UNUSED_View_Fade(void)=0;
+	virtual void _UNUSED_SetCrosshairAngle(void)=0;
+	virtual void _UNUSED_InitSprite(void)=0;
+	virtual void _UNUSED_ShutdownSprite(void)=0;
+	virtual void _UNUSED_GetSpriteSize(void)=0;
+	virtual void _UNUSED_VoiceStatus(void)=0;
+	virtual void _UNUSED_InstallStringTableCallback(void)=0;
+	virtual void _UNUSED_FrameStageNotify(void)=0;
+	virtual void _UNUSED_DispatchUserMessage(void)=0;
+	virtual void _UNUSED_SaveInit(void)=0;
+	virtual void _UNUSED_SaveWriteFields(void)=0;
+	virtual void _UNUSED_SaveReadFields(void)=0;
+	virtual void _UNUSED_PreSave(void)=0;
+	virtual void _UNUSED_Save(void)=0;
+	virtual void _UNUSED_WriteSaveHeaders(void)=0;
+	virtual void _UNUSED_ReadRestoreHeaders(void)=0;
+	virtual void _UNUSED_Restore(void)=0;
+	virtual void _UNUSED_DispatchOnRestore(void)=0;
+	virtual void _UNUSED_GetStandardRecvProxies(void)=0;
+	virtual void _UNUSED_WriteSaveGameScreenshot(void)=0;
+	virtual void _UNUSED_EmitSentenceCloseCaption(void)=0;
+	virtual void _UNUSED_EmitCloseCaption(void)=0;
+};
+
+
+// IBaseClientDLL_012 //////////////////////////////////////////////////////////
+
+#define CLIENT_DLL_INTERFACE_VERSION_012		"VClient012"
+
+/// <comments>
+///		Supported by:
+///		</comments>
+class IBaseClientDLL_012 abstract
+{
+public:
+	// Called once when the client DLL is loaded
+	virtual int				Init( CreateInterfaceFn appSystemFactory, 
+									CreateInterfaceFn physicsFactory,
+									CGlobalVarsBase *pGlobals ) = 0;
+
+	// Called once when the client DLL is being unloaded
+	virtual void			Shutdown( void ) = 0;
+	
+	virtual void _UNUSED_LevelInitPreEntity(void)=0;
+	virtual void _UNUSED_LevelInitPostEntity(void)=0;
+	virtual void _UNUSED_LevelShutdown(void)=0;
+	virtual void _UNUSED_GetAllClasses(void)=0;
+	virtual void _UNUSED_HudVidInit(void)=0;
+	virtual void _UNUSED_HudProcessInput(void)=0;
+	virtual void _UNUSED_HudUpdate(void)=0;
+	virtual void _UNUSED_HudReset(void)=0;
+	virtual void _UNUSED_HudText(void)=0;
+	virtual void _UNUSED_IN_ActivateMouse(void)=0;
+	virtual void _UNUSED_IN_DeactivateMouse(void)=0;
+	virtual void _UNUSED_IN_MouseEvent(void)=0;
+	virtual void _UNUSED_IN_Accumulate(void)=0;
+	virtual void _UNUSED_IN_ClearStates(void)=0;
+	virtual void _UNUSED_IN_IsKeyDown(void)=0;
+	virtual void _UNUSED_IN_KeyEvent(void)=0;
+	virtual void _UNUSED_CreateMove (void)=0;
+	virtual void _UNUSED_ExtraMouseSample(void)=0;
+	virtual void _UNUSED_WriteUsercmdDeltaToBuffer(void)=0;
+	virtual void _UNUSED_EncodeUserCmdToBuffer(void)=0;
+	virtual void _UNUSED_DecodeUserCmdFromBuffer(void)=0;
+	virtual void _UNUSED_View_Render(void)=0;
+	virtual void _UNUSED_RenderView(void)=0;
+	virtual void _UNUSED_View_Fade(void)=0;
+	virtual void _UNUSED_InitSprite(void)=0;
+	virtual void _UNUSED_ShutdownSprite(void)=0;
+	virtual void _UNUSED_GetSpriteSize(void)=0;
+	virtual void _UNUSED_VoiceStatus(void)=0;
+	virtual void _UNUSED_InstallStringTableCallback(void)=0;
+	virtual void _UNUSED_FrameStageNotify(void)=0;
+	virtual void _UNUSED_DispatchUserMessage(void)=0;
+	virtual void _UNUSED_SaveInit(void)=0;
+	virtual void _UNUSED_SaveWriteFields(void)=0;
+	virtual void _UNUSED_SaveReadFields(void)=0;
+	virtual void _UNUSED_PreSave(void)=0;
+	virtual void _UNUSED_Save(void)=0;
+	virtual void _UNUSED_WriteSaveHeaders(void)=0;
+	virtual void _UNUSED_ReadRestoreHeaders(void)=0;
+	virtual void _UNUSED_Restore(void)=0;
+	virtual void _UNUSED_DispatchOnRestore(void)=0;
+	virtual void _UNUSED_GetStandardRecvProxies(void)=0;
+	virtual void _UNUSED_WriteSaveGameScreenshot(void)=0;
+	virtual void _UNUSED_EmitSentenceCloseCaption(void)=0;
+	virtual void _UNUSED_EmitCloseCaption(void)=0;
+	virtual void _UNUSED_CanRecordDemo(void)=0;
+};
+
+
+// IBaseClientDLL_013 //////////////////////////////////////////////////////////
 
 #define CLIENT_DLL_INTERFACE_VERSION_013 "VClient013"
 
-class CGlobalVarsBase;
-
+/// <comments>
+///		Supported by: Counter-Strike Source
+///		</comments>
 class IBaseClientDLL_013 abstract
 {
 public:
@@ -947,11 +1109,13 @@ public:
 
 // IBaseClientDll_015 //////////////////////////////////////////////////////////
 
-
 #define CLIENT_DLL_INTERFACE_VERSION_015		"VClient015"
 
 class CGlobalVarsBase;
 
+/// <comments>
+///		Supported by: Portal First Slice
+///		</comments>
 class IBaseClientDLL_015 abstract
 {
 public:
