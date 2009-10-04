@@ -74,24 +74,27 @@ REGISTER_CMD_FUNC(camimport_basetime)
 ////////////////////////////////////////////////////////////////////////////////
 
 /// <remarks> If pz is 0, the function returns </remarks>
-void CrLfZ2LfZ(char * pz) {
-	if(!pz)
-		return;
+char * CrLfZ2LfZ(char * opz) {
+	char *pz = opz;
 
-	while(char c = *pz) {
-		if(
-			'\r' == c
-			&& '\n' == *(pz+1)
-			&& '\0' == *(pz+2)
-		) 
-			// \r\n\0
-			*pz = '\n';
-			*(pz+1) = '\0';
-			break;
+	if(pz) {
+		while(char c = *pz) {
+			if(
+				'\r' == c
+				&& '\n' == *(pz+1)
+				&& '\0' == *(pz+2)
+			) {
+				// \r\n\0
+				*pz = '\n';
+				*(pz+1) = '\0';
+				break;
+			}
+
+			pz++;
 		}
-
-		pz++;
 	}
+
+	return opz;
 }
 
 
