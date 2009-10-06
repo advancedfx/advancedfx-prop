@@ -105,7 +105,7 @@ public:
 	{
 		HookDllPath = "";
 		ProgramPath = "";
-		CmdLine = "-steam -game cstrike";
+		CmdLine = "-steam -window -console -game cstrike";
 	}
 };
 
