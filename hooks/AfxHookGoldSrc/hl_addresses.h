@@ -214,125 +214,70 @@ public:
 
 extern cHLAddresses g_HLAddresses;
 
+#define HL_ADDR_EXPOSE(name) \
+	extern unsigned long g_HL_ADDR_##name;
+
+#define HL_ADDR_GET(name) \
+	g_HL_ADDR_##name
+
 //
 // Header exports of address variables (should be only for reading!):
+// usage in code: use the HL_ADDR_GET(name) macro
 //
-extern unsigned long ulHLAddr_p_cl_enginefuncs_s;
-extern unsigned long ulHLAddr_p_enginefuncs_s;
-extern unsigned long ulHLAddr_p_engine_studio_api_s;
-extern unsigned long ulHLAddr_p_playermove_s;
-extern unsigned long ulHLAddr_HUD_TOURIN;
-extern unsigned long ulHLAddr_HUD_TOUROUT;
-extern unsigned long ulHLAddr_R_RenderView;
-extern unsigned long ulHLAddr_DTOURSZ_R_RenderView;
-extern unsigned long ulHLAddr_Mod_LeafPVS;
-extern unsigned long ulHLAddr_DTOURSZ_Mod_LeafPVS;
-extern unsigned long ulHLAddr_r_refdef;
-extern unsigned long ulHLAddr_HudSpectator_tfc;
-extern unsigned long ulHLAddr_HudSpectator_cmp_tfc;
-extern unsigned long ulHLAddr_UpdateSpectatorPanel_checkjmp_ag_clofs;
-extern unsigned long ulHLAddr_UpdateSpectatorPanel_checkjmp_tfc;
-extern unsigned long ulHLAddr_UpdateSpectatorPanel_checkjmp_ns_clofs;
-extern unsigned long ulHLAddr_UpdateSpectatorPanel_checkjmp_valve;
-extern unsigned long ulHLAddr_GetSoundtime;
-extern unsigned long ulHLAddr_DTOURSZ_GetSoundtime;
-extern unsigned long ulHLAddr_S_PaintChannels;
-extern unsigned long ulHLAddr_DTOURSZ_S_PaintChannels;
-extern unsigned long ulHLAddr_S_TransferPaintBuffer;
-extern unsigned long ulHLAddr_DTOURSZ_S_TransferPaintBuffer;
-extern unsigned long ulHLAddr_shm;
-extern unsigned long ulHLAddr_paintbuffer;
-extern unsigned long ulHLAddr_soundtime;
-extern unsigned long ulHLAddr_paintedtime;
-extern unsigned long ulHLAddr_CL_ParseServerMessage;
-extern unsigned long ulHLAddr_net_message_cursize;
-extern unsigned long ulHLAddr_net_message;
-extern unsigned long ulHLAddr_msg_readcount;
-extern unsigned long ulHLAddr_CL_ParseServerMessage_CmdRead;
-extern unsigned long ulHLAddr_DTOURSZ_CL_ParseServerMessage_CmdRead;
-extern unsigned long ulHLAddr_GetClientColor;
-extern unsigned long ulHLAddr_DTOURSZ_GetClientColor;
-extern unsigned long ulHLAddr_unkInlineClientColorA;
-extern unsigned long ulHLAddr_SZ_unkInlineClientColorA;
-extern unsigned long ulHLAddr_unkInlineClientColorV;
-extern unsigned long ulHLAddr_SZ_unkInlineClientColorV;
-extern unsigned long ulHLAddr_CLOFS_UnkCstrikeCrosshairFn;
-extern unsigned long ulHLAddr_DTOURSZ_UnkCstrikeCrosshairFn;
-extern unsigned long ulHLAddr_CLOFS_UnkCstrikeCh_mul_fac;
-extern unsigned long ulHLAddr_CLOFS_UnkCstrikeCh_add_fac;
-extern unsigned long ulHLAddr_R_PolyBlend;
-extern unsigned long ulHLAddr_DTOURSZ_R_PolyBlend;
-extern unsigned long ulHLAddr_UnkGetDecalTexture;
-extern unsigned long ulHLAddr_DTOURSZ_UnkGetDecalTexture;
+HL_ADDR_EXPOSE(p_cl_enginefuncs_s)
+HL_ADDR_EXPOSE(p_engine_studio_api_s)
+HL_ADDR_EXPOSE(p_playermove_s)
+HL_ADDR_EXPOSE(HUD_TOURIN)
+HL_ADDR_EXPOSE(HUD_TOUROUT)
+HL_ADDR_EXPOSE(R_RenderView)
+HL_ADDR_EXPOSE(DTOURSZ_R_RenderView)
+HL_ADDR_EXPOSE(Mod_LeafPVS)
+HL_ADDR_EXPOSE(DTOURSZ_Mod_LeafPVS)
+HL_ADDR_EXPOSE(r_refdef)
+HL_ADDR_EXPOSE(HudSpectator_tfc)
+HL_ADDR_EXPOSE(HudSpectator_cmp_tfc)
+HL_ADDR_EXPOSE(UpdateSpectatorPanel_checkjmp_ag_clofs)
+HL_ADDR_EXPOSE(UpdateSpectatorPanel_checkjmp_tfc)
+HL_ADDR_EXPOSE(UpdateSpectatorPanel_checkjmp_ns_clofs)
+HL_ADDR_EXPOSE(UpdateSpectatorPanel_checkjmp_valve)
+HL_ADDR_EXPOSE(GetSoundtime)
+HL_ADDR_EXPOSE(DTOURSZ_GetSoundtime)
+HL_ADDR_EXPOSE(S_PaintChannels)
+HL_ADDR_EXPOSE(DTOURSZ_S_PaintChannels)
+HL_ADDR_EXPOSE(S_TransferPaintBuffer)
+HL_ADDR_EXPOSE(DTOURSZ_S_TransferPaintBuffer)
+HL_ADDR_EXPOSE(shm)
+HL_ADDR_EXPOSE(paintbuffer)
+HL_ADDR_EXPOSE(soundtime)
+HL_ADDR_EXPOSE(paintedtime)
+HL_ADDR_EXPOSE(CL_ParseServerMessage)
+HL_ADDR_EXPOSE(net_message_cursize)
+HL_ADDR_EXPOSE(net_message)
+HL_ADDR_EXPOSE(msg_readcount)
+HL_ADDR_EXPOSE(CL_ParseServerMessage_CmdRead)
+HL_ADDR_EXPOSE(DTOURSZ_CL_ParseServerMessage_CmdRead)
+HL_ADDR_EXPOSE(GetClientColor)
+HL_ADDR_EXPOSE(DTOURSZ_GetClientColor)
+HL_ADDR_EXPOSE(unkInlineClientColorA)
+HL_ADDR_EXPOSE(SZ_unkInlineClientColorA)
+HL_ADDR_EXPOSE(unkInlineClientColorV)
+HL_ADDR_EXPOSE(SZ_unkInlineClientColorV)
+HL_ADDR_EXPOSE(CLOFS_UnkCstrikeCrosshairFn)
+HL_ADDR_EXPOSE(DTOURSZ_UnkCstrikeCrosshairFn)
+HL_ADDR_EXPOSE(CLOFS_UnkCstrikeCh_mul_fac)
+HL_ADDR_EXPOSE(CLOFS_UnkCstrikeCh_add_fac)
+HL_ADDR_EXPOSE(R_PolyBlend)
+HL_ADDR_EXPOSE(DTOURSZ_R_PolyBlend)
+HL_ADDR_EXPOSE(UnkGetDecalTexture)
+HL_ADDR_EXPOSE(DTOURSZ_UnkGetDecalTexture)
+HL_ADDR_EXPOSE(R_DrawParticles)
+HL_ADDR_EXPOSE(DTOURSZ_R_DrawParticles)
+HL_ADDR_EXPOSE(R_DrawEntitiesOnList)
+HL_ADDR_EXPOSE(DTOURSZ_R_DrawEntitiesOnList)
+HL_ADDR_EXPOSE(R_DrawViewModel)
+HL_ADDR_EXPOSE(DTOURSZ_R_DrawViewModel)
 
-
-//
-// macros for accessing the header exports (for compabtility with old code):
-//
-
-#define HL_ADDR_CL_ENGINEFUNCS_S ulHLAddr_p_cl_enginefuncs_s
-#define HL_ADDR_ENGINEFUNCS_S ulHLAddr_p_enginefuncs_s
-#define HL_ADDR_ENGINE_STUDIO_API_S ulHLAddr_p_engine_studio_api_s;
-
-#define HL_ADDR_PLAYERMOVE_S ulHLAddr_p_playermove_s
-
-#define HL_ADDR_HUD_TOURIN ulHLAddr_HUD_TOURIN
-#define HL_ADDR_HUD_TOUROUT ulHLAddr_HUD_TOUROUT
-
-#define HL_ADDR_R_RenderView ulHLAddr_R_RenderView
-#define HL_ADDR_DTOURSZ_R_RenderView ulHLAddr_DTOURSZ_R_RenderView
-
-#define HL_ADDR_refdef ulHLAddr_r_refdef
-
-#define HL_ADDR_HUDSPECTATOR_FUNC_TFC ulHLAddr_HudSpectator_tfc
-#define HL_ADDR_HUDSPECTATOR_CMPA0_TFC ulHLAddr_HudSpectator_cmp_tfc
-
-#define HL_ADDR_UpdateSpectatorPanel_checkjmp_ag_clofs ulHLAddr_UpdateSpectatorPanel_checkjmp_ag_clofs
-#define HL_ADDR_UpdateSpectatorPanel_checkjmp_tfc ulHLAddr_UpdateSpectatorPanel_checkjmp_tfc
-#define HL_ADDR_UpdateSpectatorPanel_checkjmp_ns_clofs ulHLAddr_UpdateSpectatorPanel_checkjmp_ns_clofs
-#define HL_ADDR_UpdateSpectatorPanel_checkjmp_valve ulHLAddr_UpdateSpectatorPanel_checkjmp_valve
-
-#define HL_ADDR_GetSoundtime ulHLAddr_GetSoundtime
-#define HL_ADDR_DTOURSZ_GetSoundtime ulHLAddr_DTOURSZ_GetSoundtime
-
-#define HL_ADDR_S_PaintChannels ulHLAddr_S_PaintChannels
-#define HL_ADDR_DTOURSZ_S_PaintChannels ulHLAddr_DTOURSZ_S_PaintChannels
-
-#define HL_ADDR_S_TransferPaintBuffer ulHLAddr_S_TransferPaintBuffer
-#define HL_ADDR_DTOURSZ_S_TransferPaintBuffer ulHLAddr_DTOURSZ_S_TransferPaintBuffer
-
-#define HL_ADDR_shm ulHLAddr_shm
-#define HL_ADDR_paintbuffer ulHLAddr_paintbuffer
-#define HL_ADDR_soundtime ulHLAddr_soundtime
-#define HL_ADDR_paintedtime ulHLAddr_paintedtime
-
-#define HL_ADDR_CL_ParseServerMessage ulHLAddr_CL_ParseServerMessage
-#define HL_ADDR_net_message_cursize ulHLAddr_net_message_cursize
-#define HL_ADDR_net_message ulHLAddr_net_message
-#define HL_ADDR_msg_readcount ulHLAddr_msg_readcount
-#define HL_ADDR_CL_ParseServerMessage_CmdRead ulHLAddr_CL_ParseServerMessage_CmdRead
-#define HL_ADDR_DTOURSZ_CL_ParseServerMessage_CmdRead ulHLAddr_DTOURSZ_CL_ParseServerMessage_CmdRead
-
-#define HL_ADDR_GetClientColor ulHLAddr_GetClientColor
-#define HL_ADDR_DTOURSZ_GetClientColor ulHLAddr_DTOURSZ_GetClientColor
-#define HL_ADDR_unkInlineClientColorA ulHLAddr_unkInlineClientColorA
-#define HL_ADDR_SZ_unkInlineClientColorA ulHLAddr_SZ_unkInlineClientColorA
-#define HL_ADDR_unkInlineClientColorV ulHLAddr_unkInlineClientColorV
-#define HL_ADDR_SZ_unkInlineClientColorV ulHLAddr_SZ_unkInlineClientColorV
-
-#define HL_ADDR_CLOFS_UnkCstrikeCrosshairFn ulHLAddr_CLOFS_UnkCstrikeCrosshairFn
-#define HL_ADDR_DTOURSZ_UnkCstrikeCrosshairFn ulHLAddr_DTOURSZ_UnkCstrikeCrosshairFn
-#define HL_ADDR_CLOFS_UnkCstrikeCh_mul_fac ulHLAddr_CLOFS_UnkCstrikeCh_mul_fac
-#define HL_ADDR_CLOFS_UnkCstrikeCh_add_fac ulHLAddr_CLOFS_UnkCstrikeCh_add_fac
-
-#define HL_ADDR_R_PolyBlend ulHLAddr_R_PolyBlend
-#define HL_ADDR_DTOURSZ_R_PolyBlend ulHLAddr_DTOURSZ_R_PolyBlend
-
-#define HL_ADDR_Mod_LeafPVS ulHLAddr_Mod_LeafPVS
-#define HL_ADDR_DTOURSZ_Mod_LeafPVS ulHLAddr_DTOURSZ_Mod_LeafPVS
-
-#define HL_ADDR_UnkGetDecalTexture ulHLAddr_UnkGetDecalTexture
-#define HL_ADDR_DTOURSZ_UnkGetDecalTexture ulHLAddr_DTOURSZ_UnkGetDecalTexture
 
 
 #endif // #ifndef HL_ADDRESSES_H
+

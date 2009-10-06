@@ -239,29 +239,29 @@ void InstallHook_GetClientColor( void )
 		g_NewColors.v_defaultactive = false;
 
 		// hook GetClientColor:
-		if (HL_ADDR_GetClientColor!=NULL)
+		if (HL_ADDR_GET(GetClientColor)!=NULL)
 		{
-			g_Hooked_GetClientColor = (GetClientColor_t) DetourApply((BYTE *)(dwClientDLL + HL_ADDR_GetClientColor), (BYTE *)Hooking_GetClientColor, (int)HL_ADDR_DTOURSZ_GetClientColor);
+			g_Hooked_GetClientColor = (GetClientColor_t) DetourApply((BYTE *)(dwClientDLL + HL_ADDR_GET(GetClientColor)), (BYTE *)Hooking_GetClientColor, (int)HL_ADDR_GET(DTOURSZ_GetClientColor));
 			i_ok_cnt++;
 		}
 
 		// replace unkInlineClientColorA (Attacker frag coloring):
-		if (HL_ADDR_unkInlineClientColorA != NULL)
+		if (HL_ADDR_GET(unkInlineClientColorA) != NULL)
 		{
-			dwJmp_unkInlineClientColorA = (dwClientDLL + HL_ADDR_unkInlineClientColorA) + HL_ADDR_SZ_unkInlineClientColorA;
+			dwJmp_unkInlineClientColorA = (dwClientDLL + HL_ADDR_GET(unkInlineClientColorA)) + HL_ADDR_GET(SZ_unkInlineClientColorA);
 
 			MdtMemBlockInfos mbis;
 
-			MdtMemAccessBegin( (void *)(dwClientDLL + HL_ADDR_unkInlineClientColorA), HL_ADDR_SZ_unkInlineClientColorA, &mbis);
+			MdtMemAccessBegin( (void *)(dwClientDLL + HL_ADDR_GET(unkInlineClientColorA)), HL_ADDR_GET(SZ_unkInlineClientColorA), &mbis);
 
 			// make many NOPs:
-			memset( (void *)(dwClientDLL + HL_ADDR_unkInlineClientColorA), asmNOP, HL_ADDR_SZ_unkInlineClientColorA);
+			memset( (void *)(dwClientDLL + HL_ADDR_GET(unkInlineClientColorA)), asmNOP, HL_ADDR_GET(SZ_unkInlineClientColorA));
 
 			// jmp on the naked guy:
 			unsigned char ucJMPE9 = asmJMP;
-			DWORD dwAddress = (DWORD)tour_unkInlineClientColorA - (DWORD)(dwClientDLL + HL_ADDR_unkInlineClientColorA) - JMP32_SZ;
-			memcpy( (void *)(dwClientDLL + HL_ADDR_unkInlineClientColorA), &ucJMPE9, sizeof(unsigned char));
-			memcpy( (char *)(dwClientDLL + HL_ADDR_unkInlineClientColorA)+1, &dwAddress, sizeof(DWORD));
+			DWORD dwAddress = (DWORD)tour_unkInlineClientColorA - (DWORD)(dwClientDLL + HL_ADDR_GET(unkInlineClientColorA)) - JMP32_SZ;
+			memcpy( (void *)(dwClientDLL + HL_ADDR_GET(unkInlineClientColorA)), &ucJMPE9, sizeof(unsigned char));
+			memcpy( (char *)(dwClientDLL + HL_ADDR_GET(unkInlineClientColorA))+1, &dwAddress, sizeof(DWORD));
 
 			MdtMemAccessEnd(&mbis);
 
@@ -269,22 +269,22 @@ void InstallHook_GetClientColor( void )
 		}
 
 		// replace unkInlineClientColorV (Victim frag coloring):
-		if (HL_ADDR_unkInlineClientColorV != NULL)
+		if (HL_ADDR_GET(unkInlineClientColorV) != NULL)
 		{
-			dwJmp_unkInlineClientColorV = (dwClientDLL + HL_ADDR_unkInlineClientColorV) + HL_ADDR_SZ_unkInlineClientColorV;
+			dwJmp_unkInlineClientColorV = (dwClientDLL + HL_ADDR_GET(unkInlineClientColorV)) + HL_ADDR_GET(SZ_unkInlineClientColorV);
 
 			MdtMemBlockInfos mbis;
 
-			MdtMemAccessBegin( (void *)(dwClientDLL + HL_ADDR_unkInlineClientColorV), HL_ADDR_SZ_unkInlineClientColorV, &mbis);
+			MdtMemAccessBegin( (void *)(dwClientDLL + HL_ADDR_GET(unkInlineClientColorV)), HL_ADDR_GET(SZ_unkInlineClientColorV), &mbis);
 
 			// make many NOPs:
-			memset( (void *)(dwClientDLL + HL_ADDR_unkInlineClientColorV), asmNOP, HL_ADDR_SZ_unkInlineClientColorV);
+			memset( (void *)(dwClientDLL + HL_ADDR_GET(unkInlineClientColorV)), asmNOP, HL_ADDR_GET(SZ_unkInlineClientColorV));
 
 			// jmp on the naked guy:
 			unsigned char ucJMPE9 = asmJMP;
-			DWORD dwAddress = (DWORD)tour_unkInlineClientColorV - (DWORD)(dwClientDLL + HL_ADDR_unkInlineClientColorV) - JMP32_SZ;
-			memcpy( (void *)(dwClientDLL + HL_ADDR_unkInlineClientColorV), &ucJMPE9, sizeof(unsigned char));
-			memcpy( (char *)(dwClientDLL + HL_ADDR_unkInlineClientColorV)+1, &dwAddress, sizeof(DWORD));
+			DWORD dwAddress = (DWORD)tour_unkInlineClientColorV - (DWORD)(dwClientDLL + HL_ADDR_GET(unkInlineClientColorV)) - JMP32_SZ;
+			memcpy( (void *)(dwClientDLL + HL_ADDR_GET(unkInlineClientColorV)), &ucJMPE9, sizeof(unsigned char));
+			memcpy( (char *)(dwClientDLL + HL_ADDR_GET(unkInlineClientColorV))+1, &dwAddress, sizeof(DWORD));
 
 			MdtMemAccessEnd(&mbis);
 

@@ -208,15 +208,7 @@
 			Name="resources"
 			>
 			<File
-				RelativePath="..\..\resources\changelog.txt"
-				>
-			</File>
-			<File
 				RelativePath="..\..\resources\mdt_addresses.ini"
-				>
-			</File>
-			<File
-				RelativePath="..\..\resources\readme.txt"
 				>
 			</File>
 		</Filter>

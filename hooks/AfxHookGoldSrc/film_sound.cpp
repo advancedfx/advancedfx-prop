@@ -125,7 +125,7 @@ void CFilmSound::_touring_GetSoundtime(void)
 		}
 
 		// override soundtime (translated into valve space):
-		*(int *)HL_ADDR_soundtime = (*(int *)HL_ADDR_paintedtime)<<1; // we always exactly played what we got painted by H-L (at least for now)
+		*(int *)HL_ADDR_GET(soundtime) = (*(int *)HL_ADDR_GET(paintedtime))<<1; // we always exactly played what we got painted by H-L (at least for now)
 		// we are multiplying with 2 since the valve DirectSound buffers tick at 22.050 kHz while the internal mixing happens at 11.025 khz
 
 		//pEngfuncs->Con_Printf("sndtime: %i, paintt: %i\n",*(int *)ADDRESS_soundtime,*(int *)ADDRESS_paintedtime);
@@ -144,11 +144,11 @@ void CFilmSound::_touring_S_PaintChannels(int endtime)
 
 		// retrive sound info structure:
 		static volatile dma_HL_t *shm;
-		shm =*(dma_HL_t **)HL_ADDR_shm;
+		shm =*(dma_HL_t **)HL_ADDR_GET(shm);
 
 		// calculate mix ahead of current position:
 		static int currPaintedTime; // do not assert here, statics are only asserted once (at which time?)
-		currPaintedTime = (*(int *)HL_ADDR_paintedtime)<<1; // translate into valve space
+		currPaintedTime = (*(int *)HL_ADDR_GET(paintedtime))<<1; // translate into valve space
 		static float fendtime;
 		fendtime = (float)(currPaintedTime) + (_pFilmSound->_get_fTargetTime()-_pFilmSound->_get_fCurrentTime()) * (float)shm->Valve_speed;
 
@@ -167,7 +167,7 @@ void CFilmSound::_touring_S_PaintChannels(int endtime)
 
 
 		static int newPaintedTime; // do not assert here, statics are only asserted once (at which time?)
-		newPaintedTime = (*(int *)HL_ADDR_paintedtime)<<1;
+		newPaintedTime = (*(int *)HL_ADDR_GET(paintedtime))<<1;
 		//pEngfuncs->Con_Printf(" == %i\n",newPaintedTime);
 
 		// update Our clas'ss _CurrentTime:
@@ -204,11 +204,11 @@ void CFilmSound::_touring_S_TransferPaintBuffer(int endtime)
 
 		// retrive globals:
 		static int paintedtime;
-		paintedtime= *(int *)HL_ADDR_paintedtime; //this should be == _lsoc_paintedtime
+		paintedtime= *(int *)HL_ADDR_GET(paintedtime); //this should be == _lsoc_paintedtime
 		static volatile dma_HL_t *shm;
-		shm=*(dma_HL_t **)HL_ADDR_shm;
+		shm=*(dma_HL_t **)HL_ADDR_GET(shm);
 		static portable_samplepair_t *paintbuffer;
-		paintbuffer = (portable_samplepair_t *)HL_ADDR_paintbuffer;
+		paintbuffer = (portable_samplepair_t *)HL_ADDR_GET(paintbuffer);
 
 		static int iMyVolume;
 		iMyVolume = (int)(_pFilmSound->_get_fUseVolume()*256.0f);
@@ -253,9 +253,9 @@ void CFilmSound::_touring_S_TransferPaintBuffer(int endtime)
 void CFilmSound::_InstallHooks()
 {
 	// notice the memory allocted here gets never freed o_O
-	if (!_detoured_GetSoundtime) _detoured_GetSoundtime = (GetSoundtime_t) DetourApply((BYTE *)HL_ADDR_GetSoundtime, (BYTE *)_touring_GetSoundtime, (int)HL_ADDR_DTOURSZ_GetSoundtime);
-	if (!_detoured_S_PaintChannels) _detoured_S_PaintChannels = (S_PaintChannels_t) DetourApply((BYTE *)HL_ADDR_S_PaintChannels, (BYTE *)_touring_S_PaintChannels, (int)HL_ADDR_DTOURSZ_S_PaintChannels);
-	if (!_detoured_S_TransferPaintBuffer) _detoured_S_TransferPaintBuffer = (S_TransferPaintBuffer_t) DetourApply((BYTE *)HL_ADDR_S_TransferPaintBuffer, (BYTE *)_touring_S_TransferPaintBuffer, (int)HL_ADDR_DTOURSZ_S_TransferPaintBuffer);
+	if (!_detoured_GetSoundtime) _detoured_GetSoundtime = (GetSoundtime_t) DetourApply((BYTE *)HL_ADDR_GET(GetSoundtime), (BYTE *)_touring_GetSoundtime, (int)HL_ADDR_GET(DTOURSZ_GetSoundtime));
+	if (!_detoured_S_PaintChannels) _detoured_S_PaintChannels = (S_PaintChannels_t) DetourApply((BYTE *)HL_ADDR_GET(S_PaintChannels), (BYTE *)_touring_S_PaintChannels, (int)HL_ADDR_GET(DTOURSZ_S_PaintChannels));
+	if (!_detoured_S_TransferPaintBuffer) _detoured_S_TransferPaintBuffer = (S_TransferPaintBuffer_t) DetourApply((BYTE *)HL_ADDR_GET(S_TransferPaintBuffer), (BYTE *)_touring_S_TransferPaintBuffer, (int)HL_ADDR_GET(DTOURSZ_S_TransferPaintBuffer));
 }
 
 void CFilmSound::_OnStoppingFinished()
@@ -395,7 +395,7 @@ bool CFilmSound::Start(char *pszFileName,float fTargetTime,float fUseVolume)
 		_fUseVolume=fUseVolume;
 
 		// retrive sound info structure (since we need the samples per second value == shm->Valve_speed):
-		volatile dma_HL_t *shm=*(dma_HL_t **)HL_ADDR_shm;
+		volatile dma_HL_t *shm=*(dma_HL_t **)HL_ADDR_GET(shm);
 
 		if(!(_pWaveFile=_fBeginWave(pszFileName,shm->Valve_speed))) // we use Quake speed since we capture the internal mixer
 			return false; // on fail return false

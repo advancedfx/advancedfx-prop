@@ -78,8 +78,8 @@ typedef struct sizebuf_s
 
 void Handle_CmdRead_Intercepted(void)
 {
-	int *pmsg_readcount = (int *)HL_ADDR_msg_readcount;
-	sizebuf_t * pnet_message = (sizebuf_t *)HL_ADDR_net_message;
+	int *pmsg_readcount = (int *)HL_ADDR_GET(msg_readcount);
+	sizebuf_t * pnet_message = (sizebuf_t *)HL_ADDR_GET(net_message);
 	int myreadcount=*pmsg_readcount;
 
 	bool bScan = true;
@@ -154,14 +154,14 @@ void install_tour_CL_ParseServerMessage_CmdRead()
 {
 	if(dwHL_ADDR_CL_ParseServerMessage_CmdRead_continue) return;
 
-	dwHL_ADDR_CL_ParseServerMessage_CmdRead_continue = (DWORD)DetourApply((BYTE *)HL_ADDR_CL_ParseServerMessage_CmdRead,(BYTE *)tour_CL_ParseServerMessage_CmdRead,HL_ADDR_DTOURSZ_CL_ParseServerMessage_CmdRead);
+	dwHL_ADDR_CL_ParseServerMessage_CmdRead_continue = (DWORD)DetourApply((BYTE *)HL_ADDR_GET(CL_ParseServerMessage_CmdRead),(BYTE *)tour_CL_ParseServerMessage_CmdRead,HL_ADDR_GET(DTOURSZ_CL_ParseServerMessage_CmdRead));
 
 	// adjust call in detoured part:
 	DWORD *pdwFixAdr = (DWORD *)((char *)dwHL_ADDR_CL_ParseServerMessage_CmdRead_continue + 0x02 + 0x01);
 
 	DWORD dwAdr = *pdwFixAdr;
 
-	dwAdr -= dwHL_ADDR_CL_ParseServerMessage_CmdRead_continue - HL_ADDR_CL_ParseServerMessage_CmdRead;
+	dwAdr -= dwHL_ADDR_CL_ParseServerMessage_CmdRead_continue - HL_ADDR_GET(CL_ParseServerMessage_CmdRead);
 
 	*pdwFixAdr = dwAdr;
 }

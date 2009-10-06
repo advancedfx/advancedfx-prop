@@ -33,8 +33,8 @@ extern playermove_s *ppmove;
 std::map <int, int> g_DemoEditMappings;
 
 // Addresses for TFC
-#define DM_ADDR	HL_ADDR_HUDSPECTATOR_FUNC_TFC
-#define A0_ADDR HL_ADDR_HUDSPECTATOR_CMPA0_TFC
+#define DM_ADDR	HL_ADDR_GET(HudSpectator_tfc)
+#define A0_ADDR HL_ADDR_GET(HudSpectator_cmp_tfc)
 
 typedef bool (__stdcall *DirectorMessage_t)(DWORD *this_ptr, int iSize, void *pbuf);
 DirectorMessage_t orig_DirectorMessage;
@@ -188,19 +188,19 @@ REGISTER_CMD_FUNC(disable_specmenu)
 
 	if( !strcmp("ag",gamedir) )
 	{
-		usCheck = (unsigned short *)((unsigned char *)(GetModuleHandle("client.dll")) + HL_ADDR_UpdateSpectatorPanel_checkjmp_ag_clofs);
+		usCheck = (unsigned short *)((unsigned char *)(GetModuleHandle("client.dll")) + HL_ADDR_GET(UpdateSpectatorPanel_checkjmp_ag_clofs));
 	}
 	else if( !strcmp("tfc",gamedir) )
 	{
-		usCheck = (unsigned short *) HL_ADDR_UpdateSpectatorPanel_checkjmp_tfc;
+		usCheck = (unsigned short *) HL_ADDR_GET(UpdateSpectatorPanel_checkjmp_tfc);
 	}
 	else if( !strcmp("ns",gamedir) )
 	{
-		usCheck = (unsigned short *)((unsigned char *)(GetModuleHandle("client.dll")) + HL_ADDR_UpdateSpectatorPanel_checkjmp_ns_clofs);
+		usCheck = (unsigned short *)((unsigned char *)(GetModuleHandle("client.dll")) + HL_ADDR_GET(UpdateSpectatorPanel_checkjmp_ns_clofs));
 	}
 	else if( !strcmp("valve",gamedir) )
 	{
-		usCheck = (unsigned short *) HL_ADDR_UpdateSpectatorPanel_checkjmp_valve;
+		usCheck = (unsigned short *) HL_ADDR_GET(UpdateSpectatorPanel_checkjmp_valve);
 	}
 
 	pEngfuncs->Con_DPrintf("0x%08x\n",usCheck);

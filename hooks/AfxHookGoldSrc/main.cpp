@@ -601,9 +601,9 @@ bool Mdt_LoadAddressConfig(HMODULE hHwDll)
 		if (!bCfgres) MessageBox(0,"mdt_addresses.ini syntax or semantics were invalid.\nTrying to continue ...","MDT_WARNING",MB_OK|MB_ICONEXCLAMATION);
 
 		// update unregistered local copies manually:
-		pEngfuncs		= (cl_enginefuncs_s*)	HL_ADDR_CL_ENGINEFUNCS_S;
-		pEngStudio	= (engine_studio_api_s*)HL_ADDR_ENGINE_STUDIO_API_S;
-		ppmove			= (playermove_s*)		HL_ADDR_PLAYERMOVE_S;
+		pEngfuncs		= (cl_enginefuncs_s*)HL_ADDR_GET(p_cl_enginefuncs_s);
+		pEngStudio	= (engine_studio_api_s*)HL_ADDR_GET(p_engine_studio_api_s);
+		ppmove			= (playermove_s*)HL_ADDR_GET(p_playermove_s);
 
 
 	} else MessageBox(0,"Could not locate mdt_addresses.ini.","MDT_ERROR",MB_OK|MB_ICONHAND);

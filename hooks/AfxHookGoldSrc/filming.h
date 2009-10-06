@@ -153,9 +153,6 @@ private:
 
 	FILMING_STATE m_iFilmingState;
 
-	DRAW_RESULT shouldDrawDuringWorldMatte(GLenum mode);
-	DRAW_RESULT shouldDrawDuringEntityMatte(GLenum mode);
-
 	bool m_bInWireframe;
 	GLenum m_iLastMode;
 

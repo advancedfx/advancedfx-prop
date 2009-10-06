@@ -60,7 +60,6 @@ REGISTER_DEBUGCVAR(print_frame, "0", 0);
 REGISTER_DEBUGCVAR(print_pos, "0", 0);
 
 REGISTER_CVAR(camexport_mode, "0", 0);
-
 REGISTER_CVAR(crop_height, "-1", 0);
 REGISTER_CVAR(crop_yofs, "-1", 0);
 REGISTER_CVAR(depth_logarithmic, "32", 0);
@@ -73,9 +72,15 @@ REGISTER_CVAR(fx_wh_noquads, "0", 0);
 REGISTER_CVAR(fx_wh_tint_enable, "0", 0);
 REGISTER_CVAR(fx_wh_xtendvis, "1", 0);
 REGISTER_CVAR(fx_xtendvis, "0", 0);
+
+REGISTER_CVAR(matte_entityquads, "2", 0);
+REGISTER_CVAR(matte_particles, "2", 0);
+REGISTER_CVAR(matte_viewmodel, "2", 0);
+REGISTER_CVAR(matte_worldmodels, "1", 0);
 REGISTER_CVAR(matte_xray, "0", 0);
+
 REGISTER_CVAR(movie_clearscreen, "0", 0);
-REGISTER_CVAR(movie_bmp, "0", 0);
+REGISTER_CVAR(movie_bmp, "1", 0);
 REGISTER_CVAR(movie_depthdump, "0", 0);
 REGISTER_CVAR(movie_export_sound, "0", 0); // should default to 1, but I don't want to mess up other updates
 REGISTER_CVAR(movie_filename, "untitled", 0);
@@ -87,8 +92,6 @@ REGISTER_CVAR(movie_sound_volume, "0.5", 0); // volume 0.8 is CS 1.6 default
 REGISTER_CVAR(movie_stereomode,"0",0);
 REGISTER_CVAR(movie_stereo_centerdist,"1.3",0);
 REGISTER_CVAR(movie_stereo_yawdegrees,"0.02",0);
-REGISTER_CVAR(movie_swapdoors, "0", 0);
-REGISTER_CVAR(movie_swapweapon, "0", 0);
 REGISTER_CVAR(movie_splitstreams, "0", 0);
 REGISTER_CVAR(movie_wireframe, "0", 0);
 REGISTER_CVAR(movie_wireframesize, "1", 0);
@@ -170,8 +173,8 @@ void install_Hud_tours()
 	//
 
 	MdtMemBlockInfos mbisIn, mbisOut;
-	LPVOID pCodeTourIn = (LPVOID)HL_ADDR_HUD_TOURIN;
-	LPVOID pCodeTourOut = (LPVOID)HL_ADDR_HUD_TOUROUT;
+	LPVOID pCodeTourIn = (LPVOID)HL_ADDR_GET(HUD_TOURIN);
+	LPVOID pCodeTourOut = (LPVOID)HL_ADDR_GET(HUD_TOUROUT);
 	size_t dwCodeSizeIn = 0x05;
 	size_t dwCodeSizeOut = 0x05;
 
@@ -316,7 +319,7 @@ void touring_R_RenderView_(void)
 // this is our R_RemderView hook
 // pay attention, cuz it will have heavy interaction with our filming singelton!
 {
-	refdef_t* p_r_refdef=(refdef_t*)HL_ADDR_refdef; // pointer to r_refdef global struct
+	refdef_t* p_r_refdef=(refdef_t*)HL_ADDR_GET(r_refdef); // pointer to r_refdef global struct
 
 	static vec3_t oldorigin;
 	static vec3_t oldangles;
@@ -506,8 +509,8 @@ byte * touring_Mod_LeafPVS (mleaf_t *leaf, model_t *model)
 
 void InstallHook_Mod_LeafPVS()
 {
-	if (!detoured_Mod_LeafPVS && (HL_ADDR_Mod_LeafPVS!=NULL))
-		detoured_Mod_LeafPVS = (Mod_LeafPVS_t) DetourApply((BYTE *)HL_ADDR_Mod_LeafPVS, (BYTE *)touring_Mod_LeafPVS, (int)HL_ADDR_DTOURSZ_Mod_LeafPVS);
+	if (!detoured_Mod_LeafPVS && (HL_ADDR_GET(Mod_LeafPVS)!=NULL))
+		detoured_Mod_LeafPVS = (Mod_LeafPVS_t) DetourApply((BYTE *)HL_ADDR_GET(Mod_LeafPVS), (BYTE *)touring_Mod_LeafPVS, (int)HL_ADDR_GET(DTOURSZ_Mod_LeafPVS));
 }
 
 //
@@ -526,8 +529,8 @@ void touring_R_PolyBlend (void)
 
 void InstallHook_R_PolyBlend()
 {
-	if (!detoured_R_PolyBlend && (HL_ADDR_R_PolyBlend!=NULL))
-			detoured_R_PolyBlend = (R_PolyBlend_t) DetourApply((BYTE *)HL_ADDR_R_PolyBlend, (BYTE *)touring_R_PolyBlend, (int)HL_ADDR_DTOURSZ_R_PolyBlend);
+	if (!detoured_R_PolyBlend && (HL_ADDR_GET(R_PolyBlend)!=NULL))
+			detoured_R_PolyBlend = (R_PolyBlend_t) DetourApply((BYTE *)HL_ADDR_GET(R_PolyBlend), (BYTE *)touring_R_PolyBlend, (int)HL_ADDR_GET(DTOURSZ_R_PolyBlend));
 }
 
 REGISTER_CMD_FUNC(fx_noblend)
@@ -541,6 +544,57 @@ REGISTER_CMD_FUNC(fx_noblend)
 		pEngfuncs->Con_Printf("Usage:\n" PREFIX "fx_noblend 0/1 = normal/block blends\n");
 	}
 }
+
+REGISTER_CMD_FUNC(tttt)
+{
+	pEngfuncs->Con_Printf("0x%08x 0x%08x", HL_ADDR_GET(R_DrawParticles), HL_ADDR_GET(DTOURSZ_R_DrawParticles));
+}
+
+
+// R_DrawParticles /////////////////////////////////////////////////////////////
+
+bool g_bInR_DrawParticles = false;
+
+typedef void (*R_DrawParticles_t) (void);
+R_DrawParticles_t detoured_R_DrawParticles = NULL;
+
+void touring_R_DrawParticles (void)
+{
+	g_bInR_DrawParticles = true;
+	detoured_R_DrawParticles();
+	g_bInR_DrawParticles = false;
+}
+
+
+// R_DrawEntitiesOnList ////////////////////////////////////////////////////////
+
+bool g_bInR_DrawEntitiesOnList = false;
+
+typedef void (*R_DrawEntitiesOnList_t) (void);
+R_DrawEntitiesOnList_t detoured_R_DrawEntitiesOnList = NULL;
+
+void touring_R_DrawEntitiesOnList (void)
+{
+	g_bInR_DrawEntitiesOnList = true;
+	detoured_R_DrawEntitiesOnList();
+	g_bInR_DrawEntitiesOnList = false;
+}
+
+
+// R_DrawViewModel /////////////////////////////////////////////////////////////
+
+bool g_bInR_DrawViewModel = false;
+
+typedef void (*R_DrawViewModel_t) (void);
+R_DrawViewModel_t detoured_R_DrawViewModel = NULL;
+
+void touring_R_DrawViewModel (void)
+{
+	g_bInR_DrawViewModel = true;
+	detoured_R_DrawViewModel();
+	g_bInR_DrawViewModel = false;
+}
+
 
 //
 // // // //
@@ -766,8 +820,20 @@ void Filming::Start()
 	if ( !detoured_R_RenderView_ )
 	{
 		// we don't have it yet and the addres is not NULL (which might be an intended cfg setting)
-		detoured_R_RenderView_ = (R_RenderView__t) DetourApply((BYTE *)HL_ADDR_R_RenderView, (BYTE *)touring_R_RenderView_, (int)HL_ADDR_DTOURSZ_R_RenderView);
+		detoured_R_RenderView_ = (R_RenderView__t) DetourApply((BYTE *)HL_ADDR_GET(R_RenderView), (BYTE *)touring_R_RenderView_, (int)HL_ADDR_GET(DTOURSZ_R_RenderView));
 		install_Hud_tours(); // wil automaticall check if already installed or not
+	}
+
+	if( !detoured_R_DrawParticles ) {
+		detoured_R_DrawParticles = (R_DrawParticles_t) DetourApply((BYTE *)HL_ADDR_GET(R_DrawParticles), (BYTE *)touring_R_DrawParticles, (int)HL_ADDR_GET(DTOURSZ_R_DrawParticles));
+	}
+
+	if( !detoured_R_DrawEntitiesOnList ) {
+		detoured_R_DrawEntitiesOnList = (R_DrawEntitiesOnList_t) DetourApply((BYTE *)HL_ADDR_GET(R_DrawEntitiesOnList), (BYTE *)touring_R_DrawEntitiesOnList, (int)HL_ADDR_GET(DTOURSZ_R_DrawEntitiesOnList));
+	}
+
+	if( !detoured_R_DrawViewModel ) {
+		detoured_R_DrawViewModel = (R_DrawViewModel_t) DetourApply((BYTE *)HL_ADDR_GET(R_DrawViewModel), (BYTE *)touring_R_DrawViewModel, (int)HL_ADDR_GET(DTOURSZ_R_DrawViewModel));
 	}
 
 	// make sure some states used in recordBuffers are set properly:
@@ -1041,18 +1107,106 @@ void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
 
 Filming::DRAW_RESULT Filming::shouldDraw(GLenum mode)
 {
-	if (m_iMatteStage == MS_ALL)
-		return DR_NORMAL;
+	bool bMatteXray = matte_xray->value ;
+	bool bFilterEntities = matte_entities_r.bNotEmpty;
 
-	else if (m_iMatteStage == MS_ENTITY)
-	{
-		Filming::DRAW_RESULT res = shouldDrawDuringEntityMatte(mode);
-		if(  matte_xray->value && res == Filming::DR_MASK )
-			res = Filming::DR_HIDE;
-		return res;
+	int iMatteParticles = (int)matte_particles->value;
+	bool bParticleWorld  = 0x01 & iMatteParticles;
+	bool bParticleEntity = 0x02 & iMatteParticles;
+
+	int iMatteViewModel = (int)matte_viewmodel->value;
+	bool bViewModelWorld  = 0x01 & iMatteViewModel;
+	bool bViewModelEntity = 0x02 & iMatteViewModel;
+
+	int iMatteWmodels = (int)matte_worldmodels->value;
+	bool bWmodelWorld  = 0x01 & iMatteWmodels;
+	bool bWmodelEntity = 0x02 & iMatteWmodels;
+
+	int iMatteEntityQuads = (int)matte_entityquads->value;
+	bool bEntityQuadWorld  = 0x01 & iMatteEntityQuads;
+	bool bEntityQuadEntity = 0x02 & iMatteEntityQuads;
+
+	// in R_Particles:
+	if(g_bInR_DrawParticles) {
+		switch(m_iMatteStage) {
+		case MS_WORLD:
+			return bParticleWorld ? DR_NORMAL : DR_HIDE;
+		case MS_ENTITY:
+			return bParticleEntity ? DR_NORMAL : (bMatteXray ? DR_HIDE : DR_MASK );
+		};
+		return bParticleWorld | bParticleEntity ? DR_NORMAL : DR_HIDE;
 	}
-	else 
-		return shouldDrawDuringWorldMatte(mode);
+
+	// in R_DrawEntitiesOnList:
+	else if(g_bInR_DrawEntitiesOnList) {
+		cl_entity_t *ce = pEngStudio->GetCurrentEntity();
+
+		if(!ce)
+			return DR_NORMAL;
+
+		// Apply entity Filter list:
+		if (bFilterEntities) {
+			bool bActive = _InMatteEntities(ce->index);
+			switch(m_iMatteStage) {
+			case MS_WORLD:
+				return !bActive ? DR_NORMAL : DR_HIDE;
+			case MS_ENTITY:
+				return bActive ? DR_NORMAL : (bMatteXray ? DR_HIDE : DR_MASK );
+			};
+			return bActive ? DR_NORMAL : DR_HIDE;
+		}
+
+		// w_* models_:
+		else if(ce->model && ce->model->type == mod_brush && strncmp(ce->model->name, "maps/", 5) != 0) {
+			switch(m_iMatteStage) {
+			case MS_WORLD:
+				return bWmodelWorld ? DR_NORMAL : DR_HIDE;
+			case MS_ENTITY:
+				return bWmodelEntity ? DR_NORMAL : (bMatteXray ? DR_HIDE : DR_MASK );
+			};
+			return bWmodelWorld | bWmodelEntity ? DR_NORMAL : DR_HIDE;
+		}
+
+		// QUADS, such as blood sprites:
+		else if(mode == GL_QUADS) {
+			switch(m_iMatteStage) {
+			case MS_WORLD:
+				return bEntityQuadWorld ? DR_NORMAL : DR_HIDE;
+			case MS_ENTITY:
+				return bEntityQuadEntity ? DR_NORMAL : DR_HIDE;
+			};
+			return bEntityQuadWorld | bEntityQuadEntity ? DR_NORMAL : DR_HIDE;
+		}
+
+		// Everything else in the entity list:
+		switch(m_iMatteStage) {
+		case MS_WORLD:
+			return DR_HIDE;
+		case MS_ENTITY:
+			return DR_NORMAL;
+		};
+		return DR_NORMAL;
+	}
+
+	// in R_DrawViewModel
+	else if(g_bInR_DrawViewModel) {
+		switch(m_iMatteStage) {
+		case MS_WORLD:
+			return bViewModelWorld ? DR_NORMAL : DR_HIDE;
+		case MS_ENTITY:
+			return bViewModelEntity ? DR_NORMAL : (bMatteXray ? DR_HIDE : DR_MASK );
+		};
+		return bViewModelWorld | bViewModelEntity ? DR_NORMAL : DR_HIDE;
+	}
+
+	// Everything else:
+	switch(m_iMatteStage) {
+	case MS_WORLD:
+		return DR_NORMAL;
+	case MS_ENTITY:
+		return (bMatteXray ? DR_HIDE : DR_MASK );
+	};
+	return DR_NORMAL;
 }
 
 bool Filming::_InMatteEntities(int iid)
@@ -1072,99 +1226,6 @@ bool Filming::_InMatteEntities(int iid)
 	return bFound;
 }
 
-Filming::DRAW_RESULT Filming::shouldDrawDuringEntityMatte(GLenum mode)
-{
-	bool bSwapWeapon = (movie_swapweapon->value != 0);
-	bool bForceWeapon = (movie_swapweapon->value == 2);
-	bool bSwapDoors = (movie_swapdoors->value != 0);
-	bool bOnlyActors = matte_entities_r.bNotEmpty;
-
-	// GL_POLYGON is a worldbrush
-	if (mode == GL_POLYGON)
-	{
-		cl_entity_t *ce = pEngStudio->GetCurrentEntity();
-
-		// This is a polygon func_ something, so probably a door or a grill
-		// We don't touch doors here ol' chap if swapdoors is on
-		if (bSwapDoors && ce && ce->model && ce->model->type == mod_brush && strncmp(ce->model->name, "maps/", 5) != 0)
-			return DR_NORMAL;
-
-		return DR_MASK;
-	}
-
-	// Sprites and sky are just removed completely
-	else if (mode == GL_QUADS)
-		return DR_HIDE;
-
-	// Entities
-	else if (mode == GL_TRIANGLE_STRIP || mode == GL_TRIANGLE_FAN)
-	{
-		cl_entity_t *ce = pEngStudio->GetCurrentEntity();
-
-		// Studio models
-		if (ce && ce->model && ce->model->type == mod_studio)
-		{
-			// This is the viewmodel so hide it from ent-only if they want it to be shown as normal
-			// However hide it via a mask so it still covers stuff
-			// Actually do we want to do that?
-			// edit: No, not for now as it breaks
-			if (bSwapWeapon && strncmp("models/v_", ce->model->name, 9) == 0)
-				return bForceWeapon ? DR_NORMAL : DR_HIDE;
-
-			// We have selected ents to be visible alone and none of those
-			if (bOnlyActors && !_InMatteEntities(ce->index))
-				return DR_MASK;
-		}	
-		// This is some sort of func thing so matte effect it
-		// TODO: why is this doing MATTE_COLOUR instea of masking?
-		else
-			//glColor3f(MATTE_COLOUR);
-			return DR_MASK;
-	}
-
-	return DR_NORMAL;
-}
-
-Filming::DRAW_RESULT Filming::shouldDrawDuringWorldMatte(GLenum mode)
-{
-	bool bSwapWeapon = (movie_swapweapon->value != 0) && (movie_swapweapon->value != 2);
-	bool bSwapDoors = (movie_swapdoors->value != 0);
-	bool bOnlyActors = matte_entities_r.bNotEmpty;
-
-	// Worldbrush stuff
-	if (mode == GL_POLYGON)
-	{
-		cl_entity_t *ce = pEngStudio->GetCurrentEntity();
-
-		// This is a polygon func_ something, so probably a door or a grill
-		if (bSwapDoors && ce && ce->model && ce->model->type == mod_brush && strncmp(ce->model->name, "maps/", 5) != 0)
-			return DR_HIDE;
-	}
-
-	// Entities...
-	// We remove stuff rather than hide it, because in world only they probably
-	// want the depth dump to just be the world!
-	else if (mode == GL_TRIANGLE_STRIP || mode == GL_TRIANGLE_FAN)
-	{
-		cl_entity_t *ce = pEngStudio->GetCurrentEntity();
-
-		// Studio models need only apply
-		if (ce && ce->model && ce->model->type == mod_studio)
-		{
-			// This is the viewmodel so hide it from ent-only if they want it to be shown as normal
-			if (bSwapWeapon && strncmp("models/v_", ce->model->name, 9) == 0)
-				return DR_NORMAL;
-
-			// We have selected ents to be visible alone and none of those
-			if (bOnlyActors && !_InMatteEntities(ce->index))
-				return DR_NORMAL;
-
-			return DR_HIDE;
-		}	
-	}
-
-	return DR_NORMAL;
-}
 
 bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 // be sure to read the comments to _bRecordBuffers_FirstCall in filming.h, because this is fundamental for undertanding what the **** is going on here

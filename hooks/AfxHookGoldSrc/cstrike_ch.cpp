@@ -123,11 +123,11 @@ void CrosshairFix_Install()
 			pEngfuncs->Con_DPrintf("0x%08x\n",dwClientDLL);
 
 			// install hook:
-			g_pfnCrosshairFix_Hooked_Func = (UnkCstrikeCrosshairFn_t) DetourClassFunc((BYTE *)(dwClientDLL + HL_ADDR_CLOFS_UnkCstrikeCrosshairFn), (BYTE *)CrosshairFix_Hooking_Func, (int)HL_ADDR_DTOURSZ_UnkCstrikeCrosshairFn);
+			g_pfnCrosshairFix_Hooked_Func = (UnkCstrikeCrosshairFn_t) DetourClassFunc((BYTE *)(dwClientDLL + HL_ADDR_GET(CLOFS_UnkCstrikeCrosshairFn)), (BYTE *)CrosshairFix_Hooking_Func, (int)HL_ADDR_GET(DTOURSZ_UnkCstrikeCrosshairFn));
 
 			// install factor pointers:
-			g_f_ch_mul_fac = (double *)(dwClientDLL + HL_ADDR_CLOFS_UnkCstrikeCh_mul_fac);
-			g_f_ch_add_fac = (double *)(dwClientDLL + HL_ADDR_CLOFS_UnkCstrikeCh_add_fac);
+			g_f_ch_mul_fac = (double *)(dwClientDLL + HL_ADDR_GET(CLOFS_UnkCstrikeCh_mul_fac));
+			g_f_ch_add_fac = (double *)(dwClientDLL + HL_ADDR_GET(CLOFS_UnkCstrikeCh_add_fac));
 
 			pEngfuncs->Con_DPrintf("0x%08x,0x%08x\n",g_f_ch_mul_fac,g_f_ch_add_fac);
 		}

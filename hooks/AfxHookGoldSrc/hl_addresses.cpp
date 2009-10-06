@@ -9,9 +9,9 @@
 
 cHLAddresses g_HLAddresses;
 
-#define HL_ADDR_ENTRY(name,expression) \
-	unsigned long ulHLAddr_##name; \
-	cHLAddressEntry HLAddrObj_##name(&g_HLAddresses,#name,##expression,&ulHLAddr_##name);
+#define HL_ADDR_ENTRY(name) \
+	unsigned long g_HL_ADDR_##name; \
+	cHLAddressEntry HLAddrObj_##name(&g_HLAddresses,#name,"0x0",&g_HL_ADDR_##name);
 
 #define HL_ADDR_VAR(name) \
 	cHLAddressEntry HLAddrObj_##name(&g_HLAddresses,#name);
@@ -38,67 +38,76 @@ HL_ADDR_VAR(_vE)
 HL_ADDR_VAR(_vF)
 
 // Addresses:
-HL_ADDR_ENTRY(p_cl_enginefuncs_s,"0x0")
-HL_ADDR_ENTRY(p_enginefuncs_s,"0x0") // unused
-HL_ADDR_ENTRY(p_engine_studio_api_s,"0x0")
-HL_ADDR_ENTRY(p_playermove_s,"0x0")
+HL_ADDR_ENTRY(p_cl_enginefuncs_s)
+HL_ADDR_ENTRY(p_engine_studio_api_s)
+HL_ADDR_ENTRY(p_playermove_s)
 
-HL_ADDR_ENTRY(HUD_TOURIN,"0x0")
-HL_ADDR_ENTRY(HUD_TOUROUT,"0x0")
+HL_ADDR_ENTRY(HUD_TOURIN)
+HL_ADDR_ENTRY(HUD_TOUROUT)
 
-HL_ADDR_ENTRY(R_RenderView,"0x0")
-HL_ADDR_ENTRY(DTOURSZ_R_RenderView,"0x0")
+HL_ADDR_ENTRY(R_RenderView)
+HL_ADDR_ENTRY(DTOURSZ_R_RenderView)
 
-HL_ADDR_ENTRY(Mod_LeafPVS,"0x0")
-HL_ADDR_ENTRY(DTOURSZ_Mod_LeafPVS,"0x0")
+HL_ADDR_ENTRY(Mod_LeafPVS)
+HL_ADDR_ENTRY(DTOURSZ_Mod_LeafPVS)
 
-HL_ADDR_ENTRY(r_refdef,"0x0")
-HL_ADDR_ENTRY(HudSpectator_tfc,"0x0")
-HL_ADDR_ENTRY(HudSpectator_cmp_tfc,"0x0")
+HL_ADDR_ENTRY(r_refdef)
+HL_ADDR_ENTRY(HudSpectator_tfc)
+HL_ADDR_ENTRY(HudSpectator_cmp_tfc)
 
-HL_ADDR_ENTRY(GetSoundtime,"0x0")
-HL_ADDR_ENTRY(DTOURSZ_GetSoundtime,"0x0")
+HL_ADDR_ENTRY(GetSoundtime)
+HL_ADDR_ENTRY(DTOURSZ_GetSoundtime)
 
-HL_ADDR_ENTRY(S_PaintChannels,"0x0")
-HL_ADDR_ENTRY(DTOURSZ_S_PaintChannels,"0x0")
+HL_ADDR_ENTRY(S_PaintChannels)
+HL_ADDR_ENTRY(DTOURSZ_S_PaintChannels)
 
-HL_ADDR_ENTRY(S_TransferPaintBuffer,"0x0")
-HL_ADDR_ENTRY(DTOURSZ_S_TransferPaintBuffer,"0x0")
+HL_ADDR_ENTRY(S_TransferPaintBuffer)
+HL_ADDR_ENTRY(DTOURSZ_S_TransferPaintBuffer)
 
-HL_ADDR_ENTRY(shm,"0x0")
-HL_ADDR_ENTRY(paintbuffer,"0x0")
-HL_ADDR_ENTRY(soundtime,"0x0")
-HL_ADDR_ENTRY(paintedtime,"0x0")
+HL_ADDR_ENTRY(shm)
+HL_ADDR_ENTRY(paintbuffer)
+HL_ADDR_ENTRY(soundtime)
+HL_ADDR_ENTRY(paintedtime)
 
-HL_ADDR_ENTRY(CL_ParseServerMessage,"0x0")
-HL_ADDR_ENTRY(net_message_cursize,"0x0")
-HL_ADDR_ENTRY(net_message,"0x0")
-HL_ADDR_ENTRY(msg_readcount,"0x0")
-HL_ADDR_ENTRY(CL_ParseServerMessage_CmdRead,"0x0")
-HL_ADDR_ENTRY(DTOURSZ_CL_ParseServerMessage_CmdRead,"0x0")
+HL_ADDR_ENTRY(CL_ParseServerMessage)
+HL_ADDR_ENTRY(net_message_cursize)
+HL_ADDR_ENTRY(net_message)
+HL_ADDR_ENTRY(msg_readcount)
+HL_ADDR_ENTRY(CL_ParseServerMessage_CmdRead)
+HL_ADDR_ENTRY(DTOURSZ_CL_ParseServerMessage_CmdRead)
 
-HL_ADDR_ENTRY(UpdateSpectatorPanel_checkjmp_ag_clofs,"0x0")
-HL_ADDR_ENTRY(UpdateSpectatorPanel_checkjmp_tfc,"0x0")
-HL_ADDR_ENTRY(UpdateSpectatorPanel_checkjmp_ns_clofs,"0x0")
-HL_ADDR_ENTRY(UpdateSpectatorPanel_checkjmp_valve,"0x0")
+HL_ADDR_ENTRY(UpdateSpectatorPanel_checkjmp_ag_clofs)
+HL_ADDR_ENTRY(UpdateSpectatorPanel_checkjmp_tfc)
+HL_ADDR_ENTRY(UpdateSpectatorPanel_checkjmp_ns_clofs)
+HL_ADDR_ENTRY(UpdateSpectatorPanel_checkjmp_valve)
 
-HL_ADDR_ENTRY(GetClientColor,"0x0")
-HL_ADDR_ENTRY(DTOURSZ_GetClientColor,"0x0")
-HL_ADDR_ENTRY(unkInlineClientColorA,"0x0")
-HL_ADDR_ENTRY(SZ_unkInlineClientColorA,"0x0")
-HL_ADDR_ENTRY(unkInlineClientColorV,"0x0")
-HL_ADDR_ENTRY(SZ_unkInlineClientColorV,"0x0")
+HL_ADDR_ENTRY(GetClientColor)
+HL_ADDR_ENTRY(DTOURSZ_GetClientColor)
+HL_ADDR_ENTRY(unkInlineClientColorA)
+HL_ADDR_ENTRY(SZ_unkInlineClientColorA)
+HL_ADDR_ENTRY(unkInlineClientColorV)
+HL_ADDR_ENTRY(SZ_unkInlineClientColorV)
 
-HL_ADDR_ENTRY(CLOFS_UnkCstrikeCrosshairFn,"0x0")
-HL_ADDR_ENTRY(DTOURSZ_UnkCstrikeCrosshairFn,"0x0")
-HL_ADDR_ENTRY(CLOFS_UnkCstrikeCh_mul_fac,"0x0")
-HL_ADDR_ENTRY(CLOFS_UnkCstrikeCh_add_fac,"0x0")
+HL_ADDR_ENTRY(CLOFS_UnkCstrikeCrosshairFn)
+HL_ADDR_ENTRY(DTOURSZ_UnkCstrikeCrosshairFn)
+HL_ADDR_ENTRY(CLOFS_UnkCstrikeCh_mul_fac)
+HL_ADDR_ENTRY(CLOFS_UnkCstrikeCh_add_fac)
 
-HL_ADDR_ENTRY(R_PolyBlend,"0x0")
-HL_ADDR_ENTRY(DTOURSZ_R_PolyBlend,"0x0")
+HL_ADDR_ENTRY(R_PolyBlend)
+HL_ADDR_ENTRY(DTOURSZ_R_PolyBlend)
 
-HL_ADDR_ENTRY(UnkGetDecalTexture,"0x0")
-HL_ADDR_ENTRY(DTOURSZ_UnkGetDecalTexture,"0x0")
+HL_ADDR_ENTRY(UnkGetDecalTexture)
+HL_ADDR_ENTRY(DTOURSZ_UnkGetDecalTexture)
+
+HL_ADDR_ENTRY(R_DrawParticles)
+HL_ADDR_ENTRY(DTOURSZ_R_DrawParticles)
+
+HL_ADDR_ENTRY(R_DrawEntitiesOnList)
+HL_ADDR_ENTRY(DTOURSZ_R_DrawEntitiesOnList)
+
+HL_ADDR_ENTRY(R_DrawViewModel)
+HL_ADDR_ENTRY(DTOURSZ_R_DrawViewModel)
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // cHLAddresses
@@ -595,3 +604,4 @@ char *cHLAddressEntry::GetName()
 {
 	return (char *)_strName.c_str();
 }
+
