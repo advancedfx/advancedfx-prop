@@ -276,4 +276,11 @@ ref struct hldemo_macroblock_header_s
 //	Svc to string mapper is not ported yet
 //
 
+// sub commands of svc_hltv:
+#define HLTV_ACTIVE				0	// tells client that he's an spectator and will get director commands
+#define HLTV_STATUS				1	// send status infos about proxy 
+#define HLTV_LISTEN				2	// tell client to listen to a multicast stream
+
+
+
 } // namespace hlae

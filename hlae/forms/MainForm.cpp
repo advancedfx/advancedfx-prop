@@ -3,7 +3,7 @@
 #include "MainForm.h"
 #include "Launcher.h"
 #include <system/debug.h>
-#include <system/demotoolswizard.h>
+#include <tools/demotools/demotoolswizard.h>
 #include <system/BasecomServer.h>
 
 using namespace hlae;

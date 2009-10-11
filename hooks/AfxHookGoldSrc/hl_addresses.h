@@ -276,8 +276,7 @@ HL_ADDR_EXPOSE(R_DrawEntitiesOnList)
 HL_ADDR_EXPOSE(DTOURSZ_R_DrawEntitiesOnList)
 HL_ADDR_EXPOSE(R_DrawViewModel)
 HL_ADDR_EXPOSE(DTOURSZ_R_DrawViewModel)
-
-
-
+HL_ADDR_EXPOSE(p_enginefuncs_s)
+HL_ADDR_EXPOSE(p_globalvars_s)
 #endif // #ifndef HL_ADDRESSES_H
 

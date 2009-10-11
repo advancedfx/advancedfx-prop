@@ -52,6 +52,8 @@ CHlaeDemoFix::CHlaeDemoFix(System::Windows::Forms::Form ^parent, DebugMaster ^de
 		_watermark260[i] = (char)(tstr2[i]);
 	delete tstr2;
 	_watermark260[i]=0;
+
+	m_LastPercentage = 0;
 }
 
 CHlaeDemoFix::~CHlaeDemoFix()
@@ -119,381 +121,348 @@ void CHlaeDemoFix::ClearCommandMap( void )
 
 bool CHlaeDemoFix::Run ( System::String ^infilename, System::String ^outfilename)
 {
+	bool bOK = false;
+	System::IO::BinaryReader ^ infile = nullptr;
+	System::IO::BinaryWriter ^ outfile = nullptr;
+
 	_ucHltvFixBell = 2;
 
-	if (_bEnableDirectoryFix)
-		return fix_demo(infilename,outfilename);
-	else
-		return normal_demo(infilename,outfilename);
-}
+	try {
 
-bool CHlaeDemoFix::normal_demo ( System::String ^infilename, System::String ^outfilename )
-{
-	bool bOK=false;
-
-	System::IO::BinaryReader ^infile;
-	System::IO::BinaryWriter ^outfile;
-
-	try
-	{
-		infile = gcnew System::IO::BinaryReader( System::IO::File::Open( infilename, System::IO::FileMode::Open, System::IO::FileAccess::Read ) );
-	} catch (System::Exception ^e)
-	{
-		ERROR_MESSAGE( debugMaster, System::String::Format("Exception when opening inputfile: {0}",e) );
-		return false;
-	}
-
-	try
-	{
-		outfile = gcnew System::IO::BinaryWriter( System::IO::File::Open( outfilename, System::IO::FileMode::Create, System::IO::FileAccess::Write ) );
-	}
-	catch (System::Exception ^e)
-	{
-		ERROR_MESSAGE( debugMaster, System::String::Format("Exception when opening outfile: {0}",e) );
-		delete infile;
-		return false;
-	}
-
-	//wxProgressDialog* tickerdlg = new wxProgressDialog(_T("DemoTools"),_T("Starting ..."),(int)(infile->Length()),NULL,wxPD_APP_MODAL|wxPD_SMOOTH|wxPD_CAN_ABORT|wxPD_ELAPSED_TIME|wxPD_ESTIMATED_TIME|wxPD_REMAINING_TIME);
-
-	if (
-		infile->BaseStream->CanRead && infile->BaseStream->CanSeek
-		&& outfile->BaseStream->CanWrite && outfile->BaseStream->CanSeek // seek required(?)
-	)
-	{
-		//wxString tstr;
-		hldemo_header_s ^header = gcnew hldemo_header_s; 
-
-		VERBOSE_MESSAGE( debugMaster, "reading demo header ..." );
-
-		if (read_header(infile,header))
+		try
 		{
-			if (_bEnableWaterMarks) watermark_header(header);
+			infile = gcnew System::IO::BinaryReader( System::IO::File::Open( infilename, System::IO::FileMode::Open, System::IO::FileAccess::Read ) );
+		} catch (System::Exception ^e)
+		{
+			ERROR_MESSAGE( debugMaster, System::String::Format("Exception when opening inputfile: {0}",e) );
+			if(infile) infile->Close();
+			infile = nullptr;
+		}
 
-			if(!(header->dir_offset))
-			{
-				ERROR_MESSAGE( debugMaster, "Directory entries not present, aborting. Use DemoFix.");
-			}
-			else if (write_header(outfile,header))
-			{
+		try
+		{
+			outfile = gcnew System::IO::BinaryWriter( System::IO::File::Open( outfilename, System::IO::FileMode::Create, System::IO::FileAccess::Write ) );
+		}
+		catch (System::Exception ^e)
+		{
+			ERROR_MESSAGE( debugMaster, System::String::Format("Exception when opening outfile: {0}",e) );
+			if(outfile) outfile->Close();
+			outfile = nullptr;
+		}
 
-				bool bSearchNewSegment = true && (infile->BaseStream->Position < header->dir_offset);
-				int iNumSegments = 0;
-				copy_macroblock_e eCopyState=copy_macroblock_e::CPMB_OKSTOP;
+		if (
+			nullptr != infile && nullptr != outfile
+			&& infile->BaseStream->CanRead && infile->BaseStream->CanSeek
+			&& outfile->BaseStream->CanWrite && outfile->BaseStream->CanSeek // seek required(?)
+		)
+		{
+			if (_bEnableDirectoryFix)
+				bOK = fix_demo(infile, outfile);
+			else
+				bOK = normal_demo(infile, outfile);
 
-
-
-				while (bSearchNewSegment)
-				{
-					VERBOSE_MESSAGE( debugMaster, System::String::Format( "Processing segment {0}",iNumSegments) );
-
-					//tstr.Printf(_T("Segment: %i"),iNumSegments);
-					//tickerdlg->Update(infile->Tell(),tstr);
-					//tickerdlg->TempSet((100*infile->BaseStream->Position)/infile->BaseStream->Length);
-
-					hldemo_macroblock_header_s ^lastheader = gcnew hldemo_macroblock_header_s();
-					lastheader->type = 5;
-					lastheader->time = 0.0f;
-					lastheader->frame = 0;
-
-					eCopyState = copy_macroblock(infile, outfile, lastheader);
-
-					while (eCopyState==copy_macroblock_e::CPMB_OK && (infile->BaseStream->Position < header->dir_offset))
-					{
-						//if (! ( tickerdlg->Update(infile->BaseStream->Position) ) )
-						//{
-						//	eCopyState=CPMB_USERABORT;
-						//	break;
-						//}
-						eCopyState = copy_macroblock(infile, outfile, lastheader);
-					}
-					
-					if (eCopyState==copy_macroblock_e::CPMB_OKSTOP)
-					{
-						// normal stop
-
-						// munch repeated stops:
-						long long fpos = infile->BaseStream->Position;
-						hldemo_macroblock_header_s ^mbheader = gcnew hldemo_macroblock_header_s();
-
-						while ( (infile->BaseStream->Position < header->dir_offset) && mbheader->read( infile ) && mbheader->type == 5 )
-						{
-							lastheader = mbheader;
-							fpos = infile->BaseStream->Position;
-							mbheader->write( outfile );
-						}
-
-						// rewind behind last stop:
-						infile->BaseStream->Seek( fpos, System::IO::SeekOrigin::Begin );
-
-					} else if (eCopyState==copy_macroblock_e::CPMB_ERROR)
-					{
-						ERROR_MESSAGE( debugMaster, "DemoFix: Found incomplete or unknown message or file end, aborting. Use DemoFix." );
-					} else if (eCopyState==copy_macroblock_e::CPMB_USERABORT) {
-						// fatal error (user abort)
-						ERROR_MESSAGE( debugMaster, "DemoFix: User aborted." );
-					} else {
-						// fatal error
-						ERROR_MESSAGE( debugMaster, "DemoFix: Cannot recover from last error, failed." );
-					}
-
-					if (eCopyState==copy_macroblock_e::CPMB_OKSTOP)
-					{
-						iNumSegments++;
-					}
-
-					bSearchNewSegment = (eCopyState == copy_macroblock_e::CPMB_OKSTOP) && (infile->BaseStream->Position < header->dir_offset);
-				}
-
-				// no new segments, copy directory entries (if any):
-				if (eCopyState==copy_macroblock_e::CPMB_OKSTOP)
-				{
-					//tstr.Printf(_T("copying %i directory entries"),iNumSegments);
-					//tickerdlg->Update(infile->BaseStream->Position,tstr);
-					VERBOSE_MESSAGE( debugMaster, System::String::Format("copying {0} directory entries",iNumSegments) );
-
-					if(copy_bytes(infile,outfile,infile->BaseStream->Length - infile->BaseStream->Position))
-					{
-						// that's it guys.
-						INFO_MESSAGE( debugMaster, "DemoTools: Finished.");
-						//tickerdlg->Update(infile->Length());
-						bOK=true;
-					};
-				}
-
-			} else ERROR_MESSAGE( debugMaster, "Failed to write demo header." );
-
-		} else ERROR_MESSAGE( debugMaster, "Failed to read demo header." );
-
-		delete header;
-
-	} else {
-		if (!(infile->BaseStream->CanRead && infile->BaseStream->CanSeek)) ERROR_MESSAGE( debugMaster, "Could not open input file for reading and seeking." );
-		if (!(infile->BaseStream->CanWrite && infile->BaseStream->CanSeek)) ERROR_MESSAGE( debugMaster, "Could not open output file for writing and seeking." );
+		} else {
+			if (!(infile && infile->BaseStream && infile->BaseStream->CanRead && infile->BaseStream->CanSeek)) ERROR_MESSAGE( debugMaster, "Could not open input file for reading and seeking." );
+			if (!(outfile && outfile->BaseStream && outfile->BaseStream->CanWrite && outfile->BaseStream->CanSeek)) ERROR_MESSAGE( debugMaster, "Could not open output file for writing and seeking." );
+		}
 	}
+	finally {
+		if(infile) infile->Close();
+		if(outfile) outfile->Close();
 
-	delete infile;
-	delete outfile;
-
-	//tickerdlg->Destroy();
-	//delete tickerdlg;
+		delete infile;
+		delete outfile;
+	}
 
 	return bOK;
 }
 
-bool CHlaeDemoFix::fix_demo ( System::String ^infilename, System::String ^outfilename )
+bool CHlaeDemoFix::normal_demo(System::IO::BinaryReader ^ infile, System::IO::BinaryWriter ^ outfile)
 {
 	bool bOK=false;
 
-	System::IO::BinaryReader ^infile;
-	System::IO::BinaryWriter ^outfile;
 
-	try
+	//wxString tstr;
+	hldemo_header_s ^header = gcnew hldemo_header_s; 
+
+	VERBOSE_MESSAGE( debugMaster, "reading demo header ..." );
+
+	if (read_header(infile,header))
 	{
-		infile = gcnew System::IO::BinaryReader( System::IO::File::Open( infilename, System::IO::FileMode::Open, System::IO::FileAccess::Read ) );
-	} catch (System::Exception ^e)
-	{
-		ERROR_MESSAGE( debugMaster, System::String::Format("Exception when opening inputfile: {0}",e) );
-		return false;
-	}
+		if (_bEnableWaterMarks) watermark_header(header);
 
-	try
-	{
-		outfile = gcnew System::IO::BinaryWriter( System::IO::File::Open( outfilename, System::IO::FileMode::Create, System::IO::FileAccess::Write ) );
-	}
-	catch (System::Exception ^e)
-	{
-		ERROR_MESSAGE( debugMaster, System::String::Format("Exception when opening outfile: {0}",e) );
-		delete infile;
-		return false;
-	}
-
-	//wxProgressDialog* tickerdlg = new wxProgressDialog(_T("DemoFix"),_T("Starting ..."),(int)(infile->Length()),NULL,wxPD_APP_MODAL|wxPD_SMOOTH|wxPD_CAN_ABORT|wxPD_ELAPSED_TIME|wxPD_ESTIMATED_TIME|wxPD_REMAINING_TIME);
-
-	if (
-		infile->BaseStream->CanRead && infile->BaseStream->CanSeek
-		&& outfile->BaseStream->CanWrite && outfile->BaseStream->CanSeek // seek required(?)
-	)
-	{
-		//wxString tstr;
-		hldemo_header_s ^header = gcnew hldemo_header_s();
-
-		VERBOSE_MESSAGE( debugMaster, "DemoFix: reading demo header ..." );
-
-		if (read_header(infile,header))
+		if(!(header->dir_offset))
 		{
-			if (_bEnableWaterMarks) watermark_header(header);
+			ERROR_MESSAGE( debugMaster, "Directory entries not present, aborting. Use DemoFix.");
+		}
+		else if (write_header(outfile,header))
+		{
 
-			if(header->dir_offset)
+			bool bSearchNewSegment = true && (infile->BaseStream->Position < header->dir_offset);
+			int iNumSegments = 0;
+			copy_macroblock_e eCopyState=copy_macroblock_e::CPMB_OKSTOP;
+
+
+
+			while (bSearchNewSegment)
 			{
-				WARNING_MESSAGE( debugMaster, "DemoFix: Directory entries already present, ignoring." );
-				header->dir_offset = 0;
+				VERBOSE_MESSAGE( debugMaster, System::String::Format( "Processing segment {0}",iNumSegments) );
+
+				//tstr.Printf(_T("Segment: %i"),iNumSegments);
+				//tickerdlg->Update(infile->Tell(),tstr);
+				//tickerdlg->TempSet((100*infile->BaseStream->Position)/infile->BaseStream->Length);
+
+				hldemo_macroblock_header_s ^lastheader = gcnew hldemo_macroblock_header_s();
+				lastheader->type = 5;
+				lastheader->time = 0.0f;
+				lastheader->frame = 0;
+
+				eCopyState = copy_macroblock(infile, outfile, lastheader);
+
+				while (eCopyState==copy_macroblock_e::CPMB_OK && (infile->BaseStream->Position < header->dir_offset))
+				{
+					//if (! ( tickerdlg->Update(infile->BaseStream->Position) ) )
+					//{
+					//	eCopyState=CPMB_USERABORT;
+					//	break;
+					//}
+					eCopyState = copy_macroblock(infile, outfile, lastheader);
+				}
+				
+				if (eCopyState==copy_macroblock_e::CPMB_OKSTOP)
+				{
+					// normal stop
+
+					// munch repeated stops:
+					long long fpos = infile->BaseStream->Position;
+					hldemo_macroblock_header_s ^mbheader = gcnew hldemo_macroblock_header_s();
+
+					while ( (infile->BaseStream->Position < header->dir_offset) && mbheader->read( infile ) && mbheader->type == 5 )
+					{
+						lastheader = mbheader;
+						fpos = infile->BaseStream->Position;
+						mbheader->write( outfile );
+					}
+
+					// rewind behind last stop:
+					infile->BaseStream->Seek( fpos, System::IO::SeekOrigin::Begin );
+
+				} else if (eCopyState==copy_macroblock_e::CPMB_ERROR)
+				{
+					ERROR_MESSAGE( debugMaster, "DemoFix: Found incomplete or unknown message or file end, aborting. Use DemoFix." );
+				} else if (eCopyState==copy_macroblock_e::CPMB_USERABORT) {
+					// fatal error (user abort)
+					ERROR_MESSAGE( debugMaster, "DemoFix: User aborted." );
+				} else {
+					// fatal error
+					ERROR_MESSAGE( debugMaster, "DemoFix: Cannot recover from last error, failed." );
+				}
+
+				if (eCopyState==copy_macroblock_e::CPMB_OKSTOP)
+				{
+					iNumSegments++;
+				}
+
+				bSearchNewSegment = (eCopyState == copy_macroblock_e::CPMB_OKSTOP) && (infile->BaseStream->Position < header->dir_offset);
 			}
 
-			if (write_header(outfile,header))
+			// no new segments, copy directory entries (if any):
+			if (eCopyState==copy_macroblock_e::CPMB_OKSTOP)
 			{
-				bool bSearchNewSegment=true;
-				int iNumSegments=0;
-				copy_macroblock_e eCopyState;
+				//tstr.Printf(_T("copying %i directory entries"),iNumSegments);
+				//tickerdlg->Update(infile->BaseStream->Position,tstr);
+				VERBOSE_MESSAGE( debugMaster, System::String::Format("copying {0} directory entries",iNumSegments) );
 
-				System::Collections::Generic::Queue <hldemo_dir_entry_s ^> direntries_que;
-				
-				while (bSearchNewSegment)
+				if(copy_bytes(infile,outfile,infile->BaseStream->Length - infile->BaseStream->Position))
 				{
-					VERBOSE_MESSAGE( debugMaster, System::String::Format("Scanning for segment {0}",iNumSegments) );
-
-					//tstr.Printf(_T("Segment: %i"),iNumSegments);
-					//tickerdlg->Update(infile->Tell(),tstr);
-
-					unsigned int segmentoffset=infile->BaseStream->Position;
-					unsigned int totalframes=0;
-					float starttime=0;
-
-					hldemo_macroblock_header_s ^lastheader = gcnew hldemo_macroblock_header_s();
-					lastheader->type = 5;
-					lastheader->time = 0.0f;
-					lastheader->frame = 0;
-
-					eCopyState = copy_macroblock(infile, outfile, lastheader);
-
-					if(eCopyState==copy_macroblock_e::CPMB_OK || eCopyState==copy_macroblock_e::CPMB_OKSTOP)
-						starttime=lastheader->time;
-
-					while (eCopyState==copy_macroblock_e::CPMB_OK)
-					{
-						totalframes++;
-						//if (! ( tickerdlg->Update(infile->BaseStream->Position) ) )
-						//{
-						//	eCopyState=CPMB_USERABORT;
-						//	break;
-						//}
-						eCopyState = copy_macroblock(infile, outfile, lastheader);
-					}
-					
-					if (eCopyState==copy_macroblock_e::CPMB_OKSTOP)
-					{
-						// normal stop
-
-						// munch repeated stops:
-						long long fpos = infile->BaseStream->Position;
-						hldemo_macroblock_header_s ^mbheader = gcnew hldemo_macroblock_header_s();
-
-						while ( mbheader->read( infile ) && mbheader->type == 5)
-						{
-							lastheader = mbheader;
-							totalframes++;
-							fpos = infile->BaseStream->Position;
-							mbheader->write( outfile );
-						}
-
-						// rewind behind last stop:
-						infile->BaseStream->Seek( fpos, System::IO::SeekOrigin::Begin );
-
-					} else if (eCopyState==copy_macroblock_e::CPMB_ERROR)
-					{
-						// some error, we drop the rest and add the missing stop:
-						if (totalframes>0)
-						{
-							VERBOSE_MESSAGE( debugMaster, "DemoFix: Found incomplete or unknown message or file end. Asuming file end, finishing segment (appending STOP), dropping rest." );
-							hldemo_macroblock_header_s ^mbheader = gcnew hldemo_macroblock_header_s();
-
-							mbheader->type = 0x05;
-							mbheader->frame = totalframes;
-							mbheader->time = lastheader->time;
-							mbheader->write( outfile );
-							totalframes++;
-						} else VERBOSE_MESSAGE( debugMaster, "DemoFix: Found incomplete or unknown message or file end. Asuming file end, ignoring segment (was empty), dropping rest." );
-					} else if (eCopyState==copy_macroblock_e::CPMB_USERABORT) {
-						// fatal error (user abort)
-						ERROR_MESSAGE( debugMaster, "DemoFix: User aborted." );
-					} else {
-						// fatal error
-						ERROR_MESSAGE( debugMaster, "DemoFix: Cannot recover from last error, failed." );
-					}
-
-					if ((eCopyState==copy_macroblock_e::CPMB_OKSTOP || eCopyState==copy_macroblock_e::CPMB_ERROR)&&totalframes>0)
-					{
-						// add to directory entry
-						hldemo_dir_entry_s ^direntry = gcnew hldemo_dir_entry_s();
-						direntry->number = iNumSegments;
-						if (iNumSegments==0)
-						{
-							int i=0;
-							for each(System::Char achar in System::String("LOADING"))
-								direntry->title[i++] = (unsigned char)achar;
-							for (;i<direntry->title->Length;i++)
-								direntry->title[i]=0; // terminate / fill with zero
-						}
-						else
-						{
-							int i=0;
-							for each(System::Char achar in System::String("Playback"))
-								direntry->title[i++] = (unsigned char)achar;
-							for (;i<direntry->title->Length;i++)
-								direntry->title[i]=0; // terminate / fill with zero
-						}
-						direntry->flags = 0;
-						direntry->play = 0x0FF;
-						direntry->time = lastheader->time - starttime;
-						direntry->frames = totalframes;
-						direntry->offset = segmentoffset;
-						direntry->length = infile->BaseStream->Position - segmentoffset;
-
-						direntries_que.Enqueue( direntry );
-						iNumSegments++;
-					}
-
-					if (eCopyState!=copy_macroblock_e::CPMB_OKSTOP)
-						bSearchNewSegment=false;
-				}
-
-				// no new segments, create directory entries (if any):
-				if (eCopyState==copy_macroblock_e::CPMB_OKSTOP || eCopyState==copy_macroblock_e::CPMB_ERROR)
-				{
-					//tstr.Printf(_T("Building %i directory entries"),iNumSegments);
-					//tickerdlg->Update(infile->Tell(),tstr);
-					unsigned int fdiroffset = outfile->BaseStream->Position; // remember offset of directory entries
-
-					VERBOSE_MESSAGE( debugMaster, System::String::Format("DemoFix: building directroy entries for {0} segments ...", iNumSegments) );
-
-					outfile->Write( iNumSegments ); // write number of directroy entries;
-
-					// spew out directory entries (if any):
-					while (iNumSegments>0)
-					{
-
-						hldemo_dir_entry_s ^curentry = direntries_que.Dequeue();
-						iNumSegments--;
-
-						curentry->write( outfile );
-					}
-
-					// patch dir_offset in header:
-					outfile->Seek( hldemo_header_s::size-sizeof(unsigned int), System::IO::SeekOrigin::Begin );
-					outfile->Write( fdiroffset );
-
 					// that's it guys.
-					INFO_MESSAGE( debugMaster, "DemoFix: Finished." );
+					INFO_MESSAGE( debugMaster, "DemoTools: Finished.");
 					//tickerdlg->Update(infile->Length());
 					bOK=true;
+				};
+			}
+
+		} else ERROR_MESSAGE( debugMaster, "Failed to write demo header." );
+
+	} else ERROR_MESSAGE( debugMaster, "Failed to read demo header." );
+
+	delete header;
+
+	return bOK;
+}
+
+bool CHlaeDemoFix::fix_demo(System::IO::BinaryReader ^ infile, System::IO::BinaryWriter ^ outfile)
+{
+	bool bOK=false;
+
+	//wxString tstr;
+	hldemo_header_s ^header = gcnew hldemo_header_s();
+
+	VERBOSE_MESSAGE( debugMaster, "DemoFix: reading demo header ..." );
+
+	if (read_header(infile,header))
+	{
+		if (_bEnableWaterMarks) watermark_header(header);
+
+		if(header->dir_offset)
+		{
+			WARNING_MESSAGE( debugMaster, "DemoFix: Directory entries already present, ignoring." );
+			header->dir_offset = 0;
+		}
+
+		if (write_header(outfile,header))
+		{
+			bool bSearchNewSegment=true;
+			int iNumSegments=0;
+			copy_macroblock_e eCopyState;
+
+			System::Collections::Generic::Queue <hldemo_dir_entry_s ^> direntries_que;
+			
+			while (bSearchNewSegment)
+			{
+				VERBOSE_MESSAGE( debugMaster, System::String::Format("Scanning for segment {0}",iNumSegments) );
+
+				//tstr.Printf(_T("Segment: %i"),iNumSegments);
+				//tickerdlg->Update(infile->Tell(),tstr);
+
+				unsigned int segmentoffset=infile->BaseStream->Position;
+				unsigned int totalframes=0;
+				float starttime=0;
+
+				hldemo_macroblock_header_s ^lastheader = gcnew hldemo_macroblock_header_s();
+				lastheader->type = 5;
+				lastheader->time = 0.0f;
+				lastheader->frame = 0;
+
+				eCopyState = copy_macroblock(infile, outfile, lastheader);
+
+				if(eCopyState==copy_macroblock_e::CPMB_OK || eCopyState==copy_macroblock_e::CPMB_OKSTOP)
+					starttime=lastheader->time;
+
+				while (eCopyState==copy_macroblock_e::CPMB_OK)
+				{
+					totalframes++;
+					//if (! ( tickerdlg->Update(infile->BaseStream->Position) ) )
+					//{
+					//	eCopyState=CPMB_USERABORT;
+					//	break;
+					//}
+					eCopyState = copy_macroblock(infile, outfile, lastheader);
+				}
+				
+				if (eCopyState==copy_macroblock_e::CPMB_OKSTOP)
+				{
+					// normal stop
+
+					// munch repeated stops:
+					long long fpos = infile->BaseStream->Position;
+					hldemo_macroblock_header_s ^mbheader = gcnew hldemo_macroblock_header_s();
+
+					while ( mbheader->read( infile ) && mbheader->type == 5)
+					{
+						lastheader = mbheader;
+						totalframes++;
+						fpos = infile->BaseStream->Position;
+						mbheader->write( outfile );
+					}
+
+					// rewind behind last stop:
+					infile->BaseStream->Seek( fpos, System::IO::SeekOrigin::Begin );
+
+				} else if (eCopyState==copy_macroblock_e::CPMB_ERROR)
+				{
+					// some error, we drop the rest and add the missing stop:
+					if (totalframes>0)
+					{
+						VERBOSE_MESSAGE( debugMaster, "DemoFix: Found incomplete or unknown message or file end. Asuming file end, finishing segment (appending STOP), dropping rest." );
+						hldemo_macroblock_header_s ^mbheader = gcnew hldemo_macroblock_header_s();
+
+						mbheader->type = 0x05;
+						mbheader->frame = totalframes;
+						mbheader->time = lastheader->time;
+						mbheader->write( outfile );
+						totalframes++;
+					} else VERBOSE_MESSAGE( debugMaster, "DemoFix: Found incomplete or unknown message or file end. Asuming file end, ignoring segment (was empty), dropping rest." );
+				} else if (eCopyState==copy_macroblock_e::CPMB_USERABORT) {
+					// fatal error (user abort)
+					ERROR_MESSAGE( debugMaster, "DemoFix: User aborted." );
+				} else {
+					// fatal error
+					ERROR_MESSAGE( debugMaster, "DemoFix: Cannot recover from last error, failed." );
 				}
 
-			} else ERROR_MESSAGE( debugMaster, "DemoFix: Failed to write demo header." );
+				if ((eCopyState==copy_macroblock_e::CPMB_OKSTOP || eCopyState==copy_macroblock_e::CPMB_ERROR)&&totalframes>0)
+				{
+					// add to directory entry
+					hldemo_dir_entry_s ^direntry = gcnew hldemo_dir_entry_s();
+					direntry->number = iNumSegments;
+					if (iNumSegments==0)
+					{
+						int i=0;
+						for each(System::Char achar in System::String("LOADING"))
+							direntry->title[i++] = (unsigned char)achar;
+						for (;i<direntry->title->Length;i++)
+							direntry->title[i]=0; // terminate / fill with zero
+					}
+					else
+					{
+						int i=0;
+						for each(System::Char achar in System::String("Playback"))
+							direntry->title[i++] = (unsigned char)achar;
+						for (;i<direntry->title->Length;i++)
+							direntry->title[i]=0; // terminate / fill with zero
+					}
+					direntry->flags = 0;
+					direntry->play = 0x0FF;
+					direntry->time = lastheader->time - starttime;
+					direntry->frames = totalframes;
+					direntry->offset = segmentoffset;
+					direntry->length = infile->BaseStream->Position - segmentoffset;
 
-		} else ERROR_MESSAGE( debugMaster, "DemoFix: Failed to read demo header." );
+					direntries_que.Enqueue( direntry );
+					iNumSegments++;
+				}
 
-		delete header;
+				if (eCopyState!=copy_macroblock_e::CPMB_OKSTOP)
+					bSearchNewSegment=false;
+			}
 
-	} else {
-		if (!(infile->BaseStream->CanRead && infile->BaseStream->CanSeek)) ERROR_MESSAGE( debugMaster, "Could not open input file for reading and seeking." );
-		if (!(infile->BaseStream->CanWrite && infile->BaseStream->CanSeek)) ERROR_MESSAGE( debugMaster, "Could not open output file for writing and seeking." );
-	}
+			// no new segments, create directory entries (if any):
+			if (eCopyState==copy_macroblock_e::CPMB_OKSTOP || eCopyState==copy_macroblock_e::CPMB_ERROR)
+			{
+				//tstr.Printf(_T("Building %i directory entries"),iNumSegments);
+				//tickerdlg->Update(infile->Tell(),tstr);
+				unsigned int fdiroffset = outfile->BaseStream->Position; // remember offset of directory entries
 
-	delete infile;
-	delete outfile;
-	
-	//tickerdlg->Destroy();
-	//delete tickerdlg;
+				VERBOSE_MESSAGE( debugMaster, System::String::Format("DemoFix: building directroy entries for {0} segments ...", iNumSegments) );
+
+				outfile->Write( iNumSegments ); // write number of directroy entries;
+
+				// spew out directory entries (if any):
+				while (iNumSegments>0)
+				{
+
+					hldemo_dir_entry_s ^curentry = direntries_que.Dequeue();
+					iNumSegments--;
+
+					curentry->write( outfile );
+				}
+
+				// patch dir_offset in header:
+				outfile->Seek( hldemo_header_s::size-sizeof(unsigned int), System::IO::SeekOrigin::Begin );
+				outfile->Write( fdiroffset );
+
+				// that's it guys.
+				INFO_MESSAGE( debugMaster, "DemoFix: Finished." );
+				//tickerdlg->Update(infile->Length());
+				bOK=true;
+			}
+
+		} else ERROR_MESSAGE( debugMaster, "DemoFix: Failed to write demo header." );
+
+	} else ERROR_MESSAGE( debugMaster, "DemoFix: Failed to read demo header." );
+
+	delete header;
 
 	return bOK;
 }
@@ -689,6 +658,14 @@ CHlaeDemoFix::copy_macroblock_e CHlaeDemoFix::copy_macroblock( System::IO::Binar
 	// get filesize and backup filepos:
 	fsize=infile->BaseStream->Length;
 	fpos=infile->BaseStream->Position;
+
+	{
+		int newPercentage = fsize ? (fpos*100) / fsize : 100;
+		if(newPercentage != m_LastPercentage && nullptr != OnDemoFixProgress) {
+			m_LastPercentage = newPercentage;
+			OnDemoFixProgress(this, newPercentage);
+		}
+	}
 
 	// read macroblock_header:
 	if (! macroblock_header->read( infile ) )
@@ -905,7 +882,7 @@ CHlaeDemoFix::copy_macroblock_e CHlaeDemoFix::copy_gamedata( System::IO::BinaryR
 				if (ctmp==0) break; // string end, get out of here
 			}
 			continue;
-		
+
 		case svc_serverinfo: // 11
 			DEBUG_MESSAGE( debugMaster, System::String::Format("found svc_serverinfo at {0}",(unsigned int)initialpos+dwreadorg-dwreadbytes));
 			uitmp = 4 +		4 + 4 + 16;					
@@ -965,101 +942,20 @@ CHlaeDemoFix::copy_macroblock_e CHlaeDemoFix::copy_gamedata( System::IO::BinaryR
 
 			break; // our work is done here, get us out of here!
 		
-		case svc_updateuserinfo: // 13
-			// deactivated cause s.th. in here is too buggy:
-			break; 
-			if (dwreadbytes<5) break; // invalid, let copy bytes handle it
-			if (!copy_bytes(infile,outfile,5)) return PRINT_FERROR(cmdcode,copy_macroblock_e::CPMB_FATALERROR);
-			dwreadbytes-=5;
-			// Read string:
-			while (dwreadbytes>0)
-			{
-				dwreadbytes--;
-				try {
-					ctmp = infile->ReadByte();
-					outfile->Write( ctmp );
-				} catch (System::Exception ^)
-				{
-					PRINT_FERROR(cmdcode,copy_macroblock_e::CPMB_FATALERROR);
-				}
-				if (ctmp==0) break; // string end, get out of here
-			}
-			continue;
-
-		//case svc_deltadescription: // 14
-		// i am to lazy to support that now, hope we don't need to parse it before serverinfo : )
-
-		case svc_clientdata: // 15
-			// deactivated cause s.th. in here is too buggy:
-			break; 
-			if (dwreadbytes<5) break; // invalid, let copy bytes handle it
-			if (!copy_bytes(infile,outfile,5)) return PRINT_FERROR(cmdcode,copy_macroblock_e::CPMB_FATALERROR);
-			dwreadbytes-=5;
-			// Read string:
-			while (dwreadbytes>0)
-			{
-				dwreadbytes--;
-				try {
-					ctmp = infile->ReadByte();
-					outfile->Write( ctmp );
-				} catch (System::Exception ^)
-				{
-					return PRINT_FERROR(cmdcode,copy_macroblock_e::CPMB_FATALERROR);
-				}
-				if (ctmp==0) break; // string end, get out of here
-			}
-			continue;
-
-		case svc_spawnstaticsound: // 29
-			// deactivated cause s.th. in here is too buggy:
-			break; 
-			uitmp = 2 +2 +2 +2 +1 +1 +2 +1 +1;
-			if (dwreadbytes<uitmp) break; // invalid, let copy bytes handle it
-			if (!copy_bytes(infile,outfile,uitmp)) return PRINT_FERROR(cmdcode,copy_macroblock_e::CPMB_FATALERROR);
-			dwreadbytes-=uitmp;
-			continue;
-
-		case svc_roomtype: // 37
-			// deactivated cause s.th. in here is too buggy:
-			break; 
-			if (dwreadbytes<2) break; // invalid, let copy bytes handle it
-			if (!copy_bytes(infile,outfile,2)) return PRINT_FERROR(cmdcode,copy_macroblock_e::CPMB_FATALERROR);
-			dwreadbytes-=2;
-			continue;
-
-		case svc_resourcerequest: // 45
-			// deactivated cause s.th. in here is too buggy:
-			break; 
-			if (dwreadbytes<8) break; // invalid, let copy bytes handle it
-			if (!copy_bytes(infile,outfile,8)) return PRINT_FERROR(cmdcode,copy_macroblock_e::CPMB_FATALERROR);
-			dwreadbytes-=8;
-			continue;			
-
-		case svc_sendextrainfo: // 54
-			// deactivated cause s.th. in here is too buggy:
-			break; 
-			// Read string:
-			while (dwreadbytes>0)
-			{
-				dwreadbytes--;
-				try {
-					ctmp = infile->ReadByte();
-					outfile->Write( ctmp );
-				} catch (System::Exception ^){
-					return PRINT_FERROR(cmdcode,copy_macroblock_e::CPMB_FATALERROR);
-				}
-				if (ctmp==0) break; // string end, get out of here
-			}
-			if (dwreadbytes<1) break; // invalid, let copy bytes handle it
-			dwreadbytes--;
+		case svc_hltv: // 50
+			if (dwreadbytes<2) break; // dunno let copy bytes handle it
 
 			try {
 				ctmp = infile->ReadByte();
+				dwreadbytes--;
 				outfile->Write( ctmp );
 			} catch (System::Exception ^)
 			{
 				return PRINT_FERROR(cmdcode,copy_macroblock_e::CPMB_FATALERROR);
 			}
+
+			if(HLTV_ACTIVE != ctmp) break; // dunno let copy bytes handle it
+
 			continue;
 		}
 

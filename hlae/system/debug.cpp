@@ -223,6 +223,10 @@ DebugMessageState DebugListener::MasterMessage( DebugMaster ^debugMaster, DebugM
 
 DebugMessageState DebugMaster::PostMessage( System::String ^debugMessageString, DebugMessageType debugMessageType )
 {
+#ifdef NO_HLAE_DEBUG_SYSTEM
+	return DebugMessageState::DMS_IGNORED;
+#endif
+
 	// ignore ignored messages:
 	if( DebugFilterSetting::DFS_IGNORE == GetFilter( debugMessageType  ))
 		return DebugMessageState::DMS_IGNORED;

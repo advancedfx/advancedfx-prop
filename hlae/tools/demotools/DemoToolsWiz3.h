@@ -35,23 +35,49 @@ namespace hlae {
 			return this->checkBoxMarks->Checked;
 		}
 
-		System::String ^ReturnInFile()
+		System::String ^ GetFile(int index)
 		{
-			return this->textBoxIn->Text;
+			return this->listDemos->Items[index]->Name;
 		}
 
-		System::String ^ReturnOutFile()
+		int GetFileCount() {
+			return this->listDemos->Items->Count;
+		}
+
+		void RemoveFile(int index) {
+			this->listDemos->Items->RemoveAt(index);
+		}
+
+		System::String ^ GetOutDir()
 		{
-			return this->textBoxOut->Text;
+			return this->textOutDir->Text;
+		}
+
+		void SetOutDir(String ^ value) {
+			this->textOutDir->Text = value;
 		}
 
 	private:
 		void doUpdateFinish( void )
 		{
-			this->buttonNext->Enabled = !(
-				String::IsNullOrEmpty( this->textBoxIn->Text )
-				|| String::IsNullOrEmpty( this->textBoxOut->Text )
+			this->buttonNext->Enabled = (
+				0 < listDemos->Items->Count
+				&& IO::Directory::Exists( this->textOutDir->Text )
 			);
+		}
+
+		void AddFile(String ^ fileName) {
+			String ^ fullPath = IO::Path::GetFullPath(fileName);
+			String ^ shortName = IO::Path::GetFileName(fileName);
+			if(listDemos->Items->IndexOfKey(fullPath) < 0) {
+				// not in the list yet
+				ListViewItem ^ li = gcnew ListViewItem();
+				li->Text = shortName;
+				li->Name = fullPath;
+				li->SubItems->Add(fullPath);
+
+				listDemos->Items->Add(li);
+			}
 		}
 
 
@@ -78,20 +104,30 @@ namespace hlae {
 	private: System::Windows::Forms::Button^  buttonPrev;
 	private: System::Windows::Forms::Label^  labelFileSelect;
 	private: System::Windows::Forms::GroupBox^  groupBoxIn;
-	private: System::Windows::Forms::Button^  buttonIn;
 
 
-	private: System::Windows::Forms::TextBox^  textBoxIn;
+
+
 	private: System::Windows::Forms::GroupBox^  groupBoxOut;
 	private: System::Windows::Forms::CheckBox^  checkBoxMarks;
+	private: System::Windows::Forms::TextBox^  textOutDir;
 
 
 
-	private: System::Windows::Forms::TextBox^  textBoxOut;
+
 
 	private: System::Windows::Forms::Button^  buttonOut;
 	private: System::Windows::Forms::OpenFileDialog^  openFileDialog;
-	private: System::Windows::Forms::SaveFileDialog^  saveFileDialog;
+
+	private: System::Windows::Forms::ListView^  listDemos;
+
+	private: System::Windows::Forms::ColumnHeader^  colName;
+	private: System::Windows::Forms::ColumnHeader^  colPath;
+	private: System::Windows::Forms::Button^  buttonAdd;
+	private: System::Windows::Forms::Button^  buttonRemove;
+	private: System::Windows::Forms::Label^  label1;
+	private: System::Windows::Forms::FolderBrowserDialog^  folderDialog;
+
 
 
 	private:
@@ -112,14 +148,18 @@ namespace hlae {
 			this->buttonPrev = (gcnew System::Windows::Forms::Button());
 			this->labelFileSelect = (gcnew System::Windows::Forms::Label());
 			this->groupBoxIn = (gcnew System::Windows::Forms::GroupBox());
-			this->textBoxIn = (gcnew System::Windows::Forms::TextBox());
-			this->buttonIn = (gcnew System::Windows::Forms::Button());
+			this->label1 = (gcnew System::Windows::Forms::Label());
+			this->buttonRemove = (gcnew System::Windows::Forms::Button());
+			this->buttonAdd = (gcnew System::Windows::Forms::Button());
+			this->listDemos = (gcnew System::Windows::Forms::ListView());
+			this->colName = (gcnew System::Windows::Forms::ColumnHeader());
+			this->colPath = (gcnew System::Windows::Forms::ColumnHeader());
 			this->groupBoxOut = (gcnew System::Windows::Forms::GroupBox());
 			this->checkBoxMarks = (gcnew System::Windows::Forms::CheckBox());
-			this->textBoxOut = (gcnew System::Windows::Forms::TextBox());
+			this->textOutDir = (gcnew System::Windows::Forms::TextBox());
 			this->buttonOut = (gcnew System::Windows::Forms::Button());
 			this->openFileDialog = (gcnew System::Windows::Forms::OpenFileDialog());
-			this->saveFileDialog = (gcnew System::Windows::Forms::SaveFileDialog());
+			this->folderDialog = (gcnew System::Windows::Forms::FolderBrowserDialog());
 			this->groupBoxIn->SuspendLayout();
 			this->groupBoxOut->SuspendLayout();
 			this->SuspendLayout();
@@ -158,7 +198,7 @@ namespace hlae {
 			// labelFileSelect
 			// 
 			this->labelFileSelect->AutoSize = true;
-			this->labelFileSelect->Location = System::Drawing::Point(12, 23);
+			this->labelFileSelect->Location = System::Drawing::Point(12, 9);
 			this->labelFileSelect->Name = L"labelFileSelect";
 			this->labelFileSelect->Size = System::Drawing::Size(71, 13);
 			this->labelFileSelect->TabIndex = 2;
@@ -166,44 +206,81 @@ namespace hlae {
 			// 
 			// groupBoxIn
 			// 
-			this->groupBoxIn->Controls->Add(this->textBoxIn);
-			this->groupBoxIn->Controls->Add(this->buttonIn);
-			this->groupBoxIn->Location = System::Drawing::Point(17, 53);
+			this->groupBoxIn->Controls->Add(this->label1);
+			this->groupBoxIn->Controls->Add(this->buttonRemove);
+			this->groupBoxIn->Controls->Add(this->buttonAdd);
+			this->groupBoxIn->Controls->Add(this->listDemos);
+			this->groupBoxIn->Location = System::Drawing::Point(12, 25);
 			this->groupBoxIn->Name = L"groupBoxIn";
-			this->groupBoxIn->Size = System::Drawing::Size(442, 58);
+			this->groupBoxIn->Size = System::Drawing::Size(450, 169);
 			this->groupBoxIn->TabIndex = 3;
 			this->groupBoxIn->TabStop = false;
-			this->groupBoxIn->Text = L"In: demo to fix";
+			this->groupBoxIn->Text = L"In: demo files";
 			// 
-			// textBoxIn
+			// label1
 			// 
-			this->textBoxIn->Location = System::Drawing::Point(12, 23);
-			this->textBoxIn->Name = L"textBoxIn";
-			this->textBoxIn->Size = System::Drawing::Size(333, 20);
-			this->textBoxIn->TabIndex = 1;
-			this->textBoxIn->TextChanged += gcnew System::EventHandler(this, &DemoToolsWiz3::textBoxIn_TextChanged);
+			this->label1->AutoSize = true;
+			this->label1->Location = System::Drawing::Point(258, 24);
+			this->label1->Name = L"label1";
+			this->label1->Size = System::Drawing::Size(152, 13);
+			this->label1->TabIndex = 3;
+			this->label1->Text = L"Tip: Drag and drop into the list.";
 			// 
-			// buttonIn
+			// buttonRemove
 			// 
-			this->buttonIn->Location = System::Drawing::Point(351, 21);
-			this->buttonIn->Name = L"buttonIn";
-			this->buttonIn->Size = System::Drawing::Size(75, 23);
-			this->buttonIn->TabIndex = 0;
-			this->buttonIn->Text = L"Browse";
-			this->buttonIn->UseVisualStyleBackColor = true;
-			this->buttonIn->Click += gcnew System::EventHandler(this, &DemoToolsWiz3::buttonIn_Click);
+			this->buttonRemove->Location = System::Drawing::Point(118, 19);
+			this->buttonRemove->Name = L"buttonRemove";
+			this->buttonRemove->Size = System::Drawing::Size(75, 23);
+			this->buttonRemove->TabIndex = 2;
+			this->buttonRemove->Text = L"Remove";
+			this->buttonRemove->UseVisualStyleBackColor = true;
+			this->buttonRemove->Click += gcnew System::EventHandler(this, &DemoToolsWiz3::buttonRemove_Click);
+			// 
+			// buttonAdd
+			// 
+			this->buttonAdd->Location = System::Drawing::Point(6, 19);
+			this->buttonAdd->Name = L"buttonAdd";
+			this->buttonAdd->Size = System::Drawing::Size(75, 23);
+			this->buttonAdd->TabIndex = 1;
+			this->buttonAdd->Text = L"Add";
+			this->buttonAdd->UseVisualStyleBackColor = true;
+			this->buttonAdd->Click += gcnew System::EventHandler(this, &DemoToolsWiz3::buttonAdd_Click);
+			// 
+			// listDemos
+			// 
+			this->listDemos->AllowDrop = true;
+			this->listDemos->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(2) {this->colName, this->colPath});
+			this->listDemos->HeaderStyle = System::Windows::Forms::ColumnHeaderStyle::Nonclickable;
+			this->listDemos->Location = System::Drawing::Point(6, 48);
+			this->listDemos->Name = L"listDemos";
+			this->listDemos->Size = System::Drawing::Size(438, 115);
+			this->listDemos->TabIndex = 0;
+			this->listDemos->UseCompatibleStateImageBehavior = false;
+			this->listDemos->View = System::Windows::Forms::View::Details;
+			this->listDemos->DragDrop += gcnew System::Windows::Forms::DragEventHandler(this, &DemoToolsWiz3::listDemos_DragDrop);
+			this->listDemos->DragEnter += gcnew System::Windows::Forms::DragEventHandler(this, &DemoToolsWiz3::listDemos_DragEnter);
+			// 
+			// colName
+			// 
+			this->colName->Text = L"Name";
+			this->colName->Width = 200;
+			// 
+			// colPath
+			// 
+			this->colPath->Text = L"Path";
+			this->colPath->Width = 400;
 			// 
 			// groupBoxOut
 			// 
 			this->groupBoxOut->Controls->Add(this->checkBoxMarks);
-			this->groupBoxOut->Controls->Add(this->textBoxOut);
+			this->groupBoxOut->Controls->Add(this->textOutDir);
 			this->groupBoxOut->Controls->Add(this->buttonOut);
-			this->groupBoxOut->Location = System::Drawing::Point(15, 132);
+			this->groupBoxOut->Location = System::Drawing::Point(12, 200);
 			this->groupBoxOut->Name = L"groupBoxOut";
-			this->groupBoxOut->Size = System::Drawing::Size(442, 78);
+			this->groupBoxOut->Size = System::Drawing::Size(450, 78);
 			this->groupBoxOut->TabIndex = 4;
 			this->groupBoxOut->TabStop = false;
-			this->groupBoxOut->Text = L"Out: file to save to";
+			this->groupBoxOut->Text = L"Out: folder to save to";
 			// 
 			// checkBoxMarks
 			// 
@@ -217,13 +294,13 @@ namespace hlae {
 			this->checkBoxMarks->Text = L"add HLAE water marks";
 			this->checkBoxMarks->UseVisualStyleBackColor = true;
 			// 
-			// textBoxOut
+			// textOutDir
 			// 
-			this->textBoxOut->Location = System::Drawing::Point(12, 23);
-			this->textBoxOut->Name = L"textBoxOut";
-			this->textBoxOut->Size = System::Drawing::Size(333, 20);
-			this->textBoxOut->TabIndex = 1;
-			this->textBoxOut->TextChanged += gcnew System::EventHandler(this, &DemoToolsWiz3::textBoxOut_TextChanged);
+			this->textOutDir->Location = System::Drawing::Point(12, 23);
+			this->textOutDir->Name = L"textOutDir";
+			this->textOutDir->Size = System::Drawing::Size(333, 20);
+			this->textOutDir->TabIndex = 1;
+			this->textOutDir->TextChanged += gcnew System::EventHandler(this, &DemoToolsWiz3::textOutDir_TextChanged);
 			// 
 			// buttonOut
 			// 
@@ -240,11 +317,11 @@ namespace hlae {
 			this->openFileDialog->DefaultExt = L"dem";
 			this->openFileDialog->FileName = L"*.dem";
 			this->openFileDialog->Filter = L"Half-Life Demo (*.dem)|*.dem";
+			this->openFileDialog->Multiselect = true;
 			// 
-			// saveFileDialog
+			// folderDialog
 			// 
-			this->saveFileDialog->DefaultExt = L"dem";
-			this->saveFileDialog->Filter = L"Half-Life Demo (*.dem)|*.dem";
+			this->folderDialog->Description = L"Select (different) destination folder.";
 			// 
 			// DemoToolsWiz3
 			// 
@@ -277,25 +354,61 @@ namespace hlae {
 		// Events:
 		//
 
-		System::Void buttonIn_Click(System::Object^  sender, System::EventArgs^  e)
+	System::Void buttonOut_Click(System::Object^  sender, System::EventArgs^  e){
+		if(IO::Directory::Exists(textOutDir->Text)) 
+			folderDialog->SelectedPath = textOutDir->Text;
+
+		if (::DialogResult::OK == folderDialog->ShowDialog(this))
 		{
-			if (::DialogResult::OK == openFileDialog->ShowDialog(this))
-			{
-				this->textBoxIn->Text = openFileDialog->FileName;
-			}
+			this->textOutDir->Text = folderDialog->SelectedPath;
 		}
 
-		System::Void buttonOut_Click(System::Object^  sender, System::EventArgs^  e){
-			if (::DialogResult::OK == saveFileDialog->ShowDialog(this))
-			{
-				this->textBoxOut->Text = saveFileDialog->FileName;
+		doUpdateFinish();
+	}
+
+	System::Void buttonRemove_Click(System::Object^  sender, System::EventArgs^  e) {
+		listDemos->BeginUpdate();
+		while(0 < listDemos->SelectedIndices->Count)
+			listDemos->Items->RemoveAt(listDemos->SelectedIndices[0]);
+		listDemos->EndUpdate();
+
+		doUpdateFinish();
+	}
+
+	System::Void buttonAdd_Click(System::Object^  sender, System::EventArgs^  e) {
+		if(::DialogResult::OK == this->openFileDialog->ShowDialog(this)) {
+			listDemos->BeginUpdate();
+			for each(String ^ fileName in this->openFileDialog->FileNames) {
+				AddFile(fileName);
 			}
+			listDemos->EndUpdate();
 		}
 
-		System::Void textBoxIn_TextChanged(System::Object^  sender, System::EventArgs^  e)
-		{ doUpdateFinish(); }
-		System::Void textBoxOut_TextChanged(System::Object^  sender, System::EventArgs^  e)
-		{ doUpdateFinish(); }
+		doUpdateFinish();
+	}
 
-	}; // class
+	System::Void listDemos_DragEnter(System::Object^  sender, System::Windows::Forms::DragEventArgs^  e) {
+		if(e->Data->GetDataPresent(DataFormats::FileDrop)) {
+			e->Effect = DragDropEffects::Link;
+		}
+	}
+	System::Void listDemos_DragDrop(System::Object^  sender, System::Windows::Forms::DragEventArgs^  e) {
+		if(e->Data->GetDataPresent(DataFormats::FileDrop)) {
+			try {
+				array<String ^> ^ files =  dynamic_cast<array<String ^> ^>(e->Data->GetData(DataFormats::FileDrop));
+				if(files) {
+					for each(String ^ file in files)
+						AddFile(file);
+				}
+			}
+			catch(...) {
+			}
+		}
+		doUpdateFinish();
+	}
+
+	System::Void textOutDir_TextChanged(System::Object^  sender, System::EventArgs^  e) {
+		doUpdateFinish();
+	}
+}; // class
 }

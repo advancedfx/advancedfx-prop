@@ -108,6 +108,10 @@ HL_ADDR_ENTRY(DTOURSZ_R_DrawEntitiesOnList)
 HL_ADDR_ENTRY(R_DrawViewModel)
 HL_ADDR_ENTRY(DTOURSZ_R_DrawViewModel)
 
+HL_ADDR_ENTRY(p_enginefuncs_s)
+HL_ADDR_ENTRY(p_globalvars_s)
+
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // cHLAddresses

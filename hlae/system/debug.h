@@ -1,5 +1,9 @@
 #pragma once
 
+// block the debug system, cuz the spewing is happening from the wrong thread atm
+// and it's not really required atm (needs to be changed)
+#define NO_HLAE_DEBUG_SYSTEM
+
 //  debug.h - Debug system
 //  Copyright (c) Half-Life Advanced Effects project
 

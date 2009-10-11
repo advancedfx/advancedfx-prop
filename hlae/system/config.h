@@ -109,22 +109,36 @@ public:
 	}
 };
 
+public ref class CfgDemoTools
+{
+public:
+	String ^ OutputFolder;
+
+public:
+	void Default() {
+		OutputFolder = "";
+	}
+};
+
 public ref class CfgSettings
 {
 public:
 	CfgLauncher ^Launcher;
 	CfgCustomLoader ^ CustomLoader;
+	CfgDemoTools ^ DemoTools;
 
 public:
 	CfgSettings()
 	{
 		Launcher = gcnew CfgLauncher();
 		CustomLoader = gcnew CfgCustomLoader();
+		DemoTools = gcnew CfgDemoTools();
 	}
 	void Default()
 	{
 		Launcher->Default();
 		CustomLoader->Default();
+		DemoTools->Default();
 	}
 
 };

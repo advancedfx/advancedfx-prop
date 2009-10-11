@@ -25,9 +25,13 @@ namespace hlae {
 ref struct hldemo_header_s;
 ref struct hldemo_macroblock_header_s;
 
+delegate void OnDemoFixProgressDelegate(System::Object ^ sender, int percentage);
+
 ref class CHlaeDemoFix
 {
 public:
+	OnDemoFixProgressDelegate ^ OnDemoFixProgress;
+
 	#define DEMOFIX_MAXPLAYERS 32
 	CHlaeDemoFix(System::Windows::Forms::Form ^parent, DebugMaster ^debugMaster);
 	~CHlaeDemoFix();
@@ -84,6 +88,9 @@ private:
 
 	DebugMaster ^debugMaster;
 
+	int m_LastPercentage;
+
+
 	enum class copy_macroblock_e
 	{
 		CPMB_OK=0,			// copy ok
@@ -123,12 +130,12 @@ private:
 
 	System::Collections::Generic::LinkedList <cmd_mapping_s ^> _CommandMap;
 
-	bool normal_demo ( System::String ^infilename, System::String ^outfilename);
+	bool normal_demo(System::IO::BinaryReader ^ infile, System::IO::BinaryWriter ^ outfile);
 	// used when EnableDirectoryFix is not set, obeys _bEnableDemoCleanUp and _bEnableHltvFix
 	// infilename: file to read from
 	// outfilename: filte to write to
 
-	bool fix_demo ( System::String ^infilename, System::String ^outfilename);
+	bool fix_demo(System::IO::BinaryReader ^ infile, System::IO::BinaryWriter ^ outfile);
 	// used when EnableDirectoryFix is set, obeys _bEnableDemoCleanUp and _bEnableHltvFix
 	// infilename: file to read from
 	// outfilename: filte to write to

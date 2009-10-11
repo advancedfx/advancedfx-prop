@@ -275,36 +275,6 @@
 					</File>
 				</File>
 				<File
-					RelativePath=".\forms\DemoToolsWiz1.h"
-					FileType="3"
-					>
-					<File
-						RelativePath=".\forms\DemoToolsWiz1.resx"
-						SubType="Designer"
-						>
-					</File>
-				</File>
-				<File
-					RelativePath=".\forms\DemoToolsWiz2.h"
-					FileType="3"
-					>
-					<File
-						RelativePath=".\forms\DemoToolsWiz2.resx"
-						SubType="Designer"
-						>
-					</File>
-				</File>
-				<File
-					RelativePath=".\forms\DemoToolsWiz3.h"
-					FileType="3"
-					>
-					<File
-						RelativePath=".\forms\DemoToolsWiz3.resx"
-						SubType="Designer"
-						>
-					</File>
-				</File>
-				<File
 					RelativePath=".\forms\Launcher.cpp"
 					>
 					<FileConfiguration
@@ -347,6 +317,15 @@
 					<File
 						RelativePath=".\forms\MainForm.resx"
 						SubType="Designer"
+						>
+					</File>
+				</File>
+				<File
+					RelativePath=".\forms\OverwriteDialog.h"
+					FileType="3"
+					>
+					<File
+						RelativePath=".\forms\OverwriteDialog.resx"
 						>
 					</File>
 				</File>
@@ -406,22 +385,6 @@
 				</File>
 				<File
 					RelativePath=".\system\debug_file.h"
-					>
-				</File>
-				<File
-					RelativePath=".\system\demotools.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\system\demotools.h"
-					>
-				</File>
-				<File
-					RelativePath=".\system\demotoolswizard.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\system\demotoolswizard.h"
 					>
 				</File>
 				<File
@@ -486,6 +449,66 @@
 						</File>
 					</File>
 				</Filter>
+				<Filter
+					Name="demotools"
+					>
+					<File
+						RelativePath=".\tools\demotools\demotools.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\tools\demotools\demotools.h"
+						>
+					</File>
+					<File
+						RelativePath=".\tools\demotools\DemoToolsProgressForm.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\tools\demotools\DemoToolsProgressForm.h"
+						FileType="3"
+						>
+						<File
+							RelativePath=".\tools\demotools\DemoToolsProgressForm.resx"
+							>
+						</File>
+					</File>
+					<File
+						RelativePath=".\tools\demotools\DemoToolsWiz1.h"
+						FileType="3"
+						>
+						<File
+							RelativePath=".\tools\demotools\DemoToolsWiz1.resx"
+							>
+						</File>
+					</File>
+					<File
+						RelativePath=".\tools\demotools\DemoToolsWiz2.h"
+						FileType="3"
+						>
+						<File
+							RelativePath=".\tools\demotools\DemoToolsWiz2.resx"
+							>
+						</File>
+					</File>
+					<File
+						RelativePath=".\tools\demotools\DemoToolsWiz3.h"
+						FileType="3"
+						>
+						<File
+							RelativePath=".\tools\demotools\DemoToolsWiz3.resx"
+							>
+						</File>
+					</File>
+					<File
+						RelativePath=".\tools\demotools\demotoolswizard.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\tools\demotools\demotoolswizard.h"
+						>
+					</File>
+				</Filter>
 			</Filter>
 		</Filter>
 		<Filter
@@ -504,6 +527,10 @@
 				>
 				<File
 					RelativePath="..\shared\hldemo\hldemo.h"
+					>
+				</File>
+				<File
+					RelativePath="..\shared\hldemo\hldemo_clr.h"
 					>
 				</File>
 			</Filter>

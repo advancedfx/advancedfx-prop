@@ -1,5 +1,4 @@
-#ifndef HLAE_DEMO_H
-#define HLAE_DEMO_H
+#pragma once
 
 // when we don't use  manual packing, use this one:
 #define HLDEMO_CPP_PACK 8
@@ -16,6 +15,8 @@
 // char         :  8 bit (signed)
 // unsigned int : 32 bit
 // float        : 32 bit
+
+/*
 
 #define HLDEMO_DEMO_VERSION		5
 #define HLDEMO_NETWORK_VERSION	47
@@ -74,6 +75,8 @@ struct hldemo_macroblock_header_s
 	unsigned int frame;
 };
 #pragma pack(pop)
+
+*/
 
 //
 // server to client commands:
@@ -142,6 +145,7 @@ struct hldemo_macroblock_header_s
 #define	svc_sendcvarvalue2			58
 #define	svc_END_OF_LIST				255
 
+/*
 struct svc_entry_s
 {
 	unsigned int cmd;
@@ -215,6 +219,7 @@ typedef svc_entry_s svc_mapper_t[];
 	{ svc_END_OF_LIST, "End of List", 0 } \
 };
 
+*/
+
 #pragma pack(pop)
 
-#endif

@@ -79,7 +79,7 @@ namespace hlae {
 	private: System::Windows::Forms::Button^  buttonCancel;
 	private: System::Windows::Forms::Button^  buttonNext;
 	private: System::Windows::Forms::Button^  buttonPrev;
-	private: System::Windows::Forms::Label^  labelDemoHeader;
+
 	private: System::Windows::Forms::CheckBox^  checkBoxDemoHeader;
 
 
@@ -106,7 +106,6 @@ namespace hlae {
 			this->buttonCancel = (gcnew System::Windows::Forms::Button());
 			this->buttonNext = (gcnew System::Windows::Forms::Button());
 			this->buttonPrev = (gcnew System::Windows::Forms::Button());
-			this->labelDemoHeader = (gcnew System::Windows::Forms::Label());
 			this->checkBoxDemoHeader = (gcnew System::Windows::Forms::CheckBox());
 			this->SuspendLayout();
 			// 
@@ -202,30 +201,20 @@ namespace hlae {
 			this->buttonPrev->Text = L"< Back";
 			this->buttonPrev->UseVisualStyleBackColor = true;
 			// 
-			// labelDemoHeader
-			// 
-			this->labelDemoHeader->AutoSize = true;
-			this->labelDemoHeader->Location = System::Drawing::Point(18, 268);
-			this->labelDemoHeader->Name = L"labelDemoHeader";
-			this->labelDemoHeader->Size = System::Drawing::Size(113, 13);
-			this->labelDemoHeader->TabIndex = 10;
-			this->labelDemoHeader->Text = L"(not 100% finsihed yet)";
-			// 
 			// checkBoxDemoHeader
 			// 
 			this->checkBoxDemoHeader->AutoSize = true;
 			this->checkBoxDemoHeader->Location = System::Drawing::Point(21, 248);
 			this->checkBoxDemoHeader->Name = L"checkBoxDemoHeader";
-			this->checkBoxDemoHeader->Size = System::Drawing::Size(316, 17);
+			this->checkBoxDemoHeader->Size = System::Drawing::Size(206, 17);
 			this->checkBoxDemoHeader->TabIndex = 9;
-			this->checkBoxDemoHeader->Text = L"Convert to new Demo Version (HLTV will most likely not work)";
+			this->checkBoxDemoHeader->Text = L"Try to convert demo version (47 -> 48)";
 			this->checkBoxDemoHeader->UseVisualStyleBackColor = true;
 			this->checkBoxDemoHeader->CheckedChanged += gcnew System::EventHandler(this, &DemoToolsWiz1::checkBoxXXX_CheckedChanged);
 			// 
 			// DemoToolsWiz1
 			// 
 			this->ClientSize = System::Drawing::Size(474, 335);
-			this->Controls->Add(this->labelDemoHeader);
 			this->Controls->Add(this->checkBoxDemoHeader);
 			this->Controls->Add(this->buttonPrev);
 			this->Controls->Add(this->buttonNext);
