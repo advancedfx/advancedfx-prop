@@ -546,6 +546,7 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 
 void APIENTRY my_glFrustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble zNear, GLdouble zFar)
 {
+	g_Filming.SupplyZClipping(zNear, zFar);
 	g_Zooming.adjustFrustumParams(left, right, top, bottom);
 	glFrustum(left, right, bottom, top, zNear, zFar);
 }

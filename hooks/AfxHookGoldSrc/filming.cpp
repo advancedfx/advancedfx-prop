@@ -48,9 +48,6 @@ extern playermove_s *ppmove;
 extern float clamp(float, float, float);
 
 
-REGISTER_DEBUGCVAR(depth_bias, "0", 0);
-REGISTER_DEBUGCVAR(depth_bpp, "8", 0);
-REGISTER_DEBUGCVAR(depth_scale, "1", 0);
 REGISTER_DEBUGCVAR(gl_force_noztrick, "1", 0);
 REGISTER_DEBUGCVAR(sample_addoverlap, "0", 0);
 REGISTER_DEBUGCVAR(sample_colorh, "0", 0);
@@ -62,7 +59,6 @@ REGISTER_DEBUGCVAR(print_pos, "0", 0);
 REGISTER_CVAR(camexport_mode, "0", 0);
 REGISTER_CVAR(crop_height, "-1", 0);
 REGISTER_CVAR(crop_yofs, "-1", 0);
-REGISTER_CVAR(depth_logarithmic, "32", 0);
 REGISTER_CVAR(depth_streams, "3", 0);
 REGISTER_CVAR(fx_lightmap, "0", 0);
 REGISTER_CVAR(fx_wh_enable, "0", 0);
@@ -619,6 +615,14 @@ REGISTER_CMD_FUNC(cameraofs_cs)
 //void Filming::bNoMatteInterpolation (bool bSet)
 //{ if (m_iFilmingState == FS_INACTIVE) _bNoMatteInterpolation = bSet; }
 
+
+void Filming::SupplyZClipping(GLdouble zNear, GLdouble zFar) {
+	m_ZNear = zNear;
+	m_ZFar = zFar;
+}
+
+
+
 bool Filming::bEnableStereoMode()
 { return _bEnableStereoMode; }
 
@@ -990,6 +994,107 @@ bool Filming::OnPrintFrame(unsigned long id, void *prgbdata, int iWidht, int iHe
 		false); // always color
 }
 
+
+void LinearizeFloatDepthBuffer(GLfloat *pBuffer, unsigned int count, GLdouble zNear, GLdouble zFar) {
+
+	GLfloat f = (GLfloat)zFar;
+	GLfloat n = (GLfloat)zNear;
+	GLfloat w = 1.0f;
+
+	GLfloat f1 = (-1)*f*n*w;
+	GLfloat f2 = f-n;
+
+	for(; count; count--) {
+		float t = f1/((*pBuffer)*f2-f);
+		*pBuffer = (t-n)/f2;
+		pBuffer++;
+	}
+}
+
+void LogarithmizeDepthBuffer(GLfloat *pBuffer, unsigned int count, GLdouble zNear, GLdouble zFar) {
+	GLfloat N  = (GLfloat)zNear;
+	GLfloat yL = log((GLfloat)zNear);
+	GLfloat yD = log((GLfloat)zFar) -yL;
+	GLfloat xD = (GLfloat)zFar - (GLfloat)zNear;
+
+	for(; count; count--) {
+		*pBuffer = (log(xD*(*pBuffer) + N) -yL)/yD;
+//		if(*pBuffer<0.0f) *pBuffer = 0.0f;
+//		else if(1.0f < *pBuffer) *pBuffer = 1.0f;
+//		else *pBuffer = 0.5f;
+		pBuffer++;
+	}
+
+}
+
+void DebugDepthBuffer(GLfloat *pBuffer, unsigned int count) {
+	for(; count; count--) {
+		float t = *pBuffer;
+		if(t<0.0f) *pBuffer = 0.0f;
+		else if(1.0f < t) *pBuffer = 1.0f;
+		else *pBuffer = 0.5f;
+		pBuffer++;
+	}
+}
+
+// Constraints: 
+// - assumes the GLfloat buffer to contain values in [0.0f,1.0f] v
+// - assumes GLfloat to conform with IEEE 754-2008 binary32
+void GLfloatArrayToUInt8Array(GLfloat *pBuffer, unsigned int count) {
+	__asm {
+		MOV  ESI, pBuffer
+		MOV  EDI, ESI
+		MOV  EBX, count
+		TEST EBX, EBX
+		JZ   __Done
+
+		__Loop:
+			MOV  EAX, [ESI]
+			TEST EAX, EAX
+			JZ   __Zero
+
+			MOV  ECX, EAX
+			SHR  ECX, 23
+			SUB  CL, 127
+			NEG  CL
+			JZ   __One
+
+			; value in (0.0f, 1.0f)
+			;
+			AND  EAX, 0x7FFFFF
+			OR   EAX, 0x800000
+			SHR  EAX, 15
+			SHR  EAX, CL
+			MOV  [EDI], AL
+
+			DEC  EBX
+			JZ   __Done
+			ADD  ESI, 4
+			INC  EDI
+			JMP  __Loop
+
+		__Zero:
+			MOV  BYTE PTR [EDI], 0x00
+
+			DEC  EBX
+			JZ   __Done
+			ADD  ESI, 4
+			INC  EDI
+			JMP  __Loop
+
+		__One:
+			MOV  BYTE PTR [EDI], 0xFF
+
+			DEC  EBX
+			JZ   __Done
+			ADD  ESI, 4
+			INC  EDI
+			JMP  __Loop
+	
+		__Done:
+	};
+}
+
 void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
 {
 	if(print_frame->value)
@@ -1001,11 +1106,9 @@ void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
 
 	bool bBMP = 0.0f != movie_bmp->value;
 
-	int iMovieBitDepth = (int)(depth_bpp->value);
-
 	GLenum eGLBuffer = (iBuffer == COLOR ? GL_BGR_EXT : (iBuffer == ALPHA ? GL_ALPHA : GL_DEPTH_COMPONENT));
 	GLenum eGLtype = ((iBuffer == COLOR)||(iBuffer == ALPHA)? GL_UNSIGNED_BYTE : GL_FLOAT);
-	int nBitsDiv8 = ((iBuffer == COLOR ) ? 3 : (iBuffer == ALPHA ? 1:(iMovieBitDepth==32?4:(iMovieBitDepth==24?3:(iMovieBitDepth==16?2:1)))));
+	int nBitsDiv8 = ((iBuffer == COLOR ) ? 3 : (iBuffer == ALPHA ? 1:1));
 
 	//// in case we want to check if the buffer's are set:
 	//GLint iTemp,iTemp2; glGetIntegerv(GL_READ_BUFFER,&iTemp); glGetIntegerv(GL_DRAW_BUFFER,&iTemp2); pEngfuncs->Con_Printf(">>Read:  0x%08x, Draw:  0x%08x \n",iTemp,iTemp2);
@@ -1028,44 +1131,16 @@ void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
 	if (iBuffer==DEPTH)
 	{
 		// user wants 24 Bit output, we need to cut off
-		int iSize=m_iWidth*m_iCropHeight;
-		unsigned char* t_pBuffer=m_GlRawPic.GetPointer();	// the pointer where we write
-		unsigned char* t_pBuffer2=t_pBuffer;				// the pointer where we read
-		
-		float tfloat;
-		unsigned int tuint;
+		unsigned int uiCount = (unsigned int)m_iWidth * (unsigned int)m_iCropHeight;
+		void * pBuffer=m_GlRawPic.GetPointer();	// the pointer where we write
 
-		unsigned int mymax=(1<<(8*nBitsDiv8))-1;
+		unsigned char ucMethod = (unsigned char)movie_depthdump->value;
 
-		float logscale=depth_logarithmic->value;
+		if(1==ucMethod||2==ucMethod) LinearizeFloatDepthBuffer((GLfloat *)pBuffer, uiCount, m_ZNear, m_ZFar);
+		if(2==ucMethod) LogarithmizeDepthBuffer((GLfloat *)pBuffer, uiCount, m_ZNear, m_ZFar);
+		if(0x4 & ucMethod) DebugDepthBuffer((GLfloat *)pBuffer, uiCount);
 
-		// these values are needed in order to work around in bugs i.e. of the NVIDIA Geforce 5600, since it doesn't use the default values for some reason:
-		static float fHard_GL_DEPTH_BIAS  = 0.0; // OGL reference says default is 0.0
-		static float fHard_GL_DEPTH_SCALE = 1.0; // OGL reference says default is 1.0	
-		glGetFloatv(GL_DEPTH_BIAS,&fHard_GL_DEPTH_BIAS);
-		glGetFloatv(GL_DEPTH_SCALE,&fHard_GL_DEPTH_SCALE);
-
-		//pEngfuncs->Con_Printf("Depth: Scale: %f, Bias: %f, Firstpixel: %f\n",fHard_GL_DEPTH_SCALE,fHard_GL_DEPTH_BIAS,(float)*(float *)t_pBuffer2);
-
-		for (int i=0;i<iSize;i++)
-		{
-			memmove(&tfloat,t_pBuffer2,sizeof(float));
-
-            tfloat=tfloat*(depth_scale->value)+(depth_bias->value); // allow custom scale and offset
-			tfloat=tfloat/fHard_GL_DEPTH_SCALE-fHard_GL_DEPTH_BIAS; // fix the range for card's that don't do it their selfs, although the OpenGL reference says so.
-
-			if (logscale!=0)
-			{
-				tfloat = (exp(tfloat*logscale)-1)/(exp((float)1*logscale)-1);
-			}
-			tfloat*=mymax; // scale to int's max. value
-			tuint = max(min((unsigned int)tfloat,mymax),0); // floor,clamp and convert to the desired data type
-
-			memmove(t_pBuffer,&tuint,nBitsDiv8);
-				
-			t_pBuffer+=nBitsDiv8;
-			t_pBuffer2+=sizeof(float);
-		}
+		GLfloatArrayToUInt8Array((GLfloat *)pBuffer, uiCount);
 	}
 
 	if( bSampledStream )
@@ -1685,3 +1760,14 @@ REGISTER_CMD_FUNC(matte_entities)
 		);
 	}
 }
+
+
+REGISTER_DEBUGCMD_FUNC(depth_info) {
+	float N = g_Filming.GetZNear();
+	float F = g_Filming.GetZFar();
+	float E = (F-N)/256.0f;
+	float P = (F-N) ? 100*E/(F-N) : 0;
+	pEngfuncs->Con_Printf("zNear: %f\nzFar: %f\nMax linear error (8bit): %f (%f %%)\n", N, F, E, P);
+}
+
+

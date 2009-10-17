@@ -315,10 +315,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\enthack.cpp"
-					>
-				</File>
-				<File
 					RelativePath=".\film_sound.cpp"
 					>
 				</File>

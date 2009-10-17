@@ -124,6 +124,11 @@ public:
 
 	float GetDebugClientTime();
 
+	void SupplyZClipping(GLdouble zNear, GLdouble zFar);
+
+	float GetZNear() { return m_ZNear; }
+	float GetZFar() { return m_ZFar; }
+
 
 private:
 	#define MIN_FRAME_DURATION 0.001f
@@ -194,6 +199,9 @@ private:
 	float m_fps;
 	unsigned long m_frames;
 	float m_time;
+
+	GLdouble m_ZNear;
+	GLdouble m_ZFar;
 
 
 };
