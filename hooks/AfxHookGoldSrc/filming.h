@@ -122,6 +122,8 @@ public:
 
 	bool OnPrintFrame(unsigned long id, void *prgbdata, int iWidht, int iHeight);
 
+	void OnR_RenderView(vec3_t & vieworg, vec3_t & viewangles);
+
 	float GetDebugClientTime();
 
 	void SupplyZClipping(GLdouble zNear, GLdouble zFar);
@@ -136,6 +138,11 @@ private:
 	enum FILMING_STATE { FS_INACTIVE, FS_STARTING, FS_ACTIVE };
 
 	float m_StartClientTime;
+
+	unsigned int m_LastCamFrameMid;
+	unsigned int m_LastCamFrameLeft;
+	unsigned int m_LastCamFrameRight;
+
 
 	CHlaeSupportRender *_pSupportRender;
 
@@ -197,7 +204,6 @@ private:
 
 	// framing system:
 	float m_fps;
-	unsigned long m_frames;
 	float m_time;
 
 	GLdouble m_ZNear;

@@ -23,7 +23,7 @@
 
 #include "cmdregister.h"
 
-#include "detours.h"
+#include <hooks/shared/detours.h>
 
 extern cl_enginefuncs_s *pEngfuncs;
 extern engine_studio_api_s *pEngStudio;

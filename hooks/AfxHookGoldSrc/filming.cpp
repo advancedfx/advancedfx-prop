@@ -48,6 +48,9 @@ extern playermove_s *ppmove;
 extern float clamp(float, float, float);
 
 
+REGISTER_DEBUGCVAR(depth_bpp, "8", 0);
+REGISTER_DEBUGCVAR(depth_slice_lo, "0.0", 0);
+REGISTER_DEBUGCVAR(depth_slice_hi, "1.0", 0);
 REGISTER_DEBUGCVAR(gl_force_noztrick, "1", 0);
 REGISTER_DEBUGCVAR(sample_addoverlap, "0", 0);
 REGISTER_DEBUGCVAR(sample_colorh, "0", 0);
@@ -324,135 +327,7 @@ void touring_R_RenderView_(void)
 	memcpy (oldorigin,p_r_refdef->vieworg,3*sizeof(float));
 	memcpy (oldangles,p_r_refdef->viewangles,3*sizeof(float));
 
-	//
-	// override by cammotion import:
-	if(g_CamImport.IsActive())
-	{
-		static float ftmp[6];
-	
-		if(g_CamImport.GetCamPositon(g_Filming.GetDebugClientTime(),ftmp))
-		{
-			p_r_refdef->vieworg[1] = -ftmp[0];
-			p_r_refdef->vieworg[2] = +ftmp[1];
-			p_r_refdef->vieworg[0] = -ftmp[2];
-			p_r_refdef->viewangles[ROLL] = -ftmp[3];
-			p_r_refdef->viewangles[PITCH] = -ftmp[4];
-			p_r_refdef->viewangles[YAW] = +ftmp[5];
-		}
-	}
-
-	// >> begin calculate transform vectors
-	// we have to calculate our own transformation vectors from the angles and can not use pparams->forward etc., because in spectator mode they might be not present:
-	// (adapted from HL1SDK/multiplayer/pm_shared.c/AngleVectors) and modified for quake order of angles:
-
-	float *angles;
-	float forward[3],right[3],up[3];
-
-	float		angle;
-	float		sr, sp, sy, cr, cp, cy;
-
-	angles = p_r_refdef->viewangles;
-
-	angle = angles[YAW] * ((float)M_PI*2 / 360);
-	sy = sin((float)angle);
-	cy = cos((float)angle);
-	angle = angles[PITCH] * ((float)M_PI*2 / 360);
-	sp = sin((float)angle);
-	cp = cos((float)angle);
-	angle = angles[ROLL] * ((float)M_PI*2 / 360);
-	sr = sin((float)angle);
-	cr = cos((float)angle);
-
-	forward[0] = cp*cy;
-	forward[1] = cp*sy;
-	forward[2] = -sp;
-
-	right[0] = (-1*sr*sp*cy+-1*cr*-sy);
-	right[1] = (-1*sr*sp*sy+-1*cr*cy);
-	right[2] = -1*sr*cp;
-
-	up[0] = (cr*sp*cy+-sr*-sy);
-	up[1] = (cr*sp*sy+-sr*cy);
-	up[2] = cr*cp;
-
-	// << end calculate transform vectors
-
-	// (this code is similar to HL1SDK/multiplayer/cl_dll/view.cpp/V_CalcNormalRefdef)
-
-	//
-	// apply displacement :
-	{
-		float fDispRight, fDispUp, fDispForward;
-
-		g_Filming.GetCameraOfs(&fDispRight,&fDispUp,&fDispForward);
-
-		for ( int i=0 ; i<3 ; i++ )
-		{
-			p_r_refdef->vieworg[i] += fDispForward*forward[i] + fDispRight*right[i] + fDispUp*up[i];
-		}
-	}
-
-	if(g_CamExport.HasFileMain()) g_CamExport.WriteMainFrame(
-		-p_r_refdef->vieworg[1], +p_r_refdef->vieworg[2], -p_r_refdef->vieworg[0],
-		-p_r_refdef->viewangles[ROLL], -p_r_refdef->viewangles[PITCH], +p_r_refdef->viewangles[YAW]
-	);
-
-	//
-	// Apply Stereo mode:
-
-	// one note on the stereoyawing:
-	// it may look simple, but it is only simple since the H-L engine carrys the yawing out as last rotation and after that translates
-	// if this wouldn't be the case, then we would have a bit more complicated calculations to make sure the camera is always rotated around the up axis!
-
-	if (g_Filming.bEnableStereoMode()&&(g_Filming.isFilming()))
-	{
-		float fDispRight;
-		Filming::STEREO_STATE sts =g_Filming.GetStereoState(); 
-
-		if(sts ==Filming::STS_LEFT)
-		{
-			// left
-			fDispRight = movie_stereo_centerdist->value; // left displacement
-			p_r_refdef->viewangles[YAW] -= movie_stereo_yawdegrees->value; // turn right
-		}
-		else
-		{
-			// right
-			fDispRight = movie_stereo_centerdist->value; // right displacement
-			p_r_refdef->viewangles[YAW] += movie_stereo_yawdegrees->value; // turn left
-		}
-
-		// apply displacement:
-		for ( int i=0 ; i<3 ; i++ )
-		{
-			p_r_refdef->vieworg[i] += fDispRight*right[i];
-		}
-
-		// export:
-		if(sts ==Filming::STS_LEFT && g_CamExport.HasFileLeft())
-			g_CamExport.WriteLeftFrame(
-				-p_r_refdef->vieworg[1], +p_r_refdef->vieworg[2], -p_r_refdef->vieworg[0],
-				-p_r_refdef->viewangles[ROLL], -p_r_refdef->viewangles[PITCH], +p_r_refdef->viewangles[YAW]
-			);
-		else if(g_CamExport.HasFileRight())
-			g_CamExport.WriteRightFrame(
-				-p_r_refdef->vieworg[1], +p_r_refdef->vieworg[2], -p_r_refdef->vieworg[0],
-				-p_r_refdef->viewangles[ROLL], -+p_r_refdef->viewangles[PITCH], +p_r_refdef->viewangles[YAW]
-			);
-
-	}
-
-
-	if(print_pos->value!=0.0)
-		pEngfuncs->Con_Printf("(%f,%f,%f) (%f,%f,%f)\n",
-			p_r_refdef->vieworg[0],
-			p_r_refdef->vieworg[1],
-			p_r_refdef->vieworg[2],
-			p_r_refdef->viewangles[PITCH],
-			p_r_refdef->viewangles[YAW],
-			p_r_refdef->viewangles[ROLL]
-		);
-
+	g_Filming.OnR_RenderView(p_r_refdef->vieworg, p_r_refdef->viewangles);
 
 	//
 	// call original R_RenderView_
@@ -614,6 +489,156 @@ REGISTER_CMD_FUNC(cameraofs_cs)
 
 //void Filming::bNoMatteInterpolation (bool bSet)
 //{ if (m_iFilmingState == FS_INACTIVE) _bNoMatteInterpolation = bSet; }
+
+
+void Filming::OnR_RenderView(vec3_t & vieworg, vec3_t & viewangles) {
+	//
+	// override by cammotion import:
+	if(g_CamImport.IsActive())
+	{
+		static float ftmp[6];
+	
+		if(g_CamImport.GetCamPositon(g_Filming.GetDebugClientTime(),ftmp))
+		{
+			vieworg[1] = -ftmp[0];
+			vieworg[2] = +ftmp[1];
+			vieworg[0] = -ftmp[2];
+			viewangles[ROLL] = -ftmp[3];
+			viewangles[PITCH] = -ftmp[4];
+			viewangles[YAW] = +ftmp[5];
+		}
+	}
+
+	// >> begin calculate transform vectors
+	// we have to calculate our own transformation vectors from the angles and can not use pparams->forward etc., because in spectator mode they might be not present:
+	// (adapted from HL1SDK/multiplayer/pm_shared.c/AngleVectors) and modified for quake order of angles:
+
+	float *angles;
+	float forward[3],right[3],up[3];
+
+	float		angle;
+	float		sr, sp, sy, cr, cp, cy;
+
+	angles = viewangles;
+
+	angle = angles[YAW] * ((float)M_PI*2 / 360);
+	sy = sin((float)angle);
+	cy = cos((float)angle);
+	angle = angles[PITCH] * ((float)M_PI*2 / 360);
+	sp = sin((float)angle);
+	cp = cos((float)angle);
+	angle = angles[ROLL] * ((float)M_PI*2 / 360);
+	sr = sin((float)angle);
+	cr = cos((float)angle);
+
+	forward[0] = cp*cy;
+	forward[1] = cp*sy;
+	forward[2] = -sp;
+
+	right[0] = (-1*sr*sp*cy+-1*cr*-sy);
+	right[1] = (-1*sr*sp*sy+-1*cr*cy);
+	right[2] = -1*sr*cp;
+
+	up[0] = (cr*sp*cy+-sr*-sy);
+	up[1] = (cr*sp*sy+-sr*cy);
+	up[2] = cr*cp;
+
+	// << end calculate transform vectors
+
+	// (this code is similar to HL1SDK/multiplayer/cl_dll/view.cpp/V_CalcNormalRefdef)
+
+	//
+	// apply displacement :
+	{
+		float fDispRight, fDispUp, fDispForward;
+
+		g_Filming.GetCameraOfs(&fDispRight,&fDispUp,&fDispForward);
+
+		for ( int i=0 ; i<3 ; i++ )
+		{
+			vieworg[i] += fDispForward*forward[i] + fDispRight*right[i] + fDispUp*up[i];
+		}
+	}
+
+	if(g_CamExport.HasFileMain()
+		&& m_LastCamFrameMid != m_nFrames
+	) {
+		m_LastCamFrameMid = m_nFrames;
+
+		g_CamExport.WriteMainFrame(
+			-vieworg[1], +vieworg[2], -vieworg[0],
+			-viewangles[ROLL], -viewangles[PITCH], +viewangles[YAW]
+		);
+	}
+
+	//
+	// Apply Stereo mode:
+
+	// one note on the stereoyawing:
+	// it may look simple, but it is only simple since the H-L engine carrys the yawing out as last rotation and after that translates
+	// if this wouldn't be the case, then we would have a bit more complicated calculations to make sure the camera is always rotated around the up axis!
+
+	if (g_Filming.bEnableStereoMode()&&(g_Filming.isFilming()))
+	{
+		float fDispRight;
+		Filming::STEREO_STATE sts =g_Filming.GetStereoState(); 
+
+		if(sts ==Filming::STS_LEFT)
+		{
+			// left
+			fDispRight = movie_stereo_centerdist->value; // left displacement
+			viewangles[YAW] -= movie_stereo_yawdegrees->value; // turn right
+		}
+		else
+		{
+			// right
+			fDispRight = movie_stereo_centerdist->value; // right displacement
+			viewangles[YAW] += movie_stereo_yawdegrees->value; // turn left
+		}
+
+		// apply displacement:
+		for ( int i=0 ; i<3 ; i++ )
+		{
+			vieworg[i] += fDispRight*right[i];
+		}
+
+		// export:
+		if(sts == Filming::STS_LEFT
+			&& g_CamExport.HasFileLeft()
+			&& m_LastCamFrameLeft != m_nFrames
+		) {
+			m_LastCamFrameLeft = m_nFrames;
+
+			g_CamExport.WriteLeftFrame(
+				-vieworg[1], +vieworg[2], -vieworg[0],
+				-viewangles[ROLL], -viewangles[PITCH], +viewangles[YAW]
+			);
+		}
+		else if(g_CamExport.HasFileRight()
+			&& m_LastCamFrameRight != m_nFrames
+		) {
+			m_LastCamFrameRight = m_nFrames;
+
+			g_CamExport.WriteRightFrame(
+				-vieworg[1], +vieworg[2], -vieworg[0],
+				-viewangles[ROLL], -viewangles[PITCH], +viewangles[YAW]
+			);
+		}
+
+	}
+
+
+	if(print_pos->value!=0.0)
+		pEngfuncs->Con_Printf("(%f,%f,%f) (%f,%f,%f)\n",
+			vieworg[0],
+			vieworg[1],
+			vieworg[2],
+			viewangles[PITCH],
+			viewangles[YAW],
+			viewangles[ROLL]
+		);
+}
+
 
 
 void Filming::SupplyZClipping(GLdouble zNear, GLdouble zFar) {
@@ -779,7 +804,6 @@ void Filming::setScreenSize(GLint w, GLint h)
 
 void Filming::Start()
 {
-	m_frames = 0;
 	m_fps = max(movie_fps->value,1.0f);
 	m_time = 0;
 
@@ -795,6 +819,11 @@ void Filming::Start()
 	}
 
 	m_nFrames = 0;
+	
+	m_LastCamFrameMid = -1;
+	m_LastCamFrameLeft = -1;
+	m_LastCamFrameRight = -1;
+
 	m_StartClientTime = pEngfuncs->GetClientTime();
 	m_iFilmingState = FS_STARTING;
 	m_iMatteStage = MS_WORLD;
@@ -957,7 +986,6 @@ void Filming::Stop()
 		m_sampling.bEnable = false;
 	}
 
-	m_nFrames = 0;
 	m_iFilmingState = FS_INACTIVE;
 	m_nTakes++;
 	_HudRqState=HUDRQ_NORMAL;
@@ -1019,9 +1047,6 @@ void LogarithmizeDepthBuffer(GLfloat *pBuffer, unsigned int count, GLdouble zNea
 
 	for(; count; count--) {
 		*pBuffer = (log(xD*(*pBuffer) + N) -yL)/yD;
-//		if(*pBuffer<0.0f) *pBuffer = 0.0f;
-//		else if(1.0f < *pBuffer) *pBuffer = 1.0f;
-//		else *pBuffer = 0.5f;
 		pBuffer++;
 	}
 
@@ -1037,27 +1062,66 @@ void DebugDepthBuffer(GLfloat *pBuffer, unsigned int count) {
 	}
 }
 
+void SliceDepthBuffer(GLfloat *pBuffer, unsigned int count, GLfloat sliceLo, GLfloat sliceHi) {
+
+	if(!(
+		0.0f <= sliceLo
+		&& sliceLo < sliceHi
+		&& sliceHi <= 1.0f
+		&& (0.0f != sliceLo || 1.0f != sliceHi)
+	))
+		return; // no valid slicing range
+
+	GLfloat s = 1.0f/(sliceHi - sliceLo);
+
+	for(; count; count--) {
+		GLfloat t = (*pBuffer);
+		
+		// clamp
+		if(t<sliceLo) t = sliceLo;
+		else if(sliceHi < t) t = sliceHi;
+		
+		*pBuffer = s*(t-sliceLo); // and scale
+		
+		pBuffer++;
+	}
+}
+
 // Constraints: 
 // - assumes the GLfloat buffer to contain values in [0.0f,1.0f] v
 // - assumes GLfloat to conform with IEEE 754-2008 binary32
-void GLfloatArrayToUInt8Array(GLfloat *pBuffer, unsigned int count) {
+// - componentBytes \in 1,2,3
+void GLfloatArrayToXByteArray(GLfloat *pBuffer, unsigned int width, unsigned int height, unsigned char componentBytes) {
 	__asm {
+		MOV  EBX, height
+		TEST EBX, EBX
+		JZ   __Done ; height 0
+
+		MOV  EBX, width
+		TEST EBX, EBX
+		JZ   __Done ; width 0
+
 		MOV  ESI, pBuffer
 		MOV  EDI, ESI
-		MOV  EBX, count
-		TEST EBX, EBX
-		JZ   __Done
 
-		__Loop:
+		JMP  __SelectLoop
+
+		__Next8:
+			ADD  ESI, 4
+			INC  EDI
+			DEC  EBX
+			JZ   __LineDone
+
+		__Loop8:
 			MOV  EAX, [ESI]
 			TEST EAX, EAX
-			JZ   __Zero
+			JZ   __Zero8
 
 			MOV  ECX, EAX
 			SHR  ECX, 23
 			SUB  CL, 127
 			NEG  CL
-			JZ   __One
+			JZ   __One8
 
 			; value in (0.0f, 1.0f)
 			;
@@ -1067,33 +1131,120 @@ void GLfloatArrayToUInt8Array(GLfloat *pBuffer, unsigned int count) {
 			SHR  EAX, CL
 			MOV  [EDI], AL
 
-			DEC  EBX
-			JZ   __Done
-			ADD  ESI, 4
-			INC  EDI
-			JMP  __Loop
+			JMP  __Next8
 
-		__Zero:
+		__Zero8:
 			MOV  BYTE PTR [EDI], 0x00
+			JMP  __Next8
 
-			DEC  EBX
-			JZ   __Done
-			ADD  ESI, 4
-			INC  EDI
-			JMP  __Loop
-
-		__One:
+		__One8:
 			MOV  BYTE PTR [EDI], 0xFF
+			JMP  __Next8
 
+		__Next16:
+			ADD  ESI, 4
+			ADD  EDI, 2
+			DEC  EBX
+			JZ   __LineDone
+
+		__Loop16:
+			MOV  EAX, [ESI]
+			TEST EAX, EAX
+			JZ   __Zero16
+
+			MOV  ECX, EAX
+			SHR  ECX, 23
+			SUB  CL, 127
+			NEG  CL
+			JZ   __One16
+
+			; value in (0.0f, 1.0f)
+			;
+			AND  EAX, 0x7FFFFF
+			OR   EAX, 0x800000
+			SHR  EAX, 7
+			SHR  EAX, CL
+			MOV  [EDI], AX
+
+			JMP  __Next16
+
+		__Zero16:
+			MOV  WORD PTR [EDI], 0x0000
+			JMP  __Next16
+
+		__One16:
+			MOV  WORD PTR [EDI], 0xFFFF
+			JMP  __Next16
+
+		__Next24:
+			ADD  ESI, 4
+			ADD  EDI, 3
+			DEC  EBX
+			JZ   __LineDone
+
+		__Loop24:
+			MOV  EAX, [ESI]
+			TEST EAX, EAX
+			JZ   __Zero24
+
+			MOV  ECX, EAX
+			SHR  ECX, 23
+			SUB  CL, 127
+			NEG  CL
+			JZ   __One24
+
+			; value in (0.0f, 1.0f)
+			;
+			AND  EAX, 0x7FFFFF
+			OR   EAX, 0x800000
+			SHL  EAX, 1
+			SHR  EAX, CL
+			MOV  [EDI], AX
+			SHR  EAX, 16
+			MOV  [EDI+2], AL
+			JMP  __Next24
+
+		__Zero24:
+			MOV  WORD PTR [EDI], 0x0000
+			MOV  BYTE PTR [EDI+2], 0x0000
+			JMP  __Next24
+
+		__One24:
+			MOV  WORD PTR [EDI], 0xFFFF
+			MOV  BYTE PTR [EDI+2], 0xFF
+			JMP  __Next24
+
+		__LineDone:
+			AND EBX, 0x00000003
+			JZ   __LineDoneContinue
+
+			; fix align:
+			NEG BL
+			ADD BL, 4
+			ADD	EDI, EBX
+
+		__LineDoneContinue:
+			; check linecount:
+			MOV  EBX, height
 			DEC  EBX
 			JZ   __Done
-			ADD  ESI, 4
-			INC  EDI
-			JMP  __Loop
-	
+
+			MOV  height, ebx
+			MOV  EBX, width
+
+		__SelectLoop:
+			MOV  AL, componentBytes
+			CMP  AL, 1
+			JLE  __Loop8
+			CMP  AL, 2
+			JLE  __Loop16
+			JMP  __Loop24
+
+			
 		__Done:
 	};
 }
+
 
 void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
 {
@@ -1105,14 +1256,38 @@ void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
 	}
 
 	bool bBMP = 0.0f != movie_bmp->value;
+	GLenum eGLBuffer;
+	GLenum eGLtype;
+	unsigned char ucComponentBytes;
 
-	GLenum eGLBuffer = (iBuffer == COLOR ? GL_BGR_EXT : (iBuffer == ALPHA ? GL_ALPHA : GL_DEPTH_COMPONENT));
-	GLenum eGLtype = ((iBuffer == COLOR)||(iBuffer == ALPHA)? GL_UNSIGNED_BYTE : GL_FLOAT);
-	int nBitsDiv8 = ((iBuffer == COLOR ) ? 3 : (iBuffer == ALPHA ? 1:1));
+	switch(iBuffer) {
+	case ALPHA:
+		eGLBuffer = GL_ALPHA;
+		eGLtype = GL_UNSIGNED_BYTE;
+		ucComponentBytes = 1;
+		break;
 
-	//// in case we want to check if the buffer's are set:
-	//GLint iTemp,iTemp2; glGetIntegerv(GL_READ_BUFFER,&iTemp); glGetIntegerv(GL_DRAW_BUFFER,&iTemp2); pEngfuncs->Con_Printf(">>Read:  0x%08x, Draw:  0x%08x \n",iTemp,iTemp2);
+	case DEPTH:
+		eGLBuffer = GL_DEPTH_COMPONENT;
+		eGLtype = GL_FLOAT;
+		switch(unsigned char ucDepthBpp = (unsigned char)depth_bpp->value) {
+		case 16:
+			ucComponentBytes = 2;
+			break;
+		case 24:
+			ucComponentBytes = 3;
+			break;
+		default:
+			ucComponentBytes = 1;
+		}
+		break;
 
+	case COLOR:
+	default:
+		eGLBuffer = GL_BGR_EXT;
+		eGLtype = GL_UNSIGNED_BYTE;
+		ucComponentBytes = 3;
+	};
 
 	bool bSampledStream = m_iMatteStage==MS_ALL && iBuffer == COLOR && m_sampling.bEnable;
 
@@ -1140,7 +1315,17 @@ void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
 		if(2==ucMethod) LogarithmizeDepthBuffer((GLfloat *)pBuffer, uiCount, m_ZNear, m_ZFar);
 		if(0x4 & ucMethod) DebugDepthBuffer((GLfloat *)pBuffer, uiCount);
 
-		GLfloatArrayToUInt8Array((GLfloat *)pBuffer, uiCount);
+		float sliceLo = depth_slice_lo->value;
+		float sliceHi = depth_slice_hi->value;
+
+		if( 0.0f<=sliceLo
+			&& sliceLo<sliceHi
+			&& sliceHi<=1.0f
+			&& (0.0f != sliceLo || 1.0f != sliceHi)
+			)
+			SliceDepthBuffer((GLfloat *)pBuffer, uiCount, sliceLo, sliceHi);
+
+		GLfloatArrayToXByteArray((GLfloat *)pBuffer, m_iWidth, m_iCropHeight, ucComponentBytes);
 	}
 
 	if( bSampledStream )
@@ -1150,7 +1335,7 @@ void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
 		m_sampling.samplemaster->Sample(
 			m_time,
 			m_GlRawPic.GetPointer(),
-			 m_iWidth * m_iCropHeight * nBitsDiv8
+			 m_iWidth * m_iCropHeight * (int)ucComponentBytes
 		);
 	}
 	else
@@ -1171,12 +1356,12 @@ void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
 
 		if( bBMP )
 		{
-			WriteRawBitmap(m_GlRawPic.GetPointer(),szFilename,m_iWidth,m_iCropHeight,8*nBitsDiv8,
+			WriteRawBitmap(m_GlRawPic.GetPointer(), szFilename, m_iWidth, m_iCropHeight, ucComponentBytes<<3,
 				false); // align is still 4 byte probably
 			return;
 		}
 
-		WriteRawTarga(m_GlRawPic.GetPointer(),szFilename,m_iWidth,m_iCropHeight,8*nBitsDiv8,!bColor);
+		WriteRawTarga(m_GlRawPic.GetPointer(), szFilename, m_iWidth, m_iCropHeight, ucComponentBytes<<3, !bColor);
 	}
 }
 
@@ -1347,7 +1532,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 		return true;
 	}
 
-	float flTime = ((m_frames+1)/m_fps)-(m_frames/m_fps); // pay attention when changing s.th. here because of handling of precision errors!
+	float flTime = ((m_nFrames+1)/m_fps)-(m_nFrames/m_fps); // pay attention when changing s.th. here because of handling of precision errors!
 
 	static char *pszTitles[] = { "all", "world", "entity" };
 	static char *pszDepthTitles[] = { "depthall", "depthworld", "depthall" };
@@ -1450,7 +1635,6 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 	}
 
 	m_nFrames++;
-	m_frames = m_nFrames;
 	
 	float flNextFrameDuration = flTime;
 	pEngfuncs->Cvar_SetValue("host_framerate", flNextFrameDuration);

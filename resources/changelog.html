@@ -70,10 +70,29 @@ body {
 
 
 <div class="entry">
+<div class="title">HLAE <span class="version">2.2.6.1</span> (<span class="time">2009-10-19T22:45Z</span>)</div>
+<div class="notelist">
+<div class="note n_fixed">
+Fixed mirv_camexport_mode behaviour for multi-stream captures.
+</div>
+<div class="note n_fixed">
+Fixed depthdump image row alignment for non-standard image widths.
+</div>
+<div class="note n_added">
+Readded __mirv_depth_bpp (8, 16, 24).
+</div>
+<div class="note n_added">
+Added __mirv_depth_slice_lo, __mirv_depth_slice_hi for retriving only a slice of the depth (only useful when dumping with low precision, i.e. 8bit).
+</div>
+</div>
+</div>
+
+
+<div class="entry">
 <div class="title">HLAE <span class="version">2.2.6.0</span> (<span class="time">2009-10-17T18:25Z</span>)</div>
 <div class="notelist">
 <div class="note n_updated">
-Updated mirv_depth_dump (0 off, 1 linear, 2 logarithmic, 3 inverse (OpenGL)).
+Updated mirv_movie_depthdump (0 off, 1 linear, 2 logarithmic, 3 inverse (OpenGL)).
 </div>
 <div class="note n_added">
 Added __mirv_depth_info.
