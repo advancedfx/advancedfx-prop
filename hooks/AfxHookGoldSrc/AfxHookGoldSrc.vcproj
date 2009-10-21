@@ -287,6 +287,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\cstrike_smoke.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\dd_hook.cpp"
 					>
 				</File>

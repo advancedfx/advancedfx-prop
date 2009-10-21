@@ -111,6 +111,7 @@ HL_ADDR_ENTRY(DTOURSZ_R_DrawViewModel)
 HL_ADDR_ENTRY(p_enginefuncs_s)
 HL_ADDR_ENTRY(p_globalvars_s)
 
+HL_ADDR_ENTRY(cstrike_EV_CreateSmoke_CLOFS)
 
 
 ///////////////////////////////////////////////////////////////////////////////
