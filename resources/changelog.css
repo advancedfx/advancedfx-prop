@@ -1,0 +1,56 @@
+@charset "US-ASCII";
+
+body {
+	background:#E0E0E0;
+}
+.entry {
+	display:block;
+	background:#FFFFFF;
+	border-color:#808080;
+	border-style:solid;
+	border-width:1px;
+	margin-top:16pt;
+	margin-bottom:16pt;
+}
+.title {
+	background-color:#E0E0FF;
+	display:block;
+	font-family:monospace;
+	font-weight:bold;
+}
+.version {
+	display:inline;
+}
+.time {
+	display:inline;
+}
+.notelist {
+	background-color:#EFFFE0;
+	display:block;
+	font-family:monospace;
+}
+.note:before {
+	content:"? ";
+	background-color:#FFFFE0;
+	font-weight:bold;
+}
+.note {
+	display:block;
+	margin-top:8pt;
+	margin-bottom:8pt;
+}
+.n_added:before {
+	content:"* ";
+}
+.n_fixed:before {
+	content:"+ ";
+}
+.n_removed:before {
+	content:"- ";
+}
+.n_replaced:before {
+	content:"R ";
+}
+.n_updated:before {
+	content:"U ";
+}

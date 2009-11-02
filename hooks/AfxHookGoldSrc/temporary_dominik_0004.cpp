@@ -66,19 +66,3 @@ REGISTER_DEBUGCMD_FUNC(map_localplayer_install)
 		pEngfuncs->Con_DPrintf("Old address: 0x%08x\n",g_orig_GetLocalPlayer); // Old address: 0x01d18a60
 	};
 }
-
-#include "cmd_tools.h"
-
-extern CHlaeCmdTools g_CmdTools;
-
-REGISTER_DEBUGCMD_FUNC(test_d0004)
-{
-	if(pEngfuncs->Cmd_Argc()!=2) return;
-
-	char *parg = pEngfuncs->Cmd_Argv(1);
-
-	void * paddr = (void *)g_CmdTools.GiveCommandFn(parg);
-	pEngfuncs->Con_Printf("%s: 0x%08x\n",parg,paddr);
-
-
-}

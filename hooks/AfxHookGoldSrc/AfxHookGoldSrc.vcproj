@@ -219,6 +219,22 @@
 				Name="shared"
 				>
 				<File
+					RelativePath="..\shared\bvhexport.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\shared\bvhexport.h"
+					>
+				</File>
+				<File
+					RelativePath="..\shared\bvhimport.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\shared\bvhimport.h"
+					>
+				</File>
+				<File
 					RelativePath="..\shared\detours.cpp"
 					>
 				</File>
@@ -388,6 +404,10 @@
 				</File>
 				<File
 					RelativePath=".\sampling.h"
+					>
+				</File>
+				<File
+					RelativePath=".\specmenu.cpp"
 					>
 				</File>
 				<File

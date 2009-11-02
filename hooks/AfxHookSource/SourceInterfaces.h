@@ -78,26 +78,6 @@ public:
 
 // Rendering related
 
-// Used by RenderView
-enum RenderViewInfo_t
-{
-	RENDERVIEW_UNSPECIFIED	 = 0,
-	RENDERVIEW_DRAWVIEWMODEL = (1<<0),
-	RENDERVIEW_DRAWHUD		 = (1<<1),
-	RENDERVIEW_SUPPRESSMONITORRENDERING = (1<<2),
-};
-
-enum ClearFlags_t
-{
-	VIEW_CLEAR_COLOR = 0x1,
-	VIEW_CLEAR_DEPTH = 0x2,
-	VIEW_CLEAR_FULL_TARGET = 0x4,
-	VIEW_NO_DRAW = 0x8,
-	VIEW_CLEAR_OBEY_STENCIL = 0x10, // Draws a quad allowing stencil test to clear through portals
-	VIEW_CLEAR_STENCIL = 0x20,
-};
-
-
 class CGlobalVarsBase;
 
 // Command / Cvar related:
@@ -558,6 +538,8 @@ public:
 };
 
 
+class CViewSetup_013;
+
 // IVEngineClient_012 //////////////////////////////////////////////////////////
 
 #define VENGINE_CLIENT_INTERFACE_VERSION_012		"VEngineClient012"
@@ -943,34 +925,34 @@ public:
 	// Called once when the client DLL is loaded
 	virtual int				Init( CreateInterfaceFn appSystemFactory, 
 									CreateInterfaceFn physicsFactory,
-									CGlobalVarsBase *pGlobals ) = 0;
+									CGlobalVarsBase *pGlobals ) = 0; // 0
 
 	// Called once when the client DLL is being unloaded
-	virtual void			Shutdown( void ) = 0;
+	virtual void			Shutdown( void ) = 0; // 1
 	
-	virtual void _UNUSED_LevelInitPreEntity(void)=0;
-	virtual void _UNUSED_LevelInitPostEntity(void)=0;
-	virtual void _UNUSED_LevelShutdown(void)=0;
-	virtual void _UNUSED_GetAllClasses(void)=0;
-	virtual void _UNUSED_HudVidInit(void)=0;
-	virtual void _UNUSED_HudProcessInput(void)=0;
-	virtual void _UNUSED_HudUpdate(void)=0;
-	virtual void _UNUSED_HudReset(void)=0;
-	virtual void _UNUSED_HudText(void)=0;
-	virtual void _UNUSED_IN_ActivateMouse(void)=0;
-	virtual void _UNUSED_IN_DeactivateMouse(void)=0;
-	virtual void _UNUSED_IN_MouseEvent(void)=0;
-	virtual void _UNUSED_IN_Accumulate(void)=0;
-	virtual void _UNUSED_IN_ClearStates(void)=0;
-	virtual void _UNUSED_IN_IsKeyDown(void)=0;
-	virtual void _UNUSED_IN_KeyEvent(void)=0;
-	virtual void _UNUSED_CreateMove(void)=0;
-	virtual void _UNUSED_ExtraMouseSample(void)=0;
-	virtual void _UNUSED_WriteUsercmdDeltaToBuffer(void)=0;
-	virtual void _UNUSED_EncodeUserCmdToBuffer(void)=0;
-	virtual void _UNUSED_DecodeUserCmdFromBuffer(void)=0;
-	virtual void _UNUSED_View_Render(void)=0;
-	virtual void _UNUSED_RenderView(void)=0;
+	virtual void _UNUSED_LevelInitPreEntity(void)=0; // 2
+	virtual void _UNUSED_LevelInitPostEntity(void)=0; // 3
+	virtual void _UNUSED_LevelShutdown(void)=0; // 4
+	virtual void _UNUSED_GetAllClasses(void)=0; // 5
+	virtual void _UNUSED_HudVidInit(void)=0; // 6
+	virtual void _UNUSED_HudProcessInput(void)=0; // 7
+	virtual void _UNUSED_HudUpdate(void)=0; // 8
+	virtual void _UNUSED_HudReset(void)=0; // 9
+	virtual void _UNUSED_HudText(void)=0; // 10
+	virtual void _UNUSED_IN_ActivateMouse(void)=0; // 11
+	virtual void _UNUSED_IN_DeactivateMouse(void)=0; // 12
+	virtual void _UNUSED_IN_MouseEvent(void)=0; // 13
+	virtual void _UNUSED_IN_Accumulate(void)=0; // 14
+	virtual void _UNUSED_IN_ClearStates(void)=0; // 15
+	virtual void _UNUSED_IN_IsKeyDown(void)=0; // 16
+	virtual void _UNUSED_IN_KeyEvent(void)=0; // 17
+	virtual void _UNUSED_CreateMove(void)=0; // 18
+	virtual void _UNUSED_ExtraMouseSample(void)=0; // 19
+	virtual void _UNUSED_WriteUsercmdDeltaToBuffer(void)=0; // 20
+	virtual void _UNUSED_EncodeUserCmdToBuffer(void)=0; // 21
+	virtual void _UNUSED_DecodeUserCmdFromBuffer(void)=0; // 22
+	virtual void _UNUSED_View_Render(void)=0; // 23
+	virtual void _UNUSED_RenderView(void)=0; // 24
 	virtual void _UNUSED_View_Fade(void)=0;
 	virtual void _UNUSED_SetCrosshairAngle(void)=0;
 	virtual void _UNUSED_InitSprite(void)=0;
@@ -1075,60 +1057,60 @@ public:
 	// Called once when the client DLL is loaded
 	virtual int				Init( CreateInterfaceFn appSystemFactory, 
 									CreateInterfaceFn physicsFactory,
-									CGlobalVarsBase *pGlobals ) = 0;
+									CGlobalVarsBase *pGlobals ) = 0; // 0
 
 	// Called once when the client DLL is being unloaded
-	virtual void			Shutdown( void ) = 0;
+	virtual void			Shutdown( void ) = 0; // 1
 	
-	virtual void _UNUSED_LevelInitPreEntity(void)=0;
-	virtual void _UNUSED_LevelInitPostEntity(void)=0;
-	virtual void _UNUSED_LevelShutdown(void)=0;
-	virtual void _UNUSED_GetAllClasses(void)=0;
-	virtual void _UNUSED_HudVidInit(void)=0;
-	virtual void _UNUSED_HudProcessInput(void)=0;
-	virtual void _UNUSED_HudUpdate(void)=0;
-	virtual void _UNUSED_HudReset(void)=0;
-	virtual void _UNUSED_HudText(void)=0;
-	virtual void _UNUSED_IN_ActivateMouse(void)=0;
-	virtual void _UNUSED_IN_DeactivateMouse(void)=0;
-	virtual void _UNUSED_IN_MouseEvent (void)=0;
-	virtual void _UNUSED_IN_Accumulate (void)=0;
-	virtual void _UNUSED_IN_ClearStates (void)=0;
-	virtual void _UNUSED_IN_IsKeyDown(void)=0;
-	virtual void _UNUSED_IN_KeyEvent(void)=0;
-	virtual void _UNUSED_CreateMove(void)=0;
-	virtual void _UNUSED_ExtraMouseSample(void)=0;
-	virtual void _UNUSED_WriteUsercmdDeltaToBuffer(void)=0;
-	virtual void _UNUSED_EncodeUserCmdToBuffer(void)=0;
-	virtual void _UNUSED_DecodeUserCmdFromBuffer(void)=0;
-	virtual void _UNUSED_View_Render(void)=0;
-	virtual void _UNUSED_RenderView(void)=0;
-	virtual void _UNUSED_View_Fade(void)=0;
-	virtual void _UNUSED_SetCrosshairAngle(void)=0;
-	virtual void _UNUSED_InitSprite(void)=0;
-	virtual void _UNUSED_ShutdownSprite(void)=0;
-	virtual void _UNUSED_GetSpriteSize(void)=0;
-	virtual void _UNUSED_VoiceStatus(void)=0;
-	virtual void _UNUSED_InstallStringTableCallback(void)=0;
-	virtual void _UNUSED_FrameStageNotify(void)=0;
-	virtual void _UNUSED_DispatchUserMessage(void)=0;
-	virtual void _UNUSED_SaveInit(void)=0;
-	virtual void _UNUSED_SaveWriteFields(void)=0;
-	virtual void _UNUSED_SaveReadFields(void)=0;
-	virtual void _UNUSED_PreSave(void)=0;
-	virtual void _UNUSED_Save(void)=0;
-	virtual void _UNUSED_WriteSaveHeaders(void)=0;
-	virtual void _UNUSED_ReadRestoreHeaders(void)=0;
-	virtual void _UNUSED_Restore(void)=0;
-	virtual void _UNUSED_DispatchOnRestore(void)=0;
-	virtual void _UNUSED_GetStandardRecvProxies(void)=0;
-	virtual void _UNUSED_WriteSaveGameScreenshot(void)=0;
-	virtual void _UNUSED_EmitSentenceCloseCaption(void)=0;
-	virtual void _UNUSED_EmitCloseCaption(void)=0;
-	virtual void _UNUSED_CanRecordDemo(void)=0;
-	virtual void _UNUSED_WriteSaveGameScreenshotOfSize(void)=0;
-	virtual void _UNUSED_RenderViewEx(void)=0;
-	virtual void _UNUSED_GetPlayerView(void)=0;
+	virtual void _UNUSED_LevelInitPreEntity(void)=0; // 2
+	virtual void _UNUSED_LevelInitPostEntity(void)=0; // 3
+	virtual void _UNUSED_LevelShutdown(void)=0; // 4
+	virtual void _UNUSED_GetAllClasses(void)=0; // 5
+	virtual void _UNUSED_HudVidInit(void)=0; // 6
+	virtual void _UNUSED_HudProcessInput(void)=0; // 7
+	virtual void _UNUSED_HudUpdate(void)=0; // 8
+	virtual void _UNUSED_HudReset(void)=0; // 9
+	virtual void _UNUSED_HudText(void)=0; // 10
+	virtual void _UNUSED_IN_ActivateMouse(void)=0; // 11
+	virtual void _UNUSED_IN_DeactivateMouse(void)=0; // 12
+	virtual void _UNUSED_IN_MouseEvent (void)=0; // 13
+	virtual void _UNUSED_IN_Accumulate (void)=0; // 14
+	virtual void _UNUSED_IN_ClearStates (void)=0; // 15
+	virtual void _UNUSED_IN_IsKeyDown(void)=0; // 16
+	virtual void _UNUSED_IN_KeyEvent(void)=0; // 17
+	virtual void _UNUSED_CreateMove(void)=0; // 18
+	virtual void _UNUSED_ExtraMouseSample(void)=0; // 19
+	virtual void _UNUSED_WriteUsercmdDeltaToBuffer(void)=0; // 20
+	virtual void _UNUSED_EncodeUserCmdToBuffer(void)=0; // 21
+	virtual void _UNUSED_DecodeUserCmdFromBuffer(void)=0; // 22
+	virtual void _UNUSED_View_Render(void)=0; // 23
+	virtual void _UNUSED_RenderView(void)=0; // 24
+	virtual void _UNUSED_View_Fade(void)=0; // 25
+	virtual void _UNUSED_SetCrosshairAngle(void)=0; // 26
+	virtual void _UNUSED_InitSprite(void)=0; // 27
+	virtual void _UNUSED_ShutdownSprite(void)=0; // 28
+	virtual void _UNUSED_GetSpriteSize(void)=0; // 29
+	virtual void _UNUSED_VoiceStatus(void)=0; // 30
+	virtual void _UNUSED_InstallStringTableCallback(void)=0; // 31
+	virtual void _UNUSED_FrameStageNotify(void)=0; // 32
+	virtual void _UNUSED_DispatchUserMessage(void)=0; // 33
+	virtual void _UNUSED_SaveInit(void)=0; // 34
+	virtual void _UNUSED_SaveWriteFields(void)=0; // 35
+	virtual void _UNUSED_SaveReadFields(void)=0; // 36
+	virtual void _UNUSED_PreSave(void)=0; // 37
+	virtual void _UNUSED_Save(void)=0; // 38
+	virtual void _UNUSED_WriteSaveHeaders(void)=0; // 39
+	virtual void _UNUSED_ReadRestoreHeaders(void)=0; // 40
+	virtual void _UNUSED_Restore(void)=0; // 41
+	virtual void _UNUSED_DispatchOnRestore(void)=0; // 42
+	virtual void _UNUSED_GetStandardRecvProxies(void)=0; // 43
+	virtual void _UNUSED_WriteSaveGameScreenshot(void)=0; // 44
+	virtual void _UNUSED_EmitSentenceCloseCaption(void)=0; // 45
+	virtual void _UNUSED_EmitCloseCaption(void)=0; // 46
+	virtual void _UNUSED_CanRecordDemo(void)=0; // 47
+	virtual void _UNUSED_WriteSaveGameScreenshotOfSize(void)=0; // 48
+	virtual void _UNUSED_RenderViewEx(void)=0; // 49
+	virtual void _UNUSED_GetPlayerView(void)=0; // 50
 };
 
 

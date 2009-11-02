@@ -164,6 +164,34 @@
 			Name="hooks"
 			>
 			<Filter
+				Name="shared"
+				>
+				<File
+					RelativePath="..\shared\bvhexport.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\shared\bvhexport.h"
+					>
+				</File>
+				<File
+					RelativePath="..\shared\bvhimport.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\shared\bvhimport.h"
+					>
+				</File>
+				<File
+					RelativePath="..\shared\detours.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\shared\detours.h"
+					>
+				</File>
+			</Filter>
+			<Filter
 				Name="AfxHookSource"
 				>
 				<File
@@ -172,6 +200,14 @@
 				</File>
 				<File
 					RelativePath=".\MirvCommands.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\RenderView.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\RenderView.h"
 					>
 				</File>
 				<File
@@ -203,18 +239,10 @@
 					>
 				</File>
 			</Filter>
-			<Filter
-				Name="shared"
-				>
-				<File
-					RelativePath="..\shared\detours.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\shared\detours.h"
-					>
-				</File>
-			</Filter>
+		</Filter>
+		<Filter
+			Name="resources"
+			>
 		</Filter>
 	</Files>
 	<Globals>

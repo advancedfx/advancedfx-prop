@@ -12,6 +12,7 @@
 
 #include <hooks/shared/detours.h>
 
+#include "RenderView.h"
 #include "SourceInterfaces.h"
 #include "WrpVEngineClient.h"
 #include "WrpConsole.h"
@@ -53,6 +54,25 @@ void ErrorBox() {
 	ErrorBox("Something went wrong.");
 }
 
+char const * g_Info_VClient = "NULL";
+char const * g_Info_VEngineClient = "NULL";
+char const * g_Info_VEngineCvar = "NULL";
+
+void PrintInfo() {
+	Tier0_Msg(
+		"|" "\n"
+		"| AfxHookSource ("  __DATE__ " "__TIME__ ")" "\n"
+		"| Copyright (c) advancedfx.org" "\n"
+		"|" "\n"
+	);
+
+	Tier0_Msg("| VClient: %s\n", g_Info_VClient);
+	Tier0_Msg("| VEngineClient: %s\n", g_Info_VEngineClient);
+	Tier0_Msg("| VEngineCvar: %s\n", g_Info_VEngineCvar);
+	Tier0_Msg("| GameDirectory: %s\n", g_VEngineClient->GetGameDirectory());
+
+	Tier0_Msg("|" "\n");
+}
 
 void MySetup(CreateInterfaceFn appSystemFactory) {
 	static bool bFirstRun = true;
@@ -62,37 +82,40 @@ void MySetup(CreateInterfaceFn appSystemFactory) {
 
 		bFirstRun = false;
 
-		Tier0_Msg("| VEngineClient: ");
 		if(iface = appSystemFactory(VENGINE_CLIENT_INTERFACE_VERSION_013, NULL)) {
-			Tier0_Msg(VENGINE_CLIENT_INTERFACE_VERSION_013 "\n");
+			g_Info_VEngineClient = VENGINE_CLIENT_INTERFACE_VERSION_013;
 			g_VEngineClient = new WrpVEngineClient_013((IVEngineClient_013 *)iface);
 		}
 		else if(iface = appSystemFactory(VENGINE_CLIENT_INTERFACE_VERSION_012, NULL)) {
-			Tier0_Msg(VENGINE_CLIENT_INTERFACE_VERSION_012 "\n");
+			g_Info_VEngineClient = VENGINE_CLIENT_INTERFACE_VERSION_012;
 			g_VEngineClient = new WrpVEngineClient_012((IVEngineClient_012 *)iface);
 		}
 		else {
-			Tier0_Msg("(FAILED)" "\n");
 			ErrorBox("Could not get a supported VEngineClient interface.");
 		}
 
-		Tier0_Msg("| VEngineCvar: ");
 		if(iface = appSystemFactory( VENGINE_CVAR_INTERFACE_VERSION_004, NULL )) {
-			Tier0_Msg(VENGINE_CVAR_INTERFACE_VERSION_004 "\n");
+			g_Info_VEngineCvar = VENGINE_CVAR_INTERFACE_VERSION_004;
 			WrpConCommands::RegisterCommands((ICvar_004 *)iface);
 		}
 		else if(
 			(iface = appSystemFactory( VENGINE_CVAR_INTERFACE_VERSION_003, NULL ))
 			&& (iface2 = appSystemFactory(VENGINE_CLIENT_INTERFACE_VERSION_012, NULL))
 		) {
-			Tier0_Msg(VENGINE_CVAR_INTERFACE_VERSION_003 " & " VENGINE_CLIENT_INTERFACE_VERSION_012 "\n");
+			g_Info_VEngineCvar = VENGINE_CVAR_INTERFACE_VERSION_003 " & " VENGINE_CLIENT_INTERFACE_VERSION_012;
 			WrpConCommands::RegisterCommands((ICvar_003 *)iface, (IVEngineClient_012 *)iface2);
 		}
 		else {
-			Tier0_Msg("(FAILED)" "\n");
 			ErrorBox("Could not get a supported VEngineCvar interface.");
 		}
 	}
+
+	if(g_VEngineClient) {
+		g_Hook_VClient_RenderView.Install_cstrike();
+	}
+
+
+	PrintInfo();
 }
 
 void * old_Client_Init;
@@ -156,30 +179,22 @@ void* new_Client_CreateInterface(const char *pName, int *pReturnCode) {
 
 		void * iface = NULL;
 
-		Tier0_Msg(
-			"|" "\n"
-			"| AfxHookSource ("  __DATE__ " "__TIME__ ")" "\n"
-			"| Copyright (c) advancedfx.org" "\n"
-			"|" "\n"
-			"| Setting up ..." "\n"
-		);
 
 
-		Tier0_Msg("| VClient: ");
+
 		if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_015, NULL)) {
-			Tier0_Msg(CLIENT_DLL_INTERFACE_VERSION_015 "\n");
+			g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_015;
 		}
 		else if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_013, NULL)) {
-			Tier0_Msg(CLIENT_DLL_INTERFACE_VERSION_013 "\n");
+			g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_013;
 		}
 		else if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_012, NULL)) {
-			Tier0_Msg(CLIENT_DLL_INTERFACE_VERSION_012 "\n");
+			g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_012;
 		}
 		else if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_011, NULL)) {
-			Tier0_Msg(CLIENT_DLL_INTERFACE_VERSION_011 "\n");
+			g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_011;
 		}
 		else {
-			Tier0_Msg("(FAILED)" "\n");
 			ErrorBox("Could not get a supported VClient interface.");
 		}
 
