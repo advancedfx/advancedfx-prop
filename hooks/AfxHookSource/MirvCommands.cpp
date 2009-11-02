@@ -83,7 +83,7 @@ CON_COMMAND(mirv_camexport, "controls camera motion data export") {
 			return;
 		}
 		if(0 == stricmp("timeinfo", arg1)) {			
-			Tier0_Msg("Current client time: %f\n", g_VEngineClient->Time());
+			Tier0_Msg("Current (interpolated client) time: %f\n", g_Hook_VClient_RenderView.GetCurTime());
 			return;
 		}
 
@@ -115,7 +115,7 @@ CON_COMMAND(mirv_camimport, "controls camera motion data import") {
 		else
 		if(0 == stricmp("start", arg1) && 3 <= argc) {
 			char const * fileName = args->ArgV(2);
-			g_Hook_VClient_RenderView.SetImportBaseTime(g_VEngineClient->GetLastTimeStamp());
+			g_Hook_VClient_RenderView.SetImportBaseTime(g_Hook_VClient_RenderView.GetCurTime());
 			g_Hook_VClient_RenderView.ImportBegin(fileName);
 			return;
 		}
@@ -124,7 +124,7 @@ CON_COMMAND(mirv_camimport, "controls camera motion data import") {
 			if(3 <= argc) {
 				char const * newTime = args->ArgV(2);
 				if(0 == stricmp("current", newTime))
-					g_Hook_VClient_RenderView.SetImportBaseTime(g_VEngineClient->GetLastTimeStamp());
+					g_Hook_VClient_RenderView.SetImportBaseTime(g_Hook_VClient_RenderView.GetCurTime());
 				else
 					g_Hook_VClient_RenderView.SetImportBaseTime(atof(newTime));
 				return;

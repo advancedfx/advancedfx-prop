@@ -30,6 +30,8 @@ public:
 	bool ExportBegin(char const *fileName, float frameTime);
 	void ExportEnd();
 
+	float GetCurTime();
+
 	float GetImportBasteTime();
 
 	bool ImportBegin(char const *fileName);

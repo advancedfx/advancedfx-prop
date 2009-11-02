@@ -47,7 +47,6 @@ BvhImport g_BvhImport;
 // Create singelton instance:
 Hook_VClient_RenderView g_Hook_VClient_RenderView;
 
-// #define CLOFS_gpGlobals 0x3E7260
 // void * gpGlobals;
 
 //#define CLOFS_CallCalcDemoViewOverride 0x169A7D
@@ -56,6 +55,8 @@ Hook_VClient_RenderView g_Hook_VClient_RenderView;
 #define CLOFS_CheckDemoviewOverride (CLOFS_IfIsPlayingTimeDemo +0x16)
 #define CLOFS_NotPlaying (CLOFS_IfIsPlayingTimeDemo +0x51)
 #define CLOFS_cl_demoviewoverride_value (0x3EE7F0 +0x28)
+#define CLOFS_gpGLobals 0x392C8C
+#define OFS_gpGlobals_value_curtime +4*3
 
 #define OPCODE_NOP			0x90
 #define OPCODE_JMP			0xE9
@@ -64,6 +65,7 @@ Hook_VClient_RenderView g_Hook_VClient_RenderView;
 DWORD g_continue_NotPlaying;
 DWORD g_continue_CheckDemoViewOverrideCvar;
 float * g_value_cl_demoviewoverride;
+float * g_value_curtime;
 
 void __cdecl myViewOverride( Vector *origin, QAngle *angles ) {
 	g_Hook_VClient_RenderView.OnViewOverride(
@@ -145,6 +147,10 @@ void Hook_VClient_RenderView::ExportEnd() {
 	m_Export = false;
 }
 
+float Hook_VClient_RenderView::GetCurTime() {
+	return *g_value_curtime;
+}
+
 float Hook_VClient_RenderView::GetImportBasteTime() {
 	return m_ImportBaseTime;
 }
@@ -178,6 +184,7 @@ void Hook_VClient_RenderView::Install_cstrike(void) {
 		g_continue_NotPlaying = (DWORD)((BYTE *)hm +CLOFS_NotPlaying);
 		g_continue_CheckDemoViewOverrideCvar = (DWORD)((BYTE *)hm +CLOFS_CheckDemoviewOverride);
 		g_value_cl_demoviewoverride = (float *)((BYTE *)hm +CLOFS_cl_demoviewoverride_value);
+		g_value_curtime = (float *)(*(BYTE **)((BYTE *)hm +CLOFS_gpGLobals) +OFS_gpGlobals_value_curtime);
 
 		MdtMemAccessBegin(pmem, CLOFS_CheckDemoviewOverride -CLOFS_IfIsPlayingTimeDemo, &mbis);
 
@@ -199,13 +206,13 @@ bool Hook_VClient_RenderView::IsInstalled(void) {
 
 
 void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, float &Rx, float &Ry, float &Rz) {
-	float curTime = g_VEngineClient->GetLastTimeStamp();
-	if(curTime == m_LastTime) {
+	float curTime = GetCurTime();
+/*	if(curTime == m_LastTime) {
 		curTime += g_VEngineClient->Time() -m_SubTime;
 	}
 	else
 		m_SubTime = g_VEngineClient->Time();
-
+*/
 	if(m_Import) {
 		float Tf[6];
 
@@ -213,17 +220,20 @@ void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, fl
 			curTime -m_ImportBaseTime,
 			Tf
 		)) {
-			Tx = Tf[0];
-			Ty = Tf[1];
-			Tz = Tf[2];
-			Rz = Tf[3];
-			Rx = Tf[4];
-			Ry = Tf[5];
+			Ty = -Tf[0];
+			Tz = +Tf[1];
+			Tx = -Tf[2];
+			Rz = -Tf[3];
+			Rx = -Tf[4];
+			Ry = +Tf[5];
 		}
 	}
 
 	if(m_Export) {
-		g_BvhExport->WriteFrame(Tx, Ty, Tz, Rz, Rx, Ry);
+		g_BvhExport->WriteFrame(
+			-Ty, +Tz, -Tx,
+			-Rz, -Rx, +Ry
+		);
 	}
 }
 
