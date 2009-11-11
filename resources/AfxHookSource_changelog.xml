@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="changelog.xsl"?>
+
+<changelog>
+
+
+<release>
+<name>AfxHookSource</name>
+<version>0.0.2.0</version>
+<time>2009-11-02T14:00Z</time>
+<changes>
+<change type="added">
+Added mirv_camexport, mirv_camimport (Counter-Strike Source only).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
+<version>0.0.0.1</version>
+<time>2009-09-29T22:00Z</time>
+<changes>
+<change type="added">
+First version.
+</change>
+</changes>
+</release>
+
+
+</changelog>
