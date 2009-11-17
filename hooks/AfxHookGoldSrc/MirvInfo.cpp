@@ -16,10 +16,3 @@ MirvInfo g_MirvInfo;
 
 // MirvInfo //////////////////////////////////////////////////////////////////
 
-MirvInfo::MirvInfo() {
-	m_Recording = false;
-}
-
-void MirvInfo::SetRecording(bool value) {
-	m_Recording = value;
-}

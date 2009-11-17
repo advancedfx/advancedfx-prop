@@ -320,6 +320,8 @@ void touring_R_RenderView_(void)
 // this is our R_RemderView hook
 // pay attention, cuz it will have heavy interaction with our filming singelton!
 {
+	g_MirvInfo.SetIn_R_Renderview(true);
+
 	refdef_t* p_r_refdef=(refdef_t*)HL_ADDR_GET(r_refdef); // pointer to r_refdef global struct
 
 	static vec3_t oldorigin;
@@ -340,6 +342,8 @@ void touring_R_RenderView_(void)
 	// But one thing is for sure, if we do steropases, then we need to restore them for ourselfs anways!
 	memcpy (p_r_refdef->vieworg,oldorigin,3*sizeof(float));
 	memcpy (p_r_refdef->viewangles,oldangles,3*sizeof(float));
+
+	g_MirvInfo.SetIn_R_Renderview(false);
 }
 
 
@@ -426,46 +430,40 @@ REGISTER_CMD_FUNC(tttt)
 
 // R_DrawParticles /////////////////////////////////////////////////////////////
 
-bool g_bInR_DrawParticles = false;
-
 typedef void (*R_DrawParticles_t) (void);
 R_DrawParticles_t detoured_R_DrawParticles = NULL;
 
 void touring_R_DrawParticles (void)
 {
-	g_bInR_DrawParticles = true;
+	g_MirvInfo.SetIn_R_DrawParticles(true);
 	detoured_R_DrawParticles();
-	g_bInR_DrawParticles = false;
+	g_MirvInfo.SetIn_R_DrawParticles(false);
 }
 
 
 // R_DrawEntitiesOnList ////////////////////////////////////////////////////////
-
-bool g_bInR_DrawEntitiesOnList = false;
 
 typedef void (*R_DrawEntitiesOnList_t) (void);
 R_DrawEntitiesOnList_t detoured_R_DrawEntitiesOnList = NULL;
 
 void touring_R_DrawEntitiesOnList (void)
 {
-	g_bInR_DrawEntitiesOnList = true;
+	g_MirvInfo.SetIn_R_DrawEntitiesOnList(true);
 	detoured_R_DrawEntitiesOnList();
-	g_bInR_DrawEntitiesOnList = false;
+	g_MirvInfo.SetIn_R_DrawEntitiesOnList(false);
 }
 
 
 // R_DrawViewModel /////////////////////////////////////////////////////////////
-
-bool g_bInR_DrawViewModel = false;
 
 typedef void (*R_DrawViewModel_t) (void);
 R_DrawViewModel_t detoured_R_DrawViewModel = NULL;
 
 void touring_R_DrawViewModel (void)
 {
-	g_bInR_DrawViewModel = true;
+	g_MirvInfo.SetIn_R_DrawViewModel(true);
 	detoured_R_DrawViewModel();
-	g_bInR_DrawViewModel = false;
+	g_MirvInfo.SetIn_R_DrawViewModel(false);
 }
 
 
@@ -1393,7 +1391,7 @@ Filming::DRAW_RESULT Filming::shouldDraw(GLenum mode)
 	bool bEntityQuadEntity = 0x02 & iMatteEntityQuads;
 
 	// in R_Particles:
-	if(g_bInR_DrawParticles) {
+	if(g_MirvInfo.In_R_DrawParticles_get()) {
 		switch(m_iMatteStage) {
 		case MS_WORLD:
 			return bParticleWorld ? DR_NORMAL : DR_HIDE;
@@ -1404,7 +1402,7 @@ Filming::DRAW_RESULT Filming::shouldDraw(GLenum mode)
 	}
 
 	// in R_DrawEntitiesOnList:
-	else if(g_bInR_DrawEntitiesOnList) {
+	else if(g_MirvInfo.In_R_DrawEntitiesOnList_get()) {
 		cl_entity_t *ce = pEngStudio->GetCurrentEntity();
 
 		if(!ce)
@@ -1455,7 +1453,7 @@ Filming::DRAW_RESULT Filming::shouldDraw(GLenum mode)
 	}
 
 	// in R_DrawViewModel
-	else if(g_bInR_DrawViewModel) {
+	else if(g_MirvInfo.In_R_DrawViewModel_get()) {
 		switch(m_iMatteStage) {
 		case MS_WORLD:
 			return bViewModelWorld ? DR_NORMAL : DR_HIDE;

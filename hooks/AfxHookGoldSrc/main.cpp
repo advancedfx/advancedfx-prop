@@ -55,7 +55,6 @@
 #include "dsound_hook.h"
 
 #include "hl_addresses.h" // address definitions
-#include "config_mdtdll.h" // used temporary to load i.e. addresses
 
 #include "newsky.h"
 #include "cmd_tools.h"
@@ -69,9 +68,11 @@
 #include "FxColor.h"
 #include "FxRgbMask.h"
 
+#include "MirvInfo.h"
 
 #include <map>
 #include <list>
+#include <string>
 
 extern Filming g_Filming;
 extern Aiming g_Aiming;
@@ -107,13 +108,11 @@ int		g_nViewports = 0;
 bool	g_bIsSucceedingViewport = false;
 
 #define MDT_MAX_PATH_BYTES 1025
-#define MDT_CFG_FILE "mdt_addresses.ini"
-#define MDT_CFG_FILE_SLEN 15
+#define MDT_CFG_FILE "AfxHookGoldSrc_init.js"
 #define DLL_NAME	"AfxHookGoldSrc.dll"
 
 HMODULE g_hMDTDLL=NULL; // handle to our self
 static char pg_MDTpath[MDT_MAX_PATH_BYTES];
-static char pg_MDTcfgfile[MDT_MAX_PATH_BYTES+MDT_CFG_FILE_SLEN];
 
 //
 //  Cvars
@@ -396,14 +395,18 @@ REGISTER_DEBUGCVAR(glbegin_stats,"0", 0)
 
 void APIENTRY my_glBegin(GLenum mode)
 {
+	g_MirvInfo.SetIn_glBegin(true);
+
 	g_glBegin_saved.restore=false;
 
 	g_glBeginStats++;
 
 	g_NewSky.DetectAndProcessSky(mode);
 
-	if (g_Filming.doWireframe(mode) == Filming::DR_HIDE)
+	if (g_Filming.doWireframe(mode) == Filming::DR_HIDE) {
+		g_MirvInfo.SetIn_glBegin(false);
 		return;
+	}
 
 	g_Filming.DoWorldFxBegin(mode); // WH fx
 
@@ -412,13 +415,16 @@ void APIENTRY my_glBegin(GLenum mode)
 	if (!g_Filming.isFilming())
 	{
 		glBegin(mode);
+		g_MirvInfo.SetIn_glBegin(false);
 		return;
 	}
 
 	Filming::DRAW_RESULT res = g_Filming.shouldDraw(mode);
 
-	if (res == Filming::DR_HIDE)
+	if (res == Filming::DR_HIDE) {
+		g_MirvInfo.SetIn_glBegin(false);
 		return;
+	}
 
 	else if (res == Filming::DR_MASK)
 	{
@@ -441,10 +447,13 @@ void APIENTRY my_glBegin(GLenum mode)
 	g_FxColor.OnGlBegin(mode);
 
 	glBegin(mode);
+
+	g_MirvInfo.SetIn_glBegin(false);
 }
 
 void APIENTRY my_glEnd(void)
 {
+	g_MirvInfo.SetIn_glEnd(true);
 	glEnd();
 
 	g_FxColor.OnGlEnd();
@@ -461,6 +470,8 @@ void APIENTRY my_glEnd(void)
 	}
 
 	g_Filming.DoWorldFxEnd();
+
+	g_MirvInfo.SetIn_glEnd(false);
 }
 
 void APIENTRY my_glClear(GLbitfield mask)
@@ -475,19 +486,7 @@ void APIENTRY my_glClear(GLbitfield mask)
 	glClear(mask);
 }
 
-void retriveMDTConfigFile(char *frompath,char *tocfg)
-// Warning: Doesn't check buffers.
-{
-	char* spos=strrchr(frompath,'\\');
-	tocfg[0]=NULL;
 
-	if (spos!=NULL){
-		memcpy(tocfg,frompath,spos-frompath+1);
-		tocfg+=spos-frompath+1;
-	}
-
-	strcpy(tocfg,MDT_CFG_FILE);
-}
 
 
 SCREENINFO screeninfo;
@@ -624,38 +623,49 @@ void APIENTRY my_glBlendFunc (GLenum sfactor, GLenum dfactor)
 // Hooking
 //
 
-bool Mdt_LoadAddressConfig(HMODULE hHwDll)
+bool Mdt_LoadConfig(HMODULE hHwDll)
 {
-	cConfig_mdtdll* pg_Config_mdtdll;
-	
-	// the very first thing we have to do is to set the addresses from the config, cuz really much stuff relays on that:
-	g_hMDTDLL = GetModuleHandle(DLL_NAME);
-	pg_MDTpath[0]=NULL;
-	if (g_hMDTDLL) GetModuleFileName(g_hMDTDLL,pg_MDTpath,MDT_MAX_PATH_BYTES-1);
-
-	retriveMDTConfigFile(pg_MDTpath,pg_MDTcfgfile);
-	// not allowed before addresses are validied pEngfuncs->Con_Printf("Path: %s | %s \n",pg_MDTpath,pg_MDTcfgfile);
-
 	bool bCfgres = false;
 
-	if (g_hMDTDLL)
+	g_hMDTDLL = GetModuleHandle(DLL_NAME);
+	pg_MDTpath[0]=NULL;
+	if (g_hMDTDLL) {
+		HL_ADDR_SET(hw_dll, (HlAddress_t)hHwDll);
+
+		GetModuleFileName(g_hMDTDLL, pg_MDTpath,MDT_MAX_PATH_BYTES-1);
+
+		std::string strMdtCfg(pg_MDTpath);
+		size_t fp = strMdtCfg.find_last_of('\\');
+		if(std::string::npos != fp) {
+			strMdtCfg.resize(fp+1);
+
+			fp = 0;
+			while(std::string::npos != fp) {
+				fp = strMdtCfg.find_first_of('\\', fp);
+				if(std::string::npos != fp) {
+					strMdtCfg.insert(fp, "\\");
+					fp += 2;
+				}
+			}
+		}
+		strMdtCfg = "load('" + strMdtCfg + MDT_CFG_FILE + "');";
+
+		MessageBox(0,strMdtCfg.c_str(),"Info", MB_OK|MB_ICONINFORMATION);
+
+		bCfgres = JsExecute(strMdtCfg.c_str());
+	}
+
+	if (bCfgres)
 	{
-		pg_Config_mdtdll = new cConfig_mdtdll(pg_MDTcfgfile);
-		bCfgres = pg_Config_mdtdll->LoadAndApplyAddresses( hHwDll );
-
-		if (!bCfgres) MessageBox(0,"mdt_addresses.ini syntax or semantics were invalid.\nTrying to continue ...","MDT_WARNING",MB_OK|MB_ICONEXCLAMATION);
-
 		// update unregistered local copies manually:
 		pEngfuncs		= (cl_enginefuncs_s*)HL_ADDR_GET(p_cl_enginefuncs_s);
 		pEngStudio	= (engine_studio_api_s*)HL_ADDR_GET(p_engine_studio_api_s);
 		ppmove			= (playermove_s*)HL_ADDR_GET(p_playermove_s);
 
 
-	} else MessageBox(0,"Could not locate mdt_addresses.ini.","MDT_ERROR",MB_OK|MB_ICONHAND);
+	} else MessageBox(0,"Error upon loading \"" MDT_CFG_FILE "\".","MDT_ERROR",MB_OK|MB_ICONHAND);
 
 	
-	delete pg_Config_mdtdll;
-
 	return bCfgres;
 }
 
@@ -792,7 +802,7 @@ HMODULE WINAPI new_LoadLibraryA( LPCSTR lpLibFileName )
 			if( hRet )
 			{
 				// load addresses form config:
-				Mdt_LoadAddressConfig( hRet );
+				Mdt_LoadConfig( hRet );
 
 				bool bIcepOk = true;
 
@@ -840,6 +850,8 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 #ifdef MDT_DEBUG
 			MessageBox(0,"DllMain - DLL_PROCESS_ATTACH","MDT_DEBUG",MB_OK|MB_ICONINFORMATION);
 #endif
+			JsStartUp();
+
 			// Intercept GetProcAddress:
 			//pGetProcAddress = (FARPROC(WINAPI *)(HMODULE, LPCSTR)) InterceptDllCall(GetModuleHandle(NULL), "Kernel32.dll", "GetProcAddress", (DWORD) &newGetProcAddress);
 
@@ -847,13 +859,12 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 			p_LoadLibraryA = (HMODULE(WINAPI *)( LPCSTR )) InterceptDllCall(GetModuleHandle(NULL), "Kernel32.dll", "LoadLibraryA", (DWORD) &new_LoadLibraryA);
 			if( !p_LoadLibraryA ) MessageBox(0,"Base interception failed","MDT_ERROR",MB_OK|MB_ICONHAND);
 
-			JsStartUp();
-
 			break;
 		}
 		case DLL_PROCESS_DETACH:
 		{
 			g_Script_CanConsolePrint = false;
+
 			JsShutDown();
 			break;
 		}

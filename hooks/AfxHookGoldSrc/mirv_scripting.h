@@ -14,6 +14,4 @@ bool JsStartUp();
 void JsShutDown();
 bool JsIsRunning();
 
-
-#include <windows.h>
-#include <gl\gl.h>
+bool JsExecute(char const * script);

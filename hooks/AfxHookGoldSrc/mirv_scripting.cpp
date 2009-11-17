@@ -14,6 +14,11 @@
 #include "FxRgbMask.h"
 #include "MirvInfo.h"
 
+#include "hl_addresses.h"
+
+#include <windows.h>
+#include <gl\gl.h>
+
 // BEGIN HLSDK includes
 #pragma push_macro("HSPRITE")
 #define HSPRITE MDTHACKED_HSPRITE
@@ -29,6 +34,7 @@
 
 #include <malloc.h>
 #include <string.h>
+
 
 #define XP_WIN
 #include <jsapi.h>
@@ -215,22 +221,84 @@ static JSClass FxRgbMask_class = {
 // Info /////////////////////////////////////////////////////////////////////
 
 enum Info_tinyid {
-	Info_RECORDING
+	TID_Info_In_glBegin,
+	TID_Info_In_glEnd,
+	TID_Info_In_R_DrawEntitiesOnList,
+	TID_Info_In_R_DrawParticles,
+	TID_Info_In_R_DrawViewModel,
+	TID_Info_In_R_Renderview,
+	TID_Info_Recording
 };
+
+JSBool Info_In_glBegin_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	*vp = BOOLEAN_TO_JSVAL(g_MirvInfo.In_glBegin_get());
+	return JS_TRUE;
+}
+
+JSBool Info_In_glEnd_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	*vp = BOOLEAN_TO_JSVAL(g_MirvInfo.In_glEnd_get());
+	return JS_TRUE;
+}
+
+JSBool Info_In_R_DrawEntitiesOnList_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	*vp = BOOLEAN_TO_JSVAL(g_MirvInfo.In_R_DrawEntitiesOnList_get());
+	return JS_TRUE;
+}
+
+JSBool Info_In_R_DrawParticles_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	*vp = BOOLEAN_TO_JSVAL(g_MirvInfo.In_R_DrawParticles_get());
+	return JS_TRUE;
+}
+
+JSBool Info_In_R_Renderview_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	*vp = BOOLEAN_TO_JSVAL(g_MirvInfo.In_R_Renderview_get());
+	return JS_TRUE;
+}
+
+JSBool Info_In_R_DrawViewModel_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	*vp = BOOLEAN_TO_JSVAL(g_MirvInfo.In_R_DrawViewModel_get());
+	return JS_TRUE;
+}
 
 JSBool Info_Recording_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
 	*vp = BOOLEAN_TO_JSVAL(g_MirvInfo.Recording_get());
 	return JS_TRUE;
 }
 
-
 static JSPropertySpec Info_props[] = {
-	{"recording"  , Info_RECORDING  , JSPROP_READONLY, Info_Recording_get, NULL},
-    {NULL,0,0,NULL,NULL}
+  {"in_glBegin"             , TID_Info_In_glBegin             , JSPROP_READONLY, Info_Recording_get, NULL},
+  {"in_glEnd"               , TID_Info_In_glEnd               , JSPROP_READONLY, Info_Recording_get, NULL},
+  {"in_R_DrawEntitiesOnList", TID_Info_In_R_DrawEntitiesOnList, JSPROP_READONLY, Info_Recording_get, NULL},
+  {"in_R_DrawParticles"     , TID_Info_In_R_DrawParticles     , JSPROP_READONLY, Info_Recording_get, NULL},
+  {"in_R_Renderview"        , TID_Info_In_R_DrawViewModel     , JSPROP_READONLY, Info_Recording_get, NULL},
+  {"in_R_DrawViewModel"     , TID_Info_In_R_Renderview        , JSPROP_READONLY, Info_Recording_get, NULL},
+  {"recording"              , TID_Info_Recording              , JSPROP_READONLY, Info_Recording_get, NULL},
+  {NULL,0,0,NULL,NULL}
 };
 
 static JSClass Info_class = {
     "Info", 0,
+    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
+    JSCLASS_NO_OPTIONAL_MEMBERS
+};
+
+
+// Events //////////////////////////////////////////////////////////////////////
+
+enum Events_tinyid {
+	TID_Events_On_glBegin,
+	TID_Events_On_glEnd,
+};
+
+static JSPropertySpec Events_props[] = {
+  {"on_GlBegin", TID_Events_On_glBegin, JSPROP_ENUMERATE, Info_Recording_get, NULL},
+  {"on_glEnd"  , TID_Events_On_glEnd  , JSPROP_ENUMERATE, Info_Recording_get, NULL},
+  {NULL,0,0,NULL,NULL}
+};
+
+static JSClass Events_class = {
+    "Events", 0,
     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
     JSCLASS_NO_OPTIONAL_MEMBERS
@@ -245,6 +313,46 @@ static JSClass Fx_class = {
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
+
+// Addr ////////////////////////////////////////////////////////////////////////
+
+
+static JSBool
+Addr_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+    JSString * str = JS_ValueToString(cx, id);
+
+	if(str) {
+		HlAddress_t * padr = HlAddr_GetByName(JS_GetStringBytes(str));
+		if(padr) *vp = INT_TO_JSVAL((*padr));
+	}
+
+    return JS_TRUE;
+}
+
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+Addr_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+    JSString * str = JS_ValueToString(cx, id);
+	if(str) {
+		int32 i32;
+		HlAddress_t * padr = HlAddr_GetByName(JS_GetStringBytes(str));
+
+		if(padr && JS_TRUE == JS_ValueToInt32(cx, *vp, &i32))
+			*padr = (HlAddress_t)i32;
+	}
+
+    return JS_TRUE;
+}
+
+static JSClass Addr_class = {
+    "Addr", 0,
+    JS_PropertyStub, JS_PropertyStub, Addr_getProperty, Addr_setProperty,
+    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
+    JSCLASS_NO_OPTIONAL_MEMBERS
+};
+
 
 
 // Global //////////////////////////////////////////////////////////////////////
@@ -325,6 +433,14 @@ static JSFunctionSpec Global_functions[] = {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+
+bool JsExecute(char const * script) {
+	if(!g_JsRunning) return false;
+
+	jsval rval;
+	return JS_TRUE == JS_EvaluateScript(g_JsCx, g_JsGlobal, script, strlen(script), NULL, 0, &rval);
+}
+
 bool JsIsRunning() {
 	return g_JsRunning;
 }
@@ -357,6 +473,9 @@ bool JsStartUp() {
 		&& JS_InitStandardClasses(g_JsCx, g_JsGlobal)
 		&& JS_DefineFunctions(g_JsCx, g_JsGlobal, Global_functions)
 
+		// .addr:
+		&& NULL != (jo = JS_DefineObject(g_JsCx, g_JsGlobal, "addr", &Addr_class, NULL, JSPROP_READONLY))
+
 		// .info:
 		&& NULL != (jo = JS_DefineObject(g_JsCx, g_JsGlobal, "info", &Info_class, NULL, JSPROP_READONLY))
 		&& JS_DefineProperties(g_JsCx, jo, Info_props)
@@ -381,7 +500,6 @@ bool JsStartUp() {
 
 	return bOk;
 }
-
 
 // Client console access ///////////////////////////////////////////////////////
 
