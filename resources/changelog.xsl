@@ -11,11 +11,18 @@
 <title>Changelog</title>
 <style type="text/css">
 body {
-	background:#E0E0E0;
+	background:#e0e0e0;
+}
+h1 {
+	background-color:#e0ffc0;
+	border-color:#808080;
+	border-style:solid;
+	border-width:1px;
+	padding:4pt;
 }
 .entry {
 	display:block;
-	background:#FFFFFF;
+	background:#ffffff;
 	border-color:#808080;
 	border-style:solid;
 	border-width:1px;
@@ -23,7 +30,7 @@ body {
 	margin-bottom:16pt;
 }
 .title {
-	background-color:#E0E0FF;
+	background-color:#e0ffc0;
 	display:block;
 	font-family:monospace;
 	font-weight:bold;
@@ -35,23 +42,24 @@ body {
 	display:inline;
 }
 .notelist {
-	background-color:#F8FFF0;
 	display:block;
 	font-family:monospace;
 }
 .note {
 	display:block;
-	margin-top:8pt;
 	margin-bottom:8pt;
+	margin-left:4pt;
+	margin-top:8pt;
+	margin-right:4pt;
 }
 .note_icon {
 	display:inline;
 	font-weight:bold;
 }
 .comments {
-	background-color:#FFFFF0;
 	display:block;
-	font-style:italic;
+	margin-left:4pt;
+	margin-right:4pt;
 }
 </style>
 </head>
@@ -66,9 +74,7 @@ body {
 	<div class="entry">
 		<div class="title">
 			<xsl:value-of select="name" />&nbsp;<xsl:value-of select="version" />
-			<xsl:if test="time">
-				&nbsp;(<xsl:value-of select="time" />)
-			</xsl:if>
+			<xsl:if test="time">&nbsp;(<xsl:value-of select="time" />)</xsl:if>
 		</div>
 		<xsl:apply-templates select="changes" />
 		<xsl:apply-templates select="comments" />
@@ -86,31 +92,31 @@ body {
 		<xsl:when test="@type = 'added'">
 			<div class="note">
 				<span class="note_icon">*</span>
-				<xsl:value-of select="." />
+				<xsl:apply-templates select="node()" />
 			</div>
 		</xsl:when>
 		<xsl:when test="@type = 'fixed'">
 			<div class="note">
 				<span class="note_icon">+</span>
-				<xsl:value-of select="." />
+				<xsl:apply-templates select="node()" />
 			</div>
 		</xsl:when>
 		<xsl:when test="@type = 'removed'">
 			<div class="note">
 				<span class="note_icon">-</span>
-				<xsl:value-of select="." />
+				<xsl:apply-templates select="node()" />
 			</div>
 		</xsl:when>
 		<xsl:when test="@type = 'updated'">
 			<div class="note">
 				<span class="note_icon">U</span>
-				<xsl:value-of select="." />
+				<xsl:apply-templates select="node()" />
 			</div>
 		</xsl:when>
 		<xsl:otherwise>
 			<div class="note">
 				<span class="note_icon">?</span>
-				<xsl:value-of select="." />
+				<xsl:apply-templates select="node()" />
 			</div>
 		</xsl:otherwise>
 	</xsl:choose>

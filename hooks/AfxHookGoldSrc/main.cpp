@@ -1,12 +1,20 @@
+// #include "stdafx.h"
+
 /*
 	Mirv Demo Tool
 
 */
 
-#include "mdt_debug.h"
-
+// pull in additional libraries:
 #pragma comment(lib,"OpenGL32.lib")
 #pragma comment(lib,"GLu32.lib")
+#pragma comment(lib,"js32.lib")
+
+// additonal dependencies:
+#pragma comment(linker, "\"/manifestdependency:type='Win32' name='Mozilla.SpiderMonkey.JS' version='1.7.0.0' processorArchitecture='X86' publicKeyToken='0000000000000000'\"")
+
+
+#include "mdt_debug.h"
 
 #include <windows.h>
 #include <winbase.h>
@@ -53,6 +61,14 @@
 #include "cmd_tools.h"
 
 #include "basecomClient.h"
+
+#include "mirv_glext.h"
+
+#include "mirv_scripting.h"
+
+#include "FxColor.h"
+#include "FxRgbMask.h"
+
 
 #include <map>
 #include <list>
@@ -374,9 +390,15 @@ struct glBegin_saved_s {
 	GLboolean b_ColorWriteMask[4];
 } g_glBegin_saved;
 
+unsigned int g_glBeginStats = 0;
+
+REGISTER_DEBUGCVAR(glbegin_stats,"0", 0)
+
 void APIENTRY my_glBegin(GLenum mode)
 {
 	g_glBegin_saved.restore=false;
+
+	g_glBeginStats++;
 
 	g_NewSky.DetectAndProcessSky(mode);
 
@@ -415,12 +437,19 @@ void APIENTRY my_glBegin(GLenum mode)
 	else if (!g_Filming.bWantsHudCapture)
 		glColorMask(TRUE, TRUE, TRUE, TRUE); // BlendFunc for additive sprites needs special controll, don't override it
 
+	g_FxRgbMask.OnGlBegin(mode);
+	g_FxColor.OnGlBegin(mode);
+
 	glBegin(mode);
 }
 
 void APIENTRY my_glEnd(void)
 {
 	glEnd();
+
+	g_FxColor.OnGlEnd();
+	g_FxRgbMask.OnGlEnd();
+
 
 	if (g_glBegin_saved.restore)
 	{
@@ -475,6 +504,16 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 		MessageBox(0,"First my_glViewport","MDT_DEBUG",MB_OK|MB_ICONINFORMATION);
 #endif
 
+		g_Script_CanConsolePrint = true;
+
+		//
+		// Install OpenGL Extensions:
+
+		if(!Install_All_Gl_Extensions())
+		{
+			pEngfuncs->Con_Printf("MDT WARNING: Could not install all OpenGL extensions. Some features might not work.\n");
+		}
+
 		// Register the commands
 		std::list<Void_func_t>::iterator i = GetCmdList().begin();
 		while (i != GetCmdList().end())
@@ -513,6 +552,11 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 	if (g_nViewports == 0)
 	{
 		//g_Filming.setScreenSize(width, height);
+
+		if(glbegin_stats->value)
+			pEngfuncs->Con_Printf("glBegin calls: %u\n", g_glBeginStats);
+
+		g_glBeginStats = 0;
 
 		// Make sure we can see the local player if dem_forcehltv is on
 		// dem_forcehtlv is not a cvar, so don't bother checking
@@ -803,10 +847,14 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 			p_LoadLibraryA = (HMODULE(WINAPI *)( LPCSTR )) InterceptDllCall(GetModuleHandle(NULL), "Kernel32.dll", "LoadLibraryA", (DWORD) &new_LoadLibraryA);
 			if( !p_LoadLibraryA ) MessageBox(0,"Base interception failed","MDT_ERROR",MB_OK|MB_ICONHAND);
 
+			JsStartUp();
+
 			break;
 		}
 		case DLL_PROCESS_DETACH:
 		{
+			g_Script_CanConsolePrint = false;
+			JsShutDown();
 			break;
 		}
 		case DLL_THREAD_ATTACH:

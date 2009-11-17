@@ -43,7 +43,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../;c:\Libraries/hlsdk/multiplayer/cl_dll;c:\Libraries/hlsdk/multiplayer/common;c:\Libraries/hlsdk/multiplayer/engine;c:\Libraries/hlsdk/multiplayer/pm_shared;c:\Libraries/hlsdk/multiplayer/dlls;$(NOINHERIT)"
+				AdditionalIncludeDirectories="../../;c:\Libraries/hlsdk/multiplayer/cl_dll;c:\Libraries/hlsdk/multiplayer/common;c:\Libraries/hlsdk/multiplayer/engine;c:\Libraries/hlsdk/multiplayer/pm_shared;c:\Libraries/hlsdk/multiplayer/dlls;C:\Libraries\js\src;$(NOINHERIT)"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;_BIND_TO_CURRENT_CRT_VERSION=1"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -66,7 +66,7 @@
 				Name="VCLinkerTool"
 				OutputFile="$(OutDir)/AfxHookGoldSrc.dll"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="C:\Libraries/ui/Lib"
+				AdditionalLibraryDirectories="C:\Libraries\js\src\Release"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(OutDir)/AfxHookGoldSrc.pdb"
 				SubSystem="2"
@@ -124,7 +124,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="../../;c:\Libraries/hlsdk/multiplayer/cl_dll;c:\Libraries/hlsdk/multiplayer/common;c:\Libraries/hlsdk/multiplayer/engine;c:\Libraries/hlsdk/multiplayer/pm_shared;c:\Libraries/hlsdk/multiplayer/dlls;$(NOINHERIT)"
+				AdditionalIncludeDirectories="../../;c:\Libraries/hlsdk/multiplayer/cl_dll;c:\Libraries/hlsdk/multiplayer/common;c:\Libraries/hlsdk/multiplayer/engine;c:\Libraries/hlsdk/multiplayer/pm_shared;c:\Libraries/hlsdk/multiplayer/dlls;C:\Libraries\js\src;$(NOINHERIT)"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;_BIND_TO_CURRENT_CRT_VERSION=1"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -145,7 +145,7 @@
 				Name="VCLinkerTool"
 				OutputFile="$(OutDir)/AfxHookGoldSrc.dll"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories=""
+				AdditionalLibraryDirectories="C:\Libraries\js\src\Release"
 				IgnoreAllDefaultLibraries="false"
 				IgnoreDefaultLibraryNames=""
 				GenerateDebugInformation="true"
@@ -351,6 +351,22 @@
 					>
 				</File>
 				<File
+					RelativePath=".\FxColor.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FxColor.h"
+					>
+				</File>
+				<File
+					RelativePath=".\FxRgbMask.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FxRgbMask.h"
+					>
+				</File>
+				<File
 					RelativePath=".\hl_addresses.cpp"
 					>
 				</File>
@@ -372,6 +388,30 @@
 				</File>
 				<File
 					RelativePath=".\mdt_media.h"
+					>
+				</File>
+				<File
+					RelativePath=".\mirv_glext.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\mirv_glext.h"
+					>
+				</File>
+				<File
+					RelativePath=".\mirv_scripting.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\mirv_scripting.h"
+					>
+				</File>
+				<File
+					RelativePath=".\MirvInfo.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\MirvInfo.h"
 					>
 				</File>
 				<File

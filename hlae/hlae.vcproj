@@ -220,10 +220,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ReadMe.txt"
-				>
-			</File>
-			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -509,6 +505,18 @@
 						>
 					</File>
 				</Filter>
+			</Filter>
+			<Filter
+				Name="other"
+				>
+				<File
+					RelativePath=".\other\hlaelogo.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\other\hlaelogo.h"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<Filter

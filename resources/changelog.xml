@@ -5,14 +5,22 @@
 
 
 <release>
-<name>HLAE</name>
-<version>x.x.x.x</version>
-<time>XXXX-XX-XXTXX:XXZ</time>
+<name>HLAE Rouge</name>
+<version>2.2.7.2</version>
+<time>2009-11-17T00:15Z</time>
 <changes>
 <change type="added">
 Added mirv_camexport_timeinfo.
 </change>
+<change type="added">
+Added afx command for script engine access and some test objects.
+</change>
 </changes>
+<comments>
+Started as HLAE Rouge 2.2.7.1 2009-11-16T18:15Z.<br />
+Uses parts of the SpiderMonkey script engine.
+The SpiderMonkey source code can be obtained from http://developer.mozilla.org/ .
+</comments>
 </release>
 
 

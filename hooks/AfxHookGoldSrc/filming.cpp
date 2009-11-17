@@ -39,6 +39,8 @@
 
 #include "RawOutput.h"
 
+#include "MirvInfo.h"
+
 using namespace hlae::sampler;
 
 extern cl_enginefuncs_s *pEngfuncs;
@@ -952,10 +954,14 @@ void Filming::Start()
 			+overlap
 		);
 	}
+
+	g_MirvInfo.SetRecording(true);
 }
 
 void Filming::Stop()
 {
+	g_MirvInfo.SetRecording(false);
+
 	if (_pSupportRender)
 		_pSupportRender->hlaeOnFilmingStop();
 
