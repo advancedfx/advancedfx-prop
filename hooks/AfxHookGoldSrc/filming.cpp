@@ -41,6 +41,8 @@
 
 #include "MirvInfo.h"
 
+#include "Mirv_Scripting.h"
+
 using namespace hlae::sampler;
 
 extern cl_enginefuncs_s *pEngfuncs;
@@ -804,6 +806,8 @@ void Filming::setScreenSize(GLint w, GLint h)
 
 void Filming::Start()
 {
+	ScriptEvent_OnRecordStarting();
+
 	m_fps = max(movie_fps->value,1.0f);
 	m_time = 0;
 
@@ -952,14 +956,10 @@ void Filming::Start()
 			+overlap
 		);
 	}
-
-	g_MirvInfo.SetRecording(true);
 }
 
 void Filming::Stop()
 {
-	g_MirvInfo.SetRecording(false);
-
 	if (_pSupportRender)
 		_pSupportRender->hlaeOnFilmingStop();
 
@@ -999,6 +999,8 @@ void Filming::Stop()
 
 	// in case our code is broken [again] we better also reset the mask here: : )
 	glColorMask(TRUE, TRUE, TRUE, TRUE);
+
+	ScriptEvent_OnRecordEnded();
 }
 
 bool Filming::OnPrintFrame(unsigned long id, void *prgbdata, int iWidht, int iHeight)

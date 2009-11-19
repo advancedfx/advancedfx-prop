@@ -32,13 +32,20 @@
 
 #include "cmdregister.h"
 
-#include <malloc.h>
-#include <string.h>
+//#include <malloc.h>
+//#include <string.h>
+
+#include <string>
 
 
 #define XP_WIN
 #include <jsapi.h>
 #include <jsstr.h>
+
+#define JSMIRVPROP JSPROP_ENUMERATE|JSPROP_PERMANENT
+#define JSMIRVSHAREDPROP JSMIRVPROP|JSPROP_SHARED
+
+std::string g_ScriptFolder("");
 
 JSRuntime * g_JsRt = NULL;
 JSContext * g_JsCx = NULL;
@@ -69,11 +76,11 @@ enum FxColor_tinyid {
 };
 
 static JSPropertySpec FxColor_props[] = {
-    {"enabled", FxColor_ENABLED, JSPROP_ENUMERATE, NULL, NULL},
-    {"red"    , FxColor_RED    , JSPROP_ENUMERATE, NULL, NULL},
-    {"green"  , FxColor_GREEN  , JSPROP_ENUMERATE, NULL, NULL},
-    {"blue"   , FxColor_BLUE   , JSPROP_ENUMERATE, NULL, NULL},
-    {"alpha"  , FxColor_ALPHA  , JSPROP_ENUMERATE, NULL, NULL},
+    {"enabled", FxColor_ENABLED, JSMIRVSHAREDPROP, NULL, NULL},
+    {"red"    , FxColor_RED    , JSMIRVSHAREDPROP, NULL, NULL},
+    {"green"  , FxColor_GREEN  , JSMIRVSHAREDPROP, NULL, NULL},
+    {"blue"   , FxColor_BLUE   , JSMIRVSHAREDPROP, NULL, NULL},
+    {"alpha"  , FxColor_ALPHA  , JSMIRVSHAREDPROP, NULL, NULL},
     {NULL,0,0,NULL,NULL}
 };
 
@@ -144,101 +151,90 @@ static JSClass FxColor_class = {
 // FxRgbMask /////////////////////////////////////////////////////////////////////
 
 enum FxRgbMask_tinyid {
-	FxRgbMask_ENABLED, FxRgbMask_OPRED, FxRgbMask_OPGREEN, FxRgbMask_OPBLUE,
-	FxRgbMask_SUPPORTED
+	TID_FxRgbMask_Enabled,
+	TID_FxRgbMask_OpBlue,
+	TID_FxRgbMask_OpGreen,
+	TID_FxRgbMask_OpRed,
+	TID_FxRgbMask_Supported
 };
 
-static JSPropertySpec FxRgbMask_props[] = {
-	{"enabled"  , FxRgbMask_ENABLED  , JSPROP_ENUMERATE, NULL, NULL},
-    {"opRed"    , FxRgbMask_OPRED    , JSPROP_ENUMERATE, NULL, NULL},
-    {"opGreen"  , FxRgbMask_OPGREEN  , JSPROP_ENUMERATE, NULL, NULL},
-    {"opBlue"   , FxRgbMask_OPBLUE   , JSPROP_ENUMERATE, NULL, NULL},
-	{"supported", FxRgbMask_SUPPORTED, JSPROP_READONLY , NULL, NULL},
-    {NULL,0,0,NULL,NULL}
-};
 
-static JSBool
-FxRgbMask_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
-{
-    if (!JSVAL_IS_INT(id)) return JS_TRUE;
-
-	switch (JSVAL_TO_INT(id)) {
-	case FxRgbMask_ENABLED:
-		*vp = BOOLEAN_TO_JSVAL(g_FxRgbMask.Enabled_get());
-		break;
-	case FxRgbMask_OPRED:
-		*vp = INT_TO_JSVAL(g_FxRgbMask.OpRed_get());
-		break;
-	case FxRgbMask_OPGREEN:
-		*vp = INT_TO_JSVAL(g_FxRgbMask.OpGreen_get());
-		break;
-	case FxRgbMask_OPBLUE:
-		*vp = INT_TO_JSVAL(g_FxRgbMask.OpBlue_get());
-		break;
-	case FxRgbMask_SUPPORTED:
-		*vp = BOOLEAN_TO_JSVAL(g_FxRgbMask.Supported_get());
-		break;
-	}
-
-    return JS_TRUE;
-}
-
-
-JS_STATIC_DLL_CALLBACK(JSBool)
-FxRgbMask_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
-{
-    if (!JSVAL_IS_INT(id)) return JS_TRUE;
-
-	int32 i32;
-	JSBool jB;
-
-	switch (JSVAL_TO_INT(id)) {
-	case FxRgbMask_ENABLED:
-		if(JS_ValueToBoolean(cx, *vp, &jB)) g_FxRgbMask.Enabled_set(jB);
-		break;
-	case FxRgbMask_OPRED:
-		if(JS_ValueToInt32(cx, *vp, &i32)) g_FxRgbMask.OpRed_set(i32);
-		break;
-	case FxRgbMask_OPGREEN:
-		if(JS_ValueToInt32(cx, *vp, &i32)) g_FxRgbMask.OpGreen_set(i32);
-		break;
-	case FxRgbMask_OPBLUE:
-		if(JS_ValueToInt32(cx, *vp, &i32)) g_FxRgbMask.OpBlue_set(i32);
-		break;
-	}
-
+JSBool FxRgbMask_Enabled_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	*vp = BOOLEAN_TO_JSVAL(g_FxRgbMask.Enabled_get());
 	return JS_TRUE;
 }
 
+JSBool FxRgbMask_Enabled_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	JSBool jB;
+	if(JS_ValueToBoolean(cx, *vp, &jB)) g_FxRgbMask.Enabled_set(jB);
+	return JS_TRUE;
+}
+
+JSBool FxRgbMask_OpGreen_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	*vp = INT_TO_JSVAL(g_FxRgbMask.OpGreen_get());
+	return JS_TRUE;
+}
+
+JSBool FxRgbMask_OpGreen_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	int32 i32;
+	if(JS_TRUE == JS_ValueToInt32(cx, *vp, &i32)) g_FxRgbMask.OpGreen_set(i32);
+	return JS_TRUE;
+}
+
+JSBool FxRgbMask_OpBlue_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	*vp = INT_TO_JSVAL(g_FxRgbMask.OpBlue_get());
+	return JS_TRUE;
+}
+
+JSBool FxRgbMask_OpBlue_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	int32 i32;
+	if(JS_TRUE == JS_ValueToInt32(cx, *vp, &i32)) g_FxRgbMask.OpBlue_set(i32);
+	return JS_TRUE;
+}
+
+JSBool FxRgbMask_OpRed_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	*vp = INT_TO_JSVAL(g_FxRgbMask.OpRed_get());
+	return JS_TRUE;
+}
+
+JSBool FxRgbMask_OpRed_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	int32 i32;
+	if(JS_TRUE == JS_ValueToInt32(cx, *vp, &i32)) g_FxRgbMask.OpRed_set(i32);
+	return JS_TRUE;
+}
+
+JSBool FxRgbMask_Supported_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	*vp = BOOLEAN_TO_JSVAL(g_FxRgbMask.Supported_get());
+	return JS_TRUE;
+}
+
+
+static JSPropertySpec FxRgbMask_props[] = {
+  {"enabled"  , TID_FxRgbMask_Enabled  , JSMIRVSHAREDPROP, FxRgbMask_Enabled_get, FxRgbMask_Enabled_set},
+  {"opBlue"     , TID_FxRgbMask_OpBlue     , JSMIRVSHAREDPROP, FxRgbMask_OpBlue_get, FxRgbMask_OpBlue_set},
+  {"opGreen"    , TID_FxRgbMask_OpGreen    , JSMIRVSHAREDPROP, FxRgbMask_OpGreen_get, FxRgbMask_OpGreen_set},
+  {"opRed"      , TID_FxRgbMask_OpRed      , JSMIRVSHAREDPROP, FxRgbMask_OpRed_get, FxRgbMask_OpRed_set},
+  {"supported", TID_FxRgbMask_Supported, JSMIRVSHAREDPROP|JSPROP_READONLY, FxRgbMask_Supported_get, NULL              },
+  {NULL,0,0,NULL,NULL}
+};
+
 static JSClass FxRgbMask_class = {
     "FxRgbMask", 0,
-    JS_PropertyStub, JS_PropertyStub, FxRgbMask_getProperty, FxRgbMask_setProperty,
+    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 
+
 // Info /////////////////////////////////////////////////////////////////////
 
 enum Info_tinyid {
-	TID_Info_In_glBegin,
-	TID_Info_In_glEnd,
 	TID_Info_In_R_DrawEntitiesOnList,
 	TID_Info_In_R_DrawParticles,
 	TID_Info_In_R_DrawViewModel,
-	TID_Info_In_R_Renderview,
-	TID_Info_Recording
+	TID_Info_In_R_Renderview
 };
-
-JSBool Info_In_glBegin_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
-	*vp = BOOLEAN_TO_JSVAL(g_MirvInfo.In_glBegin_get());
-	return JS_TRUE;
-}
-
-JSBool Info_In_glEnd_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
-	*vp = BOOLEAN_TO_JSVAL(g_MirvInfo.In_glEnd_get());
-	return JS_TRUE;
-}
 
 JSBool Info_In_R_DrawEntitiesOnList_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
 	*vp = BOOLEAN_TO_JSVAL(g_MirvInfo.In_R_DrawEntitiesOnList_get());
@@ -260,19 +256,11 @@ JSBool Info_In_R_DrawViewModel_get(JSContext *cx, JSObject *obj, jsval idval, js
 	return JS_TRUE;
 }
 
-JSBool Info_Recording_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
-	*vp = BOOLEAN_TO_JSVAL(g_MirvInfo.Recording_get());
-	return JS_TRUE;
-}
-
 static JSPropertySpec Info_props[] = {
-  {"in_glBegin"             , TID_Info_In_glBegin             , JSPROP_READONLY, Info_Recording_get, NULL},
-  {"in_glEnd"               , TID_Info_In_glEnd               , JSPROP_READONLY, Info_Recording_get, NULL},
-  {"in_R_DrawEntitiesOnList", TID_Info_In_R_DrawEntitiesOnList, JSPROP_READONLY, Info_Recording_get, NULL},
-  {"in_R_DrawParticles"     , TID_Info_In_R_DrawParticles     , JSPROP_READONLY, Info_Recording_get, NULL},
-  {"in_R_Renderview"        , TID_Info_In_R_DrawViewModel     , JSPROP_READONLY, Info_Recording_get, NULL},
-  {"in_R_DrawViewModel"     , TID_Info_In_R_Renderview        , JSPROP_READONLY, Info_Recording_get, NULL},
-  {"recording"              , TID_Info_Recording              , JSPROP_READONLY, Info_Recording_get, NULL},
+  {"in_R_DrawEntitiesOnList", TID_Info_In_R_DrawEntitiesOnList, JSMIRVSHAREDPROP|JSPROP_READONLY, Info_In_R_DrawEntitiesOnList_get, NULL},
+  {"in_R_DrawParticles"     , TID_Info_In_R_DrawParticles     , JSMIRVSHAREDPROP|JSPROP_READONLY, Info_In_R_DrawParticles_get     , NULL},
+  {"in_R_Renderview"        , TID_Info_In_R_DrawViewModel     , JSMIRVSHAREDPROP|JSPROP_READONLY, Info_In_R_Renderview_get        , NULL},
+  {"in_R_DrawViewModel"     , TID_Info_In_R_Renderview        , JSMIRVSHAREDPROP|JSPROP_READONLY, Info_In_R_DrawViewModel_get     , NULL},
   {NULL,0,0,NULL,NULL}
 };
 
@@ -286,14 +274,63 @@ static JSClass Info_class = {
 
 // Events //////////////////////////////////////////////////////////////////////
 
+JSObject  * g_JsEvents = NULL;
+
+struct ScriptEvents_s {
+	std::string On_glBegin;
+	std::string On_glEnd;
+	std::string On_RecordStarting;
+	std::string On_RecordEnded;
+} g_ScriptEvents;
+
 enum Events_tinyid {
 	TID_Events_On_glBegin,
 	TID_Events_On_glEnd,
+	TID_Events_On_RecordStarting,
+	TID_Events_On_RecordEnded
 };
 
+void SetEventFnString(std::string *pstr, JSContext *cx, jsval *vp) {
+	JSString *jstr;
+	if(
+		JSTYPE_FUNCTION == JS_TypeOfValue(cx, *vp)
+		&& NULL != (jstr = JS_GetFunctionId(JS_ValueToFunction(cx, *vp)))
+	)
+		pstr->assign(JS_GetStringBytes(jstr));
+	else
+		pstr->assign("");
+}
+
+
+JSBool Events_On_glBegin_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	SetEventFnString(&g_ScriptEvents.On_glBegin, cx, vp);
+
+	return JS_TRUE;
+}
+
+JSBool Events_On_glEnd_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	SetEventFnString(&g_ScriptEvents.On_glEnd, cx, vp);
+
+	return JS_TRUE;
+}
+
+JSBool Events_On_RecordStarting_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	SetEventFnString(&g_ScriptEvents.On_RecordStarting, cx, vp);
+
+	return JS_TRUE;
+}
+
+JSBool Events_On_RecordEnded_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	SetEventFnString(&g_ScriptEvents.On_RecordEnded, cx, vp);
+
+	return JS_TRUE;
+}
+
 static JSPropertySpec Events_props[] = {
-  {"on_GlBegin", TID_Events_On_glBegin, JSPROP_ENUMERATE, Info_Recording_get, NULL},
-  {"on_glEnd"  , TID_Events_On_glEnd  , JSPROP_ENUMERATE, Info_Recording_get, NULL},
+  {"on_glBegin", TID_Events_On_glBegin, JSMIRVPROP, NULL, Events_On_glBegin_set},
+  {"on_glEnd"  , TID_Events_On_glEnd  , JSMIRVPROP, NULL, Events_On_glEnd_set},
+  {"on_RecordStarting"  , TID_Events_On_RecordStarting, JSMIRVPROP, NULL, Events_On_RecordStarting_set},
+  {"on_RecordEnded"  , TID_Events_On_RecordEnded, JSMIRVPROP, NULL, Events_On_RecordEnded_set},
   {NULL,0,0,NULL,NULL}
 };
 
@@ -303,6 +340,36 @@ static JSClass Events_class = {
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
+
+void ScriptEvent_OnGlBegin(unsigned int mode) {
+	if(!g_ScriptEvents.On_glBegin.empty()) {
+		jsval r;
+		jsval args[1];
+		args[0] = INT_TO_JSVAL(mode);
+		JS_CallFunctionName(g_JsCx, g_JsGlobal, g_ScriptEvents.On_glBegin.c_str(), 1, args, &r);
+	}
+}
+
+void ScriptEvent_OnGlEnd() {
+	if(!g_ScriptEvents.On_glEnd.empty()) {
+		jsval r;
+		JS_CallFunctionName(g_JsCx, g_JsGlobal, g_ScriptEvents.On_glEnd.c_str(), 0, NULL, &r);
+	}
+}
+
+void ScriptEvent_OnRecordStarting() {
+	if(!g_ScriptEvents.On_RecordStarting.empty()) {
+		jsval r;
+		JS_CallFunctionName(g_JsCx, g_JsGlobal, g_ScriptEvents.On_RecordStarting.c_str(), 0, NULL, &r);
+	}
+}
+void ScriptEvent_OnRecordEnded() {
+	if(!g_ScriptEvents.On_RecordEnded.empty()) {
+		jsval r;
+		JS_CallFunctionName(g_JsCx, g_JsGlobal, g_ScriptEvents.On_RecordEnded.c_str(), 0, NULL, &r);
+	}
+}
+
 
 
 // Fx //////////////////////////////////////////////////////////////////////////
@@ -386,8 +453,14 @@ Global_Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         filename = JS_GetStringBytes(str);
         errno = 0;
         oldopts = JS_GetOptions(cx);
+
+		std::string strFile(g_ScriptFolder);
+		strFile += filename;
+
+//		MessageBox(0, strFile.c_str(), "Ok", MB_OK);
+
         JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO);
-        script = JS_CompileFile(cx, obj, filename);
+		script = JS_CompileFile(cx, obj, strFile.c_str());
         if (!script) {
             ok = JS_FALSE;
         } else {
@@ -474,22 +547,25 @@ bool JsStartUp() {
 		&& JS_DefineFunctions(g_JsCx, g_JsGlobal, Global_functions)
 
 		// .addr:
-		&& NULL != (jo = JS_DefineObject(g_JsCx, g_JsGlobal, "addr", &Addr_class, NULL, JSPROP_READONLY))
+		&& NULL != (jo = JS_DefineObject(g_JsCx, g_JsGlobal, "addr", &Addr_class, NULL, JSMIRVPROP|JSPROP_READONLY))
 
 		// .info:
-		&& NULL != (jo = JS_DefineObject(g_JsCx, g_JsGlobal, "info", &Info_class, NULL, JSPROP_READONLY))
+		&& NULL != (jo = JS_DefineObject(g_JsCx, g_JsGlobal, "info", &Info_class, NULL, JSMIRVPROP|JSPROP_READONLY))
 		&& JS_DefineProperties(g_JsCx, jo, Info_props)
 
+		// .events:
+		&& NULL != (jo = JS_DefineObject(g_JsCx, g_JsGlobal, "events", &Events_class, NULL, JSMIRVPROP|JSPROP_READONLY))
+		&& JS_DefineProperties(g_JsCx, jo, Events_props)
 
 		// .fx:
-		&& NULL != (joFx = JS_DefineObject(g_JsCx, g_JsGlobal, "fx", &Fx_class, NULL, JSPROP_READONLY))
+		&& NULL != (joFx = JS_DefineObject(g_JsCx, g_JsGlobal, "fx", &Fx_class, NULL, JSMIRVPROP|JSPROP_READONLY))
 
 		// .fx.color:
-		&& NULL != (jo = JS_DefineObject(g_JsCx, joFx, "color", &FxColor_class, NULL, JSPROP_READONLY))
+		&& NULL != (jo = JS_DefineObject(g_JsCx, joFx, "color", &FxColor_class, NULL, JSMIRVPROP|JSPROP_READONLY))
 		&& JS_DefineProperties(g_JsCx, jo, FxColor_props)
 
-		// .fx.rgbMask:
-		&& NULL != (jo = JS_DefineObject(g_JsCx, joFx, "rgbMask", &FxRgbMask_class, NULL, JSPROP_READONLY))
+		// .fx.replace:
+		&& NULL != (jo = JS_DefineObject(g_JsCx, joFx, "rgbMask", &FxRgbMask_class, NULL, JSMIRVPROP|JSPROP_READONLY))
 		&& JS_DefineProperties(g_JsCx, jo, FxRgbMask_props)
 	;
 
@@ -499,6 +575,10 @@ bool JsStartUp() {
 	g_JsRunning = bOk;
 
 	return bOk;
+}
+
+void JsSetScriptFolder(char const * scriptfolder) {
+	g_ScriptFolder  = scriptfolder;
 }
 
 // Client console access ///////////////////////////////////////////////////////

@@ -8,18 +8,14 @@
 // First changes
 // 2009-11-14 dominik.matrixstorm.com
 
-#include "FxRgbMask.h"
+#include "FxReplace.h"
 
 #include "mirv_glext.h"
 
 
-FxRgbMask g_FxRgbMask;
+FxReplace g_FxReplace;
 
-
-// FxRgbMask //////////////////////////////////////////////////////////////////
-
-GLuint g_Textures[8];
-
+GLuint g_WhiteTexture;
 
 void EnsureTextures() {
 	static bool firstRun = true;
@@ -31,26 +27,16 @@ void EnsureTextures() {
 		GLint oldtex;
 
 		glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldtex);
-		glGenTextures(8, g_Textures);
+		glGenTextures(1, &g_WhiteTexture);
 
-		for(unsigned char t=0; t<8; t++) {
-			unsigned char r = 0x01 & t ? 0xFF: 0x00;
-			unsigned char g = 0x02 & t ? 0xFF: 0x00;
-			unsigned char b = 0x04 & t ? 0xFF: 0x00;
+		memset(texmem, 0xFF, 48);
 
-			for(int i=0; i<16; i++) {
-				texmem[3*i  ] = r;
-				texmem[3*i+1] = g;
-				texmem[3*i+2] = b;
-			}
-
-			glBindTexture(GL_TEXTURE_2D, g_Textures[t]);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 4, 4, 0, GL_RGB, GL_UNSIGNED_BYTE, texmem);
-			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP);
-			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP);
-		}
+		glBindTexture(GL_TEXTURE_2D, g_WhiteTexture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 4, 4, 0, GL_RGB, GL_UNSIGNED_BYTE, texmem);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP);
 
 		glBindTexture(GL_TEXTURE_2D, oldtex);
 	}
@@ -58,21 +44,21 @@ void EnsureTextures() {
 }
 
 
-// FxRgbMask //////////////////////////////////////////////////////////////////
+// FxReplace //////////////////////////////////////////////////////////////////
 
-FxRgbMask::FxRgbMask() {
+FxReplace::FxReplace() {
 	m_Active = false;
 	m_Enabled = false;
-	m_OpBlue = 1;
-	m_OpGreen = 1;
-	m_OpRed = 1;
+	m_Red = 1;
+	m_Green = 1;
+	m_Blue = 1;
 }
 
-bool FxRgbMask::Supported_get() {
+bool FxReplace::Supported_get() {
 	return g_Has_GL_ARB_multitexture;
 }
 
-void FxRgbMask::OnGlBegin(GLenum mode) {
+void FxReplace::OnGlBegin(GLenum mode) {
 	m_Active = g_Has_GL_ARB_multitexture && m_Enabled;
 	if(!m_Active) return;
 
@@ -82,35 +68,35 @@ void FxRgbMask::OnGlBegin(GLenum mode) {
 	glGetBooleanv(GL_COLOR_WRITEMASK, m_Old_Gl_ColorMask);
 	glGetIntegerv(GL_ACTIVE_TEXTURE_ARB, &m_Old_Gl_Active_Texture_Arb);
 
+	bool bRed = 0.0f <= m_Red && m_Red <= 1.0f;
+	bool bGreen = 0.0f <= m_Green && m_Green <= 1.0f;
+	bool bBlue = 0.0f <= m_Blue && m_Blue <= 1.0f;
+
 	glColorMask(
-		m_OpRed ? GL_TRUE: GL_FALSE,
-		m_OpGreen ? GL_TRUE: GL_FALSE,
-		m_OpBlue ? GL_TRUE: GL_FALSE,
+		bRed ? GL_TRUE: GL_FALSE,
+		bGreen ? GL_TRUE: GL_FALSE,
+		bBlue ? GL_TRUE: GL_FALSE,
 		m_Old_Gl_ColorMask[3]
 	);
 
-	glActiveTextureARB(GL_TEXTURE2_ARB);
+	glActiveTextureARB(GL_TEXTURE1_ARB);
 
 	m_Old_Gl_Texture2d = glIsEnabled(GL_TEXTURE_2D);
 	glGetIntegerv(GL_TEXTURE_BINDING_2D, &m_Old_Gl_TextureBinding2d);
 	glGetTexEnviv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &m_Old_Gl_Texture_Env_Mode);
 
 	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, g_Textures[
-		(0 < m_OpRed ? 0x01 : 0)
-		| (0 < m_OpGreen ? 0x02 : 0)
-		| (0 < m_OpBlue ? 0x04 : 0)
-	]);
+	glBindTexture(GL_TEXTURE_2D, g_WhiteTexture);
 	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	glColor4f(
-		(0 < m_OpRed ? 1 : 0),
-		(0 < m_OpGreen ? 1 : 0),
-		(0 < m_OpBlue ? 1 : 0),
+		(bRed ? m_Red : 0),
+		(bGreen ? m_Green : 0),
+		(bBlue ? m_Blue : 0),
 		m_Old_Gl_Color[3]
 	);
 }
 
-void FxRgbMask::OnGlEnd() {
+void FxReplace::OnGlEnd() {
 	if(!m_Active) return;
 	m_Active = false;
 

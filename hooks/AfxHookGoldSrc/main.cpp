@@ -108,7 +108,8 @@ int		g_nViewports = 0;
 bool	g_bIsSucceedingViewport = false;
 
 #define MDT_MAX_PATH_BYTES 1025
-#define MDT_CFG_FILE "AfxHookGoldSrc_init.js"
+#define INIT_SCRIPT_FILE "AfxHookGoldSrc_init.js"
+#define SCRIPT_FOLDER "scripts\\"
 #define DLL_NAME	"AfxHookGoldSrc.dll"
 
 HMODULE g_hMDTDLL=NULL; // handle to our self
@@ -202,6 +203,25 @@ REGISTER_DEBUGCMD_FUNC(info)
 	glGetIntegerv(GL_PACK_ALIGNMENT,&gi);
 	pEngfuncs->Con_Printf("GL_PACK_ALIGNMENT: %i\n",gi);
 	pEngfuncs->Con_Printf("<<<< <<<< <<<< <<<<\n");
+}
+
+REGISTER_DEBUGCMD_FUNC(list_addresses) {
+	unsigned int cnt = HlAddr_Debug_GetCount();
+	unsigned int zcnt = 0;
+	for(int i=0; i<cnt; i++) {
+		char const * pName;
+		unsigned long addr;
+
+		if(!HlAddr_Debug_GetAt(i, addr, pName)) {
+			pEngfuncs->Con_Printf("Error.\n");
+			break; // error
+		}
+
+		if(!addr) zcnt;
+
+		pEngfuncs->Con_Printf("%s = 0x%08x\n", pName, addr);
+	}
+	pEngfuncs->Con_Printf("%u / %u were NULL.\n", zcnt, cnt);
 }
 
 REGISTER_DEBUGCVAR(deltatime, "1.0", 0);
@@ -395,7 +415,7 @@ REGISTER_DEBUGCVAR(glbegin_stats,"0", 0)
 
 void APIENTRY my_glBegin(GLenum mode)
 {
-	g_MirvInfo.SetIn_glBegin(true);
+	ScriptEvent_OnGlBegin((unsigned int)mode);
 
 	g_glBegin_saved.restore=false;
 
@@ -404,7 +424,6 @@ void APIENTRY my_glBegin(GLenum mode)
 	g_NewSky.DetectAndProcessSky(mode);
 
 	if (g_Filming.doWireframe(mode) == Filming::DR_HIDE) {
-		g_MirvInfo.SetIn_glBegin(false);
 		return;
 	}
 
@@ -415,14 +434,12 @@ void APIENTRY my_glBegin(GLenum mode)
 	if (!g_Filming.isFilming())
 	{
 		glBegin(mode);
-		g_MirvInfo.SetIn_glBegin(false);
 		return;
 	}
 
 	Filming::DRAW_RESULT res = g_Filming.shouldDraw(mode);
 
 	if (res == Filming::DR_HIDE) {
-		g_MirvInfo.SetIn_glBegin(false);
 		return;
 	}
 
@@ -443,21 +460,23 @@ void APIENTRY my_glBegin(GLenum mode)
 	else if (!g_Filming.bWantsHudCapture)
 		glColorMask(TRUE, TRUE, TRUE, TRUE); // BlendFunc for additive sprites needs special controll, don't override it
 
-	g_FxRgbMask.OnGlBegin(mode);
 	g_FxColor.OnGlBegin(mode);
+
+	g_FxRgbMask.OnGlBegin(mode);
 
 	glBegin(mode);
 
-	g_MirvInfo.SetIn_glBegin(false);
 }
 
 void APIENTRY my_glEnd(void)
 {
-	g_MirvInfo.SetIn_glEnd(true);
+	ScriptEvent_OnGlEnd();
+
 	glEnd();
 
-	g_FxColor.OnGlEnd();
 	g_FxRgbMask.OnGlEnd();
+
+	g_FxColor.OnGlEnd();
 
 
 	if (g_glBegin_saved.restore)
@@ -471,7 +490,6 @@ void APIENTRY my_glEnd(void)
 
 	g_Filming.DoWorldFxEnd();
 
-	g_MirvInfo.SetIn_glEnd(false);
 }
 
 void APIENTRY my_glClear(GLbitfield mask)
@@ -634,25 +652,35 @@ bool Mdt_LoadConfig(HMODULE hHwDll)
 
 		GetModuleFileName(g_hMDTDLL, pg_MDTpath,MDT_MAX_PATH_BYTES-1);
 
-		std::string strMdtCfg(pg_MDTpath);
-		size_t fp = strMdtCfg.find_last_of('\\');
+		std::string strFolder(pg_MDTpath);
+		size_t fp = strFolder.find_last_of('\\');
 		if(std::string::npos != fp) {
-			strMdtCfg.resize(fp+1);
+			strFolder.resize(fp+1);
 
-			fp = 0;
+/*			fp = 0;
 			while(std::string::npos != fp) {
-				fp = strMdtCfg.find_first_of('\\', fp);
+				fp = strFolder.find_first_of('\\', fp);
 				if(std::string::npos != fp) {
-					strMdtCfg.insert(fp, "\\");
+					strFolder.insert(fp, "\\");
 					fp += 2;
 				}
 			}
+*/
 		}
-		strMdtCfg = "load('" + strMdtCfg + MDT_CFG_FILE + "');";
 
-		MessageBox(0,strMdtCfg.c_str(),"Info", MB_OK|MB_ICONINFORMATION);
+		strFolder += SCRIPT_FOLDER;
 
-		bCfgres = JsExecute(strMdtCfg.c_str());
+		JsSetScriptFolder(strFolder.c_str());
+
+		bCfgres = JsExecute("load('" INIT_SCRIPT_FILE "');");
+
+		if(!bCfgres) {
+			strFolder = "Failed to load:\n\""
+				+strFolder +INIT_SCRIPT_FILE "\"."
+			;
+
+			MessageBox(0, strFolder.c_str(), "MDT_ERROR",MB_OK|MB_ICONHAND);
+		}
 	}
 
 	if (bCfgres)
@@ -661,9 +689,7 @@ bool Mdt_LoadConfig(HMODULE hHwDll)
 		pEngfuncs		= (cl_enginefuncs_s*)HL_ADDR_GET(p_cl_enginefuncs_s);
 		pEngStudio	= (engine_studio_api_s*)HL_ADDR_GET(p_engine_studio_api_s);
 		ppmove			= (playermove_s*)HL_ADDR_GET(p_playermove_s);
-
-
-	} else MessageBox(0,"Error upon loading \"" MDT_CFG_FILE "\".","MDT_ERROR",MB_OK|MB_ICONHAND);
+	}
 
 	
 	return bCfgres;

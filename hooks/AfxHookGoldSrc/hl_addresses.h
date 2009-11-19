@@ -10,8 +10,6 @@
 
 typedef unsigned long HlAddress_t;
 
-HlAddress_t * HlAddr_GetByName(char const * name);
-
 #define HL_ADDR_GET(name) \
 	(g_HlAddr_##name)
 
@@ -79,3 +77,12 @@ HL_ADDR_EXPOSE(soundtime)
 HL_ADDR_EXPOSE(unkInlineClientColorA)
 HL_ADDR_EXPOSE(unkInlineClientColorV)
 
+
+//
+////
+
+HlAddress_t * HlAddr_GetByName(char const * name);
+
+// slow!
+bool HlAddr_Debug_GetAt(unsigned int index, HlAddress_t & outAddr, char const * & outName);
+unsigned int HlAddr_Debug_GetCount();

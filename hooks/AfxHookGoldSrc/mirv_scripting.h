@@ -15,3 +15,12 @@ void JsShutDown();
 bool JsIsRunning();
 
 bool JsExecute(char const * script);
+
+void JsSetScriptFolder(char const * scriptfolder);
+
+void ScriptEvent_OnGlBegin(unsigned int mode);
+void ScriptEvent_OnGlEnd();
+
+void ScriptEvent_OnRecordStarting();
+void ScriptEvent_OnRecordEnded();
+

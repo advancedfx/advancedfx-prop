@@ -18,6 +18,11 @@ class HlAddressEntries {
 public:
 	void Register(HlAddressEntry *entry);
 	HlAddress_t * GetByName(char const * name);
+
+	// slow
+	HlAddressEntry * Debug_GetAt(unsigned int index);
+
+	unsigned int Debug_GetCount();
 	
 private:
 	std::list<HlAddressEntry *> m_HlAddressEntryList;
@@ -45,8 +50,42 @@ HlAddress_t * HlAddressEntries::GetByName(char const * name) {
 	return 0;
 }
 
+HlAddressEntry * HlAddressEntries::Debug_GetAt(unsigned int index) {
+	if(index < m_HlAddressEntryList.size()) {
+		std::list<HlAddressEntry *>::iterator it = m_HlAddressEntryList.begin(); 
+		while(0 < index) {
+			it++;
+			index--;
+		}
+
+		return (*it);
+	}
+
+	return 0;
+}
+
+unsigned int HlAddressEntries::Debug_GetCount() {
+	return m_HlAddressEntryList.size();
+}
+
+
 HlAddress_t * HlAddr_GetByName(char const * name) {
 	return g_HlAddressEntries.GetByName(name);
+}
+
+bool HlAddr_Debug_GetAt(unsigned int index, HlAddress_t & outAddr, char const * & outName) {
+	HlAddressEntry * entry = g_HlAddressEntries.Debug_GetAt(index);
+
+	if(entry) {
+		outAddr = *(entry->m_Entry);
+		outName = entry->m_Name;
+	}
+
+	return 0 != entry;
+}
+
+unsigned int HlAddr_Debug_GetCount() {
+	return g_HlAddressEntries.Debug_GetCount();
 }
 
 
