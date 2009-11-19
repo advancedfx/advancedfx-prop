@@ -67,6 +67,7 @@
 
 #include "FxColor.h"
 #include "FxRgbMask.h"
+#include "FxHide.h"
 
 #include "MirvInfo.h"
 
@@ -464,8 +465,7 @@ void APIENTRY my_glBegin(GLenum mode)
 
 	g_FxRgbMask.OnGlBegin(mode);
 
-	glBegin(mode);
-
+	if(g_FxHide.OnGlBegin()) glBegin(mode);
 }
 
 void APIENTRY my_glEnd(void)

@@ -11,6 +11,7 @@
 #include "mirv_scripting.h"
 
 #include "FxColor.h"
+#include "FxHide.h"
 #include "FxRgbMask.h"
 #include "MirvInfo.h"
 
@@ -225,7 +226,37 @@ static JSClass FxRgbMask_class = {
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
+// FxHide //////////////////////////////////////////////////////////////////////
 
+enum FxHide_tinyid {
+	TID_FxHide_Enabled
+};
+
+
+JSBool FxHide_Enabled_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	*vp = BOOLEAN_TO_JSVAL(g_FxHide.Enabled_get());
+	return JS_TRUE;
+}
+
+JSBool FxHide_Enabled_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	JSBool jB;
+	if(JS_ValueToBoolean(cx, *vp, &jB)) g_FxHide.Enabled_set(jB);
+	return JS_TRUE;
+}
+
+
+
+static JSPropertySpec FxHide_props[] = {
+  {"enabled"  , TID_FxHide_Enabled  , JSMIRVSHAREDPROP, FxHide_Enabled_get, FxHide_Enabled_set},
+  {NULL,0,0,NULL,NULL}
+};
+
+static JSClass FxHide_class = {
+    "FxHide", 0,
+    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
+    JSCLASS_NO_OPTIONAL_MEMBERS
+};
 
 // Info /////////////////////////////////////////////////////////////////////
 
@@ -233,7 +264,8 @@ enum Info_tinyid {
 	TID_Info_In_R_DrawEntitiesOnList,
 	TID_Info_In_R_DrawParticles,
 	TID_Info_In_R_DrawViewModel,
-	TID_Info_In_R_Renderview
+	TID_Info_In_R_Renderview,
+	TID_Info_Recording
 };
 
 JSBool Info_In_R_DrawEntitiesOnList_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
@@ -246,22 +278,41 @@ JSBool Info_In_R_DrawParticles_get(JSContext *cx, JSObject *obj, jsval idval, js
 	return JS_TRUE;
 }
 
+JSBool Info_In_R_DrawViewModel_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	*vp = BOOLEAN_TO_JSVAL(g_MirvInfo.In_R_DrawViewModel_get());
+	return JS_TRUE;
+}
+
 JSBool Info_In_R_Renderview_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
 	*vp = BOOLEAN_TO_JSVAL(g_MirvInfo.In_R_Renderview_get());
 	return JS_TRUE;
 }
 
-JSBool Info_In_R_DrawViewModel_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
-	*vp = BOOLEAN_TO_JSVAL(g_MirvInfo.In_R_DrawViewModel_get());
+JSBool Info_Recording_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	*vp = BOOLEAN_TO_JSVAL(g_MirvInfo.Recording_get());
 	return JS_TRUE;
 }
 
 static JSPropertySpec Info_props[] = {
   {"in_R_DrawEntitiesOnList", TID_Info_In_R_DrawEntitiesOnList, JSMIRVSHAREDPROP|JSPROP_READONLY, Info_In_R_DrawEntitiesOnList_get, NULL},
   {"in_R_DrawParticles"     , TID_Info_In_R_DrawParticles     , JSMIRVSHAREDPROP|JSPROP_READONLY, Info_In_R_DrawParticles_get     , NULL},
-  {"in_R_Renderview"        , TID_Info_In_R_DrawViewModel     , JSMIRVSHAREDPROP|JSPROP_READONLY, Info_In_R_Renderview_get        , NULL},
-  {"in_R_DrawViewModel"     , TID_Info_In_R_Renderview        , JSMIRVSHAREDPROP|JSPROP_READONLY, Info_In_R_DrawViewModel_get     , NULL},
+  {"in_R_DrawViewModel"     , TID_Info_In_R_DrawViewModel     , JSMIRVSHAREDPROP|JSPROP_READONLY, Info_In_R_DrawViewModel_get     , NULL},
+  {"in_R_Renderview"        , TID_Info_In_R_Renderview        , JSMIRVSHAREDPROP|JSPROP_READONLY, Info_In_R_Renderview_get        , NULL},
+  {"recording"              , TID_Info_Recording              , JSMIRVSHAREDPROP|JSPROP_READONLY, Info_Recording_get              , NULL},
   {NULL,0,0,NULL,NULL}
+};
+
+static JSBool
+Info_GetCurrentEntityIndex(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+	*rval = INT_TO_JSVAL(g_MirvInfo.GetCurrentEntityIndex());	
+
+    return JS_TRUE;
+}
+
+static JSFunctionSpec Info_functions[] = {
+    {"getCurrentEntityIndex", Info_GetCurrentEntityIndex, 0, JSMIRVSHAREDPROP|JSPROP_READONLY,0},
+	{NULL,NULL,0,0,0}
 };
 
 static JSClass Info_class = {
@@ -270,6 +321,8 @@ static JSClass Info_class = {
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
+
+
 
 
 // Events //////////////////////////////////////////////////////////////////////
@@ -497,8 +550,8 @@ Global_Print(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 static JSFunctionSpec Global_functions[] = {
-	{"load" , Global_Load , 1,0,0},
-    {"print", Global_Print, 0,0,0},
+	{"load" , Global_Load , 1,JSMIRVSHAREDPROP|JSPROP_READONLY,0},
+    {"print", Global_Print, 0,JSMIRVSHAREDPROP|JSPROP_READONLY,0},
 	{NULL,NULL,0,0,0}
 };
 
@@ -552,6 +605,7 @@ bool JsStartUp() {
 		// .info:
 		&& NULL != (jo = JS_DefineObject(g_JsCx, g_JsGlobal, "info", &Info_class, NULL, JSMIRVPROP|JSPROP_READONLY))
 		&& JS_DefineProperties(g_JsCx, jo, Info_props)
+		&& JS_DefineFunctions(g_JsCx, jo, Info_functions)
 
 		// .events:
 		&& NULL != (jo = JS_DefineObject(g_JsCx, g_JsGlobal, "events", &Events_class, NULL, JSMIRVPROP|JSPROP_READONLY))
@@ -563,6 +617,10 @@ bool JsStartUp() {
 		// .fx.color:
 		&& NULL != (jo = JS_DefineObject(g_JsCx, joFx, "color", &FxColor_class, NULL, JSMIRVPROP|JSPROP_READONLY))
 		&& JS_DefineProperties(g_JsCx, jo, FxColor_props)
+
+		// .fx.hide:
+		&& NULL != (jo = JS_DefineObject(g_JsCx, joFx, "hide", &FxHide_class, NULL, JSMIRVPROP|JSPROP_READONLY))
+		&& JS_DefineProperties(g_JsCx, jo, FxHide_props)
 
 		// .fx.replace:
 		&& NULL != (jo = JS_DefineObject(g_JsCx, joFx, "rgbMask", &FxRgbMask_class, NULL, JSMIRVPROP|JSPROP_READONLY))

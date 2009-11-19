@@ -1,7 +1,7 @@
-// This file is part of the Half-Life Advanced Effects (HLAE) distribution.
-// Visit us at: http://advancedfx.org/
+// WE SUGGEST TO NOT EDIT THIS FILE!
+// This file carries out important operations and we might change it occasionally.
 //
-// This file is not meant to be edited by the user, since it will be changed by us occassionally!
+// Visit us at: http://advancedfx.org/
 
 ////////////////////////////////////////////////////////////////////////////////
 //

@@ -956,10 +956,14 @@ void Filming::Start()
 			+overlap
 		);
 	}
+
+	g_MirvInfo.SetRecording(true);
 }
 
 void Filming::Stop()
 {
+	g_MirvInfo.SetRecording(false);
+
 	if (_pSupportRender)
 		_pSupportRender->hlaeOnFilmingStop();
 

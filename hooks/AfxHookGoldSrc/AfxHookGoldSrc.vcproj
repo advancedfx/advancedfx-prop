@@ -351,6 +351,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\FxHide.h"
+					>
+				</File>
+				<File
 					RelativePath=".\FxRgbMask.cpp"
 					>
 				</File>
@@ -476,6 +480,10 @@
 				</File>
 			</Filter>
 		</Filter>
+		<File
+			RelativePath=".\FxHide.cpp"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
