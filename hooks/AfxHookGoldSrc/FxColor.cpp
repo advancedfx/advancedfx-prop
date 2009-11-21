@@ -24,7 +24,7 @@ FxColor::FxColor() {
 }
 
 
-void FxColor::OnGlBegin(GLenum mode) {
+void FxColor::OnGlBegin() {
 	m_Active = m_Enabled;
 	
 	if(!m_Active) return;

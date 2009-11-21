@@ -18,7 +18,7 @@ class FxColor {
 public:
 	FxColor();
 
-	void OnGlBegin(GLenum mode);
+	void OnGlBegin();
 	void OnGlEnd();
 
 	//
@@ -27,6 +27,7 @@ public:
 	bool Enabled_get() { return m_Enabled; }
 	void Enabled_set(bool value) { m_Enabled = value; }
 
+	// x < 0: no change, [0.0 - 1.0]: enable (set color channel value)
 	GLfloat Red_get() { return m_Red; }
 	void Red_set(GLfloat value) { m_Red = value; }
 

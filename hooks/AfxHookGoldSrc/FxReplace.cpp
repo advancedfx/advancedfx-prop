@@ -8,15 +8,15 @@
 // First changes
 // 2009-11-14 dominik.matrixstorm.com
 
-#include "FxRgbMask.h"
+#include "FxReplace.h"
 
 #include "mirv_glext.h"
 
 
-FxRgbMask g_FxRgbMask;
+FxReplace g_FxReplace;
 
 
-// FxRgbMask //////////////////////////////////////////////////////////////////
+// FxReplace //////////////////////////////////////////////////////////////////
 
 GLuint g_Textures[8];
 
@@ -58,36 +58,27 @@ void EnsureTextures() {
 }
 
 
-// FxRgbMask //////////////////////////////////////////////////////////////////
+// FxReplace //////////////////////////////////////////////////////////////////
 
-FxRgbMask::FxRgbMask() {
+FxReplace::FxReplace() {
 	m_Active = false;
 	m_Enabled = false;
-	m_OpBlue = 1;
-	m_OpGreen = 1;
-	m_OpRed = 1;
+	m_Blue = true;
+	m_Green = true;
+	m_Red = true;
 }
 
-bool FxRgbMask::Supported_get() {
+bool FxReplace::Supported_get() {
 	return g_Has_GL_ARB_multitexture;
 }
 
-void FxRgbMask::OnGlBegin(GLenum mode) {
+void FxReplace::OnGlBegin() {
 	m_Active = g_Has_GL_ARB_multitexture && m_Enabled;
 	if(!m_Active) return;
 
 	EnsureTextures();
 
-	glGetFloatv(GL_CURRENT_COLOR, m_Old_Gl_Color);
-	glGetBooleanv(GL_COLOR_WRITEMASK, m_Old_Gl_ColorMask);
 	glGetIntegerv(GL_ACTIVE_TEXTURE_ARB, &m_Old_Gl_Active_Texture_Arb);
-
-	glColorMask(
-		m_OpRed ? GL_TRUE: GL_FALSE,
-		m_OpGreen ? GL_TRUE: GL_FALSE,
-		m_OpBlue ? GL_TRUE: GL_FALSE,
-		m_Old_Gl_ColorMask[3]
-	);
 
 	glActiveTextureARB(GL_TEXTURE2_ARB);
 
@@ -97,30 +88,20 @@ void FxRgbMask::OnGlBegin(GLenum mode) {
 
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, g_Textures[
-		(0 < m_OpRed ? 0x01 : 0)
-		| (0 < m_OpGreen ? 0x02 : 0)
-		| (0 < m_OpBlue ? 0x04 : 0)
+		(m_Red ? 0x01 : 0)
+		| (m_Green ? 0x02 : 0)
+		| (m_Blue ? 0x04 : 0)
 	]);
 	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-	glColor4f(
-		(0 < m_OpRed ? 1 : 0),
-		(0 < m_OpGreen ? 1 : 0),
-		(0 < m_OpBlue ? 1 : 0),
-		m_Old_Gl_Color[3]
-	);
 }
 
-void FxRgbMask::OnGlEnd() {
+void FxReplace::OnGlEnd() {
 	if(!m_Active) return;
 	m_Active = false;
-
-	glColor4f(m_Old_Gl_Color[0], m_Old_Gl_Color[1], m_Old_Gl_Color[2], m_Old_Gl_Color[3]);	
 
 	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, m_Old_Gl_Texture_Env_Mode);
 	glBindTexture(GL_TEXTURE_2D, m_Old_Gl_TextureBinding2d);
 	if(!m_Old_Gl_Texture2d) glDisable(GL_TEXTURE_2D);
 
 	glActiveTextureARB(m_Old_Gl_Active_Texture_Arb);
-
-	glColorMask(m_Old_Gl_ColorMask[0], m_Old_Gl_ColorMask[1], m_Old_Gl_ColorMask[2], m_Old_Gl_ColorMask[3]);
 }

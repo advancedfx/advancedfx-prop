@@ -66,9 +66,9 @@
 #include "mirv_scripting.h"
 
 #include "FxColor.h"
-#include "FxRgbMask.h"
+#include "FxColorMask.h"
 #include "FxHide.h"
-
+#include "FxReplace.h"
 #include "MirvInfo.h"
 
 #include <map>
@@ -461,9 +461,11 @@ void APIENTRY my_glBegin(GLenum mode)
 	else if (!g_Filming.bWantsHudCapture)
 		glColorMask(TRUE, TRUE, TRUE, TRUE); // BlendFunc for additive sprites needs special controll, don't override it
 
-	g_FxColor.OnGlBegin(mode);
+	g_FxReplace.OnGlBegin();
 
-	g_FxRgbMask.OnGlBegin(mode);
+	g_FxColor.OnGlBegin();
+
+	g_FxColorMask.OnGlBegin();
 
 	if(g_FxHide.OnGlBegin()) glBegin(mode);
 }
@@ -474,9 +476,11 @@ void APIENTRY my_glEnd(void)
 
 	glEnd();
 
-	g_FxRgbMask.OnGlEnd();
+	g_FxColorMask.OnGlEnd();
 
 	g_FxColor.OnGlEnd();
+
+	g_FxReplace.OnGlEnd();
 
 
 	if (g_glBegin_saved.restore)

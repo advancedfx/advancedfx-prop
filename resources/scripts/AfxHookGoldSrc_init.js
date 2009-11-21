@@ -1,7 +1,5 @@
 // WE SUGGEST TO NOT EDIT THIS FILE!
-// This file carries out important operations and we might change it occasionally.
-//
-// Visit us at: http://advancedfx.org/
+// This file carries out CRUCIAL operations and we might change it occasionally.
 
 ////////////////////////////////////////////////////////////////////////////////
 //

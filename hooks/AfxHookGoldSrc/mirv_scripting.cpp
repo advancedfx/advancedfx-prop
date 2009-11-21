@@ -12,7 +12,8 @@
 
 #include "FxColor.h"
 #include "FxHide.h"
-#include "FxRgbMask.h"
+#include "FxColorMask.h"
+#include "FxReplace.h"
 #include "MirvInfo.h"
 
 #include "hl_addresses.h"
@@ -73,158 +74,253 @@ void reportError(JSContext *cx, const char *message, JSErrorReport *report)
 // FxColor /////////////////////////////////////////////////////////////////////
 
 enum FxColor_tinyid {
-	FxColor_ENABLED, FxColor_RED, FxColor_GREEN, FxColor_BLUE, FxColor_ALPHA
+	TID_FxColor_Alpha,
+	TID_FxColor_Blue,
+	TID_FxColor_Enabled,
+	TID_FxColor_Green,
+	TID_FxColor_Red
 };
+
+
+JSBool FxColor_Alpha_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	*vp = DOUBLE_TO_JSVAL(g_FxColor.Alpha_get());
+	return JS_TRUE;
+}
+
+JSBool FxColor_Alpha_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	jsdouble jD;
+	if(JS_ValueToNumber(cx, *vp, &jD)) g_FxColor.Alpha_set(jD);
+	return JS_TRUE;
+}
+
+JSBool FxColor_Blue_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	*vp = DOUBLE_TO_JSVAL(g_FxColor.Blue_get());
+	return JS_TRUE;
+}
+
+JSBool FxColor_Blue_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	jsdouble jD;
+	if(JS_ValueToNumber(cx, *vp, &jD)) g_FxColor.Blue_set(jD);
+	return JS_TRUE;
+}
+
+
+JSBool FxColor_Enabled_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	*vp = BOOLEAN_TO_JSVAL(g_FxColor.Enabled_get());
+	return JS_TRUE;
+}
+
+JSBool FxColor_Enabled_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	JSBool jB;
+	if(JS_ValueToBoolean(cx, *vp, &jB)) g_FxColor.Enabled_set(jB);
+	return JS_TRUE;
+}
+
+JSBool FxColor_Green_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	*vp = DOUBLE_TO_JSVAL(g_FxColor.Green_get());
+	return JS_TRUE;
+}
+
+JSBool FxColor_Green_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	jsdouble jD;
+	if(JS_ValueToNumber(cx, *vp, &jD)) g_FxColor.Green_set(jD);
+	return JS_TRUE;
+}
+
+JSBool FxColor_Red_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	*vp = DOUBLE_TO_JSVAL(g_FxColor.Red_get());
+	return JS_TRUE;
+}
+
+JSBool FxColor_Red_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	jsdouble jD;
+	if(JS_ValueToNumber(cx, *vp, &jD)) g_FxColor.Red_set(jD);
+	return JS_TRUE;
+}
 
 static JSPropertySpec FxColor_props[] = {
-    {"enabled", FxColor_ENABLED, JSMIRVSHAREDPROP, NULL, NULL},
-    {"red"    , FxColor_RED    , JSMIRVSHAREDPROP, NULL, NULL},
-    {"green"  , FxColor_GREEN  , JSMIRVSHAREDPROP, NULL, NULL},
-    {"blue"   , FxColor_BLUE   , JSMIRVSHAREDPROP, NULL, NULL},
-    {"alpha"  , FxColor_ALPHA  , JSMIRVSHAREDPROP, NULL, NULL},
-    {NULL,0,0,NULL,NULL}
-};
-
-static JSBool
-FxColor_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
-{
-    if (!JSVAL_IS_INT(id)) return JS_TRUE;
-
-	switch (JSVAL_TO_INT(id)) {
-	case FxColor_ENABLED:
-		*vp = BOOLEAN_TO_JSVAL(g_FxColor.Enabled_get());
-		break;
-	case FxColor_RED:
-		*vp = DOUBLE_TO_JSVAL(g_FxColor.Red_get());
-		break;
-	case FxColor_GREEN:
-		*vp = DOUBLE_TO_JSVAL(g_FxColor.Green_get());
-		break;
-	case FxColor_BLUE:
-		*vp = DOUBLE_TO_JSVAL(g_FxColor.Blue_get());
-		break;
-	case FxColor_ALPHA:
-		*vp = DOUBLE_TO_JSVAL(g_FxColor.Alpha_get());
-		break;
-	}
-
-    return JS_TRUE;
-}
-
-
-JS_STATIC_DLL_CALLBACK(JSBool)
-FxColor_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
-{
-    if (!JSVAL_IS_INT(id)) return JS_TRUE;
-
-	jsdouble jD;
-	JSBool jB;
-
-	switch (JSVAL_TO_INT(id)) {
-	case FxColor_ENABLED:
-		if(JS_ValueToBoolean(cx, *vp, &jB)) g_FxColor.Enabled_set(jB);
-		break;
-	case FxColor_RED:
-		if(JS_ValueToNumber(cx, *vp, &jD)) g_FxColor.Red_set(jD);
-		break;
-	case FxColor_GREEN:
-		if(JS_ValueToNumber(cx, *vp, &jD)) g_FxColor.Green_set(jD);
-		break;
-	case FxColor_BLUE:
-		if(JS_ValueToNumber(cx, *vp, &jD)) g_FxColor.Blue_set(jD);
-		break;
-	case FxColor_ALPHA:
-		if(JS_ValueToNumber(cx, *vp, &jD)) g_FxColor.Alpha_set(jD);
-		break;
-	}
-
-	return JS_TRUE;
-}
-
-static JSClass FxColor_class = {
-    "FxColor", 0,
-    JS_PropertyStub, JS_PropertyStub, FxColor_getProperty, FxColor_setProperty,
-    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
-    JSCLASS_NO_OPTIONAL_MEMBERS
-};
-
-
-// FxRgbMask /////////////////////////////////////////////////////////////////////
-
-enum FxRgbMask_tinyid {
-	TID_FxRgbMask_Enabled,
-	TID_FxRgbMask_OpBlue,
-	TID_FxRgbMask_OpGreen,
-	TID_FxRgbMask_OpRed,
-	TID_FxRgbMask_Supported
-};
-
-
-JSBool FxRgbMask_Enabled_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
-	*vp = BOOLEAN_TO_JSVAL(g_FxRgbMask.Enabled_get());
-	return JS_TRUE;
-}
-
-JSBool FxRgbMask_Enabled_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
-	JSBool jB;
-	if(JS_ValueToBoolean(cx, *vp, &jB)) g_FxRgbMask.Enabled_set(jB);
-	return JS_TRUE;
-}
-
-JSBool FxRgbMask_OpGreen_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
-	*vp = INT_TO_JSVAL(g_FxRgbMask.OpGreen_get());
-	return JS_TRUE;
-}
-
-JSBool FxRgbMask_OpGreen_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
-	int32 i32;
-	if(JS_TRUE == JS_ValueToInt32(cx, *vp, &i32)) g_FxRgbMask.OpGreen_set(i32);
-	return JS_TRUE;
-}
-
-JSBool FxRgbMask_OpBlue_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
-	*vp = INT_TO_JSVAL(g_FxRgbMask.OpBlue_get());
-	return JS_TRUE;
-}
-
-JSBool FxRgbMask_OpBlue_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
-	int32 i32;
-	if(JS_TRUE == JS_ValueToInt32(cx, *vp, &i32)) g_FxRgbMask.OpBlue_set(i32);
-	return JS_TRUE;
-}
-
-JSBool FxRgbMask_OpRed_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
-	*vp = INT_TO_JSVAL(g_FxRgbMask.OpRed_get());
-	return JS_TRUE;
-}
-
-JSBool FxRgbMask_OpRed_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
-	int32 i32;
-	if(JS_TRUE == JS_ValueToInt32(cx, *vp, &i32)) g_FxRgbMask.OpRed_set(i32);
-	return JS_TRUE;
-}
-
-JSBool FxRgbMask_Supported_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
-	*vp = BOOLEAN_TO_JSVAL(g_FxRgbMask.Supported_get());
-	return JS_TRUE;
-}
-
-
-static JSPropertySpec FxRgbMask_props[] = {
-  {"enabled"  , TID_FxRgbMask_Enabled  , JSMIRVSHAREDPROP, FxRgbMask_Enabled_get, FxRgbMask_Enabled_set},
-  {"opBlue"     , TID_FxRgbMask_OpBlue     , JSMIRVSHAREDPROP, FxRgbMask_OpBlue_get, FxRgbMask_OpBlue_set},
-  {"opGreen"    , TID_FxRgbMask_OpGreen    , JSMIRVSHAREDPROP, FxRgbMask_OpGreen_get, FxRgbMask_OpGreen_set},
-  {"opRed"      , TID_FxRgbMask_OpRed      , JSMIRVSHAREDPROP, FxRgbMask_OpRed_get, FxRgbMask_OpRed_set},
-  {"supported", TID_FxRgbMask_Supported, JSMIRVSHAREDPROP|JSPROP_READONLY, FxRgbMask_Supported_get, NULL              },
+  {"alpha"  , TID_FxColor_Alpha  , JSMIRVSHAREDPROP, FxColor_Alpha_get  , FxColor_Alpha_set  },
+  {"blue"   , TID_FxColor_Blue   , JSMIRVSHAREDPROP, FxColor_Blue_get   , FxColor_Blue_set   },
+  {"enabled", TID_FxColor_Enabled, JSMIRVSHAREDPROP, FxColor_Enabled_get, FxColor_Enabled_set},
+  {"green"  , TID_FxColor_Green  , JSMIRVSHAREDPROP, FxColor_Green_get  , FxColor_Green_set  },
+  {"red"    , TID_FxColor_Red    , JSMIRVSHAREDPROP, FxColor_Red_get    , FxColor_Red_set    },
   {NULL,0,0,NULL,NULL}
 };
 
-static JSClass FxRgbMask_class = {
-    "FxRgbMask", 0,
+static JSClass FxColor_class = {
+  "FxColor", 0,
+  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
+  JSCLASS_NO_OPTIONAL_MEMBERS
+};
+
+
+// FxColorMask //////////////////////////////////////////////////////////////////////
+
+enum FxColorMask_tinyid {
+  TID_FxColorMask_Alpha,
+  TID_FxColorMask_Blue,
+  TID_FxColorMask_Enabled,
+  TID_FxColorMask_Green,
+  TID_FxColorMask_Red
+};
+
+
+JSBool FxColorMask_Alpha_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	*vp = INT_TO_JSVAL(g_FxColorMask.Alpha_get());
+	return JS_TRUE;
+}
+
+JSBool FxColorMask_Alpha_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	int32 i32;
+	if(JS_ValueToInt32(cx, *vp, &i32)) g_FxColorMask.Alpha_set(i32);
+	return JS_TRUE;
+}
+
+JSBool FxColorMask_Blue_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	*vp = INT_TO_JSVAL(g_FxColorMask.Blue_get());
+	return JS_TRUE;
+}
+
+JSBool FxColorMask_Blue_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	int32 i32;
+	if(JS_ValueToInt32(cx, *vp, &i32)) g_FxColorMask.Blue_set(i32);
+	return JS_TRUE;
+}
+
+
+
+JSBool FxColorMask_Enabled_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	*vp = BOOLEAN_TO_JSVAL(g_FxColorMask.Enabled_get());
+	return JS_TRUE;
+}
+
+JSBool FxColorMask_Enabled_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	JSBool jB;
+	if(JS_ValueToBoolean(cx, *vp, &jB)) g_FxColorMask.Enabled_set(jB);
+	return JS_TRUE;
+}
+
+
+JSBool FxColorMask_Green_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	*vp = INT_TO_JSVAL(g_FxColorMask.Green_get());
+	return JS_TRUE;
+}
+
+JSBool FxColorMask_Green_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	int32 i32;
+	if(JS_ValueToInt32(cx, *vp, &i32)) g_FxColorMask.Green_set(i32);
+	return JS_TRUE;
+}
+
+
+JSBool FxColorMask_Red_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	*vp = INT_TO_JSVAL(g_FxColorMask.Red_get());
+	return JS_TRUE;
+}
+
+JSBool FxColorMask_Red_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	int32 i32;
+	if(JS_ValueToInt32(cx, *vp, &i32)) g_FxColorMask.Red_set(i32);
+	return JS_TRUE;
+}
+
+static JSPropertySpec FxColorMask_props[] = {
+  {"Alpha"  , TID_FxColorMask_Alpha  , JSMIRVSHAREDPROP, FxColorMask_Alpha_get  , FxColorMask_Alpha_set  },
+  {"Blue"   , TID_FxColorMask_Blue   , JSMIRVSHAREDPROP, FxColorMask_Blue_get   , FxColorMask_Blue_set   },
+  {"enabled", TID_FxColorMask_Enabled, JSMIRVSHAREDPROP, FxColorMask_Enabled_get, FxColorMask_Enabled_set},
+  {"Green"  , TID_FxColorMask_Green  , JSMIRVSHAREDPROP, FxColorMask_Green_get  , FxColorMask_Green_set  },
+  {"Red"    , TID_FxColorMask_Red    , JSMIRVSHAREDPROP, FxColorMask_Red_get    , FxColorMask_Red_set    },
+  {NULL,0,0,NULL,NULL}
+};
+
+static JSClass FxColorMask_class = {
+    "FxColorMask", 0,
     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
+
+// FxReplace /////////////////////////////////////////////////////////////////////
+
+enum FxReplace_tinyid {
+	TID_FxReplace_Enabled,
+	TID_FxReplace_Blue,
+	TID_FxReplace_Green,
+	TID_FxReplace_Red,
+	TID_FxReplace_Supported
+};
+
+JSBool FxReplace_Blue_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	*vp = BOOLEAN_TO_JSVAL(g_FxReplace.Blue_get());
+	return JS_TRUE;
+}
+
+JSBool FxReplace_Blue_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	JSBool jB;
+	if(JS_ValueToBoolean(cx, *vp, &jB)) g_FxReplace.Blue_set(jB);
+	return JS_TRUE;
+}
+
+
+JSBool FxReplace_Enabled_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	*vp = BOOLEAN_TO_JSVAL(g_FxReplace.Enabled_get());
+	return JS_TRUE;
+}
+
+JSBool FxReplace_Enabled_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	JSBool jB;
+	if(JS_ValueToBoolean(cx, *vp, &jB)) g_FxReplace.Enabled_set(jB);
+	return JS_TRUE;
+}
+
+
+JSBool FxReplace_Green_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	*vp = BOOLEAN_TO_JSVAL(g_FxReplace.Green_get());
+	return JS_TRUE;
+}
+
+JSBool FxReplace_Green_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	JSBool jB;
+	if(JS_ValueToBoolean(cx, *vp, &jB)) g_FxReplace.Green_set(jB);
+	return JS_TRUE;
+}
+
+
+JSBool FxReplace_Red_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	*vp = BOOLEAN_TO_JSVAL(g_FxReplace.Red_get());
+	return JS_TRUE;
+}
+
+JSBool FxReplace_Red_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	JSBool jB;
+	if(JS_ValueToBoolean(cx, *vp, &jB)) g_FxReplace.Red_set(jB);
+	return JS_TRUE;
+}
+
+
+JSBool FxReplace_Supported_get(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	*vp = BOOLEAN_TO_JSVAL(g_FxReplace.Supported_get());
+	return JS_TRUE;
+}
+
+
+static JSPropertySpec FxReplace_props[] = {
+  {"blue"     , TID_FxReplace_Blue     , JSMIRVSHAREDPROP, FxReplace_Blue_get, FxReplace_Blue_set},
+  {"enabled"  , TID_FxReplace_Enabled  , JSMIRVSHAREDPROP, FxReplace_Enabled_get, FxReplace_Enabled_set},
+  {"green"    , TID_FxReplace_Green    , JSMIRVSHAREDPROP, FxReplace_Green_get, FxReplace_Green_set},
+  {"red"      , TID_FxReplace_Red      , JSMIRVSHAREDPROP, FxReplace_Red_get, FxReplace_Red_set},
+  {"supported", TID_FxReplace_Supported, JSMIRVSHAREDPROP|JSPROP_READONLY, FxReplace_Supported_get, NULL              },
+  {NULL,0,0,NULL,NULL}
+};
+
+static JSClass FxReplace_class = {
+    "FxReplace", 0,
+    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
+    JSCLASS_NO_OPTIONAL_MEMBERS
+};
+
 
 // FxHide //////////////////////////////////////////////////////////////////////
 
@@ -243,7 +339,6 @@ JSBool FxHide_Enabled_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) 
 	if(JS_ValueToBoolean(cx, *vp, &jB)) g_FxHide.Enabled_set(jB);
 	return JS_TRUE;
 }
-
 
 
 static JSPropertySpec FxHide_props[] = {
@@ -618,13 +713,17 @@ bool JsStartUp() {
 		&& NULL != (jo = JS_DefineObject(g_JsCx, joFx, "color", &FxColor_class, NULL, JSMIRVPROP|JSPROP_READONLY))
 		&& JS_DefineProperties(g_JsCx, jo, FxColor_props)
 
+		// .fx.colorMask:
+		&& NULL != (jo = JS_DefineObject(g_JsCx, joFx, "colorMask", &FxColorMask_class, NULL, JSMIRVPROP|JSPROP_READONLY))
+		&& JS_DefineProperties(g_JsCx, jo, FxColorMask_props)
+
 		// .fx.hide:
 		&& NULL != (jo = JS_DefineObject(g_JsCx, joFx, "hide", &FxHide_class, NULL, JSMIRVPROP|JSPROP_READONLY))
 		&& JS_DefineProperties(g_JsCx, jo, FxHide_props)
 
 		// .fx.replace:
-		&& NULL != (jo = JS_DefineObject(g_JsCx, joFx, "rgbMask", &FxRgbMask_class, NULL, JSMIRVPROP|JSPROP_READONLY))
-		&& JS_DefineProperties(g_JsCx, jo, FxRgbMask_props)
+		&& NULL != (jo = JS_DefineObject(g_JsCx, joFx, "replace", &FxReplace_class, NULL, JSMIRVPROP|JSPROP_READONLY))
+		&& JS_DefineProperties(g_JsCx, jo, FxReplace_props)
 	;
 
 	if(!bOk)

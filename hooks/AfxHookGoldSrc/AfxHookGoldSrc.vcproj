@@ -351,15 +351,23 @@
 					>
 				</File>
 				<File
+					RelativePath=".\FxColorMask.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FxColorMask.h"
+					>
+				</File>
+				<File
 					RelativePath=".\FxHide.h"
 					>
 				</File>
 				<File
-					RelativePath=".\FxRgbMask.cpp"
+					RelativePath=".\FxReplace.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\FxRgbMask.h"
+					RelativePath=".\FxReplace.h"
 					>
 				</File>
 				<File
