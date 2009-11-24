@@ -1,10 +1,12 @@
-/*
-File        : film_sound.cpp
-Started     : 2007-10-22T17:39Z
-Project     : Mirv Demo Tool
-Authors     : Dominik Tugend
-Description : see film_sound.h
-*/
+// #include "stdafx.h"
+
+// Copyright (c) by advancedfx.org
+//
+// Last changes:
+// 2009-11-24 dominik.matrixstorm.com
+//
+// First changes
+// 2007-10-22T17:39Z dominik.matrixstorm.com
 
 // to understand what we do here please look into the Quake 1 (QW) source by ID Software!
 
@@ -15,15 +17,12 @@ Description : see film_sound.h
 // HLSDK, qboolean, Vector, vec_3t, ...:
 
 // BEGIN HLSDK includes
-//
-// HACK: prevent cldll_int.h from messing the HSPRITE definition,
-// HLSDK's HSPRITE --> MDTHACKED_HSPRITE
 #pragma push_macro("HSPRITE")
 #define HSPRITE MDTHACKED_HSPRITE
 //
-#include "wrect.h" 
-#include "cl_dll.h"
-#include "cdll_int.h"
+#include <hlsdk/multiplayer/cl_dll/wrect.h>
+#include <hlsdk/multiplayer/cl_dll/cl_dll.h>
+#include <hlsdk/multiplayer/engine/cdll_int.h>
 //
 #undef HSPRITE
 #pragma pop_macro("HSPRITE")

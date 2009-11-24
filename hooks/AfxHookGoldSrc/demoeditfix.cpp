@@ -1,19 +1,14 @@
+// #include "stdafx.h"
+
 // BEGIN HLSDK includes
 //
-// HACK: prevent cldll_int.h from messing the HSPRITE definition,
-// HLSDK's HSPRITE --> MDTHACKED_HSPRITE
 #pragma push_macro("HSPRITE")
 #define HSPRITE MDTHACKED_HSPRITE
 //
-#include <wrect.h>
-#include <cl_dll.h>
-#include <cdll_int.h>
-#include <r_efx.h>
-#include <com_model.h>
-#include <r_studioint.h>
-#include <pm_defs.h>
-#include <cvardef.h>
-#include <entity_types.h>
+#include <hlsdk/multiplayer/cl_dll/wrect.h>
+#include <hlsdk/multiplayer/cl_dll/cl_dll.h>
+#include <hlsdk/multiplayer/engine/cdll_int.h>
+#include <hlsdk/multiplayer/common/cvardef.h>
 //
 #undef HSPRITE
 #pragma pop_macro("HSPRITE")
@@ -27,8 +22,6 @@
 #include "hl_addresses.h"
 
 extern cl_enginefuncs_s *pEngfuncs;
-extern engine_studio_api_s *pEngStudio;
-extern playermove_s *ppmove;
 
 std::map <int, int> g_DemoEditMappings;
 

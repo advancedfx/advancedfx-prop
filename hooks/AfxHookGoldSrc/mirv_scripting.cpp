@@ -25,8 +25,8 @@
 #pragma push_macro("HSPRITE")
 #define HSPRITE MDTHACKED_HSPRITE
 //
-#include <wrect.h>
-#include <cl_dll.h>
+#include <hlsdk/multiplayer/cl_dll/wrect.h>
+#include <hlsdk/multiplayer/cl_dll/cl_dll.h>
 //
 #undef HSPRITE
 #pragma pop_macro("HSPRITE")
@@ -41,8 +41,8 @@
 
 
 #define XP_WIN
-#include <jsapi.h>
-#include <jsstr.h>
+#include <js/src/jsapi.h>
+#include <js/src/jsstr.h>
 
 #define JSMIRVPROP JSPROP_ENUMERATE|JSPROP_PERMANENT
 #define JSMIRVSHAREDPROP JSMIRVPROP|JSPROP_SHARED

@@ -12,11 +12,11 @@
 //>>> BEGIN HLSDK includes
 #pragma push_macro("HSPRITE")
 #define HSPRITE MDTHACKED_HSPRITE
-#include <wrect.h>
-#include <cl_dll.h>
-#include <cdll_int.h>
-#include <cvardef.h>
-#include <event_args.h>
+#include <hlsdk/multiplayer/cl_dll/wrect.h>
+#include <hlsdk/multiplayer/cl_dll/cl_dll.h>
+#include <hlsdk/multiplayer/engine/cdll_int.h>
+#include <hlsdk/multiplayer/common/cvardef.h>
+#include <hlsdk/multiplayer/common/event_args.h>
 #undef HSPRITE
 #pragma pop_macro("HSPRITE")
 //<<< END HLSDK includes

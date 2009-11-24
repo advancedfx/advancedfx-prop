@@ -43,7 +43,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../;c:\Libraries/hlsdk/multiplayer/cl_dll;c:\Libraries/hlsdk/multiplayer/common;c:\Libraries/hlsdk/multiplayer/engine;c:\Libraries/hlsdk/multiplayer/pm_shared;c:\Libraries/hlsdk/multiplayer/dlls;C:\Libraries\js\src;$(NOINHERIT)"
+				AdditionalIncludeDirectories="../../;C:\Libraries;C:\Libraries\hlsdk\multiplayer\common;C:\Libraries\hlsdk\multiplayer\engine;C:\Libraries\hlsdk\multiplayer\pm_shared"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;_BIND_TO_CURRENT_CRT_VERSION=1"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -124,7 +124,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="../../;c:\Libraries/hlsdk/multiplayer/cl_dll;c:\Libraries/hlsdk/multiplayer/common;c:\Libraries/hlsdk/multiplayer/engine;c:\Libraries/hlsdk/multiplayer/pm_shared;c:\Libraries/hlsdk/multiplayer/dlls;C:\Libraries\js\src;$(NOINHERIT)"
+				AdditionalIncludeDirectories="../../;C:\Libraries;C:\Libraries\hlsdk\multiplayer\common;C:\Libraries\hlsdk\multiplayer\engine;C:\Libraries\hlsdk\multiplayer\pm_shared"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;_BIND_TO_CURRENT_CRT_VERSION=1"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"

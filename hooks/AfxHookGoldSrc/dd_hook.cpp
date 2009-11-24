@@ -23,23 +23,16 @@ Description : See dd_hook.h
 #pragma push_macro("HSPRITE")
 #define HSPRITE MDTHACKED_HSPRITE
 //
-#include <wrect.h>
-#include <cl_dll.h>
-#include <cdll_int.h>
-#include <r_efx.h>
-#include <com_model.h>
-#include <r_studioint.h>
-#include <pm_defs.h>
-#include <cvardef.h>
-#include <entity_types.h>
+#include <hlsdk/multiplayer/cl_dll/wrect.h>
+#include <hlsdk/multiplayer/cl_dll/cl_dll.h>
+#include <hlsdk/multiplayer/engine/cdll_int.h>
+#include <hlsdk/multiplayer/common/cvardef.h>
 //
 #undef HSPRITE
 #pragma pop_macro("HSPRITE")
 // END HLSDK includes
 
 extern cl_enginefuncs_s *pEngfuncs;
-extern engine_studio_api_s *pEngStudio;
-extern playermove_s *ppmove;
 
 
 typedef HRESULT (WINAPI *DirectDrawCreate_t) ( GUID FAR* lpGUID, LPDIRECTDRAW FAR* lplpDD, IUnknown FAR* pUnkOuter);

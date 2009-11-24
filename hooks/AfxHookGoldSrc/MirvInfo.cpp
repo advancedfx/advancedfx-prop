@@ -15,10 +15,10 @@
 #pragma push_macro("HSPRITE")
 #define HSPRITE MDTHACKED_HSPRITE
 //
-#include <wrect.h>
-#include <cl_dll.h>
-#include <cl_entity.h>
-#include <r_studioint.h>
+#include <hlsdk/multiplayer/cl_dll/wrect.h>
+#include <hlsdk/multiplayer/cl_dll/cl_dll.h>
+#include <hlsdk/multiplayer/common/cl_entity.h>
+#include <hlsdk/multiplayer/common/r_studioint.h>
 //
 #undef HSPRITE
 #pragma pop_macro("HSPRITE")

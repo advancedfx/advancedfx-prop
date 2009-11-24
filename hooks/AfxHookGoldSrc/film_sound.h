@@ -1,13 +1,12 @@
-/*
-File        : film_sound.h
-Started     : 2007-10-22T17:39Z
-Project     : Mirv Demo Tool
-Authors     : Dominik Tugend
-Description : Object with functions for interfacing the H-L Sound
-*/
+#pragma once
 
-#ifndef MDT_FILM_SOUND_H
-#define MDT_FILM_SOUND_H
+// Copyright (c) by advancedfx.org
+//
+// Last changes:
+// 2009-11-24 dominik.matrixstorm.com
+//
+// First changes
+// 2007-10-22T17:39Z dominik.matrixstorm.com
 
 #include <windows.h>
 #include <stdio.h> // FILE, ...
@@ -152,6 +151,3 @@ public:
 
 	FILM_SOUND_STATE eFilmSoundState();
 };
-
-
-#endif // #ifndef MDT_FILM_SOUND_H

@@ -48,7 +48,8 @@ Microsoft
   
 SpiderMonkey
   HLAE uses parts of the SpiderMonkey script engine.
-  The source code can be obtained from http://developer.mozilla.org/ .
+  The SpiderMonkey source code can be obtained from
+  http://www.mozilla.org/js/spidermonkey/
   
 Valve
   for HLSDK
@@ -75,7 +76,11 @@ MIRVIN_monkey
   Was the first one, mostly inactive past 1.0.
   http://www.madabouthats.org
   
-
+ripieces
+  Programmer, ... .
+  Joined March  2007.
+  http://dominik.matrixstorm.com
+  
 msthavoc
   Documentation, testing, community relations, tutorials, additional tools.
   Joined August 2007.
@@ -93,11 +98,3 @@ neomic
   Joined August 2007, inactive since August 2008.
   http://neomic.xail.net/
 
-
-Passed members:
-
-ripieces
-  Programmer.
-  Joined March  2007, died August 2008.
-  http://dominik.matrixstorm.com
-  
