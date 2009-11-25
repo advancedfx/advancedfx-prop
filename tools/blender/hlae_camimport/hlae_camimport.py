@@ -9,7 +9,7 @@ Tip: 'Import HLAE camera motion data'
 
 __author__ = "ripieces"
 __url__ = "advancedfx.org"
-__version__ = "0.0.0.4 (2009-09-04T14:44Z)"
+__version__ = "0.0.1.0 (2009-11-25T20:20Z)"
 
 __bpydoc__ = """\
 HLAE camera motion Import
@@ -21,7 +21,7 @@ For more info see http://www.advancedfx.org/
 # Copyright (c) advancedfx.org
 #
 # Last changes:
-# 2009-09-04 by dominik.matrixstorm.com
+# 2009-11-25 by dominik.matrixstorm.com
 #
 # First changes:
 # 2009-09-01 by dominik.matrixstorm.com
@@ -116,6 +116,16 @@ def ReadRootName(file):
 		return False
 		
 	return words[1]
+	
+	
+def ReadFrames(file):
+	words = ReadLineWordsFilterL(file, 'Frames:')
+	
+	if not words or len(words)<2:
+		return -1
+		
+	return int(words[1])
+
 
 
 def ReadFrame(file, channels):
@@ -134,7 +144,7 @@ def ReadFrame(file, channels):
 	return [Xpos, Ypos, Zpos, Zrot, Xrot, Yrot]
 	
 
-def ReadFile(fileName, scale, camFov, rotFix):
+def ReadFile(fileName, scale, camFov):
 	file = open(fileName, 'rU')
 	
 	rootName = ReadRootName(file)
@@ -148,6 +158,15 @@ def ReadFile(fileName, scale, camFov, rotFix):
 	if not channels:
 		SetError('Failed parsing CHANNELS.')
 		return False
+		
+	frames = ReadFrames(file);
+	if frames < 0:
+		SetError('Failed parsing Frames.')
+		return False
+		
+	if 0 == frames: frames = 1
+	
+	frames = float(frames)
 		
 	# seek to last line before Frame data:
 	if not ReadLineWordsFilterL(file, 'Time:'):
@@ -163,33 +182,41 @@ def ReadFile(fileName, scale, camFov, rotFix):
 	CrvRotY = ipo.addCurve('RotY')
 	CrvRotZ = ipo.addCurve('RotZ')
 	
-	frameCount = 0
+	frameCount = float(0)
+	
+	lastTime = 0
 			
 	while True:
 		frame = ReadFrame(file, channels)
 		if not frame:
-			break;
+			break
+			
+		curTime = Blender.sys.time()
+		
+		if(0.125 <= curTime - lastTime):
+			lastTime = curTime
+
+			# handle user input:
+			if Blender.Window.QTest():
+				evt, val = Blender.Window.QRead()
+				if evt in [Blender.Draw.ESCKEY, Blender.Draw.QKEY]:
+					break
+					
+			# update progessbar:
+			Blender.Window.DrawProgressBar(frameCount/frames, "Reading frame "+str(frameCount+1)+"/"+str(frames)+"...")
 			
 		frameCount += 1
 		
 		BTT = float(frameCount)
 
-		BXP =  frame[0] *scale # Bvh_XP
-		BYP = -frame[2] *scale # Bvh_ZP
-		BZP =  frame[1] *scale # Bvh_YP 
+		BXP = -frame[2] *scale
+		BYP = -frame[0] *scale
+		BZP =  frame[1] *scale
 
-		BYR = -frame[3] # Bvh_ZR
-		BXR =  frame[4] # Bvh_XR
-		BZR =  frame[5] # Bvh_YR
+		BYR = -frame[3]
+		BXR =  frame[4] +90.0
+		BZR =  frame[5] -90.0
 		
-		if rotFix:
-			BT = BXP
-			BXP = BYP
-			BYP = -BT
-			BZR -= 90.0
-		
-		BXR += 90.0 #  fix blender camera to point up at z
-
 		BXP = float(BXP)
 		BYP = float(BYP)
 		BZP = float(BZP)
@@ -222,32 +249,33 @@ def ReadFile(fileName, scale, camFov, rotFix):
 	scn.update(1)
 	Blender.Window.RedrawAll()
 	
-	return True
+	return frameCount == frames
 
 
 def load_HlaeCamMotion(fileName):
 	UI_Scale = Blender.Draw.Create(0.01)
 	UI_Fov = Blender.Draw.Create(90.0)
-	UI_Fix = Blender.Draw.Create(True)
 
 	UI_block = []	
 	UI_block.append(("Scale:", UI_Scale, 0.001, 10.0, 'Scaling'))
 	UI_block.append(("FOV:", UI_Fov, 10.0, 170.0, 'Field of view to set for the camera (in degrees)'))
-	UI_block.append(("-90deg fix", UI_Fix, 'Matches wrong BSP viewer map rotation'))
 	
 	if not Blender.Draw.PupBlock('HLAE camera motion import', UI_block):
 		return
+		
+	Blender.Window.DrawProgressBar(0.0, "Importing ...")
 			
 	IMP_Scale = UI_Scale.val
 	IMP_Fov = UI_Fov.val
-	IMP_Fix = UI_Fix.val
 
-	print 'Importing', fileName, 'Scale =', IMP_Scale, 'FOV =', IMP_Fov, 'Fix =', IMP_Fix
+	print 'Importing', fileName, 'Scale =', IMP_Scale, 'FOV =', IMP_Fov
 	
-	if ReadFile(fileName, IMP_Scale, IMP_Fov, IMP_Fix):
+	if ReadFile(fileName, IMP_Scale, IMP_Fov):
 		print 'Done.'
 	else:
 		print 'FAILED';
+		
+	Blender.Window.DrawProgressBar(1.0, "Finished.")
 
 	
 def main():
