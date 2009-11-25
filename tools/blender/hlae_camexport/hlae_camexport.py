@@ -9,7 +9,7 @@ Tip: 'Export motion data for HLAE'
 
 __author__ = "ripieces"
 __url__ = "advancedfx.org"
-__version__ = "0.0.0.1 (2009-09-03T07:00Z)"
+__version__ = "0.0.1.0 (2009-11-25T20:20Z)"
 
 __bpydoc__ = """\
 HLAE camera motion Export
@@ -23,7 +23,7 @@ For more info see http://www.advancedfx.org/
 # Copyright (c) advancedfx.org
 #
 # Last changes:
-# 2009-09-03 by dominik.matrixstorm.com
+# 2009-11-25 by dominik.matrixstorm.com
 #
 # First changes:
 # 2009-09-03 by dominik.matrixstorm.com
@@ -60,7 +60,7 @@ def WriteHeader(file, frames, frameTime):
 	file.write("Frame Time: "+FloatToBvhString(frameTime)+"\n")
 
 	
-def WriteFrame(file, obj, scale, rotFix):
+def WriteFrame(file, obj, scale):
 	def LimDeg(val):
 		while val>=360.0:
 			val -=360.0
@@ -71,20 +71,12 @@ def WriteFrame(file, obj, scale, rotFix):
 	loc = obj.getLocation('worldspace')
 	rot = obj.getEuler('worldspace')
 	
-	if not rotFix:
-		X =  loc[0] *scale
-		Y =  loc[2] *scale
-		Z = -loc[1] *scale
-		XR = LimDeg( rot[0] *RAD2DEG)
-		YR = LimDeg( rot[2] *RAD2DEG)
-		ZR = LimDeg(-rot[1] *RAD2DEG)
-	else:
-		X = -loc[1] *scale
-		Y =  loc[2] *scale
-		Z = -loc[0] *scale
-		XR = LimDeg( rot[0] *RAD2DEG)
-		YR = LimDeg( rot[2] *RAD2DEG +90.0)
-		ZR = LimDeg(-rot[1] *RAD2DEG)
+	X = -loc[1] *scale
+	Y =  loc[2] *scale
+	Z = -loc[0] *scale
+	XR = LimDeg( rot[0] *RAD2DEG)
+	YR = LimDeg( rot[2] *RAD2DEG +90.0)
+	ZR = LimDeg(-rot[1] *RAD2DEG)
 	
 	if 'Camera' == obj.getType():
 		# fix blender bug er feature
@@ -94,7 +86,7 @@ def WriteFrame(file, obj, scale, rotFix):
 	file.write(S)
 	
 
-def WriteFile(fileName, render, obj, scale, startFrame, endFrame, fps, rotFix):
+def WriteFile(fileName, render, obj, scale, startFrame, endFrame, fps):
 	fps = int(fps)
 	startFrame = int(startFrame)
 	endFrame = int(endFrame)
@@ -114,6 +106,7 @@ def WriteFile(fileName, render, obj, scale, startFrame, endFrame, fps, rotFix):
 	
 	scn = Blender.Scene.GetCurrent()
 
+	curFrame = 0	
 	frameCount = 1 +endFrame - startFrame
 	frameTime = 1.0 / float(fps)
 
@@ -126,24 +119,33 @@ def WriteFile(fileName, render, obj, scale, startFrame, endFrame, fps, rotFix):
 	try:
 		WriteHeader(file, frameCount, frameTime)
 		
-		curFrame = 0	
-		Blender.Window.DrawProgressBar(0.5, 'HLAE: exporting ...')		
+		lastTime = 0
 		while curFrame<frameCount:
 			render.currentFrame(startFrame + curFrame)
 			
-			#scn.update(1)
-			#Blender.Window.RedrawAll()
+			curTime = Blender.sys.time()
 			
-			WriteFrame(file, obj, scale, rotFix)
+			if(0.125 <= curTime - lastTime):
+				lastTime = curTime
+
+				# handle user input:
+				if Blender.Window.QTest():
+					evt, val = Blender.Window.QRead()
+					if evt in [Blender.Draw.ESCKEY, Blender.Draw.QKEY]:
+						break
+						
+				# update progessbar:
+				Blender.Window.DrawProgressBar(float(curFrame)/float(frameCount), "Writing frame "+str(curFrame+1)+"/"+str(frameCount)+"...")
+			
+			WriteFrame(file, obj, scale)
 			
 			curFrame += 1
 				
 	finally:
 		render.currentFrame(oldFrame)
-		Blender.Window.DrawProgressBar(1.0, 'HLAE: done.')
 		file.close()
 	
-	return True
+	return curFrame == frameCount
 
 def export_HlaeCamMotion(fileName):
 	scn = Blender.Scene.GetCurrent()
@@ -160,13 +162,11 @@ def export_HlaeCamMotion(fileName):
 	IMP_StartFrame = int(render.startFrame())
 	IMP_EndFrame = int(render.endFrame())
 	IMP_Fps = int(render.fps)
-	IMP_Fix = True
 	
 	UI_Scale = Blender.Draw.Create(IMP_Scale)
 	UI_StartFrame = Blender.Draw.Create(IMP_StartFrame)
 	UI_EndFrame = Blender.Draw.Create(IMP_EndFrame)
 	UI_Fps = Blender.Draw.Create(IMP_Fps)
-	UI_Fix = Blender.Draw.Create(IMP_Fix)
 	
 	UI_block = []	
 	UI_block.append(('Export "'+obj.name+'" ...'))
@@ -174,24 +174,25 @@ def export_HlaeCamMotion(fileName):
 	UI_block.append(("FPS:", UI_Fps, 1, 120, 'Frames Per Second'))
 	UI_block.append(("StartFrame:", UI_StartFrame, 1, 30000, 'Frame from which the export shall start'))
 	UI_block.append(("EndFrame:", UI_EndFrame, 1, 30000, 'Frame where the export shall end'))
-	UI_block.append(("+90deg fix", UI_Fix, 'Matches wrong BSP viewer map rotation'))
 	
 	if not Blender.Draw.PupBlock('HLAE camera motion export', UI_block):
 		return
+		
+	Blender.Window.DrawProgressBar(0.0, "Exproting ...")
 			
 	IMP_Scale = UI_Scale.val
 	IMP_StartFrame = UI_StartFrame.val
 	IMP_EndFrame = UI_EndFrame.val
 	IMP_Fps = UI_Fps.val
-	IMP_Fix = UI_Fix.val
 
-	print 'Exporting', obj.name, 'to', fileName, 'Scale =', IMP_Scale, 'FPS =', IMP_Fps, 'StartFrame =', IMP_StartFrame, 'EndFrame =', IMP_EndFrame, 'Fix =', IMP_Fix
+	print 'Exporting', obj.name, 'to', fileName, 'Scale =', IMP_Scale, 'FPS =', IMP_Fps, 'StartFrame =', IMP_StartFrame, 'EndFrame =', IMP_EndFrame
 	
-	if WriteFile(fileName, render, obj, IMP_Scale, IMP_StartFrame, IMP_EndFrame, IMP_Fps, IMP_Fix):
+	if WriteFile(fileName, render, obj, IMP_Scale, IMP_StartFrame, IMP_EndFrame, IMP_Fps):
 		print 'Done.'
 	else:
 		print 'FAILED';
-
+		
+	Blender.Window.DrawProgressBar(1.0, "Finished.")
 	
 def main():
 	if 1 != len(Blender.Scene.GetCurrent().objects.selected):
