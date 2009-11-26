@@ -207,10 +207,6 @@
 		<Filter
 			Name="resources"
 			>
-			<File
-				RelativePath="..\..\resources\mdt_addresses.ini"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="hooks"
@@ -359,6 +355,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\FxHide.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\FxHide.h"
 					>
 				</File>
@@ -392,6 +392,14 @@
 				</File>
 				<File
 					RelativePath=".\mdt_media.h"
+					>
+				</File>
+				<File
+					RelativePath=".\mirv_commands.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\mirv_commands.h"
 					>
 				</File>
 				<File
@@ -488,10 +496,6 @@
 				</File>
 			</Filter>
 		</Filter>
-		<File
-			RelativePath=".\FxHide.cpp"
-			>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>

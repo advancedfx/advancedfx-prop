@@ -429,13 +429,17 @@ struct ScriptEvents_s {
 	std::string On_glEnd;
 	std::string On_RecordStarting;
 	std::string On_RecordEnded;
+	std::string On_RenderViewBegin;
+	std::string On_RenderViewEnd;
 } g_ScriptEvents;
 
 enum Events_tinyid {
 	TID_Events_On_glBegin,
 	TID_Events_On_glEnd,
 	TID_Events_On_RecordStarting,
-	TID_Events_On_RecordEnded
+	TID_Events_On_RecordEnded,
+	TID_Events_On_RenderViewBegin,
+	TID_Events_On_RenderViewEnd,
 };
 
 void SetEventFnString(std::string *pstr, JSContext *cx, jsval *vp) {
@@ -462,6 +466,18 @@ JSBool Events_On_glEnd_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
 	return JS_TRUE;
 }
 
+JSBool Events_On_RenderViewBegin_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	SetEventFnString(&g_ScriptEvents.On_RenderViewBegin, cx, vp);
+
+	return JS_TRUE;
+}
+
+JSBool Events_On_RenderViewEnd_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	SetEventFnString(&g_ScriptEvents.On_RenderViewEnd, cx, vp);
+
+	return JS_TRUE;
+}
+
 JSBool Events_On_RecordStarting_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
 	SetEventFnString(&g_ScriptEvents.On_RecordStarting, cx, vp);
 
@@ -479,6 +495,8 @@ static JSPropertySpec Events_props[] = {
   {"on_glEnd"  , TID_Events_On_glEnd  , JSMIRVPROP, NULL, Events_On_glEnd_set},
   {"on_RecordStarting"  , TID_Events_On_RecordStarting, JSMIRVPROP, NULL, Events_On_RecordStarting_set},
   {"on_RecordEnded"  , TID_Events_On_RecordEnded, JSMIRVPROP, NULL, Events_On_RecordEnded_set},
+  {"on_RenderViewBegin", TID_Events_On_RenderViewBegin, JSMIRVPROP, NULL, Events_On_RenderViewBegin_set},
+  {"on_RenderViewEnd"  , TID_Events_On_RenderViewEnd  , JSMIRVPROP, NULL, Events_On_RenderViewEnd_set},
   {NULL,0,0,NULL,NULL}
 };
 
@@ -518,6 +536,29 @@ void ScriptEvent_OnRecordEnded() {
 	}
 }
 
+bool ScriptEvent_OnRenderViewBegin() {
+	if(g_ScriptEvents.On_RenderViewBegin.empty())
+		return true;
+
+	jsval r;
+	JSBool jB;
+
+	JS_CallFunctionName(g_JsCx, g_JsGlobal, g_ScriptEvents.On_RenderViewBegin.c_str(), 0, NULL, &r);
+
+	return JS_ValueToBoolean(g_JsCx, r, &jB) ? (bool)jB : true;
+}
+
+bool ScriptEvent_OnRenderViewEnd() {
+	if(g_ScriptEvents.On_RenderViewEnd.empty())
+		return false;
+
+	jsval r;
+	JSBool jB;
+
+	JS_CallFunctionName(g_JsCx, g_JsGlobal, g_ScriptEvents.On_RenderViewEnd.c_str(), 0, NULL, &r);
+
+	return JS_ValueToBoolean(g_JsCx, r, &jB) ? (bool)jB : false;
+}
 
 
 // Fx //////////////////////////////////////////////////////////////////////////
@@ -576,7 +617,7 @@ static JSClass Global_class = {
     "Global", 0,
     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
-    JSCLASS_NO_OPTIONAL_MEMBERS
+    JSCLASS_NO_OPTIONAL_MEMBERS | JSCLASS_GLOBAL_FLAGS
 };
 
 static JSBool
@@ -689,7 +730,7 @@ bool JsStartUp() {
 			true
 		)
 
-		// .:
+		// . (global):
 		&& NULL != (g_JsGlobal = JS_NewObject(g_JsCx, &Global_class, NULL, NULL)) // .
 		&& JS_InitStandardClasses(g_JsCx, g_JsGlobal)
 		&& JS_DefineFunctions(g_JsCx, g_JsGlobal, Global_functions)

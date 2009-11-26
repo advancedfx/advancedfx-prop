@@ -24,3 +24,8 @@ void ScriptEvent_OnGlEnd();
 void ScriptEvent_OnRecordStarting();
 void ScriptEvent_OnRecordEnded();
 
+// true - call (default), false - block
+bool ScriptEvent_OnRenderViewBegin();
+
+// true - loop, false end (default)
+bool ScriptEvent_OnRenderViewEnd();

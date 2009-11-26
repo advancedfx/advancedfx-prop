@@ -22,9 +22,6 @@
 #include <gl\glu.h>
 
 // BEGIN HLSDK includes
-//
-// HACK: prevent cldll_int.h from messing the HSPRITE definition,
-// HLSDK's HSPRITE --> MDTHACKED_HSPRITE
 #pragma push_macro("HSPRITE")
 #define HSPRITE MDTHACKED_HSPRITE
 //
@@ -71,8 +68,8 @@
 #include "FxReplace.h"
 #include "MirvInfo.h"
 
-#include <map>
-#include <list>
+#include "mirv_commands.h"
+
 #include <string>
 
 extern Filming g_Filming;
@@ -84,20 +81,6 @@ CHlaeSupportRender *g_pSupportRender = NULL; // inited in basecomClient.cpp
 
 extern const char *pszFileVersion;
 
-typedef std::list <Void_func_t> VoidFuncList;
-VoidFuncList &GetCvarList()
-{
-	static VoidFuncList CvarList;
-	return CvarList;
-}
-VoidFuncList &GetCmdList()
-{
-	static VoidFuncList CmdList;
-	return CmdList;
-}
-
-void CvarRegister(Void_func_t func) { GetCvarList().push_front(func); }
-void CmdRegister(Void_func_t func) { GetCmdList().push_front(func); }
 
 // Various H-L Engine interface (super) Globals:
 //   (they are filled when the addresses system is loaded)
@@ -535,17 +518,12 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 			pEngfuncs->Con_Printf("MDT WARNING: Could not install all OpenGL extensions. Some features might not work.\n");
 		}
 
-		// Register the commands
-		std::list<Void_func_t>::iterator i = GetCmdList().begin();
-		while (i != GetCmdList().end())
-			(*i++)();
+		// Register commands:
+		Mirv_Commands_Register();
 
-		// Register the cvars
-		i = GetCvarList().begin();
-		while (i != GetCvarList().end())
-			(*i++)();
 
 		pEngfuncs->Con_Printf("Mirv Demo Tool v%s (%s) Loaded\nBy Mirvin_Monkey 02/05/2004\n\n", pszFileVersion, __DATE__);
+
 
 		screeninfo.iSize = sizeof(SCREENINFO);
 		pEngfuncs->pfnGetScreenInfo(&screeninfo);

@@ -321,7 +321,6 @@ void touring_R_RenderView_(void)
 // this is our R_RemderView hook
 // pay attention, cuz it will have heavy interaction with our filming singelton!
 {
-	g_MirvInfo.SetIn_R_Renderview(true);
 
 	refdef_t* p_r_refdef=(refdef_t*)HL_ADDR_GET(r_refdef); // pointer to r_refdef global struct
 
@@ -334,17 +333,25 @@ void touring_R_RenderView_(void)
 
 	g_Filming.OnR_RenderView(p_r_refdef->vieworg, p_r_refdef->viewangles);
 
-	//
-	// call original R_RenderView_
-	//
-	detoured_R_RenderView_();
+	bool bLoop;
+	do {
+		bLoop = false;
+		if(ScriptEvent_OnRenderViewBegin()) {
+			//
+			// call original R_RenderView_
+			//
 
-	// restore old (is this necessary? I don't know if the values are used for interpolations later or not)
-	// But one thing is for sure, if we do steropases, then we need to restore them for ourselfs anways!
-	memcpy (p_r_refdef->vieworg,oldorigin,3*sizeof(float));
-	memcpy (p_r_refdef->viewangles,oldangles,3*sizeof(float));
+			g_MirvInfo.SetIn_R_Renderview(true);
+			detoured_R_RenderView_();
+			g_MirvInfo.SetIn_R_Renderview(false);
 
-	g_MirvInfo.SetIn_R_Renderview(false);
+			bLoop = ScriptEvent_OnRenderViewEnd();
+		}
+
+		// restore original values
+		memcpy (p_r_refdef->vieworg,oldorigin,3*sizeof(float));
+		memcpy (p_r_refdef->viewangles,oldangles,3*sizeof(float));
+	} while(bLoop);
 }
 
 
