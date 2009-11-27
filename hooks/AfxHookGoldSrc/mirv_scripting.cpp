@@ -353,6 +353,58 @@ static JSClass FxHide_class = {
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
+
+// Ogl /////////////////////////////////////////////////////////////////////////
+
+static JSBool
+Ogl_glColorMask(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+	JSBool jbR = JS_TRUE;
+	JSBool jbG = JS_TRUE;
+	JSBool jbB = JS_TRUE;
+	JSBool jbA = JS_TRUE;
+
+	JS_ValueToBoolean(g_JsCx, argv[0], &jbR);
+	JS_ValueToBoolean(g_JsCx, argv[1], &jbG);
+	JS_ValueToBoolean(g_JsCx, argv[2], &jbB);
+	JS_ValueToBoolean(g_JsCx, argv[3], &jbA);
+
+	glColorMask(jbR, jbG, jbB, jbA);
+
+	*rval = INT_TO_JSVAL(g_MirvInfo.GetCurrentEntityIndex());	
+
+    return JS_TRUE;
+}
+
+static JSBool
+Ogl_GlClear(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+	int32 jMode = 0;
+
+	JS_ValueToInt32(g_JsCx, argv[0], &jMode);
+
+	glClear(jMode);
+
+	*rval = INT_TO_JSVAL(g_MirvInfo.GetCurrentEntityIndex());	
+
+    return JS_TRUE;
+}
+
+
+static JSFunctionSpec Ogl_functions[] = {
+    {"glClear", Ogl_glColorMask, 1, JSMIRVSHAREDPROP|JSPROP_READONLY,0},
+    {"glColorMask", Ogl_GlClear, 4, JSMIRVSHAREDPROP|JSPROP_READONLY,0},
+	{NULL,NULL,0,0,0}
+};
+
+static JSClass Ogl_class = {
+    "Ogl", 0,
+    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
+    JSCLASS_NO_OPTIONAL_MEMBERS
+};
+
+
 // Info /////////////////////////////////////////////////////////////////////
 
 enum Info_tinyid {
@@ -570,6 +622,7 @@ static JSClass Fx_class = {
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
+
 // Addr ////////////////////////////////////////////////////////////////////////
 
 
@@ -614,10 +667,10 @@ static JSClass Addr_class = {
 // Global //////////////////////////////////////////////////////////////////////
 
 static JSClass Global_class = {
-    "Global", 0,
+    "Global", JSCLASS_GLOBAL_FLAGS,
     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
-    JSCLASS_NO_OPTIONAL_MEMBERS | JSCLASS_GLOBAL_FLAGS
+    JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 static JSBool
@@ -742,6 +795,10 @@ bool JsStartUp() {
 		&& NULL != (jo = JS_DefineObject(g_JsCx, g_JsGlobal, "info", &Info_class, NULL, JSMIRVPROP|JSPROP_READONLY))
 		&& JS_DefineProperties(g_JsCx, jo, Info_props)
 		&& JS_DefineFunctions(g_JsCx, jo, Info_functions)
+
+		// .ogl:
+		&& NULL != (jo = JS_DefineObject(g_JsCx, g_JsGlobal, "ogl", &Ogl_class, NULL, JSMIRVPROP|JSPROP_READONLY))
+		&& JS_DefineFunctions(g_JsCx, jo, Ogl_functions)
 
 		// .events:
 		&& NULL != (jo = JS_DefineObject(g_JsCx, g_JsGlobal, "events", &Events_class, NULL, JSMIRVPROP|JSPROP_READONLY))

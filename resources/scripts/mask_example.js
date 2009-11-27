@@ -3,7 +3,7 @@
 // To use this script:
 // 1. load a demo
 // 2. mirv_movie_simulate 1; mirv_recordmovie_start
-// 3. "afx load('mask_example.js');"
+// 3. afx "load('mask_example.js');"
 
 function myGlBegin(mode) {
 	if(info.recording) {

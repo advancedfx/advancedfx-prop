@@ -5,9 +5,9 @@
 
 
 <release>
-<name>HLAE Rouge</name>
-<version>2.2.7.6</version>
-<time>2009-11-21T14:41Z</time>
+<name>HLAE</name>
+<version>2.2.8.0</version>
+<time>2009-11-27T15:37Z</time>
 <changes>
 <change type="added">
 Added mirv_camexport_timeinfo.
@@ -20,14 +20,11 @@ Replaced old mdt_addresses.ini system with a start-up script filling the addr sc
 </change>
 </changes>
 <comments>
-Uses parts of the SpiderMonkey script engine.
-The SpiderMonkey source code can be obtained from http://developer.mozilla.org/ .<br />
+This is release is for testing HLAE in combination with the
+SpiderMonkey script engine.<br />
+The SpiderMonkey source code can be obtained from http://www.mozilla.org/js/spidermonkey/ .<br />
 <br />
-HLAE Rouge 2.2.7.5 (2009-11-19T13:13Z),<br />
-HLAE Rouge 2.2.7.4 (2009-11-19T02:34Z),<br />
-HLAE Rouge 2.2.7.3 (2009-11-17T13:48Z),<br />
-HLAE Rouge 2.2.7.2 (2009-11-17T00:15Z),<br />
-HLAE Rouge 2.2.7.1 (2009-11-16T18:15Z).
+Based on HLAE Rouge 2.2.7.1 (2009-11-16T18:15Z) - 2.2.7.6 (2009-11-21T14:41Z).
 </comments>
 </release>
 

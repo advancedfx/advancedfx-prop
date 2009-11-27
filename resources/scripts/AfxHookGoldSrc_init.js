@@ -1,9 +1,10 @@
 // WE SUGGEST TO NOT EDIT THIS FILE!
 // This file carries out CRUCIAL operations and we might change it occasionally.
 
+
 ////////////////////////////////////////////////////////////////////////////////
 //
-// Init addresses:
+// Address system:
 
 //
 // Engine-to-client interfaces:
@@ -114,18 +115,18 @@ addr.UpdateSpectatorPanel_checkjmp_valve = 0x01940221; //Half-Life (valve) //unc
 
 // cstrike Team color hook:
 // ALL OFFSETS ARE RELATIVE TO client.dll!
-addr.GetClientColor = 0x45CD0; // function, used by head-up and overview i.e. //checked
-addr.DTOURSZ_GetClientColor = 0x0a; //checked
-addr.unkInlineClientColorA = 0x4629A; // inline, used to draw attacker color, also check hook //checked
-addr.SZ_unkInlineClientColorA = 0x3E; //checked
+addr.GetClientColor = 0x45CD0; // function, used by head-up and overview i.e.
+addr.DTOURSZ_GetClientColor = 0x0a;
+addr.unkInlineClientColorA = 0x4629A; // inline, used to draw attacker color, also check hook
+addr.SZ_unkInlineClientColorA = 0x3E;
 addr.unkInlineClientColorV = 0x46320; // inline, used to draw victim color, also check hook // todo
-addr.SZ_unkInlineClientColorV = 0x3C; //checked
+addr.SZ_unkInlineClientColorV = 0x3C;
 
 // cstrike CrossHair fix related:
-addr.CLOFS_UnkCstrikeCrosshairFn = 0x42EB0; //checked
-addr.DTOURSZ_UnkCstrikeCrosshairFn = 0x09; //checked, at least 8 bytes req.
-addr.CLOFS_UnkCstrikeCh_mul_fac = 0xCD450; //checked
-addr.CLOFS_UnkCstrikeCh_add_fac = 0xC3298; //checked
+addr.CLOFS_UnkCstrikeCrosshairFn = 0x42EB0;
+addr.DTOURSZ_UnkCstrikeCrosshairFn = 0x09; // at least 8 bytes req.
+addr.CLOFS_UnkCstrikeCh_mul_fac = 0xCD450;
+addr.CLOFS_UnkCstrikeCh_add_fac = 0xC3298;
 
 // cstrike EV_CreateSmoke:
 addr.cstrike_EV_CreateSmoke_CLOFS = 0xa420;
@@ -133,3 +134,15 @@ addr.cstrike_EV_CreateSmoke_CLOFS = 0xa420;
 
 // unused // p_enginefuncs_s = addr.hw_dll + 0x18B9F0 // may be unused
 // unused // p_globalvars_s = addr.hw_dll + 0x7CD0E0 // may be unused
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Provide additional OpenGL helpers:
+
+ogl.GL_TRUE = 1;
+ogl.GL_FALSE = 0;
+ogl.GL_COLOR_BUFFER_BIT = 0x00004000;
+ogl.GL_DEPTH_BUFFER_BIT = 0x00000100;
+ogl.GL_ACCUM_BUFFER_BIT = 0x00000200;
+ogl.GL_STENCIL_BUFFER_BIT = 0x00000400;
