@@ -6,8 +6,8 @@
 
 <release>
 <name>HLAE</name>
-<version>2.2.9.0</version>
-<time>2009-12-11T12:11Z</time>
+<version>2.2.9.1</version>
+<time>2009-12-11T12:50Z</time>
 <changes>
 <change type="updated">
 Changed mirv_movie_filename: now specifies a folder path.

@@ -534,7 +534,7 @@ ATOM APIENTRY HlaeBcClt_RegisterClassA(CONST WNDCLASSA *lpWndClass)
 		return RegisterClassA(lpWndClass);
 
 	// check for fullscreen cheatcode:
-	if( pEngfuncs->CheckParm("-mdtfull",NULL) )
+	if( pEngfuncs->CheckParm("-full",NULL) )
 	{
 		g_bFullScreenCheatMode = true;
 		return RegisterClassA( lpWndClass );

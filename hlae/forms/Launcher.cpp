@@ -34,9 +34,10 @@ System::Void Launcher::buttonOK_Click(System::Object^  sender, System::EventArgs
 				MessageBoxButtons::OK,
 				MessageBoxIcon::Error
 			);
-
-		if(cfg->RememberChanges)
+		else if(cfg->RememberChanges) {
 			HlaeConfig::Config->Settings->Launcher = cfg;
+			HlaeConfig::BackUp();
+		}
 	}
 }
 
@@ -122,6 +123,4 @@ System::Void Launcher::WriteToConfig(CfgLauncher ^ cfg)
 	cfg->StartDocked = this->checkBoxStartDocked->Checked;
 	cfg->RenderMode = this->comboBoxRenderMode->SelectedIndex;
 	cfg->FullScreen = this->checkBoxFullScreen->Checked;
-
-	HlaeConfig::BackUp();
 }

@@ -483,13 +483,14 @@ private: System::Void checkBoxFullScreen_Click(System::Object^  sender, System::
 			if( this->checkBoxFullScreen->Checked )
 			{
 				System::Windows::Forms::DialogResult dr = MessageBox::Show(
-					"Switching to fullscreen is not recommended:\n"
-					"Fullscreen supports much fewer resolutions.\n"
+					"Switching to full screen is not recommended,\n"
+					"i.e. full screen supports much fewer resolutions.\n"
 					"\n"
-					"Do you want to switch to fullscreen?",
+					"Do you still want to switch to fullscreen?",
 					"Really switch to full screen?",
 					MessageBoxButtons::YesNo,
-					MessageBoxIcon::Information
+					MessageBoxIcon::Information,
+					MessageBoxDefaultButton::Button2
 				);
 				if( System::Windows::Forms::DialogResult::Yes == dr )
 				{					
