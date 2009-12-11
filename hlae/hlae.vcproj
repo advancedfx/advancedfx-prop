@@ -216,7 +216,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\hlae.cpp"
+				RelativePath=".\main.cpp"
 				>
 			</File>
 			<File
@@ -515,6 +515,18 @@
 				</File>
 				<File
 					RelativePath=".\other\hlaelogo.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="AfxGoldSrc"
+				>
+				<File
+					RelativePath=".\AfxGoldSrc\AfxGoldSrc.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\AfxGoldSrc\AfxGoldSrc.h"
 					>
 				</File>
 			</Filter>

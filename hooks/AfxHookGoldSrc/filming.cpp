@@ -42,6 +42,8 @@
 
 #include "Mirv_Scripting.h"
 
+#include "filetools.h"
+
 using namespace hlae::sampler;
 
 extern cl_enginefuncs_s *pEngfuncs;
@@ -85,7 +87,7 @@ REGISTER_CVAR(movie_clearscreen, "0", 0);
 REGISTER_CVAR(movie_bmp, "1", 0);
 REGISTER_CVAR(movie_depthdump, "0", 0);
 REGISTER_CVAR(movie_export_sound, "0", 0); // should default to 1, but I don't want to mess up other updates
-REGISTER_CVAR(movie_filename, "untitled", 0);
+REGISTER_CVAR(movie_filename, "untitled_rec", 0);
 REGISTER_CVAR(movie_fps, "30", 0);
 REGISTER_CVAR(movie_separate_hud, "0", 0);
 REGISTER_CVAR(movie_simulate, "0", 0);
@@ -103,6 +105,30 @@ REGISTER_CVAR(sample_sps, "180", 0);
 
 // Our filming singleton
 Filming g_Filming;
+
+
+FilmingStreamInfo g_Filming_Stream_Infos[] = {
+	{"all", false},
+	{"world", false},
+	{"entity", false},
+	{"depthall", false},
+	{"depthworld", false},
+	{"hudcolor", false},
+	{"hudalpha", false},
+	{"sampled", false},
+	0
+};
+
+enum FilmingStreamInfoType {
+	FSIT_all,
+	FSIT_world,
+	FSIT_entity,
+	FSIT_depthall,
+	FSIT_depthworld,
+	FSIT_hudcolor,
+	FSIT_hudalpha,
+	FSIT_sampled
+};
 
 //
 //
@@ -492,6 +518,20 @@ REGISTER_CMD_FUNC(cameraofs_cs)
 		pEngfuncs->Con_Printf("Usage: " PREFIX "cameraofs_cs <right> <up> <forward>\nNot neccessary for stereo mode, use mirv_movie_stereo instead\n");
 }
 
+void Filming::EnsureStreamDirectory(FilmingStreamInfo * streamInfo) {
+	if(!streamInfo->dirCreated) {
+		std::string strDir(m_TakeDir);
+		strDir += "\\";
+		strDir += streamInfo->name;
+
+		if(!CreateDirectoryRecursiveA(strDir.c_str()))
+			pEngfuncs->Con_Printf("ERROR: could not create directory \"%s\"\n", strDir.c_str());
+
+		streamInfo->dirCreated = true;
+	}
+}
+
+
 //bool Filming::bNoMatteInterpolation()
 //{ return _bNoMatteInterpolation; }
 
@@ -783,7 +823,7 @@ bool Filming::OnHudEndEvnet()
 	switch(giveHudRqState())
 	{
 	case HUDRQ_CAPTURE_COLOR:
-		if (!_bSimulate2)Capture("hudcolor",m_nFrames,COLOR);
+		if (!_bSimulate2)Capture(&g_Filming_Stream_Infos[FSIT_hudcolor] ,m_nFrames, COLOR);
 		if (movie_separate_hud->value!=2.0)
 		{
 			// we want alpha too in this case
@@ -792,7 +832,7 @@ bool Filming::OnHudEndEvnet()
 		}
 		break;
 	case HUDRQ_CAPTURE_ALPHA:
-		if(!_bSimulate2)Capture("hudalpha",m_nFrames,ALPHA);
+		if(!_bSimulate2)Capture(&g_Filming_Stream_Infos[FSIT_hudalpha], m_nFrames, ALPHA);
 		break;
 	}
 	return false; // do not loop
@@ -812,21 +852,51 @@ void Filming::setScreenSize(GLint w, GLint h)
 
 void Filming::Start()
 {
+	// Prepare directories and directory infos:
+
+	for(int i=0; 0 != g_Filming_Stream_Infos[i].name; i++)
+		g_Filming_Stream_Infos[i].dirCreated = false;
+
+	// Different filename, so save it and reset the take count
+	if (strcmp(movie_filename->string, m_RecordDir.c_str()) != 0)
+	{
+		m_RecordDir.assign(movie_filename->string);
+		m_nTakes = 0;
+	}
+
+	// Build Take Dir:
+	{
+		char szTake[33];
+		_snprintf(szTake, sizeof(szTake) - 1, "%02d", m_nTakes);
+
+		m_TakeDir.assign(m_RecordDir);
+		m_TakeDir.append("\\take");
+		m_TakeDir.append(szTake);
+	}
+
+	if(!CreateDirectoryRecursiveA(m_TakeDir.c_str())) {
+		pEngfuncs->Con_Printf(
+			"ERROR: Could not create directory \"%s\" or directory already exists.\n"
+			"Aborting.\n",
+			m_TakeDir.c_str());
+
+		return; // abort!
+	}
+
+
+	//
+	//
+
 	ScriptEvent_OnRecordStarting();
+
+	pEngfuncs->Con_Printf("Started recording to \"%s\".\n", m_TakeDir.c_str());
 
 	m_fps = max(movie_fps->value,1.0f);
 	m_time = 0;
 
 	HlaeBc_OnFilmingStart(); // inform Hlae Server GUI
 	if (_pSupportRender)
-		_pSupportRender->hlaeOnFilmingStart();
-
-	// Different filename, so save it and reset the take count
-	if (strncmp(movie_filename->string, m_szFilename, sizeof(m_szFilename) - 1) != 0)
-	{
-		strncpy(m_szFilename, movie_filename->string, sizeof(m_szFilename) - 1);
-		m_nTakes = 0;
-	}
+		_pSupportRender->hlaeOnFilmingStart();	
 
 	m_nFrames = 0;
 	
@@ -853,9 +923,9 @@ void Filming::Start()
 		float fc = camexport_mode->value;
 		float frameTime = 1.0f / m_fps;
 
-		if(fc && fc != 2.0f) g_CamExport.BeginFileMain(m_szFilename, m_nTakes, frameTime);
-		if(fc && fc >= 2.0f) g_CamExport.BeginFileLeft(m_szFilename, m_nTakes, frameTime);
-		if(fc && fc >= 2.0f) g_CamExport.BeginFileRight(m_szFilename, m_nTakes, frameTime);
+		if(fc && fc != 2.0f) g_CamExport.BeginFileMain(m_TakeDir.c_str(), frameTime);
+		if(fc && fc >= 2.0f) g_CamExport.BeginFileLeft(m_TakeDir.c_str(), frameTime);
+		if(fc && fc >= 2.0f) g_CamExport.BeginFileRight(m_TakeDir.c_str(), frameTime);
 	}
 
 	// if we want to use R_RenderView and we have not already done that, we need to set it up now:
@@ -1015,6 +1085,8 @@ void Filming::Stop()
 
 bool Filming::OnPrintFrame(unsigned long id, void *prgbdata, int iWidht, int iHeight)
 {
+	FilmingStreamInfo * streamInfo = &g_Filming_Stream_Infos[FSIT_sampled];
+
 	bool bBMP = 0.0f != movie_bmp->value;
 
 	// only supports BGR data atm!:
@@ -1022,11 +1094,11 @@ bool Filming::OnPrintFrame(unsigned long id, void *prgbdata, int iWidht, int iHe
 	int nBits = 24;
 
 	const char *pszFileTag = "samp";
-	char* pszStereotag="";
+	std::string fileName;
 
 	char szFilename[196];
-	_snprintf(szFilename, sizeof(szFilename) - 1, "%s_%02d_%s%s_%05d.%s", m_szFilename, m_nTakes, pszFileTag, pszStereotag, id, bBMP ? "bmp" : "tga");
-
+	_snprintf(szFilename, sizeof(szFilename) - 1, "%s\\%s\\%05d.%s", m_TakeDir.c_str(), streamInfo->name, id, bBMP ? "bmp" : "tga");
+	EnsureStreamDirectory(streamInfo);
 	
 	if( bBMP )
 	{
@@ -1262,7 +1334,7 @@ void GLfloatArrayToXByteArray(GLfloat *pBuffer, unsigned int width, unsigned int
 }
 
 
-void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
+void Filming::Capture(FilmingStreamInfo * streamInfo, int iFileNumber, BUFFER iBuffer)
 {
 	if(print_frame->value)
 	{
@@ -1365,10 +1437,12 @@ void Filming::Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer)
 		if (_bEnableStereoMode&&!bWantsHudCapture)
 		{
 			// if we are not capturing the hud and are in stereo mode add the proper tag:
-			if (_stereo_state==STS_LEFT) pszStereotag="_left"; else pszStereotag="_right";
+			if (_stereo_state==STS_LEFT) pszStereotag="left_"; else pszStereotag="right_";
 		}
+		
 		char szFilename[196];
-		_snprintf(szFilename, sizeof(szFilename) - 1, "%s_%02d_%s%s_%05d.%s", m_szFilename, m_nTakes, pszFileTag, pszStereotag, iFileNumber, bBMP ? "bmp" : "tga");
+		_snprintf(szFilename, sizeof(szFilename) - 1, "%s\\%s\\%s%05d.%s", m_TakeDir.c_str(), streamInfo->name, pszStereotag, iFileNumber, bBMP ? "bmp" : "tga");
+		EnsureStreamDirectory(streamInfo);
 
 		if( bBMP )
 		{
@@ -1550,8 +1624,8 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 
 	float flTime = ((m_nFrames+1)/m_fps)-(m_nFrames/m_fps); // pay attention when changing s.th. here because of handling of precision errors!
 
-	static char *pszTitles[] = { "all", "world", "entity" };
-	static char *pszDepthTitles[] = { "depthall", "depthworld", "depthall" };
+	FilmingStreamInfoType infos[] = { FSIT_all, FSIT_world, FSIT_entity };
+	FilmingStreamInfoType depthInfos[] = { FSIT_depthall, FSIT_depthworld, FSIT_depthall };
 
 	// Are we doing our own screenshot stuff
 	bool bDepthDumps = (movie_depthdump->value != 0);
@@ -1576,9 +1650,9 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 		// capture ALL OR WORLD:
 		if( movie_splitstreams->value != 2)
 		{
-			if (!_bSimulate) Capture(pszTitles[m_iMatteStage], m_nFrames, COLOR);
+			if (!_bSimulate) Capture(&g_Filming_Stream_Infos[infos[m_iMatteStage]], m_nFrames, COLOR);
 			if (bDepthDumps && !_bSimulate2 && iDepthStreams & 0x1)
-				Capture(pszDepthTitles[m_iMatteStage], m_nFrames, DEPTH);
+				Capture(&g_Filming_Stream_Infos[depthInfos[m_iMatteStage]], m_nFrames, DEPTH);
 
 			if (_pSupportRender) 
 				*bSwapRes = _pSupportRender->hlaeSwapBuffers(hSwapHDC);
@@ -1596,9 +1670,9 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 			touring_R_RenderView_(); // rerender frame instant!!!!
 
 			// capture stage:
-			if (!_bSimulate) Capture(pszTitles[m_iMatteStage], m_nFrames, COLOR);
+			if (!_bSimulate) Capture(&g_Filming_Stream_Infos[infos[m_iMatteStage]], m_nFrames, COLOR);
 			if (bDepthDumps && !_bSimulate2 && iDepthStreams & 0x2)
-				Capture(pszDepthTitles[m_iMatteStage], m_nFrames, DEPTH);
+				Capture(&g_Filming_Stream_Infos[depthInfos[m_iMatteStage]], m_nFrames, DEPTH);
 			if (_pSupportRender)
 				*bSwapRes = _pSupportRender->hlaeSwapBuffers(hSwapHDC);
 			else
@@ -1635,7 +1709,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 
 			// try to init sound filming system:
 			char szFilename[196];
-			_snprintf(szFilename, sizeof(szFilename) - 1, "%s_%02d_sound.wav", m_szFilename, m_nTakes);
+			_snprintf(szFilename, sizeof(szFilename) - 1, "%s\\sound.wav", m_TakeDir.c_str());
 
 			_bExportingSound = _FilmSound.Start(szFilename,m_time,movie_sound_volume->value);
 			// the soundsystem will get deactivated here, if it fails
@@ -1970,4 +2044,13 @@ REGISTER_DEBUGCMD_FUNC(depth_info) {
 	pEngfuncs->Con_Printf("zNear: %f\nzFar: %f\nMax linear error (8bit): %f (%f %%)\n", N, F, E, P);
 }
 
+
+REGISTER_DEBUGCMD_FUNC(dirtest) {
+	if(2 <= pEngfuncs->Cmd_Argc()) {
+		pEngfuncs->Con_Printf(
+			"Success: %s",
+			CreateDirectoryRecursiveA(pEngfuncs->Cmd_Argv(1)) ? "TRUE" : "FALSE"
+		);
+	}
+}
 

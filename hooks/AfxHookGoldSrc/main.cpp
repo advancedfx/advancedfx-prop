@@ -48,7 +48,6 @@
 
 #include "supportrender.h" // off-screen recording support
 
-#include "dd_hook.h" // we have to call functions (inGetProcAddress) from here in order to init the hook
 #include "dsound_hook.h"
 
 #include "hl_addresses.h" // address definitions
@@ -78,8 +77,6 @@ extern Zooming g_Zooming;
 extern CHlaeCmdTools g_CmdTools;
 
 CHlaeSupportRender *g_pSupportRender = NULL; // inited in basecomClient.cpp
-
-extern const char *pszFileVersion;
 
 
 // Various H-L Engine interface (super) Globals:
@@ -140,7 +137,7 @@ void PrintDebugPlayerInfo(cl_entity_s *pl,int itrueindex)
 	pEngfuncs->Con_Printf("%i (%s): %i, %s, %s, %i, %i, %i, %i, %i, %i\n",itrueindex,(pl->curstate.effects & EF_NODRAW) ? "y" : "n",pl->index,m_hpinfo.name,m_hpinfo.model,m_hpinfo.ping,m_hpinfo.packetloss,m_hpinfo.topcolor,m_hpinfo.bottomcolor,m_hpinfo.spectator,m_hpinfo.thisplayer);
 }
 
-REGISTER_DEBUGCMD_FUNC(listplayers)
+REGISTER_CMD_FUNC(listplayers)
 {
 	bool bLocalListed=false;
 	int iLocalIndex=-1;
@@ -177,7 +174,7 @@ REGISTER_DEBUGCMD_FUNC(info)
 {
 	GLint gi;
 	pEngfuncs->Con_Printf(">>>> >>>> >>>> >>>>\n");
-	pEngfuncs->Con_Printf("MDT_DLL_VERSION: v%s (%s)\n", pszFileVersion, __DATE__);
+	pEngfuncs->Con_Printf("MDT_DLL_VERSION: %s\n", __DATE__);
 	pEngfuncs->Con_Printf("GL_VENDOR: %s\n",glGetString(GL_VENDOR));
 	pEngfuncs->Con_Printf("GL_RENDERER: %s\n",glGetString(GL_RENDERER));
 	pEngfuncs->Con_Printf("GL_VERSION: %s\n",glGetString(GL_VERSION));
@@ -522,7 +519,7 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 		Mirv_Commands_Register();
 
 
-		pEngfuncs->Con_Printf("Mirv Demo Tool v%s (%s) Loaded\nBy Mirvin_Monkey 02/05/2004\n\n", pszFileVersion, __DATE__);
+		pEngfuncs->Con_Printf("Mirv Demo Tool %s\nBy Mirvin_Monkey 02/05/2004\n\n", __DATE__);
 
 
 		screeninfo.iSize = sizeof(SCREENINFO);
@@ -819,7 +816,7 @@ HMODULE WINAPI new_LoadLibraryA( LPCSTR lpLibFileName )
 
 				// we have to manually intercept things windows already loaded with the LoadLibrary call:
 
-				// replace DirectDraw:
+/*				// replace DirectDraw:
 				FARPROC old_dd = GetProcAddress( GetModuleHandle("ddraw.dll"), "DirectDrawCreate" );
 				if( old_dd )
 				{
@@ -830,7 +827,7 @@ HMODULE WINAPI new_LoadLibraryA( LPCSTR lpLibFileName )
 					MessageBox(0,"Querying DirectDraw failed.","MDT_ERROR",MB_OK|MB_ICONHAND);
 					bIcepOk = false;
 				}
-
+*/
 				// WindowAPI related:
 				if( !InterceptDllCall( hRet, "User32.dll", "CreateWindowExA", (DWORD) &HlaeBcClt_CreateWindowExA) ) bIcepOk = false;
 				if( !InterceptDllCall( hRet, "User32.dll", "DestroyWindow", (DWORD) &HlaeBcClt_DestroyWindow) ) bIcepOk = false;

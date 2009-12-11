@@ -17,6 +17,7 @@ Description : see mdt_gltools.h
 #include "sampling.h"
 
 #include <list>
+#include <string>
 
 using namespace hlae::sampler;
 
@@ -31,6 +32,11 @@ extern R_RenderView__t detoured_R_RenderView_; // filming.cpp
 
 
 // Filming /////////////////////////////////////////////////////////////////////
+
+typedef struct Filming_Stream_Info_s {
+	char const * name;
+	bool dirCreated;
+} FilmingStreamInfo;
 
 class Filming
 {
@@ -49,7 +55,7 @@ public:
 		_pSupportRender = pSupportRender;
 	}
 
-	void Capture(const char *pszFileTag, int iFileNumber, BUFFER iBuffer);
+	void Capture(FilmingStreamInfo * streamInfo, int iFileNumber, BUFFER iBuffer);
 	DRAW_RESULT shouldDraw(GLenum mode);
 	void Start();
 	void Stop();
@@ -149,8 +155,6 @@ private:
 	CFilmSound _FilmSound; // our sound filming class
 	bool _bExportingSound;
 
-	char m_szFilename[256];
-
 	unsigned int m_nTakes;
 	unsigned int m_nFrames;
 
@@ -209,7 +213,10 @@ private:
 	GLdouble m_ZNear;
 	GLdouble m_ZFar;
 
+	void EnsureStreamDirectory(FilmingStreamInfo * streamInfo);
 
+	std::string m_RecordDir;
+	std::string m_TakeDir;
 };
 
 #endif

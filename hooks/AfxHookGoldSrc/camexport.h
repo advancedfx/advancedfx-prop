@@ -23,9 +23,9 @@ public:
 	CCamExport();
 	~CCamExport();
 
-	void BeginFileLeft(char const * filePrefix, unsigned int take, float frameTime);
-	void BeginFileMain(char const * filePrefix, unsigned int take, float frameTime);
-	void BeginFileRight(char const * filePrefix, unsigned int take, float frameTime);
+	void BeginFileLeft(char const * folder, float frameTime);
+	void BeginFileMain(char const * folder, float frameTime);
+	void BeginFileRight(char const * folder, float frameTime);
 
 	void EndFileLeft();
 	void EndFileMain();
@@ -46,11 +46,9 @@ private:
 	BvhExport * m_BvhFileRight;
 	unsigned int m_FrameCount;
 
-	BvhExport * BeginFile(char const * filePrefix, unsigned int take, char const * fileSuffix, char const * rootName, float frameTime);
+	BvhExport * BeginFile(char const * folder, char const * fileName, char const * rootName, float frameTime);
 
 	void EndFile(BvhExport * & bvhFile);
-
-	std::string MakeFileName(char const * filePrefix, unsigned int take, char const * fileSuffix);
 
 	void WriteFrame(BvhExport * bvhFile, float Xposition, float Yposition, float Zposition, float Zrotation, float Xrotation, float Yrotation);
 };

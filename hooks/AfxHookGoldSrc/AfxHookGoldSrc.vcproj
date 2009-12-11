@@ -50,7 +50,6 @@
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
 			/>
 			<Tool
@@ -129,7 +128,6 @@
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -295,14 +293,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\dd_hook.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\dd_hook.h"
-					>
-				</File>
-				<File
 					RelativePath=".\decals_hook.cpp"
 					>
 				</File>
@@ -315,11 +305,23 @@
 					>
 				</File>
 				<File
+					RelativePath=".\demozoom.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\dsound_hook.cpp"
 					>
 				</File>
 				<File
 					RelativePath=".\dsound_hook.h"
+					>
+				</File>
+				<File
+					RelativePath=".\filetools.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\filetools.h"
 					>
 				</File>
 				<File
@@ -435,6 +437,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\RawMedia.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\RawMedia.h"
+					>
+				</File>
+				<File
 					RelativePath=".\RawOutput.cpp"
 					>
 				</File>
@@ -463,6 +473,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\stdafx.h"
+					>
+				</File>
+				<File
 					RelativePath=".\supportrender.cpp"
 					>
 				</File>
@@ -480,10 +494,6 @@
 				</File>
 				<File
 					RelativePath=".\temporary_dominik_0005.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\version.cpp"
 					>
 				</File>
 				<File

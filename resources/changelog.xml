@@ -6,6 +6,33 @@
 
 <release>
 <name>HLAE</name>
+<version>2.2.9.0</version>
+<time>2009-12-11T12:11Z</time>
+<changes>
+<change type="updated">
+Changed mirv_movie_filename: now specifies a folder path.
+If all or parts of the path do not exist, HLAE will try to create the folder(s) for you.
+</change>
+<change type="updated">
+Renamed __mirv_listplayers to mirv_listplayers.
+</change>
+<change type="updated">
+Exposed undocumented feature as __mirv_demozoom (allows overriding weaponzooming in in-eye demos).
+</change>
+<change type="updated">
+Screen resolution forcing now uses (recently added?) native GoldSrc engine features instead of a custom hack.
+This may result in less supported full screen resolutions but allows more windowed resolutions
+and is more stable.
+</change>
+</changes>
+<comments>
+Greetz to: msthavoc, xorN.<br />
+</comments>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.2.8.0</version>
 <time>2009-11-27T15:37Z</time>
 <changes>

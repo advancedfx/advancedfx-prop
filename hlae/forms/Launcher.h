@@ -35,7 +35,7 @@ namespace hlae {
 			InitializeComponent();
 
 			// custom bellow this line
-			ConfigRead();
+			ReadFromConfig(HlaeConfig::Config->Settings->Launcher);
 		}
 
 	protected:
@@ -60,8 +60,8 @@ namespace hlae {
 
 	private:
 		CGlobals ^Globals;
-		System::Void ConfigRead();
-		System::Void ConfigWrite();
+		System::Void ReadFromConfig(CfgLauncher ^ cfg);
+		System::Void WriteToConfig(CfgLauncher ^ cfg);
 
 
 	private: System::Windows::Forms::GroupBox^  groupBoxGame;
@@ -245,11 +245,11 @@ namespace hlae {
 			// checkBoxFullScreen
 			// 
 			this->checkBoxFullScreen->AutoSize = true;
-			this->checkBoxFullScreen->Location = System::Drawing::Point(358, 32);
+			this->checkBoxFullScreen->Location = System::Drawing::Point(275, 39);
 			this->checkBoxFullScreen->Name = L"checkBoxFullScreen";
-			this->checkBoxFullScreen->Size = System::Drawing::Size(104, 17);
+			this->checkBoxFullScreen->Size = System::Drawing::Size(74, 17);
 			this->checkBoxFullScreen->TabIndex = 7;
-			this->checkBoxFullScreen->Text = L"fullscreen (hack)";
+			this->checkBoxFullScreen->Text = L"full screen";
 			this->checkBoxFullScreen->UseVisualStyleBackColor = true;
 			this->checkBoxFullScreen->Click += gcnew System::EventHandler(this, &Launcher::checkBoxFullScreen_Click);
 			// 
@@ -257,60 +257,60 @@ namespace hlae {
 			// 
 			this->comboBoxResDepth->FormattingEnabled = true;
 			this->comboBoxResDepth->Items->AddRange(gcnew cli::array< System::Object^  >(3) {L"32 (High)", L"24 (Medium)", L"16 (Low)"});
-			this->comboBoxResDepth->Location = System::Drawing::Point(259, 32);
+			this->comboBoxResDepth->Location = System::Drawing::Point(157, 35);
 			this->comboBoxResDepth->Name = L"comboBoxResDepth";
 			this->comboBoxResDepth->Size = System::Drawing::Size(88, 21);
-			this->comboBoxResDepth->TabIndex = 6;
+			this->comboBoxResDepth->TabIndex = 5;
 			// 
 			// labelResDepth
 			// 
 			this->labelResDepth->AutoSize = true;
-			this->labelResDepth->Location = System::Drawing::Point(256, 15);
+			this->labelResDepth->Location = System::Drawing::Point(154, 18);
 			this->labelResDepth->Name = L"labelResDepth";
 			this->labelResDepth->Size = System::Drawing::Size(66, 13);
-			this->labelResDepth->TabIndex = 5;
+			this->labelResDepth->TabIndex = 4;
 			this->labelResDepth->Text = L"Color Depth:";
 			// 
 			// textBoxResHeight
 			// 
-			this->textBoxResHeight->Location = System::Drawing::Point(187, 32);
+			this->textBoxResHeight->Location = System::Drawing::Point(85, 35);
 			this->textBoxResHeight->Name = L"textBoxResHeight";
 			this->textBoxResHeight->Size = System::Drawing::Size(56, 20);
-			this->textBoxResHeight->TabIndex = 4;
+			this->textBoxResHeight->TabIndex = 3;
 			// 
 			// labelResHeight
 			// 
 			this->labelResHeight->AutoSize = true;
-			this->labelResHeight->Location = System::Drawing::Point(184, 15);
+			this->labelResHeight->Location = System::Drawing::Point(82, 18);
 			this->labelResHeight->Name = L"labelResHeight";
 			this->labelResHeight->Size = System::Drawing::Size(41, 13);
-			this->labelResHeight->TabIndex = 3;
+			this->labelResHeight->TabIndex = 2;
 			this->labelResHeight->Text = L"Height:";
 			// 
 			// textBoxResWidth
 			// 
-			this->textBoxResWidth->Location = System::Drawing::Point(112, 32);
+			this->textBoxResWidth->Location = System::Drawing::Point(10, 35);
 			this->textBoxResWidth->Name = L"textBoxResWidth";
 			this->textBoxResWidth->Size = System::Drawing::Size(56, 20);
-			this->textBoxResWidth->TabIndex = 2;
+			this->textBoxResWidth->TabIndex = 1;
 			// 
 			// labelResWidth
 			// 
 			this->labelResWidth->AutoSize = true;
-			this->labelResWidth->Location = System::Drawing::Point(109, 16);
+			this->labelResWidth->Location = System::Drawing::Point(7, 19);
 			this->labelResWidth->Name = L"labelResWidth";
 			this->labelResWidth->Size = System::Drawing::Size(38, 13);
-			this->labelResWidth->TabIndex = 1;
+			this->labelResWidth->TabIndex = 0;
 			this->labelResWidth->Text = L"Width:";
 			// 
 			// checkBoxResForce
 			// 
 			this->checkBoxResForce->AutoSize = true;
-			this->checkBoxResForce->Location = System::Drawing::Point(10, 32);
+			this->checkBoxResForce->Location = System::Drawing::Point(275, 14);
 			this->checkBoxResForce->Name = L"checkBoxResForce";
-			this->checkBoxResForce->Size = System::Drawing::Size(56, 17);
-			this->checkBoxResForce->TabIndex = 0;
-			this->checkBoxResForce->Text = L"Force:";
+			this->checkBoxResForce->Size = System::Drawing::Size(98, 17);
+			this->checkBoxResForce->TabIndex = 6;
+			this->checkBoxResForce->Text = L"force resolution";
 			this->checkBoxResForce->UseVisualStyleBackColor = true;
 			// 
 			// groupBoxMisc
@@ -484,14 +484,12 @@ private: System::Void checkBoxFullScreen_Click(System::Object^  sender, System::
 			{
 				System::Windows::Forms::DialogResult dr = MessageBox::Show(
 					"Switching to fullscreen is not recommended:\n"
-					"- It may damage your hardware or software\n"
-					"- It may produce unexpected results\n"
-					"- This feature might go away in the future\n"
+					"Fullscreen supports much fewer resolutions.\n"
 					"\n"
-					"Do you really want to switch to fullscreen?",
-					"Fullscreen is experimental, are you sure?",
+					"Do you want to switch to fullscreen?",
+					"Really switch to full screen?",
 					MessageBoxButtons::YesNo,
-					MessageBoxIcon::Warning
+					MessageBoxIcon::Information
 				);
 				if( System::Windows::Forms::DialogResult::Yes == dr )
 				{					

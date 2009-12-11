@@ -8,11 +8,15 @@
 // First changes:
 // 2009-11-14 dominik.matrixstorm.com
 
-class HlaeLogo {
+ref class HlaeLogo {
 public:
 	HlaeLogo();
-	~HlaeLogo();
+	void Draw(System::Drawing::Graphics ^graphics, System::Drawing::RectangleF rect);
+	void SetRed(bool value) {
+		m_Red = value;
+	}
 
 private:
-
+	bool m_Red;
+	
 };

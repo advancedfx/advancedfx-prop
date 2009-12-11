@@ -101,72 +101,12 @@ public:
 		if(0 < procs->Length)
 			return false;
 
-		//	build commandline:
-		String ^cmds, ^s1, ^s2, ^s3;
-		int i1;
+		CfgLauncher ^cfg = gcnew CfgLauncher();
 
-		CfgLauncher ^lcfg = HlaeConfig::Config->Settings->Launcher;
+		cfg->CopyFrom(HlaeConfig::Config->Settings->Launcher);
+		cfg->CustomCmdLine = OverrideCustomArgs;
 
-		cmds = String::Concat("-steam -gl");
-		
-		if( lcfg->FullScreen )
-			cmds = String::Concat(cmds," -full -mdtfull");
-		else
-			cmds = String::Concat(cmds," -window");
-
-		cmds = String::Concat( cmds, " -game ",
-			lcfg->Modification
-		);
-
-		// gfx settings
-		s1 = lcfg->GfxBpp.ToString();
-		if( 0 < s1->Length)
-			cmds = String::Concat( cmds," -", s1, "bpp" );
-
-		if( lcfg->GfxForce )
-		{
-			s1 = lcfg->GfxWidth.ToString();
-			s2 = lcfg->GfxHeight.ToString();
-			s3 = lcfg->GfxBpp.ToString();
-
-			if( 0 < s1->Length && 0 < s2->Length && 0 < s3->Length )
-				cmds = String::Concat( cmds," -mdtres ", s1,"x",s2,"x",s3 );
-		} else {
-			s1 = lcfg->GfxWidth.ToString();
-			if( 0 < s1->Length) cmds = String::Concat( cmds," -w ", s1 );
-			s1 = lcfg->GfxHeight.ToString();
-			if( 0 < s1->Length) cmds = String::Concat( cmds," -h ", s1 );
-		}
-
-		// advanced
-
-		if( lcfg->ForceAlpha )
-			cmds = String::Concat( cmds, " -mdtalpha8" );
-
-		i1 = lcfg->RenderMode;
-		if( 1 == i1 )
-			cmds = String::Concat( cmds, " -mdtrender fbo" );
-		else if( 2 == i1 )
-			cmds = String::Concat( cmds, " -mdtrender memdc" );
-		// custom command line
-
-		if( lcfg->OptimizeVisibilty )
-			cmds = String::Concat( cmds, " -mdtoptvis" );
-
-		if( lcfg->StartDocked )
-			cmds = String::Concat( cmds, " -mdtdocked" );
-
-		s1 = OverrideCustomArgs;
-		if( 0 < s1->Length)
-			cmds = String::Concat( cmds," ", s1 );
-
-		s1 = lcfg->GamePath;
-
-		VERBOSE_MESSAGE( globals->debugMaster,String::Concat("Remote triggered launching of \"",s1,"\" with: ",cmds));
-
-		InitLoader( 0, s1, cmds );
-
-		return true;
+		return AfxGoldSrcLaunch(cfg);
 	}
 };
 

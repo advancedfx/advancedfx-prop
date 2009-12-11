@@ -76,9 +76,15 @@ void CCamExport::EndFile(BvhExport * & bvhFile) {
 	bvhFile = NULL;
 }
 
-BvhExport * CCamExport::BeginFile(char const * filePrefix, unsigned int take, char const * fileSuffix, char const * rootName, float frameTime) {
+BvhExport * CCamExport::BeginFile(char const * folder, char const * fileName, char const * rootName, float frameTime) {
+	
+	std::string strFileName(folder);
+	if(folder && 0 < strlen(folder))
+		strFileName.append("\\");
+	strFileName.append(fileName);
+
 	BvhExport * bvhFile = new BvhExport(
-		MakeFileName(filePrefix, take, fileSuffix).c_str(),
+		strFileName.c_str(),
 		rootName,
 		frameTime
 	);
@@ -86,16 +92,16 @@ BvhExport * CCamExport::BeginFile(char const * filePrefix, unsigned int take, ch
 	return bvhFile;
 }
 
-void CCamExport::BeginFileLeft(char const * filePrefix, unsigned int take, float frameTime) {
-	m_BvhFileLeft = BeginFile(filePrefix, take, "_motion_left.bvh", "MdtCamLeft", frameTime);
+void CCamExport::BeginFileLeft(char const * folder, float frameTime) {
+	m_BvhFileLeft = BeginFile(folder, "motion_left.bvh", "MdtCamLeft", frameTime);
 }
 
-void CCamExport::BeginFileMain(char const * filePrefix, unsigned int take, float frameTime) {
-	m_BvhFileMain = BeginFile(filePrefix, take, "_motion.bvh", "MdtCam", frameTime);
+void CCamExport::BeginFileMain(char const * folder, float frameTime) {
+	m_BvhFileMain = BeginFile(folder, "motion.bvh", "MdtCam", frameTime);
 }
 
-void CCamExport::BeginFileRight(char const * filePrefix, unsigned int take, float frameTime) {
-	m_BvhFileRight = BeginFile(filePrefix, take, "_motion_right.bvh", "MdtCamRight", frameTime);
+void CCamExport::BeginFileRight(char const * folder, float frameTime) {
+	m_BvhFileRight = BeginFile(folder, "motion_right.bvh", "MdtCamRight", frameTime);
 }
 
 
@@ -116,18 +122,6 @@ void CCamExport::EndFiles() {
 	EndFileLeft();
 	EndFileMain();
 	EndFileRight();
-}
-
-std::string CCamExport::MakeFileName(char const * filePrefix, unsigned int take, char const * fileSuffix) {
-	ostringstream os(ostringstream::out);
-
-	os.fill('0');
-	os << filePrefix << '_' ;
-	os.width(2);
-	os << std::right << take;
-	os << fileSuffix;
-
-	return os.str();
 }
 
 

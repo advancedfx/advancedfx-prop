@@ -16,8 +16,6 @@ using namespace System::Threading;
 using namespace System::Xml;
 using namespace System::Xml::Serialization;
 
-using namespace hlae;
-
 namespace hlae {
 
 public ref class CfgLauncher
@@ -82,13 +80,29 @@ public:
 		GfxHeight = 600;
 		GfxBpp = 32;
 		RememberChanges = true;
-		// Advanced Settings:
 		ForceAlpha = false;
 		OptimizeDesktopRes = false;
 		OptimizeVisibilty = true;
 		StartDocked = true;
 		FullScreen = false;
 		RenderMode = 0;		
+	}
+
+	void CopyFrom(CfgLauncher ^ from) {
+		this->GamePath = String::Copy(from->GamePath);
+		this->Modification = String::Copy(from->Modification);
+		this->CustomCmdLine = String::Copy(from->CustomCmdLine);
+		this->GfxForce = from->GfxForce;
+		this->GfxWidth = from->GfxWidth;
+		this->GfxHeight = from->GfxHeight;
+		this->GfxBpp = from->GfxBpp;
+		this->RememberChanges = from->RememberChanges;
+		this->ForceAlpha = from->ForceAlpha;
+		this->OptimizeDesktopRes = from->OptimizeDesktopRes;
+		this->OptimizeVisibilty = from->OptimizeVisibilty;
+		this->StartDocked = from->StartDocked;
+		this->FullScreen = from->FullScreen;
+		this->RenderMode = from->RenderMode;
 	}
 };
 

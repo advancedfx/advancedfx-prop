@@ -12,6 +12,10 @@
 // Description:
 // For launching the game and the hook.
 
-bool InitLoader(unsigned int uiUnused, System::String ^m_path, System::String ^m_cmdline);
+#include <system/config.h>
+
+using namespace hlae;
+
+bool AfxGoldSrcLaunch(CfgLauncher ^cfg);
 
 bool CustomLoader(System::String ^ hookPath, System::String ^ programPath, System::String ^ cmdline);
