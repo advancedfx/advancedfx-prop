@@ -58,7 +58,7 @@ namespace hlae {
 			this->splitContainerPrimary->SuspendLayout();
 			this->SuspendLayout();
 
-			this->hlaeConsole = (gcnew HlaeConsole(this->Globals->debugMaster));
+			this->hlaeConsole = gcnew HlaeConsole();
 			this->splitContainerSecondary->Panel2->Controls->Add(this->hlaeConsole);
 			this->hlaeConsole->Dock = System::Windows::Forms::DockStyle::Fill;
 			this->hlaeConsole->Location = System::Drawing::Point(0, 0);

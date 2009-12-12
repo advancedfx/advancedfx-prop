@@ -248,11 +248,10 @@
 				>
 				<File
 					RelativePath=".\controls\HlaeConsole.h"
-					FileType="4"
+					FileType="3"
 					>
 					<File
 						RelativePath=".\controls\HlaeConsole.resx"
-						SubType="Designer"
 						>
 					</File>
 				</File>
