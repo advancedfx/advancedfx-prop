@@ -55,7 +55,7 @@ addr.Mod_LeafPVS = addr.hw_dll + 0x35E30;
 addr.DTOURSZ_Mod_LeafPVS = 0x0e;
 
 // DecalTexture hook:
-//   this function called in a unkonown sub function of R_DrawWorld that is
+//   this function is called in a unknown sub function of R_DrawWorld that is
 //   called before R_BlendLightmaps. the unknown functions draws out all
 //   decals of the map as it seems or s.th. and uses this one to get
 //   a decal's texture
@@ -80,6 +80,9 @@ addr.shm = addr.hw_dll + 0x73F758;
 addr.paintedtime = addr.hw_dll + 0x9FA880;
 addr.paintbuffer = addr.paintedtime - 0xC160;
 addr.soundtime = addr.paintbuffer + 0xC15C;
+
+addr.SND_PickChannel = addr.hw_dll + 0xA25F0;
+addr.DTOURSZ_SND_PickChannel = 0x05;
 
 
 //

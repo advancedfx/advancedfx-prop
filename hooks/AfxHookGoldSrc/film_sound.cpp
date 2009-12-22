@@ -75,149 +75,112 @@ typedef struct
 	int				Valve_speed;			// added by Valve(?)
 } dma_HL_t;
 
-//
-//	the static variables for the class:
-//
+typedef void * channel_t;
 
-CFilmSound::GetSoundtime_t CFilmSound::_detoured_GetSoundtime;
-CFilmSound::S_PaintChannels_t CFilmSound::_detoured_S_PaintChannels;
-CFilmSound::S_TransferPaintBuffer_t CFilmSound::_detoured_S_TransferPaintBuffer;
+typedef void (*GetSoundtime_t)(void);
+typedef void (*S_PaintChannels_t)(int endtime);
+typedef void (*S_TransferPaintBuffer_t)(int endtime);
+typedef channel_t * (*SND_PickChannel_t)(int entnum, int entchannel, int _unknown1, int _unknown2);
 
-//int CFilmSound::_initial_paintedtime;
-CFilmSound* CFilmSound::_pFilmSound;
+GetSoundtime_t detoured_GetSoundtime = NULL;
+S_PaintChannels_t detoured_S_PaintChannels = NULL;
+S_TransferPaintBuffer_t detoured_S_TransferPaintBuffer = NULL;
+SND_PickChannel_t detoured_SND_PickChannel = NULL;
 
+CFilmSound* g_FilmSound = 0;
 
-//
-// class functions:
-//
+float g_TargetTime, g_CurrentTime, g_Volume;
 
-void CFilmSound::_touring_GetSoundtime(void)
+bool g_FilmSound_BlockChannels = false;
+
+enum FilmSoundState {
+	FSS_IDLE,
+	FSS_STARTING,
+	FSS_FILMING,
+	FSS_STOPPING
+} g_FilmSoundState = FSS_IDLE;
+
+void touring_GetSoundtime(void)
 {
-	// retrive current state:
-	static CFilmSound::FILM_SOUND_STATE eCurrState;
-	eCurrState = _pFilmSound->_get_eFilmSoundState();
-
-	if (eCurrState == FSS_IDLE)
-	{
-		// don't do anything abnormal
-		_detoured_GetSoundtime();
-	} else {
-		// we are filming
-
-		if (eCurrState == FSS_STARTING)
-		{
-			// starting,get last valid time:
-			//pEngfuncs->Con_Printf("Called _touring_GetSoundtime in FSS_STARTING.\n");
-			
-			_detoured_GetSoundtime(); // let it calculate a last engine controlled time
-
-			//
-			// I am not sure if we should make some adjustments to our class's flow here or not
-			// since we probably drop already calculated sounds now
-			//
-
-			// now we will save that time, ife we need it for requests:
-			//_initial_paintedtime = *(int *)ADDRESS_paintedtime;
-
-			// go to normal filming mode:
-			_pFilmSound->_set_eFilmSoundState(FSS_FILMING);
-		}
-
-		// override soundtime (translated into valve space):
-		*(int *)HL_ADDR_GET(soundtime) = (*(int *)HL_ADDR_GET(paintedtime))<<1; // we always exactly played what we got painted by H-L (at least for now)
-		// we are multiplying with 2 since the valve DirectSound buffers tick at 22.050 kHz while the internal mixing happens at 11.025 khz
-
-		//pEngfuncs->Con_Printf("sndtime: %i, paintt: %i\n",*(int *)ADDRESS_soundtime,*(int *)ADDRESS_paintedtime);
+	if(FSS_FILMING != g_FilmSoundState) {
+		// do not update during filming
+		detoured_GetSoundtime();
 	}
 }
 
-void CFilmSound::_touring_S_PaintChannels(int endtime)
+void touring_S_PaintChannels(int endtime)
 {
-	// retrive current state:
-	static CFilmSound::FILM_SOUND_STATE eCurrState;
-	eCurrState = _pFilmSound->_get_eFilmSoundState();
+	static volatile dma_HL_t *shm;
 
-	if (eCurrState != FSS_IDLE)
+	if (FSS_STARTING == g_FilmSoundState)
 	{
-		// we are filming, adjust endtime (the mixahead for the curren frame) as desired:
+		g_FilmSoundState = FSS_FILMING;
+	}
 
-		// retrive sound info structure:
-		static volatile dma_HL_t *shm;
-		shm =*(dma_HL_t **)HL_ADDR_GET(shm);
+	if (FSS_IDLE != g_FilmSoundState)
+	{
+		float fDeltaTime;
+		int deltaTime;
 
-		// calculate mix ahead of current position:
-		static int currPaintedTime; // do not assert here, statics are only asserted once (at which time?)
-		currPaintedTime = (*(int *)HL_ADDR_GET(paintedtime))<<1; // translate into valve space
-		static float fendtime;
-		fendtime = (float)(currPaintedTime) + (_pFilmSound->_get_fTargetTime()-_pFilmSound->_get_fCurrentTime()) * (float)shm->Valve_speed;
+		shm = *(dma_HL_t **)HL_ADDR_GET(shm);
+
+		fDeltaTime = (
+			g_TargetTime - g_CurrentTime
+		) * (float)shm->Quake_speed;
 
 		// and override
-		if (eCurrState==FSS_STOPPING)
-			endtime = (int)ceil(fendtime); // we preffer having too much samples when stopping
-		else
-			endtime = (int)floor(fendtime); // we preffer having faster updates and therefore less samples during filming
-	
+		if (FSS_STOPPING == g_FilmSoundState)
+			deltaTime = (int)ceil(fDeltaTime); // we preffer having too much samples when stopping
+		else {
+			deltaTime = (int)floor(fDeltaTime); // we preffer having faster updates and therefore less samples during filming
+		}
 
-		//pEngfuncs->Con_Printf("Painting time: %i ... %i | sndt: %i\n",currPaintedTime,endtime,*(int *)ADDRESS_soundtime);
+		// we cannot go back in time, so stfu:
+		if(deltaTime < 0) deltaTime = 0;
 
-		// call original painting:	
-		_detoured_S_PaintChannels(endtime >> 1);
-		// detoured_S_PaintChannels will set paintedtime = end
+		fDeltaTime = (float)deltaTime / (float)shm->Quake_speed;
 
+		// >> Sound painting
+		detoured_S_PaintChannels(*(int *)HL_ADDR_GET(paintedtime) +deltaTime);
+		// << Sound painting
 
-		static int newPaintedTime; // do not assert here, statics are only asserted once (at which time?)
-		newPaintedTime = (*(int *)HL_ADDR_GET(paintedtime))<<1;
-		//pEngfuncs->Con_Printf(" == %i\n",newPaintedTime);
+		// update Our class's _CurrentTime:
+		g_CurrentTime = g_CurrentTime +fDeltaTime;
 
-		// update Our clas'ss _CurrentTime:
-		static float fnewcurr;
-		fnewcurr = _pFilmSound->_get_fCurrentTime() + ((float)(newPaintedTime-currPaintedTime) / (float)shm->Valve_speed);
-		_pFilmSound->_set_fCurrentTime(fnewcurr);
+		if (FSS_STOPPING == g_FilmSoundState) {
+			g_FilmSound->Snd_Finished();
 
-		// handle FSS_STOPPING:
-		if (eCurrState==FSS_STOPPING)
-			_pFilmSound->_OnStoppingFinished();
+			// make soundsystem catch up:
+			touring_GetSoundtime();
+			*(int *)HL_ADDR_GET(paintedtime) = (*(int *)HL_ADDR_GET(soundtime)) >> 1;
+			pEngfuncs->pfnClientCmd("stopsound");
+		}
 
 	} else {
 		// don't do anything abnormal
-		_detoured_S_PaintChannels(endtime);
+		detoured_S_PaintChannels(endtime);
 	}
 
 }
 
-void CFilmSound::_touring_S_TransferPaintBuffer(int endtime)
+void touring_S_TransferPaintBuffer(int endtime)
 {
-	// retrive current state:
-	static CFilmSound::FILM_SOUND_STATE eCurrState;
-	eCurrState = _pFilmSound->_get_eFilmSoundState();
-	
-	if (eCurrState == FSS_IDLE)
+	static volatile dma_HL_t *shm;
+
+	if (FSS_IDLE != g_FilmSoundState)
 	{
-		// don't do anything abnormal
-		//pEngfuncs->Con_Printf("Called touring_S_TransferPaintBuffer in IDLE mode.\n");
-
-		_detoured_S_TransferPaintBuffer(endtime);
-	} else {
 		// filming
-		//pEngfuncs->Con_Printf("Called touring_S_TransferPaintBuffer in filming mode.\n");
 
-		// retrive globals:
-		static int paintedtime;
-		paintedtime= *(int *)HL_ADDR_GET(paintedtime); //this should be == _lsoc_paintedtime
-		static volatile dma_HL_t *shm;
 		shm=*(dma_HL_t **)HL_ADDR_GET(shm);
-		static portable_samplepair_t *paintbuffer;
-		paintbuffer = (portable_samplepair_t *)HL_ADDR_GET(paintbuffer);
+		
+		int paintedtime = *(int *)HL_ADDR_GET(paintedtime);
 
-		static int iMyVolume;
-		iMyVolume = (int)(_pFilmSound->_get_fUseVolume()*256.0f);
+		portable_samplepair_t * paintbuffer = (portable_samplepair_t *)HL_ADDR_GET(paintbuffer);
 
-		int		lpaintedtime;
+		int iMyVolume = (int)(g_Volume*256.0f);
 
-		int *snd_p;
-
-		snd_p = (int *) paintbuffer;
-		lpaintedtime = paintedtime;
+		int * snd_p = (int *) paintbuffer;
+		int lpaintedtime = paintedtime;
 
 		while (lpaintedtime < endtime)
 		{
@@ -239,67 +202,48 @@ void CFilmSound::_touring_S_TransferPaintBuffer(int endtime)
 				else if (irchan < (short)0x8000) wrchan = (short)0x8000;
 				else wrchan = irchan;
 
-				_pFilmSound->_fWriteWave(_pFilmSound->_get_pWaveFile(),wlchan,wrchan); // write pair to Wave
+				g_FilmSound->Snd_Supply(wlchan, wrchan);
 				snd_p+=2;
 			}
 
 			lpaintedtime++;
 		}
-
 	}
+
+	// pass through to sound buffer:
+	detoured_S_TransferPaintBuffer(endtime);
+
 }
 
-void CFilmSound::_InstallHooks()
+channel_t * touring_SND_PickChannel(int entnum, int entchannel, int _unknown1, int _unknown2) {
+
+	if(!g_FilmSound_BlockChannels)
+		return detoured_SND_PickChannel(entnum, entchannel, _unknown1, _unknown2);
+
+	return 0;
+}
+
+void InstallHooks()
 {
 	// notice the memory allocted here gets never freed o_O
-	if (!_detoured_GetSoundtime) _detoured_GetSoundtime = (GetSoundtime_t) DetourApply((BYTE *)HL_ADDR_GET(GetSoundtime), (BYTE *)_touring_GetSoundtime, (int)HL_ADDR_GET(DTOURSZ_GetSoundtime));
-	if (!_detoured_S_PaintChannels) _detoured_S_PaintChannels = (S_PaintChannels_t) DetourApply((BYTE *)HL_ADDR_GET(S_PaintChannels), (BYTE *)_touring_S_PaintChannels, (int)HL_ADDR_GET(DTOURSZ_S_PaintChannels));
-	if (!_detoured_S_TransferPaintBuffer) _detoured_S_TransferPaintBuffer = (S_TransferPaintBuffer_t) DetourApply((BYTE *)HL_ADDR_GET(S_TransferPaintBuffer), (BYTE *)_touring_S_TransferPaintBuffer, (int)HL_ADDR_GET(DTOURSZ_S_TransferPaintBuffer));
+	if(!detoured_GetSoundtime) detoured_GetSoundtime = (GetSoundtime_t) DetourApply((BYTE *)HL_ADDR_GET(GetSoundtime), (BYTE *)touring_GetSoundtime, (int)HL_ADDR_GET(DTOURSZ_GetSoundtime));
+	if(!detoured_S_PaintChannels) detoured_S_PaintChannels = (S_PaintChannels_t) DetourApply((BYTE *)HL_ADDR_GET(S_PaintChannels), (BYTE *)touring_S_PaintChannels, (int)HL_ADDR_GET(DTOURSZ_S_PaintChannels));
+	if(!detoured_S_TransferPaintBuffer) detoured_S_TransferPaintBuffer = (S_TransferPaintBuffer_t) DetourApply((BYTE *)HL_ADDR_GET(S_TransferPaintBuffer), (BYTE *)touring_S_TransferPaintBuffer, (int)HL_ADDR_GET(DTOURSZ_S_TransferPaintBuffer));
+	if(!detoured_SND_PickChannel) detoured_SND_PickChannel = (SND_PickChannel_t)DetourApply((BYTE *)HL_ADDR_GET(SND_PickChannel), (BYTE *)touring_SND_PickChannel, (int)HL_ADDR_GET(DTOURSZ_SND_PickChannel));
 }
 
-void CFilmSound::_OnStoppingFinished()
-{
-	_fEndWave(_pWaveFile); // finish the wave file
-	_eFilmSoundState = FSS_IDLE; // we will be idle again
-
-	pEngfuncs->Cvar_SetValue("snd_noextraupdate",_fOld_HL_snd_noextraupdate); // restore old value
-	
-	pEngfuncs->Con_Printf("Sound system finished stopping.\n");
+void FilmSound_BlockChannels(bool block) {
+	g_FilmSound_BlockChannels = block;
 }
 
-float CFilmSound::_get_fTargetTime()
-{
-	return _fTargetTime;
-}
 
-float CFilmSound::_get_fCurrentTime()
-{
-	return _fCurrentTime;
-}
+// CFilmSound //////////////////////////////////////////////////////////////////
 
-float CFilmSound::_get_fUseVolume()
+CFilmSound::CFilmSound()
 {
-	return _fUseVolume;
-}
+	if(g_FilmSound) throw "err";
 
-void CFilmSound::_set_fCurrentTime(float fNewCurrTime)
-{
-	_fCurrentTime = fNewCurrTime;
-}
-
-CFilmSound::FILM_SOUND_STATE CFilmSound::_get_eFilmSoundState()
-{
-	return _eFilmSoundState;
-}
-
-void CFilmSound::_set_eFilmSoundState(FILM_SOUND_STATE eNewFilmSoundState)
-{
-	_eFilmSoundState=eNewFilmSoundState;
-}
-
-FILE* CFilmSound::_get_pWaveFile()
-{
-	return _pWaveFile;
+	g_FilmSound = this;
 }
 
 FILE* CFilmSound::_fBeginWave(char *pszFileName,DWORD dwSamplesPerSec)
@@ -368,42 +312,28 @@ void CFilmSound::_fEndWave(FILE* pHandle)
 	fclose(pHandle);
 }
 
-CFilmSound::CFilmSound()
+bool CFilmSound::Start(char *pszFileName, float fTargetTime, float fUseVolume)
 {
-	_pFilmSound = this;
-	_detoured_S_TransferPaintBuffer=NULL;
-	_detoured_S_PaintChannels=NULL;
-	_detoured_GetSoundtime=NULL;
+	InstallHooks(); // make sure hooks are installed
 
-	_eFilmSoundState = FSS_IDLE;
-}
-
-bool CFilmSound::Start(char *pszFileName,float fTargetTime,float fUseVolume)
-{
-	_InstallHooks(); // make sure hooks are installed
-
-	if (_eFilmSoundState == FSS_IDLE)
+	if (g_FilmSoundState == FSS_IDLE)
 	{
 		// only start when idle
 		
 		// init time:
-		_fTargetTime = fTargetTime;
-		_fCurrentTime = 0;
+		g_TargetTime = fTargetTime;
+		g_CurrentTime = 0;
 
 		// set volume:
-		_fUseVolume=fUseVolume;
+		g_Volume = fUseVolume;
 
 		// retrive sound info structure (since we need the samples per second value == shm->Valve_speed):
 		volatile dma_HL_t *shm=*(dma_HL_t **)HL_ADDR_GET(shm);
 
 		if(!(_pWaveFile=_fBeginWave(pszFileName,shm->Valve_speed))) // we use Quake speed since we capture the internal mixer
 			return false; // on fail return false
-	
-		
-		_fOld_HL_snd_noextraupdate = pEngfuncs->pfnGetCvarFloat("snd_noextraupdate");
-		pEngfuncs->Cvar_SetValue("snd_noextraupdate",1.0f); // turn off extra updates !!!
 
-		_eFilmSoundState = FSS_STARTING; // switch to filming mode
+		g_FilmSoundState = FSS_STARTING; // switch to filming mode
 
 		return true;
 	} else
@@ -413,17 +343,24 @@ bool CFilmSound::Start(char *pszFileName,float fTargetTime,float fUseVolume)
 void CFilmSound::AdvanceFrame(float fTargetTime)
 {
 	// update frame time:
-	_fTargetTime = fTargetTime;
+	g_TargetTime = fTargetTime;
 }
 
 void CFilmSound::Stop()
 {
-	if (_eFilmSoundState != FSS_IDLE)
-		_eFilmSoundState = FSS_STOPPING; // we cannot stop instant
+	if (g_FilmSoundState != FSS_IDLE)
+		g_FilmSoundState = FSS_STOPPING; // we cannot stop instantly
 }
 
-CFilmSound::FILM_SOUND_STATE CFilmSound::eFilmSoundState()
-{
-	return _eFilmSoundState;
+
+void CFilmSound::Snd_Supply(WORD leftchan, WORD rightchan) {
+	_fWriteWave(_pWaveFile, leftchan, rightchan);
+}
+
+void CFilmSound::Snd_Finished() {
+	_fEndWave(_pWaveFile); // finish the wave file
+	g_FilmSoundState = FSS_IDLE; // we will be idle again
+	
+	pEngfuncs->Con_Printf("Sound system finished stopping.\n");
 }
 

@@ -6,17 +6,38 @@
 
 <release>
 <name>HLAE</name>
+<version>2.2.10.1</version>
+<time>2009-12-22T11:08Z</time>
+<changes>
+<change type="fixed">
+Changed HLAE sound capturing in order to cope with rare sound engine quirks during splitstreams, now also
+allowing the engine to push more soundupdates during a frame. Improved sound playback during and after
+capturing.
+</change>
+<change type="updated">
+Minor tweak in camimport to reduce rounding error.
+</change>
+</changes>
+<comments>
+Many thanks to hyber1z0r for noticing, reporting and helping to squash the sound problem
+by extensive testing.
+</comments>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.2.9.2</version>
 <time>2009-12-12T18:15Z</time>
 <changes>
 <change type="fixed">
-Fixed HLAE hook failing i.e. on Windows Vista due to an invalid element in the
-JS script engine side-by-side assembly manifest.
+Fixed HLAE hook failing i.e. on Windows Vista due to an invalid element in a
+side-by-side assembly manifest.
 </change>
 </changes>
 <comments>
 Very big thanks to qujon from www.style-productions.net for helping to nail
-down the problem!<br />
+down the problem!
 </comments>
 </release>
 

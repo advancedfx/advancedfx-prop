@@ -247,6 +247,10 @@
 				Name="controls"
 				>
 				<File
+					RelativePath=".\controls\HlaeConsole.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\controls\HlaeConsole.h"
 					FileType="3"
 					>

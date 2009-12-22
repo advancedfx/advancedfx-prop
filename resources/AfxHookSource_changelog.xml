@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.0.2.1</version>
+<time>2009-12-22T10:13Z</time>
+<changes>
+<change type="updated">
+Minor tweak in camimport to reduce rounding error.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.0.2.0</version>
 <time>2009-11-02T14:00Z</time>
 <changes>

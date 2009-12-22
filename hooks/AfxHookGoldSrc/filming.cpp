@@ -1587,7 +1587,6 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 	}
 	_bRecordBuffers_FirstCall = false;
 
-
 	m_iMatteStage = MS_ALL;
 
 	if( movie_splitstreams->value >= 1)
@@ -1622,7 +1621,13 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 		return true;
 	}
 
+	// no sound updates during re-renders:
+	FilmSound_BlockChannels(true);
+
 	float flTime = ((m_nFrames+1)/m_fps)-(m_nFrames/m_fps); // pay attention when changing s.th. here because of handling of precision errors!
+
+	if(print_frame->value)
+		pEngfuncs->Con_Printf("MDT: capturing engine frame #%i (mdt time: %f, client time: %f)\n", m_nFrames, flTime, pEngfuncs->GetClientTime());
 
 	FilmingStreamInfoType infos[] = { FSIT_all, FSIT_world, FSIT_entity };
 	FilmingStreamInfoType depthInfos[] = { FSIT_depthall, FSIT_depthworld, FSIT_depthall };
@@ -1737,6 +1742,9 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 		m_iMatteStage = MS_ALL; // override matte stage
 		_HudRqState = HUDRQ_CAPTURE_COLOR; // signal we want an color capture
 	}
+
+	// allow sound updates again:
+	FilmSound_BlockChannels(false);
 
 	return true;
 }

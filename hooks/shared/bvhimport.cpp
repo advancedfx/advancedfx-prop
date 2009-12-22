@@ -28,6 +28,11 @@ char * CrLfZ2LfZ(char * opz) {
 	return opz;
 }
 
+inline int myround(float x)
+{
+	return x < 0 ? (int)(x -0.5f) : (int)(x +0.5f);
+}
+
 
 // BvhImport //////////////////////////////////////////////////////////////////
 
@@ -79,7 +84,7 @@ bool BvhImport::GetCamPositon(float fTimeOfs, float outCamdata[6])
 		return false; // not active
 
 	// calc targetframe:
-	int iCurFrame = (int)(fTimeOfs / m_FrameTime);
+	int iCurFrame = myround(fTimeOfs / m_FrameTime);
 	if(iCurFrame < 0 || iCurFrame >= m_Frames)
 		return false; // out of range
 
