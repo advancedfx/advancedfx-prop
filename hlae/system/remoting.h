@@ -11,12 +11,10 @@
 
 #include <system/loader.h>
 
-namespace hlae {
-namespace remoting {
-
 #include <system/debug.h>
 #include <system/config.h>
 #include <system/globals.h>
+#include <AfxGoldSrc/AfxGoldSrc.h>
 
 using namespace System;
 using namespace System::Runtime::Remoting;
@@ -25,6 +23,9 @@ using namespace System::Runtime::Remoting::Channels::Ipc;
 
 using namespace hlae::debug;
 using namespace hlae::globals;
+
+namespace hlae {
+namespace remoting {
 
 #define HLAE_REMOTING_OBJ_URI_HlaeRemote_1 "Hlae.Remote.1"
 
@@ -106,7 +107,9 @@ public:
 		cfg->CopyFrom(HlaeConfig::Config->Settings->Launcher);
 		cfg->CustomCmdLine = OverrideCustomArgs;
 
-		return AfxGoldSrcLaunch(cfg);
+		AfxGoldSrc ^ ag = AfxGoldSrc::GetOrCreate();
+		ag->Settings->CopyFrom(cfg);
+		return ag->Launch();
 	}
 };
 

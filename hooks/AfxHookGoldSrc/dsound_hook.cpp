@@ -11,8 +11,6 @@ Started     : 2008-03-08 14:46 UTC
 Authors     : Dominik Tugend // add yourself here if u change s.th.
 */
 
-#include "mdt_debug.h"
-
 #include <windows.h>
 #include <shared/microsoft/dsound.h>
 #include <stdio.h>

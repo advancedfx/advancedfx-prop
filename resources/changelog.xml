@@ -11,7 +11,7 @@
 <changes>
 <change type="fixed">
 Changed HLAE sound capturing in order to cope with rare sound engine quirks during splitstreams, now also
-allowing the engine to push more soundupdates during a frame. Improved sound playback during and after
+allowing the engine to push more sound updates during a frame. Improved sound playback during and after
 capturing.
 </change>
 <change type="updated">
@@ -19,7 +19,7 @@ Minor tweak in camimport to reduce rounding error.
 </change>
 </changes>
 <comments>
-Many thanks to hyber1z0r for noticing, reporting and helping to squash the sound problem
+Many thanks to hyber1z0r for noticing, reporting and helping to squash the problem
 by extensive testing.
 </comments>
 </release>
@@ -55,7 +55,7 @@ If all or parts of the path do not exist, HLAE will try to create the folder(s) 
 Renamed __mirv_listplayers to mirv_listplayers.
 </change>
 <change type="updated">
-Exposed undocumented feature as __mirv_demozoom (allows overriding weaponzooming in in-eye demos).
+Exposed undocumented feature as __mirv_demozoom (allows overriding weapon zooming in in-eye demos).
 </change>
 <change type="updated">
 Screen resolution forcing now uses (recently added?) native GoldSrc engine features instead of a custom hack.
@@ -121,7 +121,7 @@ Fixed depthdump image row alignment for non-standard image widths.
 Readded __mirv_depth_bpp (8, 16, 24).
 </change>
 <change type="added">
-Added __mirv_depth_slice_lo, __mirv_depth_slice_hi for retriving only a slice of the depth (only useful when dumping with low precision, i.e. 8bit).
+Added __mirv_depth_slice_lo, __mirv_depth_slice_hi for retrieving only a slice of the depth (only useful when dumping with low precision, i.e. 8bit).
 </change>
 </changes>
 </release>
@@ -163,14 +163,14 @@ Minor DemoTools update: drag n drop, batch to folder.
 <time>2009-10-06T13:37Z</time>
 <changes>
 <change type="updated">
-Improved detection of entites, etc. for the splitstreams features.
+Improved detection of entities, etc. for the splitstreams features.
 </change>
 <change type="added">
 Added mirv_matte_enetityquads (i.e. blood sprites),
 mirv_matte_particles, mirv_matte_viewmodel (i.e. in-eye weapon),
 mirv_matte_worldmodels (i.e. doors and some boxes) to allow more fine grained control.<br />
 In general for those 0 means never draw, 1 prefer in world, 2 prefer in entity, 3 always draw.
-For more detailed beavhiour look the commands up in the HLAE manual.
+For more detailed behaviour look the commands up in the HLAE manual.
 </change>
 <change type="removed">
 Removed mirv_movie_swapweapon, replaced by mirv_matte_viewmodel.
@@ -190,7 +190,7 @@ Removed mirv_movie_swapdoors, replaced by mirv_matte_worldmodels.
 <change type="removed">
 removed "-demoedit" from the default launch options
 since it may cause high memory usage, performance hits
-and instabilty, while only a share of HLAE users use it
+and instability, while only a share of HLAE users use it
 </change>
 <change type="updated">
 improved skymanager:

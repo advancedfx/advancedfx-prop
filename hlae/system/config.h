@@ -56,9 +56,6 @@ public:
 	//[DefaultValue(true)]
 	Boolean OptimizeVisibilty;
 
-	//[DefaultValue(true)]
-	Boolean StartDocked;
-
 	//[DefaultValue(false)]
 	Boolean FullScreen;
 
@@ -83,7 +80,6 @@ public:
 		ForceAlpha = false;
 		OptimizeDesktopRes = false;
 		OptimizeVisibilty = true;
-		StartDocked = true;
 		FullScreen = false;
 		RenderMode = 0;		
 	}
@@ -100,7 +96,6 @@ public:
 		this->ForceAlpha = from->ForceAlpha;
 		this->OptimizeDesktopRes = from->OptimizeDesktopRes;
 		this->OptimizeVisibilty = from->OptimizeVisibilty;
-		this->StartDocked = from->StartDocked;
 		this->FullScreen = from->FullScreen;
 		this->RenderMode = from->RenderMode;
 	}

@@ -229,69 +229,6 @@ DWORD WINAPI LoaderThread(void *p)
 using namespace System;
 using namespace System::Runtime::InteropServices;
 
-bool AfxGoldSrcLaunch(CfgLauncher ^cfg) {
-	String ^cmds, ^s1;
-	int i1;
-
-	//
-	//	build parameters:
-
-	cmds = "-steam -gl";
-	
-	cmds = String::Concat( cmds, " -game ", cfg->Modification );
-
-	// gfx settings
-
-	if( cfg->FullScreen )
-		cmds = String::Concat(cmds," -full");
-	else
-		cmds = String::Concat(cmds," -window");
-
-
-	s1 = cfg->GfxBpp.ToString();
-	if( 0 < s1->Length) cmds = String::Concat( cmds," -", s1, "bpp" );
-
-	s1 = cfg->GfxWidth.ToString();
-	if( 0 < s1->Length) cmds = String::Concat( cmds," -w ", s1 );
-
-	s1 = cfg->GfxHeight.ToString();
-	if( 0 < s1->Length) cmds = String::Concat( cmds," -h ", s1 );
-
-	if( cfg->GfxForce ) cmds = String::Concat(cmds, " -forceres");
-
-	// advanced
-
-	if( cfg->ForceAlpha )
-		cmds = String::Concat( cmds, " -mdtalpha8" );
-
-	i1 = cfg->RenderMode;
-	if( 1 == i1 )
-		cmds = String::Concat( cmds, " -mdtrender fbo" );
-	else if( 2 == i1 )
-		cmds = String::Concat( cmds, " -mdtrender memdc" );
-
-	if( cfg->OptimizeVisibilty )
-		cmds = String::Concat( cmds, " -mdtoptvis" );
-
-	if( cfg->StartDocked )
-		cmds = String::Concat( cmds, " -mdtdocked" );
-
-	// custom command line
-
-	s1 = cfg->CustomCmdLine;
-	if( 0 < s1->Length)
-		cmds = String::Concat( cmds," ", s1 );
-
-	//
-	// Launch:
-
-	return CustomLoader(
-		String::Concat(System::Windows::Forms::Application::StartupPath, "\\AfxHookGoldSrc.dll"),
-		cfg->GamePath,
-		cmds
-	);
-}
-
 
 bool CustomLoader(System::String ^ hookPath, System::String ^ programPath, System::String ^ cmdline)
 {

@@ -385,10 +385,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mdt_debug.h"
-					>
-				</File>
-				<File
 					RelativePath=".\mdt_media.cpp"
 					>
 				</File>
@@ -410,6 +406,10 @@
 				</File>
 				<File
 					RelativePath=".\mirv_glext.h"
+					>
+				</File>
+				<File
+					RelativePath=".\mirv_info.cpp"
 					>
 				</File>
 				<File

@@ -2,7 +2,6 @@
 
 #include <controls/HlaeConsole.h>
 #include <forms/calculator.h>
-#include <forms/UpdaterForm.h>
 #include <other/hlaelogo.h>
 #include <system/debug.h>
 #include <system/debug_file.h>
@@ -350,7 +349,6 @@ private: System::Windows::Forms::ToolStripMenuItem^  customLoaderToolStripMenuIt
 			this->checkForUpdateToolStripMenuItem->Size = System::Drawing::Size(174, 22);
 			this->checkForUpdateToolStripMenuItem->Text = L"Check for &Updates";
 			this->checkForUpdateToolStripMenuItem->Visible = false;
-			this->checkForUpdateToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::checkForUpdateToolStripMenuItem_Click);
 			// 
 			// debugToolStripMenuItem
 			// 
@@ -501,10 +499,7 @@ private: System::Void externalConsoleToolStripMenuItem_Click(System::Object^  se
 private: System::Void statusBarToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
 			 this->statusStripMain->Visible = this->statusBarToolStripMenuItem->Checked;
 		 }
-private: System::Void checkForUpdateToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
-			 UpdaterForm ^uf = gcnew UpdaterForm(Globals);
-			 uf->Show(this);
-		 }
+
 	private: System::Void skyManagerToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
 				 skymanager ^sm = gcnew skymanager(Globals);
 				 sm->Show(this);

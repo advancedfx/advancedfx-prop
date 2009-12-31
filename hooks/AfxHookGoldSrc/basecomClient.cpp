@@ -1,9 +1,6 @@
 #include <windows.h>
-//#include <winuser.h> // KEYBDINPUT Structure, ...
-#include "mdt_debug.h"
 
-#if 1//#ifdef MDT_DEBUG
-	#include <stdio.h>
+#include <stdio.h>
 
 // BEGIN HLSDK includes
 //
@@ -21,10 +18,9 @@
 #pragma pop_macro("HSPRITE")
 // END HLSDK includes
 	
-	#include "cmdregister.h"
+#include "cmdregister.h"
 
-	extern cl_enginefuncs_s* pEngfuncs;
-#endif
+extern cl_enginefuncs_s* pEngfuncs;
 
 #include "supportrender.h"
 
@@ -603,7 +599,7 @@ HWND APIENTRY HlaeBcClt_CreateWindowExA(DWORD dwExStyle,LPCTSTR lpClassName,LPCT
 	g_hHlaeServerWND = useParent;
 
 	// modifiy some properities to our needs:
-	dwStyle = WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CHILD;
+	dwStyle = WS_CHILD; // | WS_CLIPSIBLINGS | WS_CLIPCHILDREN
 	dwExStyle = WS_EX_NOPARENTNOTIFY;
 	hWndParent = useParent;
 	x = 0;

@@ -328,16 +328,6 @@
 						>
 					</File>
 				</File>
-				<File
-					RelativePath=".\forms\UpdaterForm.h"
-					FileType="3"
-					>
-					<File
-						RelativePath=".\forms\UpdaterForm.resx"
-						SubType="Designer"
-						>
-					</File>
-				</File>
 			</Filter>
 			<Filter
 				Name="resources"
@@ -400,6 +390,10 @@
 				</File>
 				<File
 					RelativePath=".\system\remoting.h"
+					>
+				</File>
+				<File
+					RelativePath=".\system\updater.cpp"
 					>
 				</File>
 				<File

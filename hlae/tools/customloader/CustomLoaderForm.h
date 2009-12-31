@@ -193,7 +193,6 @@ namespace hlae {
 			// 
 			// openFileDialog
 			// 
-			this->openFileDialog->AutoUpgradeEnabled = false;
 			this->openFileDialog->Title = L"Select ...";
 			// 
 			// CustomLoaderForm

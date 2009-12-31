@@ -5,7 +5,7 @@
 #include <system/globals.h>
 #include <system/debug.h>
 #include <system/config.h>
-#include <system/loader.h>
+#include <AfxGoldSrc/AfxGoldSrc.h>
 
 using namespace hlae;
 using namespace hlae::globals;
@@ -15,29 +15,22 @@ using namespace System::Windows::Forms;
 
 System::Void Launcher::buttonOK_Click(System::Object^  sender, System::EventArgs^  e)
 {
-	array<System::Diagnostics::Process^>^procs = System::Diagnostics::Process::GetProcessesByName( "hl" );
-	if(0 < procs->Length)
+	CfgLauncher ^ cfg = gcnew CfgLauncher();
+	WriteToConfig(cfg);
+
+	AfxGoldSrc ^ ag = AfxGoldSrc::GetOrCreate();
+	ag->Settings->CopyFrom(cfg);
+
+	if(!ag->Launch())
 		MessageBox::Show(
-			"hl.exe is already running, cannot launch. Please terminate hl.exe.",
+			"Launching failed.",
 			"Error",
 			MessageBoxButtons::OK,
 			MessageBoxIcon::Error
 		);
-	else {
-		CfgLauncher ^ cfg = gcnew CfgLauncher();
-		WriteToConfig(cfg);
-
-		if(!AfxGoldSrcLaunch(cfg))
-			MessageBox::Show(
-				"Launching failed.",
-				"Error",
-				MessageBoxButtons::OK,
-				MessageBoxIcon::Error
-			);
-		else if(cfg->RememberChanges) {
-			HlaeConfig::Config->Settings->Launcher = cfg;
-			HlaeConfig::BackUp();
-		}
+	else if(cfg->RememberChanges) {
+		HlaeConfig::Config->Settings->Launcher = cfg;
+		HlaeConfig::BackUp();
 	}
 }
 
@@ -89,7 +82,6 @@ System::Void Launcher::ReadFromConfig(CfgLauncher ^ cfg)
 	this->checkBoxForceAlpha->Checked = cfg->ForceAlpha;
 	this->checkBoxDesktopRes->Checked = cfg->OptimizeDesktopRes;
 	this->checkBoxVisbility->Checked = cfg->OptimizeVisibilty;
-	this->checkBoxStartDocked->Checked = cfg->StartDocked;
 	//
 	if( cfg->RenderMode < this->comboBoxRenderMode->Items->Count )
 		this->comboBoxRenderMode->SelectedIndex = cfg->RenderMode;
@@ -120,7 +112,6 @@ System::Void Launcher::WriteToConfig(CfgLauncher ^ cfg)
 	cfg->ForceAlpha = this->checkBoxForceAlpha->Checked;
 	cfg->OptimizeDesktopRes = this->checkBoxDesktopRes->Checked;
 	cfg->OptimizeVisibilty = this->checkBoxVisbility->Checked;
-	cfg->StartDocked = this->checkBoxStartDocked->Checked;
 	cfg->RenderMode = this->comboBoxRenderMode->SelectedIndex;
 	cfg->FullScreen = this->checkBoxFullScreen->Checked;
 }

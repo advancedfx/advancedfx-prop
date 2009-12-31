@@ -1,4 +1,3 @@
-#include "mdt_debug.h"
 
 // BEGIN HLSDK includes
 //

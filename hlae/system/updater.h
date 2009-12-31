@@ -1,119 +1,83 @@
 #pragma once
 
-// Project :  Half-Life Advanced Effects
-// File    :  hlae/system/updater.h
+// Copyright (c) by advancedfx.org
+//
+// Last changes:
+// 2009-13-31 by dominik.matrixstorm.com
+//
+// First changes:
+// 2008-12-23 by dominik.matrixstorm.com
 
-// Authors : last change / first change / name
-// 2008-12-23 / 2008-12-23 / Dominik Tugend
+#define HLAE_UPDATER_URL "http://update.matrixstorm.com/61b65ac26b714c41a1d998af3c5bd6dd.xml"
+#define HLAE_UPDATER_CURRENT_GUID "2f1b50f2-78c0-405f-804a-97db10482595"
+#define HLAE_UPDATER_MAX_XML_REDIRECTS 1
 
-#include <system/debug.h>
-#include <system/config.h>
-#include <system/globals.h>
-
-using namespace System::Net;
-using namespace System::Xml;
-
-using namespace hlae::globals;
+using namespace System;
+using namespace System::Threading;
 
 namespace hlae {
-namespace updater {
 
-enum class UpdateCheckSate
+enum class UpdaterCheckState
 {
-	US_FAILED,
-	US_RECENT,
-	US_OLD
+	Unknown,
+	Checked,
+	Checking
 };
 
-public ref class Updater
+interface class IUpdaterCheckResult
 {
-public:
-	Updater(CGlobals ^Globals)
-	{
-		this->Globals = Globals;
-		m_valid = false;
-		m_ownguid = gcnew System::Guid("2f1b50f2-78c0-405f-804a-97db10482595");
+	//
+	// Properties:
+
+	property String ^ Description {
+		String ^ get();
 	}
 
-	System::String ^GetTitle() { return m_title; };
-	System::String ^GetUrl() { return m_url; };
-	System::String ^GetDescription() { return m_description; };
-	
-	UpdateCheckSate CheckForUpdate()
-	{
-		UpdateCheckSate myRet = UpdateCheckSate::US_FAILED;
-		if(RetriveData())
-		{
-			if(0 != m_guid->CompareTo(m_ownguid))
-				myRet = UpdateCheckSate::US_OLD;
-			else
-				myRet = UpdateCheckSate::US_RECENT;
-		}
+	property bool IsUpdated {
+		bool get();
+	}
 
-		return myRet;
+	property String ^ Title {
+		String ^ get();
+	}
+
+	property String ^ Url {
+		String ^ get();
+	}
+};
+
+
+// Updater /////////////////////////////////////////////////////////////////////
+
+ref class Updater
+{
+public:
+	Updater();
+	~Updater();
+
+	/// <summary> Triggers a new (asynchronus) update check. </summary>
+	void StartCheck();
+
+	//
+	// Properties:
+
+	/// <summmary> result of a check or nullptr </summary>
+	property IUpdaterCheckResult ^ CheckResult {
+		IUpdaterCheckResult ^ get();
+	}
+
+	property UpdaterCheckState CheckState {
+		UpdaterCheckState get();
 	}
 	
 private:
-	CGlobals ^Globals;
+	IUpdaterCheckResult ^ m_CheckResult;
+	UpdaterCheckState m_CheckState;
+	Thread ^ m_CheckThread;
+	Guid ^ m_OwnGuid;
 
-	bool m_valid;
-	System::Guid ^m_ownguid;
-	System::Guid ^m_guid;
-	System::String ^m_title;
-	System::String ^m_url;
-	System::String ^m_description;
-	
-
-	bool RetriveData()
-	{
-		// u want ugly code?
-		// ok u get ugly code:
-
-		bool bRes = true;
-		HttpWebRequest^ request;
-		HttpWebResponse^ response;
-		System::IO::Stream ^stream;
-		XmlDocument ^doc;
-
-		try {
-			request = (HttpWebRequest^)( WebRequest::Create( "http://update.advancedfx.org/61b65ac26b714c41a1d998af3c5bd6dd.xml" ) );
-			request->MaximumAutomaticRedirections = 1;
-			request->AllowAutoRedirect = true;
-			HttpWebResponse^ response = (HttpWebResponse^)( request->GetResponse() );
-
-			doc = gcnew XmlDocument();
-			stream = response->GetResponseStream();
-			doc->Load( stream );
-
-			if(bRes)
-			{
-				XmlNode ^nodeUpdate = doc->SelectSingleNode("update");
-				XmlNode ^anode;
-				anode = nodeUpdate->SelectSingleNode("title");
-				m_title = anode->InnerText;
-				anode = nodeUpdate->SelectSingleNode("url");
-				m_url = anode->InnerText;
-				anode = nodeUpdate->SelectSingleNode("description");
-				m_description = anode->InnerText;
-				anode = nodeUpdate->SelectSingleNode("guid");
-				m_guid = gcnew System::Guid( anode->InnerText );
-			}
-
-		}
-		catch(System::Exception ^e) {
-			ERROR_MESSAGE( Globals->debugMaster, System::String::Format("Updater exception: {0}",e) );
-			bRes = false;
-		}
-
-		if(doc) delete doc;
-		if(stream) stream->Close();
-		if(response) response->Close();
-
-		m_valid = bRes;
-
-		return bRes;
-	}
+	void CheckWorker();
 };
 
-} // namespace updater
 } // namespace hlae
+

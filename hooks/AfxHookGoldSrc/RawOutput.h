@@ -7,8 +7,6 @@
 //
 // Raw means dumb, no checks etc..
 
-#include "mdt_debug.h"
-
 #include <windows.h>
 #include <winbase.h>
 

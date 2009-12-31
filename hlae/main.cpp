@@ -20,7 +20,35 @@ int main(array<System::String ^> ^args)
 {
 	// Enabling Windows XP visual effects before any controls are created
 	Application::EnableVisualStyles();
-	Application::SetCompatibleTextRenderingDefault(false); 
+	Application::SetCompatibleTextRenderingDefault(false);
+
+	//
+	// .NET Framework Service Pack check:
+
+	System::Version ^ envVersion = System::Environment::Version;
+	System::String ^ strVer = nullptr;
+
+	if(
+		50727 == envVersion->Build
+		&& 42 <= envVersion->Revision
+	) {
+		if(envVersion->Revision < 1433) strVer = "Original release";
+		else if(envVersion->Revision < 3053) strVer = "Service Pack 1";
+	}
+	else strVer = "unknown";
+
+	if(nullptr != strVer) System::Windows::Forms::MessageBox::Show(
+		System::String::Concat(
+			"HLAE is targeted at .NET framework 2.0 Service Pack 2 or newer.\n"
+			"But your installed CLR version is ", envVersion->ToString(), " (", strVer, ").\n",
+			"\n",
+			"We recommend upgrading to the latest Service Pack to ensure HLAE operates as intended!"
+		),
+		".NET framework version warning",
+		System::Windows::Forms::MessageBoxButtons::OK,
+		System::Windows::Forms::MessageBoxIcon::Warning
+	);
+
 
 	//
 

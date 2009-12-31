@@ -16,6 +16,4 @@
 
 using namespace hlae;
 
-bool AfxGoldSrcLaunch(CfgLauncher ^cfg);
-
 bool CustomLoader(System::String ^ hookPath, System::String ^ programPath, System::String ^ cmdline);

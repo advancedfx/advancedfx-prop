@@ -1,7 +1,5 @@
 #include "RawOutput.h"
 
-#include "mdt_debug.h"
-
 #include <windows.h>
 #include <gl\gl.h>
 //#include <winbase.h>

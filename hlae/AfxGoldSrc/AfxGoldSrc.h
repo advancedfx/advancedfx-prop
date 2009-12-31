@@ -9,7 +9,10 @@
 // 2009-12-06T15:58Z by dominik.matrixstorm.com
 
 
+#include <system/config.h>
+
 using namespace System;
+using namespace hlae;
 
 
 enum class AfxGoldSrcRenderMode {
@@ -27,6 +30,7 @@ public:
 		m_Alpha8 = false;
 		m_Bpp = 32;
 		m_CustomLaunchOptions = "";
+		m_ForceRes = true;
 		m_FullScreen = false;
 		m_HalfLifePath = "";
 		m_Height = 640;
@@ -34,6 +38,33 @@ public:
 		m_OptWindowVisOnRec = true;
 		m_RenderMode = AfxGoldSrcRenderMode::Default;
 		m_Width = 480;
+	}
+
+	//
+	// Functions:
+
+	void CopyFrom(CfgLauncher ^cfg) {
+		this->Alpha8 = cfg->ForceAlpha;
+		this->Bpp = cfg->GfxBpp;
+		this->CustomLaunchOptions = cfg->CustomCmdLine;
+		this->ForceRes = cfg->GfxForce;
+		this->FullScreen = cfg->FullScreen;
+		this->HalfLifePath = cfg->GamePath;
+		this->Height = cfg->GfxHeight;
+		this->Modification = cfg->Modification;
+		this->OptWindowVisOnRec = cfg->OptimizeVisibilty;
+		switch(cfg->RenderMode) {
+		case 1:
+			this->RenderMode = AfxGoldSrcRenderMode::FrameBufferObject;
+			break;
+		case 2:
+			this->RenderMode = AfxGoldSrcRenderMode::MemoryDC;
+			break;
+		default:
+			this->RenderMode = AfxGoldSrcRenderMode::Default;
+		}
+		this->Width = cfg->GfxWidth;
+
 	}
 
 	//
@@ -57,6 +88,13 @@ public:
 		String ^ get() { return m_CustomLaunchOptions; }
 		void set(String ^ value) {
 			if(!Running()) m_CustomLaunchOptions = gcnew String(value);
+		}
+	}
+
+	property bool ForceRes {
+		bool get() { return m_ForceRes; }
+		void set(bool value) {
+			if(!Running()) m_ForceRes = value;
 		}
 	}
 
@@ -114,6 +152,7 @@ private:
 	bool m_Alpha8;
 	unsigned short int m_Bpp;
 	String ^ m_CustomLaunchOptions;
+	bool m_ForceRes;
 	bool m_FullScreen;
 	String ^ m_HalfLifePath;
 	unsigned int m_Height;
@@ -134,6 +173,12 @@ public:
 	AfxGoldSrc();
 	~AfxGoldSrc();
 
+	/// <retruns> Singelton instance if present. </returns>
+	static AfxGoldSrc ^ Get();
+
+	/// <retruns> Singelton instance if present, otherwise creates a new one. </returns>
+	static AfxGoldSrc ^ GetOrCreate();
+
 	bool Launch();
 
 	//
@@ -144,7 +189,12 @@ public:
 	property AfxGoldSrcSettings ^ Settings { AfxGoldSrcSettings ^ get() { return m_Settings; } }
 
 private:
+	static AfxGoldSrc ^ m_SingeltonInstance;
+	System::IntPtr m_RecvPipeReadHandle;
+	System::IntPtr  m_RecvPipeWriteHandle;
 	bool m_Running;
+	System::IntPtr m_SendPipeReadHandle;
+	System::IntPtr  m_SendPipeWriteHandle;
 	AfxGoldSrcSettings ^ m_Settings;
 
 };
