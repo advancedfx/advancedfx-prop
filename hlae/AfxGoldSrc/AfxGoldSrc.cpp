@@ -158,6 +158,6 @@ bool AfxGoldSrc::Launch() {
 
 // AfxGoldSrcSettings //////////////////////////////////////////////////////////
 
-bool AfxGoldSrcSettings::Running() {
-	return m_AfxGoldSrc->Running;
-}
+//bool AfxGoldSrcSettings::Running() {
+//	return m_AfxGoldSrc->Running;
+//}

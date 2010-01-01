@@ -23,14 +23,6 @@ public:
 	//
 	// Properties:
 
-	property String ^ Description {
-
-		/// <summary> Implements IUpdaterCheckResult. </summary>
-		virtual String ^ get() { return m_Description; }
-
-		void set(String ^ value) { m_Description = value; }
-	}
-
 	property System::Guid ^ Guid {
 		System::Guid ^ get() { return m_Guid; }
 		void set(System::Guid ^ value) { m_Guid = value; }
@@ -44,28 +36,18 @@ public:
 		void set(bool value) { m_IsUpdated = value; }
 	}
 
-	property String ^ Title {
+	property System::Uri ^ Uri {
 
 		/// <summary> Implements IUpdaterCheckResult. </summary>
-		virtual String ^ get() { return m_Title; }
+		virtual System::Uri ^ get() { return m_Uri; }
 
-		void set(String ^ value) { m_Title = value; }
-	}
-
-	property String ^ Url {
-
-		/// <summary> Implements IUpdaterCheckResult. </summary>
-		virtual String ^ get() { return m_Url; }
-
-		void set(String ^ value) { m_Url = value; }
+		void set(System::Uri ^ value) { m_Uri = value; }
 	}
 
 private:
-	String ^ m_Description;
 	System::Guid ^ m_Guid;
 	bool m_IsUpdated;
-	String ^ m_Url;
-	String ^ m_Title;
+	System::Uri ^ m_Uri;
 };
 
 
@@ -82,6 +64,7 @@ void GetUpdateInfo(System::String ^ url, UpdateInfoHelper ^ helper, int maxRedir
 			request = (HttpWebRequest^)( WebRequest::Create( url ) );
 			request->MaximumAutomaticRedirections = 1;
 			request->AllowAutoRedirect = true;
+			request->Timeout = 10000;
 			HttpWebResponse^ response = (HttpWebResponse^)( request->GetResponse() );
 
 			doc = gcnew XmlDocument();
@@ -96,15 +79,10 @@ void GetUpdateInfo(System::String ^ url, UpdateInfoHelper ^ helper, int maxRedir
 				helper->Guid =
 					gcnew System::Guid(nodeUpdate["guid"]->InnerText)
 				;
-				helper->Title =
-					(anode = nodeUpdate["title"]) ? anode->InnerText : ""
+				helper->Uri =
+					(anode = nodeUpdate["link"]) ? gcnew Uri(anode->InnerText) : nullptr
 				;
-				helper->Url =
-					(anode = nodeUpdate["url"]) ? anode->InnerText : ""
-				;
-				helper->Description =
-					(anode = nodeUpdate["description"]) ? anode->InnerText : ""
-				;
+				break;
 			}
 			else if(0 < maxRedirects) {
 				// follow redirect:
@@ -127,9 +105,11 @@ void GetUpdateInfo(System::String ^ url, UpdateInfoHelper ^ helper, int maxRedir
 
 Updater::Updater()
 {
-	m_CheckState = UpdaterCheckState::Unknown;
 	m_CheckResult = nullptr;
-	m_OwnGuid = gcnew Guid("2f1b50f2-78c0-405f-804a-97db10482595");
+	m_CheckThreadQuit = false;
+	m_CheckThreadWork = gcnew AutoResetEvent(false);
+	m_CheckedNotificationTargets = gcnew System::Collections::Generic::LinkedList<UpdaterNotificationTarget ^>();
+	m_OwnGuid = gcnew Guid(HLAE_UPDATER_CURRENT_GUID);
 
 	m_CheckThread = gcnew Thread(gcnew ThreadStart(this, &Updater::CheckWorker));
 	m_CheckThread->Name = "hlae Updater CheckThread";
@@ -137,52 +117,94 @@ Updater::Updater()
 
 Updater::~Updater()
 {
-	if(m_CheckThread->IsAlive)
-		m_CheckThread->Join();
+	while(m_CheckThread->IsAlive) {
+		m_CheckThreadQuit = true;
+		m_CheckThreadWork->Set();
+		m_CheckThread->Join(250);
+	}
 }
 
 
-IUpdaterCheckResult ^ Updater::CheckResult::get()
-{
-	return m_CheckResult;
-}
+void Updater::BeginCheckedNotification(UpdaterNotificationTarget ^ target) {
+	try {
+		Monitor::Enter(m_CheckedNotificationTargets);
 
-
-UpdaterCheckState Updater::CheckState::get()
-{
-	return m_CheckState;
+		m_CheckedNotificationTargets->AddLast(target);
+	}
+	finally {
+		Monitor::Exit(m_CheckedNotificationTargets);
+	}
 }
 
 
 void Updater::CheckWorker()
 {
+	while(!m_CheckThreadQuit)
+	{
+		try {
+			UpdateInfoHelper ^ helper = gcnew UpdateInfoHelper();
+			GetUpdateInfo(HLAE_UPDATER_URL, helper, HLAE_UPDATER_MAX_XML_REDIRECTS);
+			helper->IsUpdated = 0 != m_OwnGuid->CompareTo(helper->Guid);
+
+			m_CheckResult = helper;
+		}
+		catch(...) {
+			m_CheckResult = nullptr;
+		}
+
+		try {
+			Monitor::Enter(m_CheckedNotificationTargets);
+
+			for(
+				System::Collections::Generic::LinkedListNode<UpdaterNotificationTarget ^> ^ cur = m_CheckedNotificationTargets->First;
+				nullptr != cur;
+				cur = cur->Next
+			)
+				cur->Value->Notify(this, m_CheckResult);
+		}
+		finally {
+			Monitor::Exit(m_CheckedNotificationTargets);
+		}
+
+		m_CheckThreadWork->WaitOne();
+	}
+}
+
+
+void Updater::EndCheckedNotification(UpdaterNotificationTarget ^ target) {
 	try {
-		UpdateInfoHelper ^ helper = gcnew UpdateInfoHelper();
-		GetUpdateInfo(HLAE_UPDATER_URL, helper, HLAE_UPDATER_MAX_XML_REDIRECTS);
-		helper->IsUpdated = m_OwnGuid != helper->Guid;
+		Monitor::Enter(m_CheckedNotificationTargets);
 
-		m_CheckResult = helper;
+		m_CheckedNotificationTargets->Remove(target);
 	}
-	catch(...) {
-		m_CheckResult = nullptr;
+	finally {
+		Monitor::Exit(m_CheckedNotificationTargets);
 	}
+}
 
-	m_CheckState = UpdaterCheckState::Checked;
+
+Guid ^ Updater::OwnGuid::get() {
+	return m_OwnGuid;
 }
 
 
 
+Updater ^ Updater::Singelton::get()
+{
+	return m_Singelton;
+}
+
+void Updater::Singelton::set(Updater ^ value)
+{
+	m_Singelton = value;
+}
+
+
 void Updater::StartCheck()
 {
-	if(
-		UpdaterCheckState::Checking == m_CheckState
-		|| m_CheckThread->IsAlive
-	)
-		return;
-
-	m_CheckState = UpdaterCheckState::Checking;
-	m_CheckResult = nullptr;
-
-	m_CheckThread->Start();
+	if(!m_CheckThread->IsAlive)
+		m_CheckThread->Start();
+	else
+		m_CheckThreadWork->Set();
 }
 

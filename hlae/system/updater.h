@@ -9,7 +9,7 @@
 // 2008-12-23 by dominik.matrixstorm.com
 
 #define HLAE_UPDATER_URL "http://update.matrixstorm.com/61b65ac26b714c41a1d998af3c5bd6dd.xml"
-#define HLAE_UPDATER_CURRENT_GUID "2f1b50f2-78c0-405f-804a-97db10482595"
+#define HLAE_UPDATER_CURRENT_GUID "51cae731-14aa-4538-bc82-4e2751454f9e"
 #define HLAE_UPDATER_MAX_XML_REDIRECTS 1
 
 using namespace System;
@@ -17,33 +17,40 @@ using namespace System::Threading;
 
 namespace hlae {
 
-enum class UpdaterCheckState
-{
-	Unknown,
-	Checked,
-	Checking
-};
-
 interface class IUpdaterCheckResult
 {
 	//
 	// Properties:
 
-	property String ^ Description {
-		String ^ get();
-	}
-
 	property bool IsUpdated {
 		bool get();
 	}
 
-	property String ^ Title {
-		String ^ get();
+	property System::Uri ^ Uri {
+		System::Uri ^ get();
+	}
+};
+
+delegate void UpdaterCheckedHandler(System::Object ^sender, IUpdaterCheckResult ^checkResult);
+
+ref class UpdaterNotificationTarget
+{
+public:
+	UpdaterNotificationTarget(
+		System::Windows::Forms::Control ^ targetThreadControl,
+		UpdaterCheckedHandler ^ targetHandler
+	) {
+		m_TargetHandler = targetHandler;
+		m_TargetThreadControl = targetThreadControl;
 	}
 
-	property String ^ Url {
-		String ^ get();
+	void Notify(System::Object ^ sender, IUpdaterCheckResult ^ checkResult) {
+		m_TargetThreadControl->Invoke(m_TargetHandler, gcnew cli::array<System::Object ^,1>(2) {sender, checkResult}); 
 	}
+
+private:
+	UpdaterCheckedHandler ^ m_TargetHandler;
+	System::Windows::Forms::Control ^ m_TargetThreadControl;
 };
 
 
@@ -58,23 +65,32 @@ public:
 	/// <summary> Triggers a new (asynchronus) update check. </summary>
 	void StartCheck();
 
+	/// <summary> Eventhandler (re-)triggered when a updatecheck completed </summary>
+	void BeginCheckedNotification(UpdaterNotificationTarget ^ target);
+
+	/// <remarks> Do not call upon notification (will cause deadlock). </remarks>
+	void EndCheckedNotification(UpdaterNotificationTarget ^ target);
+
 	//
 	// Properties:
 
-	/// <summmary> result of a check or nullptr </summary>
-	property IUpdaterCheckResult ^ CheckResult {
-		IUpdaterCheckResult ^ get();
+	property Guid ^ OwnGuid {
+		Guid ^ get();
 	}
 
-	property UpdaterCheckState CheckState {
-		UpdaterCheckState get();
+	static property Updater ^ Singelton {
+		Updater ^ get();
+		void set(Updater ^ value);
 	}
 	
 private:
 	IUpdaterCheckResult ^ m_CheckResult;
-	UpdaterCheckState m_CheckState;
 	Thread ^ m_CheckThread;
+	bool m_CheckThreadQuit;
+	AutoResetEvent ^ m_CheckThreadWork;
+	System::Collections::Generic::LinkedList<UpdaterNotificationTarget ^> ^ m_CheckedNotificationTargets;
 	Guid ^ m_OwnGuid;
+	static Updater ^ m_Singelton;
 
 	void CheckWorker();
 };

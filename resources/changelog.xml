@@ -6,6 +6,21 @@
 
 <release>
 <name>HLAE</name>
+<version>2.2.10.2</version>
+<time>2010-01-01T12:37Z</time>
+<changes>
+<change type="added">
+Added simple obligatory update check notification.
+</change>
+<change type="fixed">
+Minor tweaks.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.2.10.1</version>
 <time>2009-12-22T11:08Z</time>
 <changes>

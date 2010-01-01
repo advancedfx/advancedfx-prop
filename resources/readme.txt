@@ -72,17 +72,17 @@ The HLAE Team:
 Current members:
 
 MIRVIN_monkey
-  The creator and programmer.
+  The creator and former lead programmer.
   Was the first one, mostly inactive past 1.0.
   http://www.madabouthats.org
   
 ripieces
-  Programmer, ... .
-  Joined March  2007.
+  Lead programmer.
+  Joined March 2007.
   http://dominik.matrixstorm.com
   
 msthavoc
-  Documentation, testing, community relations, tutorials, additional tools.
+  Programming of additional tools, testing, community relations, documentation and tutorials.
   Joined August 2007.
   http://www.mst-gaming.de
   

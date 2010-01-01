@@ -161,7 +161,10 @@ private:
 	AfxGoldSrcRenderMode m_RenderMode;
 	unsigned int m_Width;
 
-	bool Running();
+	bool Running() {
+		return false; // hack (failing to launch will otherwise make it fail forever)
+		//	return m_AfxGoldSrc->Running;
+	}
 };
 
 

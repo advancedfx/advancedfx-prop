@@ -6,7 +6,7 @@
 #include "system/debug_file.h"
 #include "system/config.h"
 #include "system/globals.h"
-
+#include "system/updater.h"
 
 #include "forms/MainForm.h"
 
@@ -73,8 +73,30 @@ int main(array<System::String ^> ^args)
 	CGlobals ^Globals = gcnew CGlobals();
 	Globals->debugMaster = debugMaster;
 
+	// Init updater:
+	Updater::Singelton = gcnew Updater();
+	short int updateCheck = HlaeConfig::Config->Settings->UpdateCheck;
+	if(0 == updateCheck) {
+		updateCheck = System::Windows::Forms::DialogResult::Yes == System::Windows::Forms::MessageBox::Show(
+				"Shall HLAE automatically look for updates on the web?",
+				"Enable automated HLAE update check?",
+				System::Windows::Forms::MessageBoxButtons::YesNo,
+				System::Windows::Forms::MessageBoxIcon::Question,
+				System::Windows::Forms::MessageBoxDefaultButton::Button1
+
+		) ? 1 : -1;
+		 HlaeConfig::Config->Settings->UpdateCheck = updateCheck;
+		 HlaeConfig::BackUp();
+	}
+	
+
 	// Create the main window and run it
 	Application::Run(gcnew MainForm(Globals,debugFile));
+
+	// Shutdown updater:
+	delete Updater::Singelton;
+	Updater::Singelton = nullptr;
+
 
 	// remove globals:
 	delete Globals;

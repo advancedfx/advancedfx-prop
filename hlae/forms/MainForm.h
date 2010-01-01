@@ -9,6 +9,7 @@
 #include <system/remoting.h>
 #include <tools/customloader/CustomLoader.h>
 #include <tools/skymanager/skymanager.h>
+#include <system/updater.h>
 
 
 class CHlaeBcServer; // forward decleration
@@ -102,14 +103,20 @@ namespace hlae {
 		void MyDestroy();
 
 	private:
+		UpdaterNotificationTarget ^ m_UpdaterCheckedNotification;
 		CHlaeBcServer *hlaeBaseComServer;
 		HlaeRemoting ^remotingSystem;
 		CGlobals ^Globals;
 		FileDebugListener ^debugFile;
 		HlaeConsole ^ hlaeConsole;
-		HlaeLogo ^ hlaeLogo;
+	private: System::Windows::Forms::ToolStripStatusLabel^  statusLabelHide;
+			 HlaeLogo ^ hlaeLogo;
 
+		void UpdaterChecked(System::Object ^sender, IUpdaterCheckResult ^checkResult);
 
+	private:
+
+	private: System::Windows::Forms::StatusStrip^  statusStrip1;
 	private: System::Windows::Forms::MenuStrip^  menuStrip1;
 	private: System::Windows::Forms::ToolStripMenuItem^  fileToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^  launchToolStripMenuItem;
@@ -125,24 +132,31 @@ namespace hlae {
 	private: System::Windows::Forms::ToolStripMenuItem^  fileSizeToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^  helpToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^  advancedfxorgToolStripMenuItem;
+	private: System::Windows::Forms::ToolStripMenuItem^  menuUpdates;
 
-	private: System::Windows::Forms::ToolStripMenuItem^  checkForUpdateToolStripMenuItem;
+
 
 
 	private: System::Windows::Forms::ToolStripMenuItem^  debugToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^  flushLogFileToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^  neverDropMessagesToolStripMenuItem;
-	private: System::Windows::Forms::ToolStripPanel^  toolStripPanelTop;
+
 	private: System::Windows::Forms::SplitContainer^  splitContainerPrimary;
 	private: System::Windows::Forms::SplitContainer^  splitContainerSecondary;
 	private: System::Windows::Forms::Panel^  panelGame;
-	private: System::Windows::Forms::ToolStripMenuItem^  statusBarToolStripMenuItem;
-	private: System::Windows::Forms::ToolStripPanel^  toolStripPanelBottom;
-	private: System::Windows::Forms::StatusStrip^  statusStripMain;
+
+
 private: System::Windows::Forms::ToolStripMenuItem^  skyManagerToolStripMenuItem;
 private: System::Windows::Forms::ToolStripSeparator^  toolStripMenuItem2;
 private: System::Windows::Forms::ToolStripMenuItem^  developerToolStripMenuItem;
 private: System::Windows::Forms::ToolStripMenuItem^  customLoaderToolStripMenuItem;
+private: System::Windows::Forms::ToolStripMenuItem^  menuAutoCheck;
+
+private: System::Windows::Forms::ToolStripSeparator^  toolStripMenuItem3;
+private: System::Windows::Forms::ToolStripMenuItem^  checkNowToolStripMenuItem;
+private: System::Windows::Forms::ToolStripStatusLabel^  statusLabelUpdate;
+private: System::Windows::Forms::ToolStripMenuItem^  statusBarToolStripMenuItem;
+
 
 
 
@@ -180,28 +194,29 @@ private: System::Windows::Forms::ToolStripMenuItem^  customLoaderToolStripMenuIt
 			this->customLoaderToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->helpToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->advancedfxorgToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
-			this->checkForUpdateToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->toolStripMenuItem3 = (gcnew System::Windows::Forms::ToolStripSeparator());
+			this->menuUpdates = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->menuAutoCheck = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->checkNowToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->debugToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->flushLogFileToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->neverDropMessagesToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
-			this->toolStripPanelTop = (gcnew System::Windows::Forms::ToolStripPanel());
 			this->splitContainerPrimary = (gcnew System::Windows::Forms::SplitContainer());
 			this->splitContainerSecondary = (gcnew System::Windows::Forms::SplitContainer());
 			this->panelGame = (gcnew System::Windows::Forms::Panel());
-			this->toolStripPanelBottom = (gcnew System::Windows::Forms::ToolStripPanel());
-			this->statusStripMain = (gcnew System::Windows::Forms::StatusStrip());
+			this->statusStrip1 = (gcnew System::Windows::Forms::StatusStrip());
+			this->statusLabelUpdate = (gcnew System::Windows::Forms::ToolStripStatusLabel());
+			this->statusLabelHide = (gcnew System::Windows::Forms::ToolStripStatusLabel());
 			this->menuStrip1->SuspendLayout();
-			this->toolStripPanelTop->SuspendLayout();
 			this->splitContainerPrimary->Panel2->SuspendLayout();
 			this->splitContainerPrimary->SuspendLayout();
 			this->splitContainerSecondary->Panel1->SuspendLayout();
 			this->splitContainerSecondary->SuspendLayout();
-			this->toolStripPanelBottom->SuspendLayout();
+			this->statusStrip1->SuspendLayout();
 			this->SuspendLayout();
 			// 
 			// menuStrip1
 			// 
-			this->menuStrip1->Dock = System::Windows::Forms::DockStyle::None;
 			this->menuStrip1->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(5) {this->fileToolStripMenuItem, 
 				this->viewToolStripMenuItem, this->toolsToolStripMenuItem, this->helpToolStripMenuItem, this->debugToolStripMenuItem});
 			this->menuStrip1->Location = System::Drawing::Point(0, 0);
@@ -264,11 +279,9 @@ private: System::Windows::Forms::ToolStripMenuItem^  customLoaderToolStripMenuIt
 			// 
 			// statusBarToolStripMenuItem
 			// 
-			this->statusBarToolStripMenuItem->CheckOnClick = true;
 			this->statusBarToolStripMenuItem->Name = L"statusBarToolStripMenuItem";
 			this->statusBarToolStripMenuItem->Size = System::Drawing::Size(138, 22);
 			this->statusBarToolStripMenuItem->Text = L"&Status Bar";
-			this->statusBarToolStripMenuItem->Visible = false;
 			this->statusBarToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::statusBarToolStripMenuItem_Click);
 			// 
 			// toolsToolStripMenuItem
@@ -328,8 +341,8 @@ private: System::Windows::Forms::ToolStripMenuItem^  customLoaderToolStripMenuIt
 			// 
 			// helpToolStripMenuItem
 			// 
-			this->helpToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {this->advancedfxorgToolStripMenuItem, 
-				this->checkForUpdateToolStripMenuItem});
+			this->helpToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(3) {this->advancedfxorgToolStripMenuItem, 
+				this->toolStripMenuItem3, this->menuUpdates});
 			this->helpToolStripMenuItem->Name = L"helpToolStripMenuItem";
 			this->helpToolStripMenuItem->Size = System::Drawing::Size(40, 20);
 			this->helpToolStripMenuItem->Text = L"&Help";
@@ -342,13 +355,32 @@ private: System::Windows::Forms::ToolStripMenuItem^  customLoaderToolStripMenuIt
 			this->advancedfxorgToolStripMenuItem->Text = L"advancedfx.org";
 			this->advancedfxorgToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::advancedfxorgToolStripMenuItem_Click);
 			// 
-			// checkForUpdateToolStripMenuItem
+			// toolStripMenuItem3
 			// 
-			this->checkForUpdateToolStripMenuItem->Enabled = false;
-			this->checkForUpdateToolStripMenuItem->Name = L"checkForUpdateToolStripMenuItem";
-			this->checkForUpdateToolStripMenuItem->Size = System::Drawing::Size(174, 22);
-			this->checkForUpdateToolStripMenuItem->Text = L"Check for &Updates";
-			this->checkForUpdateToolStripMenuItem->Visible = false;
+			this->toolStripMenuItem3->Name = L"toolStripMenuItem3";
+			this->toolStripMenuItem3->Size = System::Drawing::Size(171, 6);
+			// 
+			// menuUpdates
+			// 
+			this->menuUpdates->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {this->menuAutoCheck, 
+				this->checkNowToolStripMenuItem});
+			this->menuUpdates->Name = L"menuUpdates";
+			this->menuUpdates->Size = System::Drawing::Size(174, 22);
+			this->menuUpdates->Text = L"Check for &Updates";
+			// 
+			// menuAutoCheck
+			// 
+			this->menuAutoCheck->Name = L"menuAutoCheck";
+			this->menuAutoCheck->Size = System::Drawing::Size(140, 22);
+			this->menuAutoCheck->Text = L"&Auto Check";
+			this->menuAutoCheck->Click += gcnew System::EventHandler(this, &MainForm::autoCheckToolStripMenuItem_Click);
+			// 
+			// checkNowToolStripMenuItem
+			// 
+			this->checkNowToolStripMenuItem->Name = L"checkNowToolStripMenuItem";
+			this->checkNowToolStripMenuItem->Size = System::Drawing::Size(140, 22);
+			this->checkNowToolStripMenuItem->Text = L"&Check now";
+			this->checkNowToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::checkNowToolStripMenuItem_Click);
 			// 
 			// debugToolStripMenuItem
 			// 
@@ -374,20 +406,10 @@ private: System::Windows::Forms::ToolStripMenuItem^  customLoaderToolStripMenuIt
 			this->neverDropMessagesToolStripMenuItem->Text = L"Never drop messages";
 			this->neverDropMessagesToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::neverDropMessagesToolStripMenuItem_Click);
 			// 
-			// toolStripPanelTop
-			// 
-			this->toolStripPanelTop->Controls->Add(this->menuStrip1);
-			this->toolStripPanelTop->Dock = System::Windows::Forms::DockStyle::Top;
-			this->toolStripPanelTop->Location = System::Drawing::Point(0, 0);
-			this->toolStripPanelTop->Name = L"toolStripPanelTop";
-			this->toolStripPanelTop->Orientation = System::Windows::Forms::Orientation::Horizontal;
-			this->toolStripPanelTop->RowMargin = System::Windows::Forms::Padding(3, 0, 0, 0);
-			this->toolStripPanelTop->Size = System::Drawing::Size(492, 24);
-			// 
 			// splitContainerPrimary
 			// 
 			this->splitContainerPrimary->Dock = System::Windows::Forms::DockStyle::Fill;
-			this->splitContainerPrimary->Location = System::Drawing::Point(0, 24);
+			this->splitContainerPrimary->Location = System::Drawing::Point(0, 0);
 			this->splitContainerPrimary->Name = L"splitContainerPrimary";
 			// 
 			// splitContainerPrimary.Panel1
@@ -398,7 +420,7 @@ private: System::Windows::Forms::ToolStripMenuItem^  customLoaderToolStripMenuIt
 			// splitContainerPrimary.Panel2
 			// 
 			this->splitContainerPrimary->Panel2->Controls->Add(this->splitContainerSecondary);
-			this->splitContainerPrimary->Size = System::Drawing::Size(492, 349);
+			this->splitContainerPrimary->Size = System::Drawing::Size(492, 351);
 			this->splitContainerPrimary->SplitterDistance = 183;
 			this->splitContainerPrimary->TabIndex = 6;
 			// 
@@ -413,7 +435,7 @@ private: System::Windows::Forms::ToolStripMenuItem^  customLoaderToolStripMenuIt
 			// 
 			this->splitContainerSecondary->Panel1->Controls->Add(this->panelGame);
 			this->splitContainerSecondary->Panel2Collapsed = true;
-			this->splitContainerSecondary->Size = System::Drawing::Size(492, 349);
+			this->splitContainerSecondary->Size = System::Drawing::Size(492, 351);
 			this->splitContainerSecondary->SplitterDistance = 248;
 			this->splitContainerSecondary->TabIndex = 0;
 			// 
@@ -424,49 +446,58 @@ private: System::Windows::Forms::ToolStripMenuItem^  customLoaderToolStripMenuIt
 			this->panelGame->Dock = System::Windows::Forms::DockStyle::Fill;
 			this->panelGame->Location = System::Drawing::Point(0, 0);
 			this->panelGame->Name = L"panelGame";
-			this->panelGame->Size = System::Drawing::Size(492, 349);
+			this->panelGame->Size = System::Drawing::Size(492, 351);
 			this->panelGame->TabIndex = 0;
 			// 
-			// toolStripPanelBottom
+			// statusStrip1
 			// 
-			this->toolStripPanelBottom->Controls->Add(this->statusStripMain);
-			this->toolStripPanelBottom->Dock = System::Windows::Forms::DockStyle::Bottom;
-			this->toolStripPanelBottom->Location = System::Drawing::Point(0, 373);
-			this->toolStripPanelBottom->Name = L"toolStripPanelBottom";
-			this->toolStripPanelBottom->Orientation = System::Windows::Forms::Orientation::Horizontal;
-			this->toolStripPanelBottom->RowMargin = System::Windows::Forms::Padding(3, 0, 0, 0);
-			this->toolStripPanelBottom->Size = System::Drawing::Size(492, 0);
+			this->statusStrip1->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {this->statusLabelUpdate, 
+				this->statusLabelHide});
+			this->statusStrip1->Location = System::Drawing::Point(0, 351);
+			this->statusStrip1->Name = L"statusStrip1";
+			this->statusStrip1->Size = System::Drawing::Size(492, 22);
+			this->statusStrip1->TabIndex = 0;
+			this->statusStrip1->Text = L"hello";
+			this->statusStrip1->Visible = false;
+			this->statusStrip1->VisibleChanged += gcnew System::EventHandler(this, &MainForm::statusStrip1_VisibleChanged);
 			// 
-			// statusStripMain
+			// statusLabelUpdate
 			// 
-			this->statusStripMain->Dock = System::Windows::Forms::DockStyle::None;
-			this->statusStripMain->Location = System::Drawing::Point(0, 0);
-			this->statusStripMain->Name = L"statusStripMain";
-			this->statusStripMain->Size = System::Drawing::Size(202, 22);
-			this->statusStripMain->TabIndex = 0;
-			this->statusStripMain->Visible = false;
+			this->statusLabelUpdate->Name = L"statusLabelUpdate";
+			this->statusLabelUpdate->Size = System::Drawing::Size(415, 17);
+			this->statusLabelUpdate->Spring = true;
+			this->statusLabelUpdate->Text = L"Update status unknown";
+			this->statusLabelUpdate->Click += gcnew System::EventHandler(this, &MainForm::statusLabelUpdate_Click);
+			// 
+			// statusLabelHide
+			// 
+			this->statusLabelHide->BorderSides = static_cast<System::Windows::Forms::ToolStripStatusLabelBorderSides>((((System::Windows::Forms::ToolStripStatusLabelBorderSides::Left | System::Windows::Forms::ToolStripStatusLabelBorderSides::Top) 
+				| System::Windows::Forms::ToolStripStatusLabelBorderSides::Right) 
+				| System::Windows::Forms::ToolStripStatusLabelBorderSides::Bottom));
+			this->statusLabelHide->Name = L"statusLabelHide";
+			this->statusLabelHide->Size = System::Drawing::Size(31, 17);
+			this->statusLabelHide->Text = L"hide";
+			this->statusLabelHide->Click += gcnew System::EventHandler(this, &MainForm::statusLabelHide_Click);
 			// 
 			// MainForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(492, 373);
+			this->Controls->Add(this->menuStrip1);
 			this->Controls->Add(this->splitContainerPrimary);
-			this->Controls->Add(this->toolStripPanelTop);
-			this->Controls->Add(this->toolStripPanelBottom);
+			this->Controls->Add(this->statusStrip1);
 			this->MainMenuStrip = this->menuStrip1;
 			this->Name = L"MainForm";
 			this->Text = L"Half-Life Advanced Effects";
 			this->menuStrip1->ResumeLayout(false);
 			this->menuStrip1->PerformLayout();
-			this->toolStripPanelTop->ResumeLayout(false);
-			this->toolStripPanelTop->PerformLayout();
 			this->splitContainerPrimary->Panel2->ResumeLayout(false);
 			this->splitContainerPrimary->ResumeLayout(false);
 			this->splitContainerSecondary->Panel1->ResumeLayout(false);
 			this->splitContainerSecondary->ResumeLayout(false);
-			this->toolStripPanelBottom->ResumeLayout(false);
-			this->toolStripPanelBottom->PerformLayout();
+			this->statusStrip1->ResumeLayout(false);
+			this->statusStrip1->PerformLayout();
 			this->ResumeLayout(false);
 			this->PerformLayout();
 
@@ -496,9 +527,6 @@ private: System::Void fileSizeToolStripMenuItem_Click(System::Object^  sender, S
 private: System::Void externalConsoleToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
 			 this->splitContainerSecondary->Panel2Collapsed = !(this->viewConsoleToolStripMenuItem->Checked);
 		 }
-private: System::Void statusBarToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
-			 this->statusStripMain->Visible = this->statusBarToolStripMenuItem->Checked;
-		 }
 
 	private: System::Void skyManagerToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
 				 skymanager ^sm = gcnew skymanager(Globals);
@@ -506,6 +534,38 @@ private: System::Void statusBarToolStripMenuItem_Click(System::Object^  sender, 
 			 }
 private: System::Void customLoaderToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
 			 RunCustomLoader(this);
+		 }
+
+
+private: System::Void statusBarToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
+			 this->statusStrip1->Visible = !this->statusBarToolStripMenuItem->Checked;
+		 }
+private: System::Void statusStrip1_VisibleChanged(System::Object^  sender, System::EventArgs^  e) {
+			 this->statusBarToolStripMenuItem->Checked = this->statusStrip1->Visible;
+		 }
+private: System::Void checkNowToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
+			this->statusStrip1->Visible = true;
+			this->statusLabelUpdate->IsLink = false;
+			this->statusLabelUpdate->Text = "Checking for updates ...";
+			this->statusLabelUpdate->ForeColor = Color::FromKnownColor(KnownColor::ControlText);
+			this->statusLabelUpdate->BackColor = Color::FromKnownColor(KnownColor::Control);
+
+			Updater::Singelton->StartCheck();
+		 }
+private: System::Void statusLabelUpdate_Click(System::Object^  sender, System::EventArgs^  e) {
+			 if(statusLabelUpdate->IsLink) {
+				 System::Diagnostics::Process::Start(
+					 statusLabelUpdate->Tag->ToString()
+				);
+			 }
+		 }
+private: System::Void autoCheckToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
+			 this->menuAutoCheck->Checked = !(0 < HlaeConfig::Config->Settings->UpdateCheck);
+			 HlaeConfig::Config->Settings->UpdateCheck = this->menuAutoCheck->Checked ? 1 : -1;
+			 HlaeConfig::BackUp();
+		 }
+private: System::Void statusLabelHide_Click(System::Object^  sender, System::EventArgs^  e) {
+			 this->statusStrip1->Visible = false;
 		 }
 }; // MainForm
 } // namespace hlae

@@ -136,12 +136,15 @@ public:
 	CfgCustomLoader ^ CustomLoader;
 	CfgDemoTools ^ DemoTools;
 
+	System::SByte UpdateCheck;
+
 public:
 	CfgSettings()
 	{
 		Launcher = gcnew CfgLauncher();
 		CustomLoader = gcnew CfgCustomLoader();
 		DemoTools = gcnew CfgDemoTools();
+		UpdateCheck = 0;
 	}
 	void Default()
 	{
