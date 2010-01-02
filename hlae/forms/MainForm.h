@@ -409,7 +409,7 @@ private: System::Windows::Forms::ToolStripMenuItem^  statusBarToolStripMenuItem;
 			// splitContainerPrimary
 			// 
 			this->splitContainerPrimary->Dock = System::Windows::Forms::DockStyle::Fill;
-			this->splitContainerPrimary->Location = System::Drawing::Point(0, 0);
+			this->splitContainerPrimary->Location = System::Drawing::Point(0, 24);
 			this->splitContainerPrimary->Name = L"splitContainerPrimary";
 			// 
 			// splitContainerPrimary.Panel1
@@ -420,7 +420,7 @@ private: System::Windows::Forms::ToolStripMenuItem^  statusBarToolStripMenuItem;
 			// splitContainerPrimary.Panel2
 			// 
 			this->splitContainerPrimary->Panel2->Controls->Add(this->splitContainerSecondary);
-			this->splitContainerPrimary->Size = System::Drawing::Size(492, 351);
+			this->splitContainerPrimary->Size = System::Drawing::Size(492, 349);
 			this->splitContainerPrimary->SplitterDistance = 183;
 			this->splitContainerPrimary->TabIndex = 6;
 			// 
@@ -435,7 +435,7 @@ private: System::Windows::Forms::ToolStripMenuItem^  statusBarToolStripMenuItem;
 			// 
 			this->splitContainerSecondary->Panel1->Controls->Add(this->panelGame);
 			this->splitContainerSecondary->Panel2Collapsed = true;
-			this->splitContainerSecondary->Size = System::Drawing::Size(492, 351);
+			this->splitContainerSecondary->Size = System::Drawing::Size(492, 349);
 			this->splitContainerSecondary->SplitterDistance = 248;
 			this->splitContainerSecondary->TabIndex = 0;
 			// 
@@ -446,7 +446,7 @@ private: System::Windows::Forms::ToolStripMenuItem^  statusBarToolStripMenuItem;
 			this->panelGame->Dock = System::Windows::Forms::DockStyle::Fill;
 			this->panelGame->Location = System::Drawing::Point(0, 0);
 			this->panelGame->Name = L"panelGame";
-			this->panelGame->Size = System::Drawing::Size(492, 351);
+			this->panelGame->Size = System::Drawing::Size(492, 349);
 			this->panelGame->TabIndex = 0;
 			// 
 			// statusStrip1
@@ -464,7 +464,7 @@ private: System::Windows::Forms::ToolStripMenuItem^  statusBarToolStripMenuItem;
 			// statusLabelUpdate
 			// 
 			this->statusLabelUpdate->Name = L"statusLabelUpdate";
-			this->statusLabelUpdate->Size = System::Drawing::Size(415, 17);
+			this->statusLabelUpdate->Size = System::Drawing::Size(446, 17);
 			this->statusLabelUpdate->Spring = true;
 			this->statusLabelUpdate->Text = L"Update status unknown";
 			this->statusLabelUpdate->Click += gcnew System::EventHandler(this, &MainForm::statusLabelUpdate_Click);
@@ -484,8 +484,8 @@ private: System::Windows::Forms::ToolStripMenuItem^  statusBarToolStripMenuItem;
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(492, 373);
-			this->Controls->Add(this->menuStrip1);
 			this->Controls->Add(this->splitContainerPrimary);
+			this->Controls->Add(this->menuStrip1);
 			this->Controls->Add(this->statusStrip1);
 			this->MainMenuStrip = this->menuStrip1;
 			this->Name = L"MainForm";

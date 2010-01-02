@@ -6,6 +6,18 @@
 
 <release>
 <name>HLAE</name>
+<version>2.2.10.3</version>
+<time>2010-01-02T15:26Z</time>
+<changes>
+<change type="fixed">
+Fixed GUI menu overlaying part of game window.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.2.10.2</version>
 <time>2010-01-01T12:37Z</time>
 <changes>
