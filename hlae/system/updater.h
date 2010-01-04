@@ -9,7 +9,7 @@
 // 2008-12-23 by dominik.matrixstorm.com
 
 #define HLAE_UPDATER_URL "http://update.matrixstorm.com/61b65ac26b714c41a1d998af3c5bd6dd.xml"
-#define HLAE_UPDATER_CURRENT_GUID "3ad6f7ef-c65f-423e-a973-5c65edfb019c"
+#define HLAE_UPDATER_CURRENT_GUID "de4b3ad4-9e3f-4e90-8f9f-11354bb9a407"
 #define HLAE_UPDATER_MAX_XML_REDIRECTS 1
 
 using namespace System;

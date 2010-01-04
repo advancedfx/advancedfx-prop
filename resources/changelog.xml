@@ -4,6 +4,19 @@
 <changelog>
 
 
+
+<release>
+<name>HLAE</name>
+<version>2.2.10.4</version>
+<time>2010-01-04T22:22Z</time>
+<changes>
+<change type="updated">
+Added new resforce support code to allow exceeding screen resolutions limits again.
+</change>
+</changes>
+</release>
+
+
 <release>
 <name>HLAE</name>
 <version>2.2.10.3</version>

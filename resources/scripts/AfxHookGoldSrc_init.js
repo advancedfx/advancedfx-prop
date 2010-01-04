@@ -22,6 +22,9 @@ addr.p_playermove_s = addr.hw_dll + 0xFD5AE0;
 addr.Host_Frame = addr.hw_dll +0xD82A0;
 addr.DTOURSZ_Host_Frame = 0x0C;
 
+addr.UnkDevCapsChecks = addr.hw_dll +0xC6A26;
+addr.UnkDevCapsChecks_BYTES = 0x14;
+
 
 //
 // Rendering related:

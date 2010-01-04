@@ -67,6 +67,8 @@
 
 #include "mirv_commands.h"
 
+#include "forceres.h"
+
 #include <string>
 
 extern Filming g_Filming;
@@ -718,6 +720,18 @@ HMODULE WINAPI new_LoadLibraryA( LPCSTR lpLibFileName )
 				// Intercept GetProcAddress:
 				if( !InterceptDllCall( hRet, "Kernel32.dll", "GetProcAddress", (DWORD) &newGetProcAddress) ) bIcepOk = false;
 
+				// WindowAPI related:
+				if( !InterceptDllCall( hRet, "User32.dll", "CreateWindowExA", (DWORD) &HlaeBcClt_CreateWindowExA) ) bIcepOk = false;
+				if( !InterceptDllCall( hRet, "User32.dll", "DestroyWindow", (DWORD) &HlaeBcClt_DestroyWindow) ) bIcepOk = false;
+				if( !InterceptDllCall( hRet, "User32.dll", "RegisterClassA", (DWORD) &HlaeBcClt_RegisterClassA) ) bIcepOk = false;
+				if( !InterceptDllCall( hRet, "User32.dll", "SetWindowPos", (DWORD) &HlaeBcClt_SetWindowPos) ) bIcepOk = false;
+				if( !InterceptDllCall( hRet, "gdi32.dll", "ChoosePixelFormat", (DWORD) &HlaeBcClt_ChoosePixelFormat) ) bIcepOk = false;
+				if( !InterceptDllCall( hRet, "User32.dll", "ReleaseDC", (DWORD) &HlaeBcClt_ReleaseDC) ) bIcepOk = false;
+
+				if( !bIcepOk ) MessageBox(0,"One or more interceptions failed","MDT_ERROR",MB_OK|MB_ICONHAND);
+
+				HandleForceRes();
+
 				// we have to manually intercept things windows already loaded with the LoadLibrary call:
 
 /*				// replace DirectDraw:
@@ -732,15 +746,6 @@ HMODULE WINAPI new_LoadLibraryA( LPCSTR lpLibFileName )
 					bIcepOk = false;
 				}
 */
-				// WindowAPI related:
-				if( !InterceptDllCall( hRet, "User32.dll", "CreateWindowExA", (DWORD) &HlaeBcClt_CreateWindowExA) ) bIcepOk = false;
-				if( !InterceptDllCall( hRet, "User32.dll", "DestroyWindow", (DWORD) &HlaeBcClt_DestroyWindow) ) bIcepOk = false;
-				if( !InterceptDllCall( hRet, "User32.dll", "RegisterClassA", (DWORD) &HlaeBcClt_RegisterClassA) ) bIcepOk = false;
-				if( !InterceptDllCall( hRet, "User32.dll", "SetWindowPos", (DWORD) &HlaeBcClt_SetWindowPos) ) bIcepOk = false;
-				if( !InterceptDllCall( hRet, "gdi32.dll", "ChoosePixelFormat", (DWORD) &HlaeBcClt_ChoosePixelFormat) ) bIcepOk = false;
-				if( !InterceptDllCall( hRet, "User32.dll", "ReleaseDC", (DWORD) &HlaeBcClt_ReleaseDC) ) bIcepOk = false;
-
-				if( !bIcepOk ) MessageBox(0,"One or more interceptions failed","MDT_ERROR",MB_OK|MB_ICONHAND);
 
 			}
 

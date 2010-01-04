@@ -341,6 +341,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\forceres.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\forceres.h"
+					>
+				</File>
+				<File
 					RelativePath=".\FxColor.cpp"
 					>
 				</File>

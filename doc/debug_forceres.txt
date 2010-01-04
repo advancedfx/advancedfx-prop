@@ -1,0 +1,29 @@
+> s -a hw L1000000 "-forceres"
+036aca50  2d 66 6f 72 63 65 72 65-73 00 00 00 53 63 72 65  -forceres...Scre
+
+0:000> s -a hw L1000000 "-forceres"
+036aca50  2d 66 6f 72 63 65 72 65-73 00 00 00 53 63 72 65  -forceres...Scre
+
+
+035e6abd 6850ca6a03      push    offset hw!vgui::Frame::`vftable'+0x4178c (036aca50)
+035e6ac2 e81919f7ff      call    hw+0x383e0 (035583e0)
+035e6ac7 83c404          add     esp,4
+035e6aca 85c0            test    eax,eax
+...
+035e6b83 c20400          ret     4
+
+step out / follow ret (to get function address):
+035e74e9 e872f3ffff      call    hw!F+0x1a00 (035e6860)
+
+035e6860:
+...
+035e6a26 395c2414        cmp     dword ptr [esp+14h],ebx
+035e6a2a 7e04            jle     hw!F+0x1bd0 (035e6a30)
+035e6a2c 895c2414        mov     dword ptr [esp+14h],ebx
+035e6a30 39442410        cmp     dword ptr [esp+10h],eax
+035e6a34 7e04            jle     hw!F+0x1bda (035e6a3a)
+035e6a36 89442410        mov     dword ptr [esp+10h],eax
+035e6a3a 8b6c2414        mov     ebp,dword ptr [esp+14h]
+035e6a3e 85ed            test    ebp,ebp
+
+--> we nop checks [035e6a26, 035e6a3a)
