@@ -49,6 +49,8 @@ DECLARE_MESSAGE( m_DeathNotice, DeathMsg );
 0d14623f 3df820220d      cmp     eax,offset client!V_CalcRefdef+0xb3c78 (0d2220f8)
 0d146244 7cee            jl      client!F+0xeb4 (0d146234)
 
+--> 0d221e78 - 0x80 == rgDeathNoticeList
+
 
 //	if ( i == MAX_DEATHNOTICES )
 //	{ // move the rest of the list forward to make room for this item

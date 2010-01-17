@@ -139,7 +139,7 @@ addr.cstrike_EV_CreateSmoke_CLOFS = 0xa420;
 
 
 // cstrike DeathMsg related (client.dll offsets):
-addr.cstrike_rgDeathNoticeList = 0x121E78;
+addr.cstrike_rgDeathNoticeList = 0x121DF8;
 addr.cstrike_CHudDeathNotice_Draw = 0x45E10;
 addr.cstrike_CHudDeathNotice_MsgFunc_DeathMsg = 0x46190;
 addr.cstrike_MsgFunc_DeathMsg = 0x45CB0;

@@ -6,8 +6,8 @@
 
 <release>
 <name>HLAE</name>
-<version>2.2.11.0</version>
-<time>2010-01-17T10:29Z</time>
+<version>2.2.12.0</version>
+<time>2010-01-17T18:22Z</time>
 <changes>
 <change type="added">
 Added mirv_cstrike_deathmsg command which allows to block, fake and show more(!) frag / deathmsg rows in the hud.

@@ -30,6 +30,8 @@
 // the structs size is 0xa0, however the fields might be in wrong oder,
 // since I don't access them atm and thus did not validate em.
 struct cstrike_DeathNoticeItem {
+	char szKiller[MAX_PLAYER_NAME_LENGTH*2];
+	char szVictim[MAX_PLAYER_NAME_LENGTH*2];
 	int iId;	// the index number of the associated sprite
 	int iId2; // the index number of the second sprite or -1
 	int iSuicide;
@@ -38,8 +40,6 @@ struct cstrike_DeathNoticeItem {
 	float flDisplayTime;
 	float *KillerColor;
 	float *VictimColor;
-	char szKiller[MAX_PLAYER_NAME_LENGTH*2];
-	char szVictim[MAX_PLAYER_NAME_LENGTH*2];
 };
 // << HLSDK
 
@@ -144,12 +144,11 @@ BOOL cstrike_DeathMsg_GetItem()
 	// get next item (if any is left):
 	if(cstrike_DeathNotices_it != cstrike_DeathNotices.end()) {
 		((cstrike_DeathNoticeItem *)cstrike_rgDeathNoticeList)[0] = *cstrike_DeathNotices_it;
+		//memcpy(&((cstrike_DeathNoticeItem *)cstrike_rgDeathNoticeList)[0], &(*cstrike_DeathNotices_it), sizeof(cstrike_DeathNoticeItem));
 		((cstrike_DeathNoticeItem *)cstrike_rgDeathNoticeList)[1].iId = 0; // force marker
 
 		cstrike_DeathNotices_it++;
 		cstrike_DeathMsg_Draw_Item++;
-
-		//pEngfuncs->Con_Printf("cstrike_DeathMsg_GetItem: %i %i\n", ((cstrike_DeathNoticeItem *)cstrike_rgDeathNoticeList)[0].iId, ((cstrike_DeathNoticeItem *)cstrike_rgDeathNoticeList)[0].iId2);
 
 		return 1; // yes we got one.
 	}
@@ -160,7 +159,7 @@ BOOL cstrike_DeathMsg_GetItem()
 
 int __stdcall touring_cstrike_DeathMsg_Draw(DWORD *this_ptr, float flTime )
 {
-	cstrike_DeathMsg_Draw_Item = 0;
+	cstrike_DeathMsg_Draw_Item = -1;
 	cstrike_DeathMsg_Draw_First = 1;
 	cstrike_DeathNotices_it = cstrike_DeathNotices.begin();
 
@@ -179,8 +178,6 @@ int __stdcall touring_cstrike_DeathMsg_Msg(DWORD *this_ptr, const char *pszName,
 
 	if(i)
 	{
-//		pEngfuncs->Con_Printf("DeathMsg0: %i %i\n", ((cstrike_DeathNoticeItem *)cstrike_rgDeathNoticeList)[0].iId, ((cstrike_DeathNoticeItem *)cstrike_rgDeathNoticeList)[0].iId2);
-
 		if(0 < deathMessagesMax)
 		{
 			// make space for new element:
@@ -189,6 +186,8 @@ int __stdcall touring_cstrike_DeathMsg_Msg(DWORD *this_ptr, const char *pszName,
 
 			// Pick up the message:
 			cstrike_DeathNoticeItem di = ((cstrike_DeathNoticeItem *)cstrike_rgDeathNoticeList)[0];
+			//memcpy(&di, &((cstrike_DeathNoticeItem *)cstrike_rgDeathNoticeList)[0], sizeof(cstrike_DeathNoticeItem));
+
 			cstrike_DeathNotices.push_back(di);
 		}
 		else
