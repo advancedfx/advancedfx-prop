@@ -70,31 +70,29 @@ You :)
 The HLAE Team:
 
 Current members:
-
-MIRVIN_monkey
-  The creator and former lead programmer.
-  Was the first one, mostly inactive past 1.0.
-  http://www.madabouthats.org
   
 ripieces
   Lead programmer.
-  Joined March 2007.
-  http://dominik.matrixstorm.com
+  Since March 2007.
+  http://dominik.matrixstorm.com/
   
 msthavoc
   Programming of additional tools, testing, community relations, documentation and tutorials.
-  Joined August 2007.
-  http://www.mst-gaming.de
-  
-juggaknot
-  Forum, community relations, testing, tutorials.
-  Joined March 2008.
-
+  Since August 2007.
+  http://www.mst-gaming.de/
 
 Past members:
 
+MIRVIN_monkey
+  Creator and former lead programmer.
+  2004 - 2007.
+  http://www.madabouthats.org/
+
 neomic
   Programmer (old wxWidgets GUI).
-  Joined August 2007, inactive since August 2008.
+  August 2007 - August 2008.
   http://neomic.xail.net/
-
+  
+juggaknot
+  Forum, community relations, testing, tutorials.
+  March 2008 - January 2010.

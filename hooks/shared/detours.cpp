@@ -168,3 +168,17 @@ void *DetourClassFunc(BYTE *src, const BYTE *dst, const int len)
 
 	return jmp;
 }
+
+
+void Asm32ReplaceWithJmp(void * replaceAt, size_t countBytes, void * jmpTo)
+{
+	MdtMemBlockInfos mbis;
+
+	MdtMemAccessBegin(replaceAt, countBytes, &mbis);
+
+	memset(replaceAt, NOP, countBytes);
+	((BYTE *)replaceAt)[0] = JMP;
+	*(DWORD*)((BYTE *)replaceAt+1) = (DWORD)((BYTE *)jmpTo - (BYTE *)replaceAt) - JMP32_SZ;
+
+	MdtMemAccessEnd(&mbis);
+}

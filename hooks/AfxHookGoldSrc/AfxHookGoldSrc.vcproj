@@ -43,7 +43,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../;C:\Libraries;C:\Libraries\hlsdk\multiplayer\common;C:\Libraries\hlsdk\multiplayer\engine;C:\Libraries\hlsdk\multiplayer\pm_shared"
+				AdditionalIncludeDirectories="./;../../;C:\Libraries;C:\Libraries\hlsdk\multiplayer\common;C:\Libraries\hlsdk\multiplayer\engine;C:\Libraries\hlsdk\multiplayer\pm_shared"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;_BIND_TO_CURRENT_CRT_VERSION=1"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -123,7 +123,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="../../;C:\Libraries;C:\Libraries\hlsdk\multiplayer\common;C:\Libraries\hlsdk\multiplayer\engine;C:\Libraries\hlsdk\multiplayer\pm_shared"
+				AdditionalIncludeDirectories="./;../../;C:\Libraries;C:\Libraries\hlsdk\multiplayer\common;C:\Libraries\hlsdk\multiplayer\engine;C:\Libraries\hlsdk\multiplayer\pm_shared"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;_BIND_TO_CURRENT_CRT_VERSION=1"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -186,10 +186,18 @@
 			Name="shared"
 			>
 			<Filter
-				Name="basecom"
+				Name="com"
 				>
 				<File
 					RelativePath="..\..\shared\com\basecom.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\shared\com\PipeCom.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\shared\com\PipeCom.h"
 					>
 				</File>
 			</Filter>
@@ -286,6 +294,10 @@
 				</File>
 				<File
 					RelativePath=".\cstrike_ch.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cstrike_deathmsg.cpp"
 					>
 				</File>
 				<File

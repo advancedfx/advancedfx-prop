@@ -10,6 +10,8 @@
 
 #include <windows.h>
 
+#include <shared/com/PipeCom.h>
+
 #include "AfxGoldSrc.h"
 
 #include <system/loader.h>
@@ -25,40 +27,17 @@ AfxGoldSrc::AfxGoldSrc()
 	;
 	m_SingeltonInstance = this;
 
+	m_PipeComServer = new PipeComServer(0);
+
 	m_Running = false;
 	m_Settings = gcnew AfxGoldSrcSettings(this);
-
-	// Create Pipes:
-
-	SECURITY_ATTRIBUTES secAttrib;
-	secAttrib.nLength = sizeof(secAttrib);
-	secAttrib.lpSecurityDescriptor = 0;
-	secAttrib.bInheritHandle = true;
-
-	HANDLE hRead, hWrite;
-
-	if(!CreatePipe(&hRead, &hWrite, &secAttrib, 0))
-		throw "Pipe creation failed."
-	;
-
-	m_SendPipeReadHandle = System::IntPtr(hRead);
-	m_SendPipeWriteHandle = System::IntPtr(hWrite);
-
-	if(!CreatePipe(&hRead, &hWrite, &secAttrib, 0))
-		throw "Pipe creation failed."
-	;
-
-	m_RecvPipeReadHandle = System::IntPtr(hRead);
-	m_RecvPipeWriteHandle = System::IntPtr(hWrite);
 }
 
 
 AfxGoldSrc::~AfxGoldSrc()
 {
-	CloseHandle((HANDLE)m_RecvPipeReadHandle.ToPointer());
-	CloseHandle((HANDLE)m_RecvPipeWriteHandle.ToPointer());
-	CloseHandle((HANDLE)m_SendPipeReadHandle.ToPointer());
-	CloseHandle((HANDLE)m_SendPipeWriteHandle.ToPointer());
+	delete m_PipeComServer;
+	m_PipeComServer = 0;
 
 	m_SingeltonInstance = nullptr;
 }

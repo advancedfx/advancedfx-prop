@@ -138,6 +138,13 @@ addr.CLOFS_UnkCstrikeCh_add_fac = 0xC3298;
 addr.cstrike_EV_CreateSmoke_CLOFS = 0xa420;
 
 
+// cstrike DeathMsg related (client.dll offsets):
+addr.cstrike_rgDeathNoticeList = 0x121E78;
+addr.cstrike_CHudDeathNotice_Draw = 0x45E10;
+addr.cstrike_CHudDeathNotice_MsgFunc_DeathMsg = 0x46190;
+addr.cstrike_MsgFunc_DeathMsg = 0x45CB0;
+
+
 // unused // p_enginefuncs_s = addr.hw_dll + 0x18B9F0 // may be unused
 // unused // p_globalvars_s = addr.hw_dll + 0x7CD0E0 // may be unused
 

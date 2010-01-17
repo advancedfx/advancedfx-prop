@@ -14,7 +14,6 @@
 using namespace System;
 using namespace hlae;
 
-
 enum class AfxGoldSrcRenderMode {
 	Default,
 	FrameBufferObject,
@@ -170,6 +169,8 @@ private:
 
 // AfxGoldSrc //////////////////////////////////////////////////////////////////
 
+class PipeComServer;
+
 ref class AfxGoldSrc
 {
 public:
@@ -192,12 +193,12 @@ public:
 	property AfxGoldSrcSettings ^ Settings { AfxGoldSrcSettings ^ get() { return m_Settings; } }
 
 private:
-	static AfxGoldSrc ^ m_SingeltonInstance;
+	PipeComServer * m_PipeComServer;
 	System::IntPtr m_RecvPipeReadHandle;
 	System::IntPtr  m_RecvPipeWriteHandle;
 	bool m_Running;
 	System::IntPtr m_SendPipeReadHandle;
 	System::IntPtr  m_SendPipeWriteHandle;
 	AfxGoldSrcSettings ^ m_Settings;
-
+	static AfxGoldSrc ^ m_SingeltonInstance;
 };

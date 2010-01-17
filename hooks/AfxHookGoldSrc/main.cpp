@@ -8,7 +8,18 @@
 // pull in additional libraries:
 #pragma comment(lib,"OpenGL32.lib")
 #pragma comment(lib,"GLu32.lib")
+
 #pragma comment(lib,"js32.lib")
+
+/*
+// Direct show:
+#ifdef _DEBUG
+#pragma comment(lib,"strmbasd.lib") // BaseClasses release will not work in debug.
+#else
+#pragma comment(lib,"strmbase.lib")
+#endif
+#pragma comment(lib,"winmm.lib")
+*/
 
 // additonal dependencies:
 #pragma comment(linker, "\"/manifestdependency:type='win32' name='Mozilla.SpiderMonkey.JS' version='1.7.0.0' processorArchitecture='x86' publicKeyToken='0000000000000000'\"")

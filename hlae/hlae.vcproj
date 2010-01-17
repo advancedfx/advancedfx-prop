@@ -540,10 +540,18 @@
 			Name="shared"
 			>
 			<Filter
-				Name="basecom"
+				Name="com"
 				>
 				<File
 					RelativePath="..\shared\com\basecom.h"
+					>
+				</File>
+				<File
+					RelativePath="..\shared\com\PipeCom.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\shared\com\PipeCom.h"
 					>
 				</File>
 			</Filter>

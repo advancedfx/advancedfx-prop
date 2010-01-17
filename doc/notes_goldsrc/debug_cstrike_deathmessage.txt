@@ -1,0 +1,160 @@
+> s -a client L1000000 "DeathMsg"
+0d1e77fc  44 65 61 74 68 4d 73 67-00 00 00 00 64 5f 73 6b  DeathMsg....d_sk
+
+> s client L1000000 fc 77 1e 0d
+0d145d34  fc 77 1e 0d ff 15 e8 1b-22 0d 6a 00 68 f8 77 1e  .w......".j.h.w.
+
+0d145d2e 68b05c140d      push    offset client!F+0x930 (0d145cb0)
+0d145d33 68fc771e0d      push    offset client!V_CalcRefdef+0x7937c (0d1e77fc)
+0d145d38 ff15e81b220d    call    dword ptr [client!V_CalcRefdef+0xb3768 (0d221be8)]
+
+--> 0d145cb0 is the DeathMsg func (see DECLARE_MESSAGE macro in HLSDK):
+
+DECLARE_MESSAGE( m_DeathNotice, DeathMsg );
+
+// int __MsgFunc_DeathMsg(const char *pszName, int iSize, void *pbuf)
+// {
+// 	return gHUD.m_DeathNotice.MsgFunc_DeathMsg(pszName, iSize, pbuf );
+// }
+//
+0d145cb0 8b44240c        mov     eax,dword ptr [esp+0Ch]
+0d145cb4 8b4c2408        mov     ecx,dword ptr [esp+8]
+0d145cb8 8b542404        mov     edx,dword ptr [esp+4]
+0d145cbc 50              push    eax
+0d145cbd 51              push    ecx
+0d145cbe 52              push    edx
+0d145cbf b91812220d      mov     ecx,offset client!V_CalcRefdef+0xb2d98 (0d221218)
+0d145cc4 e8c7040000      call    client!F+0xe10 (0d146190)
+0d145cc9 c3              ret
+
+--> 0d146190 is CHudDeathNotice :: MsgFunc_DeathMsg
+
+0d146190
+....
+
+// >>
+
+//	for ( int i = 0; i < MAX_DEATHNOTICES; i++ )
+//	{
+//		if ( rgDeathNoticeList[i].iId == 0 )
+//			break;
+//	}
+// asm code looks a bit different, probably due to optimization:
+0d14622d 33f6            xor     esi,esi
+0d14622f b8781e220d      mov     eax,offset client!V_CalcRefdef+0xb39f8 (0d221e78)
+0d146234 833800          cmp     dword ptr [eax],0
+0d146237 740d            je      client!F+0xec6 (0d146246)               [br=1]
+0d146239 05a0000000      add     eax,offset <Unloaded_papi.dll>+0x9f (000000a0)
+0d14623e 46              inc     esi
+0d14623f 3df820220d      cmp     eax,offset client!V_CalcRefdef+0xb3c78 (0d2220f8)
+0d146244 7cee            jl      client!F+0xeb4 (0d146234)
+
+
+//	if ( i == MAX_DEATHNOTICES )
+//	{ // move the rest of the list forward to make room for this item
+//		memmove( rgDeathNoticeList, rgDeathNoticeList+1, sizeof(DeathNoticeItem) * MAX_DEATHNOTICES );
+//		i = MAX_DEATHNOTICES - 1;
+//	}
+0d146246 83fe04          cmp     esi,4
+0d146249 751c            jne     client!F+0xee7 (0d146267)
+0d14624b 6880020000      push    offset <Unloaded_papi.dll>+0x27f (00000280)
+0d146250 68981e220d      push    offset client!V_CalcRefdef+0xb3a18 (0d221e98)
+0d146255 68f81d220d      push    offset client!V_CalcRefdef+0xb3978 (0d221df8)
+0d14625a e8817a0600      call    client!V_CalcRefdef+0x3f860 (0d1adce0)
+0d14625f 83c40c          add     esp,0Ch
+0d146262 be03000000      mov     esi,offset <Unloaded_papi.dll>+0x2 (00000003)
+0d146267 
+
+// << 
+
+--> 0d221df8 is rgDeathNoticeList
+
+Our strategy will be to replace the above snipped with own code that in the end
+sets esi = 0 so  the current slot is rgDeathNoticeList[0] for the following code
+and we'll simply pick the slot up from there.
+
+We'll simply NOP the whole rest of the code (eax is not reused).
+
+
+next thing to patch is the drawing function, so we search for rgDeathNoticeList:
+
+> s client L1000000 f8 1d 22 0d
+0d145da9  f8 1d 22 0d f3 ab 5f c3-90 90 90 90 90 90 90 90  .."..._.........
+0d145e7c  f8 1d 22 0d 89 74 24 34-8b 85 78 1e 22 0d 85 c0  .."..t$4..x."...
+0d146256  f8 1d 22 0d e8 81 7a 06-00 83 c4 0c be 03 00 00  .."...z.........
+0d14628d  f8 1d 22 0d 89 44 24 40-c6 00 00 eb 67 8d 54 6d  .."..D$@....g.Tm
+0d1462e9  f8 1d 22 0d 51 89 4c 24-4c e8 09 85 06 00 83 c4  ..".Q.L$L.......
+
+okay, the first two matches are probably in that function :)
+
+so we put a breakpoint at 0d145e7c-4 (second match):
+0d145e78 c7442410f81d220d mov     dword ptr [esp+10h],offset client!V_CalcRefdef+0xb3978 (0d221df8)
+
+0d145e10 is CHudDeathNotice :: Draw
+
+0d145e10 83ec3c          sub     esp,3Ch
+0d145e13 53              push    ebx
+0d145e14 8bd9            mov     ebx,ecx
+0d145e16 55              push    ebp
+0d145e17 33ed            xor     ebp,ebp
+0d145e19 8b431c          mov     eax,dword ptr [ebx+1Ch]
+....
+0d145e62 c20400          ret     4
+
+0d145e65 56              push    esi
+0d145e66 be981e220d      mov     esi,offset client!V_CalcRefdef+0xb3a18 (0d221e98)
+0d145e6b 57              push    edi
+0d145e6c 896c241c        mov     dword ptr [esp+1Ch],ebp
+0d145e70 c7442414381e220d mov     dword ptr [esp+14h],offset client!V_CalcRefdef+0xb39b8 (0d221e38)
+0d145e78 c7442410f81d220d mov     dword ptr [esp+10h],offset client!V_CalcRefdef+0xb3978 (0d221df8)
+0d145e80 89742434        mov     dword ptr [esp+34h],esi
+
+0d145e84 8b85781e220d    mov     eax,dword ptr client!V_CalcRefdef+0xb39f8 (0d221e78)[ebp]
+0d145e8a 85c0            test    eax,eax
+0d145e8c 0f84ee020000    je      client!F+0xe00 (0d146180)
+0d145e92  
+...
+// y = YRES(DEATHNOTICE_TOP) + 2 + (20 * i);  //!!!
+0d145f2e 8b4318          mov     eax,dword ptr [ebx+18h]
+0d145f31 8b542438        mov     edx,dword ptr [esp+38h]
+0d145f35 0faf44241c      imul    eax,dword ptr [esp+1Ch]
+0d145f3a 03c2            add     eax,edx
+0d145f3c 89442420        mov     dword ptr [esp+20h],eax
+0d145f40
+...
+
+0d146139 ff150c1c220d    call    dword ptr [client!V_CalcRefdef+0xb378c (0d221c0c)]
+0d14613f 83c40c          add     esp,0Ch
+
+0d146142 8b5c2418        mov     ebx,dword ptr [esp+18h]
+0d146146 8b742434        mov     esi,dword ptr [esp+34h]
+0d14614a 8b54241c        mov     edx,dword ptr [esp+1Ch]
+0d14614e 8b4c2414        mov     ecx,dword ptr [esp+14h]
+0d146152 42              inc     edx
+0d146153 b8a0000000      mov     eax,offset <Unloaded_st.dll>+0x8f (000000a0)
+0d146158 8954241c        mov     dword ptr [esp+1Ch],edx
+0d14615c 8b542410        mov     edx,dword ptr [esp+10h]
+0d146160 03f0            add     esi,eax
+0d146162 03e8            add     ebp,eax
+0d146164 03d0            add     edx,eax
+0d146166 03c8            add     ecx,eax
+
+0d146168 81fe1821220d    cmp     esi,offset client!V_CalcRefdef+0xb3c98 (0d222118)
+0d14616e 89742434        mov     dword ptr [esp+34h],esi
+0d146172 89542410        mov     dword ptr [esp+10h],edx
+0d146176 894c2414        mov     dword ptr [esp+14h],ecx ss:0023:0012f89c=0d221d98
+0d14617a 0f8c04fdffff    jl      client!F+0xb04 (0d145e84)
+0d146180
+...
+
+
+well okay, again I am not going to break down the difference between the optimization and the code here.
+
+Now Our strategy here is as follows:
+* we will detour the check at [0d145e84 - 0d145e92 )
+  and instead replace it with own logic and the following:
+* reset esi, esp+1C, esp+14, esp+10, esp+34 to the values in the first run
+* set ebp to 0
+
+* add some logic for timeout check (simply using markers, so we know when the loop continue was hit)
+* detour the yres part and fix it with new code
