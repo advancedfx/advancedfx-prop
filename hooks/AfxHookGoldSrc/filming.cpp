@@ -52,6 +52,8 @@ extern playermove_s *ppmove;
 
 extern float clamp(float, float, float);
 
+REGISTER_DEBUGCVAR(camera_test, "0", 0);
+
 
 REGISTER_DEBUGCVAR(depth_bpp, "8", 0);
 REGISTER_DEBUGCVAR(depth_slice_lo, "0.0", 0);
@@ -95,7 +97,7 @@ REGISTER_CVAR(movie_simulate_delay, "0", 0);
 REGISTER_CVAR(movie_sound_volume, "0.5", 0); // volume 0.8 is CS 1.6 default
 REGISTER_CVAR(movie_stereomode,"0",0);
 REGISTER_CVAR(movie_stereo_centerdist,"1.3",0);
-REGISTER_CVAR(movie_stereo_yawdegrees,"0.02",0);
+REGISTER_CVAR(movie_stereo_yawdegrees,"0.0",0);
 REGISTER_CVAR(movie_splitstreams, "0", 0);
 REGISTER_CVAR(movie_wireframe, "0", 0);
 REGISTER_CVAR(movie_wireframesize, "1", 0);
@@ -539,6 +541,108 @@ void Filming::EnsureStreamDirectory(FilmingStreamInfo * streamInfo) {
 //{ if (m_iFilmingState == FS_INACTIVE) _bNoMatteInterpolation = bSet; }
 
 
+void do_camera_test(vec3_t & vieworg, vec3_t & viewangles) {
+	static unsigned int state = 0;
+	static float angles[3];
+	static float ofs[3];
+
+	switch(state) {
+	case 1:
+		ofs[0] += 2.0f;
+		if(360.0f <= ofs[0]) {
+			state++;
+			ofs[0] = 0;
+		}
+		break;
+	case 2:
+		ofs[1] += 2.0f;
+		if(360.0f <= ofs[1]) {
+			state++;
+			ofs[1] = 0;
+		}
+		break;
+	case 3:
+		ofs[2] += 2.0f;
+		if(360.0f <= ofs[2]) {
+			state++;
+			ofs[2] = 0;
+		}
+		break;
+	case 4:
+		angles[0] += 2.0f;
+		if(360.0f <= angles[0]) {
+			state++;
+			angles[0] = 0;
+		}
+		break;
+	case 5:
+		angles[1] += 2.0f;
+		if(360.0f <= angles[1]) {
+			state++;
+			angles[1] = 0;
+		}
+		break;
+	case 6:
+		angles[2] += 2.0f;
+		if(360.0f <= angles[2]) {
+			state++;
+			angles[2] = 0;
+		}
+		break;
+	case 7:
+		angles[0] -= 2.0f;
+		if(-360.0f >= angles[0]) {
+			state++;
+			angles[0] = 0;
+		}
+		break;
+	case 8:
+		angles[1] -= 2.0f;
+		if(-360.0f >= angles[1]) {
+			state++;
+			angles[1] = 0;
+		}
+		break;
+	case 9:
+		angles[2] -= 2.0f;
+		if(-360.0f >= angles[2]) {
+			state++;
+			angles[2] = 0;
+		}
+		break;
+	default:
+		angles[0] = 0;
+		angles[1] = 0;
+		angles[2] = 0;
+		ofs[0] = 0;
+		ofs[0] = 0;
+		ofs[0] = 0;
+
+		state = 1;
+	};
+
+	viewangles[0] = angles[0];
+	viewangles[1] = angles[1];
+	viewangles[2] = angles[2];
+	vieworg[0] += ofs[0];
+	vieworg[1] += ofs[1];
+	vieworg[2] += ofs[2];
+
+	if(state < 10) {
+		static char szInfo[100];
+
+		if(state < 4)
+			_snprintf(szInfo, 100, "ofs=(%f, %f, %f)", ofs[0], ofs[1], ofs[2]);
+		else if(state < 10)
+			_snprintf(szInfo, 100, "ang=(%f, %f, %f)", angles[0], angles[1], angles[2]);
+
+		pEngfuncs->pfnCenterPrint(szInfo);
+	}
+	else
+		pEngfuncs->pfnCenterPrint("zZz");
+}
+
+
 void Filming::OnR_RenderView(vec3_t & vieworg, vec3_t & viewangles) {
 	//
 	// override by cammotion import:
@@ -607,6 +711,12 @@ void Filming::OnR_RenderView(vec3_t & vieworg, vec3_t & viewangles) {
 			vieworg[i] += fDispForward*forward[i] + fDispRight*right[i] + fDispUp*up[i];
 		}
 	}
+
+	// camera test:
+	if(camera_test->value)
+		do_camera_test(vieworg, viewangles);
+
+	// export:
 
 	if(g_CamExport.HasFileMain()
 		&& m_LastCamFrameMid != m_nFrames

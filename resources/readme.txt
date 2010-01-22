@@ -84,14 +84,13 @@ msthavoc
 Past members:
 
 MIRVIN_monkey
-  Creator and former lead programmer.
-  2004 - 2007.
+  Creator, former lead programmer, hosting.
+  2004 - 2009.
   http://www.madabouthats.org/
 
 neomic
   Programmer (old wxWidgets GUI).
   August 2007 - August 2008.
-  http://neomic.xail.net/
   
 juggaknot
   Forum, community relations, testing, tutorials.

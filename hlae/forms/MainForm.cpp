@@ -36,7 +36,7 @@ void MainForm::MyCreate()
 		remotingSystem = gcnew HlaeRemoting( Globals );
 
 	hlaeConsole->WriteLn(
-		String::Concat("Own updater GUID: ", Updater::Singelton->OwnGuid->ToString())
+		String::Concat("Version GUID: ", Updater::Singelton->OwnGuid->ToString())
 	);
 }
 

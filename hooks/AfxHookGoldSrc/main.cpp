@@ -111,7 +111,7 @@ static char pg_MDTpath[MDT_MAX_PATH_BYTES];
 //  Cvars
 //
 
-REGISTER_CVAR(fixforcehltv, "0", 0); // modified by Hook_dem_forcehltv
+
 REGISTER_CVAR(disableautodirector, "0", 0);
 
 REGISTER_DEBUGCVAR(gl_noclear, "0", 0);
@@ -163,15 +163,7 @@ void Hook_connect(void)
 	else if (imbret == IDYES) g_Old_connect();
 }
 
-xcommand_t g_Old_dem_forcehltv = NULL;
 
-void Hook_dem_forcehltv(void)
-{
-	char *ptmp="";
-	if (pEngfuncs->Cmd_Argc()>=1) ptmp=pEngfuncs->Cmd_Argv(1);
-	pEngfuncs->Cvar_SetValue(PREFIX "fixforcehltv",atof(ptmp));
-	g_Old_dem_forcehltv();
-}
 
 void Hook_startmovie(void)
 {
@@ -273,28 +265,44 @@ REGISTER_DEBUGCMD_FUNC(debug_spec)
 
 }
 
-void DrawActivePlayers()
+// >> dem_forcehltv fix
+
+//	bool bNotInEye = ppmove->iuser1 != 4;
+//	int iwatched = ppmove->iuser2;
+
+REGISTER_DEBUGCVAR(fixforcehltv, "1", 0);
+REGISTER_DEBUGCVAR(force_thirdperson, "0", 0);
+
+bool g_FixForceHltvEnabled = false;
+
+int FixForceHltv_CL_IsThirdPerson( void )
 {
-	bool bNotInEye = ppmove->iuser1 != 4;
-	int iwatched = ppmove->iuser2;
+	if(force_thirdperson->value)
+		return 1 == force_thirdperson->value ? 1 : 0;
 
-	for (int i = 0; i <= pEngfuncs->GetMaxClients(); i++)
-	{
-		cl_entity_t *e = pEngfuncs->GetEntityByIndex(i);
-
-		if(!e) continue;
-
-		if (e && e->player && e->model && !(e->curstate.effects & EF_NODRAW) && (bNotInEye || e->index != iwatched))
-		{
-			float flDeltaTime = fabs(pEngfuncs->GetClientTime() - e->curstate.msg_time);
-
-			if (flDeltaTime < deltatime->value)
-			{
-				pEngfuncs->CL_CreateVisibleEntity(ET_PLAYER, e);
-			}
-		}
-	}
+	return
+		fixforcehltv->value
+		&& pEngfuncs->IsSpectateOnly()
+		&& g_FixForceHltvEnabled
+		&& (
+			ppmove->iuser1 != 4 // not in-eye
+			|| ppmove->iuser2 != pEngfuncs->GetLocalPlayer()->index // not watching ourselfs
+		) ? 1: 0
+	;
 }
+
+xcommand_t g_Old_dem_forcehltv = NULL;
+
+void Hook_dem_forcehltv(void)
+{
+	char *ptmp="";
+	if (pEngfuncs->Cmd_Argc()>=1) ptmp=pEngfuncs->Cmd_Argv(1);
+	g_FixForceHltvEnabled = (0 != atof(ptmp));
+	g_Old_dem_forcehltv();
+}
+
+// << dem_forcehltv fix
+
 
 //
 //	OpenGl Hooking
@@ -309,7 +317,7 @@ struct glBegin_saved_s {
 
 unsigned int g_glBeginStats = 0;
 
-REGISTER_DEBUGCVAR(glbegin_stats,"0", 0)
+REGISTER_DEBUGCVAR(glbegin_stats, "0", 0)
 
 void APIENTRY my_glBegin(GLenum mode)
 {
@@ -470,12 +478,6 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 			pEngfuncs->Con_Printf("glBegin calls: %u\n", g_glBeginStats);
 
 		g_glBeginStats = 0;
-
-		// Make sure we can see the local player if dem_forcehltv is on
-		// dem_forcehtlv is not a cvar, so don't bother checking
-		// however mdt tries to keep track a bit of dem_forcehltv
-		if ( fixforcehltv->value != 0.0f && pEngfuncs->IsSpectateOnly() )
-			DrawActivePlayers();
 
 		// Always get rid of auto_director
 		if (disableautodirector->value != 0.0f)
@@ -691,7 +693,8 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 		if (!lstrcmp(lpProcName, "wglMakeCurrent"))
 			return (FARPROC) &HlaeBcClt_wglMakeCurrent;
 
-
+		if (!lstrcmp(lpProcName, "CL_IsThirdPerson"))
+			return (FARPROC) &FixForceHltv_CL_IsThirdPerson;
 
 		//if (!lstrcmp(lpProcName,"DirectSoundCreate"))
 		//	return Hook_DirectSoundCreate(nResult);
