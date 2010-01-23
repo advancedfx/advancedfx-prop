@@ -9,7 +9,7 @@ Tip: 'Export motion data for HLAE'
 
 __author__ = "ripieces"
 __url__ = "advancedfx.org"
-__version__ = "0.0.1.0 (2009-11-25T20:20Z)"
+__version__ = "0.0.2.2 (2011-01-23T17:50Z)"
 
 __bpydoc__ = """\
 HLAE camera motion Export
@@ -23,7 +23,7 @@ For more info see http://www.advancedfx.org/
 # Copyright (c) advancedfx.org
 #
 # Last changes:
-# 2009-11-25 by dominik.matrixstorm.com
+# 2011-01-23 by dominik.matrixstorm.com
 #
 # First changes:
 # 2009-09-03 by dominik.matrixstorm.com
@@ -58,33 +58,9 @@ def WriteHeader(file, frames, frameTime):
 	file.write("MOTION\n")
 	file.write("Frames: "+str(frames)+"\n")
 	file.write("Frame Time: "+FloatToBvhString(frameTime)+"\n")
-
 	
-def WriteFrame(file, obj, scale):
-	def LimDeg(val):
-		while val>=360.0:
-			val -=360.0
-		while val<=-360.0:
-			val +=360.0
-		return val
-
-	loc = obj.getLocation('worldspace')
-	rot = obj.getEuler('worldspace')
-	
-	X = -loc[1] *scale
-	Y =  loc[2] *scale
-	Z = -loc[0] *scale
-	XR = LimDeg( rot[0] *RAD2DEG)
-	YR = LimDeg( rot[2] *RAD2DEG +90.0)
-	ZR = LimDeg(-rot[1] *RAD2DEG)
-	
-	if 'Camera' == obj.getType():
-		# fix blender bug er feature
-		XR = LimDeg(XR -90.0)
-	
-	S = "" +FloatToBvhString(X) +" " +FloatToBvhString(Y) +" " +FloatToBvhString(Z) +" " +FloatToBvhString(ZR) +" " +FloatToBvhString(XR) +" " +FloatToBvhString(YR) + "\n"
-	file.write(S)
-	
+def LimDeg(val):
+	return val
 
 def WriteFile(fileName, render, obj, scale, startFrame, endFrame, fps):
 	fps = int(fps)
@@ -109,6 +85,10 @@ def WriteFile(fileName, render, obj, scale, startFrame, endFrame, fps):
 	curFrame = 0	
 	frameCount = 1 +endFrame - startFrame
 	frameTime = 1.0 / float(fps)
+	
+	Rb = Blender.Mathutils.RotationMatrix(90.0, 3, 'z')
+	if 'Camera' == obj.getType():
+		Rb = Rb * Blender.Mathutils.RotationMatrix(-90.0, 3, 'x')
 
 	file = open(fileName, 'wb')
 	if not file:
@@ -136,8 +116,26 @@ def WriteFile(fileName, render, obj, scale, startFrame, endFrame, fps):
 						
 				# update progessbar:
 				Blender.Window.DrawProgressBar(float(curFrame)/float(frameCount), "Writing frame "+str(curFrame+1)+"/"+str(frameCount)+"...")
+
+			loc = obj.getLocation('worldspace')
+			rot = obj.getEuler('worldspace')
 			
-			WriteFrame(file, obj, scale)
+			rot = (Rb *Blender.Mathutils.Euler(rot[0] *RAD2DEG, rot[1] *RAD2DEG, rot[2]*RAD2DEG).toMatrix()).toEuler()
+			
+			X = -loc[1] *scale
+			Y =  loc[2] *scale
+			Z = -loc[0] *scale
+			
+			ZR = -rot.x
+			XR = -rot.y
+			YR =  rot.z
+				
+			ZR = LimDeg(ZR)
+			XR = LimDeg(XR)				
+			YR = LimDeg(YR)
+			
+			S = "" +FloatToBvhString(X) +" " +FloatToBvhString(Y) +" " +FloatToBvhString(Z) +" " +FloatToBvhString(ZR) +" " +FloatToBvhString(XR) +" " +FloatToBvhString(YR) + "\n"
+			file.write(S)
 			
 			curFrame += 1
 				

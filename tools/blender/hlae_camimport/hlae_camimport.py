@@ -9,7 +9,7 @@ Tip: 'Import HLAE camera motion data'
 
 __author__ = "ripieces"
 __url__ = "advancedfx.org"
-__version__ = "0.0.1.0 (2009-11-25T20:20Z)"
+__version__ = "0.0.2.2 (2011-01-23T17:50Z)"
 
 __bpydoc__ = """\
 HLAE camera motion Import
@@ -21,7 +21,7 @@ For more info see http://www.advancedfx.org/
 # Copyright (c) advancedfx.org
 #
 # Last changes:
-# 2009-11-25 by dominik.matrixstorm.com
+# 2011-01-23 by dominik.matrixstorm.com
 #
 # First changes:
 # 2009-09-01 by dominik.matrixstorm.com
@@ -185,6 +185,9 @@ def ReadFile(fileName, scale, camFov):
 	frameCount = float(0)
 	
 	lastTime = 0
+	
+	# makes camera point up + 90 degrees fix:
+	Rb = Blender.Mathutils.RotationMatrix(+90.0, 3, 'x') * Blender.Mathutils.RotationMatrix(-90.0, 3, 'z')
 			
 	while True:
 		frame = ReadFrame(file, channels)
@@ -209,28 +212,26 @@ def ReadFile(fileName, scale, camFov):
 		
 		BTT = float(frameCount)
 
-		BXP = -frame[2] *scale
 		BYP = -frame[0] *scale
 		BZP =  frame[1] *scale
+		BXP = -frame[2] *scale
 
-		BYR = -frame[3]
-		BXR =  frame[4] +90.0
-		BZR =  frame[5] -90.0
+		BXR = -frame[3]
+		BYR = -frame[4]
+		BZR =  frame[5]
 		
-		BXP = float(BXP)
-		BYP = float(BYP)
-		BZP = float(BZP)
-		BXR = float(BXR) / 10.0
-		BYR = float(BYR) / 10.0
-		BZR = float(BZR) / 10.0
-		
+		Rx = Blender.Mathutils.RotationMatrix(BXR, 3, 'x')
+		Ry = Blender.Mathutils.RotationMatrix(BYR, 3, 'y')
+		Rz = Blender.Mathutils.RotationMatrix(BZR, 3, 'z')
+		R = (Rb*Rx*Ry*Rz).toEuler()
+				
 		CrvLocX.append((BTT, BXP))
 		CrvLocY.append((BTT, BYP))
 		CrvLocZ.append((BTT, BZP))
 
-		CrvRotX.append((BTT, BXR))
-		CrvRotY.append((BTT, BYR))
-		CrvRotZ.append((BTT, BZR))
+		CrvRotX.append((BTT, R.x / 10.0))
+		CrvRotY.append((BTT, R.y / 10.0))
+		CrvRotZ.append((BTT, R.z / 10.0))
 		
 	# setup scene
 		
