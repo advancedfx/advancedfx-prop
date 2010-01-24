@@ -275,20 +275,25 @@ REGISTER_DEBUGCVAR(force_thirdperson, "0", 0);
 
 bool g_FixForceHltvEnabled = false;
 
+typedef int (*CL_IsThirdPerson_t)( void );
+CL_IsThirdPerson_t old_CL_IsThirdPerson;
+
 int FixForceHltv_CL_IsThirdPerson( void )
 {
 	if(force_thirdperson->value)
 		return 1 == force_thirdperson->value ? 1 : 0;
 
-	return
-		fixforcehltv->value
+	if(fixforcehltv->value
 		&& pEngfuncs->IsSpectateOnly()
 		&& g_FixForceHltvEnabled
 		&& (
 			ppmove->iuser1 != 4 // not in-eye
 			|| ppmove->iuser2 != pEngfuncs->GetLocalPlayer()->index // not watching ourselfs
-		) ? 1: 0
-	;
+		)
+	) 
+		return 1;
+
+	return old_CL_IsThirdPerson();
 }
 
 xcommand_t g_Old_dem_forcehltv = NULL;
@@ -693,8 +698,10 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 		if (!lstrcmp(lpProcName, "wglMakeCurrent"))
 			return (FARPROC) &HlaeBcClt_wglMakeCurrent;
 
-		if (!lstrcmp(lpProcName, "CL_IsThirdPerson"))
+		if (!lstrcmp(lpProcName, "CL_IsThirdPerson")) {
+			old_CL_IsThirdPerson = (CL_IsThirdPerson_t)nResult;
 			return (FARPROC) &FixForceHltv_CL_IsThirdPerson;
+		}
 
 		//if (!lstrcmp(lpProcName,"DirectSoundCreate"))
 		//	return Hook_DirectSoundCreate(nResult);

@@ -5,8 +5,8 @@
 
 <release>
 <name>HLAE</name>
-<version>2.2.12.1</version>
-<time>2010-01-22T18:25Z</time>
+<version>2.2.12.2</version>
+<time>2010-01-22T19:13Z</time>
 <changes>
 <change type="updated">
 Updated dem_forcehltv fix.
@@ -16,7 +16,7 @@ Changed default mirv_movie_stereo_yawdegrees to 0.0.
 </change>
 </changes>
 <comments>
-sigh
+*sigh*
 </comments>
 </release>
 
