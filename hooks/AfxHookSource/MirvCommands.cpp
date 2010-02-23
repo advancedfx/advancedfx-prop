@@ -116,7 +116,8 @@ CON_COMMAND(mirv_camimport, "controls camera motion data import") {
 		if(0 == stricmp("start", arg1) && 3 <= argc) {
 			char const * fileName = args->ArgV(2);
 			g_Hook_VClient_RenderView.SetImportBaseTime(g_Hook_VClient_RenderView.GetCurTime());
-			g_Hook_VClient_RenderView.ImportBegin(fileName);
+			if(!g_Hook_VClient_RenderView.ImportBegin(fileName))
+				Tier0_Msg("Loading failed.");
 			return;
 		}
 		else

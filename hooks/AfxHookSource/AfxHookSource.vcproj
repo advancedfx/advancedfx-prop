@@ -240,10 +240,6 @@
 				</File>
 			</Filter>
 		</Filter>
-		<Filter
-			Name="resources"
-			>
-		</Filter>
 	</Files>
 	<Globals>
 	</Globals>

@@ -51,9 +51,10 @@ Hook_VClient_RenderView g_Hook_VClient_RenderView;
 
 //#define CLOFS_CallCalcDemoViewOverride 0x169A7D
 
-#define CLOFS_IfIsPlayingTimeDemo 0x169A65
-#define CLOFS_CheckDemoviewOverride (CLOFS_IfIsPlayingTimeDemo +0x16)
-#define CLOFS_NotPlaying (CLOFS_IfIsPlayingTimeDemo +0x51)
+// hooks in CViewRender::SetUpView:
+#define CLOFS_IfIsPlayingDemo 0x169A65
+#define CLOFS_CheckDemoviewOverride (CLOFS_IfIsPlayingDemo +0x16)
+#define CLOFS_NotPlaying (CLOFS_IfIsPlayingDemo +0x51)
 #define CLOFS_cl_demoviewoverride_value (0x3EE7F0 +0x28)
 #define CLOFS_gpGLobals 0x392C8C
 #define OFS_gpGlobals_value_curtime +4*3
@@ -80,7 +81,7 @@ bool __cdecl myCheckDemoViewOverride() {
 
 __declspec(naked) void hook_IfDemoviewOverride() {
 	__asm {
-		; store IfIsPlayingTimeDemo:
+		; store IfIsPlayingDemo:
 		MOV eax, 0
 		JZ __Continue
 		MOV eax, 1
@@ -94,7 +95,7 @@ __declspec(naked) void hook_IfDemoviewOverride() {
 		POP edi
 		POP esi
 
-		; handle IfIsPlayingTimeDemo:
+		; handle IfIsPlayingDemo:
 		POP eax
 		TEST eax, eax
 		JNZ __Playing
@@ -179,16 +180,16 @@ void Hook_VClient_RenderView::Install_cstrike(void) {
 	if(hm) {
 		MdtMemBlockInfos mbis;
 
-		BYTE * pmem = (BYTE *)hm +CLOFS_IfIsPlayingTimeDemo;
+		BYTE * pmem = (BYTE *)hm +CLOFS_IfIsPlayingDemo;
 
 		g_continue_NotPlaying = (DWORD)((BYTE *)hm +CLOFS_NotPlaying);
 		g_continue_CheckDemoViewOverrideCvar = (DWORD)((BYTE *)hm +CLOFS_CheckDemoviewOverride);
 		g_value_cl_demoviewoverride = (float *)((BYTE *)hm +CLOFS_cl_demoviewoverride_value);
 		g_value_curtime = (float *)(*(BYTE **)((BYTE *)hm +CLOFS_gpGLobals) +OFS_gpGlobals_value_curtime);
 
-		MdtMemAccessBegin(pmem, CLOFS_CheckDemoviewOverride -CLOFS_IfIsPlayingTimeDemo, &mbis);
+		MdtMemAccessBegin(pmem, CLOFS_CheckDemoviewOverride -CLOFS_IfIsPlayingDemo, &mbis);
 
-		memset(pmem, OPCODE_NOP, CLOFS_CheckDemoviewOverride -CLOFS_IfIsPlayingTimeDemo);
+		memset(pmem, OPCODE_NOP, CLOFS_CheckDemoviewOverride -CLOFS_IfIsPlayingDemo);
 
 		pmem[0] = OPCODE_JMP;
 		*(DWORD*)(pmem+1) = (DWORD)((BYTE *)&hook_IfDemoviewOverride -pmem) - OPCODE_JMP32_SZ;

@@ -211,10 +211,6 @@
 			</Filter>
 		</Filter>
 		<Filter
-			Name="resources"
-			>
-		</Filter>
-		<Filter
 			Name="hooks"
 			>
 			<Filter
@@ -294,6 +290,10 @@
 				</File>
 				<File
 					RelativePath=".\cstrike_ch.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cstrike_clientcolor.cpp"
 					>
 				</File>
 				<File
@@ -502,10 +502,6 @@
 				</File>
 				<File
 					RelativePath=".\supportrender.h"
-					>
-				</File>
-				<File
-					RelativePath=".\teamcolor.cpp"
 					>
 				</File>
 				<File

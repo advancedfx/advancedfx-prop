@@ -62,7 +62,7 @@ void PrintInfo() {
 	Tier0_Msg(
 		"|" "\n"
 		"| AfxHookSource ("  __DATE__ " "__TIME__ ")" "\n"
-		"| Copyright (c) advancedfx.org" "\n"
+		"| http://advancedfx.org/" "\n"
 		"|" "\n"
 	);
 

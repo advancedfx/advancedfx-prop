@@ -94,7 +94,7 @@ REGISTER_CVAR(movie_fps, "30", 0);
 REGISTER_CVAR(movie_separate_hud, "0", 0);
 REGISTER_CVAR(movie_simulate, "0", 0);
 REGISTER_CVAR(movie_simulate_delay, "0", 0);
-REGISTER_CVAR(movie_sound_volume, "0.5", 0); // volume 0.8 is CS 1.6 default
+REGISTER_CVAR(movie_sound_volume, "0.4", 0); // volume 0.8 is CS 1.6 default
 REGISTER_CVAR(movie_stereomode,"0",0);
 REGISTER_CVAR(movie_stereo_centerdist,"1.3",0);
 REGISTER_CVAR(movie_stereo_yawdegrees,"0.0",0);
