@@ -8,13 +8,13 @@
 // First changes
 // 2009-11-16 dominik.matrixstorm.com
 
-#include "FxColor.h"
+#include "ModColor.h"
 
-FxColor g_FxColor;
+ModColor g_ModColor;
 
-// FxColor /////////////////////////////////////////////////////////////////////
+// ModColor /////////////////////////////////////////////////////////////////////
 
-FxColor::FxColor() {
+ModColor::ModColor() {
 	m_Active = false;
 	m_Enabled = false;
 	m_Red = -1;
@@ -24,7 +24,7 @@ FxColor::FxColor() {
 }
 
 
-void FxColor::OnGlBegin() {
+void ModColor::OnGlBegin() {
 	m_Active = m_Enabled;
 	
 	if(!m_Active) return;
@@ -39,7 +39,7 @@ void FxColor::OnGlBegin() {
 	);
 }
 
-void FxColor::OnGlEnd() {
+void ModColor::OnGlEnd() {
 	if(!m_Active) return;
 	m_Active = false;
 	

@@ -12,11 +12,11 @@
 #include <gl\gl.h>
 
 
-// FxReplace //////////////////////////////////////////////////////////////////
+// ModReplace //////////////////////////////////////////////////////////////////
 
-class FxReplace {
+class ModReplace {
 public:
-	FxReplace();
+	ModReplace();
 
 	void OnGlBegin();
 	void OnGlEnd();
@@ -52,5 +52,5 @@ private:
 
 };
 
-extern FxReplace g_FxReplace;
+extern ModReplace g_ModReplace;
 

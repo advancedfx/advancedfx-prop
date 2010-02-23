@@ -12,11 +12,11 @@
 #include <gl\gl.h>
 
 
-// FxColor /////////////////////////////////////////////////////////////////////
+// ModColor /////////////////////////////////////////////////////////////////////
 
-class FxColor {
+class ModColor {
 public:
-	FxColor();
+	ModColor();
 
 	void OnGlBegin();
 	void OnGlEnd();
@@ -51,5 +51,5 @@ private:
 	GLfloat m_Alpha;
 };
 
-extern FxColor g_FxColor;
+extern ModColor g_ModColor;
 

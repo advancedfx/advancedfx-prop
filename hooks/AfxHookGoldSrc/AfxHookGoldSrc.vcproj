@@ -361,38 +361,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\FxColor.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\FxColor.h"
-					>
-				</File>
-				<File
-					RelativePath=".\FxColorMask.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\FxColorMask.h"
-					>
-				</File>
-				<File
-					RelativePath=".\FxHide.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\FxHide.h"
-					>
-				</File>
-				<File
-					RelativePath=".\FxReplace.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\FxReplace.h"
-					>
-				</File>
-				<File
 					RelativePath=".\hl_addresses.cpp"
 					>
 				</File>
@@ -441,14 +409,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\MirvInfo.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\MirvInfo.h"
-					>
-				</File>
-				<File
 					RelativePath=".\newsky.cpp"
 					>
 				</File>
@@ -489,6 +449,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\script.h"
+					>
+				</File>
+				<File
 					RelativePath=".\specmenu.cpp"
 					>
 				</File>
@@ -520,6 +484,90 @@
 					RelativePath=".\zooming.h"
 					>
 				</File>
+				<Filter
+					Name="modules"
+					>
+					<File
+						RelativePath=".\modules\ModColor.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\modules\ModColor.h"
+						>
+					</File>
+					<File
+						RelativePath=".\modules\ModColor_S.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\modules\ModColor_S.h"
+						>
+					</File>
+					<File
+						RelativePath=".\modules\ModColorMask.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\modules\ModColorMask.h"
+						>
+					</File>
+					<File
+						RelativePath=".\modules\ModColorMask_S.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\modules\ModColorMask_S.h"
+						>
+					</File>
+					<File
+						RelativePath=".\modules\ModHide.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\modules\ModHide.h"
+						>
+					</File>
+					<File
+						RelativePath=".\modules\ModHide_S.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\modules\ModHide_S.h"
+						>
+					</File>
+					<File
+						RelativePath=".\modules\ModInfo.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\modules\ModInfo.h"
+						>
+					</File>
+					<File
+						RelativePath=".\modules\ModInfo_S.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\modules\ModInfo_S.h"
+						>
+					</File>
+					<File
+						RelativePath=".\modules\ModReplace.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\modules\ModReplace.h"
+						>
+					</File>
+					<File
+						RelativePath=".\modules\ModReplace_S.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\modules\ModReplace_S.h"
+						>
+					</File>
+				</Filter>
 			</Filter>
 		</Filter>
 	</Files>

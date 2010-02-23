@@ -38,9 +38,9 @@
 
 #include "RawOutput.h"
 
-#include "MirvInfo.h"
+#include <modules/ModInfo.h>
 
-#include "Mirv_Scripting.h"
+#include "mirv_Scripting.h"
 
 #include "filetools.h"
 
@@ -369,9 +369,9 @@ void touring_R_RenderView_(void)
 			// call original R_RenderView_
 			//
 
-			g_MirvInfo.SetIn_R_Renderview(true);
+			g_ModInfo.SetIn_R_Renderview(true);
 			detoured_R_RenderView_();
-			g_MirvInfo.SetIn_R_Renderview(false);
+			g_ModInfo.SetIn_R_Renderview(false);
 
 			bLoop = ScriptEvent_OnRenderViewEnd();
 		}
@@ -471,9 +471,9 @@ R_DrawParticles_t detoured_R_DrawParticles = NULL;
 
 void touring_R_DrawParticles (void)
 {
-	g_MirvInfo.SetIn_R_DrawParticles(true);
+	g_ModInfo.SetIn_R_DrawParticles(true);
 	detoured_R_DrawParticles();
-	g_MirvInfo.SetIn_R_DrawParticles(false);
+	g_ModInfo.SetIn_R_DrawParticles(false);
 }
 
 
@@ -484,9 +484,9 @@ R_DrawEntitiesOnList_t detoured_R_DrawEntitiesOnList = NULL;
 
 void touring_R_DrawEntitiesOnList (void)
 {
-	g_MirvInfo.SetIn_R_DrawEntitiesOnList(true);
+	g_ModInfo.SetIn_R_DrawEntitiesOnList(true);
 	detoured_R_DrawEntitiesOnList();
-	g_MirvInfo.SetIn_R_DrawEntitiesOnList(false);
+	g_ModInfo.SetIn_R_DrawEntitiesOnList(false);
 }
 
 
@@ -497,9 +497,9 @@ R_DrawViewModel_t detoured_R_DrawViewModel = NULL;
 
 void touring_R_DrawViewModel (void)
 {
-	g_MirvInfo.SetIn_R_DrawViewModel(true);
+	g_ModInfo.SetIn_R_DrawViewModel(true);
 	detoured_R_DrawViewModel();
-	g_MirvInfo.SetIn_R_DrawViewModel(false);
+	g_ModInfo.SetIn_R_DrawViewModel(false);
 }
 
 
@@ -1143,12 +1143,12 @@ void Filming::Start()
 		);
 	}
 
-	g_MirvInfo.SetRecording(true);
+	g_ModInfo.SetRecording(true);
 }
 
 void Filming::Stop()
 {
-	g_MirvInfo.SetRecording(false);
+	g_ModInfo.SetRecording(false);
 
 	if (_pSupportRender)
 		_pSupportRender->hlaeOnFilmingStop();
@@ -1587,7 +1587,7 @@ Filming::DRAW_RESULT Filming::shouldDraw(GLenum mode)
 	bool bEntityQuadEntity = 0x02 & iMatteEntityQuads;
 
 	// in R_Particles:
-	if(g_MirvInfo.In_R_DrawParticles_get()) {
+	if(g_ModInfo.In_R_DrawParticles_get()) {
 		switch(m_iMatteStage) {
 		case MS_WORLD:
 			return bParticleWorld ? DR_NORMAL : DR_HIDE;
@@ -1598,7 +1598,7 @@ Filming::DRAW_RESULT Filming::shouldDraw(GLenum mode)
 	}
 
 	// in R_DrawEntitiesOnList:
-	else if(g_MirvInfo.In_R_DrawEntitiesOnList_get()) {
+	else if(g_ModInfo.In_R_DrawEntitiesOnList_get()) {
 		cl_entity_t *ce = pEngStudio->GetCurrentEntity();
 
 		if(!ce)
@@ -1649,7 +1649,7 @@ Filming::DRAW_RESULT Filming::shouldDraw(GLenum mode)
 	}
 
 	// in R_DrawViewModel
-	else if(g_MirvInfo.In_R_DrawViewModel_get()) {
+	else if(g_ModInfo.In_R_DrawViewModel_get()) {
 		switch(m_iMatteStage) {
 		case MS_WORLD:
 			return bViewModelWorld ? DR_NORMAL : DR_HIDE;

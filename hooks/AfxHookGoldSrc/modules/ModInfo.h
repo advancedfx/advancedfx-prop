@@ -12,11 +12,11 @@
 #include <gl\gl.h>
 
 
-// MirvInfo //////////////////////////////////////////////////////////////////
+// ModInfo //////////////////////////////////////////////////////////////////
 
-class MirvInfo {
+class ModInfo {
 public:
-	MirvInfo(){
+	ModInfo(){
 		m_In_R_DrawEntitiesOnList = false;
 		m_In_R_DrawParticles = false;
 		m_In_R_DrawViewModel = false;
@@ -48,5 +48,5 @@ private:
 	bool m_Recording;
 };
 
-extern MirvInfo g_MirvInfo;
+extern ModInfo g_ModInfo;
 

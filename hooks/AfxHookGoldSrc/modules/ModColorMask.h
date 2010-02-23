@@ -12,11 +12,11 @@
 #include <gl\gl.h>
 
 
-// FxColorMask /////////////////////////////////////////////////////////////////
+// ModColorMask /////////////////////////////////////////////////////////////////
 
-class FxColorMask {
+class ModColorMask {
 public:
-	FxColorMask();
+	ModColorMask();
 
 	void OnGlBegin();
 	void OnGlEnd();
@@ -51,5 +51,5 @@ private:
 	int m_Alpha;
 };
 
-extern FxColorMask g_FxColorMask;
+extern ModColorMask g_ModColorMask;
 

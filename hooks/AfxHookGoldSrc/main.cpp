@@ -70,11 +70,11 @@
 
 #include "mirv_scripting.h"
 
-#include "FxColor.h"
-#include "FxColorMask.h"
-#include "FxHide.h"
-#include "FxReplace.h"
-#include "MirvInfo.h"
+#include <modules/ModColor.h>
+#include <modules/ModColorMask.h>
+#include <modules/ModHide.h>
+#include <modules/ModReplace.h>
+#include <modules/ModInfo.h>
 
 #include "mirv_commands.h"
 
@@ -371,13 +371,13 @@ void APIENTRY my_glBegin(GLenum mode)
 	else if (!g_Filming.bWantsHudCapture)
 		glColorMask(TRUE, TRUE, TRUE, TRUE); // BlendFunc for additive sprites needs special controll, don't override it
 
-	g_FxReplace.OnGlBegin();
+	g_ModReplace.OnGlBegin();
 
-	g_FxColor.OnGlBegin();
+	g_ModColor.OnGlBegin();
 
-	g_FxColorMask.OnGlBegin();
+	g_ModColorMask.OnGlBegin();
 
-	if(g_FxHide.OnGlBegin()) glBegin(mode);
+	if(g_ModHide.OnGlBegin()) glBegin(mode);
 }
 
 void APIENTRY my_glEnd(void)
@@ -386,11 +386,11 @@ void APIENTRY my_glEnd(void)
 
 	glEnd();
 
-	g_FxColorMask.OnGlEnd();
+	g_ModColorMask.OnGlEnd();
 
-	g_FxColor.OnGlEnd();
+	g_ModColor.OnGlEnd();
 
-	g_FxReplace.OnGlEnd();
+	g_ModReplace.OnGlEnd();
 
 
 	if (g_glBegin_saved.restore)

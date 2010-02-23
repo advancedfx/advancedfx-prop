@@ -8,15 +8,15 @@
 // First changes
 // 2009-11-14 dominik.matrixstorm.com
 
-#include "FxReplace.h"
+#include "ModReplace.h"
 
 #include "mirv_glext.h"
 
 
-FxReplace g_FxReplace;
+ModReplace g_ModReplace;
 
 
-// FxReplace //////////////////////////////////////////////////////////////////
+// ModReplace //////////////////////////////////////////////////////////////////
 
 GLuint g_Textures[8];
 
@@ -58,9 +58,9 @@ void EnsureTextures() {
 }
 
 
-// FxReplace //////////////////////////////////////////////////////////////////
+// ModReplace //////////////////////////////////////////////////////////////////
 
-FxReplace::FxReplace() {
+ModReplace::ModReplace() {
 	m_Active = false;
 	m_Enabled = false;
 	m_Blue = true;
@@ -68,11 +68,11 @@ FxReplace::FxReplace() {
 	m_Red = true;
 }
 
-bool FxReplace::Supported_get() {
+bool ModReplace::Supported_get() {
 	return g_Has_GL_ARB_multitexture;
 }
 
-void FxReplace::OnGlBegin() {
+void ModReplace::OnGlBegin() {
 	m_Active = g_Has_GL_ARB_multitexture && m_Enabled;
 	if(!m_Active) return;
 
@@ -95,7 +95,7 @@ void FxReplace::OnGlBegin() {
 	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 }
 
-void FxReplace::OnGlEnd() {
+void ModReplace::OnGlEnd() {
 	if(!m_Active) return;
 	m_Active = false;
 

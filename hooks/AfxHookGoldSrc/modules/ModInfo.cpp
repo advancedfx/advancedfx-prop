@@ -8,7 +8,7 @@
 // First changes
 // 2009-11-16 dominik.matrixstorm.com
 
-#include "MirvInfo.h"
+#include "ModInfo.h"
 
 
 // BEGIN HLSDK includes
@@ -25,14 +25,14 @@
 // END HLSDK includes
 
 
-MirvInfo g_MirvInfo;
+ModInfo g_ModInfo;
 
 extern engine_studio_api_s *pEngStudio;
 
 
-// MirvInfo //////////////////////////////////////////////////////////////////
+// ModInfo //////////////////////////////////////////////////////////////////
 
-int MirvInfo::GetCurrentEntityIndex() {
+int ModInfo::GetCurrentEntityIndex() {
 	cl_entity_t *ce;
 	if(pEngStudio && (ce = pEngStudio->GetCurrentEntity()))
 		return ce->index;

@@ -8,13 +8,13 @@
 // First changes
 // 2009-11-16 dominik.matrixstorm.com
 
-#include "FxColorMask.h"
+#include "ModColorMask.h"
 
-FxColorMask g_FxColorMask;
+ModColorMask g_ModColorMask;
 
-// FxColorMask /////////////////////////////////////////////////////////////////
+// ModColorMask /////////////////////////////////////////////////////////////////
 
-FxColorMask::FxColorMask() {
+ModColorMask::ModColorMask() {
 	m_Active = false;
 	m_Enabled = false;
 	m_Red = 0;
@@ -24,7 +24,7 @@ FxColorMask::FxColorMask() {
 }
 
 
-void FxColorMask::OnGlBegin() {
+void ModColorMask::OnGlBegin() {
 	m_Active = m_Enabled;
 	
 	if(!m_Active) return;
@@ -39,7 +39,7 @@ void FxColorMask::OnGlBegin() {
 	);
 }
 
-void FxColorMask::OnGlEnd() {
+void ModColorMask::OnGlEnd() {
 	if(!m_Active) return;
 	m_Active = false;
 	

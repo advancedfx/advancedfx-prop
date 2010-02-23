@@ -8,18 +8,18 @@
 // First changes
 // 2009-11-19 dominik.matrixstorm.com
 
-#include "FxHide.h"
+#include "ModHide.h"
 
-FxHide g_FxHide;
+ModHide g_ModHide;
 
-// FxHide /////////////////////////////////////////////////////////////////////
+// ModHide /////////////////////////////////////////////////////////////////////
 
-FxHide::FxHide() {
+ModHide::ModHide() {
 	m_Enabled = false;
 }
 
 
-bool FxHide::OnGlBegin() {
+bool ModHide::OnGlBegin() {
 	return !m_Enabled;
 
 }

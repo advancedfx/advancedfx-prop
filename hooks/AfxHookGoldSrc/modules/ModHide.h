@@ -12,11 +12,11 @@
 #include <gl\gl.h>
 
 
-// FxHide /////////////////////////////////////////////////////////////////////
+// ModHide /////////////////////////////////////////////////////////////////////
 
-class FxHide {
+class ModHide {
 public:
-	FxHide();
+	ModHide();
 
 	// returns false if to block
 	bool OnGlBegin();
@@ -32,5 +32,5 @@ private:
 	bool m_Enabled;
 };
 
-extern FxHide g_FxHide;
+extern ModHide g_ModHide;
 
