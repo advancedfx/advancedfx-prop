@@ -20,8 +20,6 @@
 #pragma pop_macro("HSPRITE")
 // END HLSDK includes
 
-#include "register.h"
-
 #include "aiming.h"
 #include "cmdregister.h"
 

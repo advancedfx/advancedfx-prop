@@ -1,35 +1,33 @@
-
-#ifndef CMDREGISTER_H
-#define CMDREGISTER_H
-
-#include "register.h"
+#pragma once
 
 #define PREFIX "mirv_"
 #define DEBUG_PREFIX "__mirv_"
 
-typedef void (__cdecl *Void_func_t)(void);
-extern void CvarRegister(Void_func_t func);
-extern void CmdRegister(Void_func_t func);
+class RegisterCvar
+{
+public:
+	RegisterCvar(char * name, char * value, int flags, struct cvar_s * * outCvar);
+};
 
-#define _REGISTER_CVAR_INT(var, cvar, def, flags) \
-	pEngfuncs->pfnRegisterVariable(cvar, def, flags); \
-	var = pEngfuncs->pfnGetCvarPointer(cvar);
+
+class RegisterCmd
+{
+public:
+	RegisterCmd(char * name, void (*function)(void));
+};
+
 
 #define _REGISTER_CVAR(var, cvar, def, flags) \
-	cvar_t *var; \
-	void register_cvar_ ## var ## () { _REGISTER_CVAR_INT(var, cvar, def, flags) } \
-	RegisterWithFunction<Void_func_t> register_cvar_ ## var ## _(register_cvar_ ## var, CvarRegister); 
+	struct cvar_s * var; \
+	RegisterCvar register_cvar_ ## var ## _(cvar, def, flags, &var); 
 
 #define REGISTER_CVAR(var, def, flags) _REGISTER_CVAR(var, PREFIX # var, def, flags)
 #define REGISTER_DEBUGCVAR(var, def, flags) _REGISTER_CVAR(var, DEBUG_PREFIX # var, def, flags)
 
-#define _REGISTER_CMD_INT(cmd, func) \
-	pEngfuncs->pfnAddCommand(cmd, func);
 
 #define _REGISTER_CMD(cmd, func) \
 	void func(); \
-	void register_cmd_ ## func ## () { _REGISTER_CMD_INT(cmd, func) } \
-	RegisterWithFunction<Void_func_t> register_cmd_ ## func ## _(register_cmd_ ## func, CmdRegister);
+	RegisterCmd register_cmd_ ## func ## _(cmd, func);
 
 #define REGISTER_CMD(cmd) _REGISTER_CMD(PREFIX # cmd, cmd ## _cmd)
 #define REGISTER_CMD_BEGIN(cmd) _REGISTER_CMD("+" ## PREFIX # cmd, cmd ## _begincmd)
@@ -54,5 +52,3 @@ extern void CmdRegister(Void_func_t func);
 #define REGISTER_DEBUGCMD_FUNC(cmd) \
 	_REGISTER_CMD(DEBUG_PREFIX # cmd, cmd ## _cmd) \
 	void cmd ## _cmd()
-
-#endif

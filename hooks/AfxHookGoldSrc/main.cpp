@@ -56,9 +56,6 @@
 #include "ui.h"
 
 #include "supportrender.h" // off-screen recording support
-
-#include "dsound_hook.h"
-
 #include "hl_addresses.h" // address definitions
 
 #include "newsky.h"
@@ -445,9 +442,8 @@ void APIENTRY my_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 			pEngfuncs->Con_Printf("MDT WARNING: Could not install all OpenGL extensions. Some features might not work.\n");
 		}
 
-		// Register commands:
-		Mirv_Commands_Register();
-
+		// Register commands amd Cvars (may not be used beforehand):
+		AfxRegisterCommands();
 
 		pEngfuncs->Con_Printf("Mirv Demo Tool %s\nBy Mirvin_Monkey 02/05/2004\n\n", __DATE__);
 
@@ -703,14 +699,6 @@ FARPROC WINAPI newGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 			return (FARPROC) &FixForceHltv_CL_IsThirdPerson;
 		}
 
-		//if (!lstrcmp(lpProcName,"DirectSoundCreate"))
-		//	return Hook_DirectSoundCreate(nResult);
-
-		//if (!lstrcmp(lpProcName,"DirectInputCreateA"))
-			//return (FARPROC) &my_DirectInputCreateA;
-			// DirectInputCreateA" - imported but never called?
-			// Half-Life uses DirectInputCreateW (uni code) instead
-			// (Steam's vgui)
 	}
 
 	return nResult;

@@ -6,6 +6,7 @@
 
 #include "cmdregister.h"
 
+
 // BEGIN HLSDK includes
 #pragma push_macro("HSPRITE")
 #define HSPRITE MDTHACKED_HSPRITE
@@ -19,35 +20,110 @@
 #pragma pop_macro("HSPRITE")
 // END HLSDK includes
 
-#include <list>
-
 
 extern cl_enginefuncs_s *pEngfuncs;
 
+#include <list>
 
-typedef std::list <Void_func_t> VoidFuncList;
-VoidFuncList &GetCvarList()
+#define NULLPTR 0
+
+struct AfxCvarEntry
 {
-	static VoidFuncList CvarList;
-	return CvarList;
-}
-VoidFuncList &GetCmdList()
+	char * Name;
+	char * Value;
+	int Flags;
+	struct cvar_s * * OutCvar;
+};
+
+struct AfxCmdEntry
 {
-	static VoidFuncList CmdList;
-	return CmdList;
+	char * Name;
+	void (*Function)(void);
+};
+
+std::list<AfxCvarEntry> & GetAfxCvarEntries() {
+	static std::list<AfxCvarEntry> afxCvarEntries;
+	return afxCvarEntries;
 }
 
-void CvarRegister(Void_func_t func) { GetCvarList().push_front(func); }
-void CmdRegister(Void_func_t func) { GetCmdList().push_front(func); }
+std::list<AfxCmdEntry> & GetAfxCmdEntries() {
+	static std::list<AfxCmdEntry> afxCmdEntries;
+	return afxCmdEntries;
+}
 
-void Mirv_Commands_Register() {
-		// Register the commands
-		std::list<Void_func_t>::iterator i = GetCmdList().begin();
-		while (i != GetCmdList().end())
-			(*i++)();
+void AfxRegisterCommands()
+{
+	// Register the cvars:
+	{
+		for(
+			std::list<AfxCvarEntry>::iterator i = GetAfxCvarEntries().begin();
+			i != GetAfxCvarEntries().end();
+			i++
+		) {
+			if(NULLPTR != i->OutCvar)
+				*(i->OutCvar) = pEngfuncs->pfnRegisterVariable(i->Name, i->Value, i->Flags);
+			else
+				pEngfuncs->pfnRegisterVariable(i->Name, i->Value, i->Flags);
+		}
+	}
 
-		// Register the cvars
-		i = GetCvarList().begin();
-		while (i != GetCvarList().end())
-			(*i++)();
+	// Register the commands:
+	{
+		for(
+			std::list<AfxCmdEntry>::iterator i = GetAfxCmdEntries().begin();
+			i != GetAfxCmdEntries().end();
+			i++
+		)
+			pEngfuncs->pfnAddCommand(i->Name, i->Function);
+	}
+}
+
+
+RegisterCvar::RegisterCvar(char * name, char * value, int flags, struct cvar_s * * outCvar)
+{
+	AfxCvarEntry entry = { name, value, flags, outCvar };
+	GetAfxCvarEntries().push_back(entry);
+}
+
+RegisterCmd::RegisterCmd(char * name, void (*function)(void))
+{
+	AfxCmdEntry entry = { name, function };
+	GetAfxCmdEntries().push_back(entry);
+}
+
+
+REGISTER_DEBUGCMD_FUNC(listcmds)
+{
+	int cntCmds = 0;
+	int cntVars = 0;
+
+	pEngfuncs->Con_Printf("---- cvars ----\n");
+
+	// Register the cvars:
+	{
+		for(
+			std::list<AfxCvarEntry>::iterator i = GetAfxCvarEntries().begin();
+			i != GetAfxCvarEntries().end();
+			i++
+		) {
+			pEngfuncs->Con_Printf("%s, %s, 0x%08x\n", i->Name, i->Value, i->Flags);
+			cntVars++;
+		}
+	}
+
+	pEngfuncs->Con_Printf("---- cmds ----\n");
+
+	// Register the commands:
+	{
+		for(
+			std::list<AfxCmdEntry>::iterator i = GetAfxCmdEntries().begin();
+			i != GetAfxCmdEntries().end();
+			i++
+		) {
+			pEngfuncs->Con_Printf("%s\n", i->Name);
+			cntCmds++;
+		}
+	}
+
+	pEngfuncs->Con_Printf("----------------\nCvars:%i, Cmds: %i, Total: %i\n", cntVars, cntCmds, cntVars +cntCmds);
 }

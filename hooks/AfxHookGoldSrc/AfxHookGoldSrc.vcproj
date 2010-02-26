@@ -321,14 +321,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\dsound_hook.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\dsound_hook.h"
-					>
-				</File>
-				<File
 					RelativePath=".\filetools.cpp"
 					>
 				</File>
@@ -430,10 +422,6 @@
 				</File>
 				<File
 					RelativePath=".\RawOutput.h"
-					>
-				</File>
-				<File
-					RelativePath=".\register.h"
 					>
 				</File>
 				<File
