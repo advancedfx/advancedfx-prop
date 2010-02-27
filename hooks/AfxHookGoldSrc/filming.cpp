@@ -1,23 +1,7 @@
-// #include "stdafx.h"
+#include "stdafx.h"
 
-// BEGIN HLSDK includes
-#pragma push_macro("HSPRITE")
-#define HSPRITE MDTHACKED_HSPRITE
-//
-#include <hlsdk/multiplayer/cl_dll/wrect.h>
-#include <hlsdk/multiplayer/cl_dll/cl_dll.h>
-#include <hlsdk/multiplayer/engine/cdll_int.h>
-#include <hlsdk/multiplayer/common/cvardef.h>
-#include <hlsdk/multiplayer/common/r_efx.h>
-#include <hlsdk/multiplayer/common/com_model.h>
-#include <hlsdk/multiplayer/common/r_studioint.h>
-#include <hlsdk/multiplayer/pm_shared/pm_defs.h>
-#include <hlsdk/multiplayer/common/entity_types.h>
-#include <hlsdk/multiplayer/cl_dll/in_defs.h> // PITCH YAW ROLL // HL1 sdk
-//
-#undef HSPRITE
-#pragma pop_macro("HSPRITE")
-// END HLSDK includes
+#include <hlsdk.h>
+
 
 #include "supportrender.h"
 #include "cmdregister.h"
@@ -643,7 +627,7 @@ void do_camera_test(vec3_t & vieworg, vec3_t & viewangles) {
 }
 
 
-void Filming::OnR_RenderView(vec3_t & vieworg, vec3_t & viewangles) {
+void Filming::OnR_RenderView(Vector & vieworg, Vector & viewangles) {
 	//
 	// override by cammotion import:
 	if(g_CamImport.IsActive())

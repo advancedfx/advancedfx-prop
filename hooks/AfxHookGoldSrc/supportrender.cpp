@@ -1,3 +1,5 @@
+#include "stdafx.h"
+
 // Project :  Half-Life Advanced Effects
 // File    :  dll/supportrender.h
 
@@ -13,20 +15,7 @@
 #include <gl\glu.h>
 #include <shared\ogl\glext.h>
 
-// BEGIN HLSDK includes
-//
-// HACK: prevent cldll_int.h from messing the HSPRITE definition,
-// HLSDK's HSPRITE --> MDTHACKED_HSPRITE
-#pragma push_macro("HSPRITE")
-#define HSPRITE MDTHACKED_HSPRITE
-//
-#include <hlsdk/multiplayer/cl_dll/wrect.h>
-#include <hlsdk/multiplayer/cl_dll/cl_dll.h>
-#include <hlsdk/multiplayer/engine/cdll_int.h>
-//
-#undef HSPRITE
-#pragma pop_macro("HSPRITE")
-// END HLSDK includes
+#include <hlsdk.h>
 
 #include "supportrender.h"
 
@@ -771,3 +760,7 @@ void CHlaeSupportRender::_Delete_RT_FRAMEBUFFEROBJECT_onlyFBO ()
 		glDeleteRenderbuffersEXT( 1, &_FrameBufferObject_r.depthRenderBuffer );
 	}
 }
+
+
+CHlaeSupportRender *g_pSupportRender = NULL; // inited in basecomClient.cpp
+

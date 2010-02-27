@@ -1,3 +1,5 @@
+#include "stdafx.h"
+
 //  Copyright (c) advancedfx.org
 //
 //  Last changes:

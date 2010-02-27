@@ -1,6 +1,4 @@
-
-#ifndef AIMING_H
-#define AIMING_H
+#pragma once
 
 #ifdef min
 #undef min
@@ -8,6 +6,8 @@
 #endif
 
 #include <list>
+
+#include <hlsdk.h>
 
 class Aiming
 {
@@ -72,4 +72,4 @@ public:
 	void SetAimOfs(float fOfsRight,float fOfsForward,float fOfsUp);
 };
 
-#endif
+extern Aiming g_Aiming;

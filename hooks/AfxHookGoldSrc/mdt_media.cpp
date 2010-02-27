@@ -1,3 +1,5 @@
+#include "stdafx.h"
+
 /*
 File        : mdt_media.cpp
 Started     : 2007-08-07 12:05:11

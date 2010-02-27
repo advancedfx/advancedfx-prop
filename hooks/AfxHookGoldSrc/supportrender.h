@@ -1,5 +1,4 @@
-#ifndef HLAE_SUPPORTRENDER_H
-#define HLAE_SUPPORTRENDER_H
+#pragma once
 
 // Project :  Half-Life Advanced Effects
 // File    :  dll/supportrender.h
@@ -222,4 +221,4 @@ private:
 	void	_Delete_RT_FRAMEBUFFEROBJECT_onlyFBO ();
 };
 
-#endif
+extern CHlaeSupportRender * g_pSupportRender;

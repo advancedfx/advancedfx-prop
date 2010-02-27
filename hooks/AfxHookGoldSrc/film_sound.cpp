@@ -1,4 +1,4 @@
-// #include "stdafx.h"
+#include "stdafx.h"
 
 // Copyright (c) by advancedfx.org
 //
@@ -14,19 +14,7 @@
 // includes:
 //
 
-// HLSDK, qboolean, Vector, vec_3t, ...:
-
-// BEGIN HLSDK includes
-#pragma push_macro("HSPRITE")
-#define HSPRITE MDTHACKED_HSPRITE
-//
-#include <hlsdk/multiplayer/cl_dll/wrect.h>
-#include <hlsdk/multiplayer/cl_dll/cl_dll.h>
-#include <hlsdk/multiplayer/engine/cdll_int.h>
-//
-#undef HSPRITE
-#pragma pop_macro("HSPRITE")
-// END HLSDK includes
+#include <hlsdk.h>
 
 #include "film_sound.h"
 #include "hl_addresses.h"

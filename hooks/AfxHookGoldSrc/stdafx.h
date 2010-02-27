@@ -1,2 +1,2 @@
-//
-// dummy, AfxHookGoldSrc does not use PCH (Pre Compiled Headers)
+#include <windows.h>
+#include "hlsdk.h"

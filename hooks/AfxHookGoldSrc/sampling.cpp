@@ -1,3 +1,5 @@
+#include "stdafx.h"
+
 // Project :  Half-Life Advanced Effects
 // File    :  dll/sampling.cpp
 

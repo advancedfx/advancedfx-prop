@@ -1,18 +1,9 @@
+#include "stdafx.h"
+
 #include <windows.h>
 #include <gl\gl.h>
 
-// BEGIN HLSDK includes
-#pragma push_macro("HSPRITE")
-#define HSPRITE MDTHACKED_HSPRITE
-//
-#include <hlsdk/multiplayer/cl_dll/wrect.h>
-#include <hlsdk/multiplayer/cl_dll/cl_dll.h>
-#include <hlsdk/multiplayer/common/cl_entity.h>
-#include <hlsdk/multiplayer/pm_shared/pm_defs.h>
-//
-#undef HSPRITE
-#pragma pop_macro("HSPRITE")
-// END HLSDK includes
+#include <hlsdk.h>
 
 // Own includes:
 #include "cmdregister.h"

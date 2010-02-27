@@ -1,3 +1,5 @@
+#pragma once
+
 // from Quake 1 cmd.h:
 typedef void (*xcommand_t) (void);
 
@@ -32,3 +34,6 @@ private:
 
 	cmd_function_t * _FindCmdTreeEntry(char *pszCmdName,cmd_function_t *pTree);
 };
+
+// global singelton:
+extern CHlaeCmdTools g_CmdTools;

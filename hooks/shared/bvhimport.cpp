@@ -1,3 +1,5 @@
+#include "stdafx.h"
+
 #include "bvhimport.h"
 
 #include <stdio.h>

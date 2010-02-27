@@ -1,6 +1,4 @@
-
-#ifndef ZOOMING_H
-#define ZOOMING_H
+#pragma once
 
 #include <windows.h>
 #include <gl\gl.h>
@@ -22,4 +20,5 @@ public:
 	void handleZoom();
 };
 
-#endif
+extern Zooming g_Zooming;
+

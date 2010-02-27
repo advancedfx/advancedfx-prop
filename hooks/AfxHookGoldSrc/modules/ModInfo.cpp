@@ -1,4 +1,4 @@
-//#include "stdafx.h"
+#include "stdafx.h"
 
 // Copyright (c) by advancedfx.org
 //
@@ -11,18 +11,7 @@
 #include "ModInfo.h"
 
 
-// BEGIN HLSDK includes
-#pragma push_macro("HSPRITE")
-#define HSPRITE MDTHACKED_HSPRITE
-//
-#include <hlsdk/multiplayer/cl_dll/wrect.h>
-#include <hlsdk/multiplayer/cl_dll/cl_dll.h>
-#include <hlsdk/multiplayer/common/cl_entity.h>
-#include <hlsdk/multiplayer/common/r_studioint.h>
-//
-#undef HSPRITE
-#pragma pop_macro("HSPRITE")
-// END HLSDK includes
+#include <hlsdk.h>
 
 
 ModInfo g_ModInfo;

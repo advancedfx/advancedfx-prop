@@ -1,11 +1,11 @@
+#pragma once
+
 /*
 File        : mdt_gltools.cpp
 Started     : 2007-008-02 11:56:21
 Project     : Mirv Demo Tool
 Description : see mdt_gltools.h
 */
-#ifndef FILMING_H
-#define FILMING_H
 
 #include <windows.h>
 #include <gl\gl.h>
@@ -128,7 +128,7 @@ public:
 
 	bool OnPrintFrame(unsigned long id, void *prgbdata, int iWidht, int iHeight);
 
-	void OnR_RenderView(vec3_t & vieworg, vec3_t & viewangles);
+	void OnR_RenderView(Vector & vieworg, Vector & viewangles);
 
 	float GetDebugClientTime();
 
@@ -219,4 +219,4 @@ private:
 	std::string m_TakeDir;
 };
 
-#endif
+extern Filming g_Filming;

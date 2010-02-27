@@ -1,4 +1,4 @@
-//#include "stdafx.h"
+#include "stdafx.h"
 
 // Copyright (c) by advancedfx.org
 //
@@ -21,16 +21,7 @@
 #include <windows.h>
 #include <gl\gl.h>
 
-// BEGIN HLSDK includes
-#pragma push_macro("HSPRITE")
-#define HSPRITE MDTHACKED_HSPRITE
-//
-#include <hlsdk/multiplayer/cl_dll/wrect.h>
-#include <hlsdk/multiplayer/cl_dll/cl_dll.h>
-//
-#undef HSPRITE
-#pragma pop_macro("HSPRITE")
-// END HLSDK includes
+#include <hlsdk.h>
 
 #include "cmdregister.h"
 

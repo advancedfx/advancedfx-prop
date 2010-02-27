@@ -1,20 +1,6 @@
-// BEGIN HLSDK includes
-//
-// HACK: prevent cldll_int.h from messing the HSPRITE definition,
-// HLSDK's HSPRITE --> MDTHACKED_HSPRITE
-#pragma push_macro("HSPRITE")
-#define HSPRITE MDTHACKED_HSPRITE
-//
-#include <hlsdk/multiplayer/cl_dll/wrect.h>
-#include <hlsdk/multiplayer/cl_dll/cl_dll.h>
-#include <hlsdk/multiplayer/engine/cdll_int.h>
-#include <hlsdk/multiplayer/common/cvardef.h>
-#include <hlsdk/multiplayer/common/r_efx.h>
-#include <hlsdk/multiplayer/common/com_model.h>
-//
-#undef HSPRITE
-#pragma pop_macro("HSPRITE")
-// END HLSDK includes
+#include "stdafx.h"
+
+#include <hlsdk.h>
 
 #include "cmdregister.h"
 #include "hl_addresses.h"

@@ -48,7 +48,6 @@
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="4"
 			/>
@@ -126,7 +125,8 @@
 				AdditionalIncludeDirectories="./;../../;C:\Libraries;C:\Libraries\hlsdk\multiplayer\common;C:\Libraries\hlsdk\multiplayer\engine;C:\Libraries\hlsdk\multiplayer\pm_shared"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;_BIND_TO_CURRENT_CRT_VERSION=1"
 				RuntimeLibrary="2"
-				UsePrecompiledHeader="0"
+				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="stdafx.h"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -183,376 +183,484 @@
 	</References>
 	<Files>
 		<Filter
-			Name="shared"
-			>
-			<Filter
-				Name="com"
-				>
-				<File
-					RelativePath="..\..\shared\com\basecom.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\shared\com\PipeCom.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\shared\com\PipeCom.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="hldemo"
-				>
-				<File
-					RelativePath="..\..\shared\hldemo\hldemo.h"
-					>
-				</File>
-			</Filter>
-		</Filter>
-		<Filter
-			Name="hooks"
+			Name="Header Files"
+			Filter="h"
 			>
 			<Filter
 				Name="shared"
 				>
-				<File
-					RelativePath="..\shared\bvhexport.cpp"
+				<Filter
+					Name="com"
 					>
-				</File>
-				<File
-					RelativePath="..\shared\bvhexport.h"
+					<File
+						RelativePath="..\..\shared\com\basecom.h"
+						>
+					</File>
+					<File
+						RelativePath="..\..\shared\com\PipeCom.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="hldemo"
 					>
-				</File>
-				<File
-					RelativePath="..\shared\bvhimport.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\shared\bvhimport.h"
-					>
-				</File>
-				<File
-					RelativePath="..\shared\detours.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\shared\detours.h"
-					>
-				</File>
+					<File
+						RelativePath="..\..\shared\hldemo\hldemo.h"
+						>
+					</File>
+				</Filter>
 			</Filter>
 			<Filter
-				Name="AfxHookGoldSrc"
+				Name="hooks"
 				>
-				<File
-					RelativePath=".\aiming.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\aiming.h"
-					>
-				</File>
-				<File
-					RelativePath=".\basecomClient.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\basecomClient.h"
-					>
-				</File>
-				<File
-					RelativePath=".\camexport.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\camexport.h"
-					>
-				</File>
-				<File
-					RelativePath=".\camimport.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\camimport.h"
-					>
-				</File>
-				<File
-					RelativePath=".\cmd_tools.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\cmd_tools.h"
-					>
-				</File>
-				<File
-					RelativePath=".\cmdregister.h"
-					>
-				</File>
-				<File
-					RelativePath=".\cstrike_ch.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\cstrike_clientcolor.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\cstrike_deathmsg.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\cstrike_smoke.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\decals_hook.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\demo_tools.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\demoeditfix.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\demozoom.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\filetools.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\filetools.h"
-					>
-				</File>
-				<File
-					RelativePath=".\film_sound.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\film_sound.h"
-					>
-				</File>
-				<File
-					RelativePath=".\filming.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\filming.h"
-					>
-				</File>
-				<File
-					RelativePath=".\forceres.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\forceres.h"
-					>
-				</File>
-				<File
-					RelativePath=".\hl_addresses.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\hl_addresses.h"
-					>
-				</File>
-				<File
-					RelativePath=".\main.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\mdt_media.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\mdt_media.h"
-					>
-				</File>
-				<File
-					RelativePath=".\mirv_commands.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\mirv_commands.h"
-					>
-				</File>
-				<File
-					RelativePath=".\mirv_glext.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\mirv_glext.h"
-					>
-				</File>
-				<File
-					RelativePath=".\mirv_info.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\mirv_scripting.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\mirv_scripting.h"
-					>
-				</File>
-				<File
-					RelativePath=".\newsky.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\newsky.h"
-					>
-				</File>
-				<File
-					RelativePath=".\RawMedia.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\RawMedia.h"
-					>
-				</File>
-				<File
-					RelativePath=".\RawOutput.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\RawOutput.h"
-					>
-				</File>
-				<File
-					RelativePath=".\resource.h"
-					>
-				</File>
-				<File
-					RelativePath=".\sampling.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\sampling.h"
-					>
-				</File>
-				<File
-					RelativePath=".\script.h"
-					>
-				</File>
-				<File
-					RelativePath=".\specmenu.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\stdafx.h"
-					>
-				</File>
-				<File
-					RelativePath=".\supportrender.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\supportrender.h"
-					>
-				</File>
-				<File
-					RelativePath=".\temporary_dominik_0004.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\temporary_dominik_0005.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\zooming.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\zooming.h"
-					>
-				</File>
 				<Filter
-					Name="modules"
+					Name="AfxHookGoldSrc"
 					>
 					<File
-						RelativePath=".\modules\ModColor.cpp"
+						RelativePath=".\aiming.h"
 						>
 					</File>
 					<File
-						RelativePath=".\modules\ModColor.h"
+						RelativePath=".\basecomClient.h"
 						>
 					</File>
 					<File
-						RelativePath=".\modules\ModColor_S.cpp"
+						RelativePath=".\camexport.h"
 						>
 					</File>
 					<File
-						RelativePath=".\modules\ModColor_S.h"
+						RelativePath=".\camimport.h"
 						>
 					</File>
 					<File
-						RelativePath=".\modules\ModColorMask.cpp"
+						RelativePath=".\cmd_tools.h"
 						>
 					</File>
 					<File
-						RelativePath=".\modules\ModColorMask.h"
+						RelativePath=".\cmdregister.h"
 						>
 					</File>
 					<File
-						RelativePath=".\modules\ModColorMask_S.cpp"
+						RelativePath=".\filetools.h"
 						>
 					</File>
 					<File
-						RelativePath=".\modules\ModColorMask_S.h"
+						RelativePath=".\film_sound.h"
 						>
 					</File>
 					<File
-						RelativePath=".\modules\ModHide.cpp"
+						RelativePath=".\filming.h"
 						>
 					</File>
 					<File
-						RelativePath=".\modules\ModHide.h"
+						RelativePath=".\forceres.h"
 						>
 					</File>
 					<File
-						RelativePath=".\modules\ModHide_S.cpp"
+						RelativePath=".\hl_addresses.h"
 						>
 					</File>
 					<File
-						RelativePath=".\modules\ModHide_S.h"
+						RelativePath=".\hlsdk.h"
 						>
 					</File>
 					<File
-						RelativePath=".\modules\ModInfo.cpp"
+						RelativePath=".\HltvFix.h"
 						>
 					</File>
 					<File
-						RelativePath=".\modules\ModInfo.h"
+						RelativePath=".\mdt_media.h"
 						>
 					</File>
 					<File
-						RelativePath=".\modules\ModInfo_S.cpp"
+						RelativePath=".\mirv_commands.h"
 						>
 					</File>
 					<File
-						RelativePath=".\modules\ModInfo_S.h"
+						RelativePath=".\mirv_glext.h"
 						>
 					</File>
 					<File
-						RelativePath=".\modules\ModReplace.cpp"
+						RelativePath=".\mirv_info.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\modules\ModReplace.h"
+						RelativePath=".\mirv_scripting.h"
 						>
 					</File>
 					<File
-						RelativePath=".\modules\ModReplace_S.cpp"
+						RelativePath=".\newsky.h"
 						>
 					</File>
 					<File
-						RelativePath=".\modules\ModReplace_S.h"
+						RelativePath=".\RawMedia.h"
+						>
+					</File>
+					<File
+						RelativePath=".\RawOutput.h"
+						>
+					</File>
+					<File
+						RelativePath=".\resource.h"
+						>
+					</File>
+					<File
+						RelativePath=".\sampling.h"
+						>
+					</File>
+					<File
+						RelativePath=".\script.h"
+						>
+					</File>
+					<File
+						RelativePath=".\stdafx.h"
+						>
+					</File>
+					<File
+						RelativePath=".\supportrender.h"
+						>
+					</File>
+					<File
+						RelativePath=".\zooming.h"
+						>
+					</File>
+					<Filter
+						Name="modules"
+						>
+						<File
+							RelativePath=".\modules\ModColor.h"
+							>
+						</File>
+						<File
+							RelativePath=".\modules\ModColor_S.h"
+							>
+						</File>
+						<File
+							RelativePath=".\modules\ModColorMask.h"
+							>
+						</File>
+						<File
+							RelativePath=".\modules\ModColorMask_S.h"
+							>
+						</File>
+						<File
+							RelativePath=".\modules\ModHide.h"
+							>
+						</File>
+						<File
+							RelativePath=".\modules\ModHide_S.h"
+							>
+						</File>
+						<File
+							RelativePath=".\modules\ModInfo.h"
+							>
+						</File>
+						<File
+							RelativePath=".\modules\ModInfo_S.h"
+							>
+						</File>
+						<File
+							RelativePath=".\modules\ModReplace.h"
+							>
+						</File>
+						<File
+							RelativePath=".\modules\ModReplace_S.h"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="hooks"
+						>
+						<File
+							RelativePath=".\hooks\HookGameLoaded.h"
+							>
+						</File>
+						<File
+							RelativePath=".\hooks\HookHl.h"
+							>
+						</File>
+						<File
+							RelativePath=".\hooks\HookHw.h"
+							>
+						</File>
+						<File
+							RelativePath=".\hooks\OpenGlHooks.h"
+							>
+						</File>
+					</Filter>
+				</Filter>
+				<Filter
+					Name="shared"
+					>
+					<File
+						RelativePath="..\shared\bvhexport.h"
+						>
+					</File>
+					<File
+						RelativePath="..\shared\bvhimport.h"
+						>
+					</File>
+					<File
+						RelativePath="..\shared\detours.h"
+						>
+					</File>
+				</Filter>
+			</Filter>
+		</Filter>
+		<Filter
+			Name="Source Files"
+			Filter="cpp"
+			>
+			<Filter
+				Name="hooks"
+				>
+				<Filter
+					Name="AfxHookGoldSrc"
+					>
+					<File
+						RelativePath=".\aiming.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\basecomClient.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\camexport.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\camimport.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\cmd_tools.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\cstrike_ch.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\cstrike_clientcolor.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\cstrike_deathmsg.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\cstrike_smoke.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\decals_hook.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\demo_tools.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\demoeditfix.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\demozoom.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\filetools.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\film_sound.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\filming.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\forceres.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\hl_addresses.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\HltvFix.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\main.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\mdt_media.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\mirv_commands.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\mirv_glext.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\mirv_scripting.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\newsky.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\RawMedia.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\RawOutput.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\sampling.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\specmenu.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\stdafx.cpp"
+						>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								UsePrecompiledHeader="1"
+								PrecompiledHeaderThrough="stdafx.h"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Release|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								UsePrecompiledHeader="1"
+								PrecompiledHeaderThrough="stdafx.h"
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath=".\supportrender.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\temporary_dominik_0004.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\temporary_dominik_0005.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\zooming.cpp"
+						>
+					</File>
+					<Filter
+						Name="modules"
+						>
+						<File
+							RelativePath=".\modules\ModColor.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\modules\ModColor_S.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\modules\ModColorMask.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\modules\ModColorMask_S.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\modules\ModHide.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\modules\ModHide_S.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\modules\ModInfo.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\modules\ModInfo_S.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\modules\ModReplace.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\modules\ModReplace_S.cpp"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="hooks"
+						>
+						<File
+							RelativePath=".\hooks\HookGameLoaded.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\hooks\HookHl.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\hooks\HookHw.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\hooks\OpenGlHooks.cpp"
+							>
+						</File>
+					</Filter>
+				</Filter>
+				<Filter
+					Name="shared"
+					>
+					<File
+						RelativePath="..\shared\bvhexport.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\shared\bvhimport.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\shared\detours.cpp"
+						>
+					</File>
+				</Filter>
+			</Filter>
+			<Filter
+				Name="shared"
+				>
+				<Filter
+					Name="com"
+					>
+					<File
+						RelativePath="..\..\shared\com\PipeCom.cpp"
 						>
 					</File>
 				</Filter>
