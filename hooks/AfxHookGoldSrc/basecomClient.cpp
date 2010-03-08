@@ -61,15 +61,6 @@ bool g_bFullScreenCheatMode = false;
 
 bool g_bIsActive = false;
 
-struct
-{
-	unsigned int ui_rx_packets;
-	unsigned int ui_tx_packets;
-
-} g_message_stats = {0, 0};
-
-REGISTER_DEBUGCVAR(debug_blockkeys, "0", 0);
-
 LRESULT CALLBACK Hooking_WndProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	//
@@ -122,9 +113,6 @@ LRESULT CALLBACK Hooking_WndProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 			return g_HL_WndClassA->lpfnWndProc(hWnd,uMsg,wParam,lParam); // PASS ON WM_KILLFOCUS
 		}
 		break;
-	case WM_KEYDOWN:
-	case WM_KEYUP:
-		if( debug_blockkeys->value != 0 ) return NULL;
 	}
 
 	return g_HL_WndClassA->lpfnWndProc(hWnd,uMsg,wParam,lParam);
@@ -216,8 +204,6 @@ LRESULT CALLBACK HlaeBcCltWndProc(
     WPARAM wParam,    // first message parameter
     LPARAM lParam)    // second message parameter
 {
-	g_message_stats.ui_rx_packets++;
-
     switch (uMsg) 
     { 
         case WM_CREATE: 
@@ -322,7 +308,6 @@ bool HlaeBcCltSendMessage(DWORD dwId,DWORD cbSize,PVOID lpData)
 // this function could be optimized by reducing expensive FindWindowW calls
 {
 	HWND hwServerWindow;
-	g_message_stats.ui_tx_packets++;
 	
 	// curently wastes time:
 	if(!(hwServerWindow=FindWindowW(HLAE_BASECOM_CLASSNAME,HLAE_BASECOM_SERVER_ID)))
@@ -821,11 +806,6 @@ REGISTER_DEBUGCMD_FUNC(debug_devicecontext)
 	ReleaseDC(g_HL_MainWindow,hdcResult);
 }
 
-REGISTER_DEBUGCMD_FUNC(debug_message_stats)
-{
-	pEngfuncs->Con_Printf("HLAE BaseCom Client (includes failed):\ntx packets: %u\nrx packets: %u\n",g_message_stats.ui_tx_packets,g_message_stats.ui_rx_packets);
-}
-
 REGISTER_DEBUGCMD_FUNC(debug_wndproc_isontop)
 {
 	if( Hooking_WndProc != (WNDPROC)GetWindowLong( (HWND)g_HL_MainWindow, GWL_WNDPROC ))
@@ -839,19 +819,4 @@ REGISTER_DEBUGCMD_FUNC(debug_wndproc_rehook)
 	SetWindowLongPtr( (HWND)g_HL_MainWindow, GWL_WNDPROC, (LONG)Hooking_WndProc );
 }
 
-REGISTER_DEBUGCMD_FUNC(debug_getcommandline)
-{
-	pEngfuncs->Con_Printf("GetCommandLine(): %s\n",GetCommandLine());
-}
 
-REGISTER_DEBUGCMD_FUNC(debug_activateapp_on)
-{
-	SendMessage(g_HL_MainWindow,WM_ACTIVATEAPP, TRUE ,NULL);
-	SendMessage(g_HL_MainWindow,WM_ACTIVATE, WA_ACTIVE ,NULL);
-}
-
-REGISTER_DEBUGCMD_FUNC(debug_activateapp_off)
-{
-	SendMessage(g_HL_MainWindow,WM_ACTIVATE, WA_INACTIVE ,NULL);
-	SendMessage(g_HL_MainWindow,WM_ACTIVATEAPP, FALSE ,NULL);
-}

@@ -442,11 +442,6 @@ REGISTER_CMD_FUNC(fx_noblend)
 	}
 }
 
-REGISTER_CMD_FUNC(tttt)
-{
-	pEngfuncs->Con_Printf("0x%08x 0x%08x", HL_ADDR_GET(R_DrawParticles), HL_ADDR_GET(DTOURSZ_R_DrawParticles));
-}
-
 
 // R_DrawParticles /////////////////////////////////////////////////////////////
 

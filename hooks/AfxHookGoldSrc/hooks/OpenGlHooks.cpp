@@ -40,15 +40,11 @@ struct glBegin_saved_s {
 
 unsigned int g_glBeginStats = 0;
 
-REGISTER_DEBUGCVAR(glbegin_stats, "0", 0)
-
 void APIENTRY NewGlBegin(GLenum mode)
 {
 	ScriptEvent_OnGlBegin((unsigned int)mode);
 
 	g_glBegin_saved.restore=false;
-
-	g_glBeginStats++;
 
 	g_NewSky.DetectAndProcessSky(mode);
 
@@ -159,11 +155,6 @@ void APIENTRY NewGlViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 	if (g_nViewports == 0)
 	{
 		//g_Filming.setScreenSize(width, height);
-
-		if(glbegin_stats->value)
-			pEngfuncs->Con_Printf("glBegin calls: %u\n", g_glBeginStats);
-
-		g_glBeginStats = 0;
 
 		// Always get rid of auto_director
 		if (disableautodirector->value != 0.0f)
