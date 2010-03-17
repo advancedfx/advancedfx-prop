@@ -167,6 +167,9 @@ void HookGameLoaded()
 
 	g_Script_CanConsolePrint = true;
 
+	// Now is a good time to install OpenGl extensions:
+	Install_All_Gl_Extensions();
+
 	if(!g_Has_All_Gl_Extensions)
 		pEngfuncs->Con_Printf("MDT WARNING: Could not install all OpenGL extensions. Some features might not work.\n");
 

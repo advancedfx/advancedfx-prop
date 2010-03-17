@@ -22,8 +22,8 @@
 
 //
 
+#include "initscript.h"
 #include "mirv_scripting.h"
-#include "mirv_glext.h"
 #include "hooks/HookHl.h"
 
 
@@ -33,12 +33,9 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 	{ 
 		case DLL_PROCESS_ATTACH:
 		{
-#ifdef MDT_DEBUG
-			MessageBox(0,"DllMain - DLL_PROCESS_ATTACH","MDT_DEBUG",MB_OK|MB_ICONINFORMATION);
-#endif
 			JsStartUp();
 
-			Install_All_Gl_Extensions();
+			RunInitScript();
 
 			HookHl();
 

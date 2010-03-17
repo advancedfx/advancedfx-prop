@@ -258,23 +258,50 @@ static JSClass Fx_class = {
 
 // Addr ////////////////////////////////////////////////////////////////////////
 
+struct AddrEvents_s
+{
+	std::string OnClientDllLoaded;
+	std::string OnHwDllLoaded;
+} g_AddrEvents;
 
-static JSBool
-Addr_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+enum Addr_tinyid {
+	TID_Addr_OnClientDllLoaded,
+	TID_Addr_OnHwDllLoaded,
+};
+
+
+
+JSBool Addr_OnClientDllLoaded_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	SetEventFnString(&g_AddrEvents.OnClientDllLoaded, cx, vp);
+
+	return JS_TRUE;
+}
+
+
+JSBool Addr_OnHwDllLoaded_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
+	SetEventFnString(&g_AddrEvents.OnHwDllLoaded, cx, vp);
+
+	return JS_TRUE;
+}
+
+static JSBool Addr_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     JSString * str = JS_ValueToString(cx, id);
 
 	if(str) {
 		HlAddress_t * padr = HlAddr_GetByName(JS_GetStringBytes(str));
-		if(padr) *vp = INT_TO_JSVAL((*padr));
+		if(padr)
+		{
+			*vp = INT_TO_JSVAL((*padr));
+			return JS_TRUE;
+		}
 	}
 
-    return JS_TRUE;
+	return JS_FALSE;
 }
 
 
-JS_STATIC_DLL_CALLBACK(JSBool)
-Addr_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+JS_STATIC_DLL_CALLBACK(JSBool) Addr_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     JSString * str = JS_ValueToString(cx, id);
 	if(str) {
@@ -282,11 +309,21 @@ Addr_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 		HlAddress_t * padr = HlAddr_GetByName(JS_GetStringBytes(str));
 
 		if(padr && JS_TRUE == JS_ValueToInt32(cx, *vp, &i32))
+		{
 			*padr = (HlAddress_t)i32;
+			return JS_TRUE;
+		}
 	}
 
-    return JS_TRUE;
+	return JS_FALSE;
 }
+
+static JSPropertySpec Addr_props[] = {
+  {"onClientDllLoaded", TID_Addr_OnClientDllLoaded, JSMIRVPROP, NULL, Addr_OnClientDllLoaded_set},
+  {"onHwDllLoaded"  , TID_Addr_OnHwDllLoaded  , JSMIRVPROP, NULL, Addr_OnHwDllLoaded_set},
+  {NULL,0,0,NULL,NULL}
+};
+
 
 static JSClass Addr_class = {
     "Addr", 0,
@@ -295,7 +332,19 @@ static JSClass Addr_class = {
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
+void OnClientDllLoaded() {
+	if(!g_AddrEvents.OnClientDllLoaded.empty()) {
+		jsval r;
+		JS_CallFunctionName(g_JsCx, g_JsGlobal, g_AddrEvents.OnClientDllLoaded.c_str(), 0, NULL, &r);
+	}
+}
 
+void OnHwDllLoaded() {
+	if(!g_AddrEvents.OnHwDllLoaded.empty()) {
+		jsval r;
+		JS_CallFunctionName(g_JsCx, g_JsGlobal, g_AddrEvents.OnHwDllLoaded.c_str(), 0, NULL, &r);
+	}
+}
 
 // Global //////////////////////////////////////////////////////////////////////
 
@@ -423,6 +472,7 @@ bool JsStartUp() {
 
 		// .addr:
 		&& NULL != (jo = JS_DefineObject(g_JsCx, g_JsGlobal, "addr", &Addr_class, NULL, JSMIRVPROP|JSPROP_READONLY))
+		&& JS_DefineProperties(g_JsCx, jo, Addr_props)
 
 		// .info:
 		&& NULL != (jo = ModInfo_S_Register(g_JsCx, g_JsGlobal, "info"))
@@ -452,7 +502,10 @@ bool JsStartUp() {
 	;
 
 	if(!bOk)
+	{
+		MessageBox(0, "Failed to init scripting engine.", "Error", MB_OK|MB_ICONERROR);
 		JsShutDown();
+	}
 
 	g_JsRunning = bOk;
 

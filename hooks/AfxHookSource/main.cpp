@@ -10,6 +10,8 @@
 
 #include <windows.h>
 
+#include <shared/StringTools.h>
+
 #include <hooks/shared/detours.h>
 
 #include "RenderView.h"
@@ -21,30 +23,6 @@
 WrpVEngineClient * g_VEngineClient = 0;
 ICvar_003 * g_Cvar = 0;
 
-
-
-bool StringEndsWith(char const * target, char const * ending) {
-	size_t lenTarget = strlen(target);
-	size_t lenEnding = strlen(ending);
-
-	if(lenTarget < lenEnding) return false;
-
-	return !strcmp(target +(lenTarget-lenEnding), ending);
-}
-
-bool StringBeginsWith(char const * target, char const * beginning) {
-	while(*target && *beginning) {
-		if(*beginning != *target)
-			return false;
-		target++;
-		beginning++;
-	}
-
-	if(*beginning && !*target)
-		return false;
-
-	return true;
-}
 
 void ErrorBox(char const * messageText) {
 	MessageBoxA(0, messageText, "Error - AfxHookSource", MB_OK|MB_ICONERROR);

@@ -240,6 +240,18 @@
 				</File>
 			</Filter>
 		</Filter>
+		<Filter
+			Name="shared"
+			>
+			<File
+				RelativePath="..\..\shared\StringTools.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\shared\StringTools.h"
+				>
+			</File>
+		</Filter>
 	</Files>
 	<Globals>
 	</Globals>

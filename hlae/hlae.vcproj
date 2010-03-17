@@ -512,18 +512,6 @@
 				</Filter>
 			</Filter>
 			<Filter
-				Name="other"
-				>
-				<File
-					RelativePath=".\other\hlaelogo.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\other\hlaelogo.h"
-					>
-				</File>
-			</Filter>
-			<Filter
 				Name="AfxGoldSrc"
 				>
 				<File

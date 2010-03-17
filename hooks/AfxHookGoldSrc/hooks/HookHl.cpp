@@ -11,12 +11,13 @@
 
 HMODULE WINAPI new_LoadLibraryA( LPCSTR lpLibFileName )
 {
-		static bool bFirstLoad = true;
+		static bool bHwLoaded = false;
+		static bool bClientLoaded = false;
 
-		if( bFirstLoad && !lstrcmp( lpLibFileName, "hw.dll") )
+		if( !bHwLoaded && !lstrcmp( lpLibFileName, "hw.dll") )
 		{
-			bFirstLoad = false;
-			HMODULE hHw = LoadLibraryA( lpLibFileName );//LoadLibraryEx( lpLibFileName, NULL, DONT_RESOLVE_DLL_REFERENCES );
+			bHwLoaded = true;
+			HMODULE hHw = LoadLibraryA( lpLibFileName );
 
 			if( hHw )
 				HookHw(hHw);

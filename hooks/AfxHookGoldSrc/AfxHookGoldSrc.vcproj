@@ -317,6 +317,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\InitScript.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\InitScript.h"
+					>
+				</File>
+				<File
 					RelativePath=".\main.cpp"
 					>
 				</File>
@@ -619,6 +627,14 @@
 		<Filter
 			Name="shared"
 			>
+			<File
+				RelativePath="..\..\shared\StringTools.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\shared\StringTools.h"
+				>
+			</File>
 			<Filter
 				Name="com"
 				>

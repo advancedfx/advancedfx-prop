@@ -10,6 +10,9 @@
 
 extern bool g_Script_CanConsolePrint;
 
+void OnClientDllLoaded();
+void OnHwDllLoaded();
+
 bool JsStartUp();
 void JsShutDown();
 bool JsIsRunning();

@@ -2,7 +2,6 @@
 
 #include <controls/HlaeConsole.h>
 #include <forms/calculator.h>
-#include <other/hlaelogo.h>
 #include <system/debug.h>
 #include <system/debug_file.h>
 #include <system/globals.h>
@@ -43,7 +42,6 @@ namespace hlae {
 		{
 			this->Globals = Globals;
 			this->debugFile = debugFile;
-			this->hlaeLogo = gcnew HlaeLogo();
 
 			InitializeComponent();
 			
@@ -109,12 +107,9 @@ namespace hlae {
 		CGlobals ^Globals;
 		FileDebugListener ^debugFile;
 		HlaeConsole ^ hlaeConsole;
-	private: System::Windows::Forms::ToolStripStatusLabel^  statusLabelHide;
-			 HlaeLogo ^ hlaeLogo;
-
+		System::Windows::Forms::ToolStripStatusLabel^  statusLabelHide;
 		void UpdaterChecked(System::Object ^sender, IUpdaterCheckResult ^checkResult);
 
-	private:
 
 	private: System::Windows::Forms::StatusStrip^  statusStrip1;
 	private: System::Windows::Forms::MenuStrip^  menuStrip1;
