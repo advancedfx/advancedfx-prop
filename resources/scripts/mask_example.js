@@ -23,5 +23,3 @@ function myGlBegin(mode) {
 
 events.on_glBegin = myGlBegin;
 //events.on_glBegin = undefined;
-
-delete myGlBegin;

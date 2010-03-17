@@ -87,7 +87,7 @@ FARPROC WINAPI NewHwGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 
 HMODULE WINAPI NewHwLoadLibraryA( LPCSTR lpLibFileName )
 {
-	if(StringEndsWith(lpLibFileName, "cl_dlls\client.dll"))
+	if(StringEndsWith(lpLibFileName, "cl_dlls\\client.dll"))
 	{
 		HMODULE hClient = LoadLibraryA(lpLibFileName);
 

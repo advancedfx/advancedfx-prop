@@ -91,7 +91,7 @@ REGISTER_DEBUGCMD_FUNC(list_addresses) {
 			break; // error
 		}
 
-		if(!addr) zcnt;
+		if(!addr) zcnt++;
 
 		pEngfuncs->Con_Printf("%s = 0x%08x\n", pName, addr);
 	}

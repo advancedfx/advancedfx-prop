@@ -1,6 +1,7 @@
 // WE SUGGEST TO NOT EDIT THIS FILE!
 // This file carries out CRUCIAL operations and we might change it occasionally.
 
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 // Address system:
@@ -20,8 +21,8 @@ function afx_OnHwDllLoaded()
 	// General engine hooks:
 	//
 
-	addr.Host_Frame = addr.hwDll +0xD82A0;
-	addr.DTOURSZ_Host_Frame = 0x0C;
+	addr.Host_Frame = addr.hwDll +0xD82A0; // unused atm
+	addr.DTOURSZ_Host_Frame = 0x0C; // unused atm
 
 	addr.UnkDevCapsChecks = addr.hwDll +0xC6A26;
 	addr.UnkDevCapsChecks_BYTES = 0x14;
@@ -116,6 +117,17 @@ function afx_OnHwDllLoaded()
 	addr.UpdateSpectatorPanel_checkjmp_valve = 0x01940221; //Half-Life (valve) //unchecked
 
 
+
+	// unused // p_enginefuncs_s = addr.hwDll + 0x18B9F0 // may be unused
+	// unused // p_globalvars_s = addr.hwDll + 0x7CD0E0 // may be unused
+}
+addr.onClientDllLoaded = afx_OnClientDllLoaded;
+delete afx_OnClientDllLoaded;
+
+function afx_OnClientDllLoaded()
+{
+	iWasHere = 'Yes';
+	
 	//
 	// game: cstrike
 	//
@@ -143,22 +155,11 @@ function afx_OnHwDllLoaded()
 	addr.cstrike_rgDeathNoticeList = 0x121DF8;
 	addr.cstrike_CHudDeathNotice_Draw = 0x45E10;
 	addr.cstrike_CHudDeathNotice_MsgFunc_DeathMsg = 0x46190;
-	addr.cstrike_MsgFunc_DeathMsg = 0x45CB0;
-
-
-	// unused // p_enginefuncs_s = addr.hwDll + 0x18B9F0 // may be unused
-	// unused // p_globalvars_s = addr.hwDll + 0x7CD0E0 // may be unused
+	addr.cstrike_MsgFunc_DeathMsg = 0x45CB0;	
 }
-
-function afx_OnClientDllLoaded()
-{
-}
-
-addr.onClientDllLoaded = afx_OnClientDllLoaded;
 addr.onHwDllLoaded = afx_OnHwDllLoaded;
+delete afx_OnHwDllLoaded;
 
-delete afx_OnHwDllLoaded;
-delete afx_OnHwDllLoaded;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
