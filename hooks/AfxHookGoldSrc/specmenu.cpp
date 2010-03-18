@@ -17,7 +17,7 @@ REGISTER_CMD_FUNC(disable_specmenu)
 
 	if( !strcmp("ag",gamedir) )
 	{
-		usCheck = (unsigned short *)((unsigned char *)(GetModuleHandle("client.dll")) + HL_ADDR_GET(UpdateSpectatorPanel_checkjmp_ag_clofs));
+		usCheck = (unsigned short *) HL_ADDR_GET(UpdateSpectatorPanel_checkjmp_ag);
 	}
 	else if( !strcmp("tfc",gamedir) )
 	{
@@ -25,7 +25,7 @@ REGISTER_CMD_FUNC(disable_specmenu)
 	}
 	else if( !strcmp("ns",gamedir) )
 	{
-		usCheck = (unsigned short *)((unsigned char *)(GetModuleHandle("client.dll")) + HL_ADDR_GET(UpdateSpectatorPanel_checkjmp_ns_clofs));
+		usCheck = (unsigned short *) HL_ADDR_GET(UpdateSpectatorPanel_checkjmp_ns);
 	}
 	else if( !strcmp("valve",gamedir) )
 	{

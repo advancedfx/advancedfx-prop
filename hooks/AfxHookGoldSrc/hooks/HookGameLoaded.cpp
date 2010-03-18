@@ -170,13 +170,15 @@ void HookGameLoaded()
 	// Now is a good time to install OpenGl extensions:
 	Install_All_Gl_Extensions();
 
-	if(!g_Has_All_Gl_Extensions)
-		pEngfuncs->Con_Printf("MDT WARNING: Could not install all OpenGL extensions. Some features might not work.\n");
-
 	// Register commands amd Cvars (may not be used beforehand):
 	AfxRegisterCommands();
 
 	pEngfuncs->Con_Printf("Mirv Demo Tool %s\nBy Mirvin_Monkey 02/05/2004\n\n", __DATE__);
+
+	if(!g_Has_All_Gl_Extensions)
+		pEngfuncs->Con_Printf("MDT WARNING: Could not install all OpenGL extensions. Some features might not work.\n");
+
+	
 
 
 	screeninfo.iSize = sizeof(SCREENINFO);

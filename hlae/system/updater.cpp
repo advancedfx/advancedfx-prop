@@ -111,6 +111,14 @@ Updater::Updater()
 	m_CheckedNotificationTargets = gcnew System::Collections::Generic::LinkedList<UpdaterNotificationTarget ^>();
 	m_OwnGuid = gcnew Guid(HLAE_UPDATER_CURRENT_GUID);
 
+	m_OldGuid =
+#ifndef HLAE_UPDATER_OLD_GUID
+		null
+#else
+		gcnew Guid(HLAE_UPDATER_OLD_GUID)
+#endif
+	;
+
 	m_CheckThread = gcnew Thread(gcnew ThreadStart(this, &Updater::CheckWorker));
 	m_CheckThread->Name = "hlae Updater CheckThread";
 }
@@ -144,7 +152,7 @@ void Updater::CheckWorker()
 		try {
 			UpdateInfoHelper ^ helper = gcnew UpdateInfoHelper();
 			GetUpdateInfo(HLAE_UPDATER_URL, helper, HLAE_UPDATER_MAX_XML_REDIRECTS);
-			helper->IsUpdated = 0 != m_OwnGuid->CompareTo(helper->Guid);
+			helper->IsUpdated = m_OwnGuid->CompareTo(helper->Guid) && (!m_OldGuid || m_OldGuid->CompareTo(helper->Guid));
 
 			m_CheckResult = helper;
 		}

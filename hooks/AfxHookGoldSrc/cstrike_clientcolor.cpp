@@ -199,14 +199,8 @@ void InstallHook_GetClientColor( void )
 	{
 
 		const char *gamedir = pEngfuncs->pfnGetGameDirectory();
-		DWORD dwClientDLL = NULL;
 
-		if( !strcmp("cstrike",gamedir) )
-		{
-			dwClientDLL = (DWORD)GetModuleHandle("client.dll");
-			pEngfuncs->Con_DPrintf("0x%08x\n",dwClientDLL);
-		}
-		else
+		if( 0 != strcmp("cstrike", gamedir) )
 		{
 			pEngfuncs->Con_Printf( "Sorry, your mod (%s) is not supported for this command.\n",	gamedir );
 			return; // quit
@@ -224,27 +218,27 @@ void InstallHook_GetClientColor( void )
 		// hook GetClientColor:
 		if (HL_ADDR_GET(GetClientColor)!=NULL)
 		{
-			g_Hooked_GetClientColor = (GetClientColor_t) DetourApply((BYTE *)(dwClientDLL + HL_ADDR_GET(GetClientColor)), (BYTE *)Hooking_GetClientColor, (int)HL_ADDR_GET(DTOURSZ_GetClientColor));
+			g_Hooked_GetClientColor = (GetClientColor_t) DetourApply((BYTE *)HL_ADDR_GET(GetClientColor), (BYTE *)Hooking_GetClientColor, (int)HL_ADDR_GET(DTOURSZ_GetClientColor));
 			i_ok_cnt++;
 		}
 
 		// replace unkInlineClientColorA (Attacker frag coloring):
 		if (HL_ADDR_GET(unkInlineClientColorA) != NULL)
 		{
-			dwJmp_unkInlineClientColorA = (dwClientDLL + HL_ADDR_GET(unkInlineClientColorA)) + HL_ADDR_GET(SZ_unkInlineClientColorA);
+			dwJmp_unkInlineClientColorA = HL_ADDR_GET(unkInlineClientColorA) + HL_ADDR_GET(SZ_unkInlineClientColorA);
 
 			MdtMemBlockInfos mbis;
 
-			MdtMemAccessBegin( (void *)(dwClientDLL + HL_ADDR_GET(unkInlineClientColorA)), HL_ADDR_GET(SZ_unkInlineClientColorA), &mbis);
+			MdtMemAccessBegin( (void *)HL_ADDR_GET(unkInlineClientColorA), HL_ADDR_GET(SZ_unkInlineClientColorA), &mbis);
 
 			// make many NOPs:
-			memset( (void *)(dwClientDLL + HL_ADDR_GET(unkInlineClientColorA)), asmNOP, HL_ADDR_GET(SZ_unkInlineClientColorA));
+			memset( (void *)HL_ADDR_GET(unkInlineClientColorA), asmNOP, HL_ADDR_GET(SZ_unkInlineClientColorA));
 
 			// jmp on the naked guy:
 			unsigned char ucJMPE9 = asmJMP;
-			DWORD dwAddress = (DWORD)tour_unkInlineClientColorA - (DWORD)(dwClientDLL + HL_ADDR_GET(unkInlineClientColorA)) - JMP32_SZ;
-			memcpy( (void *)(dwClientDLL + HL_ADDR_GET(unkInlineClientColorA)), &ucJMPE9, sizeof(unsigned char));
-			memcpy( (char *)(dwClientDLL + HL_ADDR_GET(unkInlineClientColorA))+1, &dwAddress, sizeof(DWORD));
+			DWORD dwAddress = (DWORD)tour_unkInlineClientColorA - (DWORD)HL_ADDR_GET(unkInlineClientColorA) - JMP32_SZ;
+			memcpy( (void *)HL_ADDR_GET(unkInlineClientColorA), &ucJMPE9, sizeof(unsigned char));
+			memcpy( (char *)HL_ADDR_GET(unkInlineClientColorA) + 1, &dwAddress, sizeof(DWORD));
 
 			MdtMemAccessEnd(&mbis);
 
@@ -254,20 +248,20 @@ void InstallHook_GetClientColor( void )
 		// replace unkInlineClientColorV (Victim frag coloring):
 		if (HL_ADDR_GET(unkInlineClientColorV) != NULL)
 		{
-			dwJmp_unkInlineClientColorV = (dwClientDLL + HL_ADDR_GET(unkInlineClientColorV)) + HL_ADDR_GET(SZ_unkInlineClientColorV);
+			dwJmp_unkInlineClientColorV = HL_ADDR_GET(unkInlineClientColorV) + HL_ADDR_GET(SZ_unkInlineClientColorV);
 
 			MdtMemBlockInfos mbis;
 
-			MdtMemAccessBegin( (void *)(dwClientDLL + HL_ADDR_GET(unkInlineClientColorV)), HL_ADDR_GET(SZ_unkInlineClientColorV), &mbis);
+			MdtMemAccessBegin( (void *)HL_ADDR_GET(unkInlineClientColorV), HL_ADDR_GET(SZ_unkInlineClientColorV), &mbis);
 
 			// make many NOPs:
-			memset( (void *)(dwClientDLL + HL_ADDR_GET(unkInlineClientColorV)), asmNOP, HL_ADDR_GET(SZ_unkInlineClientColorV));
+			memset( (void *)HL_ADDR_GET(unkInlineClientColorV), asmNOP, HL_ADDR_GET(SZ_unkInlineClientColorV));
 
 			// jmp on the naked guy:
 			unsigned char ucJMPE9 = asmJMP;
-			DWORD dwAddress = (DWORD)tour_unkInlineClientColorV - (DWORD)(dwClientDLL + HL_ADDR_GET(unkInlineClientColorV)) - JMP32_SZ;
-			memcpy( (void *)(dwClientDLL + HL_ADDR_GET(unkInlineClientColorV)), &ucJMPE9, sizeof(unsigned char));
-			memcpy( (char *)(dwClientDLL + HL_ADDR_GET(unkInlineClientColorV))+1, &dwAddress, sizeof(DWORD));
+			DWORD dwAddress = (DWORD)tour_unkInlineClientColorV - (DWORD)HL_ADDR_GET(unkInlineClientColorV) - JMP32_SZ;
+			memcpy( (void *)HL_ADDR_GET(unkInlineClientColorV), &ucJMPE9, sizeof(unsigned char));
+			memcpy( (char *)HL_ADDR_GET(unkInlineClientColorV)+1, &dwAddress, sizeof(DWORD));
 
 			MdtMemAccessEnd(&mbis);
 

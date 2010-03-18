@@ -29,6 +29,7 @@ FARPROC WINAPI NewHwGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 
 	if (HIWORD(lpProcName))
 	{
+		static bool clientDllLoaded = false;
 #if 0
 		static bool bFirst = true;
 		static FILE *f1=NULL;
@@ -75,30 +76,23 @@ FARPROC WINAPI NewHwGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 		if (!lstrcmp(lpProcName, "wglMakeCurrent"))
 			return (FARPROC) &HlaeBcClt_wglMakeCurrent;
 
+
 		if (!lstrcmp(lpProcName, "CL_IsThirdPerson")) {
 			OldClientCL_IsThirdPerson = (CL_IsThirdPerson_t)nResult;
 			return (FARPROC) &NewClientCL_IsThirdPerson;
 		}
 
+		if (!clientDllLoaded && !lstrcmp(lpProcName, "Initialize") && GetProcAddress(hModule, "HUD_VidInit"))
+		{
+			clientDllLoaded = true;
+
+			HL_ADDR_SET(clientDll, (HlAddress_t)hModule);
+	
+			OnClientDllLoaded();
+		}
 	}
 
 	return nResult;
-}
-
-HMODULE WINAPI NewHwLoadLibraryA( LPCSTR lpLibFileName )
-{
-	if(StringEndsWith(lpLibFileName, "cl_dlls\\client.dll"))
-	{
-		HMODULE hClient = LoadLibraryA(lpLibFileName);
-
-		HL_ADDR_SET(clientDll, (HlAddress_t)hClient);
-
-		OnClientDllLoaded();
-
-		return hClient;
-	}
-
-	return LoadLibraryA( lpLibFileName );
 }
 
 void HookHw(HMODULE hHw)
@@ -117,7 +111,6 @@ void HookHw(HMODULE hHw)
 	bool bIcepOk = true;
 
 	if(!InterceptDllCall(hHw, "Kernel32.dll", "GetProcAddress", (DWORD) &NewHwGetProcAddress) ) bIcepOk = false;
-	if(!InterceptDllCall(hHw, "Kernel32.dll", "LoadLibraryA", (DWORD) &NewHwLoadLibraryA) ) bIcepOk = false;
 
 	// WindowAPI related:
 	if(!InterceptDllCall(hHw, "User32.dll", "CreateWindowExA", (DWORD) &HlaeBcClt_CreateWindowExA) ) bIcepOk = false;

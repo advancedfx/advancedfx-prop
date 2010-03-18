@@ -4,6 +4,18 @@
 <changelog>
 
 <release>
+<name>HLAE nightly</name>
+<version>2.2.12.3</version>
+<time>2010-03-18T10:02Z</time>
+<changes>
+<change type="updated">
+Varios internal changes and clean-ups.
+</change>
+</changes>
+</release>
+
+
+<release>
 <name>HLAE</name>
 <version>2.2.12.2</version>
 <time>2010-01-22T19:13Z</time>

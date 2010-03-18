@@ -137,7 +137,6 @@ BOOL cstrike_DeathMsg_GetItem()
 	// get next item (if any is left):
 	if(cstrike_DeathNotices_it != cstrike_DeathNotices.end()) {
 		((cstrike_DeathNoticeItem *)cstrike_rgDeathNoticeList)[0] = *cstrike_DeathNotices_it;
-		//memcpy(&((cstrike_DeathNoticeItem *)cstrike_rgDeathNoticeList)[0], &(*cstrike_DeathNotices_it), sizeof(cstrike_DeathNoticeItem));
 		((cstrike_DeathNoticeItem *)cstrike_rgDeathNoticeList)[1].iId = 0; // force marker
 
 		cstrike_DeathNotices_it++;
@@ -179,7 +178,6 @@ int __stdcall touring_cstrike_DeathMsg_Msg(DWORD *this_ptr, const char *pszName,
 
 			// Pick up the message:
 			cstrike_DeathNoticeItem di = ((cstrike_DeathNoticeItem *)cstrike_rgDeathNoticeList)[0];
-			//memcpy(&di, &((cstrike_DeathNoticeItem *)cstrike_rgDeathNoticeList)[0], sizeof(cstrike_DeathNoticeItem));
 
 			cstrike_DeathNotices.push_back(di);
 		}
@@ -263,21 +261,20 @@ __declspec(naked) void cstrike_DeathMsg_MsgHelper()
 
 
 
-bool Install_cstrike_DeatMsg() {
+bool Install_cstrike_DeatMsg()
+{
 	static bool bFirstRun = true;
 	if(!bFirstRun)
 		return true;
 
 	bFirstRun = false;
 
-	DWORD dwClientDLL = (DWORD)GetModuleHandle("client.dll");
-
 	// 1. Fill addresses:
 
-	cstrike_rgDeathNoticeList = dwClientDLL +(DWORD)HL_ADDR_GET(cstrike_rgDeathNoticeList);
+	cstrike_rgDeathNoticeList = (DWORD)HL_ADDR_GET(cstrike_rgDeathNoticeList);
 
-	DWORD dwDraw = dwClientDLL +(DWORD)HL_ADDR_GET(cstrike_CHudDeathNotice_Draw);
-	DWORD dwMsg = dwClientDLL +(DWORD)HL_ADDR_GET(cstrike_CHudDeathNotice_MsgFunc_DeathMsg);
+	DWORD dwDraw = (DWORD)HL_ADDR_GET(cstrike_CHudDeathNotice_Draw);
+	DWORD dwMsg = (DWORD)HL_ADDR_GET(cstrike_CHudDeathNotice_MsgFunc_DeathMsg);
 
 	cstrike_DeathMsg_Draw_Check = dwDraw + OFS_Draw_Check;
 	cstrike_DeathMsg_Draw_AfterCheck = dwDraw +OFS_Draw_AfterCheck;
@@ -288,7 +285,7 @@ bool Install_cstrike_DeatMsg() {
 	cstrike_DeathMsg_Msg_AfterCheck = dwMsg +OFS_Msg_AfterCheck;
 
 	// Detour Functions:
-	detoured_cstrike_MsgFunc_DeathMsg = (cstrike_MsgFunc_DeathMsg_t)DetourApply((BYTE *)((DWORD)dwClientDLL +(DWORD)HL_ADDR_GET(cstrike_MsgFunc_DeathMsg)), (BYTE *)touring_cstrike_MsgFunc_DeathMsg, DLEN_MsgFunc_DeathMsg);
+	detoured_cstrike_MsgFunc_DeathMsg = (cstrike_MsgFunc_DeathMsg_t)DetourApply((BYTE *)HL_ADDR_GET(cstrike_MsgFunc_DeathMsg), (BYTE *)touring_cstrike_MsgFunc_DeathMsg, DLEN_MsgFunc_DeathMsg);
 
 	detoured_cstrike_DeathMsg_Draw = (cstrike_DeathMsg_Draw_t)DetourClassFunc((BYTE *)dwDraw, (BYTE *)touring_cstrike_DeathMsg_Draw, DLEN_DeathMsg_Draw);
 	detoured_cstrike_DeathMsg_Msg = (cstrike_DeathMsg_Msg_t)DetourClassFunc((BYTE *)dwMsg, (BYTE *)touring_cstrike_DeathMsg_Msg, DLEN_DeathMsg_Msg);

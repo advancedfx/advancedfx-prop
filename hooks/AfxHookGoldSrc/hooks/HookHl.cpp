@@ -8,6 +8,7 @@
 
 #include "HookHw.h"
 
+#include "../hl_addresses.h"
 
 HMODULE WINAPI new_LoadLibraryA( LPCSTR lpLibFileName )
 {
@@ -30,7 +31,10 @@ HMODULE WINAPI new_LoadLibraryA( LPCSTR lpLibFileName )
 
 void HookHl()
 {
-	// Intercept LoadLibraryA:
-	if(!(HMODULE(WINAPI *)( LPCSTR )) InterceptDllCall(GetModuleHandle(NULL), "Kernel32.dll", "LoadLibraryA", (DWORD) &new_LoadLibraryA))
+	HMODULE hHl = GetModuleHandle(NULL);
+
+	HL_ADDR_SET(hlExe, (HlAddress_t)hHl);
+
+	if(!(HMODULE(WINAPI *)( LPCSTR )) InterceptDllCall(hHl, "Kernel32.dll", "LoadLibraryA", (DWORD) &new_LoadLibraryA))
 		MessageBox(0,"Base interception failed","MDT_ERROR",MB_OK|MB_ICONHAND);
 }

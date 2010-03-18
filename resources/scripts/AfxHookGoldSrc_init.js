@@ -100,65 +100,64 @@ function afx_OnHwDllLoaded()
 	addr.msg_readcount = addr.hwDll + 0xFD3D28;
 	addr.CL_ParseServerMessage_CmdRead = addr.CL_ParseServerMessage + 0x0E3;
 	addr.DTOURSZ_CL_ParseServerMessage_CmdRead = 0x07;
-
-
+	
 	//
-	// Various hooks
+	// other
 	//
 
 	// tfc DemoEdit campath fix:
-	addr.HudSpectator_tfc = 0x01909A00; //unchecked
-	addr.HudSpectator_cmp_tfc = addr.HudSpectator_tfc + 0x23; //unchecked
-
+	addr.HudSpectator_tfc = addr.hlExe + 0x509A00
+	addr.HudSpectator_cmp_tfc = addr.HudSpectator_tfc + 0x23;
+	
 	// UpdateSpectatorPanel overviewmode check jump (for HLTV menu removal):
-	addr.UpdateSpectatorPanel_checkjmp_ag_clofs = 0x028091; // Adrenaline-Gamer (ag), client.dll ofs //unchecked
-	addr.UpdateSpectatorPanel_checkjmp_tfc = 0x019439a1; // Team Fortress Classic (tfc) //unchecked
-	addr.UpdateSpectatorPanel_checkjmp_ns_clofs = 0x033F3D; // Natuaral Selection (ns), client.dll ofs //unchecked
-	addr.UpdateSpectatorPanel_checkjmp_valve = 0x01940221; //Half-Life (valve) //unchecked
-
-
-
+	addr.UpdateSpectatorPanel_checkjmp_tfc = addr.hlExe + 0x5439A1; // Team Fortress Classic (tfc)
+	addr.UpdateSpectatorPanel_checkjmp_valve = addr.hlExe + 0x540221; //Half-Life (valve)
+	
 	// unused // p_enginefuncs_s = addr.hwDll + 0x18B9F0 // may be unused
 	// unused // p_globalvars_s = addr.hwDll + 0x7CD0E0 // may be unused
 }
-addr.onClientDllLoaded = afx_OnClientDllLoaded;
-delete afx_OnClientDllLoaded;
+events.onHwDllLoaded = afx_OnHwDllLoaded;
+delete afx_OnHwDllLoaded;
 
 function afx_OnClientDllLoaded()
 {
-	iWasHere = 'Yes';
-	
 	//
 	// game: cstrike
 	//
 
 	// cstrike Team color hook:
-	// ALL OFFSETS ARE RELATIVE TO client.dll!
-	addr.GetClientColor = 0x45CD0; // function, used by head-up and overview i.e.
+	addr.GetClientColor = addr.clientDll + 0x45CD0; // function, used by head-up and overview i.e.
 	addr.DTOURSZ_GetClientColor = 0x0a;
-	addr.unkInlineClientColorA = 0x4629A; // inline, used to draw attacker color, also check hook
+	addr.unkInlineClientColorA = addr.clientDll + 0x4629A; // inline, used to draw attacker color, also check hook
 	addr.SZ_unkInlineClientColorA = 0x3E;
-	addr.unkInlineClientColorV = 0x46320; // inline, used to draw victim color, also check hook // todo
+	addr.unkInlineClientColorV = addr.clientDll + 0x46320; // inline, used to draw victim color, also check hook // todo
 	addr.SZ_unkInlineClientColorV = 0x3C;
 
 	// cstrike CrossHair fix related:
-	addr.CLOFS_UnkCstrikeCrosshairFn = 0x42EB0;
+	addr.UnkCstrikeCrosshairFn = addr.clientDll + 0x42EB0;
 	addr.DTOURSZ_UnkCstrikeCrosshairFn = 0x09; // at least 8 bytes req.
-	addr.CLOFS_UnkCstrikeCh_mul_fac = 0xCD450;
-	addr.CLOFS_UnkCstrikeCh_add_fac = 0xC3298;
+	addr.UnkCstrikeCh_mul_fac = addr.clientDll + 0xCD450;
+	addr.UnkCstrikeCh_add_fac = addr.clientDll + 0xC3298;
 
 	// cstrike EV_CreateSmoke:
-	addr.cstrike_EV_CreateSmoke_CLOFS = 0xa420;
-
+	addr.cstrike_EV_CreateSmoke = addr.clientDll + 0xa420;
 
 	// cstrike DeathMsg related (client.dll offsets):
-	addr.cstrike_rgDeathNoticeList = 0x121DF8;
-	addr.cstrike_CHudDeathNotice_Draw = 0x45E10;
-	addr.cstrike_CHudDeathNotice_MsgFunc_DeathMsg = 0x46190;
-	addr.cstrike_MsgFunc_DeathMsg = 0x45CB0;	
+	addr.cstrike_rgDeathNoticeList = addr.clientDll + 0x121DF8;
+	addr.cstrike_CHudDeathNotice_Draw = addr.clientDll + 0x45E10;
+	addr.cstrike_CHudDeathNotice_MsgFunc_DeathMsg = addr.clientDll + 0x46190;
+	addr.cstrike_MsgFunc_DeathMsg = addr.clientDll + 0x45CB0;
+	
+	//
+	// other games
+	//
+	
+	// UpdateSpectatorPanel overviewmode check jump (for HLTV menu removal):
+	addr.UpdateSpectatorPanel_checkjmp_ag = addr.clientDll + 0x028091; // Adrenaline-Gamer (ag)
+	addr.UpdateSpectatorPanel_checkjmp_ns = addr.clientDll + 0x033F3D; // Natuaral Selection (ns)
 }
-addr.onHwDllLoaded = afx_OnHwDllLoaded;
-delete afx_OnHwDllLoaded;
+events.onClientDllLoaded = afx_OnClientDllLoaded;
+delete afx_OnClientDllLoaded;
 
 
 ////////////////////////////////////////////////////////////////////////////////
