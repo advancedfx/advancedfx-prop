@@ -337,6 +337,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\MemoryStore.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\MemoryStore.h"
+					>
+				</File>
+				<File
 					RelativePath=".\mirv_commands.cpp"
 					>
 				</File>
