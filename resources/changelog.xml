@@ -5,11 +5,11 @@
 
 <release>
 <name>HLAE nightly</name>
-<version>2.2.12.3</version>
-<time>2010-03-18T10:02Z</time>
+<version>2.2.12.4</version>
+<time>2010-03-23T03:23Z</time>
 <changes>
 <change type="updated">
-Varios internal changes and clean-ups.
+Varios internal changes.
 </change>
 </changes>
 </release>

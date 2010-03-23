@@ -13,7 +13,14 @@ void APIENTRY NewGlClear(GLbitfield mask);
 void APIENTRY NewGlViewport(GLint x, GLint y, GLsizei width, GLsizei height);
 
 void APIENTRY NewGlFrustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble zNear, GLdouble zFar);
+
 void APIENTRY NewGlBlendFunc (GLenum sfactor, GLenum dfactor);
 
 extern BOOL (APIENTRY *OldWglSwapBuffers)(HDC hDC);
 BOOL APIENTRY NewWglSwapBuffers(HDC hDC);
+
+HGLRC WINAPI NewWglCreateContext(HDC);
+
+BOOL WINAPI NewWglDeleteContext(HGLRC hGlRc);
+
+BOOL WINAPI NewWglMakeCurrent(HDC, HGLRC);

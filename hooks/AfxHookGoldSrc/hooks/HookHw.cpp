@@ -5,21 +5,28 @@
 #include <hooks/shared/detours.h>
 
 #include "HookHw.h"
-#include "OpenGlHooks.h"
-#include "../HltvFix.h"
+#include "OpenGl32Hooks.h"
+#include "gdi32Hooks.h"
+#include "user32Hooks.h"
 
+#include "../HltvFix.h"
 #include "../hl_addresses.h"
 #include "../mirv_scripting.h"
-
-#include "../basecomClient.h"
-
 #include "../forceres.h"
-
 
 
 struct cl_enginefuncs_s * pEngfuncs		= (struct cl_enginefuncs_s *)0;
 struct engine_studio_api_s * pEngStudio	= (struct engine_studio_api_s *)0;
 struct playermove_s * ppmove			= (struct playermove_s *)0;
+
+typedef void (* Host_Frame_t)(float time);
+
+Host_Frame_t DetouredHost_Frame;
+
+void TouringHost_Frame (float time)
+{
+	DetouredHost_Frame(time);
+}
 
 
 FARPROC WINAPI NewHwGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
@@ -70,11 +77,11 @@ FARPROC WINAPI NewHwGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 		}
 
 		if (!lstrcmp(lpProcName, "wglCreateContext"))
-			return (FARPROC) &HlaeBcClt_wglCreateContext;
+			return (FARPROC) &NewWglCreateContext;
 		if (!lstrcmp(lpProcName, "wglDeleteContext"))
-			return (FARPROC) &HlaeBcClt_wglDeleteContext;
+			return (FARPROC) &NewWglDeleteContext;
 		if (!lstrcmp(lpProcName, "wglMakeCurrent"))
-			return (FARPROC) &HlaeBcClt_wglMakeCurrent;
+			return (FARPROC) &NewWglMakeCurrent;
 
 
 		if (!lstrcmp(lpProcName, "CL_IsThirdPerson")) {
@@ -97,30 +104,32 @@ FARPROC WINAPI NewHwGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 
 void HookHw(HMODULE hHw)
 {
+	bool bIcepOk = true;
+
 	HL_ADDR_SET(hwDll, (HlAddress_t)hHw);
 
 	OnHwDllLoaded();
 
-	// update unregistered local copies manually:
-
+	// hw.dll:
+	if(!(DetouredHost_Frame = (Host_Frame_t)DetourApply((BYTE *)HL_ADDR_GET(Host_Frame), (BYTE *)TouringHost_Frame, (int)HL_ADDR_GET(DTOURSZ_Host_Frame)))) bIcepOk = false;
 	pEngfuncs		= (cl_enginefuncs_s*)HL_ADDR_GET(p_cl_enginefuncs_s);
 	pEngStudio	= (engine_studio_api_s*)HL_ADDR_GET(p_engine_studio_api_s);
 	ppmove			= (playermove_s*)HL_ADDR_GET(p_playermove_s);
 
-
-	bool bIcepOk = true;
-
+	// Kernel32.dll:
 	if(!InterceptDllCall(hHw, "Kernel32.dll", "GetProcAddress", (DWORD) &NewHwGetProcAddress) ) bIcepOk = false;
 
-	// WindowAPI related:
-	if(!InterceptDllCall(hHw, "User32.dll", "CreateWindowExA", (DWORD) &HlaeBcClt_CreateWindowExA) ) bIcepOk = false;
-	if(!InterceptDllCall(hHw, "User32.dll", "DestroyWindow", (DWORD) &HlaeBcClt_DestroyWindow) ) bIcepOk = false;
-	if(!InterceptDllCall(hHw, "User32.dll", "RegisterClassA", (DWORD) &HlaeBcClt_RegisterClassA) ) bIcepOk = false;
-	if(!InterceptDllCall(hHw, "User32.dll", "SetWindowPos", (DWORD) &HlaeBcClt_SetWindowPos) ) bIcepOk = false;
-	if(!InterceptDllCall(hHw, "gdi32.dll", "ChoosePixelFormat", (DWORD) &HlaeBcClt_ChoosePixelFormat) ) bIcepOk = false;
-	if(!InterceptDllCall(hHw, "User32.dll", "ReleaseDC", (DWORD) &HlaeBcClt_ReleaseDC) ) bIcepOk = false;
+	// user32.dll:
+	if(!InterceptDllCall(hHw, "user32.dll", "CreateWindowExA", (DWORD) &NewCreateWindowExA) ) bIcepOk = false;
+	if(!InterceptDllCall(hHw, "user32.dll", "DestroyWindow", (DWORD) &NewDestroyWindow) ) bIcepOk = false;
+	if(!InterceptDllCall(hHw, "user32.dll", "RegisterClassA", (DWORD) &NewRegisterClassA) ) bIcepOk = false;
+	if(!InterceptDllCall(hHw, "user32.dll", "SetWindowPos", (DWORD) &NewSetWindowPos) ) bIcepOk = false;
 
-	if( !bIcepOk ) MessageBox(0,"One or more interceptions failed","MDT_ERROR",MB_OK|MB_ICONHAND);
+	// gdi32.dll:
+	if(!InterceptDllCall(hHw, "gdi32.dll", "ChoosePixelFormat", (DWORD) &NewChoosePixelFormat) ) bIcepOk = false;
+
+	if( !bIcepOk )
+		MessageBox(0,"One or more interceptions failed","MDT_ERROR",MB_OK|MB_ICONHAND);
 
 	HandleForceRes();
 }

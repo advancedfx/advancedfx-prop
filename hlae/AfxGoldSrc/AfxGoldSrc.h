@@ -11,14 +11,11 @@
 
 #include <system/config.h>
 
+#include "AfxGoldSrcComServer.h"
+
 using namespace System;
 using namespace hlae;
 
-enum class AfxGoldSrcRenderMode {
-	Default,
-	FrameBufferObject,
-	MemoryDC
-};
 
 ref class AfxGoldSrc;
 
@@ -169,8 +166,6 @@ private:
 
 // AfxGoldSrc //////////////////////////////////////////////////////////////////
 
-class PipeComServer;
-
 ref class AfxGoldSrc
 {
 public:
@@ -183,7 +178,8 @@ public:
 	/// <retruns> Singelton instance if present, otherwise creates a new one. </returns>
 	static AfxGoldSrc ^ GetOrCreate();
 
-	bool Launch();
+	bool Launch(System::Windows::Forms::Panel ^ gamePanel);
+	void Stop();
 
 	//
 	// Properties:
@@ -193,12 +189,8 @@ public:
 	property AfxGoldSrcSettings ^ Settings { AfxGoldSrcSettings ^ get() { return m_Settings; } }
 
 private:
-	PipeComServer * m_PipeComServer;
-	System::IntPtr m_RecvPipeReadHandle;
-	System::IntPtr  m_RecvPipeWriteHandle;
+	AfxGoldSrcComServer ^ m_ComServer;
 	bool m_Running;
-	System::IntPtr m_SendPipeReadHandle;
-	System::IntPtr  m_SendPipeWriteHandle;
 	AfxGoldSrcSettings ^ m_Settings;
 	static AfxGoldSrc ^ m_SingeltonInstance;
 };

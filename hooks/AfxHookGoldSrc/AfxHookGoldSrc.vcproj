@@ -189,19 +189,19 @@
 				Name="AfxHookGoldSrc"
 				>
 				<File
+					RelativePath=".\AfxGoldSrcComClient.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\AfxGoldSrcComClient.h"
+					>
+				</File>
+				<File
 					RelativePath=".\aiming.cpp"
 					>
 				</File>
 				<File
 					RelativePath=".\aiming.h"
-					>
-				</File>
-				<File
-					RelativePath=".\basecomClient.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\basecomClient.h"
 					>
 				</File>
 				<File
@@ -546,6 +546,14 @@
 					Name="hooks"
 					>
 					<File
+						RelativePath=".\hooks\gdi32Hooks.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\hooks\gdi32Hooks.h"
+						>
+					</File>
+					<File
 						RelativePath=".\hooks\HookGameLoaded.cpp"
 						>
 					</File>
@@ -570,11 +578,19 @@
 						>
 					</File>
 					<File
-						RelativePath=".\hooks\OpenGlHooks.cpp"
+						RelativePath=".\hooks\OpenGl32Hooks.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\hooks\OpenGlHooks.h"
+						RelativePath=".\hooks\OpenGl32Hooks.h"
+						>
+					</File>
+					<File
+						RelativePath=".\hooks\user32Hooks.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\hooks\user32Hooks.h"
 						>
 					</File>
 				</Filter>
@@ -639,7 +655,7 @@
 				Name="com"
 				>
 				<File
-					RelativePath="..\..\shared\com\basecom.h"
+					RelativePath="..\..\shared\com\AfxGoldSrcComDefs.h"
 					>
 				</File>
 				<File

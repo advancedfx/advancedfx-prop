@@ -184,7 +184,7 @@ DWORD WINAPI LoaderThread(void *p)
 		g_opts_exe,
 		NULL,
 		NULL,
-		FALSE,
+		TRUE, // inherit handles
 			//CREATE_DEFAULT_ERROR_MODE|
 			CREATE_NEW_PROCESS_GROUP|
 			DETACHED_PROCESS|

@@ -98,4 +98,52 @@ REGISTER_DEBUGCMD_FUNC(list_addresses) {
 	pEngfuncs->Con_Printf("%u / %u were NULL.\n", zcnt, cnt);
 }
 
+/*
+
+
+REGISTER_DEBUGCMD_FUNC(debug_devicecontext)
+{
+	HDC hdcResult;
+
+	hdcResult=GetDC(g_HL_MainWindow);
+
+	PIXELFORMATDESCRIPTOR *pPfd = new PIXELFORMATDESCRIPTOR;
+
+	if (DescribePixelFormat( hdcResult, GetPixelFormat(hdcResult),sizeof(PIXELFORMATDESCRIPTOR),pPfd))
+	{
+
+		pEngfuncs->Con_Printf("DescribePixelFormat says:\nnSize:%u\nnVersion:%u\ndwFlags:0x%08x\niPixelType:%i\ncColorBits:%u\ncRedBits:%u\ncRedShift:%u\ncGreenBits:%u\ncGreenShift:%u\ncBlueBits:%u\ncBlueShift:%u\ncAlphaBits:%u\ncAlphaShift:%u\ncAccumBits:%u\ncAccumRedBits:%u\ncAccumGreenBits:%u\ncAccumBlueBits:%u\ncAccumAlphaBits:%u\ncDepthBits:%u\ncStencilBits:%u\ncAuxBuffers:%u\niLayerType:%i\nbReserved:%u\ndwLayerMask:%u\ndwVisibleMask:%u\ndwDamageMask:%u",
+			pPfd->nSize, pPfd->nVersion, pPfd->dwFlags, pPfd->iPixelType,
+			pPfd->cColorBits, pPfd->cRedBits, pPfd->cRedShift, pPfd->cGreenBits,
+			pPfd->cGreenShift, pPfd->cBlueBits, pPfd->cBlueShift, pPfd->cAlphaBits,
+			pPfd->cAlphaShift, pPfd->cAccumBits, pPfd->cAccumRedBits, pPfd->cAccumGreenBits,
+			pPfd->cAccumBlueBits, pPfd->cAccumAlphaBits, pPfd->cDepthBits, pPfd->cStencilBits,
+			pPfd->cAuxBuffers, pPfd->iLayerType, pPfd->bReserved, pPfd->dwLayerMask,
+			pPfd->dwVisibleMask, pPfd->dwDamageMask);
+
+	} else pEngfuncs->Con_Printf("DescribePixelFormat failed");
+
+	delete pPfd;
+
+	ReleaseDC(g_HL_MainWindow,hdcResult);
+}
+
+
+
+REGISTER_DEBUGCMD_FUNC(debug_wndproc_isontop)
+{
+	if( Hooking_WndProc != (WNDPROC)GetWindowLong( (HWND)g_HL_MainWindow, GWL_WNDPROC ))
+		pEngfuncs->Con_Printf("S.th. hooked us!\n");
+	else
+		pEngfuncs->Con_Printf("We seem to be at top.\n");
+}
+
+REGISTER_DEBUGCMD_FUNC(debug_wndproc_rehook)
+{
+	SetWindowLongPtr( (HWND)g_HL_MainWindow, GWL_WNDPROC, (LONG)Hooking_WndProc );
+}
+
+
+*/
+
 

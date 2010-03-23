@@ -27,8 +27,6 @@ AfxGoldSrc::AfxGoldSrc()
 	;
 	m_SingeltonInstance = this;
 
-	m_PipeComServer = new PipeComServer(0);
-
 	m_Running = false;
 	m_Settings = gcnew AfxGoldSrcSettings(this);
 }
@@ -36,8 +34,7 @@ AfxGoldSrc::AfxGoldSrc()
 
 AfxGoldSrc::~AfxGoldSrc()
 {
-	delete m_PipeComServer;
-	m_PipeComServer = 0;
+	Stop();
 
 	m_SingeltonInstance = nullptr;
 }
@@ -56,7 +53,12 @@ AfxGoldSrc ^ AfxGoldSrc::GetOrCreate() {
 }
 
 
-bool AfxGoldSrc::Launch() {
+bool AfxGoldSrc::Launch(System::Windows::Forms::Panel ^ gamePanel)
+{
+	Stop();
+
+	m_ComServer = gcnew AfxGoldSrcComServer();
+
 	String ^cmds, ^s1;
 	array<System::Diagnostics::Process^> ^ procs;
 	
@@ -94,27 +96,12 @@ bool AfxGoldSrc::Launch() {
 	// pipe handles:
 	cmds = String::Concat(cmds,
 		" -afxpipes ",
-		m_SendPipeReadHandle.ToString(),
+		m_ComServer->ClientRecvPipeHandle.ToString(),
 		",",
-		m_RecvPipeWriteHandle.ToString()
+		m_ComServer->ClientSendPipeHandle.ToString()
 	);
 
 	// advanced
-
-	if( m_Settings->Alpha8 )
-		cmds = String::Concat( cmds, " -mdtalpha8" );
-
-	switch(m_Settings->RenderMode) {
-	case AfxGoldSrcRenderMode::FrameBufferObject:
-		cmds = String::Concat( cmds, " -mdtrender fbo" );
-		break;
-	case AfxGoldSrcRenderMode::MemoryDC:
-		cmds = String::Concat( cmds, " -mdtrender memdc" );
-		break;
-	}
-
-	if(m_Settings->OptWindowVisOnRec)
-		cmds = String::Concat( cmds, " -mdtoptvis" );
 
 	// custom command line
 
@@ -125,15 +112,37 @@ bool AfxGoldSrc::Launch() {
 	//
 	// Launch:
 
+//	System::Windows::Forms::MessageBox::Show(cmds);
+
 	m_Running = CustomLoader(
 		String::Concat(System::Windows::Forms::Application::StartupPath, "\\AfxHookGoldSrc.dll"),
 		m_Settings->HalfLifePath,
 		cmds
 	);
 
+	if(m_Running)
+	{
+		m_ComServer->Start(
+			m_Settings->FullScreen,
+			m_Settings->Alpha8 ,
+			gamePanel,
+			m_Settings->RenderMode,
+			m_Settings->OptWindowVisOnRec
+		);
+	}
+
 	return m_Running;
 }
 
+
+void AfxGoldSrc::Stop()
+{
+	if(nullptr != m_ComServer)
+	{
+		delete m_ComServer;
+		m_ComServer = nullptr;
+	}
+}
 
 // AfxGoldSrcSettings //////////////////////////////////////////////////////////
 

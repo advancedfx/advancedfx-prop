@@ -28,9 +28,10 @@ namespace hlae {
 	ref class Launcher : public System::Windows::Forms::Form
 	{
 	public:
-		Launcher(CGlobals ^Globals)
+		Launcher(CGlobals ^Globals, System::Windows::Forms::Panel ^ gamePanel)
 		{
 			this->Globals = Globals;
+			this->gamePanel = gamePanel;
 
 			InitializeComponent();
 
@@ -62,6 +63,7 @@ namespace hlae {
 		CGlobals ^Globals;
 		System::Void ReadFromConfig(CfgLauncher ^ cfg);
 		System::Void WriteToConfig(CfgLauncher ^ cfg);
+		System::Windows::Forms::Panel ^ gamePanel;
 
 
 	private: System::Windows::Forms::GroupBox^  groupBoxGame;

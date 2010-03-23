@@ -73,10 +73,12 @@ public ref class HlaeRemote_1 : public MarshalByRefObject, public IHlaeRemote_1
 {
 private:
 	CGlobals ^globals;
+	System::Windows::Forms::Panel ^ gamePanel;
+
 public:
-	HlaeRemote_1( CGlobals ^globals )
+	HlaeRemote_1( CGlobals ^globals, System::Windows::Forms::Panel ^ gamePanel )
 	{
-		if( this->globals ) return;
+		this->gamePanel = gamePanel;
 		this->globals = globals;
 	}
 
@@ -109,7 +111,7 @@ public:
 
 		AfxGoldSrc ^ ag = AfxGoldSrc::GetOrCreate();
 		ag->Settings->CopyFrom(cfg);
-		return ag->Launch();
+		return ag->Launch(gamePanel);
 	}
 };
 
@@ -127,7 +129,7 @@ private:
 	HlaeRemote_1 ^hlaeRemote_1;
 	ObjRef ^ref_HlaeRemote_1;
 public:
-	HlaeRemoting( CGlobals ^globals )
+	HlaeRemoting( CGlobals ^globals, System::Windows::Forms::Panel ^ gamePanel )
 	{
 		this->globals = globals;
 
@@ -136,7 +138,7 @@ public:
 		//
 		//	Init global scope class that will be accessed by the remote:
 
-		hlaeRemote_1 = gcnew HlaeRemote_1( this->globals );
+		hlaeRemote_1 = gcnew HlaeRemote_1( this->globals, gamePanel );
 		
 		//
 		//	Start remoting server:

@@ -10,6 +10,8 @@
 
 #include "InitScript.h"
 
+#include "AfxGoldSrcComClient.h"
+
 #include "mirv_scripting.h"
 
 #include <string>

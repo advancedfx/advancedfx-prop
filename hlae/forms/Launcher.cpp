@@ -21,7 +21,7 @@ System::Void Launcher::buttonOK_Click(System::Object^  sender, System::EventArgs
 	AfxGoldSrc ^ ag = AfxGoldSrc::GetOrCreate();
 	ag->Settings->CopyFrom(cfg);
 
-	if(!ag->Launch())
+	if(!ag->Launch(gamePanel))
 		MessageBox::Show(
 			"Launching failed.",
 			"Error",

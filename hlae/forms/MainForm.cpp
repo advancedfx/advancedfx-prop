@@ -4,8 +4,6 @@
 #include "Launcher.h"
 #include <system/debug.h>
 #include <tools/demotools/demotoolswizard.h>
-#include <system/BasecomServer.h>
-
 
 
 using namespace hlae;
@@ -28,12 +26,9 @@ void MainForm::MyCreate()
 		Updater::Singelton->StartCheck();
 	}
 
-	hlaeBaseComServer = new ::CHlaeBcServer( this->panelGame );
-
-
 	// start up public remoting system (if requested):
 	if( System::Environment::CommandLine->Contains( "-ipcremote" ) )
-		remotingSystem = gcnew HlaeRemoting( Globals );
+		remotingSystem = gcnew HlaeRemoting( Globals, this->panelGame );
 
 	hlaeConsole->WriteLn(
 		String::Concat("Version GUID: ", Updater::Singelton->OwnGuid->ToString())
@@ -45,8 +40,6 @@ void MainForm::MyDestroy()
 	// shutdown remoting system (if it was started):
 	if( remotingSystem )
 		delete remotingSystem;
-
-	delete hlaeBaseComServer;
 
 	Updater::Singelton->EndCheckedNotification(m_UpdaterCheckedNotification);
 	delete m_UpdaterCheckedNotification;
@@ -85,7 +78,7 @@ void MainForm::UpdaterChecked(System::Object ^sender, IUpdaterCheckResult ^check
 
 System::Void MainForm::launchToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e)
 {
-	hlae::Launcher ^launcher = gcnew hlae::Launcher(Globals);
+	hlae::Launcher ^launcher = gcnew hlae::Launcher(Globals, panelGame);
 
 	launcher->ShowDialog(this);
 }

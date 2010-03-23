@@ -357,14 +357,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\system\BasecomServer.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\system\BasecomServer.h"
-					>
-				</File>
-				<File
 					RelativePath=".\system\config.h"
 					>
 				</File>
@@ -522,6 +514,14 @@
 					RelativePath=".\AfxGoldSrc\AfxGoldSrc.h"
 					>
 				</File>
+				<File
+					RelativePath=".\AfxGoldSrc\AfxGoldSrcComServer.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\AfxGoldSrc\AfxGoldSrcComServer.h"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<Filter
@@ -531,7 +531,7 @@
 				Name="com"
 				>
 				<File
-					RelativePath="..\shared\com\basecom.h"
+					RelativePath="..\shared\com\AfxGoldSrcComDefs.h"
 					>
 				</File>
 				<File

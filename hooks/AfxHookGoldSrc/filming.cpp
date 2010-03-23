@@ -2,7 +2,8 @@
 
 #include <hlsdk.h>
 
-
+#include "AfxGoldSrcComClient.h"
+#include "hooks/user32Hooks.h"
 #include "supportrender.h"
 #include "cmdregister.h"
 
@@ -17,8 +18,6 @@
 
 #include "hl_addresses.h" // we want to access addressese (i.e. R_RenderView)
 #include <hooks/shared/detours.h> // we want to use Detourapply
-
-#include "basecomclient.h" // OnFilmingStart(), OnFilmingStop()
 
 #include "RawOutput.h"
 
@@ -978,12 +977,16 @@ void Filming::Start()
 
 	ScriptEvent_OnRecordStarting();
 
+	g_AfxGoldSrcComClient.OnRecordStarting();
+
+	if(g_AfxGoldSrcComClient.GetOptimizeCaptureVis())
+		UndockGameWindowForCapture();
+
 	pEngfuncs->Con_Printf("Started recording to \"%s\".\n", m_TakeDir.c_str());
 
 	m_fps = max(movie_fps->value,1.0f);
 	m_time = 0;
 
-	HlaeBc_OnFilmingStart(); // inform Hlae Server GUI
 	if (_pSupportRender)
 		_pSupportRender->hlaeOnFilmingStart();	
 
@@ -1132,8 +1135,6 @@ void Filming::Stop()
 	if (_pSupportRender)
 		_pSupportRender->hlaeOnFilmingStop();
 
-	HlaeBc_OnFilmingStop(); // inform Hlae Server GUI
-
 	// stop camera motion export:
 	g_CamExport.EndFiles();
 	
@@ -1168,6 +1169,11 @@ void Filming::Stop()
 
 	// in case our code is broken [again] we better also reset the mask here: : )
 	glColorMask(TRUE, TRUE, TRUE, TRUE);
+
+	if(g_AfxGoldSrcComClient.GetOptimizeCaptureVis())
+		RedockGameWindow();
+
+	g_AfxGoldSrcComClient.OnRecordEnded();
 
 	ScriptEvent_OnRecordEnded();
 }

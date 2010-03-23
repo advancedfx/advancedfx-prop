@@ -102,7 +102,6 @@ namespace hlae {
 
 	private:
 		UpdaterNotificationTarget ^ m_UpdaterCheckedNotification;
-		CHlaeBcServer *hlaeBaseComServer;
 		HlaeRemoting ^remotingSystem;
 		CGlobals ^Globals;
 		FileDebugListener ^debugFile;
