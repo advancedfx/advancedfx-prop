@@ -15,7 +15,7 @@ typedef void * StoreValue;
 class IStoreFactory abstract
 {
 public:
-	virtual StoreValue ContructValue() abstract = 0;
+	virtual StoreValue ConstructValue() abstract = 0;
 	virtual void DestructValue(StoreValue value) abstract = 0;
 };
 
@@ -42,7 +42,7 @@ class FrequentStore :
 {
 public:
 	FrequentStore(IStoreFactory * factory);
-	~FrequentStore();
+	virtual ~FrequentStore();
 
 	virtual IStoreItem * Aquire(void);
 

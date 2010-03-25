@@ -5,11 +5,14 @@
 
 <release>
 <name>HLAE nightly</name>
-<version>2.2.12.4</version>
-<time>2010-03-23T03:23Z</time>
+<version>2.2.13.0</version>
+<time>2010-03-25T21:53Z</time>
 <changes>
 <change type="updated">
-Varios internal changes.
+Various internal changes, including the sampling system (no new features).
+</change>
+<change type="removed">
+Removed __mirv_sample_colorh.
 </change>
 </changes>
 </release>

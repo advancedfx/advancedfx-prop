@@ -14,12 +14,10 @@ Description : see mdt_gltools.h
 #include "supportrender.h" // for switching rendering target (important for recording)
 #include "mdt_media.h" // We Mant RAWGLPICS and other media interfaces
 #include "film_sound.h"
-#include "sampling.h"
+#include "EasySampler.h"
 
 #include <list>
 #include <string>
-
-using namespace hlae::sampler;
 
 
 //#include "eiface_mdt.h"
@@ -126,7 +124,7 @@ public:
 	void SetStereoOfs(float left_and_rightofs); // will be used in stereo mode to displace the camera left and right, suggested values are between 1.0 - 1.4, value should be positive, otherewise you would switch left and right cam
 
 
-	bool OnPrintFrame(unsigned long id, void *prgbdata, int iWidht, int iHeight);
+	void OnPrintFrame(unsigned char * data, int number);
 
 	void OnR_RenderView(Vector & vieworg, Vector & viewangles);
 
@@ -202,8 +200,7 @@ private:
 	{
 		bool bEnable;
 		float out_fps;
-		BGRSampler *bgrsampler;
-		CSampleMaster *samplemaster;
+		EasyBgrSampler * sampler;
 	} m_sampling;
 
 	// framing system:

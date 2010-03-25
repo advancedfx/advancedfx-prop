@@ -104,12 +104,14 @@ FrequentStoreManager::~FrequentStoreManager()
 
 IStoreItem * FrequentStoreManager::Aquire(void)
 {
-	if(!FreeItem)
-		new FrequentStoreItem(this);
+	FrequentStoreItem * item = FreeItem;
 
-	FreeItem->Aquire();
+	if(!item)
+		item = new FrequentStoreItem(this);
 
-	return FreeItem;
+	item->Aquire();
+
+	return item;
 }
 
 IStoreFactory *  FrequentStoreManager::GetFactory()
@@ -133,7 +135,7 @@ FrequentStoreItem::FrequentStoreItem(FrequentStoreManager * manager)
 	NextFree = 0;
 	m_Aquired = false;
 	m_Manager = manager;
-	m_Value = manager->GetFactory()->ContructValue();
+	m_Value = manager->GetFactory()->ConstructValue();
 
 	manager->ItemCount++;
 	Enlist();

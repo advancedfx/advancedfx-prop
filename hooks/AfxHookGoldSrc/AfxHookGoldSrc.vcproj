@@ -265,6 +265,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\EasySampler.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\EasySampler.h"
+					>
+				</File>
+				<File
 					RelativePath=".\filetools.cpp"
 					>
 				</File>
@@ -390,14 +398,6 @@
 				</File>
 				<File
 					RelativePath=".\resource.h"
-					>
-				</File>
-				<File
-					RelativePath=".\sampling.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\sampling.h"
 					>
 				</File>
 				<File

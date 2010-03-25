@@ -14,8 +14,6 @@
 
 #include "filming.h"
 
-#include "sampling.h"
-
 #include "hl_addresses.h" // we want to access addressese (i.e. R_RenderView)
 #include <hooks/shared/detours.h> // we want to use Detourapply
 
@@ -26,8 +24,6 @@
 #include "mirv_Scripting.h"
 
 #include "filetools.h"
-
-using namespace hlae::sampler;
 
 extern cl_enginefuncs_s *pEngfuncs;
 extern engine_studio_api_s *pEngStudio;
@@ -43,7 +39,6 @@ REGISTER_DEBUGCVAR(depth_slice_lo, "0.0", 0);
 REGISTER_DEBUGCVAR(depth_slice_hi, "1.0", 0);
 REGISTER_DEBUGCVAR(gl_force_noztrick, "1", 0);
 REGISTER_DEBUGCVAR(sample_addoverlap, "0", 0);
-REGISTER_DEBUGCVAR(sample_colorh, "0", 0);
 REGISTER_DEBUGCVAR(sample_ffunc, "0", 0);
 REGISTER_DEBUGCVAR(sample_smethod, "1", 0);
 REGISTER_DEBUGCVAR(print_frame, "0", 0);
@@ -927,9 +922,9 @@ bool Filming::OnHudEndEvnet()
 }
 
 
-bool OnPrintFrame(unsigned long id, void *prgbdata, int iWidht, int iHeight)
+void OnPrintFrame(unsigned char * data, int number)
 {
-	return g_Filming.OnPrintFrame(id,prgbdata, iWidht, iHeight);
+	g_Filming.OnPrintFrame(data, number);
 }
 
 void Filming::setScreenSize(GLint w, GLint h)
@@ -1105,23 +1100,18 @@ void Filming::Start()
 		m_sampling.out_fps = max(movie_fps->value,1.0f);
 
 		float overlap=sample_addoverlap->value;
-		// don't add if( 0!= sample_ffunc->value ) overlap += 0.5; // Gauss active, overlap a bit
 
-		m_sampling.bgrsampler = new BGRSampler(
+		float frameDuration = 1.0f / m_sampling.out_fps; 
+
+		m_sampling.sampler = new EasyBgrSampler(
 			m_iWidth,
-			m_iHeight,
-			0 == sample_smethod->value ? BGRSampler::SM_INT_RECTANGLE : BGRSampler::SM_INT_TRAPEZOID,
-			0 == sample_colorh->value ? BGRSampler::CM_RGB : (1 == sample_colorh->value ? BGRSampler::CM_AVERAGE : BGRSampler::CM_SRGB_LUMA),
-			0 == sample_ffunc->value ? BGRSampler::FF_RECTANGLE : BGRSampler::FF_GAUSS,
-			&::OnPrintFrame
-		);
-		m_sampling.samplemaster = new CSampleMaster();
-		m_sampling.samplemaster->BeginSampling(
-			m_sampling.bgrsampler,
-			m_time,
-			m_sampling.out_fps,
-			-overlap,
-			+overlap
+			m_iCropHeight,
+			movie_bmp->value ? 4 : 1,
+			0 == sample_smethod->value ? EasyBgrSampler::ESM_Rectangle : EasyBgrSampler::ESM_Trapezoid,
+			0 == sample_ffunc->value ? EasyBgrSampler::RectangleWeighter : EasyBgrSampler::GaussWeighter,
+			-(float)overlap * frameDuration, +(float)overlap * frameDuration,
+			&::OnPrintFrame,
+			frameDuration
 		);
 	}
 
@@ -1148,15 +1138,9 @@ void Filming::Stop()
 	// shutdown sampling system if it was enabled:
 	if( m_sampling.bEnable )
 	{
-		pEngfuncs->Con_DPrintf("pre-finshed trackers:\n\tsamplemaster: %i\n\tframemaster: %i\n",m_sampling.samplemaster->GetTracker(),m_sampling.bgrsampler->GetTracker());
-		m_sampling.samplemaster->EndSampling(m_time);
+		pEngfuncs->Con_Printf("Peak count of frames lingering in sampler: %i\n", m_sampling.sampler->GetPeakFrameCount());
 
-		// Output trackers as debug console text:
-		pEngfuncs->Con_DPrintf("finshed trackers (take #%i):\n\tsamplemaster: %i\n\tframemaster: %i\n",m_nTakes,m_sampling.samplemaster->GetTracker(),m_sampling.bgrsampler->GetTracker());
-
-		delete m_sampling.samplemaster;
-		delete m_sampling.bgrsampler;
-
+		delete m_sampling.sampler;
 		m_sampling.bEnable = false;
 	}
 
@@ -1178,7 +1162,7 @@ void Filming::Stop()
 	ScriptEvent_OnRecordEnded();
 }
 
-bool Filming::OnPrintFrame(unsigned long id, void *prgbdata, int iWidht, int iHeight)
+void Filming::OnPrintFrame(unsigned char * data, int number)
 {
 	FilmingStreamInfo * streamInfo = &g_Filming_Stream_Infos[FSIT_sampled];
 
@@ -1192,17 +1176,15 @@ bool Filming::OnPrintFrame(unsigned long id, void *prgbdata, int iWidht, int iHe
 	std::string fileName;
 
 	char szFilename[196];
-	_snprintf(szFilename, sizeof(szFilename) - 1, "%s\\%s\\%05d.%s", m_TakeDir.c_str(), streamInfo->name, id, bBMP ? "bmp" : "tga");
+	_snprintf(szFilename, sizeof(szFilename) - 1, "%s\\%s\\%05d.%s", m_TakeDir.c_str(), streamInfo->name, number, bBMP ? "bmp" : "tga");
 	EnsureStreamDirectory(streamInfo);
 	
 	if( bBMP )
-	{
-		return WriteRawBitmap((unsigned char *)prgbdata,szFilename,iWidht,iHeight,nBits,
-			true); // restore align from sampler
-	}
-
-	return WriteRawTarga((unsigned char *)prgbdata,szFilename,iWidht,iHeight,nBits,
-		false); // always color
+		WriteRawBitmap((unsigned char *)data, szFilename, m_iWidth, m_iCropHeight, nBits,
+			false); // align is still 4 byte probably
+	else
+		WriteRawTarga((unsigned char *)data, szFilename, m_iWidth, m_iCropHeight, nBits,
+			false); // always color
 }
 
 
@@ -1474,7 +1456,7 @@ void Filming::Capture(FilmingStreamInfo * streamInfo, int iFileNumber, BUFFER iB
 
 	bool bSampledStream = m_iMatteStage==MS_ALL && iBuffer == COLOR && m_sampling.bEnable;
 
-	bool bReadOk = m_GlRawPic.DoGlReadPixels(0, m_iCropYOfs, m_iWidth, m_iCropHeight, eGLBuffer, eGLtype, !bBMP || bSampledStream);
+	bool bReadOk = m_GlRawPic.DoGlReadPixels(0, m_iCropYOfs, m_iWidth, m_iCropHeight, eGLBuffer, eGLtype, !bBMP);
 	if (!bReadOk)
 	{
 		pEngfuncs->Con_Printf("MDT ERROR: failed to capture take %05d, Errorcode: %d.\n",m_nTakes,m_GlRawPic.GetLastUnhandledError());
@@ -1515,10 +1497,9 @@ void Filming::Capture(FilmingStreamInfo * streamInfo, int iFileNumber, BUFFER iB
 	{
 		// pass on to sampling system:
 
-		m_sampling.samplemaster->Sample(
-			m_time,
-			m_GlRawPic.GetPointer(),
-			 m_iWidth * m_iCropHeight * (int)ucComponentBytes
+		m_sampling.sampler->Sample(
+			(unsigned char const *)m_GlRawPic.GetPointer(),
+			1.0f / m_fps
 		);
 	}
 	else
