@@ -5,6 +5,17 @@
 
 <release>
 <name>HLAE</name>
+<version>2.2.13.4</version>
+<time>2010-03-26T13:14Z</time>
+<changes>
+<change type="fixed">
+Fixed GUI scroll sizing.
+</change>
+</changes>
+</release>
+
+<release>
+<name>HLAE</name>
 <version>2.2.13.3</version>
 <time>2010-03-26T07:35Z</time>
 <changes>

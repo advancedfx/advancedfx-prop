@@ -57,7 +57,7 @@ void AfxGoldSrcComServer::CLM_UpdateWindowSize()
 	ComInt width, height;
 
 	m_PipeComServer->ReadBytes(&width, sizeof(width));
-	m_PipeComServer->WriteBytes(&height, sizeof(height));
+	m_PipeComServer->ReadBytes(&height, sizeof(height));
 
 	m_GameWindowParent->AutoScrollMinSize = System::Drawing::Size( width, height );
 }
