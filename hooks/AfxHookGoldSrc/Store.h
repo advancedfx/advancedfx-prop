@@ -28,9 +28,11 @@ public:
 };
 
 
-class IStore
+class Store abstract
 {
 public:
+	virtual ~Store() {};
+
 	virtual IStoreItem * Aquire(void) abstract = 0;
 };
 
@@ -38,13 +40,17 @@ public:
 class FrequentStoreManager;
 
 class FrequentStore :
-	public IStore
+	public Store
 {
 public:
 	FrequentStore(IStoreFactory * factory);
 	virtual ~FrequentStore();
 
 	virtual IStoreItem * Aquire(void);
+	virtual void Destruct(void)
+	{
+		delete this;
+	}
 
 	void Pack(void);
 

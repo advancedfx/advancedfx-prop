@@ -20,7 +20,6 @@ class FrequentStoreItem :
 	public IStoreItem
 {
 public:
-	FrequentStoreItem * PreviousFree;
 	FrequentStoreItem * NextFree;
 
 	FrequentStoreItem(FrequentStoreManager * manager);
@@ -44,7 +43,6 @@ private:
 class FrequentStoreManager
 {
 public:
-	int ItemCount;
 	FrequentStoreItem * FreeItem;
 
 	FrequentStoreManager(IStoreFactory * factory);
@@ -88,7 +86,6 @@ void FrequentStore::Pack(void)
 
 FrequentStoreManager::FrequentStoreManager(IStoreFactory * factory)
 {
-	ItemCount = 0;
 	FreeItem = 0;
 	m_Factory = factory;
 }
@@ -97,9 +94,6 @@ FrequentStoreManager::~FrequentStoreManager()
 {
 	while(FreeItem)
 		delete FreeItem;
-
-	if(ItemCount)
-		throw logic_error("");
 }
 
 IStoreItem * FrequentStoreManager::Aquire(void)
@@ -131,13 +125,11 @@ void FrequentStoreManager::Pack(void)
 
 FrequentStoreItem::FrequentStoreItem(FrequentStoreManager * manager)
 {
-	PreviousFree = 0;
 	NextFree = 0;
 	m_Aquired = false;
 	m_Manager = manager;
 	m_Value = manager->GetFactory()->ConstructValue();
 
-	manager->ItemCount++;
 	Enlist();
 }
 
@@ -147,7 +139,6 @@ FrequentStoreItem::~FrequentStoreItem()
 		throw logic_error("");
 
 	Delist();
-	m_Manager->ItemCount--;
 
 	m_Manager->GetFactory()->DestructValue(m_Value);
 }
@@ -163,28 +154,14 @@ void FrequentStoreItem::Aquire()
 
 void FrequentStoreItem::Delist()
 {
-	if(PreviousFree)
-		PreviousFree->NextFree = NextFree;
-
-	if(NextFree)
-		NextFree->PreviousFree = PreviousFree;
-
-	if(this == m_Manager->FreeItem)
-		m_Manager->FreeItem = 0;
+	m_Manager->FreeItem = NextFree;
+	NextFree = 0;
 }
 
 void FrequentStoreItem::Enlist()
 {
-	if(!m_Manager->FreeItem)
-		m_Manager->FreeItem = this;
-	else
-	{
-		NextFree = m_Manager->FreeItem;
-		
-		if(NextFree)
-			NextFree->PreviousFree = this;
-		m_Manager->FreeItem = this;
-	}	
+	NextFree = m_Manager->FreeItem;
+	m_Manager->FreeItem = this;
 }
 
 StoreValue FrequentStoreItem::GetValue()

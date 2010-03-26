@@ -5,6 +5,18 @@
 
 <release>
 <name>HLAE</name>
+<version>2.2.13.5</version>
+<time>2010-03-26T21:17Z</time>
+<changes>
+<change type="fixed">
+Yet another bugfix.
+</change>
+</changes>
+<comments>The release today went a bit unlucky. Sorry about that. This update is still not perfect, but okay for now.</comments>
+</release>
+
+<release>
+<name>HLAE</name>
 <version>2.2.13.4</version>
 <time>2010-03-26T13:14Z</time>
 <changes>

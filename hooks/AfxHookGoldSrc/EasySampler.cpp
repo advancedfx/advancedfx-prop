@@ -279,12 +279,14 @@ void EasyBgrSampler::SampleFrame(IStoreItem * item, unsigned char const * data, 
 	}
 	else
 	{
+		w *= 0.5f;
+
 		unsigned char const * data2 = m_OldSample;
 		for( int iy=0; iy < ymax; iy++ )
 		{
 			for( int ix=0; ix < xmax; ix++ )
 			{
-				*fdata += w * ((float)(*data) +(float)(*data2)) / 2.0f;
+				*fdata += w * ((int)(*data) +(int)(*data2));
 
 				fdata++;
 				data++;

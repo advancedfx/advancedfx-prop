@@ -88,7 +88,7 @@ private:
 	int m_FrameCount;
 	float m_FrameDuration;
 	FrameFactory  * m_FrameFactory;
-	IStore * m_FrameStore;
+	Store * m_FrameStore;
 	list<IStoreItem *> m_Frames;
 	FramePrinter m_FramePrinter;
 	int m_Height;
