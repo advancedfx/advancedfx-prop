@@ -191,8 +191,8 @@ void EasyBgrSampler::Sample(unsigned char const * data, float sampleDuration)
 	list<IStoreItem *>::iterator it;
 	
 	// insert new frames:
-	float maxFrameBound = m_Frames.empty() ? frameBoundLo : ((Frame *)m_Frames.back()->GetValue())->Offset +m_FrameDuration;
-	while(maxFrameBound < sampleDuration)
+	float maxFrameBound = m_Frames.empty() ? 0 : ((Frame *)m_Frames.back()->GetValue())->Offset +m_FrameDuration;
+	while(maxFrameBound +frameBoundLo < sampleDuration)
 	{
 		IStoreItem * i = BeginFrame(maxFrameBound);
 		m_Frames.push_back(i);
