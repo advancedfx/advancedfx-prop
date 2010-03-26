@@ -5,14 +5,18 @@
 
 <release>
 <name>HLAE</name>
-<version>2.2.13.2</version>
-<time>2010-03-26T06:29Z</time>
+<version>2.2.13.3</version>
+<time>2010-03-26T07:35Z</time>
 <changes>
 <change type="updated">
 Numerous internal changes, including sampling system speed-up and fixes (no new features).
 </change>
 <change type="removed">
 Removed __mirv_sample_colorh.
+Removed __mirv_sample_addoverlap
+</change>
+<change type="added">
+Added __mirv_sample_overlap, __mirv_sample_overlapfuture.
 </change>
 </changes>
 </release>

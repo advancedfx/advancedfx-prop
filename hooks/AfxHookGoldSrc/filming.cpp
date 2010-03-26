@@ -38,7 +38,8 @@ REGISTER_DEBUGCVAR(depth_bpp, "8", 0);
 REGISTER_DEBUGCVAR(depth_slice_lo, "0.0", 0);
 REGISTER_DEBUGCVAR(depth_slice_hi, "1.0", 0);
 REGISTER_DEBUGCVAR(gl_force_noztrick, "1", 0);
-REGISTER_DEBUGCVAR(sample_addoverlap, "0", 0);
+REGISTER_DEBUGCVAR(sample_overlap, "0.0", 0);
+REGISTER_DEBUGCVAR(sample_overlapfuture, "0.0", 0);
 REGISTER_DEBUGCVAR(sample_ffunc, "0", 0);
 REGISTER_DEBUGCVAR(sample_smethod, "1", 0);
 REGISTER_DEBUGCVAR(print_frame, "0", 0);
@@ -1099,8 +1100,6 @@ void Filming::Start()
 		m_fps = max(sample_sps->value,1.0f);
 		m_sampling.out_fps = max(movie_fps->value,1.0f);
 
-		float overlap=sample_addoverlap->value;
-
 		float frameDuration = 1.0f / m_sampling.out_fps; 
 
 		m_sampling.sampler = new EasyBgrSampler(
@@ -1109,7 +1108,7 @@ void Filming::Start()
 			movie_bmp->value ? 4 : 1,
 			0 == sample_smethod->value ? EasyBgrSampler::ESM_Rectangle : EasyBgrSampler::ESM_Trapezoid,
 			0 == sample_ffunc->value ? EasyBgrSampler::RectangleWeighter : EasyBgrSampler::GaussWeighter,
-			-(float)overlap * frameDuration, +(float)overlap * frameDuration,
+			-sample_overlapfuture->value * frameDuration, +sample_overlap->value * frameDuration,
 			&::OnPrintFrame,
 			frameDuration
 		);
