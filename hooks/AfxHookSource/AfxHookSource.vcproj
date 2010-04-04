@@ -223,6 +223,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\SvCheats.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\SvCheats.h"
+					>
+				</File>
+				<File
 					RelativePath=".\WrpConsole.cpp"
 					>
 				</File>

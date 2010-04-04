@@ -13,6 +13,7 @@
 
 #include "RenderView.h"
 #include "SourceInterfaces.h"
+#include "SvCheats.h"
 #include "WrpVEngineClient.h"
 #include "WrpConsole.h"
 #include "WrpVEngineClient.h"
@@ -146,4 +147,10 @@ CON_COMMAND(mirv_camimport, "controls camera motion data import") {
 		"mirv_camimport stop\n"
 		"mirv_camimport basetime\n"
 	);
+}
+
+
+CON_COMMAND(mirv_allowcheats, "execute once to disable blocking of sv_cheats and related variables")
+{
+	Install_AllowCheats(g_VEngineClient->GetGameDirectory());
 }

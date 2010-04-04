@@ -37,7 +37,7 @@ public:
 	bool ImportBegin(char const *fileName);
 	void ImportEnd();
 
-	void Install_cstrike(void);
+	void Install(const char * gameDir);
 
 	bool IsInstalled(void);
 
@@ -53,5 +53,8 @@ private:
 	bool m_IsInstalled;
 	float m_LastTime;
 	float m_SubTime;
+
+	void Install_cstrike(void);
+	void Install_ep2(void);
 };
 

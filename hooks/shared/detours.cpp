@@ -171,6 +171,36 @@ void *DetourClassFunc(BYTE *src, const BYTE *dst, const int len)
 }
 
 
+void *DetourVoidClassFunc(BYTE *src, const BYTE *dst, const int len)
+{
+	BYTE *jmp = (BYTE*)MdtAllocExecuteableMemory(len+JMP32_SZ+POPREG_SZ);
+	MdtMemBlockInfos mbis;
+
+	MdtMemAccessBegin(src, len, &mbis);
+
+	memcpy(jmp+1, src, len);
+
+	// calculate callback function call
+	jmp[0] = POP_ECX;						// pop ecx
+	jmp[len+1] = JMP;						// jmp
+	*(DWORD*)(jmp+len+2) = (DWORD)((src+len) - (jmp+len+1)) - JMP32_SZ;
+
+	// detour source function call
+	src[0] = 0x87; // XCHG ecx, [esp]
+	src[1] = 0x0c; // .
+	src[2] = 0x24; // .
+	src[3] = PUSH_ECX; // push ecx
+	src[4] = JMP;							// jmp
+	*(DWORD*)(src+5) = (DWORD)(dst - (src+4)) - JMP32_SZ;
+
+	memset(src+9, NOP, len - 9);
+
+	MdtMemAccessEnd(&mbis);
+
+	return jmp;
+}
+
+
 void Asm32ReplaceWithJmp(void * replaceAt, size_t countBytes, void * jmpTo)
 {
 	MdtMemBlockInfos mbis;

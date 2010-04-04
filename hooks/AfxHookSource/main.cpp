@@ -89,7 +89,7 @@ void MySetup(CreateInterfaceFn appSystemFactory) {
 	}
 
 	if(g_VEngineClient) {
-		g_Hook_VClient_RenderView.Install_cstrike();
+		g_Hook_VClient_RenderView.Install(g_VEngineClient->GetGameDirectory());
 	}
 
 
@@ -146,7 +146,8 @@ __declspec(naked) void hook_Client_Init() {
 }
 
 CreateInterfaceFn old_Client_CreateInterface = 0;
-void* new_Client_CreateInterface(const char *pName, int *pReturnCode) {
+void* new_Client_CreateInterface(const char *pName, int *pReturnCode)
+{
 	static bool bFirstCall = true;
 	MdtMemBlockInfos mbis;
 
@@ -176,7 +177,8 @@ void* new_Client_CreateInterface(const char *pName, int *pReturnCode) {
 			ErrorBox("Could not get a supported VClient interface.");
 		}
 
-		if(iface) {
+		if(iface)
+		{
 			void **padr =  *(void ***)iface;
 			old_Client_Init = *padr;
 			MdtMemAccessBegin(padr, sizeof(void *), &mbis);
@@ -221,8 +223,9 @@ FARPROC WINAPI new_Engine_GetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 HMODULE WINAPI new_LoadLibraryA(LPCSTR lpLibFileName);
 HMODULE WINAPI new_LoadLibraryExA(LPCSTR lpLibFileName, HANDLE hFile, DWORD dwFlags);
 
-void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName) {
-
+void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
+{
+	static bool bHasTier0 = false;
 	static bool bFirstLaucher = true;
 	static bool bFirstFileSystemSteam = true;
 	static bool bFirstEngine = true;
@@ -232,8 +235,28 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName) {
 		return;
 
 	// do not use messageboxes here, there is some friggin hooking going on in between by the
-	// Surce engine.
+	// Source engine.
 
+	if(!bHasTier0)
+	{
+		HMODULE hTier0 = GetModuleHandleA("bin\\tier0.dll");
+		if(!hTier0)
+			return;
+
+		bHasTier0 = true;
+
+		Tier0_Msg = (Tier0MsgFn)GetProcAddress(hTier0, "Msg");
+		Tier0_DMsg = (Tier0DMsgFn)GetProcAddress(hTier0, "DMsg");
+		Tier0_Warning = (Tier0MsgFn)GetProcAddress(hTier0, "Warning");
+		Tier0_DWarning = (Tier0DMsgFn)GetProcAddress(hTier0, "DWarning");
+		Tier0_Log = (Tier0MsgFn)GetProcAddress(hTier0, "Log");
+		Tier0_DLog = (Tier0DMsgFn)GetProcAddress(hTier0, "DLog");
+		Tier0_Error = (Tier0MsgFn)GetProcAddress(hTier0, "Error");
+		Tier0_ConMsg = (Tier0MsgFn)GetProcAddress(hTier0, "ConMsg");
+		Tier0_ConWarning = (Tier0MsgFn)GetProcAddress(hTier0, "ConWarning");
+		Tier0_ConLog = (Tier0MsgFn)GetProcAddress(hTier0, "ConLog");
+	}
+	
 	if(bFirstLaucher && StringEndsWith( lpLibFileName, "launcher.dll"))
 	{
 		bFirstLaucher = false;
@@ -292,27 +315,10 @@ HMODULE WINAPI new_LoadLibraryExA(LPCSTR lpLibFileName, HANDLE hFile, DWORD dwFl
 
 bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 {
-	HMODULE hTier0;
-
 	switch (fdwReason) 
 	{ 
 		case DLL_PROCESS_ATTACH:
 		{
-#ifdef _DEBUG
-			MessageBox(0,"DllMain - DLL_PROCESS_ATTACH", "AFX_DEBUG", MB_OK|MB_ICONINFORMATION);
-#endif
-			hTier0 = LoadLibraryA("bin\\tier0.dll");
-			Tier0_Msg = (Tier0MsgFn)GetProcAddress(hTier0, "Msg");
-			Tier0_DMsg = (Tier0DMsgFn)GetProcAddress(hTier0, "DMsg");
-			Tier0_Warning = (Tier0MsgFn)GetProcAddress(hTier0, "Warning");
-			Tier0_DWarning = (Tier0DMsgFn)GetProcAddress(hTier0, "DWarning");
-			Tier0_Log = (Tier0MsgFn)GetProcAddress(hTier0, "Log");
-			Tier0_DLog = (Tier0DMsgFn)GetProcAddress(hTier0, "DLog");
-			Tier0_Error = (Tier0MsgFn)GetProcAddress(hTier0, "Error");
-			Tier0_ConMsg = (Tier0MsgFn)GetProcAddress(hTier0, "ConMsg");
-			Tier0_ConWarning = (Tier0MsgFn)GetProcAddress(hTier0, "ConWarning");
-			Tier0_ConLog = (Tier0MsgFn)GetProcAddress(hTier0, "ConLog");
-
 			if(!(
 				InterceptDllCall(GetModuleHandle(NULL), "Kernel32.dll", "LoadLibraryExA", (DWORD) &new_LoadLibraryExA)
 				||InterceptDllCall(GetModuleHandle(NULL), "Kernel32.dll", "LoadLibraryA", (DWORD) &new_LoadLibraryA)
@@ -324,9 +330,7 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 		case DLL_PROCESS_DETACH:
 		{
 			// source terminates the process, this will never get called
-#ifdef _DEBUG
-			MessageBox(0,"DllMain - DLL_PROCESS_DEATTACH", "AFX_DEBUG", MB_OK|MB_ICONINFORMATION);
-#endif
+
 			break;
 		}
 		case DLL_THREAD_ATTACH:

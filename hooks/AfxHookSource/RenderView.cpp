@@ -8,9 +8,18 @@
 // First changes:
 // 2009-11-01 by dominik.matrixstorm.com
 
+
+//
+// These hooks mainly hook into
+// CViewRender::SetUpView inside the client.dll
+//
+
+
+
 #include "RenderView.h"
 
 #include <hooks/shared/detours.h>
+#include <shared/StringTools.h>
 
 #include <hooks/shared/bvhimport.h>
 #include <hooks/shared/bvhexport.h>
@@ -47,73 +56,116 @@ BvhImport g_BvhImport;
 // Create singelton instance:
 Hook_VClient_RenderView g_Hook_VClient_RenderView;
 
-// void * gpGlobals;
 
-//#define CLOFS_CallCalcDemoViewOverride 0x169A7D
 
-// hooks in CViewRender::SetUpView:
-#define CLOFS_IfIsPlayingDemo 0x169A65
-#define CLOFS_CheckDemoviewOverride (CLOFS_IfIsPlayingDemo +0x16)
-#define CLOFS_NotPlaying (CLOFS_IfIsPlayingDemo +0x51)
-#define CLOFS_cl_demoviewoverride_value (0x3EE7F0 +0x28)
-#define CLOFS_gpGLobals 0x392C8C
-#define OFS_gpGlobals_value_curtime +4*3
 
-#define OPCODE_NOP			0x90
-#define OPCODE_JMP			0xE9
-#define OPCODE_JMP32_SZ		5
+#define ADDR_cstrike_CalcDemoViewOverride 0x169180
+#define ADDR_cstrike_CalcDemoViewOverride_DSZ 0x09
+#define ADDR_cstrike_CViewRender_SetUpView 0x169900
+#define ADDR_cstrike_CViewRender_SetUpView_DSZ 0x0c
+#define ADDR_cstrike_cl_demoviewoverride 0x3EE808
+#define ADDR_cstrike_gpGLobals 0x392C8C
+#define OFS_cstrike_gpGlobals_value_curtime +4*3
 
-DWORD g_continue_NotPlaying;
-DWORD g_continue_CheckDemoViewOverrideCvar;
-float * g_value_cl_demoviewoverride;
+#define OFS_cstrike_CvarFloatValue 10
+
+
+#define ADDR_ep2_CalcDemoViewOverride 0x1229E0
+#define ADDR_ep2_CalcDemoViewOverride_DSZ 0x09
+#define ADDR_ep2_CViewRender_SetUpView 0x123210
+#define ADDR_ep2_CViewRender_SetUpView_DSZ 0x0a
+#define ADDR_ep2_cl_demoviewoverride 0x3FC3D4
+#define ADDR_ep2_gpGLobals 0x3A2698
+#define OFS_ep2_gpGlobals_value_curtime +4*3
+
+#define OFS_ep2_CvarFloatValue 11
+
+unsigned int g_OfsCvarFloatValue;
+
+float GetCvarFloat(void * pcvar)
+{
+	float * pf = *(float **)pcvar +g_OfsCvarFloatValue;
+
+	float f = *pf;
+
+	return f;
+}
+
+void SetCvarFloat(void * pcvar, float value)
+{
+	float * pf = *(float **)pcvar +g_OfsCvarFloatValue;
+
+	*pf = value;
+}
+
+
+typedef bool (__stdcall *CViewRender_SetUpView_t)(DWORD *this_ptr);
+
+typedef void * CalcDemoViewOverride_t;
+
+CViewRender_SetUpView_t g_Hooked_CViewRender_SetUpView;
+CalcDemoViewOverride_t g_Hooked_CalcDemoViewOverride;
+
+void * g_Cl_DemoViewOverride;
+
 float * g_value_curtime;
 
-void __cdecl myViewOverride( Vector *origin, QAngle *angles ) {
+float g_Old_Cl_DemoViewOverride;
+
+
+void __stdcall Hooking_CViewRender_SetUpView(DWORD *this_ptr)
+{
+	g_Old_Cl_DemoViewOverride = GetCvarFloat(g_Cl_DemoViewOverride);
+
+	SetCvarFloat(g_Cl_DemoViewOverride, 1);
+
+	g_Hooked_CViewRender_SetUpView(this_ptr);
+	
+	SetCvarFloat(g_Cl_DemoViewOverride, g_Old_Cl_DemoViewOverride);
+}
+
+void Hooking2_CalcDemoViewOverride(Vector * origin, QAngle * angles)
+{
 	g_Hook_VClient_RenderView.OnViewOverride(
 		origin->x, origin->y, origin->z,
 		angles->x, angles->y, angles->z
 	);
+
+	if(g_Old_Cl_DemoViewOverride > 0.0f)
+	{
+		SetCvarFloat(g_Cl_DemoViewOverride, g_Old_Cl_DemoViewOverride);
+
+		__asm
+		{
+			mov edi, origin
+			mov esi, angles
+			call g_Hooked_CalcDemoViewOverride
+		}
+
+		SetCvarFloat(g_Cl_DemoViewOverride, 1);
+	}
 }
 
-bool __cdecl myCheckDemoViewOverride() {
-	return 0.0f >= *g_value_cl_demoviewoverride;
-}
-
-__declspec(naked) void hook_IfDemoviewOverride() {
-	__asm {
-		; store IfIsPlayingDemo:
-		MOV eax, 0
-		JZ __Continue
-		MOV eax, 1
-	
-	__Continue:
-		PUSH eax
-
-		PUSH esi
-		PUSH edi
-		CALL myViewOverride
-		POP edi
-		POP esi
-
-		; handle IfIsPlayingDemo:
-		POP eax
-		TEST eax, eax
-		JNZ __Playing
-		JMP g_continue_NotPlaying
-
-		__Playing:
-
-		CALL myCheckDemoViewOverride;
-		TEST eax, eax
-		JMP g_continue_CheckDemoViewOverrideCvar
+__declspec(naked) void Hooking_CalcDemoViewOverride()
+{
+	__asm
+	{
+		push esi
+		push edi
+		call Hooking2_CalcDemoViewOverride
+		pop edi
+		pop esi
+		ret
 	}
 }
 
 
 
+
 // Hook_VClient_RenderView /////////////////////////////////////////////////////
 
-Hook_VClient_RenderView::Hook_VClient_RenderView() {
+Hook_VClient_RenderView::Hook_VClient_RenderView()
+{
 	m_Export = false;
 	m_FrameTime = 0;
 	m_Import = false;
@@ -170,6 +222,16 @@ void Hook_VClient_RenderView::ImportEnd() {
 	m_Import = false;
 }
 
+void Hook_VClient_RenderView::Install(const char * gameDir)
+{
+	if(StringEndsWith(gameDir, "\\cstrike"))
+		Install_cstrike();
+	else if(StringEndsWith(gameDir, "\\ep2"))
+		Install_ep2();
+	else
+		Tier0_Msg("%s is not supported\n", gameDir);
+}
+
 
 void Hook_VClient_RenderView::Install_cstrike(void) {
 	if(m_IsInstalled)
@@ -178,23 +240,32 @@ void Hook_VClient_RenderView::Install_cstrike(void) {
 	HMODULE hm = GetModuleHandle("client");
 
 	if(hm) {
-		MdtMemBlockInfos mbis;
+		g_Hooked_CViewRender_SetUpView = (CViewRender_SetUpView_t)DetourClassFunc((BYTE *)hm +ADDR_cstrike_CViewRender_SetUpView, (BYTE *)Hooking_CViewRender_SetUpView, ADDR_cstrike_CViewRender_SetUpView_DSZ);
+		g_Hooked_CalcDemoViewOverride = (CalcDemoViewOverride_t)DetourApply((BYTE *)hm +ADDR_cstrike_CalcDemoViewOverride, (BYTE *)Hooking_CalcDemoViewOverride, ADDR_cstrike_CalcDemoViewOverride_DSZ);
 
-		BYTE * pmem = (BYTE *)hm +CLOFS_IfIsPlayingDemo;
+		g_Cl_DemoViewOverride = (void *)((BYTE *)hm +ADDR_cstrike_cl_demoviewoverride);
+		g_value_curtime = (float *)(*(BYTE **)((BYTE *)hm +ADDR_cstrike_gpGLobals) +OFS_cstrike_gpGlobals_value_curtime);
 
-		g_continue_NotPlaying = (DWORD)((BYTE *)hm +CLOFS_NotPlaying);
-		g_continue_CheckDemoViewOverrideCvar = (DWORD)((BYTE *)hm +CLOFS_CheckDemoviewOverride);
-		g_value_cl_demoviewoverride = (float *)((BYTE *)hm +CLOFS_cl_demoviewoverride_value);
-		g_value_curtime = (float *)(*(BYTE **)((BYTE *)hm +CLOFS_gpGLobals) +OFS_gpGlobals_value_curtime);
+		g_OfsCvarFloatValue = OFS_cstrike_CvarFloatValue;
 
-		MdtMemAccessBegin(pmem, CLOFS_CheckDemoviewOverride -CLOFS_IfIsPlayingDemo, &mbis);
+		m_IsInstalled = true;
+	}
+}
 
-		memset(pmem, OPCODE_NOP, CLOFS_CheckDemoviewOverride -CLOFS_IfIsPlayingDemo);
+void Hook_VClient_RenderView::Install_ep2(void) {
+	if(m_IsInstalled)
+		return;
 
-		pmem[0] = OPCODE_JMP;
-		*(DWORD*)(pmem+1) = (DWORD)((BYTE *)&hook_IfDemoviewOverride -pmem) - OPCODE_JMP32_SZ;
+	HMODULE hm = GetModuleHandle("client");
 
-		MdtMemAccessEnd(&mbis);
+	if(hm) {
+		g_Hooked_CViewRender_SetUpView = (CViewRender_SetUpView_t)DetourClassFunc((BYTE *)hm +ADDR_ep2_CViewRender_SetUpView, (BYTE *)Hooking_CViewRender_SetUpView, ADDR_ep2_CViewRender_SetUpView_DSZ);
+		g_Hooked_CalcDemoViewOverride = (CalcDemoViewOverride_t)DetourApply((BYTE *)hm +ADDR_ep2_CalcDemoViewOverride, (BYTE *)Hooking_CalcDemoViewOverride, ADDR_ep2_CalcDemoViewOverride_DSZ);
+
+		g_Cl_DemoViewOverride = (void *)((BYTE *)hm +ADDR_ep2_cl_demoviewoverride);
+		g_value_curtime = (float *)(*(BYTE **)((BYTE *)hm +ADDR_ep2_gpGLobals) +OFS_ep2_gpGlobals_value_curtime);
+
+		g_OfsCvarFloatValue = OFS_ep2_CvarFloatValue;
 
 		m_IsInstalled = true;
 	}

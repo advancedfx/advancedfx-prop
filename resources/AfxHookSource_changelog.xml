@@ -3,6 +3,23 @@
 
 <changelog>
 
+<release>
+<name>AfxHookSource</name>
+<version>0.0.3.1</version>
+<time>2010-04-04T19:11Z</time>
+<changes>
+<change type="added">
+Added mirv_allowcheats (cstrike, ep2), unblocks sv_cheats and related commands.
+</change>
+<change type="added">
+Extended mirv_camexport, mirv_camimport to work with ep2.
+</change>
+</changes>
+<comments>
+Greetz / thx to msthavoc, Austin Killey, nemoic.
+</comments>
+</release>
+
 
 <release>
 <name>AfxHookSource</name>
