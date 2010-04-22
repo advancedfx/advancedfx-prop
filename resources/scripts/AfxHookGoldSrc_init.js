@@ -16,26 +16,23 @@ function afx_OnHwDllLoaded()
 	addr.p_engine_studio_api_s = addr.hwDll + 0x1829B8;
 	addr.p_playermove_s = addr.hwDll + 0xFD5AE0;
 
-
 	//
 	// General engine hooks:
 	//
 
-	addr.Host_Frame = addr.hwDll +0xD82A0; // unused atm
-	addr.DTOURSZ_Host_Frame = 0x0C; // unused atm
-
 	addr.UnkDevCapsChecks = addr.hwDll +0xC6A26;
 	addr.UnkDevCapsChecks_BYTES = 0x14;
-
 
 	//
 	// Rendering related:
 	//
+	
+	addr.CL_EmitEntities = addr.hwDll + 0x21C40;
+	addr.CL_EmitEntities_DSZ = 0x05;
 
 	addr.SCR_UpdateScreen = addr.hwDll + 0xCE570;
 	addr.DTOURSZ_SCR_UpdateScreen = 0x09;
 
-	// Hud drawing:
 	addr.HUD_TOURIN = addr.SCR_UpdateScreen + 0xBD;
 	addr.HUD_TOUROUT = addr.HUD_TOURIN + 0x87;
 

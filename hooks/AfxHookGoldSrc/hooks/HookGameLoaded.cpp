@@ -193,7 +193,7 @@ void HookGameLoaded()
 	g_CmdTools.Init(pEngfuncs);
 	pEngfuncs->Con_DPrintf("CommandTree at: 0x%08x\n", g_CmdTools.GiveCommandTreePtr());
 
-	// install some hooks:
+	// install some command hooks:
 	if (!(g_Old_connect = g_CmdTools.HookCommand("connect", Hook_connect))) pEngfuncs->Con_Printf("HLAE warning: Failed hooking connect");
 	if (!(OldClientCmdDemForceHltv = g_CmdTools.HookCommand("dem_forcehltv", NewClientCmdDemForceHltv))) pEngfuncs->Con_Printf("HLAE warning: Failed hooking dem_forcehltv");
 	if (!(g_CmdTools.HookCommand("startmovie", Hook_startmovie))) pEngfuncs->Con_Printf("HLAE warning: Failed hooking startmovie");

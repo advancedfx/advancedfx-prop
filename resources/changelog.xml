@@ -5,6 +5,28 @@
 
 <release>
 <name>HLAE</name>
+<version>2.2.13.7</version>
+<time>2010-04-22T13:18Z</time>
+<changes>
+<change type="fixed">
+Update dem_forcehltv 1 fix to fix in-eye weapon models not showing.
+</change>
+</changes>
+</release>
+
+<release>
+<name>HLAE</name>
+<version>2.2.13.6</version>
+<time>2010-04-12T18:58Z</time>
+<changes>
+<change type="fixed">
+Fixed force alpha 8 option.
+</change>
+</changes>
+</release>
+
+<release>
+<name>HLAE</name>
 <version>2.2.13.5</version>
 <time>2010-03-26T21:17Z</time>
 <changes>

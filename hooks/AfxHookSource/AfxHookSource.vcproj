@@ -195,6 +195,14 @@
 				Name="AfxHookSource"
 				>
 				<File
+					RelativePath=".\d3d9Hooks.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\d3d9Hooks.h"
+					>
+				</File>
+				<File
 					RelativePath=".\main.cpp"
 					>
 				</File>

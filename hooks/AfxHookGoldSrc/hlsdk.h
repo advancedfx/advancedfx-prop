@@ -11,6 +11,7 @@
 #include <hlsdk/multiplayer/common/cl_entity.h>
 #include <hlsdk/multiplayer/common/com_model.h>
 #include <hlsdk/multiplayer/common/cvardef.h>
+#include <hlsdk/multiplayer/common/entity_state.h>
 #include <hlsdk/multiplayer/common/entity_types.h>
 #include <hlsdk/multiplayer/common/event_args.h>
 #include <hlsdk/multiplayer/common/net_api.h>

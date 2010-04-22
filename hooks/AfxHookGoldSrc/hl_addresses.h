@@ -19,12 +19,13 @@ typedef unsigned long HlAddress_t;
 #define HL_ADDR_EXPOSE(name) \
 	extern HlAddress_t g_HlAddr_##name;
 
+HL_ADDR_EXPOSE(CL_EmitEntities)
+HL_ADDR_EXPOSE(CL_EmitEntities_DSZ)
 HL_ADDR_EXPOSE(CL_ParseServerMessage)
 HL_ADDR_EXPOSE(CL_ParseServerMessage_CmdRead)
 HL_ADDR_EXPOSE(DTOURSZ_CL_ParseServerMessage_CmdRead)
 HL_ADDR_EXPOSE(DTOURSZ_GetClientColor)
 HL_ADDR_EXPOSE(DTOURSZ_GetSoundtime)
-HL_ADDR_EXPOSE(DTOURSZ_Host_Frame)
 HL_ADDR_EXPOSE(DTOURSZ_Mod_LeafPVS)
 HL_ADDR_EXPOSE(DTOURSZ_R_DrawEntitiesOnList)
 HL_ADDR_EXPOSE(DTOURSZ_R_DrawParticles)
@@ -41,7 +42,6 @@ HL_ADDR_EXPOSE(GetClientColor)
 HL_ADDR_EXPOSE(GetSoundtime)
 HL_ADDR_EXPOSE(HUD_TOURIN)
 HL_ADDR_EXPOSE(HUD_TOUROUT)
-HL_ADDR_EXPOSE(Host_Frame)
 HL_ADDR_EXPOSE(HudSpectator_cmp_tfc)
 HL_ADDR_EXPOSE(HudSpectator_tfc)
 HL_ADDR_EXPOSE(Mod_LeafPVS)

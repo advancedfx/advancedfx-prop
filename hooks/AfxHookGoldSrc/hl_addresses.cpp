@@ -95,12 +95,13 @@ unsigned int HlAddr_Debug_GetCount() {
 	HlAddress_t g_HlAddr_##name; \
 	HlAddressEntry g_HlAddressEntry##name (&g_HlAddressEntries, &g_HlAddr_##name, #name);
 
+HL_ADDR_DEF(CL_EmitEntities)
+HL_ADDR_DEF(CL_EmitEntities_DSZ)
 HL_ADDR_DEF(CL_ParseServerMessage)
 HL_ADDR_DEF(CL_ParseServerMessage_CmdRead)
 HL_ADDR_DEF(DTOURSZ_CL_ParseServerMessage_CmdRead)
 HL_ADDR_DEF(DTOURSZ_GetClientColor)
 HL_ADDR_DEF(DTOURSZ_GetSoundtime)
-HL_ADDR_DEF(DTOURSZ_Host_Frame)
 HL_ADDR_DEF(DTOURSZ_Mod_LeafPVS)
 HL_ADDR_DEF(DTOURSZ_R_DrawEntitiesOnList)
 HL_ADDR_DEF(DTOURSZ_R_DrawParticles)
@@ -117,7 +118,6 @@ HL_ADDR_DEF(GetClientColor)
 HL_ADDR_DEF(GetSoundtime)
 HL_ADDR_DEF(HUD_TOURIN)
 HL_ADDR_DEF(HUD_TOUROUT)
-HL_ADDR_DEF(Host_Frame)
 HL_ADDR_DEF(HudSpectator_cmp_tfc)
 HL_ADDR_DEF(HudSpectator_tfc)
 HL_ADDR_DEF(Mod_LeafPVS)

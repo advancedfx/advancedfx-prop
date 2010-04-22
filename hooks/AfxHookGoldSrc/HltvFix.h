@@ -4,7 +4,7 @@
 
 typedef int (* CL_IsThirdPerson_t)( void );
 
-extern CL_IsThirdPerson_t OldClientCL_IsThirdPerson;
+extern CL_IsThirdPerson_t g_OldClientCL_IsThirdPerson;
 int NewClientCL_IsThirdPerson(void);
 
 extern xcommand_t OldClientCmdDemForceHltv;

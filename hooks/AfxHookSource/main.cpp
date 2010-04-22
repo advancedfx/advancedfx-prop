@@ -18,6 +18,7 @@
 #include "SourceInterfaces.h"
 #include "WrpVEngineClient.h"
 #include "WrpConsole.h"
+#include "d3d9Hooks.h"
 
 
 WrpVEngineClient * g_VEngineClient = 0;
@@ -225,11 +226,13 @@ HMODULE WINAPI new_LoadLibraryExA(LPCSTR lpLibFileName, HANDLE hFile, DWORD dwFl
 
 void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 {
-	static bool bHasTier0 = false;
-	static bool bFirstLaucher = true;
-	static bool bFirstFileSystemSteam = true;
-	static bool bFirstEngine = true;
 	static bool bFirstClient = true;
+	static bool bFirstEngine = true;
+	static bool bFirstFileSystemSteam = true;
+	static bool bFirstLaucher = true;
+	static bool bFirstMaterialSystem = true;
+	static bool bFirstShaderapidx9 = true;
+	static bool bHasTier0 = false;
 
 	if(!hModule || !lpLibFileName)
 		return;
@@ -282,14 +285,27 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryA", (DWORD) &new_LoadLibraryA);
 	}
 	else
+	if(bFirstMaterialSystem && StringEndsWith( lpLibFileName, "materialsystem.dll"))
+	{
+		bFirstMaterialSystem = false;
+		
+		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryExA", (DWORD) &new_LoadLibraryExA);
+		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryA", (DWORD) &new_LoadLibraryA);
+	}
+	else
+	if(bFirstShaderapidx9 && StringEndsWith( lpLibFileName, "shaderapidx9.dll"))
+	{
+		bFirstShaderapidx9 = false;
+
+		old_Direct3DCreate9 = (Direct3DCreate9_t)InterceptDllCall(hModule, "d3d9.dll", "Direct3DCreate9", (DWORD) &new_Direct3DCreate9);
+	}
+	else
 	if(bFirstClient && StringEndsWith( lpLibFileName, "client.dll"))
 	{
 		bFirstClient = false;
 
 		g_H_ClientDll = hModule;
 	}
-
-
 }
 
 

@@ -19,16 +19,6 @@ struct cl_enginefuncs_s * pEngfuncs		= (struct cl_enginefuncs_s *)0;
 struct engine_studio_api_s * pEngStudio	= (struct engine_studio_api_s *)0;
 struct playermove_s * ppmove			= (struct playermove_s *)0;
 
-typedef void (* Host_Frame_t)(float time);
-
-Host_Frame_t DetouredHost_Frame;
-
-void TouringHost_Frame (float time)
-{
-	DetouredHost_Frame(time);
-}
-
-
 FARPROC WINAPI NewHwGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 {
 	FARPROC nResult;
@@ -85,7 +75,7 @@ FARPROC WINAPI NewHwGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 
 
 		if (!lstrcmp(lpProcName, "CL_IsThirdPerson")) {
-			OldClientCL_IsThirdPerson = (CL_IsThirdPerson_t)nResult;
+			g_OldClientCL_IsThirdPerson = (CL_IsThirdPerson_t)nResult;
 			return (FARPROC) &NewClientCL_IsThirdPerson;
 		}
 
@@ -111,7 +101,6 @@ void HookHw(HMODULE hHw)
 	OnHwDllLoaded();
 
 	// hw.dll:
-	if(!(DetouredHost_Frame = (Host_Frame_t)DetourApply((BYTE *)HL_ADDR_GET(Host_Frame), (BYTE *)TouringHost_Frame, (int)HL_ADDR_GET(DTOURSZ_Host_Frame)))) bIcepOk = false;
 	pEngfuncs		= (cl_enginefuncs_s*)HL_ADDR_GET(p_cl_enginefuncs_s);
 	pEngStudio	= (engine_studio_api_s*)HL_ADDR_GET(p_engine_studio_api_s);
 	ppmove			= (playermove_s*)HL_ADDR_GET(p_playermove_s);
