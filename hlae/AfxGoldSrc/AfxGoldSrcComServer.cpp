@@ -23,7 +23,7 @@ AfxGoldSrcComServer::AfxGoldSrcComServer()
 AfxGoldSrcComServer::~AfxGoldSrcComServer()
 {
 	m_ServerShutdown = true;
-	if(m_ServerThread->IsAlive)
+	if(nullptr != m_ServerThread && m_ServerThread->IsAlive)
 		m_ServerThread->Join();
 	m_ServerThread = nullptr;
 
@@ -59,6 +59,18 @@ void AfxGoldSrcComServer::CLM_UpdateWindowSize()
 	m_PipeComServer->ReadBytes(&width, sizeof(width));
 	m_PipeComServer->ReadBytes(&height, sizeof(height));
 
+	array<System::Object ^> ^ args = gcnew array<System::Object ^>(2);
+	args[0] = width;
+	args[1] = height;
+
+	m_GameWindowParent->Invoke(
+		gcnew WindowSizeDelegate(this, &AfxGoldSrcComServer::DoUpdateWindowSize),
+		args
+	);
+}
+
+void AfxGoldSrcComServer::DoUpdateWindowSize(int width, int height)
+{
 	m_GameWindowParent->AutoScrollMinSize = System::Drawing::Size( width, height );
 }
 

@@ -254,7 +254,6 @@ BOOL APIENTRY NewWglSwapBuffers(HDC hDC)
 	else if(gl_previewclear->value)
 		g_Filming.clearBuffers();
 
-
 	return bResWglSwapBuffers;
 }
 

@@ -44,6 +44,8 @@ protected:
 	~AfxGoldSrcComServer();
 
 private:
+	delegate void WindowSizeDelegate(int width, int height);
+
 	ComBool m_ForceAlpha8;
 	ComBool m_FullScreen;
 	System::Windows::Forms::Panel ^ m_GameWindowParent;
@@ -57,6 +59,8 @@ private:
 
 	void CLM_OnHostFrame();
 	void CLM_UpdateWindowSize();
+
+	void DoUpdateWindowSize(int width, int height);
 
 	bool InitServer();
 

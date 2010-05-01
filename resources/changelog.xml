@@ -5,6 +5,20 @@
 
 <release>
 <name>HLAE</name>
+<version>2.2.13.8</version>
+<time>2010-05-01T11:37Z</time>
+<changes>
+<change type="fixed">
+Fixes in sampling system.
+</change>
+<change type="fixed">
+Other internal changes.
+</change>
+</changes>
+</release>
+
+<release>
+<name>HLAE</name>
 <version>2.2.13.7</version>
 <time>2010-04-22T13:18Z</time>
 <changes>

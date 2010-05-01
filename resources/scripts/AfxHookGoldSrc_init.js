@@ -19,6 +19,9 @@ function afx_OnHwDllLoaded()
 	//
 	// General engine hooks:
 	//
+	
+	addr.Host_Frame = addr.hwDll +0x62B00;
+	addr.Host_Frame_DSZ = 0x05;
 
 	addr.UnkDevCapsChecks = addr.hwDll +0xC6A26;
 	addr.UnkDevCapsChecks_BYTES = 0x14;

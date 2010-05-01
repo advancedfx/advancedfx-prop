@@ -200,18 +200,18 @@ void EasyBgrSampler::Sample(unsigned char const * data, float sampleDuration)
 		maxFrameBound += m_FrameDuration;
 	}
 
-	// sample:
+	// sample (and update frames):
 	for(it = m_Frames.begin(); it != m_Frames.end(); it++)
 		SampleFrame(*it, data, sampleDuration);
 
-	// update frame offsets and finish frames:
+	// finish frames:
 	it = m_Frames.begin();
 	while(it != m_Frames.end())
 	{
 		IStoreItem * i = *it;
 		Frame * f = (Frame *)i->GetValue();
 
-		if((f->Offset -= sampleDuration) +frameBoundHi <= 0)
+		if(f->Offset +frameBoundHi <= 0)
 		{
 			FinishFrame(i);
 			m_Frames.erase(it);
@@ -237,24 +237,24 @@ void EasyBgrSampler::SampleFrame(IStoreItem * item, unsigned char const * data, 
 	float frameDelta = frameHi -frameLo;
 
 	// calculate and normalize intersection with frame:
-	float isLo ,isHi;
+	float sampT ,sampDelta;
 
 	if(0 != frameDelta)
 	{
-		isLo =  frameLo <= 0 ? 0 : frameLo;
-		isHi = sampleDuration <= frameHi ? sampleDuration : frameHi;
-
-		isLo = (isLo -frameLo) / frameDelta;
-		isHi = (isHi -frameLo) / frameDelta;
+		sampT = -frameLo / frameDelta;
+		sampDelta = sampleDuration * m_FrameDuration  / frameDelta;
 	}
 	else
 	{
-		isLo = 0;
-		isHi = 0;
+		sampT = 0;
+		sampDelta = 0;
 	}
 
 	// get frame weight:
-	float w = m_Weighter(isLo, isHi -isLo);
+	float w = m_Weighter(sampT, sampDelta);
+
+	//
+	// update image data:
 
 	f->WhitePoint += w*255.0f;
 	float * fdata = f->Data;
@@ -297,4 +297,7 @@ void EasyBgrSampler::SampleFrame(IStoreItem * item, unsigned char const * data, 
 			data2 += m_RowSkip;
 		}
 	}
+
+	// update frame time:
+	f->Offset -= sampDelta;
 }

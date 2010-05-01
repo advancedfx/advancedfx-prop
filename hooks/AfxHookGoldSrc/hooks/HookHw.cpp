@@ -9,6 +9,7 @@
 #include "gdi32Hooks.h"
 #include "user32Hooks.h"
 
+#include "hw/Host_Frame.h"
 #include "hw/Mod_LeafPvs.h"
 #include "hw/R_DrawEntitiesOnList.h"
 #include "hw/R_DrawParticles.h"
@@ -127,6 +128,8 @@ void HookHw(HMODULE hHw)
 		MessageBox(0,"One or more interceptions failed","MDT_ERROR",MB_OK|MB_ICONHAND);
 
 	HandleForceRes();
+
+	Hook_Host_Frame();
 
 	Hook_Mod_LeafPvs();
 

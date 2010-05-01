@@ -597,6 +597,14 @@
 						Name="hw"
 						>
 						<File
+							RelativePath=".\hooks\hw\Host_Frame.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\hooks\hw\Host_Frame.h"
+							>
+						</File>
+						<File
 							RelativePath=".\hooks\hw\Mod_LeafPvs.cpp"
 							>
 						</File>
