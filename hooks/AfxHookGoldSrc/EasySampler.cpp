@@ -242,7 +242,7 @@ void EasyBgrSampler::SampleFrame(IStoreItem * item, unsigned char const * data, 
 	if(0 != frameDelta)
 	{
 		sampT = -frameLo / frameDelta;
-		sampDelta = sampleDuration * m_FrameDuration  / frameDelta;
+		sampDelta = (-frameLo +sampleDuration) / frameDelta -sampT;
 	}
 	else
 	{
@@ -298,6 +298,25 @@ void EasyBgrSampler::SampleFrame(IStoreItem * item, unsigned char const * data, 
 		}
 	}
 
+#if 0
+	// ffs too weird today :| || :]
+	int dMin = (int)(sampT * (float)xmax);
+	int dMax = dMin +(int)(sampDelta/2.0f * (float)xmax);
+
+	fdata = f->Data;
+
+	for(int i=0; i<xmax; i++)
+	{
+		if(dMin <= i && i <= dMax )
+			fdata[i] += 255.0f;
+
+		for(int ii=1;ii<32;ii++)
+		{
+			fdata[i+xmax*ii] = fdata[i];
+		}
+	}
+#endif
+
 	// update frame time:
-	f->Offset -= sampDelta;
+	f->Offset -= sampleDuration; // the frame moves by the real sample duration, since samples are stretched
 }
