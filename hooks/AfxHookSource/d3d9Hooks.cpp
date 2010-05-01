@@ -4,6 +4,8 @@
 
 #include <hooks/shared/detours.h>
 
+#include "DepthImages.h"
+
 typedef struct __declspec(novtable) Interface_s abstract {} * Interface_t;
 typedef void * (__stdcall Interface_s::*InterfaceFn_t) (void *);
 #define IFACE_PASSTHROUGH(iface,method,ifacePtr) \
@@ -21,6 +23,7 @@ typedef void * (__stdcall Interface_s::*InterfaceFn_t) (void *);
 	}
 
 IDirect3DDevice9 * g_OldDirect3DDevice9;
+
 struct NewDirect3DDevice9
 {
     /*** IUnknown methods ***/
@@ -42,13 +45,8 @@ struct NewDirect3DDevice9
     IFACE_PASSTHROUGH(IDirect3DDevice9, CreateAdditionalSwapChain, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetSwapChain, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetNumberOfSwapChains, g_OldDirect3DDevice9);
-    IFACE_PASSTHROUGH(IDirect3DDevice9, Reset, g_OldDirect3DDevice9);
-    
-	STDMETHOD(Present)(THIS_ CONST RECT* pSourceRect,CONST RECT* pDestRect,HWND hDestWindowOverride,CONST RGNDATA* pDirtyRegion)
-	{
-		return g_OldDirect3DDevice9->Present(pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
-	}
-
+    IFACE_PASSTHROUGH(IDirect3DDevice9, Reset, g_OldDirect3DDevice9);    
+	IFACE_PASSTHROUGH(IDirect3DDevice9, Present, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetBackBuffer, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetRasterStatus, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, SetDialogBoxMode, g_OldDirect3DDevice9);
@@ -73,7 +71,16 @@ struct NewDirect3DDevice9
     IFACE_PASSTHROUGH(IDirect3DDevice9, SetDepthStencilSurface, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetDepthStencilSurface, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, BeginScene, g_OldDirect3DDevice9);
-    IFACE_PASSTHROUGH(IDirect3DDevice9, EndScene, g_OldDirect3DDevice9);
+
+    STDMETHOD(EndScene)(THIS)
+	{
+		g_DepthImages.OnEndScene(g_OldDirect3DDevice9);
+
+		HRESULT hr = g_OldDirect3DDevice9->EndScene();
+
+		return hr;
+	}
+
     IFACE_PASSTHROUGH(IDirect3DDevice9, Clear, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, SetTransform, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetTransform, g_OldDirect3DDevice9);
@@ -175,7 +182,6 @@ struct NewDirect3D9
 	IFACE_PASSTHROUGH(IDirect3D9, CheckDeviceFormatConversion, g_OldDirect3D9);
 	IFACE_PASSTHROUGH(IDirect3D9, GetDeviceCaps, g_OldDirect3D9);
 	IFACE_PASSTHROUGH(IDirect3D9, GetAdapterMonitor, g_OldDirect3D9);
-	IFACE_PASSTHROUGH(IDirect3D9, CreateDevice, g_OldDirect3D9);
 
     STDMETHOD(CreateDevice)(THIS_ UINT Adapter,D3DDEVTYPE DeviceType,HWND hFocusWindow,DWORD BehaviorFlags,D3DPRESENT_PARAMETERS* pPresentationParameters,IDirect3DDevice9** ppReturnedDeviceInterface)
 	{

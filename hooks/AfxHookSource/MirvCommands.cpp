@@ -11,18 +11,16 @@
 
 // Hint: for now commands are registered upon the first client.dll CreateInterface() call
 
+#include "DepthImages.h"
 #include "RenderView.h"
 #include "SourceInterfaces.h"
-#include "SvCheats.h"
 #include "WrpVEngineClient.h"
 #include "WrpConsole.h"
 #include "WrpVEngineClient.h"
 
-
 #include <malloc.h>
-#include <string.h>
-
 #include <stdlib.h>
+#include <string.h>
 
 extern WrpVEngineClient * g_VEngineClient;
 
@@ -69,9 +67,11 @@ CON_COMMAND(mirv_camexport, "controls camera motion data export") {
 
 	int argc = args->ArgC();
 
-	if(2 <= argc) {
+	if(2 <= argc)
+	{
 		char const * arg1 = args->ArgV(1);
-		if(0 == stricmp("stop", arg1)) {
+		if(0 == stricmp("stop", arg1))
+		{
 			g_Hook_VClient_RenderView.ExportEnd();
 			return;
 		}
@@ -83,7 +83,8 @@ CON_COMMAND(mirv_camexport, "controls camera motion data export") {
 			g_Hook_VClient_RenderView.ExportBegin(fileName, 1.0f/fps);	
 			return;
 		}
-		if(0 == stricmp("timeinfo", arg1)) {			
+		if(0 == stricmp("timeinfo", arg1))
+		{			
 			Tier0_Msg("Current (interpolated client) time: %f\n", g_Hook_VClient_RenderView.GetCurTime());
 			return;
 		}
@@ -149,8 +150,29 @@ CON_COMMAND(mirv_camimport, "controls camera motion data import") {
 	);
 }
 
+CON_COMMAND(mirv_depthexport, "depth (z-buffer) image export") {
+	int argc = args->ArgC();
 
-CON_COMMAND(mirv_allowcheats, "execute once to disable blocking of sv_cheats and related variables")
-{
-	Install_AllowCheats(g_VEngineClient->GetGameDirectory());
+	if(2 <= argc)
+	{
+		char const * arg1 = args->ArgV(1);
+		if(0 == stricmp("stop", arg1))
+		{
+			g_DepthImages.WriteDepth_set(false);
+			return;
+		}
+		else if(0 == stricmp("start", arg1) && 3 <= argc)
+		{
+			char const * fileName = args->ArgV(2);
+			g_DepthImages.FilePrefix_set(fileName);
+			g_DepthImages.WriteDepth_set(true);
+			return;
+		}
+	}
+
+	Tier0_Msg(
+		"Usage:\n"
+		"mirv_depthexport start <filePrefix>\n"
+		"mirv_depthexport stop\n"
+	);
 }

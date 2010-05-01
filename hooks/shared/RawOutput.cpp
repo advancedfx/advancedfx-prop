@@ -3,75 +3,30 @@
 #include "RawOutput.h"
 
 #include <windows.h>
-#include <gl\gl.h>
-//#include <winbase.h>
 #include <stdio.h>
 
-//
-//	TODO: lot's of, this is just another mad hack
-//
-
-
-/*
-//
-//	TODO: GlGetError handling is bad, may result in lost errors!
-//
-
-// commonly used properties that cause problems for us:
-struct GLStorageProperties_s
+int CalcPitch(int width, unsigned char bytePerPixel, int byteAlignment)
 {
-	GLint alignment;
-};
+	if(byteAlignment < 1)
+		return 0;
 
-void GetStorageProperties(GLStorageProperties_s *pHere)
-{
-	glGetIntegerv(GL_PACK_ALIGNMENT,&(pHere->alignment));
+	int pitch = 
+		width * (int)bytePerPixel;
+
+	if(0 != pitch % byteAlignment)
+		pitch = (1+(pitch / byteAlignment))*byteAlignment;
+
+	return pitch;
 }
-
-void SetStorageProperties(GLStorageProperties_s *pHere)
-{
-	glPixelStorei(GL_PACK_ALIGNMENT, pHere->alignment);
-}
-
-//	if it fails it restores the old ones
-bool SafeSetStorageProperties(GLStorageProperties_s *pHere)
-{
-	GLStorageProperties_s backup;
-	GetStorageProperties(backup);
-	glGetError(); // unset any old error (get's lost, bad coding)
-	SetStorageProperties(pHere);
-	if(glGetError())
-	{
-		glGetError(); // unset new error
-		SetStorageProperties(backup);
-	}
-
-}
-
-
-bool SafeSetupGLForTarga()
-{
-
-
-
-
-	return false;
-}
-
-bool SafeSetupGLForBitmap()
-{
-	return false;
-}
-*/
 
 // see RawOutput.h
 bool WriteRawBitmap(
-	unsigned char *pData,
-	const char *pszFileName,
+	unsigned char const * pData,
+	const char * pszFileName,
 	unsigned short usWidth,
 	unsigned short usHeight,
 	unsigned char ucBpp,
-	bool bRestoreAlign
+	int pitch
 )
 {
 	if(ucBpp > 24) return false;
@@ -155,40 +110,34 @@ bool WriteRawBitmap(
 	//
 	//	write out image data:
 
-	if(	bRestoreAlign ) // bRestoreAlign may change in this sub code!
-	{
-		LONG inLineSize = ucBpp >> 3;
-		if( ucBpp & 0x7) inLineSize++;
-		inLineSize *= usWidth;
-		LONG realLineSize = bmInfoH.biSizeImage / usHeight;
-		int iPaddings = realLineSize-inLineSize;
-		char pad=0x00;
-		char pad2=0xFF;
+	LONG realLineSize = bmInfoH.biSizeImage / usHeight;
 
-		if(iPaddings>0)
-		{
-
-			for( LONG line=0; line<usHeight; line++)
-			{
-				fwrite(pData, sizeof(unsigned char), inLineSize, pFile);
-				pData += inLineSize;
-				
-				for(int i=0;i<iPaddings;i++)
-					fwrite(&pad, 1, 1, pFile);
-			}
-
-		}
-		else bRestoreAlign=false; // !!!
-	}
-
-	if(!bRestoreAlign)
+	if(pitch == realLineSize)
 	{
 		fwrite(pData, sizeof(unsigned char), bmInfoH.biSizeImage, pFile);
+		fclose(pFile);
+		return true;
+	}
+	else if(pitch >  realLineSize)
+	{
+		int iPaddings = realLineSize-pitch;
+		char pad=0x00;
+
+		for( LONG line=0; line<usHeight; line++)
+		{
+			fwrite(pData, sizeof(unsigned char), pitch, pFile);
+			pData += pitch;
+			
+			for(int i=0;i<iPaddings;i++)
+				fwrite(&pad, 1, 1, pFile);
+		}
+
+		fclose(pFile);
+		return true;
 	}
 
 	fclose(pFile);
-
-	return true;
+	return false;
 }
 
 // see RawOutput.h

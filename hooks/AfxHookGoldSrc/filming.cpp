@@ -17,13 +17,15 @@
 #include "hl_addresses.h" // we want to access addressese (i.e. R_RenderView)
 #include <hooks/shared/detours.h> // we want to use Detourapply
 
-#include "RawOutput.h"
+#include <hooks/shared/RawOutput.h>
 
 #include <modules/ModInfo.h>
 
 #include "mirv_Scripting.h"
 
 #include "filetools.h"
+
+#include "hooks/hw/Mod_LeafPvs.h"
 
 extern cl_enginefuncs_s *pEngfuncs;
 extern engine_studio_api_s *pEngStudio;
@@ -114,6 +116,8 @@ enum FilmingStreamInfoType {
 //
 //
 //
+
+typedef void (*R_RenderView__t)( void );
 
 R_RenderView__t	detoured_R_RenderView_=NULL;
 
@@ -362,119 +366,6 @@ void touring_R_RenderView_(void)
 }
 
 
-//
-// Mod_LeafPVS WH related stuff:
-//
-
-// Hints:
-
-// 01d51d90 R_RenderView (found by searching for "%3ifps %3i ms %4i wpoly %4i epoly\n")
-// 
-// 01d51c60 R_RenderScene (modified) (usually has pretty static offset from R_RenderView)
-// 
-// 01d51cb3 e8b8f0ffff      call    launcher!CreateInterface+0x94f981 (01d50d70)
-// 01d51cb8 e883efffff      call    launcher!CreateInterface+0x94f851 (01d50c40)
-// 01d51cbd e82ef5ffff      call    launcher!CreateInterface+0x94fe01 (01d511f0) R_SetupGL
-// 01d51cc2 e8d9320000      call    launcher!CreateInterface+0x953bb1 (01d54fa0) <-- R_MarkLeaves
-// 
-// 01d54fa0 R_MarkLeafs (Valve modification):
-// 
-// (see Q1 source for more help):
-// 
-// 01edcdb4 --> r_novis.value
-//
-// R_MarkLeaves leads to Mod_LeafPVS
-
-typedef byte * (*Mod_LeafPVS_t)(mleaf_t *leaf, model_t *model);
-Mod_LeafPVS_t detoured_Mod_LeafPVS;
-
-byte * touring_Mod_LeafPVS (mleaf_t *leaf, model_t *model)
-{
-//	static byte	decompressed[MAX_MAP_LEAFS/8];
-
-	// (Re-)force r_novis 1 if requested!:	
-	if(( fx_wh_enable->value == 0.0f && fx_xtendvis->value != 0.0f)||(fx_wh_enable->value != 0.0f && fx_wh_xtendvis->value != 0.0f) )
-		return detoured_Mod_LeafPVS( model->leafs, model);
-
-	return detoured_Mod_LeafPVS( leaf, model);
-}
-
-void InstallHook_Mod_LeafPVS()
-{
-	if (!detoured_Mod_LeafPVS && (HL_ADDR_GET(Mod_LeafPVS)!=NULL))
-		detoured_Mod_LeafPVS = (Mod_LeafPVS_t) DetourApply((BYTE *)HL_ADDR_GET(Mod_LeafPVS), (BYTE *)touring_Mod_LeafPVS, (int)HL_ADDR_GET(DTOURSZ_Mod_LeafPVS));
-}
-
-//
-//	R_PolyBlend hook (usefull for flashhack etc.)
-//
-
-typedef void (*R_PolyBlend_t) (void);
-R_PolyBlend_t detoured_R_PolyBlend = NULL;
-
-bool g_b_R_PolyBlend_block = false;
-
-void touring_R_PolyBlend (void)
-{
-	if( !g_b_R_PolyBlend_block ) detoured_R_PolyBlend();
-}
-
-void InstallHook_R_PolyBlend()
-{
-	if (!detoured_R_PolyBlend && (HL_ADDR_GET(R_PolyBlend)!=NULL))
-			detoured_R_PolyBlend = (R_PolyBlend_t) DetourApply((BYTE *)HL_ADDR_GET(R_PolyBlend), (BYTE *)touring_R_PolyBlend, (int)HL_ADDR_GET(DTOURSZ_R_PolyBlend));
-}
-
-REGISTER_CMD_FUNC(fx_noblend)
-{
-	InstallHook_R_PolyBlend();
-	if( 2 == pEngfuncs->Cmd_Argc() )
-	{
-		int i = atoi(pEngfuncs->Cmd_Argv(1));
-		g_b_R_PolyBlend_block = i == 1;
-	} else {
-		pEngfuncs->Con_Printf("Usage:\n" PREFIX "fx_noblend 0/1 = normal/block blends\n");
-	}
-}
-
-
-// R_DrawParticles /////////////////////////////////////////////////////////////
-
-typedef void (*R_DrawParticles_t) (void);
-R_DrawParticles_t detoured_R_DrawParticles = NULL;
-
-void touring_R_DrawParticles (void)
-{
-	g_ModInfo.SetIn_R_DrawParticles(true);
-	detoured_R_DrawParticles();
-	g_ModInfo.SetIn_R_DrawParticles(false);
-}
-
-
-// R_DrawEntitiesOnList ////////////////////////////////////////////////////////
-
-typedef void (*R_DrawEntitiesOnList_t) (void);
-R_DrawEntitiesOnList_t detoured_R_DrawEntitiesOnList = NULL;
-
-void touring_R_DrawEntitiesOnList (void)
-{
-	g_ModInfo.SetIn_R_DrawEntitiesOnList(true);
-	detoured_R_DrawEntitiesOnList();
-	g_ModInfo.SetIn_R_DrawEntitiesOnList(false);
-}
-
-
-// R_DrawViewModel /////////////////////////////////////////////////////////////
-
-typedef void (*R_DrawViewModel_t) (void);
-R_DrawViewModel_t detoured_R_DrawViewModel = NULL;
-
-void touring_R_DrawViewModel (void)
-{
-	g_ModInfo.SetIn_R_DrawViewModel(true);
-	detoured_R_DrawViewModel();
-	g_ModInfo.SetIn_R_DrawViewModel(false);
-}
 
 
 //
@@ -1003,8 +894,10 @@ void Filming::Start()
 	_bSimulate = (movie_simulate->value != 0.0);
 	_bSimulate2 = _bSimulate && (movie_simulate->value != 2.0);
 
-	// make sure the R_MarLeaves is hooked:
-	InstallHook_Mod_LeafPVS();
+
+	// Mod_LeafPvs (WallHack related):
+	g_Mod_LeafPvs_NoVis = ( fx_wh_enable->value == 0.0f && fx_xtendvis->value != 0.0f)||(fx_wh_enable->value != 0.0f && fx_wh_xtendvis->value != 0.0f);
+
 
 	// setup camexport:
 	if (!_bSimulate2) {
@@ -1023,18 +916,6 @@ void Filming::Start()
 		// we don't have it yet and the addres is not NULL (which might be an intended cfg setting)
 		detoured_R_RenderView_ = (R_RenderView__t) DetourApply((BYTE *)HL_ADDR_GET(R_RenderView), (BYTE *)touring_R_RenderView_, (int)HL_ADDR_GET(DTOURSZ_R_RenderView));
 		install_Hud_tours(); // wil automaticall check if already installed or not
-	}
-
-	if( !detoured_R_DrawParticles ) {
-		detoured_R_DrawParticles = (R_DrawParticles_t) DetourApply((BYTE *)HL_ADDR_GET(R_DrawParticles), (BYTE *)touring_R_DrawParticles, (int)HL_ADDR_GET(DTOURSZ_R_DrawParticles));
-	}
-
-	if( !detoured_R_DrawEntitiesOnList ) {
-		detoured_R_DrawEntitiesOnList = (R_DrawEntitiesOnList_t) DetourApply((BYTE *)HL_ADDR_GET(R_DrawEntitiesOnList), (BYTE *)touring_R_DrawEntitiesOnList, (int)HL_ADDR_GET(DTOURSZ_R_DrawEntitiesOnList));
-	}
-
-	if( !detoured_R_DrawViewModel ) {
-		detoured_R_DrawViewModel = (R_DrawViewModel_t) DetourApply((BYTE *)HL_ADDR_GET(R_DrawViewModel), (BYTE *)touring_R_DrawViewModel, (int)HL_ADDR_GET(DTOURSZ_R_DrawViewModel));
 	}
 
 	// make sure some states used in recordBuffers are set properly:
@@ -1180,7 +1061,7 @@ void Filming::OnPrintFrame(unsigned char * data, int number)
 	
 	if( bBMP )
 		WriteRawBitmap((unsigned char *)data, szFilename, m_iWidth, m_iCropHeight, nBits,
-			false); // align is still 4 byte probably
+			CalcPitch(m_iWidth, 3, 4)); // align is still 4 byte probably
 	else
 		WriteRawTarga((unsigned char *)data, szFilename, m_iWidth, m_iCropHeight, nBits,
 			false); // always color
@@ -1522,7 +1403,7 @@ void Filming::Capture(FilmingStreamInfo * streamInfo, int iFileNumber, BUFFER iB
 		if( bBMP )
 		{
 			WriteRawBitmap(m_GlRawPic.GetPointer(), szFilename, m_iWidth, m_iCropHeight, ucComponentBytes<<3,
-				false); // align is still 4 byte probably
+				CalcPitch(m_iWidth, ucComponentBytes, 4)); // align is still 4 byte probably
 			return;
 		}
 

@@ -9,6 +9,12 @@
 #include "gdi32Hooks.h"
 #include "user32Hooks.h"
 
+#include "hw/Mod_LeafPvs.h"
+#include "hw/R_DrawEntitiesOnList.h"
+#include "hw/R_DrawParticles.h"
+#include "hw/R_DrawViewModel.h"
+#include "hw/R_PolyBlend.h"
+
 #include "../HltvFix.h"
 #include "../hl_addresses.h"
 #include "../mirv_scripting.h"
@@ -121,4 +127,14 @@ void HookHw(HMODULE hHw)
 		MessageBox(0,"One or more interceptions failed","MDT_ERROR",MB_OK|MB_ICONHAND);
 
 	HandleForceRes();
+
+	Hook_Mod_LeafPvs();
+
+	Hook_R_DrawEntitiesOnList();
+
+	Hook_R_DrawParticles();
+
+	Hook_R_DrawViewModel();
+
+	Hook_R_PolyBlend();
 }

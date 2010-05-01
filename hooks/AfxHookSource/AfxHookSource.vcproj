@@ -190,6 +190,14 @@
 					RelativePath="..\shared\detours.h"
 					>
 				</File>
+				<File
+					RelativePath="..\shared\RawOutput.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\shared\RawOutput.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="AfxHookSource"
@@ -200,6 +208,14 @@
 				</File>
 				<File
 					RelativePath=".\d3d9Hooks.h"
+					>
+				</File>
+				<File
+					RelativePath=".\DepthImages.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\DepthImages.h"
 					>
 				</File>
 				<File
@@ -228,14 +244,6 @@
 				</File>
 				<File
 					RelativePath=".\stdafx.h"
-					>
-				</File>
-				<File
-					RelativePath=".\SvCheats.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\SvCheats.h"
 					>
 				</File>
 				<File

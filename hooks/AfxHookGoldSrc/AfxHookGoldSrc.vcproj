@@ -305,6 +305,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\fx_noblend.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\hl_addresses.cpp"
 					>
 				</File>
@@ -378,22 +382,6 @@
 				</File>
 				<File
 					RelativePath=".\newsky.h"
-					>
-				</File>
-				<File
-					RelativePath=".\RawMedia.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\RawMedia.h"
-					>
-				</File>
-				<File
-					RelativePath=".\RawOutput.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\RawOutput.h"
 					>
 				</File>
 				<File
@@ -601,6 +589,54 @@
 						RelativePath=".\hooks\user32Hooks.h"
 						>
 					</File>
+					<Filter
+						Name="client"
+						>
+					</Filter>
+					<Filter
+						Name="hw"
+						>
+						<File
+							RelativePath=".\hooks\hw\Mod_LeafPvs.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\hooks\hw\Mod_LeafPvs.h"
+							>
+						</File>
+						<File
+							RelativePath=".\hooks\hw\R_DrawEntitiesOnList.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\hooks\hw\R_DrawEntitiesOnList.h"
+							>
+						</File>
+						<File
+							RelativePath=".\hooks\hw\R_DrawParticles.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\hooks\hw\R_DrawParticles.h"
+							>
+						</File>
+						<File
+							RelativePath=".\hooks\hw\R_DrawViewModel.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\hooks\hw\R_DrawViewModel.h"
+							>
+						</File>
+						<File
+							RelativePath=".\hooks\hw\R_PolyBlend.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\hooks\hw\R_PolyBlend.h"
+							>
+						</File>
+					</Filter>
 				</Filter>
 				<Filter
 					Name="bits"
@@ -646,6 +682,14 @@
 					RelativePath="..\shared\detours.h"
 					>
 				</File>
+				<File
+					RelativePath="..\shared\RawOutput.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\shared\RawOutput.h"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<Filter
@@ -680,6 +724,42 @@
 				>
 				<File
 					RelativePath="..\..\shared\hldemo\hldemo.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="vcpp"
+				>
+				<File
+					RelativePath="..\..\shared\vcpp\Data.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\shared\vcpp\Data.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\shared\vcpp\GlImage.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\shared\vcpp\GlImage.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\shared\vcpp\Image.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\shared\vcpp\Image.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\shared\vcpp\Ref.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\shared\vcpp\Ref.h"
 					>
 				</File>
 			</Filter>

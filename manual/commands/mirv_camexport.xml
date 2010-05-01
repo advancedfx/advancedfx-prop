@@ -1,0 +1,35 @@
+<node>
+	<!--
+	<link>/commands/mirv_camexport</link>
+	<link>/engines/source/cstrike/mirv_camexport</link>
+	<link>/engines/source/ep2/mirv_camexport</link>
+	-->
+
+	<title>mirv_camexport</title>
+	
+	Camera motion data export.
+
+	<or>
+		<node>
+			<link>start</link>
+			<title>start</title>
+			
+			Enables camera motion data export.
+			
+			<node arg="string">
+				<title>fileName.bvh</title>
+				Export file name.
+			</node>
+			<node arg="float">
+				<title>fps</title>
+				Frame to claim for the output file.
+			</node>
+		</node>
+		<node>
+			<link>stop</link>
+			<title>stop</title>
+			
+			Stops camera motion data export.
+		</node>
+	</or>
+</node>

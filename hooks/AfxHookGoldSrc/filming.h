@@ -22,12 +22,6 @@ Description : see mdt_gltools.h
 
 //#include "eiface_mdt.h"
 
-// added 20070922:
-
-// I could have also moved this into the class, but I didn't want to mess around with static members and stuff etc.
-typedef void (*R_RenderView__t)( void );
-extern R_RenderView__t detoured_R_RenderView_; // filming.cpp
-
 
 // Filming /////////////////////////////////////////////////////////////////////
 

@@ -1,5 +1,4 @@
-#ifndef MDT_RAW_OUTPUT_H
-#define MDT_RAW_OUTPUT_H
+#pragma once
 
 // Temporary raw and dirty raw output functions
 // to allow getting the existing code more structured and readable
@@ -9,6 +8,9 @@
 
 #include <windows.h>
 #include <winbase.h>
+
+
+int CalcPitch(int width, unsigned char bytePerPixel, int byteAlignment);
 
 //	WriteRawTarga
 //
@@ -36,14 +38,12 @@ bool WriteRawTarga(
 //
 //	pData - bottom-left -> top-right, 4 Byte (32Bit DWORD) alligned
 //	ucBpp <= 24
-//	bRestoreAlign // hack: 1 Byte Row Alignment (SAMPLER) -> 4 Byte Row Alignment (BMP)
+//	pitch // number of bytes in a row
 bool WriteRawBitmap(
-	unsigned char *pData,
-	const char *pszFileName,
+	unsigned char const * pData,
+	const char * pszFileName,
 	unsigned short usWidth,
 	unsigned short usHeight,
 	unsigned char ucBpp,
-	bool bRestoreAlign
+	int pitch
 );
-
-#endif // #ifndef MDT_RAW_OUTPUT_H
