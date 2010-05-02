@@ -1,14 +1,24 @@
 #include "StdAfx.h"
 
 #include "MainForm.h"
-#include "Launcher.h"
+
+#include <AfxGoldSrc/AfxGoldSrc.h>
 #include <system/debug.h>
 #include <tools/demotools/demotoolswizard.h>
+
+#include "Launcher.h"
 
 
 using namespace hlae;
 using namespace hlae::debug;
 using namespace hlae::remoting;
+
+
+System::Void MainForm::MainForm_FormClosing(System::Object^  sender, System::Windows::Forms::FormClosingEventArgs^  e)
+{
+	if(nullptr != AfxGoldSrc::Get())
+		delete AfxGoldSrc::Get();
+}
 
 void MainForm::MyCreate()
 {

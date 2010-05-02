@@ -5,6 +5,18 @@
 
 <release>
 <name>HLAE</name>
+<version>2.2.14.1</version>
+<time>2010-05-02T09:10Z</time>
+<changes>
+<change type="fixed">
+Fixed hlae.exe and hl.exe processes not closing when closing the HLAE window.
+</change>
+</changes>
+<comments>More bugs than features lately, eh? Good thing we count those as features too, meh. :|</comments>
+</release>
+
+<release>
+<name>HLAE</name>
 <version>2.2.14.0</version>
 <time>2010-05-01T15:40Z</time>
 <changes>

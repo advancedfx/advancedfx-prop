@@ -107,6 +107,7 @@ namespace hlae {
 		FileDebugListener ^debugFile;
 		HlaeConsole ^ hlaeConsole;
 		System::Windows::Forms::ToolStripStatusLabel^  statusLabelHide;
+		System::Void MainForm_FormClosing(System::Object^  sender, System::Windows::Forms::FormClosingEventArgs^  e);
 		void UpdaterChecked(System::Object ^sender, IUpdaterCheckResult ^checkResult);
 
 
@@ -484,6 +485,7 @@ private: System::Windows::Forms::ToolStripMenuItem^  statusBarToolStripMenuItem;
 			this->MainMenuStrip = this->menuStrip1;
 			this->Name = L"MainForm";
 			this->Text = L"Half-Life Advanced Effects";
+			this->FormClosing += gcnew System::Windows::Forms::FormClosingEventHandler(this, &MainForm::MainForm_FormClosing);
 			this->menuStrip1->ResumeLayout(false);
 			this->menuStrip1->PerformLayout();
 			this->splitContainerPrimary->Panel2->ResumeLayout(false);

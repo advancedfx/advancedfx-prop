@@ -93,10 +93,6 @@ int main(array<System::String ^> ^args)
 	// Create the main window and run it
 	Application::Run(gcnew MainForm(Globals,debugFile));
 
-	// Shutdown singelton instances (ugly hack for now):
-	if(nullptr != AfxGoldSrc::Get())
-		delete AfxGoldSrc::Get();
-
 	// Shutdown updater:
 	delete Updater::Singelton;
 	Updater::Singelton = nullptr;
