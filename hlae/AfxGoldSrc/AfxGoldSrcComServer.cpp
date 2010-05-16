@@ -151,9 +151,7 @@ void AfxGoldSrcComServer::Start(
 
 	m_ServerShutdown = false;
 	m_ServerThread = gcnew Thread(gcnew ThreadStart( this, &AfxGoldSrcComServer::ServerWorker ));
-
-	if(InitServer())
-		m_ServerThread->Start();
+	m_ServerThread->Start();
 }
 
 
@@ -182,6 +180,9 @@ bool AfxGoldSrcComServer::ProcessMessages()
 
 void AfxGoldSrcComServer::ServerWorker(void)
 {
+	if(!InitServer())
+		return;
+
 	while(ProcessMessages());
 }
 

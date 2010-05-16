@@ -1,35 +1,42 @@
-// rendered with POV-Ray
-// http://povray.org/
+// advancedfx.org logo
+//
+// To be rendered with POV-Ray ( http://povray.org/ ).
 
-#declare fin1 = finish { ambient .1 diffuse .8 reflection 0 phong .1 phong_size 8 }
-#declare tex_silver = texture { pigment { color rgb <1, 1, 1> } finish { fin1 } }
-#declare tex_red = texture { pigment { color rgb <1, 0, 0> } finish { fin1 } }
+#include "metals.inc"
+#include "golds.inc"
 
 union {
   light_source {
-      <-6, -6, -12>
-      color rgb < .25, .25, .25>
+      <0, 0, 0>
+      color rgb 1/2
+  }
+
+
+  light_source {
+      <-6, -6, 0>
+      color rgb 1/8
   }
   light_source {
-      <+6, -6, -12>
-      color rgb < .25, .25, .25>
+      <-6, +6, 0>
+      color rgb 1/8
   }
   light_source {
-      <-6, +6, -12>
-      color rgb < .25, .25, .25>
+      <+6, -6, 0>
+      color rgb 1/8
   }
   light_source {
-      <+6, +6, -12>
-      color rgb < .25, .25, .25>
+      <+6, +6, 0>
+      color rgb 1/8
   }
   
+  translate <0, 0, -20>
   rotate <0,-clock*360,0>
 }
 
 camera {
-  right 16*x/9
+  right 800*x/800
   up y
-  location  <  20*sin(clock*2*pi),   0,  -20*cos(clock*2*pi)>
+  location  <  20*sin(clock*2*pi),  0,  -20*cos(clock*2*pi)>
   look_at   <  0,   0,  0>
 }
 
@@ -123,13 +130,13 @@ intersection {
     <-10,-10,-1/2> <10,10,1/2>
   }
   
-  texture { tex_silver }
+  texture { T_Gold_5E }
 }
 
 cylinder {
   <0,0,-1/8>, <0,0,1/8> 9
 
-  texture { tex_red }
+  texture { T_Silver_3C }
 }
 
 difference {
@@ -140,7 +147,7 @@ difference {
     <0,0,-1>, <0,0,1> 9-1/6
   }
   
-  texture { tex_silver }
+  texture { T_Silver_3E }
 }
   
   

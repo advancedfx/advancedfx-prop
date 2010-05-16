@@ -3,6 +3,22 @@
 
 <changelog>
 
+
+<release>
+<name>HLAE</name>
+<version>2.2.14.2</version>
+<time>2010-05-16T00:02Z</time>
+<changes>
+<change type="fixed">
+Fixed hlae.exe and hl.exe processes not closing when closing the HLAE window.
+</change>
+<change type="updated">
+Changed injection process a bit.
+</change>
+</changes>
+</release>
+
+
 <release>
 <name>HLAE</name>
 <version>2.2.14.1</version>
@@ -14,6 +30,7 @@ Fixed hlae.exe and hl.exe processes not closing when closing the HLAE window.
 </changes>
 <comments>More bugs than features lately, eh? Good thing we count those as features too, meh. :|</comments>
 </release>
+
 
 <release>
 <name>HLAE</name>
@@ -29,6 +46,7 @@ Other internal changes.
 </changes>
 </release>
 
+
 <release>
 <name>HLAE</name>
 <version>2.2.13.7</version>
@@ -40,6 +58,7 @@ Update dem_forcehltv 1 fix to fix in-eye weapon models not showing.
 </changes>
 </release>
 
+
 <release>
 <name>HLAE</name>
 <version>2.2.13.6</version>
@@ -50,6 +69,7 @@ Fixed force alpha 8 option.
 </change>
 </changes>
 </release>
+
 
 <release>
 <name>HLAE</name>
@@ -63,6 +83,7 @@ Yet another bugfix.
 <comments>The release today went a bit unlucky. Sorry about that. This update is still not perfect, but okay for now.</comments>
 </release>
 
+
 <release>
 <name>HLAE</name>
 <version>2.2.13.4</version>
@@ -73,6 +94,7 @@ Fixed GUI scroll sizing.
 </change>
 </changes>
 </release>
+
 
 <release>
 <name>HLAE</name>

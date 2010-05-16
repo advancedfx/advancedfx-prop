@@ -1,0 +1,256 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectName>Half-Life Advanced Effects .NET</ProjectName>
+    <ProjectGuid>{CF9B4385-F921-4168-92D4-31DF94AC36FB}</ProjectGuid>
+    <RootNamespace>hlae</RootNamespace>
+    <Keyword>ManagedCProj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <CLRSupport>true</CLRSupport>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <CLRSupport>true</CLRSupport>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)build\$(Configuration)\bin\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)build\$(Configuration)\$(RootNamespace)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)build\$(Configuration)\bin\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)build\$(Configuration)\$(RootNamespace)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">hlae</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">hlae</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_BIND_TO_CURRENT_CRT_VERSION=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AssemblyDebug>true</AssemblyDebug>
+      <SubSystem>Windows</SubSystem>
+      <EntryPointSymbol>main</EntryPointSymbol>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_BIND_TO_CURRENT_CRT_VERSION=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <EntryPointSymbol>main</EntryPointSymbol>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <Reference Include="System">
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+    </Reference>
+    <Reference Include="System.Data">
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+    </Reference>
+    <Reference Include="System.Drawing">
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+    </Reference>
+    <Reference Include="System.Windows.Forms">
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+    </Reference>
+    <Reference Include="System.Xml">
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+    </Reference>
+    <Reference Include="System.Web">
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+    </Reference>
+    <Reference Include="System.Web.Services">
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="AssemblyInfo.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="controls\HlaeConsole.cpp" />
+    <ClCompile Include="forms\Launcher.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)%(Filename)1.obj</ObjectFileName>
+      <XMLDocumentationFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)%(Filename)1.xdc</XMLDocumentationFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename)1.obj</ObjectFileName>
+      <XMLDocumentationFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename)1.xdc</XMLDocumentationFileName>
+    </ClCompile>
+    <ClCompile Include="forms\MainForm.cpp" />
+    <ClCompile Include="AfxDocking.cpp" />
+    <ClCompile Include="system\debug.cpp" />
+    <ClCompile Include="system\debug_file.cpp" />
+    <ClCompile Include="system\loader.cpp" />
+    <ClCompile Include="system\updater.cpp" />
+    <ClCompile Include="tools\skymanager\skymanager.cpp" />
+    <ClCompile Include="tools\customloader\CustomLoader.cpp" />
+    <ClCompile Include="tools\demotools\demotools.cpp" />
+    <ClCompile Include="tools\demotools\DemoToolsProgressForm.cpp" />
+    <ClCompile Include="tools\demotools\demotoolswizard.cpp" />
+    <ClCompile Include="AfxGoldSrc\AfxGoldSrc.cpp" />
+    <ClCompile Include="AfxGoldSrc\AfxGoldSrcComServer.cpp" />
+    <ClCompile Include="..\shared\com\PipeCom.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="controls\HlaeConsole.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
+    <ClInclude Include="forms\Calculator.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
+    <ClInclude Include="forms\Launcher.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
+    <ClInclude Include="forms\MainForm.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
+    <ClInclude Include="forms\OverwriteDialog.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
+    <ClInclude Include="resources\resource.h" />
+    <ClInclude Include="AfxDocking.h" />
+    <ClInclude Include="system\config.h" />
+    <ClInclude Include="system\debug.h" />
+    <ClInclude Include="system\debug_file.h" />
+    <ClInclude Include="system\globals.h" />
+    <ClInclude Include="system\loader.h" />
+    <ClInclude Include="system\remoting.h" />
+    <ClInclude Include="system\updater.h" />
+    <ClInclude Include="tools\skymanager\skymanager.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
+    <ClInclude Include="tools\customloader\CustomLoader.h" />
+    <ClInclude Include="tools\customloader\CustomLoaderForm.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
+    <ClInclude Include="tools\demotools\demotools.h" />
+    <ClInclude Include="tools\demotools\DemoToolsProgressForm.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
+    <ClInclude Include="tools\demotools\DemoToolsWiz1.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
+    <ClInclude Include="tools\demotools\DemoToolsWiz2.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
+    <ClInclude Include="tools\demotools\DemoToolsWiz3.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
+    <ClInclude Include="tools\demotools\demotoolswizard.h" />
+    <ClInclude Include="AfxGoldSrc\AfxGoldSrc.h" />
+    <ClInclude Include="AfxGoldSrc\AfxGoldSrcComServer.h" />
+    <ClInclude Include="..\shared\com\AfxGoldSrcComDefs.h" />
+    <ClInclude Include="..\shared\com\PipeCom.h" />
+    <ClInclude Include="..\shared\hldemo\hldemo.h" />
+    <ClInclude Include="..\shared\hldemo\hldemo_clr.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\app.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="resources\app.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="controls\HlaeConsole.resx">
+      <DependentUpon>HlaeConsole.h</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="forms\Calculator.resx">
+      <DependentUpon>Calculator.h</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="forms\Launcher.resx">
+      <DependentUpon>Launcher.h</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="forms\MainForm.resx">
+      <DependentUpon>MainForm.h</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="forms\OverwriteDialog.resx">
+      <DependentUpon>OverwriteDialog.h</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="tools\skymanager\skymanager.resx">
+      <DependentUpon>skymanager.h</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="tools\customloader\CustomLoaderForm.resx">
+      <DependentUpon>CustomLoaderForm.h</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="tools\demotools\DemoToolsProgressForm.resx">
+      <DependentUpon>DemoToolsProgressForm.h</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="tools\demotools\DemoToolsWiz1.resx">
+      <DependentUpon>DemoToolsWiz1.h</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="tools\demotools\DemoToolsWiz2.resx">
+      <DependentUpon>DemoToolsWiz2.h</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="tools\demotools\DemoToolsWiz3.resx">
+      <DependentUpon>DemoToolsWiz3.h</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

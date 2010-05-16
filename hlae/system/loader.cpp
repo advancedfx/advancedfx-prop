@@ -28,69 +28,14 @@
 #define WIN32_LEAN_AND_MEAN
 #include <tchar.h>
 #include <windows.h>
-#include <stdlib.h> // remove later, for _itot
+#include <stdlib.h>
+#include <stdio.h>
 
 #pragma comment(lib, "version.lib") // GEtFileVersion...
 #pragma comment(lib, "User32.lib") // MessageBox, remove later
 
-PROCESS_INFORMATION g_HLpi;		// global proccessinfo for HL, only valid when HL has been started by LoaderThread and is still runing
-STARTUPINFO g_HLsi;				// I don't know why I made this global, used in LoaderThread
-
 #define CREATE_THREAD_ACCESS (PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ)
 
-HRESULT InjectDll(DWORD pID, LPCTSTR dllName)
-{
-	HANDLE hProc = OpenProcess(CREATE_THREAD_ACCESS, FALSE, pID);
-
-	if (!hProc)
-		return FALSE;
-
-	LPVOID lLoadLibraryAddr = (LPVOID) GetProcAddress(
-		GetModuleHandle( _T("kernel32.dll") ),
-#ifdef _UNICODE
-		"LoadLibraryW"
-#elif
-		"LoadLibraryA"
-#endif
-		);	
-
-	if (!lLoadLibraryAddr)
-	{
-		CloseHandle(hProc);
-		return FALSE;
-	}
-
-	LPVOID lArgAddress = VirtualAllocEx(hProc, NULL, sizeof( _TCHAR ) * (_tcsclen(dllName) + 1), MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE); 
-
-	if (!lArgAddress)
-	{
-		CloseHandle(hProc);
-		return FALSE;
-	}
-
-	BOOL bResult = WriteProcessMemory(hProc, lArgAddress, dllName, sizeof( _TCHAR ) * (_tcsclen(dllName) + 1), NULL);
-
-	if (!bResult)
-	{
-		VirtualFreeEx(hProc, lArgAddress, sizeof( _TCHAR ) * (_tcsclen(dllName) + 1), MEM_RELEASE|MEM_DECOMMIT);
-		CloseHandle(hProc);
-		return FALSE;
-	}
-	
-	HANDLE hThread = CreateRemoteThread(hProc, NULL, NULL, (LPTHREAD_START_ROUTINE) lLoadLibraryAddr, lArgAddress, NULL, NULL);
-
-	if (!hThread)
-	{
-		VirtualFreeEx(hProc, lArgAddress, sizeof( _TCHAR ) * (_tcsclen(dllName) + 1), MEM_RELEASE|MEM_DECOMMIT);
-		CloseHandle(hProc);
-		return FALSE;
-	}
-
-	VirtualFreeEx(hProc, lArgAddress, sizeof( _TCHAR ) * (_tcsclen(dllName) + 1), MEM_RELEASE|MEM_DECOMMIT);
-	CloseHandle(hProc);
-
-	return TRUE;
-}
 
 LPCTSTR GetPluginVersion(LPCTSTR pszName)
 // this function supports MBCS and Unicode
@@ -127,102 +72,212 @@ LPCTSTR GetPluginVersion(LPCTSTR pszName)
 
 	return szVersion;
 }
-LPTSTR g_path_dll;
-LPTSTR g_path_exe;
-LPTSTR g_dir_exe;
-LPTSTR g_opts_exe;
 
-bool g_bSignalDone=false;
 
-DWORD WINAPI LoaderThread(void *p)
+class AfxHook
 {
-	//MessageBox(0,g_path_dll,_T("g_path_dll"),MB_OK|MB_ICONINFORMATION);
-
-	//
-	// Phase 1: Launch Half-Life
-	//
-	//	EnableDebugPrivilege(true);
-	// Note: The CreateProcess call has to be made by the thread that want's to Debug!
-
-	// check if the DLL exists:
-
-	//
-	// not implemented
-	//
-
-	LPCTSTR pszVersion = GetPluginVersion(g_path_dll);
-
-	if (!pszVersion)
+public:
+	AfxHook(char const * imageFileName)
 	{
-//		MessageBox( 0, _T("Could not retrive mdt dll version info."), _T("Error"), MB_OK|MB_ICONERROR );
-		//g_debug.SendMessage(wxString::Format(_T("Could not retrive info from %s."), _T(HLAE_DLLNAME)), hlaeDEBUG_ERROR);
-//		g_bSignalDone=true;
-//		return FALSE;
-	} else {
-		//wxString tstr;
-		//tstr.Printf(_T("Mirv Demo Tool (DLL v%s)"),wxString(pszVersion));
-		//g_debug.SendMessage(tstr,hlaeDEBUG_INFO);
+		m_BootImage = 0;
+		m_BootImageSize = 0;
+
+		LoadImage(imageFileName);
 	}
 
-	// there should be some detecton if HL is already running here:
-	// and if it can be launched (file exists):
-	
-	//
-	// not implemented yet.
-	//
-
-	// Launch Half-Life:
-    ZeroMemory( &g_HLsi, sizeof(g_HLsi) );
-	//GetStartupInfo(&g_HLsi);
-    g_HLsi.cb = sizeof(g_HLsi);
-    ZeroMemory( &g_HLpi, sizeof(g_HLpi) );
-
-	//g_debug.SendMessage(_T("Launching Half-Life ..."),hlaeDEBUG_INFO);
-
-	if(!CreateProcess(
-		g_path_exe,
-		g_opts_exe,
-		NULL,
-		NULL,
-		TRUE, // inherit handles
-			//CREATE_DEFAULT_ERROR_MODE|
-			CREATE_NEW_PROCESS_GROUP|
-			DETACHED_PROCESS|
-			CREATE_SUSPENDED
-			//DEBUG_ONLY_THIS_PROCESS|
-			//DEBUG_PROCESS				// we want to catch debug event's (sadly also of childs)
-			,
-		NULL,
-		g_dir_exe,
-		&g_HLsi,
-		&g_HLpi)  )
+	~AfxHook()
 	{
-		TCHAR strerr[33];
-		_itot(GetLastError(),strerr,10);
-		MessageBox( 0, _T("Failed to launch Half-Life."), (LPCTSTR)strerr, MB_OK|MB_ICONERROR );
-		//g_debug.SendMessage(_T("ERROR: Failed to launch Half-Life."),hlaeDEBUG_ERROR);
-		g_bSignalDone=true;
-		return FALSE;
+		FreeImage();
 	}
 
-	//MessageBox( 0, _T("Injecting hook ..."), _T("Error"), MB_OK|MB_ICONERROR );
 
-	if (!InjectDll(g_HLpi.dwProcessId, g_path_dll))
-		MessageBox( 0, _T("Starting injection failed."), _T("Error"), MB_OK|MB_ICONERROR );
-		//;
-		//g_debug.SendMessage(_T("ERROR: Starting injection failed!"), hlaeDEBUG_ERROR);
+	bool Inject(
+		LPCTSTR programPath, LPCTSTR programDirectory, LPTSTR programOptions,
+		LPCTSTR dllDirectory, LPCTSTR dllFileName
+	)
+	{
+		PROCESS_INFORMATION processInfo;
+		STARTUPINFO startupInfo;
 
-	Sleep(2000);
+		ZeroMemory( &processInfo, sizeof(processInfo) );
 
-	//g_debug.SendMessage(_T("Resuming ..."), hlaeDEBUG_VERBOSE_LEVEL3);
-	ResumeThread(g_HLpi.hThread);
+		ZeroMemory( &startupInfo, sizeof(startupInfo) );
+		startupInfo.cb = sizeof(processInfo);
 
-	// I don't know why, but if we don't send a debug message here, the InitLoader will hang forever:
-	//g_debug.SendMessage(_T("Done, LoaderThread is about to die ..."), hlaeDEBUG_VERBOSE_LEVEL3);
+		if(!CreateProcess(
+			programPath,
+			programOptions,
+			NULL,
+			NULL,
+			TRUE, // inherit handles
+				//CREATE_DEFAULT_ERROR_MODE|
+				CREATE_NEW_PROCESS_GROUP|
+				DETACHED_PROCESS|
+				CREATE_SUSPENDED
+				//DEBUG_ONLY_THIS_PROCESS|
+				//DEBUG_PROCESS				// we want to catch debug event's (sadly also of childs)
+				,
+			NULL,
+			programDirectory,
+			&startupInfo,
+			&processInfo
+		))
+		{
+			TCHAR strErr[33];
+			_itot(GetLastError(), strErr, 10);
+			MessageBox( 0, _T("Failed to launch the program."), (LPCTSTR)strErr, MB_OK|MB_ICONERROR );
+			return false;
+		}
 
-	g_bSignalDone=true;
-	return TRUE;
-}
+		bool imageInjected = InjectImage(
+			processInfo.dwProcessId, dllDirectory, dllFileName
+		);
+
+		if (!imageInjected)
+		{
+			MessageBox( 0, _T("Image injection failed."), _T("Error"), MB_OK|MB_ICONERROR );
+		}
+
+		Sleep(2000);
+
+		ResumeThread(processInfo.hThread);
+
+		return imageInjected;
+	}
+
+private:
+	unsigned char * m_BootImage;
+	size_t m_BootImageSize;
+
+	void LoadImage(char const * imageFileName)
+	{
+		FILE * file = 0;
+
+		bool bOk =
+			0 != (file= fopen(imageFileName, "r"))
+			&& 0 == fseek(file, 0, SEEK_END)
+			&& -1 != (m_BootImageSize = ftell(file))
+			&& 0 == fseek(file, 0, SEEK_SET)
+			&& 0 != (m_BootImage = (unsigned char *)malloc(m_BootImageSize))
+			&& 1 == fread(m_BootImage, m_BootImageSize, 1, file)
+		;
+
+		if(file) fclose(file);
+
+		if(!bOk)
+		{
+			FreeImage();
+		}
+
+	}
+
+	void FreeImage()
+	{
+		if(m_BootImage) free(m_BootImage);
+		m_BootImage = 0;
+		m_BootImageSize = 0;
+	}
+
+	bool InjectImage(DWORD processId, LPCTSTR dllDirectory, LPCTSTR dllFileName)
+	{
+		LPVOID argDllDir = 0;
+		LPVOID argDllName = 0;
+		size_t dllDirectorySz = sizeof( _TCHAR ) * (_tcsclen(dllDirectory) + 1);
+		size_t dllFileNameSz = sizeof( _TCHAR ) * (_tcsclen(dllFileName) + 1);
+		HMODULE hKernel32 = GetModuleHandle( _T("kernel32.dll") );
+		HANDLE hProc = OpenProcess(CREATE_THREAD_ACCESS, FALSE, processId);
+		HANDLE hThread = 0;
+		LPVOID imageAfxHook = 0;
+		LPVOID pLoadLibrary = 0;
+		LPVOID pSetDllDirectory = 0;
+
+		bool bOk =
+			m_BootImage && hKernel32 && hProc
+
+			&& (pLoadLibrary = (LPVOID) GetProcAddress(hKernel32,
+#ifdef _UNICODE
+				"LoadLibraryW"
+#elif
+				"LoadLibraryA"
+#endif
+			))
+			&& (pSetDllDirectory = (LPVOID) GetProcAddress(hKernel32,
+#ifdef _UNICODE
+				"SetDllDirectoryW"
+#elif
+				"SetDllDirectoryA"
+#endif
+			))
+
+			&& (argDllDir  = VirtualAllocEx(hProc, NULL, dllDirectorySz, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE))
+			&& (argDllName = VirtualAllocEx(hProc, NULL, dllFileNameSz, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE))
+			&& (imageAfxHook = VirtualAllocEx(hProc, NULL, m_BootImageSize, MEM_RESERVE|MEM_COMMIT, PAGE_EXECUTE_READWRITE))
+
+			&& UpdateBootImage(pLoadLibrary, pSetDllDirectory, argDllDir, argDllName)
+
+			&& WriteProcessMemory(hProc, argDllDir, dllDirectory, dllDirectorySz, NULL)
+			&& WriteProcessMemory(hProc, argDllName, dllFileName, dllFileNameSz, NULL)
+			&& WriteProcessMemory(hProc, imageAfxHook, m_BootImage, m_BootImageSize, NULL)
+
+			&& (hThread = CreateRemoteThread(
+				hProc, NULL, 0, (LPTHREAD_START_ROUTINE)imageAfxHook, NULL, 0, NULL
+			))
+		;
+
+		if(bOk)
+		{
+			bOk = false;
+
+			for(int i=0; i < 60; i++)
+			{
+				if(WAIT_OBJECT_0 == WaitForSingleObject(hThread, 1000))
+				{
+					bOk = true;
+					break;
+				}
+			}
+
+			if(!bOk)
+			{
+				TerminateThread(hThread, 1);
+			}
+			else
+			{
+				DWORD exitCode;
+
+				bOk =
+					0 != GetExitCodeThread(hThread, &exitCode)
+					&& 0 == exitCode
+				;
+			}
+		}
+
+		if(hThread) CloseHandle(hThread);
+		if(imageAfxHook) VirtualFreeEx(hProc, imageAfxHook, 0, MEM_RELEASE);
+		if(argDllDir) VirtualFreeEx(hProc, argDllName, 0, MEM_RELEASE);
+		if(argDllName) VirtualFreeEx(hProc, argDllDir, 0, MEM_RELEASE);
+
+		if(hProc) CloseHandle(hProc);
+
+		return bOk;
+	}
+
+	bool UpdateBootImage(LPVOID loadLibrary, LPVOID setDllDirectory, LPVOID dllDir, LPVOID dllName)
+	{
+		if(!(m_BootImage && loadLibrary && setDllDirectory && dllDir && dllName))
+			return false;
+
+		unsigned __int32 * imageArgs = (unsigned __int32 *)(m_BootImage +32);
+
+		imageArgs[0] = (unsigned __int32)loadLibrary;
+		imageArgs[1] = (unsigned __int32)setDllDirectory;
+		imageArgs[2] = (unsigned __int32)dllDir;
+		imageArgs[3] = (unsigned __int32)dllName;
+
+		return true;
+	}
+};
+
 
 #pragma managed
 
@@ -230,44 +285,54 @@ using namespace System;
 using namespace System::Runtime::InteropServices;
 
 
-bool CustomLoader(System::String ^ hookPath, System::String ^ programPath, System::String ^ cmdline)
+bool CustomLoader(System::String ^ strHookPath, System::String ^ strProgramPath, System::String ^ strCmdLine)
 {
-
-	System::String ^strExeDir = gcnew System::String( System::IO::Path::GetDirectoryName( programPath ) );
+	System::String ^ strDllDirectory = System::IO::Path::GetDirectoryName( strHookPath );
+	System::String ^ strProgramDirectory = System::IO::Path::GetDirectoryName( strProgramPath );
+	System::String ^ strImageFileName = System::AppDomain::CurrentDomain->BaseDirectory + "\\AfxHook.dat";
 
 	System::Text::StringBuilder ^strOptsB = gcnew System::Text::StringBuilder( "\"" );
-	strOptsB->Append( programPath );
+	strOptsB->Append( strProgramPath );
 	strOptsB->Append( "\" " );
-	strOptsB->Append( cmdline );
+	strOptsB->Append( strCmdLine );
+
+	LPCTSTR dllDirectory = 0;
+	LPCTSTR dllFileName = 0;
+	LPCTSTR programDirectory = 0;
+	LPTSTR programOptions = 0;
+	LPCTSTR programPath = 0;
 
 #ifdef _UNICODE
-	g_path_dll = (LPTSTR)(int)Marshal::StringToHGlobalUni( hookPath->ToString() );
-	g_path_exe = (LPTSTR)(int)Marshal::StringToHGlobalUni( programPath );
-	g_opts_exe = (LPTSTR)(int)Marshal::StringToHGlobalUni( strOptsB->ToString() );
-	g_dir_exe = (LPTSTR)(int)Marshal::StringToHGlobalUni( strExeDir );
+	dllDirectory = (LPCTSTR)(int)Marshal::StringToHGlobalUni( strDllDirectory );
+	dllFileName = (LPCTSTR)(int)Marshal::StringToHGlobalUni( strHookPath );
+	programDirectory = (LPCTSTR)(int)Marshal::StringToHGlobalUni( strProgramDirectory );
+	programOptions = (LPTSTR)(int)Marshal::StringToHGlobalUni( strOptsB->ToString() );
+	programPath = (LPCTSTR)(int)Marshal::StringToHGlobalUni( strProgramPath );
 #else
-	g_path_dll = (LPTSTR)(int)Marshal::StringToHGlobalAnsi( hookPath->ToString() );
-	g_path_exe = (LPTSTR)(int)Marshal::StringToHGlobalAnsi( programPath );
-	g_opts_exe = (LPTSTR)(int)Marshal::StringToHGlobalAnsi( strOptsB->ToString() );
-	g_dir_exe = (LPTSTR)(int)Marshal::StringToHGlobalAnsi( strExeDir );
+	dllDirectory = (LPCTSTR)(int)Marshal::StringToHGlobalAnsi( strDllDirectory );
+	dllFileName = (LPCTSTR)(int)Marshal::StringToHGlobalAnsi( strHookPath );
+	programDirectory = (LPCTSTR)(int)Marshal::StringToHGlobalAnsi( strProgramDirectory );
+	programOptions = (LPTSTR)(int)Marshal::StringToHGlobalAnsi( strOptsB->ToString() );
+	programPath = (LPCTSTR)(int)Marshal::StringToHGlobalAnsi( strProgramPath );
 #endif
 
-	g_bSignalDone = false;
-	HANDLE hThread = CreateThread(0, 0, LoaderThread, 0, 0, 0);
+	char const * imageFileName = (char const *)(int)Marshal::StringToHGlobalAnsi( strImageFileName );
 
-	if (hThread!=NULL)
-	{
-		while (!g_bSignalDone)
-		{
-			// g_debug.SendMessage(_T("Waiting for LoaderThread ..."), hlaeDEBUG_DEBUG);
-			Sleep(500);
-		}
-	}
 
-	Marshal::FreeHGlobal( (System::IntPtr)g_dir_exe );
-	Marshal::FreeHGlobal( (System::IntPtr)g_opts_exe );
-	Marshal::FreeHGlobal( (System::IntPtr)g_path_exe );
-	Marshal::FreeHGlobal( (System::IntPtr)g_path_dll );
+	AfxHook afxHook(imageFileName);
 
-	return true;
+	bool bOk = afxHook.Inject(
+		programPath, programDirectory, programOptions,
+		dllDirectory, dllFileName
+	);
+
+	Marshal::FreeHGlobal( (System::IntPtr)(int)imageFileName );	
+
+	Marshal::FreeHGlobal( (System::IntPtr)(int)programPath );
+	Marshal::FreeHGlobal( (System::IntPtr)(int)programOptions );
+	Marshal::FreeHGlobal( (System::IntPtr)(int)programDirectory );
+	Marshal::FreeHGlobal( (System::IntPtr)(int)dllFileName );
+	Marshal::FreeHGlobal( (System::IntPtr)(int)dllDirectory );
+
+	return bOk;
 }

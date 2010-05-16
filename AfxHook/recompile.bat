@@ -1,0 +1,1 @@
+"%~dp0..\tools\nasm\nasm.exe" -f bin -o AfxHook.dat AfxHook.asm

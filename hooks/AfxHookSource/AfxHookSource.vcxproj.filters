@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="hooks">
+      <UniqueIdentifier>{a53dad50-bd4d-4dff-97ba-26a2a69f3b1c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="hooks\shared">
+      <UniqueIdentifier>{2c2ebb9f-0d53-4964-9634-7d46c48d15f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="hooks\AfxHookSource">
+      <UniqueIdentifier>{3f97863e-150a-40ba-9637-3339a961d0a5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\shared\bvhexport.cpp">
+      <Filter>hooks\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\bvhimport.cpp">
+      <Filter>hooks\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\detours.cpp">
+      <Filter>hooks\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\RawOutput.cpp">
+      <Filter>hooks\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="d3d9Hooks.cpp">
+      <Filter>hooks\AfxHookSource</Filter>
+    </ClCompile>
+    <ClCompile Include="DepthImages.cpp">
+      <Filter>hooks\AfxHookSource</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>hooks\AfxHookSource</Filter>
+    </ClCompile>
+    <ClCompile Include="MirvCommands.cpp">
+      <Filter>hooks\AfxHookSource</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderView.cpp">
+      <Filter>hooks\AfxHookSource</Filter>
+    </ClCompile>
+    <ClCompile Include="SourceInterfaces.cpp">
+      <Filter>hooks\AfxHookSource</Filter>
+    </ClCompile>
+    <ClCompile Include="WrpConsole.cpp">
+      <Filter>hooks\AfxHookSource</Filter>
+    </ClCompile>
+    <ClCompile Include="WrpVEngineClient.cpp">
+      <Filter>hooks\AfxHookSource</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\shared\StringTools.cpp">
+      <Filter>hooks\shared</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\shared\bvhexport.h">
+      <Filter>hooks\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\bvhimport.h">
+      <Filter>hooks\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\detours.h">
+      <Filter>hooks\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\RawOutput.h">
+      <Filter>hooks\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="d3d9Hooks.h">
+      <Filter>hooks\AfxHookSource</Filter>
+    </ClInclude>
+    <ClInclude Include="DepthImages.h">
+      <Filter>hooks\AfxHookSource</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderView.h">
+      <Filter>hooks\AfxHookSource</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceInterfaces.h">
+      <Filter>hooks\AfxHookSource</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>hooks\AfxHookSource</Filter>
+    </ClInclude>
+    <ClInclude Include="WrpConsole.h">
+      <Filter>hooks\AfxHookSource</Filter>
+    </ClInclude>
+    <ClInclude Include="WrpVEngineClient.h">
+      <Filter>hooks\AfxHookSource</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\shared\StringTools.h">
+      <Filter>hooks\shared</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

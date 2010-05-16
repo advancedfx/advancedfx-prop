@@ -1,12 +1,12 @@
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual C++ Express 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Half-Life Advanced Effects .NET", "hlae\hlae.vcproj", "{CF9B4385-F921-4168-92D4-31DF94AC36FB}"
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual C++ Express 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Half-Life Advanced Effects .NET", "hlae\hlae.vcxproj", "{CF9B4385-F921-4168-92D4-31DF94AC36FB}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ipc_remoting", "examples\ipc_remoting\ipc_remoting.vcproj", "{43CD67D1-16AB-4F78-BEAA-61C2989220DB}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ipc_remoting", "examples\ipc_remoting\ipc_remoting.vcxproj", "{43CD67D1-16AB-4F78-BEAA-61C2989220DB}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AfxHookSource", "hooks\AfxHookSource\AfxHookSource.vcproj", "{3B8B10B2-05E6-4D15-8022-65D3D60DCCCD}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AfxHookSource", "hooks\AfxHookSource\AfxHookSource.vcxproj", "{3B8B10B2-05E6-4D15-8022-65D3D60DCCCD}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AfxHookGoldSrc", "hooks\AfxHookGoldSrc\AfxHookGoldSrc.vcproj", "{B5B38F84-EE5E-4B8E-A0B3-5AE3DC669896}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AfxHookGoldSrc", "hooks\AfxHookGoldSrc\AfxHookGoldSrc.vcxproj", "{B5B38F84-EE5E-4B8E-A0B3-5AE3DC669896}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

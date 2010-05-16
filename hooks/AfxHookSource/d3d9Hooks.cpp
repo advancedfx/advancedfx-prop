@@ -74,11 +74,9 @@ struct NewDirect3DDevice9
 
     STDMETHOD(EndScene)(THIS)
 	{
-		g_DepthImages.OnEndScene(g_OldDirect3DDevice9);
+		//g_DepthImages.OnEndScene(g_OldDirect3DDevice9);
 
-		HRESULT hr = g_OldDirect3DDevice9->EndScene();
-
-		return hr;
+		return g_OldDirect3DDevice9->EndScene();;
 	}
 
     IFACE_PASSTHROUGH(IDirect3DDevice9, Clear, g_OldDirect3DDevice9);
@@ -145,7 +143,12 @@ struct NewDirect3DDevice9
     IFACE_PASSTHROUGH(IDirect3DDevice9, SetIndices, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetIndices, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, CreatePixelShader, g_OldDirect3DDevice9);
-    IFACE_PASSTHROUGH(IDirect3DDevice9, SetPixelShader, g_OldDirect3DDevice9);
+
+    STDMETHOD(SetPixelShader)(THIS_ IDirect3DPixelShader9* pShader)
+	{
+		return g_OldDirect3DDevice9->SetPixelShader(pShader);
+	}
+
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetPixelShader, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, SetPixelShaderConstantF, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetPixelShaderConstantF, g_OldDirect3DDevice9);

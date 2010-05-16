@@ -114,22 +114,20 @@ bool AfxGoldSrc::Launch(System::Windows::Forms::Panel ^ gamePanel)
 
 //	System::Windows::Forms::MessageBox::Show(cmds);
 
+	m_ComServer->Start(
+		m_Settings->FullScreen,
+		m_Settings->Alpha8 ,
+		gamePanel,
+		m_Settings->RenderMode,
+		m_Settings->OptWindowVisOnRec
+	);
+
+
 	m_Running = CustomLoader(
 		String::Concat(System::Windows::Forms::Application::StartupPath, "\\AfxHookGoldSrc.dll"),
 		m_Settings->HalfLifePath,
 		cmds
 	);
-
-	if(m_Running)
-	{
-		m_ComServer->Start(
-			m_Settings->FullScreen,
-			m_Settings->Alpha8 ,
-			gamePanel,
-			m_Settings->RenderMode,
-			m_Settings->OptWindowVisOnRec
-		);
-	}
 
 	return m_Running;
 }

@@ -16,4 +16,4 @@
 
 using namespace hlae;
 
-bool CustomLoader(System::String ^ hookPath, System::String ^ programPath, System::String ^ cmdline);
+bool CustomLoader(System::String ^ strHookPath, System::String ^ strProgramPath, System::String ^ strCmdLine);
