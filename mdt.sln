@@ -4,9 +4,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Half-Life Advanced Effects 
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ipc_remoting", "examples\ipc_remoting\ipc_remoting.vcxproj", "{43CD67D1-16AB-4F78-BEAA-61C2989220DB}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AfxHookSource", "hooks\AfxHookSource\AfxHookSource.vcxproj", "{3B8B10B2-05E6-4D15-8022-65D3D60DCCCD}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AfxHookSource", "AfxHookSource\AfxHookSource.vcxproj", "{3B8B10B2-05E6-4D15-8022-65D3D60DCCCD}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AfxHookGoldSrc", "hooks\AfxHookGoldSrc\AfxHookGoldSrc.vcxproj", "{B5B38F84-EE5E-4B8E-A0B3-5AE3DC669896}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AfxHookGoldSrc", "AfxHookGoldSrc\AfxHookGoldSrc.vcxproj", "{B5B38F84-EE5E-4B8E-A0B3-5AE3DC669896}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

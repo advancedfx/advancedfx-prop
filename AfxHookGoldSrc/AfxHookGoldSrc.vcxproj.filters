@@ -1,0 +1,429 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="AfxHookGoldSrc">
+      <UniqueIdentifier>{0a3f7a39-87fc-4038-85aa-709bf2d77244}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="AfxHookGoldSrc\modules">
+      <UniqueIdentifier>{8e270edb-eea8-4868-ae86-e6ee864b4699}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="AfxHookGoldSrc\hooks">
+      <UniqueIdentifier>{1bc528f3-f592-4b42-a33b-b8fc93926d72}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="AfxHookGoldSrc\hooks\client">
+      <UniqueIdentifier>{71d70d49-8374-43cc-84a5-31145d28300a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="AfxHookGoldSrc\hooks\hw">
+      <UniqueIdentifier>{30438562-965a-4236-905f-9b2d427620ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="AfxHookGoldSrc\bits">
+      <UniqueIdentifier>{1eedb489-9975-41da-9f38-30793d970ee4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shared">
+      <UniqueIdentifier>{32805ebf-8b73-4ad8-9fa7-84ac24d50773}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shared\com">
+      <UniqueIdentifier>{76afe740-d0d3-43b3-abc9-d2fd95fba72d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shared\hldemo">
+      <UniqueIdentifier>{f109fb84-4139-47b9-beed-0cf2052be0ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shared\vcpp">
+      <UniqueIdentifier>{949c2759-8fcb-4d06-9ae8-1405bf0c4b50}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\shared\bvhexport.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\bvhimport.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="AfxGoldSrcComClient.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="bits\bits.cpp">
+      <Filter>AfxHookGoldSrc\bits</Filter>
+    </ClCompile>
+    <ClCompile Include="cstrike_smoke.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="aiming.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="camexport.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="camimport.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="cmd_tools.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="cstrike_ch.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="cstrike_clientcolor.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="cstrike_deathmsg.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\vcpp\Data.cpp">
+      <Filter>shared\vcpp</Filter>
+    </ClCompile>
+    <ClCompile Include="demozoom.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="decals_hook.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="demo_tools.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="demoeditfix.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\detours.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="fx_noblend.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="EasySampler.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="film_sound.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="filming.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="forceres.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\vcpp\GlImage.cpp">
+      <Filter>shared\vcpp</Filter>
+    </ClCompile>
+    <ClCompile Include="hl_addresses.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="hooks\gdi32Hooks.cpp">
+      <Filter>AfxHookGoldSrc\hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="hooks\HookGameLoaded.cpp">
+      <Filter>AfxHookGoldSrc\hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="hooks\HookHw.cpp">
+      <Filter>AfxHookGoldSrc\hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="hooks\HookHl.cpp">
+      <Filter>AfxHookGoldSrc\hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="HltvFix.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="hooks\hw\Host_Frame.cpp">
+      <Filter>AfxHookGoldSrc\hooks\hw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\vcpp\Image.cpp">
+      <Filter>shared\vcpp</Filter>
+    </ClCompile>
+    <ClCompile Include="InitScript.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="mdt_media.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="mirv_commands.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="mirv_glext.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="mirv_info.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="mirv_scripting.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="hooks\hw\Mod_LeafPvs.cpp">
+      <Filter>AfxHookGoldSrc\hooks\hw</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\ModColor.cpp">
+      <Filter>AfxHookGoldSrc\modules</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\ModColor_S.cpp">
+      <Filter>AfxHookGoldSrc\modules</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\ModColorMask.cpp">
+      <Filter>AfxHookGoldSrc\modules</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\ModColorMask_S.cpp">
+      <Filter>AfxHookGoldSrc\modules</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\ModHide.cpp">
+      <Filter>AfxHookGoldSrc\modules</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\ModHide_S.cpp">
+      <Filter>AfxHookGoldSrc\modules</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\ModInfo.cpp">
+      <Filter>AfxHookGoldSrc\modules</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\ModInfo_S.cpp">
+      <Filter>AfxHookGoldSrc\modules</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\ModReplace.cpp">
+      <Filter>AfxHookGoldSrc\modules</Filter>
+    </ClCompile>
+    <ClCompile Include="modules\ModReplace_S.cpp">
+      <Filter>AfxHookGoldSrc\modules</Filter>
+    </ClCompile>
+    <ClCompile Include="hooks\OpenGl32Hooks.cpp">
+      <Filter>AfxHookGoldSrc\hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="newsky.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\com\PipeCom.cpp">
+      <Filter>shared\com</Filter>
+    </ClCompile>
+    <ClCompile Include="hooks\hw\R_DrawEntitiesOnList.cpp">
+      <Filter>AfxHookGoldSrc\hooks\hw</Filter>
+    </ClCompile>
+    <ClCompile Include="hooks\hw\R_DrawParticles.cpp">
+      <Filter>AfxHookGoldSrc\hooks\hw</Filter>
+    </ClCompile>
+    <ClCompile Include="hooks\hw\R_DrawViewModel.cpp">
+      <Filter>AfxHookGoldSrc\hooks\hw</Filter>
+    </ClCompile>
+    <ClCompile Include="hooks\hw\R_PolyBlend.cpp">
+      <Filter>AfxHookGoldSrc\hooks\hw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\RawOutput.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\vcpp\Ref.cpp">
+      <Filter>shared\vcpp</Filter>
+    </ClCompile>
+    <ClCompile Include="specmenu.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="Store.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\StringTools.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="supportrender.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="temporary_dominik_0004.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="temporary_dominik_0005.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="zooming.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="hooks\user32Hooks.cpp">
+      <Filter>AfxHookGoldSrc\hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\FileTools.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\shared\bvhexport.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\bvhimport.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="AfxGoldSrcComClient.h">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\com\AfxGoldSrcComDefs.h">
+      <Filter>shared\com</Filter>
+    </ClInclude>
+    <ClInclude Include="bits\bits_Js.h">
+      <Filter>AfxHookGoldSrc\bits</Filter>
+    </ClInclude>
+    <ClInclude Include="bits\bits.h">
+      <Filter>AfxHookGoldSrc\bits</Filter>
+    </ClInclude>
+    <ClInclude Include="aiming.h">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="camexport.h">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="camimport.h">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="cmd_tools.h">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="cmdregister.h">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\vcpp\Data.h">
+      <Filter>shared\vcpp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\detours.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="EasySampler.h">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="film_sound.h">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="filming.h">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="forceres.h">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\vcpp\GlImage.h">
+      <Filter>shared\vcpp</Filter>
+    </ClInclude>
+    <ClInclude Include="hl_addresses.h">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="hlsdk.h">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\hldemo\hldemo.h">
+      <Filter>shared\hldemo</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\gdi32Hooks.h">
+      <Filter>AfxHookGoldSrc\hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\HookHw.h">
+      <Filter>AfxHookGoldSrc\hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\HookHl.h">
+      <Filter>AfxHookGoldSrc\hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\HookGameLoaded.h">
+      <Filter>AfxHookGoldSrc\hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="HltvFix.h">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\hw\Host_Frame.h">
+      <Filter>AfxHookGoldSrc\hooks\hw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\vcpp\Image.h">
+      <Filter>shared\vcpp</Filter>
+    </ClInclude>
+    <ClInclude Include="mirv_scripting.h">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="InitScript.h">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="mdt_media.h">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="mirv_commands.h">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="mirv_glext.h">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\hw\Mod_LeafPvs.h">
+      <Filter>AfxHookGoldSrc\hooks\hw</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\ModReplace_S.h">
+      <Filter>AfxHookGoldSrc\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\ModColor.h">
+      <Filter>AfxHookGoldSrc\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\ModColor_S.h">
+      <Filter>AfxHookGoldSrc\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\ModColorMask.h">
+      <Filter>AfxHookGoldSrc\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\ModColorMask_S.h">
+      <Filter>AfxHookGoldSrc\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\ModHide.h">
+      <Filter>AfxHookGoldSrc\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\ModHide_S.h">
+      <Filter>AfxHookGoldSrc\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\ModInfo.h">
+      <Filter>AfxHookGoldSrc\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\ModInfo_S.h">
+      <Filter>AfxHookGoldSrc\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="modules\ModReplace.h">
+      <Filter>AfxHookGoldSrc\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\OpenGl32Hooks.h">
+      <Filter>AfxHookGoldSrc\hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="newsky.h">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\com\PipeCom.h">
+      <Filter>shared\com</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\hw\R_DrawEntitiesOnList.h">
+      <Filter>AfxHookGoldSrc\hooks\hw</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\hw\R_DrawParticles.h">
+      <Filter>AfxHookGoldSrc\hooks\hw</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\hw\R_DrawViewModel.h">
+      <Filter>AfxHookGoldSrc\hooks\hw</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\hw\R_PolyBlend.h">
+      <Filter>AfxHookGoldSrc\hooks\hw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\RawOutput.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\vcpp\Ref.h">
+      <Filter>shared\vcpp</Filter>
+    </ClInclude>
+    <ClInclude Include="Store.h">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="script.h">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\StringTools.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="supportrender.h">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="zooming.h">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\user32Hooks.h">
+      <Filter>AfxHookGoldSrc\hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\FileTools.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

@@ -7,15 +7,25 @@
 <release>
 <name>HLAE</name>
 <version>2.2.14.2</version>
-<time>2010-05-16T00:02Z</time>
+<time>2010-05-20T17:47Z</time>
 <changes>
+<change type="updated">
+Switched to .NET 4.0 framework / VC100.
+</change>
 <change type="fixed">
-Fixed hlae.exe and hl.exe processes not closing when closing the HLAE window.
+Fixed window getting lost on Windows 7 when optimize vis is enabled.
 </change>
 <change type="updated">
-Changed injection process a bit.
+Changed injection process to cope with flat DLL deployment layout.
+</change>
+<change type="updated">
+Improved handling of mirv_movie_filename (now tries to continue take count).
 </change>
 </changes>
+<comments>
+This release includes a compatible version of AfxHookSource (due to changed DLL dependencies).<br />
+Greetz and thanks to Martin Vassie.
+</comments>
 </release>
 
 

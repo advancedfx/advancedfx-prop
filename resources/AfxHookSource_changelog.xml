@@ -5,6 +5,20 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.0.3.2</version>
+<time>2010-05-20T17:32Z</time>
+<changes>
+<change type="removed">
+Removed mirv_allowcheats (sv_cheats always works in demos in Source).
+</change>
+<change type="updated">
+Switched to VC100.
+</change>
+</changes>
+</release>
+
+<release>
+<name>AfxHookSource</name>
 <version>0.0.3.1</version>
 <time>2010-04-04T19:11Z</time>
 <changes>
