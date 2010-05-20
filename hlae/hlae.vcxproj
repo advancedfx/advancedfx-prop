@@ -71,6 +71,8 @@
       </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
+    <EmbeddedResource>
+    </EmbeddedResource>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -92,6 +94,8 @@
       </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
+    <EmbeddedResource>
+    </EmbeddedResource>
   </ItemDefinitionGroup>
   <ItemGroup>
     <Reference Include="System">
@@ -215,39 +219,58 @@
   <ItemGroup>
     <EmbeddedResource Include="controls\HlaeConsole.resx">
       <DependentUpon>HlaeConsole.h</DependentUpon>
+      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">hlae.HlaeConsole.resources</LogicalName>
+      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">hlae.HlaeConsole.resources</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="forms\Calculator.resx">
       <DependentUpon>Calculator.h</DependentUpon>
-      <SubType>Designer</SubType>
+      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">hlae.Calculator.resources</LogicalName>
+      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">hlae.Calculator.resources</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="forms\Launcher.resx">
       <DependentUpon>Launcher.h</DependentUpon>
-      <SubType>Designer</SubType>
+      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">hlae.Launcher.resources</LogicalName>
+      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">hlae.Launcher.resources</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="forms\MainForm.resx">
       <DependentUpon>MainForm.h</DependentUpon>
-      <SubType>Designer</SubType>
+      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">hlae.MainForm.resources</LogicalName>
+      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">hlae.MainForm.resources</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="forms\OverwriteDialog.resx">
       <DependentUpon>OverwriteDialog.h</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="tools\skymanager\skymanager.resx">
-      <DependentUpon>skymanager.h</DependentUpon>
+      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">hlae.OverwriteDialog.resources</LogicalName>
+      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">hlae.OverwriteDialog.resources</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="tools\customloader\CustomLoaderForm.resx">
       <DependentUpon>CustomLoaderForm.h</DependentUpon>
+      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">hlae.CustomLoaderForm.resources</LogicalName>
+      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">hlae.CustomLoaderForm.resources</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="tools\demotools\DemoToolsProgressForm.resx">
       <DependentUpon>DemoToolsProgressForm.h</DependentUpon>
+      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">hlae.DemoToolsProgressForm.resources</LogicalName>
+      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">hlae.DemoToolsProgressForm.resources</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="tools\demotools\DemoToolsWiz1.resx">
       <DependentUpon>DemoToolsWiz1.h</DependentUpon>
+      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">hlae.DemoToolsWiz1.resources</LogicalName>
+      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">hlae.DemoToolsWiz1.resources</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="tools\demotools\DemoToolsWiz2.resx">
       <DependentUpon>DemoToolsWiz2.h</DependentUpon>
+      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">hlae.DemoToolsWiz2.resources</LogicalName>
+      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">hlae.DemoToolsWiz2.resources</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="tools\demotools\DemoToolsWiz3.resx">
       <DependentUpon>DemoToolsWiz3.h</DependentUpon>
+      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">hlae.DemoToolsWiz3.resources</LogicalName>
+      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">hlae.DemoToolsWiz3.resources</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="tools\skymanager\skymanager.resx">
+      <DependentUpon>skymanager.h</DependentUpon>
+      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">hlae.skymanager.resources</LogicalName>
+      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">hlae.skymanager.resources</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -13,7 +13,7 @@
 // definition of HLAE_UPDATER_OLD_GUID is optional
 #define HLAE_UPDATER_OLD_GUID "b78e1725-273f-459e-87cb-e3c99229d760"
 
-#define HLAE_UPDATER_CURRENT_GUID "0ce1733d-bf01-44d5-800c-caa7423e4e59"
+#define HLAE_UPDATER_CURRENT_GUID "64c61593-e3fa-411e-b238-6aa8b1fb5917"
 #define HLAE_UPDATER_MAX_XML_REDIRECTS 1
 
 using namespace System;

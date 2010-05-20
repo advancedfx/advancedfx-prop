@@ -202,37 +202,4 @@
       <Filter>hlae\resources</Filter>
     </ResourceCompile>
   </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="tools\skymanager\skymanager.resx" />
-    <EmbeddedResource Include="forms\Calculator.resx">
-      <Filter>hlae\forms</Filter>
-    </EmbeddedResource>
-    <EmbeddedResource Include="tools\customloader\CustomLoaderForm.resx">
-      <Filter>hlae\tools\customloader</Filter>
-    </EmbeddedResource>
-    <EmbeddedResource Include="tools\demotools\DemoToolsProgressForm.resx">
-      <Filter>hlae\tools\demotools</Filter>
-    </EmbeddedResource>
-    <EmbeddedResource Include="tools\demotools\DemoToolsWiz3.resx">
-      <Filter>hlae\tools\demotools</Filter>
-    </EmbeddedResource>
-    <EmbeddedResource Include="tools\demotools\DemoToolsWiz1.resx">
-      <Filter>hlae\tools\demotools</Filter>
-    </EmbeddedResource>
-    <EmbeddedResource Include="tools\demotools\DemoToolsWiz2.resx">
-      <Filter>hlae\tools\demotools</Filter>
-    </EmbeddedResource>
-    <EmbeddedResource Include="controls\HlaeConsole.resx">
-      <Filter>hlae\controls</Filter>
-    </EmbeddedResource>
-    <EmbeddedResource Include="forms\Launcher.resx">
-      <Filter>hlae\forms</Filter>
-    </EmbeddedResource>
-    <EmbeddedResource Include="forms\MainForm.resx">
-      <Filter>hlae\forms</Filter>
-    </EmbeddedResource>
-    <EmbeddedResource Include="forms\OverwriteDialog.resx">
-      <Filter>hlae\forms</Filter>
-    </EmbeddedResource>
-  </ItemGroup>
 </Project>

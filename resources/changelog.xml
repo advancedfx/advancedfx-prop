@@ -3,9 +3,20 @@
 
 <changelog>
 
+<release>
+<name>HLAE noveau</name>
+<version>2.2.14.3</version>
+<time>2010-05-20T20:40Z</time>
+<changes>
+<change type="fixed">
+Set Logical Name properties of .resx resources to avoid clashes with VC100 resource naming convention
+(would cause the DemoTools dialog to fail with System.Resources.MissingManifestResourceException).
+</change>
+</changes>
+</release>
 
 <release>
-<name>HLAE</name>
+<name>HLAE noveau</name>
 <version>2.2.14.2</version>
 <time>2010-05-20T17:47Z</time>
 <changes>
