@@ -3,8 +3,21 @@
 
 <changelog>
 
+
 <release>
-<name>HLAE noveau</name>
+<name>HLAE nouveau</name>
+<version>2.2.14.4</version>
+<time>2010-05-21T14:14Z</time>
+<changes>
+<change type="fixed">
+Fixed file names.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE nouveau</name>
 <version>2.2.14.3</version>
 <time>2010-05-20T20:40Z</time>
 <changes>
@@ -16,7 +29,7 @@ Set Logical Name properties of .resx resources to avoid clashes with VC100 resou
 </release>
 
 <release>
-<name>HLAE noveau</name>
+<name>HLAE nouveau</name>
 <version>2.2.14.2</version>
 <time>2010-05-20T17:47Z</time>
 <changes>

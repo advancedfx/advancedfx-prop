@@ -1049,7 +1049,8 @@ void Filming::OnPrintFrame(unsigned char * data, int number)
 	EnsureStreamDirectory(streamInfo);
 
 	std::wostringstream os;
-	os << m_TakeDir << L"\\"  << streamInfo->name << L"\\" << setfill(L'0') << setw(5) << number << setw(0) <<  bBMP ? L"bmp" : L"tga";
+	os << m_TakeDir << L"\\"  << streamInfo->name << L"\\" << setfill(L'0') << setw(5) << number << setw(0) << (bBMP ? L".bmp" : L".tga");
+
 	
 	if( bBMP )
 		WriteRawBitmap((unsigned char *)data, os.str().c_str(), m_iWidth, m_iCropHeight, nBits,
@@ -1391,7 +1392,7 @@ void Filming::Capture(FilmingStreamInfo * streamInfo, int iFileNumber, BUFFER iB
 		EnsureStreamDirectory(streamInfo);
 
 		std::wostringstream os;
-		os << m_TakeDir << L"\\"  << streamInfo->name << L"\\" << pszStereotag << setfill(L'0') << setw(5) << iFileNumber << setw(0) <<  bBMP ? L".bmp" : L".tga";
+		os << m_TakeDir << L"\\"  << streamInfo->name << L"\\" << pszStereotag << setfill(L'0') << setw(5) << iFileNumber << setw(0) << (bBMP ? L".bmp" : L".tga");
 	
 		if( bBMP )
 			WriteRawBitmap(m_GlRawPic.GetPointer(), os.str().c_str(), m_iWidth, m_iCropHeight, ucComponentBytes<<3,
