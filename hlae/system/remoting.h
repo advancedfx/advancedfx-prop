@@ -9,8 +9,6 @@
 
 #using <System.Runtime.Remoting.dll>
 
-#include <system/loader.h>
-
 #include <system/debug.h>
 #include <system/config.h>
 #include <system/globals.h>

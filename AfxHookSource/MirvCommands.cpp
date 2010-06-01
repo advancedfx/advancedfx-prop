@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2009-09-30 by dominik.matrixstorm.com
+// 2010-05-24 by dominik.matrixstorm.com
 //
 // First changes:
 // 2009-09-30 by dominik.matrixstorm.com
@@ -13,7 +13,7 @@
 
 #include <shared/StringTools.h>
 
-//#include "DepthImages.h"
+//#include "MirvShader.h"
 #include "RenderView.h"
 #include "SourceInterfaces.h"
 #include "WrpVEngineClient.h"
@@ -164,31 +164,41 @@ CON_COMMAND(mirv_camimport, "controls camera motion data import") {
 }
 
 /*
-
-CON_COMMAND(mirv_depthexport, "depth (z-buffer) image export") {
+CON_COMMAND(mirv_shader, "shader effects")
+{
 	int argc = args->ArgC();
 
 	if(2 <= argc)
 	{
 		char const * arg1 = args->ArgV(1);
-		if(0 == stricmp("stop", arg1))
+		
+		if(0 == stricmp("enabled", arg1))
 		{
-			g_DepthImages.WriteDepth_set(false);
+			if(3 == argc)
+			{
+				int iEnable = atoi(args->ArgV(2));
+				g_MirvShader.Enabled_set(0 != iEnable);
+				return;
+			}
+
+			Tier0_Msg(
+				"mirv_shader enabled: %s.\n",
+				g_MirvShader.Enabled_get() ? "1" : "0"
+			);
 			return;
 		}
-		else if(0 == stricmp("start", arg1) && 3 <= argc)
+		else if(0 == stricmp("loadpso", arg1) && 3 == argc)
 		{
-			char const * fileName = args->ArgV(2);
-			g_DepthImages.FilePrefix_set(fileName);
-			g_DepthImages.WriteDepth_set(true);
+			g_MirvShader.LoadPso(args->ArgV(2));
+			g_MirvShader.Enabled_set(true);
 			return;
 		}
 	}
 
 	Tier0_Msg(
 		"Usage:\n"
-		"mirv_depthexport start <filePrefix>\n"
-		"mirv_depthexport stop\n"
+		"mirv_shader enabled [0|1]\n"
+		"mirv_shader loadpso <fileName>\n"
 	);
 }
 */

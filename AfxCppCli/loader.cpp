@@ -1,13 +1,13 @@
 #include "stdafx.h"
 
-// Project :  Half-Life Advanced Effects
-// File    :  hlae/loader.cpp
-// Changed :  2008-05-15
-// Created :  2008-03-19
-
-// Authors : last change / first change / name
-// 2008-05-15 / 2007 / Dominik Tugend
-// 2007 / / Gavin Bramhill
+// Copyright (c) advancedfx.org
+//
+// Last changes:
+// 2010-05-26 by dominik.matrixstorm.com
+//
+// First changes:
+// 2007 by dominik.matrixstorm.com
+// 2007 by Gavin Bramhill
 
 // Comment:
 //

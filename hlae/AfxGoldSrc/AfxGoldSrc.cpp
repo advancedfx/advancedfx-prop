@@ -14,8 +14,6 @@
 
 #include "AfxGoldSrc.h"
 
-#include <system/loader.h>
-
 using namespace System::Runtime::InteropServices;
 
 // AfxGoldSrc //////////////////////////////////////////////////////////////////
@@ -123,10 +121,10 @@ bool AfxGoldSrc::Launch(System::Windows::Forms::Panel ^ gamePanel)
 	);
 
 
-	m_Running = CustomLoader(
-		String::Concat(System::Windows::Forms::Application::StartupPath, "\\AfxHookGoldSrc.dll"),
+	m_Running = AfxCppCli::AfxHook::LauchAndHook(
 		m_Settings->HalfLifePath,
-		cmds
+		cmds,		
+		String::Concat(System::Windows::Forms::Application::StartupPath, "\\AfxHookGoldSrc.dll")
 	);
 
 	return m_Running;

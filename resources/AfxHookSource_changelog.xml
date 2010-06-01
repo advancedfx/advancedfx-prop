@@ -5,6 +5,21 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.0.3.3</version>
+<time>2010-06-01T22:53Z</time>
+<changes>
+<change type="fixed">
+Fixed cam motion file import.
+</change>
+</changes>
+<comments>
+Thanks to chetaah.
+</comments>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.0.3.2</version>
 <time>2010-05-20T17:32Z</time>
 <changes>

@@ -4,7 +4,7 @@
 
 #include <shared/detours.h>
 
-#include "DepthImages.h"
+#include "MirvShader.h"
 
 typedef struct __declspec(novtable) Interface_s abstract {} * Interface_t;
 typedef void * (__stdcall Interface_s::*InterfaceFn_t) (void *);
@@ -23,6 +23,8 @@ typedef void * (__stdcall Interface_s::*InterfaceFn_t) (void *);
 	}
 
 IDirect3DDevice9 * g_OldDirect3DDevice9;
+
+ULONG g_NewDirect3DDevic9_RefCount = 0;
 
 struct NewDirect3DDevice9
 {
@@ -71,14 +73,7 @@ struct NewDirect3DDevice9
     IFACE_PASSTHROUGH(IDirect3DDevice9, SetDepthStencilSurface, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetDepthStencilSurface, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, BeginScene, g_OldDirect3DDevice9);
-
-    STDMETHOD(EndScene)(THIS)
-	{
-		//g_DepthImages.OnEndScene(g_OldDirect3DDevice9);
-
-		return g_OldDirect3DDevice9->EndScene();;
-	}
-
+    IFACE_PASSTHROUGH(IDirect3DDevice9, EndScene, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, Clear, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, SetTransform, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetTransform, g_OldDirect3DDevice9);
@@ -146,7 +141,7 @@ struct NewDirect3DDevice9
 
     STDMETHOD(SetPixelShader)(THIS_ IDirect3DPixelShader9* pShader)
 	{
-		return g_OldDirect3DDevice9->SetPixelShader(pShader);
+		return g_OldDirect3DDevice9->SetPixelShader(g_MirvShader.OnSetPixelShader(pShader));
 	}
 
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetPixelShader, g_OldDirect3DDevice9);

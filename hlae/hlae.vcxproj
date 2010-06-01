@@ -142,10 +142,8 @@
       <XMLDocumentationFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename)1.xdc</XMLDocumentationFileName>
     </ClCompile>
     <ClCompile Include="forms\MainForm.cpp" />
-    <ClCompile Include="AfxDocking.cpp" />
     <ClCompile Include="system\debug.cpp" />
     <ClCompile Include="system\debug_file.cpp" />
-    <ClCompile Include="system\loader.cpp" />
     <ClCompile Include="system\updater.cpp" />
     <ClCompile Include="tools\skymanager\skymanager.cpp" />
     <ClCompile Include="tools\customloader\CustomLoader.cpp" />
@@ -174,12 +172,10 @@
       <FileType>CppForm</FileType>
     </ClInclude>
     <ClInclude Include="resources\resource.h" />
-    <ClInclude Include="AfxDocking.h" />
     <ClInclude Include="system\config.h" />
     <ClInclude Include="system\debug.h" />
     <ClInclude Include="system\debug_file.h" />
     <ClInclude Include="system\globals.h" />
-    <ClInclude Include="system\loader.h" />
     <ClInclude Include="system\remoting.h" />
     <ClInclude Include="system\updater.h" />
     <ClInclude Include="tools\skymanager\skymanager.h">
@@ -272,6 +268,11 @@
       <LogicalName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">hlae.skymanager.resources</LogicalName>
       <LogicalName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">hlae.skymanager.resources</LogicalName>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AfxCppCli\AfxCppCli.vcxproj">
+      <Project>{98ecbbb4-6be2-42e2-8754-e18827852534}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

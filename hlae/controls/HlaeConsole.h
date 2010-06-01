@@ -8,6 +8,7 @@
 //  First changes:
 //	2009-06-30 by dominik.matrixstorm.com
 
+
 using namespace System;
 using namespace System::ComponentModel;
 using namespace System::Collections;
@@ -20,8 +21,7 @@ namespace hlae {
 
 // HlaeConsole /////////////////////////////////////////////////////////////////
 
-ref class HlaeConsoleColors;
-ref class HlaeConsoleHistory;
+ref class HlaeConsole;
 
 public ref class HlaeConsole : public System::Windows::Forms::UserControl
 {
@@ -31,8 +31,6 @@ public:
 	void Clear();
 
 	void CopyToClipboard();
-
-	HlaeConsoleColors ^GetColorSetting();
 
 	String ^GetSelection();
 
@@ -66,11 +64,16 @@ protected:
 	~HlaeConsole();
 
 private:
+	static Color const m_BackGroundColor = Color::Black;
+	static Color const m_ForeGroundColor = Color::White;
+	static Color const m_SelectingColor = Color::Yellow;
+	static Color const m_BgSelectedColor = Color::Silver;
+	static Color const m_DecorColor = Color::Cyan;
+
+
 	array<System::Char, 2> ^m_Chars;
-	HlaeConsoleColors ^m_ColorSetting;
 	array<Color, 2> ^m_Colors;
 	int m_Cols;
-	HlaeConsoleHistory ^m_CommandHistory;
 	int m_CurCol;
 	int m_CurRow;
 	Control ^m_Display;

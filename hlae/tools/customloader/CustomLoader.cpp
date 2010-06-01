@@ -14,7 +14,6 @@
 
 #include <system/config.h>
 #include <system/globals.h>
-#include <system/loader.h>
 
 
 using namespace hlae;
@@ -38,7 +37,7 @@ bool RunCustomLoader(System::Windows::Forms::IWin32Window ^ owner) {
 
 		HlaeConfig::BackUp();
 
-		if(CustomLoader(frm->HookDll, frm->Program, frm->CmdLine))
+		if(AfxCppCli::AfxHook::LauchAndHook(frm->Program, frm->CmdLine, frm->HookDll))
 			return true;
 
 		MessageBox::Show("CustomLoader failed", "Error", ::MessageBoxButtons::OK, ::MessageBoxIcon::Error);

@@ -16,8 +16,6 @@ using namespace hlae;
 // HlaeConsole /////////////////////////////////////////////////////////////////
 
 HlaeConsole::HlaeConsole() {
-	m_CommandHistory = gcnew HlaeConsoleHistory(20);
-
 	InitializeComponent();
 
 	InitConsoleWindow(80, 100);
@@ -107,7 +105,7 @@ void HlaeConsole::ClearPhysRow(int iPhysRow)
 	for(int j=0; j<m_Cols+1; j++)
 	{
 		m_Chars[iPhysRow,j] = System::Char('\0');
-		m_Colors[iPhysRow,j] = m_ColorSetting->m_BgStandard;			
+		m_Colors[iPhysRow,j] = m_BackGroundColor;			
 	}
 }
 
@@ -256,7 +254,7 @@ void HlaeConsole::Display_Paint(Object ^, System::Windows::Forms::PaintEventArgs
 		ttr.Y += -vRect.Y + e->ClipRectangle.Y;
 		ttr.Width--;
 		ttr.Height--;
-		e->Graphics->DrawRectangle(gcnew Pen(m_ColorSetting->m_Selecting), ttr);
+		e->Graphics->DrawRectangle(gcnew Pen(m_SelectingColor), ttr);
 	}
 }
 
@@ -346,12 +344,6 @@ void HlaeConsole::DoWriteString(String ^aString, Color aColor)
 }
 
 
-HlaeConsoleColors ^HlaeConsole::GetColorSetting()
-{
-	return m_ColorSetting;
-}
-
-
 String ^HlaeConsole::GetRowString(int iRow, bool bWithLineBreak)
 {
 	System::Text::StringBuilder ^sb = gcnew System::Text::StringBuilder();
@@ -384,7 +376,6 @@ void HlaeConsole::InitConsoleWindow(int iCols, int iRows)
 {
 	m_Chars = gcnew array<System::Char, 2>(iRows, iCols+1); // 1 extra field for explicit newlines
 	m_Colors = gcnew array<Color, 2>(iRows, iCols+1); // .
-	m_ColorSetting = gcnew HlaeConsoleColors;
 	m_Cols = iCols;
 	m_CurCol = 0;
 	m_CurRow = 0;
@@ -410,8 +401,8 @@ void HlaeConsole::InitConsoleWindow(int iCols, int iRows)
 	this->SuspendLayout();
 
 	this->AutoSize = false;
-	this->BackColor = m_ColorSetting->m_BgStandard;
-	this->ForeColor = m_ColorSetting->m_Standard;
+	this->BackColor = m_BackGroundColor;
+	this->ForeColor = m_ForeGroundColor;
 
 	this->m_Display = gcnew Control();
 	this->m_Display->Cursor = Cursors::IBeam;
@@ -551,11 +542,11 @@ void HlaeConsole::PaintLine( int iRow, int iOfsX, int iOfsY, System::Drawing::Gr
 	// Draw selected:
 	if(IsSelectedRow(iBufferRow))
 	{
-		g->FillRectangle(gcnew SolidBrush(m_ColorSetting->m_BgSelected), RectangleF((float)g->VisibleClipBounds.Left,(float)iOfsY,(float)g->VisibleClipBounds.Width,(float)iLineHeight));
+		g->FillRectangle(gcnew SolidBrush(m_BgSelectedColor), RectangleF((float)g->VisibleClipBounds.Left,(float)iOfsY,(float)g->VisibleClipBounds.Width,(float)iLineHeight));
 	}
 
 	// draw decorations (line number, ...);
-	g->DrawLine(gcnew Pen(this->m_ColorSetting->m_BgDecor), 0.0f, (float)iOfsY +(float)iLineHeight, (float)g->VisibleClipBounds.Width,  (float)iOfsY +(float)iLineHeight);
+	g->DrawLine(gcnew Pen(m_DecorColor), 0.0f, (float)iOfsY +(float)iLineHeight, (float)g->VisibleClipBounds.Width,  (float)iOfsY +(float)iLineHeight);
 
 	//
 	// Now draw the line text:
@@ -641,7 +632,7 @@ void HlaeConsole::Write(System::Char aChar, Color aColor)
 
 void HlaeConsole::Write(System::Char aChar)
 {
-	this->DoWriteChar(aChar, this->m_ColorSetting->m_Standard);
+	this->DoWriteChar(aChar, m_ForeGroundColor);
 	this->InvalidateDisplay();
 }
 
@@ -653,7 +644,7 @@ void HlaeConsole::Write(String ^aString, Color aColor)
 
 void HlaeConsole::Write(String ^aString)
 {
-	this->DoWriteString(aString, this->m_ColorSetting->m_Standard);
+	this->DoWriteString(aString, m_ForeGroundColor);
 	this->InvalidateDisplay();
 }
 
@@ -666,7 +657,7 @@ void HlaeConsole::WriteLn(System::Char aChar, Color aColor)
 
 void HlaeConsole::WriteLn(System::Char aChar)
 {
-	Color aColor = this->m_ColorSetting->m_Standard;
+	Color aColor = m_ForeGroundColor;
 	this->DoWriteChar(aChar, aColor);
 	this->DoWriteChar('\n', aColor);
 	this->InvalidateDisplay();
@@ -681,7 +672,7 @@ void HlaeConsole::WriteLn(String ^aString, Color aColor)
 
 void HlaeConsole::WriteLn(String ^aString)
 {
-	Color aColor = this->m_ColorSetting->m_Standard;
+	Color aColor = m_ForeGroundColor;
 	this->DoWriteString(aString, aColor);
 	this->DoWriteChar('\n', aColor);
 	this->InvalidateDisplay();
@@ -689,7 +680,7 @@ void HlaeConsole::WriteLn(String ^aString)
 
 void HlaeConsole::WriteLn()
 {
-	this->DoWriteChar('\n', this->m_ColorSetting->m_Standard);
+	this->DoWriteChar('\n', m_ForeGroundColor);
 	this->InvalidateDisplay();
 }
 

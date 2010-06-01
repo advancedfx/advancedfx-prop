@@ -8,6 +8,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AfxHookSource", "AfxHookSou
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AfxHookGoldSrc", "AfxHookGoldSrc\AfxHookGoldSrc.vcxproj", "{B5B38F84-EE5E-4B8E-A0B3-5AE3DC669896}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AfxCppCli", "AfxCppCli\AfxCppCli.vcxproj", "{98ECBBB4-6BE2-42E2-8754-E18827852534}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -30,6 +32,10 @@ Global
 		{B5B38F84-EE5E-4B8E-A0B3-5AE3DC669896}.Debug|Win32.Build.0 = Debug|Win32
 		{B5B38F84-EE5E-4B8E-A0B3-5AE3DC669896}.Release|Win32.ActiveCfg = Release|Win32
 		{B5B38F84-EE5E-4B8E-A0B3-5AE3DC669896}.Release|Win32.Build.0 = Release|Win32
+		{98ECBBB4-6BE2-42E2-8754-E18827852534}.Debug|Win32.ActiveCfg = Debug|Win32
+		{98ECBBB4-6BE2-42E2-8754-E18827852534}.Debug|Win32.Build.0 = Debug|Win32
+		{98ECBBB4-6BE2-42E2-8754-E18827852534}.Release|Win32.ActiveCfg = Release|Win32
+		{98ECBBB4-6BE2-42E2-8754-E18827852534}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

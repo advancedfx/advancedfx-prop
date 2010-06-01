@@ -1,5 +1,20 @@
 You are here: mdt/trunk
 
+AfxCppCli/
+  CLR Class Library in C++/CLI meant for handling interop
+  and encapsulating unmanaged code.
+  
+AfxHook/
+  Boot image that is injected in the target process that shall
+  be hooked, handles loading of the desired AfxHook*.dll and
+  other things.
+  
+AfxHookGoldSrc/
+  Hook for GoldSrc engine.
+  
+AfxHookSource/
+  Hook for Source engine.
+  
 build/
   Directory where all projects place their temporary release and debug folders
   in a subfolder, the binary and debug headers go into the bin subfolder
@@ -16,9 +31,6 @@ hooks/
   
 misc/
   miscellaneous
-  
-rcstamp/
-  Source for the modified rcstamp tool.
   
 resources/
   files that should be packaged with an release, curently you have to copy them manually!

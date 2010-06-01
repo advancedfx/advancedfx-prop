@@ -227,7 +227,7 @@ bool BvhImport::LoadMotionFile(wchar_t const * fileName)
 	if(m_Active)
 		CloseMotionFile();
 
-	m_File = _wfopen(fileName,L"wb+");
+	m_File = _wfopen(fileName,L"rb");
 
 	if(!m_File)
 		return false;

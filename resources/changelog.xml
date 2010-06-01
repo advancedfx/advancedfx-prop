@@ -3,6 +3,17 @@
 
 <changelog>
 
+<release>
+<name>HLAE nouveau</name>
+<version>2.2.14.5</version>
+<time>2010-06-01T22:53Z</time>
+<changes>
+<change type="fixed">
+Fixed cam motion file import.
+</change>
+</changes>
+</release>
+
 
 <release>
 <name>HLAE nouveau</name>
