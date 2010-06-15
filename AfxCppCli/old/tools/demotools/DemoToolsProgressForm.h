@@ -1,6 +1,6 @@
 #pragma once
 
-#include <forms/OverwriteDialog.h>
+#include "OverwriteDialog.h"
 
 #include "DemoToolsWiz3.h"
 #include "demotools.h"
@@ -13,7 +13,9 @@ using namespace System::Data;
 using namespace System::Drawing;
 
 
-namespace hlae {
+namespace AfxCppCli {
+namespace old {
+namespace tools {
 
 	/// <summary>
 	/// Summary for DemoToolsProgressForm
@@ -246,5 +248,8 @@ private: System::Void button1_Click(System::Object^  sender, System::EventArgs^ 
 		 }
 };
 
-}
+} // namespace tools {
+} // namespace old {
+} // namespace AfxCppCli {
+
 

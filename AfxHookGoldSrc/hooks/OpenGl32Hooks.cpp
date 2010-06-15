@@ -23,6 +23,8 @@
 
 #include <hlsdk.h>
 
+#include "mirv_glext.h"
+
 
 REGISTER_CVAR(disableautodirector, "0", 0);
 
@@ -30,23 +32,184 @@ REGISTER_DEBUGCVAR(gl_noclear, "0", 0);
 REGISTER_DEBUGCVAR(gl_previewclear, "1", 0);
 
 
-int		g_nViewports = 0;
-bool	g_bIsSucceedingViewport = false;
-
-struct glBegin_saved_s {
+struct {
 	bool restore;
+
+	// Matte key:
 	GLboolean b_GL_DEPTH_TEST;
 	GLint i_GL_DEPTH_FUNC;
 	GLboolean b_ColorWriteMask[4];
-} g_glBegin_saved;
 
-unsigned int g_glBeginStats = 0;
+	// Mate alpha:
+	GLboolean old_enabled;
+	GLint old_texture;
+	GLint old_active_texture;
+	GLint old_env_param;
+
+} g_ModeKey_saved;
+
+
+void ModeKey_Begin(GLenum mode)
+{
+	g_ModeKey_saved.restore=false;
+
+	Filming::DRAW_RESULT res = g_Filming.shouldDraw(mode);
+
+	if (res == Filming::DR_HIDE) {
+		return;
+	}
+
+	else if (res == Filming::DR_MASK)
+	{
+		if(Filming::MS_ENTITY == g_Filming.GetMatteStage())
+		{
+			g_ModeKey_saved.restore = true;
+			glGetBooleanv(GL_DEPTH_TEST,&(g_ModeKey_saved.b_GL_DEPTH_TEST));
+			glGetIntegerv(GL_DEPTH_FUNC,&(g_ModeKey_saved.i_GL_DEPTH_FUNC));
+			glGetBooleanv(GL_COLOR_WRITEMASK, g_ModeKey_saved.b_ColorWriteMask);
+
+			glColorMask(FALSE, FALSE, FALSE, TRUE);
+			glDepthFunc(GL_LEQUAL);
+			glEnable(GL_DEPTH_TEST);
+		}
+	}
+	else if (!g_Filming.bWantsHudCapture)
+		glColorMask(TRUE, TRUE, TRUE, TRUE); // BlendFunc for additive sprites needs special controll, don't override it
+
+}
+
+
+void ModeKey_End()
+{
+	if (g_ModeKey_saved.restore)
+	{
+		g_ModeKey_saved.restore = false;
+		if(!g_ModeKey_saved.b_GL_DEPTH_TEST)
+			glDisable(GL_DEPTH_TEST);
+		glDepthFunc(g_ModeKey_saved.i_GL_DEPTH_FUNC);
+		glColorMask(g_ModeKey_saved.b_ColorWriteMask[0], g_ModeKey_saved.b_ColorWriteMask[1], g_ModeKey_saved.b_ColorWriteMask[2], g_ModeKey_saved.b_ColorWriteMask[3]);
+	}
+}
+
+struct {
+	bool restore;
+	GLboolean old_enabled;
+	GLint old_texture;
+	GLint old_active_texture;
+	GLint old_env_param;
+} g_ModeAlpha_saved;
+
+void ModeAlpha_Begin(GLenum mode)
+{
+	g_ModeAlpha_saved.restore=false;
+
+	if (Filming::MS_ENTITY == g_Filming.GetMatteStage())
+	{
+		static GLuint blacktex = 0;
+		static GLuint whitetex = 0;
+
+		if(!blacktex)
+		{
+			unsigned char texmem[48];
+			GLint oldtex;
+
+			glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldtex);
+			glGenTextures(1,&blacktex);
+			glGenTextures(1,&whitetex);
+
+			memset(texmem,0x00,48);
+			glBindTexture(GL_TEXTURE_2D, blacktex);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 4, 4, 0, GL_RGB, GL_UNSIGNED_BYTE, texmem);
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP);
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP);
+
+			memset(texmem,0xFF,48);
+			glBindTexture(GL_TEXTURE_2D, whitetex);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 4, 4, 0, GL_RGB, GL_UNSIGNED_BYTE, texmem);
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP);
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP);
+
+			glBindTexture(GL_TEXTURE_2D, oldtex);
+		}
+
+		GLfloat curcolor[4];
+		glGetFloatv(GL_CURRENT_COLOR, curcolor);
+
+
+		Filming::DRAW_RESULT res = g_Filming.shouldDraw(mode);
+
+		if(Filming::DR_NORMAL == res)
+		{
+			// positive (white).
+
+			if(g_Has_GL_ARB_multitexture)
+			{
+				g_ModeAlpha_saved.restore = true;
+				glGetIntegerv(GL_ACTIVE_TEXTURE_ARB, &g_ModeAlpha_saved.old_active_texture);
+
+				glActiveTextureARB(GL_TEXTURE1_ARB);
+
+				g_ModeAlpha_saved.old_enabled = glIsEnabled(GL_TEXTURE_2D);
+				glGetIntegerv(GL_TEXTURE_BINDING_2D, &g_ModeAlpha_saved.old_texture);
+				glGetTexEnviv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &g_ModeAlpha_saved.old_env_param);
+
+				glEnable(GL_TEXTURE_2D);
+				glBindTexture(GL_TEXTURE_2D,whitetex);
+				glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+			}
+			glColor4f(1,1,1,curcolor[3]);
+		}
+		else
+		{
+			// negative (black).
+
+			if(g_Has_GL_ARB_multitexture)
+			{
+				g_ModeAlpha_saved.restore = true;
+				glGetIntegerv(GL_ACTIVE_TEXTURE_ARB, &g_ModeAlpha_saved.old_active_texture);
+
+				glActiveTextureARB(GL_TEXTURE1_ARB);
+
+				g_ModeAlpha_saved.old_enabled = glIsEnabled(GL_TEXTURE_2D);
+				glGetIntegerv(GL_TEXTURE_BINDING_2D, &g_ModeAlpha_saved.old_texture);
+				glGetTexEnviv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &g_ModeAlpha_saved.old_env_param);
+
+				glEnable(GL_TEXTURE_2D);
+				glBindTexture(GL_TEXTURE_2D,blacktex);
+				glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+			}
+			glColor4f(0,0,0,curcolor[3]);
+		}
+	}
+}
+
+void ModeAlpha_End()
+{
+	if (g_ModeAlpha_saved.restore)
+	{
+		g_ModeAlpha_saved.restore = false;
+
+		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, g_ModeAlpha_saved.old_env_param);
+		glBindTexture(GL_TEXTURE_2D, g_ModeAlpha_saved.old_texture);
+		if(!g_ModeAlpha_saved.old_enabled)
+			glDisable(GL_TEXTURE_2D);
+
+		glActiveTextureARB(g_ModeAlpha_saved.old_active_texture);
+	}
+}
+
+
+int		g_nViewports = 0;
+bool	g_bIsSucceedingViewport = false;
+
 
 void APIENTRY NewGlBegin(GLenum mode)
 {
 	ScriptEvent_OnGlBegin((unsigned int)mode);
-
-	g_glBegin_saved.restore=false;
 
 	g_NewSky.DetectAndProcessSky(mode);
 
@@ -64,28 +227,10 @@ void APIENTRY NewGlBegin(GLenum mode)
 		return;
 	}
 
-	Filming::DRAW_RESULT res = g_Filming.shouldDraw(mode);
-
-	if (res == Filming::DR_HIDE) {
-		return;
-	}
-
-	else if (res == Filming::DR_MASK)
-	{
-		if(Filming::MS_ENTITY == g_Filming.GetMatteStage())
-		{
-			g_glBegin_saved.restore = true;
-			glGetBooleanv(GL_DEPTH_TEST,&(g_glBegin_saved.b_GL_DEPTH_TEST));
-			glGetIntegerv(GL_DEPTH_FUNC,&(g_glBegin_saved.i_GL_DEPTH_FUNC));
-			glGetBooleanv(GL_COLOR_WRITEMASK, g_glBegin_saved.b_ColorWriteMask);
-
-			glColorMask(FALSE, FALSE, FALSE, TRUE);
-			glDepthFunc(GL_LEQUAL);
-			glEnable(GL_DEPTH_TEST);
-		}
-	}
-	else if (!g_Filming.bWantsHudCapture)
-		glColorMask(TRUE, TRUE, TRUE, TRUE); // BlendFunc for additive sprites needs special controll, don't override it
+	if(Filming::MM_KEY == g_Filming.GetMatteMethod())
+		ModeKey_Begin(mode);
+	else
+		ModeAlpha_Begin(mode);
 
 	g_ModReplace.OnGlBegin();
 
@@ -108,15 +253,10 @@ void APIENTRY NewGlEnd(void)
 
 	g_ModReplace.OnGlEnd();
 
-
-	if (g_glBegin_saved.restore)
-	{
-		g_glBegin_saved.restore = false;
-		if(!g_glBegin_saved.b_GL_DEPTH_TEST)
-			glDisable(GL_DEPTH_TEST);
-		glDepthFunc(g_glBegin_saved.i_GL_DEPTH_FUNC);
-		glColorMask(g_glBegin_saved.b_ColorWriteMask[0], g_glBegin_saved.b_ColorWriteMask[1], g_glBegin_saved.b_ColorWriteMask[2], g_glBegin_saved.b_ColorWriteMask[3]);
-	}
+	if(Filming::MM_KEY == g_Filming.GetMatteMethod())
+		ModeKey_End();
+	else
+		ModeAlpha_End();
 
 	g_Filming.DoWorldFxEnd();
 

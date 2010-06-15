@@ -145,11 +145,7 @@
     <ClCompile Include="system\debug.cpp" />
     <ClCompile Include="system\debug_file.cpp" />
     <ClCompile Include="system\updater.cpp" />
-    <ClCompile Include="tools\skymanager\skymanager.cpp" />
     <ClCompile Include="tools\customloader\CustomLoader.cpp" />
-    <ClCompile Include="tools\demotools\demotools.cpp" />
-    <ClCompile Include="tools\demotools\DemoToolsProgressForm.cpp" />
-    <ClCompile Include="tools\demotools\demotoolswizard.cpp" />
     <ClCompile Include="AfxGoldSrc\AfxGoldSrc.cpp" />
     <ClCompile Include="AfxGoldSrc\AfxGoldSrcComServer.cpp" />
     <ClCompile Include="..\shared\com\PipeCom.cpp" />
@@ -168,9 +164,6 @@
     <ClInclude Include="forms\MainForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
-    <ClInclude Include="forms\OverwriteDialog.h">
-      <FileType>CppForm</FileType>
-    </ClInclude>
     <ClInclude Include="resources\resource.h" />
     <ClInclude Include="system\config.h" />
     <ClInclude Include="system\debug.h" />
@@ -178,33 +171,14 @@
     <ClInclude Include="system\globals.h" />
     <ClInclude Include="system\remoting.h" />
     <ClInclude Include="system\updater.h" />
-    <ClInclude Include="tools\skymanager\skymanager.h">
-      <FileType>CppForm</FileType>
-    </ClInclude>
     <ClInclude Include="tools\customloader\CustomLoader.h" />
     <ClInclude Include="tools\customloader\CustomLoaderForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
-    <ClInclude Include="tools\demotools\demotools.h" />
-    <ClInclude Include="tools\demotools\DemoToolsProgressForm.h">
-      <FileType>CppForm</FileType>
-    </ClInclude>
-    <ClInclude Include="tools\demotools\DemoToolsWiz1.h">
-      <FileType>CppForm</FileType>
-    </ClInclude>
-    <ClInclude Include="tools\demotools\DemoToolsWiz2.h">
-      <FileType>CppForm</FileType>
-    </ClInclude>
-    <ClInclude Include="tools\demotools\DemoToolsWiz3.h">
-      <FileType>CppForm</FileType>
-    </ClInclude>
-    <ClInclude Include="tools\demotools\demotoolswizard.h" />
     <ClInclude Include="AfxGoldSrc\AfxGoldSrc.h" />
     <ClInclude Include="AfxGoldSrc\AfxGoldSrcComServer.h" />
     <ClInclude Include="..\shared\com\AfxGoldSrcComDefs.h" />
     <ClInclude Include="..\shared\com\PipeCom.h" />
-    <ClInclude Include="..\shared\hldemo\hldemo.h" />
-    <ClInclude Include="..\shared\hldemo\hldemo_clr.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\app.ico" />
@@ -233,40 +207,10 @@
       <LogicalName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">hlae.MainForm.resources</LogicalName>
       <LogicalName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">hlae.MainForm.resources</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="forms\OverwriteDialog.resx">
-      <DependentUpon>OverwriteDialog.h</DependentUpon>
-      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">hlae.OverwriteDialog.resources</LogicalName>
-      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">hlae.OverwriteDialog.resources</LogicalName>
-    </EmbeddedResource>
     <EmbeddedResource Include="tools\customloader\CustomLoaderForm.resx">
       <DependentUpon>CustomLoaderForm.h</DependentUpon>
       <LogicalName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">hlae.CustomLoaderForm.resources</LogicalName>
       <LogicalName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">hlae.CustomLoaderForm.resources</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="tools\demotools\DemoToolsProgressForm.resx">
-      <DependentUpon>DemoToolsProgressForm.h</DependentUpon>
-      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">hlae.DemoToolsProgressForm.resources</LogicalName>
-      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">hlae.DemoToolsProgressForm.resources</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="tools\demotools\DemoToolsWiz1.resx">
-      <DependentUpon>DemoToolsWiz1.h</DependentUpon>
-      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">hlae.DemoToolsWiz1.resources</LogicalName>
-      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">hlae.DemoToolsWiz1.resources</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="tools\demotools\DemoToolsWiz2.resx">
-      <DependentUpon>DemoToolsWiz2.h</DependentUpon>
-      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">hlae.DemoToolsWiz2.resources</LogicalName>
-      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">hlae.DemoToolsWiz2.resources</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="tools\demotools\DemoToolsWiz3.resx">
-      <DependentUpon>DemoToolsWiz3.h</DependentUpon>
-      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">hlae.DemoToolsWiz3.resources</LogicalName>
-      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">hlae.DemoToolsWiz3.resources</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="tools\skymanager\skymanager.resx">
-      <DependentUpon>skymanager.h</DependentUpon>
-      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">hlae.skymanager.resources</LogicalName>
-      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">hlae.skymanager.resources</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

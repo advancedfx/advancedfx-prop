@@ -8,7 +8,9 @@ using namespace System::Data;
 using namespace System::Drawing;
 
 
-namespace hlae {
+namespace AfxCppCli {
+namespace old {
+namespace tools {
 
 enum class OverwriteDialogResult {
 	Cancel,
@@ -234,4 +236,7 @@ private: System::Void buttonNoAll_Click(System::Object^  sender, System::EventAr
 		 }
 };
 
-}
+} // namespace tools {
+} // namespace old {
+} // namespace AfxCppCli {
+

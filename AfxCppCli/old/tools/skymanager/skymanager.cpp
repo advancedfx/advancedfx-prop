@@ -1,11 +1,11 @@
-#include <stdafx.h>
+#include "stdafx.h"
 
 #include "skymanager.h"
 
 
-using namespace hlae;
 using namespace System::IO;
 
+using namespace AfxCppCli::old::tools;
 
 bool skymanager::PointInRect(Drawing::Point % point, int invSx, int invSy, CubeSide % cs) {
 	PointF csp;

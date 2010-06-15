@@ -3,8 +3,21 @@
 
 <changelog>
 
+
 <release>
-<name>HLAE nouveau</name>
+<name>HLAE</name>
+<version>2.2.15.0</version>
+<time>2010-06-15T19:37Z</time>
+<changes>
+<change type="added">
+Added mirv_matte_method, set this to 2 to re-create the alpha matte feature from the old HLAE beta (suggested by spunge).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.2.14.5</version>
 <time>2010-06-01T22:53Z</time>
 <changes>
@@ -12,11 +25,14 @@
 Fixed cam motion file import.
 </change>
 </changes>
+<comments>
+Thanks to cheetah.
+</comments>
 </release>
 
 
 <release>
-<name>HLAE nouveau</name>
+<name>HLAE</name>
 <version>2.2.14.4</version>
 <time>2010-05-21T14:14Z</time>
 <changes>
@@ -28,7 +44,7 @@ Fixed file names.
 
 
 <release>
-<name>HLAE nouveau</name>
+<name>HLAE</name>
 <version>2.2.14.3</version>
 <time>2010-05-20T20:40Z</time>
 <changes>
@@ -40,7 +56,7 @@ Set Logical Name properties of .resx resources to avoid clashes with VC100 resou
 </release>
 
 <release>
-<name>HLAE nouveau</name>
+<name>HLAE</name>
 <version>2.2.14.2</version>
 <time>2010-05-20T17:47Z</time>
 <changes>

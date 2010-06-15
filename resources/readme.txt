@@ -74,7 +74,7 @@ Current members:
 ripieces
   Lead programmer.
   Since March 2007.
-  http://dominik.tugend.matrixstorm.com/
+  http://dominik.matrixstorm.com/
   
 msthavoc
   Programming of additional tools, testing, community relations, documentation and tutorials.

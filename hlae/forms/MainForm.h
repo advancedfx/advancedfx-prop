@@ -7,7 +7,6 @@
 #include <system/globals.h>
 #include <system/remoting.h>
 #include <tools/customloader/CustomLoader.h>
-#include <tools/skymanager/skymanager.h>
 #include <system/updater.h>
 
 
@@ -525,7 +524,7 @@ private: System::Void externalConsoleToolStripMenuItem_Click(System::Object^  se
 		 }
 
 	private: System::Void skyManagerToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
-				 skymanager ^sm = gcnew skymanager(Globals);
+				 AfxCppCli::old::tools::skymanager ^sm = gcnew AfxCppCli::old::tools::skymanager(HlaeConfig::Config->Settings->Launcher->GamePath);
 				 sm->Show(this);
 			 }
 private: System::Void customLoaderToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {

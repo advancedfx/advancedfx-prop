@@ -1,25 +1,31 @@
-#include <stdafx.h>
+#include "stdafx.h"
 
-//  debug.h - Debug system
-//  Copyright (c) Half-Life Advanced Effects project
-
-
-//  Last changes:
-//  2008-06-14 by dominik.matrixstorm.com
-
-//  First changes:
-//  2008-03-14 by dominik.matrixstorm.com
-
-//  Comment: see gui/demo_fix.h
+// Copyright (c) advancedfx.org
+//
+// Last changes:
+// 2010-06-12 by dominik.matrixstorm.com
+//
+// First changes:
+// 2008-03-14 by dominik.matrixstorm.com
 
 #include "demotools.h"
-#include <system/debug.h>
-//#include <forms/ProgressDialog.h>
+
 #include <tchar.h>
+
 #include <shared/hldemo/hldemo_clr.h>
 
 using namespace hlae;
-using namespace hlae::debug;
+using namespace AfxCppCli::old::tools;
+
+#define DEBUG_MESSAGE(master,message) MessageDummy()
+#define ERROR_MESSAGE(master,message) MessageDummy()
+#define INFO_MESSAGE(master,message) MessageDummy()
+#define VERBOSE_MESSAGE(master,message) MessageDummy()
+#define WARNING_MESSAGE(master,message) MessageDummy()
+
+void MessageDummy(void)
+{
+}
 
 bool compare_bytes (const char *bytes1, const char *bytes2, size_t ilen)
 {
@@ -27,11 +33,8 @@ bool compare_bytes (const char *bytes1, const char *bytes2, size_t ilen)
 	return true;
 }
 
-CHlaeDemoFix::CHlaeDemoFix(System::Windows::Forms::Form ^parent, DebugMaster ^debugMaster)
+CHlaeDemoFix::CHlaeDemoFix()
 {
-	_parent = parent;
-	this->debugMaster = debugMaster;
-
 	_bEnableDirectoryFix = false;
 	_bEnableDemoCleanUp = false;
 	_bEnableHltvFix = false;

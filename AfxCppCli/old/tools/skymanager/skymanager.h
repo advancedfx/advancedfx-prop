@@ -1,8 +1,5 @@
 #pragma once
 
-#include <system/globals.h>
-#include <system/config.h>
-
 using namespace System;
 using namespace System::ComponentModel;
 using namespace System::Collections;
@@ -10,12 +7,9 @@ using namespace System::Windows::Forms;
 using namespace System::Data;
 using namespace System::Drawing;
 
-using namespace hlae;
-using namespace hlae::globals;
-
-
-
-namespace hlae {
+namespace AfxCppCli {
+namespace old {
+namespace tools {
 
 	/// <summary>
 	/// Summary for skymanager
@@ -29,9 +23,9 @@ namespace hlae {
 	public ref class skymanager : public System::Windows::Forms::Form
 	{
 	public:
-		skymanager(CGlobals ^Globals)
+		skymanager(System::String ^ gamePath)
 		{
-			this->Globals = Globals;
+			this->m_GamePath = gamePath;
 
 			CreateInitialImages();
 
@@ -53,6 +47,9 @@ namespace hlae {
 			}
 		}
 
+	private:
+		System::String ^ m_GamePath;
+
 	private: System::Windows::Forms::CheckBox^  checkPreRight;
 	private: System::Windows::Forms::CheckBox^  checkPreBack;
 	private: System::Windows::Forms::CheckBox^  checkPreUp;
@@ -72,7 +69,6 @@ namespace hlae {
 
 
 	private:
-		CGlobals ^Globals;
 		Bitmap ^ imageFront;
 		Bitmap ^ imageLeft;
 		Bitmap ^ imageRight;
@@ -736,7 +732,7 @@ private:
 private: System::Void buttonExport_Click(System::Object^  sender, System::EventArgs^  e) {
 			try
 			{
-				String ^ str = HlaeConfig::Config->Settings->Launcher->GamePath;
+				String ^ str = m_GamePath;
 				folderBrowserDialog->SelectedPath = IO::Path::GetDirectoryName(str);
 				if(Windows::Forms::DialogResult::OK == folderBrowserDialog->ShowDialog(this))
 				{
@@ -770,4 +766,8 @@ private: System::Void picPreview_MouseClick(System::Object^  sender, System::Win
 
 private: System::Void picPreview_MouseDoubleClick(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e);
 };
-}
+
+
+} // namespace tools {
+} // namespace old {
+} // namespace AfxCppCli {

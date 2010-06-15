@@ -23,6 +23,7 @@
 #include "camexport.h"
 #include "cmdregister.h"
 #include "hl_addresses.h"
+#include "mirv_glext.h"
 #include "mirv_scripting.h"
 
 
@@ -63,6 +64,7 @@ REGISTER_CVAR(fx_wh_xtendvis, "1", 0);
 REGISTER_CVAR(fx_xtendvis, "0", 0);
 
 REGISTER_CVAR(matte_entityquads, "2", 0);
+REGISTER_CVAR(matte_method, "1", 0);
 REGISTER_CVAR(matte_particles, "2", 0);
 REGISTER_CVAR(matte_viewmodel, "2", 0);
 REGISTER_CVAR(matte_worldmodels, "1", 0);
@@ -753,6 +755,11 @@ float Filming::GetDebugClientTime()
 	return pEngfuncs->GetClientTime();
 }
 
+Filming::MATTE_METHOD Filming::GetMatteMethod()
+{
+	return m_MatteMethod;
+}
+
 float Filming::GetStereoOffset()
 {
 	return _fStereoOffset;
@@ -867,6 +874,14 @@ void Filming::Start()
 
 	if(g_AfxGoldSrcComClient.GetOptimizeCaptureVis())
 		UndockGameWindowForCapture();
+
+	m_MatteMethod = 2 == matte_method->value ? MM_ALPHA : MM_KEY;
+
+	if(MM_ALPHA == m_MatteMethod && !g_Has_GL_ARB_multitexture)
+	{
+		pEngfuncs->Con_Printf("ERROR: Alpha mattes not supported by your setup.\n");
+		m_MatteMethod = MM_KEY;
+	}
 
 	m_fps = max(movie_fps->value,1.0f);
 	m_time = 0;

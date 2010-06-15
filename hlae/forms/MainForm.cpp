@@ -4,7 +4,6 @@
 
 #include <AfxGoldSrc/AfxGoldSrc.h>
 #include <system/debug.h>
-#include <tools/demotools/demotoolswizard.h>
 
 #include "Launcher.h"
 
@@ -95,7 +94,15 @@ System::Void MainForm::launchToolStripMenuItem_Click(System::Object^  sender, Sy
 
 System::Void MainForm::demoToolsToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e)
 {
-	hlae::DemoToolsWizard ^demoWiz = gcnew hlae::DemoToolsWizard( this, Globals );
+	AfxCppCli::old::tools::DemoToolsWizard ^ demoWiz = gcnew AfxCppCli::old::tools::DemoToolsWizard();
+
+	demoWiz->OutputPath = HlaeConfig::Config->Settings->DemoTools->OutputFolder;
+
+	if(demoWiz->ShowDialog(this))
+	{
+		HlaeConfig::Config->Settings->DemoTools->OutputFolder = demoWiz->OutputPath;
+		HlaeConfig::BackUp();
+	}
 
 	delete demoWiz;
 }

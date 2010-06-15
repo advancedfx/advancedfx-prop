@@ -1,8 +1,4 @@
-#include <stdafx.h>
-
-#include <system/debug.h>
-#include <system/globals.h>
-#include <system/config.h>
+#include "stdafx.h"
 
 #include "demotoolswizard.h"
 
@@ -18,9 +14,7 @@
 using namespace System;
 using namespace System::Windows::Forms;
 
-using namespace hlae;
-using namespace hlae::globals;
-using namespace hlae::debug;
+using namespace AfxCppCli::old::tools;
 
 enum class CheckOutDirResult {
 	Invalid,
@@ -44,16 +38,19 @@ CheckOutDirResult CheckOutDir(DemoToolsWiz3 ^ wiz3) {
 	return CheckOutDirResult::Ok;
 }
 
-DemoToolsWizard::DemoToolsWizard( System::Windows::Forms::Form ^parentWindow, CGlobals ^Globals)
+DemoToolsWizard::DemoToolsWizard()
 {
-	this->debugMaster = Globals->debugMaster;
+	m_OutputPath = "";
+}
 
+bool DemoToolsWizard::ShowDialog(System::Windows::Forms::IWin32Window ^ parentWindow)
+{
 	DemoToolsWiz1 ^wiz1 = gcnew DemoToolsWiz1();
 	DemoToolsWiz2 ^wiz2 = gcnew DemoToolsWiz2();
 	DemoToolsWiz3 ^wiz3 = gcnew DemoToolsWiz3();
 
 	{
-		String ^ dir = HlaeConfig::Config->Settings->DemoTools->OutputFolder;
+		String ^ dir = m_OutputPath;
 		if(IO::Directory::Exists(dir)) wiz3->SetOutDir(dir);
 	}
 
@@ -134,10 +131,9 @@ DemoToolsWizard::DemoToolsWizard( System::Windows::Forms::Form ^parentWindow, CG
 
 			iShowDialog = -1;
 
-			HlaeConfig::Config->Settings->DemoTools->OutputFolder = wiz3->GetOutDir();
-			HlaeConfig::BackUp();
+			m_OutputPath = wiz3->GetOutDir();
 
-			CHlaeDemoFix ^dtool = gcnew CHlaeDemoFix( parentWindow, debugMaster );
+			CHlaeDemoFix ^dtool = gcnew CHlaeDemoFix();
 
 			dtool->EnableDirectoryFix( wiz1->bCheckedFix() );
 			dtool->EnableHltvFix( wiz1->bCheckedStuck() );
@@ -206,4 +202,6 @@ DemoToolsWizard::DemoToolsWizard( System::Windows::Forms::Form ^parentWindow, CG
 	delete wiz3;
 	delete wiz2;
 	delete wiz1;
+
+	return 3 == iShowDialog;
 }

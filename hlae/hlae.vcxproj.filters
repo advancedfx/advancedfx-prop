@@ -19,14 +19,8 @@
     <Filter Include="hlae\tools">
       <UniqueIdentifier>{14a0f54f-af1c-429e-a2c2-b0cdd5ff1d32}</UniqueIdentifier>
     </Filter>
-    <Filter Include="hlae\tools\skymanager">
-      <UniqueIdentifier>{c926de69-cf11-4d5b-9c25-6e440f897ee2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="hlae\tools\customloader">
       <UniqueIdentifier>{9ebe5904-265a-4d68-9138-8c7cec8c976e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="hlae\tools\demotools">
-      <UniqueIdentifier>{77ac5c90-0fb1-4e29-99b0-6596bd6df8a2}</UniqueIdentifier>
     </Filter>
     <Filter Include="hlae\AfxGoldSrc">
       <UniqueIdentifier>{a12ad30a-5b33-458b-aa83-4a2f95caa7dd}</UniqueIdentifier>
@@ -36,9 +30,6 @@
     </Filter>
     <Filter Include="shared\com">
       <UniqueIdentifier>{3d7cfc46-740a-4242-976e-5500577e38b6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="shared\hldemo">
-      <UniqueIdentifier>{520a6640-fd55-4e10-9f2b-8bacec0af576}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -69,20 +60,8 @@
     <ClCompile Include="system\updater.cpp">
       <Filter>hlae\system</Filter>
     </ClCompile>
-    <ClCompile Include="tools\skymanager\skymanager.cpp">
-      <Filter>hlae\tools\skymanager</Filter>
-    </ClCompile>
     <ClCompile Include="tools\customloader\CustomLoader.cpp">
       <Filter>hlae\tools\customloader</Filter>
-    </ClCompile>
-    <ClCompile Include="tools\demotools\demotools.cpp">
-      <Filter>hlae\tools\demotools</Filter>
-    </ClCompile>
-    <ClCompile Include="tools\demotools\DemoToolsProgressForm.cpp">
-      <Filter>hlae\tools\demotools</Filter>
-    </ClCompile>
-    <ClCompile Include="tools\demotools\demotoolswizard.cpp">
-      <Filter>hlae\tools\demotools</Filter>
     </ClCompile>
     <ClCompile Include="AfxGoldSrc\AfxGoldSrc.cpp">
       <Filter>hlae\AfxGoldSrc</Filter>
@@ -110,9 +89,6 @@
     <ClInclude Include="forms\MainForm.h">
       <Filter>hlae\forms</Filter>
     </ClInclude>
-    <ClInclude Include="forms\OverwriteDialog.h">
-      <Filter>hlae\forms</Filter>
-    </ClInclude>
     <ClInclude Include="resources\resource.h">
       <Filter>hlae\resources</Filter>
     </ClInclude>
@@ -134,32 +110,11 @@
     <ClInclude Include="system\updater.h">
       <Filter>hlae\system</Filter>
     </ClInclude>
-    <ClInclude Include="tools\skymanager\skymanager.h">
-      <Filter>hlae\tools\skymanager</Filter>
-    </ClInclude>
     <ClInclude Include="tools\customloader\CustomLoader.h">
       <Filter>hlae\tools\customloader</Filter>
     </ClInclude>
     <ClInclude Include="tools\customloader\CustomLoaderForm.h">
       <Filter>hlae\tools\customloader</Filter>
-    </ClInclude>
-    <ClInclude Include="tools\demotools\demotools.h">
-      <Filter>hlae\tools\demotools</Filter>
-    </ClInclude>
-    <ClInclude Include="tools\demotools\DemoToolsProgressForm.h">
-      <Filter>hlae\tools\demotools</Filter>
-    </ClInclude>
-    <ClInclude Include="tools\demotools\DemoToolsWiz1.h">
-      <Filter>hlae\tools\demotools</Filter>
-    </ClInclude>
-    <ClInclude Include="tools\demotools\DemoToolsWiz2.h">
-      <Filter>hlae\tools\demotools</Filter>
-    </ClInclude>
-    <ClInclude Include="tools\demotools\DemoToolsWiz3.h">
-      <Filter>hlae\tools\demotools</Filter>
-    </ClInclude>
-    <ClInclude Include="tools\demotools\demotoolswizard.h">
-      <Filter>hlae\tools\demotools</Filter>
     </ClInclude>
     <ClInclude Include="AfxGoldSrc\AfxGoldSrc.h">
       <Filter>hlae\AfxGoldSrc</Filter>
@@ -172,12 +127,6 @@
     </ClInclude>
     <ClInclude Include="..\shared\com\PipeCom.h">
       <Filter>shared\com</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\hldemo\hldemo.h">
-      <Filter>shared\hldemo</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\hldemo\hldemo_clr.h">
-      <Filter>shared\hldemo</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -200,26 +149,8 @@
     <EmbeddedResource Include="forms\Launcher.resx">
       <Filter>hlae\forms</Filter>
     </EmbeddedResource>
-    <EmbeddedResource Include="forms\OverwriteDialog.resx">
-      <Filter>hlae\forms</Filter>
-    </EmbeddedResource>
     <EmbeddedResource Include="forms\MainForm.resx">
       <Filter>hlae\forms</Filter>
-    </EmbeddedResource>
-    <EmbeddedResource Include="tools\skymanager\skymanager.resx">
-      <Filter>hlae\tools\skymanager</Filter>
-    </EmbeddedResource>
-    <EmbeddedResource Include="tools\demotools\DemoToolsProgressForm.resx">
-      <Filter>hlae\tools\demotools</Filter>
-    </EmbeddedResource>
-    <EmbeddedResource Include="tools\demotools\DemoToolsWiz3.resx">
-      <Filter>hlae\tools\demotools</Filter>
-    </EmbeddedResource>
-    <EmbeddedResource Include="tools\demotools\DemoToolsWiz1.resx">
-      <Filter>hlae\tools\demotools</Filter>
-    </EmbeddedResource>
-    <EmbeddedResource Include="tools\demotools\DemoToolsWiz2.resx">
-      <Filter>hlae\tools\demotools</Filter>
     </EmbeddedResource>
     <EmbeddedResource Include="tools\customloader\CustomLoaderForm.resx">
       <Filter>hlae\tools\customloader</Filter>

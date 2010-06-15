@@ -7,8 +7,9 @@ using namespace System::Windows::Forms;
 using namespace System::Data;
 using namespace System::Drawing;
 
-
-namespace hlae {
+namespace AfxCppCli {
+namespace old {
+namespace tools {
 
 	/// <summary>
 	/// Summary for DemoToolsWiz2
@@ -312,4 +313,8 @@ namespace hlae {
 		}
 #pragma endregion
 	};
-}
+
+} // namespace tools {
+} // namespace old {
+} // namespace AfxCppCli {
+

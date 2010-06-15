@@ -1,10 +1,8 @@
 #include "StdAfx.h"
+
 #include "DemoToolsProgressForm.h"
 
-#include "DemoToolsWiz3.h"
-#include "demotools.h"
-
-using namespace hlae;
+using namespace AfxCppCli::old::tools;
 
 System::Void DemoToolsProgressForm::backgroundWorker_DoWork(System::Object^  sender, System::ComponentModel::DoWorkEventArgs^  e) {
 	String ^ outDir = (String ^)e->Argument;

@@ -1,29 +1,36 @@
 #pragma once
 
-// Project :  Half-Life Advanced Effects
-// File    :  gui/demo_fix.cpp
+// Copyright (c) advancedfx.org
+//
+// Last changes:
+// 2010-06-12 by dominik.matrixstorm.com
+//
+// First changes:
+// 2008-03-14 by dominik.matrixstorm.com
 
-// Authors : last change / first change / name
+// Description:
+// Classes that help fixing and manipulating demos.
 
-// 2008-03-18 / 2008-03-15 / Dominik Tugend
-
-// Comment: classes that help fixing and manipulating demos.
-
-///////////////////////////////////////////////////////////////////////////////
-
-#include <system/debug.h>
 
 using namespace System;
-using namespace hlae::debug;
 
 namespace hlae {
-
-#define HLAE_HLDEM_ENABLESLOWDEBUG 0
-// this enables additional (slow) messages, which are also pretty many, so you
-// might want to use debug mode and set no drop in menu ;)
-
 ref struct hldemo_header_s;
 ref struct hldemo_macroblock_header_s;
+} // namespace hlae {
+
+using namespace hlae;
+
+namespace AfxCppCli {
+namespace old {
+namespace tools {
+
+// this enables additional (slow) messages, which are also pretty many, so you
+// might want to use debug mode and set no drop in menu ;)
+#define HLAE_HLDEM_ENABLESLOWDEBUG 0
+
+#define HLAE_WATERMARK64 "It is so great! I simply love it <3: Half-Life Advanced Effects"
+#define HLAE_WATERMARK260 "Half-Life Advanced Effects is great! I love Half-Life Advanced Effects! I really love Half-Life Advanced Effects! Did I already say how much I love Half-Life Advanced Effects? Dude, Half-Life Advanced Effects is really great! I luv Half-Life Advanced Effects!"
 
 delegate void OnDemoFixProgressDelegate(System::Object ^ sender, int percentage);
 
@@ -33,7 +40,7 @@ public:
 	OnDemoFixProgressDelegate ^ OnDemoFixProgress;
 
 	#define DEMOFIX_MAXPLAYERS 32
-	CHlaeDemoFix(System::Windows::Forms::Form ^parent, DebugMaster ^debugMaster);
+	CHlaeDemoFix();
 	~CHlaeDemoFix();
 
 	void EnableDirectoryFix() { EnableDirectoryFix(true); };
@@ -83,11 +90,6 @@ public:
 	// outfilename: filte to write to
 
 private:
-	#define HLAE_WATERMARK64 "It is so great! I simply love it <3: Half-Life Advanced Effects"
-	#define HLAE_WATERMARK260 "Half-Life Advanced Effects is great! I love Half-Life Advanced Effects! I really love Half-Life Advanced Effects! Did I already say how much I love Half-Life Advanced Effects? Dude, Half-Life Advanced Effects is really great! I luv Half-Life Advanced Effects!"
-
-	DebugMaster ^debugMaster;
-
 	int m_LastPercentage;
 
 
@@ -99,8 +101,6 @@ private:
 		CPMB_USERABORT,		// user aborted operation
 		CPMB_FATALERROR		// fatal error, can not be recovered
 	};
-
-	System::Windows::Forms::Form ^_parent;
 
 	bool _bEnableDirectoryFix;
 	bool _bEnableDemoCleanUp;
@@ -186,4 +186,7 @@ private:
 
 };
 
-} // namespace hlae
+
+} // namespace tools {
+} // namespace old {
+} // namespace AfxCppCli {

@@ -7,8 +7,9 @@ using namespace System::Windows::Forms;
 using namespace System::Data;
 using namespace System::Drawing;
 
-
-namespace hlae {
+namespace AfxCppCli {
+namespace old {
+namespace tools {
 
 	/// <summary>
 	/// Summary for DemoToolsWiz1
@@ -243,4 +244,7 @@ namespace hlae {
 		System::Void checkBoxXXX_CheckedChanged(System::Object^  sender, System::EventArgs^  e)
 		{ doUpdateNext(); }
 	};
-}
+
+} // namespace tools {
+} // namespace old {
+} // namespace AfxCppCli {
