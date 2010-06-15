@@ -6,8 +6,8 @@
 
 <release>
 <name>HLAE</name>
-<version>2.2.15.0</version>
-<time>2010-06-15T19:37Z</time>
+<version>2.2.15.1</version>
+<time>2010-06-15T20:39Z</time>
 <changes>
 <change type="added">
 Added mirv_matte_method, set this to 2 to re-create the alpha matte feature from the old HLAE beta (suggested by spunge).

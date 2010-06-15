@@ -1718,7 +1718,7 @@ void Filming::clearBuffers()
 	glClearColor(m_MatteColour[0], m_MatteColour[1], m_MatteColour[2], 1.0f);
 
 	// Now we do our clearing!
-	if(m_iMatteStage!=MS_ENTITY || matte_xray->value)
+	if(m_iMatteStage!=MS_ENTITY || matte_xray->value || MM_ALPHA == m_MatteMethod)
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 	else
 		glClear(GL_COLOR_BUFFER_BIT);

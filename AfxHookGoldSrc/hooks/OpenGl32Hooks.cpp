@@ -49,14 +49,14 @@ struct {
 } g_ModeKey_saved;
 
 
-void ModeKey_Begin(GLenum mode)
+bool ModeKey_Begin(GLenum mode)
 {
 	g_ModeKey_saved.restore=false;
 
 	Filming::DRAW_RESULT res = g_Filming.shouldDraw(mode);
 
 	if (res == Filming::DR_HIDE) {
-		return;
+		return false;
 	}
 
 	else if (res == Filming::DR_MASK)
@@ -76,6 +76,7 @@ void ModeKey_Begin(GLenum mode)
 	else if (!g_Filming.bWantsHudCapture)
 		glColorMask(TRUE, TRUE, TRUE, TRUE); // BlendFunc for additive sprites needs special controll, don't override it
 
+	return true;
 }
 
 
@@ -99,7 +100,7 @@ struct {
 	GLint old_env_param;
 } g_ModeAlpha_saved;
 
-void ModeAlpha_Begin(GLenum mode)
+bool ModeAlpha_Begin(GLenum mode)
 {
 	g_ModeAlpha_saved.restore=false;
 
@@ -185,6 +186,8 @@ void ModeAlpha_Begin(GLenum mode)
 			glColor4f(0,0,0,curcolor[3]);
 		}
 	}
+
+	return true;
 }
 
 void ModeAlpha_End()
@@ -228,9 +231,15 @@ void APIENTRY NewGlBegin(GLenum mode)
 	}
 
 	if(Filming::MM_KEY == g_Filming.GetMatteMethod())
-		ModeKey_Begin(mode);
+	{
+		if(!ModeKey_Begin(mode))
+			return;
+	}
 	else
-		ModeAlpha_Begin(mode);
+	{
+		if(!ModeAlpha_Begin(mode))
+			return;
+	}
 
 	g_ModReplace.OnGlBegin();
 
