@@ -3,6 +3,19 @@
 
 <changelog>
 
+
+<release>
+<name>AfxHookSource</name>
+<version>0.0.3.4</version>
+<time>2010-06-24T22:23Z</time>
+<changes>
+<change type="updated">
+Adjusted to latest CSS update.
+</change>
+</changes>
+</release>
+
+
 <release>
 <name>AfxHookSource</name>
 <version>0.0.3.3</version>

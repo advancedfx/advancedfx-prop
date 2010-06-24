@@ -58,27 +58,25 @@ Hook_VClient_RenderView g_Hook_VClient_RenderView;
 
 
 
-
-#define ADDR_cstrike_CalcDemoViewOverride 0x169180
+#define ADDR_cstrike_CalcDemoViewOverride 0x135C40
+//0x169180
 #define ADDR_cstrike_CalcDemoViewOverride_DSZ 0x09
-#define ADDR_cstrike_CViewRender_SetUpView 0x169900
-#define ADDR_cstrike_CViewRender_SetUpView_DSZ 0x0c
-#define ADDR_cstrike_cl_demoviewoverride 0x3EE808
-#define ADDR_cstrike_gpGLobals 0x392C8C
+
+#define ADDR_cstrike_CViewRender_SetUpView 0x136480
+//0x169900
+#define ADDR_cstrike_CViewRender_SetUpView_DSZ 0x0d
+// 0x0c
+
+#define ADDR_cstrike_cl_demoviewoverride 0x4A202C
+//0x3EE808
+
+#define ADDR_cstrike_gpGLobals 0x43B854
+// 0x392C8C
 #define OFS_cstrike_gpGlobals_value_curtime +4*3
 
-#define OFS_cstrike_CvarFloatValue 10
+#define OFS_cstrike_CvarFloatValue 11
+//10
 
-
-#define ADDR_ep2_CalcDemoViewOverride 0x1229E0
-#define ADDR_ep2_CalcDemoViewOverride_DSZ 0x09
-#define ADDR_ep2_CViewRender_SetUpView 0x123210
-#define ADDR_ep2_CViewRender_SetUpView_DSZ 0x0a
-#define ADDR_ep2_cl_demoviewoverride 0x3FC3D4
-#define ADDR_ep2_gpGLobals 0x3A2698
-#define OFS_ep2_gpGlobals_value_curtime +4*3
-
-#define OFS_ep2_CvarFloatValue 11
 
 unsigned int g_OfsCvarFloatValue;
 
@@ -227,8 +225,6 @@ void Hook_VClient_RenderView::Install(const char * gameDir)
 {
 	if(StringEndsWith(gameDir, "\\cstrike"))
 		Install_cstrike();
-	else if(StringEndsWith(gameDir, "\\ep2"))
-		Install_ep2();
 	else
 		Tier0_Msg("%s is not supported\n", gameDir);
 }
@@ -248,25 +244,6 @@ void Hook_VClient_RenderView::Install_cstrike(void) {
 		g_value_curtime = (float *)(*(BYTE **)((BYTE *)hm +ADDR_cstrike_gpGLobals) +OFS_cstrike_gpGlobals_value_curtime);
 
 		g_OfsCvarFloatValue = OFS_cstrike_CvarFloatValue;
-
-		m_IsInstalled = true;
-	}
-}
-
-void Hook_VClient_RenderView::Install_ep2(void) {
-	if(m_IsInstalled)
-		return;
-
-	HMODULE hm = GetModuleHandle("client");
-
-	if(hm) {
-		g_Hooked_CViewRender_SetUpView = (CViewRender_SetUpView_t)DetourClassFunc((BYTE *)hm +ADDR_ep2_CViewRender_SetUpView, (BYTE *)Hooking_CViewRender_SetUpView, ADDR_ep2_CViewRender_SetUpView_DSZ);
-		g_Hooked_CalcDemoViewOverride = (CalcDemoViewOverride_t)DetourApply((BYTE *)hm +ADDR_ep2_CalcDemoViewOverride, (BYTE *)Hooking_CalcDemoViewOverride, ADDR_ep2_CalcDemoViewOverride_DSZ);
-
-		g_Cl_DemoViewOverride = (void *)((BYTE *)hm +ADDR_ep2_cl_demoviewoverride);
-		g_value_curtime = (float *)(*(BYTE **)((BYTE *)hm +ADDR_ep2_gpGLobals) +OFS_ep2_gpGlobals_value_curtime);
-
-		g_OfsCvarFloatValue = OFS_ep2_CvarFloatValue;
 
 		m_IsInstalled = true;
 	}

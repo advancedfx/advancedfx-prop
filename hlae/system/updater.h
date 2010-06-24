@@ -11,9 +11,9 @@
 #define HLAE_UPDATER_URL "http://update.matrixstorm.com/61b65ac26b714c41a1d998af3c5bd6dd.xml"
 
 // definition of HLAE_UPDATER_OLD_GUID is optional
-#define HLAE_UPDATER_OLD_GUID "3fd17f8b-a292-4778-8109-24a27b9e5019"
+#define HLAE_UPDATER_OLD_GUID "5939d980-2ed5-4767-abfb-b05083179203"
 
-#define HLAE_UPDATER_CURRENT_GUID "5939d980-2ed5-4767-abfb-b05083179203"
+#define HLAE_UPDATER_CURRENT_GUID "4a1bef0d-1d3f-4b4a-adfa-c1159a23bab6"
 #define HLAE_UPDATER_MAX_XML_REDIRECTS 1
 
 using namespace System;

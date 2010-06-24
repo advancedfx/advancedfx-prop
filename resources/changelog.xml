@@ -6,6 +6,18 @@
 
 <release>
 <name>HLAE</name>
+<version>2.2.15.2</version>
+<time>2010-06-24T22:43Z</time>
+<changes>
+<change type="updated">
+AfxHookSource: Adjusted to latest CSS update.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.2.15.1</version>
 <time>2010-06-15T20:39Z</time>
 <changes>
