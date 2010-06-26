@@ -49,8 +49,9 @@ void PipeCom::ReadBytes(LPVOID outBuffer, DWORD bytesToRead)
 	{
 		if(!ReadFile(m_hRead, outBuffer, bytesToRead, &bytesRead, NULL))
 			throw "PipeCom::ReadBytes";
-		else
-			bytesToRead -= bytesRead;
+	
+		outBuffer = (unsigned char *)outBuffer +bytesRead;
+		bytesToRead -= bytesRead;
 	}
 }
 
@@ -63,8 +64,9 @@ void PipeCom::WriteBytes(LPVOID buffer, DWORD bytesToWrite)
 	{
 		if(!WriteFile(m_hWrite, buffer, bytesToWrite, &bytesWritten, NULL))
 			throw "PipeCom::WriteBytes";
-		else
-			bytesToWrite -= bytesWritten;
+		
+		buffer = (unsigned char *)buffer +bytesWritten;
+		bytesToWrite -= bytesWritten;
 	}
 }
 
