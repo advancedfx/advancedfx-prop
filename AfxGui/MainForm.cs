@@ -37,6 +37,7 @@ namespace AfxGui
         // Private members:
 
         Tools.Calculator m_Calculator;
+        hlae.remoting.HlaeRemoting m_HlaeRemoting;
         UpdateCheckNotificationTarget m_UpdateCheckNotification;
 
         private void Calculator_FormClosed(object sender, FormClosedEventArgs e)
@@ -87,7 +88,7 @@ namespace AfxGui
 			this.statusLabelUpdate.ForeColor = Color.FromKnownColor(KnownColor.ControlText);
 			this.statusLabelUpdate.BackColor = Color.FromKnownColor(KnownColor.Control);
 
-			UpdateCheck.Global.StartCheck();
+			GlobalUpdateCheck.Instance.StartCheck();
         }
 
         private void menuFileSize_Click(object sender, EventArgs e)
@@ -124,22 +125,29 @@ namespace AfxGui
 
         private void MainForm_Shown(object sender, EventArgs e)
         {
-            UpdateCheck.Global.BeginCheckedNotification(m_UpdateCheckNotification);
+            GlobalUpdateCheck.Instance.BeginCheckedNotification(m_UpdateCheckNotification);
 
-            if(0 < Config.Global.Settings.UpdateCheck)
+            if (0 < GlobalConfig.Instance.Settings.UpdateCheck)
             {
                 this.menuAutoUpdateCheck.Checked = true;
                 StartUpdateCheck();
             }
-            else if(0 == Config.Global.Settings.UpdateCheck)
+            else if (0 == GlobalConfig.Instance.Settings.UpdateCheck)
             {
                 this.stripEnableUpdateCheck.Visible = true;
             }
+
+	        // start up public remoting system (if requested):
+	        if( System.Environment.CommandLine.Contains( "-ipcremote" ) )
+                m_HlaeRemoting = new hlae.remoting.HlaeRemoting(gameWindowPanel);
+
         }
 
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
         {
-            UpdateCheck.Global.EndCheckedNotification(m_UpdateCheckNotification);
+            if (null != m_HlaeRemoting) m_HlaeRemoting.Dispose();
+
+            GlobalUpdateCheck.Instance.EndCheckedNotification(m_UpdateCheckNotification);
         }
 
         private void statusLabelUpdate_Click(object sender, EventArgs e)
@@ -167,7 +175,7 @@ namespace AfxGui
             this.stripEnableUpdateCheck.Visible = false;
 
             menuAutoUpdateCheck.Checked = !menuAutoUpdateCheck.Checked;
-            Config.Global.Settings.UpdateCheck = (SByte)(menuAutoUpdateCheck.Checked ? 1 : -1);
+            GlobalConfig.Instance.Settings.UpdateCheck = (SByte)(menuAutoUpdateCheck.Checked ? 1 : -1);
         }
 
         private void statusLabelAuto_Click(object sender, EventArgs e)
@@ -176,12 +184,12 @@ namespace AfxGui
 
             if (this.statusLabelAutoYes == sender)
             {
-                Config.Global.Settings.UpdateCheck = (SByte)1;
+                GlobalConfig.Instance.Settings.UpdateCheck = (SByte)1;
                 StartUpdateCheck();
             }
             else
             {
-                Config.Global.Settings.UpdateCheck = (SByte)(-1);
+                GlobalConfig.Instance.Settings.UpdateCheck = (SByte)(-1);
             }
         }
 
@@ -189,12 +197,12 @@ namespace AfxGui
         {
 	        AfxCppCli.old.tools.DemoToolsWizard demoWiz = new AfxCppCli.old.tools.DemoToolsWizard();
 
-	        demoWiz.OutputPath = Config.Global.Settings.DemoTools.OutputFolder;
+            demoWiz.OutputPath = GlobalConfig.Instance.Settings.DemoTools.OutputFolder;
 
 	        if(demoWiz.ShowDialog(this))
 	        {
-		        Config.Global.Settings.DemoTools.OutputFolder = demoWiz.OutputPath;
-		        Config.Global.BackUp();
+                GlobalConfig.Instance.Settings.DemoTools.OutputFolder = demoWiz.OutputPath;
+                GlobalConfig.Instance.BackUp();
 	        }
 
             //demoWiz.Dispose();
@@ -202,7 +210,7 @@ namespace AfxGui
 
         private void skyToolStripMenuItem_Click(object sender, EventArgs e)
         {
-			AfxCppCli.old.tools.skymanager sm = new AfxCppCli.old.tools.skymanager(Config.Global.Settings.Launcher.GamePath);
+            AfxCppCli.old.tools.skymanager sm = new AfxCppCli.old.tools.skymanager(GlobalConfig.Instance.Settings.Launcher.GamePath);
 			sm.Show(this);
         }
 

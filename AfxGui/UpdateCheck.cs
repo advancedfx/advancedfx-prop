@@ -120,19 +120,6 @@ namespace AfxGui
 	    //
 	    // Public properties:
 
-        public static UpdateCheck Global
-        {
-            get
-            {
-                return m_Global;
-            }
-
-            set
-            {
-                m_Global = value;
-            }
-        }
-
         /// <summary>
         /// Current Guid (that identifies the current version).
         /// </summary>
@@ -251,7 +238,6 @@ namespace AfxGui
 	    bool m_CheckThreadQuit;
 	    AutoResetEvent m_CheckThreadWork;
         bool m_Disposed;
-        static UpdateCheck m_Global;
         Guid[] m_Guids;
         LinkedList<UpdateCheckNotificationTarget> m_Targets;
 

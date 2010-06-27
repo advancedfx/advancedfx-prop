@@ -47,14 +47,14 @@ namespace AfxGui
 
             m_Icon = System.Drawing.Icon.ExtractAssociatedIcon(System.Windows.Forms.Application.ExecutablePath);
 
-            Config.Global = Config.LoadOrCreate(String.Concat(m_BaseDir, "\\hlaeconfig.xml"));
-            UpdateCheck.Global = new UpdateCheck();
+            GlobalConfig.Instance = Config.LoadOrCreate(String.Concat(m_BaseDir, "\\hlaeconfig.xml"));
+            GlobalUpdateCheck.Instance = new UpdateCheck();
 
             Application.Run(new MainForm());
 
-            Config.Global.BackUp();
+            GlobalConfig.Instance.BackUp();
 
-            UpdateCheck.Global.Dispose();
+            GlobalUpdateCheck.Instance.Dispose();
         }
     }
 }

@@ -212,12 +212,12 @@ public class Config
         return config;
 	}
 
-    public bool BackUp()
+    internal bool BackUp()
 	{
 		return WriteToFile( m_CfgPath );
 	}
 
-	public bool BackUp( String filePath )
+    internal bool BackUp(String filePath)
 	{
 		return WriteToFile( filePath );
 	}
@@ -244,24 +244,10 @@ public class Config
         }
     }
 
-    internal static Config Global
-    {
-        get
-        {
-            return m_Global;
-        }
-        set
-        {
-            m_Global = value;
-        }
-    }
-
     //
     // Private members:
 
-
 	String m_CfgPath;
-    static Config m_Global;
 
 	bool WriteToFile( String filePath )
 	{
