@@ -78,7 +78,7 @@ void AfxGoldSrcComServer::DoUpdateWindowSize(int width, int height)
 bool AfxGoldSrcComServer::InitServer()
 {
 	ComVersion version = COM_VERSION;
-	ComBool ok = false;
+	ComBool ok = 0;
 
 	m_PipeComServer->WriteBytes(&version, sizeof(version));
 	m_PipeComServer->ReadBytes(&ok, sizeof(ok));
@@ -101,7 +101,7 @@ bool AfxGoldSrcComServer::InitServer()
 		m_PipeComServer->WriteBytes(&crm, sizeof(crm));
 	}
 
-	return ok;
+	return 0 != ok;
 }
 
 

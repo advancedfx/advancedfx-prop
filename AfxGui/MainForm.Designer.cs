@@ -34,7 +34,6 @@
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
             this.menuExit = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.consoleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStatusBar = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.demoToolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -58,6 +57,7 @@
             this.statusLabelAutoYes = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusLabelAutoNo = new System.Windows.Forms.ToolStripStatusLabel();
             this.gameWindowPanel = new System.Windows.Forms.Panel();
+            this.menuGuidToClipBoard = new System.Windows.Forms.ToolStripMenuItem();
             this.mainMenu.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.stripEnableUpdateCheck.SuspendLayout();
@@ -89,41 +89,34 @@
             // menuLaunch
             // 
             this.menuLaunch.Name = "menuLaunch";
-            this.menuLaunch.Size = new System.Drawing.Size(152, 22);
+            this.menuLaunch.Size = new System.Drawing.Size(119, 22);
             this.menuLaunch.Text = "Launch";
             this.menuLaunch.Click += new System.EventHandler(this.menuLaunch_Click);
             // 
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(149, 6);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(116, 6);
             // 
             // menuExit
             // 
             this.menuExit.Name = "menuExit";
-            this.menuExit.Size = new System.Drawing.Size(152, 22);
+            this.menuExit.Size = new System.Drawing.Size(119, 22);
             this.menuExit.Text = "Exit";
             this.menuExit.Click += new System.EventHandler(this.menuExit_Click);
             // 
             // viewToolStripMenuItem
             // 
             this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.consoleToolStripMenuItem,
             this.menuStatusBar});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(41, 20);
             this.viewToolStripMenuItem.Text = "View";
             // 
-            // consoleToolStripMenuItem
-            // 
-            this.consoleToolStripMenuItem.Name = "consoleToolStripMenuItem";
-            this.consoleToolStripMenuItem.Size = new System.Drawing.Size(135, 22);
-            this.consoleToolStripMenuItem.Text = "Console";
-            // 
             // menuStatusBar
             // 
             this.menuStatusBar.Name = "menuStatusBar";
-            this.menuStatusBar.Size = new System.Drawing.Size(135, 22);
+            this.menuStatusBar.Size = new System.Drawing.Size(152, 22);
             this.menuStatusBar.Text = "Status Bar";
             this.menuStatusBar.Click += new System.EventHandler(this.statusBarToolStripMenuItem_Click);
             // 
@@ -142,7 +135,7 @@
             // demoToolsToolStripMenuItem
             // 
             this.demoToolsToolStripMenuItem.Name = "demoToolsToolStripMenuItem";
-            this.demoToolsToolStripMenuItem.Size = new System.Drawing.Size(141, 22);
+            this.demoToolsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.demoToolsToolStripMenuItem.Text = "Demo Tools";
             this.demoToolsToolStripMenuItem.Click += new System.EventHandler(this.demoToolsToolStripMenuItem_Click);
             // 
@@ -151,7 +144,7 @@
             this.calculatorsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menuFileSize});
             this.calculatorsToolStripMenuItem.Name = "calculatorsToolStripMenuItem";
-            this.calculatorsToolStripMenuItem.Size = new System.Drawing.Size(141, 22);
+            this.calculatorsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.calculatorsToolStripMenuItem.Text = "Calculators";
             // 
             // menuFileSize
@@ -164,27 +157,28 @@
             // skyToolStripMenuItem
             // 
             this.skyToolStripMenuItem.Name = "skyToolStripMenuItem";
-            this.skyToolStripMenuItem.Size = new System.Drawing.Size(141, 22);
+            this.skyToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.skyToolStripMenuItem.Text = "Sky Manger";
             this.skyToolStripMenuItem.Click += new System.EventHandler(this.skyToolStripMenuItem_Click);
             // 
             // toolStripMenuItem2
             // 
             this.toolStripMenuItem2.Name = "toolStripMenuItem2";
-            this.toolStripMenuItem2.Size = new System.Drawing.Size(138, 6);
+            this.toolStripMenuItem2.Size = new System.Drawing.Size(149, 6);
             // 
             // developerToolStripMenuItem
             // 
             this.developerToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.menuCustomLoader});
+            this.menuCustomLoader,
+            this.menuGuidToClipBoard});
             this.developerToolStripMenuItem.Name = "developerToolStripMenuItem";
-            this.developerToolStripMenuItem.Size = new System.Drawing.Size(141, 22);
+            this.developerToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.developerToolStripMenuItem.Text = "Developer";
             // 
             // menuCustomLoader
             // 
             this.menuCustomLoader.Name = "menuCustomLoader";
-            this.menuCustomLoader.Size = new System.Drawing.Size(157, 22);
+            this.menuCustomLoader.Size = new System.Drawing.Size(171, 22);
             this.menuCustomLoader.Text = "Custom Loader";
             this.menuCustomLoader.Click += new System.EventHandler(this.menuCustomLoader_Click);
             // 
@@ -317,6 +311,13 @@
             this.gameWindowPanel.Size = new System.Drawing.Size(370, 249);
             this.gameWindowPanel.TabIndex = 3;
             // 
+            // menuGuidToClipBoard
+            // 
+            this.menuGuidToClipBoard.Name = "menuGuidToClipBoard";
+            this.menuGuidToClipBoard.Size = new System.Drawing.Size(171, 22);
+            this.menuGuidToClipBoard.Text = "GUID to ClipBoard";
+            this.menuGuidToClipBoard.Click += new System.EventHandler(this.menuGuidToClipBoard_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -350,7 +351,6 @@
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem menuExit;
         private System.Windows.Forms.ToolStripMenuItem viewToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem consoleToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem menuStatusBar;
         private System.Windows.Forms.ToolStripMenuItem toolsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem demoToolsToolStripMenuItem;
@@ -374,5 +374,6 @@
         private System.Windows.Forms.ToolStripStatusLabel statusLabelAutoYes;
         private System.Windows.Forms.ToolStripStatusLabel statusLabelAutoNo;
         private System.Windows.Forms.Panel gameWindowPanel;
+        private System.Windows.Forms.ToolStripMenuItem menuGuidToClipBoard;
     }
 }

@@ -75,7 +75,7 @@ AfxGoldSrcComClient::AfxGoldSrcComClient()
 , m_Connected(false)
 {
 	ComVersion version;
-	ComBool ok = false;
+	ComBool ok = 0;
 
 	m_Connected = false;
 
@@ -88,7 +88,7 @@ AfxGoldSrcComClient::AfxGoldSrcComClient()
 		return;
 	}
 
-	ok = true;
+	ok = 1;
 	this->WriteBytes(&ok, sizeof(ok));
 
 	this->ReadBytes(&m_ForceAlpha8, sizeof(m_ForceAlpha8));
@@ -144,16 +144,17 @@ bool AfxGoldSrcComClient::GetOptimizeCaptureVis()
 
 ServerMessage AfxGoldSrcComClient::RecvMessage(void)
 {
-	ServerMessage serverMessage;
+	ComInt msg;
 
-	ReadBytes(&serverMessage, sizeof(serverMessage));
+	ReadBytes(&msg, sizeof(msg));
 
-	return serverMessage;
+	return (ServerMessage)msg;
 }
 
 void AfxGoldSrcComClient::SendMessage(ClientMessage message)
 {
-	WriteBytes(&message, sizeof(message));
+	ComInt msg = (ComInt)message;
+	WriteBytes(&msg, sizeof(msg));
 }
 
 

@@ -38,7 +38,7 @@ enum ComRenderMode
 	RM_MemoryDc
 };
 
-typedef bool ComBool;
+typedef unsigned char ComBool;
 typedef __int32 ComHandle;
 typedef __int32 ComInt;
 

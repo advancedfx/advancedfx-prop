@@ -6,11 +6,27 @@
 
 <release>
 <name>HLAE</name>
+<version>2.2.16.0</version>
+<time>2010-06-28T13:30Z</time>
+<changes>
+<change type="updated">
+AfxHookSource: Adjusted to 26 Jun 2010 CSS update.
+</change>
+<change type="updated">
+Ported parts of the GUI to CSharp in order to make coding easier for other coders.
+</change>
+</changes>
+</release>
+
+
+
+<release>
+<name>HLAE</name>
 <version>2.2.15.2</version>
 <time>2010-06-24T22:43Z</time>
 <changes>
 <change type="updated">
-AfxHookSource: Adjusted to latest CSS update.
+AfxHookSource: Adjusted to 23 Jun 2010 CSS update.
 </change>
 </changes>
 </release>

@@ -52,17 +52,18 @@ class AfxGoldSrc : IDisposable
             FullScreen = false;
             GameWindowParent = gameWindowParent;
             HalfLifePath = halfLifePath;
-            Height = 640;
+            Height = 480;
             Modification = modification;
             OptWindowVisOnRec = true;
             RenderMode = RenderMode.Default;
-            Width = 480;
+            Width = 640;
         }
     }
 
     public AfxGoldSrc()
     {
         m_DoUpdateWindowSize = new DoUpdateWindowSizeDelegate(DoUpdateWindowSize);
+
         m_PipeComServer = new PipeComServer();
     }
 
@@ -126,6 +127,9 @@ class AfxGoldSrc : IDisposable
 	    //
 	    // Launch:
 
+        m_GameWindowParentHandle = startSettings.GameWindowParent.Handle;
+        m_StartSettings = startSettings;
+
         StartServer();
 
         if (!AfxCppCli.AfxHook.LauchAndHook(
@@ -141,7 +145,6 @@ class AfxGoldSrc : IDisposable
             return false;
         }
 
-        m_StartSettings = startSettings;
 
         return true;
     }
@@ -150,6 +153,7 @@ class AfxGoldSrc : IDisposable
     {
         StopServer();
 
+        m_GameWindowParentHandle = IntPtr.Zero;
         m_StartSettings = null;
     }
 
@@ -187,6 +191,7 @@ class AfxGoldSrc : IDisposable
     const int COM_VERSION = 0;
 
     bool m_Disposed;
+    IntPtr m_GameWindowParentHandle;
     PipeComServer m_PipeComServer;
     DoUpdateWindowSizeDelegate m_DoUpdateWindowSize;
     StartSettings m_StartSettings;
@@ -215,6 +220,11 @@ class AfxGoldSrc : IDisposable
         );
     }
 
+    IntPtr DoGetHandle(IWin32Window window)
+    {
+        return window.Handle;
+    }
+
     void DoUpdateWindowSize(int width, int height)
     {
 	    m_StartSettings.GameWindowParent.AutoScrollMinSize = new System.Drawing.Size(width, height);
@@ -241,7 +251,7 @@ class AfxGoldSrc : IDisposable
         m_PipeComServer.Write((Boolean)m_StartSettings.Alpha8);
         m_PipeComServer.Write((Boolean)m_StartSettings.FullScreen);
         m_PipeComServer.Write((Boolean)m_StartSettings.OptWindowVisOnRec);
-        m_PipeComServer.Write((Int32)m_StartSettings.GameWindowParent.Handle.ToInt32());
+        m_PipeComServer.Write((Int32)m_GameWindowParentHandle.ToInt32());
         m_PipeComServer.Write((Int32)m_StartSettings.RenderMode);
 
 	    return true;

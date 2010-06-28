@@ -118,12 +118,12 @@ class PipeCom
 
     public void Write(Boolean value)
     {
-        Write(value ? (Byte)1 : (Byte)0);
+        Write(new Byte[] { (Byte)(value ? 1 : 0) }, 0, 1);
     }
 
     public void Write(Byte value)
     {
-        Write(BitConverter.GetBytes(value));
+        Write(new Byte[]{value}, 0, 1);
     }
 
     public void Write(Int32 value)
@@ -266,10 +266,10 @@ class PipeComServer : PipeCom, IDisposable
         secAttrib.lpSecurityDescriptor = IntPtr.Zero;
         secAttrib.bInheritHandle = true;
 
-        if (!CreatePipe(out m_ClientReadPipe, out m_ClientWritePipe, ref secAttrib, 0))
+        if (!CreatePipe(out m_ClientReadPipe, out serverWritePipe, ref secAttrib, 0))
             throw new ApplicationException();
 
-        if (!CreatePipe(out serverReadPipe, out serverWritePipe, ref secAttrib, 0))
+        if (!CreatePipe(out serverReadPipe, out m_ClientWritePipe, ref secAttrib, 0))
             throw new ApplicationException();
 
         this.ReadPipe = serverReadPipe;

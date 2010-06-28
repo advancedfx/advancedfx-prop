@@ -145,7 +145,12 @@ namespace AfxGui
 
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
         {
+            // close down remoting:
             if (null != m_HlaeRemoting) m_HlaeRemoting.Dispose();
+
+            // close down ag:
+            Afx.AfxGoldSrc ag = GlobalAfxGoldSrc.Instance;
+            if (null != ag) ag.Dispose();
 
             GlobalUpdateCheck.Instance.EndCheckedNotification(m_UpdateCheckNotification);
         }
@@ -227,6 +232,11 @@ namespace AfxGui
         private void menuLaunch_Click(object sender, EventArgs e)
         {
             Launcher.RunLauncher(this, this.gameWindowPanel);
+        }
+
+        private void menuGuidToClipBoard_Click(object sender, EventArgs e)
+        {
+            Clipboard.SetText(GlobalUpdateCheck.Instance.Guid.ToString());           
         }
     }
 }
