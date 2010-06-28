@@ -6,11 +6,23 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.0.3.5</version>
+<time>2010-06-28T08:50Z</time>
+<changes>
+<change type="updated">
+Adjusted to 26 Jun 2010 CSS update.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.0.3.4</version>
 <time>2010-06-24T22:23Z</time>
 <changes>
 <change type="updated">
-Adjusted to latest CSS update.
+Adjusted to 23 Jun 2010 CSS update.
 </change>
 </changes>
 </release>
