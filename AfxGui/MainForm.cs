@@ -218,5 +218,15 @@ namespace AfxGui
         {
             this.Close();
         }
+
+        private void menuCustomLoader_Click(object sender, EventArgs e)
+        {
+            AfxGui.Tools.CustomLoader.RunCustomLoader(this);
+        }
+
+        private void menuLaunch_Click(object sender, EventArgs e)
+        {
+            Launcher.RunLauncher(this, this.gameWindowPanel);
+        }
     }
 }

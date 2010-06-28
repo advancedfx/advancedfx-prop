@@ -164,7 +164,7 @@ class PipeCom
     [return: MarshalAs(UnmanagedType.Bool)]
     static extern Boolean ReadFile(
         IntPtr hFile,
-        [Out] ArrayWithOffset lpBuffer,
+        [In, Out] ArrayWithOffset lpBuffer,
         UInt32 nNumberOfBytesToRead,
         out UInt32 lpNumberOfBytesRead,
         IntPtr lpOverlapped
@@ -174,7 +174,7 @@ class PipeCom
     [return: MarshalAs(UnmanagedType.Bool)]
     static extern Boolean WriteFile(
         IntPtr hFile,
-        ArrayWithOffset lpBuffer,
+        [In, Out] ArrayWithOffset lpBuffer,
         UInt32 nNumberOfBytesToWrite,
         out UInt32 lpNumberOfBytesWritten,
         IntPtr lpOverlapped

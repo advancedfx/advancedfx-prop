@@ -30,7 +30,7 @@
         {
             this.mainMenu = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.launchToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuLaunch = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
             this.menuExit = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -43,7 +43,7 @@
             this.skyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
             this.developerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.customLoaderToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuCustomLoader = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuAdvancedFxOrg = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripSeparator();
@@ -79,28 +79,29 @@
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.launchToolStripMenuItem,
+            this.menuLaunch,
             this.toolStripMenuItem1,
             this.menuExit});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(35, 20);
             this.fileToolStripMenuItem.Text = "File";
             // 
-            // launchToolStripMenuItem
+            // menuLaunch
             // 
-            this.launchToolStripMenuItem.Name = "launchToolStripMenuItem";
-            this.launchToolStripMenuItem.Size = new System.Drawing.Size(119, 22);
-            this.launchToolStripMenuItem.Text = "Launch";
+            this.menuLaunch.Name = "menuLaunch";
+            this.menuLaunch.Size = new System.Drawing.Size(152, 22);
+            this.menuLaunch.Text = "Launch";
+            this.menuLaunch.Click += new System.EventHandler(this.menuLaunch_Click);
             // 
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(116, 6);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(149, 6);
             // 
             // menuExit
             // 
             this.menuExit.Name = "menuExit";
-            this.menuExit.Size = new System.Drawing.Size(119, 22);
+            this.menuExit.Size = new System.Drawing.Size(152, 22);
             this.menuExit.Text = "Exit";
             this.menuExit.Click += new System.EventHandler(this.menuExit_Click);
             // 
@@ -175,16 +176,17 @@
             // developerToolStripMenuItem
             // 
             this.developerToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.customLoaderToolStripMenuItem});
+            this.menuCustomLoader});
             this.developerToolStripMenuItem.Name = "developerToolStripMenuItem";
             this.developerToolStripMenuItem.Size = new System.Drawing.Size(141, 22);
             this.developerToolStripMenuItem.Text = "Developer";
             // 
-            // customLoaderToolStripMenuItem
+            // menuCustomLoader
             // 
-            this.customLoaderToolStripMenuItem.Name = "customLoaderToolStripMenuItem";
-            this.customLoaderToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
-            this.customLoaderToolStripMenuItem.Text = "Custom Loader";
+            this.menuCustomLoader.Name = "menuCustomLoader";
+            this.menuCustomLoader.Size = new System.Drawing.Size(157, 22);
+            this.menuCustomLoader.Text = "Custom Loader";
+            this.menuCustomLoader.Click += new System.EventHandler(this.menuCustomLoader_Click);
             // 
             // helpToolStripMenuItem
             // 
@@ -321,12 +323,12 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(370, 273);
             this.Controls.Add(this.gameWindowPanel);
+            this.Controls.Add(this.mainMenu);
             this.Controls.Add(this.statusStrip);
             this.Controls.Add(this.stripEnableUpdateCheck);
-            this.Controls.Add(this.mainMenu);
             this.MainMenuStrip = this.mainMenu;
             this.Name = "MainForm";
-            this.Text = "MainForm";
+            this.Text = "Half-Life Advanced Effects";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainForm_FormClosed);
             this.Shown += new System.EventHandler(this.MainForm_Shown);
             this.mainMenu.ResumeLayout(false);
@@ -344,7 +346,7 @@
 
         private System.Windows.Forms.MenuStrip mainMenu;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem launchToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem menuLaunch;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem menuExit;
         private System.Windows.Forms.ToolStripMenuItem viewToolStripMenuItem;
@@ -357,7 +359,7 @@
         private System.Windows.Forms.ToolStripMenuItem skyToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem2;
         private System.Windows.Forms.ToolStripMenuItem developerToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem customLoaderToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem menuCustomLoader;
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem menuAdvancedFxOrg;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem3;

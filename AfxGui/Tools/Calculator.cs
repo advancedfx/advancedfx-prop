@@ -11,7 +11,7 @@ namespace AfxGui.Tools
 {
     public partial class Calculator : Form
     {
-        public Calculator()
+        internal Calculator()
         {
             InitializeComponent();
             this.Icon = Program.Icon;

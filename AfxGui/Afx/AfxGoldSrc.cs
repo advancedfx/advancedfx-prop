@@ -126,16 +126,22 @@ class AfxGoldSrc : IDisposable
 	    //
 	    // Launch:
 
-        if(!AfxCppCli.AfxHook.LauchAndHook(
-		    startSettings.HalfLifePath,
-		    cmds,		
-		    System.Windows.Forms.Application.StartupPath + "\\AfxHookGoldSrc.dll"
-	    ))
+        StartServer();
+
+        if (!AfxCppCli.AfxHook.LauchAndHook(
+            startSettings.HalfLifePath,
+            cmds,
+            System.Windows.Forms.Application.StartupPath + "\\AfxHookGoldSrc.dll"
+        ))
+        {
+            //TODO:
+            // this won't actually work properly yet, the sever cannot stop properly
+            // once it's started atm.
+            StopServer();
             return false;
+        }
 
         m_StartSettings = startSettings;
-
-        StartServer();
 
         return true;
     }

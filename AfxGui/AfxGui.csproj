@@ -69,6 +69,13 @@
     <Compile Include="Afx\AfxGoldSrc.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="Globals.cs" />
+    <Compile Include="Launcher.cs" />
+    <Compile Include="LauncherForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="LauncherForm.Designer.cs">
+      <DependentUpon>LauncherForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -85,7 +92,17 @@
     <Compile Include="Tools\Calculator.Designer.cs">
       <DependentUpon>Calculator.cs</DependentUpon>
     </Compile>
+    <Compile Include="Tools\CustomLoader.cs" />
+    <Compile Include="Tools\CustomLoaderForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Tools\CustomLoaderForm.Designer.cs">
+      <DependentUpon>CustomLoaderForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="UpdateCheck.cs" />
+    <EmbeddedResource Include="LauncherForm.resx">
+      <DependentUpon>LauncherForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -100,6 +117,9 @@
     </Compile>
     <EmbeddedResource Include="Tools\Calculator.resx">
       <DependentUpon>Calculator.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\CustomLoaderForm.resx">
+      <DependentUpon>CustomLoaderForm.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
