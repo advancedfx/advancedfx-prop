@@ -1,0 +1,17 @@
+Build order:
+
+1) Build Spidermonkey, see doc\how_to_build_spidermonkey.txt.
+   Copy the js32.dll into build\Release\bin\
+
+2) Build (Configuration=Release): AfxHookGoldSrc, AfxHookSource, AfxCppCli
+
+3) AfxHook\recompile.bat, move AfxHook.dat into build\Release\bin\
+
+4) Build AfxGui (Release), move and rename AfxGui.exe to build\Release\bin\hlae.exe
+
+5) Copy all files and folders from resources\ to build\Release\bin
+
+6) Copy msvcp100.dll, msvcr100.dll (CRT runtime, required by C++ and C++/CLI
+   projects) from your system folders to build\Release\bin
+   
+7) Remove all temporary / unneeded files such as *.pdb and hlaeconfig.xml

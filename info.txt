@@ -1,8 +1,11 @@
-You are here: mdt/trunk
+You are here: $(REPOS)/mdt/trunk/
 
 AfxCppCli/
   CLR Class Library in C++/CLI meant for handling interop
   and encapsulating unmanaged code.
+  
+AfxGui/
+  C#, the HLAE GUI and more.
   
 AfxHook/
   Boot image that is injected in the target process that shall
@@ -15,19 +18,15 @@ AfxHookGoldSrc/
 AfxHookSource/
   Hook for Source engine.
   
-build/
-  Directory where all projects place their temporary release and debug folders
-  in a subfolder, the binary and debug headers go into the bin subfolder
+doc/
+  Notes.
 
-examples/
-  Example projects (i.e. IPC Rremoting), that are not part of the main
-  HLAE suite.
+HlaeRemote/
+  HLAE IPC-remoting example in C#.
   
-hlae/
-  Project for the new .NET based HLAE GUI
-  
-hooks/
-  Hook projects for hooking into the game engines.
+build/
+  Directory where C++ and C++/CLI projects place their intermediate
+  files, binaries and PDBs.
   
 misc/
   miscellaneous
@@ -41,8 +40,9 @@ shared/
 tools/
   small tools not part of the hlae core download
   
-mdt.sln
-  Solution file for Microsoft Visual Studio 2008 .NET (VC++) which organizes the different projects.
-  
 info.txt
-  This file.
+  This file.  
+  
+mdt.sln
+  Solution file for Microsoft Visual Studio 2008 .NET (VC++) which organizes C++
+  and C++/CLI  projects.
