@@ -6,6 +6,18 @@
 
 <release>
 <name>HLAE</name>
+<version>2.2.16.1</version>
+<time>2010-06-29T09:05Z</time>
+<changes>
+<change type="updated">
+Switched .NET v4.0 profile to Client.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.2.16.0</version>
 <time>2010-06-28T13:30Z</time>
 <changes>

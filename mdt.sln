@@ -1,9 +1,5 @@
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual C++ Express 2010
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Half-Life Advanced Effects .NET", "hlae\hlae.vcxproj", "{CF9B4385-F921-4168-92D4-31DF94AC36FB}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ipc_remoting", "examples\ipc_remoting\ipc_remoting.vcxproj", "{43CD67D1-16AB-4F78-BEAA-61C2989220DB}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AfxHookSource", "AfxHookSource\AfxHookSource.vcxproj", "{3B8B10B2-05E6-4D15-8022-65D3D60DCCCD}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AfxHookGoldSrc", "AfxHookGoldSrc\AfxHookGoldSrc.vcxproj", "{B5B38F84-EE5E-4B8E-A0B3-5AE3DC669896}"
@@ -16,14 +12,6 @@ Global
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{CF9B4385-F921-4168-92D4-31DF94AC36FB}.Debug|Win32.ActiveCfg = Debug|Win32
-		{CF9B4385-F921-4168-92D4-31DF94AC36FB}.Debug|Win32.Build.0 = Debug|Win32
-		{CF9B4385-F921-4168-92D4-31DF94AC36FB}.Release|Win32.ActiveCfg = Release|Win32
-		{CF9B4385-F921-4168-92D4-31DF94AC36FB}.Release|Win32.Build.0 = Release|Win32
-		{43CD67D1-16AB-4F78-BEAA-61C2989220DB}.Debug|Win32.ActiveCfg = Debug|Win32
-		{43CD67D1-16AB-4F78-BEAA-61C2989220DB}.Debug|Win32.Build.0 = Debug|Win32
-		{43CD67D1-16AB-4F78-BEAA-61C2989220DB}.Release|Win32.ActiveCfg = Release|Win32
-		{43CD67D1-16AB-4F78-BEAA-61C2989220DB}.Release|Win32.Build.0 = Release|Win32
 		{3B8B10B2-05E6-4D15-8022-65D3D60DCCCD}.Debug|Win32.ActiveCfg = Debug|Win32
 		{3B8B10B2-05E6-4D15-8022-65D3D60DCCCD}.Debug|Win32.Build.0 = Debug|Win32
 		{3B8B10B2-05E6-4D15-8022-65D3D60DCCCD}.Release|Win32.ActiveCfg = Release|Win32

@@ -135,8 +135,10 @@
             // 
             // CustomLoaderForm
             // 
+            this.AcceptButton = this.buttonOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.CancelButton = this.buttonAbort;
             this.ClientSize = new System.Drawing.Size(469, 151);
             this.Controls.Add(this.buttonSelectProgram);
             this.Controls.Add(this.buttonSelectHook);
