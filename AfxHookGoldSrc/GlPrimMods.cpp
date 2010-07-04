@@ -347,6 +347,8 @@ bool Replace::IsSupported()
 
 void Replace::OnGlBegin(GLenum mode)
 {
+	EnsureTexture();
+
 	if(!m_HasTexture) return;
 
 

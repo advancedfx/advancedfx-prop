@@ -6,8 +6,8 @@
 
 <release>
 <name>HLAE</name>
-<version>2.2.16.4</version>
-<time>2010-07-04T08:58Z</time>
+<version>2.2.16.5</version>
+<time>2010-07-04T10:10Z</time>
 <changes>
 <change type="updated">
 Alpha matte method now obeys mirv_matte_xray.

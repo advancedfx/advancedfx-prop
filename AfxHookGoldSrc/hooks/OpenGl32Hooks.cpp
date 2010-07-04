@@ -123,6 +123,7 @@ bool ModeAlpha_Begin(GLenum mode)
 		{
 			// positive (white).
 
+			g_ModeAlpha.restore = true;
 			g_ModeAlpha.wasWhite = true;
 
 			g_ModeAlpha.replaceWhite.OnGlBegin(mode);
@@ -134,6 +135,7 @@ bool ModeAlpha_Begin(GLenum mode)
 		{
 			// negative (black).
 
+			g_ModeAlpha.restore = true;
 			g_ModeAlpha.wasWhite = false;
 
 			g_ModeAlpha.replaceBlack.OnGlBegin(mode);
