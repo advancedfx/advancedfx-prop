@@ -8,6 +8,8 @@
 #include "../aiming.h"
 #include "../cmdregister.h"
 #include "../filming.h"
+#include "../GlPrimMods.h"
+#include "../mirv_glext.h"
 #include "../mirv_scripting.h"
 #include "../newsky.h"
 #include "../supportrender.h"
@@ -22,8 +24,6 @@
 #include "../modules/ModInfo.h"
 
 #include <hlsdk.h>
-
-#include "mirv_glext.h"
 
 
 REGISTER_CVAR(disableautodirector, "0", 0);
@@ -93,97 +93,58 @@ void ModeKey_End()
 }
 
 struct {
+	GlPrimMod::Replace replaceBlack;
+	GlPrimMod::Replace replaceWhite;
+	GlPrimMod::Color   color;
 	bool restore;
-	GLboolean old_enabled;
-	GLint old_texture;
-	GLint old_active_texture;
-	GLint old_env_param;
-} g_ModeAlpha_saved;
+	bool wasWhite;
+} g_ModeAlpha;
 
 bool ModeAlpha_Begin(GLenum mode)
 {
-	g_ModeAlpha_saved.restore=false;
+	static bool firstRun = true;
+
+	if(firstRun)
+	{
+		firstRun = false;
+
+		g_ModeAlpha.replaceBlack.SetRgb(0, 0, 0);
+
+		g_ModeAlpha.replaceWhite.SetRgb(255, 255, 255);
+	}
+
+	g_ModeAlpha.restore=false;
 
 	if (Filming::MS_ENTITY == g_Filming.GetMatteStage())
 	{
-		static GLuint blacktex = 0;
-		static GLuint whitetex = 0;
-
-		if(!blacktex)
-		{
-			unsigned char texmem[48];
-			GLint oldtex;
-
-			glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldtex);
-			glGenTextures(1,&blacktex);
-			glGenTextures(1,&whitetex);
-
-			memset(texmem,0x00,48);
-			glBindTexture(GL_TEXTURE_2D, blacktex);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 4, 4, 0, GL_RGB, GL_UNSIGNED_BYTE, texmem);
-			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP);
-			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP);
-
-			memset(texmem,0xFF,48);
-			glBindTexture(GL_TEXTURE_2D, whitetex);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 4, 4, 0, GL_RGB, GL_UNSIGNED_BYTE, texmem);
-			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP);
-			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP);
-
-			glBindTexture(GL_TEXTURE_2D, oldtex);
-		}
-
-		GLfloat curcolor[4];
-		glGetFloatv(GL_CURRENT_COLOR, curcolor);
-
-
 		Filming::DRAW_RESULT res = g_Filming.shouldDraw(mode);
 
 		if(Filming::DR_NORMAL == res)
 		{
 			// positive (white).
 
-			if(g_Has_GL_ARB_multitexture)
-			{
-				g_ModeAlpha_saved.restore = true;
-				glGetIntegerv(GL_ACTIVE_TEXTURE_ARB, &g_ModeAlpha_saved.old_active_texture);
+			g_ModeAlpha.wasWhite = true;
 
-				glActiveTextureARB(GL_TEXTURE1_ARB);
+			g_ModeAlpha.replaceWhite.OnGlBegin(mode);
 
-				g_ModeAlpha_saved.old_enabled = glIsEnabled(GL_TEXTURE_2D);
-				glGetIntegerv(GL_TEXTURE_BINDING_2D, &g_ModeAlpha_saved.old_texture);
-				glGetTexEnviv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &g_ModeAlpha_saved.old_env_param);
-
-				glEnable(GL_TEXTURE_2D);
-				glBindTexture(GL_TEXTURE_2D,whitetex);
-				glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-			}
-			glColor4f(1,1,1,curcolor[3]);
+			g_ModeAlpha.color.SetRgba(1, 1, 1, -1);
+			g_ModeAlpha.color.OnGlBegin(mode);
 		}
-		else
+		else if(Filming::DR_MASK == res)
 		{
 			// negative (black).
 
-			if(g_Has_GL_ARB_multitexture)
-			{
-				g_ModeAlpha_saved.restore = true;
-				glGetIntegerv(GL_ACTIVE_TEXTURE_ARB, &g_ModeAlpha_saved.old_active_texture);
+			g_ModeAlpha.wasWhite = false;
 
-				glActiveTextureARB(GL_TEXTURE1_ARB);
+			g_ModeAlpha.replaceBlack.OnGlBegin(mode);
 
-				g_ModeAlpha_saved.old_enabled = glIsEnabled(GL_TEXTURE_2D);
-				glGetIntegerv(GL_TEXTURE_BINDING_2D, &g_ModeAlpha_saved.old_texture);
-				glGetTexEnviv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &g_ModeAlpha_saved.old_env_param);
-
-				glEnable(GL_TEXTURE_2D);
-				glBindTexture(GL_TEXTURE_2D,blacktex);
-				glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-			}
-			glColor4f(0,0,0,curcolor[3]);
+			g_ModeAlpha.color.SetRgba(0, 0, 0, -1);
+			g_ModeAlpha.color.OnGlBegin(mode);
+		}
+		else
+		{
+			// (x-ray).
+			return false;
 		}
 	}
 
@@ -192,16 +153,16 @@ bool ModeAlpha_Begin(GLenum mode)
 
 void ModeAlpha_End()
 {
-	if (g_ModeAlpha_saved.restore)
+	if (g_ModeAlpha.restore)
 	{
-		g_ModeAlpha_saved.restore = false;
+		g_ModeAlpha.restore = false;
 
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, g_ModeAlpha_saved.old_env_param);
-		glBindTexture(GL_TEXTURE_2D, g_ModeAlpha_saved.old_texture);
-		if(!g_ModeAlpha_saved.old_enabled)
-			glDisable(GL_TEXTURE_2D);
+		g_ModeAlpha.color.OnGlEnd();
 
-		glActiveTextureARB(g_ModeAlpha_saved.old_active_texture);
+		if(g_ModeAlpha.wasWhite)
+			g_ModeAlpha.replaceWhite.OnGlEnd();
+		else
+			g_ModeAlpha.replaceBlack.OnGlEnd();
 	}
 }
 
@@ -241,13 +202,13 @@ void APIENTRY NewGlBegin(GLenum mode)
 			return;
 	}
 
-	g_ModReplace.OnGlBegin();
+	g_ModReplace.OnGlBegin(mode);
 
-	g_ModColor.OnGlBegin();
+	g_ModColor.OnGlBegin(mode);
 
-	g_ModColorMask.OnGlBegin();
+	g_ModColorMask.OnGlBegin(mode);
 
-	if(g_ModHide.OnGlBegin()) glBegin(mode);
+	if(g_ModHide.OnGlBegin(mode)) glBegin(mode);
 }
 
 void APIENTRY NewGlEnd(void)

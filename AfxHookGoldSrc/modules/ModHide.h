@@ -19,7 +19,7 @@ public:
 	ModHide();
 
 	// returns false if to block
-	bool OnGlBegin();
+	bool OnGlBegin(GLenum mode);
 
 	//
 	// Properties:

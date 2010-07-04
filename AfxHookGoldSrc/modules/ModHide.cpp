@@ -19,7 +19,7 @@ ModHide::ModHide() {
 }
 
 
-bool ModHide::OnGlBegin() {
+bool ModHide::OnGlBegin(GLenum mode) {
 	return !m_Enabled;
 
 }

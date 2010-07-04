@@ -1,0 +1,1 @@
+xcopy "resources\*" "build\Release\bin" /D /E /Y

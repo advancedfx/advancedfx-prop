@@ -8,8 +8,8 @@
 // First changes
 // 2009-11-16 dominik.matrixstorm.com
 
-#include <windows.h>
-#include <gl\gl.h>
+
+#include "GlPrimMods.h"
 
 
 // ModColor /////////////////////////////////////////////////////////////////////
@@ -18,7 +18,7 @@ class ModColor {
 public:
 	ModColor();
 
-	void OnGlBegin();
+	void OnGlBegin(GLenum mode);
 	void OnGlEnd();
 
 	//
@@ -28,27 +28,24 @@ public:
 	void Enabled_set(bool value) { m_Enabled = value; }
 
 	// x < 0: no change, [0.0 - 1.0]: enable (set color channel value)
-	GLfloat Red_get() { return m_Red; }
-	void Red_set(GLfloat value) { m_Red = value; }
+	GLfloat Red_get() { return m_Color.GetRed(); }
+	void Red_set(GLfloat value) { m_Color.SetRed(value); }
 
-	GLfloat Green_get() { return m_Green; }
-	void Green_set(GLfloat value) { m_Green = value; }
+	GLfloat Green_get() { return m_Color.GetGreen(); }
+	void Green_set(GLfloat value) { m_Color.SetGreen(value); }
 
-	GLfloat Blue_get() { return m_Blue; }
-	void Blue_set(GLfloat value) { m_Blue = value; }
+	GLfloat Blue_get() { return m_Color.GetBlue(); }
+	void Blue_set(GLfloat value) { m_Color.SetBlue(value); }
 
-	GLfloat Alpha_get() { return m_Alpha; }
-	void Alpha_set(GLfloat value) { m_Alpha = value; }
+	GLfloat Alpha_get() { return m_Color.GetAlpha(); }
+	void Alpha_set(GLfloat value) { m_Color.SetAlpha(value); }
 
 private:
 	bool m_Active;
 	bool m_Enabled;
-	GLfloat m_Old_Gl_Color[4];
 
-	GLfloat m_Red;
-	GLfloat m_Green;
-	GLfloat m_Blue;
-	GLfloat m_Alpha;
+	GlPrimMod::Color m_Color;
+
 };
 
 extern ModColor g_ModColor;

@@ -131,6 +131,7 @@
     <ClCompile Include="filming.cpp" />
     <ClCompile Include="forceres.cpp" />
     <ClCompile Include="fx_noblend.cpp" />
+    <ClCompile Include="GlPrimMods.cpp" />
     <ClCompile Include="hl_addresses.cpp" />
     <ClCompile Include="HltvFix.cpp" />
     <ClCompile Include="InitScript.cpp" />
@@ -199,6 +200,7 @@
     <ClInclude Include="film_sound.h" />
     <ClInclude Include="filming.h" />
     <ClInclude Include="forceres.h" />
+    <ClInclude Include="GlPrimMods.h" />
     <ClInclude Include="hl_addresses.h" />
     <ClInclude Include="hlsdk.h" />
     <ClInclude Include="HltvFix.h" />
