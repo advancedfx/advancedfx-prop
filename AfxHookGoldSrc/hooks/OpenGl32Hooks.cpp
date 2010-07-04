@@ -73,7 +73,7 @@ bool ModeKey_Begin(GLenum mode)
 			glEnable(GL_DEPTH_TEST);
 		}
 	}
-	else if (!g_Filming.bWantsHudCapture)
+	else if (Filming::HUDRQ_NORMAL == g_Filming.giveHudRqState())
 		glColorMask(TRUE, TRUE, TRUE, TRUE); // BlendFunc for additive sprites needs special controll, don't override it
 
 	return true;

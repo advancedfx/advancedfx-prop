@@ -53,7 +53,6 @@ void BvhExport::BeginContent(FILE *pFile, char const * pRootName, float frameTim
 	ulTPos = ftell(pFile);
 	fputs("Frames: 0123456789A\n",pFile);
 
-	//if (movie_fpscap->value) flTime = max(flTime, MIN_FRAME_DURATION);
 	_snprintf(szTmp, sizeof(szTmp) - 1,"Frame Time: %f\n", frameTime);
 	fputs(szTmp,pFile);
 }

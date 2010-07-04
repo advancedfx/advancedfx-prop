@@ -5,6 +5,24 @@
 
 
 <release>
+<name>HLAE venture</name>
+<version>2.2.17.0</version>
+<time>2010-07-04T19:50Z</time>
+<changes>
+<change type="added">
+Sampling is now supported for all non-detph image streams.
+</change>
+<change type="updated">
+Set mirv_movie_splitstreams 4 if you don't want any of the main streams.
+</change>
+<change type="updated">
+Removed mirv_movie_simualte 2, please use mirv_movie_simulate 1 and mirv_movie_splitstreams 4 instead.
+</change>
+</changes>
+</release>
+
+
+<release>
 <name>HLAE</name>
 <version>2.2.16.5</version>
 <time>2010-07-04T10:10Z</time>

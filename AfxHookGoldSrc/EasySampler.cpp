@@ -3,13 +3,14 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-03-24 dominik.matrixstorm.com
+// 2010-07-04 dominik.matrixstorm.com
 //
 // First changes
 // 2010-03-23 dominik.matrixstorm.com
 
 #include "EasySampler.h"
 
+#include <assert.h>
 #include <math.h>
 
 const float C_Values_Direct_Gauss_0_3_129 [129] =
@@ -50,9 +51,9 @@ const float C_Values_Direct_Gauss_0_3_129 [129] =
 };
 
 
-// EasyBgrSampler //////////////////////////////////////////////////////////////
+// EasyByteSampler //////////////////////////////////////////////////////////////
 
-float EasyBgrSampler::GaussWeighter(float t, float deltaT)
+float EasyByteSampler::GaussWeighter(float t, float deltaT)
 {
 	float x = 2.0f *(t +deltaT / 2.0f) -1.0f;
 
@@ -72,43 +73,47 @@ float EasyBgrSampler::GaussWeighter(float t, float deltaT)
 	return deltaT*(f_y_lo + x*( C_Values_Direct_Gauss_0_3_129[ (unsigned char)(f_x_hi) ] - f_y_lo ));
 }
 
-float EasyBgrSampler::RectangleWeighter(float t, float deltaT)
+float EasyByteSampler::RectangleWeighter(float t, float deltaT)
 {
 	return deltaT;
 }
 
-EasyBgrSampler::EasyBgrSampler(
+EasyByteSampler::EasyByteSampler(
 		int width,
 		int height,
-		size_t rowAlignment, // >= 1
+		int pitch,
 		Method method, 
 		Weighter weighter, // cannot be 0
 		float leftOffset,
 		float rightOffset,
-		FramePrinter framePrinter,
+		IFramePrinter * framePrinter,
 		float frameDuration)
 {
+	assert(0 <= width);
+	assert(0 <= height);
+	assert(width <= pitch);
+
 	m_FrameCount = 0;
 	m_FrameDuration = frameDuration;
 	m_FramePrinter = framePrinter;
 	m_Height = height;
 	m_LeftOffset = leftOffset;
 	m_PeakFrameCount = 0;
+	m_Pitch = pitch;
 	m_PrintedCount = 0;
 	m_RightOffset = rightOffset;
-	m_RowSkip = (rowAlignment -(3*width % rowAlignment)) % rowAlignment;
 	m_TwoPoint = false;
 	m_Width =  width;
 	m_Weighter = weighter;
 
-	m_FrameFactory = new FrameFactory(m_Height*3*m_Width);
-	m_OldSample = ESM_Trapezoid == method ? new unsigned char[m_Height*(3*m_Width +m_RowSkip)] : 0; 
-	m_PrintMem = new unsigned char[m_Height*(3*m_Width +m_RowSkip)];
+	m_FrameFactory = new FrameFactory(height * width);
+	m_OldSample = ESM_Trapezoid == method ? new unsigned char[height * pitch] : 0; 
+	m_PrintMem = new unsigned char[height * pitch];
 
 	m_FrameStore = new FrequentStore(m_FrameFactory);
 }
 
-EasyBgrSampler::~EasyBgrSampler()
+EasyByteSampler::~EasyByteSampler()
 {
 	for(list<IStoreItem *>::iterator it = m_Frames.begin(); it != m_Frames.end(); it++)
 		FinishFrame(*it);
@@ -120,14 +125,14 @@ EasyBgrSampler::~EasyBgrSampler()
 	delete m_FrameFactory;
 }
 
-IStoreItem * EasyBgrSampler::BeginFrame(float offset)
+IStoreItem * EasyByteSampler::BeginFrame(float offset)
 {
 	IStoreItem * i = m_FrameStore->Aquire();
 	m_FrameCount++;
 
 	Frame * f = (Frame *)i->GetValue();
 
-	memset(f->Data, 0, sizeof(float)*m_Height*3*m_Width);
+	memset(f->Data, 0, sizeof(float) * m_Height * m_Width);
 	f->Offset = offset;
 	f->WhitePoint = 0;
 
@@ -137,7 +142,7 @@ IStoreItem * EasyBgrSampler::BeginFrame(float offset)
 	return i;
 }
 
-void EasyBgrSampler::FinishFrame(IStoreItem * item)
+void EasyByteSampler::FinishFrame(IStoreItem * item)
 {
 	Frame * f = (Frame *)item->GetValue();
 	float w = f->WhitePoint;
@@ -146,14 +151,14 @@ void EasyBgrSampler::FinishFrame(IStoreItem * item)
 
 	if(0 == w)
 	{
-		memset(data, 0, m_Height*(3*m_Width+m_RowSkip));
+		memset(data, 0, m_Height * m_Pitch);
 	}
 	else
 	{
 		float * fdata = f->Data;
 
 		int ymax = m_Height;
-		int xmax = 3*m_Width;
+		int xmax = m_Width;
 
 		for( int iy=0; iy < ymax; iy++ )
 		{
@@ -165,11 +170,11 @@ void EasyBgrSampler::FinishFrame(IStoreItem * item)
 				data++;
 			}
 
-			data += m_RowSkip;
+			data += m_Pitch -m_Width;
 		}
 	}
 
-	m_FramePrinter(m_PrintMem, m_PrintedCount);
+	m_FramePrinter->Print(m_PrintMem);
 	m_PrintedCount++;
 
 	m_FrameCount--;
@@ -178,13 +183,13 @@ void EasyBgrSampler::FinishFrame(IStoreItem * item)
 	return;
 }
 
-int EasyBgrSampler::GetPeakFrameCount()
+int EasyByteSampler::GetPeakFrameCount()
 {
 	return m_PeakFrameCount;
 }
 
 
-void EasyBgrSampler::Sample(unsigned char const * data, float sampleDuration)
+void EasyByteSampler::Sample(unsigned char const * data, float sampleDuration)
 {
 	float frameBoundLo = m_LeftOffset;
 	float frameBoundHi = m_FrameDuration + m_RightOffset;
@@ -223,12 +228,12 @@ void EasyBgrSampler::Sample(unsigned char const * data, float sampleDuration)
 
 	if(m_OldSample)
 	{
-		memcpy(m_OldSample, data, m_Height*(3*m_Width +m_RowSkip));	
+		memcpy(m_OldSample, data, m_Height * m_Pitch);	
 		m_TwoPoint = true;
 	}
 }
 
-void EasyBgrSampler::SampleFrame(IStoreItem * item, unsigned char const * data, float sampleDuration)
+void EasyByteSampler::SampleFrame(IStoreItem * item, unsigned char const * data, float sampleDuration)
 {
 	Frame * f = (Frame *)item->GetValue();
 
@@ -260,7 +265,7 @@ void EasyBgrSampler::SampleFrame(IStoreItem * item, unsigned char const * data, 
 	float * fdata = f->Data;
 
 	int ymax = m_Height;
-	int xmax = 3*m_Width;
+	int xmax = m_Width;
 
 	if(!m_TwoPoint)
 	{
@@ -274,7 +279,7 @@ void EasyBgrSampler::SampleFrame(IStoreItem * item, unsigned char const * data, 
 				data++;
 			}
 
-			data += m_RowSkip;
+			data += m_Pitch -m_Width;
 		}
 	}
 	else
@@ -293,29 +298,10 @@ void EasyBgrSampler::SampleFrame(IStoreItem * item, unsigned char const * data, 
 				data2++;
 			}
 
-			data += m_RowSkip;
-			data2 += m_RowSkip;
+			data += m_Pitch -m_Width;
+			data2 += m_Pitch -m_Width;
 		}
 	}
-
-#if 0
-	// ffs too weird today :| || :]
-	int dMin = (int)(sampT * (float)xmax);
-	int dMax = dMin +(int)(sampDelta/2.0f * (float)xmax);
-
-	fdata = f->Data;
-
-	for(int i=0; i<xmax; i++)
-	{
-		if(dMin <= i && i <= dMax )
-			fdata[i] += 255.0f;
-
-		for(int ii=1;ii<32;ii++)
-		{
-			fdata[i+xmax*ii] = fdata[i];
-		}
-	}
-#endif
 
 	// update frame time:
 	f->Offset -= sampleDuration; // the frame moves by the real sample duration, since samples are stretched

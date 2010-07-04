@@ -142,7 +142,7 @@ bool WriteRawBitmap(
 
 // see RawOutput.h
 bool WriteRawTarga(
-	unsigned char *pData,
+	unsigned char const * pData,
 	wchar_t const * fileName,
 	unsigned short usWidth,
 	unsigned short usHeight,

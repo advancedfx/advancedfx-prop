@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-03-24 dominik.matrixstorm.com
+// 2010-07-04 dominik.matrixstorm.com
 //
 // First changes
 // 2010-03-23 dominik.matrixstorm.com
@@ -14,8 +14,14 @@
 
 using namespace std;
 
+class __declspec(novtable) IFramePrinter abstract
+{
+public:
+	virtual void Print(unsigned char const * data) abstract = 0;
+};
 
-class EasyBgrSampler
+
+class EasyByteSampler
 {
 public:
 	enum Method
@@ -25,23 +31,25 @@ public:
 	};
 
 	typedef float (* Weighter)(float t, float deltaT);
-	typedef void (* FramePrinter)(unsigned char * data, int number);
 
 	static float GaussWeighter(float t, float deltaT);
 	static float RectangleWeighter(float t, float deltaT);
 
-	EasyBgrSampler(
+	/// <param name="pitch">number of bytes in a row</param>
+	/// <param name="method">non-functional atm, always trapezoid</param>
+	/// <param name="weighter">cannot be 0, the class provides default weighters</param>
+	EasyByteSampler(
 		int width,
 		int height,
-		size_t rowAlignment, // >= 1
-		Method method,  // non-functional atm, always trapezoid
-		Weighter weighter, // cannot be 0, the class provides default weighters, see bellow
+		int pitch,
+		Method method,
+		Weighter weighter,
 		float leftOffset,
 		float rightOffset,
-		FramePrinter framePrinter,
+		IFramePrinter * framePrinter,
 		float frameDuration);
 
-	~EasyBgrSampler();
+	~EasyByteSampler();
 
 	int GetPeakFrameCount();
 
@@ -90,15 +98,15 @@ private:
 	FrameFactory  * m_FrameFactory;
 	Store * m_FrameStore;
 	list<IStoreItem *> m_Frames;
-	FramePrinter m_FramePrinter;
+	IFramePrinter * m_FramePrinter;
 	int m_Height;
 	float m_LeftOffset;
 	unsigned char * m_OldSample;
 	int m_PeakFrameCount;
+	int m_Pitch;
 	unsigned char * m_PrintMem;
 	int m_PrintedCount;
 	float m_RightOffset;
-	int m_RowSkip;
 	bool m_TwoPoint;
 	int m_Width;
 	Weighter m_Weighter;

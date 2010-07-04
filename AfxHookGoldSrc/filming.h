@@ -21,19 +21,55 @@ Description : see mdt_gltools.h
 #include "supportrender.h"
 
 
+
+enum FILMING_BUFFER { FB_COLOR, FB_DEPTH, FB_ALPHA };
+
+
+class FilmingStream :
+	public IFramePrinter
+{
+public:
+	/// <param name="sampleDuration">&lt;= 0: no sampling, sample duration (1/sps) otherwise</param>
+	/// <remarks>Depth buffers can't be sampled atm.</remarks>
+	FilmingStream(
+		wchar_t const * takePath, wchar_t const * name,
+		FILMING_BUFFER buffer,
+		float samplingFrameDuration,
+		int x, int y, int width, int height
+	);
+	~FilmingStream();
+
+	void Capture(float sampleDuration, CMdt_Media_RAWGLPIC * usePic);
+
+	virtual void Print(unsigned char const * data);
+	
+
+private:
+	bool m_Bmp;
+	FILMING_BUFFER m_Buffer;
+	unsigned char m_BytesPerPixel;
+	bool m_DirCreated;
+	int m_FrameCount;
+	GLenum m_GlBuffer;
+	GLenum m_GlType;
+	int m_Height;
+	std::wstring m_Path;
+	EasyByteSampler * m_Sampler;
+	int m_Pitch;
+	int m_Width;
+	int m_X;
+	int m_Y;
+};
+
+
 // Filming /////////////////////////////////////////////////////////////////////
 
-typedef struct Filming_Stream_Info_s {
-	wchar_t const * name;
-	bool dirCreated;
-} FilmingStreamInfo;
 
 class Filming
 {
 public:
 	enum DRAW_RESULT { DR_NORMAL, DR_HIDE, DR_MASK };
 	enum STEREO_STATE { STS_LEFT, STS_RIGHT };
-	enum BUFFER { COLOR, DEPTH, ALPHA };
 	enum HUD_REQUEST_STATE { HUDRQ_NORMAL,HUDRQ_HIDE,HUDRQ_CAPTURE_COLOR,HUDRQ_CAPTURE_ALPHA };
 	enum MATTE_STAGE { MS_ALL, MS_WORLD, MS_ENTITY };
 	enum MATTE_METHOD { MM_KEY, MM_ALPHA };
@@ -48,7 +84,6 @@ public:
 		_pSupportRender = pSupportRender;
 	}
 
-	void Capture(FilmingStreamInfo * streamInfo, int iFileNumber, BUFFER iBuffer);
 	DRAW_RESULT shouldDraw(GLenum mode);
 	void Start();
 	void Stop();
@@ -96,6 +131,8 @@ public:
 
 	MATTE_STAGE GetMatteStage();
 
+	bool GetSimulate2() { return _bSimulate2; }
+
 	bool bRequestingMatteTextUpdate;
 
 
@@ -105,21 +142,12 @@ public:
 	bool bEnableStereoMode();
 	STEREO_STATE GetStereoState();
 
-	bool bWantsHudCapture; // used by R_RenderView to prepare HUD Captures
-
 	void OnHudBeginEvent(); // called by Hud Begin tour
 	bool OnHudEndEvnet(); // called by Hud End tour, if pDoLoop is true the toor will cause an loop, otherwise it will continue normal HL code operation
 
-	// I don't know why I wrote these, may be remove them again if u want (but I like em heh):
-	//bool bNoMatteInterpolation();
-	//void bNoMatteInterpolation (bool bSet); // if the Interpolation should check for Matte Color on Entity streams (if enabled Matte Color will not be blended, instead it will be overwritten)
-	void bEnableStereoMode(bool bSet); // if you enable stereo mode MDT will take left and right images using the stereofs you set
 
 	void SetCameraOfs(float right, float up, float forward); // you can set an static cameraofs here, however during stereomode it should be 0
 	void SetStereoOfs(float left_and_rightofs); // will be used in stereo mode to displace the camera left and right, suggested values are between 1.0 - 1.4, value should be positive, otherewise you would switch left and right cam
-
-
-	void OnPrintFrame(unsigned char * data, int number);
 
 	void OnR_RenderView(Vector & vieworg, Vector & viewangles);
 
@@ -132,17 +160,21 @@ public:
 
 
 private:
-	#define MIN_FRAME_DURATION 0.001f
-
 	enum FILMING_STATE { FS_INACTIVE, FS_STARTING, FS_ACTIVE };
 
-	MATTE_METHOD m_MatteMethod;
-
-	float m_StartClientTime;
-
+	bool m_EnableStereoMode;
+	int m_Height;
 	unsigned int m_LastCamFrameMid;
 	unsigned int m_LastCamFrameLeft;
 	unsigned int m_LastCamFrameRight;
+	MATTE_METHOD m_MatteMethod;
+	float m_StartClientTime;
+	std::wstring m_TakeDir;
+	int m_Width;
+	GLdouble m_ZFar;
+	GLdouble m_ZNear;
+	float m_fps;
+	float m_time;
 
 
 	CHlaeSupportRender *_pSupportRender;
@@ -151,11 +183,6 @@ private:
 	bool _bExportingSound;
 
 	unsigned int m_nFrames;
-
-	int m_iWidth, m_iHeight;
-	int m_iCropYOfs,m_iCropHeight; // used to determine the output params (after cropping)
-
-	bool m_bActive;
 
 	CMdt_Media_RAWGLPIC m_GlRawPic;
 
@@ -166,10 +193,7 @@ private:
 	bool m_bInWireframe;
 	GLenum m_iLastMode;
 
-	// added 20070922:
 	struct _cameraofs_s { float right; float up; float forward; } _cameraofs;
-	//bool	_bNoMatteInterpolation;
-	bool	_bEnableStereoMode;
 	float	_fStereoOffset;
 
 	STEREO_STATE _stereo_state;
@@ -182,7 +206,6 @@ private:
 
 	HUD_REQUEST_STATE _HudRqState;
 
-	bool _bSimulate;
 	bool _bSimulate2;
 
 	bool _bWorldFxDisableBlend;
@@ -191,24 +214,6 @@ private:
 	float _fx_whRGBf[3];
 
 	bool _InMatteEntities(int iid);
-
-	struct Sampling_s
-	{
-		bool bEnable;
-		float out_fps;
-		EasyBgrSampler * sampler;
-	} m_sampling;
-
-	// framing system:
-	float m_fps;
-	float m_time;
-
-	GLdouble m_ZNear;
-	GLdouble m_ZFar;
-
-	void EnsureStreamDirectory(FilmingStreamInfo * streamInfo);
-
-	std::wstring m_TakeDir;
 };
 
 extern Filming g_Filming;

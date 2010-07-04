@@ -93,29 +93,17 @@ REGISTER_CVAR(sample_sps, "180", 0);
 // Our filming singleton
 Filming g_Filming;
 
+FilmingStream * g_Filming_Stream[12];
 
-FilmingStreamInfo g_Filming_Stream_Infos[] = {
-	{L"all", false},
-	{L"world", false},
-	{L"entity", false},
-	{L"depthall", false},
-	{L"depthworld", false},
-	{L"hudcolor", false},
-	{L"hudalpha", false},
-	{L"sampled", false},
-	0
+enum FilmingStreamSlot {
+	FS_all, FS_all_right,
+	FS_world, FS_world_right,
+	FS_entity, 	FS_entity_right,
+	FS_depthall, FS_depthall_right,
+	FS_depthworld, FS_depthworld_right,
+	FS_hudcolor,FS_hudalpha
 };
 
-enum FilmingStreamInfoType {
-	FSIT_all,
-	FSIT_world,
-	FSIT_entity,
-	FSIT_depthall,
-	FSIT_depthworld,
-	FSIT_hudcolor,
-	FSIT_hudalpha,
-	FSIT_sampled
-};
 
 //
 //
@@ -389,19 +377,6 @@ REGISTER_CMD_FUNC(cameraofs_cs)
 		pEngfuncs->Con_Printf("Usage: " PREFIX "cameraofs_cs <right> <up> <forward>\nNot neccessary for stereo mode, use mirv_movie_stereo instead\n");
 }
 
-void Filming::EnsureStreamDirectory(FilmingStreamInfo * streamInfo) {
-	if(!streamInfo->dirCreated &&!_bSimulate2)
-	{
-		std::wstring strDir(m_TakeDir);
-		strDir += L"\\";
-		strDir += streamInfo->name;
-
-		if(!CreatePath(strDir.c_str(), strDir))
-			pEngfuncs->Con_Printf("ERROR: could not create \"%s\"\n", strDir.c_str());
-
-		streamInfo->dirCreated = true;
-	}
-}
 
 
 //bool Filming::bNoMatteInterpolation()
@@ -677,10 +652,8 @@ void Filming::SupplyZClipping(GLdouble zNear, GLdouble zFar) {
 
 
 bool Filming::bEnableStereoMode()
-{ return _bEnableStereoMode; }
+{ return m_EnableStereoMode; }
 
-void Filming::bEnableStereoMode(bool bSet)
-{ if (m_iFilmingState == FS_INACTIVE) _bEnableStereoMode = bSet; }
 
 void Filming::SetCameraOfs(float right, float up, float forward)
 {
@@ -700,11 +673,9 @@ void Filming::SetStereoOfs(float left_and_rightofs)
 Filming::Filming()
 // constructor
 {
-		m_bInWireframe = false;
+	m_bInWireframe = false;
+	m_EnableStereoMode = false;
 
-		// added 20070922:
-		//_bNoMatteInterpolation = true;
-		_bEnableStereoMode = false;
 		_cameraofs.right = 0;
 		_cameraofs.up = 0;
 		_cameraofs.forward = 0;
@@ -717,11 +688,8 @@ Filming::Filming()
 		// (will be set in Start again)
 		_stereo_state = STS_LEFT;
 
-		bWantsHudCapture = false;
-
 		_HudRqState = HUDRQ_NORMAL;
 
-		_bSimulate = false;
 		_bSimulate2 = false;
 
 	_fx_whRGBf[0]=0.0f;
@@ -731,8 +699,6 @@ Filming::Filming()
 	 bRequestingMatteTextUpdate=false;
 
 	 matte_entities_r.bNotEmpty=false; // by default empty
-
-	 m_sampling.bEnable = false; // not enabled by default
 }
 
 Filming::~Filming()
@@ -808,8 +774,8 @@ bool Filming::OnHudEndEvnet()
 	switch(giveHudRqState())
 	{
 	case HUDRQ_CAPTURE_COLOR:
-		if (!_bSimulate2)Capture(&g_Filming_Stream_Infos[FSIT_hudcolor] ,m_nFrames, COLOR);
-		if (movie_separate_hud->value!=2.0)
+		if(g_Filming_Stream[FS_hudcolor]) g_Filming_Stream[FS_hudcolor]->Capture(1.0f / m_fps, &m_GlRawPic);
+		if(g_Filming_Stream[FS_hudalpha])
 		{
 			// we want alpha too in this case
 			_HudRqState = HUDRQ_CAPTURE_ALPHA; // set ALPHA mode!
@@ -817,33 +783,26 @@ bool Filming::OnHudEndEvnet()
 		}
 		break;
 	case HUDRQ_CAPTURE_ALPHA:
-		if(!_bSimulate2)Capture(&g_Filming_Stream_Infos[FSIT_hudalpha], m_nFrames, ALPHA);
+		if(g_Filming_Stream[FS_hudalpha]) g_Filming_Stream[FS_hudalpha]->Capture(1.0f / m_fps, &m_GlRawPic);
 		break;
 	}
 	return false; // do not loop
 }
 
 
-void OnPrintFrame(unsigned char * data, int number)
-{
-	g_Filming.OnPrintFrame(data, number);
-}
-
 void Filming::setScreenSize(GLint w, GLint h)
 {
-	if (m_iWidth < w) m_iWidth = w;
-	if (m_iHeight < h) m_iHeight = h;
+	if (m_Width < w) m_Width = w;
+	if (m_Height < h) m_Height = h;
 }
+
+
 
 void Filming::Start()
 {
-	_bSimulate = (movie_simulate->value != 0.0);
-	_bSimulate2 = _bSimulate && (movie_simulate->value != 2.0);
+	_bSimulate2 = (movie_simulate->value != 0.0);
 
-	// Prepare directories and directory infos:
-
-	for(int i=0; 0 != g_Filming_Stream_Infos[i].name; i++)
-		g_Filming_Stream_Infos[i].dirCreated = false;
+	// Prepare directories:
 
 	if(!_bSimulate2)
 	{
@@ -899,10 +858,8 @@ void Filming::Start()
 	m_iFilmingState = FS_STARTING;
 	m_iMatteStage = MS_WORLD;
 
-	// retrive some cvars:
 	_fStereoOffset = movie_stereo_centerdist->value;
-	_bEnableStereoMode = (movie_stereomode->value != 0.0); // we also have to be able to use R_RenderView
-	//_bNoMatteInterpolation = (matte_nointerp->value == 0.0);
+	m_EnableStereoMode = (movie_stereomode->value != 0.0); // we also have to be able to use R_RenderView
 
 
 	// Mod_LeafPvs (WallHack related):
@@ -932,34 +889,6 @@ void Filming::Start()
 	_HudRqState = HUDRQ_NORMAL;
 	_stereo_state = STS_LEFT;
 	_bRecordBuffers_FirstCall = true;
-	bWantsHudCapture = false;
-
-	// Init Cropping:
-	// retrive cropping settings and make sure the values are in bounds we can work with:
-	// -1 means the code will try to act as if this value was default (default ofs / default max height)
-
-	int iTcrop_yofs=(int)crop_yofs->value;
-
-	m_iCropHeight = (int)crop_height->value;
-	if (m_iCropHeight == -1) m_iCropHeight = m_iHeight; // default is maximum height we know, doh :O
-	else
-	{
-		// make sure we are within valid bounds to avoid mem acces errors and potential problems with badly coded loops :P
-		// may be someone can optimize this:
-		if (m_iCropHeight > m_iHeight) m_iCropHeight=m_iHeight;
-		else if (m_iCropHeight < 2)  m_iCropHeight=2;
-	}
-
-	if (iTcrop_yofs==-1) m_iCropYOfs = (m_iHeight-m_iCropHeight)/2; // user wants that we center the height-crop (this way we preffer cutting off top lines (OpenGL y-axis!) if the number of lines is uneven)
-	else {
-		int iTHeightDiff = (m_iHeight - m_iCropHeight);
-		// user specified an offset, we will transform the values for him, so he sees Yofs/-axis as top->down while OpenGL handles it down->up
-		m_iCropYOfs  =  iTHeightDiff - iTcrop_yofs; //GL y-axis is down->up
-
-		// may be someone can optimize this:
-		if (m_iCropYOfs > iTHeightDiff) m_iCropYOfs=iTHeightDiff;
-		else if (m_iCropYOfs<0) m_iCropYOfs=0;
-	}
 
 
 	// prepare (and force) some HL engine settings:
@@ -985,25 +914,192 @@ void Filming::Start()
 
 	
 	// start up sampling system:
-	m_sampling.bEnable = 1 == sample_enable->value && 0 == movie_splitstreams->value && 0 == movie_depthdump->value && 0 == movie_separate_hud->value;
-	if( m_sampling.bEnable )
+	bool enableSampling = 0 != sample_enable->value;
+	if(enableSampling)
 	{
-		m_fps = max(sample_sps->value,1.0f);
-		m_sampling.out_fps = max(movie_fps->value,1.0f);
-
-		float frameDuration = 1.0f / m_sampling.out_fps; 
-
-		m_sampling.sampler = new EasyBgrSampler(
-			m_iWidth,
-			m_iCropHeight,
-			movie_bmp->value ? 4 : 1,
-			0 == sample_smethod->value ? EasyBgrSampler::ESM_Rectangle : EasyBgrSampler::ESM_Trapezoid,
-			0 == sample_ffunc->value ? EasyBgrSampler::RectangleWeighter : EasyBgrSampler::GaussWeighter,
-			-sample_overlapfuture->value * frameDuration, +sample_overlap->value * frameDuration,
-			&::OnPrintFrame,
-			frameDuration
-		);
+		m_fps = max(sample_sps->value, 1.0f);
 	}
+
+	// Prepare streams:
+	{
+		float samplingFrameDuration = enableSampling ? 1.0f / max(movie_fps->value, 1.0f) : 0.0;
+
+		int x = 0;
+		int y = (int)crop_yofs->value;
+		int width = m_Width;
+		int height = (int)crop_height->value;
+
+		if (height == -1)
+			height = m_Height; // default height
+		else
+		{
+			// limit height:
+
+			if (height > m_Height) height=m_Height;
+			else if (height < 2)  height=2;
+		}
+
+		if (y == -1)
+			y = (m_Height-height)/2; // default ofs.
+		else {
+			// limit ofs:
+
+			int yD = (m_Height - height);
+
+			// user specified an offset, we will transform the values for him, so he sees Yofs/-axis as top->down while OpenGL handles it down->up
+			y  =  yD - y; //GL y-axis is down->up
+
+			if (y > yD) y=yD;
+			else if (y<0) y=0;
+		}
+
+		bool bWorld  = 1 == (int)movie_splitstreams->value || 3 == (int)movie_splitstreams->value;
+		bool bEntity = 2 == (int)movie_splitstreams->value || 3 == (int)movie_splitstreams->value;
+		bool bAll    = 0 == (int)movie_splitstreams->value;
+
+		bool bDepthWorld = bWorld && movie_depthdump->value && (1 == (int)depth_streams->value || 3 <= (int)depth_streams->value);
+		bool bDepthAll   = (bAll || bEntity) && movie_depthdump->value && (2 == (int)depth_streams->value || 3 <= (int)depth_streams->value);
+
+		bool bHudColor = 0 != movie_separate_hud->value;
+		bool bHudAlpha = bHudColor && 2 != movie_separate_hud->value;
+
+		wchar_t const * takePath = m_TakeDir.c_str();
+
+		if(bAll)
+		{
+			g_Filming_Stream[FS_all] = new FilmingStream(
+				takePath, !m_EnableStereoMode ? L"all" : L"all_left",
+				FB_COLOR,
+				samplingFrameDuration,
+				x, y, width, height
+			);
+
+			if(m_EnableStereoMode)
+			{
+				g_Filming_Stream[FS_all_right] = new FilmingStream(
+					takePath, L"all_right",
+					FB_COLOR,
+					samplingFrameDuration,
+					x, y, width, height
+				);
+			}
+			else g_Filming_Stream[FS_all_right] = 0;
+		}
+		else g_Filming_Stream[FS_all] = 0;
+
+		if(bWorld)
+		{
+			g_Filming_Stream[FS_world] = new FilmingStream(
+				takePath, !m_EnableStereoMode ? L"world" : L"world_left",
+				FB_COLOR,
+				samplingFrameDuration,
+				x, y, width, height
+			);
+
+			if(m_EnableStereoMode)
+			{
+				g_Filming_Stream[FS_world_right] = new FilmingStream(
+					takePath, L"world_right",
+					FB_COLOR,
+					samplingFrameDuration,
+					x, y, width, height
+				);
+			}
+			else g_Filming_Stream[FS_world_right] = 0;
+		}
+		else g_Filming_Stream[FS_world] = 0;
+
+		if(bEntity)
+		{
+			g_Filming_Stream[FS_entity] = new FilmingStream(
+				takePath, !m_EnableStereoMode ? L"entity" : L"entity_left",
+				FB_COLOR,
+				samplingFrameDuration,
+				x, y, width, height
+			);
+
+			if(m_EnableStereoMode)
+			{
+				g_Filming_Stream[FS_entity_right] = new FilmingStream(
+					takePath, L"entity_right",
+					FB_COLOR,
+					samplingFrameDuration,
+					x, y, width, height
+				);
+			}
+			else g_Filming_Stream[FS_entity_right] = 0;
+		}
+		else g_Filming_Stream[FS_entity] = 0;
+
+		if(bHudColor)
+		{
+			g_Filming_Stream[FS_hudcolor] = new FilmingStream(
+				takePath, L"hudcolor",
+				FB_COLOR,
+				samplingFrameDuration,
+				x, y, width, height
+			);
+		}
+		else g_Filming_Stream[FS_hudcolor] = 0;
+
+		if(bHudAlpha)
+		{
+			g_Filming_Stream[FS_hudalpha] = new FilmingStream(
+				takePath, L"hudalpha",
+				FB_ALPHA,
+				samplingFrameDuration,
+				x, y, width, height
+			);
+		}
+		else g_Filming_Stream[FS_hudalpha] = 0;
+
+		if(bDepthAll)
+		{
+			g_Filming_Stream[FS_depthall] = new FilmingStream(
+				takePath, !m_EnableStereoMode ? L"depthall" : L"depthall_left",
+				FB_DEPTH,
+				samplingFrameDuration,
+				x, y, width, height
+			);
+
+			if(m_EnableStereoMode)
+			{
+				g_Filming_Stream[FS_depthall_right] = new FilmingStream(
+					takePath, L"depthall_right",
+					FB_DEPTH,
+					samplingFrameDuration,
+					x, y, width, height
+				);
+			}
+			else g_Filming_Stream[FS_depthall_right] = 0;
+		}
+		else g_Filming_Stream[FS_depthall] = 0;
+
+		if(bDepthWorld)
+		{
+			g_Filming_Stream[FS_depthworld] = new FilmingStream(
+				takePath, !m_EnableStereoMode ? L"depthworld" : L"depthworld_left",
+				FB_DEPTH,
+				samplingFrameDuration,
+				x, y, width, height
+			);
+
+			if(m_EnableStereoMode)
+			{
+				g_Filming_Stream[FS_depthworld_right] = new FilmingStream(
+					takePath, L"depthworld_right",
+					FB_DEPTH,
+					samplingFrameDuration,
+					x, y, width, height
+				);
+			}
+			else g_Filming_Stream[FS_depthworld_right] = 0;
+		}
+		else g_Filming_Stream[FS_depthworld] = 0;
+	}
+
+
+	//
 
 	g_ModInfo.SetRecording(true);
 }
@@ -1011,6 +1107,23 @@ void Filming::Start()
 void Filming::Stop()
 {
 	g_ModInfo.SetRecording(false);
+
+	//
+
+	if(g_Filming_Stream[FS_all]) delete g_Filming_Stream[FS_all];
+	if(g_Filming_Stream[FS_all_right]) delete g_Filming_Stream[FS_all_right];
+	if(g_Filming_Stream[FS_world]) delete g_Filming_Stream[FS_world];
+	if(g_Filming_Stream[FS_world_right]) delete g_Filming_Stream[FS_world_right];
+	if(g_Filming_Stream[FS_entity]) delete g_Filming_Stream[FS_entity];
+	if(g_Filming_Stream[FS_entity_right]) delete g_Filming_Stream[FS_entity_right];
+	if(g_Filming_Stream[FS_depthall]) delete g_Filming_Stream[FS_depthall];
+	if(g_Filming_Stream[FS_depthall_right]) delete g_Filming_Stream[FS_depthall_right];
+	if(g_Filming_Stream[FS_depthworld]) delete g_Filming_Stream[FS_depthworld];
+	if(g_Filming_Stream[FS_depthworld_right]) delete g_Filming_Stream[FS_depthworld_right];
+	if(g_Filming_Stream[FS_hudcolor]) delete g_Filming_Stream[FS_hudcolor];
+	if(g_Filming_Stream[FS_hudalpha]) delete g_Filming_Stream[FS_hudalpha];
+
+	//
 
 	if (_pSupportRender)
 		_pSupportRender->hlaeOnFilmingStop();
@@ -1023,15 +1136,6 @@ void Filming::Stop()
 	{
 		_FilmSound.Stop();
 		_bExportingSound = false;
-	}
-
-	// shutdown sampling system if it was enabled:
-	if( m_sampling.bEnable )
-	{
-		pEngfuncs->Con_Printf("Peak count of frames lingering in sampler: %i\n", m_sampling.sampler->GetPeakFrameCount());
-
-		delete m_sampling.sampler;
-		m_sampling.bEnable = false;
 	}
 
 	m_iFilmingState = FS_INACTIVE;
@@ -1049,30 +1153,6 @@ void Filming::Stop()
 	g_AfxGoldSrcComClient.OnRecordEnded();
 
 	ScriptEvent_OnRecordEnded();
-}
-
-void Filming::OnPrintFrame(unsigned char * data, int number)
-{
-	FilmingStreamInfo * streamInfo = &g_Filming_Stream_Infos[FSIT_sampled];
-
-	bool bBMP = 0.0f != movie_bmp->value;
-
-	// only supports BGR data atm!:
-	char cDepth = 2;
-	int nBits = 24;
-
-	EnsureStreamDirectory(streamInfo);
-
-	std::wostringstream os;
-	os << m_TakeDir << L"\\"  << streamInfo->name << L"\\" << setfill(L'0') << setw(5) << number << setw(0) << (bBMP ? L".bmp" : L".tga");
-
-	
-	if( bBMP )
-		WriteRawBitmap((unsigned char *)data, os.str().c_str(), m_iWidth, m_iCropHeight, nBits,
-			CalcPitch(m_iWidth, 3, 4)); // align is still 4 byte probably
-	else
-		WriteRawTarga((unsigned char *)data, os.str().c_str(), m_iWidth, m_iCropHeight, nBits,
-			false); // always color
 }
 
 
@@ -1299,124 +1379,6 @@ void GLfloatArrayToXByteArray(GLfloat *pBuffer, unsigned int width, unsigned int
 }
 
 
-void Filming::Capture(FilmingStreamInfo * streamInfo, int iFileNumber, BUFFER iBuffer)
-{
-	if(print_frame->value)
-	{
-		char stmp[7+33]="Frame: 01234567890123456789012345678901";
-		itoa(m_nFrames,stmp+7,10);
-		pEngfuncs->pfnCenterPrint(stmp);
-	}
-
-	bool bBMP = 0.0f != movie_bmp->value;
-	GLenum eGLBuffer;
-	GLenum eGLtype;
-	unsigned char ucComponentBytes;
-
-	switch(iBuffer) {
-	case ALPHA:
-		eGLBuffer = GL_ALPHA;
-		eGLtype = GL_UNSIGNED_BYTE;
-		ucComponentBytes = 1;
-		break;
-
-	case DEPTH:
-		eGLBuffer = GL_DEPTH_COMPONENT;
-		eGLtype = GL_FLOAT;
-		switch(unsigned char ucDepthBpp = (unsigned char)depth_bpp->value) {
-		case 16:
-			ucComponentBytes = 2;
-			break;
-		case 24:
-			ucComponentBytes = 3;
-			break;
-		default:
-			ucComponentBytes = 1;
-		}
-		break;
-
-	case COLOR:
-	default:
-		eGLBuffer = GL_BGR_EXT;
-		eGLtype = GL_UNSIGNED_BYTE;
-		ucComponentBytes = 3;
-	};
-
-	bool bSampledStream = m_iMatteStage==MS_ALL && iBuffer == COLOR && m_sampling.bEnable;
-
-	bool bReadOk = m_GlRawPic.DoGlReadPixels(0, m_iCropYOfs, m_iWidth, m_iCropHeight, eGLBuffer, eGLtype, !bBMP);
-	if (!bReadOk)
-	{
-		pEngfuncs->Con_Printf("MDT ERROR: failed to capture frame %05d, Errorcode: %d.\n", m_nFrames, m_GlRawPic.GetLastUnhandledError());
-		return; // may be we should code some better error handling here heh
-	}
-
-	// apply postprocessing to the depthbuffer:
-	// the following code should be replaced completly later, cause it's rather dependent
-	// on sizes of unsigned int and float and stuff, although it should be somewhat
-	// save from acces violations (only corrupted pixel data):
-	// also the GL_UNSIGNED_INT FIX is somewhat slow by now, code has to be optimized
-	if (iBuffer==DEPTH)
-	{
-		// user wants 24 Bit output, we need to cut off
-		unsigned int uiCount = (unsigned int)m_iWidth * (unsigned int)m_iCropHeight;
-		void * pBuffer=m_GlRawPic.GetPointer();	// the pointer where we write
-
-		unsigned char ucMethod = (unsigned char)movie_depthdump->value;
-
-		if(1==ucMethod||2==ucMethod) LinearizeFloatDepthBuffer((GLfloat *)pBuffer, uiCount, m_ZNear, m_ZFar);
-		if(2==ucMethod) LogarithmizeDepthBuffer((GLfloat *)pBuffer, uiCount, m_ZNear, m_ZFar);
-		if(0x4 & ucMethod) DebugDepthBuffer((GLfloat *)pBuffer, uiCount);
-
-		float sliceLo = depth_slice_lo->value;
-		float sliceHi = depth_slice_hi->value;
-
-		if( 0.0f<=sliceLo
-			&& sliceLo<sliceHi
-			&& sliceHi<=1.0f
-			&& (0.0f != sliceLo || 1.0f != sliceHi)
-			)
-			SliceDepthBuffer((GLfloat *)pBuffer, uiCount, sliceLo, sliceHi);
-
-		GLfloatArrayToXByteArray((GLfloat *)pBuffer, m_iWidth, m_iCropHeight, ucComponentBytes);
-	}
-
-	if( bSampledStream )
-	{
-		// pass on to sampling system:
-
-		m_sampling.sampler->Sample(
-			(unsigned char const *)m_GlRawPic.GetPointer(),
-			1.0f / m_fps
-		);
-	}
-	else
-	{
-		// write out directly:
-
-		bool bColor = iBuffer == COLOR;
-
-		// construct filename:
-		wchar_t * pszStereotag = L"";
-		if (_bEnableStereoMode&&!bWantsHudCapture)
-		{
-			// if we are not capturing the hud and are in stereo mode add the proper tag:
-			if (_stereo_state==STS_LEFT) pszStereotag=L"left_"; else pszStereotag=L"right_";
-		}
-		
-		EnsureStreamDirectory(streamInfo);
-
-		std::wostringstream os;
-		os << m_TakeDir << L"\\"  << streamInfo->name << L"\\" << pszStereotag << setfill(L'0') << setw(5) << iFileNumber << setw(0) << (bBMP ? L".bmp" : L".tga");
-	
-		if( bBMP )
-			WriteRawBitmap(m_GlRawPic.GetPointer(), os.str().c_str(), m_iWidth, m_iCropHeight, ucComponentBytes<<3,
-				CalcPitch(m_iWidth, ucComponentBytes, 4)); // align is still 4 byte probably
-		else
-			WriteRawTarga(m_GlRawPic.GetPointer(), os.str().c_str(), m_iWidth, m_iCropHeight, ucComponentBytes<<3, !bColor);
-	}
-}
-
 Filming::DRAW_RESULT Filming::shouldDraw(GLenum mode)
 {
 	bool bMatteXray = matte_xray->value ;
@@ -1549,10 +1511,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 	}
 	_bRecordBuffers_FirstCall = false;
 
-	m_iMatteStage = MS_ALL;
-
-	if( movie_splitstreams->value >= 1)
-		m_iMatteStage = MS_WORLD;
+	m_iMatteStage = g_Filming_Stream[FS_all] ? MS_ALL : MS_WORLD;
 
 	// If we've only just started, delay until the next scene so that
 	// the first frame is drawn correctly
@@ -1560,10 +1519,8 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 	{
 		// we drop this frame and prepare the next one:
 
-		if (movie_separate_hud->value!=0.0)
+		if (g_Filming_Stream[FS_hudcolor])
 		{
-			bWantsHudCapture = true; // signal for R_RenderView
-			m_iMatteStage = MS_ALL; // override matte stage
 			_HudRqState = HUDRQ_CAPTURE_COLOR; // signal we want an color capture
 		}
 
@@ -1571,7 +1528,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 		if (_pSupportRender)
 			*bSwapRes = _pSupportRender->hlaeSwapBuffers(hSwapHDC);
 		else
-			*bSwapRes=SwapBuffers(hSwapHDC);
+			*bSwapRes = SwapBuffers(hSwapHDC);
 		
 		// prepare and clear for render:
 		glClearColor(m_MatteColour[0], m_MatteColour[1], m_MatteColour[2], 1.0f); // don't forget to set our clear color
@@ -1591,69 +1548,103 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 	if(print_frame->value)
 		pEngfuncs->Con_Printf("MDT: capturing engine frame #%i (mdt time: %f, client time: %f)\n", m_nFrames, flTime, pEngfuncs->GetClientTime());
 
-	FilmingStreamInfoType infos[] = { FSIT_all, FSIT_world, FSIT_entity };
-	FilmingStreamInfoType depthInfos[] = { FSIT_depthall, FSIT_depthworld, FSIT_depthall };
-
-	// Are we doing our own screenshot stuff
-	bool bDepthDumps = (movie_depthdump->value != 0);
-	int iDepthStreams = (int)depth_streams->value;
-
-	if (bWantsHudCapture)
+	if (g_Filming_Stream[FS_hudcolor])
 	{
-		// currently we waste a whole frame cuz I want to get this done, so rerquest it
+		// since for HUD captures we waste a whole frame, request a new one:
+
 		_HudRqState = HUDRQ_NORMAL;
-		bWantsHudCapture=false;
 
-		if (_bSimulate && movie_simulate_delay->value > 0) Sleep((DWORD)movie_simulate_delay->value);
+		// Delay:
+		if (_bSimulate2 && movie_simulate_delay->value > 0) Sleep((DWORD)movie_simulate_delay->value);
 
-		glColorMask(GL_TRUE,GL_TRUE,GL_TRUE,GL_TRUE);
-		glClearColor(m_MatteColour[0], m_MatteColour[1], m_MatteColour[2], 1.0f); // don't forget to set our clear color
-		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-		touring_R_RenderView_(); // rerender frame instant!!!!
+		clearBuffers();
+		touring_R_RenderView_(); // re-render view
 	}
 
 	do
 	{
-		// capture ALL OR WORLD:
-		if( movie_splitstreams->value != 2)
+		if(MS_ALL == m_iMatteStage)
 		{
-			if (!_bSimulate) Capture(&g_Filming_Stream_Infos[infos[m_iMatteStage]], m_nFrames, COLOR);
-			if (bDepthDumps && !_bSimulate2 && iDepthStreams & 0x1)
-				Capture(&g_Filming_Stream_Infos[depthInfos[m_iMatteStage]], m_nFrames, DEPTH);
-
-			if (_pSupportRender) 
-				*bSwapRes = _pSupportRender->hlaeSwapBuffers(hSwapHDC);
+			if(_stereo_state == STS_RIGHT)
+			{
+				if(g_Filming_Stream[FS_all_right]) g_Filming_Stream[FS_all_right]->Capture(1.0f/m_fps, &m_GlRawPic);
+				if(g_Filming_Stream[FS_depthall_right]) g_Filming_Stream[FS_depthall_right]->Capture(1.0f/m_fps, &m_GlRawPic);
+			}
 			else
-				*bSwapRes=SwapBuffers(hSwapHDC);
+			{
+				if(g_Filming_Stream[FS_all]) g_Filming_Stream[FS_all]->Capture(1.0f/m_fps, &m_GlRawPic);
+				if(g_Filming_Stream[FS_depthall]) g_Filming_Stream[FS_depthall]->Capture(1.0f/m_fps, &m_GlRawPic);
+			}
 
-			if (_bSimulate && movie_simulate_delay->value > 0) Sleep((DWORD)movie_simulate_delay->value);
+			// Swap:
+			if (_pSupportRender) *bSwapRes = _pSupportRender->hlaeSwapBuffers(hSwapHDC);
+			else *bSwapRes=SwapBuffers(hSwapHDC);
+
+			// Delay:
+			if (_bSimulate2 && movie_simulate_delay->value > 0) Sleep((DWORD)movie_simulate_delay->value);
+		}
+		else
+		{
+			if(MS_WORLD == m_iMatteStage)
+			{
+				if(_stereo_state == STS_RIGHT)
+				{
+					if(g_Filming_Stream[FS_world_right]) g_Filming_Stream[FS_world_right]->Capture(1.0f/m_fps, &m_GlRawPic);
+					if(g_Filming_Stream[FS_depthworld_right]) g_Filming_Stream[FS_depthworld_right]->Capture(1.0f/m_fps, &m_GlRawPic);
+				}
+				else
+				{
+					if(g_Filming_Stream[FS_world]) g_Filming_Stream[FS_world]->Capture(1.0f/m_fps, &m_GlRawPic);
+					if(g_Filming_Stream[FS_depthworld]) g_Filming_Stream[FS_depthworld]->Capture(1.0f/m_fps, &m_GlRawPic);
+				}
+
+				// Swap:
+				if (_pSupportRender) *bSwapRes = _pSupportRender->hlaeSwapBuffers(hSwapHDC);
+				else *bSwapRes=SwapBuffers(hSwapHDC);
+
+				// Delay:
+				if (_bSimulate2 && movie_simulate_delay->value > 0) Sleep((DWORD)movie_simulate_delay->value);
+
+				if(g_Filming_Stream[FS_entity] || g_Filming_Stream[FS_depthall])
+				{
+					m_iMatteStage = MS_ENTITY; // next is entity
+					clearBuffers();
+					touring_R_RenderView_(); // re-render view
+				}
+			}
+
+			if(MS_ENTITY == m_iMatteStage)
+			{
+				if(_stereo_state == STS_RIGHT)
+				{
+					if(g_Filming_Stream[FS_entity_right]) g_Filming_Stream[FS_entity_right]->Capture(1.0f/m_fps, &m_GlRawPic);
+					if(g_Filming_Stream[FS_depthall_right]) g_Filming_Stream[FS_depthall_right]->Capture(1.0f/m_fps, &m_GlRawPic);
+				}
+				else
+				{
+					if(g_Filming_Stream[FS_entity]) g_Filming_Stream[FS_entity]->Capture(1.0f/m_fps, &m_GlRawPic);
+					if(g_Filming_Stream[FS_depthall]) g_Filming_Stream[FS_depthall]->Capture(1.0f/m_fps, &m_GlRawPic);
+				}
+
+
+				// Swap:
+				if (_pSupportRender) *bSwapRes = _pSupportRender->hlaeSwapBuffers(hSwapHDC);
+				else *bSwapRes=SwapBuffers(hSwapHDC);
+
+				// Delay:
+				if (_bSimulate2 && movie_simulate_delay->value > 0) Sleep((DWORD)movie_simulate_delay->value);
+
+				if(g_Filming_Stream[FS_world] || g_Filming_Stream[FS_depthworld])
+				{
+					m_iMatteStage = MS_WORLD; // next is world
+				}
+			}
 		}
 
-		if( movie_splitstreams->value >= 2)
-		{
-			m_iMatteStage = MS_ENTITY;
-
-			g_Filming.clearBuffers();
-			touring_R_RenderView_(); // rerender frame instant!!!!
-
-			// capture stage:
-			if (!_bSimulate) Capture(&g_Filming_Stream_Infos[infos[m_iMatteStage]], m_nFrames, COLOR);
-			if (bDepthDumps && !_bSimulate2 && iDepthStreams & 0x2)
-				Capture(&g_Filming_Stream_Infos[depthInfos[m_iMatteStage]], m_nFrames, DEPTH);
-			if (_pSupportRender)
-				*bSwapRes = _pSupportRender->hlaeSwapBuffers(hSwapHDC);
-			else
-				*bSwapRes=SwapBuffers(hSwapHDC); // well let's count the last on, ok? :)
-
-			if (_bSimulate && movie_simulate_delay->value > 0) Sleep((DWORD)movie_simulate_delay->value);
-
-			m_iMatteStage = MS_WORLD;
-		}
-
-		if (_bEnableStereoMode && (_stereo_state==STS_LEFT))
+		if (m_EnableStereoMode && (_stereo_state==STS_LEFT))
 		{
 			_stereo_state=STS_RIGHT;
-			g_Filming.clearBuffers();
+			clearBuffers();
 			touring_R_RenderView_(); // rerender frame instant!!!!
 		} else _stereo_state=STS_LEFT;
 
@@ -1699,10 +1690,8 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 
 	_bRecordBuffers_FirstCall = true;
 
-	if ((movie_separate_hud->value!=0)&&isFilming())
+	if (g_Filming_Stream[FS_hudcolor] && isFilming())
 	{
-		bWantsHudCapture = true; // signal for R_RenderView
-		m_iMatteStage = MS_ALL; // override matte stage
 		_HudRqState = HUDRQ_CAPTURE_COLOR; // signal we want an color capture
 	}
 
@@ -1858,7 +1847,164 @@ void Filming::DoWorldFx2(GLenum mode)
 		glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_REPLACE);
 }
 
-/////
+// FilmingStream ///////////////////////////////////////////////////////////////
+
+FilmingStream::FilmingStream(
+	wchar_t const * takePath, wchar_t const * name,
+	FILMING_BUFFER buffer,
+	float samplingFrameDuration,
+	int x, int y, int width, int height
+)
+{
+	size_t nameBufferLength = wcslen(name) +1;
+
+	m_Bmp = 0.0f != movie_bmp->value;
+	m_Buffer = buffer;
+	m_DirCreated = false;
+	m_FrameCount = 0;
+	m_Sampler = 0;
+	m_Width = width;
+	m_Height = height;
+	m_X = x;
+	m_Y = y;
+
+	m_Path.assign(takePath);
+	m_Path.append(L"\\");
+	m_Path.append(name);
+
+	if(!g_Filming.GetSimulate2())
+	{
+		m_DirCreated = CreatePath(m_Path.c_str(), m_Path);
+		if(!m_DirCreated)
+			pEngfuncs->Con_Printf("ERROR: could not create \"%s\"\n", m_Path.c_str());
+	}
+
+	switch(buffer) {
+	case FB_ALPHA:
+		m_GlBuffer = GL_ALPHA;
+		m_GlType = GL_UNSIGNED_BYTE;
+		m_BytesPerPixel = 1;
+		break;
+
+	case FB_DEPTH:
+		m_GlBuffer = GL_DEPTH_COMPONENT;
+		m_GlType = GL_FLOAT;
+		switch((unsigned char)depth_bpp->value) {
+		case 16:
+			m_BytesPerPixel = 2;
+			break;
+		case 24:
+			m_BytesPerPixel = 3;
+			break;
+		default:
+			m_BytesPerPixel = 1;
+		}
+		break;
+
+	case FB_COLOR:
+	default:
+		m_GlBuffer = GL_BGR_EXT;
+		m_GlType = GL_UNSIGNED_BYTE;
+		m_BytesPerPixel = 3;
+	};
+
+	m_Pitch = CalcPitch(m_Width, m_BytesPerPixel, m_Bmp ? 4 : 1);
+
+	if(0 < samplingFrameDuration && (FB_COLOR == buffer || FB_ALPHA == buffer))
+	{
+		// activate sampling.
+		m_Sampler = new EasyByteSampler(
+			m_BytesPerPixel * width, height, m_Pitch,
+			0 == sample_smethod->value ? EasyByteSampler::ESM_Rectangle : EasyByteSampler::ESM_Trapezoid,
+			0 == sample_ffunc->value ? EasyByteSampler::RectangleWeighter : EasyByteSampler::GaussWeighter,
+			-sample_overlapfuture->value * samplingFrameDuration, +sample_overlap->value * samplingFrameDuration,
+			static_cast<IFramePrinter *>(this),
+			samplingFrameDuration
+		);
+	}
+	else
+		m_Sampler = 0;
+
+}
+
+FilmingStream::~FilmingStream()
+{
+	if(m_Sampler) delete m_Sampler;
+}
+
+void FilmingStream::Capture(float sampleDuration, CMdt_Media_RAWGLPIC * usePic)
+{
+	if (!usePic->DoGlReadPixels(m_X, m_Y, m_Width, m_Height, m_GlBuffer, m_GlType, m_Bmp))
+	{
+		pEngfuncs->Con_Printf("MDT ERROR: failed to capture a frame (%d).\n", usePic->GetLastUnhandledError());
+		return;
+	}
+
+	// apply postprocessing to the depthbuffer:
+	// the following code should be replaced completly later, cause it's rather dependent
+	// on sizes of unsigned int and float and stuff, although it should be somewhat
+	// save from acces violations (only corrupted pixel data):
+	// also the GL_UNSIGNED_INT FIX is somewhat slow by now, code has to be optimized
+	if (FB_DEPTH == m_Buffer)
+	{
+		// user wants 24 Bit output, we need to cut off
+		unsigned int uiCount = (unsigned int)m_Width * (unsigned int)m_Height;
+		void * pBuffer = usePic->GetPointer();	// the pointer where we write
+
+		unsigned char ucMethod = (unsigned char)movie_depthdump->value;
+
+		if(1==ucMethod||2==ucMethod) LinearizeFloatDepthBuffer((GLfloat *)pBuffer, uiCount, g_Filming.GetZNear(), g_Filming.GetZFar());
+		if(2==ucMethod) LogarithmizeDepthBuffer((GLfloat *)pBuffer, uiCount, g_Filming.GetZNear(), g_Filming.GetZFar());
+		if(0x4 & ucMethod) DebugDepthBuffer((GLfloat *)pBuffer, uiCount);
+
+		float sliceLo = depth_slice_lo->value;
+		float sliceHi = depth_slice_hi->value;
+
+		if( 0.0f<=sliceLo
+			&& sliceLo<sliceHi
+			&& sliceHi<=1.0f
+			&& (0.0f != sliceLo || 1.0f != sliceHi)
+			)
+			SliceDepthBuffer((GLfloat *)pBuffer, uiCount, sliceLo, sliceHi);
+
+		GLfloatArrayToXByteArray((GLfloat *)pBuffer, m_Width, m_Height, m_BytesPerPixel);
+	}
+
+	if(0 != m_Sampler)
+	{
+		// pass on to sampling system:
+
+		m_Sampler->Sample(
+			(unsigned char const *)usePic->GetPointer(),
+			sampleDuration
+		);
+	}
+	else
+	{
+		// write out directly:
+		Print((unsigned char const *)usePic->GetPointer());
+	}
+}
+
+void FilmingStream::Print(unsigned char const * data)
+{
+	if(!m_DirCreated)
+		return;
+
+	bool bColor = m_Buffer == FB_COLOR;
+	
+	std::wostringstream os;
+	os << m_Path << L"\\" << setfill(L'0') << setw(5) << m_FrameCount << setw(0) << (m_Bmp ? L".bmp" : L".tga");
+	
+	if( m_Bmp )
+		WriteRawBitmap(data, os.str().c_str(), m_Width, m_Height, m_BytesPerPixel<<3, m_Pitch); // align is still 4 byte probably
+	else
+		WriteRawTarga(data, os.str().c_str(), m_Width, m_Height, m_BytesPerPixel<<3, !bColor);
+
+	m_FrameCount++;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 REGISTER_CMD_FUNC_BEGIN(recordmovie)
 {

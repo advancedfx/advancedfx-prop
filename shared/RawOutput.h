@@ -29,7 +29,7 @@ int CalcPitch(int width, unsigned char bytePerPixel, int byteAlignment);
 //	ucBpp - BitDepth
 //	bGrayScale - if this image is GrayScale or color
 bool WriteRawTarga(
-	unsigned char *pData, wchar_t const * fileName,
+	unsigned char const * pData, wchar_t const * fileName,
 	unsigned short usWidth, unsigned short usHeight,
 	unsigned char ucBpp, bool bGrayScale
 );
