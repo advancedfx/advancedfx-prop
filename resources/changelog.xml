@@ -6,6 +6,25 @@
 
 <release>
 <name>HLAE venture</name>
+<version>2.2.17.1</version>
+<time>2010-07-05T22:00Z</time>
+<changes>
+<change type="removed">
+Removed __mirv_sample_overlap, __mirv:sample_overlapfuture.
+</change>
+<change type="added">
+Added __mirv_sample_fac_leakage (in-ter sample signal loss), __mirv_sample_fac_frame (inter-frame blur / signal strength).
+</change>
+<change type="updated">
+Changed sampling model.
+</change>
+</changes>
+<comments>Please not the new model is yet unoptimized and a bit slower than the old one.</comments>
+</release>
+
+
+<release>
+<name>HLAE venture</name>
 <version>2.2.17.0</version>
 <time>2010-07-04T19:50Z</time>
 <changes>

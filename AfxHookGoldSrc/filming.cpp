@@ -45,6 +45,9 @@ REGISTER_DEBUGCVAR(depth_slice_hi, "1.0", 0);
 REGISTER_DEBUGCVAR(gl_force_noztrick, "1", 0);
 REGISTER_DEBUGCVAR(sample_overlap, "0.0", 0);
 REGISTER_DEBUGCVAR(sample_overlapfuture, "0.0", 0);
+REGISTER_DEBUGCVAR(sample_fac_frame, "0.0", 0);
+REGISTER_DEBUGCVAR(sample_fac_leakage, "0.0", 0);
+REGISTER_DEBUGCVAR(sample_fac_sample, "1.0", 0);
 REGISTER_DEBUGCVAR(sample_ffunc, "0", 0);
 REGISTER_DEBUGCVAR(sample_smethod, "1", 0);
 REGISTER_DEBUGCVAR(print_frame, "0", 0);
@@ -965,6 +968,19 @@ void Filming::Start()
 
 		wchar_t const * takePath = m_TakeDir.c_str();
 
+		g_Filming_Stream[FS_all] = 0;
+		g_Filming_Stream[FS_all_right] = 0;
+		g_Filming_Stream[FS_world] = 0;
+		g_Filming_Stream[FS_world_right] = 0;
+		g_Filming_Stream[FS_entity] = 0;
+		g_Filming_Stream[FS_entity_right] = 0;
+		g_Filming_Stream[FS_depthall] = 0;
+		g_Filming_Stream[FS_depthall_right] = 0;
+		g_Filming_Stream[FS_depthworld] = 0;
+		g_Filming_Stream[FS_depthworld_right] = 0;
+		g_Filming_Stream[FS_hudcolor] = 0;
+		g_Filming_Stream[FS_hudalpha] = 0;
+
 		if(bAll)
 		{
 			g_Filming_Stream[FS_all] = new FilmingStream(
@@ -983,9 +999,7 @@ void Filming::Start()
 					x, y, width, height
 				);
 			}
-			else g_Filming_Stream[FS_all_right] = 0;
 		}
-		else g_Filming_Stream[FS_all] = 0;
 
 		if(bWorld)
 		{
@@ -1005,9 +1019,7 @@ void Filming::Start()
 					x, y, width, height
 				);
 			}
-			else g_Filming_Stream[FS_world_right] = 0;
 		}
-		else g_Filming_Stream[FS_world] = 0;
 
 		if(bEntity)
 		{
@@ -1027,9 +1039,7 @@ void Filming::Start()
 					x, y, width, height
 				);
 			}
-			else g_Filming_Stream[FS_entity_right] = 0;
 		}
-		else g_Filming_Stream[FS_entity] = 0;
 
 		if(bHudColor)
 		{
@@ -1040,7 +1050,6 @@ void Filming::Start()
 				x, y, width, height
 			);
 		}
-		else g_Filming_Stream[FS_hudcolor] = 0;
 
 		if(bHudAlpha)
 		{
@@ -1051,7 +1060,6 @@ void Filming::Start()
 				x, y, width, height
 			);
 		}
-		else g_Filming_Stream[FS_hudalpha] = 0;
 
 		if(bDepthAll)
 		{
@@ -1071,9 +1079,7 @@ void Filming::Start()
 					x, y, width, height
 				);
 			}
-			else g_Filming_Stream[FS_depthall_right] = 0;
 		}
-		else g_Filming_Stream[FS_depthall] = 0;
 
 		if(bDepthWorld)
 		{
@@ -1093,9 +1099,7 @@ void Filming::Start()
 					x, y, width, height
 				);
 			}
-			else g_Filming_Stream[FS_depthworld_right] = 0;
 		}
-		else g_Filming_Stream[FS_depthworld] = 0;
 	}
 
 
@@ -1917,9 +1921,11 @@ FilmingStream::FilmingStream(
 			m_BytesPerPixel * width, height, m_Pitch,
 			0 == sample_smethod->value ? EasyByteSampler::ESM_Rectangle : EasyByteSampler::ESM_Trapezoid,
 			0 == sample_ffunc->value ? EasyByteSampler::RectangleWeighter : EasyByteSampler::GaussWeighter,
-			-sample_overlapfuture->value * samplingFrameDuration, +sample_overlap->value * samplingFrameDuration,
 			static_cast<IFramePrinter *>(this),
-			samplingFrameDuration
+			samplingFrameDuration,
+			sample_fac_frame->value,
+			sample_fac_leakage->value,
+			sample_fac_sample->value
 		);
 	}
 	else
@@ -2019,6 +2025,9 @@ REGISTER_CMD_FUNC_BEGIN(recordmovie)
 
 REGISTER_CMD_FUNC_END(recordmovie)
 {
+	if(!g_Filming.isFilming())
+		return;
+
 	g_Filming.Stop();
 }
 

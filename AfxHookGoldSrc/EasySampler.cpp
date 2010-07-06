@@ -82,70 +82,49 @@ EasyByteSampler::EasyByteSampler(
 		int width,
 		int height,
 		int pitch,
-		Method method, 
-		Weighter weighter, // cannot be 0
-		float leftOffset,
-		float rightOffset,
+		Method method,
+		Weighter weighter,
 		IFramePrinter * framePrinter,
-		float frameDuration)
+		float frameDuration,
+		float facFrame,
+		float facLeakage,
+		float facSample
+		)
 {
 	assert(0 <= width);
 	assert(0 <= height);
 	assert(width <= pitch);
 
-	m_FrameCount = 0;
+	m_DeltaT = 0;
+	m_FacLeakage = facLeakage;
+	m_FacFrame = facFrame;
+	m_FacSample = facSample;
+	m_Frame = new Frame(height * width);
 	m_FrameDuration = frameDuration;
 	m_FramePrinter = framePrinter;
 	m_Height = height;
-	m_LeftOffset = leftOffset;
-	m_PeakFrameCount = 0;
 	m_Pitch = pitch;
-	m_PrintedCount = 0;
-	m_RightOffset = rightOffset;
+	m_OldSample = ESM_Trapezoid == method ? new unsigned char[height * pitch] : 0; 
+	m_PrintMem = new unsigned char[height * pitch];
 	m_TwoPoint = false;
 	m_Width =  width;
 	m_Weighter = weighter;
-
-	m_FrameFactory = new FrameFactory(height * width);
-	m_OldSample = ESM_Trapezoid == method ? new unsigned char[height * pitch] : 0; 
-	m_PrintMem = new unsigned char[height * pitch];
-
-	m_FrameStore = new FrequentStore(m_FrameFactory);
 }
 
 EasyByteSampler::~EasyByteSampler()
 {
-	for(list<IStoreItem *>::iterator it = m_Frames.begin(); it != m_Frames.end(); it++)
-		FinishFrame(*it);
-
-	delete m_FrameStore;
+	FinishFrame();
 
 	delete m_PrintMem;
 	delete m_OldSample;
-	delete m_FrameFactory;
+	delete m_Frame;
 }
 
-IStoreItem * EasyByteSampler::BeginFrame(float offset)
+
+void EasyByteSampler::FinishFrame()
 {
-	IStoreItem * i = m_FrameStore->Aquire();
-	m_FrameCount++;
-
-	Frame * f = (Frame *)i->GetValue();
-
-	memset(f->Data, 0, sizeof(float) * m_Height * m_Width);
-	f->Offset = offset;
-	f->WhitePoint = 0;
-
-	if(m_PeakFrameCount < m_FrameCount)
-		m_PeakFrameCount = m_FrameCount;
-
-	return i;
-}
-
-void EasyByteSampler::FinishFrame(IStoreItem * item)
-{
-	Frame * f = (Frame *)item->GetValue();
-	float w = f->WhitePoint;
+	float w = m_Frame->WhitePoint;
+	float ff = m_FacFrame;
 
 	unsigned char * data = m_PrintMem;
 
@@ -155,7 +134,7 @@ void EasyByteSampler::FinishFrame(IStoreItem * item)
 	}
 	else
 	{
-		float * fdata = f->Data;
+		float * fdata = m_Frame->Data;
 
 		int ymax = m_Height;
 		int xmax = m_Width;
@@ -164,7 +143,9 @@ void EasyByteSampler::FinishFrame(IStoreItem * item)
 		{
 			for( int ix=0; ix < xmax; ix++ )
 			{
-				*data = (unsigned char)(255.0f * (*fdata / w));
+				float f = *fdata;
+				*data = (unsigned char)(255.0f * (f / w));
+				*fdata = ff * f;
 
 				fdata++;
 				data++;
@@ -175,55 +156,88 @@ void EasyByteSampler::FinishFrame(IStoreItem * item)
 	}
 
 	m_FramePrinter->Print(m_PrintMem);
-	m_PrintedCount++;
 
-	m_FrameCount--;
-	item->Release();
-
-	return;
+	m_Frame->WhitePoint = ff * w;
 }
-
-int EasyByteSampler::GetPeakFrameCount()
-{
-	return m_PeakFrameCount;
-}
-
 
 void EasyByteSampler::Sample(unsigned char const * data, float sampleDuration)
 {
-	float frameBoundLo = m_LeftOffset;
-	float frameBoundHi = m_FrameDuration + m_RightOffset;
-	list<IStoreItem *>::iterator it;
-	
-	// insert new frames:
-	float maxFrameBound = m_Frames.empty() ? 0 : ((Frame *)m_Frames.back()->GetValue())->Offset +m_FrameDuration;
-	while(maxFrameBound +frameBoundLo < sampleDuration)
+	while(0 < sampleDuration)
 	{
-		IStoreItem * i = BeginFrame(maxFrameBound);
-		m_Frames.push_back(i);
+		float frameRemaining = m_FrameDuration +m_Frame->Offset;
+		float deltaT = sampleDuration;
+		if(deltaT > frameRemaining) deltaT = frameRemaining;
 
-		maxFrameBound += m_FrameDuration;
-	}
+		float t = -m_Frame->Offset / m_FrameDuration;
+		float w = m_FacSample * m_Weighter(t, deltaT);
+		float fl = m_DeltaT * m_FacLeakage;
 
-	// sample (and update frames):
-	for(it = m_Frames.begin(); it != m_Frames.end(); it++)
-		SampleFrame(*it, data, sampleDuration);
+		//
+		// update image data:
 
-	// finish frames:
-	it = m_Frames.begin();
-	while(it != m_Frames.end())
-	{
-		IStoreItem * i = *it;
-		Frame * f = (Frame *)i->GetValue();
+		m_Frame->WhitePoint = m_Frame->WhitePoint -fl;
+		if(m_Frame->WhitePoint < 0) m_Frame->WhitePoint = 0;
+		m_Frame->WhitePoint += w * 255.0f;
 
-		if(f->Offset +frameBoundHi <= 0)
+		float * fdata = m_Frame->Data;
+
+		int ymax = m_Height;
+		int xmax = m_Width;
+
+		if(!m_TwoPoint)
 		{
-			FinishFrame(i);
-			m_Frames.erase(it);
-			it = m_Frames.begin();
+			unsigned char const * data1 = data;
+			for( int iy=0; iy < ymax; iy++ )
+			{
+				for( int ix=0; ix < xmax; ix++ )
+				{
+					float f = (*fdata) -fl;
+					if(f < 0) f = 0;
+					*fdata = f + w * (float)(*data1);
+
+					fdata++;
+					data1++;
+				}
+
+				data1 += m_Pitch -m_Width;
+			}
 		}
 		else
-			it++;
+		{
+			w *= 0.5f;
+
+			unsigned char const * data1 = data;
+			unsigned char const * data2 = m_OldSample;
+			for( int iy=0; iy < ymax; iy++ )
+			{
+				for( int ix=0; ix < xmax; ix++ )
+				{
+					float f = (*fdata) -fl;
+					if(f < 0) f = 0;
+					*fdata = f + w * ((int)(*data1) +(int)(*data2));
+
+					fdata++;
+					data1++;
+					data2++;
+				}
+
+				data1 += m_Pitch -m_Width;
+				data2 += m_Pitch -m_Width;
+			}
+		}
+
+		// update frame time:
+		m_Frame->Offset -= deltaT;
+
+		// check if frame needs to be printed:
+		if(m_Frame->Offset + m_FrameDuration <= 0)
+		{
+			m_Frame->Offset += m_FrameDuration;
+			FinishFrame();
+		}
+
+		m_DeltaT = deltaT;
+		sampleDuration -= deltaT;
 	}
 
 	if(m_OldSample)
@@ -231,78 +245,4 @@ void EasyByteSampler::Sample(unsigned char const * data, float sampleDuration)
 		memcpy(m_OldSample, data, m_Height * m_Pitch);	
 		m_TwoPoint = true;
 	}
-}
-
-void EasyByteSampler::SampleFrame(IStoreItem * item, unsigned char const * data, float sampleDuration)
-{
-	Frame * f = (Frame *)item->GetValue();
-
-	float frameLo = m_LeftOffset +f->Offset;
-	float frameHi = m_FrameDuration +m_RightOffset +f->Offset;
-	float frameDelta = frameHi -frameLo;
-
-	// calculate and normalize intersection with frame:
-	float sampT ,sampDelta;
-
-	if(0 != frameDelta)
-	{
-		sampT = -frameLo / frameDelta;
-		sampDelta = (-frameLo +sampleDuration) / frameDelta -sampT;
-	}
-	else
-	{
-		sampT = 0;
-		sampDelta = 0;
-	}
-
-	// get frame weight:
-	float w = m_Weighter(sampT, sampDelta);
-
-	//
-	// update image data:
-
-	f->WhitePoint += w*255.0f;
-	float * fdata = f->Data;
-
-	int ymax = m_Height;
-	int xmax = m_Width;
-
-	if(!m_TwoPoint)
-	{
-		for( int iy=0; iy < ymax; iy++ )
-		{
-			for( int ix=0; ix < xmax; ix++ )
-			{
-				*fdata += w * (float)(*data);
-
-				fdata++;
-				data++;
-			}
-
-			data += m_Pitch -m_Width;
-		}
-	}
-	else
-	{
-		w *= 0.5f;
-
-		unsigned char const * data2 = m_OldSample;
-		for( int iy=0; iy < ymax; iy++ )
-		{
-			for( int ix=0; ix < xmax; ix++ )
-			{
-				*fdata += w * ((int)(*data) +(int)(*data2));
-
-				fdata++;
-				data++;
-				data2++;
-			}
-
-			data += m_Pitch -m_Width;
-			data2 += m_Pitch -m_Width;
-		}
-	}
-
-	// update frame time:
-	f->Offset -= sampleDuration; // the frame moves by the real sample duration, since samples are stretched
 }

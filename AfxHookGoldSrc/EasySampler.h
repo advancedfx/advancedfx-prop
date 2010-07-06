@@ -44,76 +44,54 @@ public:
 		int pitch,
 		Method method,
 		Weighter weighter,
-		float leftOffset,
-		float rightOffset,
 		IFramePrinter * framePrinter,
-		float frameDuration);
+		float frameDuration,
+		float facFrame,
+		float facLeakage,
+		float facSample
+		);
 
 	~EasyByteSampler();
-
-	int GetPeakFrameCount();
 
 	void Sample(unsigned char const * data, float sampleDuration);
 
 private:
-	struct Frame
+	class Frame
 	{
+	public:
+		Frame(size_t length)
+		{
+			Data = new float[length];
+			Offset = 0;
+			WhitePoint = 0;
+
+			memset(Data, 0, sizeof(float) * length);
+		}
+
+		~Frame()
+		{
+			delete Data;
+		}
+
 		float * Data;
 		float Offset;
 		float WhitePoint;
 	};
 
-	class FrameFactory :
-		public IStoreFactory
-	{
-	public:
-		FrameFactory(int dataCount)
-		{
-			m_DataCount = dataCount;
-		}
-
-		virtual StoreValue ConstructValue() override
-		{
-			Frame * frame = new Frame();
-			frame->Data = new float[m_DataCount];
-
-			return (StoreValue)frame;
-		}
-
-		virtual void DestructValue(StoreValue value) override
-		{
-			Frame * frame = (Frame *)value;
-
-			delete frame->Data;
-			delete frame;
-		}
-
-	private:
-
-		int m_DataCount;
-	};
-
-	int m_FrameCount;
+	float m_DeltaT;
+	float m_FacLeakage;
+	float m_FacFrame;
+	float m_FacSample;
+	Frame * m_Frame;
 	float m_FrameDuration;
-	FrameFactory  * m_FrameFactory;
-	Store * m_FrameStore;
-	list<IStoreItem *> m_Frames;
 	IFramePrinter * m_FramePrinter;
 	int m_Height;
-	float m_LeftOffset;
 	unsigned char * m_OldSample;
-	int m_PeakFrameCount;
 	int m_Pitch;
 	unsigned char * m_PrintMem;
-	int m_PrintedCount;
-	float m_RightOffset;
 	bool m_TwoPoint;
 	int m_Width;
 	Weighter m_Weighter;
 
-	IStoreItem *  BeginFrame(float offset);
-	
-	void FinishFrame(IStoreItem * item);
-
-	void SampleFrame(IStoreItem * item, unsigned char const * data, float sampleDuration);
+	void FinishFrame();
 };
