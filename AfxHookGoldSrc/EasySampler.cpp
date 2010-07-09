@@ -139,19 +139,53 @@ void EasyByteSampler::FinishFrame()
 		int ymax = m_Height;
 		int xmax = m_Width;
 
-		for( int iy=0; iy < ymax; iy++ )
+		if(0 == ff)
 		{
-			for( int ix=0; ix < xmax; ix++ )
+			for( int iy=0; iy < ymax; iy++ )
 			{
-				float f = *fdata;
-				*data = (unsigned char)(255.0f * (f / w));
-				*fdata = ff * f;
+				for( int ix=0; ix < xmax; ix++ )
+				{
+					*data = (unsigned char)(255.0f * (*fdata / w));
+					*fdata = 0;
 
-				fdata++;
-				data++;
+					fdata++;
+					data++;
+				}
+
+				data += m_Pitch -m_Width;
 			}
+		}
+		else if(1 == ff)
+		{
+			for( int iy=0; iy < ymax; iy++ )
+			{
+				for( int ix=0; ix < xmax; ix++ )
+				{
+					*data = (unsigned char)(255.0f * (*fdata / w));
 
-			data += m_Pitch -m_Width;
+					fdata++;
+					data++;
+				}
+
+				data += m_Pitch -m_Width;
+			}
+		}
+		else
+		{
+			for( int iy=0; iy < ymax; iy++ )
+			{
+				for( int ix=0; ix < xmax; ix++ )
+				{
+					float f = *fdata;
+					*data = (unsigned char)(255.0f * (f / w));
+					*fdata = ff * f;
+
+					fdata++;
+					data++;
+				}
+
+				data += m_Pitch -m_Width;
+			}
 		}
 	}
 
@@ -175,10 +209,6 @@ void EasyByteSampler::Sample(unsigned char const * data, float sampleDuration)
 		//
 		// update image data:
 
-		m_Frame->WhitePoint = m_Frame->WhitePoint -fl;
-		if(m_Frame->WhitePoint < 0) m_Frame->WhitePoint = 0;
-		m_Frame->WhitePoint += w * 255.0f;
-
 		float * fdata = m_Frame->Data;
 
 		int ymax = m_Height;
@@ -187,44 +217,120 @@ void EasyByteSampler::Sample(unsigned char const * data, float sampleDuration)
 		if(!m_TwoPoint)
 		{
 			unsigned char const * data1 = data;
-			for( int iy=0; iy < ymax; iy++ )
+
+			if(0 == fl)
 			{
-				for( int ix=0; ix < xmax; ix++ )
+				for( int iy=0; iy < ymax; iy++ )
 				{
-					float f = (*fdata) -fl;
-					if(f < 0) f = 0;
-					*fdata = f + w * (float)(*data1);
+					for( int ix=0; ix < xmax; ix++ )
+					{
+						*fdata = *fdata + w * (*data1);
 
-					fdata++;
-					data1++;
+						fdata++;
+						data1++;
+					}
+
+					data1 += m_Pitch -m_Width;
 				}
+			}
+			else if(m_Frame->WhitePoint <= fl)
+			{
+				for( int iy=0; iy < ymax; iy++ )
+				{
+					for( int ix=0; ix < xmax; ix++ )
+					{
+						*fdata = w * (*data1);
 
-				data1 += m_Pitch -m_Width;
+						fdata++;
+						data1++;
+					}
+
+					data1 += m_Pitch -m_Width;
+				}
+			}
+			else
+			{
+				for( int iy=0; iy < ymax; iy++ )
+				{
+					for( int ix=0; ix < xmax; ix++ )
+					{
+						float f = (*fdata) -fl;
+						if(f < 0) f = 0;
+						*fdata = f + w * (*data1);
+
+						fdata++;
+						data1++;
+					}
+
+					data1 += m_Pitch -m_Width;
+				}
 			}
 		}
 		else
 		{
-			w *= 0.5f;
+			float w2 = 0.5*w;
 
 			unsigned char const * data1 = data;
 			unsigned char const * data2 = m_OldSample;
-			for( int iy=0; iy < ymax; iy++ )
+
+			if(0 == fl)
 			{
-				for( int ix=0; ix < xmax; ix++ )
+				for( int iy=0; iy < ymax; iy++ )
 				{
-					float f = (*fdata) -fl;
-					if(f < 0) f = 0;
-					*fdata = f + w * ((int)(*data1) +(int)(*data2));
+					for( int ix=0; ix < xmax; ix++ )
+					{
+						*fdata = *fdata + w2 * ((int)(*data1) +(int)(*data2));
 
-					fdata++;
-					data1++;
-					data2++;
+						fdata++;
+						data1++;
+						data2++;
+					}
+
+					data1 += m_Pitch -m_Width;
+					data2 += m_Pitch -m_Width;
 				}
+			}
+			else if(m_Frame->WhitePoint <= fl)
+			{
+				for( int iy=0; iy < ymax; iy++ )
+				{
+					for( int ix=0; ix < xmax; ix++ )
+					{
+						*fdata = w2 * ((int)(*data1) +(int)(*data2));
 
-				data1 += m_Pitch -m_Width;
-				data2 += m_Pitch -m_Width;
+						fdata++;
+						data1++;
+						data2++;
+					}
+
+					data1 += m_Pitch -m_Width;
+					data2 += m_Pitch -m_Width;
+				}
+			}
+			else
+			{
+				for( int iy=0; iy < ymax; iy++ )
+				{
+					for( int ix=0; ix < xmax; ix++ )
+					{
+						float f = (*fdata) -fl;
+						if(f < 0) f = 0;
+						*fdata = f + w2 * ((int)(*data1) +(int)(*data2));
+
+						fdata++;
+						data1++;
+						data2++;
+					}
+
+					data1 += m_Pitch -m_Width;
+					data2 += m_Pitch -m_Width;
+				}
 			}
 		}
+
+		m_Frame->WhitePoint = m_Frame->WhitePoint -fl;
+		if(m_Frame->WhitePoint < 0) m_Frame->WhitePoint = 0;
+		m_Frame->WhitePoint += w * 255.0f;
 
 		// update frame time:
 		m_Frame->Offset -= deltaT;

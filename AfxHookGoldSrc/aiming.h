@@ -16,6 +16,10 @@ private:
 
 private:
 	std::list<int> m_AimLayers;
+	bool m_Awake[2];
+	float m_D0[2];
+	float m_D1[2];
+	float m_LastAimTime;
 
 	int m_iHighestSlot;
 	int m_iCurrentEntity;

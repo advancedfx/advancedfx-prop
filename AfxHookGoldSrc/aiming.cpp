@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
 #include "aiming.h"
+#include "filming.h"
 #include "cmdregister.h"
 
 extern cl_enginefuncs_s *pEngfuncs;
@@ -8,13 +9,16 @@ extern engine_studio_api_s *pEngStudio;
 extern playermove_s *ppmove;
 
 REGISTER_CVAR(aim_oneway, "0", 0);
-REGISTER_CVAR(aim_snapto, "1", 0);
+REGISTER_CVAR(aim_snapto, "0", 0);
 REGISTER_CVAR(aim_lingertime, "50", 0);
 REGISTER_CVAR(aim_onlyvisible, "0", 0);
 
-REGISTER_DEBUGCVAR(aim_maxspeed,"3.0",0);
-REGISTER_DEBUGCVAR(aim_accel,"20.0",0);
-REGISTER_DEBUGCVAR(aim_deaccel,"10.0",0);
+REGISTER_DEBUGCVAR(aim_accel, "0.01", 0);
+REGISTER_DEBUGCVAR(aim_deaccel, "0.01", 0);
+REGISTER_DEBUGCVAR(aim_rest_x, "4.0", 0);
+REGISTER_DEBUGCVAR(aim_rest_y, "4.0", 0);
+REGISTER_DEBUGCVAR(aim_wake_x, "10.0", 0);
+REGISTER_DEBUGCVAR(aim_wake_y, "20.0", 0);
 
 // Our aiming singleton
 Aiming g_Aiming;
@@ -76,6 +80,14 @@ void Aiming::showAimLayers()
 
 void Aiming::Start()
 {
+	m_Awake[0] = false;
+	m_Awake[1] = false;
+	m_D0[0] = 0;
+	m_D0[1] = 0;
+	m_D1[0] = 0;
+	m_D1[1] = 0;
+	m_LastAimTime = g_Filming.GetDebugClientTime();
+
 	m_iHighestSlot = 9999;
 	m_bActive = true;
 
@@ -250,18 +262,16 @@ bool Aiming::getValidTarget(Vector &outTarget)
 
 void Aiming::aim()
 {
-	float flRealAimMaxSpeed = aim_maxspeed->value; // 3.0f;
-	float flRealAimAccel = aim_accel->value;// 20.0f;
-	float flRealAimDeaccel = aim_deaccel->value;// 10.0f;
-
 	Vector target(0, 0, 0);
 
 	// Nothing to aim at here
 	if (!getValidTarget(target))
 		return;
 
-	Vector idealaim, reaim;
-	AnglesFromTo(ppmove->origin, /*them->origin*/ target, idealaim);
+	float curAimTime = g_Filming.GetDebugClientTime();
+	Vector idealaim;
+
+	AnglesFromTo(ppmove->origin, target, idealaim);		
 
 	// Are we using snapto or nice aiming
 	if (aim_snapto->value != 0)
@@ -276,55 +286,52 @@ void Aiming::aim()
 	else
 	{
 		float angles[3];
+		float reaim[2];
+		float d2[2];
+		float deltaT = curAimTime - m_LastAimTime;
+
+		if(deltaT < 0) deltaT = 0;
+
 		pEngfuncs->GetViewAngles(angles);
 
-		reaim.x = idealaim.x - angles[1];
-		reaim.y = idealaim.y - angles[0];
-		reaim.z = 0;
+		reaim[0] = idealaim.x - angles[1];
+		reaim[1] = idealaim.y - angles[0];
 
 		// For when angles are on the 359..0 crossover
-		if (reaim.x > 180.0f)
-			reaim.x -= 360.0f;
-		else if (reaim.x < -180.0f)
-			reaim.x += 360.0f;
+		if (reaim[0] > 180.0f) reaim[0] -= 360.0f;
+		else if (reaim[0] < -180.0f) reaim[0] += 360.0f;
+		if (reaim[1] > 180.0f) reaim[1] -= 360.0f;
+		else if (reaim[1] < -180.0f) reaim[1] += 360.0f;
 
-		float reaim_distance = reaim.Length();
+		// avoid over-controlling:
 
-		// Lets just get it working first
-		if (reaim_distance > 0)
-		{	
-			// Are we speeding up or slowing down
-			if (reaim_distance > flRealAimAccel)
-			{
-				m_flRealAimSpeed += flRealAimMaxSpeed / flRealAimAccel;
-			}
-			else
-			{
-				// Max speed depends on the distance
-				m_flRealAimSpeed = clamp(m_flRealAimSpeed, 0.5f, (flRealAimMaxSpeed * (reaim_distance / flRealAimAccel)));
-			}
+		m_Awake[0] = m_Awake[0] && 0.5f * aim_rest_x->value < abs(reaim[0])
+			|| 0.5f * aim_wake_x->value < abs(reaim[0]);
 
-			// Make sure we can't go above the max speed
-			m_flRealAimSpeed = clamp(m_flRealAimSpeed, 0, flRealAimMaxSpeed);
+		m_Awake[1] = m_Awake[1] && 0.5f * aim_rest_y->value < abs(reaim[1])
+			|| 0.5f * aim_wake_y->value < abs(reaim[1]);
 
-			// Get the percentage of the distance we can go clamped by max speed
-			float pc = clamp(reaim_distance, -m_flRealAimSpeed, m_flRealAimSpeed) / reaim_distance;
+		if(m_Awake[0]) m_D1[0] += deltaT * aim_accel->value;
+		else m_D1[0] -= deltaT * aim_deaccel->value;
 
-			// Resize all the components
-			reaim = reaim * pc;
+		if(m_Awake[1]) m_D1[1] += deltaT * aim_accel->value;
+		else m_D1[1] -= deltaT * aim_deaccel->value;
 
-			// Now shift our view
-			angles[1] += reaim.x;
-			angles[0] += reaim.y;
+		m_D1[0] = clamp(m_D1[0], 0, 1);
+		m_D1[1] = clamp(m_D1[1], 0, 1);
 
-			pEngfuncs->SetViewAngles(angles);
-		}
-		else
-		{
-			m_flRealAimSpeed -= flRealAimMaxSpeed / flRealAimDeaccel;
-			m_flRealAimSpeed = clamp(m_flRealAimSpeed, 0, flRealAimMaxSpeed);
-		}
+		m_D0[0] = m_D1[0] * (reaim[0] -m_D0[0]);
+		m_D0[1] = m_D1[1] * (reaim[1] -m_D0[1]);
+
+		// apply re-aiming:
+
+		angles[1] += m_D0[0];
+		angles[0] += m_D0[1];
+
+		pEngfuncs->SetViewAngles(angles);
 	}
+
+	m_LastAimTime = curAimTime;
 }
 
 void Aiming::SetAimOfs(float fOfsRight,float fOfsForward,float fOfsUp)
@@ -492,37 +499,51 @@ REGISTER_CMD_FUNC(aim_stop)
 	CALL_CMD_END(aim);
 }
 
-REGISTER_CMD_FUNC(addaimlayer)
+
+REGISTER_CMD_FUNC(aim_layers)
 {
-	if (pEngfuncs->Cmd_Argc() != 3)
+	bool showHelp = true;
+
+	int argc = pEngfuncs->Cmd_Argc();
+
+	if(2 <= argc)
 	{
-		pEngfuncs->Con_Printf("Usage: " PREFIX "addaimentity <slot> <entid>\n");
-		return;
+		char const * cmd1 = pEngfuncs->Cmd_Argv(1);
+
+		if(2 == argc && !stricmp("list", cmd1))
+		{
+			g_Aiming.showAimLayers();
+			showHelp = false;
+		}
+		else if(3 <= argc)
+		{
+			int slot = atoi(pEngfuncs->Cmd_Argv(2));
+			
+			if(3 == argc && !stricmp("del", cmd1))
+			{
+				g_Aiming.removeAimLayer(slot);
+				showHelp = false;
+			}
+			else if(4 == argc && !stricmp("add", cmd1))
+			{
+				int ent = atoi(pEngfuncs->Cmd_Argv(3));
+				g_Aiming.addAimLayer(slot, ent);
+				showHelp = false;
+			}
+		}
 	}
 
-	int slot = atoi(pEngfuncs->Cmd_Argv(1));
-	int ent = atoi(pEngfuncs->Cmd_Argv(2));
-
-	g_Aiming.addAimLayer(slot, ent);
-}
-
-REGISTER_CMD_FUNC(delaimlayer)
-{
-	if (pEngfuncs->Cmd_Argc() != 2)
+	if(showHelp)
 	{
-		pEngfuncs->Con_Printf("Usage: " PREFIX "delaimentity <slot>\n");
-		return;
+		pEngfuncs->Con_Printf(
+			"Usage:\n"
+			"\t" PREFIX "aim_layers add <slot> <entid>\n"
+			"\t" PREFIX "aim_layers del <slot>\n"
+			"\t" PREFIX "aim_layers list\n"
+		);
 	}
-
-	int slot = atoi(pEngfuncs->Cmd_Argv(1));
-
-	g_Aiming.removeAimLayer(slot);
 }
 
-REGISTER_CMD_FUNC(viewaimlayers)
-{
-	g_Aiming.showAimLayers();
-}
 
 REGISTER_CMD_FUNC(showentities)
 {

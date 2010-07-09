@@ -6,6 +6,17 @@
 
 <release>
 <name>HLAE venture</name>
+<version>2.2.17.5</version>
+<time>2010-07-09T12:34Z</time>
+<changes>
+<change type="updated">
+Aiming system changes.
+</change>
+</release>
+
+
+<release>
+<name>HLAE venture</name>
 <version>2.2.17.1</version>
 <time>2010-07-05T22:00Z</time>
 <changes>
