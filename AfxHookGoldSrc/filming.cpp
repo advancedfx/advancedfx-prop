@@ -2,6 +2,8 @@
 
 #include "filming.h"
 
+#include <limits>
+
 #include <iomanip>
 #include <list>
 #include <sstream>
@@ -43,12 +45,7 @@ REGISTER_DEBUGCVAR(depth_bpp, "8", 0);
 REGISTER_DEBUGCVAR(depth_slice_lo, "0.0", 0);
 REGISTER_DEBUGCVAR(depth_slice_hi, "1.0", 0);
 REGISTER_DEBUGCVAR(gl_force_noztrick, "1", 0);
-REGISTER_DEBUGCVAR(sample_overlap, "0.0", 0);
-REGISTER_DEBUGCVAR(sample_overlapfuture, "0.0", 0);
-REGISTER_DEBUGCVAR(sample_fac_frame, "0.0", 0);
-REGISTER_DEBUGCVAR(sample_fac_leakage, "0.0", 0);
-REGISTER_DEBUGCVAR(sample_fac_sample, "1.0", 0);
-REGISTER_DEBUGCVAR(sample_ffunc, "0", 0);
+REGISTER_DEBUGCVAR(sample_frame_strength, "1.0", 0);
 REGISTER_DEBUGCVAR(sample_smethod, "1", 0);
 REGISTER_DEBUGCVAR(print_frame, "0", 0);
 REGISTER_DEBUGCVAR(print_pos, "0", 0);
@@ -90,6 +87,7 @@ REGISTER_CVAR(movie_splitstreams, "0", 0);
 REGISTER_CVAR(movie_wireframe, "0", 0);
 REGISTER_CVAR(movie_wireframesize, "1", 0);
 REGISTER_CVAR(sample_enable, "0", 0);
+REGISTER_CVAR(sample_exposure, "1.0", 0);
 REGISTER_CVAR(sample_sps, "180", 0);
 
 
@@ -777,7 +775,7 @@ bool Filming::OnHudEndEvnet()
 	switch(giveHudRqState())
 	{
 	case HUDRQ_CAPTURE_COLOR:
-		if(g_Filming_Stream[FS_hudcolor]) g_Filming_Stream[FS_hudcolor]->Capture(1.0f / m_fps, &m_GlRawPic);
+		if(g_Filming_Stream[FS_hudcolor]) g_Filming_Stream[FS_hudcolor]->Capture(m_time, &m_GlRawPic, m_fps);
 		if(g_Filming_Stream[FS_hudalpha])
 		{
 			// we want alpha too in this case
@@ -786,7 +784,7 @@ bool Filming::OnHudEndEvnet()
 		}
 		break;
 	case HUDRQ_CAPTURE_ALPHA:
-		if(g_Filming_Stream[FS_hudalpha]) g_Filming_Stream[FS_hudalpha]->Capture(1.0f / m_fps, &m_GlRawPic);
+		if(g_Filming_Stream[FS_hudalpha]) g_Filming_Stream[FS_hudalpha]->Capture(m_time, &m_GlRawPic, m_fps);
 		break;
 	}
 	return false; // do not loop
@@ -803,6 +801,9 @@ void Filming::setScreenSize(GLint w, GLint h)
 
 void Filming::Start()
 {
+	m_HostFrameCount = 0;
+	m_StartTickCount = GetTickCount();
+
 	_bSimulate2 = (movie_simulate->value != 0.0);
 
 	// Prepare directories:
@@ -1157,6 +1158,19 @@ void Filming::Stop()
 	g_AfxGoldSrcComClient.OnRecordEnded();
 
 	ScriptEvent_OnRecordEnded();
+
+	// Print stats:
+	{
+		DWORD deltaTicks = GetTickCount() -m_StartTickCount;
+		DWORD seconds = deltaTicks / 1000;
+		DWORD minutes = seconds / 60;
+		DWORD hours = minutes / 60;
+
+		seconds = seconds % 60;
+		minutes = minutes % 60;
+
+		pEngfuncs->Con_Printf("Stats: %u engine frames / [%2u h %2u min %2u s] = %.4f eFPS.\n", m_HostFrameCount, hours, minutes, seconds, deltaTicks ? 1000 * m_HostFrameCount / (double)deltaTicks  : (m_HostFrameCount ? numeric_limits<float>::infinity() : 0.0));
+	}
 }
 
 
@@ -1515,6 +1529,9 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 	}
 	_bRecordBuffers_FirstCall = false;
 
+	float frameDuration = ((m_nFrames+1)/m_fps)-(m_nFrames/m_fps); // pay attention when changing s.th. here because of handling of precision errors!
+	m_HostFrameCount++;
+
 	m_iMatteStage = g_Filming_Stream[FS_all] ? MS_ALL : MS_WORLD;
 
 	// If we've only just started, delay until the next scene so that
@@ -1522,6 +1539,8 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 	if (m_iFilmingState == FS_STARTING)
 	{
 		// we drop this frame and prepare the next one:
+
+		m_time += frameDuration;
 
 		if (g_Filming_Stream[FS_hudcolor])
 		{
@@ -1547,10 +1566,8 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 	// no sound updates during re-renders:
 	FilmSound_BlockChannels(true);
 
-	float flTime = ((m_nFrames+1)/m_fps)-(m_nFrames/m_fps); // pay attention when changing s.th. here because of handling of precision errors!
-
 	if(print_frame->value)
-		pEngfuncs->Con_Printf("MDT: capturing engine frame #%i (mdt time: %f, client time: %f)\n", m_nFrames, flTime, pEngfuncs->GetClientTime());
+		pEngfuncs->Con_Printf("MDT: capturing engine frame #%i (mdt time: %f, client time: %f)\n", m_nFrames, m_time, pEngfuncs->GetClientTime());
 
 	if (g_Filming_Stream[FS_hudcolor])
 	{
@@ -1571,13 +1588,13 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 		{
 			if(_stereo_state == STS_RIGHT)
 			{
-				if(g_Filming_Stream[FS_all_right]) g_Filming_Stream[FS_all_right]->Capture(1.0f/m_fps, &m_GlRawPic);
-				if(g_Filming_Stream[FS_depthall_right]) g_Filming_Stream[FS_depthall_right]->Capture(1.0f/m_fps, &m_GlRawPic);
+				if(g_Filming_Stream[FS_all_right]) g_Filming_Stream[FS_all_right]->Capture(m_time, &m_GlRawPic, m_fps);
+				if(g_Filming_Stream[FS_depthall_right]) g_Filming_Stream[FS_depthall_right]->Capture(m_time, &m_GlRawPic, m_fps);
 			}
 			else
 			{
-				if(g_Filming_Stream[FS_all]) g_Filming_Stream[FS_all]->Capture(1.0f/m_fps, &m_GlRawPic);
-				if(g_Filming_Stream[FS_depthall]) g_Filming_Stream[FS_depthall]->Capture(1.0f/m_fps, &m_GlRawPic);
+				if(g_Filming_Stream[FS_all]) g_Filming_Stream[FS_all]->Capture(m_time, &m_GlRawPic, m_fps);
+				if(g_Filming_Stream[FS_depthall]) g_Filming_Stream[FS_depthall]->Capture(m_time, &m_GlRawPic, m_fps);
 			}
 
 			// Swap:
@@ -1593,13 +1610,13 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 			{
 				if(_stereo_state == STS_RIGHT)
 				{
-					if(g_Filming_Stream[FS_world_right]) g_Filming_Stream[FS_world_right]->Capture(1.0f/m_fps, &m_GlRawPic);
-					if(g_Filming_Stream[FS_depthworld_right]) g_Filming_Stream[FS_depthworld_right]->Capture(1.0f/m_fps, &m_GlRawPic);
+					if(g_Filming_Stream[FS_world_right]) g_Filming_Stream[FS_world_right]->Capture(m_time, &m_GlRawPic, m_fps);
+					if(g_Filming_Stream[FS_depthworld_right]) g_Filming_Stream[FS_depthworld_right]->Capture(m_time, &m_GlRawPic, m_fps);
 				}
 				else
 				{
-					if(g_Filming_Stream[FS_world]) g_Filming_Stream[FS_world]->Capture(1.0f/m_fps, &m_GlRawPic);
-					if(g_Filming_Stream[FS_depthworld]) g_Filming_Stream[FS_depthworld]->Capture(1.0f/m_fps, &m_GlRawPic);
+					if(g_Filming_Stream[FS_world]) g_Filming_Stream[FS_world]->Capture(m_time, &m_GlRawPic, m_fps);
+					if(g_Filming_Stream[FS_depthworld]) g_Filming_Stream[FS_depthworld]->Capture(m_time, &m_GlRawPic, m_fps);
 				}
 
 				// Swap:
@@ -1621,13 +1638,13 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 			{
 				if(_stereo_state == STS_RIGHT)
 				{
-					if(g_Filming_Stream[FS_entity_right]) g_Filming_Stream[FS_entity_right]->Capture(1.0f/m_fps, &m_GlRawPic);
-					if(g_Filming_Stream[FS_depthall_right]) g_Filming_Stream[FS_depthall_right]->Capture(1.0f/m_fps, &m_GlRawPic);
+					if(g_Filming_Stream[FS_entity_right]) g_Filming_Stream[FS_entity_right]->Capture(m_time, &m_GlRawPic, m_fps);
+					if(g_Filming_Stream[FS_depthall_right]) g_Filming_Stream[FS_depthall_right]->Capture(m_time, &m_GlRawPic, m_fps);
 				}
 				else
 				{
-					if(g_Filming_Stream[FS_entity]) g_Filming_Stream[FS_entity]->Capture(1.0f/m_fps, &m_GlRawPic);
-					if(g_Filming_Stream[FS_depthall]) g_Filming_Stream[FS_depthall]->Capture(1.0f/m_fps, &m_GlRawPic);
+					if(g_Filming_Stream[FS_entity]) g_Filming_Stream[FS_entity]->Capture(m_time, &m_GlRawPic, m_fps);
+					if(g_Filming_Stream[FS_depthall]) g_Filming_Stream[FS_depthall]->Capture(m_time, &m_GlRawPic, m_fps);
 				}
 
 
@@ -1653,9 +1670,6 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 		} else _stereo_state=STS_LEFT;
 
 	} while (_stereo_state!=STS_LEFT);
-
-	// update time past the frame time:
-	m_time += flTime;
 	
 	//
 	// Sound system handling:
@@ -1674,7 +1688,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 
 			fileName.append(L"\\sound.wav");
 
-			_bExportingSound = _FilmSound.Start(fileName.c_str() ,m_time,movie_sound_volume->value);
+			_bExportingSound = _FilmSound.Start(fileName.c_str() , m_time, movie_sound_volume->value);
 			// the soundsystem will get deactivated here, if it fails
 			//pEngfuncs->Con_Printf("sound t: %f\n",flTime);
 
@@ -1688,9 +1702,10 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 	}
 
 	m_nFrames++;
+	m_time += frameDuration;
 	
-	float flNextFrameDuration = flTime;
-	pEngfuncs->Cvar_SetValue("host_framerate", flNextFrameDuration);
+	float flNextFrameDuration = frameDuration;
+	pEngfuncs->Cvar_SetValue("host_framerate", frameDuration);
 
 	_bRecordBuffers_FirstCall = true;
 
@@ -1920,12 +1935,11 @@ FilmingStream::FilmingStream(
 		m_Sampler = new EasyByteSampler(
 			m_BytesPerPixel * width, height, m_Pitch,
 			0 == sample_smethod->value ? EasyByteSampler::ESM_Rectangle : EasyByteSampler::ESM_Trapezoid,
-			0 == sample_ffunc->value ? EasyByteSampler::RectangleWeighter : EasyByteSampler::GaussWeighter,
 			static_cast<IFramePrinter *>(this),
 			samplingFrameDuration,
-			sample_fac_frame->value,
-			sample_fac_leakage->value,
-			sample_fac_sample->value
+			0,
+			sample_exposure->value,
+			sample_frame_strength->value
 		);
 	}
 	else
@@ -1938,8 +1952,19 @@ FilmingStream::~FilmingStream()
 	if(m_Sampler) delete m_Sampler;
 }
 
-void FilmingStream::Capture(float sampleDuration, CMdt_Media_RAWGLPIC * usePic)
+void FilmingStream::Capture(float time, CMdt_Media_RAWGLPIC * usePic, float spsHint)
 {
+	if(m_Sampler && 0 < spsHint && m_Sampler->CanSkipConstant(time, 1 / spsHint))
+	{
+		// we can skip the capture safely:
+		m_Sampler->Sample(
+			0,
+			time
+		);
+		//pEngfuncs->Con_Printf("skipped at %f\n", time);
+		return;
+	}
+
 	if (!usePic->DoGlReadPixels(m_X, m_Y, m_Width, m_Height, m_GlBuffer, m_GlType, m_Bmp))
 	{
 		pEngfuncs->Con_Printf("MDT ERROR: failed to capture a frame (%d).\n", usePic->GetLastUnhandledError());
@@ -1982,7 +2007,7 @@ void FilmingStream::Capture(float sampleDuration, CMdt_Media_RAWGLPIC * usePic)
 
 		m_Sampler->Sample(
 			(unsigned char const *)usePic->GetPointer(),
-			sampleDuration
+			time
 		);
 	}
 	else

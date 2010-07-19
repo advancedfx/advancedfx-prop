@@ -39,7 +39,7 @@ public:
 	);
 	~FilmingStream();
 
-	void Capture(float sampleDuration, CMdt_Media_RAWGLPIC * usePic);
+	void Capture(float sampleDuration, CMdt_Media_RAWGLPIC * usePic, float spsHint);
 
 	virtual void Print(unsigned char const * data);
 	
@@ -164,11 +164,13 @@ private:
 
 	bool m_EnableStereoMode;
 	int m_Height;
+	unsigned int m_HostFrameCount;
 	unsigned int m_LastCamFrameMid;
 	unsigned int m_LastCamFrameLeft;
 	unsigned int m_LastCamFrameRight;
 	MATTE_METHOD m_MatteMethod;
 	float m_StartClientTime;
+	DWORD m_StartTickCount;
 	std::wstring m_TakeDir;
 	int m_Width;
 	GLdouble m_ZFar;

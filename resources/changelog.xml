@@ -6,12 +6,29 @@
 
 <release>
 <name>HLAE venture</name>
+<version>2.2.18.0</version>
+<time>2010-07-19T09:55Z</time>
+<changes>
+<change type="updated">
+Sampling system changes and optimizations.
+</change>
+<change type="added">
+Added mirv_sample_exposure.
+</change>
+</changes>
+<comments>Greetz to spunge.</comments>
+</release>
+
+
+<release>
+<name>HLAE venture</name>
 <version>2.2.17.5</version>
 <time>2010-07-09T12:34Z</time>
 <changes>
 <change type="updated">
 Aiming system changes.
 </change>
+</changes>
 </release>
 
 
@@ -21,7 +38,7 @@ Aiming system changes.
 <time>2010-07-05T22:00Z</time>
 <changes>
 <change type="removed">
-Removed __mirv_sample_overlap, __mirv:sample_overlapfuture.
+Removed __mirv_sample_overlap, __mirv_sample_overlapfuture.
 </change>
 <change type="added">
 Added __mirv_sample_fac_leakage (in-ter sample signal loss), __mirv_sample_fac_frame (inter-frame blur / signal strength).
