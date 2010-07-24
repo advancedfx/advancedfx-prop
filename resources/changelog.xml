@@ -5,6 +5,18 @@
 
 
 <release>
+<name>HLAE</name>
+<version>2.2.18.1</version>
+<time>2010-07-24T12:47Z</time>
+<changes>
+<change type="updated">
+Updated dem_forcehltv fix to work with all mods again.
+</change>
+</changes>
+</release>
+
+
+<release>
 <name>HLAE venture</name>
 <version>2.2.18.0</version>
 <time>2010-07-19T09:55Z</time>

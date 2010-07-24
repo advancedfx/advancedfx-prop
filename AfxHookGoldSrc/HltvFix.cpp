@@ -5,6 +5,7 @@
 #include <shared/detours.h>
 
 #include "hooks/HookHw.h"
+#include "hooks/hw/ClientFunctions.h"
 #include "modules/ModInfo.h"
 
 #include "cmdregister.h"
@@ -31,18 +32,6 @@ void New_CL_EmitEntities(void)
 	g_InClEmitEntities = false;
 }
 
-void Hook_CL_EmitEntities(void)
-{
-	static bool bHooked=false;
-
-	if(bHooked)
-		return;
-
-	bHooked = true;
-
-	g_Old_CL_EmitEntities = (CL_EmitEntities_t)DetourApply((BYTE *)HL_ADDR_GET(CL_EmitEntities), (BYTE *)New_CL_EmitEntities, (int)HL_ADDR_GET(CL_EmitEntities_DSZ));
-}
-
 
 typedef int (*CL_IsThirdPerson_t)( void );
 CL_IsThirdPerson_t g_OldClientCL_IsThirdPerson;
@@ -56,13 +45,25 @@ int NewClientCL_IsThirdPerson( void )
 	if(force_thirdperson->value)
 		return 1 == force_thirdperson->value ? 1 : 0;
 
-	if(g_InClEmitEntities && fixforcehltv->value)
+	if(g_FixForceHltvEnabled && g_InClEmitEntities && fixforcehltv->value)
 		return 1;
 
 	return g_OldClientCL_IsThirdPerson();
 }
 
 xcommand_t OldClientCmdDemForceHltv = NULL;
+
+void InstallHltvFix(void)
+{
+	static bool firstRun=true;
+	if(!firstRun) return;
+	firstRun = false;
+
+	g_Old_CL_EmitEntities = (CL_EmitEntities_t)DetourApply((BYTE *)HL_ADDR_GET(CL_EmitEntities), (BYTE *)New_CL_EmitEntities, (int)HL_ADDR_GET(CL_EmitEntities_DSZ));
+
+	g_OldClientCL_IsThirdPerson = (CL_IsThirdPerson_t)GetClientFunction(CFTE_CL_IsThirdPerson);
+	ReplaceClientFunction(CFTE_CL_IsThirdPerson, (void *)&NewClientCL_IsThirdPerson);
+}
 
 
 void NewClientCmdDemForceHltv(void)
@@ -73,7 +74,7 @@ void NewClientCmdDemForceHltv(void)
 
 	if(g_FixForceHltvEnabled)
 	{
-		Hook_CL_EmitEntities();
+		InstallHltvFix();
 	}
 
 	OldClientCmdDemForceHltv();

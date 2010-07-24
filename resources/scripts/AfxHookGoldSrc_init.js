@@ -25,6 +25,8 @@ function afx_OnHwDllLoaded()
 
 	addr.UnkDevCapsChecks = addr.hwDll +0xC6A26;
 	addr.UnkDevCapsChecks_BYTES = 0x14;
+	
+	addr.ClientFunctionTable = addr.hwDll +0x11FE320;
 
 	//
 	// Rendering related:
@@ -119,6 +121,9 @@ function afx_OnHwDllLoaded()
 events.onHwDllLoaded = afx_OnHwDllLoaded;
 delete afx_OnHwDllLoaded;
 
+/**
+* @remarks Not called when no client.dll is loaded (valve, tfc).
+*/
 function afx_OnClientDllLoaded()
 {
 	//

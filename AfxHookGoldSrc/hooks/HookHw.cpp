@@ -16,7 +16,6 @@
 #include "hw/R_DrawViewModel.h"
 #include "hw/R_PolyBlend.h"
 
-#include "../HltvFix.h"
 #include "../hl_addresses.h"
 #include "../mirv_scripting.h"
 #include "../forceres.h"
@@ -80,14 +79,11 @@ FARPROC WINAPI NewHwGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 		if (!lstrcmp(lpProcName, "wglMakeCurrent"))
 			return (FARPROC) &NewWglMakeCurrent;
 
-
-		if (!lstrcmp(lpProcName, "CL_IsThirdPerson")) {
-			g_OldClientCL_IsThirdPerson = (CL_IsThirdPerson_t)nResult;
-			return (FARPROC) &NewClientCL_IsThirdPerson;
-		}
-
 		if (!clientDllLoaded && !lstrcmp(lpProcName, "Initialize") && GetProcAddress(hModule, "HUD_VidInit"))
 		{
+			// This won't get called in valve mods that
+			// don't have a real client.dll (i.e valve, tfc).
+
 			clientDllLoaded = true;
 
 			HL_ADDR_SET(clientDll, (HlAddress_t)hModule);

@@ -10,7 +10,7 @@
 #include "../mirv_glext.h"
 #include "../HltvFix.h"
 #include "HookHw.h"
-
+#include "hw/ClientFunctions.h"
 
 #include <hlsdk.h>
 
@@ -164,6 +164,10 @@ REGISTER_DEBUGCMD_FUNC(debug_spec)
 void HookGameLoaded()
 {
 	SCREENINFO screeninfo;
+
+	// Re-Hook ClientFunctionTable:
+	HookClientFunctions();
+
 
 	g_Script_CanConsolePrint = true;
 
