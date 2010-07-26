@@ -1,0 +1,82 @@
+03520000 hw
+
+03572000 R_Renderscene
+
+035751c0 R_DrawWorld
+...
+0357530b 83c404          add     esp,4
+0357530e c7052c27ba0300000000 mov dword ptr [hw!vgui::Frame::`vftable'+0x537468 (03ba272c)],0
+03575318 e803f5ffff      call    hw+0x54820 (03574820)
+0357531d e81ee90400      call    hw!QGL_D3DInit+0x26940 (035c3c40)
+03575322 e8c984fdff      call    hw+0x2d7f0 (0354d7f0)
+03575327 85c0            test    eax,eax
+03575329 750e            jne     hw+0x55339 (03575339)
+....
+0357533f c3              ret
+
+
+03574820 DrawTextureChains
+....
+// 		t = cl.worldmodel->textures[i];
+//		if (!t)
+//			continue;
+03574884 8b8874010000    mov     ecx,dword ptr <Unloaded_st.dll>+0x163 (00000174)[eax]
+0357488a 8b3ca9          mov     edi,dword ptr [ecx+ebp*4]
+0357488d 85ff            test    edi,edi
+...
+//		s = t->texturechain;
+//		if (!s)
+//			continue;
+03574895 8b771c          mov     esi,dword ptr [edi+1Ch]
+03574898 85f6            test    esi,esi
+0357489a 747a            je      hw+0x54916 (03574916)
+//		if (i == skytexturenum)
+//			R_DrawSkyChain (s);
+0357489c 3b2d044a3b04    cmp     ebp,dword ptr [hw!qwglMakeCurrent+0x436b00 (043b4a04)]
+035748a2 750b            jne     hw+0x548af (035748af)
+035748a4 56              push    esi
+035748a5 e89c6f0000      call    hw+0x5b846 (0357b846)
+035748aa 83c404          add     esp,4
+...
+0357b845 c3              ret
+0357b846
+
+
+0357b846 R_DrawSkyChain
+...
+// ClipSkyPolygon (p->numverts, verts[0], 0);
+0357b8bb 6a00            push    0
+0357b8bd 50              push    eax
+0357b8be 51              push    ecx
+0357b8bf e818faffff      call    hw+0x5b2dc (0357b2dc)
+...
+0357b8d5 e8dc010000      call    hw+0x5bab6 (0357bab6)
+0357b8da 5f              pop     edi
+0357b8db 81c400030000    add     esp,offset <Unloaded_papi.dll>+0x2ff (00000300)
+0357b8e1 c3              ret
+0357b8e2 
+
+
+0357b2dc ClipSkyPolygon
+...
+0357b306 51              push    ecx
+0357b307 e860fdffff      call    hw+0x5b06c (0357b06c)
+
+
+0357bab6 Similar to R_DrawSkyBox
+....
+0357bc03 8b04b5d0856903  mov     eax,dword ptr hw!vgui::Frame::`vftable'+0x2d30c (036985d0)[esi*4]
+0357bc0a 8b0c852036fa03  mov     ecx,dword ptr hw!qwglMakeCurrent+0x2571c (03fa3620)[eax*4]
+0357bc11 51              push    ecx
+0357bc12 e8c9bbfeff      call    hw+0x477e0 (035677e0)
+0357bc17 83c404          add     esp,4
+0357bc1a 55              push    ebp
+0357bc1b 53              push    ebx
+0357bc1c 57              push    edi
+0357bc1d ff1590d6f703    call    dword ptr [hw!vgui::Frame::`vftable'+0x9123cc (03f7d690)]
+0357bc23 6a07            push    7
+...
+
+035677e0 is GL_Bind
+036985d0 is skytexorder
+03fa3620 is 03fa3620 SKY_TEX texture id array

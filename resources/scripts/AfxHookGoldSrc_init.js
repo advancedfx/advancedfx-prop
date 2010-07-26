@@ -35,19 +35,17 @@ function afx_OnHwDllLoaded()
 	addr.CL_EmitEntities = addr.hwDll + 0x21C40;
 	addr.CL_EmitEntities_DSZ = 0x05;
 
-	addr.SCR_UpdateScreen = addr.hwDll + 0xCE570;
-	addr.DTOURSZ_SCR_UpdateScreen = 0x09;
-
-	addr.HUD_TOURIN = addr.SCR_UpdateScreen + 0xBD;
-	addr.HUD_TOUROUT = addr.HUD_TOURIN + 0x87;
+	addr.Mod_LeafPVS = addr.hwDll + 0x35E30;
+	addr.DTOURSZ_Mod_LeafPVS = 0x0e;
 
 	addr.R_RenderView = addr.hwDll + 0x52130;
 	addr.DTOURSZ_R_RenderView = 0x6;
 
-	addr.r_refdef = addr.hwDll + 0xE95600;
-
 	addr.R_DrawParticles = addr.hwDll + 0x91C10;
 	addr.DTOURSZ_R_DrawParticles = 0x08;
+	
+	addr.R_DrawSkyBoxEx = addr.hwDll + 0x5BAB6;
+	addr.R_DrawSkyBoxEx_DSZ = 0x08;
 
 	addr.R_DrawEntitiesOnList = addr.hwDll + 0x504a0;
 	addr.DTOURSZ_R_DrawEntitiesOnList = 0x0c;
@@ -58,8 +56,18 @@ function afx_OnHwDllLoaded()
 	addr.R_PolyBlend = addr.hwDll +0x50C60;
 	addr.DTOURSZ_R_PolyBlend  = 0x09;
 
-	addr.Mod_LeafPVS = addr.hwDll + 0x35E30;
-	addr.DTOURSZ_Mod_LeafPVS = 0x0e;
+	addr.SCR_UpdateScreen = addr.hwDll + 0xCE570;
+	addr.DTOURSZ_SCR_UpdateScreen = 0x09;
+
+	addr.r_refdef = addr.hwDll + 0xE95600;
+	
+	addr.skytextures = addr.hwDll +0xA83620;
+
+	
+	addr.HUD_TOURIN = addr.SCR_UpdateScreen + 0xBD;
+	addr.HUD_TOUROUT = addr.HUD_TOURIN + 0x87;
+	
+	
 
 	// DecalTexture hook:
 	//   this function is called in a unknown sub function of R_DrawWorld that is

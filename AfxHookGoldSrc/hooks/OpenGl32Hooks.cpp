@@ -11,7 +11,6 @@
 #include "../GlPrimMods.h"
 #include "../mirv_glext.h"
 #include "../mirv_scripting.h"
-#include "../newsky.h"
 #include "../supportrender.h"
 #include "../zooming.h"
 
@@ -176,8 +175,6 @@ bool	g_bIsSucceedingViewport = false;
 void APIENTRY NewGlBegin(GLenum mode)
 {
 	ScriptEvent_OnGlBegin((unsigned int)mode);
-
-	g_NewSky.DetectAndProcessSky(mode);
 
 	if (g_Filming.doWireframe(mode) == Filming::DR_HIDE) {
 		return;

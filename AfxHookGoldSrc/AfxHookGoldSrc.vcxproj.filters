@@ -246,6 +246,9 @@
     <ClCompile Include="hooks\hw\ClientFunctions.cpp">
       <Filter>AfxHookGoldSrc\hooks\hw</Filter>
     </ClCompile>
+    <ClCompile Include="hooks\hw\R_DrawSkyBoxEx.cpp">
+      <Filter>AfxHookGoldSrc\hooks\hw</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -435,6 +438,9 @@
       <Filter>AfxHookGoldSrc</Filter>
     </ClInclude>
     <ClInclude Include="hooks\hw\ClientFunctions.h">
+      <Filter>AfxHookGoldSrc\hooks\hw</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\hw\R_DrawSkyBoxEx.h">
       <Filter>AfxHookGoldSrc\hooks\hw</Filter>
     </ClInclude>
   </ItemGroup>

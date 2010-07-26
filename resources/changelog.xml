@@ -6,6 +6,18 @@
 
 <release>
 <name>HLAE</name>
+<version>2.2.18.2</version>
+<time>2010-07-26T10:09Z</time>
+<changes>
+<change type="updated">
+Hardened mirv_fx_sky_hd (sky replacement feature).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.2.18.1</version>
 <time>2010-07-24T12:47Z</time>
 <changes>

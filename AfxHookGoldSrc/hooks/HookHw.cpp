@@ -13,6 +13,7 @@
 #include "hw/Mod_LeafPvs.h"
 #include "hw/R_DrawEntitiesOnList.h"
 #include "hw/R_DrawParticles.h"
+#include "hw/R_DrawSkyBoxEx.h"
 #include "hw/R_DrawViewModel.h"
 #include "hw/R_PolyBlend.h"
 
@@ -132,6 +133,8 @@ void HookHw(HMODULE hHw)
 	Hook_R_DrawEntitiesOnList();
 
 	Hook_R_DrawParticles();
+
+	Hook_R_DrawSkyBoxEx();
 
 	Hook_R_DrawViewModel();
 

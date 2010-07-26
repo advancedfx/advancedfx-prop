@@ -135,6 +135,7 @@
     <ClCompile Include="hl_addresses.cpp" />
     <ClCompile Include="HltvFix.cpp" />
     <ClCompile Include="hooks\hw\ClientFunctions.cpp" />
+    <ClCompile Include="hooks\hw\R_DrawSkyBoxEx.cpp" />
     <ClCompile Include="InitScript.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mdt_media.cpp" />
@@ -206,6 +207,7 @@
     <ClInclude Include="hlsdk.h" />
     <ClInclude Include="HltvFix.h" />
     <ClInclude Include="hooks\hw\ClientFunctions.h" />
+    <ClInclude Include="hooks\hw\R_DrawSkyBoxEx.h" />
     <ClInclude Include="InitScript.h" />
     <ClInclude Include="mdt_media.h" />
     <ClInclude Include="mirv_commands.h" />

@@ -32,7 +32,10 @@ class Launcher
                     MessageBox.Show("Launching failed.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
                 if (cfg.RememberChanges)
+                {
                     GlobalConfig.Instance.Settings.Launcher.CopyFrom(cfg);
+                    GlobalConfig.Instance.BackUp();
+                }
             }
             else
                 bOk = true;

@@ -6,21 +6,15 @@ Half-Life Advanced Effects project
 
 #include "newsky.h"
 
+#include "cmdregister.h"
+#include "hooks/HookHw.h"
+#include "hooks/hw/R_DrawSkyBoxEx.h"
 #include <hlsdk.h>
 
-#include "cmdregister.h"
-
-// from Quake sorce:
-//#define	SKY_TEX		2000
-// HL:
-#define SKY_TEX 0x16a8
-
-extern cl_enginefuncs_s *pEngfuncs;
 
 ///////////////////////////////////////////////////////////////////////////////
 
 
-int skyorder[6] = {0,1,2,3,4,5};
 char *suf[6] = {"rt", "bk", "lf", "ft", "up", "dn"};
 
 typedef struct skyimage_s {
@@ -138,38 +132,12 @@ skyimage_t *LoadSky(const char *pszFileName, bool bFlipY)
 CNewSky::CNewSky()
 {
 	_iSkyQuadsCount = 7; // no sky processing in progress
-	_bWantCustomSky = false; // user does not want CustomSky (or s.th. went rong)
-	_bWantReload = true; // by default we need to load
-	_bOldFormat = true;
 
 	memset(_SkyTextures,0,6*sizeof(GLuint)); // no textures yet
 }
 
-void CNewSky::DetectAndProcessSky(GLenum mode)
-{
-	if (!_bWantCustomSky || mode!=GL_QUADS) return;
 
-	GLint iGLcurrBind;
-	glGetIntegerv(GL_TEXTURE_BINDING_2D,&iGLcurrBind);
-
-	if ((iGLcurrBind<SKY_TEX)||(SKY_TEX +6 <= iGLcurrBind)) return;
-
-	EnsureGLTextureIndices(); // make sure we have the indices
-			
-	if (_bWantReload)
-	{
-		_bWantCustomSky = ReloadTexturesFromFile();
-		_bWantReload = false;
-	}
-
-	// if we still have s.th. we can use as sky lol, then use it:
-	if (_bWantCustomSky)
-		glBindTexture(GL_TEXTURE_2D,_SkyTextures[iGLcurrBind-SKY_TEX]);
-
-	//pEngfuncs->Con_Printf("QUAD: %i\n",iGLcurrBind-SKY_TEX);
-}
-
-bool CNewSky::ReloadTexturesFromFile()
+bool CNewSky::ReloadTexturesFromFile(bool oldFormat)
 {
 	bool bRes=false;
 	
@@ -177,12 +145,12 @@ bool CNewSky::ReloadTexturesFromFile()
 
 	memset(SkyTextures,0,6* sizeof(skyimage_t *));
 
-	SkyTextures[skyorder[0]]=LoadSky("mdtskyrt.bmp", !_bOldFormat);
-	SkyTextures[skyorder[1]]=LoadSky("mdtskybk.bmp", !_bOldFormat);
-	SkyTextures[skyorder[2]]=LoadSky("mdtskylf.bmp", !_bOldFormat);
-	SkyTextures[skyorder[3]]=LoadSky("mdtskyft.bmp", !_bOldFormat);
-	SkyTextures[skyorder[4]]=LoadSky("mdtskyup.bmp", !_bOldFormat);
-	SkyTextures[skyorder[5]]=LoadSky("mdtskydn.bmp", !_bOldFormat);
+	SkyTextures[0]=LoadSky("mdtskyrt.bmp", !oldFormat);
+	SkyTextures[1]=LoadSky("mdtskybk.bmp", !oldFormat);
+	SkyTextures[2]=LoadSky("mdtskylf.bmp", !oldFormat);
+	SkyTextures[3]=LoadSky("mdtskyft.bmp", !oldFormat);
+	SkyTextures[4]=LoadSky("mdtskyup.bmp", !oldFormat);
+	SkyTextures[5]=LoadSky("mdtskydn.bmp", !oldFormat);
 
 	bRes = SkyTextures[0] && SkyTextures[1] && SkyTextures[2] && SkyTextures[3] && SkyTextures[4] && SkyTextures[5];
 
@@ -232,9 +200,19 @@ void CNewSky::EnsureGLTextureIndices()
 
 void CNewSky::User_ForceReload(bool bEnableCustomSky, bool bOldFormat)
 {
-	_bOldFormat = bOldFormat;
-	_bWantReload = true;
-	_bWantCustomSky = bEnableCustomSky;
+	EnsureGLTextureIndices(); // make sure we have the textures indices allocated
+
+	bool customSky;
+
+	if(bEnableCustomSky)
+		customSky = ReloadTexturesFromFile(bOldFormat);
+	else
+		customSky = false;
+
+	if (customSky)
+		g_R_DrawSkyBoxEx_NewTextures = _SkyTextures;
+	else
+		g_R_DrawSkyBoxEx_NewTextures = 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -248,7 +226,7 @@ REGISTER_CMD_FUNC(fx_skyhd)
 {
 	if (pEngfuncs->Cmd_Argc() != 2)
 	{
-		pEngfuncs->Con_Printf("Usage: " PREFIX "fx_skyhd 0|1|2\nSee manual for more information.");
+		pEngfuncs->Con_Printf("Usage: " PREFIX "fx_skyhd 0|1|2\nSee manual for more information.\n");
 		return;
 	}
 
