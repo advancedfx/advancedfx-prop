@@ -18,6 +18,7 @@
 
 #include "hooks/user32Hooks.h"
 #include "hooks/hw/Mod_LeafPvs.h"
+#include "hooks/client/cstrike/CrossHairFix.h"
 
 #include "AfxGoldSrcComClient.h"
 #include "supportrender.h"
@@ -760,6 +761,7 @@ void Filming::OnHudBeginEvent()
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 		break;
 	case HUDRQ_CAPTURE_ALPHA:
+		g_Cstrike_CrossHair_Block = true; // no cool-down now.
 		glClearColor(0.0f,0.0f,0.0f, 0.0f); // don't forget to set our clear color
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 		break;
@@ -785,6 +787,7 @@ bool Filming::OnHudEndEvnet()
 		break;
 	case HUDRQ_CAPTURE_ALPHA:
 		if(g_Filming_Stream[FS_hudalpha]) g_Filming_Stream[FS_hudalpha]->Capture(m_time, &m_GlRawPic, m_fps);
+		g_Cstrike_CrossHair_Block = false; // allow cool-down again.
 		break;
 	}
 	return false; // do not loop

@@ -147,10 +147,10 @@ function afx_OnClientDllLoaded()
 	addr.SZ_unkInlineClientColorV = 0x3C;
 
 	// cstrike CrossHair fix related:
-	addr.UnkCstrikeCrosshairFn = addr.clientDll + 0x42EB0;
-	addr.DTOURSZ_UnkCstrikeCrosshairFn = 0x09; // at least 8 bytes req.
-	addr.UnkCstrikeCh_mul_fac = addr.clientDll + 0xCD450;
-	addr.UnkCstrikeCh_add_fac = addr.clientDll + 0xC3298;
+	addr.cstrike_UnkCrosshairFn = addr.clientDll + 0x42EB0;
+	addr.cstrike_UnkCrosshairFn_DSZ = 0x09; // at least 8 bytes req.
+	addr.cstrike_UnkCrosshairFn_add_fac = addr.clientDll + 0xCD450;
+	addr.cstrike_UnkCrosshairFn_mul_fac = addr.clientDll + 0xC3298;
 
 	// cstrike EV_CreateSmoke:
 	addr.cstrike_EV_CreateSmoke = addr.clientDll + 0xa420;

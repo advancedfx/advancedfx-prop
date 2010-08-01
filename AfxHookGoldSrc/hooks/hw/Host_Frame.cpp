@@ -9,12 +9,15 @@
 #include <shared/detours.h>
 
 typedef void (*Host_Frame_t) (float time);
+
 Host_Frame_t g_Old_HostFrame = 0;
+float g_Host_Frame_time = 0;
 
 void New_Host_Frame (float time)
 {
 	g_AfxGoldSrcComClient.OnHostFrame();
 
+	g_Host_Frame_time = time;
 	g_Old_HostFrame(time);
 }
 

@@ -31,6 +31,9 @@
     <Filter Include="shared\vcpp">
       <UniqueIdentifier>{949c2759-8fcb-4d06-9ae8-1405bf0c4b50}</UniqueIdentifier>
     </Filter>
+    <Filter Include="AfxHookGoldSrc\hooks\client\cstrike">
+      <UniqueIdentifier>{7e8fbdd2-d971-4e37-8b5c-88e4425b88d1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\bvhexport.cpp">
@@ -249,6 +252,12 @@
     <ClCompile Include="hooks\hw\R_DrawSkyBoxEx.cpp">
       <Filter>AfxHookGoldSrc\hooks\hw</Filter>
     </ClCompile>
+    <ClCompile Include="hooks\client\cstrike\CrossHairFix.cpp">
+      <Filter>AfxHookGoldSrc\hooks\client\cstrike</Filter>
+    </ClCompile>
+    <ClCompile Include="hooks\client\HookClient.cpp">
+      <Filter>AfxHookGoldSrc\hooks\client</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -442,6 +451,12 @@
     </ClInclude>
     <ClInclude Include="hooks\hw\R_DrawSkyBoxEx.h">
       <Filter>AfxHookGoldSrc\hooks\hw</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\client\cstrike\CrossHairFix.h">
+      <Filter>AfxHookGoldSrc\hooks\client\cstrike</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\client\HookClient.h">
+      <Filter>AfxHookGoldSrc\hooks\client</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

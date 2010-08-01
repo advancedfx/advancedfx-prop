@@ -6,6 +6,18 @@
 
 <release>
 <name>HLAE</name>
+<version>2.2.18.3</version>
+<time>2010-08-01T19:50Z</time>
+<changes>
+<change type="updated">
+Counter-Strike 1.6 (cstrike) cross-hair fix is now auto-enabled (__mirv_cstrike_ch_fps 72.0).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.2.18.2</version>
 <time>2010-07-26T10:09Z</time>
 <changes>

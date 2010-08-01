@@ -20,6 +20,7 @@ function myGlBegin(mode) {
 	}
 	else fx.replace.enabled = false;
 }
-
 events.on_glBegin = myGlBegin;
+delete myGlBegin;
+
 //events.on_glBegin = undefined;

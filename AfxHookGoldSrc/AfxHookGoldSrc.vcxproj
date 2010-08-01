@@ -134,6 +134,8 @@
     <ClCompile Include="GlPrimMods.cpp" />
     <ClCompile Include="hl_addresses.cpp" />
     <ClCompile Include="HltvFix.cpp" />
+    <ClCompile Include="hooks\client\cstrike\CrossHairFix.cpp" />
+    <ClCompile Include="hooks\client\HookClient.cpp" />
     <ClCompile Include="hooks\hw\ClientFunctions.cpp" />
     <ClCompile Include="hooks\hw\R_DrawSkyBoxEx.cpp" />
     <ClCompile Include="InitScript.cpp" />
@@ -206,6 +208,8 @@
     <ClInclude Include="hl_addresses.h" />
     <ClInclude Include="hlsdk.h" />
     <ClInclude Include="HltvFix.h" />
+    <ClInclude Include="hooks\client\cstrike\CrossHairFix.h" />
+    <ClInclude Include="hooks\client\HookClient.h" />
     <ClInclude Include="hooks\hw\ClientFunctions.h" />
     <ClInclude Include="hooks\hw\R_DrawSkyBoxEx.h" />
     <ClInclude Include="InitScript.h" />

@@ -2,8 +2,36 @@
 //
 // To be rendered with POV-Ray ( http://povray.org/ ).
 
-#include "metals.inc"
-#include "golds.inc"
+#declare T_Logo_bg = texture {
+  pigment { color rgb <1,0.25,0.125> }
+  finish {
+    diffuse 0.5
+    specular 0.4
+    phong 0.1
+    phong_size 1.0 
+  }
+}
+
+#declare T_Logo_tool = texture {
+  pigment { color rgb <1,1,1> }
+  finish {
+    diffuse 0.5
+    specular 0.4
+    phong 0.1
+    phong_size 1.0 
+  }
+}
+
+#declare T_Logo_border = texture {
+  pigment { color rgb <1,0.25,0.125>}
+  finish {
+    diffuse 0.2
+    specular 0.7
+    phong 0.1
+    phong_size 1.0  
+  }
+}
+
 
 union {
   light_source {
@@ -130,13 +158,13 @@ intersection {
     <-10,-10,-1/2> <10,10,1/2>
   }
   
-  texture { T_Gold_5E }
+  texture { T_Logo_tool }
 }
 
 cylinder {
   <0,0,-1/8>, <0,0,1/8> 9
 
-  texture { T_Silver_3C }
+  texture { T_Logo_bg }
 }
 
 difference {
@@ -147,7 +175,7 @@ difference {
     <0,0,-1>, <0,0,1> 9-1/6
   }
   
-  texture { T_Silver_3E }
+  texture { T_Logo_border }
 }
   
   
