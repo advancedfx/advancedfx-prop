@@ -6,6 +6,18 @@
 
 <release>
 <name>HLAE</name>
+<version>2.2.18.4</version>
+<time>2010-08-07T08:25Z</time>
+<changes>
+<change type="added">
+Added __mirv_moveto.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.2.18.3</version>
 <time>2010-08-01T19:50Z</time>
 <changes>
