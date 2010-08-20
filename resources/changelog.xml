@@ -6,6 +6,18 @@
 
 <release>
 <name>HLAE</name>
+<version>2.2.18.6</version>
+<time>2010-08-20T18:20Z</time>
+<changes>
+<change type="fixed">
+Fixed cstrike crosshair fix. Changed __mirv_cstrike_ch_fps standard value to 100.0.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.2.18.4</version>
 <time>2010-08-07T08:25Z</time>
 <changes>

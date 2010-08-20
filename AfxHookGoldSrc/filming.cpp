@@ -1521,7 +1521,6 @@ bool Filming::_InMatteEntities(int iid)
 	return bFound;
 }
 
-
 bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 // be sure to read the comments to _bRecordBuffers_FirstCall in filming.h, because this is fundamental for undertanding what the **** is going on here
 // currently like the old code we relay on some user changable values, however we should lock those during filming to avoid crashes caused by the user messing around (not implemented yet)

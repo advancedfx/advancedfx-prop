@@ -18,7 +18,10 @@
 #include <hlsdk.h>
 #include "../../../hl_addresses.h"
 
+#include "../../HookHw.h"
 #include "../../hw/Host_Frame.h"
+
+#include <gl/gl.h>
 
 
 typedef void (__stdcall *UnkCstrikeCrosshairFn_t)( DWORD *this_ptr, float dwUnk1, DWORD dwUnk2);
@@ -28,30 +31,56 @@ UnkCstrikeCrosshairFn_t g_pfnCrosshairFix_Hooked_Func = NULL;
 double *g_f_ch_mul_fac = NULL;
 double *g_f_ch_add_fac = NULL;
 
-double g_cstrike_ch_deltaT = 0;
-double g_cstrike_ch_frameT = 1.0/72.0;
+double g_cstrike_ch_frameT = 1.0/100.0;
+
 
 void __stdcall CrosshairFix_Hooking_Func(  DWORD *this_ptr, float fUnkTime, DWORD dwUnkWeaponCode )
 {
+	static float oldClientTime = 0;
+	static double deltaT = 0;
+
 	bool freezeCh = g_Cstrike_CrossHair_Block;
 	bool fix = !freezeCh && 0.0 < g_cstrike_ch_frameT;
+
 	
 	if(fix)
 	{
-		g_cstrike_ch_deltaT += g_Host_Frame_time;
+		float frameTime = pEngfuncs->pfnGetCvarFloat("host_framerate");
+		if(0 >= frameTime) frameTime = g_Host_Frame_time;
+
+		deltaT += (double)frameTime;
 		
-		bool coolDown = g_cstrike_ch_frameT <= g_cstrike_ch_deltaT;
+		bool coolDown = g_cstrike_ch_frameT <= deltaT;
 
 		if(coolDown)
 		{
 			// apply cooldown:
+			bool doLoop;
+			GLboolean oldMasks[5];
 			do
 			{
+				deltaT -= g_cstrike_ch_frameT;
+
+				doLoop = g_cstrike_ch_frameT <= deltaT;
+
+				if(doLoop)
+				{
+					glGetBooleanv(GL_COLOR_WRITEMASK, oldMasks);
+					glGetBooleanv(GL_COLOR_WRITEMASK, &(oldMasks[4]));
+
+					glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+					glDepthMask(GL_FALSE);
+				}
+
 				g_pfnCrosshairFix_Hooked_Func( this_ptr, fUnkTime, dwUnkWeaponCode );
 
-				g_cstrike_ch_deltaT -= g_cstrike_ch_frameT;
+				if(doLoop)
+				{
+					glColorMask(oldMasks[0], oldMasks[1], oldMasks[2], oldMasks[3]);
+					glDepthMask(oldMasks[4]);
+				}
 			}
-			while(g_cstrike_ch_frameT <= g_cstrike_ch_deltaT);
+			while(doLoop);
 
 			return; // done.
 		}
