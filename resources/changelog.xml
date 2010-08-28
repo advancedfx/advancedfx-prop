@@ -6,6 +6,13 @@
 
 <release>
 <name>HLAE</name>
+<version>2.2.18.7</version>
+<time>2010-08-28T16:15Z</time>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.2.18.6</version>
 <time>2010-08-20T18:20Z</time>
 <changes>

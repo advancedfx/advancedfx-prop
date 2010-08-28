@@ -12,7 +12,7 @@
 typedef void * StoreValue;
 
 
-class IStoreFactory abstract
+class __declspec(novtable) IStoreFactory abstract
 {
 public:
 	virtual StoreValue ConstructValue() abstract = 0;
@@ -20,7 +20,7 @@ public:
 };
 
 
-class IStoreItem abstract
+class __declspec(novtable) IStoreItem abstract
 {
 public:
 	virtual StoreValue GetValue() abstract = 0;
@@ -31,7 +31,7 @@ public:
 class Store abstract
 {
 public:
-	virtual ~Store() {};
+	virtual ~Store();
 
 	virtual IStoreItem * Aquire(void) abstract = 0;
 };

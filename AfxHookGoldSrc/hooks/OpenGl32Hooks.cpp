@@ -274,10 +274,6 @@ void APIENTRY NewGlViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 		// This is called whether we're zooming or not
 		g_Zooming.handleZoom();
 
-		// this is now done in doCapturePoint() called in swap
-		//if (g_Filming.isFilming())
-		//	g_Filming.recordBuffers();
-
 		if (g_Aiming.isAiming())
 			g_Aiming.aim();
 	}

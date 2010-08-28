@@ -5,13 +5,8 @@
 #include "mirv_commands.h"
 
 #include "cmdregister.h"
-
-
+#include "hooks/HookHw.h"
 #include <hlsdk.h>
-
-
-extern cl_enginefuncs_s *pEngfuncs;
-
 #include <list>
 
 #define NULLPTR 0

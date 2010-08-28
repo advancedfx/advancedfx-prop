@@ -178,3 +178,9 @@ void FrequentStoreItem::Release()
 	Enlist();
 }
 
+
+// Store ///////////////////////////////////////////////////////////////////////
+
+Store::~Store()
+{
+}

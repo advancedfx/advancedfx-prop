@@ -1050,7 +1050,7 @@ void Filming::Start()
 			g_Filming_Stream[FS_hudcolor] = new FilmingStream(
 				takePath, L"hudcolor",
 				FB_COLOR,
-				samplingFrameDuration,
+				0.0, // Sampling not supported // samplingFrameDuration,
 				x, y, width, height
 			);
 		}
@@ -1060,7 +1060,7 @@ void Filming::Start()
 			g_Filming_Stream[FS_hudalpha] = new FilmingStream(
 				takePath, L"hudalpha",
 				FB_ALPHA,
-				samplingFrameDuration,
+				0.0, // Sampling not supported // samplingFrameDuration,
 				x, y, width, height
 			);
 		}
@@ -1070,7 +1070,7 @@ void Filming::Start()
 			g_Filming_Stream[FS_depthall] = new FilmingStream(
 				takePath, !m_EnableStereoMode ? L"depthall" : L"depthall_left",
 				FB_DEPTH,
-				samplingFrameDuration,
+				0.0, // Sampling not supported // samplingFrameDuration,
 				x, y, width, height
 			);
 
@@ -1079,7 +1079,7 @@ void Filming::Start()
 				g_Filming_Stream[FS_depthall_right] = new FilmingStream(
 					takePath, L"depthall_right",
 					FB_DEPTH,
-					samplingFrameDuration,
+					0.0, // Sampling not supported // samplingFrameDuration,
 					x, y, width, height
 				);
 			}
@@ -1090,7 +1090,7 @@ void Filming::Start()
 			g_Filming_Stream[FS_depthworld] = new FilmingStream(
 				takePath, !m_EnableStereoMode ? L"depthworld" : L"depthworld_left",
 				FB_DEPTH,
-				samplingFrameDuration,
+				0.0, // Sampling not supported // samplingFrameDuration,
 				x, y, width, height
 			);
 
@@ -1099,7 +1099,7 @@ void Filming::Start()
 				g_Filming_Stream[FS_depthworld_right] = new FilmingStream(
 					takePath, L"depthworld_right",
 					FB_DEPTH,
-					samplingFrameDuration,
+					0.0, // Sampling not supported // samplingFrameDuration,
 					x, y, width, height
 				);
 			}
