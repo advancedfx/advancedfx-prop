@@ -36,14 +36,8 @@ namespace AfxGui
         //
         // Private members:
 
-        Tools.Calculator m_Calculator;
         hlae.remoting.HlaeRemoting m_HlaeRemoting;
         UpdateCheckNotificationTarget m_UpdateCheckNotification;
-
-        private void Calculator_FormClosed(object sender, FormClosedEventArgs e)
-        {
-            m_Calculator = null;
-        }
 
         void OnUpdateChecked(object o, IUpdateCheckResult checkResult)
         {
@@ -93,18 +87,7 @@ namespace AfxGui
 
         private void menuFileSize_Click(object sender, EventArgs e)
         {
-            if (null == m_Calculator)
-            {
-                m_Calculator = new Tools.Calculator();
-                m_Calculator.FormClosed += Calculator_FormClosed;
-
-                m_Calculator.Show();
-            }
-            else
-            {
-                m_Calculator.WindowState = FormWindowState.Normal;
-                m_Calculator.BringToFront();
-            }
+            (new Tools.Calculator()).Show();
         }
 
         private void menuAdvancedFxOrg_Click(object sender, EventArgs e)

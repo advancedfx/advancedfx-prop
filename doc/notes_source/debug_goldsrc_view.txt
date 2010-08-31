@@ -1,0 +1,82 @@
+0:004> s -a client L1000000 "OnRenderStart->CViewRender::SetUpView"
+12d44168  4f 6e 52 65 6e 64 65 72-53 74 61 72 74 2d 3e 43  OnRenderStart->C
+0:004> s client L10000000 68 41 d4 12
+12a2c7da  68 41 d4 12 6a 00 6a 01-e8 89 9e fb ff 83 c4 18  hA..j.j.........
+12ae75bf  68 41 d4 12 e8 08 c8 ef-ff 68 a0 3f d4 12 6a 01  hA.......h.?..j.
+
+
+12ae75be == 12ae75bf-1 is the correct match
+inside CViewRender::SetUpView():
+
+
+12ae75be 686841d412      push    offset client!CreateInterface+0x13f018 (12d44168)
+12ae75c3 e808c8efff      call    client+0x33dd0 (129e3dd0)
+12ae75c8 68a03fd412      push    offset client!CreateInterface+0x13ee50 (12d43fa0)
+12ae75cd 6a01            push    1
+12ae75cf 6a01            push    1
+12ae75d1 e89af0efff      call    client+0x36670 (129e6670)
+
+129e3dd0 == "OnRenderStart->CViewRender::SetUpView"
+12d43fa0 == "CViewRender::SetUpView->OnRenderEnd"
+
+Now we just need to break on 12ae75be and follow till ret:
+12ae7723 56              push    esi
+12ae7724 e8a7fcffff      call    client+0x1373d0 (12ae73d0)
+
+-->
+12ae73d0 == CiewRender::SetupView == client +1373D0
+DSZ ==  0x0d
+
+12ae73d0
+....
+12ae752e 83c40c          add     esp,0Ch
+12ae7531 ffd2            call    edx
+12ae7533 84c0            test    al,al
+12ae7535 744c            je      client+0x137583 (12ae7583)              [br=1]
+12ae7537 d9ee            fldz
+12ae7539 a1e4caea12      mov     eax,dword ptr [client!CreateInterface+0x2a7994 (12eacae4)]
+12ae753e d8582c          fcomp   dword ptr [eax+2Ch]
+12ae7541 dfe0            fnstsw  ax
+12ae7543 f6c405          test    ah,5
+12ae7546 7a07            jp      client+0x13754f (12ae754f)
+12ae7548 e833f6ffff      call    client+0x136b80 (12ae6b80)
+12ae754d eb34            jmp     client+0x137583 (12ae7583)
+12ae754f d907            fld     dword ptr [edi]
+12ae7551 d91d10cbea12    fstp    dword ptr [client!CreateInterface+0x2a79c0 (12eacb10)]
+12ae7557 d94704          fld     dword ptr [edi+4]
+12ae755a d91d14cbea12    fstp    dword ptr [client!CreateInterface+0x2a79c4 (12eacb14)]
+12ae7560 d94708          fld     dword ptr [edi+8]
+12ae7563 d91d18cbea12    fstp    dword ptr [client!CreateInterface+0x2a79c8 (12eacb18)]
+12ae7569 d906            fld     dword ptr [esi]
+12ae756b d91d1ccbea12    fstp    dword ptr [client!CreateInterface+0x2a79cc (12eacb1c)]
+12ae7571 d94604          fld     dword ptr [esi+4]
+12ae7574 d91d20cbea12    fstp    dword ptr [client!CreateInterface+0x2a79d0 (12eacb20)]
+12ae757a d94608          fld     dword ptr [esi+8]
+12ae757d d91d24cbea12    fstp    dword ptr [client!CreateInterface+0x2a79d4 (12eacb24)]
+12ae7583 
+....
+
+
+--> 12eacae4 == client + 4FCAE4 == cl_demoviewoverride cvar
+--> 2C == 4*B == cvar float offset
+--> esi is m_View.angles
+--> edi is m_View.origin
+--> 12ae6b80 == client + 136B80 == CalcDemoViewOverride()
+    (DSZ == 0x09)
+
+
+12ae6b80
+...
+12ae6b95 8b0d6865e512    mov     ecx,dword ptr [client!CreateInterface+0x251418 (12e56568)]
+12ae6b9b 8b158448e412    mov     edx,dword ptr [client!CreateInterface+0x23f734 (12e44884)]
+12ae6ba1 8b01            mov     eax,dword ptr [ecx]
+12ae6ba3 d94208          fld     dword ptr [edx+8]
+12ae6ba6 8b4010          mov     eax,dword ptr [eax+10h]
+12ae6ba9 6a01            push    1
+12ae6bab 51              push    ecx
+12ae6bac d91c24          fstp    dword ptr [esp]
+12ae6baf ffd0            call    eax
+
+--> 12e44884 == client +494884 == gpGlobals
+--> 8 == 2*4 == offset absoluteframetime
+ --> 3*4 == offset curtime

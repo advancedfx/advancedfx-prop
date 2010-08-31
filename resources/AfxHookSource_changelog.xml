@@ -6,6 +6,23 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.0.3.6</version>
+<time>2010-08-31T12:37Z</time>
+<changes>
+<change type="updated">
+Adjusted to 31 Auf 2010 CSS update.
+</change>
+</changes>
+<comments>
+Playing demos and using the hook with those should work.
+Joing servers might crash the game or get you banned.
+Please launch CSS at least once without HLAE.
+</comments>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.0.3.5</version>
 <time>2010-06-28T08:50Z</time>
 <changes>

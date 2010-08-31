@@ -6,8 +6,13 @@
 
 <release>
 <name>HLAE</name>
-<version>2.2.18.7</version>
-<time>2010-08-28T16:15Z</time>
+<version>2.2.19.0</version>
+<time>2010-08-31T12:37Z</time>
+<changes>
+<change type="updated">
+Included AfxHookSource 0.0.3.6 (2010-08-31T12:37Z).
+</change>
+</changes>
 </release>
 
 
@@ -154,7 +159,7 @@ Alpha matte method now obeys mirv_matte_xray.
 <time>2010-06-28T13:30Z</time>
 <changes>
 <change type="updated">
-AfxHookSource: Adjusted to 26 Jun 2010 CSS update.
+Included AfxHookSource 0.0.3.5 (2010-06-28T08:50Z).
 </change>
 <change type="updated">
 Ported parts of the GUI to CSharp in order to make coding easier for other coders.
@@ -163,14 +168,13 @@ Ported parts of the GUI to CSharp in order to make coding easier for other coder
 </release>
 
 
-
 <release>
 <name>HLAE</name>
 <version>2.2.15.2</version>
 <time>2010-06-24T22:43Z</time>
 <changes>
 <change type="updated">
-AfxHookSource: Adjusted to 23 Jun 2010 CSS update.
+Included AfxHookSource 0.0.3.4 (2010-06-24T22:23Z).
 </change>
 </changes>
 </release>

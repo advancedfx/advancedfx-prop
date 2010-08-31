@@ -191,6 +191,16 @@ REGISTER_DEBUGCMD_FUNC(moveto)
 
 }
 
+REGISTER_DEBUGCMD_FUNC(sse_xorps)
+{
+	__asm
+	{
+		nop
+		xorps xmm0, xmm0
+		nop
+	}
+}
+
 
 
 // 0cffde70 v_valcspectatorrefdef
