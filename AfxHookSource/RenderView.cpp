@@ -58,18 +58,22 @@ Hook_VClient_RenderView g_Hook_VClient_RenderView;
 
 
 
-#define ADDR_cstrike_CalcDemoViewOverride 0x136B80
+#define ADDR_cstrike_CalcDemoViewOverride 0x136B00
+// 0x136B80
 // 0x135D30
 #define ADDR_cstrike_CalcDemoViewOverride_DSZ 0x09
 
-#define ADDR_cstrike_CViewRender_SetUpView 0x1373D0
+#define ADDR_cstrike_CViewRender_SetUpView 0x137350
+// 0x1373D0
 // 0x136570
 #define ADDR_cstrike_CViewRender_SetUpView_DSZ 0x0d
 
 #define ADDR_cstrike_cl_demoviewoverride 0x4FCAE4
+// 0x4FCAE4
 // 0x4A202C
 
 #define ADDR_cstrike_gpGLobals 0x494884
+// 0x494884
 // 0x43B854
 #define OFS_cstrike_gpGlobals_value_curtime +4*3
 
