@@ -128,12 +128,12 @@ namespace tools {
 			this->textBoxCmdSrc = (gcnew System::Windows::Forms::TextBox());
 			this->labelCmdMap = (gcnew System::Windows::Forms::Label());
 			this->groupBox1 = (gcnew System::Windows::Forms::GroupBox());
+			this->buttonSwap = (gcnew System::Windows::Forms::Button());
 			this->buttonAdd = (gcnew System::Windows::Forms::Button());
 			this->buttonRemove = (gcnew System::Windows::Forms::Button());
 			this->listMap = (gcnew System::Windows::Forms::ListView());
 			this->colFrom = (gcnew System::Windows::Forms::ColumnHeader());
 			this->colTo = (gcnew System::Windows::Forms::ColumnHeader());
-			this->buttonSwap = (gcnew System::Windows::Forms::Button());
 			this->groupBox1->SuspendLayout();
 			this->SuspendLayout();
 			// 
@@ -226,6 +226,16 @@ namespace tools {
 			this->groupBox1->TabStop = false;
 			this->groupBox1->Text = L"Command mappings";
 			// 
+			// buttonSwap
+			// 
+			this->buttonSwap->Location = System::Drawing::Point(344, 74);
+			this->buttonSwap->Name = L"buttonSwap";
+			this->buttonSwap->Size = System::Drawing::Size(100, 23);
+			this->buttonSwap->TabIndex = 11;
+			this->buttonSwap->Text = L"Swap";
+			this->buttonSwap->UseVisualStyleBackColor = true;
+			this->buttonSwap->Click += gcnew System::EventHandler(this, &DemoToolsWiz2::buttonSwap_Click);
+			// 
 			// buttonAdd
 			// 
 			this->buttonAdd->Location = System::Drawing::Point(344, 152);
@@ -248,8 +258,9 @@ namespace tools {
 			// 
 			// listMap
 			// 
-			this->listMap->AllowDrop = true;
 			this->listMap->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(2) {this->colFrom, this->colTo});
+			this->listMap->FullRowSelect = true;
+			this->listMap->GridLines = true;
 			this->listMap->HeaderStyle = System::Windows::Forms::ColumnHeaderStyle::Nonclickable;
 			this->listMap->Location = System::Drawing::Point(12, 19);
 			this->listMap->Name = L"listMap";
@@ -257,6 +268,7 @@ namespace tools {
 			this->listMap->TabIndex = 6;
 			this->listMap->UseCompatibleStateImageBehavior = false;
 			this->listMap->View = System::Windows::Forms::View::Details;
+			this->listMap->KeyDown += gcnew System::Windows::Forms::KeyEventHandler(this, &DemoToolsWiz2::listMap_KeyDown);
 			// 
 			// colFrom
 			// 
@@ -267,16 +279,6 @@ namespace tools {
 			// 
 			this->colTo->Text = L"To";
 			this->colTo->Width = 150;
-			// 
-			// buttonSwap
-			// 
-			this->buttonSwap->Location = System::Drawing::Point(344, 74);
-			this->buttonSwap->Name = L"buttonSwap";
-			this->buttonSwap->Size = System::Drawing::Size(100, 23);
-			this->buttonSwap->TabIndex = 11;
-			this->buttonSwap->Text = L"Swap";
-			this->buttonSwap->UseVisualStyleBackColor = true;
-			this->buttonSwap->Click += gcnew System::EventHandler(this, &DemoToolsWiz2::buttonSwap_Click);
 			// 
 			// DemoToolsWiz2
 			// 
@@ -309,7 +311,9 @@ private:
 		{
 			ListViewItem ^ li = nullptr;
 
-			if(listMap->Items->IndexOfKey(src) < 0)
+			int idx = listMap->Items->IndexOfKey(src);
+
+			if(idx < 0)
 			{
 				// not in the list yet
 				li = gcnew ListViewItem();
@@ -321,10 +325,21 @@ private:
 			}
 			else
 			{
-				li->Text = src;
+				li = listMap->Items[idx];
 				li->Name = src;
-				li->SubItems[0]->Text = dst;
+				li->SubItems[0]->Text = src;
+				li->SubItems[1]->Text = dst;
 			}
+		}
+
+		void Swap(ListViewItem ^ item)
+		{
+			String ^ src = item->SubItems[0]->Text;
+			String ^ dst = item->SubItems[1]->Text;
+
+			item->Name = dst;
+			item->SubItems[0]->Text = dst;
+			item->SubItems[1]->Text = src;
 		}
 
 private:
@@ -344,17 +359,38 @@ private:
 	System::Void buttonSwap_Click(System::Object^  sender, System::EventArgs^  e)
 	 {
 		 listMap->BeginUpdate();
-		 for each(ListViewItem ^ li in listMap->Items)
+		 if(listMap->SelectedIndices->Count <= 0)
 		 {
-			String ^ src = li->SubItems[0]->Text;
-			String ^ dst = li->SubItems[1]->Text;
-
-			li->Name = dst;
-			li->SubItems[0]->Text = dst;
-			li->SubItems[1]->Text = src;
+			for each(ListViewItem ^ li in listMap->Items)
+				Swap(li);
 		 }
+		 else
+		 {
+			 for(int i=0; i < listMap->SelectedIndices->Count; i++)
+				 Swap(listMap->Items[listMap->SelectedIndices[i]]);
+		 }
+
+
 		 listMap->EndUpdate();
 	 }
+private: System::Void listMap_KeyDown(System::Object^  sender, System::Windows::Forms::KeyEventArgs^  e)
+		 {
+			 if(e->Control && Keys::A == e->KeyCode)
+			 {
+				 bool selectedAll = listMap->Items->Count == listMap->SelectedIndices->Count;
+
+				 listMap->BeginUpdate();
+				 listMap->SelectedIndices->Clear();
+				 if(!selectedAll)
+				 {
+					 for(int i=0; i<listMap->Items->Count; i++)
+					 {
+						 listMap->SelectedIndices->Add(i);
+					 }
+				 }
+				 listMap->EndUpdate();
+			 }
+		 }
 };
 
 } // namespace tools {
