@@ -53,9 +53,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AfxCppCli.cpp">
-      <Filter>AfxCppCli</Filter>
-    </ClCompile>
     <ClCompile Include="AssemblyInfo.cpp">
       <Filter>AfxCppCli</Filter>
     </ClCompile>
@@ -77,5 +74,16 @@
     <ClCompile Include="old\tools\demotools\DemoToolsProgressForm.cpp">
       <Filter>AfxCppCli\old\tools\demotools</Filter>
     </ClCompile>
+    <ClCompile Include="AfxCppCli.cpp">
+      <Filter>AfxCppCli</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="old\tools\demotools\DemoToolsProgressForm.resx" />
+    <EmbeddedResource Include="old\tools\demotools\DemoToolsWiz1.resx" />
+    <EmbeddedResource Include="old\tools\demotools\DemoToolsWiz2.resx" />
+    <EmbeddedResource Include="old\tools\demotools\DemoToolsWiz3.resx" />
+    <EmbeddedResource Include="old\tools\demotools\OverwriteDialog.resx" />
+    <EmbeddedResource Include="old\tools\skymanager\skymanager.resx" />
   </ItemGroup>
 </Project>

@@ -6,6 +6,18 @@
 
 <release>
 <name>HLAE</name>
+<version>2.2.19.3</version>
+<time>2010-09-18T06:41Z</time>
+<changes>
+<change type="updated">
+Minor change in DemoTools / DemoCleanupUp.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.2.19.2</version>
 <time>2010-09-10T09:56Z</time>
 <changes>

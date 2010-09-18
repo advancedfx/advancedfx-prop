@@ -57,6 +57,7 @@ bool DemoToolsWizard::ShowDialog(System::Windows::Forms::IWin32Window ^ parentWi
 	DialogResult dResult;
 	int iShowDialog = 0;
 	CheckOutDirResult cr;
+	bool bDemoToolsOk = false;
 
 	while (iShowDialog>=0 && iShowDialog < 3)
 	{
@@ -166,12 +167,12 @@ bool DemoToolsWizard::ShowDialog(System::Windows::Forms::IWin32Window ^ parentWi
 
 				bool bEnabledSth = false;
 				
-				for (int i=0;i<3;i++)
+				for (int i=0; i < wiz2->GetMapCnt(); i++)
 				{
-					astr = wiz2->ReturnMapping( 2*i );
+					astr = wiz2->GetMapSrc(i);
 					if ( !System::String::IsNullOrEmpty( astr ) )
 					{
-						dtool->AddCommandMapping( astr, wiz2->ReturnMapping( 2*i+1 ) );
+						dtool->AddCommandMapping( astr, wiz2->GetMapDst(i) );
 						bEnabledSth = true;
 					}
 				}
@@ -183,7 +184,8 @@ bool DemoToolsWizard::ShowDialog(System::Windows::Forms::IWin32Window ^ parentWi
 
 			dp->GO(parentWindow);
 
-			if(!dp->GetResult()) {
+			if(!dp->GetResult())
+			{
 				iShowDialog = 2;
 				MessageBox::Show(
 					"Some files failed and remain in the box.",
@@ -192,6 +194,9 @@ bool DemoToolsWizard::ShowDialog(System::Windows::Forms::IWin32Window ^ parentWi
 					MessageBoxIcon::Error
 				);
 			}
+			else
+				bDemoToolsOk = true;
+
 
 			delete dp;
 			delete dtool;
@@ -203,5 +208,5 @@ bool DemoToolsWizard::ShowDialog(System::Windows::Forms::IWin32Window ^ parentWi
 	delete wiz2;
 	delete wiz1;
 
-	return 3 == iShowDialog;
+	return bDemoToolsOk;
 }

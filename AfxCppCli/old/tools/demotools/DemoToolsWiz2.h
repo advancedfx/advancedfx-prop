@@ -26,38 +26,26 @@ namespace tools {
 		DemoToolsWiz2(void)
 		{
 			InitializeComponent();
-			//
-			//TODO: Add the constructor code here
-			//
+
+			AddMap("+commandmenu", "+c0mmandmenu");
+			AddMap("+showscores", "+sh0wscores");
+			AddMap("+score", "+sc0re");
+			AddMap("togglescores", "t0gglescores");
 		}
 
-		///	<summary>
-		/// Summary for ReturnMapping
-		///
-		/// Returns the text content of the command mapping cells where odd numbers
-		/// return the source cell and even numbers return the destination cell.
-		///	The first cell is 0.
-		/// If iNumber is out of range an empty string is returned.
-		/// </summary>
-		System::String ^ReturnMapping ( int iNumber )
+		int GetMapCnt()
 		{
-			switch( iNumber )
-			{
-			case 0:
-				return this->textBoxCmd1S->Text;
-			case 1:
-				return this->textBoxCmd1D->Text;
-			case 2:
-				return this->textBoxCmd2S->Text;
-			case 3:
-				return this->textBoxCmd2D->Text;
-			case 4:
-				return this->textBoxCmd3S->Text;
-			case 5:
-				return this->textBoxCmd3D->Text;
-			default:
-				return gcnew System::String("");
-			}
+			return listMap->Items->Count;
+		}
+
+		System::String ^ GetMapDst(int index)
+		{
+			return listMap->Items[index]->SubItems[1]->Text;
+		}
+
+		System::String ^ GetMapSrc(int index)
+		{
+			return listMap->Items[index]->SubItems[0]->Text;
 		}
 
 	protected:
@@ -83,25 +71,37 @@ namespace tools {
 	private: System::Windows::Forms::Button^  buttonPrev;
 	private: System::Windows::Forms::Label^  labelDemoCleanUp;
 	private: System::Windows::Forms::Label^  labelCleanUpHelp;
-	private: System::Windows::Forms::Label^  labelCmd1;
-
-	private: System::Windows::Forms::TextBox^  textBoxCmd1S;
-
-	private: System::Windows::Forms::TextBox^  textBoxCmd1D;
-	private: System::Windows::Forms::TextBox^  textBoxCmd2D;
-
-	private: System::Windows::Forms::TextBox^  textBoxCmd2S;
-	private: System::Windows::Forms::Label^  labelCmd2;
 
 
-	private: System::Windows::Forms::TextBox^  textBoxCmd3D;
 
-	private: System::Windows::Forms::TextBox^  textBoxCmd3S;
-	private: System::Windows::Forms::Label^  labelCmd3;
+
+
+
+
+
+
+	private: System::Windows::Forms::TextBox^  textBoxCmdDst;
+
+
+
+	private: System::Windows::Forms::TextBox^  textBoxCmdSrc;
+	private: System::Windows::Forms::Label^  labelCmdMap;
+
+
+
 
 
 	private: System::Windows::Forms::GroupBox^  groupBox1;
-	private: System::Windows::Forms::Label^  label1;
+	private: System::Windows::Forms::ListView^  listMap;
+
+
+	private: System::Windows::Forms::ColumnHeader^  colFrom;
+	private: System::Windows::Forms::ColumnHeader^  colTo;
+	private: System::Windows::Forms::Button^  buttonAdd;
+	private: System::Windows::Forms::Button^  buttonRemove;
+	private: System::Windows::Forms::Button^  buttonSwap;
+
+
 
 
 
@@ -110,6 +110,7 @@ namespace tools {
 		/// Required designer variable.
 		/// </summary>
 		System::ComponentModel::Container ^components;
+
 
 #pragma region Windows Form Designer generated code
 		/// <summary>
@@ -123,17 +124,16 @@ namespace tools {
 			this->buttonPrev = (gcnew System::Windows::Forms::Button());
 			this->labelDemoCleanUp = (gcnew System::Windows::Forms::Label());
 			this->labelCleanUpHelp = (gcnew System::Windows::Forms::Label());
-			this->labelCmd1 = (gcnew System::Windows::Forms::Label());
-			this->textBoxCmd1S = (gcnew System::Windows::Forms::TextBox());
-			this->textBoxCmd1D = (gcnew System::Windows::Forms::TextBox());
-			this->textBoxCmd2D = (gcnew System::Windows::Forms::TextBox());
-			this->textBoxCmd2S = (gcnew System::Windows::Forms::TextBox());
-			this->labelCmd2 = (gcnew System::Windows::Forms::Label());
-			this->textBoxCmd3D = (gcnew System::Windows::Forms::TextBox());
-			this->textBoxCmd3S = (gcnew System::Windows::Forms::TextBox());
-			this->labelCmd3 = (gcnew System::Windows::Forms::Label());
+			this->textBoxCmdDst = (gcnew System::Windows::Forms::TextBox());
+			this->textBoxCmdSrc = (gcnew System::Windows::Forms::TextBox());
+			this->labelCmdMap = (gcnew System::Windows::Forms::Label());
 			this->groupBox1 = (gcnew System::Windows::Forms::GroupBox());
-			this->label1 = (gcnew System::Windows::Forms::Label());
+			this->buttonAdd = (gcnew System::Windows::Forms::Button());
+			this->buttonRemove = (gcnew System::Windows::Forms::Button());
+			this->listMap = (gcnew System::Windows::Forms::ListView());
+			this->colFrom = (gcnew System::Windows::Forms::ColumnHeader());
+			this->colTo = (gcnew System::Windows::Forms::ColumnHeader());
+			this->buttonSwap = (gcnew System::Windows::Forms::Button());
 			this->groupBox1->SuspendLayout();
 			this->SuspendLayout();
 			// 
@@ -186,107 +186,97 @@ namespace tools {
 			this->labelCleanUpHelp->Text = L"By default the scoreboard and the commandmenu is removed.\r\nIf that is fine with y" 
 				L"ou just continue to the next page (Click Next).";
 			// 
-			// labelCmd1
+			// textBoxCmdDst
 			// 
-			this->labelCmd1->AutoSize = true;
-			this->labelCmd1->Location = System::Drawing::Point(143, 27);
-			this->labelCmd1->Name = L"labelCmd1";
-			this->labelCmd1->Size = System::Drawing::Size(16, 13);
-			this->labelCmd1->TabIndex = 1;
-			this->labelCmd1->Text = L"->";
+			this->textBoxCmdDst->Location = System::Drawing::Point(198, 154);
+			this->textBoxCmdDst->Name = L"textBoxCmdDst";
+			this->textBoxCmdDst->Size = System::Drawing::Size(140, 20);
+			this->textBoxCmdDst->TabIndex = 8;
+			this->textBoxCmdDst->Text = L"yet unused";
 			// 
-			// textBoxCmd1S
+			// textBoxCmdSrc
 			// 
-			this->textBoxCmd1S->Location = System::Drawing::Point(12, 24);
-			this->textBoxCmd1S->Name = L"textBoxCmd1S";
-			this->textBoxCmd1S->Size = System::Drawing::Size(120, 20);
-			this->textBoxCmd1S->TabIndex = 0;
-			this->textBoxCmd1S->Text = L"+showscores";
+			this->textBoxCmdSrc->Location = System::Drawing::Point(12, 154);
+			this->textBoxCmdSrc->Name = L"textBoxCmdSrc";
+			this->textBoxCmdSrc->Size = System::Drawing::Size(140, 20);
+			this->textBoxCmdSrc->TabIndex = 6;
 			// 
-			// textBoxCmd1D
+			// labelCmdMap
 			// 
-			this->textBoxCmd1D->Location = System::Drawing::Point(168, 24);
-			this->textBoxCmd1D->Name = L"textBoxCmd1D";
-			this->textBoxCmd1D->Size = System::Drawing::Size(120, 20);
-			this->textBoxCmd1D->TabIndex = 2;
-			this->textBoxCmd1D->Text = L"+sh0wscores";
-			// 
-			// textBoxCmd2D
-			// 
-			this->textBoxCmd2D->Location = System::Drawing::Point(168, 60);
-			this->textBoxCmd2D->Name = L"textBoxCmd2D";
-			this->textBoxCmd2D->Size = System::Drawing::Size(120, 20);
-			this->textBoxCmd2D->TabIndex = 5;
-			this->textBoxCmd2D->Text = L"+c0mmandmenu";
-			// 
-			// textBoxCmd2S
-			// 
-			this->textBoxCmd2S->Location = System::Drawing::Point(12, 60);
-			this->textBoxCmd2S->Name = L"textBoxCmd2S";
-			this->textBoxCmd2S->Size = System::Drawing::Size(120, 20);
-			this->textBoxCmd2S->TabIndex = 3;
-			this->textBoxCmd2S->Text = L"+commandmenu";
-			// 
-			// labelCmd2
-			// 
-			this->labelCmd2->AutoSize = true;
-			this->labelCmd2->Location = System::Drawing::Point(143, 63);
-			this->labelCmd2->Name = L"labelCmd2";
-			this->labelCmd2->Size = System::Drawing::Size(16, 13);
-			this->labelCmd2->TabIndex = 4;
-			this->labelCmd2->Text = L"->";
-			// 
-			// textBoxCmd3D
-			// 
-			this->textBoxCmd3D->Location = System::Drawing::Point(168, 96);
-			this->textBoxCmd3D->Name = L"textBoxCmd3D";
-			this->textBoxCmd3D->Size = System::Drawing::Size(120, 20);
-			this->textBoxCmd3D->TabIndex = 8;
-			this->textBoxCmd3D->Text = L"yet unused";
-			// 
-			// textBoxCmd3S
-			// 
-			this->textBoxCmd3S->Location = System::Drawing::Point(12, 96);
-			this->textBoxCmd3S->Name = L"textBoxCmd3S";
-			this->textBoxCmd3S->Size = System::Drawing::Size(120, 20);
-			this->textBoxCmd3S->TabIndex = 6;
-			// 
-			// labelCmd3
-			// 
-			this->labelCmd3->AutoSize = true;
-			this->labelCmd3->Location = System::Drawing::Point(143, 99);
-			this->labelCmd3->Name = L"labelCmd3";
-			this->labelCmd3->Size = System::Drawing::Size(16, 13);
-			this->labelCmd3->TabIndex = 7;
-			this->labelCmd3->Text = L"->";
+			this->labelCmdMap->AutoSize = true;
+			this->labelCmdMap->Location = System::Drawing::Point(167, 157);
+			this->labelCmdMap->Name = L"labelCmdMap";
+			this->labelCmdMap->Size = System::Drawing::Size(16, 13);
+			this->labelCmdMap->TabIndex = 7;
+			this->labelCmdMap->Text = L"->";
 			// 
 			// groupBox1
 			// 
-			this->groupBox1->Controls->Add(this->label1);
-			this->groupBox1->Controls->Add(this->textBoxCmd3D);
-			this->groupBox1->Controls->Add(this->textBoxCmd3S);
-			this->groupBox1->Controls->Add(this->labelCmd3);
-			this->groupBox1->Controls->Add(this->textBoxCmd2D);
-			this->groupBox1->Controls->Add(this->textBoxCmd2S);
-			this->groupBox1->Controls->Add(this->labelCmd2);
-			this->groupBox1->Controls->Add(this->textBoxCmd1D);
-			this->groupBox1->Controls->Add(this->textBoxCmd1S);
-			this->groupBox1->Controls->Add(this->labelCmd1);
-			this->groupBox1->Location = System::Drawing::Point(34, 91);
+			this->groupBox1->Controls->Add(this->buttonSwap);
+			this->groupBox1->Controls->Add(this->buttonAdd);
+			this->groupBox1->Controls->Add(this->buttonRemove);
+			this->groupBox1->Controls->Add(this->listMap);
+			this->groupBox1->Controls->Add(this->textBoxCmdDst);
+			this->groupBox1->Controls->Add(this->textBoxCmdSrc);
+			this->groupBox1->Controls->Add(this->labelCmdMap);
+			this->groupBox1->Location = System::Drawing::Point(12, 91);
 			this->groupBox1->Name = L"groupBox1";
-			this->groupBox1->Size = System::Drawing::Size(300, 180);
+			this->groupBox1->Size = System::Drawing::Size(450, 180);
 			this->groupBox1->TabIndex = 4;
 			this->groupBox1->TabStop = false;
 			this->groupBox1->Text = L"Command mappings";
 			// 
-			// label1
+			// buttonAdd
 			// 
-			this->label1->AutoSize = true;
-			this->label1->Location = System::Drawing::Point(9, 137);
-			this->label1->Name = L"label1";
-			this->label1->Size = System::Drawing::Size(209, 26);
-			this->label1->TabIndex = 9;
-			this->label1->Text = L"If the left of the two fields in a row is empty,\r\nthen the row is ignored.";
+			this->buttonAdd->Location = System::Drawing::Point(344, 152);
+			this->buttonAdd->Name = L"buttonAdd";
+			this->buttonAdd->Size = System::Drawing::Size(100, 23);
+			this->buttonAdd->TabIndex = 10;
+			this->buttonAdd->Text = L"Add";
+			this->buttonAdd->UseVisualStyleBackColor = true;
+			this->buttonAdd->Click += gcnew System::EventHandler(this, &DemoToolsWiz2::buttonAdd_Click);
+			// 
+			// buttonRemove
+			// 
+			this->buttonRemove->Location = System::Drawing::Point(344, 19);
+			this->buttonRemove->Name = L"buttonRemove";
+			this->buttonRemove->Size = System::Drawing::Size(100, 23);
+			this->buttonRemove->TabIndex = 9;
+			this->buttonRemove->Text = L"Remove";
+			this->buttonRemove->UseVisualStyleBackColor = true;
+			this->buttonRemove->Click += gcnew System::EventHandler(this, &DemoToolsWiz2::buttonRemove_Click);
+			// 
+			// listMap
+			// 
+			this->listMap->AllowDrop = true;
+			this->listMap->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(2) {this->colFrom, this->colTo});
+			this->listMap->HeaderStyle = System::Windows::Forms::ColumnHeaderStyle::Nonclickable;
+			this->listMap->Location = System::Drawing::Point(12, 19);
+			this->listMap->Name = L"listMap";
+			this->listMap->Size = System::Drawing::Size(326, 115);
+			this->listMap->TabIndex = 6;
+			this->listMap->UseCompatibleStateImageBehavior = false;
+			this->listMap->View = System::Windows::Forms::View::Details;
+			// 
+			// colFrom
+			// 
+			this->colFrom->Text = L"From";
+			this->colFrom->Width = 150;
+			// 
+			// colTo
+			// 
+			this->colTo->Text = L"To";
+			this->colTo->Width = 150;
+			// 
+			// buttonSwap
+			// 
+			this->buttonSwap->Location = System::Drawing::Point(344, 74);
+			this->buttonSwap->Name = L"buttonSwap";
+			this->buttonSwap->Size = System::Drawing::Size(100, 23);
+			this->buttonSwap->TabIndex = 11;
+			this->buttonSwap->Text = L"Swap";
+			this->buttonSwap->UseVisualStyleBackColor = true;
+			this->buttonSwap->Click += gcnew System::EventHandler(this, &DemoToolsWiz2::buttonSwap_Click);
 			// 
 			// DemoToolsWiz2
 			// 
@@ -312,7 +302,60 @@ namespace tools {
 
 		}
 #pragma endregion
-	};
+
+
+private:
+		void AddMap(String ^ src, String ^ dst)
+		{
+			ListViewItem ^ li = nullptr;
+
+			if(listMap->Items->IndexOfKey(src) < 0)
+			{
+				// not in the list yet
+				li = gcnew ListViewItem();
+				li->Text = src;
+				li->Name = src;
+				li->SubItems->Add(dst);
+
+				listMap->Items->Add(li);
+			}
+			else
+			{
+				li->Text = src;
+				li->Name = src;
+				li->SubItems[0]->Text = dst;
+			}
+		}
+
+private:
+	System::Void buttonAdd_Click(System::Object^  sender, System::EventArgs^  e)
+	{
+		AddMap(this->textBoxCmdSrc->Text, this->textBoxCmdDst->Text);
+	}
+	
+	System::Void buttonRemove_Click(System::Object^  sender, System::EventArgs^  e)
+	{
+		listMap->BeginUpdate();
+		while(0 < listMap->SelectedIndices->Count)
+			listMap->Items->RemoveAt(listMap->SelectedIndices[0]);
+		listMap->EndUpdate();
+	}
+private:
+	System::Void buttonSwap_Click(System::Object^  sender, System::EventArgs^  e)
+	 {
+		 listMap->BeginUpdate();
+		 for each(ListViewItem ^ li in listMap->Items)
+		 {
+			String ^ src = li->SubItems[0]->Text;
+			String ^ dst = li->SubItems[1]->Text;
+
+			li->Name = dst;
+			li->SubItems[0]->Text = dst;
+			li->SubItems[1]->Text = src;
+		 }
+		 listMap->EndUpdate();
+	 }
+};
 
 } // namespace tools {
 } // namespace old {

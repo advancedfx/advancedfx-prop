@@ -187,11 +187,10 @@ namespace AfxGui
 
             demoWiz.OutputPath = GlobalConfig.Instance.Settings.DemoTools.OutputFolder;
 
-	        if(demoWiz.ShowDialog(this))
-	        {
-                GlobalConfig.Instance.Settings.DemoTools.OutputFolder = demoWiz.OutputPath;
-                GlobalConfig.Instance.BackUp();
-	        }
+            demoWiz.ShowDialog(this);
+
+            GlobalConfig.Instance.Settings.DemoTools.OutputFolder = demoWiz.OutputPath;
+            GlobalConfig.Instance.BackUp();
 
             //demoWiz.Dispose();
         }
