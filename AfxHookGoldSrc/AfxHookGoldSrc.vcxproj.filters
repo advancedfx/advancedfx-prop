@@ -258,6 +258,15 @@
     <ClCompile Include="hooks\client\HookClient.cpp">
       <Filter>AfxHookGoldSrc\hooks\client</Filter>
     </ClCompile>
+    <ClCompile Include="hooks\hw\R_RenderView.cpp">
+      <Filter>AfxHookGoldSrc\hooks\hw</Filter>
+    </ClCompile>
+    <ClCompile Include="hooks\hw\SCR_UpdateScreen.cpp">
+      <Filter>AfxHookGoldSrc\hooks\hw</Filter>
+    </ClCompile>
+    <ClCompile Include="move_to.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -457,6 +466,12 @@
     </ClInclude>
     <ClInclude Include="hooks\client\HookClient.h">
       <Filter>AfxHookGoldSrc\hooks\client</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\hw\R_RenderView.h">
+      <Filter>AfxHookGoldSrc\hooks\hw</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\hw\SCR_UpdateScreen.h">
+      <Filter>AfxHookGoldSrc\hooks\hw</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

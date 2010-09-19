@@ -58,15 +58,12 @@ function afx_OnHwDllLoaded()
 
 	addr.SCR_UpdateScreen = addr.hwDll + 0xCE570;
 	addr.DTOURSZ_SCR_UpdateScreen = 0x09;
+	addr.HUD_TOURIN = addr.SCR_UpdateScreen + 0xBD;
+	addr.HUD_TOUROUT = addr.HUD_TOURIN + 0x87;	
 
 	addr.r_refdef = addr.hwDll + 0xE95600;
 	
-	addr.skytextures = addr.hwDll +0xA83620;
-
-	
-	addr.HUD_TOURIN = addr.SCR_UpdateScreen + 0xBD;
-	addr.HUD_TOUROUT = addr.HUD_TOURIN + 0x87;
-	
+	addr.skytextures = addr.hwDll +0xA83620;	
 	
 
 	// DecalTexture hook:

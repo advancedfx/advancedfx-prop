@@ -32,7 +32,7 @@ enum class OverwriteDialogResult {
 public ref class OverwriteDialog : public System::Windows::Forms::Form
 {
 public:
-	OverwriteDialog(Windows::Forms::IWin32Window ^ owner, String ^ fileName)
+	OverwriteDialog(String ^ fileName)
 	{
 		InitializeComponent();
 		//
@@ -44,16 +44,29 @@ public:
 		this->textFileName->Text = fileName;
 
 		m_Result = OverwriteDialogResult::Cancel;
-
-		this->ShowDialog(owner);
 	}
 
 	OverwriteDialogResult GetResult() {
 		return m_Result;
 	}
 
-	static OverwriteDialogResult ShowOverWriteDialog(Windows::Forms::IWin32Window ^ owner, String ^ fileName) {
-		return (gcnew OverwriteDialog(owner, fileName))->GetResult();
+	static OverwriteDialogResult ShowOverWriteDialog(Windows::Forms::IWin32Window ^ owner, String ^ fileName)
+	{
+		OverwriteDialogResult result;
+		OverwriteDialog ^ dlg = nullptr;
+
+		try
+		{
+			dlg = gcnew OverwriteDialog(fileName);
+			dlg->ShowDialog(owner);
+			result = dlg->GetResult();
+		}
+		finally
+		{
+			if(nullptr != dlg) delete dlg;
+		}
+
+		return result;
 	}
 
 
@@ -208,6 +221,7 @@ private:
 		this->ShowInTaskbar = false;
 		this->StartPosition = System::Windows::Forms::FormStartPosition::CenterParent;
 		this->Text = L"File already exists";
+		this->Shown += gcnew System::EventHandler(this, &OverwriteDialog::OverwriteDialog_Shown);
 		this->ResumeLayout(false);
 		this->PerformLayout();
 
@@ -233,6 +247,12 @@ private: System::Void buttonNo_Click(System::Object^  sender, System::EventArgs^
 private: System::Void buttonNoAll_Click(System::Object^  sender, System::EventArgs^  e) {
 			 m_Result = OverwriteDialogResult::NoToAll;
 			 this->Close();
+		 }
+private: System::Void OverwriteDialog_Shown(System::Object^  sender, System::EventArgs^  e) {
+			 this->textFileName->Focus();
+			 this->textFileName->Select(this->textFileName->Text->Length, 0);
+			 this->textFileName->ScrollToCaret();
+			 this->Focus();
 		 }
 };
 

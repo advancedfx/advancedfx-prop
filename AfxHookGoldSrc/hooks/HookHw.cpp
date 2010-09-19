@@ -16,6 +16,8 @@
 #include "hw/R_DrawSkyBoxEx.h"
 #include "hw/R_DrawViewModel.h"
 #include "hw/R_PolyBlend.h"
+#include "hw/R_RenderView.h"
+#include "hw/SCR_UpdateScreen.h"
 
 #include "../hl_addresses.h"
 #include "../mirv_scripting.h"
@@ -139,4 +141,8 @@ void HookHw(HMODULE hHw)
 	Hook_R_DrawViewModel();
 
 	Hook_R_PolyBlend();
+
+	Hook_R_RenderView();
+
+	Hook_SCR_UpdateScreen();
 }

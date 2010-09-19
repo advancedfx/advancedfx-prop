@@ -262,6 +262,7 @@ namespace tools {
 			this->listMap->FullRowSelect = true;
 			this->listMap->GridLines = true;
 			this->listMap->HeaderStyle = System::Windows::Forms::ColumnHeaderStyle::Nonclickable;
+			this->listMap->HideSelection = false;
 			this->listMap->Location = System::Drawing::Point(12, 19);
 			this->listMap->Name = L"listMap";
 			this->listMap->Size = System::Drawing::Size(326, 115);

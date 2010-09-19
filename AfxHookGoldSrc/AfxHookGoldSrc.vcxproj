@@ -138,6 +138,8 @@
     <ClCompile Include="hooks\client\HookClient.cpp" />
     <ClCompile Include="hooks\hw\ClientFunctions.cpp" />
     <ClCompile Include="hooks\hw\R_DrawSkyBoxEx.cpp" />
+    <ClCompile Include="hooks\hw\R_RenderView.cpp" />
+    <ClCompile Include="hooks\hw\SCR_UpdateScreen.cpp" />
     <ClCompile Include="InitScript.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mdt_media.cpp" />
@@ -145,6 +147,7 @@
     <ClCompile Include="mirv_glext.cpp" />
     <ClCompile Include="mirv_info.cpp" />
     <ClCompile Include="mirv_scripting.cpp" />
+    <ClCompile Include="move_to.cpp" />
     <ClCompile Include="newsky.cpp" />
     <ClCompile Include="specmenu.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -212,6 +215,8 @@
     <ClInclude Include="hooks\client\HookClient.h" />
     <ClInclude Include="hooks\hw\ClientFunctions.h" />
     <ClInclude Include="hooks\hw\R_DrawSkyBoxEx.h" />
+    <ClInclude Include="hooks\hw\R_RenderView.h" />
+    <ClInclude Include="hooks\hw\SCR_UpdateScreen.h" />
     <ClInclude Include="InitScript.h" />
     <ClInclude Include="mdt_media.h" />
     <ClInclude Include="mirv_commands.h" />

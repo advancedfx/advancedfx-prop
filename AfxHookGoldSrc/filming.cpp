@@ -18,6 +18,7 @@
 
 #include "hooks/user32Hooks.h"
 #include "hooks/hw/Mod_LeafPvs.h"
+#include "hooks/hw/R_RenderView.h"
 #include "hooks/client/cstrike/CrossHairFix.h"
 
 #include "AfxGoldSrcComClient.h"
@@ -106,258 +107,10 @@ enum FilmingStreamSlot {
 	FS_hudcolor,FS_hudalpha
 };
 
-
-//
-//
-//
-
-typedef void (*R_RenderView__t)( void );
-
-R_RenderView__t	detoured_R_RenderView_=NULL;
-
-// asm related definitons we will use:
-#define asmNOP 0x90 // opcode for NOP
-#define asmJMP	0xE9 // opcode for JUMP
-#define JMP32_SZ 5	// the size of JMP <address>
-
-bool bHudToursInstalled=false;
-
-LPVOID g_lpCode_TourIn_Continue = 0;
-LPVOID g_lpCode_TourOut_Continue = 0;
-LPVOID g_lpCode_HudTours_Loop = 0;
-
-__declspec(naked) void tour_HudBegin()
-{
-	__asm
-	{
-		PUSH ECX ; used by c++ to get g_Filming addr
-	}
-	g_Filming.OnHudBeginEvent();
-	__asm
-	{
-		POP ECX
-		JMP [g_lpCode_TourIn_Continue]
-	}
-}
-
-__declspec(naked) void tour_HudEnd()
-{
-	__asm
-	{
-		PUSH EAX ; c++ ret value
-		PUSH ECX ; used by c++ to get g_Filming addr
-	}
-	if(g_Filming.OnHudEndEvnet())
-	{
-		__asm {
-			POP ECX
-			POP EAX
-			JMP [g_lpCode_HudTours_Loop]
-		}
-	} else {
-		__asm {
-			POP ECX
-			POP EAX
-			JMP [g_lpCode_TourOut_Continue]
-		}
-	}
-}
-
-// this function installs the tours:
-void install_Hud_tours()
-// this func also checks if the hook has been already installedo or not.
-{
-	if (bHudToursInstalled) // don't do anything if already hooked
-		return;
-
-	bHudToursInstalled=true;
-
-	unsigned char ucTemp;
-	DWORD dwTemp;
-
-	//
-	//	Get access to code where detours will be applied:
-	//
-
-	MdtMemBlockInfos mbisIn, mbisOut;
-	LPVOID pCodeTourIn = (LPVOID)HL_ADDR_GET(HUD_TOURIN);
-	LPVOID pCodeTourOut = (LPVOID)HL_ADDR_GET(HUD_TOUROUT);
-	size_t dwCodeSizeIn = 0x05;
-	size_t dwCodeSizeOut = 0x05;
-
-	MdtMemAccessBegin( pCodeTourIn, dwCodeSizeIn, &mbisIn );
-	MdtMemAccessBegin( pCodeTourOut, dwCodeSizeOut, &mbisOut );
-
-	//
-
-	g_lpCode_HudTours_Loop = pCodeTourIn; // FILL IN ADDRESS
-
-	//
-	//	detour In:
-	//
-
-	// create continue code:
-
-	// get mem that is never freed:
-	LPVOID pDetouredCodeIn = (LPVOID)MdtAllocExecuteableMemory(dwCodeSizeIn + JMP32_SZ);
-
-	g_lpCode_TourIn_Continue = pDetouredCodeIn; // FILL IN ADDRESS
-
-	// copy the original mov instruction:
-	memcpy(pDetouredCodeIn,pCodeTourIn,dwCodeSizeIn);
-
-	// create jump back to continue in original code:
-	ucTemp = asmJMP;
-	memcpy((unsigned char *)pDetouredCodeIn + dwCodeSizeIn,&ucTemp,1);
-	dwTemp = (DWORD)pCodeTourIn - (DWORD)pDetouredCodeIn  - JMP32_SZ;
-	memcpy((unsigned char *)pDetouredCodeIn + dwCodeSizeIn + 1,&dwTemp,4);
-
-	// detour original code to jump to the tour_HudBegin func:
-	ucTemp = asmJMP;
-	memcpy(pCodeTourIn,&ucTemp,1);
-	dwTemp=(DWORD)&tour_HudBegin - (DWORD)pCodeTourIn - JMP32_SZ;
-	memcpy((unsigned char *)pCodeTourIn+1,&dwTemp,4);
-
-	//
-	//	detour Out:
-	//
-
-	// create continue code:
-
-	// get mem that is never freed:
-	LPVOID pDetouredCodeOut = (LPVOID)MdtAllocExecuteableMemory(dwCodeSizeOut + JMP32_SZ);
-
-	g_lpCode_TourOut_Continue = pDetouredCodeOut; // FILL IN ADDRESS
-
-	// copy the original function call:
-	memcpy(pDetouredCodeOut,pCodeTourOut,dwCodeSizeOut);
-
-	// patch the call address:
-	memcpy(&dwTemp,(unsigned char*)pDetouredCodeOut+1,4),
-	dwTemp -= (DWORD)pDetouredCodeOut - (DWORD)pCodeTourOut;
-	memcpy((unsigned char*)pDetouredCodeOut+1,&dwTemp,4);
-
-	// create jump back to continue in original code:
-	ucTemp = asmJMP;
-	memcpy((unsigned char *)pDetouredCodeOut + dwCodeSizeOut,&ucTemp,1);
-	dwTemp = (DWORD)pCodeTourOut - (DWORD)pDetouredCodeOut  - JMP32_SZ;
-	memcpy((unsigned char *)pDetouredCodeOut + dwCodeSizeOut + 1,&dwTemp,4);
-
-	// detour original code to jump to the tour_HudBegin func:
-	ucTemp = asmJMP;
-	memcpy(pCodeTourOut,&ucTemp,1);
-	dwTemp=(DWORD)&tour_HudEnd - (DWORD)pCodeTourOut - JMP32_SZ;
-	memcpy((unsigned char *)pCodeTourOut+1,&dwTemp,4);
-
-	//
-	//	Restore code access:
-	//
-
-	MdtMemAccessEnd(&mbisOut);
-	MdtMemAccessEnd(&mbisIn);
-
-	//
-	// print Debug info:
-
-	pEngfuncs->Con_DPrintf(
-		"Detoured in: 0x%08x\n"
-		"Detoured out: 0x%8x\n",
-		(DWORD)pCodeTourIn,
-		(DWORD)pCodeTourOut
-	);
-}
-
-// << Hooking the HUD functions  <<
-
-// BEGIN from ID Software's Quake 1 Source:
-
-// q1source/QW/client/mathlib.h
-// our hl includes already give us that:
-//typedef float vec_t;
-//typedef vec_t vec3_t[3];
-
-// q1source/QW/client/vid.h
-typedef struct vrect_s
-{
-	int				x,y,width,height;
-	struct vrect_s	*pnext;
-} vrect_t;
-
-// q1source/QW/client/render.h
-// !!! if this is changed, it must be changed in asm_draw.h too !!!
-typedef struct
-{
-	vrect_t		vrect;				// subwindow in video for refresh
-									// FIXME: not need vrect next field here?
-	vrect_t		aliasvrect;			// scaled Alias version
-	int			vrectright, vrectbottom;	// right & bottom screen coords
-	int			aliasvrectright, aliasvrectbottom;	// scaled Alias versions
-	float		vrectrightedge;			// rightmost right edge we care about,
-										//  for use in edge list
-	float		fvrectx, fvrecty;		// for floating-point compares
-	float		fvrectx_adj, fvrecty_adj; // left and top edges, for clamping
-	int			vrect_x_adj_shift20;	// (vrect.x + 0.5 - epsilon) << 20
-	int			vrectright_adj_shift20;	// (vrectright + 0.5 - epsilon) << 20
-	float		fvrectright_adj, fvrectbottom_adj;
-										// right and bottom edges, for clamping
-	float		fvrectright;			// rightmost edge, for Alias clamping
-	float		fvrectbottom;			// bottommost edge, for Alias clamping
-	float		horizontalFieldOfView;	// at Z = 1.0, this many X is visible 
-										// 2.0 = 90 degrees
-	float		xOrigin;			// should probably allways be 0.5
-	float		yOrigin;			// between be around 0.3 to 0.5
-
-	vec3_t		vieworg;
-	vec3_t		viewangles;
-
-	float		fov_x, fov_y;
-	
-	int			ambientlight;
-} refdef_t;
-
-// END from ID Software's Quake 1 Source.
-
 // from HL1SDK/multiplayer/common/mathlib.h:
 #ifndef M_PI
 #define M_PI		3.14159265358979323846	// matches value in gcc v2 math.h
 #endif
-
-void touring_R_RenderView_(void)
-// this is our R_RemderView hook
-// pay attention, cuz it will have heavy interaction with our filming singelton!
-{
-
-	refdef_t* p_r_refdef=(refdef_t*)HL_ADDR_GET(r_refdef); // pointer to r_refdef global struct
-
-	static vec3_t oldorigin;
-	static vec3_t oldangles;
-	
-	// save original values
-	memcpy (oldorigin,p_r_refdef->vieworg,3*sizeof(float));
-	memcpy (oldangles,p_r_refdef->viewangles,3*sizeof(float));
-
-	g_Filming.OnR_RenderView(p_r_refdef->vieworg, p_r_refdef->viewangles);
-
-	bool bLoop;
-	do {
-		bLoop = false;
-		if(ScriptEvent_OnRenderViewBegin()) {
-			//
-			// call original R_RenderView_
-			//
-
-			g_ModInfo.SetIn_R_Renderview(true);
-			detoured_R_RenderView_();
-			g_ModInfo.SetIn_R_Renderview(false);
-
-			bLoop = ScriptEvent_OnRenderViewEnd();
-		}
-
-		// restore original values
-		memcpy (p_r_refdef->vieworg,oldorigin,3*sizeof(float));
-		memcpy (p_r_refdef->viewangles,oldangles,3*sizeof(float));
-	} while(bLoop);
-}
 
 
 
@@ -368,11 +121,6 @@ void touring_R_RenderView_(void)
 
 REGISTER_CMD_FUNC(cameraofs_cs)
 {
-	if (!detoured_R_RenderView_)
-	{
-		pEngfuncs->Con_Printf("Usage: " PREFIX "cameraofs_cs will only work when R_RenderView is available (you have to record one time first)\n");
-	}
-
 	if (pEngfuncs->Cmd_Argc() == 4)
 		g_Filming.SetCameraOfs(atof(pEngfuncs->Cmd_Argv(1)),atof(pEngfuncs->Cmd_Argv(2)),atof(pEngfuncs->Cmd_Argv(3)));
 	else
@@ -881,15 +629,6 @@ void Filming::Start()
 		if(fc && fc != 2.0f) g_CamExport.BeginFileMain(m_TakeDir.c_str(), frameTime);
 		if(fc && fc >= 2.0f) g_CamExport.BeginFileLeft(m_TakeDir.c_str(), frameTime);
 		if(fc && fc >= 2.0f) g_CamExport.BeginFileRight(m_TakeDir.c_str(), frameTime);
-	}
-
-	// if we want to use R_RenderView and we have not already done that, we need to set it up now:
-
-	if ( !detoured_R_RenderView_ )
-	{
-		// we don't have it yet and the addres is not NULL (which might be an intended cfg setting)
-		detoured_R_RenderView_ = (R_RenderView__t) DetourApply((BYTE *)HL_ADDR_GET(R_RenderView), (BYTE *)touring_R_RenderView_, (int)HL_ADDR_GET(DTOURSZ_R_RenderView));
-		install_Hud_tours(); // wil automaticall check if already installed or not
 	}
 
 	// make sure some states used in recordBuffers are set properly:
@@ -1581,7 +1320,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 		if (_bSimulate2 && movie_simulate_delay->value > 0) Sleep((DWORD)movie_simulate_delay->value);
 
 		clearBuffers();
-		touring_R_RenderView_(); // re-render view
+		New_R_RenderView(); // re-render view
 	}
 
 	do
@@ -1632,7 +1371,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 				{
 					m_iMatteStage = MS_ENTITY; // next is entity
 					clearBuffers();
-					touring_R_RenderView_(); // re-render view
+					New_R_RenderView(); // re-render view
 				}
 			}
 
@@ -1668,7 +1407,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 		{
 			_stereo_state=STS_RIGHT;
 			clearBuffers();
-			touring_R_RenderView_(); // rerender frame instant!!!!
+			New_R_RenderView(); // rerender frame instant!!!!
 		} else _stereo_state=STS_LEFT;
 
 	} while (_stereo_state!=STS_LEFT);

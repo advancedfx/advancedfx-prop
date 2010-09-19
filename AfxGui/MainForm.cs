@@ -9,7 +9,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -22,16 +21,17 @@ namespace AfxGui
         //
         // Public members:
 
-        public MainForm()
+
+        //
+        // Internal members:
+
+        internal MainForm()
         {
             InitializeComponent();
             this.Icon = Program.Icon;
 
-	        m_UpdateCheckNotification = new UpdateCheckNotificationTarget(this, new UpdateCheckedDelegate(OnUpdateChecked));
+            m_UpdateCheckNotification = new UpdateCheckNotificationTarget(this, new UpdateCheckedDelegate(OnUpdateChecked));
         }
-
-        //
-        // Internal members:
 
         //
         // Private members:
