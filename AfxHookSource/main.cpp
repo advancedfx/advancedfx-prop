@@ -14,6 +14,7 @@
 
 #include <shared/detours.h>
 
+#include "addresses.h"
 #include "RenderView.h"
 #include "SourceInterfaces.h"
 #include "WrpVEngineClient.h"
@@ -306,6 +307,8 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 		bFirstClient = false;
 
 		g_H_ClientDll = hModule;
+
+		Addresses_InitClientDll((AfxAddr)g_H_ClientDll);
 	}
 }
 

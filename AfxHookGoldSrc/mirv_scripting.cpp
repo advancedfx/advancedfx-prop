@@ -305,7 +305,7 @@ static JSBool Addr_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
 
 	if(str)
 	{	
-		HlAddress_t * padr = HlAddr_GetByName(JS_GetStringBytes(str));
+		HlAddress_t * padr = AfxAddr_GetByName(JS_GetStringBytes(str));
 		if(padr)
 		{
 			*vp = INT_TO_JSVAL((*padr));
@@ -324,7 +324,7 @@ JS_STATIC_DLL_CALLBACK(JSBool) Addr_setProperty(JSContext *cx, JSObject *obj, js
 	{
 		int32 i32;
 		char * bytes = JS_GetStringBytes(str);
-		HlAddress_t * padr = HlAddr_GetByName(bytes);
+		HlAddress_t * padr = AfxAddr_GetByName(bytes);
 
 		if(padr && JS_TRUE == JS_ValueToInt32(cx, *vp, &i32))
 		{

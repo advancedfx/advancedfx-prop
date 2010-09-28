@@ -113,6 +113,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\FileTools.cpp" />
+    <ClCompile Include="..\shared\vcpp\AfxAddr.cpp" />
+    <ClCompile Include="..\shared\vcpp\Data.cpp" />
+    <ClCompile Include="..\shared\vcpp\GlImage.cpp" />
+    <ClCompile Include="..\shared\vcpp\Image.cpp" />
+    <ClCompile Include="..\shared\vcpp\Ref.cpp" />
     <ClCompile Include="AfxGoldSrcComClient.cpp" />
     <ClCompile Include="aiming.cpp" />
     <ClCompile Include="camexport.cpp" />
@@ -190,13 +195,14 @@
     <ClCompile Include="..\shared\RawOutput.cpp" />
     <ClCompile Include="..\shared\StringTools.cpp" />
     <ClCompile Include="..\shared\com\PipeCom.cpp" />
-    <ClCompile Include="..\shared\vcpp\Data.cpp" />
-    <ClCompile Include="..\shared\vcpp\GlImage.cpp" />
-    <ClCompile Include="..\shared\vcpp\Image.cpp" />
-    <ClCompile Include="..\shared\vcpp\Ref.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\FileTools.h" />
+    <ClInclude Include="..\shared\vcpp\AfxAddr.h" />
+    <ClInclude Include="..\shared\vcpp\Data.h" />
+    <ClInclude Include="..\shared\vcpp\GlImage.h" />
+    <ClInclude Include="..\shared\vcpp\Image.h" />
+    <ClInclude Include="..\shared\vcpp\Ref.h" />
     <ClInclude Include="AfxGoldSrcComClient.h" />
     <ClInclude Include="aiming.h" />
     <ClInclude Include="camexport.h" />
@@ -260,10 +266,6 @@
     <ClInclude Include="..\shared\com\AfxGoldSrcComDefs.h" />
     <ClInclude Include="..\shared\com\PipeCom.h" />
     <ClInclude Include="..\shared\hldemo\hldemo.h" />
-    <ClInclude Include="..\shared\vcpp\Data.h" />
-    <ClInclude Include="..\shared\vcpp\GlImage.h" />
-    <ClInclude Include="..\shared\vcpp\Image.h" />
-    <ClInclude Include="..\shared\vcpp\Ref.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

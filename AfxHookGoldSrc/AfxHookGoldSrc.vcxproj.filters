@@ -72,9 +72,6 @@
     <ClCompile Include="cstrike_deathmsg.cpp">
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\vcpp\Data.cpp">
-      <Filter>shared\vcpp</Filter>
-    </ClCompile>
     <ClCompile Include="demozoom.cpp">
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
@@ -105,9 +102,6 @@
     <ClCompile Include="forceres.cpp">
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\vcpp\GlImage.cpp">
-      <Filter>shared\vcpp</Filter>
-    </ClCompile>
     <ClCompile Include="hl_addresses.cpp">
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
@@ -128,9 +122,6 @@
     </ClCompile>
     <ClCompile Include="hooks\hw\Host_Frame.cpp">
       <Filter>AfxHookGoldSrc\hooks\hw</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\vcpp\Image.cpp">
-      <Filter>shared\vcpp</Filter>
     </ClCompile>
     <ClCompile Include="InitScript.cpp">
       <Filter>AfxHookGoldSrc</Filter>
@@ -210,9 +201,6 @@
     <ClCompile Include="..\shared\RawOutput.cpp">
       <Filter>shared</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\vcpp\Ref.cpp">
-      <Filter>shared\vcpp</Filter>
-    </ClCompile>
     <ClCompile Include="specmenu.cpp">
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
@@ -267,6 +255,21 @@
     <ClCompile Include="move_to.cpp">
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\vcpp\AfxAddr.cpp">
+      <Filter>shared\vcpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\vcpp\Data.cpp">
+      <Filter>shared\vcpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\vcpp\GlImage.cpp">
+      <Filter>shared\vcpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\vcpp\Image.cpp">
+      <Filter>shared\vcpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\vcpp\Ref.cpp">
+      <Filter>shared\vcpp</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -302,9 +305,6 @@
     <ClInclude Include="cmdregister.h">
       <Filter>AfxHookGoldSrc</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\vcpp\Data.h">
-      <Filter>shared\vcpp</Filter>
-    </ClInclude>
     <ClInclude Include="..\shared\detours.h">
       <Filter>shared</Filter>
     </ClInclude>
@@ -319,9 +319,6 @@
     </ClInclude>
     <ClInclude Include="forceres.h">
       <Filter>AfxHookGoldSrc</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\vcpp\GlImage.h">
-      <Filter>shared\vcpp</Filter>
     </ClInclude>
     <ClInclude Include="hl_addresses.h">
       <Filter>AfxHookGoldSrc</Filter>
@@ -349,9 +346,6 @@
     </ClInclude>
     <ClInclude Include="hooks\hw\Host_Frame.h">
       <Filter>AfxHookGoldSrc\hooks\hw</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\vcpp\Image.h">
-      <Filter>shared\vcpp</Filter>
     </ClInclude>
     <ClInclude Include="mirv_scripting.h">
       <Filter>AfxHookGoldSrc</Filter>
@@ -425,9 +419,6 @@
     <ClInclude Include="..\shared\RawOutput.h">
       <Filter>shared</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\vcpp\Ref.h">
-      <Filter>shared\vcpp</Filter>
-    </ClInclude>
     <ClInclude Include="Store.h">
       <Filter>AfxHookGoldSrc</Filter>
     </ClInclude>
@@ -472,6 +463,21 @@
     </ClInclude>
     <ClInclude Include="hooks\hw\SCR_UpdateScreen.h">
       <Filter>AfxHookGoldSrc\hooks\hw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\vcpp\AfxAddr.h">
+      <Filter>shared\vcpp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\vcpp\Data.h">
+      <Filter>shared\vcpp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\vcpp\GlImage.h">
+      <Filter>shared\vcpp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\vcpp\Image.h">
+      <Filter>shared\vcpp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\vcpp\Ref.h">
+      <Filter>shared\vcpp</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

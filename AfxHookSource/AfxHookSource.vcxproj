@@ -80,6 +80,8 @@
     <ClCompile Include="..\shared\bvhimport.cpp" />
     <ClCompile Include="..\shared\detours.cpp" />
     <ClCompile Include="..\shared\RawOutput.cpp" />
+    <ClCompile Include="..\shared\vcpp\AfxAddr.cpp" />
+    <ClCompile Include="addresses.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MirvCommands.cpp" />
     <ClCompile Include="RenderView.cpp" />
@@ -93,6 +95,8 @@
     <ClInclude Include="..\shared\bvhimport.h" />
     <ClInclude Include="..\shared\detours.h" />
     <ClInclude Include="..\shared\RawOutput.h" />
+    <ClInclude Include="..\shared\vcpp\AfxAddr.h" />
+    <ClInclude Include="addresses.h" />
     <ClInclude Include="RenderView.h" />
     <ClInclude Include="SourceInterfaces.h" />
     <ClInclude Include="stdafx.h" />

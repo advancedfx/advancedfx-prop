@@ -7,6 +7,9 @@
     <Filter Include="shared">
       <UniqueIdentifier>{2c2ebb9f-0d53-4964-9634-7d46c48d15f5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shared\vcpp">
+      <UniqueIdentifier>{e3023297-861a-49fe-96b9-a38e1f33d3b9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\bvhexport.cpp">
@@ -42,6 +45,12 @@
     <ClCompile Include="..\shared\StringTools.cpp">
       <Filter>shared</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\vcpp\AfxAddr.cpp">
+      <Filter>shared\vcpp</Filter>
+    </ClCompile>
+    <ClCompile Include="addresses.cpp">
+      <Filter>AfxHookSource</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -73,6 +82,12 @@
     </ClInclude>
     <ClInclude Include="..\shared\StringTools.h">
       <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\vcpp\AfxAddr.h">
+      <Filter>shared\vcpp</Filter>
+    </ClInclude>
+    <ClInclude Include="addresses.h">
+      <Filter>AfxHookSource</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

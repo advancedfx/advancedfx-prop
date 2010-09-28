@@ -80,13 +80,13 @@ REGISTER_DEBUGCMD_FUNC(info)
 }
 
 REGISTER_DEBUGCMD_FUNC(list_addresses) {
-	unsigned int cnt = HlAddr_Debug_GetCount();
+	unsigned int cnt = AfxAddr_Debug_GetCount();
 	unsigned int zcnt = 0;
 	for(int i=0; i<cnt; i++) {
 		char const * pName;
 		unsigned long addr;
 
-		if(!HlAddr_Debug_GetAt(i, addr, pName)) {
+		if(!AfxAddr_Debug_GetAt(i, addr, pName)) {
 			pEngfuncs->Con_Printf("Error.\n");
 			break; // error
 		}
