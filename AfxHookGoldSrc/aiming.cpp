@@ -287,7 +287,6 @@ void Aiming::aim()
 	{
 		float angles[3];
 		float reaim[2];
-		float d2[2];
 		float deltaT = curAimTime - m_LastAimTime;
 
 		if(deltaT < 0) deltaT = 0;

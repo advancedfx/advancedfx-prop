@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-07-04 dominik.matrixstorm.com
+// 2010-09-29 dominik.matrixstorm.com
 //
 // First changes
 // 2010-03-23 dominik.matrixstorm.com
@@ -20,42 +20,122 @@
 #include <hooks/HookHw.h>
 #endif
 
-// fdata and sample are modified.
-#define SAMPLE_FN(fdata, sample, width, height, deltaPitch, add) \
-{ \
-	for( int iy=0; iy < (height); iy++ ) \
-	{ \
-		for( int ix=0; ix < (width); ix++ ) \
-		{ \
-			*(fdata) = *(fdata) + (add); \
-			\
-			(fdata)++; \
-			(sample)++; \
-		} \
-		\
-		(sample) += (deltaPitch); \
-	} \
+
+void EasySamplerIntegrator_Fn(ISampleFns *fns, void const * sampleA, void const *sampleB, float timeA, float timeB, float subTimeA, float subTimeB)
+{
+	float weightA;
+	float weightB;
+
+	{
+		// Calculate weigths:
+
+		float dAB = timeB -timeA;
+		float dSAB = subTimeB -subTimeA;
+		float w = dAB ? subTimeA +subTimeB -2 * timeA / dAB : 0.0f;
+		weightA = dSAB -w / 2.0f;
+		weightB = dSAB * w / 2.0f;
+	}
+
+	//
+	// optimize / combine the function:
+
+	if(0 == weightA)
+	{
+		weightA = weightB;
+		weightB = 0;
+		sampleA = sampleB;
+		sampleB = 0;
+	}
+
+	if(0 == weightA)
+	{
+		// zero weights.
+
+		return;  // done;
+	}
+
+	assert(0 != weightA);
+
+	if(0 == sampleA)
+	{
+		// switch to 1 point sampling.
+
+		sampleA = sampleB;
+		sampleB = 0;
+
+		weightA = weightA + weightB;
+		weightB = 0;
+	}
+
+	if(0 == sampleA)
+	{
+		// 0 point sampling.
+
+		return; // done.
+	}
+
+	assert(0 != weightA);
+	assert(0 != sampleA);
+
+	if(0 == sampleB || 0 == weightB)
+	{
+		if(1 == weightA)
+		{
+			fns->Fn_1(sampleA);
+		}
+		else
+		{
+			fns->Fn_2(sampleA, weightA);
+		}
+	}
+	else
+	{
+		// 2 points.
+
+		assert(0 != weightB && 0 != sampleB);
+
+		if(weightA == weightB)
+		{
+			if(1 == weightA)
+			{
+				fns->Fn_1(sampleA);
+				fns->Fn_1(sampleB);
+			}
+			else
+			{
+				fns->Fn_4(sampleA, sampleB, weightA);
+			}
+		}
+		else
+		{
+			if(1 == weightB)
+			{
+				void const *tS = sampleA;
+				float tW = weightA;
+
+				sampleA = sampleB;
+				sampleB = tS;
+
+				weightA = weightB;
+				weightB = tW;
+			}
+
+			if(1 == weightA)
+			{
+				fns->Fn_1(sampleA);
+				fns->Fn_2(sampleB, weightB);
+			}
+			else
+			{
+				fns->Fn_2(sampleA, weightA);
+				fns->Fn_2(sampleB, weightB);
+			}
+		}
+	}
 }
 
-// fdata and sampleA and SampleB are modified.
-#define SAMPLE_FN_2(fdata, sampleA, sampleB, width, height, deltaPitch, add) \
-{ \
-	for( int iy=0; iy < (height); iy++ ) \
-	{ \
-		for( int ix=0; ix < (width); ix++ ) \
-		{ \
-			*(fdata) = *(fdata) + (add); \
-			\
-			(fdata)++; \
-			(sampleA)++; \
-			(sampleB)++; \
-		} \
-		\
-		(sampleA) += (deltaPitch); \
-		(sampleB) += (deltaPitch); \
-	} \
-}
 
+// EasyByteSampler /////////////////////////////////////////////////////////////
 
 EasyByteSampler::EasyByteSampler(
 	int width,
@@ -67,7 +147,8 @@ EasyByteSampler::EasyByteSampler(
 	float startTime,
 	float exposure,
 	float frameStrength
-	)
+)
+: EasySampler(frameDuration, startTime, exposure)
 {
 	assert(0 <= width);
 	assert(0 <= height);
@@ -75,18 +156,12 @@ EasyByteSampler::EasyByteSampler(
 
 	m_DeltaPitch = pitch -width;
 	m_Frame = new Frame(height * width);
-	m_FrameDuration = frameDuration;
 	m_FramePrinter = framePrinter;
 	m_FrameStrength = frameStrength;
 	m_HasLastSample = false;
 	m_Height = height;
-	m_LastFrameTime = startTime;
 	m_LastSample = ESM_Trapezoid == method ? new unsigned char[height * pitch] : 0;
-	m_LastSampleTime = startTime;
 	m_PrintMem = new unsigned char[height * pitch];
-	m_ShutterOpen = 0.0f < exposure;
-	m_ShutterOpenDuration = frameDuration * min(max(exposure, 0.0f), 1.0f);
-	m_ShutterTime = m_LastFrameTime;
 	m_Width =  width;
 }
 
@@ -100,6 +175,11 @@ EasyByteSampler::~EasyByteSampler()
 	delete m_Frame;
 }
 
+bool EasyByteSampler::CanSkipConstant(float time, float durationPerSample)
+{
+	return EasySampler::CanSkipConstant(time, durationPerSample, m_LastSample ? 1 : 0);
+}
+
 
 void EasyByteSampler::ClearFrame(float frameStrength)
 {
@@ -110,6 +190,78 @@ void EasyByteSampler::ClearFrame(float frameStrength)
 	ScaleFrame(w);
 }
 
+
+void EasyByteSampler::Fn_1(void const * sample)
+{
+	int height = m_Height;
+	int width = m_Width;
+	int deltaPitch = m_DeltaPitch;
+	float *fdata = m_Frame->Data;
+	unsigned char const * cdata = (unsigned char const *)sample;
+
+	for( int iy=0; iy < height; iy++ )
+	{
+		for( int ix=0; ix < width; ix++ ) 
+		{
+			*fdata = *fdata + *cdata;
+			
+			fdata++;
+			cdata++;
+		}
+		cdata += deltaPitch;
+	}
+
+	m_Frame->WhitePoint += 255.0f;
+}
+
+void EasyByteSampler::Fn_2(void const * sample, float w)
+{
+	int height = m_Height;
+	int width = m_Width;
+	int deltaPitch = m_DeltaPitch;
+	float *fdata = m_Frame->Data;
+	unsigned char const * cdata = (unsigned char const *)sample;
+
+	for( int iy=0; iy < height; iy++ )
+	{
+		for( int ix=0; ix < width; ix++ ) 
+		{
+			*fdata = *fdata + w * *cdata;
+			
+			fdata++;
+			cdata++;
+		}
+		cdata += deltaPitch;
+	}
+
+	m_Frame->WhitePoint += w * 255.0f;
+}
+
+void EasyByteSampler::Fn_4(void const * sampleA, void const * sampleB, float w)
+{
+	int height = m_Height;
+	int width = m_Width;
+	int deltaPitch = m_DeltaPitch;
+	float *fdata = m_Frame->Data;
+	unsigned char const * cdataA = (unsigned char const *)sampleA;
+	unsigned char const * cdataB = (unsigned char const *)sampleB;
+
+	for( int iy=0; iy < height; iy++ )
+	{
+		for( int ix=0; ix < width; ix++ ) 
+		{
+			*fdata = *fdata + w * ((unsigned int)*cdataA +(unsigned int)*cdataB);
+			
+			fdata++;
+			cdataA++;
+			cdataB++;
+		}
+		cdataA += deltaPitch;
+		cdataB += deltaPitch;
+	}
+
+	m_Frame->WhitePoint += w * 2.0f * 255.0f;
+}
 
 
 void EasyByteSampler::PrintFrame()
@@ -150,87 +302,11 @@ void EasyByteSampler::PrintFrame()
 
 
 void EasyByteSampler::Sample(unsigned char const * data, float time)
-{	
-	float subMin = m_LastSampleTime;
+{
+	m_CurSample = data;
 
-#ifdef DEBUG_EASYSAMPLER
-	pEngfuncs->Con_Printf("Sample: [%f, %f]\n", m_LastSampleTime, time);
-#endif
+	EasySampler::Sample(time);
 
-	while(subMin < time)
-	{		
-		float subMax = time;
-
-		float shutterEvent = m_ShutterTime+ (m_ShutterOpen ? m_ShutterOpenDuration : m_FrameDuration);
-		float frameEnd = m_LastFrameTime +m_FrameDuration;
-
-		// apply restrictions:
-
-		if(subMin < frameEnd && frameEnd <= subMax)
-		{
-			subMax = frameEnd;
-		}
-
-		if(subMin < shutterEvent && shutterEvent <= subMax)
-		{
-			subMax = shutterEvent;
-		}
-
-		// sub sample restricted interval:
-
-#ifdef DEBUG_EASYSAMPLER
-		pEngfuncs->Con_Printf("\tSub interval: [%f, %f] shutter_%s", subMin, subMax, m_ShutterOpen ? "open" : "closed");
-#endif
-
-		if(m_ShutterOpen)
-		{
-#ifdef DEBUG_EASYSAMPLER
-			if(!m_HasLastSample ||!data)
-				pEngfuncs->Con_Printf("WARNING: missing sample(s), possible quality loss, verify code, only at start past samples may be missing.\n");
-#endif
-
-			SubSample(
-				m_HasLastSample ? m_LastSample : 0, data,
-				m_LastSampleTime, time,
-				subMin, subMax
-			);
-		}
-
-		// process active restrictions:
-
-		if(subMin < frameEnd && frameEnd <= subMax)
-		{
-#ifdef DEBUG_EASYSAMPLER
-			pEngfuncs->Con_Printf(" frame_end");
-#endif
-
-			PrintFrame();
-			ClearFrame(m_FrameStrength);
-			m_LastFrameTime = subMax;
-		}
-
-		if(subMin < shutterEvent && shutterEvent <= subMax)
-		{
-#ifdef DEBUG_EASYSAMPLER
-			pEngfuncs->Con_Printf(" shutter_event");
-#endif
-			if(0.0f < m_ShutterOpenDuration && m_ShutterOpenDuration < m_FrameDuration)
-			{
-				m_ShutterOpen = !m_ShutterOpen;
-
-				if(m_ShutterOpen)
-					m_ShutterTime = subMax;
-			}
-		}
-
-#ifdef DEBUG_EASYSAMPLER
-		pEngfuncs->Con_Printf("\n");
-#endif
-
-		subMin = subMax;
-	}
-
-	m_LastSampleTime = time;
 	if(m_LastSample && data)
 	{
 		memcpy(m_LastSample, data, m_Height * (m_Width +m_DeltaPitch)* sizeof(unsigned char));
@@ -238,135 +314,6 @@ void EasyByteSampler::Sample(unsigned char const * data, float time)
 	}
 	else
 		m_HasLastSample = false;
-}
-
-
-void EasyByteSampler::SampleFn(
-	unsigned char const * sample,
-	float weight)
-{
-	if(0 == weight) return;
-	if(0 == sample) return;
-
-	float * fdata = m_Frame->Data;
-	int xmax = m_Width;
-	int ymax = m_Height;
-
-	m_Frame->WhitePoint += weight * (unsigned char)255;
-
-	if(1 == weight)
-	{
-		SAMPLE_FN(fdata, sample, xmax, ymax, m_DeltaPitch,
-			*sample
-		);
-	}
-	else
-	{
-		SAMPLE_FN(fdata, sample, xmax, ymax, m_DeltaPitch,
-			weight * *sample
-		);
-	}
-
-}
-
-
-void EasyByteSampler::SampleFn(
-	unsigned char const * sampleA,
-	unsigned char const * sampleB,
-	float weight)
-{
-	if(0 == weight) return;
-	if(0 == sampleA)
-	{
-		SampleFn(sampleB, weight);
-		return;
-	}
-	if(0 == sampleB)
-	{
-		SampleFn(sampleA, weight);
-		return;
-	}
-
-	int ymax = m_Height;
-	int xmax = m_Width;
-	float * fdata = m_Frame->Data;
-
-	m_Frame->WhitePoint += weight * (unsigned char)255;
-
-	if(1 == weight)
-	{
-		SAMPLE_FN_2(fdata, sampleA, sampleB, xmax, ymax, m_DeltaPitch,
-			(unsigned short)*sampleA +*sampleB
-		);
-	}
-	else
-	{
-		SAMPLE_FN_2(fdata, sampleA, sampleB, xmax, ymax, m_DeltaPitch,
-			weight * ((unsigned short)*sampleA +*sampleB)
-		);
-	}
-}
-
-
-void EasyByteSampler::SampleFn(
-	unsigned char const * sampleA,
-	unsigned char const * sampleB,
-	float weightA,
-	float weightB)
-{
-	if(0 == weightA)
-	{
-		SampleFn(sampleB, weightB);
-		return;
-	}
-	if(0 == weightB)
-	{
-		SampleFn(sampleA, weightA);
-		return;
-	}
-	if(weightA == weightB)
-	{
-		SampleFn(sampleA, sampleB, weightA);
-		return;
-	}
-	if(0 == sampleA)
-	{
-		SampleFn(sampleB, weightA +weightB);
-		return;
-	}
-	if(0 == sampleB)
-	{
-		SampleFn(sampleA, weightA +weightB);
-		return;
-	}
-
-	// 0 != weightA != weightB != 0
-	// , 0!= SampleA, 0 != SampleB.
-
-	float * fdata = m_Frame->Data;
-	int xmax = m_Width;
-	int ymax = m_Height;
-
-	m_Frame->WhitePoint += (weightA +weightB) * (unsigned char)255;
-
-	if(1 == weightA && 1 == weightB)
-	{
-		SAMPLE_FN_2(fdata, sampleA, sampleB, xmax, ymax, m_DeltaPitch,
-			(unsigned short)*sampleA + *sampleB
-		);
-	}
-	else if(1 == weightA || 1 == weightB)
-	{
-		SAMPLE_FN_2(fdata, sampleA, sampleB, xmax, ymax, m_DeltaPitch,
-			weightA * *sampleA + *sampleB
-		);
-	}
-	else
-	{
-		SAMPLE_FN_2(fdata, sampleA, sampleB, xmax, ymax, m_DeltaPitch,
-			weightA * *sampleA + weightB * *sampleB
-		);
-	}
 }
 
 
@@ -406,19 +353,110 @@ void EasyByteSampler::ScaleFrame(float factor)
 }
 
 
-void EasyByteSampler::SubSample(
-	unsigned char const * sampleA,
-	unsigned char const * sampleB,
-	float timeA,
-	float timeB,
-	float subTimeA,
-	float subTimeB)
-{
-	float dAB = timeB -timeA;
-	float dSAB = subTimeB -subTimeA;
-	float w = dAB ? subTimeA +subTimeB -2 * timeA / dAB : 0.0f;
-	float wA = dSAB -w / 2.0f;
-	float wB = dSAB * w / 2.0f;
 
-	SampleFn(sampleA, sampleB, wA, wB);
+// EasySampler /////////////////////////////////////////////////////////////////
+
+
+EasySampler::EasySampler(
+	float frameDuration,
+	float startTime,
+	float exposure)
+{
+	m_FrameDuration = frameDuration;
+	m_LastFrameTime = startTime;
+	m_LastSampleTime = startTime;
+	m_ShutterOpen = 0.0f < exposure;
+	m_ShutterOpenDuration = frameDuration * min(max(exposure, 0.0f), 1.0f);
+	m_ShutterTime = m_LastFrameTime;
+}
+
+
+bool EasySampler::CanSkipConstant(float time, float durationPerSample, int numPreviousSamplesRequired)
+{
+	// skipping is only allowed when enough samples are guaranteed to be captured to allow interpolation before the shutter is opened.
+
+	float prepareTime = numPreviousSamplesRequired * durationPerSample;
+	float timeLeft = m_FrameDuration -(time -m_LastFrameTime);
+
+	return
+		!m_ShutterOpen && prepareTime < timeLeft
+	;
+}
+
+
+void EasySampler::Sample(float time)
+{	
+	float subMin = m_LastSampleTime;
+
+#ifdef DEBUG_EASYSAMPLER
+	pEngfuncs->Con_Printf("Sample: [%f, %f]\n", m_LastSampleTime, time);
+#endif
+
+	while(subMin < time)
+	{		
+		float subMax = time;
+
+		float shutterEvent = m_ShutterTime+ (m_ShutterOpen ? m_ShutterOpenDuration : m_FrameDuration);
+		float frameEnd = m_LastFrameTime +m_FrameDuration;
+
+		// apply restrictions:
+
+		if(subMin < frameEnd && frameEnd <= subMax)
+		{
+			subMax = frameEnd;
+		}
+
+		if(subMin < shutterEvent && shutterEvent <= subMax)
+		{
+			subMax = shutterEvent;
+		}
+
+		// sub sample restricted interval:
+
+#ifdef DEBUG_EASYSAMPLER
+		pEngfuncs->Con_Printf("\tSub interval: [%f, %f] shutter_%s", subMin, subMax, m_ShutterOpen ? "open" : "closed");
+#endif
+
+		if(m_ShutterOpen)
+		{
+			SubSample(
+				m_LastSampleTime, time,
+				subMin, subMax
+			);
+		}
+
+		// process active restrictions:
+
+		if(subMin < frameEnd && frameEnd <= subMax)
+		{
+#ifdef DEBUG_EASYSAMPLER
+			pEngfuncs->Con_Printf(" frame_end");
+#endif
+
+			MakeFrame();
+			m_LastFrameTime = subMax;
+		}
+
+		if(subMin < shutterEvent && shutterEvent <= subMax)
+		{
+#ifdef DEBUG_EASYSAMPLER
+			pEngfuncs->Con_Printf(" shutter_event");
+#endif
+			if(0.0f < m_ShutterOpenDuration && m_ShutterOpenDuration < m_FrameDuration)
+			{
+				m_ShutterOpen = !m_ShutterOpen;
+
+				if(m_ShutterOpen)
+					m_ShutterTime = subMax;
+			}
+		}
+
+#ifdef DEBUG_EASYSAMPLER
+		pEngfuncs->Con_Printf("\n");
+#endif
+
+		subMin = subMax;
+	}
+
+	m_LastSampleTime = time;
 }
