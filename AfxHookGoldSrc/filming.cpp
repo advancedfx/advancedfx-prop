@@ -648,12 +648,9 @@ void Filming::Start()
 
 	//
 	// gl_ztrick:
-	// we force it to 0 by default, cause otherwise it could suppress gl_clear and mess up, see ID SOftware's Quake 1 source for more info why this has to be done
+	// we force it to 0 by default, cause otherwise it could mess up the z-buffer, see ID SOftware's Quake 1 source for more info why this has to be done
 	if (gl_force_noztrick->value)
 		pEngfuncs->Cvar_SetValue("gl_ztrick", 0);
-
-	// well for some reason gavin forced gl_clear 1, but we don't relay on it anyways (which is good, cause the in ineye demo mode the engine will reforce it to 0 anyways):
-	pEngfuncs->Cvar_SetValue("gl_clear", 1); // this needs should be reforced somwhere since in ineydemo mode the engine might force it to 0
 
 	// indicate sound export if requested:
 	_bExportingSound = !_bSimulate2 && (movie_export_sound->value!=0.0f);
@@ -1461,6 +1458,14 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 	return true;
 }
 
+
+void Filming::FullClear()
+{
+	// Make sure the mask colour is still correct
+	glClearColor(m_MatteColour[0], m_MatteColour[1], m_MatteColour[2], 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+}
+
 void Filming::clearBuffers()
 {
 	// Make sure the mask colour is still correct
@@ -1471,9 +1476,6 @@ void Filming::clearBuffers()
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 	else
 		glClear(GL_COLOR_BUFFER_BIT);
-
-	// well for some reason gavin forced gl_clear 1, but we don't relay on it anyways (which is good, cause the in ineye demo mode the engine will reforce it to 0 anyways):
-	pEngfuncs->Cvar_SetValue("gl_clear", 1); // reforce (I am not sure if this is a good position)
 }
 
 bool Filming::checkClear(GLbitfield mask)
@@ -1486,6 +1488,7 @@ bool Filming::checkClear(GLbitfield mask)
 	// Make sure the mask colour is still correct
 	glClearColor(m_MatteColour[0], m_MatteColour[1], m_MatteColour[2], 1.0f);
 	// we could also force glDepthRange here, but I preffer relaing on that forcing ztrick 0 worked
+
 	return true;
 }
 
@@ -1525,7 +1528,6 @@ Filming::DRAW_RESULT Filming::doWireframe(GLenum mode)
 	else
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-	pEngfuncs->Cvar_SetValue("gl_clear", 1);
 	glLineWidth(movie_wireframesize->value);
 
 	return DR_NORMAL;

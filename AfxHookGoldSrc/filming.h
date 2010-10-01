@@ -77,6 +77,9 @@ public:
 	Filming();
 	~Filming();
 
+	// used in OpenGl32Hooks.cpp
+	void FullClear();
+
 	MATTE_METHOD GetMatteMethod();
 
 	void SupplySupportRenderer(CHlaeSupportRender *pSupportRender)
@@ -88,7 +91,6 @@ public:
 	void Start();
 	void Stop();
 	bool recordBuffers(HDC hSwapHDC,BOOL *bSwapRes);	// call to record from the currently selected buffers, returns true if it already swapped itself, in this case also bSwapRes is the result of SwapBuffers
-	void clearBuffers();	// call this (i.e. after Swapping) when we can prepare (clear) our buffers for the next frame
 
 	void setScreenSize(GLint w, GLint h);
 
@@ -216,6 +218,8 @@ private:
 	float _fx_whRGBf[3];
 
 	bool _InMatteEntities(int iid);
+
+	void clearBuffers();	// call this (i.e. after Swapping) when we can prepare (clear) our buffers for the next frame
 };
 
 extern Filming g_Filming;

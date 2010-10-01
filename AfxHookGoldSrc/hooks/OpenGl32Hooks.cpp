@@ -27,7 +27,6 @@
 
 REGISTER_CVAR(disableautodirector, "0", 0);
 
-REGISTER_DEBUGCVAR(gl_noclear, "0", 0);
 REGISTER_DEBUGCVAR(gl_previewclear, "1", 0);
 
 
@@ -233,9 +232,6 @@ void APIENTRY NewGlEnd(void)
 
 void APIENTRY NewGlClear(GLbitfield mask)
 {
-	if (gl_noclear->value)
-		return;
-	
 	// check if we want to clear (it also might set clearcolor and stuff like that):
 	if (!g_Filming.checkClear(mask))
 		return;
@@ -354,10 +350,10 @@ BOOL APIENTRY NewWglSwapBuffers(HDC hDC)
 		// we are filming, do required clearing and restore buffers:
 
 		// carry out preparerations on the backbuffer for the next frame:
-		g_Filming.clearBuffers();
+		g_Filming.FullClear();
 	}
 	else if(gl_previewclear->value)
-		g_Filming.clearBuffers();
+		g_Filming.FullClear();
 
 	return bResWglSwapBuffers;
 }

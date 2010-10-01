@@ -6,6 +6,19 @@
 
 <release>
 <name>HLAE</name>
+<version>2.2.19.7</version>
+<time>2010-10-01T20:20Z</time>
+<changes>
+<change type="fixed">
+Fixed mirv_movie_splitstreams 2.
+</change>
+</changes>
+<comments>Greetz to Anthony.</comments>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.2.19.6</version>
 <time>2010-09-29T13:23Z</time>
 <changes>
