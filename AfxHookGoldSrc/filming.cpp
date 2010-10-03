@@ -1649,8 +1649,9 @@ FilmingStream::FilmingStream(
 	{
 	case 2:
 		m_DepthFn = FD_LOG;
-	case 3:
+		break;
 		m_DepthFn = FD_INV;
+		break;
 	default:
 		m_DepthFn = FD_LINEAR;
 	}
