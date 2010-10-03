@@ -6,8 +6,8 @@
 
 <release>
 <name>HLAE</name>
-<version>2.2.19.9</version>
-<time>2010-10-02T10:40Z</time>
+<version>2.2.20.0</version>
+<time>2010-10-02T11:00Z</time>
 <changes>
 <change type="fixed">
 Fixed bug that affected crosshair color upon low FPS captures.
