@@ -21,7 +21,451 @@
 #endif
 
 
-void EasySamplerIntegrator_Fn(ISampleFns *fns, void const * sampleA, void const *sampleB, float timeA, float timeB, float subTimeA, float subTimeB)
+// EasyByteSampler /////////////////////////////////////////////////////////////
+
+EasyByteSampler::EasyByteSampler(
+	EasySamplerSettings const & settings,
+	int pitch,
+	IFramePrinter * framePrinter
+)
+: EasySamplerBase(settings.FrameDuration_get(), settings.StartTime_get(), settings.Exposure_get())
+, m_Settings(settings)
+{
+	int height = settings.Height_get();
+	int width = settings.Width_get();
+	bool twoPoint = EasySamplerSettings::ESM_Trapezoid == settings.Method_get();
+
+	assert(width <= pitch);
+
+	m_Pitch = pitch;
+	m_Frame = new Frame(height * width);
+	m_FramePrinter = framePrinter;
+	m_HasLastSample = false;
+	m_LastSample = twoPoint ? new unsigned char[height * pitch] : 0;
+	m_PrintMem = new unsigned char[height * pitch];
+}
+
+
+EasyByteSampler::~EasyByteSampler()
+{
+	// ? // PrintFrame();
+
+	delete m_PrintMem;
+	delete m_LastSample;
+	delete m_Frame;
+}
+
+bool EasyByteSampler::CanSkipConstant(float time, float durationPerSample)
+{
+	return EasySamplerBase::CanSkipConstant(time, durationPerSample, m_LastSample ? 1 : 0);
+}
+
+
+void EasyByteSampler::ClearFrame(float frameStrength)
+{
+	float w = m_Frame->WhitePoint * (1.0f -frameStrength);
+
+	if(w) w = 1 / w;
+
+	ScaleFrame(w);
+}
+
+
+void EasyByteSampler::Fn_1(void const * sample)
+{
+	int height = m_Settings.Height_get();
+	int width = m_Settings.Width_get();
+	int deltaPitch = m_Pitch -width;
+	float *fdata = m_Frame->Data;
+	unsigned char const * cdata = (unsigned char const *)sample;
+
+	for( int iy=0; iy < height; iy++ )
+	{
+		for( int ix=0; ix < width; ix++ ) 
+		{
+			*fdata = *fdata + *cdata;
+			
+			fdata++;
+			cdata++;
+		}
+		cdata += deltaPitch;
+	}
+
+	m_Frame->WhitePoint += 255.0f;
+}
+
+void EasyByteSampler::Fn_2(void const * sample, float w)
+{
+	int height = m_Settings.Height_get();
+	int width = m_Settings.Width_get();
+	int deltaPitch = m_Pitch -width;
+	float *fdata = m_Frame->Data;
+	unsigned char const * cdata = (unsigned char const *)sample;
+
+	for( int iy=0; iy < height; iy++ )
+	{
+		for( int ix=0; ix < width; ix++ ) 
+		{
+			*fdata = *fdata + w * *cdata;
+			
+			fdata++;
+			cdata++;
+		}
+		cdata += deltaPitch;
+	}
+
+	m_Frame->WhitePoint += w * 255.0f;
+}
+
+void EasyByteSampler::Fn_4(void const * sampleA, void const * sampleB, float w)
+{
+	int height = m_Settings.Height_get();
+	int width = m_Settings.Width_get();
+	int deltaPitch = m_Pitch -width;
+	float *fdata = m_Frame->Data;
+	unsigned char const * cdataA = (unsigned char const *)sampleA;
+	unsigned char const * cdataB = (unsigned char const *)sampleB;
+
+	for( int iy=0; iy < height; iy++ )
+	{
+		for( int ix=0; ix < width; ix++ ) 
+		{
+			*fdata = *fdata + w * ((unsigned int)*cdataA +(unsigned int)*cdataB);
+			
+			fdata++;
+			cdataA++;
+			cdataB++;
+		}
+		cdataA += deltaPitch;
+		cdataB += deltaPitch;
+	}
+
+	m_Frame->WhitePoint += w * 2.0f * 255.0f;
+}
+
+
+void EasyByteSampler::PrintFrame()
+{
+	float w = m_Frame->WhitePoint;
+
+	unsigned char * data = m_PrintMem;
+
+	if(0 == w)
+	{
+		memset(data, 0, m_Settings.Height_get() * m_Pitch * sizeof(unsigned char));
+	}
+	else
+	{
+		float * fdata = m_Frame->Data;
+
+		int height = m_Settings.Height_get();
+		int width = m_Settings.Width_get();
+		int deltaPitch = m_Pitch - width;
+
+		w = 255.0f / w;
+
+		for( int iy=0; iy < height; iy++ )
+		{
+			for( int ix=0; ix < width; ix++ )
+			{
+				*data = (unsigned char)(w * *fdata);
+
+				fdata++;
+				data++;
+			}
+
+			data += deltaPitch;
+		}
+	}
+
+	m_FramePrinter->Print(m_PrintMem);
+}
+
+
+void EasyByteSampler::Sample(unsigned char const * data, float time)
+{
+	m_CurSample = data;
+
+	EasySamplerBase::Sample(time);
+
+	if(m_LastSample && data)
+	{
+		memcpy(m_LastSample, data, m_Settings.Height_get() * m_Pitch * sizeof(unsigned char));
+		m_HasLastSample = true;
+	}
+	else
+		m_HasLastSample = false;
+}
+
+
+void EasyByteSampler::ScaleFrame(float factor)
+{
+	float w = m_Frame->WhitePoint;
+
+	if(w * factor == w)
+	{
+		// No change.
+		return;
+	}
+	
+	if(0 == w * factor)
+	{
+		// Zero.
+		m_Frame->WhitePoint = 0;
+		memset(m_Frame->Data, 0, m_Settings.Height_get() * m_Settings.Width_get() * sizeof(float));
+		return;
+	}
+	
+	float * fdata = m_Frame->Data;
+
+	int height = m_Settings.Height_get();
+	int width = m_Settings.Width_get();
+
+	m_Frame->WhitePoint *= factor;
+
+	for( int iy=0; iy < height; iy++ )
+	{
+		for( int ix=0; ix < width; ix++ )
+		{
+			*fdata = factor * *fdata;
+			fdata++;
+		}
+	}
+}
+
+
+
+
+// EasyFloatSampler ////////////////////////////////////////////////////////////
+
+EasyFloatSampler::EasyFloatSampler(
+	EasySamplerSettings const & settings,
+	IFloatFramePrinter * framePrinter
+)
+: EasySamplerBase(settings.FrameDuration_get(), settings.StartTime_get(), settings.Exposure_get())
+, m_Settings(settings)
+{
+	int height = settings.Height_get();
+	int width = settings.Width_get();
+	bool twoPoint = EasySamplerSettings::ESM_Trapezoid == settings.Method_get();
+
+	m_FrameData = new float[height * width];
+	m_FramePrinter = framePrinter;
+	m_FrameWhitePoint = 0;
+	m_HasLastSample = false;
+	m_LastSample = twoPoint ? new float[height * width] : 0;
+	m_PrintMem = new float[height * width];
+}
+
+
+EasyFloatSampler::~EasyFloatSampler()
+{
+	// ? // PrintFrame();
+
+	delete m_PrintMem;
+	delete m_LastSample;
+	delete m_FrameData;
+}
+
+bool EasyFloatSampler::CanSkipConstant(float time, float durationPerSample)
+{
+	return EasySamplerBase::CanSkipConstant(time, durationPerSample, m_LastSample ? 1 : 0);
+}
+
+
+void EasyFloatSampler::ClearFrame(float frameStrength)
+{
+	float w = m_FrameWhitePoint * (1.0f -frameStrength);
+
+	if(w) w = 1 / w;
+
+	ScaleFrame(w);
+}
+
+
+void EasyFloatSampler::Fn_1(void const * sample)
+{
+	int height = m_Settings.Height_get();
+	int width = m_Settings.Width_get();
+	float *fdata = m_FrameData;
+	float const * cdata = (float const *)sample;
+
+	for( int iy=0; iy < height; iy++ )
+	{
+		for( int ix=0; ix < width; ix++ ) 
+		{
+			*fdata = *fdata + *cdata;
+			
+			fdata++;
+			cdata++;
+		}
+	}
+
+	m_FrameWhitePoint += 1.0f;
+}
+
+void EasyFloatSampler::Fn_2(void const * sample, float w)
+{
+	int height = m_Settings.Height_get();
+	int width = m_Settings.Width_get();
+	float *fdata = m_FrameData;
+	float const * cdata = (float const *)sample;
+
+	for( int iy=0; iy < height; iy++ )
+	{
+		for( int ix=0; ix < width; ix++ ) 
+		{
+			*fdata = *fdata + w * *cdata;
+			
+			fdata++;
+			cdata++;
+		}
+	}
+
+	m_FrameWhitePoint += w * 1.0f;
+}
+
+void EasyFloatSampler::Fn_4(void const * sampleA, void const * sampleB, float w)
+{
+	int height = m_Settings.Height_get();
+	int width = m_Settings.Width_get();
+	float *fdata = m_FrameData;
+	float const * cdataA = (float const *)sampleA;
+	float const * cdataB = (float const *)sampleB;
+
+	for( int iy=0; iy < height; iy++ )
+	{
+		for( int ix=0; ix < width; ix++ ) 
+		{
+			*fdata = *fdata + w * (*cdataA + *cdataB);
+			
+			fdata++;
+			cdataA++;
+			cdataB++;
+		}
+	}
+
+	m_FrameWhitePoint += w * 2.0f * 1.0f;
+}
+
+
+void EasyFloatSampler::PrintFrame()
+{
+	float w = m_FrameWhitePoint;
+	float * data = m_PrintMem;
+
+	if(0 == w)
+	{
+		memset(data, 0, m_Settings.Height_get() * m_Settings.Width_get() * sizeof(float));
+	}
+	else
+	{
+		float * fdata = m_FrameData;
+
+		int height = m_Settings.Height_get();
+		int width = m_Settings.Width_get();
+
+		w = 1.0f / w;
+
+		for( int iy=0; iy < height; iy++ )
+		{
+			for( int ix=0; ix < width; ix++ )
+			{
+				*data = w * *fdata;
+
+				fdata++;
+				data++;
+			}
+		}
+	}
+
+	m_FramePrinter->Print(m_PrintMem);
+}
+
+
+void EasyFloatSampler::Sample(float const * data, float time)
+{
+	m_CurSample = data;
+
+	EasySamplerBase::Sample(time);
+
+	if(m_LastSample && data)
+	{
+		memcpy(m_LastSample, data, m_Settings.Height_get() * m_Settings.Width_get() * sizeof(float));
+		m_HasLastSample = true;
+	}
+	else
+		m_HasLastSample = false;
+}
+
+
+void EasyFloatSampler::ScaleFrame(float factor)
+{
+	float w = m_FrameWhitePoint;
+
+	if(w * factor == w)
+	{
+		// No change.
+		return;
+	}
+	
+	if(0 == w * factor)
+	{
+		// Zero.
+		m_FrameWhitePoint = 0;
+		memset(m_FrameData, 0, m_Settings.Height_get() * m_Settings.Width_get() * sizeof(float));
+		return;
+	}
+	
+	float * fdata = m_FrameData;
+
+	int height = m_Settings.Height_get();
+	int width = m_Settings.Width_get();
+
+	m_FrameWhitePoint *= factor;
+
+	for( int iy=0; iy < height; iy++ )
+	{
+		for( int ix=0; ix < width; ix++ )
+		{
+			*fdata = factor * *fdata;
+			fdata++;
+		}
+	}
+}
+
+
+// EasySamplerBase /////////////////////////////////////////////////////////////
+
+
+EasySamplerBase::EasySamplerBase(
+	float frameDuration,
+	float startTime,
+	float exposure)
+{
+	m_FrameDuration = frameDuration;
+	m_LastFrameTime = startTime;
+	m_LastSampleTime = startTime;
+	m_ShutterOpen = 0.0f < exposure;
+	m_ShutterOpenDuration = frameDuration * min(max(exposure, 0.0f), 1.0f);
+	m_ShutterTime = m_LastFrameTime;
+}
+
+
+bool EasySamplerBase::CanSkipConstant(float time, float durationPerSample, int numPreviousSamplesRequired)
+{
+	// skipping is only allowed when enough samples are guaranteed to be captured to allow interpolation before the shutter is opened.
+
+	float prepareTime = numPreviousSamplesRequired * durationPerSample;
+	float timeLeft = m_FrameDuration -(time -m_LastFrameTime);
+
+	return
+		!m_ShutterOpen && prepareTime < timeLeft
+	;
+}
+
+
+void EasySamplerBase::Integrator_Fn(ISampleFns *fns, void const * sampleA, void const *sampleB, float timeA, float timeB, float subTimeA, float subTimeB)
 {
 	float weightA;
 	float weightB;
@@ -135,256 +579,7 @@ void EasySamplerIntegrator_Fn(ISampleFns *fns, void const * sampleA, void const 
 }
 
 
-// EasyByteSampler /////////////////////////////////////////////////////////////
-
-EasyByteSampler::EasyByteSampler(
-	int width,
-	int height,
-	int pitch,
-	Method method,
-	IFramePrinter * framePrinter,
-	float frameDuration,
-	float startTime,
-	float exposure,
-	float frameStrength
-)
-: EasySampler(frameDuration, startTime, exposure)
-{
-	assert(0 <= width);
-	assert(0 <= height);
-	assert(width <= pitch);
-
-	m_DeltaPitch = pitch -width;
-	m_Frame = new Frame(height * width);
-	m_FramePrinter = framePrinter;
-	m_FrameStrength = frameStrength;
-	m_HasLastSample = false;
-	m_Height = height;
-	m_LastSample = ESM_Trapezoid == method ? new unsigned char[height * pitch] : 0;
-	m_PrintMem = new unsigned char[height * pitch];
-	m_Width =  width;
-}
-
-
-EasyByteSampler::~EasyByteSampler()
-{
-	// ? // PrintFrame();
-
-	delete m_PrintMem;
-	delete m_LastSample;
-	delete m_Frame;
-}
-
-bool EasyByteSampler::CanSkipConstant(float time, float durationPerSample)
-{
-	return EasySampler::CanSkipConstant(time, durationPerSample, m_LastSample ? 1 : 0);
-}
-
-
-void EasyByteSampler::ClearFrame(float frameStrength)
-{
-	float w = m_Frame->WhitePoint * (1.0f -frameStrength);
-
-	if(w) w = 1 / w;
-
-	ScaleFrame(w);
-}
-
-
-void EasyByteSampler::Fn_1(void const * sample)
-{
-	int height = m_Height;
-	int width = m_Width;
-	int deltaPitch = m_DeltaPitch;
-	float *fdata = m_Frame->Data;
-	unsigned char const * cdata = (unsigned char const *)sample;
-
-	for( int iy=0; iy < height; iy++ )
-	{
-		for( int ix=0; ix < width; ix++ ) 
-		{
-			*fdata = *fdata + *cdata;
-			
-			fdata++;
-			cdata++;
-		}
-		cdata += deltaPitch;
-	}
-
-	m_Frame->WhitePoint += 255.0f;
-}
-
-void EasyByteSampler::Fn_2(void const * sample, float w)
-{
-	int height = m_Height;
-	int width = m_Width;
-	int deltaPitch = m_DeltaPitch;
-	float *fdata = m_Frame->Data;
-	unsigned char const * cdata = (unsigned char const *)sample;
-
-	for( int iy=0; iy < height; iy++ )
-	{
-		for( int ix=0; ix < width; ix++ ) 
-		{
-			*fdata = *fdata + w * *cdata;
-			
-			fdata++;
-			cdata++;
-		}
-		cdata += deltaPitch;
-	}
-
-	m_Frame->WhitePoint += w * 255.0f;
-}
-
-void EasyByteSampler::Fn_4(void const * sampleA, void const * sampleB, float w)
-{
-	int height = m_Height;
-	int width = m_Width;
-	int deltaPitch = m_DeltaPitch;
-	float *fdata = m_Frame->Data;
-	unsigned char const * cdataA = (unsigned char const *)sampleA;
-	unsigned char const * cdataB = (unsigned char const *)sampleB;
-
-	for( int iy=0; iy < height; iy++ )
-	{
-		for( int ix=0; ix < width; ix++ ) 
-		{
-			*fdata = *fdata + w * ((unsigned int)*cdataA +(unsigned int)*cdataB);
-			
-			fdata++;
-			cdataA++;
-			cdataB++;
-		}
-		cdataA += deltaPitch;
-		cdataB += deltaPitch;
-	}
-
-	m_Frame->WhitePoint += w * 2.0f * 255.0f;
-}
-
-
-void EasyByteSampler::PrintFrame()
-{
-	float w = m_Frame->WhitePoint;
-
-	unsigned char * data = m_PrintMem;
-
-	if(0 == w)
-	{
-		memset(data, 0, m_Height * (m_Width +m_DeltaPitch)*sizeof(unsigned char));
-	}
-	else
-	{
-		float * fdata = m_Frame->Data;
-
-		int ymax = m_Height;
-		int xmax = m_Width;
-
-		w = 255.0f / w;
-
-		for( int iy=0; iy < ymax; iy++ )
-		{
-			for( int ix=0; ix < xmax; ix++ )
-			{
-				*data = (unsigned char)(w * *fdata);
-
-				fdata++;
-				data++;
-			}
-
-			data += m_DeltaPitch;
-		}
-	}
-
-	m_FramePrinter->Print(m_PrintMem);
-}
-
-
-void EasyByteSampler::Sample(unsigned char const * data, float time)
-{
-	m_CurSample = data;
-
-	EasySampler::Sample(time);
-
-	if(m_LastSample && data)
-	{
-		memcpy(m_LastSample, data, m_Height * (m_Width +m_DeltaPitch)* sizeof(unsigned char));
-		m_HasLastSample = true;
-	}
-	else
-		m_HasLastSample = false;
-}
-
-
-void EasyByteSampler::ScaleFrame(float factor)
-{
-	float w = m_Frame->WhitePoint;
-
-	if(w * factor == w)
-	{
-		// No change.
-		return;
-	}
-	
-	if(0 == w * factor)
-	{
-		// Zero.
-		m_Frame->WhitePoint = 0;
-		memset(m_Frame->Data, 0, m_Height * m_Width * sizeof(float));
-		return;
-	}
-	
-	float * fdata = m_Frame->Data;
-
-	int ymax = m_Height;
-	int xmax = m_Width;
-
-	m_Frame->WhitePoint *= factor;
-
-	for( int iy=0; iy < ymax; iy++ )
-	{
-		for( int ix=0; ix < xmax; ix++ )
-		{
-			*fdata = factor * *fdata;
-			fdata++;
-		}
-	}
-}
-
-
-
-// EasySampler /////////////////////////////////////////////////////////////////
-
-
-EasySampler::EasySampler(
-	float frameDuration,
-	float startTime,
-	float exposure)
-{
-	m_FrameDuration = frameDuration;
-	m_LastFrameTime = startTime;
-	m_LastSampleTime = startTime;
-	m_ShutterOpen = 0.0f < exposure;
-	m_ShutterOpenDuration = frameDuration * min(max(exposure, 0.0f), 1.0f);
-	m_ShutterTime = m_LastFrameTime;
-}
-
-
-bool EasySampler::CanSkipConstant(float time, float durationPerSample, int numPreviousSamplesRequired)
-{
-	// skipping is only allowed when enough samples are guaranteed to be captured to allow interpolation before the shutter is opened.
-
-	float prepareTime = numPreviousSamplesRequired * durationPerSample;
-	float timeLeft = m_FrameDuration -(time -m_LastFrameTime);
-
-	return
-		!m_ShutterOpen && prepareTime < timeLeft
-	;
-}
-
-
-void EasySampler::Sample(float time)
+void EasySamplerBase::Sample(float time)
 {	
 	float subMin = m_LastSampleTime;
 
@@ -460,3 +655,69 @@ void EasySampler::Sample(float time)
 
 	m_LastSampleTime = time;
 }
+
+
+// EasySamplerSettings /////////////////////////////////////////////////////////
+
+EasySamplerSettings::EasySamplerSettings(
+	int width, 
+	int height,
+	Method method,
+	float frameDuration,
+	float startTime,
+	float exposure,
+	float frameStrength
+)
+{
+	assert(0 <= height);
+	assert(0 <= width);
+
+	m_Exposure = exposure;
+	m_FrameDuration = frameDuration;
+	m_FrameStrength = frameStrength;
+	m_Height = height;
+	m_Method = method;
+	m_StartTime = startTime;
+	m_Width = width;	
+}
+
+EasySamplerSettings::EasySamplerSettings(EasySamplerSettings const & settings)
+{
+	m_Exposure = settings.Exposure_get();
+	m_FrameDuration = settings.FrameDuration_get();
+	m_FrameStrength = settings.FrameStrength_get();
+	m_Height = settings.Height_get();
+	m_Method = settings.Method_get();
+	m_StartTime = settings.StartTime_get();
+	m_Width = settings.Width_get();
+}
+
+float EasySamplerSettings::Exposure_get() const
+{
+	return m_Exposure;	
+}
+float EasySamplerSettings::FrameDuration_get() const
+{
+	return m_FrameDuration;
+}
+float EasySamplerSettings::FrameStrength_get() const
+{
+	return m_FrameStrength;
+}
+float EasySamplerSettings::Height_get() const
+{
+	return m_Height;	
+}
+EasySamplerSettings::Method EasySamplerSettings::Method_get() const
+{
+	return m_Method;
+}
+float EasySamplerSettings::StartTime_get() const
+{
+	return m_StartTime;
+}
+int EasySamplerSettings::Width_get() const
+{
+	return m_Width;
+}
+

@@ -806,7 +806,7 @@ void Filming::Start()
 			g_Filming_Stream[FS_depthall] = new FilmingStream(
 				takePath, !m_EnableStereoMode ? L"depthall" : L"depthall_left",
 				FB_DEPTH,
-				0.0, // Sampling not supported // samplingFrameDuration,
+				samplingFrameDuration,
 				x, y, width, height
 			);
 
@@ -815,7 +815,7 @@ void Filming::Start()
 				g_Filming_Stream[FS_depthall_right] = new FilmingStream(
 					takePath, L"depthall_right",
 					FB_DEPTH,
-					0.0, // Sampling not supported // samplingFrameDuration,
+					samplingFrameDuration,
 					x, y, width, height
 				);
 			}
@@ -826,7 +826,7 @@ void Filming::Start()
 			g_Filming_Stream[FS_depthworld] = new FilmingStream(
 				takePath, !m_EnableStereoMode ? L"depthworld" : L"depthworld_left",
 				FB_DEPTH,
-				0.0, // Sampling not supported // samplingFrameDuration,
+				samplingFrameDuration,
 				x, y, width, height
 			);
 
@@ -835,7 +835,7 @@ void Filming::Start()
 				g_Filming_Stream[FS_depthworld_right] = new FilmingStream(
 					takePath, L"depthworld_right",
 					FB_DEPTH,
-					0.0, // Sampling not supported // samplingFrameDuration,
+					samplingFrameDuration,
 					x, y, width, height
 				);
 			}
@@ -890,6 +890,7 @@ void Filming::Stop()
 
 	// in case our code is broken [again] we better also reset the mask here: : )
 	glColorMask(TRUE, TRUE, TRUE, TRUE);
+	glDepthMask(TRUE);
 
 	if(g_AfxGoldSrcComClient.GetOptimizeCaptureVis())
 		RedockGameWindow();
@@ -923,8 +924,25 @@ void LinearizeFloatDepthBuffer(GLfloat *pBuffer, unsigned int count, GLdouble zN
 	GLfloat f2 = f-n;
 
 	for(; count; count--) {
-		float t = f1/((*pBuffer)*f2-f);
-		*pBuffer = (t-n)/f2;
+		// y = (f1/(x*f2-f) -n)/f2
+		*pBuffer = (f1/(*pBuffer * f2 -f)-n)/f2;
+		pBuffer++;
+	}
+}
+
+void InverseFloatDepthBuffer(GLfloat *pBuffer, unsigned int count, GLdouble zNear, GLdouble zFar) {
+
+	GLfloat f = (GLfloat)zFar;
+	GLfloat n = (GLfloat)zNear;
+	GLfloat w = 1.0f;
+
+	GLfloat f1 = (-1)*f*n*w;
+	GLfloat f2 = f-n;
+
+	for(; count; count--) {
+		// y = (f1/(x*f2-f) -n)/f2
+		// x = ((f1/(y*f2 +n))+f)/f2
+		*pBuffer = (f1/(*pBuffer * f2 +n) +f)/f2;
 		pBuffer++;
 	}
 }
@@ -1622,6 +1640,38 @@ FilmingStream::FilmingStream(
 
 	m_Bmp = 0.0f != movie_bmp->value;
 	m_Buffer = buffer;
+
+	unsigned char ucDepthDump = (unsigned char)movie_depthdump->value;
+
+	m_DepthDebug = 0x4 & ucDepthDump;
+
+	switch(ucDepthDump)
+	{
+	case 2:
+		m_DepthFn = FD_LOG;
+	case 3:
+		m_DepthFn = FD_INV;
+	default:
+		m_DepthFn = FD_LINEAR;
+	}
+
+	m_DepthSliceLo = depth_slice_lo->value;
+	m_DepthSliceHi = depth_slice_hi->value;
+
+	if(m_DepthSliceLo < 0.0f) m_DepthSliceLo = 0.0f;
+	if(1.0f < m_DepthSliceLo) m_DepthSliceLo = 1.0f;
+
+	if(m_DepthSliceHi < 0.0f) m_DepthSliceHi = 0.0f;
+	if(1.0f < m_DepthSliceHi) m_DepthSliceHi = 1.0f;
+
+	if(m_DepthSliceHi < m_DepthSliceLo) m_DepthSliceHi = m_DepthSliceLo;
+
+	if(m_DepthSliceLo == m_DepthSliceHi)
+	{
+		m_DepthSliceLo = 0.0f;
+		m_DepthSliceHi = 1.0f;
+	}
+
 	m_DirCreated = false;
 	m_FrameCount = 0;
 	m_Sampler = 0;
@@ -1675,18 +1725,46 @@ FilmingStream::FilmingStream(
 	if(0 < samplingFrameDuration && (FB_COLOR == buffer || FB_ALPHA == buffer))
 	{
 		// activate sampling.
-		m_Sampler = new EasyByteSampler(
-			m_BytesPerPixel * width, height, m_Pitch,
-			0 == sample_smethod->value ? EasyByteSampler::ESM_Rectangle : EasyByteSampler::ESM_Trapezoid,
-			static_cast<IFramePrinter *>(this),
+
+		EasySamplerSettings settings(
+			m_BytesPerPixel * width, height,
+			0 == sample_smethod->value ? EasySamplerSettings::ESM_Rectangle : EasySamplerSettings::ESM_Trapezoid,
 			samplingFrameDuration,
 			0,
 			sample_exposure->value,
 			sample_frame_strength->value
 		);
+
+		m_Sampler = new EasyByteSampler(
+			settings,
+			m_Pitch,
+			static_cast<IFramePrinter *>(this)
+		);
 	}
 	else
 		m_Sampler = 0;
+
+
+	if(0 < samplingFrameDuration && FB_DEPTH == buffer)
+	{
+		// activate sampling.
+
+		EasySamplerSettings settings(
+			width, height,
+			0 == sample_smethod->value ? EasySamplerSettings::ESM_Rectangle : EasySamplerSettings::ESM_Trapezoid,
+			samplingFrameDuration,
+			0,
+			sample_exposure->value,
+			sample_frame_strength->value
+		);
+
+		m_SamplerFloat = new EasyFloatSampler(
+			settings,
+			static_cast<IFloatFramePrinter *>(this)
+		);
+	}
+	else
+		m_SamplerFloat = 0;
 
 }
 
@@ -1721,27 +1799,30 @@ void FilmingStream::Capture(float time, CMdt_Media_RAWGLPIC * usePic, float spsH
 	// also the GL_UNSIGNED_INT FIX is somewhat slow by now, code has to be optimized
 	if (FB_DEPTH == m_Buffer)
 	{
-		// user wants 24 Bit output, we need to cut off
+		// user wants depth output, we need to cut off
 		unsigned int uiCount = (unsigned int)m_Width * (unsigned int)m_Height;
 		void * pBuffer = usePic->GetPointer();	// the pointer where we write
 
-		unsigned char ucMethod = (unsigned char)movie_depthdump->value;
+		if(0 != m_SamplerFloat)
+		{
+			LinearizeFloatDepthBuffer((GLfloat *)pBuffer, uiCount, g_Filming.GetZNear(), g_Filming.GetZFar());
+		}
+		else
+		{
+			if(FD_LINEAR == m_DepthFn || FD_LOG == m_DepthFn)
+				LinearizeFloatDepthBuffer((GLfloat *)pBuffer, uiCount, g_Filming.GetZNear(), g_Filming.GetZFar());
 
-		if(1==ucMethod||2==ucMethod) LinearizeFloatDepthBuffer((GLfloat *)pBuffer, uiCount, g_Filming.GetZNear(), g_Filming.GetZFar());
-		if(2==ucMethod) LogarithmizeDepthBuffer((GLfloat *)pBuffer, uiCount, g_Filming.GetZNear(), g_Filming.GetZFar());
-		if(0x4 & ucMethod) DebugDepthBuffer((GLfloat *)pBuffer, uiCount);
+			if(FD_LOG == m_DepthFn)
+				LogarithmizeDepthBuffer((GLfloat *)pBuffer, uiCount, g_Filming.GetZNear(), g_Filming.GetZFar());
 
-		float sliceLo = depth_slice_lo->value;
-		float sliceHi = depth_slice_hi->value;
+			if(m_DepthDebug)
+				DebugDepthBuffer((GLfloat *)pBuffer, uiCount);
 
-		if( 0.0f<=sliceLo
-			&& sliceLo<sliceHi
-			&& sliceHi<=1.0f
-			&& (0.0f != sliceLo || 1.0f != sliceHi)
-			)
-			SliceDepthBuffer((GLfloat *)pBuffer, uiCount, sliceLo, sliceHi);
+			if(0.0f != m_DepthSliceLo || 1.0f != m_DepthSliceHi)
+				SliceDepthBuffer((GLfloat *)pBuffer, uiCount, m_DepthSliceLo, m_DepthSliceHi);
 
-		GLfloatArrayToXByteArray((GLfloat *)pBuffer, m_Width, m_Height, m_BytesPerPixel);
+			GLfloatArrayToXByteArray((GLfloat *)pBuffer, m_Width, m_Height, m_BytesPerPixel);
+		}	
 	}
 
 	if(0 != m_Sampler)
@@ -1750,6 +1831,15 @@ void FilmingStream::Capture(float time, CMdt_Media_RAWGLPIC * usePic, float spsH
 
 		m_Sampler->Sample(
 			(unsigned char const *)usePic->GetPointer(),
+			time
+		);
+	}
+	else if(0 != m_SamplerFloat)
+	{
+		// pass on to sampling system:
+
+		m_SamplerFloat->Sample(
+			(float const *)usePic->GetPointer(),
 			time
 		);
 	}
@@ -1776,6 +1866,43 @@ void FilmingStream::Print(unsigned char const * data)
 		WriteRawTarga(data, os.str().c_str(), m_Width, m_Height, m_BytesPerPixel<<3, !bColor);
 
 	m_FrameCount++;
+}
+
+
+void FilmingStream::Print(float const * data)
+{
+	if(FD_LINEAR != m_DepthFn || m_DepthDebug)
+	{
+		unsigned int uiCount = m_Height * m_Width;
+
+		// (allocation / sharing could be optimized later)
+		GLfloat * fT = new GLfloat[uiCount];
+
+		memcpy(fT, data, uiCount * sizeof(float));
+
+		if(FD_INV == m_DepthFn)
+			InverseFloatDepthBuffer(fT, uiCount, g_Filming.GetZNear(), g_Filming.GetZFar());
+
+		if(FD_LOG == m_DepthFn)
+			LogarithmizeDepthBuffer(fT, uiCount, g_Filming.GetZNear(), g_Filming.GetZFar());
+
+		if(m_DepthDebug)
+			DebugDepthBuffer(fT, uiCount);
+
+		if(0.0f != m_DepthSliceLo || 1.0f != m_DepthSliceHi)
+			SliceDepthBuffer(fT, uiCount, m_DepthSliceLo, m_DepthSliceHi);
+
+		GLfloatArrayToXByteArray(fT, m_Width, m_Height, m_BytesPerPixel);
+
+		Print((unsigned char const *)fT);
+
+		delete fT;
+	}
+	else
+	{
+		GLfloatArrayToXByteArray((GLfloat *)data, m_Width, m_Height, m_BytesPerPixel);
+		Print((unsigned char const *)data);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

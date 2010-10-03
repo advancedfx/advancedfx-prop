@@ -21,6 +21,18 @@ public:
 	virtual void Print(unsigned char const * data) abstract = 0;
 };
 
+class __declspec(novtable) IFloatFramePrinter abstract
+{
+public:
+	virtual void Print(float const * data) abstract = 0;
+};
+
+class __declspec(novtable) IXAlphaFramePrinter abstract
+{
+public:
+	virtual void Print(unsigned char const * data, unsigned char const * alpha) abstract = 0;
+};
+
 
 class __declspec(novtable) ISampleFns abstract
 {
@@ -36,26 +48,19 @@ public:
 };
 
 
-/// <summary>
-///	  Auto 2 (trapezium) / 1 (rectangle) / 0 point sampling by integration.<br />
-///   Selects, optimizes and combines the integration using a given set of base functions.
-/// </summary>
-/// <param name="sampleA">can be 0</param>
-/// <param name="sampleB">can be 0</param>
-void EasySamplerIntegrator_Fn(ISampleFns *fns, void const *sampleA, void const *sampleB, float timeA, float timeB, float subTimeA, float subTimeB);
-
+// EasySamplerBase /////////////////////////////////////////////////////////////
 
 /// <summary>
-///		Base class, not intended to be used directly.
-///		This class supplies implementation of fundamental sampling logic.
+///   Base class, not intended to be used directly.
+///   This class supplies implementation of fundamental sampling logic.
 /// </summary>
-class EasySampler abstract
+class EasySamplerBase abstract
 {
 public:
 
 protected:
 	/// <param name="exposure">time the shutter is kept open measured in number of frames</param>
-	EasySampler(
+	EasySamplerBase(
 		float frameDuration,
 		float startTime,
 		float exposure);
@@ -91,6 +96,15 @@ protected:
 	/// </summary>
 	virtual void MakeFrame() abstract = 0;
 
+protected:
+	/// <summary>
+	///	  Auto 2 (trapezium) / 1 (rectangle) / 0 point sampling by integration.<br />
+	///   Selects, optimizes and combines the integration using a given set of base functions.
+	/// </summary>
+	/// <param name="sampleA">can be 0</param>
+	/// <param name="sampleB">can be 0</param>
+	static void Integrator_Fn(ISampleFns *fns, void const *sampleA, void const *sampleB, float timeA, float timeB, float subTimeA, float subTimeB);
+
 private:
 	float m_FrameDuration;
 	float m_LastFrameTime;
@@ -101,8 +115,12 @@ private:
 };
 
 
-class EasyByteSampler : public EasySampler,
-	private ISampleFns
+// EasySamplerSettings /////////////////////////////////////////////////////////
+
+/// <summary>
+///   Encapsulates common sampler settings.
+/// </summary>
+class EasySamplerSettings
 {
 public:
 	enum Method
@@ -111,19 +129,51 @@ public:
 		ESM_Trapezoid
 	};
 
-	/// <param name="pitch">bytes of memory to skip for a row</param>
-	/// <param name="exposure">time the shutter is kept open measured in number of frames</param>
-	EasyByteSampler(
+	EasySamplerSettings(
 		int width, 
 		int height,
-		int pitch,
 		Method method,
-		IFramePrinter * framePrinter,
 		float frameDuration,
 		float startTime,
 		float exposure,
 		float frameStrength
-		);
+	);
+
+	EasySamplerSettings(EasySamplerSettings const & settings);
+
+	float Exposure_get() const;
+	float FrameDuration_get() const;
+	float FrameStrength_get() const;
+	float Height_get() const;
+	Method Method_get() const;
+	float StartTime_get() const;
+	int Width_get() const;
+
+private:
+	float m_Exposure;
+	float m_FrameDuration;
+	float m_FrameStrength;
+	int m_Height;
+	Method m_Method;
+	float m_StartTime;
+	int m_Width;
+};
+
+
+// EasyByteSampler /////////////////////////////////////////////////////////////
+
+class EasyByteSampler : public EasySamplerBase,
+	private ISampleFns
+{
+public:
+
+
+	/// <param name="pitch">bytes of memory to skip for a row</param>
+	EasyByteSampler(
+		EasySamplerSettings const & settings,
+		int pitch,
+		IFramePrinter * framePrinter
+	);
 
 	~EasyByteSampler();
 
@@ -134,19 +184,19 @@ public:
 	void Sample(unsigned char const * data, float time);
 
 protected:
-	virtual void EasySampler::MakeFrame()
+	virtual void EasySamplerBase::MakeFrame()
 	{
 		PrintFrame();
-		ClearFrame(m_FrameStrength);
+		ClearFrame(m_Settings.FrameStrength_get());
 	}
 
-	virtual void EasySampler::SubSample(
+	virtual void EasySamplerBase::SubSample(
 		float timeA,
 		float timeB,
 		float subTimeA,
 		float subTimeB)
 	{
-		EasySamplerIntegrator_Fn(this,
+		Integrator_Fn(this,
 			m_HasLastSample ? m_LastSample : 0, m_CurSample,
 			timeA, timeB, subTimeA, subTimeB
 		);
@@ -175,15 +225,13 @@ private:
 	};
 
 	unsigned char const * m_CurSample;
-	int m_DeltaPitch;
+	EasySamplerSettings m_Settings;
 	Frame * m_Frame;
-	float m_FrameStrength;
 	IFramePrinter * m_FramePrinter;
 	bool m_HasLastSample;
-	int m_Height;
 	unsigned char * m_LastSample;
+	int m_Pitch;
 	unsigned char * m_PrintMem;
-	int m_Width;
 
 	void ClearFrame(float frameStrength);
 
@@ -200,3 +248,148 @@ private:
 
 	void ScaleFrame(float factor);
 };
+
+
+// EasyFloatSampler ////////////////////////////////////////////////////////////
+
+class EasyFloatSampler : public EasySamplerBase,
+	private ISampleFns
+{
+public:
+	EasyFloatSampler(
+		EasySamplerSettings const & settings,
+		IFloatFramePrinter * framePrinter
+	);
+
+	~EasyFloatSampler();
+
+	bool CanSkipConstant(float time, float durationPerSample);
+
+	///	<param name="data">NULLPTR is interpreted as the ideal shutter being closed for the deltaTime that passed.</param>
+	/// <remarks>A closed shutter and a weight of 0 are not the same, because the integral can be different (depends on the method).</remarks>
+	void Sample(float const * data, float time);
+
+protected:
+	virtual void EasySamplerBase::MakeFrame()
+	{
+		PrintFrame();
+		ClearFrame(m_Settings.FrameStrength_get());
+	}
+
+	virtual void EasySamplerBase::SubSample(
+		float timeA,
+		float timeB,
+		float subTimeA,
+		float subTimeB)
+	{
+		Integrator_Fn(this,
+			m_HasLastSample ? m_LastSample : 0, m_CurSample,
+			timeA, timeB, subTimeA, subTimeB
+		);
+	}
+
+private:
+	float const * m_CurSample;
+	float * m_FrameData;
+	IFloatFramePrinter * m_FramePrinter;
+	float m_FrameWhitePoint;
+	float * m_PrintMem;
+	EasySamplerSettings m_Settings;
+	bool m_HasLastSample;
+	float * m_LastSample;
+
+	void ClearFrame(float frameStrength);
+
+	/// <summary>Implements ISampleFns.</summary>
+	virtual void Fn_1(void const * sample);
+
+	/// <summary>Implements ISampleFns.</summary>
+	virtual void Fn_2(void const * sample, float w);
+
+	/// <summary>Implements ISampleFns.</summary>
+	virtual void Fn_4(void const * sampleA, void const * sampleB, float w);
+
+	void PrintFrame();
+
+	void ScaleFrame(float factor);
+};
+
+
+/*
+// EasyXAlphaSampler ///////////////////////////////////////////////////////////
+
+class EasyXAlphaSampler : public EasySamplerBase,
+	private ISampleFns
+{
+public:
+
+
+	/// <param name="dataComponents">number of bytes per alpha bytes</param>
+	/// <param name="pitch">data bytes of memory to skip for a row</param>
+	/// <param name="pitch">alpha bytes of memory to skip for a row</param>
+	EasyXAlphaSampler(
+		EasySamplerSettings const & settings,
+		int dataComponents,
+		int dataPitch,
+		int alphaPitch,
+		IXAlphaFramePrinter * framePrinter
+	);
+
+	~EasyByteSampler();
+
+	bool CanSkipConstant(float time, float durationPerSample);
+
+	///	<param name="data">NULLPTR is interpreted as the ideal shutter being closed for the deltaTime that passed.</param>
+	/// <remarks>A closed shutter and a weight of 0 are not the same, because the integral can be different (depends on the method).</remarks>
+	void Sample(unsigned char const * data, float time);
+
+protected:
+	virtual void EasySamplerBase::MakeFrame()
+	{
+		PrintFrame();
+		ClearFrame(m_Settings.FrameStrength_get());
+	}
+
+	virtual void EasySamplerBase::SubSample(
+		float timeA,
+		float timeB,
+		float subTimeA,
+		float subTimeB)
+	{
+		Integrator_Fn(this,
+			m_HasLastSample ? m_LastSample : 0, m_CurSample,
+			timeA, timeB, subTimeA, subTimeB
+		);
+	}
+
+private:
+	int m_AlphaPitch;
+	unsigned char const * m_CurSample;
+	int m_DataComponents;
+	int m_DataPitch;
+	float * m_FrameAlpha;
+	float * m_FrameData;
+	float m_FrameWhitePoint;
+	EasySamplerSettings m_Settings;
+	IXAlphaFramePrinter * m_FramePrinter;
+	bool m_HasLastSample;
+	unsigned char * m_LastSample;
+	int m_Pitch;
+	unsigned char * m_PrintMem;
+
+	void ClearFrame(float frameStrength);
+
+	/// <summary>Implements ISampleFns.</summary>
+	virtual void Fn_1(void const * sample);
+
+	/// <summary>Implements ISampleFns.</summary>
+	virtual void Fn_2(void const * sample, float w);
+
+	/// <summary>Implements ISampleFns.</summary>
+	virtual void Fn_4(void const * sampleA, void const * sampleB, float w);
+
+	void PrintFrame();
+
+	void ScaleFrame(float factor);
+};
+*/

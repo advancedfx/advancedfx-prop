@@ -53,10 +53,10 @@ bool ModeKey_Begin(GLenum mode)
 
 	Filming::DRAW_RESULT res = g_Filming.shouldDraw(mode);
 
-	if (res == Filming::DR_HIDE) {
+	if (res == Filming::DR_HIDE)
+	{
 		return false;
 	}
-
 	else if (res == Filming::DR_MASK)
 	{
 		if(Filming::MS_ENTITY == g_Filming.GetMatteStage())
@@ -71,8 +71,6 @@ bool ModeKey_Begin(GLenum mode)
 			glEnable(GL_DEPTH_TEST);
 		}
 	}
-	else if (Filming::HUDRQ_NORMAL == g_Filming.giveHudRqState())
-		glColorMask(TRUE, TRUE, TRUE, TRUE); // BlendFunc for additive sprites needs special controll, don't override it
 
 	return true;
 }
@@ -206,7 +204,8 @@ void APIENTRY NewGlBegin(GLenum mode)
 
 	g_ModColorMask.OnGlBegin(mode);
 
-	if(g_ModHide.OnGlBegin(mode)) glBegin(mode);
+	if(g_ModHide.OnGlBegin(mode))
+		glBegin(mode);
 }
 
 void APIENTRY NewGlEnd(void)
@@ -227,7 +226,6 @@ void APIENTRY NewGlEnd(void)
 		ModeAlpha_End();
 
 	g_Filming.DoWorldFxEnd();
-
 }
 
 void APIENTRY NewGlClear(GLbitfield mask)

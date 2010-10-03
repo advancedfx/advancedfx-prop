@@ -41,7 +41,6 @@ void __stdcall CrosshairFix_Hooking_Func(  DWORD *this_ptr, float fUnkTime, DWOR
 
 	bool freezeCh = g_Cstrike_CrossHair_Block;
 	bool fix = !freezeCh && 0.0 < g_cstrike_ch_frameT;
-
 	
 	if(fix)
 	{
@@ -66,7 +65,7 @@ void __stdcall CrosshairFix_Hooking_Func(  DWORD *this_ptr, float fUnkTime, DWOR
 				if(doLoop)
 				{
 					glGetBooleanv(GL_COLOR_WRITEMASK, oldMasks);
-					glGetBooleanv(GL_COLOR_WRITEMASK, &(oldMasks[4]));
+					glGetBooleanv(GL_DEPTH_WRITEMASK, &(oldMasks[4]));
 
 					glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 					glDepthMask(GL_FALSE);

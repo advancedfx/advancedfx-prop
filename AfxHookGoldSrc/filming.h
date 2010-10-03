@@ -23,10 +23,12 @@ Description : see mdt_gltools.h
 
 
 enum FILMING_BUFFER { FB_COLOR, FB_DEPTH, FB_ALPHA };
+enum FILMING_DEPTHFN { FD_INV, FD_LINEAR, FD_LOG };
 
 
 class FilmingStream :
-	public IFramePrinter
+	private IFramePrinter,
+	private IFloatFramePrinter
 {
 public:
 	/// <param name="sampleDuration">&lt;= 0: no sampling, sample duration (1/sps) otherwise</param>
@@ -41,13 +43,14 @@ public:
 
 	void Capture(float sampleDuration, CMdt_Media_RAWGLPIC * usePic, float spsHint);
 
-	virtual void Print(unsigned char const * data);
-	
-
 private:
 	bool m_Bmp;
 	FILMING_BUFFER m_Buffer;
 	unsigned char m_BytesPerPixel;
+	bool m_DepthDebug;
+	FILMING_DEPTHFN m_DepthFn;
+	float m_DepthSliceLo;
+	float m_DepthSliceHi;
 	bool m_DirCreated;
 	int m_FrameCount;
 	GLenum m_GlBuffer;
@@ -55,10 +58,17 @@ private:
 	int m_Height;
 	std::wstring m_Path;
 	EasyByteSampler * m_Sampler;
+	EasyFloatSampler * m_SamplerFloat;
 	int m_Pitch;
 	int m_Width;
 	int m_X;
 	int m_Y;
+
+	/// <summary>Implements IFramePrinter.</summary>
+	virtual void Print(unsigned char const * data);
+
+	/// <summary>Implements IFloatFramePrinter.</summary>
+	virtual void Print(float const * data);
 };
 
 
