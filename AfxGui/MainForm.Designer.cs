@@ -43,6 +43,7 @@
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
             this.developerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuCustomLoader = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuGuidToClipBoard = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuAdvancedFxOrg = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripSeparator();
@@ -57,7 +58,7 @@
             this.statusLabelAutoYes = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusLabelAutoNo = new System.Windows.Forms.ToolStripStatusLabel();
             this.gameWindowPanel = new System.Windows.Forms.Panel();
-            this.menuGuidToClipBoard = new System.Windows.Forms.ToolStripMenuItem();
+            this.statusLabelIgnore = new System.Windows.Forms.ToolStripStatusLabel();
             this.mainMenu.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.stripEnableUpdateCheck.SuspendLayout();
@@ -116,7 +117,7 @@
             // menuStatusBar
             // 
             this.menuStatusBar.Name = "menuStatusBar";
-            this.menuStatusBar.Size = new System.Drawing.Size(152, 22);
+            this.menuStatusBar.Size = new System.Drawing.Size(135, 22);
             this.menuStatusBar.Text = "Status Bar";
             this.menuStatusBar.Click += new System.EventHandler(this.statusBarToolStripMenuItem_Click);
             // 
@@ -135,7 +136,7 @@
             // demoToolsToolStripMenuItem
             // 
             this.demoToolsToolStripMenuItem.Name = "demoToolsToolStripMenuItem";
-            this.demoToolsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.demoToolsToolStripMenuItem.Size = new System.Drawing.Size(141, 22);
             this.demoToolsToolStripMenuItem.Text = "Demo Tools";
             this.demoToolsToolStripMenuItem.Click += new System.EventHandler(this.demoToolsToolStripMenuItem_Click);
             // 
@@ -144,7 +145,7 @@
             this.calculatorsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menuFileSize});
             this.calculatorsToolStripMenuItem.Name = "calculatorsToolStripMenuItem";
-            this.calculatorsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.calculatorsToolStripMenuItem.Size = new System.Drawing.Size(141, 22);
             this.calculatorsToolStripMenuItem.Text = "Calculators";
             // 
             // menuFileSize
@@ -157,14 +158,14 @@
             // skyToolStripMenuItem
             // 
             this.skyToolStripMenuItem.Name = "skyToolStripMenuItem";
-            this.skyToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.skyToolStripMenuItem.Size = new System.Drawing.Size(141, 22);
             this.skyToolStripMenuItem.Text = "Sky Manger";
             this.skyToolStripMenuItem.Click += new System.EventHandler(this.skyToolStripMenuItem_Click);
             // 
             // toolStripMenuItem2
             // 
             this.toolStripMenuItem2.Name = "toolStripMenuItem2";
-            this.toolStripMenuItem2.Size = new System.Drawing.Size(149, 6);
+            this.toolStripMenuItem2.Size = new System.Drawing.Size(138, 6);
             // 
             // developerToolStripMenuItem
             // 
@@ -172,7 +173,7 @@
             this.menuCustomLoader,
             this.menuGuidToClipBoard});
             this.developerToolStripMenuItem.Name = "developerToolStripMenuItem";
-            this.developerToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.developerToolStripMenuItem.Size = new System.Drawing.Size(141, 22);
             this.developerToolStripMenuItem.Text = "Developer";
             // 
             // menuCustomLoader
@@ -181,6 +182,13 @@
             this.menuCustomLoader.Size = new System.Drawing.Size(171, 22);
             this.menuCustomLoader.Text = "Custom Loader";
             this.menuCustomLoader.Click += new System.EventHandler(this.menuCustomLoader_Click);
+            // 
+            // menuGuidToClipBoard
+            // 
+            this.menuGuidToClipBoard.Name = "menuGuidToClipBoard";
+            this.menuGuidToClipBoard.Size = new System.Drawing.Size(171, 22);
+            this.menuGuidToClipBoard.Text = "GUID to ClipBoard";
+            this.menuGuidToClipBoard.Click += new System.EventHandler(this.menuGuidToClipBoard_Click);
             // 
             // helpToolStripMenuItem
             // 
@@ -232,6 +240,7 @@
             // 
             this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.statusLabelUpdate,
+            this.statusLabelIgnore,
             this.statusLabelHide});
             this.statusStrip.Location = new System.Drawing.Point(0, 251);
             this.statusStrip.Name = "statusStrip";
@@ -244,7 +253,7 @@
             // statusLabelUpdate
             // 
             this.statusLabelUpdate.Name = "statusLabelUpdate";
-            this.statusLabelUpdate.Size = new System.Drawing.Size(324, 17);
+            this.statusLabelUpdate.Size = new System.Drawing.Size(257, 17);
             this.statusLabelUpdate.Spring = true;
             this.statusLabelUpdate.Text = "Update status known";
             this.statusLabelUpdate.Click += new System.EventHandler(this.statusLabelUpdate_Click);
@@ -255,8 +264,8 @@
                         | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right)
                         | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
             this.statusLabelHide.Name = "statusLabelHide";
-            this.statusLabelHide.Size = new System.Drawing.Size(31, 17);
-            this.statusLabelHide.Text = "hide";
+            this.statusLabelHide.Size = new System.Drawing.Size(24, 17);
+            this.statusLabelHide.Text = "Ok";
             this.statusLabelHide.Click += new System.EventHandler(this.statusLabelHide_Click);
             // 
             // stripEnableUpdateCheck
@@ -308,15 +317,19 @@
             this.gameWindowPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.gameWindowPanel.Location = new System.Drawing.Point(0, 24);
             this.gameWindowPanel.Name = "gameWindowPanel";
-            this.gameWindowPanel.Size = new System.Drawing.Size(370, 249);
+            this.gameWindowPanel.Size = new System.Drawing.Size(370, 227);
             this.gameWindowPanel.TabIndex = 3;
             // 
-            // menuGuidToClipBoard
+            // statusLabelIgnore
             // 
-            this.menuGuidToClipBoard.Name = "menuGuidToClipBoard";
-            this.menuGuidToClipBoard.Size = new System.Drawing.Size(171, 22);
-            this.menuGuidToClipBoard.Text = "GUID to ClipBoard";
-            this.menuGuidToClipBoard.Click += new System.EventHandler(this.menuGuidToClipBoard_Click);
+            this.statusLabelIgnore.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top)
+                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right)
+                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
+            this.statusLabelIgnore.Name = "statusLabelIgnore";
+            this.statusLabelIgnore.Size = new System.Drawing.Size(43, 17);
+            this.statusLabelIgnore.Text = "Ignore";
+            this.statusLabelIgnore.Visible = false;
+            this.statusLabelIgnore.Click += new System.EventHandler(this.statusLabelIgnore_Click);
             // 
             // MainForm
             // 
@@ -375,5 +388,6 @@
         private System.Windows.Forms.ToolStripStatusLabel statusLabelAutoNo;
         private System.Windows.Forms.Panel gameWindowPanel;
         private System.Windows.Forms.ToolStripMenuItem menuGuidToClipBoard;
+        private System.Windows.Forms.ToolStripStatusLabel statusLabelIgnore;
     }
 }

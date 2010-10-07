@@ -6,6 +6,19 @@
 
 <release>
 <name>HLAE</name>
+<version>2.2.20.2</version>
+<time>2010-10-07T19:40Z</time>
+<changes>
+<change type="added">
+Added ignore update button for update check.
+</change>
+</changes>
+</release>
+
+
+
+<release>
+<name>HLAE</name>
 <version>2.2.20.1</version>
 <time>2010-10-07T17:31Z</time>
 <changes>

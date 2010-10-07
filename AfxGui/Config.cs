@@ -133,6 +133,7 @@ public class CfgSettings
     public CfgCustomLoader CustomLoader;
     public CfgDemoTools DemoTools;
     public SByte UpdateCheck;
+    public Guid IgnoreUpdateGuid;
 
 	public CfgSettings()
 	{

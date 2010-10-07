@@ -18,6 +18,7 @@ namespace AfxGui
     interface IUpdateCheckResult
     {
         bool IsUpdated { get; }
+        Guid Guid { get; }
         Uri Uri { get; }
     }
 
@@ -58,8 +59,7 @@ namespace AfxGui
 
             m_Guids = new Guid[]{
                 // always put the current guid first.
-                new Guid("667c7650-d48e-4694-8b05-c7d067661bfa"),
-				new Guid("b2c74ffb-f7bc-41d9-bb56-5de53212c1d6")
+                new Guid("f714b9eb-c336-4057-956e-3ccbfefe9a3c")
             };
 
 	        m_Targets = new LinkedList<UpdateCheckNotificationTarget>();
@@ -138,9 +138,10 @@ namespace AfxGui
         class UpdateInfo :
             IUpdateCheckResult
         {
-            public UpdateInfo(bool isUpdated, Uri uri)
+            public UpdateInfo(bool isUpdated, Guid guid, Uri uri)
             {
                 m_IsUpdated = isUpdated;
+                m_Guid = guid;
                 m_Uri = uri;
             }
 
@@ -202,8 +203,8 @@ namespace AfxGui
                     return null;
 
                 return new UpdateInfo(
-                    0 > Array.IndexOf<Guid>(guids, guid), // Is updated if the guid is not known to us, remember that Guid is a value class.
-                    uri
+                    0 > Array.IndexOf<Guid>(guids, guid), // updated when the guid is not known to us
+                    guid, uri
                 );
             }
 
@@ -218,6 +219,14 @@ namespace AfxGui
                 }
             }
 
+            Guid IUpdateCheckResult.Guid
+            {
+                get
+                {
+                    return m_Guid;
+                }
+            }
+
             Uri IUpdateCheckResult.Uri
             {
                 get
@@ -229,6 +238,7 @@ namespace AfxGui
             //
             //  Private members:
 	        bool m_IsUpdated;
+            Guid m_Guid;
 	        Uri m_Uri;
         }
 

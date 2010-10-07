@@ -36,6 +36,7 @@ namespace AfxGui
         //
         // Private members:
 
+        Guid m_LastUpdateGuid;
         hlae.remoting.HlaeRemoting m_HlaeRemoting;
         UpdateCheckNotificationTarget m_UpdateCheckNotification;
 
@@ -47,7 +48,15 @@ namespace AfxGui
 		        if(checkResult.IsUpdated) 
                 {
 			        // Updated:
-			        statusStrip.Visible = true;
+
+                    m_LastUpdateGuid = checkResult.Guid;
+
+                    Guid ignoreGuid = GlobalConfig.Instance.Settings.IgnoreUpdateGuid;
+
+                    bool notIgnored = null == ignoreGuid || ignoreGuid != checkResult.Guid;
+
+                    statusLabelIgnore.Visible = notIgnored;
+                    statusStrip.Visible = statusStrip.Visible || notIgnored;
 			        statusLabelUpdate.IsLink = true;
 			        statusLabelUpdate.Tag = null != checkResult.Uri ? checkResult.Uri.ToString() : "http://advancedfx.org/";
 			        statusLabelUpdate.Text = "Update available!";
@@ -57,7 +66,8 @@ namespace AfxGui
 		        else
                 {
 			        // Is recent:
-			        statusLabelUpdate.IsLink = false;
+                    statusLabelIgnore.Visible = false;
+                    statusLabelUpdate.IsLink = false;
 			        statusLabelUpdate.Text = "Your version is up to date :)";
 			        statusLabelUpdate.ForeColor = Color.Black;
 			        statusLabelUpdate.BackColor = Color.LightGreen;
@@ -66,7 +76,8 @@ namespace AfxGui
 	        else
             {
 		        // Has no result (s.th. went wrong):
-		        statusStrip.Visible = true;
+                statusLabelIgnore.Visible = false;
+                statusStrip.Visible = true;
 		        statusLabelUpdate.IsLink = true;
 		        statusLabelUpdate.Tag = "http://advancedfx.org/";
 		        statusLabelUpdate.Text = "Update check failed :(";
@@ -219,6 +230,13 @@ namespace AfxGui
         private void menuGuidToClipBoard_Click(object sender, EventArgs e)
         {
             Clipboard.SetText(GlobalUpdateCheck.Instance.Guid.ToString());           
+        }
+
+        private void statusLabelIgnore_Click(object sender, EventArgs e)
+        {
+            GlobalConfig.Instance.Settings.IgnoreUpdateGuid = m_LastUpdateGuid;
+            this.statusStrip.Visible = false;
+            this.statusLabelIgnore.Visible = false;
         }
     }
 }
