@@ -12,11 +12,11 @@
 
 #include <assert.h>
 
-using namespace afx;
+using namespace Afx;
 
 Ref::Ref()
 {
-	m_RefCount = 1;
+	m_RefCount = 0;
 }
 
 Ref::~Ref()

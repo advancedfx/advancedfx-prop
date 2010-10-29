@@ -12,7 +12,7 @@
 
 #include "Image.h"
 
-namespace afx {
+namespace Afx {
 
 
 // GlImage /////////////////////////////////////////////////////////////////////
@@ -51,4 +51,4 @@ private:
 
 
 
-} // namespace afx {
+} // namespace Afx {

@@ -544,25 +544,6 @@ REGISTER_CMD_FUNC(aim_layers)
 }
 
 
-REGISTER_CMD_FUNC(showentities)
-{
-	cl_entity_t *pEnt = NULL;
-
-	pEngfuncs->Con_Printf("Showing known entities with models:\n");
-
-	for (int i = 0; i < 1024; i++)
-	{
-		pEnt = pEngfuncs->GetEntityByIndex(i);
-
-		if(pEnt && pEnt->model)
-		{
-			int iDistance = (int) (pEnt->origin - ppmove->origin).Length();
-			pEngfuncs->Con_Printf("  %03d. %s (dist: %d)\n", i, pEnt->model->name, iDistance);
-		}
-	}
-}
-
-
 REGISTER_CMD_FUNC(aim_offset)
 {
 	if (pEngfuncs->Cmd_Argc() == 4)

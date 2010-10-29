@@ -118,6 +118,7 @@
     <ClCompile Include="..\shared\vcpp\GlImage.cpp" />
     <ClCompile Include="..\shared\vcpp\Image.cpp" />
     <ClCompile Include="..\shared\vcpp\Ref.cpp" />
+    <ClCompile Include="..\shared\vcpp\Expressions.cpp" />
     <ClCompile Include="AfxGoldSrcComClient.cpp" />
     <ClCompile Include="aiming.cpp" />
     <ClCompile Include="camexport.cpp" />
@@ -188,7 +189,6 @@
     <ClCompile Include="hooks\hw\R_DrawParticles.cpp" />
     <ClCompile Include="hooks\hw\R_DrawViewModel.cpp" />
     <ClCompile Include="hooks\hw\R_PolyBlend.cpp" />
-    <ClCompile Include="bits\bits.cpp" />
     <ClCompile Include="..\shared\bvhexport.cpp" />
     <ClCompile Include="..\shared\bvhimport.cpp" />
     <ClCompile Include="..\shared\detours.cpp" />
@@ -203,6 +203,7 @@
     <ClInclude Include="..\shared\vcpp\GlImage.h" />
     <ClInclude Include="..\shared\vcpp\Image.h" />
     <ClInclude Include="..\shared\vcpp\Ref.h" />
+    <ClInclude Include="..\shared\vcpp\Expressions.h" />
     <ClInclude Include="AfxGoldSrcComClient.h" />
     <ClInclude Include="aiming.h" />
     <ClInclude Include="camexport.h" />
@@ -256,8 +257,6 @@
     <ClInclude Include="hooks\hw\R_DrawParticles.h" />
     <ClInclude Include="hooks\hw\R_DrawViewModel.h" />
     <ClInclude Include="hooks\hw\R_PolyBlend.h" />
-    <ClInclude Include="bits\bits.h" />
-    <ClInclude Include="bits\bits_Js.h" />
     <ClInclude Include="..\shared\bvhexport.h" />
     <ClInclude Include="..\shared\bvhimport.h" />
     <ClInclude Include="..\shared\detours.h" />

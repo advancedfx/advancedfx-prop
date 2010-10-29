@@ -10,7 +10,7 @@
 
 #include "GlImage.h"
 
-using namespace afx;
+using namespace Afx;
 
 
 int CalcGlTypeByteCount(GLenum eGLtype)

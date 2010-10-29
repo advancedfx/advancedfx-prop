@@ -10,7 +10,7 @@
 
 #include "Image.h"
 
-using namespace afx;
+using namespace Afx;
 
 
 // ImageX16FromImageX8 /////////////////////////////////////////////////////////

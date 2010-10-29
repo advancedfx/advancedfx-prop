@@ -13,7 +13,7 @@
 #include "Data.h"
 #include "Ref.h"
 
-namespace afx {
+namespace Afx {
 
 struct __declspec(novtable) ICapture abstract
 {
@@ -97,4 +97,4 @@ public:
 };
 
 
-} // namespace afx {
+} // namespace Afx {

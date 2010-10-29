@@ -10,7 +10,7 @@
 
 #include "Ref.h"
 
-namespace afx {
+namespace Afx {
 
 struct __declspec(novtable) IData abstract
 {
@@ -47,4 +47,4 @@ private:
 	void * m_Pointer;
 };
 
-} // namespace afx {
+} // namespace Afx {

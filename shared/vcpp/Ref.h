@@ -8,7 +8,7 @@
 // First changes
 // 2010-04-24 dominik.matrixstorm.com
 
-namespace afx {
+namespace Afx {
 
 /// <summary>
 /// Object which's life-time is managed using
@@ -41,4 +41,4 @@ private:
 
 };
 
-} // namespace afx {
+} // namespace Afx {

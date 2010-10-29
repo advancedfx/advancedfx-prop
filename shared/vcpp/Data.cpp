@@ -10,7 +10,7 @@
 
 #include "Data.h"
 
-using namespace afx;
+using namespace Afx;
 
 Data::Data(void * pointer)
 {

@@ -41,12 +41,11 @@ extern playermove_s *ppmove;
 extern float clamp(float, float, float);
 
 REGISTER_DEBUGCVAR(camera_test, "0", 0);
-
-
 REGISTER_DEBUGCVAR(depth_bpp, "8", 0);
 REGISTER_DEBUGCVAR(depth_slice_lo, "0.0", 0);
 REGISTER_DEBUGCVAR(depth_slice_hi, "1.0", 0);
 REGISTER_DEBUGCVAR(gl_force_noztrick, "1", 0);
+REGISTER_DEBUGCVAR(debug_mt, "0", 0);
 REGISTER_DEBUGCVAR(sample_frame_strength, "1.0", 0);
 REGISTER_DEBUGCVAR(sample_smethod, "1", 0);
 REGISTER_DEBUGCVAR(print_frame, "0", 0);
@@ -1175,6 +1174,35 @@ Filming::DRAW_RESULT Filming::shouldDraw(GLenum mode)
 	bool bEntityQuadWorld  = 0x01 & iMatteEntityQuads;
 	bool bEntityQuadEntity = 0x02 & iMatteEntityQuads;
 
+
+	if(debug_mt->value)
+	{
+		cl_entity_t *ce = pEngStudio->GetCurrentEntity();
+
+		if(ce)
+		{
+			return MS_ENTITY == m_iMatteStage && ce->index >= (int)debug_mt->value ? DR_NORMAL : DR_HIDE;
+		}
+	}
+
+	if (bFilterEntities)
+	{
+		// Apply entity Filter list:
+		cl_entity_t *ce = pEngStudio->GetCurrentEntity();
+
+		if(ce)
+		{
+			bool bActive = _InMatteEntities(ce->index);
+			switch(m_iMatteStage) {
+			case MS_WORLD:
+				return !bActive ? DR_NORMAL : DR_HIDE;
+			case MS_ENTITY:
+				return bActive ? DR_NORMAL : (bMatteXray ? DR_HIDE : DR_MASK );
+			};
+			return bActive ? DR_NORMAL : DR_HIDE;
+		}
+	}
+
 	// in R_Particles:
 	if(g_ModInfo.In_R_DrawParticles_get()) {
 		switch(m_iMatteStage) {
@@ -1193,20 +1221,8 @@ Filming::DRAW_RESULT Filming::shouldDraw(GLenum mode)
 		if(!ce)
 			return DR_NORMAL;
 
-		// Apply entity Filter list:
-		if (bFilterEntities) {
-			bool bActive = _InMatteEntities(ce->index);
-			switch(m_iMatteStage) {
-			case MS_WORLD:
-				return !bActive ? DR_NORMAL : DR_HIDE;
-			case MS_ENTITY:
-				return bActive ? DR_NORMAL : (bMatteXray ? DR_HIDE : DR_MASK );
-			};
-			return bActive ? DR_NORMAL : DR_HIDE;
-		}
-
 		// w_* models_:
-		else if(ce->model && ce->model->type == mod_brush && strncmp(ce->model->name, "maps/", 5) != 0) {
+		if(ce->model && ce->model->type == mod_brush && strncmp(ce->model->name, "maps/", 5) != 0) {
 			switch(m_iMatteStage) {
 			case MS_WORLD:
 				return bWmodelWorld ? DR_NORMAL : DR_HIDE;

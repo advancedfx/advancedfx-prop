@@ -4,14 +4,78 @@
 #include <gl\gl.h>
 
 #include <hlsdk.h>
+#include "pm_shared.h"
 
-// Own includes:
+#include "hooks/HookHw.h"
 #include "cmdregister.h"
 #include "hl_addresses.h"
 
+REGISTER_DEBUGCVAR(lookingat_flags, "1", 0);
 
-extern cl_enginefuncs_s* pEngfuncs;
-extern playermove_s* ppmove;
+REGISTER_DEBUGCMD_FUNC(print_mapentites)
+{
+	char * cEnts = 0;
+	cl_entity_t *pEnt = pEngfuncs->GetEntityByIndex(0);
+
+	if(pEnt && pEnt->model) cEnts = pEnt->model->entities; 
+
+	if(cEnts) pEngfuncs->Con_Printf("%s\n", cEnts);
+	else pEngfuncs->Con_Printf("NULL\n");
+}
+
+
+REGISTER_DEBUGCMD_FUNC(lookingat)
+{
+	vec3_t v_end;
+	vec3_t v_angles;
+	vec3_t v_start = ppmove->origin;
+
+	pEngfuncs->GetViewAngles(v_angles);
+	pEngfuncs->pfnAngleVectors(v_angles, v_end, NULL, NULL);
+
+	v_end[0] *= 8192;
+	v_end[1] *= 8192;
+	v_end[2] *= 8192;
+
+	v_end[0] += v_start[0];
+	v_end[1] += v_start[1];
+	v_end[2] += v_start[2];
+
+	pEngfuncs->Con_Printf("You're looking at:\n");
+
+	bool bContinue;
+	int maxHits = 0;
+	int ignoreEnt = -1;
+	do
+	{	
+		pmtrace_t * trace = pEngfuncs->PM_TraceLine( v_start, v_end, (int)lookingat_flags->value /* PM_TRACELINE_ANYVISIBLE */, 2 /* point based hull*/, ignoreEnt);
+
+		bContinue = 0 <= trace->ent;
+
+		if(bContinue)
+		{
+			float fDist = (trace->endpos -ppmove->origin).Length();
+
+			maxHits++;
+
+			pEngfuncs->Con_Printf("\t%02d. #%i hit at (%.2f,%.2f,%.2f) in %.2f dist", maxHits, trace->ent, trace->endpos[0], trace->endpos[1], trace->endpos[2], fDist);
+
+			cl_entity_s *ent = pEngfuncs->GetEntityByIndex(trace->ent);
+			if(ent)
+			{
+				pEngfuncs->Con_Printf(", enity #%i", ent->index);
+				if(ent->model) pEngfuncs->Con_Printf(", model name \"%s\"", ent->model->name);
+			}
+			pEngfuncs->Con_Printf("\n");
+
+			bContinue = 0 < trace->ent && 1.0f < (v_end -trace->endpos).Length();
+			ignoreEnt = trace->ent;
+			v_start = trace->endpos;
+		}
+	} while(bContinue);
+
+	if(0 == maxHits) pEngfuncs->Con_Printf("\tNothing known.\n");
+}
 
 
 REGISTER_CMD_FUNC(whereami)
@@ -20,6 +84,7 @@ REGISTER_CMD_FUNC(whereami)
 	pEngfuncs->GetViewAngles(angles);
 	pEngfuncs->Con_Printf("Location: %fx %fy %fz\nAngles: %fx %fy %fz\n", ppmove->origin.x, ppmove->origin.y, ppmove->origin.z, angles[0], angles[1], angles[2]);
 }
+
 
 void PrintDebugPlayerInfo(cl_entity_s *pl,int itrueindex)
 {
@@ -62,6 +127,7 @@ REGISTER_CMD_FUNC(listplayers)
 
 }
 
+
 // _mirv_info - Print some informations into the console that might be usefull. when people want to report problems they should copy the console output of the command.
 REGISTER_DEBUGCMD_FUNC(info)
 {
@@ -78,6 +144,7 @@ REGISTER_DEBUGCMD_FUNC(info)
 	pEngfuncs->Con_Printf("GL_PACK_ALIGNMENT: %i\n",gi);
 	pEngfuncs->Con_Printf("<<<< <<<< <<<< <<<<\n");
 }
+
 
 REGISTER_DEBUGCMD_FUNC(list_addresses) {
 	unsigned int cnt = AfxAddr_Debug_GetCount();
