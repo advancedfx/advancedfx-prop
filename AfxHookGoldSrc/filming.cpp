@@ -424,6 +424,7 @@ Filming::Filming()
 {
 	m_bInWireframe = false;
 	m_EnableStereoMode = false;
+	m_UseXpress = false;
 
 		_cameraofs.right = 0;
 		_cameraofs.up = 0;
@@ -448,11 +449,31 @@ Filming::Filming()
 	 bRequestingMatteTextUpdate=false;
 
 	 matte_entities_r.bNotEmpty=false; // by default empty
+
+/*
+	//
+	// Set-up the soap bubble:
+
+	m_Bubble = BubbleFactory::StandardBubble();
+	m_Bubble->Ref()->AddRef();
+
+	m_Bubble->Add(m_Vars.CurrentEntityIndex, "CurrentEntityIndex");
+	m_Bubble->Add(m_Vars.CurrentGlMode, "CurrentGlMode");
+	m_Bubble->Add(m_Vars.CurrentStreamIndex, "CurrentStreamIndex");
+	m_Bubble->Add(m_Vars.InRDrawEntities, "InRDrawEntities");
+	m_Bubble->Add(m_Vars.InRDrawEntitiesOnList, "InRDrawEntitiesOnList");
+	m_Bubble->Add(m_Vars.InRDrawViewModel, "InRDrawViewModel");
+	m_Bubble->Add(m_Vars.InRRenderView, "InRRenderView");
+	m_Bubble->Add(m_Vars.IsFilming, "IsFilming");
+*/
 }
 
 Filming::~Filming()
 // destructor
 {
+/*
+	m_Bubble->Ref()->Release();
+*/
 }
 
 void Filming::GetCameraOfs(float *right, float *up, float *forward)
@@ -845,11 +866,13 @@ void Filming::Start()
 	//
 
 	g_ModInfo.SetRecording(true);
+//	m_Vars.IsFilming->Set(true);
 }
 
 void Filming::Stop()
 {
 	g_ModInfo.SetRecording(false);
+//	m_Vars.IsFilming->Set(false);
 
 	//
 
@@ -1174,6 +1197,22 @@ Filming::DRAW_RESULT Filming::shouldDraw(GLenum mode)
 	bool bEntityQuadWorld  = 0x01 & iMatteEntityQuads;
 	bool bEntityQuadEntity = 0x02 & iMatteEntityQuads;
 
+	if(m_UseXpress)
+	{	
+/*		{
+			cl_entity_t *ce = pEngStudio->GetCurrentEntity();
+			m_Vars.CurrentEntityIndex->Set( ce ? ce->index : -1);
+		}
+		m_Vars.CurrentGlMode->Set(mode);
+		m_Vars.CurrentStreamIndex->Set(
+			MS_ENTITY == m_iMatteStage ? 1 : (MS_WORLD == m_iMatteStage || MS_ALL == m_iMatteStage ? 0 : -1)
+		);
+		m_Vars.InRDrawEntities->Set(g_ModInfo.In_R_DrawEntitiesOnList_get());
+		m_Vars.InRDrawEntitiesOnList->Set(g_ModInfo.In_R_DrawEntitiesOnList_get());
+		m_Vars.InRDrawViewModel->Set(g_ModInfo.In_R_DrawViewModel_get());
+		m_Vars.InRRenderView->Set(g_ModInfo.In_R_Renderview_get());
+*/
+	}
 
 	if(debug_mt->value)
 	{
@@ -1182,24 +1221,6 @@ Filming::DRAW_RESULT Filming::shouldDraw(GLenum mode)
 		if(ce)
 		{
 			return MS_ENTITY == m_iMatteStage && ce->index >= (int)debug_mt->value ? DR_NORMAL : DR_HIDE;
-		}
-	}
-
-	if (bFilterEntities)
-	{
-		// Apply entity Filter list:
-		cl_entity_t *ce = pEngStudio->GetCurrentEntity();
-
-		if(ce)
-		{
-			bool bActive = _InMatteEntities(ce->index);
-			switch(m_iMatteStage) {
-			case MS_WORLD:
-				return !bActive ? DR_NORMAL : DR_HIDE;
-			case MS_ENTITY:
-				return bActive ? DR_NORMAL : (bMatteXray ? DR_HIDE : DR_MASK );
-			};
-			return bActive ? DR_NORMAL : DR_HIDE;
 		}
 	}
 
@@ -1221,8 +1242,20 @@ Filming::DRAW_RESULT Filming::shouldDraw(GLenum mode)
 		if(!ce)
 			return DR_NORMAL;
 
+		// Apply entity Filter list:
+		if (bFilterEntities) {
+			bool bActive = _InMatteEntities(ce->index);
+			switch(m_iMatteStage) {
+			case MS_WORLD:
+				return !bActive ? DR_NORMAL : DR_HIDE;
+			case MS_ENTITY:
+				return bActive ? DR_NORMAL : (bMatteXray ? DR_HIDE : DR_MASK );
+			};
+			return bActive ? DR_NORMAL : DR_HIDE;
+		}
+
 		// w_* models_:
-		if(ce->model && ce->model->type == mod_brush && strncmp(ce->model->name, "maps/", 5) != 0) {
+		else if(ce->model && ce->model->type == mod_brush && strncmp(ce->model->name, "maps/", 5) != 0) {
 			switch(m_iMatteStage) {
 			case MS_WORLD:
 				return bWmodelWorld ? DR_NORMAL : DR_HIDE;

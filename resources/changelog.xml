@@ -3,7 +3,7 @@
 
 <changelog>
 
-
+<!--
 <release>
 <name>HLAE</name>
 <version>2.2.21.0</version>
@@ -12,11 +12,22 @@
 <change type="added">
 Added mirv_lookingat which tries to find out what you're looking at.
 </change>
+</changes>
+</release>
+-->
+
+
+<release>
+<name>HLAE</name>
+<version>2.2.20.3</version>
+<time>2010-10-31T17:31Z</time>
+<changes>
 <change type="updated">
-Changed mirv_matte_entities to override everything else when enabled.
+Included AfxHookSource 0.0.3.10 (2010-10-31T17:50Z).
 </change>
 </changes>
 </release>
+
 
 
 <release>
