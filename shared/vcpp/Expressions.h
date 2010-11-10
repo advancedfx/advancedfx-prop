@@ -158,34 +158,174 @@ struct __declspec(novtable) Tools abstract
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-// Implementation classes:
+// Implementation support classes:
+
+struct __declspec(novtable) IBoolGetter abstract
+{
+	virtual ::Afx::IRef * Ref (void) abstract = 0;
+
+	virtual bool Get (void) abstract = 0;
+};
+
+struct __declspec(novtable) IBoolSetter abstract
+{
+	virtual ::Afx::IRef * Ref (void) abstract = 0;
+
+	virtual void Set (bool value) abstract = 0;
+};
+
+struct __declspec(novtable) IIntGetter abstract
+{
+	virtual ::Afx::IRef * Ref (void) abstract = 0;
+
+	virtual int Get (void) abstract = 0;
+};
+
+struct __declspec(novtable) IIntSetter abstract
+{
+	virtual ::Afx::IRef * Ref (void) abstract = 0;
+
+	virtual void Set (int value) abstract = 0;
+};
 
 
-/// <summary>Function that takes no arguments and returns Bool</summary>
-class BoolFunction abstract :  public Ref,
-	public IBool,
-	public ICompileable
+/// <summary>Compiles as: -&gt; Bool</summary>
+class BoolGetter abstract :  public Ref,
+	public IBoolGetter
 {
 public:
 	virtual ICompiled * Compile (ICompileArgs * args);
 
-	virtual bool EvalBool (void) abstract = 0;
+	virtual bool Get (void) abstract = 0;
 
 	virtual ::Afx::IRef * Ref (void);
 };
 
 
-class BoolVariable :  public BoolFunction
+/// <summary>Compiles as: Bool -&gt; Void</summary>
+class BoolSetter abstract :  public Ref,
+	public ICompileable,
+	public IBoolSetter
 {
 public:
-	BoolVariable();
-	BoolVariable(bool value);
+	virtual ICompiled * Compile (ICompileArgs * args);
+
+	virtual void Set (bool value) abstract = 0;
+
+	virtual ::Afx::IRef * Ref (void);
+};
+
+
+class BoolProperty abstract :  public Ref,
+	public ICompileable,
+	public IBoolGetter,
+	public IBoolSetter
+{
+public:
+	enum CompileAcces {
+		CA_Property,
+		CA_Getter,
+		CA_Setter
+	};
+
+	BoolProperty(CompileAcces compileAccess);
+
+	virtual ICompiled * Compile (ICompileArgs * args);
+
+	virtual bool Get (void) abstract = 0;
+
+	virtual ::Afx::IRef * Ref (void);
+
+	virtual void Set (bool value) abstract = 0;
+
+private:
+	CompileAcces m_CompileAccess;
+};
+
+
+/// <summary>Compiles as: -&gt; Int</summary>
+class IntGetter abstract :  public Ref,
+	public ICompileable,
+	public IIntGetter
+{
+public:
+	virtual ICompiled * Compile (ICompileArgs * args);
+
+	virtual int Get (void) abstract = 0;
+
+	virtual ::Afx::IRef * Ref (void);
+};
+
+
+/// <summary>Compiles as: Int -&gt; Void</summary>
+class IntSetter abstract :  public Ref,
+	public ICompileable,
+	public IIntSetter
+{
+public:
+	virtual ICompiled * Compile (ICompileArgs * args);
+
+	virtual void Set (int value) abstract = 0;
+
+	virtual ::Afx::IRef * Ref (void);
+};
+
+
+class IntProperty abstract :  public Ref,
+	public ICompileable,
+	public IIntGetter,
+	public IIntSetter
+{
+public:
+	enum CompileAcces {
+		CA_Property,
+		CA_Getter,
+		CA_Setter
+	};
+
+	IntProperty(CompileAcces compileAccess);
+
+	virtual ICompiled * Compile (ICompileArgs * args);
+
+	virtual int Get (void) abstract = 0;
+
+	virtual ::Afx::IRef * Ref (void);
+
+	virtual void Set (int value) abstract = 0;
+
+private:
+	CompileAcces m_CompileAccess;
+};
+
+
+/// <summary>Compiles as: -&gt; Void</summary>
+class VoidFunction abstract :  public Ref,
+	public IVoid,
+	public ICompileable
+{
+public:
+	virtual ICompiled * Compile (ICompileArgs * args);
+
+	virtual void EvalVoid (void) abstract = 0;
+
+	virtual ::Afx::IRef * Ref (void);
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Implementation classes:
+
+
+class BoolVariable :  public BoolProperty
+{
+public:
+	BoolVariable(CompileAcces compileAccess, bool value);
 
 	bool Get() const;
+	virtual bool Get (void);
 
-	virtual bool EvalBool (void);
-
-	void Set(bool value);
+	virtual void Set (bool value);
 
 private:
 	bool m_Value;
@@ -227,49 +367,20 @@ private:
 };
 
 
-/// <summary>Function that takes no arguments and returns Int</summary>
-class IntFunction abstract :  public Ref,
-	public IInt,
-	public ICompileable
+class IntVariable :  public IntProperty
 {
 public:
-	virtual ICompiled * Compile (ICompileArgs * args);
-
-	virtual int EvalInt (void) abstract = 0;
-
-	virtual ::Afx::IRef * Ref (void);
-};
-
-
-class IntVariable :  public IntFunction
-{
-public:
-	IntVariable();
-	IntVariable(int value);
+	IntVariable(CompileAcces compileAccess, int value);
 
 	int Get() const;
+	virtual int Get (void);
 
-	virtual int EvalInt (void);
-
-	void Set(int value);
+	virtual void Set (int value);
 
 private:
 	int m_Value;
 };
 
-
-/// <summary>Function that takes no arguments and returns Void (nothing)</summary>
-class VoidFunction abstract :  public Ref,
-	public IVoid,
-	public ICompileable
-{
-public:
-	virtual ICompiled * Compile (ICompileArgs * args);
-
-	virtual void EvalVoid (void) abstract = 0;
-
-	virtual ::Afx::IRef * Ref (void);
-};
 
 
 } } // namespace Afx { namespace Expr {

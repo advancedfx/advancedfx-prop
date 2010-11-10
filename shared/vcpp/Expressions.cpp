@@ -1614,34 +1614,176 @@ public:
 };
 
 
-////////////////////////////////////////////////////////////////////////////////
+// BoolGetterC /////////////////////////////////////////////////////////////////
 
-
-// BoolFunction ////////////////////////////////////////////////////////////////
-
-ICompiled * BoolFunction::Compile (ICompileArgs * args)
+class BoolGetterC : public Ref,
+	public IBool
 {
-	if(!args || 0 != args->GetCount())
-		return new Compiled(new Error());
+public:
+	BoolGetterC(IBoolGetter * boolGetter)
+	: m_BoolGetter(boolGetter)
+	{
+		boolGetter->Ref()->AddRef();
+	}
 
-	return new Compiled(dynamic_cast<IBool *>(this));
+	virtual bool EvalBool (void)
+	{
+		return m_BoolGetter->Get();
+	}
+
+	virtual ::Afx::IRef * Ref (void) { return dynamic_cast<::Afx::IRef *>(this); }
+
+protected:
+	virtual ~BoolGetterC()
+	{
+		m_BoolGetter->Ref()->Release();
+	}
+
+private:
+	IBoolGetter * m_BoolGetter;
+};
+
+
+// BoolSetterC /////////////////////////////////////////////////////////////////
+
+class BoolSetterC : public Ref,
+	public IVoid
+{
+public:
+	BoolSetterC(IBoolSetter * boolSetter, IBool * value)
+	: m_BoolSetter(boolSetter), m_Value(value)
+	{
+		boolSetter->Ref()->AddRef();
+		value->Ref()->AddRef();
+	}
+
+	virtual void EvalVoid (void)
+	{
+		m_BoolSetter->Set(m_Value->EvalBool());
+	}
+
+	virtual ::Afx::IRef * Ref (void) { return dynamic_cast<::Afx::IRef *>(this); }
+
+protected:
+	virtual ~BoolSetterC()
+	{
+		m_BoolSetter->Ref()->Release();
+		m_Value->Ref()->Release();
+	}
+
+private:
+	IBoolSetter * m_BoolSetter;
+	IBool * m_Value;
+};
+
+
+// BoolGetter //////////////////////////////////////////////////////////////////
+
+ICompiled * BoolGetter::Compile (ICompileArgs * args)
+{
+	ICompiled * compiled = 0;
+
+	if(args)
+	{
+		args->Ref()->AddRef();
+
+		if(0 == args->GetCount())
+		{
+			compiled = new Compiled(new BoolGetterC(this));
+		}
+
+		args->Ref()->Release();
+	}
+
+	return compiled ? compiled : new Compiled(new Error());
 }
 
 
-::Afx::IRef * BoolFunction::Ref (void)
+::Afx::IRef * BoolGetter::Ref (void)
 {
 	return dynamic_cast<::Afx::IRef *>(this);
 }
 
 
-// BoolVariable ////////////////////////////////////////////////////////////////
+// BoolSetter //////////////////////////////////////////////////////////////////
 
-BoolVariable::BoolVariable()
-: m_Value(false)
+ICompiled * BoolSetter::Compile (ICompileArgs * args)
+{
+	ICompiled * compiled = 0;
+
+	if(args)
+	{
+		args->Ref()->AddRef();
+
+		if(1 == args->GetCount() && 0 != args->GetArg(0)->GetBool())
+		{
+			compiled = new Compiled(new BoolSetterC(this, args->GetArg(0)->GetBool()));
+		}
+
+		args->Ref()->Release();
+	}
+
+	return compiled ? compiled : new Compiled(new Error());
+}
+
+
+::Afx::IRef * BoolSetter::Ref (void)
+{
+	return dynamic_cast<::Afx::IRef *>(this);
+}
+
+
+// BoolProperty ////////////////////////////////////////////////////////////////
+
+
+BoolProperty::BoolProperty(CompileAcces compileAccess)
+: m_CompileAccess(compileAccess)
 {
 }
-BoolVariable::BoolVariable(bool value)
-: m_Value(value)
+
+
+ICompiled * BoolProperty::Compile (ICompileArgs * args)
+{
+	ICompiled * compiled = 0;
+
+	if(!args)
+	{
+		args->Ref()->AddRef();
+
+		if(
+			(CA_Property == m_CompileAccess || CA_Getter == m_CompileAccess)
+			&& 0 == args->GetCount()
+		)
+		{
+			// Compile getter:
+			compiled = new Compiled(new BoolGetterC(this));
+		}
+		else if(
+			(CA_Property == m_CompileAccess || CA_Setter == m_CompileAccess)
+			&& 1 == args->GetCount() && 0 != args->GetArg(0)->GetBool()
+		)
+		{
+			// Compile setter:
+			compiled = new Compiled(new BoolSetterC(this, args->GetArg(0)->GetBool()));
+		}
+
+		args->Ref()->Release();
+	}
+
+	return compiled ? compiled : new Compiled(new Error());
+}
+
+
+::Afx::IRef * BoolProperty::Ref (void)
+{
+	return dynamic_cast<::Afx::IRef *>(this); 
+}
+
+
+// BoolVariable ////////////////////////////////////////////////////////////////
+
+BoolVariable::BoolVariable(CompileAcces compileAccess, bool value)
+: BoolProperty(compileAccess), m_Value(value)
 {
 }
 
@@ -1650,12 +1792,12 @@ bool BoolVariable::Get() const
 	return m_Value;
 }
 
-bool BoolVariable::EvalBool (void)
+bool BoolVariable::Get (void)
 {
 	return m_Value;
 }
 
-void BoolVariable::Set(bool value)
+void BoolVariable::Set (bool value)
 {
 	m_Value = value;
 }
@@ -2257,33 +2399,176 @@ void CursorBackup::Copy(CursorBackup const & cursorBackup)
 }
 
 
-// IntFunction /////////////////////////////////////////////////////////////////
+// IntGetterC /////////////////////////////////////////////////////////////////
 
-ICompiled * IntFunction::Compile (ICompileArgs * args)
+class IntGetterC : public Ref,
+	public IInt
 {
-	if(!args || 0 != args->GetCount())
-		return new Compiled(new Error());
+public:
+	IntGetterC(IIntGetter * intGetter)
+	: m_IntGetter(intGetter)
+	{
+		intGetter->Ref()->AddRef();
+	}
 
-	return new Compiled(dynamic_cast<IInt *>(this));
+	virtual int EvalInt (void)
+	{
+		return m_IntGetter->Get();
+	}
+
+	virtual ::Afx::IRef * Ref (void) { return dynamic_cast<::Afx::IRef *>(this); }
+
+protected:
+	virtual ~IntGetterC()
+	{
+		m_IntGetter->Ref()->Release();
+	}
+
+private:
+	IIntGetter * m_IntGetter;
+};
+
+
+// IntSetterC /////////////////////////////////////////////////////////////////
+
+class IntSetterC : public Ref,
+	public IVoid
+{
+public:
+	IntSetterC(IIntSetter * intSetter, IInt * value)
+	: m_IntSetter(intSetter), m_Value(value)
+	{
+		intSetter->Ref()->AddRef();
+		value->Ref()->AddRef();
+	}
+
+	virtual void EvalVoid (void)
+	{
+		m_IntSetter->Set(m_Value->EvalInt());
+	}
+
+	virtual ::Afx::IRef * Ref (void) { return dynamic_cast<::Afx::IRef *>(this); }
+
+protected:
+	virtual ~IntSetterC()
+	{
+		m_IntSetter->Ref()->Release();
+		m_Value->Ref()->Release();
+	}
+
+private:
+	IIntSetter * m_IntSetter;
+	IInt * m_Value;
+};
+
+
+// IntGetter //////////////////////////////////////////////////////////////////
+
+ICompiled * IntGetter::Compile (ICompileArgs * args)
+{
+	ICompiled * compiled = 0;
+
+	if(args)
+	{
+		args->Ref()->AddRef();
+
+		if(0 == args->GetCount())
+		{
+			compiled = new Compiled(new IntGetterC(this));
+		}
+
+		args->Ref()->Release();
+	}
+
+	return compiled ? compiled : new Compiled(new Error());
 }
 
 
-::Afx::IRef * IntFunction::Ref (void)
+::Afx::IRef * IntGetter::Ref (void)
 {
 	return dynamic_cast<::Afx::IRef *>(this);
 }
 
 
+// IntSetter //////////////////////////////////////////////////////////////////
 
-// IntVariable /////////////////////////////////////////////////////////////////
+ICompiled * IntSetter::Compile (ICompileArgs * args)
+{
+	ICompiled * compiled = 0;
 
-IntVariable::IntVariable()
-: m_Value(0)
+	if(args)
+	{
+		args->Ref()->AddRef();
+
+		if(1 == args->GetCount() && 0 != args->GetArg(0)->GetInt())
+		{
+			compiled = new Compiled(new IntSetterC(this, args->GetArg(0)->GetInt()));
+		}
+
+		args->Ref()->Release();
+	}
+
+	return compiled ? compiled : new Compiled(new Error());
+}
+
+
+::Afx::IRef * IntSetter::Ref (void)
+{
+	return dynamic_cast<::Afx::IRef *>(this);
+}
+
+
+// IntProperty ////////////////////////////////////////////////////////////////
+
+
+IntProperty::IntProperty(CompileAcces compileAccess)
+: m_CompileAccess(compileAccess)
 {
 }
 
-IntVariable::IntVariable(int value)
-: m_Value(value)
+
+ICompiled * IntProperty::Compile (ICompileArgs * args)
+{
+	ICompiled * compiled = 0;
+
+	if(!args)
+	{
+		args->Ref()->AddRef();
+
+		if(
+			(CA_Property == m_CompileAccess || CA_Getter == m_CompileAccess)
+			&& 0 == args->GetCount()
+		)
+		{
+			// Compile getter:
+			compiled = new Compiled(new IntGetterC(this));
+		}
+		else if(
+			(CA_Property == m_CompileAccess || CA_Setter == m_CompileAccess)
+			&& 1 == args->GetCount() && 0 != args->GetArg(0)->GetInt()
+		)
+		{
+			// Compile setter:
+			compiled = new Compiled(new IntSetterC(this, args->GetArg(0)->GetInt()));
+		}
+
+		args->Ref()->Release();
+	}
+
+	return compiled ? compiled : new Compiled(new Error());
+}
+
+
+::Afx::IRef * IntProperty::Ref (void)
+{
+	return dynamic_cast<::Afx::IRef *>(this); 
+}
+
+
+// IntVariable ////////////////////////////////////////////////////////////////
+
+IntVariable::IntVariable(CompileAcces compileAccess, int value)
+: IntProperty(compileAccess), m_Value(value)
 {
 }
 
@@ -2292,12 +2577,12 @@ int IntVariable::Get() const
 	return m_Value;
 }
 
-int IntVariable::EvalInt (void)
+int IntVariable::Get (void)
 {
 	return m_Value;
 }
 
-void IntVariable::Set(int value)
+void IntVariable::Set (int value)
 {
 	m_Value = value;
 }

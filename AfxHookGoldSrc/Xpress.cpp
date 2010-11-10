@@ -17,7 +17,7 @@
 char const * g_StrForMoreXpressInfo = "For more information on expressions please refer to the manual.";
 
 
-int Xpress_t :: FnGetCurrentEntityIndex :: EvalInt (void)
+int Xpress_t :: FnGetCurrentEntityIndex :: Get (void)
 {
 	cl_entity_t *ce = pEngStudio->GetCurrentEntity();
 

@@ -34,14 +34,14 @@ public:
 		m_Bubble = Tools::StandardBubble();
 		m_Bubble->Ref()->AddRef();
 
-		m_Bubble->Add("CurrentGlMode", CurrentGlMode = new IntVariable(-1));
-		m_Bubble->Add("CurrentStreamIndex", CurrentStreamIndex = new IntVariable(-1));
+		m_Bubble->Add("CurrentGlMode", CurrentGlMode = new IntVariable(IntVariable::CA_Getter, -1));
+		m_Bubble->Add("CurrentStreamIndex", CurrentStreamIndex = new IntVariable(IntVariable::CA_Getter, -1));
 		m_Bubble->Add("GetCurrentEntityIndex", new FnGetCurrentEntityIndex());
-		m_Bubble->Add("InRDrawEntitiesOnList", InRDrawEntitiesOnList = new BoolVariable(false));
-		m_Bubble->Add("InRDrawParticles", InRDrawParticles = new BoolVariable(false));
-		m_Bubble->Add("InRDrawViewModel", InRDrawViewModel = new BoolVariable(false));
-		m_Bubble->Add("InRRenderView", InRRenderView = new BoolVariable(false));
-		m_Bubble->Add("IsFilming", IsFilming = new BoolVariable(false));
+		m_Bubble->Add("IsFilming", IsFilming = new BoolVariable(BoolVariable::CA_Getter, false));
+		m_Bubble->Add("InRDrawEntitiesOnList", InRDrawEntitiesOnList = new BoolVariable(BoolVariable::CA_Getter, false));
+		m_Bubble->Add("InRDrawParticles", InRDrawParticles = new BoolVariable(BoolVariable::CA_Getter, false));
+		m_Bubble->Add("InRDrawViewModel", InRDrawViewModel = new BoolVariable(BoolVariable::CA_Getter, false));
+		m_Bubble->Add("InRRenderView", InRRenderView = new BoolVariable(BoolVariable::CA_Getter, false));
 	}
 
 	~Xpress_t()
@@ -51,24 +51,21 @@ public:
 		if(m_MatteEx) m_MatteEx->Ref()->Release();
 	}
 
-	int EvalMatteEx (void)
-	{
-		return 0 != m_MatteEx ? m_MatteEx->EvalInt() : 0;
-	}
-
 	bool CompileMatteEx (char const * code)
 	{
-		if(m_MatteEx) m_MatteEx->Ref()->Release();
-
 		ICompiled * compiled = m_Bubble->Compile(code);			
-		compiled->Ref()->AddRef();			
-			
-		m_MatteEx = compiled->GetInt();
-		if(m_MatteEx) m_MatteEx->Ref()->AddRef();
+		compiled->Ref()->AddRef();
+
+		SetMatteEx(compiled->GetInt());
 
 		compiled->Ref()->Release();
 
 		return HasMatteEx();
+	}
+
+	int EvalMatteEx (void)
+	{
+		return 0 != m_MatteEx ? m_MatteEx->EvalInt() : 0;
 	}
 
 	bool HasMatteEx (void)
@@ -76,14 +73,22 @@ public:
 		return 0 != m_MatteEx;
 	}
 
+	void SetMatteEx(IInt * value)
+	{
+		if(value) value->Ref()->AddRef();
+
+		if(m_MatteEx) m_MatteEx->Ref()->Release();
+		m_MatteEx = value;
+	}
+
 private:
 	IBubble * m_Bubble;
 	IInt * m_MatteEx;
 
-	class FnGetCurrentEntityIndex : public IntFunction
+	class FnGetCurrentEntityIndex : public IntGetter
 	{
 	public:
-		virtual int EvalInt (void);
+		virtual int Get (void);
 	};
 
 };
