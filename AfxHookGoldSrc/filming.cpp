@@ -29,6 +29,7 @@
 #include "hl_addresses.h"
 #include "mirv_glext.h"
 #include "mirv_scripting.h"
+#include "Xpress.h"
 
 
 using namespace std;
@@ -609,7 +610,9 @@ void Filming::Start()
 
 	m_StartClientTime = pEngfuncs->GetClientTime();
 	m_iFilmingState = FS_STARTING;
+
 	m_iMatteStage = MS_WORLD;
+	UpdateXpMatteStage();
 
 	_fStereoOffset = movie_stereo_centerdist->value;
 	m_EnableStereoMode = (movie_stereomode->value != 0.0); // we also have to be able to use R_RenderView
@@ -844,13 +847,13 @@ void Filming::Start()
 	//
 
 	g_ModInfo.SetRecording(true);
-	m_Xpress.IsFilming->Set(true);
+	g_Xpress.IsFilming->Set(true);
 }
 
 void Filming::Stop()
 {
 	g_ModInfo.SetRecording(false);
-	m_Xpress.IsFilming->Set(false);
+	g_Xpress.IsFilming->Set(false);
 
 	//
 
@@ -1175,22 +1178,9 @@ Filming::DRAW_RESULT Filming::shouldDraw(GLenum mode)
 	bool bEntityQuadWorld  = 0x01 & iMatteEntityQuads;
 	bool bEntityQuadEntity = 0x02 & iMatteEntityQuads;
 
-	if(m_Xpress.HasMatteEx())
+	if(g_Xpress.HasMatteEx())
 	{	
-		{
-			cl_entity_t *ce = pEngStudio->GetCurrentEntity();
-			m_Xpress.CurrentEntityIndex->Set( ce ? ce->index : -1);
-		}
-		m_Xpress.CurrentGlMode->Set(mode);
-		m_Xpress.CurrentStreamIndex->Set(
-			MS_ENTITY == m_iMatteStage ? 1 : (MS_WORLD == m_iMatteStage || MS_ALL == m_iMatteStage ? 0 : -1)
-		);
-		m_Xpress.InRDrawEntities->Set(g_ModInfo.In_R_DrawEntitiesOnList_get());
-		m_Xpress.InRDrawEntitiesOnList->Set(g_ModInfo.In_R_DrawEntitiesOnList_get());
-		m_Xpress.InRDrawViewModel->Set(g_ModInfo.In_R_DrawViewModel_get());
-		m_Xpress.InRRenderView->Set(g_ModInfo.In_R_Renderview_get());
-
-		int matteExVal = m_Xpress.EvalMatteEx();
+		int matteExVal = g_Xpress.EvalMatteEx();
 
 		if(matteExVal < 0) return DR_HIDE;
 		else if(0 < matteExVal) return DR_MASK;
@@ -1321,6 +1311,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 	m_HostFrameCount++;
 
 	m_iMatteStage = g_Filming_Stream[FS_all] ? MS_ALL : MS_WORLD;
+	UpdateXpMatteStage();
 
 	// If we've only just started, delay until the next scene so that
 	// the first frame is drawn correctly
@@ -1417,6 +1408,8 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 				if(g_Filming_Stream[FS_entity] || g_Filming_Stream[FS_depthall])
 				{
 					m_iMatteStage = MS_ENTITY; // next is entity
+					UpdateXpMatteStage();
+
 					clearBuffers();
 					New_R_RenderView(); // re-render view
 				}
@@ -1446,6 +1439,8 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 				if(g_Filming_Stream[FS_world] || g_Filming_Stream[FS_depthworld])
 				{
 					m_iMatteStage = MS_WORLD; // next is world
+					UpdateXpMatteStage();
+
 				}
 			}
 		}
@@ -1522,7 +1517,7 @@ void Filming::clearBuffers()
 	glClearColor(m_MatteColour[0], m_MatteColour[1], m_MatteColour[2], 1.0f);
 
 	// Now we do our clearing!
-	if(m_iMatteStage!=MS_ENTITY || matte_xray->value || MM_ALPHA == m_MatteMethod)
+	if(m_iMatteStage != MS_ENTITY || matte_xray->value || MM_ALPHA == m_MatteMethod)
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 	else
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -1939,6 +1934,27 @@ void FilmingStream::Print(float const * data)
 	}
 }
 
+void Filming::UpdateXpMatteStage()
+{
+	int iVal;
+
+	switch(m_iMatteStage)
+	{
+	case MS_ALL:
+	case MS_WORLD:
+		iVal = 0;
+		break;
+	case MS_ENTITY:
+		iVal = 1;
+		break;
+	default:
+		iVal = -1;
+		break;
+	}
+
+	g_Xpress.CurrentStreamIndex->Set(iVal);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 REGISTER_CMD_FUNC_BEGIN(recordmovie)
@@ -2097,28 +2113,4 @@ REGISTER_DEBUGCMD_FUNC(depth_info) {
 	float E = (F-N)/256.0f;
 	float P = (F-N) ? 100*E/(F-N) : 0;
 	pEngfuncs->Con_Printf("zNear: %f\nzFar: %f\nMax linear error (8bit): %f (%f %%)\n", N, F, E, P);
-}
-
-char const * g_StrForMoreXpressInfo = "For more information on expressions please refer to the manual.";
-
-REGISTER_CMD_FUNC(xp_matte)
-{
-	if(2 == pEngfuncs->Cmd_Argc())
-	{
-		bool isOk = g_Filming.CompileMatteEx( pEngfuncs->Cmd_Argv(1) );
-
-		if(isOk)
-			pEngfuncs->Con_Printf("Expression compiled successfully.\n");
-		else
-			pEngfuncs->Con_Printf("Expression failed to compile, using standard behaviour.\n");
-
-		return;
-	}
-
-	pEngfuncs->Con_Printf(
-		"WARNING: This command is yet untested and might behave unexpected.\n"
-		"Usage: " PREFIX "xpress_matte <code>\n"
-		"%s\n",
-		g_StrForMoreXpressInfo
-	);
 }

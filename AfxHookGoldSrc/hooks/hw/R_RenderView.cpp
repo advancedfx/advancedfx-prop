@@ -8,6 +8,7 @@
 #include "../../modules/ModInfo.h"
 #include "../../filming.h"
 #include "../../mirv_scripting.h"
+#include "../../Xpress.h"
 
 typedef void (*R_RenderView_t)( void );
 
@@ -86,7 +87,11 @@ void New_R_RenderView(void)
 			//
 
 			g_ModInfo.SetIn_R_Renderview(true);
+			g_Xpress.InRRenderView->Set(true);
+
 			g_Old_R_RenderView();
+
+			g_Xpress.InRRenderView->Set(false);
 			g_ModInfo.SetIn_R_Renderview(false);
 
 			bLoop = ScriptEvent_OnRenderViewEnd();

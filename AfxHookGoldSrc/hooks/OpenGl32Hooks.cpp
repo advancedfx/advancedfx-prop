@@ -22,6 +22,8 @@
 #include "../modules/ModReplace.h"
 #include "../modules/ModInfo.h"
 
+#include "../Xpress.h"
+
 #include <hlsdk.h>
 
 
@@ -172,6 +174,7 @@ bool	g_bIsSucceedingViewport = false;
 void APIENTRY NewGlBegin(GLenum mode)
 {
 	ScriptEvent_OnGlBegin((unsigned int)mode);
+	g_Xpress.CurrentGlMode->Set(mode);
 
 	if (g_Filming.doWireframe(mode) == Filming::DR_HIDE) {
 		return;
@@ -211,6 +214,7 @@ void APIENTRY NewGlBegin(GLenum mode)
 void APIENTRY NewGlEnd(void)
 {
 	ScriptEvent_OnGlEnd();
+	g_Xpress.CurrentGlMode->Set(-1);
 
 	glEnd();
 

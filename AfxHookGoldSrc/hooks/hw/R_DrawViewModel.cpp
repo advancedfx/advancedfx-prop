@@ -7,6 +7,7 @@
 #include <shared/detours.h>
 
 #include "../../modules/ModInfo.h"
+#include "../../Xpress.h"
 
 typedef void (*R_DrawViewModel_t) (void);
 R_DrawViewModel_t g_Old_R_DrawViewModel = 0;
@@ -14,7 +15,11 @@ R_DrawViewModel_t g_Old_R_DrawViewModel = 0;
 void New_R_DrawViewModel(void)
 {
 	g_ModInfo.SetIn_R_DrawViewModel(true);
+	g_Xpress.InRDrawViewModel->Set(true);
+
 	g_Old_R_DrawViewModel();
+	
+	g_Xpress.InRDrawViewModel->Set(false);
 	g_ModInfo.SetIn_R_DrawViewModel(false);
 }
 

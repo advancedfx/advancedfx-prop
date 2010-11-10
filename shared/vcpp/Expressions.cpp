@@ -1430,30 +1430,219 @@ public:
 };
 
 
+class FnDo : public Ref,
+	public IVoid,
+	public IBool,
+	public IInt
+{
+public:
+	static ICompiled * Compile(ICompileArgs * args)
+	{
+		if(args) args->Ref()->AddRef();
+
+		bool isOk =
+			0 != args
+			&& 0 <= args->GetCount()
+		;
+
+		ICompiled * compiled = 0;
+		ICompiled::Type resultType = ICompiled::T_Void;
+
+		if(isOk)
+		{
+			for(int i=0; i < args->GetCount() -1; i++)
+			{
+				ICompiled::Type curType = args->GetArg(i)->GetType();
+
+				switch(curType)
+				{
+				case ICompiled::T_Bool:
+				case ICompiled::T_Int:
+				case ICompiled::T_Void:
+					resultType = curType;
+					break;
+				default:
+					isOk = false;
+					break;
+				}
+			}
+		}
+
+		if(isOk)
+		{
+			switch(resultType)
+			{
+			case ICompiled::T_Bool:
+				compiled = new Compiled(dynamic_cast<IBool *>(new FnDo(args)));
+				break;
+			case ICompiled::T_Int:
+				compiled = new Compiled(dynamic_cast<IInt *>(new FnDo(args)));
+				break;
+			case ICompiled::T_Void:
+				compiled = new Compiled(dynamic_cast<IVoid *>(new FnDo(args)));
+				break;
+			default:
+				break;
+			}
+		}
+
+		if(args) args->Ref()->Release();
+
+		return compiled ? compiled : new Compiled(new Error());
+	}
+
+	virtual bool EvalBool (void)
+	{
+		for(int i=0; i<m_Count-1; i++) EvalX(i);
+
+		return m_Fns[m_Count-1].Bool->EvalBool();
+	}
+
+	virtual int EvalInt (void)
+	{
+		for(int i=0; i<m_Count-1; i++) EvalX(i);
+
+		return m_Fns[m_Count-1].Int->EvalInt();
+	}
+
+	virtual void EvalVoid (void)
+	{
+		for(int i=0; i<m_Count; i++) EvalX(i);
+	}
+
+	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }	
+
+protected:
+	virtual ~FnDo()
+	{
+		for(int i=0; i<m_Count; i++)
+		{
+			switch(m_Types[i])
+			{
+			case ICompiled::T_Bool:
+				m_Fns[i].Bool->Ref()->Release();
+				break;
+			case ICompiled::T_Int:
+				m_Fns[i].Int->Ref()->Release();
+				break;
+			case ICompiled::T_Void:
+				m_Fns[i].Void->Ref()->Release();
+				break;
+			default:
+				throw exception();
+				break;
+			}
+		}
+
+		delete m_Types;
+		delete m_Fns;
+	}
+
+private:
+	typedef union {
+		IVoid * Void;
+		IBool * Bool;
+		IInt * Int;
+	} FnT;
+	int m_Count;
+	ICompiled::Type * m_Types;
+	FnT * m_Fns;
+
+	FnDo(ICompileArgs * args) {
+
+		args->Ref()->AddRef();
+
+		m_Count = args->GetCount();
+
+		m_Types = new ICompiled::Type[m_Count];
+		m_Fns = new FnT[m_Count];
+
+		for(int i=0; i<m_Count; i++)
+		{
+			ICompiled::Type curType = args->GetArg(i)->GetType();
+			m_Types[i] = curType;
+
+			switch(curType)
+			{
+			case ICompiled::T_Bool:
+				m_Fns[i].Bool = args->GetArg(i)->GetBool();
+				m_Fns[i].Bool->Ref()->AddRef();
+				break;
+			case ICompiled::T_Int:
+				m_Fns[i].Int = args->GetArg(i)->GetInt();
+				m_Fns[i].Int->Ref()->AddRef();
+				break;
+			case ICompiled::T_Void:
+				m_Fns[i].Void = args->GetArg(i)->GetVoid();
+				m_Fns[i].Void->Ref()->AddRef();
+				break;
+			default:
+				throw exception();
+				break;
+			}
+		}
+
+		args->Ref()->Release();
+	}
+
+	void EvalX(int i)
+	{
+		switch(m_Types[i])
+		{
+		case ICompiled::T_Bool:
+			m_Fns[i].Bool->EvalBool();
+			break;
+		case ICompiled::T_Int:
+			m_Fns[i].Int->EvalInt();
+			break;
+		case ICompiled::T_Void:
+			m_Fns[i].Void->EvalVoid();
+		default:
+			throw exception();
+			break;
+		}
+	}
+};
+
+class FnDoCompileable : public Ref,
+	public ICompileable
+{
+public:
+	virtual ICompiled * Compile (ICompileArgs * args) { return FnDo::Compile(args); }
+
+	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }	
+};
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 
-// BoolVariable ////////////////////////////////////////////////////////////////
+// BoolFunction ////////////////////////////////////////////////////////////////
 
-BoolVariable::BoolVariable()
-: m_Value(0)
-{
-}
-BoolVariable::BoolVariable(bool value)
-: m_Value(value)
-{
-}
-
-BoolVariable::~BoolVariable()
-{
-}
-
-ICompiled * BoolVariable::Compile (ICompileArgs * args)
+ICompiled * BoolFunction::Compile (ICompileArgs * args)
 {
 	if(!args || 0 != args->GetCount())
 		return new Compiled(new Error());
 
 	return new Compiled(dynamic_cast<IBool *>(this));
+}
+
+
+::Afx::IRef * BoolFunction::Ref (void)
+{
+	return dynamic_cast<::Afx::IRef *>(this);
+}
+
+
+// BoolVariable ////////////////////////////////////////////////////////////////
+
+BoolVariable::BoolVariable()
+: m_Value(false)
+{
+}
+BoolVariable::BoolVariable(bool value)
+: m_Value(value)
+{
 }
 
 bool BoolVariable::Get() const
@@ -1464,11 +1653,6 @@ bool BoolVariable::Get() const
 bool BoolVariable::EvalBool (void)
 {
 	return m_Value;
-}
-
-::Afx::IRef * BoolVariable::Ref (void)
-{
-	return dynamic_cast<::Afx::IRef *>(this);
 }
 
 void BoolVariable::Set(bool value)
@@ -1531,6 +1715,9 @@ Bubble::Bubble()
 	Add("?", new FnIfBoolCompileable());
 	Add("if", new FnIfIntCompileable());
 	Add("?", new FnIfIntCompileable());
+
+	Add("do", new FnDoCompileable());
+
 }
 
 Bubble::~Bubble()
@@ -2070,8 +2257,25 @@ void CursorBackup::Copy(CursorBackup const & cursorBackup)
 }
 
 
-// IntVariable /////////////////////////////////////////////////////////////////
+// IntFunction /////////////////////////////////////////////////////////////////
 
+ICompiled * IntFunction::Compile (ICompileArgs * args)
+{
+	if(!args || 0 != args->GetCount())
+		return new Compiled(new Error());
+
+	return new Compiled(dynamic_cast<IInt *>(this));
+}
+
+
+::Afx::IRef * IntFunction::Ref (void)
+{
+	return dynamic_cast<::Afx::IRef *>(this);
+}
+
+
+
+// IntVariable /////////////////////////////////////////////////////////////////
 
 IntVariable::IntVariable()
 : m_Value(0)
@@ -2081,18 +2285,6 @@ IntVariable::IntVariable()
 IntVariable::IntVariable(int value)
 : m_Value(value)
 {
-}
-
-IntVariable::~IntVariable()
-{
-}
-
-ICompiled * IntVariable::Compile (ICompileArgs * args)
-{
-	if(!args || 0 != args->GetCount())
-		return new Compiled(new Error());
-
-	return new Compiled(dynamic_cast<IInt *>(this));
 }
 
 int IntVariable::Get() const
@@ -2105,15 +2297,28 @@ int IntVariable::EvalInt (void)
 	return m_Value;
 }
 
-::Afx::IRef * IntVariable::Ref (void)
-{
-	return dynamic_cast<::Afx::IRef *>(this);
-}
-
 void IntVariable::Set(int value)
 {
 	m_Value = value;
 }
+
+
+// VoidFunction ////////////////////////////////////////////////////////////////
+
+ICompiled * VoidFunction::Compile (ICompileArgs * args)
+{
+	if(!args || 0 != args->GetCount())
+		return new Compiled(new Error());
+
+	return new Compiled(dynamic_cast<IVoid *>(this));
+}
+
+
+::Afx::IRef * VoidFunction::Ref (void)
+{
+	return dynamic_cast<::Afx::IRef *>(this);
+}
+
 
 
 // Tools ///////////////////////////////////////////////////////////////

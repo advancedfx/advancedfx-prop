@@ -166,6 +166,7 @@
     <ClCompile Include="supportrender.cpp" />
     <ClCompile Include="temporary_dominik_0004.cpp" />
     <ClCompile Include="temporary_dominik_0005.cpp" />
+    <ClCompile Include="Xpress.cpp" />
     <ClCompile Include="zooming.cpp" />
     <ClCompile Include="modules\ModColor.cpp" />
     <ClCompile Include="modules\ModColor_S.cpp" />
@@ -234,6 +235,7 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Store.h" />
     <ClInclude Include="supportrender.h" />
+    <ClInclude Include="Xpress.h" />
     <ClInclude Include="zooming.h" />
     <ClInclude Include="modules\ModColor.h" />
     <ClInclude Include="modules\ModColor_S.h" />

@@ -7,7 +7,7 @@
 #include <shared/detours.h>
 
 #include "../../modules/ModInfo.h"
-
+#include "../../Xpress.h"
 
 
 typedef void (*R_DrawEntitiesOnList_t) (void);
@@ -16,7 +16,11 @@ R_DrawEntitiesOnList_t g_Old_R_DrawEntitiesOnList = 0;
 void New_R_DrawEntitiesOnList (void)
 {
 	g_ModInfo.SetIn_R_DrawEntitiesOnList(true);
+	g_Xpress.InRDrawEntitiesOnList->Set(true);
+
 	g_Old_R_DrawEntitiesOnList();
+
+	g_Xpress.InRDrawEntitiesOnList->Set(false);
 	g_ModInfo.SetIn_R_DrawEntitiesOnList(false);
 }
 

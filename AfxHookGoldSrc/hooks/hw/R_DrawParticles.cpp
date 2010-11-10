@@ -7,6 +7,7 @@
 #include <shared/detours.h>
 
 #include "../../modules/ModInfo.h"
+#include "../../Xpress.h"
 
 typedef void (*R_DrawParticles_t) (void);
 R_DrawParticles_t g_Old_R_DrawParticles = 0;
@@ -14,7 +15,11 @@ R_DrawParticles_t g_Old_R_DrawParticles = 0;
 void New_R_DrawParticles (void)
 {
 	g_ModInfo.SetIn_R_DrawParticles(true);
+	g_Xpress.InRDrawParticles->Set(true);
+
 	g_Old_R_DrawParticles();
+
+	g_Xpress.InRDrawParticles->Set(false);
 	g_ModInfo.SetIn_R_DrawParticles(false);
 }
 

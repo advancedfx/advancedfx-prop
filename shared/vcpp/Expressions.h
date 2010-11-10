@@ -20,8 +20,8 @@
 
 // Primitive functions:
 //
-// IntConstant: integer -> Int
 // BoolConstant: "false" | "true" -> Bool
+// IntConstant: integer -> Int
 
 // Standard functions:
 // and && : Bool Bool+ -> Bool
@@ -45,6 +45,10 @@
 // min: Int+ -> Int
 // if ?: Bool Bool Bool -> Bool
 // if ?: Bool Int Int -> Int
+// do: -> Void
+// do: (Void | Bool | Int)* Void -> Void
+// do: (Void | Bool | Int)* Bool -> Bool
+// do: (Void | Bool | Int)* Int -> Int
 
 // 0. text
 // 1. group parenthesis (tree)
@@ -157,26 +161,31 @@ struct __declspec(novtable) Tools abstract
 // Implementation classes:
 
 
-class BoolVariable :  public Ref,
+/// <summary>Function that takes no arguments and returns Bool</summary>
+class BoolFunction abstract :  public Ref,
 	public IBool,
 	public ICompileable
+{
+public:
+	virtual ICompiled * Compile (ICompileArgs * args);
+
+	virtual bool EvalBool (void) abstract = 0;
+
+	virtual ::Afx::IRef * Ref (void);
+};
+
+
+class BoolVariable :  public BoolFunction
 {
 public:
 	BoolVariable();
 	BoolVariable(bool value);
 
-	virtual ICompiled * Compile (ICompileArgs * args);
-
 	bool Get() const;
 
 	virtual bool EvalBool (void);
 
-	virtual ::Afx::IRef * Ref (void);
-
 	void Set(bool value);
-
-protected:
-	virtual ~BoolVariable();
 
 private:
 	bool m_Value;
@@ -218,31 +227,49 @@ private:
 };
 
 
-class IntVariable :  public Ref,
+/// <summary>Function that takes no arguments and returns Int</summary>
+class IntFunction abstract :  public Ref,
 	public IInt,
 	public ICompileable
+{
+public:
+	virtual ICompiled * Compile (ICompileArgs * args);
+
+	virtual int EvalInt (void) abstract = 0;
+
+	virtual ::Afx::IRef * Ref (void);
+};
+
+
+class IntVariable :  public IntFunction
 {
 public:
 	IntVariable();
 	IntVariable(int value);
 
-	virtual ICompiled * Compile (ICompileArgs * args);
-
 	int Get() const;
 
 	virtual int EvalInt (void);
 
-	virtual ::Afx::IRef * Ref (void);
-
 	void Set(int value);
-
-protected:
-	virtual ~IntVariable();
 
 private:
 	int m_Value;
 };
 
+
+/// <summary>Function that takes no arguments and returns Void (nothing)</summary>
+class VoidFunction abstract :  public Ref,
+	public IVoid,
+	public ICompileable
+{
+public:
+	virtual ICompiled * Compile (ICompileArgs * args);
+
+	virtual void EvalVoid (void) abstract = 0;
+
+	virtual ::Afx::IRef * Ref (void);
+};
 
 
 } } // namespace Afx { namespace Expr {
