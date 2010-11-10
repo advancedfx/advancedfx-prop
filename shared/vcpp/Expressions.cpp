@@ -1746,7 +1746,7 @@ ICompiled * BoolProperty::Compile (ICompileArgs * args)
 {
 	ICompiled * compiled = 0;
 
-	if(!args)
+	if(args)
 	{
 		args->Ref()->AddRef();
 
@@ -2531,7 +2531,7 @@ ICompiled * IntProperty::Compile (ICompileArgs * args)
 {
 	ICompiled * compiled = 0;
 
-	if(!args)
+	if(args)
 	{
 		args->Ref()->AddRef();
 
@@ -2592,10 +2592,21 @@ void IntVariable::Set (int value)
 
 ICompiled * VoidFunction::Compile (ICompileArgs * args)
 {
-	if(!args || 0 != args->GetCount())
-		return new Compiled(new Error());
+	ICompiled * compiled = 0;
 
-	return new Compiled(dynamic_cast<IVoid *>(this));
+	if(args)
+	{
+		args->Ref()->AddRef();
+
+		if(0 == args->GetCount())
+		{
+			compiled = new Compiled(dynamic_cast<IVoid *>(this));
+		}
+
+		args->Ref()->Release();
+	}
+
+	return compiled ? compiled : new Compiled(new Error());
 }
 
 

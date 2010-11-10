@@ -51,6 +51,11 @@ public:
 		if(m_MatteEx) m_MatteEx->Ref()->Release();
 	}
 
+	ICompiled * CompileEx (char const * code)
+	{
+		return m_Bubble->Compile(code);
+	}
+
 	bool CompileMatteEx (char const * code)
 	{
 		ICompiled * compiled = m_Bubble->Compile(code);			
