@@ -12,18 +12,19 @@ Description : see mdt_gltools.h
 #include <gl\gl.h>
 #include <gl\glu.h>
 
-//#include <shared/vcpp/Expressions.h>
-
-#include <list>
-#include <string>
+#include <shared/vcpp/Expressions.h>
 
 #include "EasySampler.h"
 #include "film_sound.h"
 #include "mdt_media.h"
 #include "supportrender.h"
 
-//using namespace Afx;
-//using namespace Afx::Expr;
+#include <list>
+#include <string>
+
+
+using namespace Afx;
+using namespace Afx::Expressions;
 
 
 enum FILMING_BUFFER { FB_COLOR, FB_DEPTH, FB_ALPHA };
@@ -91,6 +92,11 @@ public:
 
 	Filming();
 	~Filming();
+
+	bool CompileMatteEx (char const * code)
+	{
+		return m_Xpress.CompileMatteEx(code);
+	}
 
 	// used in OpenGl32Hooks.cpp
 	void FullClear();
@@ -178,9 +184,6 @@ public:
 
 private:
 	enum FILMING_STATE { FS_INACTIVE, FS_STARTING, FS_ACTIVE };
-
-	//IBubble * m_Bubble;
-
 	bool m_EnableStereoMode;
 	int m_Height;
 	unsigned int m_HostFrameCount;
@@ -191,15 +194,15 @@ private:
 	float m_StartClientTime;
 	DWORD m_StartTickCount;
 	std::wstring m_TakeDir;
-	bool m_UseXpress;
 	int m_Width;
 	GLdouble m_ZFar;
 	GLdouble m_ZNear;
 	float m_fps;
 	float m_time;
 
-/*
-	struct Vars_t {
+	class Xpress_t
+	{
+	public:
 		IntVariable * CurrentEntityIndex;
 		IntVariable * CurrentGlMode;
 		IntVariable * CurrentStreamIndex;
@@ -209,40 +212,62 @@ private:
 		BoolVariable * InRDrawViewModel;
 		BoolVariable * InRRenderView;
 
-		Vars_t()
-		{
-			CurrentEntityIndex = new IntVariable(-1);
-			CurrentGlMode = new IntVariable(-1);
-			CurrentStreamIndex = new IntVariable(-1);
-			InRDrawEntities = new BoolVariable(false);
-			InRDrawEntitiesOnList = new BoolVariable(false);
-			InRDrawViewModel = new BoolVariable(false);
-			InRRenderView = new BoolVariable(false);
-			IsFilming = new BoolVariable(false);
+		Xpress_t()
+		{	
+			m_MatteEx = 0;
 
-			CurrentEntityIndex->AddRef();
-			CurrentGlMode->AddRef();
-			CurrentStreamIndex->AddRef();
-			InRDrawEntities->AddRef();
-			InRDrawEntitiesOnList->AddRef();
-			InRDrawViewModel->AddRef();
-			InRRenderView->AddRef();
-			IsFilming->AddRef();
+			m_Bubble = Tools::StandardBubble();
+			m_Bubble->Ref()->AddRef();
+
+			m_Bubble->Add("CurrentEntityIndex", CurrentEntityIndex = new IntVariable(-1));
+			m_Bubble->Add("CurrentGlMode", CurrentGlMode = new IntVariable(-1));
+			m_Bubble->Add("CurrentStreamIndex", CurrentStreamIndex = new IntVariable(-1));
+			m_Bubble->Add("InRDrawEntities", InRDrawEntities = new BoolVariable(false));
+			m_Bubble->Add("InRDrawEntitiesOnList", InRDrawEntitiesOnList = new BoolVariable(false));
+			m_Bubble->Add("InRDrawViewModel", InRDrawViewModel = new BoolVariable(false));
+			m_Bubble->Add("InRRenderView", InRRenderView = new BoolVariable(false));
+			m_Bubble->Add("IsFilming", IsFilming = new BoolVariable(false));
 		}
 
-		~Vars_t()
+		~Xpress_t()
 		{
-			CurrentEntityIndex->Release();
-			CurrentGlMode->Release();
-			CurrentStreamIndex->Release();
-			InRDrawEntities->Release();
-			InRDrawEntitiesOnList->Release();
-			InRDrawViewModel->Release();
-			InRRenderView->Release();
-			IsFilming->Release();
+			m_Bubble->Ref()->Release();
+
+			if(m_MatteEx) m_MatteEx->Ref()->Release();
 		}
-	} m_Vars;
-*/
+
+		int EvalMatteEx (void)
+		{
+			return 0 != m_MatteEx ? m_MatteEx->EvalInt() : 0;
+		}
+
+		bool CompileMatteEx (char const * code)
+		{
+			if(m_MatteEx) m_MatteEx->Ref()->Release();
+
+			ICompiled * compiled = m_Bubble->Compile(code);			
+			compiled->Ref()->AddRef();			
+			
+			m_MatteEx = compiled->GetInt();
+			if(m_MatteEx) m_MatteEx->Ref()->AddRef();
+
+			compiled->Ref()->Release();
+
+			return HasMatteEx();
+		}
+
+		bool HasMatteEx (void)
+		{
+			return 0 != m_MatteEx;
+		}
+
+	private:
+		IBubble * m_Bubble;
+		IInt * m_MatteEx;
+
+
+
+	} m_Xpress;
 
 	CHlaeSupportRender *_pSupportRender;
 

@@ -420,11 +420,9 @@ void Filming::SetStereoOfs(float left_and_rightofs)
 }
 
 Filming::Filming()
-// constructor
 {
 	m_bInWireframe = false;
 	m_EnableStereoMode = false;
-	m_UseXpress = false;
 
 		_cameraofs.right = 0;
 		_cameraofs.up = 0;
@@ -449,31 +447,11 @@ Filming::Filming()
 	 bRequestingMatteTextUpdate=false;
 
 	 matte_entities_r.bNotEmpty=false; // by default empty
-
-/*
-	//
-	// Set-up the soap bubble:
-
-	m_Bubble = BubbleFactory::StandardBubble();
-	m_Bubble->Ref()->AddRef();
-
-	m_Bubble->Add(m_Vars.CurrentEntityIndex, "CurrentEntityIndex");
-	m_Bubble->Add(m_Vars.CurrentGlMode, "CurrentGlMode");
-	m_Bubble->Add(m_Vars.CurrentStreamIndex, "CurrentStreamIndex");
-	m_Bubble->Add(m_Vars.InRDrawEntities, "InRDrawEntities");
-	m_Bubble->Add(m_Vars.InRDrawEntitiesOnList, "InRDrawEntitiesOnList");
-	m_Bubble->Add(m_Vars.InRDrawViewModel, "InRDrawViewModel");
-	m_Bubble->Add(m_Vars.InRRenderView, "InRRenderView");
-	m_Bubble->Add(m_Vars.IsFilming, "IsFilming");
-*/
 }
 
 Filming::~Filming()
-// destructor
 {
-/*
-	m_Bubble->Ref()->Release();
-*/
+
 }
 
 void Filming::GetCameraOfs(float *right, float *up, float *forward)
@@ -866,13 +844,13 @@ void Filming::Start()
 	//
 
 	g_ModInfo.SetRecording(true);
-//	m_Vars.IsFilming->Set(true);
+	m_Xpress.IsFilming->Set(true);
 }
 
 void Filming::Stop()
 {
 	g_ModInfo.SetRecording(false);
-//	m_Vars.IsFilming->Set(false);
+	m_Xpress.IsFilming->Set(false);
 
 	//
 
@@ -1197,21 +1175,26 @@ Filming::DRAW_RESULT Filming::shouldDraw(GLenum mode)
 	bool bEntityQuadWorld  = 0x01 & iMatteEntityQuads;
 	bool bEntityQuadEntity = 0x02 & iMatteEntityQuads;
 
-	if(m_UseXpress)
+	if(m_Xpress.HasMatteEx())
 	{	
-/*		{
+		{
 			cl_entity_t *ce = pEngStudio->GetCurrentEntity();
-			m_Vars.CurrentEntityIndex->Set( ce ? ce->index : -1);
+			m_Xpress.CurrentEntityIndex->Set( ce ? ce->index : -1);
 		}
-		m_Vars.CurrentGlMode->Set(mode);
-		m_Vars.CurrentStreamIndex->Set(
+		m_Xpress.CurrentGlMode->Set(mode);
+		m_Xpress.CurrentStreamIndex->Set(
 			MS_ENTITY == m_iMatteStage ? 1 : (MS_WORLD == m_iMatteStage || MS_ALL == m_iMatteStage ? 0 : -1)
 		);
-		m_Vars.InRDrawEntities->Set(g_ModInfo.In_R_DrawEntitiesOnList_get());
-		m_Vars.InRDrawEntitiesOnList->Set(g_ModInfo.In_R_DrawEntitiesOnList_get());
-		m_Vars.InRDrawViewModel->Set(g_ModInfo.In_R_DrawViewModel_get());
-		m_Vars.InRRenderView->Set(g_ModInfo.In_R_Renderview_get());
-*/
+		m_Xpress.InRDrawEntities->Set(g_ModInfo.In_R_DrawEntitiesOnList_get());
+		m_Xpress.InRDrawEntitiesOnList->Set(g_ModInfo.In_R_DrawEntitiesOnList_get());
+		m_Xpress.InRDrawViewModel->Set(g_ModInfo.In_R_DrawViewModel_get());
+		m_Xpress.InRRenderView->Set(g_ModInfo.In_R_Renderview_get());
+
+		int matteExVal = m_Xpress.EvalMatteEx();
+
+		if(matteExVal < 0) return DR_HIDE;
+		else if(0 < matteExVal) return DR_MASK;
+		else return DR_NORMAL;
 	}
 
 	if(debug_mt->value)
@@ -2116,3 +2099,26 @@ REGISTER_DEBUGCMD_FUNC(depth_info) {
 	pEngfuncs->Con_Printf("zNear: %f\nzFar: %f\nMax linear error (8bit): %f (%f %%)\n", N, F, E, P);
 }
 
+char const * g_StrForMoreXpressInfo = "For more information on expressions please refer to the manual.";
+
+REGISTER_CMD_FUNC(matte_xpress) {
+
+	if(2 == pEngfuncs->Cmd_Argc())
+	{
+		bool isOk = g_Filming.CompileMatteEx( pEngfuncs->Cmd_Argv(1) );
+
+		if(isOk)
+			pEngfuncs->Con_Printf("Expression compiled successfully.\n");
+		else
+			pEngfuncs->Con_Printf("Expression failed to compile, using standard behaviour.\n");
+
+		return;
+	}
+
+	pEngfuncs->Con_Printf(
+		"WARNING: This command is yet untested and might behave unexpected.\n"
+		"Usage: " PREFIX "matte_xpress <code>\n"
+		"%s\n",
+		g_StrForMoreXpressInfo
+	);
+}

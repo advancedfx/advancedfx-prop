@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-04-24 dominik.matrixstorm.com
+// 2010-11-10 dominik.matrixstorm.com
 //
 // First changes
 // 2010-04-24 dominik.matrixstorm.com
@@ -38,4 +38,18 @@ void Ref::Release()
     {
         delete this;
     }
+}
+
+void Ref::TouchRef (void)
+{
+	TouchRef(this);
+}
+
+void Ref::TouchRef (IRef * ref)
+{
+	if(ref)
+	{
+		ref->AddRef();
+		ref->Release();
+	}
 }

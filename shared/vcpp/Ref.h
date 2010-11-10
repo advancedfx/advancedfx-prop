@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-04-24 dominik.matrixstorm.com
+// 2010-11-10 dominik.matrixstorm.com
 //
 // First changes
 // 2010-04-24 dominik.matrixstorm.com
@@ -31,6 +31,12 @@ public:
 
 	virtual void AddRef (void);
 	virtual void Release (void);
+
+	/// <summary>AddRef, Release</summary>
+	void TouchRef (void);
+
+	/// <summary>AddRef, Release</summary>
+	static void TouchRef (IRef * ref);
 
 protected:
 	unsigned int m_RefCount;

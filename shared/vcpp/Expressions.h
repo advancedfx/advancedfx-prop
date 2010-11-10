@@ -3,14 +3,14 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-11-02 dominik.matrixstorm.com
+// 2010-11-10 dominik.matrixstorm.com
 //
 // First changes
 // 2010-10-24 dominik.matrixstorm.com
 
 
 // HLAE Expressions are compiled from
-// a Scheme-styled syntax
+// a Scheme-styled syntax:
 
 // Standard types (contract functions):
 // Error
@@ -20,8 +20,8 @@
 
 // Primitive functions:
 //
-// IntConstant -> Int
-// BoolConstant -> Bool
+// IntConstant: integer -> Int
+// BoolConstant: "false" | "true" -> Bool
 
 // Standard functions:
 // and && : Bool Bool+ -> Bool
@@ -29,10 +29,13 @@
 // not ! : Bool -> Bool
 // less < : Bool Bool -> Bool
 // less < : Int Int -> Bool
+// lessOrEqual <= Bool Bool -> Bool
+// lessOrEqual <= Int Int -> Bool
 // equal == : Bool Bool -> Bool
 // equal == : Int Int -> Bool
+// greater > : Bool Bool -> Bool
 // greater > : Int Int -> Bool
-// lessOrEqual <= Int Int -> Bool
+// greaterOrEqual >= Bool Bool -> Bool
 // greaterOrEqual >= Int Int -> Bool
 // in: Bool Bool* -> Bool
 // in: Int Int* -> Bool
@@ -40,14 +43,23 @@
 // max: Int+ -> Int
 // min: Bool+ -> Bool
 // min: Int+ -> Int
+// if ?: Bool Bool Bool -> Bool
+// if ?: Bool Int Int -> Int
 
 // 0. text
 // 1. group parenthesis (tree)
 // 2. resolve 
 
+// empty = ;
+// arguments = empty | WS function, arguments ;
+// parenthesis = "(", WS*, identifier, WS*, arguments, WS* ")" ;
+// function = parenthesis | identifier
+// code = WS* function WS*
+
+
 #include "Ref.h"
 
-namespace Afx { namespace Expr {
+namespace Afx { namespace Expressions {
 
 
 struct __declspec(novtable) IError abstract
@@ -133,7 +145,7 @@ struct __declspec(novtable) IBubble abstract
 };
 
 
-struct __declspec(novtable) BubbleFactory abstract
+struct __declspec(novtable) Tools abstract
 {	
 	/// <summary>Creates a new bubble with standard operators / functions.</summary>
 	static IBubble * StandardBubble (void);

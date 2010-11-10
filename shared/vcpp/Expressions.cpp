@@ -3,21 +3,14 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-11-02 dominik.matrixstorm.com
+// 2010-11-10 dominik.matrixstorm.com
 //
 // First changes
 // 2010-10-24 dominik.matrixstorm.com
 
 
-// Test version:
-//
-// Currently precendence etc. won't work correctly (because I skipped the token stage).
-// Several changes required, but this is for testing now.
-
-
-// Currently the parsing is rather inefficient and can be speed-up later
-// i.e. by using specialized parsing tools, that operate on trees generated
-// from the grammar or similar tricks (currently it's more trial and error).
+// Things could be speed up by directly resolving to machine code
+// where applicable.
 
 
 #include "expressions.h"
@@ -27,12 +20,12 @@
 
 #include <exception>
 #include <list>
-#include <map>
+#include <vector>
 
 using namespace std;
 
 using namespace Afx;
-using namespace Afx::Expr;
+using namespace Afx::Expressions;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -120,86 +113,56 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
-
-
-struct TokenParenthesis;
-struct TokenSet;
-
-struct Token
-{
-	enum Type_t {
-		T_None,
-		T_Parenthesis,
-		T_Set,
-		T_Bool,
-		T_Int,
-		T_Text
-	} Type;
-
-	union Value_t {
-		bool Bool;
-		int Int;
-		TokenParenthesis * Parenthesis;
-		TokenSet * Set;
-		char * Text;
-	} Value;
-
-	Token() : Type(T_None) {}
-
-	Token(TokenParenthesis * value) : Type(T_Parenthesis) { Value.Parenthesis = value; }
-
-	Token(TokenSet * value) : Type(T_Set) { Value.Set = value; }
-	
-	Token(bool value) : Type(T_Bool) { Value.Bool = value; }
-	
-	Token(int value) : Type(T_Int) { Value.Int = value; }
-	
-	Token(char const * value) : Type(T_Text) {
-		size_t len = strlen(value);
-
-		Value.Text = new char[1+len];
-		memcpy(Value.Text, value, len * sizeof(char));
-		Value.Text[len] = 0;
-	}
-
-	~Token() {
-		switch(Type)
-		{
-		case T_Text: delete Value.Text; break;
-		}
-	}
-};
-
-typedef std::list<Token *> TokenList;
-
-class Tokens : public Ref
+class CompileArgs : public Ref,
+	public ICompileArgs
 {
 public:
-	Tokens()
+	CompileArgs()
 	{
 	}
 
-	TokenList & List (void)
+	void Add(ICompiled * value)
 	{
-		TokenList & ret = m_TokenList;
+#ifdef _DEBUG
+		if(!value) throw new invalid_argument("value must not be null");
+#endif
 
-		return ret;
+		value->Ref()->AddRef();
+
+		m_Compileds.push_back(value);
+	}
+
+	virtual ICompiled * GetArg (int index) {
+		size_t index_szt = (size_t)index;
+
+		if(index < 0 || m_Compileds.size() <= index_szt)
+			return 0;
+
+		return m_Compileds[index_szt];
+	}
+
+	virtual int GetCount (void) {
+		return m_Compileds.size();
+	}
+
+	virtual ::Afx::IRef * Ref (void) {
+		return dynamic_cast<::Afx::IRef *>(this);
 	}
 
 protected:
-	~Tokens()
+	~CompileArgs()
 	{
-		for(TokenList::iterator it = m_TokenList.begin(); it != m_TokenList.end(); it++)
+		for(CompiledList::iterator it = m_Compileds.begin(); it != m_Compileds.end(); it++)
 		{
-			delete (*it);
+			(*it)->Ref()->Release();
 		}
 	}
 
 private:
-	TokenList m_TokenList;
-};
+	typedef vector<ICompiled *> CompiledList;
 
+	CompiledList m_Compileds;
+};
 
 
 
@@ -260,6 +223,24 @@ protected:
 private:
 	typedef list<BubbleFn *> FunctionList;
 	FunctionList m_Functions;
+
+	ICompiled * Compile_Bool(char const * identifier, ICompileArgs * args, int errorPos);
+
+	ICompiled * Compile_Code(Cursor & cursor);
+
+	ICompiled * Compile_Function(Cursor & cursor);
+
+	ICompiled * Compile_Identifier(Cursor & cursor);
+
+	ICompiled * Compile_Identifier(char const * identifier, ICompileArgs * args, int errorPos);
+
+	ICompiled * Compile_Int(char const * identifier, ICompileArgs * args, int errorPos);
+
+	ICompiled * Compile_Parenthesis(Cursor & cursor);
+
+	static bool IsIdentifierChar(char val);
+
+	char * New_Identifier(Cursor & cursor);
 };
 
 
@@ -267,8 +248,15 @@ private:
 class Error : public Ref,
 	public IError
 {
-public:
+public:	
+	enum ErrorCode {
+		EC_None,
+		EC_Error,
+		EC_ParseError
+	};
+
 	Error() {}
+	Error(ErrorCode errorCode, int errorPosition) {}
 
 	virtual ::Afx::IRef * Ref (void) { return dynamic_cast<::Afx::IRef *>(this); }
 
@@ -283,25 +271,108 @@ private:
 
 struct __declspec(novtable) FnTools abstract
 {
-	static bool CheckArgs(ICompileArgs * args, ICompiled::Type type, int minCount)
+	static bool CheckArgs(ICompileArgs * args, ICompiled::Type type)
 	{
-		bool bOk =
+		if(args) args->Ref()->AddRef();
+
+		bool result =
 			0 != args
-			&& 2 <= args->GetCount();
+			&& 1 == args->GetCount()
+			&& type == args->GetArg(0)->GetType()
 		;
 
-		if(bOk)
+		if(args) args->Ref()->Release();
+
+		return result;
+	}
+
+	static bool CheckArgs(ICompileArgs * args, ICompiled::Type type, ICompiled::Type type2)
+	{
+		if(args) args->Ref()->AddRef();
+
+		bool result =
+			0 != args
+			&& 2 == args->GetCount()
+			&& type == args->GetArg(0)->GetType()
+			&& type2 == args->GetArg(2)->GetType()
+		;
+
+		if(args) args->Ref()->Release();
+
+		return result;
+	}
+
+	static bool CheckArgs(ICompileArgs * args, ICompiled::Type type, ICompiled::Type type2, ICompiled::Type type3)
+	{
+		if(args) args->Ref()->AddRef();
+
+		bool result =
+			0 != args
+			&& 3 == args->GetCount()
+			&& type == args->GetArg(0)->GetType()
+			&& type2 == args->GetArg(1)->GetType()
+			&& type3 == args->GetArg(2)->GetType()
+		;
+
+		if(args) args->Ref()->Release();
+
+		return result;
+	}
+
+	static bool CheckArgsMin(ICompileArgs * args, ICompiled::Type type, int minCount)
+	{
+		if(args) args->Ref()->AddRef();
+
+		bool result =
+			0 != args
+			&& minCount <= args->GetCount();
+		;
+
+		if(result)
 		{
 			int count = args->GetCount();
 
-			for(int i=0; i<count && bOk; i++)
+			for(int i=0; i<count && result; i++)
 			{
-				bOk = bOk && type == args->GetArg(i)->GetType();
+				result = result && type == args->GetArg(i)->GetType();
 			}
 		}
 
-		return bOk;
+		if(args) args->Ref()->Release();
+
+		return result;
 	}
+
+};
+
+
+class FnConstBool : public Ref,
+	public IBool
+{
+public:
+	FnConstBool(bool value) : m_Value(value) {}
+
+	virtual bool EvalBool (void) { return m_Value; }
+
+	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }
+
+private:
+	bool m_Value;
+};
+
+
+class FnConstInt : public Ref,
+	public IInt
+{
+public:
+	FnConstInt(int value) : m_Value(value) {}
+
+	virtual int EvalInt (void) { return m_Value; }
+
+	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }
+
+private:
+	int m_Value;
 };
 
 
@@ -435,7 +506,7 @@ public:
 	{
 		if(args) args->Ref()->AddRef();
 
-		ICompiled * compiled = FnTools::CheckArgs(args, ICompiled::T_Bool, 2)
+		ICompiled * compiled = FnTools::CheckArgsMin(args, ICompiled::T_Bool, 2)
 			? new Compiled(new FnAnd(args))
 			: new Compiled(new Error())
 		;
@@ -479,7 +550,7 @@ public:
 	{
 		if(args) args->Ref()->AddRef();
 
-		ICompiled * compiled = FnTools::CheckArgs(args, ICompiled::T_Bool, 2)
+		ICompiled * compiled = FnTools::CheckArgsMin(args, ICompiled::T_Bool, 2)
 			? new Compiled(new FnOr(args))
 			: new Compiled(new Error())
 		;
@@ -523,7 +594,7 @@ public:
 	{
 		if(args) args->Ref()->AddRef();
 
-		ICompiled * compiled = FnTools::CheckArgs(args, ICompiled::T_Bool, 1)
+		ICompiled * compiled = FnTools::CheckArgs(args, ICompiled::T_Bool)
 			? new Compiled(new FnNot(args))
 			: new Compiled(new Error())
 		;
@@ -560,7 +631,7 @@ public:
 	{
 		if(args) args->Ref()->AddRef();
 
-		ICompiled * compiled = FnTools::CheckArgs(args, ICompiled::T_Bool, 2)
+		ICompiled * compiled = FnTools::CheckArgs(args, ICompiled::T_Bool, ICompiled::T_Bool)
 			? new Compiled(new FnLessBool(args))
 			: new Compiled(new Error())
 		;
@@ -597,7 +668,7 @@ public:
 	{
 		if(args) args->Ref()->AddRef();
 
-		ICompiled * compiled = FnTools::CheckArgs(args, ICompiled::T_Int, 2)
+		ICompiled * compiled = FnTools::CheckArgs(args, ICompiled::T_Int, ICompiled::T_Int)
 			? new Compiled(new FnLessInt(args))
 			: new Compiled(new Error())
 		;
@@ -626,6 +697,737 @@ public:
 	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }	
 };
 
+
+class FnLessOrEqualBool : public FnBoolsToBoolBase
+{
+public:
+	static ICompiled * Compile(ICompileArgs * args)
+	{
+		if(args) args->Ref()->AddRef();
+
+		ICompiled * compiled = FnTools::CheckArgs(args, ICompiled::T_Bool, ICompiled::T_Bool)
+			? new Compiled(new FnLessOrEqualBool(args))
+			: new Compiled(new Error())
+		;
+
+		if(args) args->Ref()->Release();
+
+		return compiled;
+	}
+
+	virtual bool EvalBool (void) {
+
+		return m_Fns[0]->EvalBool() <= m_Fns[1]->EvalBool();
+	}
+
+private:
+	FnLessOrEqualBool(ICompileArgs * args) : FnBoolsToBoolBase(args) {}
+};
+
+
+class FnLessOrEqualBoolCompileable : public Ref,
+	public ICompileable
+{
+public:
+	virtual ICompiled * Compile (ICompileArgs * args) { return FnLessOrEqualBool::Compile(args); }
+
+	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }	
+};
+
+
+class FnLessOrEqualInt : public FnIntsToBoolBase
+{
+public:
+	static ICompiled * Compile(ICompileArgs * args)
+	{
+		if(args) args->Ref()->AddRef();
+
+		ICompiled * compiled = FnTools::CheckArgs(args, ICompiled::T_Int, ICompiled::T_Int)
+			? new Compiled(new FnLessOrEqualInt(args))
+			: new Compiled(new Error())
+		;
+
+		if(args) args->Ref()->Release();
+
+		return compiled;
+	}
+
+	virtual bool EvalBool (void) {
+
+		return m_Fns[0]->EvalInt() <= m_Fns[1]->EvalInt();
+	}
+
+private:
+	FnLessOrEqualInt(ICompileArgs * args) : FnIntsToBoolBase(args) {}
+};
+
+
+class FnLessOrEqualIntCompileable : public Ref,
+	public ICompileable
+{
+public:
+	virtual ICompiled * Compile (ICompileArgs * args) { return FnLessOrEqualInt::Compile(args); }
+
+	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }	
+};
+
+
+class FnEqualBool : public FnBoolsToBoolBase
+{
+public:
+	static ICompiled * Compile(ICompileArgs * args)
+	{
+		if(args) args->Ref()->AddRef();
+
+		ICompiled * compiled = FnTools::CheckArgs(args, ICompiled::T_Bool, ICompiled::T_Bool)
+			? new Compiled(new FnEqualBool(args))
+			: new Compiled(new Error())
+		;
+
+		if(args) args->Ref()->Release();
+
+		return compiled;
+	}
+
+	virtual bool EvalBool (void) {
+
+		return m_Fns[0]->EvalBool() == m_Fns[1]->EvalBool();
+	}
+
+private:
+	FnEqualBool(ICompileArgs * args) : FnBoolsToBoolBase(args) {}
+};
+
+
+class FnEqualBoolCompileable : public Ref,
+	public ICompileable
+{
+public:
+	virtual ICompiled * Compile (ICompileArgs * args) { return FnEqualBool::Compile(args); }
+
+	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }	
+};
+
+
+class FnEqualInt : public FnIntsToBoolBase
+{
+public:
+	static ICompiled * Compile(ICompileArgs * args)
+	{
+		if(args) args->Ref()->AddRef();
+
+		ICompiled * compiled = FnTools::CheckArgs(args, ICompiled::T_Int, ICompiled::T_Int)
+			? new Compiled(new FnEqualInt(args))
+			: new Compiled(new Error())
+		;
+
+		if(args) args->Ref()->Release();
+
+		return compiled;
+	}
+
+	virtual bool EvalBool (void) {
+
+		return m_Fns[0]->EvalInt() == m_Fns[1]->EvalInt();
+	}
+
+private:
+	FnEqualInt(ICompileArgs * args) : FnIntsToBoolBase(args) {}
+};
+
+
+class FnEqualIntCompileable : public Ref,
+	public ICompileable
+{
+public:
+	virtual ICompiled * Compile (ICompileArgs * args) { return FnEqualInt::Compile(args); }
+
+	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }	
+};
+
+
+class FnGreaterBool : public FnBoolsToBoolBase
+{
+public:
+	static ICompiled * Compile(ICompileArgs * args)
+	{
+		if(args) args->Ref()->AddRef();
+
+		ICompiled * compiled = FnTools::CheckArgs(args, ICompiled::T_Bool, ICompiled::T_Bool)
+			? new Compiled(new FnGreaterBool(args))
+			: new Compiled(new Error())
+		;
+
+		if(args) args->Ref()->Release();
+
+		return compiled;
+	}
+
+	virtual bool EvalBool (void) {
+
+		return m_Fns[0]->EvalBool() > m_Fns[1]->EvalBool();
+	}
+
+private:
+	FnGreaterBool(ICompileArgs * args) : FnBoolsToBoolBase(args) {}
+};
+
+
+class FnGreaterBoolCompileable : public Ref,
+	public ICompileable
+{
+public:
+	virtual ICompiled * Compile (ICompileArgs * args) { return FnGreaterBool::Compile(args); }
+
+	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }	
+};
+
+
+class FnGreaterInt : public FnIntsToBoolBase
+{
+public:
+	static ICompiled * Compile(ICompileArgs * args)
+	{
+		if(args) args->Ref()->AddRef();
+
+		ICompiled * compiled = FnTools::CheckArgs(args, ICompiled::T_Int, ICompiled::T_Int)
+			? new Compiled(new FnGreaterInt(args))
+			: new Compiled(new Error())
+		;
+
+		if(args) args->Ref()->Release();
+
+		return compiled;
+	}
+
+	virtual bool EvalBool (void) {
+
+		return m_Fns[0]->EvalInt() > m_Fns[1]->EvalInt();
+	}
+
+private:
+	FnGreaterInt(ICompileArgs * args) : FnIntsToBoolBase(args) {}
+};
+
+
+class FnGreaterIntCompileable : public Ref,
+	public ICompileable
+{
+public:
+	virtual ICompiled * Compile (ICompileArgs * args) { return FnGreaterInt::Compile(args); }
+
+	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }	
+};
+
+
+class FnGreaterOrEqualBool : public FnBoolsToBoolBase
+{
+public:
+	static ICompiled * Compile(ICompileArgs * args)
+	{
+		if(args) args->Ref()->AddRef();
+
+		ICompiled * compiled = FnTools::CheckArgs(args, ICompiled::T_Bool, ICompiled::T_Bool)
+			? new Compiled(new FnGreaterOrEqualBool(args))
+			: new Compiled(new Error())
+		;
+
+		if(args) args->Ref()->Release();
+
+		return compiled;
+	}
+
+	virtual bool EvalBool (void) {
+
+		return m_Fns[0]->EvalBool() >= m_Fns[1]->EvalBool();
+	}
+
+private:
+	FnGreaterOrEqualBool(ICompileArgs * args) : FnBoolsToBoolBase(args) {}
+};
+
+
+class FnGreaterOrEqualBoolCompileable : public Ref,
+	public ICompileable
+{
+public:
+	virtual ICompiled * Compile (ICompileArgs * args) { return FnGreaterOrEqualBool::Compile(args); }
+
+	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }	
+};
+
+
+class FnGreaterOrEqualInt : public FnIntsToBoolBase
+{
+public:
+	static ICompiled * Compile(ICompileArgs * args)
+	{
+		if(args) args->Ref()->AddRef();
+
+		ICompiled * compiled = FnTools::CheckArgs(args, ICompiled::T_Int, ICompiled::T_Int)
+			? new Compiled(new FnGreaterOrEqualInt(args))
+			: new Compiled(new Error())
+		;
+
+		if(args) args->Ref()->Release();
+
+		return compiled;
+	}
+
+	virtual bool EvalBool (void) {
+
+		return m_Fns[0]->EvalInt() >= m_Fns[1]->EvalInt();
+	}
+
+private:
+	FnGreaterOrEqualInt(ICompileArgs * args) : FnIntsToBoolBase(args) {}
+};
+
+
+class FnGreaterOrEqualIntCompileable : public Ref,
+	public ICompileable
+{
+public:
+	virtual ICompiled * Compile (ICompileArgs * args) { return FnGreaterOrEqualInt::Compile(args); }
+
+	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }	
+};
+
+
+class FnInBool : public FnBoolsToBoolBase
+{
+public:
+	static ICompiled * Compile(ICompileArgs * args)
+	{
+		if(args) args->Ref()->AddRef();
+
+		ICompiled * compiled = FnTools::CheckArgsMin(args, ICompiled::T_Bool, 1)
+			? new Compiled(new FnInBool(args))
+			: new Compiled(new Error())
+		;
+
+		if(args) args->Ref()->Release();
+
+		return compiled;
+	}
+
+	virtual bool EvalBool (void) {
+
+		bool findVal = m_Fns[0]->EvalBool();
+
+		for(int i=1; i<m_Count; i++)
+		{
+			if(findVal == m_Fns[i]->EvalBool())
+				return true;
+		}
+
+		return false;
+	}
+
+private:
+	FnInBool(ICompileArgs * args) : FnBoolsToBoolBase(args) {}
+};
+
+
+class FnInBoolCompileable : public Ref,
+	public ICompileable
+{
+public:
+	virtual ICompiled * Compile (ICompileArgs * args) { return FnInBool::Compile(args); }
+
+	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }	
+};
+
+
+class FnInInt : public FnIntsToBoolBase
+{
+public:
+	static ICompiled * Compile(ICompileArgs * args)
+	{
+		if(args) args->Ref()->AddRef();
+
+		ICompiled * compiled = FnTools::CheckArgsMin(args, ICompiled::T_Int, 1)
+			? new Compiled(new FnInInt(args))
+			: new Compiled(new Error())
+		;
+
+		if(args) args->Ref()->Release();
+
+		return compiled;
+	}
+
+	virtual bool EvalBool (void) {
+
+		int findVal = m_Fns[0]->EvalInt();
+
+		for(int i=1; i<m_Count; i++)
+		{
+			if(findVal == m_Fns[i]->EvalInt())
+				return true;
+		}
+
+		return false;
+	}
+
+private:
+	FnInInt(ICompileArgs * args) : FnIntsToBoolBase(args) {}
+};
+
+
+class FnInIntCompileable : public Ref,
+	public ICompileable
+{
+public:
+	virtual ICompiled * Compile (ICompileArgs * args) { return FnInInt::Compile(args); }
+
+	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }	
+};
+
+
+class FnMaxBool : public FnBoolsToBoolBase
+{
+public:
+	static ICompiled * Compile(ICompileArgs * args)
+	{
+		if(args) args->Ref()->AddRef();
+
+		ICompiled * compiled = FnTools::CheckArgsMin(args, ICompiled::T_Bool, 1)
+			? new Compiled(new FnMaxBool(args))
+			: new Compiled(new Error())
+		;
+
+		if(args) args->Ref()->Release();
+
+		return compiled;
+	}
+
+	virtual bool EvalBool (void) {
+		
+		bool winVal = false;
+		bool noVal = true;
+
+		for(int i=0; i<m_Count; i++)
+		{
+			bool curVal = m_Fns[i]->EvalBool();
+
+			if(noVal)
+			{
+				winVal = curVal;
+				noVal = false;
+			}
+			else if(winVal < curVal) winVal = curVal;
+		}
+
+		return winVal;
+	}
+
+private:
+	FnMaxBool(ICompileArgs * args) : FnBoolsToBoolBase(args) {}
+};
+
+
+class FnMaxBoolCompileable : public Ref,
+	public ICompileable
+{
+public:
+	virtual ICompiled * Compile (ICompileArgs * args) { return FnMaxBool::Compile(args); }
+
+	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }	
+};
+
+
+class FnMaxInt : public FnIntsToIntBase
+{
+public:
+	static ICompiled * Compile(ICompileArgs * args)
+	{
+		if(args) args->Ref()->AddRef();
+
+		ICompiled * compiled = FnTools::CheckArgsMin(args, ICompiled::T_Int, 1)
+			? new Compiled(new FnMaxInt(args))
+			: new Compiled(new Error())
+		;
+
+		if(args) args->Ref()->Release();
+
+		return compiled;
+	}
+
+	virtual int EvalInt (void) {
+		
+		int winVal = 0;
+		bool noVal = true;
+
+		for(int i=0; i<m_Count; i++)
+		{
+			int curVal = m_Fns[i]->EvalInt();
+
+			if(noVal)
+			{
+				winVal = curVal;
+				noVal = false;
+			}
+			else if(winVal < curVal) winVal = curVal;
+		}
+
+		return winVal;
+	}
+
+private:
+	FnMaxInt(ICompileArgs * args) : FnIntsToIntBase(args) {}
+};
+
+
+class FnMaxIntCompileable : public Ref,
+	public ICompileable
+{
+public:
+	virtual ICompiled * Compile (ICompileArgs * args) { return FnMaxInt::Compile(args); }
+
+	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }	
+};
+
+
+class FnMinBool : public FnBoolsToBoolBase
+{
+public:
+	static ICompiled * Compile(ICompileArgs * args)
+	{
+		if(args) args->Ref()->AddRef();
+
+		ICompiled * compiled = FnTools::CheckArgsMin(args, ICompiled::T_Bool, 1)
+			? new Compiled(new FnMinBool(args))
+			: new Compiled(new Error())
+		;
+
+		if(args) args->Ref()->Release();
+
+		return compiled;
+	}
+
+	virtual bool EvalBool (void) {
+		
+		bool winVal = false;
+		bool noVal = true;
+
+		for(int i=0; i<m_Count; i++)
+		{
+			bool curVal = m_Fns[i]->EvalBool();
+
+			if(noVal)
+			{
+				winVal = curVal;
+				noVal = false;
+			}
+			else if(winVal > curVal) winVal = curVal;
+		}
+
+		return winVal;
+	}
+
+private:
+	FnMinBool(ICompileArgs * args) : FnBoolsToBoolBase(args) {}
+};
+
+
+class FnMinBoolCompileable : public Ref,
+	public ICompileable
+{
+public:
+	virtual ICompiled * Compile (ICompileArgs * args) { return FnMinBool::Compile(args); }
+
+	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }	
+};
+
+
+class FnMinInt : public FnIntsToIntBase
+{
+public:
+	static ICompiled * Compile(ICompileArgs * args)
+	{
+		if(args) args->Ref()->AddRef();
+
+		ICompiled * compiled = FnTools::CheckArgsMin(args, ICompiled::T_Int, 1)
+			? new Compiled(new FnMinInt(args))
+			: new Compiled(new Error())
+		;
+
+		if(args) args->Ref()->Release();
+
+		return compiled;
+	}
+
+	virtual int EvalInt (void) {
+		
+		int winVal = 0;
+		bool noVal = true;
+
+		for(int i=0; i<m_Count; i++)
+		{
+			int curVal = m_Fns[i]->EvalInt();
+
+			if(noVal)
+			{
+				winVal = curVal;
+				noVal = false;
+			}
+			else if(winVal > curVal) winVal = curVal;
+		}
+
+		return winVal;
+	}
+
+private:
+	FnMinInt(ICompileArgs * args) : FnIntsToIntBase(args) {}
+};
+
+
+class FnMinIntCompileable : public Ref,
+	public ICompileable
+{
+public:
+	virtual ICompiled * Compile (ICompileArgs * args) { return FnMinInt::Compile(args); }
+
+	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }	
+};
+
+
+class FnIfBool : public Ref,
+	public IBool
+{
+public:
+	static ICompiled * Compile(ICompileArgs * args)
+	{
+		if(args) args->Ref()->AddRef();
+
+		ICompiled * compiled = FnTools::CheckArgs(args, ICompiled::T_Bool, ICompiled::T_Bool, ICompiled::T_Bool)
+			? new Compiled(new FnIfBool(args))
+			: new Compiled(new Error())
+		;
+
+		if(args) args->Ref()->Release();
+
+		return compiled;
+	}
+
+	virtual bool EvalBool (void) {
+		
+		return 	m_If->EvalBool()
+			? m_IfTrue->EvalBool()
+			: m_IfFalse->EvalBool()
+		;
+	}
+
+	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }	
+
+protected:
+	virtual ~FnIfBool()
+	{
+		m_If->Ref()->Release();
+		m_IfTrue->Ref()->Release();
+		m_IfFalse->Ref()->Release();
+	}
+
+private:
+	IBool * m_If;
+	IBool * m_IfTrue;
+	IBool * m_IfFalse;
+
+	FnIfBool(ICompileArgs * args) {
+
+		args->Ref()->AddRef();
+
+		m_If = args->GetArg(0)->GetBool();
+		m_If->Ref()->AddRef();
+
+		m_IfTrue = args->GetArg(1)->GetBool();
+		m_IfTrue->Ref()->AddRef();
+
+		m_IfFalse = args->GetArg(2)->GetBool();
+		m_IfFalse->Ref()->AddRef();
+
+		args->Ref()->Release();
+	}
+};
+
+
+class FnIfBoolCompileable : public Ref,
+	public ICompileable
+{
+public:
+	virtual ICompiled * Compile (ICompileArgs * args) { return FnIfBool::Compile(args); }
+
+	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }	
+};
+
+
+class FnIfInt : public Ref,
+	public IInt
+{
+public:
+	static ICompiled * Compile(ICompileArgs * args)
+	{
+		if(args) args->Ref()->AddRef();
+
+		ICompiled * compiled = FnTools::CheckArgs(args, ICompiled::T_Bool, ICompiled::T_Int, ICompiled::T_Int)
+			? new Compiled(new FnIfInt(args))
+			: new Compiled(new Error())
+		;
+
+		if(args) args->Ref()->Release();
+
+		return compiled;
+	}
+
+	virtual int EvalInt (void) {
+		
+		return 	m_If->EvalBool()
+			? m_IfTrue->EvalInt()
+			: m_IfFalse->EvalInt()
+		;
+	}
+
+	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }
+
+protected:
+	virtual ~FnIfInt()
+	{
+		m_If->Ref()->Release();
+		m_IfTrue->Ref()->Release();
+		m_IfFalse->Ref()->Release();
+	}
+
+private:
+	IBool * m_If;
+	IInt * m_IfTrue;
+	IInt * m_IfFalse;
+
+	FnIfInt(ICompileArgs * args) {
+
+		args->Ref()->AddRef();
+
+		m_If = args->GetArg(0)->GetBool();
+		m_If->Ref()->AddRef();
+
+		m_IfTrue = args->GetArg(1)->GetInt();
+		m_IfTrue->Ref()->AddRef();
+
+		m_IfFalse = args->GetArg(2)->GetInt();
+		m_IfFalse->Ref()->AddRef();
+
+		args->Ref()->Release();
+	}
+};
+
+
+class FnIfIntCompileable : public Ref,
+	public ICompileable
+{
+public:
+	virtual ICompiled * Compile (ICompileArgs * args) { return FnIfInt::Compile(args); }
+
+	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }	
+};
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -693,11 +1495,42 @@ Bubble::Bubble()
 
 	Add("less", new FnLessBoolCompileable());
 	Add("<", new FnLessBoolCompileable());
-
 	Add("less", new FnLessIntCompileable());
 	Add("<", new FnLessIntCompileable());
 
+	Add("lessOrEqual", new FnLessOrEqualBoolCompileable());
+	Add("<=", new FnLessOrEqualBoolCompileable());
+	Add("lessOrEqual", new FnLessOrEqualIntCompileable());
+	Add("<=", new FnLessOrEqualIntCompileable());
 
+	Add("equal", new FnEqualBoolCompileable());
+	Add("==", new FnEqualBoolCompileable());
+	Add("equal", new FnEqualIntCompileable());
+	Add("==", new FnEqualIntCompileable());
+
+	Add("greater", new FnGreaterBoolCompileable());
+	Add(">", new FnGreaterBoolCompileable());
+	Add("greater", new FnGreaterIntCompileable());
+	Add(">", new FnGreaterIntCompileable());
+
+	Add("greaterOrEqual", new FnGreaterOrEqualBoolCompileable());
+	Add(">=", new FnGreaterOrEqualBoolCompileable());
+	Add("greaterOrEqual", new FnGreaterOrEqualIntCompileable());
+	Add(">=", new FnGreaterOrEqualIntCompileable());
+
+	Add("in", new FnInBoolCompileable());
+	Add("in", new FnInIntCompileable());
+
+	Add("max", new FnMaxBoolCompileable());
+	Add("max", new FnMaxIntCompileable());
+
+	Add("min", new FnMinBoolCompileable());
+	Add("min", new FnMinIntCompileable());
+
+	Add("if", new FnIfBoolCompileable());
+	Add("?", new FnIfBoolCompileable());
+	Add("if", new FnIfIntCompileable());
+	Add("?", new FnIfIntCompileable());
 }
 
 Bubble::~Bubble()
@@ -718,20 +1551,235 @@ void Bubble::Add(char const * name, ICompileable * compileable)
 
 ICompiled * Bubble::Compile(const char * code)
 {
-	return new Compiled(new Error());
+	Cursor cursor(code);
+
+	return Compile_Code(cursor);
 }
+
+ICompiled * Bubble::Compile_Bool(char const * identifier, ICompileArgs * args, int errorPos)
+{
+	if(0 == args->GetCount())
+	{
+		bool isBool = false;
+		bool boolVal;
+
+		if(!strcmp("false", identifier))
+		{
+			isBool = true;
+			boolVal = false;
+		}
+		else if(!strcmp("true", identifier))
+		{
+			isBool = true;
+			boolVal = true;
+		}
+
+		if(isBool) return new Compiled(new FnConstBool(boolVal));
+	}
+
+	return new Compiled(new Error(Error::EC_ParseError, errorPos));
+}
+
+ICompiled * Bubble::Compile_Code(Cursor & cursor)
+{
+	cursor.SkipSpace();
+
+	ICompiled * compiled = Compile_Function(cursor);
+
+	cursor.SkipSpace();
+
+	return compiled;
+}
+
+ICompiled * Bubble::Compile_Function(Cursor & cursor)
+{
+	if('(' == cursor.Get())
+	{
+		return Compile_Parenthesis(cursor);
+	}
+
+	return Compile_Identifier(cursor);
+}
+
+ICompiled * Bubble::Compile_Identifier(Cursor & cursor)
+{
+	ICompiled * compiled = 0;
+
+	char * id = New_Identifier(cursor);
+
+	if(id) compiled = Compile_Identifier(id, new CompileArgs(), cursor.GetPos());
+
+	delete id;
+
+	return compiled ? compiled : new Compiled(new Error(Error::EC_ParseError, cursor.GetPos()));
+}
+
+ICompiled * Bubble::Compile_Identifier(char const * identifier, ICompileArgs * args, int errorPos)
+{
+	ICompiled * compiled = 0;
+
+	args->Ref()->AddRef();
+
+	if(!compiled)
+	{
+		compiled = Compile_Bool(identifier, args, errorPos);
+		if(compiled->GetError())
+		{
+			compiled->Ref()->AddRef();
+			compiled->Ref()->Release();
+			compiled = 0;
+		}
+	}
+
+	if(!compiled)
+	{
+		compiled = Compile_Int(identifier, args, errorPos);
+		if(compiled->GetError())
+		{
+			compiled->Ref()->AddRef();
+			compiled->Ref()->Release();
+			compiled = 0;
+		}
+	}
+
+	for(FunctionList::iterator it = m_Functions.begin(); it != m_Functions.end(); it++)
+	{
+		BubbleFn * bubbleFn = *it;
+
+		if(!strcmp(identifier, bubbleFn->GetName()))
+		{
+			compiled = bubbleFn->GetCompileable()->Compile(args);
+
+			if(!compiled->GetError())
+				break;
+
+			compiled->Ref()->AddRef();
+			compiled->Ref()->Release();
+		}
+	}
+
+	args->Ref()->Release();
+
+	return compiled ? compiled : new Compiled(new Error(Error::EC_ParseError, errorPos));
+}
+
+ICompiled * Bubble::Compile_Int(char const * identifier, ICompileArgs * args, int errorPos)
+{
+	if(0 == args->GetCount())
+	{
+		bool isInt = false;
+		int intVal = atoi(identifier);
+
+		if(0 == intVal)
+		{
+			size_t len = strlen(identifier);
+
+			if(0 < len)
+			{
+				// string is not empty.
+				isInt = true;
+
+				for(size_t i=0; i<len; i++)
+				{
+					isInt = isInt && (
+						'0' == identifier[i]
+						|| (0 == i && 2 <= len && '-' == identifier[i])
+					);
+				}
+			}
+		}
+		else isInt = true;
+
+		if(isInt) return new Compiled(new FnConstInt(intVal));
+	}
+
+	return new Compiled(new Error(Error::EC_ParseError, errorPos));
+}
+
+ICompiled * Bubble::Compile_Parenthesis(Cursor & cursor)
+{
+	if('(' == cursor.Get())
+	{
+		cursor.Add();
+
+		cursor.SkipSpace();
+
+		ICompiled * compiled = 0;
+		char * id = New_Identifier(cursor);
+
+		if(id)
+		{
+			CompileArgs * args = new CompileArgs();
+			args->AddRef();
+
+			for(
+				bool hasMore;
+				(hasMore = 0 < cursor.SkipSpace() && ')' != cursor.Get()) && !compiled;
+			)
+			{
+				ICompiled * curCompiled = Compile_Function(cursor);
+
+				if(curCompiled->GetError())
+					// Error, first error is compile result:
+					compiled = curCompiled;
+				else
+					// Ok, add compiled argument:
+					args->Add(curCompiled);
+
+			}
+
+			if(!compiled)
+			{
+				if(')' == cursor.Get())
+				{
+					// Try to compile it:
+					compiled = Compile_Identifier(id, args, cursor.GetPos());
+				}
+			}
+
+			args->Release();
+		}
+
+		delete id;
+
+		if(compiled) return compiled;
+	}
+
+	return new Compiled(new Error(Error::EC_ParseError, cursor.GetPos()));
+}
+
+bool Bubble::IsIdentifierChar(char val)
+{
+	return
+		!Cursor::IsNull(val)
+		&& !Cursor::IsSpace(val)
+		&& '(' != val
+		&& ')' != val
+	;
+}
+
+char * Bubble::New_Identifier(Cursor & cursor)
+{
+	int count = 0;
+
+	while(IsIdentifierChar(cursor.Get(count++)));
+
+	if(0 < count)
+	{
+		char * ret = new char[1+count];
+		for(int i=0; i<count; i++) ret[i] = cursor.GetAdd();
+		ret[count] = 0;
+
+		return ret;
+	}
+
+	return 0;
+}
+
 
 ::Afx::IRef * Bubble::Ref (void)
 {
 	return dynamic_cast<::Afx::IRef * >(this);
-}
-
-
-// BubbleFactory ///////////////////////////////////////////////////////////////
-
-IBubble * BubbleFactory::StandardBubble (void)
-{
-	return new Bubble();
 }
 
 
@@ -1045,5 +2093,13 @@ int IntVariable::EvalInt (void)
 void IntVariable::Set(int value)
 {
 	m_Value = value;
+}
+
+
+// Tools ///////////////////////////////////////////////////////////////
+
+IBubble * Tools::StandardBubble (void)
+{
+	return new Bubble();
 }
 
