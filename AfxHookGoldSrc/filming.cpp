@@ -2101,8 +2101,8 @@ REGISTER_DEBUGCMD_FUNC(depth_info) {
 
 char const * g_StrForMoreXpressInfo = "For more information on expressions please refer to the manual.";
 
-REGISTER_CMD_FUNC(matte_xpress) {
-
+REGISTER_CMD_FUNC(xp_matte)
+{
 	if(2 == pEngfuncs->Cmd_Argc())
 	{
 		bool isOk = g_Filming.CompileMatteEx( pEngfuncs->Cmd_Argv(1) );
@@ -2117,7 +2117,7 @@ REGISTER_CMD_FUNC(matte_xpress) {
 
 	pEngfuncs->Con_Printf(
 		"WARNING: This command is yet untested and might behave unexpected.\n"
-		"Usage: " PREFIX "matte_xpress <code>\n"
+		"Usage: " PREFIX "xpress_matte <code>\n"
 		"%s\n",
 		g_StrForMoreXpressInfo
 	);

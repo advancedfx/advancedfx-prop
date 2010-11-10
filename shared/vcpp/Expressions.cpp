@@ -294,7 +294,7 @@ struct __declspec(novtable) FnTools abstract
 			0 != args
 			&& 2 == args->GetCount()
 			&& type == args->GetArg(0)->GetType()
-			&& type2 == args->GetArg(2)->GetType()
+			&& type2 == args->GetArg(1)->GetType()
 		;
 
 		if(args) args->Ref()->Release();
@@ -1588,6 +1588,14 @@ ICompiled * Bubble::Compile_Code(Cursor & cursor)
 
 	cursor.SkipSpace();
 
+	if(!cursor.IsNull())
+	{
+		compiled->Ref()->AddRef();
+		compiled->Ref()->Release();
+
+		compiled = new Compiled(new Error(Error::EC_ParseError, cursor.GetPos()));
+	}
+
 	return compiled;
 }
 
@@ -1622,6 +1630,8 @@ ICompiled * Bubble::Compile_Identifier(char const * identifier, ICompileArgs * a
 
 	if(!compiled)
 	{
+		// Bool?
+
 		compiled = Compile_Bool(identifier, args, errorPos);
 		if(compiled->GetError())
 		{
@@ -1633,6 +1643,8 @@ ICompiled * Bubble::Compile_Identifier(char const * identifier, ICompileArgs * a
 
 	if(!compiled)
 	{
+		// Int?
+
 		compiled = Compile_Int(identifier, args, errorPos);
 		if(compiled->GetError())
 		{
@@ -1642,19 +1654,25 @@ ICompiled * Bubble::Compile_Identifier(char const * identifier, ICompileArgs * a
 		}
 	}
 
-	for(FunctionList::iterator it = m_Functions.begin(); it != m_Functions.end(); it++)
+	if(!compiled)
 	{
-		BubbleFn * bubbleFn = *it;
+		// Some function?
 
-		if(!strcmp(identifier, bubbleFn->GetName()))
+		for(FunctionList::iterator it = m_Functions.begin(); it != m_Functions.end(); it++)
 		{
-			compiled = bubbleFn->GetCompileable()->Compile(args);
+			BubbleFn * bubbleFn = *it;
 
-			if(!compiled->GetError())
-				break;
+			if(!strcmp(identifier, bubbleFn->GetName()))
+			{
+				compiled = bubbleFn->GetCompileable()->Compile(args);
 
-			compiled->Ref()->AddRef();
-			compiled->Ref()->Release();
+				if(!compiled->GetError())
+					break;
+
+				compiled->Ref()->AddRef();
+				compiled->Ref()->Release();
+				compiled = 0;
+			}
 		}
 	}
 
@@ -1734,6 +1752,8 @@ ICompiled * Bubble::Compile_Parenthesis(Cursor & cursor)
 				{
 					// Try to compile it:
 					compiled = Compile_Identifier(id, args, cursor.GetPos());
+
+					if(!compiled->GetError()) cursor.Add();
 				}
 			}
 
@@ -1762,7 +1782,7 @@ char * Bubble::New_Identifier(Cursor & cursor)
 {
 	int count = 0;
 
-	while(IsIdentifierChar(cursor.Get(count++)));
+	while(IsIdentifierChar(cursor.Get(count))) count++;
 
 	if(0 < count)
 	{
