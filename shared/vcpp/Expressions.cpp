@@ -2014,7 +2014,7 @@ Bubble::Bubble()
 	Add("?", new FnIfIntCompileable(this));
 
 	Add("do", new FnDoCompileable(this));
-
+	Add(".", new FnDoCompileable(this));
 }
 
 Bubble::~Bubble()
@@ -2592,3 +2592,7 @@ IBubble * Tools::StandardBubble (void)
 	return new Bubble();
 }
 
+ICompileable * Tools::FnDoCompileable(ICompiler * compiler)
+{
+	return new ::FnDoCompileable(compiler);
+}

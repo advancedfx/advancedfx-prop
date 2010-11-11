@@ -31,34 +31,44 @@ public:
 	{	
 		m_MatteEx = 0;
 
-		m_Bubble = Tools::StandardBubble();
-		m_Bubble->Ref()->AddRef();
+		m_Bubbles.Info = Tools::StandardBubble();
+		m_Bubbles.Info->Ref()->AddRef();
 
-		m_Bubble->Add("CurrentGlMode", CurrentGlMode = new IntVariable(m_Bubble->Compiler(), IntVariable::CA_Getter, -1));
-		m_Bubble->Add("CurrentStreamIndex", CurrentStreamIndex = new IntVariable(m_Bubble->Compiler(), IntVariable::CA_Getter, -1));
-		m_Bubble->Add("GetCurrentEntityIndex", new FnGetCurrentEntityIndex(m_Bubble->Compiler()));
-		m_Bubble->Add("IsFilming", IsFilming = new BoolVariable(m_Bubble->Compiler(), BoolVariable::CA_Getter, false));
-		m_Bubble->Add("InRDrawEntitiesOnList", InRDrawEntitiesOnList = new BoolVariable(m_Bubble->Compiler(), BoolVariable::CA_Getter, false));
-		m_Bubble->Add("InRDrawParticles", InRDrawParticles = new BoolVariable(m_Bubble->Compiler(), BoolVariable::CA_Getter, false));
-		m_Bubble->Add("InRDrawViewModel", InRDrawViewModel = new BoolVariable(m_Bubble->Compiler(), BoolVariable::CA_Getter, false));
-		m_Bubble->Add("InRRenderView", InRRenderView = new BoolVariable(m_Bubble->Compiler(), BoolVariable::CA_Getter, false));
+		m_Bubbles.Root = Tools::StandardBubble();
+		m_Bubbles.Root->Ref()->AddRef();
+
+		m_Bubbles.Root->Add("./", Tools::FnDoCompileable(m_Bubbles.Root->Compiler()));
+		m_Bubbles.Root->Add("..", Tools::FnDoCompileable(m_Bubbles.Root->Compiler()));
+		m_Bubbles.Root->Add(".info", Tools::FnDoCompileable(m_Bubbles.Info->Compiler()));
+
+		m_Bubbles.Info->Add("./", Tools::FnDoCompileable(m_Bubbles.Root->Compiler()));
+		m_Bubbles.Info->Add("..", Tools::FnDoCompileable(m_Bubbles.Root->Compiler()));
+		m_Bubbles.Info->Add("CurrentGlMode", CurrentGlMode = new IntVariable(m_Bubbles.Info->Compiler(), IntVariable::CA_Getter, -1));
+		m_Bubbles.Info->Add("CurrentStreamIndex", CurrentStreamIndex = new IntVariable(m_Bubbles.Info->Compiler(), IntVariable::CA_Getter, -1));
+		m_Bubbles.Info->Add("GetCurrentEntityIndex", new FnGetCurrentEntityIndex(m_Bubbles.Info->Compiler()));
+		m_Bubbles.Info->Add("IsFilming", IsFilming = new BoolVariable(m_Bubbles.Info->Compiler(), BoolVariable::CA_Getter, false));
+		m_Bubbles.Info->Add("InRDrawEntitiesOnList", InRDrawEntitiesOnList = new BoolVariable(m_Bubbles.Info->Compiler(), BoolVariable::CA_Getter, false));
+		m_Bubbles.Info->Add("InRDrawParticles", InRDrawParticles = new BoolVariable(m_Bubbles.Info->Compiler(), BoolVariable::CA_Getter, false));
+		m_Bubbles.Info->Add("InRDrawViewModel", InRDrawViewModel = new BoolVariable(m_Bubbles.Info->Compiler(), BoolVariable::CA_Getter, false));
+		m_Bubbles.Info->Add("InRRenderView", InRRenderView = new BoolVariable(m_Bubbles.Info->Compiler(), BoolVariable::CA_Getter, false));
 	}
 
 	~Xpress_t()
 	{
-		m_Bubble->Ref()->Release();
+		m_Bubbles.Info->Ref()->Release();
+		m_Bubbles.Root->Ref()->Release();
 
 		if(m_MatteEx) m_MatteEx->Ref()->Release();
 	}
 
 	ICompiled * CompileEx (char const * code)
 	{
-		return m_Bubble->Compile(code);
+		return m_Bubbles.Root->Compile(code);
 	}
 
 	bool CompileMatteEx (char const * code)
 	{
-		ICompiled * compiled = m_Bubble->Compile(code);			
+		ICompiled * compiled = m_Bubbles.Root->Compile(code);			
 		compiled->Ref()->AddRef();
 
 		SetMatteEx(compiled->GetInt());
@@ -87,7 +97,10 @@ public:
 	}
 
 private:
-	IBubble * m_Bubble;
+	struct {
+		IBubble * Info;
+		IBubble * Root;
+	} m_Bubbles;
 	IInt * m_MatteEx;
 
 	class FnGetCurrentEntityIndex : public IntGetter

@@ -11,14 +11,18 @@
 
 // Dear programmer:
 //
-// As of now please only use implementation classes
-// or implementation support classes of this header
-// since other things are subject to change!
-// (I.e. when argument-scoping is introduced later on.)
+// In order to easy changes later on stick with
+// the implementation support classes wherever possible.
 
 
-// HLAE Expressions are compiled from
-// a Scheme-styled syntax:
+// Expression syntax (EBNF):
+//
+// empty = ;
+// arguments = empty | WS, function, arguments ;
+// parenthesis = "(", WS*, identifier, WS*, arguments, WS*, ")" ;
+// function = parenthesis | identifier ;
+// code = WS*, function, WS* ;
+
 
 // Standard types (contract functions):
 // Error
@@ -53,20 +57,10 @@
 // min: Int+ -> Int
 // if ?: Bool Bool Bool -> Bool
 // if ?: Bool Int Int -> Int
-// do: -> Void
-// do: (Void | Bool | Int)* Void -> Void
-// do: (Void | Bool | Int)* Bool -> Bool
-// do: (Void | Bool | Int)* Int -> Int
-
-// 0. text
-// 1. group parenthesis (tree)
-// 2. resolve 
-
-// empty = ;
-// arguments = empty | WS function, arguments ;
-// function = "(", WS*, identifier, WS*, arguments, WS* ")" ;
-// function = parenthesis | identifier
-// code = WS* function WS*
+// do .: -> Void
+// do .: (Void | Bool | Int)* Void -> Void
+// do .: (Void | Bool | Int)* Bool -> Bool
+// do .: (Void | Bool | Int)* Int -> Int
 
 
 #include "Ref.h"
@@ -171,6 +165,9 @@ struct __declspec(novtable) Tools abstract
 {	
 	/// <summary>Creates a new bubble with standard operators / functions.</summary>
 	static IBubble * StandardBubble (void);
+
+	/// <summary>This can be used to add commands that execute in a differnet compiler / bubble.</summary>
+	static ICompileable * FnDoCompileable(ICompiler * compiler);
 };
 
 
@@ -348,11 +345,6 @@ public:
 
 	virtual ::Afx::IRef * Ref (void);
 };
-
-
-////////////////////////////////////////////////////////////////////////////////
-//
-// Implementation classes:
 
 
 class BoolVariable :  public BoolProperty
