@@ -115,6 +115,7 @@
     <ClCompile Include="..\shared\FileTools.cpp" />
     <ClCompile Include="..\shared\vcpp\AfxAddr.cpp" />
     <ClCompile Include="..\shared\vcpp\Data.cpp" />
+    <ClCompile Include="..\shared\vcpp\expressions\Cursor.cpp" />
     <ClCompile Include="..\shared\vcpp\GlImage.cpp" />
     <ClCompile Include="..\shared\vcpp\Image.cpp" />
     <ClCompile Include="..\shared\vcpp\Ref.cpp" />
@@ -201,6 +202,7 @@
     <ClInclude Include="..\shared\FileTools.h" />
     <ClInclude Include="..\shared\vcpp\AfxAddr.h" />
     <ClInclude Include="..\shared\vcpp\Data.h" />
+    <ClInclude Include="..\shared\vcpp\expressions\Cursor.h" />
     <ClInclude Include="..\shared\vcpp\GlImage.h" />
     <ClInclude Include="..\shared\vcpp\Image.h" />
     <ClInclude Include="..\shared\vcpp\Ref.h" />

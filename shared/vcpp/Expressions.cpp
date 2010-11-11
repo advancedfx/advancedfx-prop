@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-11-10 dominik.matrixstorm.com
+// 2010-11-11 dominik.matrixstorm.com
 //
 // First changes
 // 2010-10-24 dominik.matrixstorm.com
@@ -22,6 +22,9 @@
 #include <list>
 #include <vector>
 
+#include "expressions/Cursor.h"
+
+
 using namespace std;
 
 using namespace Afx;
@@ -30,88 +33,6 @@ using namespace Afx::Expressions;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
-struct CursorBackup
-{
-	int Position;
-
-	CursorBackup();
-	CursorBackup(CursorBackup const & cursorBackup);
-
-	void Copy(CursorBackup const & cursorBackup);
-private:
-};
-
-
-class Cursor
-{
-public:
-	Cursor(char const * text);
-	~Cursor();
-
-	/// <summary>Advance cursor position to the right.</summary>
-	void Add();
-
-	char AddGet();
-
-	CursorBackup const & Backup() const;
-
-	char Get() const;
-	char Get(int ofs) const;
-	char GetAbs(int pos) const;
-
-	/// <summary>Get and Add</summary>
-	/// <retruns>value from Get</returns>
-	char GetAdd();
-
-	int GetPos(void) const;
-
-	bool IsAlnum() const;
-	static bool IsAlnum (char const val);
-
-	bool IsAlpha() const;
-	static bool IsAlpha (char const val);
-
-	bool IsDigit() const;
-	static bool IsDigit (char const val);
-
-	bool IsNull() const;
-	static bool IsNull (char const val);
-
-	bool IsSpace() const;	
-	static bool IsSpace (char const val);
-	
-	void Restore(CursorBackup const & backup);
-
-	void Seek(int ofs);
-
-	/// <retruns>Number of characters skipped.</returns>
-	int SkipAlnum();
-
-	/// <retruns>Number of characters skipped.</returns>
-	int SkipAlpha();
-
-	/// <retruns>Number of characters skipped.</returns>
-	int SkipDigit();
-
-	/// <summary>Advances the cursor until there is no more white space character under it.</summary>
-	/// <retruns>Number of characters skipped.</returns>
-	int SkipSpace();
-
-	/// <summary>Recede cursor position to the left.</summary>
-	void Sub();
-
-	void SetPos(int value);
-
-
-private:
-	CursorBackup m_Backup;
-	int m_Len;
-	char * m_Text;
-};
-
-
-////////////////////////////////////////////////////////////////////////////////
 
 class CompileArgs : public Ref,
 	public ICompileArgs
@@ -167,6 +88,8 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////////////
+
+
 
 
 class BubbleFn
@@ -361,6 +284,41 @@ private:
 };
 
 
+class FnConstBoolCompileable : public Ref,
+	public ICompileable
+{
+public:
+	FnConstBoolCompileable(bool value)
+	: m_Value(value)
+	{
+	}
+
+	virtual ICompiled * Compile (ICompileArgs * args)
+	{
+		ICompiled * compiled = 0;
+
+		if(args)
+		{
+			args->Ref()->AddRef();
+
+			if(0 == args->GetCount())
+			{
+				compiled = new Compiled(new FnConstBool(m_Value));
+			}
+
+			args->Ref()->Release();
+		}
+
+		return compiled ? compiled : new Compiled(new Error());
+	}
+
+	virtual ::Afx::IRef * Ref (void) { return dynamic_cast<::Afx::IRef *>(this); }	
+
+private:
+	bool m_Value;
+};
+
+
 class FnConstInt : public Ref,
 	public IInt
 {
@@ -374,6 +332,42 @@ public:
 private:
 	int m_Value;
 };
+
+
+class FnConstIntCompileable : public Ref,
+	public ICompileable
+{
+public:
+	FnConstIntCompileable(int value)
+	: m_Value(value)
+	{
+	}
+
+	virtual ICompiled * Compile (ICompileArgs * args)
+	{
+		ICompiled * compiled = 0;
+
+		if(args)
+		{
+			args->Ref()->AddRef();
+
+			if(0 == args->GetCount())
+			{
+				compiled = new Compiled(new FnConstInt(m_Value));
+			}
+
+			args->Ref()->Release();
+		}
+
+		return compiled ? compiled : new Compiled(new Error());
+	}
+
+	virtual ::Afx::IRef * Ref (void) { return dynamic_cast<::Afx::IRef *>(this); }	
+
+private:
+	int m_Value;
+};
+
 
 
 class FnBoolsToBoolBase abstract : public Ref,
@@ -1610,8 +1604,9 @@ class FnDoCompileable : public Ref,
 public:
 	virtual ICompiled * Compile (ICompileArgs * args) { return FnDo::Compile(args); }
 
-	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }	
+	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }		
 };
+
 
 
 // BoolGetterC /////////////////////////////////////////////////////////////////
@@ -2010,6 +2005,7 @@ ICompiled * Bubble::Compile_Identifier(char const * identifier, ICompileArgs * a
 	return compiled ? compiled : new Compiled(new Error(Error::EC_ParseError, errorPos));
 }
 
+
 ICompiled * Bubble::Compile_Int(char const * identifier, ICompileArgs * args, int errorPos)
 {
 	if(0 == args->GetCount())
@@ -2190,213 +2186,6 @@ enum ICompiled::Type Compiled::GetType() { return m_Type; }
 IVoid * Compiled::GetVoid() { return ICompiled::T_Void == m_Type ? m_Value.Void : 0; }
 
 ::Afx::IRef * Compiled::Ref() { return dynamic_cast<::Afx::IRef *>(this); }
-
-
-// Cursor //////////////////////////////////////////////////////////////////////
-
-Cursor::Cursor(char const * text)
-{
-	size_t len = strlen(text);
-
-	m_Len = len;
-	m_Text = new char[1 +len];
-	memcpy(m_Text, text, (1 +len) * sizeof(char));
-}
-
-Cursor::~Cursor()
-{
-	delete m_Text;
-}
-
-void Cursor::Add()
-{
-	m_Backup.Position++;
-}
-
-char Cursor::AddGet()
-{
-	Add();
-	return Get();
-}
-
-CursorBackup const & Cursor::Backup() const
-{
-	CursorBackup const & ret = m_Backup;
-
-	return ret;
-}
-
-char Cursor::Get() const
-{
-	return Get(0);
-}
-
-char Cursor::Get(int ofs) const
-{
-	return GetAbs(m_Backup.Position +ofs);
-}
-
-char Cursor::GetAbs(int pos) const
-{
-	if(pos < 0 || m_Len <= pos) return 0;
-
-	return m_Text[pos];
-}
-
-char Cursor::GetAdd()
-{
-	char val = Get();
-
-	Add();
-
-	return val;
-}
-
-int Cursor::GetPos(void) const
-{
-	return m_Backup.Position;
-}
-
-bool Cursor::IsAlnum() const
-{
-	return IsAlnum(Get());
-}
-
-bool Cursor::IsAlnum (char const val)
-{
-	return 0 != isalnum(val);
-}
-
-bool Cursor::IsAlpha() const
-{
-	return IsAlpha(Get());
-}
-
-bool Cursor::IsAlpha (char const val)
-{
-	return 0 != isalpha(val);
-}
-
-bool Cursor::IsDigit() const
-{
-	return IsDigit(Get());
-}
-
-bool Cursor::IsDigit (char const val)
-{
-	return 0 != isdigit(val);
-}
-
-bool Cursor::IsNull() const
-{
-	return IsNull(Get());
-}
-
-bool Cursor::IsNull (char const val)
-{
-	return 0 == val;
-}
-
-bool Cursor::IsSpace() const
-{
-	return IsSpace(Get());
-}
-
-bool Cursor::IsSpace (char const val)
-{
-	return 0 != isspace(val);
-}
-
-void Cursor::Restore(CursorBackup const & backup)
-{
-	m_Backup.Copy(backup);
-}
-
-void Cursor::Seek(int ofs)
-{
-	m_Backup.Position += ofs;
-}
-
-int Cursor::SkipAlnum()
-{
-	int skipped = 0;
-
-	while(IsAlnum(Get()))
-	{
-		Add();
-		skipped++;
-	}
-
-	return skipped;
-}
-
-int Cursor::SkipAlpha()
-{
-	int skipped = 0;
-
-	while(IsAlpha(Get()))
-	{
-		Add();
-		skipped++;
-	}
-
-	return skipped;
-}
-
-int Cursor::SkipDigit()
-{
-	int skipped = 0;
-
-	while(IsDigit(Get()))
-	{
-		Add();
-		skipped++;
-	}
-
-	return skipped;
-}
-
-int Cursor::SkipSpace()
-{
-	int skipped = 0;
-
-	while(IsSpace(Get()))
-	{
-		Add();
-		skipped++;
-	}
-
-	return skipped;
-}
-
-void Cursor::Sub()
-{
-	m_Backup.Position--;
-}
-
-void Cursor::SetPos(int value)
-{
-	m_Backup.Position = value;
-}
-
-
-// CursorBackup ////////////////////////////////////////////////////////////////
-
-CursorBackup::CursorBackup()
-: Position(0)
-{
-
-}
-
-CursorBackup::CursorBackup(CursorBackup const & cursorBackup)
-{
-	Copy(cursorBackup);
-}
-
-void CursorBackup::Copy(CursorBackup const & cursorBackup)
-{
-	Position = cursorBackup.Position;
-}
 
 
 // IntGetterC /////////////////////////////////////////////////////////////////

@@ -116,6 +116,13 @@ struct __declspec(novtable) ICompiled abstract
 	virtual IInt * GetInt (void) abstract = 0;
 };
 
+/*
+struct __declspec(novtable) ICompiler abstract
+{
+	virtual ICompiled * Compile (Cursor & cur) abstract = 0;
+};
+*/
+
 
 struct __declspec(novtable) ICompileArgs abstract
 {
