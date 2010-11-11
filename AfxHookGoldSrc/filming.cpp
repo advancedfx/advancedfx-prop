@@ -578,7 +578,7 @@ void Filming::Start()
 	}
 	else
 	{
-		pEngfuncs->Con_Printf("Recording (simulated).");
+		pEngfuncs->Con_Printf("Recording (simulated).\n");
 	}
 
 	ScriptEvent_OnRecordStarting();

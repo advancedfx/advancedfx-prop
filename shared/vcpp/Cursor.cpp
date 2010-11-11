@@ -18,7 +18,6 @@
 using namespace std;
 
 using namespace Afx;
-using namespace Afx::Expressions;
 
 
 // Cursor //////////////////////////////////////////////////////////////////////

@@ -34,14 +34,14 @@ public:
 		m_Bubble = Tools::StandardBubble();
 		m_Bubble->Ref()->AddRef();
 
-		m_Bubble->Add("CurrentGlMode", CurrentGlMode = new IntVariable(IntVariable::CA_Getter, -1));
-		m_Bubble->Add("CurrentStreamIndex", CurrentStreamIndex = new IntVariable(IntVariable::CA_Getter, -1));
-		m_Bubble->Add("GetCurrentEntityIndex", new FnGetCurrentEntityIndex());
-		m_Bubble->Add("IsFilming", IsFilming = new BoolVariable(BoolVariable::CA_Getter, false));
-		m_Bubble->Add("InRDrawEntitiesOnList", InRDrawEntitiesOnList = new BoolVariable(BoolVariable::CA_Getter, false));
-		m_Bubble->Add("InRDrawParticles", InRDrawParticles = new BoolVariable(BoolVariable::CA_Getter, false));
-		m_Bubble->Add("InRDrawViewModel", InRDrawViewModel = new BoolVariable(BoolVariable::CA_Getter, false));
-		m_Bubble->Add("InRRenderView", InRRenderView = new BoolVariable(BoolVariable::CA_Getter, false));
+		m_Bubble->Add("CurrentGlMode", CurrentGlMode = new IntVariable(m_Bubble->Compiler(), IntVariable::CA_Getter, -1));
+		m_Bubble->Add("CurrentStreamIndex", CurrentStreamIndex = new IntVariable(m_Bubble->Compiler(), IntVariable::CA_Getter, -1));
+		m_Bubble->Add("GetCurrentEntityIndex", new FnGetCurrentEntityIndex(m_Bubble->Compiler()));
+		m_Bubble->Add("IsFilming", IsFilming = new BoolVariable(m_Bubble->Compiler(), BoolVariable::CA_Getter, false));
+		m_Bubble->Add("InRDrawEntitiesOnList", InRDrawEntitiesOnList = new BoolVariable(m_Bubble->Compiler(), BoolVariable::CA_Getter, false));
+		m_Bubble->Add("InRDrawParticles", InRDrawParticles = new BoolVariable(m_Bubble->Compiler(), BoolVariable::CA_Getter, false));
+		m_Bubble->Add("InRDrawViewModel", InRDrawViewModel = new BoolVariable(m_Bubble->Compiler(), BoolVariable::CA_Getter, false));
+		m_Bubble->Add("InRRenderView", InRRenderView = new BoolVariable(m_Bubble->Compiler(), BoolVariable::CA_Getter, false));
 	}
 
 	~Xpress_t()
@@ -93,6 +93,8 @@ private:
 	class FnGetCurrentEntityIndex : public IntGetter
 	{
 	public:
+		FnGetCurrentEntityIndex(ICompiler * compiler) : IntGetter(compiler) {}
+
 		virtual int Get (void);
 	};
 

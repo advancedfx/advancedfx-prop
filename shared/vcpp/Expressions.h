@@ -3,10 +3,18 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-11-10 dominik.matrixstorm.com
+// 2010-11-11 dominik.matrixstorm.com
 //
 // First changes
 // 2010-10-24 dominik.matrixstorm.com
+
+
+// Dear programmer:
+//
+// As of now please only use implementation classes
+// or implementation support classes of this header
+// since other things are subject to change!
+// (I.e. when argument-scoping is introduced later on.)
 
 
 // HLAE Expressions are compiled from
@@ -56,12 +64,14 @@
 
 // empty = ;
 // arguments = empty | WS function, arguments ;
-// parenthesis = "(", WS*, identifier, WS*, arguments, WS* ")" ;
+// function = "(", WS*, identifier, WS*, arguments, WS* ")" ;
 // function = parenthesis | identifier
 // code = WS* function WS*
 
 
 #include "Ref.h"
+#include "Cursor.h"
+
 
 namespace Afx { namespace Expressions {
 
@@ -116,23 +126,22 @@ struct __declspec(novtable) ICompiled abstract
 	virtual IInt * GetInt (void) abstract = 0;
 };
 
-/*
+
 struct __declspec(novtable) ICompiler abstract
 {
-	virtual ICompiled * Compile (Cursor & cur) abstract = 0;
-};
-*/
+	virtual ::Afx::IRef * Ref (void) abstract = 0;
 
+	virtual ICompiled * Compile_Function (Cursor & cursor) abstract = 0;
+};
 
 struct __declspec(novtable) ICompileArgs abstract
 {
 	virtual ::Afx::IRef * Ref (void) abstract = 0;
 
-	virtual ICompiled * GetArg (int index) abstract = 0;
+	virtual bool HasNextArg (void) abstract = 0;
 
-	virtual int GetCount (void) abstract = 0;
+	virtual ICompiled * CompileNextArg (ICompiler * compiler) abstract = 0;
 };
-
 
 struct __declspec(novtable) ICompileable abstract
 {
@@ -153,6 +162,8 @@ struct __declspec(novtable) IBubble abstract
 	/// <param name="code">code to compile</expression>
 	/// <returns>The compiled code.</returns>
 	virtual ICompiled * Compile(char const * code) abstract = 0;
+
+	virtual ICompiler * Compiler (void) abstract = 0;
 };
 
 
@@ -196,11 +207,29 @@ struct __declspec(novtable) IIntSetter abstract
 };
 
 
+class Compileable abstract : public Ref,
+	public ICompileable
+{
+public:
+	Compileable(ICompiler * compiler);
+
+	virtual ICompiled * Compile (ICompileArgs * args) abstract = 0;
+
+protected:
+	ICompiler * m_Compiler;
+
+	virtual ~Compileable();
+
+};
+
+
 /// <summary>Compiles as: -&gt; Bool</summary>
-class BoolGetter abstract :  public Ref,
+class BoolGetter abstract :  public Compileable,
 	public IBoolGetter
 {
 public:
+	BoolGetter(ICompiler * compiler);
+
 	virtual ICompiled * Compile (ICompileArgs * args);
 
 	virtual bool Get (void) abstract = 0;
@@ -210,11 +239,12 @@ public:
 
 
 /// <summary>Compiles as: Bool -&gt; Void</summary>
-class BoolSetter abstract :  public Ref,
-	public ICompileable,
+class BoolSetter abstract :  public Compileable,
 	public IBoolSetter
 {
 public:
+	BoolSetter(ICompiler * compiler);
+
 	virtual ICompiled * Compile (ICompileArgs * args);
 
 	virtual void Set (bool value) abstract = 0;
@@ -223,8 +253,7 @@ public:
 };
 
 
-class BoolProperty abstract :  public Ref,
-	public ICompileable,
+class BoolProperty abstract :  public Compileable,
 	public IBoolGetter,
 	public IBoolSetter
 {
@@ -235,7 +264,7 @@ public:
 		CA_Setter
 	};
 
-	BoolProperty(CompileAcces compileAccess);
+	BoolProperty(ICompiler * compiler, CompileAcces compileAccess);
 
 	virtual ICompiled * Compile (ICompileArgs * args);
 
@@ -251,11 +280,12 @@ private:
 
 
 /// <summary>Compiles as: -&gt; Int</summary>
-class IntGetter abstract :  public Ref,
-	public ICompileable,
+class IntGetter abstract :  public Compileable,
 	public IIntGetter
 {
 public:
+	IntGetter(ICompiler * compiler);
+
 	virtual ICompiled * Compile (ICompileArgs * args);
 
 	virtual int Get (void) abstract = 0;
@@ -265,11 +295,12 @@ public:
 
 
 /// <summary>Compiles as: Int -&gt; Void</summary>
-class IntSetter abstract :  public Ref,
-	public ICompileable,
+class IntSetter abstract :  public Compileable,
 	public IIntSetter
 {
 public:
+	IntSetter(ICompiler * compiler);
+
 	virtual ICompiled * Compile (ICompileArgs * args);
 
 	virtual void Set (int value) abstract = 0;
@@ -278,8 +309,7 @@ public:
 };
 
 
-class IntProperty abstract :  public Ref,
-	public ICompileable,
+class IntProperty abstract :  public Compileable,
 	public IIntGetter,
 	public IIntSetter
 {
@@ -290,7 +320,7 @@ public:
 		CA_Setter
 	};
 
-	IntProperty(CompileAcces compileAccess);
+	IntProperty(ICompiler * compiler, CompileAcces compileAccess);
 
 	virtual ICompiled * Compile (ICompileArgs * args);
 
@@ -306,11 +336,12 @@ private:
 
 
 /// <summary>Compiles as: -&gt; Void</summary>
-class VoidFunction abstract :  public Ref,
-	public IVoid,
-	public ICompileable
+class VoidFunction abstract :  public Compileable,
+	public IVoid
 {
 public:
+	VoidFunction(ICompiler * compiler);
+
 	virtual ICompiled * Compile (ICompileArgs * args);
 
 	virtual void EvalVoid (void) abstract = 0;
@@ -327,7 +358,7 @@ public:
 class BoolVariable :  public BoolProperty
 {
 public:
-	BoolVariable(CompileAcces compileAccess, bool value);
+	BoolVariable(ICompiler * compiler, CompileAcces compileAccess, bool value);
 
 	bool Get() const;
 	virtual bool Get (void);
@@ -377,7 +408,7 @@ private:
 class IntVariable :  public IntProperty
 {
 public:
-	IntVariable(CompileAcces compileAccess, int value);
+	IntVariable(ICompiler * compiler, CompileAcces compileAccess, int value);
 
 	int Get() const;
 	virtual int Get (void);
@@ -387,7 +418,6 @@ public:
 private:
 	int m_Value;
 };
-
 
 
 } } // namespace Afx { namespace Expr {

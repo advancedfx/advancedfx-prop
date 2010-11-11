@@ -31,9 +31,6 @@
     <Filter Include="AfxHookGoldSrc\hooks\client\cstrike">
       <UniqueIdentifier>{7e8fbdd2-d971-4e37-8b5c-88e4425b88d1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="shared\vcpp\expressions">
-      <UniqueIdentifier>{7c472fa5-1aeb-44a8-bf69-09a7029b4a41}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\bvhexport.cpp">
@@ -273,8 +270,8 @@
     <ClCompile Include="Xpress.cpp">
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\vcpp\expressions\Cursor.cpp">
-      <Filter>shared\vcpp\expressions</Filter>
+    <ClCompile Include="..\shared\vcpp\Cursor.cpp">
+      <Filter>shared\vcpp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -485,8 +482,8 @@
     <ClInclude Include="Xpress.h">
       <Filter>AfxHookGoldSrc</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\vcpp\expressions\Cursor.h">
-      <Filter>shared\vcpp\expressions</Filter>
+    <ClInclude Include="..\shared\vcpp\Cursor.h">
+      <Filter>shared\vcpp</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

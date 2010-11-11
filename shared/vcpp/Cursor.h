@@ -9,7 +9,7 @@
 // 2010-10-24 dominik.matrixstorm.com
 
 
-namespace Afx { namespace Expressions {
+namespace Afx {
 
 
 struct CursorBackup
@@ -92,4 +92,4 @@ private:
 };
 
 
-} } // namespace Afx { namespace Expr {
+} // namespace Afx {
