@@ -135,6 +135,80 @@ bool Cursor::IsSpace (char const val)
 	return 0 != isspace(val);
 }
 
+double Cursor::ReadDouble (void)
+{
+	return ReadDouble(0);
+}
+
+double Cursor::ReadDouble (int * outSkipped)
+{
+	if(IsNull())
+	{
+		if(outSkipped) *outSkipped = 0;		
+		return 0;
+	}
+
+	char * startPtr = m_Text +m_Backup.Position;
+	char * endPtr;
+	double value = strtod(startPtr, &endPtr);
+	int skipped = (endPtr -startPtr) / sizeof(char);
+
+	m_Backup.Position += skipped;
+
+	if(outSkipped) *outSkipped = skipped;
+	return value;
+}
+
+
+long Cursor::ReadLong (void)
+{
+	return ReadLong(0);
+}
+
+long Cursor::ReadLong (int * outSkipped)
+{
+	if(IsNull())
+	{
+		if(outSkipped) *outSkipped = 0;		
+		return 0;
+	}
+
+	char * startPtr = m_Text +m_Backup.Position;
+	char * endPtr;
+	long value = strtol(startPtr, &endPtr, 0);
+	int skipped = (endPtr -startPtr) / sizeof(char);
+
+	m_Backup.Position += skipped;
+
+	if(outSkipped) *outSkipped = skipped;
+	return value;
+}
+
+
+unsigned long Cursor::ReadULong (void)
+{
+	return ReadLong(0);
+}
+
+unsigned long Cursor::ReadULong (int * outSkipped)
+{
+	if(IsNull())
+	{
+		if(outSkipped) *outSkipped = 0;		
+		return 0;
+	}
+
+	char * startPtr = m_Text +m_Backup.Position;
+	char * endPtr;
+	unsigned long value = strtoul(startPtr, &endPtr, 0);
+	int skipped = (endPtr -startPtr) / sizeof(char);
+
+	m_Backup.Position += skipped;
+
+	if(outSkipped) *outSkipped = skipped;
+	return value;
+}
+
 void Cursor::Restore(CursorBackup const & backup)
 {
 	m_Backup.Copy(backup);

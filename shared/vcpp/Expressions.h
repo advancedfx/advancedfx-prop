@@ -18,8 +18,8 @@
 // Expression syntax (EBNF):
 //
 // empty = ;
-// arguments = empty | WS, function, arguments ;
-// parenthesis = "(", WS*, identifier, WS*, arguments, WS*, ")" ;
+// arguments = empty | WS, WS*, function, arguments ;
+// parenthesis = "(", WS*, identifier, arguments, WS*, ")" ;
 // function = parenthesis | identifier ;
 // code = WS*, function, WS* ;
 
@@ -58,9 +58,9 @@
 // if ?: Bool Bool Bool -> Bool
 // if ?: Bool Int Int -> Int
 // do .: -> Void
-// do .: (Void | Bool | Int)* Void -> Void
-// do .: (Void | Bool | Int)* Bool -> Bool
-// do .: (Void | Bool | Int)* Int -> Int
+// do .: (Void | Bool | Int | Float)* Void -> Void
+// do .: (Void | Bool | Int | Float)* Bool -> Bool
+// do .: (Void | Bool | Int | Float)* Int -> Int
 
 
 #include "Ref.h"
@@ -69,6 +69,10 @@
 
 namespace Afx { namespace Expressions {
 
+typedef bool BoolT;
+typedef double FloatT;
+typedef long IntT;
+typedef void VoidT;
 
 struct __declspec(novtable) IError abstract
 {
@@ -79,21 +83,28 @@ struct __declspec(novtable) IVoid abstract
 {
 	virtual ::Afx::IRef * Ref (void) abstract = 0;
 
-	virtual void EvalVoid (void) abstract = 0;
+	virtual VoidT EvalVoid (void) abstract = 0;
 };
 
 struct __declspec(novtable) IBool abstract
 {
 	virtual ::Afx::IRef * Ref (void) abstract = 0;
 
-	virtual bool EvalBool (void) abstract = 0;
+	virtual BoolT EvalBool (void) abstract = 0;
 };
 
 struct __declspec(novtable) IInt abstract
 {
 	virtual ::Afx::IRef * Ref (void) abstract = 0;
 
-	virtual int EvalInt (void) abstract = 0;
+	virtual IntT EvalInt (void) abstract = 0;
+};
+
+struct __declspec(novtable) IFloat abstract
+{
+	virtual ::Afx::IRef * Ref (void) abstract = 0;
+
+	virtual FloatT EvalFloat (void) abstract = 0;
 };
 
 struct __declspec(novtable) ICompiled abstract
@@ -104,7 +115,8 @@ struct __declspec(novtable) ICompiled abstract
 		T_Error,
 		T_Void,
 		T_Bool,
-		T_Int
+		T_Int,
+		T_Float
 	};
 
 	virtual ::Afx::IRef * Ref (void) abstract = 0;
@@ -118,6 +130,8 @@ struct __declspec(novtable) ICompiled abstract
 	virtual IBool * GetBool (void) abstract = 0;
 
 	virtual IInt * GetInt (void) abstract = 0;
+
+	virtual IFloat * GetFloat (void) abstract = 0;
 };
 
 
@@ -179,28 +193,42 @@ struct __declspec(novtable) IBoolGetter abstract
 {
 	virtual ::Afx::IRef * Ref (void) abstract = 0;
 
-	virtual bool Get (void) abstract = 0;
+	virtual BoolT Get (void) abstract = 0;
 };
 
 struct __declspec(novtable) IBoolSetter abstract
 {
 	virtual ::Afx::IRef * Ref (void) abstract = 0;
 
-	virtual void Set (bool value) abstract = 0;
+	virtual void Set (BoolT value) abstract = 0;
+};
+
+struct __declspec(novtable) IFloatGetter abstract
+{
+	virtual ::Afx::IRef * Ref (void) abstract = 0;
+
+	virtual FloatT Get (void) abstract = 0;
+};
+
+struct __declspec(novtable) IFloatSetter abstract
+{
+	virtual ::Afx::IRef * Ref (void) abstract = 0;
+
+	virtual void Set (FloatT value) abstract = 0;
 };
 
 struct __declspec(novtable) IIntGetter abstract
 {
 	virtual ::Afx::IRef * Ref (void) abstract = 0;
 
-	virtual int Get (void) abstract = 0;
+	virtual IntT Get (void) abstract = 0;
 };
 
 struct __declspec(novtable) IIntSetter abstract
 {
 	virtual ::Afx::IRef * Ref (void) abstract = 0;
 
-	virtual void Set (int value) abstract = 0;
+	virtual void Set (IntT value) abstract = 0;
 };
 
 
@@ -229,7 +257,7 @@ public:
 
 	virtual ICompiled * Compile (ICompileArgs * args);
 
-	virtual bool Get (void) abstract = 0;
+	virtual BoolT Get (void) abstract = 0;
 
 	virtual ::Afx::IRef * Ref (void);
 };
@@ -244,7 +272,7 @@ public:
 
 	virtual ICompiled * Compile (ICompileArgs * args);
 
-	virtual void Set (bool value) abstract = 0;
+	virtual void Set (BoolT value) abstract = 0;
 
 	virtual ::Afx::IRef * Ref (void);
 };
@@ -265,11 +293,68 @@ public:
 
 	virtual ICompiled * Compile (ICompileArgs * args);
 
-	virtual bool Get (void) abstract = 0;
+	virtual BoolT Get (void) abstract = 0;
 
 	virtual ::Afx::IRef * Ref (void);
 
-	virtual void Set (bool value) abstract = 0;
+	virtual void Set (BoolT value) abstract = 0;
+
+private:
+	CompileAcces m_CompileAccess;
+};
+
+
+
+/// <summary>Compiles as: -&gt; Float</summary>
+class FloatGetter abstract :  public Compileable,
+	public IFloatGetter
+{
+public:
+	FloatGetter(ICompiler * compiler);
+
+	virtual ICompiled * Compile (ICompileArgs * args);
+
+	virtual FloatT Get (void) abstract = 0;
+
+	virtual ::Afx::IRef * Ref (void);
+};
+
+
+/// <summary>Compiles as: Float -&gt; Void</summary>
+class FloatSetter abstract :  public Compileable,
+	public IFloatSetter
+{
+public:
+	FloatSetter(ICompiler * compiler);
+
+	virtual ICompiled * Compile (ICompileArgs * args);
+
+	virtual void Set (FloatT value) abstract = 0;
+
+	virtual ::Afx::IRef * Ref (void);
+};
+
+
+class FloatProperty abstract :  public Compileable,
+	public IFloatGetter,
+	public IFloatSetter
+{
+public:
+	enum CompileAcces {
+		CA_Property,
+		CA_Getter,
+		CA_Setter
+	};
+
+	FloatProperty(ICompiler * compiler, CompileAcces compileAccess);
+
+	virtual ICompiled * Compile (ICompileArgs * args);
+
+	virtual FloatT Get (void) abstract = 0;
+
+	virtual ::Afx::IRef * Ref (void);
+
+	virtual void Set (FloatT value) abstract = 0;
 
 private:
 	CompileAcces m_CompileAccess;
@@ -285,7 +370,7 @@ public:
 
 	virtual ICompiled * Compile (ICompileArgs * args);
 
-	virtual int Get (void) abstract = 0;
+	virtual IntT Get (void) abstract = 0;
 
 	virtual ::Afx::IRef * Ref (void);
 };
@@ -300,7 +385,7 @@ public:
 
 	virtual ICompiled * Compile (ICompileArgs * args);
 
-	virtual void Set (int value) abstract = 0;
+	virtual void Set (IntT value) abstract = 0;
 
 	virtual ::Afx::IRef * Ref (void);
 };
@@ -321,11 +406,11 @@ public:
 
 	virtual ICompiled * Compile (ICompileArgs * args);
 
-	virtual int Get (void) abstract = 0;
+	virtual IntT Get (void) abstract = 0;
 
 	virtual ::Afx::IRef * Ref (void);
 
-	virtual void Set (int value) abstract = 0;
+	virtual void Set (IntT value) abstract = 0;
 
 private:
 	CompileAcces m_CompileAccess;
@@ -341,7 +426,7 @@ public:
 
 	virtual ICompiled * Compile (ICompileArgs * args);
 
-	virtual void EvalVoid (void) abstract = 0;
+	virtual VoidT EvalVoid (void) abstract = 0;
 
 	virtual ::Afx::IRef * Ref (void);
 };
@@ -352,13 +437,13 @@ class BoolVariable :  public BoolProperty
 public:
 	BoolVariable(ICompiler * compiler, CompileAcces compileAccess, bool value);
 
-	bool Get() const;
-	virtual bool Get (void);
+	BoolT Get() const;
+	virtual BoolT Get (void);
 
-	virtual void Set (bool value);
+	virtual void Set (BoolT value);
 
 private:
-	bool m_Value;
+	BoolT m_Value;
 };
 
 
@@ -370,6 +455,7 @@ public:
 	Compiled(IVoid * value);
 	Compiled(IBool * value);
 	Compiled(IInt * value);
+	Compiled(IFloat * value);
 
 	virtual enum ICompiled::Type GetType();
 
@@ -380,6 +466,8 @@ public:
 	virtual IError * GetError();
 	
 	virtual IInt * GetInt();
+
+	virtual IFloat * GetFloat();
 
 	virtual ::Afx::IRef * Ref();
 
@@ -393,8 +481,24 @@ private:
 		IVoid * Void;
 		IBool * Bool;
 		IInt * Int;
+		IFloat * Float;
 	} m_Value;
 };
+
+class FloatVariable :  public FloatProperty
+{
+public:
+	FloatVariable(ICompiler * compiler, CompileAcces compileAccess, int value);
+
+	FloatT Get() const;
+	virtual FloatT Get (void);
+
+	virtual void Set (FloatT value);
+
+private:
+	FloatT m_Value;
+};
+
 
 
 class IntVariable :  public IntProperty
@@ -402,13 +506,13 @@ class IntVariable :  public IntProperty
 public:
 	IntVariable(ICompiler * compiler, CompileAcces compileAccess, int value);
 
-	int Get() const;
-	virtual int Get (void);
+	IntT Get() const;
+	virtual IntT Get (void);
 
-	virtual void Set (int value);
+	virtual void Set (IntT value);
 
 private:
-	int m_Value;
+	IntT m_Value;
 };
 
 

@@ -61,6 +61,21 @@ public:
 
 	bool IsSpace() const;	
 	static bool IsSpace (char const val);
+
+	double ReadDouble (void);
+
+	/// <param name="outSkipped">pointer, can be 0</param>
+	double ReadDouble (int * outSkipped);
+
+	long ReadLong (void);
+
+	/// <param name="outSkipped">pointer, can be 0</param>
+	long ReadLong (int * outSkipped);
+
+	unsigned long ReadULong (void);
+
+	/// <param name="outSkipped">pointer, can be 0</param>
+	unsigned long ReadULong (int * outSkipped);
 	
 	void Restore(CursorBackup const & backup);
 

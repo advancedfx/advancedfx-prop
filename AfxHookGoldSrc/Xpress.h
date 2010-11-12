@@ -27,39 +27,9 @@ public:
 	BoolVariable * InRDrawViewModel;
 	BoolVariable * InRRenderView;
 
-	Xpress_t()
-	{	
-		m_MatteEx = 0;
+	Xpress_t();
 
-		m_Bubbles.Info = Tools::StandardBubble();
-		m_Bubbles.Info->Ref()->AddRef();
-
-		m_Bubbles.Root = Tools::StandardBubble();
-		m_Bubbles.Root->Ref()->AddRef();
-
-		m_Bubbles.Root->Add("./", Tools::FnDoCompileable(m_Bubbles.Root->Compiler()));
-		m_Bubbles.Root->Add("..", Tools::FnDoCompileable(m_Bubbles.Root->Compiler()));
-		m_Bubbles.Root->Add(".info", Tools::FnDoCompileable(m_Bubbles.Info->Compiler()));
-
-		m_Bubbles.Info->Add("./", Tools::FnDoCompileable(m_Bubbles.Root->Compiler()));
-		m_Bubbles.Info->Add("..", Tools::FnDoCompileable(m_Bubbles.Root->Compiler()));
-		m_Bubbles.Info->Add("CurrentGlMode", CurrentGlMode = new IntVariable(m_Bubbles.Info->Compiler(), IntVariable::CA_Getter, -1));
-		m_Bubbles.Info->Add("CurrentStreamIndex", CurrentStreamIndex = new IntVariable(m_Bubbles.Info->Compiler(), IntVariable::CA_Getter, -1));
-		m_Bubbles.Info->Add("GetCurrentEntityIndex", new FnGetCurrentEntityIndex(m_Bubbles.Info->Compiler()));
-		m_Bubbles.Info->Add("IsFilming", IsFilming = new BoolVariable(m_Bubbles.Info->Compiler(), BoolVariable::CA_Getter, false));
-		m_Bubbles.Info->Add("InRDrawEntitiesOnList", InRDrawEntitiesOnList = new BoolVariable(m_Bubbles.Info->Compiler(), BoolVariable::CA_Getter, false));
-		m_Bubbles.Info->Add("InRDrawParticles", InRDrawParticles = new BoolVariable(m_Bubbles.Info->Compiler(), BoolVariable::CA_Getter, false));
-		m_Bubbles.Info->Add("InRDrawViewModel", InRDrawViewModel = new BoolVariable(m_Bubbles.Info->Compiler(), BoolVariable::CA_Getter, false));
-		m_Bubbles.Info->Add("InRRenderView", InRRenderView = new BoolVariable(m_Bubbles.Info->Compiler(), BoolVariable::CA_Getter, false));
-	}
-
-	~Xpress_t()
-	{
-		m_Bubbles.Info->Ref()->Release();
-		m_Bubbles.Root->Ref()->Release();
-
-		if(m_MatteEx) m_MatteEx->Ref()->Release();
-	}
+	~Xpress_t();
 
 	ICompiled * CompileEx (char const * code)
 	{
@@ -108,7 +78,7 @@ private:
 	public:
 		FnGetCurrentEntityIndex(ICompiler * compiler) : IntGetter(compiler) {}
 
-		virtual int Get (void);
+		virtual IntT Get (void);
 	};
 
 };

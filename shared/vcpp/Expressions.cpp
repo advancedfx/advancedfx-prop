@@ -102,9 +102,7 @@ private:
 
 	char * New_Identifier(Cursor & cursor);
 
-	bool ToBool(char const * identifier, bool & outValue);
-
-	bool Bubble::ToInt(char const * identifier, int & outValue);
+	bool ToBool(Cursor & cur, BoolT & outValue);
 };
 
 
@@ -256,7 +254,7 @@ class FnConstBool : public Ref,
 	public IBool
 {
 public:
-	static ICompiled * Compile (ICompiler * compiler, ICompileArgs * args, bool value)
+	static ICompiled * Compile (ICompiler * compiler, ICompileArgs * args, BoolT value)
 	{
 		ICompiled * compiled = 0;
 
@@ -273,21 +271,21 @@ public:
 		return compiled ? compiled : new Compiled(new Error());
 	}
 
-	FnConstBool(bool value) : m_Value(value) {}
+	FnConstBool(BoolT value) : m_Value(value) {}
 
-	virtual bool EvalBool (void) { return m_Value; }
+	virtual BoolT EvalBool (void) { return m_Value; }
 
 	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }
 
 private:
-	bool m_Value;
+	BoolT m_Value;
 };
 
 
 class FnConstBoolCompileable : public Compileable
 {
 public:
-	FnConstBoolCompileable(ICompiler * compiler, bool value)
+	FnConstBoolCompileable(ICompiler * compiler, BoolT value)
 	: Compileable(compiler), m_Value(value)
 	{
 	}
@@ -300,7 +298,7 @@ public:
 	virtual ::Afx::IRef * Ref (void) { return dynamic_cast<::Afx::IRef *>(this); }	
 
 private:
-	bool m_Value;
+	BoolT m_Value;
 };
 
 
@@ -308,7 +306,7 @@ class FnConstInt : public Ref,
 	public IInt
 {
 public:
-	static ICompiled * Compile (ICompiler * compiler, ICompileArgs * args, int value)
+	static ICompiled * Compile (ICompiler * compiler, ICompileArgs * args, IntT value)
 	{
 		ICompiled * compiled = 0;
 
@@ -326,21 +324,21 @@ public:
 	}
 
 
-	FnConstInt(int value) : m_Value(value) {}
+	FnConstInt(IntT value) : m_Value(value) {}
 
-	virtual int EvalInt (void) { return m_Value; }
+	virtual IntT EvalInt (void) { return m_Value; }
 
 	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }
 
 private:
-	int m_Value;
+	IntT m_Value;
 };
 
 
 class FnConstIntCompileable : public Compileable
 {
 public:
-	FnConstIntCompileable(ICompiler * compiler, int value)
+	FnConstIntCompileable(ICompiler * compiler, IntT value)
 	: Compileable(compiler), m_Value(value)
 	{
 	}
@@ -353,7 +351,60 @@ public:
 	virtual ::Afx::IRef * Ref (void) { return dynamic_cast<::Afx::IRef *>(this); }	
 
 private:
-	int m_Value;
+	IntT m_Value;
+};
+
+
+class FnConstFloat : public Ref,
+	public IFloat
+{
+public:
+	static ICompiled * Compile (ICompiler * compiler, ICompileArgs * args, FloatT value)
+	{
+		ICompiled * compiled = 0;
+
+		ParseArgs * pa = new ParseArgs(compiler, args);
+		pa->Ref()->AddRef();
+
+		if(!pa->HasNextArg())
+		{
+			compiled = new Compiled(new FnConstFloat(value));
+		}
+
+		pa->Ref()->Release();
+
+		return compiled ? compiled : new Compiled(new Error());
+	}
+
+
+	FnConstFloat(FloatT value) : m_Value(value) {}
+
+	virtual FloatT EvalFloat (void) { return m_Value; }
+
+	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }
+
+private:
+	FloatT m_Value;
+};
+
+
+class FnConstFloatCompileable : public Compileable
+{
+public:
+	FnConstFloatCompileable(ICompiler * compiler, FloatT value)
+	: Compileable(compiler), m_Value(value)
+	{
+	}
+
+	virtual ICompiled * Compile (ICompileArgs * args)
+	{
+		return FnConstFloat::Compile(m_Compiler, args, m_Value);
+	}
+
+	virtual ::Afx::IRef * Ref (void) { return dynamic_cast<::Afx::IRef *>(this); }	
+
+private:
+	FloatT m_Value;
 };
 
 
@@ -362,7 +413,7 @@ class FnBoolsToBoolBase abstract : public Ref,
 	public IBool
 {
 public:
-	virtual bool EvalBool (void) abstract;
+	virtual BoolT EvalBool (void) abstract;
 
 	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }
 
@@ -403,7 +454,7 @@ class FnIntsToBoolBase abstract : public Ref,
 	public IBool
 {
 public:
-	virtual bool EvalBool (void) abstract;
+	virtual BoolT EvalBool (void) abstract;
 
 	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }
 
@@ -444,7 +495,7 @@ class FnIntsToIntBase abstract : public Ref,
 	public IInt
 {
 public:
-	virtual int EvalInt (void) abstract;
+	virtual IntT EvalInt (void) abstract;
 
 	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }
 
@@ -507,9 +558,9 @@ public:
 		return compiled;
 	}
 
-	virtual bool EvalBool (void) {
+	virtual BoolT EvalBool (void) {
 
-		bool result = true;
+		BoolT result = true;
 
 		for(int i=0; i<m_Count; i++)
 		{
@@ -561,9 +612,9 @@ public:
 		return compiled;
 	}
 
-	virtual bool EvalBool (void) {
+	virtual BoolT EvalBool (void) {
 
-		bool result = false;
+		BoolT result = false;
 
 		for(int i=0; i<m_Count; i++)
 		{
@@ -612,7 +663,7 @@ public:
 		return compiled;
 	}
 
-	virtual bool EvalBool (void) {
+	virtual BoolT EvalBool (void) {
 
 		return !m_Fns[0]->EvalBool();
 	}
@@ -657,7 +708,7 @@ public:
 		return compiled;
 	}
 
-	virtual bool EvalBool (void) {
+	virtual BoolT EvalBool (void) {
 
 		return m_Fns[0]->EvalBool() < m_Fns[1]->EvalBool();
 	}
@@ -702,7 +753,7 @@ public:
 		return compiled;
 	}
 
-	virtual bool EvalBool (void) {
+	virtual BoolT EvalBool (void) {
 
 		return m_Fns[0]->EvalInt() < m_Fns[1]->EvalInt();
 	}
@@ -747,7 +798,7 @@ public:
 		return compiled;
 	}
 
-	virtual bool EvalBool (void) {
+	virtual BoolT EvalBool (void) {
 
 		return m_Fns[0]->EvalBool() <= m_Fns[1]->EvalBool();
 	}
@@ -792,7 +843,7 @@ public:
 		return compiled;
 	}
 
-	virtual bool EvalBool (void) {
+	virtual BoolT EvalBool (void) {
 
 		return m_Fns[0]->EvalInt() <= m_Fns[1]->EvalInt();
 	}
@@ -837,7 +888,7 @@ public:
 		return compiled;
 	}
 
-	virtual bool EvalBool (void) {
+	virtual BoolT EvalBool (void) {
 
 		return m_Fns[0]->EvalBool() == m_Fns[1]->EvalBool();
 	}
@@ -882,7 +933,7 @@ public:
 		return compiled;
 	}
 
-	virtual bool EvalBool (void) {
+	virtual BoolT EvalBool (void) {
 
 		return m_Fns[0]->EvalInt() == m_Fns[1]->EvalInt();
 	}
@@ -927,7 +978,7 @@ public:
 		return compiled;
 	}
 
-	virtual bool EvalBool (void) {
+	virtual BoolT EvalBool (void) {
 
 		return m_Fns[0]->EvalBool() > m_Fns[1]->EvalBool();
 	}
@@ -972,7 +1023,7 @@ public:
 		return compiled;
 	}
 
-	virtual bool EvalBool (void) {
+	virtual BoolT EvalBool (void) {
 
 		return m_Fns[0]->EvalInt() > m_Fns[1]->EvalInt();
 	}
@@ -1017,7 +1068,7 @@ public:
 		return compiled;
 	}
 
-	virtual bool EvalBool (void) {
+	virtual BoolT EvalBool (void) {
 
 		return m_Fns[0]->EvalBool() >= m_Fns[1]->EvalBool();
 	}
@@ -1062,7 +1113,7 @@ public:
 		return compiled;
 	}
 
-	virtual bool EvalBool (void) {
+	virtual BoolT EvalBool (void) {
 
 		return m_Fns[0]->EvalInt() >= m_Fns[1]->EvalInt();
 	}
@@ -1107,9 +1158,9 @@ public:
 		return compiled;
 	}
 
-	virtual bool EvalBool (void) {
+	virtual BoolT EvalBool (void) {
 
-		bool findVal = m_Fns[0]->EvalBool();
+		BoolT findVal = m_Fns[0]->EvalBool();
 
 		for(int i=1; i<m_Count; i++)
 		{
@@ -1160,9 +1211,9 @@ public:
 		return compiled;
 	}
 
-	virtual bool EvalBool (void) {
+	virtual BoolT EvalBool (void) {
 
-		int findVal = m_Fns[0]->EvalInt();
+		IntT findVal = m_Fns[0]->EvalInt();
 
 		for(int i=1; i<m_Count; i++)
 		{
@@ -1213,14 +1264,14 @@ public:
 		return compiled;
 	}
 
-	virtual bool EvalBool (void) {
+	virtual BoolT EvalBool (void) {
 		
-		bool winVal = false;
+		BoolT winVal = false;
 		bool noVal = true;
 
 		for(int i=0; i<m_Count; i++)
 		{
-			bool curVal = m_Fns[i]->EvalBool();
+			BoolT curVal = m_Fns[i]->EvalBool();
 
 			if(noVal)
 			{
@@ -1273,14 +1324,14 @@ public:
 		return compiled;
 	}
 
-	virtual int EvalInt (void) {
+	virtual IntT EvalInt (void) {
 		
-		int winVal = 0;
+		IntT winVal = 0;
 		bool noVal = true;
 
 		for(int i=0; i<m_Count; i++)
 		{
-			int curVal = m_Fns[i]->EvalInt();
+			IntT curVal = m_Fns[i]->EvalInt();
 
 			if(noVal)
 			{
@@ -1333,14 +1384,14 @@ public:
 		return compiled;
 	}
 
-	virtual bool EvalBool (void) {
+	virtual BoolT EvalBool (void) {
 		
-		bool winVal = false;
+		BoolT winVal = false;
 		bool noVal = true;
 
 		for(int i=0; i<m_Count; i++)
 		{
-			bool curVal = m_Fns[i]->EvalBool();
+			BoolT curVal = m_Fns[i]->EvalBool();
 
 			if(noVal)
 			{
@@ -1393,14 +1444,14 @@ public:
 		return compiled;
 	}
 
-	virtual int EvalInt (void) {
+	virtual IntT EvalInt (void) {
 		
-		int winVal = 0;
+		IntT winVal = 0;
 		bool noVal = true;
 
 		for(int i=0; i<m_Count; i++)
 		{
-			int curVal = m_Fns[i]->EvalInt();
+			IntT curVal = m_Fns[i]->EvalInt();
 
 			if(noVal)
 			{
@@ -1455,7 +1506,7 @@ public:
 		return compiled;
 	}
 
-	virtual bool EvalBool (void) {
+	virtual BoolT EvalBool (void) {
 		
 		return 	m_If->EvalBool()
 			? m_IfTrue->EvalBool()
@@ -1533,7 +1584,7 @@ public:
 		return compiled;
 	}
 
-	virtual int EvalInt (void) {
+	virtual IntT EvalInt (void) {
 		
 		return 	m_If->EvalBool()
 			? m_IfTrue->EvalInt()
@@ -1588,7 +1639,8 @@ public:
 class FnDo : public Ref,
 	public IVoid,
 	public IBool,
-	public IInt
+	public IInt,
+	public IFloat
 {
 public:
 	static ICompiled * Compile(ICompiler * compiler, ICompileArgs * args)
@@ -1607,9 +1659,10 @@ public:
 
 			switch(curType)
 			{
+			case ICompiled::T_Void:
 			case ICompiled::T_Bool:
 			case ICompiled::T_Int:
-			case ICompiled::T_Void:
+			case ICompiled::T_Float:
 				resultType = curType;
 				break;
 			default:
@@ -1622,14 +1675,17 @@ public:
 		{
 			switch(resultType)
 			{
+			case ICompiled::T_Void:
+				compiled = new Compiled(dynamic_cast<IVoid *>(new FnDo(pa)));
+				break;
 			case ICompiled::T_Bool:
 				compiled = new Compiled(dynamic_cast<IBool *>(new FnDo(pa)));
 				break;
 			case ICompiled::T_Int:
 				compiled = new Compiled(dynamic_cast<IInt *>(new FnDo(pa)));
 				break;
-			case ICompiled::T_Void:
-				compiled = new Compiled(dynamic_cast<IVoid *>(new FnDo(pa)));
+			case ICompiled::T_Float:
+				compiled = new Compiled(dynamic_cast<IFloat *>(new FnDo(pa)));
 				break;
 			default:
 				break;
@@ -1641,23 +1697,30 @@ public:
 		return compiled ? compiled : new Compiled(new Error());
 	}
 
-	virtual bool EvalBool (void)
+	virtual VoidT EvalVoid (void)
+	{
+		for(int i=0; i<m_Count; i++) EvalX(i);
+	}
+
+	virtual BoolT EvalBool (void)
 	{
 		for(int i=0; i<m_Count-1; i++) EvalX(i);
 
 		return m_Fns[m_Count-1].Bool->EvalBool();
 	}
 
-	virtual int EvalInt (void)
+	virtual FloatT EvalFloat (void)
+	{
+		for(int i=0; i<m_Count-1; i++) EvalX(i);
+
+		return m_Fns[m_Count-1].Float->EvalFloat();
+	}
+
+	virtual IntT EvalInt (void)
 	{
 		for(int i=0; i<m_Count-1; i++) EvalX(i);
 
 		return m_Fns[m_Count-1].Int->EvalInt();
-	}
-
-	virtual void EvalVoid (void)
-	{
-		for(int i=0; i<m_Count; i++) EvalX(i);
 	}
 
 	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }	
@@ -1669,13 +1732,16 @@ protected:
 		{
 			switch(m_Types[i])
 			{
+			case ICompiled::T_Void:
+				m_Fns[i].Void->Ref()->Release();
+				break;
 			case ICompiled::T_Bool:
 				m_Fns[i].Bool->Ref()->Release();
 				break;
 			case ICompiled::T_Int:
 				m_Fns[i].Int->Ref()->Release();
 				break;
-			case ICompiled::T_Void:
+			case ICompiled::T_Float:
 				m_Fns[i].Void->Ref()->Release();
 				break;
 			default:
@@ -1693,6 +1759,7 @@ private:
 		IVoid * Void;
 		IBool * Bool;
 		IInt * Int;
+		IFloat * Float;
 	} FnT;
 	int m_Count;
 	ICompiled::Type * m_Types;
@@ -1714,6 +1781,10 @@ private:
 
 			switch(curType)
 			{
+			case ICompiled::T_Void:
+				m_Fns[i].Void = args->GetArg(i)->GetVoid();
+				m_Fns[i].Void->Ref()->AddRef();
+				break;
 			case ICompiled::T_Bool:
 				m_Fns[i].Bool = args->GetArg(i)->GetBool();
 				m_Fns[i].Bool->Ref()->AddRef();
@@ -1722,9 +1793,9 @@ private:
 				m_Fns[i].Int = args->GetArg(i)->GetInt();
 				m_Fns[i].Int->Ref()->AddRef();
 				break;
-			case ICompiled::T_Void:
-				m_Fns[i].Void = args->GetArg(i)->GetVoid();
-				m_Fns[i].Void->Ref()->AddRef();
+			case ICompiled::T_Float:
+				m_Fns[i].Float = args->GetArg(i)->GetFloat();
+				m_Fns[i].Float->Ref()->AddRef();
 				break;
 			default:
 				throw exception();
@@ -1739,14 +1810,18 @@ private:
 	{
 		switch(m_Types[i])
 		{
+		case ICompiled::T_Void:
+			m_Fns[i].Void->EvalVoid();
+			break;
 		case ICompiled::T_Bool:
 			m_Fns[i].Bool->EvalBool();
 			break;
 		case ICompiled::T_Int:
 			m_Fns[i].Int->EvalInt();
 			break;
-		case ICompiled::T_Void:
-			m_Fns[i].Void->EvalVoid();
+		case ICompiled::T_Float:
+			m_Fns[i].Float->EvalFloat();
+			break;
 		default:
 			throw exception();
 			break;
@@ -1778,7 +1853,7 @@ public:
 		boolGetter->Ref()->AddRef();
 	}
 
-	virtual bool EvalBool (void)
+	virtual BoolT EvalBool (void)
 	{
 		return m_BoolGetter->Get();
 	}
@@ -1809,7 +1884,7 @@ public:
 		value->Ref()->AddRef();
 	}
 
-	virtual void EvalVoid (void)
+	virtual VoidT EvalVoid (void)
 	{
 		m_BoolSetter->Set(m_Value->EvalBool());
 	}
@@ -1937,22 +2012,22 @@ ICompiled * BoolSetter::Compile (ICompileArgs * args)
 
 // BoolVariable ////////////////////////////////////////////////////////////////
 
-BoolVariable::BoolVariable(ICompiler * compiler, CompileAcces compileAccess, bool value)
+BoolVariable::BoolVariable(ICompiler * compiler, CompileAcces compileAccess, BoolT value)
 : BoolProperty(compiler, compileAccess), m_Value(value)
 {
 }
 
-bool BoolVariable::Get() const
+BoolT BoolVariable::Get() const
 {
 	return m_Value;
 }
 
-bool BoolVariable::Get (void)
+BoolT BoolVariable::Get (void)
 {
 	return m_Value;
 }
 
-void BoolVariable::Set (bool value)
+void BoolVariable::Set (BoolT value)
 {
 	m_Value = value;
 }
@@ -2091,55 +2166,61 @@ ICompiled * Bubble::Compile_Identifier(Cursor & cursor, bool inParenthesis)
 
 	if(inParenthesis) cursor.SkipSpace();
 
-	char * id = New_Identifier(cursor);
-
-	if(id)
+	if(!compiled)
 	{
-		if(inParenthesis) cursor.SkipSpace();
+		// Bool?
 
-		if(!compiled)
+		CursorBackup backup = cursor.Backup();
+
+		BoolT bVal;
+		if(ToBool(cursor, bVal))
 		{
-			// Bool?
 
-			bool bVal;
-			if(ToBool(id, bVal))
+			compiled = FnConstBool::Compile(this, new CompileArgs(cursor, inParenthesis), bVal);
+			if(compiled->GetError())
 			{
-				CursorBackup backup = cursor.Backup();
-
-				compiled = FnConstBool::Compile(this, new CompileArgs(cursor, inParenthesis), bVal);
-				if(compiled->GetError())
-				{
-					compiled->Ref()->AddRef();
-					compiled->Ref()->Release();
-					compiled = 0;
-					cursor.Restore(backup);
-				}
+				compiled->Ref()->AddRef();
+				compiled->Ref()->Release();
+				compiled = 0;
 			}
 		}
 
-		if(!compiled)
+		if(!compiled) cursor.Restore(backup);
+	}
+
+	if(!compiled)
+	{
+		// Int?
+
+		CursorBackup backup = cursor.Backup();
+
+		int skipped;
+		IntT iVal = cursor.ReadLong(&skipped);
+
+		if(0 < skipped && !IsIdentifierChar(cursor.Get()))
 		{
-			// Int?
-
-			int iVal;
-			if(ToInt(id, iVal))
+			compiled = FnConstInt::Compile(this, new CompileArgs(cursor, inParenthesis), iVal);
+			if(compiled->GetError())
 			{
-				CursorBackup backup = cursor.Backup();
-
-				compiled = FnConstInt::Compile(this, new CompileArgs(cursor, inParenthesis), iVal);
-				if(compiled->GetError())
-				{
-					compiled->Ref()->AddRef();
-					compiled->Ref()->Release();
-					compiled = 0;
-					cursor.Restore(backup);
-				}
+				compiled->Ref()->AddRef();
+				compiled->Ref()->Release();
+				compiled = 0;
 			}
 		}
 
-		if(!compiled)
+		if(!compiled) cursor.Restore(backup);
+	}
+
+	if(!compiled)
+	{
+		// some function?
+
+		char * id = New_Identifier(cursor);
+
+		if(id)
 		{
-			// Some function?
+			if(inParenthesis) cursor.SkipSpace();
+
 
 			for(FunctionList::iterator it = m_Functions.begin(); it != m_Functions.end(); it++)
 			{
@@ -2162,9 +2243,9 @@ ICompiled * Bubble::Compile_Identifier(Cursor & cursor, bool inParenthesis)
 				}
 			}
 		}
-	}
 
-	delete id;
+		delete id;
+	}
 
 	return compiled ? compiled : new Compiled(new Error(Error::EC_ParseError, cursor.GetPos()));
 }
@@ -2235,54 +2316,42 @@ char * Bubble::New_Identifier(Cursor & cursor)
 }
 
 
-bool Bubble::ToBool(char const * identifier, bool & outValue)
+bool Bubble::ToBool(Cursor & cur, BoolT & outValue)
 {
 	bool isBool = false;
+	BoolT bVal;
+	int lenBool;
 
-	if(!strcmp("false", identifier))
+	if(!isBool)
 	{
+		char const * textBool = "false";
+		lenBool = strlen(textBool);
+		bVal = false;
+		
 		isBool = true;
-		outValue = false;
+		for(int i=0; i<lenBool && isBool; i++) isBool = isBool && textBool[i] == cur.Get(i);
+		isBool = isBool && !IsIdentifierChar(cur.Get(lenBool));
 	}
-	else if(!strcmp("true", identifier))
+
+	if(!isBool)
 	{
+		char const * textBool = "true";
+		lenBool = strlen(textBool);
+		bVal = true;
+		
 		isBool = true;
-		outValue = true;
+		for(int i=0; i<lenBool && isBool; i++) isBool = isBool && textBool[i] == cur.Get(i);
+		isBool = isBool && !IsIdentifierChar(cur.Get(lenBool));
+	}
+
+	if(isBool)
+	{
+		outValue = bVal;
+		cur.Seek(lenBool);
 	}
 
 	return isBool;
 }
-
-bool Bubble::ToInt(char const * identifier, int & outValue)
-{
-	bool isInt = false;
-	int intVal = atoi(identifier);
-
-	if(0 == intVal)
-	{
-		size_t len = strlen(identifier);
-
-		if(0 < len)
-		{
-			// string is not empty.
-			isInt = true;
-
-			for(size_t i=0; i<len; i++)
-			{
-				isInt = isInt && (
-					'0' == identifier[i]
-					|| (0 == i && 2 <= len && '-' == identifier[i])
-				);
-			}
-		}
-	}
-	else isInt = true;
-
-	if(isInt) outValue = intVal;
-
-	return isInt;
-}
-
 
 
 // Compileable /////////////////////////////////////////////////////////////////
@@ -2318,6 +2387,15 @@ Compiled::Compiled(IError * value)
 	m_Value.Error = value;
 }
 
+
+Compiled::Compiled(IFloat * value)
+{
+	if(value) value->Ref()->AddRef();
+
+	m_Type = ICompiled::T_Float;
+	m_Value.Float = value;
+}
+
 Compiled::Compiled(IInt * value)
 {
 	if(value) value->Ref()->AddRef();
@@ -2335,6 +2413,7 @@ Compiled::Compiled(IVoid * value)
 	m_Value.Void = value;
 }
 
+
 Compiled::~Compiled()
 {
 	switch(m_Type)
@@ -2343,12 +2422,15 @@ Compiled::~Compiled()
 	case ICompiled::T_Void: if(m_Value.Void) m_Value.Void->Ref()->Release(); break;
 	case ICompiled::T_Bool: if(m_Value.Bool) m_Value.Bool->Ref()->Release(); break;
 	case ICompiled::T_Int: if(m_Value.Int) m_Value.Int->Ref()->Release(); break;
+	case ICompiled::T_Float: if(m_Value.Float) m_Value.Float->Ref()->Release(); break;
 	}
 }
 
 IBool * Compiled::GetBool() { return ICompiled::T_Bool == m_Type ? m_Value.Bool : 0; }
 
 IError * Compiled::GetError() { return ICompiled::T_Error == m_Type ? m_Value.Error : 0; }
+
+IFloat * Compiled::GetFloat() { return ICompiled::T_Float == m_Type ? m_Value.Float : 0; }
 
 IInt * Compiled::GetInt() { return ICompiled::T_Int == m_Type ? m_Value.Int : 0; }
 
@@ -2357,6 +2439,202 @@ enum ICompiled::Type Compiled::GetType() { return m_Type; }
 IVoid * Compiled::GetVoid() { return ICompiled::T_Void == m_Type ? m_Value.Void : 0; }
 
 ::Afx::IRef * Compiled::Ref() { return dynamic_cast<::Afx::IRef *>(this); }
+
+
+
+// FloatGetterC /////////////////////////////////////////////////////////////////
+
+class FloatGetterC : public Ref,
+	public IFloat
+{
+public:
+	FloatGetterC(IFloatGetter * intGetter)
+	: m_FloatGetter(intGetter)
+	{
+		intGetter->Ref()->AddRef();
+	}
+
+	virtual FloatT EvalFloat (void)
+	{
+		return m_FloatGetter->Get();
+	}
+
+	virtual ::Afx::IRef * Ref (void) { return dynamic_cast<::Afx::IRef *>(this); }
+
+protected:
+	virtual ~FloatGetterC()
+	{
+		m_FloatGetter->Ref()->Release();
+	}
+
+private:
+	IFloatGetter * m_FloatGetter;
+};
+
+
+// FloatSetterC /////////////////////////////////////////////////////////////////
+
+class FloatSetterC : public Ref,
+	public IVoid
+{
+public:
+	FloatSetterC(IFloatSetter * intSetter, IFloat * value)
+	: m_FloatSetter(intSetter), m_Value(value)
+	{
+		intSetter->Ref()->AddRef();
+		value->Ref()->AddRef();
+	}
+
+	virtual VoidT EvalVoid (void)
+	{
+		m_FloatSetter->Set(m_Value->EvalFloat());
+	}
+
+	virtual ::Afx::IRef * Ref (void) { return dynamic_cast<::Afx::IRef *>(this); }
+
+protected:
+	virtual ~FloatSetterC()
+	{
+		m_FloatSetter->Ref()->Release();
+		m_Value->Ref()->Release();
+	}
+
+private:
+	IFloatSetter * m_FloatSetter;
+	IFloat * m_Value;
+};
+
+
+// FloatGetter //////////////////////////////////////////////////////////////////
+
+FloatGetter::FloatGetter(ICompiler * compiler)
+: Compileable(compiler)
+{
+}
+
+ICompiled * FloatGetter::Compile (ICompileArgs * args)
+{
+	ICompiled * compiled = 0;
+
+	ParseArgs * pa = new ParseArgs(m_Compiler, args);
+	pa->Ref()->AddRef();
+
+	if(!pa->HasNextArg())
+	{
+		compiled = new Compiled(new FloatGetterC(this));
+	}
+
+	pa->Ref()->Release();
+
+	return compiled ? compiled : new Compiled(new Error());
+}
+
+
+::Afx::IRef * FloatGetter::Ref (void)
+{
+	return dynamic_cast<::Afx::IRef *>(this);
+}
+
+
+// FloatProperty ////////////////////////////////////////////////////////////////
+
+
+FloatProperty::FloatProperty(ICompiler * compiler, CompileAcces compileAccess)
+: Compileable(compiler), m_CompileAccess(compileAccess)
+{
+}
+
+
+ICompiled * FloatProperty::Compile (ICompileArgs * args)
+{
+	ICompiled * compiled = 0;
+
+	ParseArgs * pa = new ParseArgs(m_Compiler, args);
+	pa->Ref()->AddRef();
+
+	if(
+		(CA_Property == m_CompileAccess || CA_Getter == m_CompileAccess)
+		&& !pa->HasNextArg()
+	)
+	{
+		// Compile getter:
+		compiled = new Compiled(new FloatGetterC(this));
+	}
+	else if(
+		(CA_Property == m_CompileAccess || CA_Setter == m_CompileAccess)
+		&& pa->ParseNextArgTC(ICompiled::T_Float) && !pa->HasNextArg()
+	)
+	{
+		// Compile setter:
+		compiled = new Compiled(new FloatSetterC(this, pa->GetArg(0)->GetFloat()));
+	}
+
+	pa->Ref()->Release();
+
+	return compiled ? compiled : new Compiled(new Error());
+}
+
+
+::Afx::IRef * FloatProperty::Ref (void)
+{
+	return dynamic_cast<::Afx::IRef *>(this); 
+}
+
+
+// FloatSetter //////////////////////////////////////////////////////////////////
+
+FloatSetter::FloatSetter(ICompiler * compiler)
+: Compileable(compiler)
+{
+}
+
+ICompiled * FloatSetter::Compile (ICompileArgs * args)
+{
+	ICompiled * compiled = 0;
+
+	ParseArgs * pa = new ParseArgs(m_Compiler, args);
+	pa->Ref()->AddRef();
+
+	if(pa->ParseNextArgTC(ICompiled::T_Float) && !pa->HasNextArg())
+	{
+		compiled = new Compiled(new FloatSetterC(this, pa->GetArg(0)->GetFloat()));
+	}
+
+	pa->Ref()->Release();
+
+	return compiled ? compiled : new Compiled(new Error());
+}
+
+
+::Afx::IRef * FloatSetter::Ref (void)
+{
+	return dynamic_cast<::Afx::IRef *>(this);
+}
+
+
+
+// FloatVariable ////////////////////////////////////////////////////////////////
+
+FloatVariable::FloatVariable(ICompiler * compiler, CompileAcces compileAccess, int value)
+: FloatProperty(compiler, compileAccess), m_Value(value)
+{
+}
+
+FloatT FloatVariable::Get() const
+{
+	return m_Value;
+}
+
+FloatT FloatVariable::Get (void)
+{
+	return m_Value;
+}
+
+void FloatVariable::Set (FloatT value)
+{
+	m_Value = value;
+}
+
 
 
 // IntGetterC /////////////////////////////////////////////////////////////////
@@ -2371,7 +2649,7 @@ public:
 		intGetter->Ref()->AddRef();
 	}
 
-	virtual int EvalInt (void)
+	virtual IntT EvalInt (void)
 	{
 		return m_IntGetter->Get();
 	}
@@ -2402,7 +2680,7 @@ public:
 		value->Ref()->AddRef();
 	}
 
-	virtual void EvalVoid (void)
+	virtual VoidT EvalVoid (void)
 	{
 		m_IntSetter->Set(m_Value->EvalInt());
 	}
@@ -2537,17 +2815,17 @@ IntVariable::IntVariable(ICompiler * compiler, CompileAcces compileAccess, int v
 {
 }
 
-int IntVariable::Get() const
+IntT IntVariable::Get() const
 {
 	return m_Value;
 }
 
-int IntVariable::Get (void)
+IntT IntVariable::Get (void)
 {
 	return m_Value;
 }
 
-void IntVariable::Set (int value)
+void IntVariable::Set (IntT value)
 {
 	m_Value = value;
 }
@@ -2596,3 +2874,4 @@ ICompileable * Tools::FnDoCompileable(ICompiler * compiler)
 {
 	return new ::FnDoCompileable(compiler);
 }
+
