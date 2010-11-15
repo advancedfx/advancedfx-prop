@@ -20,7 +20,8 @@
 #include "hw/SCR_UpdateScreen.h"
 
 #include "../hl_addresses.h"
-#include "../mirv_scripting.h"
+//#include "../mirv_scripting.h"
+#include "../InitScript.h"
 #include "../forceres.h"
 
 
@@ -91,7 +92,7 @@ FARPROC WINAPI NewHwGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 
 			HL_ADDR_SET(clientDll, (HlAddress_t)hModule);
 	
-			OnClientDllLoaded();
+			InitEvent_OnClientDllLoaded();
 		}
 	}
 
@@ -104,7 +105,7 @@ void HookHw(HMODULE hHw)
 
 	HL_ADDR_SET(hwDll, (HlAddress_t)hHw);
 
-	OnHwDllLoaded();
+	InitEvent_OnHwDllLoaded();
 
 	// hw.dll:
 	pEngfuncs		= (cl_enginefuncs_s*)HL_ADDR_GET(p_cl_enginefuncs_s);

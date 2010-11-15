@@ -9,3 +9,8 @@
 // 2010-03-17 by dominik.matrixstorm.com
 
 bool RunInitScript();
+
+bool InitEvent_OnHwDllLoaded();
+
+bool InitEvent_OnClientDllLoaded();
+

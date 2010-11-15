@@ -25,6 +25,7 @@
 
 
 // Standard types (contract functions):
+// Eof
 // Error
 // Null
 // Void
@@ -40,7 +41,7 @@
 // integerValue -> Int
 // floatValue -> Float
 // "null" T* -> Null, where T is not Error
-// "void" T* -> Void, where T is not Error
+// "void" -> Void, where T is not Error
 // "string" -> String
 // "string" stringText -> String
 // "s" = "string"
@@ -67,7 +68,7 @@
 // "min" Int+ -> Int
 // "if" |  : Bool T T -> T, where T = Void | Bool | Int | Float
 // "?" = "if"
-// "do" (Null | Void | Bool | Int | Float)* T -> T, where T = Void | Bool | Int | Float
+// "do" (Void | Bool | Int | Float)* T -> T, where T = Void | Bool | Int | Float
 // "." = "do"
 // "sum" T+ -> T, where T = Int | Float
 // "+" = "sum"
@@ -87,6 +88,10 @@ typedef long IntT;
 typedef char const * StringDataT;
 typedef void VoidT;
 
+struct __declspec(novtable) IEof abstract
+{
+	virtual ::Afx::IRef * Ref (void) abstract = 0;
+};
 
 struct __declspec(novtable) IError abstract
 {
@@ -163,6 +168,7 @@ struct __declspec(novtable) ICompiled abstract
 	enum Type
 	{
 		T_None,
+		T_Eof,
 		T_Error,
 		T_Null,
 		T_Void,
@@ -175,6 +181,8 @@ struct __declspec(novtable) ICompiled abstract
 	virtual ::Afx::IRef * Ref (void) abstract = 0;
 
 	virtual Type GetType (void) abstract = 0;
+
+	virtual IEof * GetEof (void) abstract = 0;
 
 	virtual IError * GetError (void) abstract = 0;
 
@@ -203,8 +211,6 @@ struct __declspec(novtable) ICompiler abstract
 struct __declspec(novtable) ICompileArgs abstract
 {
 	virtual ::Afx::IRef * Ref (void) abstract = 0;
-
-	virtual bool HasNextArg (void) abstract = 0;
 
 	virtual ICompiled * CompileNextArg (ICompiler * compiler) abstract = 0;
 };
@@ -534,6 +540,7 @@ class Compiled : public Ref,
 	public ICompiled
 {
 public:
+	Compiled(IEof * value);
 	Compiled(IError * value);
 	Compiled(INull * value);
 	Compiled(IVoid * value);
@@ -543,6 +550,8 @@ public:
 	Compiled(IString * value);
 
 	virtual enum ICompiled::Type GetType();
+
+	virtual IEof * GetEof();
 	
 	virtual IError * GetError();
 
@@ -566,6 +575,7 @@ protected:
 private:
 	enum ICompiled::Type m_Type;
 	union {
+		IEof * Eof;
 		IError * Error;
 		INull * Null;
 		IVoid * Void;
@@ -610,7 +620,7 @@ private:
 
 /// <summary>
 /// Compiles to:<br />
-/// VoidEvent Null -&gt; Void - Set Null (no) event
+/// VoidEvent -&gt; Void - Set Null (no) event
 /// VoidEvent Void -&gt; Void - Set Void event
 /// </summary>
 class VoidEvent : public Compileable

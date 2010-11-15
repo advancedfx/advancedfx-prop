@@ -91,6 +91,7 @@ protected:
 
 private:
 	typedef list<BubbleFn *> FunctionList;
+
 	FunctionList m_Functions;
 
 	ICompiled * Compile_Code(Cursor & cursor);
@@ -104,6 +105,7 @@ private:
 	char * New_Identifier(Cursor & cursor);
 
 	bool ToBool(Cursor & cur, BoolT & outValue);
+
 };
 
 
@@ -132,12 +134,24 @@ private:
 };
 
 
+// FnEof ///////////////////////////////////////////////////////////////////////
+
+class FnEof : public Ref,
+	public IEof
+{
+public:
+	virtual ::Afx::IRef * Ref (void) {
+		return dynamic_cast<::Afx::IRef *>(this);
+	}
+};
+
+
 class CompileArgs : public Ref,
 	public ICompileArgs
 {
 public:
 	CompileArgs(Cursor & cursor, bool inParenthesis)
-	: m_Cursor(cursor), m_InParenthesis(inParenthesis)
+	: m_Cursor(cursor), m_Eof(false), m_MoreArgs(inParenthesis)
 	{
 	}
 
@@ -147,26 +161,31 @@ public:
 
 		compiler->Ref()->AddRef();
 
-		if(HasNextArg())
+		if(m_MoreArgs)
 		{
-			compiled = compiler->Compile_Function(m_Cursor);
-			if(!compiled->GetError())
+			if(')' == m_Cursor.Get())
 			{
-				m_Cursor.SkipSpace();
+				m_MoreArgs = false;
+				m_Cursor.Add();
 			}
+			else
+			{
+				compiled = compiler->Compile_Function(m_Cursor);
+				if(!compiled->GetError())
+				{
+					m_Cursor.SkipSpace();
+				}
+			}
+		}
+
+		if(!compiled && !m_Eof)
+		{
+			compiled =  new Compiled(new FnEof());
 		}
 
 		compiler->Ref()->Release();
 
 		return compiled ? compiled : new Compiled(new Error(Error::EC_ParseError, m_Cursor.GetPos()));
-	}
-
-	virtual bool HasNextArg (void)
-	{
-		return
-			m_InParenthesis
-			&& ')' != m_Cursor.Get()
-		;
 	}
 
 	virtual ::Afx::IRef * Ref (void)
@@ -176,7 +195,8 @@ public:
 
 private:
 	Cursor & m_Cursor;
-	bool m_InParenthesis;
+	bool m_Eof;
+	bool m_MoreArgs;
 };
 
 
@@ -198,31 +218,88 @@ public:
 		return m_Compileds.size();
 	}
 
-	bool HasNextArg (void)
+	bool ParseEof (void)
 	{
-		return m_Args->HasNextArg();
+		ICompiled * nextArg = ParseNextArg();
+
+		nextArg->Ref()->AddRef();
+
+		bool isEof = 0 != nextArg->GetEof();
+
+		nextArg->Ref()->Release();
+
+		return isEof;
 	}
 
+	/// <summary>Parses the next argument, references it in the arg list and returns it.</summary>
+	/// <remarks>Null is skipped.</remarks>
 	ICompiled * ParseNextArg(void)
 	{
-		ICompiled * compiled = m_Args->CompileNextArg(m_Compiler);
+		ICompiled * compiled = ParseNextArg_Internal();
 
 		compiled->Ref()->AddRef();
-
 		m_Compileds.push_back(compiled);
 
 		return compiled;
 	}
 
+	/// <summary>Parses the next argument, references it in the arg list and returns it's type.</summary>
+	/// <remarks>Null is skipped.</remarks>
 	ICompiled::Type ParseNextArgT (void)
 	{
 		return ParseNextArg()->GetType();
 	}
 
+	/// <summary>Parses the next argument, references it in the arg list only if it's not Eof and returns it's type.</summary>
+	/// <remarks>Null is skipped.</remarks>
+	ICompiled::Type ParseNextArgTE (void)
+	{
+		ICompiled * compiled = ParseNextArg_Internal();
+
+		compiled->Ref()->AddRef();
+
+		ICompiled::Type type = compiled->GetType();
+
+		if(ICompiled::T_Eof == type)
+		{
+			compiled->Ref()->Release();
+		}
+		else
+		{
+			m_Compileds.push_back(compiled);
+		}
+
+		return type;
+	}
+
+	/// <summary>Parses the next argument, references it in the arg list and returns if it matches a given type.</summary>
+	/// <remarks>Null is skipped.</remarks>
 	bool ParseNextArgTC (ICompiled::Type type)
 	{
 		return type == ParseNextArgT();
 	}
+
+	/// <summary>Parses the next argument, references it in the arg list only if it's not Eof and returns if it matches a given type.</summary>
+	/// <remarks>Null is skipped.</remarks>
+	bool ParseNextArgTCE (ICompiled::Type type)
+	{
+		return type == ParseNextArgTE();
+	}
+
+	/// <summary>Parses the next argument, references it in the arg list only if it's not Eof.</summary>
+	/// <remarks>Null is skipped.</remarks>
+	/// <param name="type">type to match</param>
+	/// <param name="outMatchedOrEof">if type is matched or Eof</param>
+	/// <returns>if not Eof</returns>
+	bool ParseNextArgTCEX(ICompiled::Type type, bool & outMatchedOrEof)
+	{
+		ICompiled::Type curType = ParseNextArgTE();
+
+		outMatchedOrEof = type == curType || ICompiled::T_Eof == curType;
+
+		return ICompiled::T_Eof != curType;
+	}
+
 
 	::Afx::IRef * Ref (void) {
 		return dynamic_cast<::Afx::IRef *>(this);
@@ -251,6 +328,26 @@ private:
 
 	ICompileArgs * m_Args;
 	ICompiler * m_Compiler;
+
+	ICompiled * ParseNextArg_Internal(void)
+	{
+		ICompiled * compiled;
+		bool bSkip;
+		
+		do {
+			compiled = m_Args->CompileNextArg(m_Compiler);
+
+			bSkip = 0 != compiled->GetNull();
+
+			if(bSkip)
+			{
+				Ref::TouchRef(compiled->Ref());
+			}
+
+		} while(compiled->GetNull());
+
+		return compiled;
+	}
 	
 };
 
@@ -349,10 +446,11 @@ private:
 		do {
 			escaped = false;
 			length = 0;
+			int brackets = 0;
 
 			cur.Restore(backup);
 
-			while((val = cur.Get()), !Cursor::IsNull(val) && (escaped || val != '(' && val != ')'))
+			while((val = cur.Get()), !Cursor::IsNull(val) && (escaped || 0 < brackets || val != ')'))
 			{
 				cur.Add();
 
@@ -362,6 +460,19 @@ private:
 				}
 				else {
 					escaped = false;
+					
+					switch(val)
+					{
+					case '(':
+						brackets++;
+						break;
+					case ')':
+						brackets--;
+						break;
+					default:
+						break;
+					};
+
 					if(data) data[length] = val;
 					length++;
 				}
@@ -405,24 +516,13 @@ public:
 
 	virtual ICompiled * Compile (ICompileArgs * args)
 	{
-		ICompiled * compiled = 0;
-
 		args->Ref()->AddRef();
 
-		if(args->HasNextArg())
-		{
-			compiled = args->CompileNextArg(this);
-
-			if(compiled->GetError())
-			{
-				Ref::TouchRef(compiled->Ref());
-				compiled = 0;
-			}
-		}
+		ICompiled * compiled = args->CompileNextArg(this);
 
 		args->Ref()->Release();
 
-		return compiled ? compiled : new Compiled(new Error());
+		return compiled;
 	}
 
 	virtual ::Afx::IRef * Ref (void) {
@@ -464,7 +564,7 @@ public:
 		ParseArgs * pa = new ParseArgs(compiler, args);
 		pa->Ref()->AddRef();
 
-		if(!pa->HasNextArg())
+		if(pa->ParseEof())
 		{
 			compiled = new Compiled(new FnConstBool(value));
 		}
@@ -516,7 +616,7 @@ public:
 		ParseArgs * pa = new ParseArgs(compiler, args);
 		pa->Ref()->AddRef();
 
-		if(!pa->HasNextArg())
+		if(pa->ParseEof())
 		{
 			compiled = new Compiled(new FnConstInt(value));
 		}
@@ -569,7 +669,7 @@ public:
 		ParseArgs * pa = new ParseArgs(compiler, args);
 		pa->Ref()->AddRef();
 
-		if(!pa->HasNextArg())
+		if(pa->ParseEof())
 		{
 			compiled = new Compiled(new FnConstFloat(value));
 		}
@@ -748,8 +848,7 @@ public:
 			&& pa->ParseNextArgTC(ICompiled::T_Bool)
 		;
 
-		while(bOk && pa->HasNextArg())
-			bOk = bOk && pa->ParseNextArgTC(ICompiled::T_Bool);
+		while(bOk && pa->ParseNextArgTCEX(ICompiled::T_Bool, bOk));
 
 		ICompiled * compiled = bOk
 			? new Compiled(new FnAnd(pa))
@@ -791,8 +890,7 @@ public:
 			&& pa->ParseNextArgTC(ICompiled::T_Bool)
 		;
 
-		while(bOk && pa->HasNextArg())
-			bOk = bOk && pa->ParseNextArgTC(ICompiled::T_Bool);
+		while(bOk && pa->ParseNextArgTCEX(ICompiled::T_Bool, bOk));
 
 		ICompiled * compiled = bOk
 			? new Compiled(new FnOr(pa))
@@ -831,7 +929,7 @@ public:
 
 		bool bOk =
 			pa->ParseNextArgTC(ICompiled::T_Bool)
-			&& !pa->HasNextArg()
+			&& pa->ParseEof()
 		;
 
 		ICompiled * compiled = bOk
@@ -883,7 +981,7 @@ public:
 
 		bool bOk =
 			(resultType = pa->ParseNextArgT()) == pa->ParseNextArgT()
-			&& !pa->HasNextArg()
+			&& pa->ParseEof()
 		;
 
 		if(bOk)
@@ -1098,7 +1196,7 @@ public:
 			pa->ParseNextArgTC(ICompiled::T_Bool)
 		;
 
-		while(bOk && pa->HasNextArg()) bOk = pa->ParseNextArgTC(ICompiled::T_Bool);
+		while(bOk && pa->ParseNextArgTCEX(ICompiled::T_Bool, bOk));
 
 		ICompiled * compiled = bOk
 			? new Compiled(new FnInBool(pa))
@@ -1140,7 +1238,7 @@ public:
 			pa->ParseNextArgTC(ICompiled::T_Int)
 		;
 
-		while(bOk && pa->HasNextArg()) bOk = pa->ParseNextArgTC(ICompiled::T_Int);
+		while(bOk && pa->ParseNextArgTCEX(ICompiled::T_Int, bOk));
 
 		ICompiled * compiled = bOk
 			? new Compiled(new FnInInt(pa))
@@ -1182,7 +1280,7 @@ public:
 			pa->ParseNextArgTC(ICompiled::T_Bool)
 		;
 
-		while(bOk && pa->HasNextArg()) bOk = pa->ParseNextArgTC(ICompiled::T_Bool);
+		while(bOk && pa->ParseNextArgTCEX(ICompiled::T_Bool, bOk));
 
 		ICompiled * compiled = bOk
 			? new Compiled(new FnMaxBool(pa))
@@ -1231,7 +1329,7 @@ public:
 			pa->ParseNextArgTC(ICompiled::T_Int)
 		;
 
-		while(bOk && pa->HasNextArg()) bOk = pa->ParseNextArgTC(ICompiled::T_Int);
+		while(bOk && pa->ParseNextArgTCEX(ICompiled::T_Int, bOk));
 
 		ICompiled * compiled = bOk
 			? new Compiled(new FnMaxInt(pa))
@@ -1280,7 +1378,7 @@ public:
 			pa->ParseNextArgTC(ICompiled::T_Bool)
 		;
 
-		while(bOk && pa->HasNextArg()) bOk = pa->ParseNextArgTC(ICompiled::T_Bool);
+		while(bOk && pa->ParseNextArgTCEX(ICompiled::T_Bool, bOk));
 
 		ICompiled * compiled = bOk
 			? new Compiled(new FnMinBool(pa))
@@ -1329,7 +1427,7 @@ public:
 			pa->ParseNextArgTC(ICompiled::T_Int)
 		;
 
-		while(bOk && pa->HasNextArg()) bOk = pa->ParseNextArgTC(ICompiled::T_Int);
+		while(bOk && pa->ParseNextArgTCEX(ICompiled::T_Int, bOk));
 
 		ICompiled * compiled = bOk
 			? new Compiled(new FnMinInt(pa))
@@ -1384,7 +1482,7 @@ public:
 		bool bOk =
 			pa->ParseNextArgTC(ICompiled::T_Bool)
 			&& (resultType = pa->ParseNextArgT()) == pa->ParseNextArgT()
-			&& !pa->HasNextArg()
+			&& pa->ParseEof()
 		;
 
 		if(bOk)
@@ -1546,18 +1644,19 @@ public:
 		ParseArgs * pa = new ParseArgs(compiler, args);
 		pa->Ref()->AddRef();
 
-		bool bOk = pa->HasNextArg();
+		bool bOk = true;
 
 		ICompiled * compiled = 0;
-		ICompiled::Type resultType = ICompiled::T_Void;
+		ICompiled::Type resultType = ICompiled::T_None;
 
-		while(bOk && pa->HasNextArg())
+		while(bOk)
 		{
-			ICompiled::Type curType = pa->ParseNextArgT();
+			ICompiled::Type curType = pa->ParseNextArgTE();
 
 			switch(curType)
 			{
-			case ICompiled::T_Null:
+			case ICompiled::T_Eof:
+				break;
 			case ICompiled::T_Void:
 			case ICompiled::T_Bool:
 			case ICompiled::T_Int:
@@ -1631,8 +1730,6 @@ protected:
 		{
 			switch(m_Types[i])
 			{
-			case ICompiled::T_Null:
-				break;
 			case ICompiled::T_Void:
 				m_Fns[i].Void->Ref()->Release();
 				break;
@@ -1682,8 +1779,6 @@ private:
 
 			switch(curType)
 			{
-			case ICompiled::T_Null:
-				break;
 			case ICompiled::T_Void:
 				m_Fns[i].Void = args->GetArg(i)->GetVoid();
 				m_Fns[i].Void->Ref()->AddRef();
@@ -1713,8 +1808,6 @@ private:
 	{
 		switch(m_Types[i])
 		{
-		case ICompiled::T_Null:
-			break;
 		case ICompiled::T_Void:
 			m_Fns[i].Void->EvalVoid();
 			break;
@@ -1736,7 +1829,6 @@ private:
 
 
 class FnSum : public Ref,
-	public IVoid,
 	public IInt,
 	public IFloat
 {
@@ -1746,27 +1838,27 @@ public:
 		ParseArgs * pa = new ParseArgs(compiler, args);
 		pa->Ref()->AddRef();
 
-		ICompiled::Type resultType = ICompiled::T_Void;
+		ICompiled::Type resultType = ICompiled::T_None;
 		ICompiled * compiled = 0;
 
-		bool bOk = pa->HasNextArg();
+		bool bOk = true;
 
-		while(bOk && pa->HasNextArg())
+		while(bOk)
 		{
-			ICompiled::Type curType = pa->ParseNextArgT();
+			ICompiled::Type curType = pa->ParseNextArgTE();
 
 			switch(curType)
 			{
+			case ICompiled::T_Eof:
+				break;
 			case ICompiled::T_Int:
 			case ICompiled::T_Float:
+				bOk = curType == resultType ||  ICompiled::T_None == resultType; // must match first type (if any):
 				break;
 			default:
 				bOk = false;
 				break;
-			}
-
-			// must match first type (if any):
-			bOk = bOk && ICompiled::T_Void == resultType || curType == resultType;
+			}			
 
 			resultType = curType;
 		}
@@ -1775,9 +1867,6 @@ public:
 		{
 			switch(resultType)
 			{
-			case ICompiled::T_Void:
-				compiled = new Compiled(dynamic_cast<IVoid *>(new FnSum(pa, resultType)));
-				break;
 			case ICompiled::T_Int:
 				compiled = new Compiled(dynamic_cast<IInt *>(new FnSum(pa, resultType)));
 				break;
@@ -1792,11 +1881,6 @@ public:
 		pa->Ref()->Release();
 
 		return compiled ? compiled : new Compiled(new Error());
-	}
-
-	virtual VoidT EvalVoid (void) {
-		for(int i=0; i < m_Count; i++)
-			m_Fns[i].Void->EvalVoid();
 	}
 
 	virtual IntT EvalInt (void) {
@@ -1820,9 +1904,6 @@ protected:
 		{
 			switch(m_Type)
 			{
-			case ICompiled::T_Void:
-				m_Fns[i].Void->Ref()->Release();
-				break;
 			case ICompiled::T_Int:
 				m_Fns[i].Int->Ref()->Release();
 				break;
@@ -1841,7 +1922,6 @@ protected:
 private:
 	union FnT
 	{
-		IVoid * Void;
 		IInt * Int;
 		IFloat  * Float;
 	};
@@ -1861,10 +1941,6 @@ private:
 		{
 			switch(type)
 			{
-			case ICompiled::T_Void:
-				m_Fns[i].Void = args->GetArg(i)->GetVoid();
-				m_Fns[i].Void->Ref()->AddRef();
-				break;
 			case ICompiled::T_Int:
 				m_Fns[i].Int = args->GetArg(i)->GetInt();
 				m_Fns[i].Int->Ref()->AddRef();
@@ -1893,9 +1969,8 @@ public:
 		pa->Ref()->AddRef();
 
 		bool bOk =
-			pa->HasNextArg()
-			&& pa->ParseNextArgTC(ICompiled::T_String)
-			&& !pa->HasNextArg()
+			pa->ParseNextArgTC(ICompiled::T_String)
+			&& pa->ParseEof()
 		;
 
 		ICompiled * compiled = 0;
@@ -1950,9 +2025,8 @@ public:
 		pa->Ref()->AddRef();
 
 		bool bOk =
-			pa->HasNextArg()
-			&& pa->ParseNextArgTC(ICompiled::T_String)
-			&& !pa->HasNextArg()
+			pa->ParseNextArgTC(ICompiled::T_String)
+			&& pa->ParseEof()
 		;
 
 		ICompiled * compiled = 0;
@@ -1978,6 +2052,8 @@ public:
 };
 
 
+
+
 // FnNull //////////////////////////////////////////////////////////////////////
 
 class FnNull : public Ref,
@@ -1989,19 +2065,28 @@ public:
 		compiler->Ref()->AddRef();
 		args->Ref()->AddRef();
 
-		IError * error = 0;
-		bool bOk = true;
+		ICompiled * error = 0;
+		bool bContinue = true;
 
-		while(bOk && args->HasNextArg())
+		do
 		{
-			error = args->CompileNextArg(compiler)->GetError();
-			bOk = !error;
+			ICompiled * compiled = args->CompileNextArg(compiler);
+
+			compiled->Ref()->AddRef();
+
+			if(compiled->GetError())
+				error = new Compiled(compiled->GetError());
+			else
+				bContinue = !compiled->GetEof();
+
+			compiled->Ref()->Release();
 		}
+		while(!error && bContinue);
 
 		compiler->Ref()->Release();
 		args->Ref()->Release();
 
-		return bOk ? new Compiled(new FnNull()) : new Compiled(error);
+		return !error ? new Compiled(new FnNull()) : error;
 	}
 
 	virtual ::Afx::IRef * Ref (void) {
@@ -2018,22 +2103,14 @@ class FnVoid : public Ref,
 public:
 	static ICompiled * Compile(ICompiler * compiler, ICompileArgs * args)
 	{
-		compiler->Ref()->AddRef();
-		args->Ref()->AddRef();
+		ParseArgs * pa = new ParseArgs(compiler, args);
+		pa->Ref()->AddRef();
 
-		IError * error = 0;
-		bool bOk = true;
+		bool bOk = pa->ParseEof();
 
-		while(bOk && args->HasNextArg())
-		{
-			error = args->CompileNextArg(compiler)->GetError();
-			bOk = !error;
-		}
+		pa->Ref()->Release();
 
-		compiler->Ref()->Release();
-		args->Ref()->Release();
-
-		return bOk ? new Compiled(new FnVoid()) : new Compiled(error);
+		return bOk ? new Compiled(new FnVoid()) : new Compiled(new Error());
 	}
 
 	virtual VoidT EvalVoid (void) {
@@ -2122,7 +2199,7 @@ ICompiled * BoolGetter::Compile (ICompileArgs * args)
 	ParseArgs * pa = new ParseArgs(m_Compiler, args);
 	pa->Ref()->AddRef();
 
-	if(!pa->HasNextArg())
+	if(pa->ParseEof())
 	{
 		compiled = new Compiled(new BoolGetterC(this));
 	}
@@ -2151,21 +2228,28 @@ ICompiled * BoolProperty::Compile (ICompileArgs * args)
 	ParseArgs * pa = new ParseArgs(m_Compiler, args);
 	pa->Ref()->AddRef();
 
-	if(
-		(CA_Property == m_CompileAccess || CA_Getter == m_CompileAccess)
-		&& !pa->HasNextArg()
-	)
+	bool bOk;
+	if(pa->ParseNextArgTCEX(ICompiled::T_Bool, bOk) && bOk)
 	{
-		// Compile getter:
-		compiled = new Compiled(new BoolGetterC(this));
+		if(
+			(CA_Property == m_CompileAccess || CA_Setter == m_CompileAccess)
+			&& pa->ParseEof()
+		)
+		{
+			// Compile setter:
+			compiled = new Compiled(new BoolSetterC(this, pa->GetArg(0)->GetBool()));
+		}
 	}
-	else if(
-		(CA_Property == m_CompileAccess || CA_Setter == m_CompileAccess)
-		&& pa->ParseNextArgTC(ICompiled::T_Bool) && !pa->HasNextArg()
-	)
+	else if(bOk)
 	{
-		// Compile setter:
-		compiled = new Compiled(new BoolSetterC(this, pa->GetArg(0)->GetBool()));
+		if(
+			(CA_Property == m_CompileAccess || CA_Getter == m_CompileAccess)
+			&& pa->ParseEof()
+		)
+		{
+			// Compile getter:
+			compiled = new Compiled(new BoolGetterC(this));
+		}
 	}
 
 	pa->Ref()->Release();
@@ -2193,7 +2277,7 @@ ICompiled * BoolSetter::Compile (ICompileArgs * args)
 	ParseArgs * pa = new ParseArgs(m_Compiler, args);
 	pa->Ref()->AddRef();
 
-	if(pa->ParseNextArgTC(ICompiled::T_Bool) && !pa->HasNextArg())
+	if(pa->ParseNextArgTC(ICompiled::T_Bool) && pa->ParseEof())
 	{
 		compiled = new Compiled(new BoolSetterC(this, pa->GetArg(0)->GetBool()));
 	}
@@ -2514,7 +2598,6 @@ char * Bubble::New_Identifier(Cursor & cursor)
 	return dynamic_cast<::Afx::IRef * >(this);
 }
 
-
 bool Bubble::ToBool(Cursor & cur, BoolT & outValue)
 {
 	bool isBool = false;
@@ -2582,6 +2665,13 @@ Compiled::Compiled(IBool * value)
 	m_Value.Bool = value;
 }
 
+Compiled::Compiled(IEof * value)
+{
+	if(value) value->Ref()->AddRef();
+
+	m_Type = ICompiled::T_Eof;
+	m_Value.Eof = value;
+}
 
 Compiled::Compiled(IError * value)
 {
@@ -2639,6 +2729,7 @@ Compiled::~Compiled()
 {
 	switch(m_Type)
 	{
+	case ICompiled::T_Eof: if(m_Value.Eof) m_Value.Eof->Ref()->Release(); break;
 	case ICompiled::T_Error: if(m_Value.Error) m_Value.Error->Ref()->Release(); break;
 	case ICompiled::T_Null: if(m_Value.Null) m_Value.Null->Ref()->Release(); break;
 	case ICompiled::T_Void: if(m_Value.Void) m_Value.Void->Ref()->Release(); break;
@@ -2650,6 +2741,8 @@ Compiled::~Compiled()
 }
 
 IBool * Compiled::GetBool() { return ICompiled::T_Bool == m_Type ? m_Value.Bool : 0; }
+
+IEof * Compiled::GetEof() { return ICompiled::T_Eof == m_Type ? m_Value.Eof : 0; }
 
 IError * Compiled::GetError() { return ICompiled::T_Error == m_Type ? m_Value.Error : 0; }
 
@@ -2746,7 +2839,7 @@ ICompiled * FloatGetter::Compile (ICompileArgs * args)
 	ParseArgs * pa = new ParseArgs(m_Compiler, args);
 	pa->Ref()->AddRef();
 
-	if(!pa->HasNextArg())
+	if(pa->ParseEof())
 	{
 		compiled = new Compiled(new FloatGetterC(this));
 	}
@@ -2778,21 +2871,28 @@ ICompiled * FloatProperty::Compile (ICompileArgs * args)
 	ParseArgs * pa = new ParseArgs(m_Compiler, args);
 	pa->Ref()->AddRef();
 
-	if(
-		(CA_Property == m_CompileAccess || CA_Getter == m_CompileAccess)
-		&& !pa->HasNextArg()
-	)
+	bool bOk;
+	if(pa->ParseNextArgTCEX(ICompiled::T_Float, bOk) && bOk)
 	{
-		// Compile getter:
-		compiled = new Compiled(new FloatGetterC(this));
+		if(
+			(CA_Property == m_CompileAccess || CA_Setter == m_CompileAccess)
+			&& pa->ParseEof()
+		)
+		{
+			// Compile setter:
+			compiled = new Compiled(new FloatSetterC(this, pa->GetArg(0)->GetFloat()));
+		}
 	}
-	else if(
-		(CA_Property == m_CompileAccess || CA_Setter == m_CompileAccess)
-		&& pa->ParseNextArgTC(ICompiled::T_Float) && !pa->HasNextArg()
-	)
+	else if(bOk)
 	{
-		// Compile setter:
-		compiled = new Compiled(new FloatSetterC(this, pa->GetArg(0)->GetFloat()));
+		if(
+			(CA_Property == m_CompileAccess || CA_Getter == m_CompileAccess)
+			&& pa->ParseEof()
+		)
+		{
+			// Compile getter:
+			compiled = new Compiled(new FloatGetterC(this));
+		}
 	}
 
 	pa->Ref()->Release();
@@ -2820,7 +2920,7 @@ ICompiled * FloatSetter::Compile (ICompileArgs * args)
 	ParseArgs * pa = new ParseArgs(m_Compiler, args);
 	pa->Ref()->AddRef();
 
-	if(pa->ParseNextArgTC(ICompiled::T_Float) && !pa->HasNextArg())
+	if(pa->ParseNextArgTC(ICompiled::T_Float) && pa->ParseEof())
 	{
 		compiled = new Compiled(new FloatSetterC(this, pa->GetArg(0)->GetFloat()));
 	}
@@ -2937,7 +3037,7 @@ ICompiled * IntGetter::Compile (ICompileArgs * args)
 	ParseArgs * pa = new ParseArgs(m_Compiler, args);
 	pa->Ref()->AddRef();
 
-	if(!pa->HasNextArg())
+	if(pa->ParseEof())
 	{
 		compiled = new Compiled(new IntGetterC(this));
 	}
@@ -2970,21 +3070,28 @@ ICompiled * IntProperty::Compile (ICompileArgs * args)
 	ParseArgs * pa = new ParseArgs(m_Compiler, args);
 	pa->Ref()->AddRef();
 
-	if(
-		(CA_Property == m_CompileAccess || CA_Getter == m_CompileAccess)
-		&& !pa->HasNextArg()
-	)
+	bool bOk;
+	if(pa->ParseNextArgTCEX(ICompiled::T_Int, bOk) && bOk)
 	{
-		// Compile getter:
-		compiled = new Compiled(new IntGetterC(this));
+		if(
+			(CA_Property == m_CompileAccess || CA_Setter == m_CompileAccess)
+			&& pa->ParseEof()
+		)
+		{
+			// Compile setter:
+			compiled = new Compiled(new IntSetterC(this, pa->GetArg(0)->GetInt()));
+		}
 	}
-	else if(
-		(CA_Property == m_CompileAccess || CA_Setter == m_CompileAccess)
-		&& pa->ParseNextArgTC(ICompiled::T_Int) && !pa->HasNextArg()
-	)
+	else if(bOk)
 	{
-		// Compile setter:
-		compiled = new Compiled(new IntSetterC(this, pa->GetArg(0)->GetInt()));
+		if(
+			(CA_Property == m_CompileAccess || CA_Getter == m_CompileAccess)
+			&& pa->ParseEof()
+		)
+		{
+			// Compile getter:
+			compiled = new Compiled(new IntGetterC(this));
+		}
 	}
 
 	pa->Ref()->Release();
@@ -3013,7 +3120,7 @@ ICompiled * IntSetter::Compile (ICompileArgs * args)
 	ParseArgs * pa = new ParseArgs(m_Compiler, args);
 	pa->Ref()->AddRef();
 
-	if(pa->ParseNextArgTC(ICompiled::T_Int) && !pa->HasNextArg())
+	if(pa->ParseNextArgTC(ICompiled::T_Int) && pa->ParseEof())
 	{
 		compiled = new Compiled(new IntSetterC(this, pa->GetArg(0)->GetInt()));
 	}
@@ -3082,7 +3189,7 @@ ICompiled * VoidFunction::Compile (ICompileArgs * args)
 	ParseArgs * pa = new ParseArgs(m_Compiler, args);
 	pa->Ref()->AddRef();
 
-	if(!pa->HasNextArg())
+	if(pa->ParseEof())
 	{
 		compiled = new Compiled(dynamic_cast<IVoid *>(this));
 	}
@@ -3176,32 +3283,14 @@ ICompiled * VoidEvent::Compile (ICompileArgs * args)
 	ParseArgs * pa = new ParseArgs(m_Compiler, args);
 	pa->Ref()->AddRef();
 
-	ICompiled::Type argType;
-
-	bool bOk =  pa->HasNextArg();
-
-	if(bOk)
+	bool bOk;
+	if(pa->ParseNextArgTCEX(ICompiled::T_Void, bOk))
 	{
-		argType = pa->ParseNextArgT();
-
-		bOk =
-			(ICompiled::T_Null == argType || ICompiled::T_Void == argType)
-			&& !pa->HasNextArg()
-		;
+		if(bOk) compiled = new Compiled(new VoidEventSetVoid(m_Compiler, this, pa->GetArg(0)->GetVoid()));
 	}
-
-	if(bOk)
+	else if(bOk)
 	{
-		if(ICompiled::T_Void == argType)
-		{
-			compiled = new Compiled(new VoidEventSetVoid(m_Compiler, this, pa->GetArg(0)->GetVoid()));
-		}
-		else
-		{
-			compiled = new Compiled(new VoidEventSetNull(m_Compiler, this));
-		}
-		
-		compiled = new Compiled(new FnVoid());
+		compiled = new Compiled(new VoidEventSetNull(m_Compiler, this));
 	}
 
 	pa->Ref()->Release();
