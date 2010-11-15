@@ -124,6 +124,21 @@ void xpress_cmd()
 
 		switch(compiled->GetType())
 		{
+		case ICompiled::T_Error:
+			{
+				pEngfuncs->Con_Printf("Result: Error\n");
+			}
+			break;
+
+		case ICompiled::T_Void:
+			{
+				compiled->GetVoid()->EvalVoid();
+				pEngfuncs->Con_Printf(
+					"Result: Void\n"				
+				);			
+			}
+			break;
+
 		case ICompiled::T_Bool:
 			{
 				bool bResult = compiled->GetBool()->EvalBool();
@@ -144,18 +159,28 @@ void xpress_cmd()
 			}
 			break;
 
-		case ICompiled::T_Error:
+		case ICompiled::T_Float:
 			{
-				pEngfuncs->Con_Printf("Result: Error\n");
+				int iResult = compiled->GetFloat()->EvalFloat();
+				pEngfuncs->Con_Printf(
+					"Result: Float = %f\n",
+					iResult
+				);			
 			}
 			break;
 
-		case ICompiled::T_Void:
+		case ICompiled::T_String:
 			{
-				compiled->GetVoid()->EvalVoid();
+				IStringValue * result = compiled->GetString()->EvalString();
+
+				result->Ref()->AddRef();
+
 				pEngfuncs->Con_Printf(
-					"Result: Void\n"				
+					"Result: String = \"%s\"\n",
+					result->GetData()
 				);			
+
+				result->Ref()->Release();
 			}
 			break;
 

@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-11-11 dominik.matrixstorm.com
+// 2010-11-15 dominik.matrixstorm.com
 //
 // First changes
 // 2010-10-24 dominik.matrixstorm.com
@@ -26,41 +26,55 @@
 
 // Standard types (contract functions):
 // Error
+// Null
 // Void
 // Bool
 // Int
+// Float
+// String
 
-// Primitive functions:
-//
-// BoolConstant: "false" | "true" -> Bool
-// IntConstant: integer -> Int
 
 // Standard functions:
-// and && : Bool Bool+ -> Bool
-// or || : Bool Bool+ -> Bool
-// not ! : Bool -> Bool
-// less < : Bool Bool -> Bool
-// less < : Int Int -> Bool
-// lessOrEqual <= Bool Bool -> Bool
-// lessOrEqual <= Int Int -> Bool
-// equal == : Bool Bool -> Bool
-// equal == : Int Int -> Bool
-// greater > : Bool Bool -> Bool
-// greater > : Int Int -> Bool
-// greaterOrEqual >= Bool Bool -> Bool
-// greaterOrEqual >= Int Int -> Bool
-// in: Bool Bool* -> Bool
-// in: Int Int* -> Bool
-// max: Bool+ -> Bool
-// max: Int+ -> Int
-// min: Bool+ -> Bool
-// min: Int+ -> Int
-// if ?: Bool Bool Bool -> Bool
-// if ?: Bool Int Int -> Int
-// do .: -> Void
-// do .: (Void | Bool | Int | Float)* Void -> Void
-// do .: (Void | Bool | Int | Float)* Bool -> Bool
-// do .: (Void | Bool | Int | Float)* Int -> Int
+//
+// boolValue -> Bool
+// integerValue -> Int
+// floatValue -> Float
+// "null" -> Null
+// "void" -> Void
+// "string" -> String
+// "string" stringText -> String
+// "s" = "string"
+// "and" |  Bool Bool+ -> Bool
+// "&&" = "and"
+// "or" Bool Bool+ -> Bool
+// "||" = "or"
+// "not" Bool -> Bool
+// "!" = "not"
+// "less" T T -> Bool, where T = Void | Bool | Int | Float
+// "<" = "less"
+// "lessOrEqual" T T -> Bool, where T = Void | Bool | Int | Float
+// "<=" = "lessOrEqual"
+// "equal" T T -> Bool, where T = Void | Bool | Int | Float
+// "==" = "equal"
+// "greater" T T -> Bool, where T = Void | Bool | Int | Float
+// ">" = "greater"
+// "greaterOrEqual" T T -> Bool, where T = Void | Bool | Int | Float
+// ">=" = "greaterOrEqual"
+// "in" Bool Bool* -> Bool
+// "in" Int Int* -> Bool
+// "max" Bool+ -> Bool
+// "max" Int+ -> Int
+// "min" Bool+ -> Bool
+// "min" Int+ -> Int
+// "if" |  : Bool T T -> T, where T = Void | Bool | Int | Float
+// "?" = "if"
+// "do" -> Void
+// "do" (Void | Bool | Int | Float)* T -> T, where T = Void | Bool | Int | Float
+// "." = "do"
+// "sum" T+ -> T, where T = Int | Float
+// "+" = "sum"
+// "stringFromFile" String -> String
+// "compile" String -> Error | Void  | Bool | Int | Float | String
 
 
 #include "Ref.h"
@@ -72,13 +86,21 @@ namespace Afx { namespace Expressions {
 typedef bool BoolT;
 typedef double FloatT;
 typedef long IntT;
+typedef char const * StringDataT;
 typedef void VoidT;
+
 
 struct __declspec(novtable) IError abstract
 {
 	virtual ::Afx::IRef * Ref (void) abstract = 0;
 };
 
+struct __declspec(novtable) INull abstract
+{
+	virtual ::Afx::IRef * Ref (void) abstract = 0;
+};
+
+/// <summary>Function that evaluates to VoidT</summary>
 struct __declspec(novtable) IVoid abstract
 {
 	virtual ::Afx::IRef * Ref (void) abstract = 0;
@@ -86,6 +108,7 @@ struct __declspec(novtable) IVoid abstract
 	virtual VoidT EvalVoid (void) abstract = 0;
 };
 
+/// <summary>Function that evaluates to BoolT</summary>
 struct __declspec(novtable) IBool abstract
 {
 	virtual ::Afx::IRef * Ref (void) abstract = 0;
@@ -93,6 +116,7 @@ struct __declspec(novtable) IBool abstract
 	virtual BoolT EvalBool (void) abstract = 0;
 };
 
+/// <summary>Function that evaluates to IntT</summary>
 struct __declspec(novtable) IInt abstract
 {
 	virtual ::Afx::IRef * Ref (void) abstract = 0;
@@ -100,6 +124,7 @@ struct __declspec(novtable) IInt abstract
 	virtual IntT EvalInt (void) abstract = 0;
 };
 
+/// <summary>Function that evaluates to FloatT</summary>
 struct __declspec(novtable) IFloat abstract
 {
 	virtual ::Afx::IRef * Ref (void) abstract = 0;
@@ -107,16 +132,41 @@ struct __declspec(novtable) IFloat abstract
 	virtual FloatT EvalFloat (void) abstract = 0;
 };
 
+
+/// <summary>A string</summary>
+struct __declspec(novtable) IStringValue
+{
+	virtual ::Afx::IRef * Ref (void) abstract = 0;
+
+	virtual int GetLength (void) abstract = 0;
+
+	virtual StringDataT GetData (void) abstract = 0;
+};
+
+
+/// <summary>Function that evaluates to a IStringValue</summary>
+struct __declspec(novtable) IString abstract
+{
+	virtual ::Afx::IRef * Ref (void) abstract = 0;
+
+	/// <remarks>The result is a reference type and not a value type,
+	///   so don't forget to apply reference counting!</remarks>
+	virtual IStringValue * EvalString (void) abstract = 0;
+};
+
+
 struct __declspec(novtable) ICompiled abstract
 {
 	enum Type
 	{
 		T_None,
 		T_Error,
+		T_Null,
 		T_Void,
 		T_Bool,
 		T_Int,
-		T_Float
+		T_Float,
+		T_String
 	};
 
 	virtual ::Afx::IRef * Ref (void) abstract = 0;
@@ -125,6 +175,8 @@ struct __declspec(novtable) ICompiled abstract
 
 	virtual IError * GetError (void) abstract = 0;
 
+	virtual INull * GetNull (void) abstract = 0;
+
 	virtual IVoid * GetVoid (void) abstract = 0;
 
 	virtual IBool * GetBool (void) abstract = 0;
@@ -132,6 +184,8 @@ struct __declspec(novtable) ICompiled abstract
 	virtual IInt * GetInt (void) abstract = 0;
 
 	virtual IFloat * GetFloat (void) abstract = 0;
+
+	virtual IString * GetString (void) abstract = 0;
 };
 
 
@@ -142,6 +196,7 @@ struct __declspec(novtable) ICompiler abstract
 	virtual ICompiled * Compile_Function (Cursor & cursor) abstract = 0;
 };
 
+
 struct __declspec(novtable) ICompileArgs abstract
 {
 	virtual ::Afx::IRef * Ref (void) abstract = 0;
@@ -150,6 +205,7 @@ struct __declspec(novtable) ICompileArgs abstract
 
 	virtual ICompiled * CompileNextArg (ICompiler * compiler) abstract = 0;
 };
+
 
 struct __declspec(novtable) ICompileable abstract
 {
@@ -180,7 +236,10 @@ struct __declspec(novtable) Tools abstract
 	/// <summary>Creates a new bubble with standard operators / functions.</summary>
 	static IBubble * StandardBubble (void);
 
-	/// <summary>This can be used to add commands that execute in a differnet compiler / bubble.</summary>
+	/// <summary>
+	/// Create a &quot;do&quot;-function that executes in a differnet compiler / bubble.
+	/// This means you can use it to add a command function for cross-bubble access.
+	/// </summary>
 	static ICompileable * FnDoCompileable(ICompiler * compiler);
 };
 
@@ -232,6 +291,7 @@ struct __declspec(novtable) IIntSetter abstract
 };
 
 
+/// <summary>Support class for implementing ICompileable with an associated compiler.</summary>
 class Compileable abstract : public Ref,
 	public ICompileable
 {
@@ -239,6 +299,8 @@ public:
 	Compileable(ICompiler * compiler);
 
 	virtual ICompiled * Compile (ICompileArgs * args) abstract = 0;
+
+	virtual ::Afx::IRef * Ref (void);
 
 protected:
 	ICompiler * m_Compiler;
@@ -248,7 +310,10 @@ protected:
 };
 
 
-/// <summary>Compiles as: -&gt; Bool</summary>
+/// <summary>
+/// Compiles to:<br />
+/// (BoolGetter) -&gt; Bool
+/// </summary>
 class BoolGetter abstract :  public Compileable,
 	public IBoolGetter
 {
@@ -257,13 +322,16 @@ public:
 
 	virtual ICompiled * Compile (ICompileArgs * args);
 
-	virtual BoolT Get (void) abstract = 0;
-
 	virtual ::Afx::IRef * Ref (void);
+
+	virtual BoolT Get (void) abstract = 0;
 };
 
 
-/// <summary>Compiles as: Bool -&gt; Void</summary>
+/// <summary>
+/// Compiles to:<br />
+/// (BoolSetter Bool) -&gt; Void
+/// </summary>
 class BoolSetter abstract :  public Compileable,
 	public IBoolSetter
 {
@@ -272,12 +340,17 @@ public:
 
 	virtual ICompiled * Compile (ICompileArgs * args);
 
-	virtual void Set (BoolT value) abstract = 0;
-
 	virtual ::Afx::IRef * Ref (void);
+
+	virtual void Set (BoolT value) abstract = 0;
 };
 
 
+/// <summary>
+/// Compiles to (depends on compileAccess):<br />
+/// (BoolGetter) -&gt; Bool<br />
+/// (BoolSetter Bool) -&gt; Void
+/// </summary>
 class BoolProperty abstract :  public Compileable,
 	public IBoolGetter,
 	public IBoolSetter
@@ -304,8 +377,7 @@ private:
 };
 
 
-
-/// <summary>Compiles as: -&gt; Float</summary>
+/// <summary>Similar to BoolGetter.</summary>
 class FloatGetter abstract :  public Compileable,
 	public IFloatGetter
 {
@@ -320,7 +392,7 @@ public:
 };
 
 
-/// <summary>Compiles as: Float -&gt; Void</summary>
+/// <summary>Similar to BoolSetter.</summary>
 class FloatSetter abstract :  public Compileable,
 	public IFloatSetter
 {
@@ -329,12 +401,13 @@ public:
 
 	virtual ICompiled * Compile (ICompileArgs * args);
 
-	virtual void Set (FloatT value) abstract = 0;
-
 	virtual ::Afx::IRef * Ref (void);
+
+	virtual void Set (FloatT value) abstract = 0;
 };
 
 
+/// <summary>Similar to BoolProperty.</summary>
 class FloatProperty abstract :  public Compileable,
 	public IFloatGetter,
 	public IFloatSetter
@@ -361,7 +434,7 @@ private:
 };
 
 
-/// <summary>Compiles as: -&gt; Int</summary>
+/// <summary>Similar to BoolGetter.</summary>
 class IntGetter abstract :  public Compileable,
 	public IIntGetter
 {
@@ -373,10 +446,11 @@ public:
 	virtual IntT Get (void) abstract = 0;
 
 	virtual ::Afx::IRef * Ref (void);
+
 };
 
 
-/// <summary>Compiles as: Int -&gt; Void</summary>
+/// <summary>Similar to BoolSetter.</summary>
 class IntSetter abstract :  public Compileable,
 	public IIntSetter
 {
@@ -385,12 +459,13 @@ public:
 
 	virtual ICompiled * Compile (ICompileArgs * args);
 
-	virtual void Set (IntT value) abstract = 0;
-
 	virtual ::Afx::IRef * Ref (void);
+
+	virtual void Set (IntT value) abstract = 0;
 };
 
 
+/// <summary>Similar to BoolProperty.</summary>
 class IntProperty abstract :  public Compileable,
 	public IIntGetter,
 	public IIntSetter
@@ -417,7 +492,10 @@ private:
 };
 
 
-/// <summary>Compiles as: -&gt; Void</summary>
+/// <summary>
+/// Compiles to:<br />
+/// (VoidFunction) -&gt; Void
+/// </summary>
 class VoidFunction abstract :  public Compileable,
 	public IVoid
 {
@@ -432,6 +510,7 @@ public:
 };
 
 
+/// <summary>Implementation of BoolProperty as an variable.</summary>
 class BoolVariable :  public BoolProperty
 {
 public:
@@ -447,27 +526,34 @@ private:
 };
 
 
+/// <summary>ICompiled container implementation.</summary>
 class Compiled : public Ref,
 	public ICompiled
 {
 public:
 	Compiled(IError * value);
+	Compiled(INull * value);
 	Compiled(IVoid * value);
 	Compiled(IBool * value);
 	Compiled(IInt * value);
 	Compiled(IFloat * value);
+	Compiled(IString * value);
 
 	virtual enum ICompiled::Type GetType();
-
-	virtual IBool * GetBool();
-
-	virtual IVoid * GetVoid();
 	
 	virtual IError * GetError();
+
+	virtual INull * GetNull();
+
+	virtual IVoid * GetVoid();
+
+	virtual IBool * GetBool();
 	
 	virtual IInt * GetInt();
 
 	virtual IFloat * GetFloat();
+
+	virtual IString * GetString();
 
 	virtual ::Afx::IRef * Ref();
 
@@ -478,13 +564,17 @@ private:
 	enum ICompiled::Type m_Type;
 	union {
 		IError * Error;
+		INull * Null;
 		IVoid * Void;
 		IBool * Bool;
 		IInt * Int;
 		IFloat * Float;
+		IString * String;
 	} m_Value;
 };
 
+
+/// <summary>Implementation of FloatProperty as an variable.</summary>
 class FloatVariable :  public FloatProperty
 {
 public:
@@ -500,7 +590,7 @@ private:
 };
 
 
-
+/// <summary>Implementation of IntProperty as an variable.</summary>
 class IntVariable :  public IntProperty
 {
 public:
@@ -513,6 +603,31 @@ public:
 
 private:
 	IntT m_Value;
+};
+
+/// <summary>
+/// Compiles to:<br />
+/// VoidEvent Null -&gt; Void - Set Null (no) event
+/// VoidEvent Void -&gt; Void - Set Void event
+/// </summary>
+class VoidEvent : public Compileable
+{
+public:
+	VoidEvent(ICompiler * compiler);
+
+	void CallEvent();
+
+	virtual ICompiled * Compile (ICompileArgs * args);
+
+	bool HasEvent();
+
+	void SetEvent(IVoid * value);
+
+protected:
+	virtual ~VoidEvent();
+
+private:
+	IVoid * m_Void;
 };
 
 
