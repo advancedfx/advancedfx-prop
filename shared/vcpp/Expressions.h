@@ -39,14 +39,14 @@
 // boolValue -> Bool
 // integerValue -> Int
 // floatValue -> Float
-// "null" -> Null
-// "void" -> Void
+// "null" T* -> Null, where T is not Error
+// "void" T* -> Void, where T is not Error
 // "string" -> String
 // "string" stringText -> String
 // "s" = "string"
-// "and" |  Bool Bool+ -> Bool
+// "and" |  Bool Bool+ -> Bool // short-circuit evaluation
 // "&&" = "and"
-// "or" Bool Bool+ -> Bool
+// "or" Bool Bool+ -> Bool // short-circuit evaluation
 // "||" = "or"
 // "not" Bool -> Bool
 // "!" = "not"
@@ -60,16 +60,14 @@
 // ">" = "greater"
 // "greaterOrEqual" T T -> Bool, where T = Void | Bool | Int | Float
 // ">=" = "greaterOrEqual"
-// "in" Bool Bool* -> Bool
-// "in" Int Int* -> Bool
+// "in" T T* -> Bool, where T = Bool | Int // short-circuit evaluation
 // "max" Bool+ -> Bool
 // "max" Int+ -> Int
 // "min" Bool+ -> Bool
 // "min" Int+ -> Int
 // "if" |  : Bool T T -> T, where T = Void | Bool | Int | Float
 // "?" = "if"
-// "do" -> Void
-// "do" (Void | Bool | Int | Float)* T -> T, where T = Void | Bool | Int | Float
+// "do" (Null | Void | Bool | Int | Float)* T -> T, where T = Void | Bool | Int | Float
 // "." = "do"
 // "sum" T+ -> T, where T = Int | Float
 // "+" = "sum"
@@ -138,8 +136,13 @@ struct __declspec(novtable) IStringValue
 {
 	virtual ::Afx::IRef * Ref (void) abstract = 0;
 
+	/// <remarks>
+	/// GetLength is at least strlen of GetData, but may be longer i.e. in case of binary data
+	/// containing \0 characters
+	/// </remarks>
 	virtual int GetLength (void) abstract = 0;
 
+	/// <retruns>Binary data, that is guaranteed to be 0-terminated.</returns>
 	virtual StringDataT GetData (void) abstract = 0;
 };
 

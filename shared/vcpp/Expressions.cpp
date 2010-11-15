@@ -765,7 +765,7 @@ public:
 
 		BoolT result = true;
 
-		for(int i=0; i<m_Count; i++)
+		for(int i=0; i<m_Count && result; i++)
 		{
 			result = result && m_Fns[i]->EvalBool();
 		}
@@ -808,7 +808,7 @@ public:
 
 		BoolT result = false;
 
-		for(int i=0; i<m_Count; i++)
+		for(int i=0; i<m_Count  && !result; i++)
 		{
 			result = result || m_Fns[i]->EvalBool();
 		}
@@ -1546,7 +1546,7 @@ public:
 		ParseArgs * pa = new ParseArgs(compiler, args);
 		pa->Ref()->AddRef();
 
-		bool bOk = true;
+		bool bOk = pa->HasNextArg();
 
 		ICompiled * compiled = 0;
 		ICompiled::Type resultType = ICompiled::T_Void;
@@ -1557,6 +1557,7 @@ public:
 
 			switch(curType)
 			{
+			case ICompiled::T_Null:
 			case ICompiled::T_Void:
 			case ICompiled::T_Bool:
 			case ICompiled::T_Int:
@@ -1630,6 +1631,8 @@ protected:
 		{
 			switch(m_Types[i])
 			{
+			case ICompiled::T_Null:
+				break;
 			case ICompiled::T_Void:
 				m_Fns[i].Void->Ref()->Release();
 				break;
@@ -1679,6 +1682,8 @@ private:
 
 			switch(curType)
 			{
+			case ICompiled::T_Null:
+				break;
 			case ICompiled::T_Void:
 				m_Fns[i].Void = args->GetArg(i)->GetVoid();
 				m_Fns[i].Void->Ref()->AddRef();
@@ -1708,6 +1713,8 @@ private:
 	{
 		switch(m_Types[i])
 		{
+		case ICompiled::T_Null:
+			break;
 		case ICompiled::T_Void:
 			m_Fns[i].Void->EvalVoid();
 			break;
@@ -1913,6 +1920,7 @@ public:
 
 				if(numChars == fread(myChars, sizeof(char), numChars, file))
 				{
+					myChars[numChars] = 0; // terminate
 					compiled = new Compiled(new FnString(new StringValue((int)numChars, myChars)));
 				}				
 				else
@@ -1978,10 +1986,22 @@ class FnNull : public Ref,
 public:
 	static ICompiled * Compile(ICompiler * compiler, ICompileArgs * args)
 	{
-		Ref::TouchRef(compiler->Ref());
-		Ref::TouchRef(args->Ref());
+		compiler->Ref()->AddRef();
+		args->Ref()->AddRef();
 
-		return new Compiled(new FnNull());
+		IError * error = 0;
+		bool bOk = true;
+
+		while(bOk && args->HasNextArg())
+		{
+			error = args->CompileNextArg(compiler)->GetError();
+			bOk = !error;
+		}
+
+		compiler->Ref()->Release();
+		args->Ref()->Release();
+
+		return bOk ? new Compiled(new FnNull()) : new Compiled(error);
 	}
 
 	virtual ::Afx::IRef * Ref (void) {
@@ -1998,10 +2018,22 @@ class FnVoid : public Ref,
 public:
 	static ICompiled * Compile(ICompiler * compiler, ICompileArgs * args)
 	{
-		Ref::TouchRef(compiler->Ref());
-		Ref::TouchRef(args->Ref());
+		compiler->Ref()->AddRef();
+		args->Ref()->AddRef();
 
-		return new Compiled(new FnVoid());
+		IError * error = 0;
+		bool bOk = true;
+
+		while(bOk && args->HasNextArg())
+		{
+			error = args->CompileNextArg(compiler)->GetError();
+			bOk = !error;
+		}
+
+		compiler->Ref()->Release();
+		args->Ref()->Release();
+
+		return bOk ? new Compiled(new FnVoid()) : new Compiled(error);
 	}
 
 	virtual VoidT EvalVoid (void) {
