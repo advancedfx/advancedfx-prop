@@ -141,7 +141,7 @@ bool InitEvent_OnHwDllLoaded()
 
 bool InitEvent_OnClientDllLoaded()
 {
-	return g_GoldSrcAddresses.OnHwDllLoaded();
+	return g_GoldSrcAddresses.OnClientDllLoaded();
 }
 
 
@@ -192,6 +192,12 @@ bool RunInitScript()
 	HMODULE hHookDll = GetModuleHandle(DLL_NAME);
 
 	hookPath[0]=NULL;
+
+#ifdef _DEBUG
+	MessageBox(0, "RunInitScript", "MDT_DEBUG",MB_OK|MB_ICONINFORMATION);
+#endif
+
+	g_GoldSrcAddresses.BubbleAddresses();
 	
 	if (hHookDll)
 	{
@@ -220,7 +226,8 @@ bool RunInitScript()
 			case '\\':
 			case '(':
 			case ')':
-				code += "\\" +val;
+				code += "\\";
+				code += val;
 				break;
 			default:
 				code += val;

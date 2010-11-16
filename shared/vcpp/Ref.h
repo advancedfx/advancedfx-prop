@@ -8,6 +8,11 @@
 // First changes
 // 2010-04-24 dominik.matrixstorm.com
 
+#ifdef _DEBUG
+#define AFX_DEBUG_REF
+#endif
+
+
 namespace Afx {
 
 /// <summary>
@@ -30,6 +35,12 @@ public:
 	Ref();
 
 	virtual void AddRef (void);
+
+#ifdef AFX_DEBUG_REF
+	/// <remarks>Results might inaccurate due to threading.</remarks>
+	static unsigned int DEBUG_GetGlobalRefCount (void);
+#endif
+
 	virtual void Release (void);
 
 	/// <summary>AddRef, Release</summary>
@@ -44,6 +55,10 @@ protected:
 	virtual ~Ref();
 
 private:
+
+#ifdef AFX_DEBUG_REF
+	static unsigned int m_GlobalRefCount;
+#endif
 
 };
 

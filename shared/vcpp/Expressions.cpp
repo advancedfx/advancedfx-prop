@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-11-15 dominik.matrixstorm.com
+// 2010-11-16 dominik.matrixstorm.com
 //
 // First changes
 // 2010-10-24 dominik.matrixstorm.com
@@ -22,6 +22,10 @@
 #include <list>
 #include <vector>
 
+#if 0
+#include <sstream>
+#define AFX_XPRESS_MDEBUG
+#endif
 
 using namespace std;
 
@@ -121,7 +125,46 @@ public:
 	};
 
 	Error() {}
-	Error(ErrorCode errorCode, int errorPosition) {}
+	Error(ErrorCode errorCode, Cursor & cur) {
+
+#ifdef AFX_XPRESS_MDEBUG
+		ostringstream errText("Error #");
+
+		errText << (int)errorCode;
+
+		errText << " at ";
+
+		errText << (int)cur.GetPos();
+
+		errText << " (...\"";
+
+		for(int i=-16; i<0; i++)
+		{
+			char val = cur.Get(i);
+
+			if(!Cursor::IsNull(val)) errText << val;
+		}
+
+		errText << "\" [> \"";
+
+		if(!cur.IsNull()) errText << cur.Get();
+
+		errText << "\" <] \"";
+
+		for(int i=1; i<16; i++)
+		{
+			char val = cur.Get(i);
+
+			if(!Cursor::IsNull(val)) errText << val;
+		}
+
+
+		errText << "\"...).";
+
+		MessageBox(0, errText.str().c_str(), "Afx::Expression::Error(ErrorCode, Cursor &)", MB_OK|MB_ICONINFORMATION);
+#endif
+
+	}
 
 	virtual ::Afx::IRef * Ref (void) { return dynamic_cast<::Afx::IRef *>(this); }
 
@@ -166,7 +209,6 @@ public:
 			if(')' == m_Cursor.Get())
 			{
 				m_MoreArgs = false;
-				m_Cursor.Add();
 			}
 			else
 			{
@@ -185,7 +227,7 @@ public:
 
 		compiler->Ref()->Release();
 
-		return compiled ? compiled : new Compiled(new Error(Error::EC_ParseError, m_Cursor.GetPos()));
+		return compiled ? compiled : new Compiled(new Error(Error::EC_ParseError, m_Cursor));
 	}
 
 	virtual ::Afx::IRef * Ref (void)
@@ -220,7 +262,7 @@ public:
 
 	bool ParseEof (void)
 	{
-		ICompiled * nextArg = ParseNextArg();
+		ICompiled * nextArg = ParseNextArg_Internal();
 
 		nextArg->Ref()->AddRef();
 
@@ -344,7 +386,7 @@ private:
 				Ref::TouchRef(compiled->Ref());
 			}
 
-		} while(compiled->GetNull());
+		} while(bSkip);
 
 		return compiled;
 	}
@@ -511,7 +553,7 @@ public:
 	virtual ICompiled * Compile_Function (Cursor & cursor) {
 		StringValue * stringValue = StringValue::TryRead(cursor);
 
-		return stringValue ? new Compiled(new FnString(stringValue)) : new Compiled(new Error(Error::EC_ParseError, cursor.GetPos()));
+		return stringValue ? new Compiled(new FnString(stringValue)) : new Compiled(new Error(Error::EC_ParseError, cursor));
 	}
 
 	virtual ICompiled * Compile (ICompileArgs * args)
@@ -1644,18 +1686,21 @@ public:
 		ParseArgs * pa = new ParseArgs(compiler, args);
 		pa->Ref()->AddRef();
 
-		bool bOk = true;
 
 		ICompiled * compiled = 0;
 		ICompiled::Type resultType = ICompiled::T_None;
+		
+		bool bOk = true;
+		bool bEof = false;
 
-		while(bOk)
+		do
 		{
 			ICompiled::Type curType = pa->ParseNextArgTE();
 
 			switch(curType)
 			{
 			case ICompiled::T_Eof:
+				bEof = true;
 				break;
 			case ICompiled::T_Void:
 			case ICompiled::T_Bool:
@@ -1667,7 +1712,7 @@ public:
 				bOk = false;
 				break;
 			}
-		}
+		} while(bOk && !bEof);
 
 		if(bOk)
 		{
@@ -1842,26 +1887,28 @@ public:
 		ICompiled * compiled = 0;
 
 		bool bOk = true;
+		bool bEof = false;
 
-		while(bOk)
+		do
 		{
 			ICompiled::Type curType = pa->ParseNextArgTE();
 
 			switch(curType)
 			{
 			case ICompiled::T_Eof:
+				bEof = true;
 				break;
 			case ICompiled::T_Int:
 			case ICompiled::T_Float:
 				bOk = curType == resultType ||  ICompiled::T_None == resultType; // must match first type (if any):
+				resultType = curType;
 				break;
 			default:
 				bOk = false;
 				break;
 			}			
-
-			resultType = curType;
 		}
+		while (bOk && !bEof);
 
 		if(bOk)
 		{
@@ -1993,9 +2040,14 @@ public:
 
 				char * myChars = new char[1+numChars];
 
-				if(numChars == fread(myChars, sizeof(char), numChars, file))
+				memset(myChars, 0, sizeof(char)*(1+numChars));
+				fread(myChars, sizeof(char), numChars, file);
+
+				// (actual number of chars read may be less than numChars due to text translation)
+
+				if(feof(file))
 				{
-					myChars[numChars] = 0; // terminate
+					myChars[numChars] = 0; // re-terminate (just in case ;)
 					compiled = new Compiled(new FnString(new StringValue((int)numChars, myChars)));
 				}				
 				else
@@ -2431,7 +2483,7 @@ ICompiled * Bubble::Compile_Code(Cursor & cursor)
 			compiled->Ref()->AddRef();
 			compiled->Ref()->Release();
 
-			compiled = new Compiled(new Error(Error::EC_ParseError, cursor.GetPos()));
+			compiled = new Compiled(new Error(Error::EC_ParseError, cursor));
 		}
 	}
 
@@ -2532,7 +2584,7 @@ ICompiled * Bubble::Compile_Identifier(Cursor & cursor, bool inParenthesis)
 		delete id;
 	}
 
-	return compiled ? compiled : new Compiled(new Error(Error::EC_ParseError, cursor.GetPos()));
+	return compiled ? compiled : new Compiled(new Error(Error::EC_ParseError, cursor));
 }
 
 
@@ -2561,7 +2613,7 @@ ICompiled * Bubble::Compile_Parenthesis(Cursor & cursor)
 		}		
 	}
 
-	return compiled ? compiled : new Compiled(new Error(Error::EC_ParseError, cursor.GetPos()));
+	return compiled ? compiled : new Compiled(new Error(Error::EC_ParseError, cursor));
 }
 
 bool Bubble::IsIdentifierChar(char val)
@@ -3286,9 +3338,9 @@ ICompiled * VoidEvent::Compile (ICompileArgs * args)
 	bool bOk;
 	if(pa->ParseNextArgTCEX(ICompiled::T_Void, bOk))
 	{
-		if(bOk) compiled = new Compiled(new VoidEventSetVoid(m_Compiler, this, pa->GetArg(0)->GetVoid()));
+		if(bOk && pa->ParseEof()) compiled = new Compiled(new VoidEventSetVoid(m_Compiler, this, pa->GetArg(0)->GetVoid()));
 	}
-	else if(bOk)
+	else if(bOk && pa->ParseEof())
 	{
 		compiled = new Compiled(new VoidEventSetNull(m_Compiler, this));
 	}
@@ -3309,6 +3361,6 @@ void VoidEvent::SetEvent(IVoid * value)
 
 	m_Void = value;
 
-	if(value) value->Ref()->Release();
+	if(value) value->Ref()->AddRef();
 }
 

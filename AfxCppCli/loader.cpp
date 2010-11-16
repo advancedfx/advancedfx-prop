@@ -227,15 +227,26 @@ private:
 		if(bOk)
 		{
 			bOk = false;
+			bool bWait;
 
-			for(int i=0; i < 60; i++)
-			{
-				if(WAIT_OBJECT_0 == WaitForSingleObject(hThread, 1000))
+			do {
+				bWait = false;
+
+				for(int i=0; i < 60; i++)
 				{
-					bOk = true;
-					break;
+					if(WAIT_OBJECT_0 == WaitForSingleObject(hThread, 1000))
+					{
+						bOk = true;
+						break;
+					}
 				}
-			}
+
+				if(!bOk)
+				{
+					bWait = IDYES == MessageBox( 0, _T("Image injection problem.\nContinue waiting?"), _T("Warning"), MB_YESNO|MB_ICONWARNING );	
+				}
+
+			} while(bWait);
 
 			if(!bOk)
 			{

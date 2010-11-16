@@ -6,6 +6,8 @@
 #include <hlsdk.h>
 #include "pm_shared.h"
 
+#include <shared/vcpp/Ref.h>
+
 #include "hooks/HookHw.h"
 #include "cmdregister.h"
 #include "hl_addresses.h"
@@ -164,6 +166,13 @@ REGISTER_DEBUGCMD_FUNC(list_addresses) {
 	}
 	pEngfuncs->Con_Printf("%u / %u were NULL.\n", zcnt, cnt);
 }
+
+#ifdef AFX_DEBUG_REF
+REGISTER_DEBUGCMD_FUNC(debug_ref)
+{
+	pEngfuncs->Con_Printf("Global Ref-Count: %u\n", Afx::Ref::DEBUG_GetGlobalRefCount());
+}
+#endif
 
 /*
 

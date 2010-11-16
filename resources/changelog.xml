@@ -4,18 +4,27 @@
 <changelog>
 
 <!--
-<release>
-<name>HLAE</name>
-<version>2.2.21.0</version>
-<time>2010-10-21T21:00Z</time>
-<changes>
 <change type="added">
 Added mirv_lookingat which tries to find out what you're looking at.
 </change>
-</changes>
-</release>
 -->
 
+<release>
+<name>HLAE</name>
+<version>2.2.21.0</version>
+<time>2010-11-16T13:21Z</time>
+<changes>
+<change type="added">
+AfxGoldSrc: Added XPress (own expression system).
+</change>
+<change type="added">
+AfxGoldSrc: Added xpress command to access XPress.
+</changed>
+<change type="updated">
+AfxGoldSrc: Replaced JS init script with XPress code.
+</changed>
+</changes>
+</release>
 
 <release>
 <name>HLAE</name>

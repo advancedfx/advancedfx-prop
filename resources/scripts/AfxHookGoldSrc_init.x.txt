@@ -1,4 +1,4 @@
-do(
+(do
 (null(s // WE SUGGEST TO NOT EDIT THIS FILE!))
 (null(s // This file carries out CRUCIAL operations and WE MIGHT CHANGE IT occasionally.))
 
@@ -33,31 +33,31 @@ do(
 	(null(s //))
 	
 	(CL_EmitEntities (+ hwDll 0x21C40))
-	(CL_EmitEntities_DSZ = 0x05)
+	(CL_EmitEntities_DSZ 0x05)
 	
 	(Mod_LeafPVS (+ hwDll 0x35E30))
-	(DTOURSZ_Mod_LeafPVS = 0x0e)
+	(DTOURSZ_Mod_LeafPVS 0x0e)
 	
 	(R_RenderView (+ hwDll 0x52130))
-	(DTOURSZ_R_RenderView = 0x6)
+	(DTOURSZ_R_RenderView 0x6)
 	
 	(R_DrawParticles (+ hwDll 0x91C10))
-	(DTOURSZ_R_DrawParticles = 0x08)
+	(DTOURSZ_R_DrawParticles 0x08)
 	
 	(R_DrawSkyBoxEx (+ hwDll 0x5BAB6))
-	(R_DrawSkyBoxEx_DSZ = 0x08)
+	(R_DrawSkyBoxEx_DSZ 0x08)
 	
 	(R_DrawEntitiesOnList (+ hwDll 0x504a0))
-	(DTOURSZ_R_DrawEntitiesOnList = 0x0c)
+	(DTOURSZ_R_DrawEntitiesOnList 0x0c)
 	
 	(R_DrawViewModel (+ hwDll 0x506f0))
-	(DTOURSZ_R_DrawViewModel = 0x09)
+	(DTOURSZ_R_DrawViewModel 0x09)
 	
 	(R_PolyBlend (+ hwDll 0x50C60))
-	(DTOURSZ_R_PolyBlend  = 0x09)
+	(DTOURSZ_R_PolyBlend  0x09)
 	
 	(SCR_UpdateScreen (+ hwDll 0xCE570))
-	(DTOURSZ_SCR_UpdateScreen = 0x09)
+	(DTOURSZ_SCR_UpdateScreen 0x09)
 	(HUD_TOURIN (+ SCR_UpdateScreen 0xBD))
 	(HUD_TOUROUT (+ HUD_TOURIN 0x87))
 	
@@ -72,7 +72,7 @@ do(
 	(null(s //   decals of the map as it seems or s.th. and uses this one to get))
 	(null(s //   a decal's texture))
 	(UnkGetDecalTexture (+ hwDll 0x3C600))
-	(DTOURSZ_UnkGetDecalTexture = 0x05)
+	(DTOURSZ_UnkGetDecalTexture 0x05)
 	
 	
 	(null(s //))
@@ -80,21 +80,21 @@ do(
 	(null(s //))
 	
 	(GetSoundtime (+ hwDll 0xA3B30))
-	(DTOURSZ_GetSoundtime = 0x06)
+	(DTOURSZ_GetSoundtime 0x06)
 	
 	(S_PaintChannels (+ hwDll 0xA60E0))
-	(DTOURSZ_S_PaintChannels = 0x06)
+	(DTOURSZ_S_PaintChannels 0x06)
 	
 	(S_TransferPaintBuffer (+ hwDll 0xA58F0))
-	(DTOURSZ_S_TransferPaintBuffer = 0x05)
+	(DTOURSZ_S_TransferPaintBuffer 0x05)
 	
 	(shm (+ hwDll 0x73F758))
 	(paintedtime (+ hwDll 0x9FA880))
-	(paintbuffer (+ paintedtime - 0xC160))
+	(paintbuffer (+ paintedtime -0xC160))
 	(soundtime (+ paintbuffer 0xC15C))
 	
 	(SND_PickChannel (+ hwDll 0xA25F0))
-	(DTOURSZ_SND_PickChannel = 0x05)
+	(DTOURSZ_SND_PickChannel 0x05)
 	
 	
 	(null(s //))
@@ -103,10 +103,10 @@ do(
 	
 	(CL_ParseServerMessage (+ hwDll 0x2A660))
 	(net_message_cursize (+ hwDll 0xA6E630))
-	(net_message (+ net_message_cursize - 0x10))
+	(net_message (+ net_message_cursize -0x10))
 	(msg_readcount (+ hwDll 0xFD3D28))
 	(CL_ParseServerMessage_CmdRead (+ CL_ParseServerMessage 0x0E3))
-	(DTOURSZ_CL_ParseServerMessage_CmdRead = 0x07)
+	(DTOURSZ_CL_ParseServerMessage_CmdRead 0x07)
 	
 	(null(s //))
 	(null(s // other))
@@ -139,15 +139,15 @@ void) )
 	
 	(null(s // cstrike Team color hook:))
 	(GetClientColor (+ clientDll 0x45CD0)) (null(s // function, used by head-up and overview i.e.))
-	(DTOURSZ_GetClientColor = 0x0a)
+	(DTOURSZ_GetClientColor 0x0a)
 	(unkInlineClientColorA (+ clientDll 0x4629A)) (null(s // inline, used to draw attacker color, also check hook))
-	(SZ_unkInlineClientColorA = 0x3E)
+	(SZ_unkInlineClientColorA 0x3E)
 	(unkInlineClientColorV (+ clientDll 0x46320)) (null(s // inline, used to draw victim color, also check hook // todo))
-	(SZ_unkInlineClientColorV = 0x3C)
+	(SZ_unkInlineClientColorV 0x3C)
 	
 	(null(s // cstrike CrossHair fix related:))
 	(cstrike_UnkCrosshairFn (+ clientDll 0x42EB0))
-	(cstrike_UnkCrosshairFn_DSZ = 0x09) (null(s // at least 8 bytes req.))
+	(cstrike_UnkCrosshairFn_DSZ 0x09) (null(s // at least 8 bytes req.))
 	(cstrike_UnkCrosshairFn_add_fac (+ clientDll 0xCD450))
 	(cstrike_UnkCrosshairFn_mul_fac (+ clientDll 0xC3298))
 	
@@ -174,11 +174,11 @@ void) )
 (null(s //))
 (null(s // Provide additional OpenGL helpers:))
 
-(null(s //ogl.GL_TRUE = 1))
-(null(s //ogl.GL_FALSE = 0))
-(null(s //ogl.GL_COLOR_BUFFER_BIT = 0x00004000))
-(null(s //ogl.GL_DEPTH_BUFFER_BIT = 0x00000100))
-(null(s //ogl.GL_ACCUM_BUFFER_BIT = 0x00000200))
-(null(s //ogl.GL_STENCIL_BUFFER_BIT = 0x00000400))
+(null(s //ogl.GL_TRUE 1))
+(null(s //ogl.GL_FALSE 0))
+(null(s //ogl.GL_COLOR_BUFFER_BIT 0x00004000))
+(null(s //ogl.GL_DEPTH_BUFFER_BIT 0x00000100))
+(null(s //ogl.GL_ACCUM_BUFFER_BIT 0x00000200))
+(null(s //ogl.GL_STENCIL_BUFFER_BIT 0x00000400))
 
 void)

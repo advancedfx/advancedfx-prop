@@ -116,8 +116,6 @@ struct ScriptEvents_s {
 	std::string On_RecordEnded;
 	std::string On_RenderViewBegin;
 	std::string On_RenderViewEnd;
-	std::string OnClientDllLoaded;
-	std::string OnHwDllLoaded;
 } g_ScriptEvents;
 
 enum Events_tinyid {
@@ -126,9 +124,7 @@ enum Events_tinyid {
 	TID_Events_On_RecordStarting,
 	TID_Events_On_RecordEnded,
 	TID_Events_On_RenderViewBegin,
-	TID_Events_On_RenderViewEnd,
-	TID_Events_OnClientDllLoaded,
-	TID_Events_OnHwDllLoaded
+	TID_Events_On_RenderViewEnd
 };
 
 
@@ -181,20 +177,6 @@ JSBool Events_On_RecordEnded_set(JSContext *cx, JSObject *obj, jsval idval, jsva
 }
 
 
-
-JSBool Events_OnClientDllLoaded_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
-	SetEventFnString(&g_ScriptEvents.OnClientDllLoaded, cx, vp);
-
-	return JS_TRUE;
-}
-
-
-JSBool Events_OnHwDllLoaded_set(JSContext *cx, JSObject *obj, jsval idval, jsval *vp) {
-	SetEventFnString(&g_ScriptEvents.OnHwDllLoaded, cx, vp);
-
-	return JS_TRUE;
-}
-
 static JSPropertySpec Addr_props[] = {
   {NULL,0,0,NULL,NULL}
 };
@@ -207,8 +189,6 @@ static JSPropertySpec Events_props[] = {
   {"on_RecordEnded"  , TID_Events_On_RecordEnded, JSMIRVPROP, NULL, Events_On_RecordEnded_set},
   {"on_RenderViewBegin", TID_Events_On_RenderViewBegin, JSMIRVPROP, NULL, Events_On_RenderViewBegin_set},
   {"on_RenderViewEnd"  , TID_Events_On_RenderViewEnd  , JSMIRVPROP, NULL, Events_On_RenderViewEnd_set},
-  {"onClientDllLoaded", TID_Events_OnClientDllLoaded, JSMIRVPROP, NULL, Events_OnClientDllLoaded_set},
-  {"onHwDllLoaded"  , TID_Events_OnHwDllLoaded  , JSMIRVPROP, NULL, Events_OnHwDllLoaded_set},
   {NULL,0,0,NULL,NULL}
 };
 
@@ -272,19 +252,6 @@ bool ScriptEvent_OnRenderViewEnd() {
 	return JS_ValueToBoolean(g_JsCx, r, &jB) ? (bool)jB : false;
 }
 
-void OnClientDllLoaded() {
-	if(!g_ScriptEvents.OnClientDllLoaded.empty()) {
-		jsval r;
-		JS_CallFunctionName(g_JsCx, g_JsGlobal, g_ScriptEvents.OnClientDllLoaded.c_str(), 0, NULL, &r);
-	}
-}
-
-void OnHwDllLoaded() {
-	if(!g_ScriptEvents.OnHwDllLoaded.empty()) {
-		jsval r;
-		JS_CallFunctionName(g_JsCx, g_JsGlobal, g_ScriptEvents.OnHwDllLoaded.c_str(), 0, NULL, &r);
-	}
-}
 
 // Fx //////////////////////////////////////////////////////////////////////////
 

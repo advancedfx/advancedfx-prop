@@ -20,7 +20,6 @@
 #include "hw/SCR_UpdateScreen.h"
 
 #include "../hl_addresses.h"
-//#include "../mirv_scripting.h"
 #include "../InitScript.h"
 #include "../forceres.h"
 
