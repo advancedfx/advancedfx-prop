@@ -10,12 +10,13 @@
 
 #include "InitScript.h"
 
-#include "AfxGoldSrcComClient.h"
-
-#include "mirv_scripting.h"
-
 #include <shared/vcpp/AfxAddr.h>
-#include <shared/vcpp/Expressions.h>
+#include <shared/vcpp/Expressions/Expressions.h>
+
+#include "hooks/HookHw.h"
+#include "AfxGoldSrcComClient.h"
+#include "Xpress.h"
+#include "cmdregister.h"
 
 #include <string>
 
@@ -24,7 +25,6 @@ using namespace Afx;
 using namespace Afx::Expressions;
 
 
-//#define INIT_SCRIPT_FILE "AfxHookGoldSrc_init.js"
 #define INIT_SCRIPT_FILE "AfxHookGoldSrc_init.x.txt"
 #define SCRIPT_FOLDER "scripts\\"
 #define DLL_NAME	"AfxHookGoldSrc.dll"
@@ -105,24 +105,14 @@ public:
 		return bOk;
 	}
 
-	bool OnHwDllLoaded()
+	void OnHwDllLoaded()
 	{
-		if(!m_OnHwDllLoaded->HasEvent())
-			return false;
-
-		m_OnHwDllLoaded->CallEvent();
-
-		return true;
+		m_OnHwDllLoaded->EvalVoid();
 	}
 
-	bool OnClientDllLoaded()
+	void OnClientDllLoaded()
 	{
-		if(!m_OnClientDllLoaded->HasEvent())
-			return false;
-
-		m_OnClientDllLoaded->CallEvent();
-
-		return true;
+		m_OnClientDllLoaded->EvalVoid();
 	}
 
 private:
@@ -133,57 +123,18 @@ private:
 } g_GoldSrcAddresses;
 
 
-bool InitEvent_OnHwDllLoaded()
+void InitEvent_OnHwDllLoaded()
 {
-	return g_GoldSrcAddresses.OnHwDllLoaded();
+	g_GoldSrcAddresses.OnHwDllLoaded();
 }
 
 
-bool InitEvent_OnClientDllLoaded()
+void InitEvent_OnClientDllLoaded()
 {
-	return g_GoldSrcAddresses.OnClientDllLoaded();
+	g_GoldSrcAddresses.OnClientDllLoaded();
 }
 
-
-/*
-bool RunInitScript()
-{
-	char hookPath[1025];
-	bool bCfgres = false;
-	HMODULE hHookDll = GetModuleHandle(DLL_NAME);
-
-	hookPath[0]=NULL;
-	
-	if (hHookDll)
-	{
-		GetModuleFileName(hHookDll, hookPath, sizeof(hookPath)/sizeof(*hookPath) -1);
-
-		std::string strFolder(hookPath);
-		size_t fp = strFolder.find_last_of('\\');
-		if(std::string::npos != fp)
-		{
-			strFolder.resize(fp+1);
-		}
-
-		strFolder += SCRIPT_FOLDER;
-
-		JsSetScriptFolder(strFolder.c_str());
-
-		bCfgres = JsExecute("load('" INIT_SCRIPT_FILE "');");
-
-		if(!bCfgres) {
-			strFolder = "Failed to load:\n\""
-				+strFolder +INIT_SCRIPT_FILE "\"."
-			;
-
-			MessageBox(0, strFolder.c_str(), "MDT_ERROR",MB_OK|MB_ICONHAND);
-		}
-	}
-
-	return bCfgres;
-}
-*/
-
+std::string g_strFolder;
 
 bool RunInitScript()
 {
@@ -203,16 +154,16 @@ bool RunInitScript()
 	{
 		GetModuleFileName(hHookDll, hookPath, sizeof(hookPath)/sizeof(*hookPath) -1);
 
-		std::string strFolder(hookPath);
-		size_t fp = strFolder.find_last_of('\\');
+		g_strFolder = (hookPath);
+		size_t fp = g_strFolder.find_last_of('\\');
 		if(std::string::npos != fp)
 		{
-			strFolder.resize(fp+1);
+			g_strFolder.resize(fp+1);
 		}
 
-		strFolder += SCRIPT_FOLDER;
+		g_strFolder += SCRIPT_FOLDER;
 
-		std::string scriptFile(strFolder);
+		std::string scriptFile(g_strFolder);
 		scriptFile += INIT_SCRIPT_FILE;
 
 		std::string code("(compile (stringFromFile (s ");
@@ -240,11 +191,56 @@ bool RunInitScript()
 		bCfgres = g_GoldSrcAddresses.BubbleCode(code.c_str());
 
 		if(!bCfgres) {
-			strFolder = "Failed to load:\n\"" +scriptFile +"\".";
+			string strError;
+			strError += "Failed to load:\n\"" +scriptFile +"\".";
 
-			MessageBox(0, strFolder.c_str(), "MDT_ERROR",MB_OK|MB_ICONHAND);
+			MessageBox(0, strError.c_str(), "MDT_ERROR",MB_OK|MB_ICONHAND);
 		}
 	}
 
 	return bCfgres;
+}
+
+_REGISTER_CMD("xpress_exec", xpress_exec_cmd)
+void xpress_exec_cmd()
+{
+	if(2 == pEngfuncs->Cmd_Argc())
+	{
+		std::string strCode;
+
+		std::string scriptFile(g_strFolder);
+		scriptFile += pEngfuncs->Cmd_Argv(1);
+
+		std::string code("(compile (stringFromFile (s ");
+
+		for(std::string::iterator it = scriptFile.begin(); it != scriptFile.end(); it++)
+		{
+			char val = (*it);
+
+			switch(val)
+			{
+			case '\\':
+			case '(':
+			case ')':
+				code += "\\";
+				code += val;
+				break;
+			default:
+				code += val;
+				break;
+			}
+		}
+
+		code += ")))";
+
+		pEngfuncs->Con_Printf("%s\n", code.c_str());
+
+		xpress_execute(code.c_str());
+
+		return;
+	}
+
+	pEngfuncs->Con_Printf(
+		"Usage: xpress_exec <scriptName.x.txt>\n"
+	);
 }

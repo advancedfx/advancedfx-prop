@@ -13,7 +13,7 @@
 // where applicable.
 
 
-#include "expressions.h"
+#include "Expressions.h"
 
 #include <ctype.h>
 #include <string.h>
@@ -111,288 +111,6 @@ private:
 	bool ToBool(Cursor & cur, BoolT & outValue);
 
 };
-
-
-
-class Error : public Ref,
-	public IError
-{
-public:	
-	enum ErrorCode {
-		EC_None,
-		EC_Error,
-		EC_ParseError
-	};
-
-	Error() {}
-	Error(ErrorCode errorCode, Cursor & cur) {
-
-#ifdef AFX_XPRESS_MDEBUG
-		ostringstream errText("Error #");
-
-		errText << (int)errorCode;
-
-		errText << " at ";
-
-		errText << (int)cur.GetPos();
-
-		errText << " (...\"";
-
-		for(int i=-16; i<0; i++)
-		{
-			char val = cur.Get(i);
-
-			if(!Cursor::IsNull(val)) errText << val;
-		}
-
-		errText << "\" [> \"";
-
-		if(!cur.IsNull()) errText << cur.Get();
-
-		errText << "\" <] \"";
-
-		for(int i=1; i<16; i++)
-		{
-			char val = cur.Get(i);
-
-			if(!Cursor::IsNull(val)) errText << val;
-		}
-
-
-		errText << "\"...).";
-
-		MessageBox(0, errText.str().c_str(), "Afx::Expression::Error(ErrorCode, Cursor &)", MB_OK|MB_ICONINFORMATION);
-#endif
-
-	}
-
-	virtual ::Afx::IRef * Ref (void) { return dynamic_cast<::Afx::IRef *>(this); }
-
-protected:
-
-
-private:
-
-
-};
-
-
-// FnEof ///////////////////////////////////////////////////////////////////////
-
-class FnEof : public Ref,
-	public IEof
-{
-public:
-	virtual ::Afx::IRef * Ref (void) {
-		return dynamic_cast<::Afx::IRef *>(this);
-	}
-};
-
-
-class CompileArgs : public Ref,
-	public ICompileArgs
-{
-public:
-	CompileArgs(Cursor & cursor, bool inParenthesis)
-	: m_Cursor(cursor), m_Eof(false), m_MoreArgs(inParenthesis)
-	{
-	}
-
-	virtual ICompiled * CompileNextArg (ICompiler * compiler)
-	{
-		ICompiled * compiled = 0;
-
-		compiler->Ref()->AddRef();
-
-		if(m_MoreArgs)
-		{
-			if(')' == m_Cursor.Get())
-			{
-				m_MoreArgs = false;
-			}
-			else
-			{
-				compiled = compiler->Compile_Function(m_Cursor);
-				if(!compiled->GetError())
-				{
-					m_Cursor.SkipSpace();
-				}
-			}
-		}
-
-		if(!compiled && !m_Eof)
-		{
-			compiled =  new Compiled(new FnEof());
-		}
-
-		compiler->Ref()->Release();
-
-		return compiled ? compiled : new Compiled(new Error(Error::EC_ParseError, m_Cursor));
-	}
-
-	virtual ::Afx::IRef * Ref (void)
-	{
-		return dynamic_cast<::Afx::IRef *>(this);
-	}
-
-private:
-	Cursor & m_Cursor;
-	bool m_Eof;
-	bool m_MoreArgs;
-};
-
-
-class ParseArgs : public Ref
-{
-public:
-	ParseArgs(ICompiler * compiler, ICompileArgs * args)
-	: m_Args(args), m_Compiler(compiler)
-	{
-		args->Ref()->AddRef();
-		compiler->Ref()->AddRef();
-	}
-
-	ICompiled * GetArg(int index) {
-		return m_Compileds[index];
-	}
-
-	int GetCount (void) {
-		return m_Compileds.size();
-	}
-
-	bool ParseEof (void)
-	{
-		ICompiled * nextArg = ParseNextArg_Internal();
-
-		nextArg->Ref()->AddRef();
-
-		bool isEof = 0 != nextArg->GetEof();
-
-		nextArg->Ref()->Release();
-
-		return isEof;
-	}
-
-	/// <summary>Parses the next argument, references it in the arg list and returns it.</summary>
-	/// <remarks>Null is skipped.</remarks>
-	ICompiled * ParseNextArg(void)
-	{
-		ICompiled * compiled = ParseNextArg_Internal();
-
-		compiled->Ref()->AddRef();
-		m_Compileds.push_back(compiled);
-
-		return compiled;
-	}
-
-	/// <summary>Parses the next argument, references it in the arg list and returns it's type.</summary>
-	/// <remarks>Null is skipped.</remarks>
-	ICompiled::Type ParseNextArgT (void)
-	{
-		return ParseNextArg()->GetType();
-	}
-
-	/// <summary>Parses the next argument, references it in the arg list only if it's not Eof and returns it's type.</summary>
-	/// <remarks>Null is skipped.</remarks>
-	ICompiled::Type ParseNextArgTE (void)
-	{
-		ICompiled * compiled = ParseNextArg_Internal();
-
-		compiled->Ref()->AddRef();
-
-		ICompiled::Type type = compiled->GetType();
-
-		if(ICompiled::T_Eof == type)
-		{
-			compiled->Ref()->Release();
-		}
-		else
-		{
-			m_Compileds.push_back(compiled);
-		}
-
-		return type;
-	}
-
-	/// <summary>Parses the next argument, references it in the arg list and returns if it matches a given type.</summary>
-	/// <remarks>Null is skipped.</remarks>
-	bool ParseNextArgTC (ICompiled::Type type)
-	{
-		return type == ParseNextArgT();
-	}
-
-	/// <summary>Parses the next argument, references it in the arg list only if it's not Eof and returns if it matches a given type.</summary>
-	/// <remarks>Null is skipped.</remarks>
-	bool ParseNextArgTCE (ICompiled::Type type)
-	{
-		return type == ParseNextArgTE();
-	}
-
-	/// <summary>Parses the next argument, references it in the arg list only if it's not Eof.</summary>
-	/// <remarks>Null is skipped.</remarks>
-	/// <param name="type">type to match</param>
-	/// <param name="outMatchedOrEof">if type is matched or Eof</param>
-	/// <returns>if not Eof</returns>
-	bool ParseNextArgTCEX(ICompiled::Type type, bool & outMatchedOrEof)
-	{
-		ICompiled::Type curType = ParseNextArgTE();
-
-		outMatchedOrEof = type == curType || ICompiled::T_Eof == curType;
-
-		return ICompiled::T_Eof != curType;
-	}
-
-
-	::Afx::IRef * Ref (void) {
-		return dynamic_cast<::Afx::IRef *>(this);
-	}
-
-	void SetArg(int index, ICompiled * value) {
-		m_Compileds[index] = value;
-	}
-
-protected:
-	~ParseArgs()
-	{
-		for(VectorT::iterator it = m_Compileds.begin(); it != m_Compileds.end(); it++)
-		{
-			(*it)->Ref()->Release();
-		}
-
-		m_Args->Ref()->Release();
-		m_Compiler->Ref()->Release();
-	}
-
-private:
-	typedef vector<ICompiled *> VectorT;
-
-	VectorT m_Compileds;
-
-	ICompileArgs * m_Args;
-	ICompiler * m_Compiler;
-
-	ICompiled * ParseNextArg_Internal(void)
-	{
-		ICompiled * compiled;
-		bool bSkip;
-		
-		do {
-			compiled = m_Args->CompileNextArg(m_Compiler);
-
-			bSkip = 0 != compiled->GetNull();
-
-			if(bSkip)
-			{
-				Ref::TouchRef(compiled->Ref());
-			}
-
-		} while(bSkip);
-
-		return compiled;
-	}
-	
-};
-
 
 
 
@@ -2045,13 +1763,8 @@ public:
 
 				// (actual number of chars read may be less than numChars due to text translation)
 
-				if(feof(file))
-				{
-					myChars[numChars] = 0; // re-terminate (just in case ;)
-					compiled = new Compiled(new FnString(new StringValue((int)numChars, myChars)));
-				}				
-				else
-					delete myChars;
+				myChars[numChars] = 0; // re-terminate (just in case ;)
+				compiled = new Compiled(new FnString(new StringValue((int)numChars, myChars)));
 			}
 
 			if(file) fclose(file);
@@ -2174,6 +1887,105 @@ public:
 };
 
 
+
+// BoolEvent ///////////////////////////////////////////////////////////////////
+
+
+class BoolEventSet : public Ref,
+	public IVoid
+{
+public:
+	BoolEventSet(BoolEvent * boolEvent, IBool * boolFn)
+	: m_BoolEvent(boolEvent), m_Bool(boolFn)
+	{
+		boolFn->Ref()->AddRef();
+		boolEvent->Ref()->AddRef();
+	}
+
+	virtual VoidT EvalVoid (void) {
+		m_BoolEvent->SetEvent(m_Bool);
+	}
+
+	::Afx::IRef * Ref (void)
+	{
+		return dynamic_cast<::Afx::IRef *>(this);
+	}
+
+protected:
+	virtual ~BoolEventSet()
+	{
+		m_Bool->Ref()->Release();
+		m_BoolEvent->Ref()->Release();
+	}
+
+private:
+	IBool * m_Bool;
+	BoolEvent * m_BoolEvent;
+};
+
+
+BoolEvent::BoolEvent(ICompiler * compiler, BoolT initialValue)
+: Compileable(compiler), m_Bool(new FnConstBool(initialValue))
+{
+	m_Bool->Ref()->AddRef();
+}
+
+BoolEvent::~BoolEvent()
+{
+	m_Bool->Ref()->Release();
+}
+
+ICompiled * BoolEvent::Compile (ICompileArgs * args)
+{
+	ICompiled * compiled = 0;
+
+	ParseArgs * pa = new ParseArgs(m_Compiler, args);
+	pa->Ref()->AddRef();
+
+	ICompiled::Type type = pa->ParseNextArgTE();
+
+	switch(type)
+	{
+	case ICompiled::T_Eof:
+		{
+			compiled = new Compiled(this);
+		}
+		break;
+	case ICompiled::T_Bool:
+		if(pa->ParseEof())
+		{
+			compiled = new Compiled(new BoolEventSet(this, pa->GetArg(0)->GetBool()));
+		}
+		break;
+	}
+
+	pa->Ref()->Release();
+
+	return compiled ? compiled : new Compiled(new Error());
+}
+
+BoolT BoolEvent::EvalBool (void) {
+	return m_Bool->EvalBool();
+}
+
+
+::Afx::IRef * BoolEvent::Ref (void)
+{
+	return dynamic_cast<::Afx::IRef *>(this);
+}
+
+void BoolEvent::SetEvent(IBool * value)
+{
+	m_Bool->Ref()->Release();
+
+	m_Bool = value;
+
+	value->Ref()->AddRef();
+}
+
+
+
+
 // BoolGetterC /////////////////////////////////////////////////////////////////
 
 class BoolGetterC : public Ref,
@@ -2236,36 +2048,6 @@ private:
 	IBool * m_Value;
 };
 
-
-// BoolGetter //////////////////////////////////////////////////////////////////
-
-BoolGetter::BoolGetter(ICompiler * compiler)
-: Compileable(compiler)
-{
-}
-
-ICompiled * BoolGetter::Compile (ICompileArgs * args)
-{
-	ICompiled * compiled = 0;
-
-	ParseArgs * pa = new ParseArgs(m_Compiler, args);
-	pa->Ref()->AddRef();
-
-	if(pa->ParseEof())
-	{
-		compiled = new Compiled(new BoolGetterC(this));
-	}
-
-	pa->Ref()->Release();
-
-	return compiled ? compiled : new Compiled(new Error());
-}
-
-::Afx::IRef * BoolGetter::Ref (void)
-{
-	return dynamic_cast<::Afx::IRef *>(this);
-}
-
 // BoolProperty ////////////////////////////////////////////////////////////////
 
 BoolProperty::BoolProperty(ICompiler * compiler, CompileAcces compileAccess)
@@ -2314,35 +2096,6 @@ ICompiled * BoolProperty::Compile (ICompileArgs * args)
 	return dynamic_cast<::Afx::IRef *>(this);
 }
 
-
-// BoolSetter //////////////////////////////////////////////////////////////////
-
-BoolSetter::BoolSetter(ICompiler * compiler)
-: Compileable(compiler)
-{
-}
-
-ICompiled * BoolSetter::Compile (ICompileArgs * args)
-{
-	ICompiled * compiled = 0;
-
-	ParseArgs * pa = new ParseArgs(m_Compiler, args);
-	pa->Ref()->AddRef();
-
-	if(pa->ParseNextArgTC(ICompiled::T_Bool) && pa->ParseEof())
-	{
-		compiled = new Compiled(new BoolSetterC(this, pa->GetArg(0)->GetBool()));
-	}
-
-	pa->Ref()->Release();
-
-	return compiled ? compiled : new Compiled(new Error());
-}
-
-::Afx::IRef * BoolSetter::Ref (void)
-{
-	return dynamic_cast<::Afx::IRef *>(this);
-}
 
 
 
@@ -2688,131 +2441,6 @@ bool Bubble::ToBool(Cursor & cur, BoolT & outValue)
 }
 
 
-// Compileable /////////////////////////////////////////////////////////////////
-
-Compileable::Compileable(ICompiler * compiler)
-: m_Compiler(compiler)
-{
-	compiler->Ref()->AddRef();
-}
-
-Compileable::~Compileable()
-{
-	m_Compiler->Ref()->Release();
-}
-
-::Afx::IRef * Compileable::Ref (void)
-{
-	return dynamic_cast<::Afx::IRef *>(this);
-}
-
-
-// Compiled ////////////////////////////////////////////////////////////////////
-
-Compiled::Compiled(IBool * value)
-{
-	if(value) value->Ref()->AddRef();
-
-	m_Type = ICompiled::T_Bool;
-	m_Value.Bool = value;
-}
-
-Compiled::Compiled(IEof * value)
-{
-	if(value) value->Ref()->AddRef();
-
-	m_Type = ICompiled::T_Eof;
-	m_Value.Eof = value;
-}
-
-Compiled::Compiled(IError * value)
-{
-	if(value) value->Ref()->AddRef();
-
-	m_Type = ICompiled::T_Error;
-	m_Value.Error = value;
-}
-
-Compiled::Compiled(INull * value)
-{
-	if(value) value->Ref()->AddRef();
-
-	m_Type = ICompiled::T_Null;
-	m_Value.Null = value;
-}
-
-
-Compiled::Compiled(IFloat * value)
-{
-	if(value) value->Ref()->AddRef();
-
-	m_Type = ICompiled::T_Float;
-	m_Value.Float = value;
-}
-
-Compiled::Compiled(IInt * value)
-{
-	if(value) value->Ref()->AddRef();
-
-	m_Type = ICompiled::T_Int;
-	m_Value.Int = value;
-}
-
-
-Compiled::Compiled(IString * value)
-{
-	if(value) value->Ref()->AddRef();
-
-	m_Type = ICompiled::T_String;
-	m_Value.String = value;
-}
-
-
-Compiled::Compiled(IVoid * value)
-{
-	if(value) value->Ref()->AddRef();
-
-	m_Type = ICompiled::T_Void;
-	m_Value.Void = value;
-}
-
-
-Compiled::~Compiled()
-{
-	switch(m_Type)
-	{
-	case ICompiled::T_Eof: if(m_Value.Eof) m_Value.Eof->Ref()->Release(); break;
-	case ICompiled::T_Error: if(m_Value.Error) m_Value.Error->Ref()->Release(); break;
-	case ICompiled::T_Null: if(m_Value.Null) m_Value.Null->Ref()->Release(); break;
-	case ICompiled::T_Void: if(m_Value.Void) m_Value.Void->Ref()->Release(); break;
-	case ICompiled::T_Bool: if(m_Value.Bool) m_Value.Bool->Ref()->Release(); break;
-	case ICompiled::T_Int: if(m_Value.Int) m_Value.Int->Ref()->Release(); break;
-	case ICompiled::T_Float: if(m_Value.Float) m_Value.Float->Ref()->Release(); break;
-	case ICompiled::T_String: if(m_Value.String) m_Value.String->Ref()->Release(); break;
-	}
-}
-
-IBool * Compiled::GetBool() { return ICompiled::T_Bool == m_Type ? m_Value.Bool : 0; }
-
-IEof * Compiled::GetEof() { return ICompiled::T_Eof == m_Type ? m_Value.Eof : 0; }
-
-IError * Compiled::GetError() { return ICompiled::T_Error == m_Type ? m_Value.Error : 0; }
-
-IFloat * Compiled::GetFloat() { return ICompiled::T_Float == m_Type ? m_Value.Float : 0; }
-
-IInt * Compiled::GetInt() { return ICompiled::T_Int == m_Type ? m_Value.Int : 0; }
-
-INull * Compiled::GetNull() { return ICompiled::T_Null == m_Type ? m_Value.Null : 0; }
-
-IString * Compiled::GetString() { return ICompiled::T_String == m_Type ? m_Value.String : 0; }
-
-enum ICompiled::Type Compiled::GetType() { return m_Type; }
-
-IVoid * Compiled::GetVoid() { return ICompiled::T_Void == m_Type ? m_Value.Void : 0; }
-
-::Afx::IRef * Compiled::Ref() { return dynamic_cast<::Afx::IRef *>(this); }
-
-
 
 // FloatGetterC /////////////////////////////////////////////////////////////////
 
@@ -2877,35 +2505,6 @@ private:
 };
 
 
-// FloatGetter //////////////////////////////////////////////////////////////////
-
-FloatGetter::FloatGetter(ICompiler * compiler)
-: Compileable(compiler)
-{
-}
-
-ICompiled * FloatGetter::Compile (ICompileArgs * args)
-{
-	ICompiled * compiled = 0;
-
-	ParseArgs * pa = new ParseArgs(m_Compiler, args);
-	pa->Ref()->AddRef();
-
-	if(pa->ParseEof())
-	{
-		compiled = new Compiled(new FloatGetterC(this));
-	}
-
-	pa->Ref()->Release();
-
-	return compiled ? compiled : new Compiled(new Error());
-}
-
-
-::Afx::IRef * FloatGetter::Ref (void)
-{
-	return dynamic_cast<::Afx::IRef *>(this);
-}
 
 // FloatProperty ////////////////////////////////////////////////////////////////
 
@@ -2958,36 +2557,6 @@ ICompiled * FloatProperty::Compile (ICompileArgs * args)
 }
 
 
-// FloatSetter //////////////////////////////////////////////////////////////////
-
-FloatSetter::FloatSetter(ICompiler * compiler)
-: Compileable(compiler)
-{
-}
-
-ICompiled * FloatSetter::Compile (ICompileArgs * args)
-{
-	ICompiled * compiled = 0;
-
-	ParseArgs * pa = new ParseArgs(m_Compiler, args);
-	pa->Ref()->AddRef();
-
-	if(pa->ParseNextArgTC(ICompiled::T_Float) && pa->ParseEof())
-	{
-		compiled = new Compiled(new FloatSetterC(this, pa->GetArg(0)->GetFloat()));
-	}
-
-	pa->Ref()->Release();
-
-	return compiled ? compiled : new Compiled(new Error());
-}
-
-::Afx::IRef * FloatSetter::Ref (void)
-{
-	return dynamic_cast<::Afx::IRef *>(this);
-}
-
-
 // FloatVariable ////////////////////////////////////////////////////////////////
 
 FloatVariable::FloatVariable(ICompiler * compiler, CompileAcces compileAccess, int value)
@@ -3009,6 +2578,104 @@ void FloatVariable::Set (FloatT value)
 {
 	m_Value = value;
 }
+
+
+
+// IntEvent ///////////////////////////////////////////////////////////////////
+
+
+class IntEventSet : public Ref,
+	public IVoid
+{
+public:
+	IntEventSet(IntEvent * boolEvent, IInt * boolFn)
+	: m_IntEvent(boolEvent), m_Int(boolFn)
+	{
+		boolFn->Ref()->AddRef();
+		boolEvent->Ref()->AddRef();
+	}
+
+	virtual VoidT EvalVoid (void) {
+		m_IntEvent->SetEvent(m_Int);
+	}
+
+	::Afx::IRef * Ref (void)
+	{
+		return dynamic_cast<::Afx::IRef *>(this);
+	}
+
+protected:
+	virtual ~IntEventSet()
+	{
+		m_Int->Ref()->Release();
+		m_IntEvent->Ref()->Release();
+	}
+
+private:
+	IInt * m_Int;
+	IntEvent * m_IntEvent;
+};
+
+
+IntEvent::IntEvent(ICompiler * compiler, IntT initialValue)
+: Compileable(compiler), m_Int(new FnConstInt(initialValue))
+{
+	m_Int->Ref()->AddRef();
+}
+
+IntEvent::~IntEvent()
+{
+	m_Int->Ref()->Release();
+}
+
+ICompiled * IntEvent::Compile (ICompileArgs * args)
+{
+	ICompiled * compiled = 0;
+
+	ParseArgs * pa = new ParseArgs(m_Compiler, args);
+	pa->Ref()->AddRef();
+
+	ICompiled::Type type = pa->ParseNextArgTE();
+
+	switch(type)
+	{
+	case ICompiled::T_Eof:
+		{
+			compiled = new Compiled(this);
+		}
+		break;
+	case ICompiled::T_Int:
+		if(pa->ParseEof())
+		{
+			compiled = new Compiled(new IntEventSet(this, pa->GetArg(0)->GetInt()));
+		}
+		break;
+	}
+
+	pa->Ref()->Release();
+
+	return compiled ? compiled : new Compiled(new Error());
+}
+
+IntT IntEvent::EvalInt (void) {
+	return m_Int->EvalInt();
+}
+
+
+::Afx::IRef * IntEvent::Ref (void)
+{
+	return dynamic_cast<::Afx::IRef *>(this);
+}
+
+void IntEvent::SetEvent(IInt * value)
+{
+	m_Int->Ref()->Release();
+
+	m_Int = value;
+
+	value->Ref()->AddRef();
+}
+
 
 
 
@@ -3075,36 +2742,6 @@ private:
 };
 
 
-// IntGetter //////////////////////////////////////////////////////////////////
-
-IntGetter::IntGetter(ICompiler * compiler)
-: Compileable(compiler)
-{
-}
-
-ICompiled * IntGetter::Compile (ICompileArgs * args)
-{
-	ICompiled * compiled = 0;
-
-	ParseArgs * pa = new ParseArgs(m_Compiler, args);
-	pa->Ref()->AddRef();
-
-	if(pa->ParseEof())
-	{
-		compiled = new Compiled(new IntGetterC(this));
-	}
-
-	pa->Ref()->Release();
-
-	return compiled ? compiled : new Compiled(new Error());
-}
-
-
-::Afx::IRef * IntGetter::Ref (void)
-{
-	return dynamic_cast<::Afx::IRef *>(this);
-}
-
 
 // IntProperty ////////////////////////////////////////////////////////////////
 
@@ -3158,37 +2795,6 @@ ICompiled * IntProperty::Compile (ICompileArgs * args)
 }
 
 
-// IntSetter //////////////////////////////////////////////////////////////////
-
-IntSetter::IntSetter(ICompiler * compiler)
-: Compileable(compiler)
-{
-}
-
-ICompiled * IntSetter::Compile (ICompileArgs * args)
-{
-	ICompiled * compiled = 0;
-
-	ParseArgs * pa = new ParseArgs(m_Compiler, args);
-	pa->Ref()->AddRef();
-
-	if(pa->ParseNextArgTC(ICompiled::T_Int) && pa->ParseEof())
-	{
-		compiled = new Compiled(new IntSetterC(this, pa->GetArg(0)->GetInt()));
-	}
-
-	pa->Ref()->Release();
-
-	return compiled ? compiled : new Compiled(new Error());
-}
-
-
-
-::Afx::IRef * IntSetter::Ref (void)
-{
-	return dynamic_cast<::Afx::IRef *>(this);
-}
-
 
 // IntVariable ////////////////////////////////////////////////////////////////
 
@@ -3227,69 +2833,16 @@ ICompileable * Tools::FnDoCompileable(ICompiler * compiler)
 	return new ::FnCompileable(compiler, &FnDo::Compile);
 }
 
-// VoidFunction ////////////////////////////////////////////////////////////////
-
-VoidFunction::VoidFunction(ICompiler * compiler)
-: Compileable(compiler)
-{
-}
-
-ICompiled * VoidFunction::Compile (ICompileArgs * args)
-{
-	ICompiled * compiled = 0;
-
-	ParseArgs * pa = new ParseArgs(m_Compiler, args);
-	pa->Ref()->AddRef();
-
-	if(pa->ParseEof())
-	{
-		compiled = new Compiled(dynamic_cast<IVoid *>(this));
-	}
-
-	pa->Ref()->Release();
-
-	return compiled ? compiled : new Compiled(new Error());
-}
-
-
-::Afx::IRef * VoidFunction::Ref (void)
-{
-	return dynamic_cast<::Afx::IRef *>(this);
-}
-
 
 // VoidEvent ///////////////////////////////////////////////////////////////////
 
-class VoidEventSetNull : public VoidFunction
+
+class VoidEventSet : public Ref,
+	public IVoid
 {
 public:
-	VoidEventSetNull(ICompiler * compiler, VoidEvent * voidEvent)
-	: VoidFunction(compiler), m_VoidEvent(voidEvent)
-	{
-		voidEvent->Ref()->AddRef();
-	}
-
-	virtual VoidT EvalVoid (void) {
-		m_VoidEvent->SetEvent(0);
-	}
-
-protected:
-	virtual ~VoidEventSetNull()
-	{
-		m_VoidEvent->Ref()->Release();
-	}
-
-private:
-	VoidEvent * m_VoidEvent;
-
-};
-
-
-class VoidEventSetVoid : public VoidFunction
-{
-public:
-	VoidEventSetVoid(ICompiler * compiler, VoidEvent * voidEvent, IVoid * voidFn)
-	: VoidFunction(compiler), m_VoidEvent(voidEvent), m_Void(voidFn)
+	VoidEventSet(VoidEvent * voidEvent, IVoid * voidFn)
+	: m_VoidEvent(voidEvent), m_Void(voidFn)
 	{
 		voidFn->Ref()->AddRef();
 		voidEvent->Ref()->AddRef();
@@ -3299,8 +2852,13 @@ public:
 		m_VoidEvent->SetEvent(m_Void);
 	}
 
+	::Afx::IRef * Ref (void)
+	{
+		return dynamic_cast<::Afx::IRef *>(this);
+	}
+
 protected:
-	virtual ~VoidEventSetVoid()
+	virtual ~VoidEventSet()
 	{
 		m_Void->Ref()->Release();
 		m_VoidEvent->Ref()->Release();
@@ -3314,18 +2872,14 @@ private:
 
 
 VoidEvent::VoidEvent(ICompiler * compiler)
-: Compileable(compiler), m_Void(0)
+: Compileable(compiler), m_Void(new FnVoid())
 {
+	m_Void->Ref()->AddRef();
 }
 
 VoidEvent::~VoidEvent()
 {
-	SetEvent(0);
-}
-
-void VoidEvent::CallEvent()
-{
-	if(m_Void) m_Void->EvalVoid();
+	m_Void->Ref()->Release();
 }
 
 ICompiled * VoidEvent::Compile (ICompileArgs * args)
@@ -3335,14 +2889,21 @@ ICompiled * VoidEvent::Compile (ICompileArgs * args)
 	ParseArgs * pa = new ParseArgs(m_Compiler, args);
 	pa->Ref()->AddRef();
 
-	bool bOk;
-	if(pa->ParseNextArgTCEX(ICompiled::T_Void, bOk))
+	ICompiled::Type type = pa->ParseNextArgTE();
+
+	switch(type)
 	{
-		if(bOk && pa->ParseEof()) compiled = new Compiled(new VoidEventSetVoid(m_Compiler, this, pa->GetArg(0)->GetVoid()));
-	}
-	else if(bOk && pa->ParseEof())
-	{
-		compiled = new Compiled(new VoidEventSetNull(m_Compiler, this));
+	case ICompiled::T_Eof:
+		{
+			compiled = new Compiled(this);
+		}
+		break;
+	case ICompiled::T_Void:
+		if(pa->ParseEof())
+		{
+			compiled = new Compiled(new VoidEventSet(this, pa->GetArg(0)->GetVoid()));
+		}
+		break;
 	}
 
 	pa->Ref()->Release();
@@ -3350,17 +2911,24 @@ ICompiled * VoidEvent::Compile (ICompileArgs * args)
 	return compiled ? compiled : new Compiled(new Error());
 }
 
-bool VoidEvent::HasEvent()
+VoidT VoidEvent::EvalVoid (void) {
+	m_Void->EvalVoid();
+}
+
+
+::Afx::IRef * VoidEvent::Ref (void)
 {
-	return 0 != m_Void;
+	return dynamic_cast<::Afx::IRef *>(this);
 }
 
 void VoidEvent::SetEvent(IVoid * value)
 {
-	if(m_Void) m_Void->Ref()->Release();
+	if(!value) value = new FnVoid();
+
+	m_Void->Ref()->Release();
 
 	m_Void = value;
 
-	if(value) value->Ref()->AddRef();
+	value->Ref()->AddRef();
 }
 

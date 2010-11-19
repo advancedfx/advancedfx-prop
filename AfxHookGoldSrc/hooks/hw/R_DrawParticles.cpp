@@ -15,11 +15,11 @@ R_DrawParticles_t g_Old_R_DrawParticles = 0;
 void New_R_DrawParticles (void)
 {
 	g_ModInfo.SetIn_R_DrawParticles(true);
-	g_Xpress.InRDrawParticles->Set(true);
+	Xpress::Get()->Info.InRDrawParticles->Set(true);
 
 	g_Old_R_DrawParticles();
 
-	g_Xpress.InRDrawParticles->Set(false);
+	Xpress::Get()->Info.InRDrawParticles->Set(false);
 	g_ModInfo.SetIn_R_DrawParticles(false);
 }
 

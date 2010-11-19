@@ -62,7 +62,7 @@
     </ClCompile>
     <Link>
       <OutputFile>$(OutDir)AfxHookGoldSrc.dll</OutputFile>
-      <AdditionalLibraryDirectories>C:\Libraries\js\src\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(OutDir)AfxHookGoldSrc.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
@@ -93,7 +93,7 @@
     </ClCompile>
     <Link>
       <OutputFile>$(OutDir)AfxHookGoldSrc.dll</OutputFile>
-      <AdditionalLibraryDirectories>C:\Libraries\js\src\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -114,12 +114,16 @@
   <ItemGroup>
     <ClCompile Include="..\shared\FileTools.cpp" />
     <ClCompile Include="..\shared\vcpp\AfxAddr.cpp" />
-    <ClCompile Include="..\shared\vcpp\Cursor.cpp" />
     <ClCompile Include="..\shared\vcpp\Data.cpp" />
+    <ClCompile Include="..\shared\vcpp\Expressions\Compile.cpp" />
+    <ClCompile Include="..\shared\vcpp\Expressions\Cursor.cpp" />
+    <ClCompile Include="..\shared\vcpp\Expressions\Delegate.cpp" />
+    <ClCompile Include="..\shared\vcpp\Expressions\Expressions.cpp" />
+    <ClCompile Include="..\shared\vcpp\Expressions\Parse.cpp" />
+    <ClCompile Include="..\shared\vcpp\Expressions\Types.cpp" />
     <ClCompile Include="..\shared\vcpp\GlImage.cpp" />
     <ClCompile Include="..\shared\vcpp\Image.cpp" />
     <ClCompile Include="..\shared\vcpp\Ref.cpp" />
-    <ClCompile Include="..\shared\vcpp\Expressions.cpp" />
     <ClCompile Include="AfxGoldSrcComClient.cpp" />
     <ClCompile Include="aiming.cpp" />
     <ClCompile Include="camexport.cpp" />
@@ -153,7 +157,6 @@
     <ClCompile Include="mirv_commands.cpp" />
     <ClCompile Include="mirv_glext.cpp" />
     <ClCompile Include="mirv_info.cpp" />
-    <ClCompile Include="mirv_scripting.cpp" />
     <ClCompile Include="move_to.cpp" />
     <ClCompile Include="newsky.cpp" />
     <ClCompile Include="specmenu.cpp" />
@@ -167,18 +170,10 @@
     <ClCompile Include="supportrender.cpp" />
     <ClCompile Include="temporary_dominik_0004.cpp" />
     <ClCompile Include="temporary_dominik_0005.cpp" />
+    <ClCompile Include="Xmod.cpp" />
     <ClCompile Include="Xpress.cpp" />
     <ClCompile Include="zooming.cpp" />
-    <ClCompile Include="modules\ModColor.cpp" />
-    <ClCompile Include="modules\ModColor_S.cpp" />
-    <ClCompile Include="modules\ModColorMask.cpp" />
-    <ClCompile Include="modules\ModColorMask_S.cpp" />
-    <ClCompile Include="modules\ModHide.cpp" />
-    <ClCompile Include="modules\ModHide_S.cpp" />
     <ClCompile Include="modules\ModInfo.cpp" />
-    <ClCompile Include="modules\ModInfo_S.cpp" />
-    <ClCompile Include="modules\ModReplace.cpp" />
-    <ClCompile Include="modules\ModReplace_S.cpp" />
     <ClCompile Include="hooks\gdi32Hooks.cpp" />
     <ClCompile Include="hooks\HookGameLoaded.cpp" />
     <ClCompile Include="hooks\HookHl.cpp" />
@@ -201,12 +196,16 @@
   <ItemGroup>
     <ClInclude Include="..\shared\FileTools.h" />
     <ClInclude Include="..\shared\vcpp\AfxAddr.h" />
-    <ClInclude Include="..\shared\vcpp\Cursor.h" />
     <ClInclude Include="..\shared\vcpp\Data.h" />
+    <ClInclude Include="..\shared\vcpp\Expressions\Compile.h" />
+    <ClInclude Include="..\shared\vcpp\Expressions\Cursor.h" />
+    <ClInclude Include="..\shared\vcpp\Expressions\Delegate.h" />
+    <ClInclude Include="..\shared\vcpp\Expressions\Expressions.h" />
+    <ClInclude Include="..\shared\vcpp\Expressions\Parse.h" />
+    <ClInclude Include="..\shared\vcpp\Expressions\Types.h" />
     <ClInclude Include="..\shared\vcpp\GlImage.h" />
     <ClInclude Include="..\shared\vcpp\Image.h" />
     <ClInclude Include="..\shared\vcpp\Ref.h" />
-    <ClInclude Include="..\shared\vcpp\Expressions.h" />
     <ClInclude Include="AfxGoldSrcComClient.h" />
     <ClInclude Include="aiming.h" />
     <ClInclude Include="camexport.h" />
@@ -231,24 +230,15 @@
     <ClInclude Include="mdt_media.h" />
     <ClInclude Include="mirv_commands.h" />
     <ClInclude Include="mirv_glext.h" />
-    <ClInclude Include="mirv_scripting.h" />
     <ClInclude Include="newsky.h" />
     <ClInclude Include="script.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Store.h" />
     <ClInclude Include="supportrender.h" />
+    <ClInclude Include="Xmod.h" />
     <ClInclude Include="Xpress.h" />
     <ClInclude Include="zooming.h" />
-    <ClInclude Include="modules\ModColor.h" />
-    <ClInclude Include="modules\ModColor_S.h" />
-    <ClInclude Include="modules\ModColorMask.h" />
-    <ClInclude Include="modules\ModColorMask_S.h" />
-    <ClInclude Include="modules\ModHide.h" />
-    <ClInclude Include="modules\ModHide_S.h" />
     <ClInclude Include="modules\ModInfo.h" />
-    <ClInclude Include="modules\ModInfo_S.h" />
-    <ClInclude Include="modules\ModReplace.h" />
-    <ClInclude Include="modules\ModReplace_S.h" />
     <ClInclude Include="hooks\gdi32Hooks.h" />
     <ClInclude Include="hooks\HookGameLoaded.h" />
     <ClInclude Include="hooks\HookHl.h" />

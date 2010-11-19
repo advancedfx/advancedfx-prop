@@ -19,6 +19,9 @@
     <Filter Include="shared\vcpp">
       <UniqueIdentifier>{29a1ed9d-a9ca-496c-afda-e20184a5bff9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shared\vcpp\Expressions">
+      <UniqueIdentifier>{45d6f9ac-b077-40c9-ba92-996213119d66}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -27,11 +30,17 @@
     <ClInclude Include="..\..\shared\vcpp\Ref.h">
       <Filter>shared\vcpp</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\shared\vcpp\Expressions.h">
-      <Filter>shared\vcpp</Filter>
+    <ClInclude Include="..\..\shared\vcpp\Expressions\Compile.h">
+      <Filter>shared\vcpp\Expressions</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\shared\vcpp\Cursor.h">
-      <Filter>shared\vcpp</Filter>
+    <ClInclude Include="..\..\shared\vcpp\Expressions\Cursor.h">
+      <Filter>shared\vcpp\Expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\shared\vcpp\Expressions\Expressions.h">
+      <Filter>shared\vcpp\Expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\shared\vcpp\Expressions\Types.h">
+      <Filter>shared\vcpp\Expressions</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -44,11 +53,17 @@
     <ClCompile Include="..\..\shared\vcpp\Ref.cpp">
       <Filter>shared\vcpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\shared\vcpp\Expressions.cpp">
-      <Filter>shared\vcpp</Filter>
+    <ClCompile Include="..\..\shared\vcpp\Expressions\Compile.cpp">
+      <Filter>shared\vcpp\Expressions</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\shared\vcpp\Cursor.cpp">
-      <Filter>shared\vcpp</Filter>
+    <ClCompile Include="..\..\shared\vcpp\Expressions\Cursor.cpp">
+      <Filter>shared\vcpp\Expressions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\shared\vcpp\Expressions\Expressions.cpp">
+      <Filter>shared\vcpp\Expressions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\shared\vcpp\Expressions\Types.cpp">
+      <Filter>shared\vcpp\Expressions</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

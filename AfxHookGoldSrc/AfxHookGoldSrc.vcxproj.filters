@@ -31,6 +31,9 @@
     <Filter Include="AfxHookGoldSrc\hooks\client\cstrike">
       <UniqueIdentifier>{7e8fbdd2-d971-4e37-8b5c-88e4425b88d1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shared\vcpp\Expressions">
+      <UniqueIdentifier>{99e26521-c7e6-40ae-af71-674e9f2848ba}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\bvhexport.cpp">
@@ -135,40 +138,10 @@
     <ClCompile Include="mirv_info.cpp">
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
-    <ClCompile Include="mirv_scripting.cpp">
-      <Filter>AfxHookGoldSrc</Filter>
-    </ClCompile>
     <ClCompile Include="hooks\hw\Mod_LeafPvs.cpp">
       <Filter>AfxHookGoldSrc\hooks\hw</Filter>
     </ClCompile>
-    <ClCompile Include="modules\ModColor.cpp">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClCompile>
-    <ClCompile Include="modules\ModColor_S.cpp">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClCompile>
-    <ClCompile Include="modules\ModColorMask.cpp">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClCompile>
-    <ClCompile Include="modules\ModColorMask_S.cpp">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClCompile>
-    <ClCompile Include="modules\ModHide.cpp">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClCompile>
-    <ClCompile Include="modules\ModHide_S.cpp">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClCompile>
     <ClCompile Include="modules\ModInfo.cpp">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClCompile>
-    <ClCompile Include="modules\ModInfo_S.cpp">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClCompile>
-    <ClCompile Include="modules\ModReplace.cpp">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClCompile>
-    <ClCompile Include="modules\ModReplace_S.cpp">
       <Filter>AfxHookGoldSrc\modules</Filter>
     </ClCompile>
     <ClCompile Include="hooks\OpenGl32Hooks.cpp">
@@ -264,14 +237,29 @@
     <ClCompile Include="..\shared\vcpp\Ref.cpp">
       <Filter>shared\vcpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\vcpp\Expressions.cpp">
-      <Filter>shared\vcpp</Filter>
-    </ClCompile>
     <ClCompile Include="Xpress.cpp">
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\vcpp\Cursor.cpp">
-      <Filter>shared\vcpp</Filter>
+    <ClCompile Include="..\shared\vcpp\Expressions\Cursor.cpp">
+      <Filter>shared\vcpp\Expressions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\vcpp\Expressions\Expressions.cpp">
+      <Filter>shared\vcpp\Expressions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\vcpp\Expressions\Types.cpp">
+      <Filter>shared\vcpp\Expressions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\vcpp\Expressions\Compile.cpp">
+      <Filter>shared\vcpp\Expressions</Filter>
+    </ClCompile>
+    <ClCompile Include="Xmod.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\vcpp\Expressions\Parse.cpp">
+      <Filter>shared\vcpp\Expressions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\vcpp\Expressions\Delegate.cpp">
+      <Filter>shared\vcpp\Expressions</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -344,9 +332,6 @@
     <ClInclude Include="hooks\hw\Host_Frame.h">
       <Filter>AfxHookGoldSrc\hooks\hw</Filter>
     </ClInclude>
-    <ClInclude Include="mirv_scripting.h">
-      <Filter>AfxHookGoldSrc</Filter>
-    </ClInclude>
     <ClInclude Include="InitScript.h">
       <Filter>AfxHookGoldSrc</Filter>
     </ClInclude>
@@ -362,34 +347,7 @@
     <ClInclude Include="hooks\hw\Mod_LeafPvs.h">
       <Filter>AfxHookGoldSrc\hooks\hw</Filter>
     </ClInclude>
-    <ClInclude Include="modules\ModReplace_S.h">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClInclude>
-    <ClInclude Include="modules\ModColor.h">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClInclude>
-    <ClInclude Include="modules\ModColor_S.h">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClInclude>
-    <ClInclude Include="modules\ModColorMask.h">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClInclude>
-    <ClInclude Include="modules\ModColorMask_S.h">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClInclude>
-    <ClInclude Include="modules\ModHide.h">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClInclude>
-    <ClInclude Include="modules\ModHide_S.h">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClInclude>
     <ClInclude Include="modules\ModInfo.h">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClInclude>
-    <ClInclude Include="modules\ModInfo_S.h">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClInclude>
-    <ClInclude Include="modules\ModReplace.h">
       <Filter>AfxHookGoldSrc\modules</Filter>
     </ClInclude>
     <ClInclude Include="hooks\OpenGl32Hooks.h">
@@ -476,14 +434,29 @@
     <ClInclude Include="..\shared\vcpp\Ref.h">
       <Filter>shared\vcpp</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\vcpp\Expressions.h">
-      <Filter>shared\vcpp</Filter>
-    </ClInclude>
     <ClInclude Include="Xpress.h">
       <Filter>AfxHookGoldSrc</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\vcpp\Cursor.h">
-      <Filter>shared\vcpp</Filter>
+    <ClInclude Include="..\shared\vcpp\Expressions\Cursor.h">
+      <Filter>shared\vcpp\Expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\vcpp\Expressions\Expressions.h">
+      <Filter>shared\vcpp\Expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\vcpp\Expressions\Types.h">
+      <Filter>shared\vcpp\Expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\vcpp\Expressions\Compile.h">
+      <Filter>shared\vcpp\Expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="Xmod.h">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\vcpp\Expressions\Parse.h">
+      <Filter>shared\vcpp\Expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\vcpp\Expressions\Delegate.h">
+      <Filter>shared\vcpp\Expressions</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

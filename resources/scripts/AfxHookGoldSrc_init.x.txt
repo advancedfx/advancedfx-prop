@@ -1,24 +1,24 @@
 (do
-(null(s // WE SUGGEST TO NOT EDIT THIS FILE!))
-(null(s // This file carries out CRUCIAL operations and WE MIGHT CHANGE IT occasionally.))
+(null(s WE SUGGEST TO NOT EDIT THIS FILE!))
+(null(s This file carries out CRUCIAL operations and WE MIGHT CHANGE IT occasionally.))
 
-(null(s //))
-(null(s // OnHwDllLoaded))
-(null(s //))
+(null(s))
+(null(s OnHwDllLoaded))
+(null(s))
 
 (OnHwDllLoaded (do
 	
-	(null(s //))
-	(null(s // Engine-to-client interfaces:))
-	(null(s //))
+	(null(s))
+	(null(s Engine-to-client interfaces:))
+	(null(s))
 	
 	(p_cl_enginefuncs_s (+ hwDll 0x166A98))
 	(p_engine_studio_api_s (+ hwDll 0x1829B8))
 	(p_playermove_s (+ hwDll 0xFD5AE0))
 	
-	(null(s //))
-	(null(s // General engine hooks:))
-	(null(s //))
+	(null(s))
+	(null(s General engine hooks:))
+	(null(s))
 	
 	(Host_Frame (+ hwDll 0x62B00))
 	(Host_Frame_DSZ 0x05)
@@ -28,9 +28,9 @@
 	
 	(ClientFunctionTable (+ hwDll 0x11FE320))
 	
-	(null(s //))
-	(null(s // Rendering related:))
-	(null(s //))
+	(null(s))
+	(null(s Rendering related:))
+	(null(s))
 	
 	(CL_EmitEntities (+ hwDll 0x21C40))
 	(CL_EmitEntities_DSZ 0x05)
@@ -66,18 +66,18 @@
 	(skytextures (+ hwDll 0xA83620))
 	
 	
-	(null(s // DecalTexture hook:))
-	(null(s //   this function is called in a unknown sub function of R_DrawWorld that is))
-	(null(s //   called before R_BlendLightmaps. the unknown functions draws out all))
-	(null(s //   decals of the map as it seems or s.th. and uses this one to get))
-	(null(s //   a decal's texture))
+	(null(s DecalTexture hook:))
+	(null(s   this function is called in a unknown sub function of R_DrawWorld that is))
+	(null(s   called before R_BlendLightmaps. the unknown functions draws out all))
+	(null(s   decals of the map as it seems or s.th. and uses this one to get))
+	(null(s   a decal's texture))
 	(UnkGetDecalTexture (+ hwDll 0x3C600))
 	(DTOURSZ_UnkGetDecalTexture 0x05)
 	
 	
-	(null(s //))
-	(null(s // Sound system related:))
-	(null(s //))
+	(null(s))
+	(null(s Sound system related:))
+	(null(s))
 	
 	(GetSoundtime (+ hwDll 0xA3B30))
 	(DTOURSZ_GetSoundtime 0x06)
@@ -97,9 +97,9 @@
 	(DTOURSZ_SND_PickChannel 0x05)
 	
 	
-	(null(s //))
-	(null(s // Demo parsing related:))
-	(null(s //))
+	(null(s))
+	(null(s Demo parsing related:))
+	(null(s))
 	
 	(CL_ParseServerMessage (+ hwDll 0x2A660))
 	(net_message_cursize (+ hwDll 0xA6E630))
@@ -108,71 +108,71 @@
 	(CL_ParseServerMessage_CmdRead (+ CL_ParseServerMessage 0x0E3))
 	(DTOURSZ_CL_ParseServerMessage_CmdRead 0x07)
 	
-	(null(s //))
-	(null(s // other))
-	(null(s //))
+	(null(s))
+	(null(s other))
+	(null(s))
 	
-	(null(s // tfc DemoEdit campath fix:))
+	(null(s tfc DemoEdit campath fix:))
 	(HudSpectator_tfc (+ hlExe 0x509A00))
 	(HudSpectator_cmp_tfc (+ HudSpectator_tfc 0x23))
 	
-	(null(s // UpdateSpectatorPanel overviewmode check jump (for HLTV menu removal):))
-	(UpdateSpectatorPanel_checkjmp_tfc (+ hlExe 0x5439A1)) (null(s // Team Fortress Classic (tfc)))
+	(null(s UpdateSpectatorPanel overviewmode check jump (for HLTV menu removal):))
+	(UpdateSpectatorPanel_checkjmp_tfc (+ hlExe 0x5439A1)) (null(s Team Fortress Classic (tfc)))
 	(UpdateSpectatorPanel_checkjmp_valve (+ hlExe 0x540221)) (null(s //Half-Life (valve)))
 	
-	(null(s // unused // (p_enginefuncs_s (+ hwDll 0x18B9F0)) // may be unused))
-	(null(s // unused // (p_globalvars_s (+ hwDll 0x7CD0E0)) // may be unused))
+	(null(s unused // (p_enginefuncs_s (+ hwDll 0x18B9F0)) // may be unused))
+	(null(s unused // (p_globalvars_s (+ hwDll 0x7CD0E0)) // may be unused))
 	
 void) )
 
-(null(s //))
-(null(s // OnClientDllLoaded:))
-(null(s //))
+(null(s))
+(null(s OnClientDllLoaded:))
+(null(s))
 
 (null(s /// <remarks>Not called when no client.dll is loaded (valve, tfc).</remarks>))
 (null(s ///))
 (OnClientDllLoaded (do
 	
-	(null(s //))
-	(null(s // game: cstrike))
-	(null(s //))
+	(null(s))
+	(null(s game: cstrike))
+	(null(s))
 	
-	(null(s // cstrike Team color hook:))
-	(GetClientColor (+ clientDll 0x45CD0)) (null(s // function, used by head-up and overview i.e.))
+	(null(s cstrike Team color hook:))
+	(GetClientColor (+ clientDll 0x45CD0)) (null(s function, used by head-up and overview i.e.))
 	(DTOURSZ_GetClientColor 0x0a)
-	(unkInlineClientColorA (+ clientDll 0x4629A)) (null(s // inline, used to draw attacker color, also check hook))
+	(unkInlineClientColorA (+ clientDll 0x4629A)) (null(s inline, used to draw attacker color, also check hook))
 	(SZ_unkInlineClientColorA 0x3E)
-	(unkInlineClientColorV (+ clientDll 0x46320)) (null(s // inline, used to draw victim color, also check hook // todo))
+	(unkInlineClientColorV (+ clientDll 0x46320)) (null(s inline, used to draw victim color, also check hook // todo))
 	(SZ_unkInlineClientColorV 0x3C)
 	
-	(null(s // cstrike CrossHair fix related:))
+	(null(s cstrike CrossHair fix related:))
 	(cstrike_UnkCrosshairFn (+ clientDll 0x42EB0))
-	(cstrike_UnkCrosshairFn_DSZ 0x09) (null(s // at least 8 bytes req.))
+	(cstrike_UnkCrosshairFn_DSZ 0x09) (null(s at least 8 bytes req.))
 	(cstrike_UnkCrosshairFn_add_fac (+ clientDll 0xCD450))
 	(cstrike_UnkCrosshairFn_mul_fac (+ clientDll 0xC3298))
 	
-	(null(s // cstrike EV_CreateSmoke:))
+	(null(s cstrike EV_CreateSmoke:))
 	(cstrike_EV_CreateSmoke (+ clientDll 0xa420))
 	
-	(null(s // cstrike DeathMsg related (client.dll offsets):))
+	(null(s cstrike DeathMsg related (client.dll offsets):))
 	(cstrike_rgDeathNoticeList (+ clientDll 0x121DF8))
 	(cstrike_CHudDeathNotice_Draw (+ clientDll 0x45E10))
 	(cstrike_CHudDeathNotice_MsgFunc_DeathMsg (+ clientDll 0x46190))
 	(cstrike_MsgFunc_DeathMsg (+ clientDll 0x45CB0))
 	
-	(null(s //))
-	(null(s // other games))
-	(null(s //))
+	(null(s))
+	(null(s other games))
+	(null(s))
 	
-	(null(s // UpdateSpectatorPanel overviewmode check jump (for HLTV menu removal):))
-	(UpdateSpectatorPanel_checkjmp_ag (+ clientDll 0x028091)) (null(s // Adrenaline-Gamer (ag)))
-	(UpdateSpectatorPanel_checkjmp_ns (+ clientDll 0x033F3D)) (null(s // Natuaral Selection (ns)))	
+	(null(s UpdateSpectatorPanel overviewmode check jump (for HLTV menu removal):))
+	(UpdateSpectatorPanel_checkjmp_ag (+ clientDll 0x028091)) (null(s Adrenaline-Gamer (ag)))
+	(UpdateSpectatorPanel_checkjmp_ns (+ clientDll 0x033F3D)) (null(s Natuaral Selection (ns)))
 	
 void) )
 
 (null(s ////////////////////////////////////////////////////////////////////////////////))
-(null(s //))
-(null(s // Provide additional OpenGL helpers:))
+(null(s))
+(null(s Provide additional OpenGL helpers:))
 
 (null(s //ogl.GL_TRUE 1))
 (null(s //ogl.GL_FALSE 0))

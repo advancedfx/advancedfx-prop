@@ -10,7 +10,7 @@
 
 bool RunInitScript();
 
-bool InitEvent_OnHwDllLoaded();
+void InitEvent_OnHwDllLoaded();
 
-bool InitEvent_OnClientDllLoaded();
+void InitEvent_OnClientDllLoaded();
 

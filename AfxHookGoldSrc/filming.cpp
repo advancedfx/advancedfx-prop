@@ -28,7 +28,6 @@
 #include "cmdregister.h"
 #include "hl_addresses.h"
 #include "mirv_glext.h"
-#include "mirv_scripting.h"
 #include "Xpress.h"
 
 
@@ -46,7 +45,6 @@ REGISTER_DEBUGCVAR(depth_bpp, "8", 0);
 REGISTER_DEBUGCVAR(depth_slice_lo, "0.0", 0);
 REGISTER_DEBUGCVAR(depth_slice_hi, "1.0", 0);
 REGISTER_DEBUGCVAR(gl_force_noztrick, "1", 0);
-REGISTER_DEBUGCVAR(debug_mt, "0", 0);
 REGISTER_DEBUGCVAR(sample_frame_strength, "1.0", 0);
 REGISTER_DEBUGCVAR(sample_smethod, "1", 0);
 REGISTER_DEBUGCVAR(print_frame, "0", 0);
@@ -581,7 +579,7 @@ void Filming::Start()
 		pEngfuncs->Con_Printf("Recording (simulated).\n");
 	}
 
-	ScriptEvent_OnRecordStarting();
+	Xpress::Get()->Events.FilmingStart->EvalVoid();
 
 	g_AfxGoldSrcComClient.OnRecordStarting();
 
@@ -846,14 +844,12 @@ void Filming::Start()
 
 	//
 
-	g_ModInfo.SetRecording(true);
-	g_Xpress.IsFilming->Set(true);
+	Xpress::Get()->Info.IsFilming->Set(true);
 }
 
 void Filming::Stop()
 {
-	g_ModInfo.SetRecording(false);
-	g_Xpress.IsFilming->Set(false);
+	Xpress::Get()->Info.IsFilming->Set(false);
 
 	//
 
@@ -900,7 +896,7 @@ void Filming::Stop()
 
 	g_AfxGoldSrcComClient.OnRecordEnded();
 
-	ScriptEvent_OnRecordEnded();
+	Xpress::Get()->Events.FilmingStop->EvalVoid();
 
 	// Print stats:
 	{
@@ -1178,22 +1174,12 @@ Filming::DRAW_RESULT Filming::shouldDraw(GLenum mode)
 	bool bEntityQuadWorld  = 0x01 & iMatteEntityQuads;
 	bool bEntityQuadEntity = 0x02 & iMatteEntityQuads;
 
-	if(g_Xpress.HasMatteEx())
-	{	
-		int matteExVal = g_Xpress.EvalMatteEx();
-
-		if(matteExVal < 0) return DR_HIDE;
-		else if(0 < matteExVal) return DR_MASK;
-		else return DR_NORMAL;
-	}
-
-	if(debug_mt->value)
 	{
-		cl_entity_t *ce = pEngStudio->GetCurrentEntity();
+		int matteVal = Xpress::Get()->Events.Matte->EvalInt();
 
-		if(ce)
+		if(0 <= matteVal)
 		{
-			return MS_ENTITY == m_iMatteStage && ce->index >= (int)debug_mt->value ? DR_NORMAL : DR_HIDE;
+			return 0 == matteVal ? DR_NORMAL : (1 == matteVal ? DR_MASK : DR_HIDE);
 		}
 	}
 
@@ -1952,7 +1938,7 @@ void Filming::UpdateXpMatteStage()
 		break;
 	}
 
-	g_Xpress.CurrentStreamIndex->Set(iVal);
+	Xpress::Get()->Info.CurrentStreamIndex->Set(iVal);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

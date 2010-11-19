@@ -7,7 +7,6 @@
 
 #include "../../modules/ModInfo.h"
 #include "../../filming.h"
-#include "../../mirv_scripting.h"
 #include "../../Xpress.h"
 
 typedef void (*R_RenderView_t)( void );
@@ -81,20 +80,18 @@ void New_R_RenderView(void)
 	bool bLoop;
 	do {
 		bLoop = false;
-		if(ScriptEvent_OnRenderViewBegin()) {
+		if(Xpress::Get()->Events.RenderViewBegin->EvalBool()) {
 			//
 			// call original R_RenderView_
 			//
 
-			g_ModInfo.SetIn_R_Renderview(true);
-			g_Xpress.InRRenderView->Set(true);
+			Xpress::Get()->Info.InRRenderView->Set(true);
 
 			g_Old_R_RenderView();
 
-			g_Xpress.InRRenderView->Set(false);
-			g_ModInfo.SetIn_R_Renderview(false);
+			Xpress::Get()->Info.InRRenderView->Set(false);
 
-			bLoop = ScriptEvent_OnRenderViewEnd();
+			bLoop = Xpress::Get()->Events.RenderViewEnd->EvalBool();
 		}
 
 		// restore original values

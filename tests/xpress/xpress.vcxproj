@@ -78,14 +78,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\shared\vcpp\Cursor.h" />
-    <ClInclude Include="..\..\shared\vcpp\Expressions.h" />
+    <ClInclude Include="..\..\shared\vcpp\Expressions\Compile.h" />
+    <ClInclude Include="..\..\shared\vcpp\Expressions\Cursor.h" />
+    <ClInclude Include="..\..\shared\vcpp\Expressions\Expressions.h" />
+    <ClInclude Include="..\..\shared\vcpp\Expressions\Types.h" />
     <ClInclude Include="..\..\shared\vcpp\Ref.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\shared\vcpp\Cursor.cpp" />
-    <ClCompile Include="..\..\shared\vcpp\Expressions.cpp" />
+    <ClCompile Include="..\..\shared\vcpp\Expressions\Compile.cpp" />
+    <ClCompile Include="..\..\shared\vcpp\Expressions\Cursor.cpp" />
+    <ClCompile Include="..\..\shared\vcpp\Expressions\Expressions.cpp" />
+    <ClCompile Include="..\..\shared\vcpp\Expressions\Types.cpp" />
     <ClCompile Include="..\..\shared\vcpp\Ref.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

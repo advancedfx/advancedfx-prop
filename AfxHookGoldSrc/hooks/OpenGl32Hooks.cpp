@@ -10,19 +10,13 @@
 #include "../filming.h"
 #include "../GlPrimMods.h"
 #include "../mirv_glext.h"
-#include "../mirv_scripting.h"
 #include "../supportrender.h"
 #include "../zooming.h"
 
 #include "HookHw.h"
 
-#include "../modules/ModColor.h"
-#include "../modules/ModColorMask.h"
-#include "../modules/ModHide.h"
-#include "../modules/ModReplace.h"
-#include "../modules/ModInfo.h"
-
 #include "../Xpress.h"
+#include "../Xmod.h"
 
 #include <hlsdk.h>
 
@@ -173,8 +167,8 @@ bool	g_bIsSucceedingViewport = false;
 
 void APIENTRY NewGlBegin(GLenum mode)
 {
-	ScriptEvent_OnGlBegin((unsigned int)mode);
-	g_Xpress.CurrentGlMode->Set(mode);
+	Xpress::Get()->Info.CurrentGlMode->Set(mode);
+	Xpress::Get()->Events.GlBegin->EvalVoid();
 
 	if (g_Filming.doWireframe(mode) == Filming::DR_HIDE) {
 		return;
@@ -201,28 +195,19 @@ void APIENTRY NewGlBegin(GLenum mode)
 			return;
 	}
 
-	g_ModReplace.OnGlBegin(mode);
+	Xpress::Get()->Mod->GlPrimMod()->OnGlBegin(mode);
 
-	g_ModColor.OnGlBegin(mode);
-
-	g_ModColorMask.OnGlBegin(mode);
-
-	if(g_ModHide.OnGlBegin(mode))
-		glBegin(mode);
+	glBegin(mode);
 }
 
 void APIENTRY NewGlEnd(void)
 {
-	ScriptEvent_OnGlEnd();
-	g_Xpress.CurrentGlMode->Set(-1);
-
 	glEnd();
 
-	g_ModColorMask.OnGlEnd();
+	Xpress::Get()->Mod->GlPrimMod()->OnGlEnd();
 
-	g_ModColor.OnGlEnd();
-
-	g_ModReplace.OnGlEnd();
+	Xpress::Get()->Events.GlEnd->EvalVoid();
+	Xpress::Get()->Info.CurrentGlMode->Set(-1);
 
 	if(Filming::MM_KEY == g_Filming.GetMatteMethod())
 		ModeKey_End();

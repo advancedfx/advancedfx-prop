@@ -9,78 +9,62 @@
 // 2010-11-10 dominik.matrixstorm.com
 
 
-#include <shared/vcpp/Expressions.h>
+#include <shared/vcpp/Expressions/Expressions.h>
+#include "Xmod.h"
 
 
 using namespace Afx;
 using namespace Afx::Expressions;
 
 
-class Xpress_t
+class Xpress : public FunctionHost
 {
 public:
-	IntVariable * CurrentGlMode;
-	IntVariable * CurrentStreamIndex;
-	BoolVariable * IsFilming;
-	BoolVariable * InRDrawEntitiesOnList;
-	BoolVariable * InRDrawParticles;
-	BoolVariable * InRDrawViewModel;
-	BoolVariable * InRRenderView;
+	struct {
+		VoidEvent * GlBegin;
+		VoidEvent * GlEnd;
+		VoidEvent * FilmingStart;
+		VoidEvent * FilmingStop;
+		IntEvent * Matte; // -1 standard behaviour, 0 draw, 1 mask, 2 hide
+		BoolEvent * RenderViewBegin; // true (default): render, false: skip;
+		BoolEvent * RenderViewEnd; // false (default): don't loop, true: loop;
+	} Events;
 
-	Xpress_t();
+	struct {
+		IntVariable * CurrentGlMode;
+		IntVariable * CurrentStreamIndex; // -1 = unknown , 0/1 stream x
+		BoolVariable * IsFilming;
+		BoolVariable * InRDrawEntitiesOnList;
+		BoolVariable * InRDrawParticles;
+		BoolVariable * InRDrawViewModel;
+		BoolVariable * InRRenderView;
+	} Info;
 
-	~Xpress_t();
+	static Xpress * Get (void);
+
+	IXmod * Mod;
+
+	Xpress();
+
+	~Xpress();
 
 	ICompiled * CompileEx (char const * code)
 	{
 		return m_Bubbles.Root->Compile(code);
 	}
 
-	bool CompileMatteEx (char const * code)
-	{
-		ICompiled * compiled = m_Bubbles.Root->Compile(code);			
-		compiled->Ref()->AddRef();
-
-		SetMatteEx(compiled->GetInt());
-
-		compiled->Ref()->Release();
-
-		return HasMatteEx();
-	}
-
-	int EvalMatteEx (void)
-	{
-		return 0 != m_MatteEx ? m_MatteEx->EvalInt() : 0;
-	}
-
-	bool HasMatteEx (void)
-	{
-		return 0 != m_MatteEx;
-	}
-
-	void SetMatteEx(IInt * value)
-	{
-		if(value) value->Ref()->AddRef();
-
-		if(m_MatteEx) m_MatteEx->Ref()->Release();
-		m_MatteEx = value;
-	}
-
 private:
+	static Xpress * m_Xpress;
+
 	struct {
-		IBubble * Info;
 		IBubble * Root;
 	} m_Bubbles;
-	IInt * m_MatteEx;
 
-	class FnGetCurrentEntityIndex : public IntGetter
-	{
-	public:
-		FnGetCurrentEntityIndex(ICompiler * compiler) : IntGetter(compiler) {}
+	IntT GetCurrentEntityIndex(Arguments args);
 
-		virtual IntT Get (void);
-	};
-
+	BoolT GetIsPlayer(Arguments args);
 };
 
-extern Xpress_t g_Xpress;
+
+void xpress_execute(char const * textCode);
+

@@ -14,42 +14,88 @@
 #include "cmdregister.h"
 
 
-Xpress_t::Xpress_t()
-{	
-	m_MatteEx = 0;
+hud_player_info_t g_hpinfo;
 
-	m_Bubbles.Info = Tools::StandardBubble();
-	m_Bubbles.Info->Ref()->AddRef();
+
+Xpress * Xpress::m_Xpress;
+
+
+Xpress::Xpress()
+{	
+	Mod = XmodFactory::Create();
+	Mod->Ref()->AddRef();
 
 	m_Bubbles.Root = Tools::StandardBubble();
 	m_Bubbles.Root->Ref()->AddRef();
 
+	IBubble * events = Tools::StandardBubble();
+	events->Ref()->AddRef();
+
+	IBubble * info = Tools::StandardBubble();
+	info->Ref()->AddRef();
+
+	//
+
+	Mod->GetBubble()->Add("./", Tools::FnDoCompileable(m_Bubbles.Root->Compiler()));
+	Mod->GetBubble()->Add("..", Tools::FnDoCompileable(m_Bubbles.Root->Compiler()));
+
 	m_Bubbles.Root->Add("./", Tools::FnDoCompileable(m_Bubbles.Root->Compiler()));
 	m_Bubbles.Root->Add("..", Tools::FnDoCompileable(m_Bubbles.Root->Compiler()));
-	m_Bubbles.Root->Add(".info", Tools::FnDoCompileable(m_Bubbles.Info->Compiler()));
+	m_Bubbles.Root->Add(".events", Tools::FnDoCompileable(events->Compiler()));
+	m_Bubbles.Root->Add(".info", Tools::FnDoCompileable(info->Compiler()));
+	m_Bubbles.Root->Add(".mod", Tools::FnDoCompileable(Mod->GetBubble()->Compiler()));
 
-	m_Bubbles.Info->Add("./", Tools::FnDoCompileable(m_Bubbles.Root->Compiler()));
-	m_Bubbles.Info->Add("..", Tools::FnDoCompileable(m_Bubbles.Root->Compiler()));
-	m_Bubbles.Info->Add("CurrentGlMode", CurrentGlMode = new IntVariable(m_Bubbles.Info->Compiler(), IntVariable::CA_Getter, -1));
-	m_Bubbles.Info->Add("CurrentStreamIndex", CurrentStreamIndex = new IntVariable(m_Bubbles.Info->Compiler(), IntVariable::CA_Getter, -1));
-	m_Bubbles.Info->Add("GetCurrentEntityIndex", new FnGetCurrentEntityIndex(m_Bubbles.Info->Compiler()));
-	m_Bubbles.Info->Add("IsFilming", IsFilming = new BoolVariable(m_Bubbles.Info->Compiler(), BoolVariable::CA_Getter, false));
-	m_Bubbles.Info->Add("InRDrawEntitiesOnList", InRDrawEntitiesOnList = new BoolVariable(m_Bubbles.Info->Compiler(), BoolVariable::CA_Getter, false));
-	m_Bubbles.Info->Add("InRDrawParticles", InRDrawParticles = new BoolVariable(m_Bubbles.Info->Compiler(), BoolVariable::CA_Getter, false));
-	m_Bubbles.Info->Add("InRDrawViewModel", InRDrawViewModel = new BoolVariable(m_Bubbles.Info->Compiler(), BoolVariable::CA_Getter, false));
-	m_Bubbles.Info->Add("InRRenderView", InRRenderView = new BoolVariable(m_Bubbles.Info->Compiler(), BoolVariable::CA_Getter, false));
+	events->Add("./", Tools::FnDoCompileable(m_Bubbles.Root->Compiler()));
+	events->Add("..", Tools::FnDoCompileable(m_Bubbles.Root->Compiler()));
+	events->Add("GlBegin", Events.GlBegin = new VoidEvent(events->Compiler()));
+	events->Add("GlEnd", Events.GlEnd = new VoidEvent(events->Compiler()));
+	events->Add("FilmingStart", Events.FilmingStart = new VoidEvent(events->Compiler()));
+	events->Add("FilmingStop", Events.FilmingStop = new VoidEvent(events->Compiler()));
+	events->Add("Matte", Events.Matte = new IntEvent(events->Compiler(), -1));
+	events->Add("RenderViewBegin", Events.RenderViewBegin = new BoolEvent(events->Compiler(), true));
+	events->Add("RenderViewEnd", Events.RenderViewEnd = new BoolEvent(events->Compiler(), false));
+
+	info->Add("./", Tools::FnDoCompileable(m_Bubbles.Root->Compiler()));
+	info->Add("..", Tools::FnDoCompileable(m_Bubbles.Root->Compiler()));
+	info->Add("CurrentGlMode", Info.CurrentGlMode = new IntVariable(info->Compiler(), IntVariable::CA_Getter, -1));
+	info->Add("CurrentStreamIndex", Info.CurrentStreamIndex = new IntVariable(info->Compiler(), IntVariable::CA_Getter, -1));
+	info->Add("GetCurrentEntityIndex", Delegate::New(
+		info->Compiler(),
+		this,
+		(IntFunction)&Xpress::GetCurrentEntityIndex,
+		ArgumentsT::New()
+	));
+	info->Add("GetIsPlayer", Delegate::New(
+		info->Compiler(),
+		this,
+		(BoolFunction)&Xpress::GetIsPlayer,
+		ArgumentsT::New(1, A_Int)
+	));
+	info->Add("IsFilming", Info.IsFilming = new BoolVariable(info->Compiler(), BoolVariable::CA_Getter, false));
+	info->Add("InRDrawEntitiesOnList", Info.InRDrawEntitiesOnList = new BoolVariable(info->Compiler(), BoolVariable::CA_Getter, false));
+	info->Add("InRDrawParticles", Info.InRDrawParticles = new BoolVariable(info->Compiler(), BoolVariable::CA_Getter, false));
+	info->Add("InRDrawViewModel", Info.InRDrawViewModel = new BoolVariable(info->Compiler(), BoolVariable::CA_Getter, false));
+	info->Add("InRRenderView", Info.InRRenderView = new BoolVariable(info->Compiler(), BoolVariable::CA_Getter, false));
+
+	//
+
+	events->Ref()->Release();
+	info->Ref()->Release();
 }
 
-Xpress_t::~Xpress_t()
+Xpress::~Xpress()
 {
-	m_Bubbles.Info->Ref()->Release();
+	Mod->Ref()->Release();
 	m_Bubbles.Root->Ref()->Release();
-
-	if(m_MatteEx) m_MatteEx->Ref()->Release();
 }
 
 
-IntT Xpress_t :: FnGetCurrentEntityIndex :: Get (void)
+Xpress * Xpress::Get (void) {
+	if(!m_Xpress) m_Xpress = new Xpress();
+	return m_Xpress;
+}
+
+IntT Xpress::GetCurrentEntityIndex(Arguments args)
 {
 	cl_entity_t *ce = pEngStudio->GetCurrentEntity();
 
@@ -59,9 +105,14 @@ IntT Xpress_t :: FnGetCurrentEntityIndex :: Get (void)
 	return -1;
 }
 
+BoolT Xpress::GetIsPlayer(Arguments args)
+{
+	int index = args[0].Int->EvalInt();
 
-Xpress_t g_Xpress;
+	cl_entity_t * e = pEngfuncs->GetEntityByIndex(index);
 
+	return e && e->player;	
+}
 
 char * New_CodeFromEngArgs (void)
 {
@@ -105,6 +156,88 @@ char * New_CodeFromEngArgs (void)
 	return ttt;
 }
 
+void xpress_execute(char const * textCode)
+{
+	if(!textCode)
+	{
+		pEngfuncs->Con_Printf("Error: 0 code pointer.");
+		return;
+	}
+
+	ICompiled * compiled = Xpress::Get()->CompileEx( textCode );
+
+	compiled->Ref()->AddRef();
+
+	switch(compiled->GetType())
+	{
+	case ICompiled::T_Error:
+		{
+			pEngfuncs->Con_Printf("Result: Error\n");
+		}
+		break;
+
+	case ICompiled::T_Void:
+		{
+			compiled->GetVoid()->EvalVoid();
+			pEngfuncs->Con_Printf(
+				"Result: Void\n"				
+			);			
+		}
+		break;
+
+	case ICompiled::T_Bool:
+		{
+			bool bResult = compiled->GetBool()->EvalBool();
+			pEngfuncs->Con_Printf(
+				"Result: Bool = %s\n",
+				bResult ? "true" : "false"
+			);			
+		}
+		break;
+
+	case ICompiled::T_Int:
+		{
+			int iResult = compiled->GetInt()->EvalInt();
+			pEngfuncs->Con_Printf(
+				"Result: Int = %i\n",
+				iResult
+			);			
+		}
+		break;
+
+	case ICompiled::T_Float:
+		{
+			int iResult = compiled->GetFloat()->EvalFloat();
+			pEngfuncs->Con_Printf(
+				"Result: Float = %f\n",
+				iResult
+			);			
+		}
+		break;
+
+	case ICompiled::T_String:
+		{
+			IStringValue * result = compiled->GetString()->EvalString();
+
+			result->Ref()->AddRef();
+
+			pEngfuncs->Con_Printf(
+				"Result: String = \"%s\"\n",
+				result->GetData()
+			);			
+
+			result->Ref()->Release();
+		}
+		break;
+
+	default:
+		pEngfuncs->Con_Printf("Error: Unknown expression type.");
+		break;
+	}
+
+	compiled->Ref()->Release();
+}
+
 _REGISTER_CMD("xpress", xpress_cmd)
 void xpress_cmd()
 {
@@ -112,84 +245,7 @@ void xpress_cmd()
 	{
 		char * textCode = New_CodeFromEngArgs();
 
-		if(!textCode)
-		{
-			pEngfuncs->Con_Printf("Error: New_CodeFromEngArgs failed.");
-			return;
-		}
-
-		ICompiled * compiled = g_Xpress.CompileEx( textCode );
-
-		compiled->Ref()->AddRef();
-
-		switch(compiled->GetType())
-		{
-		case ICompiled::T_Error:
-			{
-				pEngfuncs->Con_Printf("Result: Error\n");
-			}
-			break;
-
-		case ICompiled::T_Void:
-			{
-				compiled->GetVoid()->EvalVoid();
-				pEngfuncs->Con_Printf(
-					"Result: Void\n"				
-				);			
-			}
-			break;
-
-		case ICompiled::T_Bool:
-			{
-				bool bResult = compiled->GetBool()->EvalBool();
-				pEngfuncs->Con_Printf(
-					"Result: Bool = %s\n",
-					bResult ? "true" : "false"
-				);			
-			}
-			break;
-
-		case ICompiled::T_Int:
-			{
-				int iResult = compiled->GetInt()->EvalInt();
-				pEngfuncs->Con_Printf(
-					"Result: Int = %i\n",
-					iResult
-				);			
-			}
-			break;
-
-		case ICompiled::T_Float:
-			{
-				int iResult = compiled->GetFloat()->EvalFloat();
-				pEngfuncs->Con_Printf(
-					"Result: Float = %f\n",
-					iResult
-				);			
-			}
-			break;
-
-		case ICompiled::T_String:
-			{
-				IStringValue * result = compiled->GetString()->EvalString();
-
-				result->Ref()->AddRef();
-
-				pEngfuncs->Con_Printf(
-					"Result: String = \"%s\"\n",
-					result->GetData()
-				);			
-
-				result->Ref()->Release();
-			}
-			break;
-
-		default:
-			pEngfuncs->Con_Printf("Error: Unknown expression type.");
-			break;
-		}
-
-		compiled->Ref()->Release();
+		xpress_execute(textCode);
 
 		free(textCode);
 
