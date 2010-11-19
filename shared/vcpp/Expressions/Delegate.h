@@ -94,6 +94,14 @@ public:
 
 	static ICompiled::Type Delegate::Translate(ArgumentT type);
 
+	VoidT CallVoid(Arguments args);
+	BoolT CallBool(Arguments args);
+	IntT CallInt(Arguments args);
+	FloatT CallFloat(Arguments args);
+	IStringValue * CallString(Arguments args);
+
+	void DeleteArgs(Arguments args);
+
 	virtual ICompiled * Compile (ICompileArgs * args);
 
 protected:

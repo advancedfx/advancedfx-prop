@@ -95,10 +95,10 @@ public:
 		compiled->Ref()->AddRef();
 
 		bool bOk =
-			0 != compiled->GetVoid()
+			0 != compiled->GetBool()
 		;
 
-		if(bOk) compiled->GetVoid()->EvalVoid();
+		if(bOk) bOk = compiled->GetBool()->EvalBool();
 
 		compiled->Ref()->Release();
 
@@ -144,7 +144,7 @@ bool RunInitScript()
 
 	hookPath[0]=NULL;
 
-#ifdef _DEBUG
+#if 1
 	MessageBox(0, "RunInitScript", "MDT_DEBUG",MB_OK|MB_ICONINFORMATION);
 #endif
 
@@ -166,7 +166,7 @@ bool RunInitScript()
 		std::string scriptFile(g_strFolder);
 		scriptFile += INIT_SCRIPT_FILE;
 
-		std::string code("(compile (stringFromFile (s ");
+		std::string code("(ceval (stringFromFile (s ");
 
 		for(std::string::iterator it = scriptFile.begin(); it != scriptFile.end(); it++)
 		{
@@ -211,7 +211,7 @@ void xpress_exec_cmd()
 		std::string scriptFile(g_strFolder);
 		scriptFile += pEngfuncs->Cmd_Argv(1);
 
-		std::string code("(compile (stringFromFile (s ");
+		std::string code("(ceval (stringFromFile (s ");
 
 		for(std::string::iterator it = scriptFile.begin(); it != scriptFile.end(); it++)
 		{
@@ -241,6 +241,7 @@ void xpress_exec_cmd()
 	}
 
 	pEngfuncs->Con_Printf(
+		"Compiles a Xpress file to a Void function and evaluates it (upon success)."
 		"Usage: xpress_exec <scriptName.x.txt>\n"
 	);
 }

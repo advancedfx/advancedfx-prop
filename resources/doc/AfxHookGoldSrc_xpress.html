@@ -42,7 +42,6 @@ Have fun!
 <li><a href="#bubble_Events">Events bubble</a></li>
 <li><a href="#bubble_Info">Info bubble</a></li>
 <li><a href="#bubble_Mod">Mod bubble</a></li>
-<li><a href="#bugs">Known bugs</a></li>
 </ul>
 
 
@@ -139,7 +138,7 @@ A evaluable function that returns a string value.
 <dt>&quot;<tt>sum</tt>&quot; T+ -&gt; T, where T = <a href="#std_type_Int">Int</a> | <a href="#std_type_Float">Float</a></dt><dd></dd>
 <dt>&quot;<tt>+</tt>&quot; = &quot;<tt>sum</tt>&quot;</dt><dd></dd>
 <dt>&quot;<tt>stringFromFile</tt>&quot; <a href="#std_type_String">String</a> -&gt; <a href="#std_type_String">String</a></dt><dd>Loads a string from a (text) file. Example: &quot;<tt>(stringFromFile (s C:\\some.txt))</tt>&quot;</dd>
-<dt>&quot;<tt>compile</tt>&quot; <a href="#std_type_String">String</a> -&gt; <a href="#std_type_Error">Error</a> | <a href="#std_type_Void">Void</a>  | <a href="#std_type_Bool">Bool</a> | <a href="#std_type_Int">Int</a> | <a href="#std_type_Float">Float</a> | <a href="#std_type_String">String</a></dt><dd>Compiles a new function from a given string. Example: &quot;<tt>(compile (stringFromFile (s C:\\code.x.txt)))</tt>&quot;</dd>
+<dt>&quot;<tt>ceval</tt>&quot; <a href="#std_type_String">String</a> -&gt; <a href="#std_type_Bool">Bool</a></dt><dd>Compiles a <a href="#std_type_Void">Void</a> function from a given string and upon success evaluates it and returns true (otherwise returns false). Example: &quot;<tt>(ceval (stringFromFile (s C:\\code.x.txt)))</tt>&quot;</dd>
 </dl>
 
 
@@ -234,7 +233,7 @@ This bubble supplies information which can be very useful to drive your <a href=
 </dl>
 
 
-<h2><a name="bubble_Info">Mod bubble</a></h2>
+<h2><a name="bubble_Mod">Mod bubble</a></h2>
 
 This bubble switch-able paremetrized object (OpenGL primitive) modifier stacks, which are great for implementing special effects
 in combination with the <a href="#bubble_Info">Info bubble</a>.
@@ -300,13 +299,6 @@ newely generated). Use this modifier rareley.
 
 </dl>
 
-
-<h2><a name="bugs">Known bugs and mistakes</a></h2>
-
-<ul>
-<li>compile evaluates argument early (at compile time)</li>
-<li>stringFromFile evaluates argument early (at compile time)</li>
-</ul>
 
 </body>
 </html>

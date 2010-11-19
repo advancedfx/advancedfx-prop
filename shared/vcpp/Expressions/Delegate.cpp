@@ -31,30 +31,30 @@ class DelegateC : public Ref,
 	public IString
 {
 public:
-	DelegateC(FunctionHost * host, FunctionT functionT, Function function, Arguments args)
-	: m_Host(host), m_FunctionT(functionT), m_Function(function), m_Args(args)
+	DelegateC(Delegate * aDelegate, Arguments args)
+	: m_Delegate(aDelegate), m_Args(args)
 	{
-		m_Host->AddRef();
+		aDelegate->AddRef();
 	}
 
 	virtual VoidT DelegateC::EvalVoid (void) {
-		(m_Host->*m_Function.Void)(m_Args);
+		m_Delegate->CallVoid(m_Args);
 	}
 
 	virtual BoolT DelegateC::EvalBool (void) {
-		return (m_Host->*m_Function.Bool)(m_Args);
+		return m_Delegate->CallBool(m_Args);
 	}
 
 	virtual IntT DelegateC::EvalInt (void) {
-		return (m_Host->*m_Function.Int)(m_Args);
+		return m_Delegate->CallInt(m_Args);
 	}
 
 	virtual FloatT DelegateC::EvalFloat (void) {
-		return (m_Host->*m_Function.Float)(m_Args);
+		return m_Delegate->CallFloat(m_Args);
 	}
 
 	virtual IStringValue * DelegateC::EvalString (void) {
-		return (m_Host->*m_Function.String)(m_Args);
+		return m_Delegate->CallString(m_Args);
 	}
 
 	virtual ::Afx::IRef * Ref (void) {
@@ -63,15 +63,13 @@ public:
 
 protected:
 	virtual ~DelegateC() {
-		m_Host->Release();
-		delete m_Args;
+		m_Delegate->DeleteArgs(m_Args);
+		m_Delegate->Release();
 	}
 
 private:
 	Arguments  m_Args;
-	Function m_Function;
-	FunctionT m_FunctionT;
-	FunctionHost * m_Host;
+	Delegate * m_Delegate;
 };
 
 
@@ -135,6 +133,61 @@ Delegate::~Delegate()
 	m_Host->Release();
 }
 
+VoidT Delegate::CallVoid(Arguments args)
+{
+	(m_Host->*m_Function.Void)(args);
+}
+
+BoolT Delegate::CallBool(Arguments args)
+{
+	return (m_Host->*m_Function.Bool)(args);
+}
+
+
+IntT Delegate::CallInt(Arguments args)
+{
+	return (m_Host->*m_Function.Int)(args);
+}
+
+FloatT Delegate::CallFloat(Arguments args)
+{
+	return (m_Host->*m_Function.Float)(args);
+}
+
+IStringValue * Delegate::CallString(Arguments args)
+{
+	return (m_Host->*m_Function.String)(args);
+}
+
+void Delegate::DeleteArgs(Arguments args)
+{
+	int count = m_ArgumentsT->Count();
+	for(int i=0; i <count; i++)
+	{
+		switch(m_ArgumentsT->Get(i))
+		{
+		case A_Void:
+			args[i].Void->Ref()->Release();
+			break;
+		case A_Bool:
+			args[i].Bool->Ref()->Release();
+			break;
+		case A_Int:
+			args[i].Int->Ref()->Release();
+			break;
+		case A_Float:
+			args[i].Float->Ref()->Release();
+			break;
+		case A_String:
+			args[i].String->Ref()->Release();
+			break;
+		default:
+			throw new exception();
+			break;
+		}
+	}
+}
+
 ICompiled * Delegate::Compile (ICompileArgs * args)
 {
 	ICompiled * compiled = 0;
@@ -151,25 +204,31 @@ ICompiled * Delegate::Compile (ICompileArgs * args)
 
 	if(bOk && pa->ParseEof())
 	{
-		Arguments args = new Argument[m_ArgumentsT->Count()];
-		for(int i=0; bOk && i < m_ArgumentsT->Count(); i++)
+		int count = m_ArgumentsT->Count();
+		Arguments args = new Argument[count];
+		for(int i=0; i < count; i++)
 		{
 			switch(m_ArgumentsT->Get(i))
 			{
 			case A_Void:
 				args[i].Void = pa->GetArg(i)->GetVoid();
+				args[i].Void->Ref()->AddRef();
 				break;
 			case A_Bool:
 				args[i].Bool = pa->GetArg(i)->GetBool();
+				args[i].Bool->Ref()->AddRef();
 				break;
 			case A_Int:
 				args[i].Int = pa->GetArg(i)->GetInt();
+				args[i].Int->Ref()->AddRef();
 				break;
 			case A_Float:
 				args[i].Float = pa->GetArg(i)->GetFloat();
+				args[i].Float->Ref()->AddRef();
 				break;
 			case A_String:
 				args[i].String = pa->GetArg(i)->GetString();
+				args[i].String->Ref()->AddRef();
 				break;
 			default:
 				throw new exception();
@@ -177,7 +236,7 @@ ICompiled * Delegate::Compile (ICompileArgs * args)
 			}
 		}
 
-		DelegateC * delegateC = new DelegateC(m_Host, m_FunctionT, m_Function, args);
+		DelegateC * delegateC = new DelegateC(this, args);
 
 		switch(m_FunctionT)
 		{

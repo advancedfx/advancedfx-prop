@@ -1725,7 +1725,10 @@ private:
 };
 
 
-class FnStringFromFile
+// FnStringFromFile ////////////////////////////////////////////////////////////
+
+class FnStringFromFile : public Ref,
+	public IString
 {
 public:
 	static ICompiled * Compile(ICompiler * compiler, ICompileArgs * args)
@@ -1742,77 +1745,149 @@ public:
 
 		if(bOk)
 		{
-			IString * str = pa->GetArg(0)->GetString();
-
-			IStringValue * strVal = str->EvalString();
-			strVal->Ref()->AddRef();
-
-			size_t fsize;
-			FILE * file;
-			if(!fopen_s(&file, strVal->GetData(), "rt")
-				&& 0 ==fseek(file, 0, SEEK_END)
-				&& ((fsize = ftell(file)), 0 == fseek(file, 0, SEEK_SET))
-			)
-			{
-				size_t numChars = fsize / sizeof(char);
-
-				char * myChars = new char[1+numChars];
-
-				memset(myChars, 0, sizeof(char)*(1+numChars));
-				fread(myChars, sizeof(char), numChars, file);
-
-				// (actual number of chars read may be less than numChars due to text translation)
-
-				myChars[numChars] = 0; // re-terminate (just in case ;)
-				compiled = new Compiled(new FnString(new StringValue((int)numChars, myChars)));
-			}
-
-			if(file) fclose(file);
+			compiled = new Compiled(new FnStringFromFile(pa->GetArg(0)->GetString()));
+		}
 
 
-			strVal->Ref()->Release();
+		pa->Ref()->Release();
+
+		return compiled ? compiled : new Compiled(new Error());
+	}
+
+	virtual IStringValue * EvalString (void)
+	{
+		IStringValue * retVal = 0;
+		IStringValue * strVal = m_String->EvalString();
+		strVal->Ref()->AddRef();
+
+		size_t fsize;
+		FILE * file;
+		if(!fopen_s(&file, strVal->GetData(), "rt")
+			&& 0 ==fseek(file, 0, SEEK_END)
+			&& ((fsize = ftell(file)), 0 == fseek(file, 0, SEEK_SET))
+		)
+		{
+			size_t numChars = fsize / sizeof(char);
+
+			char * myChars = new char[1+numChars];
+
+			memset(myChars, 0, sizeof(char)*(1+numChars));
+			fread(myChars, sizeof(char), numChars, file);
+
+			// (actual number of chars read may be less than numChars due to text translation)
+
+			myChars[numChars] = 0; // re-terminate (just in case ;)
+			retVal = new StringValue((int)numChars, myChars);
+		}
+
+		if(file) fclose(file);
+
+		strVal->Ref()->Release();
+
+		if(!retVal)
+		{
+			char * strEmpty = new char[1];
+			strEmpty[0] = 0;
+
+			retVal = new StringValue(1, strEmpty);
+		}
+
+		return retVal;
+	}
+
+	virtual IRef * Ref (void) {
+		return this;
+	}
+
+protected:
+	virtual ~FnStringFromFile()
+	{
+		m_String->Ref()->Release();
+	}
+
+private:
+	IString * m_String;
+
+	FnStringFromFile(IString * string)
+	: m_String(string)
+	{
+		string->Ref()->AddRef();
+	}
+};
+
+
+// FnCompile ///////////////////////////////////////////////////////////////////
+
+class FnCompile : public Ref,
+	public IBool
+{
+public:
+	static ICompiled * Compile(ICompiler * compiler, ICompileArgs * args)
+	{
+		ParseArgs * pa = new ParseArgs(compiler, args);
+		pa->Ref()->AddRef();
+
+		bool bOk =
+			pa->ParseNextArgTC(ICompiled::T_String)
+			&& pa->ParseEof()
+		;
+
+		ICompiled * compiled = 0;
+
+		if(bOk)
+		{
+			compiled = new Compiled(new FnCompile(compiler, pa->GetArg(0)->GetString()));
 		}
 
 		pa->Ref()->Release();
 
 		return compiled ? compiled : new Compiled(new Error());
 	}
-};
 
-
-
-class FnCompile
-{
-public:
-	static ICompiled * Compile(ICompiler * compiler, ICompileArgs * args)
+	virtual BoolT EvalBool (void)
 	{
-		ParseArgs * pa = new ParseArgs(compiler, args);
-		pa->Ref()->AddRef();
+		IStringValue * strVal = m_String->EvalString();
+		strVal->Ref()->AddRef();
 
-		bool bOk =
-			pa->ParseNextArgTC(ICompiled::T_String)
-			&& pa->ParseEof()
-		;
+		Cursor cur(strVal->GetData());
 
-		ICompiled * compiled = 0;
+		ICompiled * compiled = m_Compiler->Compile_Function(cur);
+		compiled->Ref()->AddRef();
 
-		if(bOk)
+		bool bOk = false;
+		if(compiled->GetVoid())
 		{
-			IString * str = pa->GetArg(0)->GetString();
-
-			IStringValue * strVal = str->EvalString();
-			strVal->Ref()->AddRef();
-
-			Cursor cur(strVal->GetData());
-
-			compiled = compiler->Compile_Function(cur);
-
-			strVal->Ref()->Release();
+			compiled->GetVoid()->EvalVoid();
+			bOk = true;
 		}
 
-		pa->Ref()->Release();
+		compiled->Ref()->Release();
+		strVal->Ref()->Release();
 
-		return compiled ? compiled : new Compiled(new Error());
+		return bOk;
+	}
+
+	virtual IRef * Ref (void) {
+		return this;
+	}
+
+
+protected:
+	virtual ~FnCompile()
+	{
+		m_Compiler->Ref()->Release();
+		m_String->Ref()->Release();
+	}
+
+private:
+	ICompiler * m_Compiler;
+	IString * m_String;
+
+	FnCompile(ICompiler * compiler, IString * string)
+	: m_Compiler(compiler), m_String(string)
+	{
+		m_Compiler->Ref()->AddRef();
+		m_String->Ref()->AddRef();
 	}
 };
 
@@ -2181,7 +2256,7 @@ Bubble::Bubble()
 
 	Add("stringFromFile", new FnCompileable(this, &FnStringFromFile::Compile));
 
-	Add("compile", new FnCompileable(this, &FnCompile::Compile));
+	Add("ceval", new FnCompileable(this, &FnCompile::Compile));
 }
 
 
