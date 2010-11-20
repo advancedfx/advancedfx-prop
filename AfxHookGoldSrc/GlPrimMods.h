@@ -203,6 +203,8 @@ public:
 	/// <summary>Implements IGlPrimMod.OnGlEnd.</summary>
 	virtual void OnGlEnd();
 
+	void SetEnabled(bool value);
+
 	/// <remarks>Changing the color causes the texture to be regenerated, using multiple
 	/// Replace instances (and thus textures) is usually prefered.</remarks>
 	void SetBlue(GLubyte value);
@@ -222,6 +224,8 @@ public:
 
 private:
 	GLubyte m_Blue;
+	bool m_Enable;
+	bool m_Enabled;
 	GLuint m_GlTexture;
 	GLubyte m_Green;
 	bool m_HasTexture;

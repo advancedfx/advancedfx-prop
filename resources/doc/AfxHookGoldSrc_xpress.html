@@ -42,6 +42,7 @@ Have fun!
 <li><a href="#bubble_Events">Events bubble</a></li>
 <li><a href="#bubble_Info">Info bubble</a></li>
 <li><a href="#bubble_Mod">Mod bubble</a></li>
+<li><a href="#known_problems">Known Problems</a></li>
 </ul>
 
 
@@ -186,6 +187,10 @@ This is the core bubble accessed throughout the xpress console command.
 <dt>&quot;.events&quot;</dt><dd><a href="#bubble_Events">Events bubble</a> <a href="#std_convention_link">link</a></dd>
 <dt>&quot;.info&quot;</dt><dd><a href="#bubble_Info">Info bubble</a> <a href="#std_convention_link">link</a></dd>
 <dt>&quot;.mod&quot;</dt><dd><a href="#bubble_Mod">Mod bubble</a> <a href="#std_convention_link">link</a></dd>
+
+<dt>&quot;<tt>Exec</tt>&quot; <a href="#std_type_String">String</a> -&gt; <a href="#std_type_Void">Void</a></dt>
+<dd>Executes the given string in the game's console.</dd>
+
 </dl>
 
 
@@ -273,11 +278,11 @@ The mask specifies wether the color and depth buffers are drawn (1), or not (-1)
 The parameter mode is evaluated each time the modifier is applied.
 </dd>
 
-<dt>&quot;<tt>AddReplace</tt>&quot; <a href="#std_type_Int">Int</a> <a href="#std_type_Int">Int</a> -&gt; <a href="#std_type_Void">Void</a></dt>
-<dd>Parameters are (index, red, green, blue). Adds a Replace modfier to the stack with the given index.
+<dt>&quot;<tt>AddReplace</tt>&quot; <a href="#std_type_Int">Int</a> <a href="#std_type_Int">Int</a> <a href="#std_type_Int">Int</a> <a href="#std_type_Int">Int</a> <a href="#std_type_Bool">Bool</a> -&gt; <a href="#std_type_Void">Void</a></dt>
+<dd>Parameters are (index, red, green, blue, enabled). Adds a Replace modfier to the stack with the given index.
 The color parameters specify the color of the texture (0 - 255) to be used for replacing.
 The parameters red, green and blue are evaluated when the modifier is added to the stack (that is because the texture has to be
-newely generated). Use this modifier rareley.
+newely generated). The parameter enabled is evaluate each time the modifier is being processed / applied. Use this modifier rareley.
 </dd>
 
 <dt>&quot;<tt>Active</tt>&quot; -&gt; <a href="#std_type_Int">Int</a></dt>
@@ -296,8 +301,14 @@ newely generated). Use this modifier rareley.
 <dt>&quot;<tt>Remove</tt>&quot; <a href="#std_type_Int">Int</a> -&gt; <a href="#std_type_Void">Void</a></dt>
 <dd>Remove modifier stack with the given index.</dd>
 
-
 </dl>
+
+
+<h2><a name="known_problems">Known Problems</a></h2>
+
+<ul>
+<li>I made a mistake in the reference counting graph (it has loops hehe), preventing a proper object clean-up upon shut-down for now.</li>
+</ul>
 
 
 </body>

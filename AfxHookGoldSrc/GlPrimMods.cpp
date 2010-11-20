@@ -271,6 +271,7 @@ void Mask::SetMask(ChannelMode value)
 Replace::Replace()
 {
 	m_Blue = 0;
+	m_Enable = true;
 	m_Green = 0;
 	m_HasTexture = false;
 	m_Red = 0;
@@ -347,6 +348,10 @@ bool Replace::IsSupported()
 
 void Replace::OnGlBegin(GLenum mode)
 {
+	m_Enabled = m_Enable;
+
+	if(!m_Enabled) return;
+
 	EnsureTexture();
 
 	if(!m_HasTexture) return;
@@ -368,6 +373,8 @@ void Replace::OnGlBegin(GLenum mode)
 
 void Replace::OnGlEnd()
 {
+	if(!m_Enabled) return;
+
 	if(!m_HasTexture) return;
 
 	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, m_Old_Gl_Texture_Env_Mode);
@@ -382,6 +389,11 @@ void Replace::SetBlue(GLubyte value)
 {
 	m_Blue = value;
 	m_RefreshTexture = true;
+}
+
+void Replace::SetEnabled(bool value)
+{
+	m_Enable = value;
 }
 
 void Replace::SetGreen(GLubyte value)

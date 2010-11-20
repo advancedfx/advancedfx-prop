@@ -163,7 +163,7 @@ void ModeAlpha_End()
 
 int		g_nViewports = 0;
 bool	g_bIsSucceedingViewport = false;
-
+bool g_PrimitivesApplied;
 
 void APIENTRY NewGlBegin(GLenum mode)
 {
@@ -171,6 +171,7 @@ void APIENTRY NewGlBegin(GLenum mode)
 	Xpress::Get()->Events.GlBegin->EvalVoid();
 
 	if (g_Filming.doWireframe(mode) == Filming::DR_HIDE) {
+		g_PrimitivesApplied = false;
 		return;
 	}
 
@@ -181,20 +182,28 @@ void APIENTRY NewGlBegin(GLenum mode)
 	if (!g_Filming.isFilming())
 	{
 		glBegin(mode);
+		g_PrimitivesApplied = false;
 		return;
 	}
 
 	if(Filming::MM_KEY == g_Filming.GetMatteMethod())
 	{
 		if(!ModeKey_Begin(mode))
+		{
+				g_PrimitivesApplied = false;
 			return;
+		}
 	}
 	else
 	{
 		if(!ModeAlpha_Begin(mode))
+		{
+			g_PrimitivesApplied = false;
 			return;
+		}
 	}
 
+	g_PrimitivesApplied = true;
 	Xpress::Get()->Mod->GlPrimMod()->OnGlBegin(mode);
 
 	glBegin(mode);
@@ -204,10 +213,10 @@ void APIENTRY NewGlEnd(void)
 {
 	glEnd();
 
-	Xpress::Get()->Mod->GlPrimMod()->OnGlEnd();
+	if(g_PrimitivesApplied) Xpress::Get()->Mod->GlPrimMod()->OnGlEnd();
 
-	Xpress::Get()->Events.GlEnd->EvalVoid();
 	Xpress::Get()->Info.CurrentGlMode->Set(-1);
+	Xpress::Get()->Events.GlEnd->EvalVoid();
 
 	if(Filming::MM_KEY == g_Filming.GetMatteMethod())
 		ModeKey_End();

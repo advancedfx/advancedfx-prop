@@ -44,6 +44,12 @@ Xpress::Xpress()
 	m_Bubbles.Root->Add(".events", Tools::FnDoCompileable(events->Compiler()));
 	m_Bubbles.Root->Add(".info", Tools::FnDoCompileable(info->Compiler()));
 	m_Bubbles.Root->Add(".mod", Tools::FnDoCompileable(Mod->GetBubble()->Compiler()));
+	m_Bubbles.Root->Add("Exec", Delegate::New(
+		m_Bubbles.Root->Compiler(),
+		this,
+		(VoidFunction)&Xpress::Exec,
+		ArgumentsT::New(1, A_String)
+	));
 
 	events->Add("./", Tools::FnDoCompileable(m_Bubbles.Root->Compiler()));
 	events->Add("..", Tools::FnDoCompileable(m_Bubbles.Root->Compiler()));
@@ -89,6 +95,14 @@ Xpress::~Xpress()
 	m_Bubbles.Root->Ref()->Release();
 }
 
+VoidT Xpress::Exec(Arguments args)
+{
+	StringValueRef strVal(args[0].String->EvalString());
+
+	pEngfuncs->pfnClientCmd(
+		const_cast<char *>(strVal.getData())
+	);
+}
 
 Xpress * Xpress::Get (void) {
 	if(!m_Xpress) m_Xpress = new Xpress();

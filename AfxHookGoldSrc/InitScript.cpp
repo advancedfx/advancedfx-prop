@@ -144,7 +144,7 @@ bool RunInitScript()
 
 	hookPath[0]=NULL;
 
-#if 1
+#if _DEBUG
 	MessageBox(0, "RunInitScript", "MDT_DEBUG",MB_OK|MB_ICONINFORMATION);
 #endif
 
@@ -201,8 +201,8 @@ bool RunInitScript()
 	return bCfgres;
 }
 
-_REGISTER_CMD("xpress_exec", xpress_exec_cmd)
-void xpress_exec_cmd()
+_REGISTER_CMD("xexec", xexec_cmd)
+void xexec_cmd()
 {
 	if(2 == pEngfuncs->Cmd_Argc())
 	{

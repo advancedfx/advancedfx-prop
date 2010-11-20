@@ -167,7 +167,8 @@ class XReplace : public FunctionHost,
 	public IXGlPrimMod
 {
 public:
-	XReplace(IInt * red, IInt * green, IInt * blue)
+	XReplace(IInt * red, IInt * green, IInt * blue, IBool * enabled)
+    : m_Enabled(enabled)
 	{
 		IntRef refRed(red);
 		IntRef refGreen(green);
@@ -181,10 +182,15 @@ public:
 	}
 
 	virtual void OnGlBegin(GLenum mode) {
+		m_IsEnabled = m_Enabled.eval();
+		if(!m_IsEnabled) return;
+
 		m_Replace.OnGlBegin(mode);
 	}
 
 	virtual void OnGlEnd() {
+		if(!m_IsEnabled) return;
+
 		m_Replace.OnGlEnd();
 	}
 
@@ -193,6 +199,8 @@ public:
 	}
 
 private:
+	bool m_IsEnabled;
+	BoolRef m_Enabled;
 	Replace m_Replace;
 };
 
@@ -358,7 +366,8 @@ private:
 			new XReplace(
 				args[1].Int,
 				args[2].Int,
-				args[3].Int
+				args[3].Int,
+				args[4].Bool
 			)
 		);
 	}
@@ -486,7 +495,7 @@ Xmod::Xmod()
 		m_Bubble->Compiler(),
 		this,
 		(VoidFunction)&Xmod::AddReplace,
-		ArgumentsT::New(4, A_Int, A_Int, A_Int, A_Int)
+		ArgumentsT::New(5, A_Int, A_Int, A_Int, A_Int, A_Bool)
 	));
 
 	m_Bubble->Add("Active", Delegate::New(

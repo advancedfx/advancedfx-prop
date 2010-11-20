@@ -10,14 +10,21 @@ Added mirv_lookingat which tries to find out what you're looking at.
 -->
 
 <release>
-<name>HLAE XPress</name>
+<name>HLAE testing</name>
 <version>2.3.0.0</version>
-<time>2010-11-19T16:00Z</time>
+<time>2010-11-20T11:19Z</time>
 <changes>
 <change type="added">
-Quite a few nice XPress features for crazy expert users (see included documentation).
+Finished porting JS-based features to Xpress features.
+</change>
+<change type="added">
+Included Xpress documentation (see READ_ME.html) in the download.
+</change>
+<change type="added">
+Added xexec command for easily executing files in the script folder.
 </change>
 </changes>
+<comments>This testing release has known flaws, see included Xpress doc.</comments>
 </release>
 
 
@@ -27,16 +34,17 @@ Quite a few nice XPress features for crazy expert users (see included documentat
 <time>2010-11-16T13:42Z</time>
 <changes>
 <change type="added">
-AfxGoldSrc: Added XPress (own expression system).
+Added Xpress (own expression system).
 </change>
 <change type="added">
-AfxGoldSrc: Added xpress command to access XPress.
+Added xpress command to access Xpress.
 </change>
 <change type="updated">
-AfxGoldSrc: Replaced JS init script with XPress code.
+Replaced JS init script with Xpress code.
 </change>
 </changes>
 </release>
+
 
 <release>
 <name>HLAE</name>

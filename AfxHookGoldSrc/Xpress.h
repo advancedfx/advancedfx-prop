@@ -60,6 +60,8 @@ private:
 		IBubble * Root;
 	} m_Bubbles;
 
+	VoidT Exec(Arguments args);
+
 	IntT GetCurrentEntityIndex(Arguments args);
 
 	BoolT GetIsPlayer(Arguments args);
