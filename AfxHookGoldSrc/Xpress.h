@@ -31,13 +31,13 @@ public:
 	} Events;
 
 	struct {
-		IntVariable * CurrentGlMode;
-		IntVariable * CurrentStreamIndex; // -1 = unknown , 0/1 stream x
-		BoolVariable * IsFilming;
-		BoolVariable * InRDrawEntitiesOnList;
-		BoolVariable * InRDrawParticles;
-		BoolVariable * InRDrawViewModel;
-		BoolVariable * InRRenderView;
+		int CurrentGlMode;
+		int CurrentStreamIndex; // -1 = unknown , 0/1 stream x
+		bool IsFilming;
+		bool InRDrawEntitiesOnList;
+		bool InRDrawParticles;
+		bool InRDrawViewModel;
+		bool InRRenderView;
 	} Info;
 
 	static Xpress * Get (void);
@@ -46,12 +46,13 @@ public:
 
 	Xpress();
 
-	~Xpress();
-
 	ICompiled * CompileEx (char const * code)
 	{
 		return m_Bubbles.Root->Compile(code);
 	}
+
+protected:
+	virtual ~Xpress();
 
 private:
 	static Xpress * m_Xpress;
@@ -60,11 +61,45 @@ private:
 		IBubble * Root;
 	} m_Bubbles;
 
-	VoidT Exec(Arguments args);
 
-	IntT GetCurrentEntityIndex(Arguments args);
+	VoidT XExec(Arguments args);
 
-	BoolT GetIsPlayer(Arguments args);
+	IntT XGetCurrentEntityIndex(Arguments args);
+
+	BoolT XGetIsPlayer(Arguments args);
+
+	IntT XCurrentGlMode(Arguments args)
+	{
+		return Info.CurrentGlMode;
+	}
+
+	IntT XCurrentStreamIndex(Arguments args)
+	{
+		return Info.CurrentStreamIndex;
+	}
+	
+	BoolT XIsFilming(Arguments args)
+	{
+		return Info.IsFilming;
+	}
+
+	BoolT XInRDrawEntitiesOnList(Arguments args)
+	{
+		return Info.InRDrawEntitiesOnList;
+	}
+	BoolT XInRDrawParticles(Arguments args)
+	{
+		return Info.InRDrawParticles;
+	}
+	BoolT XInRDrawViewModel(Arguments args)
+	{
+		return Info.InRDrawViewModel;
+	}
+	BoolT XInRRenderView(Arguments args)
+	{
+		return Info.InRRenderView;
+	}
+
 };
 
 

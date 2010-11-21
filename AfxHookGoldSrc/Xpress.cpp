@@ -25,63 +25,77 @@ Xpress::Xpress()
 	Mod = XmodFactory::Create();
 	Mod->Ref()->AddRef();
 
-	m_Bubbles.Root = Tools::StandardBubble();
+	m_Bubbles.Root = IBubble::New(true);
 	m_Bubbles.Root->Ref()->AddRef();
 
-	IBubble * events = Tools::StandardBubble();
+	IBubble * events = IBubble::New(true);
 	events->Ref()->AddRef();
 
-	IBubble * info = Tools::StandardBubble();
+	IBubble * info = IBubble::New(true);
 	info->Ref()->AddRef();
 
-	//
 
-	Mod->GetBubble()->Add("./", Tools::FnDoCompileable(m_Bubbles.Root->Compiler()));
-	Mod->GetBubble()->Add("..", Tools::FnDoCompileable(m_Bubbles.Root->Compiler()));
+	// Extend Mod Bubble:
 
-	m_Bubbles.Root->Add("./", Tools::FnDoCompileable(m_Bubbles.Root->Compiler()));
-	m_Bubbles.Root->Add("..", Tools::FnDoCompileable(m_Bubbles.Root->Compiler()));
-	m_Bubbles.Root->Add(".events", Tools::FnDoCompileable(events->Compiler()));
-	m_Bubbles.Root->Add(".info", Tools::FnDoCompileable(info->Compiler()));
-	m_Bubbles.Root->Add(".mod", Tools::FnDoCompileable(Mod->GetBubble()->Compiler()));
-	m_Bubbles.Root->Add("Exec", Delegate::New(
-		m_Bubbles.Root->Compiler(),
-		this,
-		(VoidFunction)&Xpress::Exec,
-		ArgumentsT::New(1, A_String)
-	));
+	Mod->GetBubble()->Add("./", FunctionsC::Do(m_Bubbles.Root->Compiler()));
+	Mod->GetBubble()->Add("..", FunctionsC::Do(m_Bubbles.Root->Compiler()));
 
-	events->Add("./", Tools::FnDoCompileable(m_Bubbles.Root->Compiler()));
-	events->Add("..", Tools::FnDoCompileable(m_Bubbles.Root->Compiler()));
-	events->Add("GlBegin", Events.GlBegin = new VoidEvent(events->Compiler()));
-	events->Add("GlEnd", Events.GlEnd = new VoidEvent(events->Compiler()));
-	events->Add("FilmingStart", Events.FilmingStart = new VoidEvent(events->Compiler()));
-	events->Add("FilmingStop", Events.FilmingStop = new VoidEvent(events->Compiler()));
-	events->Add("Matte", Events.Matte = new IntEvent(events->Compiler(), -1));
-	events->Add("RenderViewBegin", Events.RenderViewBegin = new BoolEvent(events->Compiler(), true));
-	events->Add("RenderViewEnd", Events.RenderViewEnd = new BoolEvent(events->Compiler(), false));
+	// Populate Root bubble:
+	{
+		ICompiler * defCompiler;
+		ICompileable * defCompileable = NewCompileableFnDef(m_Bubbles.Root->Compiler(), defCompiler);
+		
+		defCompileable->Ref()->AddRef();
+		defCompiler->Ref()->AddRef();
 
-	info->Add("./", Tools::FnDoCompileable(m_Bubbles.Root->Compiler()));
-	info->Add("..", Tools::FnDoCompileable(m_Bubbles.Root->Compiler()));
-	info->Add("CurrentGlMode", Info.CurrentGlMode = new IntVariable(info->Compiler(), IntVariable::CA_Getter, -1));
-	info->Add("CurrentStreamIndex", Info.CurrentStreamIndex = new IntVariable(info->Compiler(), IntVariable::CA_Getter, -1));
-	info->Add("GetCurrentEntityIndex", Delegate::New(
-		info->Compiler(),
-		this,
-		(IntFunction)&Xpress::GetCurrentEntityIndex,
-		ArgumentsT::New()
-	));
-	info->Add("GetIsPlayer", Delegate::New(
-		info->Compiler(),
-		this,
-		(BoolFunction)&Xpress::GetIsPlayer,
-		ArgumentsT::New(1, A_Int)
-	));
-	info->Add("IsFilming", Info.IsFilming = new BoolVariable(info->Compiler(), BoolVariable::CA_Getter, false));
-	info->Add("InRDrawEntitiesOnList", Info.InRDrawEntitiesOnList = new BoolVariable(info->Compiler(), BoolVariable::CA_Getter, false));
-	info->Add("InRDrawParticles", Info.InRDrawParticles = new BoolVariable(info->Compiler(), BoolVariable::CA_Getter, false));
-	info->Add("InRDrawViewModel", Info.InRDrawViewModel = new BoolVariable(info->Compiler(), BoolVariable::CA_Getter, false));
-	info->Add("InRRenderView", Info.InRRenderView = new BoolVariable(info->Compiler(), BoolVariable::CA_Getter, false));
+		IBubble::AddStandardFunctions(m_Bubbles.Root);
+		m_Bubbles.Root->Add("./", FunctionsC::Do(m_Bubbles.Root->Compiler()));
+		m_Bubbles.Root->Add("..", FunctionsC::Do(m_Bubbles.Root->Compiler()));
+		m_Bubbles.Root->Add(".def", FunctionsC::Do(defCompiler));	
+		m_Bubbles.Root->Add(".events", FunctionsC::Do(events->Compiler()));
+		m_Bubbles.Root->Add(".info", FunctionsC::Do(info->Compiler()));
+		m_Bubbles.Root->Add(".mod", FunctionsC::Do(Mod->GetBubble()->Compiler()));
+		m_Bubbles.Root->Add("Def", defCompileable);
+		m_Bubbles.Root->Add("Exec", Delegate::New(
+			m_Bubbles.Root->Compiler(),
+			this,
+			(VoidFunction)&Xpress::XExec,
+			ArgumentsT::New(1, A_String)
+		));
+
+		defCompiler->Ref()->Release();
+		defCompileable->Ref()->Release();
+	}
+
+	// Populate Events bubble:
+	{
+		IBubble::AddStandardFunctions(events);
+		events->Add("./", FunctionsC::Do(m_Bubbles.Root->Compiler()));
+		events->Add("..", FunctionsC::Do(m_Bubbles.Root->Compiler()));
+		events->Add("GlBegin", Events.GlBegin = new VoidEvent(events->Compiler()));
+		events->Add("GlEnd", Events.GlEnd = new VoidEvent(events->Compiler()));
+		events->Add("FilmingStart", Events.FilmingStart = new VoidEvent(events->Compiler()));
+		events->Add("FilmingStop", Events.FilmingStop = new VoidEvent(events->Compiler()));
+		events->Add("Matte", Events.Matte = new IntEvent(events->Compiler(), -1));
+		events->Add("RenderViewBegin", Events.RenderViewBegin = new BoolEvent(events->Compiler(), true));
+		events->Add("RenderViewEnd", Events.RenderViewEnd = new BoolEvent(events->Compiler(), false));
+	}
+
+	// Populate Info bubble:
+	{
+		IBubble::AddStandardFunctions(info);
+		info->Add("./", FunctionsC::Do(m_Bubbles.Root->Compiler()));
+		info->Add("..", FunctionsC::Do(m_Bubbles.Root->Compiler()));
+		info->Add("CurrentGlMode", Delegate::New(info->Compiler(), this, (IntFunction)&Xpress::XCurrentGlMode, ArgumentsT::New()));
+		info->Add("CurrentStreamIndex", Delegate::New(info->Compiler(), this, (IntFunction)&Xpress::XCurrentStreamIndex, ArgumentsT::New()));
+		info->Add("GetCurrentEntityIndex", Delegate::New(info->Compiler(), this, (IntFunction)&Xpress::XGetCurrentEntityIndex, ArgumentsT::New()));
+		info->Add("GetIsPlayer", Delegate::New(info->Compiler(), this, (BoolFunction)&Xpress::XGetIsPlayer, ArgumentsT::New(1, A_Int)));
+		info->Add("IsFilming", Delegate::New(info->Compiler(), this, (BoolFunction)&Xpress::XIsFilming, ArgumentsT::New()));
+		info->Add("InRDrawEntitiesOnList", Delegate::New(info->Compiler(), this, (BoolFunction)&Xpress::XInRDrawEntitiesOnList, ArgumentsT::New()));
+		info->Add("InRDrawParticles", Delegate::New(info->Compiler(), this, (BoolFunction)&Xpress::XInRDrawParticles, ArgumentsT::New()));
+		info->Add("InRDrawViewModel", Delegate::New(info->Compiler(), this, (BoolFunction)&Xpress::XInRDrawViewModel, ArgumentsT::New()));
+		info->Add("InRRenderView", Delegate::New(info->Compiler(), this, (BoolFunction)&Xpress::XInRRenderView, ArgumentsT::New()));
+	}
 
 	//
 
@@ -95,7 +109,14 @@ Xpress::~Xpress()
 	m_Bubbles.Root->Ref()->Release();
 }
 
-VoidT Xpress::Exec(Arguments args)
+
+
+Xpress * Xpress::Get (void) {
+	if(!m_Xpress) m_Xpress = new Xpress();
+	return m_Xpress;
+}
+
+VoidT Xpress::XExec(Arguments args)
 {
 	StringValueRef strVal(args[0].String->EvalString());
 
@@ -104,12 +125,7 @@ VoidT Xpress::Exec(Arguments args)
 	);
 }
 
-Xpress * Xpress::Get (void) {
-	if(!m_Xpress) m_Xpress = new Xpress();
-	return m_Xpress;
-}
-
-IntT Xpress::GetCurrentEntityIndex(Arguments args)
+IntT Xpress::XGetCurrentEntityIndex(Arguments args)
 {
 	cl_entity_t *ce = pEngStudio->GetCurrentEntity();
 
@@ -119,7 +135,7 @@ IntT Xpress::GetCurrentEntityIndex(Arguments args)
 	return -1;
 }
 
-BoolT Xpress::GetIsPlayer(Arguments args)
+BoolT Xpress::XGetIsPlayer(Arguments args)
 {
 	int index = args[0].Int->EvalInt();
 
@@ -127,6 +143,10 @@ BoolT Xpress::GetIsPlayer(Arguments args)
 
 	return e && e->player;	
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+
 
 char * New_CodeFromEngArgs (void)
 {
@@ -221,10 +241,10 @@ void xpress_execute(char const * textCode)
 
 	case ICompiled::T_Float:
 		{
-			int iResult = compiled->GetFloat()->EvalFloat();
+			double dResult = compiled->GetFloat()->EvalFloat();
 			pEngfuncs->Con_Printf(
 				"Result: Float = %f\n",
-				iResult
+				dResult
 			);			
 		}
 		break;

@@ -223,7 +223,7 @@ private:
 
 
 /// <summary>A string</summary>
-struct __declspec(novtable) IStringValue
+struct __declspec(novtable) IStringValue abstract
 {
 	virtual ::Afx::IRef * Ref (void) abstract = 0;
 

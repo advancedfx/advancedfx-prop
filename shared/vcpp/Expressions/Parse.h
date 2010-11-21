@@ -62,7 +62,7 @@ public:
 	void SetSkipNull (bool value);
 
 protected:
-	~ParseArgs();
+	virtual ~ParseArgs();
 
 private:
 	typedef vector<ICompiled *> VectorT;

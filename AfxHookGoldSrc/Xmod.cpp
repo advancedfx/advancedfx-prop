@@ -453,8 +453,10 @@ private:
 Xmod::Xmod()
 	: m_Locked(false)
 {
-	m_Bubble = Tools::StandardBubble();
+	m_Bubble = IBubble::New(true);
 	m_Bubble->Ref()->AddRef();
+
+	IBubble::AddStandardFunctions(m_Bubble);
 
 	m_Bubble->Add("Add", Delegate::New(
 		m_Bubble->Compiler(),

@@ -166,5 +166,23 @@ protected:
 };
 
 
+class StaticCompileable : public Compileable
+{
+public:
+	typedef ICompiled * (* CompileFn) (ICompiler * compiler, ICompileArgs * args);
+
+	StaticCompileable(ICompiler * compiler, CompileFn compileFn)
+	: Compileable(compiler), m_CompileFn(compileFn)
+	{}
+
+	virtual ICompiled * Compile (ICompileArgs * args) { return (*m_CompileFn)(m_Compiler, args); }
+
+	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }
+
+private:
+	CompileFn m_CompileFn;
+};
+
+
 
 } } // namespace Afx { namespace Expr {

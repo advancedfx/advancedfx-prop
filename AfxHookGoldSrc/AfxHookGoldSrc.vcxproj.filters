@@ -252,14 +252,20 @@
     <ClCompile Include="..\shared\vcpp\Expressions\Compile.cpp">
       <Filter>shared\vcpp\Expressions</Filter>
     </ClCompile>
-    <ClCompile Include="Xmod.cpp">
-      <Filter>AfxHookGoldSrc</Filter>
-    </ClCompile>
     <ClCompile Include="..\shared\vcpp\Expressions\Parse.cpp">
       <Filter>shared\vcpp\Expressions</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\vcpp\Expressions\Delegate.cpp">
       <Filter>shared\vcpp\Expressions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\vcpp\Expressions\Events.cpp">
+      <Filter>shared\vcpp\Expressions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\vcpp\Expressions\Functions.cpp">
+      <Filter>shared\vcpp\Expressions</Filter>
+    </ClCompile>
+    <ClCompile Include="Xmod.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -449,14 +455,20 @@
     <ClInclude Include="..\shared\vcpp\Expressions\Compile.h">
       <Filter>shared\vcpp\Expressions</Filter>
     </ClInclude>
-    <ClInclude Include="Xmod.h">
-      <Filter>AfxHookGoldSrc</Filter>
-    </ClInclude>
     <ClInclude Include="..\shared\vcpp\Expressions\Parse.h">
       <Filter>shared\vcpp\Expressions</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\vcpp\Expressions\Delegate.h">
       <Filter>shared\vcpp\Expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\vcpp\Expressions\Events.h">
+      <Filter>shared\vcpp\Expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\vcpp\Expressions\Functions.h">
+      <Filter>shared\vcpp\Expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="Xmod.h">
+      <Filter>AfxHookGoldSrc</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

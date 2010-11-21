@@ -16,11 +16,11 @@ R_DrawEntitiesOnList_t g_Old_R_DrawEntitiesOnList = 0;
 void New_R_DrawEntitiesOnList (void)
 {
 	g_ModInfo.SetIn_R_DrawEntitiesOnList(true);
-	Xpress::Get()->Info.InRDrawEntitiesOnList->Set(true);
+	Xpress::Get()->Info.InRDrawEntitiesOnList = true;
 
 	g_Old_R_DrawEntitiesOnList();
 
-	Xpress::Get()->Info.InRDrawEntitiesOnList->Set(false);
+	Xpress::Get()->Info.InRDrawEntitiesOnList = false;
 	g_ModInfo.SetIn_R_DrawEntitiesOnList(false);
 }
 

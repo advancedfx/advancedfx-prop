@@ -34,6 +34,10 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 	{ 
 		case DLL_PROCESS_ATTACH:
 		{
+#ifdef _DEBUG
+			MessageBox(0, "DLL_PROCESS_ATTACH", "MDT_DEBUG", MB_OK|MB_ICONINFORMATION);
+#endif
+
 			Xpress::Get()->AddRef();
 
 			RunInitScript();

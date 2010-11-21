@@ -34,4 +34,4 @@
 	
 	(Exec (s echo "Did I pass the Turing test yet?"))
 	(Exec (s spk "hgrunt/bravo you bastard!"))
-)
+void)

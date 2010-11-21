@@ -844,12 +844,12 @@ void Filming::Start()
 
 	//
 
-	Xpress::Get()->Info.IsFilming->Set(true);
+	Xpress::Get()->Info.IsFilming = true;
 }
 
 void Filming::Stop()
 {
-	Xpress::Get()->Info.IsFilming->Set(false);
+	Xpress::Get()->Info.IsFilming = false;
 
 	//
 
@@ -1938,7 +1938,7 @@ void Filming::UpdateXpMatteStage()
 		break;
 	}
 
-	Xpress::Get()->Info.CurrentStreamIndex->Set(iVal);
+	Xpress::Get()->Info.CurrentStreamIndex = iVal;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

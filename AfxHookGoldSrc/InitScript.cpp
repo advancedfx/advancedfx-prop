@@ -30,21 +30,22 @@ using namespace Afx::Expressions;
 #define DLL_NAME	"AfxHookGoldSrc.dll"
 
 
-class AddressProperty : public IntProperty
+class AddressProperty : public FunctionHost
 {
 public:
-	AddressProperty(ICompiler * compiler, AfxAddr * addr)
-	: IntProperty(compiler, CA_Property), m_Addr(addr)
+	AddressProperty(AfxAddr * addr)
+	: m_Addr(addr)
 	{
 
 	}
 
-	virtual IntT Get (void) {
+	IntT GetAddr (Arguments args)
+	{
 		return *m_Addr;
 	}
 
-	virtual void Set (IntT value) {
-		*m_Addr = value;
+	VoidT SetAddr (Arguments args) {
+		*m_Addr = (AfxAddr)args[0].Int->EvalInt();
 	}
 
 private:
@@ -57,9 +58,10 @@ class GoldSrcAddresses
 public:
 	GoldSrcAddresses()
 	{
-		m_Bubble = Tools::StandardBubble();
+		m_Bubble = IBubble::New(true);
 		m_Bubble->Ref()->AddRef();
 
+		IBubble::AddStandardFunctions(m_Bubble);
 		m_Bubble->Add("OnHwDllLoaded", (m_OnHwDllLoaded = new VoidEvent(m_Bubble->Compiler())));
 		m_Bubble->Add("OnClientDllLoaded", (m_OnClientDllLoaded = new VoidEvent(m_Bubble->Compiler())));
 	}
@@ -82,7 +84,13 @@ public:
 
 				if(padr)
 				{
-					m_Bubble->Add(name, new AddressProperty(m_Bubble->Compiler(), padr));
+					AddressProperty * adrProp = new AddressProperty(padr);
+					adrProp->AddRef();
+
+					m_Bubble->Add(name, Delegate::New(m_Bubble->Compiler(), adrProp, (IntFunction)&AddressProperty::GetAddr, ArgumentsT::New()));
+					m_Bubble->Add(name, Delegate::New(m_Bubble->Compiler(), adrProp, (VoidFunction)&AddressProperty::SetAddr, ArgumentsT::New(1, A_Int)));
+
+					adrProp->Release();
 				}
 			}
 		}
@@ -143,10 +151,6 @@ bool RunInitScript()
 	HMODULE hHookDll = GetModuleHandle(DLL_NAME);
 
 	hookPath[0]=NULL;
-
-#if _DEBUG
-	MessageBox(0, "RunInitScript", "MDT_DEBUG",MB_OK|MB_ICONINFORMATION);
-#endif
 
 	g_GoldSrcAddresses.BubbleAddresses();
 	

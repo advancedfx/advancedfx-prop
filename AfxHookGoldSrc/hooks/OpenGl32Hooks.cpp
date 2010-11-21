@@ -167,7 +167,7 @@ bool g_PrimitivesApplied;
 
 void APIENTRY NewGlBegin(GLenum mode)
 {
-	Xpress::Get()->Info.CurrentGlMode->Set(mode);
+	Xpress::Get()->Info.CurrentGlMode = mode;
 	Xpress::Get()->Events.GlBegin->EvalVoid();
 
 	if (g_Filming.doWireframe(mode) == Filming::DR_HIDE) {
@@ -215,7 +215,7 @@ void APIENTRY NewGlEnd(void)
 
 	if(g_PrimitivesApplied) Xpress::Get()->Mod->GlPrimMod()->OnGlEnd();
 
-	Xpress::Get()->Info.CurrentGlMode->Set(-1);
+	Xpress::Get()->Info.CurrentGlMode = -1;
 	Xpress::Get()->Events.GlEnd->EvalVoid();
 
 	if(Filming::MM_KEY == g_Filming.GetMatteMethod())

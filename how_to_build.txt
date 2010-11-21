@@ -1,8 +1,5 @@
 Build order:
 
-1) Build Spidermonkey, see doc\how_to_build_spidermonkey.txt.
-   Copy the js32.dll into build\Release\bin\
-
 2) Build (Configuration=Release): AfxHookGoldSrc, AfxHookSource, AfxCppCli
 
 3) AfxHook\recompile.bat, move AfxHook.dat into build\Release\bin\

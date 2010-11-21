@@ -1,24 +1,28 @@
 (do
-(null(s WE SUGGEST TO NOT EDIT THIS FILE!))
-(null(s This file carries out CRUCIAL operations and WE MIGHT CHANGE IT occasionally.))
 
-(null(s))
-(null(s OnHwDllLoaded))
-(null(s))
+(null(s
+	WE SUGGEST TO NOT EDIT THIS FILE!
+	This file carries out CRUCIAL operations and WE MIGHT CHANGE IT occasionally.
+))
+
+
+(null(s
+	OnHwDllLoaded
+))
 
 (OnHwDllLoaded (do
 	
-	(null(s))
-	(null(s Engine-to-client interfaces:))
-	(null(s))
+	(null(s
+		Engine-to-client interfaces:
+	))
 	
 	(p_cl_enginefuncs_s (+ hwDll 0x166A98))
 	(p_engine_studio_api_s (+ hwDll 0x1829B8))
 	(p_playermove_s (+ hwDll 0xFD5AE0))
 	
-	(null(s))
-	(null(s General engine hooks:))
-	(null(s))
+	(null(s
+		General engine hooks:
+	))
 	
 	(Host_Frame (+ hwDll 0x62B00))
 	(Host_Frame_DSZ 0x05)
@@ -28,9 +32,9 @@
 	
 	(ClientFunctionTable (+ hwDll 0x11FE320))
 	
-	(null(s))
-	(null(s Rendering related:))
-	(null(s))
+	(null(s
+		Rendering related:
+	))
 	
 	(CL_EmitEntities (+ hwDll 0x21C40))
 	(CL_EmitEntities_DSZ 0x05)
@@ -66,11 +70,13 @@
 	(skytextures (+ hwDll 0xA83620))
 	
 	
-	(null(s DecalTexture hook:))
-	(null(s   this function is called in a unknown sub function of R_DrawWorld that is))
-	(null(s   called before R_BlendLightmaps. the unknown functions draws out all))
-	(null(s   decals of the map as it seems or s.th. and uses this one to get))
-	(null(s   a decal's texture))
+	(null(s
+		DecalTexture hook:
+		this function is called in a unknown sub function of R_DrawWorld that is
+		called before R_BlendLightmaps. the unknown functions draws out all
+		decals of the map as it seems or s.th. and uses this one to get
+		a decal's texture
+	))
 	(UnkGetDecalTexture (+ hwDll 0x3C600))
 	(DTOURSZ_UnkGetDecalTexture 0x05)
 	
@@ -108,9 +114,9 @@
 	(CL_ParseServerMessage_CmdRead (+ CL_ParseServerMessage 0x0E3))
 	(DTOURSZ_CL_ParseServerMessage_CmdRead 0x07)
 	
-	(null(s))
-	(null(s other))
-	(null(s))
+	(null(s
+		other
+	))
 	
 	(null(s tfc DemoEdit campath fix:))
 	(HudSpectator_tfc (+ hlExe 0x509A00))
@@ -120,17 +126,21 @@
 	(UpdateSpectatorPanel_checkjmp_tfc (+ hlExe 0x5439A1)) (null(s Team Fortress Classic (tfc)))
 	(UpdateSpectatorPanel_checkjmp_valve (+ hlExe 0x540221)) (null(s //Half-Life (valve)))
 	
-	(null(s unused // (p_enginefuncs_s (+ hwDll 0x18B9F0)) // may be unused))
-	(null(s unused // (p_globalvars_s (+ hwDll 0x7CD0E0)) // may be unused))
+	(null(s
+		unused:
+		(p_enginefuncs_s (+ hwDll 0x18B9F0))
+		(p_globalvars_s (+ hwDll 0x7CD0E0))
+	))
 	
 void) )
 
-(null(s))
-(null(s OnClientDllLoaded:))
-(null(s))
 
-(null(s /// <remarks>Not called when no client.dll is loaded (valve, tfc).</remarks>))
-(null(s ///))
+(null(s
+	OnClientDllLoaded:
+	
+	<remarks>Not called when no client.dll is loaded (valve, tfc).</remarks>
+))
+
 (OnClientDllLoaded (do
 	
 	(null(s))
@@ -170,15 +180,18 @@ void) )
 	
 void) )
 
-(null(s ////////////////////////////////////////////////////////////////////////////////))
-(null(s))
-(null(s Provide additional OpenGL helpers:))
 
-(null(s //ogl.GL_TRUE 1))
-(null(s //ogl.GL_FALSE 0))
-(null(s //ogl.GL_COLOR_BUFFER_BIT 0x00004000))
-(null(s //ogl.GL_DEPTH_BUFFER_BIT 0x00000100))
-(null(s //ogl.GL_ACCUM_BUFFER_BIT 0x00000200))
-(null(s //ogl.GL_STENCIL_BUFFER_BIT 0x00000400))
+(null(s
+	////////////////////////////////////////////////////////////////////////////////
+
+	Provide additional OpenGL helpers:
+
+	//ogl.GL_TRUE 1
+	//ogl.GL_FALSE 0
+	//ogl.GL_COLOR_BUFFER_BIT 0x00004000
+	//ogl.GL_DEPTH_BUFFER_BIT 0x00000100
+	//ogl.GL_ACCUM_BUFFER_BIT 0x00000200
+	//ogl.GL_STENCIL_BUFFER_BIT 0x00000400
+))
 
 void)

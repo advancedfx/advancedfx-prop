@@ -85,11 +85,11 @@ void New_R_RenderView(void)
 			// call original R_RenderView_
 			//
 
-			Xpress::Get()->Info.InRRenderView->Set(true);
+			Xpress::Get()->Info.InRRenderView = true;
 
 			g_Old_R_RenderView();
 
-			Xpress::Get()->Info.InRRenderView->Set(false);
+			Xpress::Get()->Info.InRRenderView = false;
 
 			bLoop = Xpress::Get()->Events.RenderViewEnd->EvalBool();
 		}
