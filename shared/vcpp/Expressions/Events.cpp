@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-11-20 dominik.matrixstorm.com
+// 2010-12-15 dominik.matrixstorm.com
 //
 // First changes
 // 2010-10-24 dominik.matrixstorm.com
@@ -55,7 +55,7 @@ private:
 
 
 BoolEvent::BoolEvent(ICompiler * compiler, BoolT initialValue)
-: Compileable(compiler), m_Bool(Functions::Bool(initialValue))
+: m_Compiler(compiler), m_Bool(new Bool(initialValue))
 {
 	m_Bool->Ref()->AddRef();
 }
@@ -65,11 +65,11 @@ BoolEvent::~BoolEvent()
 	m_Bool->Ref()->Release();
 }
 
-ICompiled * BoolEvent::Compile (ICompileArgs * args)
+ICompiled * BoolEvent::Compile (Cursor * cursor)
 {
 	ICompiled * compiled = 0;
 
-	ParseArgs * pa = new ParseArgs(m_Compiler, args);
+	ParseArgs * pa = new ParseArgs(new ArgumentCompiler(m_Compiler.get(), cursor));
 	pa->Ref()->AddRef();
 
 	ICompiled::Type type = pa->ParseNextArgTE();
@@ -151,7 +151,7 @@ private:
 
 
 IntEvent::IntEvent(ICompiler * compiler, IntT initialValue)
-: Compileable(compiler), m_Int(Functions::Int(initialValue))
+: m_Compiler(compiler), m_Int(new Int(initialValue))
 {
 	m_Int->Ref()->AddRef();
 }
@@ -161,11 +161,11 @@ IntEvent::~IntEvent()
 	m_Int->Ref()->Release();
 }
 
-ICompiled * IntEvent::Compile (ICompileArgs * args)
+ICompiled * IntEvent::Compile (Cursor * cursor)
 {
 	ICompiled * compiled = 0;
 
-	ParseArgs * pa = new ParseArgs(m_Compiler, args);
+	ParseArgs * pa = new ParseArgs(new ArgumentCompiler(m_Compiler.get(), cursor));
 	pa->Ref()->AddRef();
 
 	ICompiled::Type type = pa->ParseNextArgTE();
@@ -248,7 +248,7 @@ private:
 
 
 VoidEvent::VoidEvent(ICompiler * compiler)
-	: Compileable(compiler), m_Void(Functions::Void())
+: m_Compiler(compiler), m_Void(new Void())
 {
 	m_Void->Ref()->AddRef();
 }
@@ -258,11 +258,11 @@ VoidEvent::~VoidEvent()
 	m_Void->Ref()->Release();
 }
 
-ICompiled * VoidEvent::Compile (ICompileArgs * args)
+ICompiled * VoidEvent::Compile (Cursor * cursor)
 {
 	ICompiled * compiled = 0;
 
-	ParseArgs * pa = new ParseArgs(m_Compiler, args);
+	ParseArgs * pa = new ParseArgs(new ArgumentCompiler(m_Compiler.get(), cursor));
 	pa->Ref()->AddRef();
 
 	ICompiled::Type type = pa->ParseNextArgTE();
@@ -299,7 +299,7 @@ VoidT VoidEvent::EvalVoid (void) {
 
 void VoidEvent::SetEvent(IVoid * value)
 {
-	if(!value) value = Functions::Void();
+	if(!value) value = new Void();
 
 	m_Void->Ref()->Release();
 

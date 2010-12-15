@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-11-18 dominik.matrixstorm.com
+// 2010-12-15 dominik.matrixstorm.com
 //
 // First changes
 // 2010-11-18 dominik.matrixstorm.com
@@ -121,50 +121,42 @@ ArgumentsT * ArgumentsT::New ( int argCount, ArgumentT argumentT, ... )
 // Delegate ////////////////////////////////////////////////////////////////////
 
 Delegate::Delegate(ICompiler * compiler, FunctionHost * host, FunctionT functionT, Function function, ArgumentsT * argumentsT)
-: Compileable(compiler), m_Host(host), m_FunctionT(functionT), m_Function(function), m_ArgumentsT(argumentsT)
+: m_Compiler(compiler), m_Host(host), m_FunctionT(functionT), m_Function(function), m_ArgumentsT(argumentsT)
 {
-	argumentsT->AddRef();
-	m_Host->AddRef();
-}
-
-Delegate::~Delegate()
-{
-	m_ArgumentsT->Release();
-	m_Host->Release();
 }
 
 VoidT Delegate::CallVoid(Arguments args)
 {
-	(m_Host->*m_Function.Void)(args);
+	(m_Host.get()->*m_Function.Void)(args);
 }
 
 BoolT Delegate::CallBool(Arguments args)
 {
-	return (m_Host->*m_Function.Bool)(args);
+	return (m_Host.get()->*m_Function.Bool)(args);
 }
 
 
 IntT Delegate::CallInt(Arguments args)
 {
-	return (m_Host->*m_Function.Int)(args);
+	return (m_Host.get()->*m_Function.Int)(args);
 }
 
 FloatT Delegate::CallFloat(Arguments args)
 {
-	return (m_Host->*m_Function.Float)(args);
+	return (m_Host.get()->*m_Function.Float)(args);
 }
 
 IStringValue * Delegate::CallString(Arguments args)
 {
-	return (m_Host->*m_Function.String)(args);
+	return (m_Host.get()->*m_Function.String)(args);
 }
 
 void Delegate::DeleteArgs(Arguments args)
 {
-	int count = m_ArgumentsT->Count();
+	int count = m_ArgumentsT.get()->Count();
 	for(int i=0; i <count; i++)
 	{
-		switch(m_ArgumentsT->Get(i))
+		switch(m_ArgumentsT.get()->Get(i))
 		{
 		case A_Void:
 			args[i].Void->Ref()->Release();
@@ -188,27 +180,27 @@ void Delegate::DeleteArgs(Arguments args)
 	}
 }
 
-ICompiled * Delegate::Compile (ICompileArgs * args)
+ICompiled * Delegate::Compile (Cursor * cursor)
 {
 	ICompiled * compiled = 0;
 
-	ParseArgs * pa = new ParseArgs(m_Compiler, args);
+	ParseArgs * pa = new ParseArgs(new ArgumentCompiler(m_Compiler.get(), cursor));
 	pa->Ref()->AddRef();
 
 	bool bOk = true;
 
-	for(int i=0; bOk && i < m_ArgumentsT->Count(); i++)
+	for(int i=0; bOk && i < m_ArgumentsT.get()->Count(); i++)
 	{
-		bOk = pa->ParseNextArgTC( Translate(m_ArgumentsT->Get(i)) );
+		bOk = pa->ParseNextArgTC( Translate(m_ArgumentsT.get()->Get(i)) );
 	}
 
 	if(bOk && pa->ParseEof())
 	{
-		int count = m_ArgumentsT->Count();
+		int count = m_ArgumentsT.get()->Count();
 		Arguments args = new Argument[count];
 		for(int i=0; i < count; i++)
 		{
-			switch(m_ArgumentsT->Get(i))
+			switch(m_ArgumentsT.get()->Get(i))
 			{
 			case A_Void:
 				args[i].Void = pa->GetArg(i)->GetVoid();
@@ -307,6 +299,9 @@ Delegate * Delegate::New(ICompiler * compiler, FunctionHost * host, StringFuncti
 	return new Delegate(compiler, host, F_String, f, argumentsT);
 }
 
+IRef * Delegate::Ref (void) {
+	return this;
+}
 
 ICompiled::Type Delegate::Translate(ArgumentT type)
 {

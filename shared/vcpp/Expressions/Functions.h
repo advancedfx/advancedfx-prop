@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-11-21 dominik.matrixstorm.com
+// 2010-12-15 dominik.matrixstorm.com
 //
 // First changes
 // 2010-10-24 dominik.matrixstorm.com
@@ -16,76 +16,53 @@
 namespace Afx { namespace Expressions {
 
 
-struct __declspec(novtable) Functions abstract
-{	
-	static IBool * Bool (BoolT value);
-
-	static IFloat * Float (IntT value);
-
-	static IInt * Int (IntT value);
-
-	static INull * Null (void);
-
-	static IString * String (IStringValue * value);
-
-	static IVoid * Void (void);
-};
-
-struct __declspec(novtable) FunctionsC abstract
+struct __declspec(novtable) FunctionCompilers abstract
 {
-	static ICompileable * And (ICompiler * compiler);
+	static ICompiler * And (ICompiler * compiler);
 
-	static ICompiled * Bool (ICompiler * compiler, ICompileArgs * args, BoolT value);
-
-	static ICompileable * CompileEval (ICompiler * compiler);
+	static ICompiler * CompileEval (ICompiler * compiler);
 
 	/// <summary>
 	/// Create a &quot;do&quot;-function that executes in a differnet compiler / bubble.
 	/// This means you can use it to add a command function for cross-bubble access.
 	/// </summary>
-	static ICompileable * Do (ICompiler * compiler);
+	static ICompiler * Do (ICompiler * compiler);
 
-	static ICompileable * Equal (ICompiler * compiler);
+	static ICompiler * Equal (ICompiler * compiler);
 
-	static ICompiled * Float (ICompiler * compiler, ICompileArgs * args, FloatT value);
+	static ICompiler * Greater (ICompiler * compiler);
 
-	static ICompileable * Greater (ICompiler * compiler);
+	static ICompiler * GreaterOrEqual (ICompiler * compiler);
 
-	static ICompileable * GreaterOrEqual (ICompiler * compiler);
+	static ICompiler * If (ICompiler * compiler);
 
-	static ICompileable * If (ICompiler * compiler);
+	static ICompiler * InBool (ICompiler * compiler);
 
-	static ICompileable * InBool (ICompiler * compiler);
+	static ICompiler * InInt (ICompiler * compiler);
 
-	static ICompileable * InInt (ICompiler * compiler);
+	static ICompiler * Less (ICompiler * compiler);
 
-	static ICompiled * Int (ICompiler * compiler, ICompileArgs * args, IntT value);
+	static ICompiler * LessOrEqual (ICompiler * compiler);
 
-	static ICompileable * Less (ICompiler * compiler);
+	static ICompiler * MaxBool (ICompiler * compiler);
 
-	static ICompileable * LessOrEqual (ICompiler * compiler);
+	static ICompiler * MaxInt (ICompiler * compiler);
 
-	static ICompileable * MaxBool (ICompiler * compiler);
+	static ICompiler * MinBool (ICompiler * compiler);
 
-	static ICompileable * MaxInt (ICompiler * compiler);
+	static ICompiler * MinInt (ICompiler * compiler);
 
-	static ICompileable * MinBool (ICompiler * compiler);
+	static ICompiler * Not (ICompiler * compiler);
 
-	static ICompileable * MinInt (ICompiler * compiler);
+	static ICompiler * Null (ICompiler * compiler);
 
-	static ICompileable * Not (ICompiler * compiler);
+	static ICompiler * Or (ICompiler * compiler);
 
-	static ICompileable * Null (ICompiler * compiler);
+	static ICompiler * StringFromFile (ICompiler * compiler);
 
-	static ICompileable * Or (ICompiler * compiler);
+	static ICompiler * Sum (ICompiler * compiler);
 
-	static ICompileable * String (ICompiler * compiler);
-
-	static ICompileable * StringFromFile (ICompiler * compiler);
-
-	static ICompileable * Sum (ICompiler * compiler);
-
-	static ICompileable * Void (ICompiler * compiler);
+	static ICompiler * Void (ICompiler * compiler);
 };
 
 

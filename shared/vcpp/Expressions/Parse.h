@@ -20,8 +20,8 @@ namespace Afx { namespace Expressions {
 class ParseArgs : public Ref
 {
 public:
-	/// <remarks>by default Null is skipped upon parsing</remarks>
-	ParseArgs(ICompiler * compiler, ICompileArgs * args);
+	/// <remarks>by default Null is skipped upon parsing, set SetSkipNull</remarks>
+	ParseArgs(IArgumentCompiler * argumentCompiler);
 
 	ICompiled * GetArg(int index);
 
@@ -57,7 +57,7 @@ public:
 
 	::Afx::IRef * Ref (void);
 
-	void SetArg(int index, ICompiled * value) ;
+	void SetArg(int index, ICompiled * value);
 
 	void SetSkipNull (bool value);
 
@@ -67,9 +67,8 @@ protected:
 private:
 	typedef vector<ICompiled *> VectorT;
 
-	ICompileArgs * m_Args;
+	IArgumentCompiler * m_ArgumentCompiler;
 	VectorT m_Compileds;
-	ICompiler * m_Compiler;
 	bool m_SkipNull;
 
 	ICompiled * ParseNextArg_Internal (void);
@@ -77,5 +76,5 @@ private:
 };
 
 
-
 } } // namespace Afx { namespace Expr {
+

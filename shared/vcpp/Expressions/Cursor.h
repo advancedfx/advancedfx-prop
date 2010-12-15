@@ -3,13 +3,16 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-11-11 dominik.matrixstorm.com
+// 2010-12-15 dominik.matrixstorm.com
 //
 // First changes
 // 2010-10-24 dominik.matrixstorm.com
 
 
-namespace Afx {
+#include "Types.h"
+
+
+namespace Afx { namespace Expressions {
 
 
 struct CursorBackup
@@ -24,11 +27,10 @@ private:
 };
 
 
-class Cursor
+class Cursor : public Ref
 {
 public:
-	Cursor(char const * text);
-	~Cursor();
+	Cursor(IStringValue * text);
 
 	/// <summary>Advance cursor position to the right.</summary>
 	void Add();
@@ -53,29 +55,34 @@ public:
 	bool IsAlpha() const;
 	static bool IsAlpha (char const val);
 
+	bool IsControlChar() const;
+	static bool IsControlChar(char val);
+
 	bool IsDigit() const;
 	static bool IsDigit (char const val);
+
+	bool IsEscape() const;
+	static bool IsEscape (char const val);
 
 	bool IsNull() const;
 	static bool IsNull (char const val);
 
+	bool IsPaClose() const;
+	static bool IsPaClose (char const val);
+
+	bool IsPaOpen() const;
+	static bool IsPaOpen (char const val);
+
 	bool IsSpace() const;	
 	static bool IsSpace (char const val);
 
-	double ReadDouble (void);
+	bool ReadBoolValue (BoolT & outValue);
 
-	/// <param name="outSkipped">pointer, can be 0</param>
-	double ReadDouble (int * outSkipped);
+	bool ReadFloatValue (FloatT & outValue);
 
-	long ReadLong (void);
+	bool ReadIntValue (IntT & outValue);
 
-	/// <param name="outSkipped">pointer, can be 0</param>
-	long ReadLong (int * outSkipped);
-
-	unsigned long ReadULong (void);
-
-	/// <param name="outSkipped">pointer, can be 0</param>
-	unsigned long ReadULong (int * outSkipped);
+	IStringValue * ReadStringValue (void);
 	
 	void Restore(CursorBackup const & backup);
 
@@ -99,12 +106,17 @@ public:
 
 	void SetPos(int value);
 
-
 private:
 	CursorBackup m_Backup;
 	int m_Len;
-	char * m_Text;
+	StringValueRef m_Text;
+};
+
+class CursorRef : public RefPtr<Cursor>
+{
+public:
+	CursorRef(Cursor * val) : RefPtr(val) {}
 };
 
 
-} // namespace Afx {
+} } // namespace Afx { namespace Expressions {

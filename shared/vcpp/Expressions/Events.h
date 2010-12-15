@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-11-21 dominik.matrixstorm.com
+// 2010-12-15 dominik.matrixstorm.com
 //
 // First changes
 // 2010-10-24 dominik.matrixstorm.com
@@ -20,13 +20,14 @@ namespace Afx { namespace Expressions {
 /// BoolEvent -&gt; Bool - Get event
 /// BoolEvent Bool -&gt; Void - Set event
 /// </summary>
-class BoolEvent : public Compileable,
-	public IBool
+class BoolEvent : public Ref,
+	public IBool,
+	public ICompiler
 {
 public:
 	BoolEvent(ICompiler * compiler, BoolT initialValue);
 
-	virtual ICompiled * Compile (ICompileArgs * args);
+	virtual ICompiled * Compile (Cursor * cursor);
 
 	virtual BoolT EvalBool (void);
 
@@ -38,6 +39,7 @@ protected:
 	virtual ~BoolEvent();
 
 private:
+	CompilerRef m_Compiler;
 	IBool * m_Bool;
 };
 
@@ -47,13 +49,14 @@ private:
 /// IntEvent -&gt; Int - Get event
 /// IntEvent Int -&gt; Void - Set event
 /// </summary>
-class IntEvent : public Compileable,
-	public IInt
+class IntEvent : public Ref,
+	public IInt,
+	public ICompiler
 {
 public:
 	IntEvent(ICompiler * compiler, IntT initialValue);
 
-	virtual ICompiled * Compile (ICompileArgs * args);
+	virtual ICompiled * Compile (Cursor * cursor);
 
 	virtual IntT EvalInt (void);
 
@@ -65,6 +68,7 @@ protected:
 	virtual ~IntEvent();
 
 private:
+	CompilerRef m_Compiler;
 	IInt * m_Int;
 };
 
@@ -74,13 +78,14 @@ private:
 /// VoidEvent -&gt; Void - Get event
 /// VoidEvent Void -&gt; Void - Set event
 /// </summary>
-class VoidEvent : public Compileable,
-	public IVoid
+class VoidEvent : public Ref,
+	public IVoid,
+	public ICompiler
 {
 public:
 	VoidEvent(ICompiler * compiler);
 
-	virtual ICompiled * Compile (ICompileArgs * args);
+	virtual ICompiled * Compile (Cursor * cursor);
 
 	virtual VoidT EvalVoid (void);
 
@@ -92,6 +97,7 @@ protected:
 	virtual ~VoidEvent();
 
 private:
+	CompilerRef m_Compiler;
 	IVoid * m_Void;
 };
 

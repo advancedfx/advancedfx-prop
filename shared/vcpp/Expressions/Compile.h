@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-11-16 dominik.matrixstorm.com
+// 2010-12-15 dominik.matrixstorm.com
 //
 // First changes
 // 2010-10-24 dominik.matrixstorm.com
@@ -12,6 +12,9 @@
 #include "Types.h"
 #include "Cursor.h"
 
+#include <list>
+
+using namespace std;
 
 namespace Afx { namespace Expressions {
 
@@ -51,7 +54,6 @@ struct __declspec(novtable) ICompiled abstract
 
 	virtual IString * GetString (void) abstract = 0;
 };
-
 
 /// <summary>ICompiled standard implementation.</summary>
 class Compiled : public Ref,
@@ -105,84 +107,117 @@ private:
 };
 
 
+/// <summary>Plain-text compiler</summary>
 struct __declspec(novtable) ICompiler abstract
 {
 	virtual ::Afx::IRef * Ref (void) abstract = 0;
 
-	virtual ICompiled * Compile_Function (Cursor & cursor) abstract = 0;
+	virtual ICompiled * Compile (Cursor * cursor) abstract = 0;
 };
 
-
-struct __declspec(novtable) ICompileArgs abstract
-{
-	virtual ::Afx::IRef * Ref (void) abstract = 0;
-
-	virtual ICompiled * CompileNextArg (ICompiler * compiler) abstract = 0;
-};
-
-
-/// <summary>ICompileArgs standard implementation</summary>
-class CompileArgs : public Ref,
-	public ICompileArgs
+class CompilerRef : public RefIPtr<ICompiler>
 {
 public:
-	CompileArgs(Cursor & cursor, bool inParenthesis);
+	CompilerRef(ICompiler * val) : RefIPtr(val) {}
+};
 
-	virtual ICompiled * CompileNextArg (ICompiler * compiler);
+struct __declspec(novtable) IArgumentCompiler abstract
+{
+	virtual IRef * Ref (void) abstract = 0;
 
-	virtual ::Afx::IRef * Ref (void);
+	virtual ICompiled * CompileArgument (void) abstract = 0;
+};
+
+
+class ArgumentCompiler : public Ref,
+	public IArgumentCompiler
+{
+public:
+	ArgumentCompiler(ICompiler * compiler, Cursor * cursor);
+
+	virtual ICompiled * CompileArgument (void);
+
+	virtual IRef * Ref (void);
 
 private:
-	Cursor & m_Cursor;
-	bool m_Eof;
-	bool m_MoreArgs;
+	RefIPtr<ICompiler> m_Compiler;
+	RefPtr<Cursor> m_Cursor;
 };
 
 
-struct __declspec(novtable) ICompileable abstract
-{
-	virtual ::Afx::IRef * Ref (void) abstract = 0;
-
-	virtual ICompiled * Compile (ICompileArgs * args) abstract = 0;
-};
-
-
-/// <summary>ICompileable standard implementation base class.</summary>
-class Compileable abstract : public Ref,
-	public ICompileable
+/// <summary>
+/// Compiles boolValue.
+/// </summary>
+class BoolCompiler : public Ref,
+	public ICompiler
 {
 public:
-	Compileable(ICompiler * compiler);
-
-	virtual ICompiled * Compile (ICompileArgs * args) abstract = 0;
+	virtual ICompiled * Compile (Cursor * cursor);
 
 	virtual ::Afx::IRef * Ref (void);
+};
+
+
+/// <summary>
+/// Compiles intValue.
+/// </summary>
+class IntCompiler : public Ref,
+	public ICompiler
+{
+public:
+	virtual ICompiled * Compile (Cursor * cursor);
+
+	virtual ::Afx::IRef * Ref (void);
+};
+
+
+/// <summary>
+/// Compiles floatValue.
+/// </summary>
+class FloatCompiler : public Ref,
+	public ICompiler
+{
+public:
+	virtual ICompiled * Compile (Cursor * cursor);
+
+	virtual ::Afx::IRef * Ref (void);
+};
+
+
+class StaticFunctionCompiler : public Ref,
+	public ICompiler
+{
+public:
+	typedef ICompiled * (* StaticCompileFunction)(IArgumentCompiler * compiler);
+
+	StaticFunctionCompiler(ICompiler * compiler, StaticCompileFunction compileFunction);
+
+	virtual ICompiled * Compile (Cursor * cursor);
+
+	virtual IRef * Ref (void);
 
 protected:
-	ICompiler * m_Compiler;
-
-	virtual ~Compileable();
-
-};
-
-
-class StaticCompileable : public Compileable
-{
-public:
-	typedef ICompiled * (* CompileFn) (ICompiler * compiler, ICompileArgs * args);
-
-	StaticCompileable(ICompiler * compiler, CompileFn compileFn)
-	: Compileable(compiler), m_CompileFn(compileFn)
-	{}
-
-	virtual ICompiled * Compile (ICompileArgs * args) { return (*m_CompileFn)(m_Compiler, args); }
-
-	virtual ::Afx::IRef * Ref() { return dynamic_cast<::Afx::IRef *>(this); }
 
 private:
-	CompileFn m_CompileFn;
+	StaticCompileFunction m_CompileFunction;
+	RefIPtr<ICompiler> m_Compiler;
 };
 
+
+/// <summary>
+/// Compiles stringText.
+/// </summary>
+class StringTextCompiler : public Ref,
+	public ICompiler
+{
+public:
+	virtual ICompiled * Compile (Cursor * cursor);
+
+	virtual IRef * Ref (void);
+
+private:
+	static bool ReadString(Cursor * cursor, int & outLength, char * & outData);
+};
 
 
 } } // namespace Afx { namespace Expr {

@@ -115,6 +115,7 @@
     <ClCompile Include="..\shared\FileTools.cpp" />
     <ClCompile Include="..\shared\vcpp\AfxAddr.cpp" />
     <ClCompile Include="..\shared\vcpp\Data.cpp" />
+    <ClCompile Include="..\shared\vcpp\Expressions\Bubble.cpp" />
     <ClCompile Include="..\shared\vcpp\Expressions\Compile.cpp" />
     <ClCompile Include="..\shared\vcpp\Expressions\Cursor.cpp" />
     <ClCompile Include="..\shared\vcpp\Expressions\Delegate.cpp" />
@@ -199,6 +200,7 @@
     <ClInclude Include="..\shared\FileTools.h" />
     <ClInclude Include="..\shared\vcpp\AfxAddr.h" />
     <ClInclude Include="..\shared\vcpp\Data.h" />
+    <ClInclude Include="..\shared\vcpp\Expressions\Bubble.h" />
     <ClInclude Include="..\shared\vcpp\Expressions\Compile.h" />
     <ClInclude Include="..\shared\vcpp\Expressions\Cursor.h" />
     <ClInclude Include="..\shared\vcpp\Expressions\Delegate.h" />

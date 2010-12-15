@@ -16,70 +16,51 @@ using namespace Afx;
 using namespace Afx::Expressions;
 
 
-// CompileArgs /////////////////////////////////////////////////////////////////
 
-CompileArgs::CompileArgs(Cursor & cursor, bool inParenthesis)
-: m_Cursor(cursor), m_Eof(false), m_MoreArgs(inParenthesis)
+// ArgumentCompiler //////////////////////////////////////////////////////
+
+ArgumentCompiler::ArgumentCompiler(ICompiler * compiler, Cursor * cursor)
+: m_Compiler(compiler), m_Cursor(cursor)
 {
 }
 
-ICompiled * CompileArgs::CompileNextArg (ICompiler * compiler)
+ICompiled * ArgumentCompiler::CompileArgument (void)
 {
 	ICompiled * compiled = 0;
 
-	compiler->Ref()->AddRef();
+	StringValueRef strVal(m_Cursor.get()->ReadStringValue());
 
-	if(m_MoreArgs)
+	if(1 <= strVal.getLength())
 	{
-		if(')' == m_Cursor.Get())
-		{
-			m_MoreArgs = false;
-		}
-		else
-		{
-			compiled = compiler->Compile_Function(m_Cursor);
-			if(!compiled->GetError())
-			{
-				m_Cursor.SkipSpace();
-			}
-		}
+		compiled = m_Compiler.get()->Compile(new Cursor(strVal.get()));
 	}
 
-	if(!compiled && !m_Eof)
-	{
-		compiled =  new Compiled(new Eof);
-	}
-
-	compiler->Ref()->Release();
-
-	return compiled ? compiled : new Compiled(new Error(Error::EC_ParseError, m_Cursor));
+	return compiled ? compiled : new Compiled(new Error(Error::EC_ParseError, m_Cursor.get()));
 }
 
-
-::Afx::IRef * CompileArgs::Ref (void)
+IRef * ArgumentCompiler::Ref (void)
 {
-	return dynamic_cast<::Afx::IRef *>(this);
+	return this;
 }
 
 
-// Compileable /////////////////////////////////////////////////////////////////
+// BoolCompiler ////////////////////////////////////////////////////////////////
 
-Compileable::Compileable(ICompiler * compiler)
-: m_Compiler(compiler)
+ICompiled * BoolCompiler::Compile (Cursor * cursor)
 {
-	compiler->Ref()->AddRef();
+	CursorRef curRef(cursor);
+	BoolT value;
+
+	return curRef.get()->ReadBoolValue(value)
+		? new Compiled(new Bool(value))
+		: new Compiled(new Error(Error::EC_ParseError, curRef.get()))
+	;
 }
 
-Compileable::~Compileable()
+IRef * BoolCompiler::Ref (void)
 {
-	m_Compiler->Ref()->Release();
+	return this;
 }
-
-::Afx::IRef * Compileable::Ref (void)
-{
-	return dynamic_cast<::Afx::IRef *>(this);
-}
-
 
 // Compiled ////////////////////////////////////////////////////////////////////
 
@@ -185,3 +166,142 @@ enum ICompiled::Type Compiled::GetType() { return m_Type; }
 IVoid * Compiled::GetVoid() { return ICompiled::T_Void == m_Type ? m_Value.Void : 0; }
 
 ::Afx::IRef * Compiled::Ref() { return dynamic_cast<::Afx::IRef *>(this); }
+
+
+
+// FloatCompiler ////////////////////////////////////////////////////////////////
+
+ICompiled * FloatCompiler::Compile (Cursor * cursor)
+{
+	CursorRef curRef(cursor);
+	FloatT value;
+
+	return curRef.get()->ReadFloatValue(value)
+		? new Compiled(new Float(value))
+		: new Compiled(new Error(Error::EC_ParseError, curRef.get()))
+	;
+}
+
+IRef * FloatCompiler::Ref (void)
+{
+	return this;
+}
+
+
+
+// IntCompiler ////////////////////////////////////////////////////////////////
+
+ICompiled * IntCompiler::Compile (Cursor * cursor)
+{
+	CursorRef curRef(cursor);
+	IntT value;
+
+	return curRef.get()->ReadIntValue(value)
+		? new Compiled(new Int(value))
+		: new Compiled(new Error(Error::EC_ParseError, curRef.get()))
+	;
+}
+
+IRef * IntCompiler::Ref (void)
+{
+	return this;
+}
+
+// StaticFunctionCompiler //////////////////////////////////////////////////////
+
+StaticFunctionCompiler::StaticFunctionCompiler(ICompiler * compiler, StaticCompileFunction compileFunction)
+: m_Compiler(compiler), m_CompileFunction(compileFunction)
+{
+}
+
+ICompiled * StaticFunctionCompiler::Compile (Cursor * cursor)
+{
+	return m_CompileFunction(new ArgumentCompiler(m_Compiler.get(), cursor));
+}
+
+IRef * StaticFunctionCompiler::Ref (void)
+{
+	return this;
+}
+
+
+// StringTextCompiler //////////////////////////////////////////////////////////
+
+ICompiled * StringTextCompiler::Compile (Cursor * cursor)
+{
+	CursorRef curRef(cursor);
+	ICompiled * compiled = 0;
+	int length;
+	char * data;
+
+	if(ReadString(curRef.get(), length, data))
+	{
+		compiled = new Compiled(new String(StringValue::TakeOwnership(1+length, data)));
+	}
+
+	return compiled ? compiled : new Compiled(new Error(Error::EC_ParseError, curRef.get()));
+}
+
+bool StringTextCompiler::ReadString(Cursor * cursor, int & outLength, char * & outData)
+{
+	CursorRef curRef(cursor);
+	bool escaped;
+	bool done;
+	char val;
+
+	outData = 0;
+
+	CursorBackup backup(curRef.get()->Backup());
+
+	do
+	{
+		escaped = false;
+		outLength = 0;
+		int brackets = 0;
+
+		curRef.get()->Restore(backup);
+
+		while((val = curRef.get()->Get()), !curRef.get()->IsNull(val) && (escaped || 0 < brackets || !curRef.get()->IsPaClose(val)))
+		{
+			curRef.get()->Add();
+
+			if(!escaped && curRef.get()->IsEscape(val))
+			{
+				escaped = true;
+			}
+			else {
+				escaped = false;
+
+				if(curRef.get()->IsPaOpen(val)) brackets++;
+				else if(curRef.get()->IsPaClose(val)) brackets--;
+
+				if(outData) outData[outLength] = val;
+				outLength++;
+			}
+		}
+
+		if(!outData && !escaped)
+		{
+			// not done yet, but we know the outLength now:
+			outData = new char[1+outLength];
+			outLength = 0;
+			done = false;
+		}
+		else if(outData) {
+			// ok and done.
+			outData[outLength] = 0;
+			done = true;
+		}
+		else {
+			// error and done.
+			done = true;
+		}
+	} while(!done);
+
+	return 0 != outData;
+}
+
+IRef * StringTextCompiler::Ref (void)
+{
+	return this;
+}

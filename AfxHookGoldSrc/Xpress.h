@@ -48,7 +48,18 @@ public:
 
 	ICompiled * CompileEx (char const * code)
 	{
-		return m_Bubbles.Root->Compile(code);
+		IStringValue * strVal = StringValue::CopyFrom(code);
+
+		if(strVal)
+		{		
+			strVal->Ref()->AddRef();
+			ICompiled * compiled = m_Bubbles.Root->Compile(strVal);
+			strVal->Ref()->Release();
+
+			return compiled;
+		}
+
+		return new Compiled(new Error());
 	}
 
 protected:

@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-11-11 dominik.matrixstorm.com
+// 2010-11-22 dominik.matrixstorm.com
 //
 // First changes
 // 2010-10-24 dominik.matrixstorm.com
@@ -18,22 +18,17 @@
 using namespace std;
 
 using namespace Afx;
+using namespace Afx::Expressions;
 
 
 // Cursor //////////////////////////////////////////////////////////////////////
 
-Cursor::Cursor(char const * text)
+Cursor::Cursor(IStringValue * text)
+: m_Text(text)
 {
-	size_t len = strlen(text);
+	size_t len = strlen(m_Text.getData());
 
 	m_Len = len;
-	m_Text = new char[1 +len];
-	memcpy(m_Text, text, (1 +len) * sizeof(char));
-}
-
-Cursor::~Cursor()
-{
-	delete m_Text;
 }
 
 void Cursor::Add()
@@ -68,7 +63,7 @@ char Cursor::GetAbs(int pos) const
 {
 	if(pos < 0 || m_Len <= pos) return 0;
 
-	return m_Text[pos];
+	return m_Text.getData()[pos];
 }
 
 char Cursor::GetAdd()
@@ -105,6 +100,23 @@ bool Cursor::IsAlpha (char const val)
 	return 0 != isalpha(val);
 }
 
+bool Cursor::IsControlChar() const
+{
+	return IsControlChar(Get());
+}
+
+bool Cursor::IsControlChar(char val)
+{
+	return
+		Cursor::IsNull(val)
+		|| Cursor::IsEscape(val)
+		|| Cursor::IsSpace(val)
+		|| Cursor::IsPaOpen(val)
+		|| Cursor::IsPaClose(val)
+	;
+}
+
+
 bool Cursor::IsDigit() const
 {
 	return IsDigit(Get());
@@ -113,6 +125,17 @@ bool Cursor::IsDigit() const
 bool Cursor::IsDigit (char const val)
 {
 	return 0 != isdigit(val);
+}
+
+
+bool Cursor::IsEscape() const
+{
+	return IsEscape(Get());
+}
+
+bool Cursor::IsEscape (char const val)
+{
+	return '\\' == val;
 }
 
 bool Cursor::IsNull() const
@@ -125,6 +148,27 @@ bool Cursor::IsNull (char const val)
 	return 0 == val;
 }
 
+bool Cursor::IsPaClose() const
+{
+	return IsPaClose(Get());
+}
+
+bool Cursor::IsPaClose (char const val)
+{
+	return ')' == val;
+}
+
+bool Cursor::IsPaOpen() const
+{
+	return IsPaOpen(Get());
+}
+
+bool Cursor::IsPaOpen (char const val)
+{
+	return '(' == val;
+}
+
+
 bool Cursor::IsSpace() const
 {
 	return IsSpace(Get());
@@ -135,78 +179,82 @@ bool Cursor::IsSpace (char const val)
 	return 0 != isspace(val);
 }
 
-double Cursor::ReadDouble (void)
-{
-	return ReadDouble(0);
-}
 
-double Cursor::ReadDouble (int * outSkipped)
+bool Cursor::ReadBoolValue (BoolT & outValue)
 {
-	if(IsNull())
+	for(int i=0; i<2; i++)
 	{
-		if(outSkipped) *outSkipped = 0;		
-		return 0;
+		char * text = 0 == i ? "false" : "true";
+		int textLen = strlen(text);
+		bool match = true;
+
+		for(int j=0; match && j<textLen; j++)
+		{
+			match = text[j] == Get(j);
+		}
+
+		match = match && IsControlChar(Get(textLen));
+
+		if(match)
+		{
+			outValue = 0 == i ? false : true;
+			m_Backup.Position += textLen;
+			return true;
+		}
 	}
 
-	char * startPtr = m_Text +m_Backup.Position;
-	char * endPtr;
-	double value = strtod(startPtr, &endPtr);
-	int skipped = (endPtr -startPtr) / sizeof(char);
-
-	m_Backup.Position += skipped;
-
-	if(outSkipped) *outSkipped = skipped;
-	return value;
+	return false;
 }
 
-
-long Cursor::ReadLong (void)
+bool Cursor::ReadIntValue (IntT & outValue)
 {
-	return ReadLong(0);
-}
+	if(IsNull()) return false;
 
-long Cursor::ReadLong (int * outSkipped)
-{
-	if(IsNull())
-	{
-		if(outSkipped) *outSkipped = 0;		
-		return 0;
-	}
-
-	char * startPtr = m_Text +m_Backup.Position;
+	char const * startPtr = m_Text.getData() +m_Backup.Position;
 	char * endPtr;
 	long value = strtol(startPtr, &endPtr, 0);
 	int skipped = (endPtr -startPtr) / sizeof(char);
 
-	m_Backup.Position += skipped;
-
-	if(outSkipped) *outSkipped = skipped;
-	return value;
-}
-
-
-unsigned long Cursor::ReadULong (void)
-{
-	return ReadLong(0);
-}
-
-unsigned long Cursor::ReadULong (int * outSkipped)
-{
-	if(IsNull())
+	if(0 < skipped && IsControlChar(Get(skipped)))
 	{
-		if(outSkipped) *outSkipped = 0;		
-		return 0;
+		outValue = value;
+		m_Backup.Position += skipped;
+		return true;
 	}
 
-	char * startPtr = m_Text +m_Backup.Position;
+	return false;
+}
+
+bool Cursor::ReadFloatValue (FloatT & outValue)
+{
+	if(IsNull()) return false;
+
+	char const * startPtr = m_Text.getData() +m_Backup.Position;
 	char * endPtr;
-	unsigned long value = strtoul(startPtr, &endPtr, 0);
+	double value = strtod(startPtr, &endPtr);
 	int skipped = (endPtr -startPtr) / sizeof(char);
 
-	m_Backup.Position += skipped;
+	if(0 < skipped && IsControlChar(Get(skipped)))
+	{
+		outValue = value;
+		m_Backup.Position += skipped;
+		return true;
+	}
 
-	if(outSkipped) *outSkipped = skipped;
-	return value;
+	return false;
+}
+
+IStringValue * Cursor::ReadStringValue (void)
+{
+	int count = 0;
+
+	while(!IsControlChar(Get(count))) count++;
+
+	char * data = new char[1+count];
+	for(int i=0; i<count; i++) data[i] = GetAdd();
+	data[count] = 0;
+
+	return StringValue::TakeOwnership(1+count, data);
 }
 
 void Cursor::Restore(CursorBackup const & backup)
@@ -276,10 +324,12 @@ void Cursor::Sub()
 	m_Backup.Position--;
 }
 
+
 void Cursor::SetPos(int value)
 {
 	m_Backup.Position = value;
 }
+
 
 
 // CursorBackup ////////////////////////////////////////////////////////////////
@@ -287,7 +337,6 @@ void Cursor::SetPos(int value)
 CursorBackup::CursorBackup()
 : Position(0)
 {
-
 }
 
 CursorBackup::CursorBackup(CursorBackup const & cursorBackup)

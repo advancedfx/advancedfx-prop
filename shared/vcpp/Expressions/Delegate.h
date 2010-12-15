@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-11-18 dominik.matrixstorm.com
+// 2010-12-15 dominik.matrixstorm.com
 //
 // First changes
 // 2010-11-18 dominik.matrixstorm.com
@@ -83,7 +83,8 @@ union Function {
 };
 
 
-class Delegate : public Compileable
+class Delegate : public Ref,
+	public ICompiler
 {
 public:
 	static Delegate * New (ICompiler * compiler, FunctionHost * host, VoidFunction function, ArgumentsT * argumentsT);
@@ -102,16 +103,16 @@ public:
 
 	void DeleteArgs(Arguments args);
 
-	virtual ICompiled * Compile (ICompileArgs * args);
+	virtual ICompiled * Compile (Cursor * cursor);
 
-protected:
-	virtual ~Delegate();
+	virtual IRef * Ref (void);
 
 private:
-	ArgumentsT * m_ArgumentsT;
+	RefPtr<ArgumentsT> m_ArgumentsT;
+	RefIPtr<ICompiler> m_Compiler;
 	Function m_Function;
 	FunctionT m_FunctionT;
-	FunctionHost * m_Host;
+	RefPtr<FunctionHost> m_Host;
 
 	Delegate(ICompiler * compiler, FunctionHost * host, FunctionT functionT, Function function, ArgumentsT * argumentsT);
 };

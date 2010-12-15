@@ -24,34 +24,9 @@
 #include "Functions.h"
 #include "Parse.h"
 #include "Events.h"
-
+#include "Bubble.h"
 
 namespace Afx { namespace Expressions {
 
-
-
-struct __declspec(novtable) IBubble abstract
-{
-	static void AddStandardFunctions (IBubble * bubble);
-
-	static IBubble * New (bool standardConstFunctions);
-
-	virtual ::Afx::IRef * Ref (void) abstract = 0;
-
-	/// <summary>Adds a named function to the bubble.</summary>
-	virtual void Add(char const * name, ICompileable * compileable) abstract = 0;
-
-	/// <summary>Compile</summary>
-	/// <param name="code">code to compile</expression>
-	/// <returns>The compiled code.</returns>
-	virtual ICompiled * Compile(char const * code) abstract = 0;
-
-	virtual ICompiler * Compiler (void) abstract = 0;
-
-	/// <summary>Hides all exposed functions matching the given name.</summary<
-	virtual void Hide(char const * name) abstract = 0;
-};
-
-ICompileable * NewCompileableFnDef(ICompiler * compiler, ICompiler * & outDefCompiler);
 
 } } // namespace Afx { namespace Expr {

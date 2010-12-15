@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-03-17 by dominik.matrixstorm.com
+// 2010-12-15 by dominik.matrixstorm.com
 ///
 // First changes:
 // 2010-03-17 by dominik.matrixstorm.com
@@ -58,12 +58,12 @@ class GoldSrcAddresses
 public:
 	GoldSrcAddresses()
 	{
-		m_Bubble = IBubble::New(true);
+		m_Bubble = IBubble::New();
 		m_Bubble->Ref()->AddRef();
 
 		IBubble::AddStandardFunctions(m_Bubble);
-		m_Bubble->Add("OnHwDllLoaded", (m_OnHwDllLoaded = new VoidEvent(m_Bubble->Compiler())));
-		m_Bubble->Add("OnClientDllLoaded", (m_OnClientDllLoaded = new VoidEvent(m_Bubble->Compiler())));
+		m_Bubble->Add(StringValue::CopyFrom("OnHwDllLoaded"), (m_OnHwDllLoaded = new VoidEvent(m_Bubble->Compiler())));
+		m_Bubble->Add(StringValue::CopyFrom("OnClientDllLoaded"), (m_OnClientDllLoaded = new VoidEvent(m_Bubble->Compiler())));
 	}
 
 	~GoldSrcAddresses()
@@ -87,8 +87,8 @@ public:
 					AddressProperty * adrProp = new AddressProperty(padr);
 					adrProp->AddRef();
 
-					m_Bubble->Add(name, Delegate::New(m_Bubble->Compiler(), adrProp, (IntFunction)&AddressProperty::GetAddr, ArgumentsT::New()));
-					m_Bubble->Add(name, Delegate::New(m_Bubble->Compiler(), adrProp, (VoidFunction)&AddressProperty::SetAddr, ArgumentsT::New(1, A_Int)));
+					m_Bubble->Add(StringValue::CopyFrom(name), Delegate::New(m_Bubble->Compiler(), adrProp, (IntFunction)&AddressProperty::GetAddr, ArgumentsT::New()));
+					m_Bubble->Add(StringValue::CopyFrom(name), Delegate::New(m_Bubble->Compiler(), adrProp, (VoidFunction)&AddressProperty::SetAddr, ArgumentsT::New(1, A_Int)));
 
 					adrProp->Release();
 				}
@@ -98,7 +98,7 @@ public:
 
 	bool BubbleCode(char const * code)
 	{
-		ICompiled * compiled = m_Bubble->Compile(code);
+		ICompiled * compiled = m_Bubble->Compile(StringValue::CopyFrom(code));
 
 		compiled->Ref()->AddRef();
 

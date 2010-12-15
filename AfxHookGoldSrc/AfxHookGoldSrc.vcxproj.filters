@@ -267,6 +267,9 @@
     <ClCompile Include="Xmod.cpp">
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\vcpp\Expressions\Bubble.cpp">
+      <Filter>shared\vcpp\Expressions</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -469,6 +472,9 @@
     </ClInclude>
     <ClInclude Include="Xmod.h">
       <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\vcpp\Expressions\Bubble.h">
+      <Filter>shared\vcpp\Expressions</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

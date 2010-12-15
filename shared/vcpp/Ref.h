@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-11-10 dominik.matrixstorm.com
+// 2010-11-29 dominik.matrixstorm.com
 //
 // First changes
 // 2010-04-24 dominik.matrixstorm.com
@@ -61,5 +61,73 @@ private:
 #endif
 
 };
+
+
+template <class T>
+/// <summary>
+/// Reference counting implementation helper.<br />
+/// This class will AddRef upon construction and Release upon
+/// destruction. This way it can be used to automate reference
+/// counting within a specific scope. (Scoping oddities are
+/// beyond this summary.)
+/// </summary>
+/// <remarks>
+/// To be used with classes that derieve from Ref.
+/// </remarks>
+class RefPtr
+{
+public:
+	RefPtr(T * ref)
+	: m_Ref(ref)
+	{
+		ref->AddRef();
+	}
+
+	~RefPtr()
+	{
+		m_Ref->Release();
+	}
+
+	T * get (void) const {
+		return m_Ref;
+	}
+
+protected:
+	T * m_Ref;
+};
+
+
+template <class T>
+/// <summary>
+/// Reference counting implementation helper.<br />
+/// This class will AddRef upon construction and Release upon
+/// destruction. This way it can be used to automate reference
+/// counting within a specific scope. (Scoping oddities are
+/// beyond this summary.)
+/// </summary>
+/// <remarks>To be used with some interface that supplies [ virtual IRef * Ref (void); ].</remarks>
+class RefIPtr
+{
+public:
+	RefIPtr(T * ref)
+	: m_Ref(ref)
+	{
+		ref->Ref()->AddRef();
+	}
+
+	~RefIPtr()
+	{
+		m_Ref->Ref()->Release();
+	}
+
+	T * get (void) const {
+		return m_Ref;
+	}
+
+protected:
+	T * m_Ref;
+};
+
+
 
 } // namespace Afx {

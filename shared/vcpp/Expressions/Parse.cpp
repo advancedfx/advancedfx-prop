@@ -17,11 +17,20 @@ using namespace Afx::Expressions;
 // ParseArgs ///////////////////////////////////////////////////////////////////
 
 
-ParseArgs::ParseArgs(ICompiler * compiler, ICompileArgs * args)
-: m_Args(args), m_Compiler(compiler), m_SkipNull(true)
+ParseArgs::ParseArgs(IArgumentCompiler * argumentCompiler)
+: m_ArgumentCompiler(argumentCompiler), m_SkipNull(true)
 {
-	args->Ref()->AddRef();
-	compiler->Ref()->AddRef();
+	argumentCompiler->Ref()->AddRef();
+}
+
+ParseArgs::~ParseArgs()
+{
+	for(VectorT::iterator it = m_Compileds.begin(); it != m_Compileds.end(); it++)
+	{
+		(*it)->Ref()->Release();
+	}
+
+	m_ArgumentCompiler->Ref()->Release();
 }
 
 
@@ -127,25 +136,13 @@ void ParseArgs::SetSkipNull (bool value) {
 }
 
 
-ParseArgs::~ParseArgs()
-{
-	for(VectorT::iterator it = m_Compileds.begin(); it != m_Compileds.end(); it++)
-	{
-		(*it)->Ref()->Release();
-	}
-
-	m_Args->Ref()->Release();
-	m_Compiler->Ref()->Release();
-}
-
-
 ICompiled * ParseArgs::ParseNextArg_Internal (void)
 {
 	ICompiled * compiled;
 	bool bSkip;
 		
 	do {
-		compiled = m_Args->CompileNextArg(m_Compiler);
+		compiled = m_ArgumentCompiler->CompileArgument();
 
 		bSkip = m_SkipNull && 0 != compiled->GetNull();
 
@@ -158,3 +155,4 @@ ICompiled * ParseArgs::ParseNextArg_Internal (void)
 
 	return compiled;
 }
+
