@@ -22,12 +22,12 @@ AFXADDR_DEF(cstrike_OFS_CvarFloatValue)
 
 void Addresses_InitClientDll(AfxAddr clientDll)
 {
-	AFXADDR_SET(cstrike_CalcDemoViewOverride, clientDll +0x138080);
-	AFXADDR_SET(cstrike_CalcDemoViewOverride_DSZ, 0x09);
-	AFXADDR_SET(cstrike_CViewRender_SetUpView, clientDll +0x1388C0);
-	AFXADDR_SET(cstrike_CViewRender_SetUpView_DSZ, 0x0d);
-	AFXADDR_SET(cstrike_cl_demoviewoverride, clientDll +0x5055A4);
-	AFXADDR_SET(cstrike_gpGLobals, clientDll +0x49C9F4);
+	AFXADDR_SET(cstrike_CalcDemoViewOverride, clientDll +0x138580); //
+	AFXADDR_SET(cstrike_CalcDemoViewOverride_DSZ, 0x09); //
+	AFXADDR_SET(cstrike_CViewRender_SetUpView, clientDll +0x138DC0); //
+	AFXADDR_SET(cstrike_CViewRender_SetUpView_DSZ, 0x0d); //
+	AFXADDR_SET(cstrike_cl_demoviewoverride, clientDll +0x50671C); //
+	AFXADDR_SET(cstrike_gpGLobals, clientDll +0x49DA1C); //
 	AFXADDR_SET(cstrike_gpGlobals_OFS_curtime, 3*4);
-	AFXADDR_SET(cstrike_OFS_CvarFloatValue, 11);
+	AFXADDR_SET(cstrike_OFS_CvarFloatValue, 11); //
 }

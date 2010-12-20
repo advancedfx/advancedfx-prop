@@ -3,11 +3,24 @@
 
 <changelog>
 
+
+<release>
+<name>HLAE</name>
+<version>2.2.20.4</version>
+<time>2010-12-20T20:21Z</time>
+<changes>
+<change type="updated">
+Included AfxHookSource 0.0.3.11 (2010-12-20T20:21Z).
+</change>
+</changes>
+</release>
+
+
 <!--
 <change type="added">
 Added mirv_lookingat which tries to find out what you're looking at.
 </change>
--->
+
 
 <release>
 <name>HLAE testing</name>
@@ -44,7 +57,7 @@ Replaced JS init script with Xpress code.
 </change>
 </changes>
 </release>
-
+-->
 
 <release>
 <name>HLAE</name>
@@ -56,7 +69,6 @@ Included AfxHookSource 0.0.3.10 (2010-10-31T17:50Z).
 </change>
 </changes>
 </release>
-
 
 
 <release>
