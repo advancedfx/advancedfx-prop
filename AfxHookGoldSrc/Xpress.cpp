@@ -49,12 +49,12 @@ Xpress::Xpress()
 //TODO:		defCompiler->Ref()->AddRef();
 
 		IBubble::AddStandardFunctions(m_Bubbles.Root);
-			m_Bubbles.Root->Add(StringValue::CopyFrom("./"), FunctionCompilers::Do(m_Bubbles.Root->Compiler()));
-			m_Bubbles.Root->Add(StringValue::CopyFrom(".."), FunctionCompilers::Do(m_Bubbles.Root->Compiler()));
+		m_Bubbles.Root->Add(StringValue::CopyFrom("./"), FunctionCompilers::Do(m_Bubbles.Root->Compiler()));
+		m_Bubbles.Root->Add(StringValue::CopyFrom(".."), FunctionCompilers::Do(m_Bubbles.Root->Compiler()));
 //TODO:		m_Bubbles.Root->Add(".def", FunctionCompilers::Do(defCompiler));	
-			m_Bubbles.Root->Add(StringValue::CopyFrom(".events"), FunctionCompilers::Do(events->Compiler()));
-			m_Bubbles.Root->Add(StringValue::CopyFrom(".info"), FunctionCompilers::Do(info->Compiler()));
-			m_Bubbles.Root->Add(StringValue::CopyFrom(".mod"), FunctionCompilers::Do(Mod->GetBubble()->Compiler()));
+			m_Bubbles.Root->Add(StringValue::CopyFrom(".events"), FunctionCompilers::Do(events->OuterCompiler()));
+			m_Bubbles.Root->Add(StringValue::CopyFrom(".info"), FunctionCompilers::Do(info->OuterCompiler()));
+			m_Bubbles.Root->Add(StringValue::CopyFrom(".mod"), FunctionCompilers::Do(Mod->GetBubble()->OuterCompiler()));
 //TODO:		m_Bubbles.Root->Add("Def", defCompileable);
 		m_Bubbles.Root->Add(StringValue::CopyFrom("Exec"), Delegate::New(
 			m_Bubbles.Root->Compiler(),

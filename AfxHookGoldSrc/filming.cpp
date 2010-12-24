@@ -1296,14 +1296,13 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 	float frameDuration = ((m_nFrames+1)/m_fps)-(m_nFrames/m_fps); // pay attention when changing s.th. here because of handling of precision errors!
 	m_HostFrameCount++;
 
-	m_iMatteStage = g_Filming_Stream[FS_all] ? MS_ALL : MS_WORLD;
-	UpdateXpMatteStage();
-
 	// If we've only just started, delay until the next scene so that
 	// the first frame is drawn correctly
 	if (m_iFilmingState == FS_STARTING)
 	{
 		// we drop this frame and prepare the next one:
+		m_iMatteStage = g_Filming_Stream[FS_all] ? MS_ALL : MS_WORLD;
+		UpdateXpMatteStage();
 
 		m_time += frameDuration;
 
@@ -1319,8 +1318,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 			*bSwapRes = SwapBuffers(hSwapHDC);
 		
 		// prepare and clear for render:
-		glClearColor(m_MatteColour[0], m_MatteColour[1], m_MatteColour[2], 1.0f); // don't forget to set our clear color
-		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+		FullClear();
 
 		m_iFilmingState = FS_ACTIVE;
 
@@ -1343,7 +1341,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 		// Delay:
 		if (_bSimulate2 && movie_simulate_delay->value > 0) Sleep((DWORD)movie_simulate_delay->value);
 
-		clearBuffers();
+		FullClear();
 		New_R_RenderView(); // re-render view
 	}
 
@@ -1421,20 +1419,16 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 
 				// Delay:
 				if (_bSimulate2 && movie_simulate_delay->value > 0) Sleep((DWORD)movie_simulate_delay->value);
-
-				if(g_Filming_Stream[FS_world] || g_Filming_Stream[FS_depthworld])
-				{
-					m_iMatteStage = MS_WORLD; // next is world
-					UpdateXpMatteStage();
-
-				}
 			}
 		}
+
+		m_iMatteStage = g_Filming_Stream[FS_all] ? MS_ALL : MS_WORLD;
+		UpdateXpMatteStage();
 
 		if (m_EnableStereoMode && (_stereo_state==STS_LEFT))
 		{
 			_stereo_state=STS_RIGHT;
-			clearBuffers();
+			FullClear();
 			New_R_RenderView(); // rerender frame instant!!!!
 		} else _stereo_state=STS_LEFT;
 

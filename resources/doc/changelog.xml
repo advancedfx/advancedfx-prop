@@ -6,6 +6,18 @@
 
 <release>
 <name>HLAE</name>
+<version>2.2.20.6</version>
+<time>2010-12-24T02:58Z</time>
+<changes>
+<change type="fixed">
+Fixed mirv_movie_splitstreams 2 (again).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.2.20.5</version>
 <time>2010-12-22T18:44Z</time>
 <changes>

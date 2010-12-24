@@ -74,6 +74,10 @@ AfxGoldSrcComClient::AfxGoldSrcComClient()
 : PipeCom(GetClientReadPipe(), GetClientWritePipe())
 , m_Connected(false)
 {
+#ifdef _DEBUG
+			MessageBox(0, "AfxGoldSrcComClient", "MDT_DEBUG", MB_OK|MB_ICONINFORMATION);
+#endif
+
 	ComVersion version;
 	ComBool ok = 0;
 

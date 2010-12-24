@@ -177,7 +177,7 @@ StringValue * StringValue::CopyFrom(char const * cStr)
 
 StringValue * StringValue::CopyFrom(int length, char const * data)
 {
-	if(length < 1 || 0 != data[length]) throw new exception();
+	if(length < 1 || 0 != data[length-1]) throw new exception();
 
 	char * ownData = new char[length];
 
@@ -188,7 +188,7 @@ StringValue * StringValue::CopyFrom(int length, char const * data)
 
 StringValue * StringValue::TakeOwnership(int length, char * data)
 {
-	if(length < 1 || 0 != data[length]) throw new exception();
+	if(length < 1 || 0 != data[length-1]) throw new exception();
 
 	return new StringValue(length, data);
 }

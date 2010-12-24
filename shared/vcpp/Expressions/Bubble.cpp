@@ -168,7 +168,8 @@ private:
 // Bubble //////////////////////////////////////////////////////////////////////
 
 class Bubble : public Ref,
-	public IBubble
+	public IBubble,
+	public ICompiler
 {
 public:
 	Bubble()
@@ -181,18 +182,27 @@ public:
 		m_BubbleCompiler.get()->Add(name, compiler);
 	}
 
-	virtual ICompiled * Compile(IStringValue *  code)
-	{
-		return m_BubbleCompiler.get()->Compile(new Cursor(code));
-	}
-
 	virtual ICompiler * Compiler (void) {
 		return m_BubbleCompiler.get();
+	}
+
+	virtual ICompiled * Compile(Cursor * cursor)
+	{
+		return m_BubbleCompiler.get()->Compile(cursor);
+	}
+
+	virtual ICompiled * Compile(IStringValue *  code)
+	{
+		return Compile(new Cursor(code));
 	}
 
 	virtual void Hide(IStringValue * name)
 	{
 		m_BubbleCompiler.get()->Hide(name);
+	}
+
+	virtual ICompiler * OuterCompiler (void) {
+		return this;
 	}
 
 	virtual IRef * Ref (void) {

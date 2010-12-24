@@ -58,6 +58,10 @@ class GoldSrcAddresses
 public:
 	GoldSrcAddresses()
 	{
+#ifdef _DEBUG
+		MessageBox(0, "GoldSrcAddresses", "MDT_DEBUG", MB_OK|MB_ICONINFORMATION);
+#endif
+
 		m_Bubble = IBubble::New();
 		m_Bubble->Ref()->AddRef();
 
