@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-12-15 by dominik.matrixstorm.com
+// 2011-01-03 dominik.matrixstorm.com
 ///
 // First changes:
 // 2010-03-17 by dominik.matrixstorm.com
@@ -91,8 +91,8 @@ public:
 					AddressProperty * adrProp = new AddressProperty(padr);
 					adrProp->AddRef();
 
-					m_Bubble->Add(StringValue::CopyFrom(name), Delegate::New(m_Bubble->Compiler(), adrProp, (IntFunction)&AddressProperty::GetAddr, ArgumentsT::New()));
-					m_Bubble->Add(StringValue::CopyFrom(name), Delegate::New(m_Bubble->Compiler(), adrProp, (VoidFunction)&AddressProperty::SetAddr, ArgumentsT::New(1, A_Int)));
+					m_Bubble->Add(StringValue::CopyFrom(name), Delegate::New(adrProp, (IntFunction)&AddressProperty::GetAddr, ArgumentsT::New()));
+					m_Bubble->Add(StringValue::CopyFrom(name), Delegate::New(adrProp, (VoidFunction)&AddressProperty::SetAddr, ArgumentsT::New(1, A_Int)));
 
 					adrProp->Release();
 				}

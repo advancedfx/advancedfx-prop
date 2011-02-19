@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-12-15 dominik.matrixstorm.com
+// 2011-01-03 dominik.matrixstorm.com
 //
 // First changes
 // 2010-11-17 dominik.matrixstorm.com
@@ -459,77 +459,66 @@ Xmod::Xmod()
 	IBubble::AddStandardFunctions(m_Bubble);
 
 	m_Bubble->Add(StringValue::CopyFrom("Add"), Delegate::New(
-		m_Bubble->Compiler(),
 		this,
 		(VoidFunction)&Xmod::AddStack,
 		ArgumentsT::New()
 	));
 
 	m_Bubble->Add(StringValue::CopyFrom("AddColor"), Delegate::New(
-		m_Bubble->Compiler(),
 		this,
 		(VoidFunction)&Xmod::AddColor,
 		ArgumentsT::New(5, A_Int, A_Float, A_Float, A_Float, A_Float)
 	));
 
 	m_Bubble->Add(StringValue::CopyFrom("AddColorMask"), Delegate::New(
-		m_Bubble->Compiler(),
 		this,
 		(VoidFunction)&Xmod::AddColorMask,
 		ArgumentsT::New(5, A_Int, A_Int, A_Int, A_Int, A_Int)
 	));
 
 	m_Bubble->Add(StringValue::CopyFrom("AddDepthMask"), Delegate::New(
-		m_Bubble->Compiler(),
 		this,
 		(VoidFunction)&Xmod::AddDepthMask,
 		ArgumentsT::New(2, A_Int, A_Int)
 	));
 
 	m_Bubble->Add(StringValue::CopyFrom("AddMask"), Delegate::New(
-		m_Bubble->Compiler(),
 		this,
 		(VoidFunction)&Xmod::AddMask,
 		ArgumentsT::New(2, A_Int, A_Int)
 	));
 
 	m_Bubble->Add(StringValue::CopyFrom("AddReplace"), Delegate::New(
-		m_Bubble->Compiler(),
 		this,
 		(VoidFunction)&Xmod::AddReplace,
 		ArgumentsT::New(5, A_Int, A_Int, A_Int, A_Int, A_Bool)
 	));
 
 	m_Bubble->Add(StringValue::CopyFrom("Active"), Delegate::New(
-		m_Bubble->Compiler(),
 		this,
 		(IntFunction)&Xmod::GetActive,
 		ArgumentsT::New()
 	));
 
 	m_Bubble->Add(StringValue::CopyFrom("Active"), Delegate::New(
-		m_Bubble->Compiler(),
 		this,
 		(VoidFunction)&Xmod::SetActive,
 		ArgumentsT::New(1, A_Int)
 	));
 
 	m_Bubble->Add(StringValue::CopyFrom("Clear"), Delegate::New(
-		m_Bubble->Compiler(),
 		this,
 		(VoidFunction)&Xmod::ClearAll,
 		ArgumentsT::New()
 	));
 
 	m_Bubble->Add(StringValue::CopyFrom("Count"), Delegate::New(
-		m_Bubble->Compiler(),
 		this,
 		(IntFunction)&Xmod::GetCount,
 		ArgumentsT::New()
 	));
 
 	m_Bubble->Add(StringValue::CopyFrom("Remove"), Delegate::New(
-		m_Bubble->Compiler(),
 		this,
 		(VoidFunction)&Xmod::Clear,
 		ArgumentsT::New(1, A_Int)

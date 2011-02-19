@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-11-16 dominik.matrixstorm.com
+// 2011-01-05 dominik.matrixstorm.com
 //
 // First changes
 // 2010-10-24 dominik.matrixstorm.com
@@ -16,44 +16,37 @@ using namespace Afx;
 using namespace Afx::Expressions;
 
 
-
-// ArgumentCompiler //////////////////////////////////////////////////////
-
-ArgumentCompiler::ArgumentCompiler(ICompiler * compiler, Cursor * cursor)
-: m_Compiler(compiler), m_Cursor(cursor)
-{
-}
-
-ICompiled * ArgumentCompiler::CompileArgument (void)
-{
-	ICompiled * compiled = 0;
-
-	StringValueRef strVal(m_Cursor.get()->ReadStringValue());
-
-	if(1 <= strVal.getLength())
-	{
-		compiled = m_Compiler.get()->Compile(new Cursor(strVal.get()));
-	}
-
-	return compiled ? compiled : new Compiled(new Error(Error::EC_ParseError, m_Cursor.get()));
-}
-
-IRef * ArgumentCompiler::Ref (void)
-{
-	return this;
-}
-
-
 // BoolCompiler ////////////////////////////////////////////////////////////////
 
-ICompiled * BoolCompiler::Compile (Cursor * cursor)
+ICompiled * BoolCompiler::Compile (IStringValue * value)
 {
-	CursorRef curRef(cursor);
-	BoolT value;
+	StringValueRef valueRef(value);
+	BoolT rValue;
+	bool match = false;
 
-	return curRef.get()->ReadBoolValue(value)
-		? new Compiled(new Bool(value))
-		: new Compiled(new Error(Error::EC_ParseError, curRef.get()))
+	for(int i=0; i<2; i++)
+	{
+		char * text = 0 == i ? "false" : "true";
+		match = true;
+
+		char const * valText = valueRef.getData();
+		int textLen = strlen(valText);
+
+		for(int j=0; match && j<textLen; j++)
+		{
+			match = text[j] == valText[j];
+		}
+
+		if(match)
+		{
+			rValue = 0 == i ? false : true;
+			break;
+		}
+	}
+
+	return match
+		? new Compiled(new Bool(rValue))
+		: new Compiled(new Error())
 	;
 }
 
@@ -61,6 +54,7 @@ IRef * BoolCompiler::Ref (void)
 {
 	return this;
 }
+
 
 // Compiled ////////////////////////////////////////////////////////////////////
 
@@ -171,14 +165,22 @@ IVoid * Compiled::GetVoid() { return ICompiled::T_Void == m_Type ? m_Value.Void 
 
 // FloatCompiler ////////////////////////////////////////////////////////////////
 
-ICompiled * FloatCompiler::Compile (Cursor * cursor)
+ICompiled * FloatCompiler::Compile (IStringValue * value)
 {
-	CursorRef curRef(cursor);
-	FloatT value;
+	StringValueRef valueRef(value);
+	bool match = false;
 
-	return curRef.get()->ReadFloatValue(value)
-		? new Compiled(new Float(value))
-		: new Compiled(new Error(Error::EC_ParseError, curRef.get()))
+	char const * startPtr = valueRef.getData();
+	int textLen = strlen(startPtr);
+	char * endPtr;
+	FloatT rValue = strtod(startPtr, &endPtr);
+	int skipped = (endPtr -startPtr) / sizeof(char);
+
+	match = 0 < skipped && textLen == skipped;
+
+	return match
+		? new Compiled(new Float(rValue))
+		: new Compiled(new Error())
 	;
 }
 
@@ -188,17 +190,24 @@ IRef * FloatCompiler::Ref (void)
 }
 
 
-
 // IntCompiler ////////////////////////////////////////////////////////////////
 
-ICompiled * IntCompiler::Compile (Cursor * cursor)
+ICompiled * IntCompiler::Compile (IStringValue * value)
 {
-	CursorRef curRef(cursor);
-	IntT value;
+	StringValueRef valueRef(value);
+	bool match = false;
 
-	return curRef.get()->ReadIntValue(value)
-		? new Compiled(new Int(value))
-		: new Compiled(new Error(Error::EC_ParseError, curRef.get()))
+	char const * startPtr = valueRef.getData();
+	int textLen = strlen(startPtr);
+	char * endPtr;
+	IntT rValue = strtol(startPtr, &endPtr, 0);
+	int skipped = (endPtr -startPtr) / sizeof(char);
+
+	match = 0 < skipped && textLen == skipped;
+
+	return match
+		? new Compiled(new Int(rValue))
+		: new Compiled(new Error())
 	;
 }
 
@@ -207,41 +216,16 @@ IRef * IntCompiler::Ref (void)
 	return this;
 }
 
-// StaticFunctionCompiler //////////////////////////////////////////////////////
 
-StaticFunctionCompiler::StaticFunctionCompiler(ICompiler * compiler, StaticCompileFunction compileFunction)
-: m_Compiler(compiler), m_CompileFunction(compileFunction)
+
+// StringCompiler //////////////////////////////////////////////////////////////
+
+ICompiled * StringCompiler::Compile (IStringValue * value)
 {
+	return new Compiled(new String(value));
 }
 
-ICompiled * StaticFunctionCompiler::Compile (Cursor * cursor)
-{
-	return m_CompileFunction(new ArgumentCompiler(m_Compiler.get(), cursor));
-}
-
-IRef * StaticFunctionCompiler::Ref (void)
-{
-	return this;
-}
-
-
-// StringTextCompiler //////////////////////////////////////////////////////////
-
-ICompiled * StringTextCompiler::Compile (Cursor * cursor)
-{
-	CursorRef curRef(cursor);
-	ICompiled * compiled = 0;
-	int length;
-	char * data;
-
-	if(ReadString(curRef.get(), length, data))
-	{
-		compiled = new Compiled(new String(StringValue::TakeOwnership(1+length, data)));
-	}
-
-	return compiled ? compiled : new Compiled(new Error(Error::EC_ParseError, curRef.get()));
-}
-
+/*
 bool StringTextCompiler::ReadString(Cursor * cursor, int & outLength, char * & outData)
 {
 	CursorRef curRef(cursor);
@@ -300,8 +284,9 @@ bool StringTextCompiler::ReadString(Cursor * cursor, int & outLength, char * & o
 
 	return 0 != outData;
 }
+*/
 
-IRef * StringTextCompiler::Ref (void)
+IRef * StringCompiler::Ref (void)
 {
 	return this;
 }

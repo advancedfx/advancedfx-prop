@@ -3,14 +3,14 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-12-15 dominik.matrixstorm.com
+// 2011-01-05 dominik.matrixstorm.com
 //
 // First changes
 // 2010-11-18 dominik.matrixstorm.com
 
 #include "Delegate.h"
 
-#include "Parse.h"
+#include "ParseArgs.h"
 
 #include <cstdarg>
 #include <exception>
@@ -120,8 +120,8 @@ ArgumentsT * ArgumentsT::New ( int argCount, ArgumentT argumentT, ... )
 
 // Delegate ////////////////////////////////////////////////////////////////////
 
-Delegate::Delegate(ICompiler * compiler, FunctionHost * host, FunctionT functionT, Function function, ArgumentsT * argumentsT)
-: m_Compiler(compiler), m_Host(host), m_FunctionT(functionT), m_Function(function), m_ArgumentsT(argumentsT)
+Delegate::Delegate(FunctionHost * host, FunctionT functionT, Function function, ArgumentsT * argumentsT, ICompiler * argCompiler)
+: m_Host(host), m_FunctionT(functionT), m_Function(function), m_ArgumentsT(argumentsT), m_ArgCompiler(argCompiler)
 {
 }
 
@@ -180,11 +180,11 @@ void Delegate::DeleteArgs(Arguments args)
 	}
 }
 
-ICompiled * Delegate::Compile (Cursor * cursor)
+ICompiled * Delegate::Compile (ICompileNode * node)
 {
 	ICompiled * compiled = 0;
 
-	ParseArgs * pa = new ParseArgs(new ArgumentCompiler(m_Compiler.get(), cursor));
+	ParseArgs * pa = new ParseArgs(m_ArgCompiler.get(), node);
 	pa->Ref()->AddRef();
 
 	bool bOk = true;
@@ -259,44 +259,44 @@ ICompiled * Delegate::Compile (Cursor * cursor)
 }
 
 
-Delegate * Delegate::New(ICompiler * compiler, FunctionHost * host, VoidFunction function, ArgumentsT * argumentsT)
+Delegate * Delegate::New(FunctionHost * host, VoidFunction function, ArgumentsT * argumentsT, ICompiler * argCompiler)
 {
 	Function f;
 	f.Void = function;
 
-	return new Delegate(compiler, host, F_Void, f, argumentsT);
+	return new Delegate(host, F_Void, f, argumentsT, argCompiler);
 }
 
-Delegate * Delegate::New(ICompiler * compiler, FunctionHost * host, BoolFunction function, ArgumentsT * argumentsT)
+Delegate * Delegate::New(FunctionHost * host, BoolFunction function, ArgumentsT * argumentsT, ICompiler * argCompiler)
 {
 	Function f;
 	f.Bool = function;
 
-	return new Delegate(compiler, host, F_Bool, f, argumentsT);
+	return new Delegate(host, F_Bool, f, argumentsT, argCompiler);
 }
 
-Delegate * Delegate::New(ICompiler * compiler, FunctionHost * host, IntFunction function, ArgumentsT * argumentsT)
+Delegate * Delegate::New(FunctionHost * host, IntFunction function, ArgumentsT * argumentsT, ICompiler * argCompiler)
 {
 	Function f;
 	f.Int = function;
 
-	return new Delegate(compiler, host, F_Int, f, argumentsT);
+	return new Delegate(host, F_Int, f, argumentsT, argCompiler);
 }
 
-Delegate * Delegate::New(ICompiler * compiler, FunctionHost * host, FloatFunction function, ArgumentsT * argumentsT)
+Delegate * Delegate::New(FunctionHost * host, FloatFunction function, ArgumentsT * argumentsT, ICompiler * argCompiler)
 {
 	Function f;
 	f.Float = function;
 
-	return new Delegate(compiler, host, F_Float, f, argumentsT);
+	return new Delegate(host, F_Float, f, argumentsT, argCompiler);
 }
 
-Delegate * Delegate::New(ICompiler * compiler, FunctionHost * host, StringFunction function, ArgumentsT * argumentsT)
+Delegate * Delegate::New(FunctionHost * host, StringFunction function, ArgumentsT * argumentsT, ICompiler * argCompiler)
 {
 	Function f;
 	f.String = function;
 
-	return new Delegate(compiler, host, F_String, f, argumentsT);
+	return new Delegate(host, F_String, f, argumentsT, argCompiler);
 }
 
 IRef * Delegate::Ref (void) {
@@ -347,4 +347,22 @@ IRef * FunctionRef(FunctionT functionT, Function function)
 	}
 }
 */
+
+
+// StaticFunctionCompiler //////////////////////////////////////////////////////
+
+StaticFunctionCompiler::StaticFunctionCompiler (Function function, ICompiler * argCompiler)
+: m_ArgCompiler(argCompiler), m_Function(function)
+{
+}
+
+ICompiled * StaticFunctionCompiler::Compile (ICompileNode * node)
+{
+	return m_Function(m_ArgCompiler.get(), node);
+}
+
+IRef * StaticFunctionCompiler::Ref (void)
+{
+	return this;
+}
 

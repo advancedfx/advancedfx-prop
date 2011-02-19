@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-12-15 dominik.matrixstorm.com
+// 2011-01-03 dominik.matrixstorm.com
 //
 // First changes
 // 2010-11-10 dominik.matrixstorm.com
@@ -57,7 +57,6 @@ Xpress::Xpress()
 			m_Bubbles.Root->Add(StringValue::CopyFrom(".mod"), FunctionCompilers::Do(Mod->GetBubble()->OuterCompiler()));
 //TODO:		m_Bubbles.Root->Add("Def", defCompileable);
 		m_Bubbles.Root->Add(StringValue::CopyFrom("Exec"), Delegate::New(
-			m_Bubbles.Root->Compiler(),
 			this,
 			(VoidFunction)&Xpress::XExec,
 			ArgumentsT::New(1, A_String)
@@ -86,15 +85,15 @@ Xpress::Xpress()
 		IBubble::AddStandardFunctions(info);
 		info->Add(StringValue::CopyFrom("./"), FunctionCompilers::Do(m_Bubbles.Root->Compiler()));
 		info->Add(StringValue::CopyFrom(".."), FunctionCompilers::Do(m_Bubbles.Root->Compiler()));
-		info->Add(StringValue::CopyFrom("CurrentGlMode"), Delegate::New(info->Compiler(), this, (IntFunction)&Xpress::XCurrentGlMode, ArgumentsT::New()));
-		info->Add(StringValue::CopyFrom("CurrentStreamIndex"), Delegate::New(info->Compiler(), this, (IntFunction)&Xpress::XCurrentStreamIndex, ArgumentsT::New()));
-		info->Add(StringValue::CopyFrom("GetCurrentEntityIndex"), Delegate::New(info->Compiler(), this, (IntFunction)&Xpress::XGetCurrentEntityIndex, ArgumentsT::New()));
-		info->Add(StringValue::CopyFrom("GetIsPlayer"), Delegate::New(info->Compiler(), this, (BoolFunction)&Xpress::XGetIsPlayer, ArgumentsT::New(1, A_Int)));
-		info->Add(StringValue::CopyFrom("IsFilming"), Delegate::New(info->Compiler(), this, (BoolFunction)&Xpress::XIsFilming, ArgumentsT::New()));
-		info->Add(StringValue::CopyFrom("InRDrawEntitiesOnList"), Delegate::New(info->Compiler(), this, (BoolFunction)&Xpress::XInRDrawEntitiesOnList, ArgumentsT::New()));
-		info->Add(StringValue::CopyFrom("InRDrawParticles"), Delegate::New(info->Compiler(), this, (BoolFunction)&Xpress::XInRDrawParticles, ArgumentsT::New()));
-		info->Add(StringValue::CopyFrom("InRDrawViewModel"), Delegate::New(info->Compiler(), this, (BoolFunction)&Xpress::XInRDrawViewModel, ArgumentsT::New()));
-		info->Add(StringValue::CopyFrom("InRRenderView"), Delegate::New(info->Compiler(), this, (BoolFunction)&Xpress::XInRRenderView, ArgumentsT::New()));
+		info->Add(StringValue::CopyFrom("CurrentGlMode"), Delegate::New(this, (IntFunction)&Xpress::XCurrentGlMode, ArgumentsT::New()));
+		info->Add(StringValue::CopyFrom("CurrentStreamIndex"), Delegate::New(this, (IntFunction)&Xpress::XCurrentStreamIndex, ArgumentsT::New()));
+		info->Add(StringValue::CopyFrom("GetCurrentEntityIndex"), Delegate::New(this, (IntFunction)&Xpress::XGetCurrentEntityIndex, ArgumentsT::New()));
+		info->Add(StringValue::CopyFrom("GetIsPlayer"), Delegate::New(this, (BoolFunction)&Xpress::XGetIsPlayer, ArgumentsT::New(1, A_Int)));
+		info->Add(StringValue::CopyFrom("IsFilming"), Delegate::New(this, (BoolFunction)&Xpress::XIsFilming, ArgumentsT::New()));
+		info->Add(StringValue::CopyFrom("InRDrawEntitiesOnList"), Delegate::New(this, (BoolFunction)&Xpress::XInRDrawEntitiesOnList, ArgumentsT::New()));
+		info->Add(StringValue::CopyFrom("InRDrawParticles"), Delegate::New(this, (BoolFunction)&Xpress::XInRDrawParticles, ArgumentsT::New()));
+		info->Add(StringValue::CopyFrom("InRDrawViewModel"), Delegate::New(this, (BoolFunction)&Xpress::XInRDrawViewModel, ArgumentsT::New()));
+		info->Add(StringValue::CopyFrom("InRRenderView"), Delegate::New(this, (BoolFunction)&Xpress::XInRRenderView, ArgumentsT::New()));
 	}
 
 	//

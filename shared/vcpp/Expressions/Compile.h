@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-12-15 dominik.matrixstorm.com
+// 2011-01-05 dominik.matrixstorm.com
 //
 // First changes
 // 2010-10-24 dominik.matrixstorm.com
@@ -107,117 +107,92 @@ private:
 };
 
 
-/// <summary>Plain-text compiler</summary>
-struct __declspec(novtable) ICompiler abstract
-{
-	virtual ::Afx::IRef * Ref (void) abstract = 0;
-
-	virtual ICompiled * Compile (Cursor * cursor) abstract = 0;
-};
-
-class CompilerRef : public RefIPtr<ICompiler>
-{
-public:
-	CompilerRef(ICompiler * val) : RefIPtr(val) {}
-};
-
-struct __declspec(novtable) IArgumentCompiler abstract
+struct __declspec(novtable) ICompileNode abstract
 {
 	virtual IRef * Ref (void) abstract = 0;
 
-	virtual ICompiled * CompileArgument (void) abstract = 0;
+	/// <summary>
+	/// Data associated with that node (content for leaf nodes, or id for others).
+	/// </summary>
+	virtual IStringValue * Data (void) abstract = 0;
+
+	virtual ICompileNode * Child (void) abstract = 0;
+
+	virtual ICompileNode * Next (void) abstract = 0;
 };
 
-
-class ArgumentCompiler : public Ref,
-	public IArgumentCompiler
+struct __declspec(novtable) ICompiler abstract
 {
-public:
-	ArgumentCompiler(ICompiler * compiler, Cursor * cursor);
+	virtual IRef * Ref (void) abstract = 0;
 
-	virtual ICompiled * CompileArgument (void);
-
-	virtual IRef * Ref (void);
-
-private:
-	RefIPtr<ICompiler> m_Compiler;
-	RefPtr<Cursor> m_Cursor;
+	/// <param name="node">may be 0 to indicate the empty (means no) node</param>
+	virtual ICompiled * Compile (ICompileNode * node) abstract = 0;
 };
 
 
 /// <summary>
-/// Compiles boolValue.
+/// Plain data (usually text) compiler
+/// </summary>
+struct __declspec(novtable) IStringCompiler abstract
+{
+	virtual IRef * Ref (void) abstract = 0;
+
+	virtual ICompiled * Compile (IStringValue * value) abstract = 0;
+};
+
+
+/// <summary>
+/// Compiles Bool.
 /// </summary>
 class BoolCompiler : public Ref,
-	public ICompiler
+	public IStringCompiler
 {
 public:
-	virtual ICompiled * Compile (Cursor * cursor);
+	virtual ICompiled * Compile (IStringValue * value);
 
-	virtual ::Afx::IRef * Ref (void);
+	virtual IRef * Ref (void);
 };
 
 
 /// <summary>
-/// Compiles intValue.
+/// Compiles Int.
 /// </summary>
 class IntCompiler : public Ref,
-	public ICompiler
+	public IStringCompiler
 {
 public:
-	virtual ICompiled * Compile (Cursor * cursor);
+	virtual ICompiled * Compile (IStringValue * value);
 
 	virtual ::Afx::IRef * Ref (void);
 };
 
 
 /// <summary>
-/// Compiles floatValue.
+/// Compiles Float.
 /// </summary>
 class FloatCompiler : public Ref,
-	public ICompiler
+	public IStringCompiler
 {
 public:
-	virtual ICompiled * Compile (Cursor * cursor);
+	virtual ICompiled * Compile (IStringValue * value);
 
 	virtual ::Afx::IRef * Ref (void);
 };
 
 
-class StaticFunctionCompiler : public Ref,
-	public ICompiler
-{
-public:
-	typedef ICompiled * (* StaticCompileFunction)(IArgumentCompiler * compiler);
-
-	StaticFunctionCompiler(ICompiler * compiler, StaticCompileFunction compileFunction);
-
-	virtual ICompiled * Compile (Cursor * cursor);
-
-	virtual IRef * Ref (void);
-
-protected:
-
-private:
-	StaticCompileFunction m_CompileFunction;
-	RefIPtr<ICompiler> m_Compiler;
-};
-
-
 /// <summary>
-/// Compiles stringText.
+/// Compiles StringValue.
 /// </summary>
-class StringTextCompiler : public Ref,
-	public ICompiler
+class StringCompiler : public Ref,
+	public IStringCompiler
 {
 public:
-	virtual ICompiled * Compile (Cursor * cursor);
+	virtual ICompiled * Compile (IStringValue * value);
 
-	virtual IRef * Ref (void);
-
-private:
-	static bool ReadString(Cursor * cursor, int & outLength, char * & outData);
+	virtual ::Afx::IRef * Ref (void);
 };
+
+
 
 
 } } // namespace Afx { namespace Expr {

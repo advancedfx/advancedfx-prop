@@ -50,10 +50,8 @@ Have fun!
 
 <code>
 empty = ;<br />
-arguments = empty | WS, WS*, function, arguments ;<br />
-parenthesis = &quot;(&quot;, WS*, identifier, arguments, WS*, &quot;)&quot; ;<br />
-function = parenthesis | identifier ;<br />
-code = WS*, function, WS* ;<br />
+arguments = empty | &quot;(&quot; call &quot;)&quot; ;<br />
+call = WS*, identifier, WS*, arguments, WS* ; <br />
 </code>
 
 

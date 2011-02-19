@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-12-15 dominik.matrixstorm.com
+// 2011-01-05 dominik.matrixstorm.com
 //
 // First changes
 // 2010-10-24 dominik.matrixstorm.com
@@ -15,7 +15,8 @@
 
 #include "Functions.h"
 
-#include "Parse.h"
+#include "Delegate.h"
+#include "ParseArgs.h"
 
 #include <ctype.h>
 #include <string.h>
@@ -162,9 +163,9 @@ protected:
 class FnAnd : public FnBoolsToBoolBase
 {
 public:
-	static ICompiled * Compile(IArgumentCompiler * compiler)
+	static ICompiled * Compile(ICompiler * argCompiler, ICompileNode * node)
 	{
-		ParseArgs * pa = new ParseArgs(compiler);
+		ParseArgs * pa = new ParseArgs(argCompiler, node);
 		pa->Ref()->AddRef();
 
 		bool bOk =
@@ -204,9 +205,9 @@ private:
 class FnOr : public FnBoolsToBoolBase
 {
 public:
-	static ICompiled * Compile(IArgumentCompiler * compiler)
+	static ICompiled * Compile(ICompiler * argCompiler, ICompileNode * node)
 	{
-		ParseArgs * pa = new ParseArgs(compiler);
+		ParseArgs * pa = new ParseArgs(argCompiler, node);
 		pa->Ref()->AddRef();
 
 		bool bOk =
@@ -246,9 +247,9 @@ private:
 class FnNot : public FnBoolsToBoolBase
 {
 public:
-	static ICompiled * Compile(IArgumentCompiler * compiler)
+	static ICompiled * Compile(ICompiler * argCompiler, ICompileNode * node)
 	{
-		ParseArgs * pa = new ParseArgs(compiler);
+		ParseArgs * pa = new ParseArgs(argCompiler, node);
 		pa->Ref()->AddRef();
 
 		bool bOk =
@@ -289,15 +290,15 @@ public:
 		O_Greater
 	};
 
-	static ICompiled * CompileLess(IArgumentCompiler * compiler) { return Compile(compiler, O_Less); }
-	static ICompiled * CompileLessOrEqual(IArgumentCompiler * compiler) { return Compile(compiler, O_LessOrEqual); }
-	static ICompiled * CompileEqual(IArgumentCompiler * compiler) { return Compile(compiler, O_Equal); }
-	static ICompiled * CompileGreaterOrEqual(IArgumentCompiler * compiler) { return Compile(compiler, O_GreaterOrEqual); }
-	static ICompiled * CompileGreater(IArgumentCompiler * compiler) { return Compile(compiler, O_Greater); }
+	static ICompiled * CompileLess(ICompiler * argCompiler, ICompileNode * node) { return Compile(argCompiler, node, O_Less); }
+	static ICompiled * CompileLessOrEqual(ICompiler * argCompiler, ICompileNode * node) { return Compile(argCompiler, node, O_LessOrEqual); }
+	static ICompiled * CompileEqual(ICompiler * argCompiler, ICompileNode * node) { return Compile(argCompiler, node, O_Equal); }
+	static ICompiled * CompileGreaterOrEqual(ICompiler * argCompiler, ICompileNode * node) { return Compile(argCompiler, node, O_GreaterOrEqual); }
+	static ICompiled * CompileGreater(ICompiler * argCompiler, ICompileNode * node) { return Compile(argCompiler, node, O_Greater); }
 
-	static ICompiled * Compile(IArgumentCompiler * compiler, Operation op)
+	static ICompiled * Compile(ICompiler * argCompiler, ICompileNode * node, Operation op)
 	{
-		ParseArgs * pa = new ParseArgs(compiler);
+		ParseArgs * pa = new ParseArgs(argCompiler, node);
 		pa->Ref()->AddRef();
 
 		ICompiled::Type resultType = ICompiled::T_None;
@@ -511,9 +512,9 @@ private:
 class FnInBool : public FnBoolsToBoolBase
 {
 public:
-	static ICompiled * Compile(IArgumentCompiler * compiler)
+	static ICompiled * Compile(ICompiler * argCompiler, ICompileNode * node)
 	{
-		ParseArgs * pa = new ParseArgs(compiler);
+		ParseArgs * pa = new ParseArgs(argCompiler, node);
 		pa->Ref()->AddRef();
 
 		bool bOk =
@@ -553,9 +554,9 @@ private:
 class FnInInt : public FnIntsToBoolBase
 {
 public:
-	static ICompiled * Compile(IArgumentCompiler * compiler)
+	static ICompiled * Compile(ICompiler * argCompiler, ICompileNode * node)
 	{
-		ParseArgs * pa = new ParseArgs(compiler);
+		ParseArgs * pa = new ParseArgs(argCompiler, node);
 		pa->Ref()->AddRef();
 
 		bool bOk =
@@ -595,9 +596,9 @@ private:
 class FnMaxBool : public FnBoolsToBoolBase
 {
 public:
-	static ICompiled * Compile(IArgumentCompiler * compiler)
+	static ICompiled * Compile(ICompiler * argCompiler, ICompileNode * node)
 	{
-		ParseArgs * pa = new ParseArgs(compiler);
+		ParseArgs * pa = new ParseArgs(argCompiler, node);
 		pa->Ref()->AddRef();
 
 		bool bOk =
@@ -644,9 +645,9 @@ private:
 class FnMaxInt : public FnIntsToIntBase
 {
 public:
-	static ICompiled * Compile(IArgumentCompiler * compiler)
+	static ICompiled * Compile(ICompiler * argCompiler, ICompileNode * node)
 	{
-		ParseArgs * pa = new ParseArgs(compiler);
+		ParseArgs * pa = new ParseArgs(argCompiler, node);
 		pa->Ref()->AddRef();
 
 		bool bOk =
@@ -693,9 +694,9 @@ private:
 class FnMinBool : public FnBoolsToBoolBase
 {
 public:
-	static ICompiled * Compile(IArgumentCompiler * compiler)
+	static ICompiled * Compile(ICompiler * argCompiler, ICompileNode * node)
 	{
-		ParseArgs * pa = new ParseArgs(compiler);
+		ParseArgs * pa = new ParseArgs(argCompiler, node);
 		pa->Ref()->AddRef();
 
 		bool bOk =
@@ -742,9 +743,9 @@ private:
 class FnMinInt : public FnIntsToIntBase
 {
 public:
-	static ICompiled * Compile(IArgumentCompiler * compiler)
+	static ICompiled * Compile(ICompiler * argCompiler, ICompileNode * node)
 	{
-		ParseArgs * pa = new ParseArgs(compiler);
+		ParseArgs * pa = new ParseArgs(argCompiler, node);
 		pa->Ref()->AddRef();
 
 		bool bOk =
@@ -795,9 +796,9 @@ class FnIf : public Ref,
 	public IVoid
 {
 public:
-	static ICompiled * Compile(IArgumentCompiler * compiler)
+	static ICompiled * Compile(ICompiler * argCompiler, ICompileNode * node)
 	{
-		ParseArgs * pa = new ParseArgs(compiler);
+		ParseArgs * pa = new ParseArgs(argCompiler, node);
 		pa->Ref()->AddRef();
 
 		ICompiled::Type resultType = ICompiled::T_None;
@@ -963,9 +964,9 @@ class FnDo : public Ref,
 	public IFloat
 {
 public:
-	static ICompiled * Compile(IArgumentCompiler * compiler)
+	static ICompiled * Compile(ICompiler * argCompiler, ICompileNode * node)
 	{
-		ParseArgs * pa = new ParseArgs(compiler);
+		ParseArgs * pa = new ParseArgs(argCompiler, node);
 		pa->Ref()->AddRef();
 
 
@@ -1160,9 +1161,9 @@ class FnSum : public Ref,
 	public IFloat
 {
 public:
-	static ICompiled * Compile(IArgumentCompiler * compiler)
+	static ICompiled * Compile(ICompiler * argCompiler, ICompileNode * node)
 	{
-		ParseArgs * pa = new ParseArgs(compiler);
+		ParseArgs * pa = new ParseArgs(argCompiler, node);
 		pa->Ref()->AddRef();
 
 		ICompiled::Type resultType = ICompiled::T_None;
@@ -1295,9 +1296,9 @@ class FnStringFromFile : public Ref,
 	public IString
 {
 public:
-	static ICompiled * Compile(IArgumentCompiler * compiler)
+	static ICompiled * Compile(ICompiler * argCompiler, ICompileNode * node)
 	{
-		ParseArgs * pa = new ParseArgs(compiler);
+		ParseArgs * pa = new ParseArgs(argCompiler, node);
 		pa->Ref()->AddRef();
 
 		bool bOk =
@@ -1381,14 +1382,14 @@ private:
 
 
 // FnCompile ///////////////////////////////////////////////////////////////////
-
+/*
 class FnCompile : public Ref,
 	public IBool
 {
 public:
-	static ICompiled * Compile(ICompiler * compiler, Cursor * cursor)
+	static ICompiled * Compile(ICompiler * argCompiler, ICompileNode * node)
 	{
-		ParseArgs * pa = new ParseArgs(new ArgumentCompiler(compiler, cursor));
+		ParseArgs * pa = new ParseArgs(argCompiler, node);
 		pa->Ref()->AddRef();
 
 		bool bOk =
@@ -1400,7 +1401,7 @@ public:
 
 		if(bOk)
 		{
-			compiled = new Compiled(new FnCompile(compiler, pa->GetArg(0)->GetString()));
+			compiled = new Compiled(new FnCompile(argCompiler, pa->GetArg(0)->GetString()));
 		}
 
 		pa->Ref()->Release();
@@ -1434,7 +1435,7 @@ public:
 	}
 
 private:
-	CompilerRef m_Compiler;
+	RefIPtr<ICompiler> m_Compiler;
 	StringRef m_String;
 
 	FnCompile(ICompiler * compiler, IString * string)
@@ -1442,33 +1443,7 @@ private:
 	{
 	}
 };
-
-
-class FnCompileCompiler : public Ref,
-	public ICompiler
-{
-public:
-	FnCompileCompiler(ICompiler * compiler)
-	: m_Compiler(compiler)
-	{
-	}
-
-	virtual ICompiled * Compile (Cursor * cursor)
-	{
-		return FnCompile::Compile(m_Compiler.get(), cursor);
-	}
-
-	virtual IRef * Ref (void)
-	{
-		return this;
-	}
-
-private:
-	CompilerRef m_Compiler;
-};
-
-
-
+*/
 
 // FnNull //////////////////////////////////////////////////////////////////////
 
@@ -1476,35 +1451,21 @@ class FnNull : public Ref,
 	public INull
 {
 public:
-	static ICompiled * Compile(IArgumentCompiler * compiler)
+	static ICompiled * Compile(ICompiler * argCompiler, ICompileNode * node)
 	{
-		compiler->Ref()->AddRef();
-
-		ICompiled * error = 0;
-		bool bContinue = true;
-
-		do
+		if(node)
 		{
-			ICompiled * compiled = compiler->CompileArgument();
-
-			compiled->Ref()->AddRef();
-
-			if(compiled->GetError())
-				error = new Compiled(compiled->GetError());
-			else
-				bContinue = !compiled->GetEof();
-
-			compiled->Ref()->Release();
+			node->Ref()->AddRef();
+			node->Ref()->Release();
 		}
-		while(!error && bContinue);
+		argCompiler->Ref()->AddRef();
+		argCompiler->Ref()->Release();
 
-		compiler->Ref()->Release();
-
-		return !error ? new Compiled(new FnNull()) : error;
+		return new Compiled(new FnNull());
 	}
 
-	virtual ::Afx::IRef * Ref (void) {
-		return dynamic_cast<::Afx::IRef *>(this);
+	virtual IRef * Ref (void) {
+		return this;
 	}
 };
 
@@ -1515,9 +1476,9 @@ class FnVoid : public Ref,
 	public IVoid
 {
 public:
-	static ICompiled * Compile(IArgumentCompiler * compiler)
+	static ICompiled * Compile(ICompiler * argCompiler, ICompileNode * node)
 	{
-		ParseArgs * pa = new ParseArgs(compiler);
+		ParseArgs * pa = new ParseArgs(argCompiler, node);
 		pa->Ref()->AddRef();
 
 		bool bOk = pa->ParseEof();
@@ -1539,87 +1500,90 @@ public:
 // FunctionCompilers ///////////////////////////////////////////////////////////
 
 
-ICompiler * FunctionCompilers::And (ICompiler * compiler) {
-	return new StaticFunctionCompiler(compiler, &FnAnd::Compile);
+ICompiler * FunctionCompilers::And (ICompiler  * argCompiler) {
+	return new StaticFunctionCompiler(&FnAnd::Compile, argCompiler);
 }
 
-ICompiler * FunctionCompilers::CompileEval (ICompiler * compiler) {
+/*
+ICompiler * FunctionCompilers::CompileEval (ICompiler  * argCompiler) {
 	return new FnCompileCompiler(compiler);
 }
+*/
 
-ICompiler * FunctionCompilers::Do (ICompiler * compiler) {
-	return new StaticFunctionCompiler(compiler, &FnDo::Compile);
+ICompiler * FunctionCompilers::Do (ICompiler  * argCompiler) {
+	return new StaticFunctionCompiler(&FnDo::Compile, argCompiler);
 }
 
-ICompiler * FunctionCompilers::Equal (ICompiler * compiler) {
-	return new StaticFunctionCompiler(compiler, &FnCompare::CompileEqual);
+
+ICompiler * FunctionCompilers::Equal (ICompiler  * argCompiler) {
+	return new StaticFunctionCompiler(&FnCompare::CompileEqual, argCompiler);
 }
 
-ICompiler * FunctionCompilers::Greater (ICompiler * compiler) {
-	return new StaticFunctionCompiler(compiler, &FnCompare::CompileGreater);
+ICompiler * FunctionCompilers::Greater (ICompiler  * argCompiler) {
+	return new StaticFunctionCompiler(&FnCompare::CompileGreater, argCompiler);
 }
 
-ICompiler * FunctionCompilers::GreaterOrEqual (ICompiler * compiler) {
-	return new StaticFunctionCompiler(compiler, &FnCompare::CompileGreaterOrEqual);
+ICompiler * FunctionCompilers::GreaterOrEqual (ICompiler  * argCompiler) {
+	return new StaticFunctionCompiler(&FnCompare::CompileGreaterOrEqual, argCompiler);
 }
 
-ICompiler * FunctionCompilers::If (ICompiler * compiler) {
-	return new StaticFunctionCompiler(compiler, &FnIf::Compile);
+ICompiler * FunctionCompilers::If (ICompiler  * argCompiler) {
+	return new StaticFunctionCompiler(&FnIf::Compile, argCompiler);
 }
 
-ICompiler * FunctionCompilers::InBool (ICompiler * compiler) {
-	return new StaticFunctionCompiler(compiler, &FnInBool::Compile);
+ICompiler * FunctionCompilers::InBool (ICompiler  * argCompiler) {
+	return new StaticFunctionCompiler(&FnInBool::Compile, argCompiler);
 }
 
-ICompiler * FunctionCompilers::InInt (ICompiler * compiler) {
-	return new StaticFunctionCompiler(compiler, &FnInInt::Compile);
+ICompiler * FunctionCompilers::InInt (ICompiler  * argCompiler) {
+	return new StaticFunctionCompiler(&FnInInt::Compile, argCompiler);
 }
 
-ICompiler * FunctionCompilers::Less (ICompiler * compiler) {
-	return new StaticFunctionCompiler(compiler, &FnCompare::CompileLess);
+ICompiler * FunctionCompilers::Less (ICompiler  * argCompiler) {
+	return new StaticFunctionCompiler(&FnCompare::CompileLess, argCompiler);
 }
 
-ICompiler * FunctionCompilers::LessOrEqual (ICompiler * compiler) {
-	return new StaticFunctionCompiler(compiler, &FnCompare::CompileLessOrEqual);
+ICompiler * FunctionCompilers::LessOrEqual (ICompiler  * argCompiler) {
+	return new StaticFunctionCompiler(&FnCompare::CompileLessOrEqual, argCompiler);
 }
 
-ICompiler * FunctionCompilers::MaxBool (ICompiler * compiler) {
-	return new StaticFunctionCompiler(compiler, &FnMaxBool::Compile);
+ICompiler * FunctionCompilers::MaxBool (ICompiler  * argCompiler) {
+	return new StaticFunctionCompiler(&FnMaxBool::Compile, argCompiler);
 }
 
-ICompiler * FunctionCompilers::MaxInt (ICompiler * compiler) {
-	return new StaticFunctionCompiler(compiler, &FnMaxInt::Compile);
+ICompiler * FunctionCompilers::MaxInt (ICompiler  * argCompiler) {
+	return new StaticFunctionCompiler(&FnMaxInt::Compile, argCompiler);
 }
 
-ICompiler * FunctionCompilers::MinBool (ICompiler * compiler) {
-	return new StaticFunctionCompiler(compiler, &FnMinBool::Compile);
+ICompiler * FunctionCompilers::MinBool (ICompiler  * argCompiler) {
+	return new StaticFunctionCompiler(&FnMinBool::Compile, argCompiler);
 }
 
-ICompiler * FunctionCompilers::MinInt (ICompiler * compiler) {
-	return new StaticFunctionCompiler(compiler, &FnMinInt::Compile);
+ICompiler * FunctionCompilers::MinInt (ICompiler  * argCompiler) {
+	return new StaticFunctionCompiler(&FnMinInt::Compile, argCompiler);
 }
 
-ICompiler * FunctionCompilers::Not (ICompiler * compiler) {
-	return new StaticFunctionCompiler(compiler, &FnNot::Compile);
+ICompiler * FunctionCompilers::Not (ICompiler  * argCompiler) {
+	return new StaticFunctionCompiler(&FnNot::Compile, argCompiler);
 }
 
-ICompiler * FunctionCompilers::Null (ICompiler * compiler) {
-	return new StaticFunctionCompiler(compiler, &FnNull::Compile);
+ICompiler * FunctionCompilers::Null (ICompiler  * argCompiler) {
+	return new StaticFunctionCompiler(&FnNull::Compile, argCompiler);
 }
 
-ICompiler * FunctionCompilers::Or (ICompiler * compiler) {
-	return new StaticFunctionCompiler(compiler, &FnOr::Compile);
+ICompiler * FunctionCompilers::Or (ICompiler  * argCompiler) {
+	return new StaticFunctionCompiler(&FnOr::Compile, argCompiler);
 }
 
-ICompiler * FunctionCompilers::StringFromFile (ICompiler * compiler) {
-	return new StaticFunctionCompiler(compiler, &FnStringFromFile::Compile);
+ICompiler * FunctionCompilers::StringFromFile (ICompiler  * argCompiler) {
+	return new StaticFunctionCompiler(&FnStringFromFile::Compile, argCompiler);
 }
 
-ICompiler * FunctionCompilers::Sum (ICompiler * compiler) {
-	return new StaticFunctionCompiler(compiler, &FnSum::Compile);
+ICompiler * FunctionCompilers::Sum (ICompiler  * argCompiler) {
+	return new StaticFunctionCompiler(&FnSum::Compile, argCompiler);
 }
 
-ICompiler * FunctionCompilers::Void (ICompiler * compiler) {
-	return new StaticFunctionCompiler(compiler, &FnVoid::Compile);
+ICompiler * FunctionCompilers::Void (ICompiler  * argCompiler) {
+	return new StaticFunctionCompiler(&FnVoid::Compile, argCompiler);
 }
 

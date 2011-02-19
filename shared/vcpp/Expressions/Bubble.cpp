@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-12-15 dominik.matrixstorm.com
+// 2011-01-03 dominik.matrixstorm.com
 //
 // First changes
 // 2010-10-24 dominik.matrixstorm.com
@@ -17,7 +17,7 @@
 #include <string.h>
 
 #include <exception>
-#include <list>
+#include <vector>
 
 
 using namespace std;
@@ -26,141 +26,97 @@ using namespace Afx;
 using namespace Afx::Expressions;
 
 
-// BubbleFn ////////////////////////////////////////////////////////////////////
-
-class BubbleFn : public Ref,
-	public ICompiler
+class BubbleEntry : public Ref,
 {
 public:
-	BubbleFn(IStringValue * stringValue, ICompiler * compiler)
-	: m_Compiler(compiler), m_StringValue(stringValue)
+	BubbleEntry(ICallCompiler * compiler, IGetArgsCompiler * getArgsCompiler)
+	: m_Compiler(compiler), m_GetArgsCompiler(getArgsCompiler)
 	{
 	}
 
-	virtual ICompiled * Compile (Cursor * cursor)
-	{
-		ICompiled * compiled = 0;
-		CursorRef curRef(cursor);
-
-		if(1 < m_StringValue.get()->GetLength())
-		{
-			// named:
-			StringValueRef strRef(curRef.get()->ReadStringValue());
-
-			if(!strcmp(m_StringValue.getData(), strRef.getData()))
-			{
-				curRef.get()->SkipSpace();
-
-				compiled = m_Compiler.get()->Compile(cursor);
-			}
-		}
-		else
-		{
-			// unnamed:
-			compiled = m_Compiler.get()->Compile(cursor);
-		}
-
-		return compiled ? compiled : new Compiled(new Error(Error::EC_ParseError, curRef.get()));
-	}
-
-	ICompiler * Compiler (void) const {
-		return m_Compiler.get();
-	}
-
-	IStringValue * Name (void) const {
-		return m_StringValue.get();
-	}
-
-	virtual IRef * Ref (void) {
-		return this;
-	}
-
-private:
-	RefIPtr<ICompiler> m_Compiler;
-	StringValueRef m_StringValue;
-};
-
-
-// BubbleCompiler //////////////////////////////////////////////////////////////
-
-class BubbleCompiler : public Ref,
-	public ICompiler
-{
-public:
-	BubbleCompiler()
-	{
-	}
-
-	void Add(IStringValue * name, ICompiler * compiler)
-	{
-		BubbleFn * bubbleFn = new BubbleFn(name, compiler);
-		bubbleFn->AddRef();
-
-		m_Fns.push_back(bubbleFn);
-	}
-
-	virtual ICompiled * Compile(Cursor * cursor)
+	virtual ICompiled * Compile (IStringValue * value)
 	{
 		ICompiled * compiled = 0;
 
-		CursorRef curRef(cursor);
-		CursorBackup curBackup(curRef.get()->Backup());
+		//
+#pragma error(TODO)
 
-		for(FnListT::iterator it = m_Fns.begin(); it != m_Fns.end() && !compiled; it++)
-		{
-			ICompiled * curCompiled = (*it)->Compile(curRef.get());
+		// TODO: split into identifier and argument (call) string,
+		// compile args string,
+		// upon success call
 
-			if(curCompiled->GetError())
-			{
-				Ref::TouchRef(curCompiled->Ref());
-				curRef.get()->Restore(curBackup);
-			}
-			else {
-				compiled = curCompiled;
-				break;
-			}
-		}
+		//
+
+		
 
 		return compiled ? compiled : new Compiled(new Error());
 	}
 
-	void Hide(IStringValue * name)
+	virtual IRef * Ref (void)
 	{
-		for(FnListT::iterator it = m_Fns.begin(); it != m_Fns.end(); )
-		{
-			if(!strcmp((*it)->Name()->GetData(), name->GetData()))
-			{
-				BubbleFn * bubbleFn = (*it);
-				it = m_Fns.erase(it);
-				bubbleFn->Release();
-			}
-			else it++;
-		}
+		return this;
 	}
 
-	virtual IRef * Ref (void) {
-		return this;
+private:
+	RefIPtr<ICallCompiler> m_Compiler;
+	RefIPtr<IGetArgsCompiler> m_GetArgsCompiler;
+};
+
+
+class BubbleCompilers : public Ref
+{
+public:
+	BubbleCompilers()
+	{
+	}
+
+	void Add (ICallCompiler * compiler)
+	{
+		compiler->Ref()->AddRef();
+
+		m_Fns.push_back(compiler);
+	}
+
+	ICallCompiler * GetAt(int index)
+	{
+		return 0 <= index && index < m_Fns.size()
+			? m_Fns.at(m_Fns.begin() +index)
+			: 0
+		;
+	}
+
+	int GetCount (void)
+	{
+		return m_Fns.size();
 	}
 
 	void ShutDown (void)
 	{
 		for(FnListT::iterator it = m_Fns.begin(); it != m_Fns.end(); )
 		{
-			(*it)->Release();
+			(*it)->Ref()->Release();
 			it = m_Fns.erase(it);
 		}
 	}
 
 protected:
-	virtual ~BubbleCompiler()
+	virtual ~BubbleCompilers()
 	{
 		ShutDown();
 	}
 
 private:
-	typedef list<BubbleFn *> FnListT;
+	typedef vector<ICallCompiler *> FnListT;
 
 	FnListT m_Fns;
+
+};
+
+class BubbleArgsCompiler : public Ref,
+	public IArgsCompiler
+{
+public:
+	BubbleArgsCompiler(BubbleCompilers * bubbleCompilers, IRef * dependency
 
 };
 
@@ -168,41 +124,17 @@ private:
 // Bubble //////////////////////////////////////////////////////////////////////
 
 class Bubble : public Ref,
-	public IBubble,
-	public ICompiler
+	public IBubble
 {
 public:
 	Bubble()
-	: m_BubbleCompiler(new BubbleCompiler())
+	: m_BubbleCompilers(new BubbleCompilers())
 	{
 	}
 
-	virtual void Add(IStringValue * name, ICompiler * compiler)
+	virtual void Add(ICallCompiler * compiler)
 	{
-		m_BubbleCompiler.get()->Add(name, compiler);
-	}
-
-	virtual ICompiler * Compiler (void) {
-		return m_BubbleCompiler.get();
-	}
-
-	virtual ICompiled * Compile(Cursor * cursor)
-	{
-		return m_BubbleCompiler.get()->Compile(cursor);
-	}
-
-	virtual ICompiled * Compile(IStringValue *  code)
-	{
-		return Compile(new Cursor(code));
-	}
-
-	virtual void Hide(IStringValue * name)
-	{
-		m_BubbleCompiler.get()->Hide(name);
-	}
-
-	virtual ICompiler * OuterCompiler (void) {
-		return this;
+		m_BubbleCompilers.get()->Add(compiler);
 	}
 
 	virtual IRef * Ref (void) {
@@ -212,11 +144,11 @@ public:
 protected:
 	virtual ~Bubble()
 	{
-		m_BubbleCompiler.get()->ShutDown();
+		m_BubbleCompilers.get()->ShutDown();
 	}
 
 private:
-	RefPtr<BubbleCompiler> m_BubbleCompiler;
+	RefPtr<BubbleCompilers> m_BubbleCompilers;
 };
 
 

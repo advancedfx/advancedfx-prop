@@ -122,7 +122,7 @@
     <ClCompile Include="..\shared\vcpp\Expressions\Events.cpp" />
     <ClCompile Include="..\shared\vcpp\Expressions\Expressions.cpp" />
     <ClCompile Include="..\shared\vcpp\Expressions\Functions.cpp" />
-    <ClCompile Include="..\shared\vcpp\Expressions\Parse.cpp" />
+    <ClCompile Include="..\shared\vcpp\Expressions\ParseArgs.cpp" />
     <ClCompile Include="..\shared\vcpp\Expressions\Types.cpp" />
     <ClCompile Include="..\shared\vcpp\GlImage.cpp" />
     <ClCompile Include="..\shared\vcpp\Image.cpp" />
@@ -207,7 +207,7 @@
     <ClInclude Include="..\shared\vcpp\Expressions\Events.h" />
     <ClInclude Include="..\shared\vcpp\Expressions\Expressions.h" />
     <ClInclude Include="..\shared\vcpp\Expressions\Functions.h" />
-    <ClInclude Include="..\shared\vcpp\Expressions\Parse.h" />
+    <ClInclude Include="..\shared\vcpp\Expressions\ParseArgs.h" />
     <ClInclude Include="..\shared\vcpp\Expressions\Types.h" />
     <ClInclude Include="..\shared\vcpp\GlImage.h" />
     <ClInclude Include="..\shared\vcpp\Image.h" />

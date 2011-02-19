@@ -252,9 +252,6 @@
     <ClCompile Include="..\shared\vcpp\Expressions\Compile.cpp">
       <Filter>shared\vcpp\Expressions</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\vcpp\Expressions\Parse.cpp">
-      <Filter>shared\vcpp\Expressions</Filter>
-    </ClCompile>
     <ClCompile Include="..\shared\vcpp\Expressions\Delegate.cpp">
       <Filter>shared\vcpp\Expressions</Filter>
     </ClCompile>
@@ -268,6 +265,9 @@
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\vcpp\Expressions\Bubble.cpp">
+      <Filter>shared\vcpp\Expressions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\vcpp\Expressions\ParseArgs.cpp">
       <Filter>shared\vcpp\Expressions</Filter>
     </ClCompile>
   </ItemGroup>
@@ -458,9 +458,6 @@
     <ClInclude Include="..\shared\vcpp\Expressions\Compile.h">
       <Filter>shared\vcpp\Expressions</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\vcpp\Expressions\Parse.h">
-      <Filter>shared\vcpp\Expressions</Filter>
-    </ClInclude>
     <ClInclude Include="..\shared\vcpp\Expressions\Delegate.h">
       <Filter>shared\vcpp\Expressions</Filter>
     </ClInclude>
@@ -474,6 +471,9 @@
       <Filter>AfxHookGoldSrc</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\vcpp\Expressions\Bubble.h">
+      <Filter>shared\vcpp\Expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\vcpp\Expressions\ParseArgs.h">
       <Filter>shared\vcpp\Expressions</Filter>
     </ClInclude>
   </ItemGroup>

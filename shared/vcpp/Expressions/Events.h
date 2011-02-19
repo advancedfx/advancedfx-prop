@@ -27,7 +27,7 @@ class BoolEvent : public Ref,
 public:
 	BoolEvent(ICompiler * compiler, BoolT initialValue);
 
-	virtual ICompiled * Compile (Cursor * cursor);
+	virtual ICompiled * Compile (ICompileNode * node);
 
 	virtual BoolT EvalBool (void);
 
@@ -39,7 +39,7 @@ protected:
 	virtual ~BoolEvent();
 
 private:
-	CompilerRef m_Compiler;
+	RefIPtr<ICompiler> m_Compiler;
 	IBool * m_Bool;
 };
 
@@ -56,7 +56,7 @@ class IntEvent : public Ref,
 public:
 	IntEvent(ICompiler * compiler, IntT initialValue);
 
-	virtual ICompiled * Compile (Cursor * cursor);
+	virtual ICompiled * Compile (ICompileNode * node);
 
 	virtual IntT EvalInt (void);
 
@@ -68,7 +68,7 @@ protected:
 	virtual ~IntEvent();
 
 private:
-	CompilerRef m_Compiler;
+	RefIPtr<ICompiler> m_Compiler;
 	IInt * m_Int;
 };
 
@@ -85,7 +85,7 @@ class VoidEvent : public Ref,
 public:
 	VoidEvent(ICompiler * compiler);
 
-	virtual ICompiled * Compile (Cursor * cursor);
+	virtual ICompiled * Compile (ICompileNode * node);
 
 	virtual VoidT EvalVoid (void);
 
@@ -97,7 +97,7 @@ protected:
 	virtual ~VoidEvent();
 
 private:
-	CompilerRef m_Compiler;
+	RefIPtr<ICompiler> m_Compiler;
 	IVoid * m_Void;
 };
 

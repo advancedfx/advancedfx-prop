@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-11-17 dominik.matrixstorm.com
+// 2011-01-05 dominik.matrixstorm.com
 //
 // First changes
 // 2010-11-17 dominik.matrixstorm.com
@@ -21,7 +21,7 @@ class ParseArgs : public Ref
 {
 public:
 	/// <remarks>by default Null is skipped upon parsing, set SetSkipNull</remarks>
-	ParseArgs(IArgumentCompiler * argumentCompiler);
+	ParseArgs(ICompiler * argCompiler, ICompileNode * node);
 
 	ICompiled * GetArg(int index);
 
@@ -54,8 +54,7 @@ public:
 	/// <returns>if not Eof</returns>
 	bool ParseNextArgTCEX(ICompiled::Type type, bool & outMatchedOrEof);
 
-
-	::Afx::IRef * Ref (void);
+	IRef * Ref (void);
 
 	void SetArg(int index, ICompiled * value);
 
@@ -67,8 +66,9 @@ protected:
 private:
 	typedef vector<ICompiled *> VectorT;
 
-	IArgumentCompiler * m_ArgumentCompiler;
+	ICompiler * m_ArgCompiler;
 	VectorT m_Compileds;
+	ICompileNode * m_Node;
 	bool m_SkipNull;
 
 	ICompiled * ParseNextArg_Internal (void);

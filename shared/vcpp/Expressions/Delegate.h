@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-12-15 dominik.matrixstorm.com
+// 2011-01-05 dominik.matrixstorm.com
 //
 // First changes
 // 2010-11-18 dominik.matrixstorm.com
@@ -87,11 +87,11 @@ class Delegate : public Ref,
 	public ICompiler
 {
 public:
-	static Delegate * New (ICompiler * compiler, FunctionHost * host, VoidFunction function, ArgumentsT * argumentsT);
-	static Delegate * New (ICompiler * compiler, FunctionHost * host, BoolFunction function, ArgumentsT * argumentsT);
-	static Delegate * New (ICompiler * compiler, FunctionHost * host, IntFunction function, ArgumentsT * argumentsT);
-	static Delegate * New (ICompiler * compiler, FunctionHost * host, FloatFunction function, ArgumentsT * argumentsT);
-	static Delegate * New (ICompiler * compiler, FunctionHost * host, StringFunction function, ArgumentsT * argumentsT);
+	static Delegate * New (FunctionHost * host, VoidFunction function, ArgumentsT * argumentsT, ICompiler * argCompiler);
+	static Delegate * New (FunctionHost * host, BoolFunction function, ArgumentsT * argumentsT, ICompiler * argCompiler);
+	static Delegate * New (FunctionHost * host, IntFunction function, ArgumentsT * argumentsT, ICompiler * argCompiler);
+	static Delegate * New (FunctionHost * host, FloatFunction function, ArgumentsT * argumentsT, ICompiler * argCompiler);
+	static Delegate * New (FunctionHost * host, StringFunction function, ArgumentsT * argumentsT, ICompiler * argCompiler);
 
 	static ICompiled::Type Delegate::Translate(ArgumentT type);
 
@@ -103,19 +103,36 @@ public:
 
 	void DeleteArgs(Arguments args);
 
-	virtual ICompiled * Compile (Cursor * cursor);
+	virtual ICompiled * Compile (ICompileNode * node);
 
 	virtual IRef * Ref (void);
 
 private:
 	RefPtr<ArgumentsT> m_ArgumentsT;
-	RefIPtr<ICompiler> m_Compiler;
+	RefIPtr<ICompiler> m_ArgCompiler;
 	Function m_Function;
 	FunctionT m_FunctionT;
 	RefPtr<FunctionHost> m_Host;
 
-	Delegate(ICompiler * compiler, FunctionHost * host, FunctionT functionT, Function function, ArgumentsT * argumentsT);
+	Delegate(FunctionHost * host, FunctionT functionT, Function function, ArgumentsT * argumentsT, ICompiler * argCompiler);
 };
 
+
+class StaticFunctionCompiler : public Ref,
+	public ICompiler
+{
+public:
+	typedef ICompiled * (* Function)(ICompiler * argCompiler, ICompileNode * node);
+
+	StaticFunctionCompiler (Function function, ICompiler * argCompiler);
+
+	virtual ICompiled *  Compile (ICompileNode * node);
+
+	virtual IRef * Ref (void);
+
+private:
+	RefIPtr<ICompiler> m_ArgCompiler;
+	Function m_Function;
+};
 
 } } // namespace Afx { namespace Expr {

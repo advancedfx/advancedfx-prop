@@ -3,12 +3,12 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-11-17 dominik.matrixstorm.com
+// 2011-01-05 dominik.matrixstorm.com
 //
 // First changes
 // 2010-10-24 dominik.matrixstorm.com
 
-#include "Parse.h"
+#include "ParseArgs.h"
 
 using namespace Afx;
 using namespace Afx::Expressions;
@@ -17,10 +17,11 @@ using namespace Afx::Expressions;
 // ParseArgs ///////////////////////////////////////////////////////////////////
 
 
-ParseArgs::ParseArgs(IArgumentCompiler * argumentCompiler)
-: m_ArgumentCompiler(argumentCompiler), m_SkipNull(true)
+ParseArgs::ParseArgs(ICompiler * argCompiler, ICompileNode * node)
+: m_ArgCompiler(argCompiler), m_Node(node), m_SkipNull(true)
 {
-	argumentCompiler->Ref()->AddRef();
+	argCompiler->Ref()->AddRef();
+	if(node) node->Ref()->AddRef();
 }
 
 ParseArgs::~ParseArgs()
@@ -30,7 +31,8 @@ ParseArgs::~ParseArgs()
 		(*it)->Ref()->Release();
 	}
 
-	m_ArgumentCompiler->Ref()->Release();
+	if(m_Node) m_Node->Ref()->Release();
+	m_ArgCompiler->Ref()->Release();
 }
 
 
@@ -141,16 +143,30 @@ ICompiled * ParseArgs::ParseNextArg_Internal (void)
 	ICompiled * compiled;
 	bool bSkip;
 		
-	do {
-		compiled = m_ArgumentCompiler->CompileArgument();
-
-		bSkip = m_SkipNull && 0 != compiled->GetNull();
-
-		if(bSkip)
+	do
+	{
+		if(m_Node)
 		{
-			Ref::TouchRef(compiled->Ref());
-		}
+			compiled = m_ArgCompiler->Compile(m_Node);
 
+			bSkip = m_SkipNull && ICompiled::T_Null == compiled->GetType();
+
+			if(bSkip)
+			{
+				Ref::TouchRef(compiled->Ref());
+			}
+
+			// get next Node:
+			ICompileNode * nextNode = m_Node->Next();
+			if(nextNode) nextNode->Ref()->AddRef();
+			m_Node->Ref()->Release();
+			m_Node = nextNode;
+		}
+		else
+		{
+			compiled = new Compiled(new Eof());
+			bSkip = false;
+		}
 	} while(bSkip);
 
 	return compiled;

@@ -12,7 +12,7 @@
 #include "Events.h"
 
 #include "Functions.h"
-#include "Parse.h"
+#include "ParseArgs.h"
 
 using namespace Afx;
 using namespace Afx::Expressions;
@@ -65,11 +65,11 @@ BoolEvent::~BoolEvent()
 	m_Bool->Ref()->Release();
 }
 
-ICompiled * BoolEvent::Compile (Cursor * cursor)
+ICompiled * BoolEvent::Compile (ICompileNode * node)
 {
 	ICompiled * compiled = 0;
 
-	ParseArgs * pa = new ParseArgs(new ArgumentCompiler(m_Compiler.get(), cursor));
+	ParseArgs * pa = new ParseArgs(m_Compiler.get(), node);
 	pa->Ref()->AddRef();
 
 	ICompiled::Type type = pa->ParseNextArgTE();
@@ -161,11 +161,11 @@ IntEvent::~IntEvent()
 	m_Int->Ref()->Release();
 }
 
-ICompiled * IntEvent::Compile (Cursor * cursor)
+ICompiled * IntEvent::Compile (ICompileNode * node)
 {
 	ICompiled * compiled = 0;
 
-	ParseArgs * pa = new ParseArgs(new ArgumentCompiler(m_Compiler.get(), cursor));
+	ParseArgs * pa = new ParseArgs(m_Compiler.get(), node);
 	pa->Ref()->AddRef();
 
 	ICompiled::Type type = pa->ParseNextArgTE();
@@ -258,11 +258,11 @@ VoidEvent::~VoidEvent()
 	m_Void->Ref()->Release();
 }
 
-ICompiled * VoidEvent::Compile (Cursor * cursor)
+ICompiled * VoidEvent::Compile (ICompileNode * node)
 {
 	ICompiled * compiled = 0;
 
-	ParseArgs * pa = new ParseArgs(new ArgumentCompiler(m_Compiler.get(), cursor));
+	ParseArgs * pa = new ParseArgs(m_Compiler.get(), node);
 	pa->Ref()->AddRef();
 
 	ICompiled::Type type = pa->ParseNextArgTE();
