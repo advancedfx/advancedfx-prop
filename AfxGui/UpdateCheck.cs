@@ -59,6 +59,7 @@ namespace AfxGui
 
             m_Guids = new Guid[]{
                 // always put the current guid first.
+                new Guid("8dc8ffc5-172b-42b5-a0ec-9847ad5b9f6c"),
 				new Guid("d8c48501-3d37-4aad-9a55-ae192481ff7e"),
 				new Guid("7ffafca2-0ed3-4641-bb3e-a6d0f3a17e8f")
             };
@@ -150,55 +151,60 @@ namespace AfxGui
             {
                 Uri uri = null;
                 Guid guid = Guid.Empty;
-                
-                while (true)
-	            {
-	                XmlDocument doc;
-	                HttpWebRequest request;
-	                HttpWebResponse response = null;
+                bool doLoop;
+
+                do
+                {
+                    XmlDocument doc;
+                    HttpWebRequest request;
+                    HttpWebResponse response = null;
                     Stream stream = null;
 
-                    try {
-			            request = WebRequest.Create( url ) as HttpWebRequest;
-			            request.MaximumAutomaticRedirections = 1;
-			            request.AllowAutoRedirect = true;
-			            request.Timeout = 10000;
-			            response = request.GetResponse() as HttpWebResponse;
+                    doLoop = false;
 
-			            doc = new XmlDocument();
-			            stream = response.GetResponseStream();
-			            doc.Load( stream );
+                    try
+                    {
+                        request = WebRequest.Create(url) as HttpWebRequest;
+                        request.MaximumAutomaticRedirections = 1;
+                        request.AllowAutoRedirect = true;
+                        request.Timeout = 10000;
+                        response = request.GetResponse() as HttpWebResponse;
 
-			            XmlNode anode;
-			            XmlNode nodeUpdate = doc.SelectSingleNode("update");
-			            XmlAttribute attr = nodeUpdate.Attributes["redirect"];
+                        doc = new XmlDocument();
+                        stream = response.GetResponseStream();
+                        doc.Load(stream);
 
-			            if(null == attr)
+                        XmlNode anode;
+                        XmlNode nodeUpdate = doc.SelectSingleNode("update");
+                        XmlAttribute attr = nodeUpdate.Attributes["redirect"];
+
+                        if (null == attr)
                         {
                             // no more redirects.
 
-				            guid = new Guid(nodeUpdate["guid"].InnerText);
-				            uri = null != (anode = nodeUpdate["link"]) ? new Uri(anode.InnerText) : null;
-				            break;
-			            }
-			            else if(0 < maxRedirects)
+                            guid = new Guid(nodeUpdate["guid"].InnerText);
+                            uri = null != (anode = nodeUpdate["link"]) ? new Uri(anode.InnerText) : null;
+                        }
+                        else if (0 < maxRedirects)
                         {
-				            // follow redirect.
+                            // follow redirect.
 
-				            maxRedirects--;
-				            url = attr.InnerText;
-			            }
-			            else
-				            throw new System.ApplicationException();
-		            }
-		            catch(Exception)
+                            maxRedirects--;
+                            url = attr.InnerText;
+                            doLoop = true;
+                        }
+                        else
+                            throw new System.ApplicationException();
+                    }
+                    catch (Exception)
                     {
                         uri = null;
-		            }
+                        doLoop = false;
+                    }
 
                     if (null != stream) stream.Close();
                     if (null != response) response.Close();
-	            }
+                } while (doLoop);
 
                 if (null == uri)
                     return null;
