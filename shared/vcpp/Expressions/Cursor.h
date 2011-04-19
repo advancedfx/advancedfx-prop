@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-12-15 dominik.matrixstorm.com
+// 2011-03-10 dominik.matrixstorm.com
 //
 // First changes
 // 2010-10-24 dominik.matrixstorm.com
@@ -80,10 +80,12 @@ public:
 
 	bool ReadFloatValue (FloatT & outValue);
 
+	IStringValue * ReadIdentifier (void);
+	
 	bool ReadIntValue (IntT & outValue);
 
-	IStringValue * ReadStringValue (void);
-	
+	bool ReadStringText(int & outLength, char * & outData);
+
 	void Restore(CursorBackup const & backup);
 
 	void Seek(int ofs);

@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-11-22 dominik.matrixstorm.com
+// 2011-03-10 dominik.matrixstorm.com
 //
 // First changes
 // 2010-10-24 dominik.matrixstorm.com
@@ -206,6 +206,21 @@ bool Cursor::ReadBoolValue (BoolT & outValue)
 	return false;
 }
 
+
+IStringValue * Cursor::ReadIdentifier (void)
+{
+	int count = 0;
+
+	while(!IsControlChar(Get(count))) count++;
+
+	char * data = new char[1+count];
+	for(int i=0; i<count; i++) data[i] = GetAdd();
+	data[count] = 0;
+
+	return StringValue::TakeOwnership(1+count, data);
+}
+
+
 bool Cursor::ReadIntValue (IntT & outValue)
 {
 	if(IsNull()) return false;
@@ -244,18 +259,71 @@ bool Cursor::ReadFloatValue (FloatT & outValue)
 	return false;
 }
 
-IStringValue * Cursor::ReadStringValue (void)
+
+bool Cursor::ReadStringText(int & outLength, char * & outData)
 {
-	int count = 0;
+	bool escaped;
+	bool done;
+	char val;
 
-	while(!IsControlChar(Get(count))) count++;
+	outData = 0;
 
-	char * data = new char[1+count];
-	for(int i=0; i<count; i++) data[i] = GetAdd();
-	data[count] = 0;
+	CursorBackup backup(Backup());
 
-	return StringValue::TakeOwnership(1+count, data);
+	do
+	{
+		escaped = false;
+		outLength = 0;
+		int brackets = 0;
+
+		Restore(backup);
+
+		while((val = Get()), !IsNull(val) && (escaped || 0 < brackets || !IsPaClose(val)))
+		{
+			Add();
+
+			if(!escaped && IsEscape(val))
+			{
+				escaped = true;
+			}
+			else {
+				escaped = false;
+
+				if(IsPaOpen(val)) brackets++;
+				else if(IsPaClose(val)) brackets--;
+
+				if(outData) outData[outLength] = val;
+				outLength++;
+			}
+		}
+
+		if(!outData && !escaped)
+		{
+			// not done yet, but we know the outLength now:
+			outData = new char[1+outLength];
+			outLength = 0;
+			done = false;
+		}
+		else if(outData) {
+			// ok and done.
+			outData[outLength] = 0;
+			done = true;
+		}
+		else {
+			// error and done.
+			done = true;
+		}
+	} while(!done);
+
+	if(0 == outData)
+	{
+		// Error, restore backup
+		Restore(backup);
+	}
+
+	return 0 != outData;
 }
+
 
 void Cursor::Restore(CursorBackup const & backup)
 {

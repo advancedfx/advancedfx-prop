@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2011-01-05 dominik.matrixstorm.com
+// 2011-03-10 dominik.matrixstorm.com
 //
 // First changes
 // 2010-10-24 dominik.matrixstorm.com
@@ -107,92 +107,12 @@ private:
 };
 
 
-struct __declspec(novtable) ICompileNode abstract
-{
-	virtual IRef * Ref (void) abstract = 0;
-
-	/// <summary>
-	/// Data associated with that node (content for leaf nodes, or id for others).
-	/// </summary>
-	virtual IStringValue * Data (void) abstract = 0;
-
-	virtual ICompileNode * Child (void) abstract = 0;
-
-	virtual ICompileNode * Next (void) abstract = 0;
-};
-
 struct __declspec(novtable) ICompiler abstract
 {
 	virtual IRef * Ref (void) abstract = 0;
 
-	/// <param name="node">may be 0 to indicate the empty (means no) node</param>
-	virtual ICompiled * Compile (ICompileNode * node) abstract = 0;
+	virtual ICompiled * Compile (Cursor * cursor) abstract = 0;
 };
-
-
-/// <summary>
-/// Plain data (usually text) compiler
-/// </summary>
-struct __declspec(novtable) IStringCompiler abstract
-{
-	virtual IRef * Ref (void) abstract = 0;
-
-	virtual ICompiled * Compile (IStringValue * value) abstract = 0;
-};
-
-
-/// <summary>
-/// Compiles Bool.
-/// </summary>
-class BoolCompiler : public Ref,
-	public IStringCompiler
-{
-public:
-	virtual ICompiled * Compile (IStringValue * value);
-
-	virtual IRef * Ref (void);
-};
-
-
-/// <summary>
-/// Compiles Int.
-/// </summary>
-class IntCompiler : public Ref,
-	public IStringCompiler
-{
-public:
-	virtual ICompiled * Compile (IStringValue * value);
-
-	virtual ::Afx::IRef * Ref (void);
-};
-
-
-/// <summary>
-/// Compiles Float.
-/// </summary>
-class FloatCompiler : public Ref,
-	public IStringCompiler
-{
-public:
-	virtual ICompiled * Compile (IStringValue * value);
-
-	virtual ::Afx::IRef * Ref (void);
-};
-
-
-/// <summary>
-/// Compiles StringValue.
-/// </summary>
-class StringCompiler : public Ref,
-	public IStringCompiler
-{
-public:
-	virtual ICompiled * Compile (IStringValue * value);
-
-	virtual ::Afx::IRef * Ref (void);
-};
-
-
 
 
 } } // namespace Afx { namespace Expr {

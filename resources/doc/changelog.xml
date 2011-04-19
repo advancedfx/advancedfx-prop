@@ -6,6 +6,19 @@
 
 <release>
 <name>HLAE</name>
+<version>2.2.20.8</version>
+<time>2011-04-18T18:47Z</time>
+<changes>
+<change type="updated">
+Included AfxHookSource 0.0.3.14 (2011-04-18T18:44Z).
+</change>
+</changes>
+<comments>AfxHookSource users will notice a bink*.dll missing error, which has to be addressed in a further release.</comments>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.2.20.7</version>
 <time>2011-03-05T19:34Z</time>
 <changes>

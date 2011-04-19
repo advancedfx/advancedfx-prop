@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2011-01-05 dominik.matrixstorm.com
+// 2011-03-10 dominik.matrixstorm.com
 //
 // First changes
 // 2010-10-24 dominik.matrixstorm.com
@@ -14,46 +14,6 @@
 
 using namespace Afx;
 using namespace Afx::Expressions;
-
-
-// BoolCompiler ////////////////////////////////////////////////////////////////
-
-ICompiled * BoolCompiler::Compile (IStringValue * value)
-{
-	StringValueRef valueRef(value);
-	BoolT rValue;
-	bool match = false;
-
-	for(int i=0; i<2; i++)
-	{
-		char * text = 0 == i ? "false" : "true";
-		match = true;
-
-		char const * valText = valueRef.getData();
-		int textLen = strlen(valText);
-
-		for(int j=0; match && j<textLen; j++)
-		{
-			match = text[j] == valText[j];
-		}
-
-		if(match)
-		{
-			rValue = 0 == i ? false : true;
-			break;
-		}
-	}
-
-	return match
-		? new Compiled(new Bool(rValue))
-		: new Compiled(new Error())
-	;
-}
-
-IRef * BoolCompiler::Ref (void)
-{
-	return this;
-}
 
 
 // Compiled ////////////////////////////////////////////////////////////////////
@@ -161,132 +121,3 @@ IVoid * Compiled::GetVoid() { return ICompiled::T_Void == m_Type ? m_Value.Void 
 
 ::Afx::IRef * Compiled::Ref() { return dynamic_cast<::Afx::IRef *>(this); }
 
-
-
-// FloatCompiler ////////////////////////////////////////////////////////////////
-
-ICompiled * FloatCompiler::Compile (IStringValue * value)
-{
-	StringValueRef valueRef(value);
-	bool match = false;
-
-	char const * startPtr = valueRef.getData();
-	int textLen = strlen(startPtr);
-	char * endPtr;
-	FloatT rValue = strtod(startPtr, &endPtr);
-	int skipped = (endPtr -startPtr) / sizeof(char);
-
-	match = 0 < skipped && textLen == skipped;
-
-	return match
-		? new Compiled(new Float(rValue))
-		: new Compiled(new Error())
-	;
-}
-
-IRef * FloatCompiler::Ref (void)
-{
-	return this;
-}
-
-
-// IntCompiler ////////////////////////////////////////////////////////////////
-
-ICompiled * IntCompiler::Compile (IStringValue * value)
-{
-	StringValueRef valueRef(value);
-	bool match = false;
-
-	char const * startPtr = valueRef.getData();
-	int textLen = strlen(startPtr);
-	char * endPtr;
-	IntT rValue = strtol(startPtr, &endPtr, 0);
-	int skipped = (endPtr -startPtr) / sizeof(char);
-
-	match = 0 < skipped && textLen == skipped;
-
-	return match
-		? new Compiled(new Int(rValue))
-		: new Compiled(new Error())
-	;
-}
-
-IRef * IntCompiler::Ref (void)
-{
-	return this;
-}
-
-
-
-// StringCompiler //////////////////////////////////////////////////////////////
-
-ICompiled * StringCompiler::Compile (IStringValue * value)
-{
-	return new Compiled(new String(value));
-}
-
-/*
-bool StringTextCompiler::ReadString(Cursor * cursor, int & outLength, char * & outData)
-{
-	CursorRef curRef(cursor);
-	bool escaped;
-	bool done;
-	char val;
-
-	outData = 0;
-
-	CursorBackup backup(curRef.get()->Backup());
-
-	do
-	{
-		escaped = false;
-		outLength = 0;
-		int brackets = 0;
-
-		curRef.get()->Restore(backup);
-
-		while((val = curRef.get()->Get()), !curRef.get()->IsNull(val) && (escaped || 0 < brackets || !curRef.get()->IsPaClose(val)))
-		{
-			curRef.get()->Add();
-
-			if(!escaped && curRef.get()->IsEscape(val))
-			{
-				escaped = true;
-			}
-			else {
-				escaped = false;
-
-				if(curRef.get()->IsPaOpen(val)) brackets++;
-				else if(curRef.get()->IsPaClose(val)) brackets--;
-
-				if(outData) outData[outLength] = val;
-				outLength++;
-			}
-		}
-
-		if(!outData && !escaped)
-		{
-			// not done yet, but we know the outLength now:
-			outData = new char[1+outLength];
-			outLength = 0;
-			done = false;
-		}
-		else if(outData) {
-			// ok and done.
-			outData[outLength] = 0;
-			done = true;
-		}
-		else {
-			// error and done.
-			done = true;
-		}
-	} while(!done);
-
-	return 0 != outData;
-}
-*/
-
-IRef * StringCompiler::Ref (void)
-{
-	return this;
-}
