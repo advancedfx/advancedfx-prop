@@ -188,7 +188,6 @@
     <ClCompile Include="hooks\hw\R_DrawParticles.cpp" />
     <ClCompile Include="hooks\hw\R_DrawViewModel.cpp" />
     <ClCompile Include="hooks\hw\R_PolyBlend.cpp" />
-    <ClCompile Include="bits\bits.cpp" />
     <ClCompile Include="..\shared\bvhexport.cpp" />
     <ClCompile Include="..\shared\bvhimport.cpp" />
     <ClCompile Include="..\shared\detours.cpp" />
@@ -256,8 +255,6 @@
     <ClInclude Include="hooks\hw\R_DrawParticles.h" />
     <ClInclude Include="hooks\hw\R_DrawViewModel.h" />
     <ClInclude Include="hooks\hw\R_PolyBlend.h" />
-    <ClInclude Include="bits\bits.h" />
-    <ClInclude Include="bits\bits_Js.h" />
     <ClInclude Include="..\shared\bvhexport.h" />
     <ClInclude Include="..\shared\bvhimport.h" />
     <ClInclude Include="..\shared\detours.h" />

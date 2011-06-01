@@ -16,9 +16,6 @@
     <Filter Include="AfxHookGoldSrc\hooks\hw">
       <UniqueIdentifier>{30438562-965a-4236-905f-9b2d427620ae}</UniqueIdentifier>
     </Filter>
-    <Filter Include="AfxHookGoldSrc\bits">
-      <UniqueIdentifier>{1eedb489-9975-41da-9f38-30793d970ee4}</UniqueIdentifier>
-    </Filter>
     <Filter Include="shared">
       <UniqueIdentifier>{32805ebf-8b73-4ad8-9fa7-84ac24d50773}</UniqueIdentifier>
     </Filter>
@@ -44,9 +41,6 @@
     </ClCompile>
     <ClCompile Include="AfxGoldSrcComClient.cpp">
       <Filter>AfxHookGoldSrc</Filter>
-    </ClCompile>
-    <ClCompile Include="bits\bits.cpp">
-      <Filter>AfxHookGoldSrc\bits</Filter>
     </ClCompile>
     <ClCompile Include="cstrike_smoke.cpp">
       <Filter>AfxHookGoldSrc</Filter>
@@ -283,12 +277,6 @@
     </ClInclude>
     <ClInclude Include="..\shared\com\AfxGoldSrcComDefs.h">
       <Filter>shared\com</Filter>
-    </ClInclude>
-    <ClInclude Include="bits\bits_Js.h">
-      <Filter>AfxHookGoldSrc\bits</Filter>
-    </ClInclude>
-    <ClInclude Include="bits\bits.h">
-      <Filter>AfxHookGoldSrc\bits</Filter>
     </ClInclude>
     <ClInclude Include="aiming.h">
       <Filter>AfxHookGoldSrc</Filter>
