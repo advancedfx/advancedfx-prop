@@ -23,8 +23,8 @@ function afx_OnHwDllLoaded()
 	addr.Host_Frame = addr.hwDll +0x62B00;
 	addr.Host_Frame_DSZ = 0x05;
 
-	addr.UnkDevCapsChecks = addr.hwDll +0xC6A26;
-	addr.UnkDevCapsChecks_BYTES = 0x14;
+	addr.UnkDevCapsChecks = addr.hwDll +0xC6A26; // [4]
+	addr.UnkDevCapsChecks_BYTES = 0x14; // [4]
 	
 	addr.ClientFunctionTable = addr.hwDll +0x11FE320;
 
@@ -144,19 +144,19 @@ function afx_OnClientDllLoaded()
 	addr.SZ_unkInlineClientColorV = 0x3C;
 
 	// cstrike CrossHair fix related:
-	addr.cstrike_UnkCrosshairFn = addr.clientDll + 0x42EB0;
-	addr.cstrike_UnkCrosshairFn_DSZ = 0x09; // at least 8 bytes req.
-	addr.cstrike_UnkCrosshairFn_add_fac = addr.clientDll + 0xCD450;
-	addr.cstrike_UnkCrosshairFn_mul_fac = addr.clientDll + 0xC3298;
+	addr.cstrike_UnkCrosshairFn = addr.clientDll + 0x42EB0; // [1]
+	addr.cstrike_UnkCrosshairFn_DSZ = 0x09; // at least 8 bytes req. // [1]
+	addr.cstrike_UnkCrosshairFn_add_fac = addr.clientDll + 0xCD450; // [1]
+	addr.cstrike_UnkCrosshairFn_mul_fac = addr.clientDll + 0xC3298; // [1]
 
 	// cstrike EV_CreateSmoke:
-	addr.cstrike_EV_CreateSmoke = addr.clientDll + 0xa420;
+	addr.cstrike_EV_CreateSmoke = addr.clientDll + 0xa420; // [3]
 
 	// cstrike DeathMsg related (client.dll offsets):
-	addr.cstrike_rgDeathNoticeList = addr.clientDll + 0x121DF8;
-	addr.cstrike_CHudDeathNotice_Draw = addr.clientDll + 0x45E10;
-	addr.cstrike_CHudDeathNotice_MsgFunc_DeathMsg = addr.clientDll + 0x46190;
-	addr.cstrike_MsgFunc_DeathMsg = addr.clientDll + 0x45CB0;
+	addr.cstrike_rgDeathNoticeList = addr.clientDll + 0x121DF8; // [2]
+	addr.cstrike_CHudDeathNotice_Draw = addr.clientDll + 0x45E10; // [2]
+	addr.cstrike_CHudDeathNotice_MsgFunc_DeathMsg = addr.clientDll + 0x46190; // [2]
+	addr.cstrike_MsgFunc_DeathMsg = addr.clientDll + 0x45CB0; // [2]
 	
 	//
 	// other games
@@ -180,3 +180,12 @@ ogl.GL_COLOR_BUFFER_BIT = 0x00004000;
 ogl.GL_DEPTH_BUFFER_BIT = 0x00000100;
 ogl.GL_ACCUM_BUFFER_BIT = 0x00000200;
 ogl.GL_STENCIL_BUFFER_BIT = 0x00000400;
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Documentation
+//
+// [1] docs/notes_goldsrc/debug_cstrike_crosshair.txt
+// [2] docs/notes_goldsrc/debug_cstrike_deathmessage.txt
+// [3] docs/notes_goldsrc/debug_cstrike_smoke.txt
+// [4] docs/notes_goldsrc/debug_forceres.txt
