@@ -12,9 +12,9 @@ function afx_OnHwDllLoaded()
 	// Engine-to-client interfaces:
 	//
 
-	addr.p_cl_enginefuncs_s = addr.hwDll + 0x166A98;
-	addr.p_engine_studio_api_s = addr.hwDll + 0x1829B8;
-	addr.p_playermove_s = addr.hwDll + 0xFD5AE0;
+	addr.p_cl_enginefuncs_s = addr.hwDll + 0x166A98; // [5]
+	addr.p_engine_studio_api_s = addr.hwDll + 0x1829B8; // [5]
+	addr.p_playermove_s = addr.hwDll + 0xFD5AE0; // [5]
 
 	//
 	// General engine hooks:
@@ -189,3 +189,4 @@ ogl.GL_STENCIL_BUFFER_BIT = 0x00000400;
 // [2] docs/notes_goldsrc/debug_cstrike_deathmessage.txt
 // [3] docs/notes_goldsrc/debug_cstrike_smoke.txt
 // [4] docs/notes_goldsrc/debug_forceres.txt
+// [5] docs/notes_goldsrc/debug_engine_ifaces.txt

@@ -513,9 +513,6 @@ void Filming::OnHudBeginEvent()
 		glClearColor(0.0f,0.0f,0.0f, 0.0f); // don't forget to set our clear color
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 		break;
-	case HUDRQ_HIDE:
-		glColorMask(GL_FALSE,GL_FALSE,GL_FALSE,GL_FALSE);
-		break;
 	}
 }
 
@@ -536,6 +533,7 @@ bool Filming::OnHudEndEvnet()
 	case HUDRQ_CAPTURE_ALPHA:
 		if(g_Filming_Stream[FS_hudalpha]) g_Filming_Stream[FS_hudalpha]->Capture(m_time, &m_GlRawPic, m_fps);
 		g_Cstrike_CrossHair_Block = false; // allow cool-down again.
+		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); // restore default color mask again!
 		break;
 	}
 	return false; // do not loop

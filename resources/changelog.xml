@@ -6,6 +6,18 @@
 
 <release>
 <name>HLAE</name>
+<version>2.2.20.12</version>
+<time>2011-07-02T15:52Z</time>
+<changes>
+<change type="fixed">
+Fixed hudalpha stream interfering with past frames on some setups.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.2.20.11</version>
 <time>2011-06-28T19:02Z</time>
 <changes>

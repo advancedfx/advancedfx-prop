@@ -288,6 +288,9 @@ void APIENTRY NewGlFrustum(GLdouble left, GLdouble right, GLdouble bottom, GLdou
 	glFrustum(left, right, bottom, top, zNear, zFar);
 }
 
+
+// TODO: for hudalpha streams color mask maybe temporary wrong
+// for HUD elements that don't use blending (luckily almost all do).
 void APIENTRY NewGlBlendFunc (GLenum sfactor, GLenum dfactor)
 {
 	switch(g_Filming.giveHudRqState())
