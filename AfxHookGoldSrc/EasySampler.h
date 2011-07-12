@@ -3,10 +3,18 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-09-29 dominik.matrixstorm.com
+// 2011-07-12 dominik.matrixstorm.com
 //
 // First changes
 // 2010-03-23 dominik.matrixstorm.com
+
+// TODO:
+//
+// In the average case where the full range of a sample is
+// used (withn a frame), CPU power is wasted, because the same multiplication
+// is done twice when interpolating from the next sample.
+// (First it's the new one, then the old one and factors
+// are about the same, this is a waste).
 
 #include "Store.h"
 

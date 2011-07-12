@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-09-29 dominik.matrixstorm.com
+// 2011-07-12 dominik.matrixstorm.com
 //
 // First changes
 // 2010-03-23 dominik.matrixstorm.com
@@ -472,13 +472,17 @@ void EasySamplerBase::Integrator_Fn(ISampleFns *fns, void const * sampleA, void 
 
 	{
 		// Calculate weigths:
-
 		float dAB = timeB -timeA;
-		float dSAB = subTimeB -subTimeA;
-		float w = dAB ? subTimeA +subTimeB -2 * timeA / dAB : 0.0f;
-		weightA = dSAB -w / 2.0f;
-		weightB = dSAB * w / 2.0f;
+		float w1 = (subTimeB -subTimeA) / 2.0f;
+		float w2 = dAB ? (subTimeA +subTimeB -2.0f * timeA) / dAB : 0.0f;
+		weightA = w1 * (2 -w2);
+		weightB = w1 * w2;
 	}
+
+#ifdef DEBUG_EASYSAMPLER
+	pEngfuncs->Con_Printf(" (wA=%f, SA:%s, wB=%f, SB:%s)", weightA, sampleA ? "Y" : "N", weightB, sampleB? "Y" : "N");
+#endif
+
 
 	//
 	// optimize / combine the function:

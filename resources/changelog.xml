@@ -6,11 +6,24 @@
 
 <release>
 <name>HLAE</name>
+<version>2.2.21.0</version>
+<time>2011-07-12T13:37Z</time>
+<changes>
+<change type="fixed">
+Fixed sampling system sample interpolation weight formulae to prevent artifacts, increase image quality and allow proper blending of samples.
+</change>
+</changes>
+<comments>Greetings to Dec!</comments>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.2.20.13</version>
-<time>2011-07-07T17:32Z</time>
+<time>2011-07-08T17:32Z</time>
 <changes>
 <change type="updated">
-Included AfxHookSource 0.0.3.18 (2011-07-07T17:31Z).
+Included AfxHookSource 0.0.3.18 (2011-07-08T17:31Z).
 </change>
 </changes>
 </release>
