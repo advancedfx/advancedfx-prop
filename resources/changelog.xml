@@ -6,6 +6,150 @@
 
 <release>
 <name>HLAE</name>
+<version>2.2.21.13</version>
+<time>2012-10-13T17:49Z</time>
+<changes>
+<change type="updated">
+Included AfxHookSource 0.0.3.30 (2012-10-13T17:48Z).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
+<version>2.2.21.12</version>
+<time>2012-09-14T18:29Z</time>
+<changes>
+<change type="updated">
+Included AfxHookSource 0.0.3.29 (2012-09-14T18:28Z).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
+<version>2.2.21.11</version>
+<time>2012-08-25T18:25Z</time>
+<changes>
+<change type="updated">
+Included AfxHookSource 0.0.3.28 (2012-08-25T18:24Z).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
+<version>2.2.21.10</version>
+<time>2012-08-20T18:09Z</time>
+<changes>
+<change type="fixed">
+Fixed base interception failing on some systems (new import address table hooking code).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
+<version>2.2.21.9</version>
+<time>2012-07-04T16:44Z</time>
+<changes>
+<change type="updated">
+Included AfxHookSource 0.0.3.27 (2012-07-04T16:43Z).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
+<version>2.2.21.8</version>
+<time>2012-05-27T17:12Z</time>
+<changes>
+<change type="updated">
+Included AfxHookSource 0.0.3.26 (2012-05-27T17:11Z).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
+<version>2.2.21.7</version>
+<time>2012-02-12T14:52Z</time>
+<changes>
+<change type="updated">
+Included AfxHookSource 0.0.3.25 (2012-02-12T14:51Z).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
+<version>2.2.21.6</version>
+<time>2011-12-24T16:38Z</time>
+<changes>
+<change type="updated">
+Included AfxHookSource 0.0.3.24 (2011-12-24T16:36Z).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
+<version>2.2.21.5</version>
+<time>2011-12-21T14:29Z</time>
+<changes>
+<change type="updated">
+Included AfxHookSource 0.0.3.23 (2011-12-21T14:29Z).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
+<version>2.2.21.4</version>
+<time>2011-11-15T17:25Z</time>
+<changes>
+<change type="updated">
+Included AfxHookSource 0.0.3.22 (2011-11-15T17:24Z).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
+<version>2.2.21.3</version>
+<time>2011-10-30T18:00Z</time>
+<changes>
+<change type="updated">
+Included AfxHookSource 0.0.3.21 (2011-10-30T17:59Z).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
+<version>2.2.21.2</version>
+<time>2011-09-29T13:43Z</time>
+<changes>
+<change type="updated">
+Included AfxHookSource 0.0.3.20 (2011-09-29T13:38Z).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.2.21.1</version>
 <time>2011-08-26T13:33Z</time>
 <changes>

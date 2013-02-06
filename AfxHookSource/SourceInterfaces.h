@@ -1193,3 +1193,7 @@ public:
 	virtual void _UNUSED_InvalidateMdlCache(void)=0;
 	virtual void _UNUSED_IN_SetSampleTime(void)=0;
 };
+
+// IBaseClientDll_015 //////////////////////////////////////////////////////////
+
+#define CLIENT_DLL_INTERFACE_VERSION_016		"VClient016"

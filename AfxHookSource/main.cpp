@@ -163,8 +163,10 @@ void* new_Client_CreateInterface(const char *pName, int *pReturnCode)
 
 
 
-
-		if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_015, NULL)) {
+		if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_016, NULL)) {
+			g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_016;
+		}
+		else if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_015, NULL)) {
 			g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_015;
 		}
 		else if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_013, NULL)) {

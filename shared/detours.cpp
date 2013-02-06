@@ -2,6 +2,8 @@
 
 #include <shared/detours.h>
 
+//#define MDT_DEBUG
+
 #define JMP32_SZ	5	// the size of JMP <address>
 #define POPREG_SZ	1	// the size of a POP <reg>
 #define NOP			0x90 // opcode for NOP
@@ -16,8 +18,179 @@
 //#pragma warning(disable: 4311)
 #define MakePtr(cast, ptr, addValue) (cast)((DWORD)(ptr) + (DWORD)(addValue))
 
+#define PtrFromRva( base, rva ) ( ( ( PBYTE ) base ) + rva )
+
+// Code taken from
+// http://jpassing.com/2008/01/06/using-import-address-table-hooking-for-testing/
+// needs to be replaced by own code.
+//
+/*++
+  Routine Description:
+    Replace the function pointer in a module's IAT.
+
+  Parameters:
+    Module              - Module to use IAT from.
+    ImportedModuleName  - Name of imported DLL from which 
+                          function is imported.
+    ImportedProcName    - Name of imported function.
+    AlternateProc       - Function to be written to IAT.
+    OldProc             - Original function.
+
+  Return Value:
+    S_OK on success.
+    (any HRESULT) on failure.
+--*/
+HRESULT PatchIat(
+  __in HMODULE Module,
+  __in PSTR ImportedModuleName,
+  __in PSTR ImportedProcName,
+  __in PVOID AlternateProc,
+  __out_opt PVOID *OldProc
+  )
+{
+  PIMAGE_DOS_HEADER DosHeader = ( PIMAGE_DOS_HEADER ) Module;
+  PIMAGE_NT_HEADERS NtHeader; 
+  PIMAGE_IMPORT_DESCRIPTOR ImportDescriptor;
+  UINT Index;
+
+  _ASSERTE( Module );
+  _ASSERTE( ImportedModuleName );
+  _ASSERTE( ImportedProcName );
+  _ASSERTE( AlternateProc );
+
+  NtHeader = ( PIMAGE_NT_HEADERS ) 
+    PtrFromRva( DosHeader, DosHeader->e_lfanew );
+  if( IMAGE_NT_SIGNATURE != NtHeader->Signature )
+  {
+    return HRESULT_FROM_WIN32( ERROR_BAD_EXE_FORMAT );
+  }
+
+  ImportDescriptor = ( PIMAGE_IMPORT_DESCRIPTOR ) 
+    PtrFromRva( DosHeader, 
+      NtHeader->OptionalHeader.DataDirectory
+        [ IMAGE_DIRECTORY_ENTRY_IMPORT ].VirtualAddress );
+
+  //
+  // Iterate over import descriptors/DLLs.
+  //
+  for ( Index = 0; 
+        ImportDescriptor[ Index ].Characteristics != 0; 
+        Index++ )
+  {
+    PSTR dllName = ( PSTR ) 
+      PtrFromRva( DosHeader, ImportDescriptor[ Index ].Name );
+
+    if ( 0 == _strcmpi( dllName, ImportedModuleName ) )
+    {
+      //
+      // This the DLL we are after.
+      //
+      PIMAGE_THUNK_DATA Thunk;
+      PIMAGE_THUNK_DATA OrigThunk;
+
+      if ( ! ImportDescriptor[ Index ].FirstThunk ||
+         ! ImportDescriptor[ Index ].OriginalFirstThunk )
+      {
+        return E_INVALIDARG;
+      }
+
+      Thunk = ( PIMAGE_THUNK_DATA )
+        PtrFromRva( DosHeader, 
+          ImportDescriptor[ Index ].FirstThunk );
+      OrigThunk = ( PIMAGE_THUNK_DATA )
+        PtrFromRva( DosHeader, 
+          ImportDescriptor[ Index ].OriginalFirstThunk );
+
+      for ( ; OrigThunk->u1.Function != NULL; 
+              OrigThunk++, Thunk++ )
+      {
+        if ( OrigThunk->u1.Ordinal & IMAGE_ORDINAL_FLAG )
+        {
+          //
+          // Ordinal import - we can handle named imports
+          // ony, so skip it.
+          //
+          continue;
+        }
+
+        PIMAGE_IMPORT_BY_NAME import = ( PIMAGE_IMPORT_BY_NAME )
+          PtrFromRva( DosHeader, OrigThunk->u1.AddressOfData );
+
+        if ( 0 == strcmp( ImportedProcName, 
+                              ( char* ) import->Name ) )
+        {
+          //
+          // Proc found, patch it.
+          //
+          DWORD junk;
+          MEMORY_BASIC_INFORMATION thunkMemInfo;
+
+          //
+          // Make page writable.
+          //
+          VirtualQuery(
+            Thunk,
+            &thunkMemInfo,
+            sizeof( MEMORY_BASIC_INFORMATION ) );
+          if ( ! VirtualProtect(
+            thunkMemInfo.BaseAddress,
+            thunkMemInfo.RegionSize,
+            PAGE_EXECUTE_READWRITE,
+            &thunkMemInfo.Protect ) )
+          {
+            return HRESULT_FROM_WIN32( GetLastError() );
+          }
+
+          //
+          // Replace function pointers (non-atomically).
+          //
+          if ( OldProc )
+          {
+            *OldProc = ( PVOID ) ( DWORD_PTR ) 
+                Thunk->u1.Function;
+          }
+#ifdef _WIN64
+          Thunk->u1.Function = ( ULONGLONG ) ( DWORD_PTR ) 
+              AlternateProc;
+#else
+          Thunk->u1.Function = ( DWORD ) ( DWORD_PTR ) 
+              AlternateProc;
+#endif
+          //
+          // Restore page protection.
+          //
+          if ( ! VirtualProtect(
+            thunkMemInfo.BaseAddress,
+            thunkMemInfo.RegionSize,
+            thunkMemInfo.Protect,
+            &junk ) )
+          {
+            return HRESULT_FROM_WIN32( GetLastError() );
+          }
+
+          return S_OK;
+        }
+      }
+      
+      //
+      // Import not found.
+      //
+      return HRESULT_FROM_WIN32( ERROR_PROC_NOT_FOUND );    
+    }
+  }
+
+  //
+  // DLL not found.
+  //
+  return HRESULT_FROM_WIN32( ERROR_MOD_NOT_FOUND );
+}
+
 void *InterceptDllCall(HMODULE hModule, char *szDllName, char *szFunctionName, DWORD pNewFunction)
 {
+/*
+	For some setups this old code won't probably because GetProcAddress returns
+	a different address from the one that the IAT uses.
+
 	PIMAGE_DOS_HEADER pDosHeader;
 	PIMAGE_NT_HEADERS pNTHeader;
 	PIMAGE_IMPORT_DESCRIPTOR pImportDesc;
@@ -25,18 +198,37 @@ void *InterceptDllCall(HMODULE hModule, char *szDllName, char *szFunctionName, D
 	MdtMemBlockInfos mbis;
 	void *pOldFunction;
 
+#ifdef MDT_DEBUG
+	MessageBox(0, szFunctionName, "InterceptDllCall", MB_OK|MB_ICONINFORMATION);
+#endif
+
 
 	if (!(pOldFunction = GetProcAddress(GetModuleHandle(szDllName), szFunctionName)))
+	{
+#ifdef MDT_DEBUG
+		MessageBox(0, "GetProcAddress failed.", "InterceptDllCall", MB_OK|MB_ICONERROR);
+#endif
 		return NULL;
+	}
 
 	pDosHeader = (PIMAGE_DOS_HEADER) hModule;
 	if (pDosHeader->e_magic != IMAGE_DOS_SIGNATURE)
+	{
+#ifdef MDT_DEBUG
+		MessageBox(0, "No IMAGE_DOS_SIGNATURE", "InterceptDllCall", MB_OK|MB_ICONERROR);
+#endif
 		return NULL;
+	}
 
 	pNTHeader = MakePtr(PIMAGE_NT_HEADERS, pDosHeader, pDosHeader->e_lfanew);
 	if (pNTHeader->Signature != IMAGE_NT_SIGNATURE
 	|| (pImportDesc = MakePtr(PIMAGE_IMPORT_DESCRIPTOR, pDosHeader, pNTHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress)) == (PIMAGE_IMPORT_DESCRIPTOR) pNTHeader)
+	{
+#ifdef MDT_DEBUG
+		MessageBox(0, "No IMAGE_NT_SINGATURE or ImportDesc is NtHeader", "InterceptDllCall", MB_OK|MB_ICONERROR);
+#endif
 		return NULL;
+	}
 
 	while (pImportDesc->Name)
 	{
@@ -46,7 +238,12 @@ void *InterceptDllCall(HMODULE hModule, char *szDllName, char *szFunctionName, D
 		pImportDesc++;
 	}
 	if (pImportDesc->Name == NULL)
+	{
+#ifdef MDT_DEBUG
+		MessageBox(0, "DLLName does not match.", "InterceptDllCall", MB_OK|MB_ICONERROR);
+#endif
 		return NULL;
+	}
 
 	pThunk = MakePtr(PIMAGE_THUNK_DATA, pDosHeader,	pImportDesc->FirstThunk);
 	while (pThunk->u1.Function)
@@ -61,6 +258,21 @@ void *InterceptDllCall(HMODULE hModule, char *szDllName, char *szFunctionName, D
 		}
 		pThunk++;
 	}
+
+#ifdef MDT_DEBUG
+	MessageBox(0, "Function not found.", "InterceptDllCall", MB_OK|MB_ICONERROR);
+#endif
+*/
+	void *pOldFunction;
+
+	if(S_OK == PatchIat(
+		hModule,
+		szDllName,
+		szFunctionName,
+		(PVOID)pNewFunction,
+		(PVOID *)&pOldFunction
+	))
+		return pOldFunction;
 
 	return NULL;
 }

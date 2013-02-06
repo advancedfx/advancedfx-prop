@@ -84,7 +84,6 @@ msthavoc
 Dec
   Forum, IRC.
   Since March 2011.
-  http://www.svorge.org/
 
 Past members:
 
