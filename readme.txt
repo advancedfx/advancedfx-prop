@@ -1,4 +1,11 @@
-You are here: $(REPOS)/mdt/trunk/
+How to build HLAE
+=================
+
+For info on how to build HLAE see how_to_build.txt.
+
+
+Directory Contents
+==================
 
 AfxCppCli/
   CLR Class Library in C++/CLI meant for handling interop
@@ -40,9 +47,15 @@ shared/
 tools/
   small tools not part of the hlae core download
   
-info.txt
-  This file.  
+copy_resources_release.bat
+  Helper for copying required files from the resource folder to build\Release\bin
+  
+how_to_build.txt
+  Info on how to build HLAE.  
   
 mdt.sln
   Solution file for Microsoft Visual Studio 2008 .NET (VC++) which organizes C++
   and C++/CLI  projects.
+  
+readme.txt
+  This file.

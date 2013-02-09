@@ -1,14 +1,23 @@
+For building HLAE you will need Microsoft Visual C++ and Microsoft Visual C#.
+
 Build order:
+
+1) Download and build SpiderMonkey (Release), please see
+   doc\how_to_build_spidermonkey.txt for details.
 
 2) Build (Configuration=Release): AfxHookGoldSrc, AfxHookSource, AfxCppCli
 
 3) AfxHook\recompile.bat, move AfxHook.dat into build\Release\bin\
 
-4) Build AfxGui (Release), move and rename AfxGui.exe to build\Release\bin\hlae.exe
+4) Build AfxGui (Release), move and rename AfxGui.exe to build\Release\bin\HLAE.exe
 
-5) Copy all files and folders from resources\ to build\Release\bin
+5) Copy all files and folders from resources\ to build\Release\bin,
+   you can use copy_resources_release.bat in order to do that.
 
 6) Copy msvcp100.dll, msvcr100.dll (CRT runtime, required by C++ and C++/CLI
    projects) from your system folders to build\Release\bin
    
+   Copy js32.dll (Spider monkey) from C:\Libraries\js\src\Release
+   to build\Release\bin
+
 7) Remove all temporary / unneeded files such as *.pdb and hlaeconfig.xml
