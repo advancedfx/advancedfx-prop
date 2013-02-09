@@ -62,7 +62,7 @@ unsigned int g_OfsCvarFloatValue;
 
 float GetCvarFloat(void * pcvar)
 {
-	float * pf = *(float **)pcvar +g_OfsCvarFloatValue;
+	float * pf = (float *)(*(unsigned char **)pcvar +g_OfsCvarFloatValue);
 
 	float f = *pf;
 
@@ -71,7 +71,7 @@ float GetCvarFloat(void * pcvar)
 
 void SetCvarFloat(void * pcvar, float value)
 {
-	float * pf = *(float **)pcvar +g_OfsCvarFloatValue;
+	float * pf = (float *)(*(unsigned char **)pcvar +g_OfsCvarFloatValue);
 
 	*pf = value;
 }
@@ -232,7 +232,6 @@ void Hook_VClient_RenderView::Install_cstrike(void) {
 	g_OfsCvarFloatValue = AFXADDR_GET(cstrike_OFS_CvarFloatValue);
 
 	m_IsInstalled = true;
-
 }
 
 

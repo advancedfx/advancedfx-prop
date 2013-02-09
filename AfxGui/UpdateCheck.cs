@@ -59,7 +59,7 @@ namespace AfxGui
 
             m_Guids = new Guid[]{
                 // always put the current guid first.
-				new Guid("a448a5f3-502c-4714-b9ae-275ad0fbbf85"),
+				new Guid("59005b01-89da-46c8-a357-cad6ff0fadac"),
 				new Guid("13bf84de-ea58-483a-9729-deb88ed31c77")
             };
 

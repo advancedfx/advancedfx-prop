@@ -95,7 +95,6 @@ void MySetup(CreateInterfaceFn appSystemFactory) {
 		g_Hook_VClient_RenderView.Install(g_VEngineClient->GetGameDirectory());
 	}
 
-
 	PrintInfo();
 }
 
@@ -161,9 +160,10 @@ void* new_Client_CreateInterface(const char *pName, int *pReturnCode)
 
 		void * iface = NULL;
 
-
-
-		if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_016, NULL)) {
+		if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_017, NULL)) {
+			g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_017;
+		}
+		else if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_016, NULL)) {
 			g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_016;
 		}
 		else if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_015, NULL)) {

@@ -1194,6 +1194,10 @@ public:
 	virtual void _UNUSED_IN_SetSampleTime(void)=0;
 };
 
-// IBaseClientDll_015 //////////////////////////////////////////////////////////
+// IBaseClientDll_016 //////////////////////////////////////////////////////////
 
 #define CLIENT_DLL_INTERFACE_VERSION_016		"VClient016"
+
+// IBaseClientDll_017 //////////////////////////////////////////////////////////
+
+#define CLIENT_DLL_INTERFACE_VERSION_017		"VClient017"
