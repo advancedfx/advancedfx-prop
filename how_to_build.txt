@@ -1,15 +1,22 @@
-For building HLAE you will need Microsoft Visual C++ and Microsoft Visual C#.
+For building HLAE you will need Microsoft Visual C++ and Microsoft Visual C#
+which you can obtain for free from http://www.microsoft.com (Express editions
+will do).
 
 Build order:
 
 1) Download and build SpiderMonkey (Release), please see
    doc\how_to_build_spidermonkey.txt for details.
+   
+   Download the Half-Life SDK from
+   http://metamod.sourceforge.net/files/sdk/
+   and install it into C:\Libraries\hlsdk
 
 2) Build (Configuration=Release): AfxHookGoldSrc, AfxHookSource, AfxCppCli
 
 3) AfxHook\recompile.bat, move AfxHook.dat into build\Release\bin\
 
-4) Build AfxGui (Release), move and rename AfxGui.exe to build\Release\bin\HLAE.exe
+4) Build AfxGui (Release), move and rename AfxGui.exe to
+   build\Release\bin\HLAE.exe
 
 5) Copy all files and folders from resources\ to build\Release\bin,
    you can use copy_resources_release.bat in order to do that.

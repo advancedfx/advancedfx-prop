@@ -1,6 +1,6 @@
 For more info about whats going on here see:
-C:\Libraries\q1source\WinQuake\snd_mix.c
-C:\Libraries\q1source\WinQuake\snd_dma.c
+C:\Libraries\q1source\QW\client\snd_mix.c
+C:\Libraries\q1source\QW\client\snd_dma.c
 
 Modules loaded:
 03520000 hw
