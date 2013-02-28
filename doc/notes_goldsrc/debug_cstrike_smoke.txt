@@ -1,3 +1,7 @@
+Note:
+We only hook EV_CreateSmoke, for which you can find
+debugging information at the end of this file.
+
 (For debugging use listenserver)
 
 > s -a client L4000000 "events/createsmoke.sc"

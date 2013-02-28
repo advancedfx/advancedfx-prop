@@ -16,7 +16,8 @@ void APIENTRY NewGlFrustum(GLdouble left, GLdouble right, GLdouble bottom, GLdou
 
 void APIENTRY NewGlBlendFunc (GLenum sfactor, GLenum dfactor);
 
-extern BOOL (APIENTRY *OldWglSwapBuffers)(HDC hDC);
+typedef BOOL (APIENTRY *wglSwapBuffers_t)(HDC hDC);
+extern wglSwapBuffers_t OldWglSwapBuffers;
 BOOL APIENTRY NewWglSwapBuffers(HDC hDC);
 
 HGLRC WINAPI NewWglCreateContext(HDC);

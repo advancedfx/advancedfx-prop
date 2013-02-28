@@ -1,3 +1,5 @@
+Version: Febraury 20 update
+
 This requires a modification that loads a client.dll (i.e. cstrike).
 
 Break on loading of client.dll and add the following breakpoints:

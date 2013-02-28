@@ -13,7 +13,6 @@
 HMODULE WINAPI new_LoadLibraryA( LPCSTR lpLibFileName )
 {
 		static bool bHwLoaded = false;
-		static bool bClientLoaded = false;
 
 		if( !bHwLoaded && !lstrcmp( lpLibFileName, "hw.dll") )
 		{
@@ -35,6 +34,6 @@ void HookHl()
 
 	HL_ADDR_SET(hlExe, (HlAddress_t)hHl);
 
-	if(!(HMODULE(WINAPI *)( LPCSTR )) InterceptDllCall(hHl, "Kernel32.dll", "LoadLibraryA", (DWORD) &new_LoadLibraryA))
+	if(!InterceptDllCall(hHl, "Kernel32.dll", "LoadLibraryA", (DWORD) &new_LoadLibraryA))
 		MessageBox(0,"Base interception failed","MDT_ERROR",MB_OK|MB_ICONHAND);
 }

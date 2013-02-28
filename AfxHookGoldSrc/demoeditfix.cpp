@@ -13,10 +13,6 @@ extern cl_enginefuncs_s *pEngfuncs;
 
 std::map <int, int> g_DemoEditMappings;
 
-// Addresses for TFC
-#define DM_ADDR	HL_ADDR_GET(HudSpectator_tfc)
-#define A0_ADDR HL_ADDR_GET(HudSpectator_cmp_tfc)
-
 typedef bool (__stdcall *DirectorMessage_t)(DWORD *this_ptr, int iSize, void *pbuf);
 DirectorMessage_t orig_DirectorMessage;
 
@@ -56,11 +52,11 @@ void __stdcall hook_DirectorMessage(DWORD *this_ptr, int iSize, void *pbuf)
 void PatchDMFunction(int dm_address, int dm_size, int bounds_address)
 {
 	// Redirect to hook
-	orig_DirectorMessage = (DirectorMessage_t) DetourClassFunc((BYTE *) dm_address /*DM_ADDR*/, (BYTE *) hook_DirectorMessage, dm_size /*8*/);
+	orig_DirectorMessage = (DirectorMessage_t) DetourClassFunc((BYTE *) dm_address, (BYTE *) hook_DirectorMessage, dm_size);
 
 	// TODO Change size check from 0A to whatever it shold be
 	MdtMemBlockInfos mbis;
-	BYTE *bCheck = (BYTE *) bounds_address /*A0_ADDR*/;
+	BYTE *bCheck = (BYTE *) bounds_address;
 
 	MdtMemAccessBegin(bCheck, 1, &mbis);
 	*bCheck = 0x10;
@@ -119,12 +115,18 @@ REGISTER_CMD_FUNC(demoedit_fix)
 	{
 		if (strcmp(pEngfuncs->Cmd_Argv(1), "tfc") == 0)
 		{
-			g_DemoEditMappings.clear();
-			g_DemoEditMappings[14] = 4;
-			g_DemoEditMappings[15] = 11;
-			PatchDMFunction((int)DM_ADDR, 8, (int)A0_ADDR);
-			bFixedMapping = true;
-			pEngfuncs->Con_Printf("Fixed TFC demoedit\n");
+			if(0 == HL_ADDR_GET(HudSpectator_tfc))
+			{
+				pEngfuncs->Con_Printf("Currently not supported, ask in forums for an update!");
+			}
+			else {
+				g_DemoEditMappings.clear();
+				g_DemoEditMappings[14] = 4;
+				g_DemoEditMappings[15] = 11;
+				PatchDMFunction((int)HL_ADDR_GET(HudSpectator_tfc), 8, (int)HL_ADDR_GET(HudSpectator_cmp_tfc));
+				bFixedMapping = true;
+				pEngfuncs->Con_Printf("Fixed TFC demoedit\n");
+			}
 		}
 		else
 		{

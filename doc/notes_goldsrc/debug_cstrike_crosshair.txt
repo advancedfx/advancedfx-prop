@@ -115,3 +115,7 @@ which gets passed two parameters, one seems to be the time, the other the weapon
 0d503340 5b              pop     ebx
 0d503341 83c408          add     esp,8
 0d503344 c20800          ret     8
+
+So what you need to do is detour the class function
+(0d502eb0) and access the two parameters (fmul) and
+(fadd), see above.

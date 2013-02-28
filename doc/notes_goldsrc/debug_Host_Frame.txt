@@ -1,0 +1,51 @@
+Version: Febraury 20 update
+
+Modules:
+hw 03520000
+
+Locate Host_Frame:
+
+0:019> s -a hw L1000000 "host_speeds"
+03665bc8  68 6f 73 74 5f 73 70 65-65 64 73 00 30 00 00 00  host_speeds.0...
+
+(03665bc8 +E+E == 03665be4 is E bytes after the end of "host_frame" "0" texts.)
+
+0:019> s hw L1000000 e4 5b 66 03
+03576435  e4 5b 66 03 d8 1d 1c a0-63 03 df e0 f6 c4 44 7b  .[f.....c.....D{
+
+03576433 == 03576435 -2:
+03576433 d905e45b6603    fld     dword ptr [hw!vgui::Frame::`vftable'+0x29ea8 (03665be4)]
+03576439 d81d1ca06303    fcomp   dword ptr [hw!vgui::Frame::operator=+0x5c1cc (0363a01c)]
+0357643f dfe0            fnstsw  ax
+03576441 f6c444          test    ah,44h
+03576444 7b61            jnp     hw+0x564a7 (035764a7)
+
+This is inside a sub function, set a breakpoint and follow till ret.
+
+Then you are inside Host_Frame, follow till ret again and you will get the Host_Frame call address:
+
+035766b0 is Host_Frame
+...
+0357677b 83c408          add     esp,8
+0357677e e89d97fcff      call    hw+0x1ff20 (0353ff20)
+03576783 e8d805fcff      call    hw+0x16d60 (03536d60)
+03576788 e8a397fcff      call    hw+0x1ff30 (0353ff30)
+0357678d e81efeffff      call    hw+0x565b0 (035765b0)
+03576792 e839e1fbff      call    hw+0x148d0 (035348d0)
+03576797 e88413fcff      call    hw+0x17b20 (03537b20)
+0357679c e80f54fcff      call    hw+0x1bbb0 (0353bbb0)
+035767a1 85c0            test    eax,eax
+035767a3 75f7            jne     hw+0x5679c (0357679c)
+035767a5 e816e8fbff      call    hw+0x14fc0 (03534fc0)
+035767aa e8a1feffff      call    hw+0x56650 (03576650)
+035767af e87c14feff      call    hw+0x37c30 (03557c30)
+035767b4 e8a7dd0400      call    hw!CreateInterface+0x46f00 (035c4560)
+035767b9 e84251fbff      call    hw+0xb900 (0352b900)
+035767be e8dd9afcff      call    hw+0x202a0 (035402a0)
+035767c3 e8d8300500      call    hw!CreateInterface+0x4c240 (035c98a0)
+035767c8 dd1d10c8b503    fstp    qword ptr [hw!vgui::Frame::`vftable'+0x520ad4 (03b5c810)]
+035767ce e80dfdffff      call    hw+0x564e0 (035764e0)
+...
+==>
+03576792 => 035348d0 is CL_EmitEntities
+035767ce => calls 035764e0 where SCR_UpdateScreen is called

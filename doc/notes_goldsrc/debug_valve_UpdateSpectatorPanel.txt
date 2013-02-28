@@ -1,0 +1,42 @@
+Version: Febraury 20 update
+
+See:
+C:\Libraries\hlsdk\multiplayer\cl_dll\vgui_TeamFortressViewport.cpp
+
+Game:
+valve
+
+Modules:
+client 0d130000 - 0d208000
+
+0:016> s -a client L1000000 "#Spec_Mode%d"
+0d1b0604  23 53 70 65 63 5f 4d 6f-64 65 25 64 00 00 00 00  #Spec_Mode%d....
+
+0:016> s client L1000000 04 06 1b 0d
+0d13473b  04 06 1b 0d 50 e8 7f e1-04 00 8d 4c 24 34 51 e8  ....P......L$4Q.
+0d17a767  04 06 1b 0d 51 e8 53 81-00 00 8b 15 8c fd 1d 0d  ....Q.S.........
+0d17a780  04 06 1b 0d 50 e8 3a 81-00 00 83 c4 18 ff 15 f0  ....P.:.........
+
+0d17a767 - 1 is inside TeamFortressViewport::UpdateSpectatorPanel
+
+0d17a670 is TeamFortressViewport::UpdateSpectatorPanel
+0d17a670 a18cfd1d0d      mov     eax,dword ptr [client!`string'+0x26c2c (0d1dfd8c)]
+0d17a675 81ec40020000    sub     esp,offset <Unloaded_ud.drv>+0x23f (00000240)
+0d17a67b 56              push    esi
+0d17a67c 8bf1            mov     esi,ecx
+0d17a67e 898624020000    mov     dword ptr <Unloaded_ud.drv>+0x223 (00000224)[esi],eax
+0d17a684 8b0d90fd1d0d    mov     ecx,dword ptr [client!`string'+0x26c30 (0d1dfd90)]
+0d17a68a 898e28020000    mov     dword ptr <Unloaded_ud.drv>+0x227 (00000228)[esi],ecx
+0d17a690 8b8e180a0000    mov     ecx,dword ptr <Unloaded_ud.drv>+0xa17 (00000a18)[esi]
+0d17a696 8b1594fd1d0d    mov     edx,dword ptr [client!`string'+0x26c34 (0d1dfd94)]
+
+// 	if (!m_pSpectatorPanel)
+//		return;
+0d17a69c 85c9            test    ecx,ecx
+0d17a6a4 0f84b4030000    je      client!vgui::BuildGroup::operator=+0x2bbe (0d17aa5e)
+...
+0d17aa5e 5e              pop     esi
+0d17aa5f 81c440020000    add     esp,offset <Unloaded_ud.drv>+0x23f (00000240)
+0d17aa65 c3              ret
+==>
+We patch at 0d17a6a4 (Toggle JE/JMP instruction)

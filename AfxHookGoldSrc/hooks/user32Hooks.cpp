@@ -2,12 +2,13 @@
 
 #include "user32Hooks.h"
 
+#include <shared/detours.h>
+
 #include "../AfxGoldSrcComClient.h"
 #include "../supportrender.h"
 
 HWND g_GameWindow = NULL;
 bool g_GameWindowActive = false;
-WNDCLASSA * g_GameWindowClass = NULL;
 WNDPROC g_GameWindowProc = NULL;
 bool g_GameWindowUndocked = false;
 int g_Height = 0;
@@ -65,12 +66,11 @@ LRESULT CALLBACK NewGameWindowProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 	return g_GameWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
-
-HWND APIENTRY NewCreateWindowExA(DWORD dwExStyle,LPCTSTR lpClassName,LPCTSTR lpWindowName,DWORD dwStyle,int x,int y,int nWidth,int nHeight,HWND hWndParent,HMENU hMenu,HINSTANCE hInstance,LPVOID lpParam)
+HWND APIENTRY NewCreateWindowExW(DWORD dwExStyle,LPCWSTR lpClassName,LPCWSTR lpWindowName,DWORD dwStyle,int x,int y,int nWidth,int nHeight,HWND hWndParent,HMENU hMenu,HINSTANCE hInstance,LPVOID lpParam)
 {
-	if (NULL != hWndParent)
+	if (NULL != hWndParent || lstrcmpW(L"",lpWindowName))
 		// it's not the window we want.
-		return CreateWindowExA(dwExStyle,lpClassName,lpWindowName,dwStyle,x,y,nWidth,nHeight,hWndParent,hMenu,hInstance,lpParam);
+		return CreateWindowExW(dwExStyle,lpClassName,lpWindowName,dwStyle,x,y,nWidth,nHeight,hWndParent,hMenu,hInstance,lpParam);
 
 	// it's the window we want.
 	
@@ -81,15 +81,28 @@ HWND APIENTRY NewCreateWindowExA(DWORD dwExStyle,LPCTSTR lpClassName,LPCTSTR lpW
 	
 	if(!g_AfxGoldSrcComClient.GetFullScreen())
 	{
-		// modifiy some properities to our needs:
+		// currently won't work:
+		/*// modifiy some properities to our needs:
 		dwStyle = WS_CHILD; // | WS_CLIPSIBLINGS | WS_CLIPCHILDREN
 		dwExStyle = WS_EX_NOPARENTNOTIFY;
 		hWndParent = g_AfxGoldSrcComClient.GetParentWindow();
 		x = 0;
-		y = 0;
+		y = 0;*/
 	}
 	
-	return g_GameWindow = CreateWindowExA( dwExStyle, lpClassName, lpWindowName, dwStyle, x, y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam );
+	g_GameWindow = CreateWindowExW( dwExStyle, lpClassName, lpWindowName, dwStyle, x, y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam );
+
+	g_GameWindowProc = (WNDPROC)GetWindowLongPtrW(g_GameWindow, GWLP_WNDPROC);
+	//char t[100];
+	//sprintf_s(t,"0x%08x",g_GameWindowProc);
+	//MessageBox(0,t,"g_GameWIndowProc",MB_OK);
+
+	// We can't set a new windowproc, this will get us an endless loop because SDL
+	// is just fucked up, so we hook the SDL one:
+	//SetWindowLongPtrW(g_GameWindow, GWLP_WNDPROC, (LONG)NewGameWindowProc);
+	//g_GameWindowProc = (WNDPROC)DetourApply((BYTE *)g_GameWindowProc, (BYTE *)NewGameWindowProc, 0x09);
+
+	return g_GameWindow;
 }
 
 
@@ -108,27 +121,6 @@ BOOL APIENTRY NewDestroyWindow(HWND hWnd)
 	}
 
 	return DestroyWindow(hWnd);
-}
-
-
-ATOM APIENTRY NewRegisterClassA(CONST WNDCLASSA *lpWndClass)
-{
-	// quit if it's not the class we want:
-	if (!HIWORD(lpWndClass->lpszClassName) || lstrcmp(lpWndClass->lpszClassName,"Valve001"))
-		return RegisterClassA(lpWndClass);
-
-	// it's the class we want.
-
-	g_GameWindowClass = const_cast<WNDCLASSA *>(lpWndClass);
-	g_GameWindowProc = g_GameWindowClass->lpfnWndProc;
-
-	// modify it to meet our needs:
-	g_GameWindowClass->lpfnWndProc = NewGameWindowProc;
-
-	if(!g_AfxGoldSrcComClient.GetFullScreen())
-		g_GameWindowClass->style = CS_OWNDC;
-
-	return RegisterClassA(g_GameWindowClass);
 }
 
 
@@ -165,8 +157,8 @@ void RedockGameWindow()
 	{
 		// restore old style and parent (see SetParent() on MSDN2, why we do it in this order):
 		SetWindowLongPtr( g_GameWindow, GWL_STYLE, g_OldWindowStyle);
-		SetParent( g_GameWindow, g_AfxGoldSrcComClient.GetParentWindow() );
-		SetWindowPos( g_GameWindow, HWND_TOP, 0, 0, 0, 0, SWP_FRAMECHANGED|SWP_NOSIZE|SWP_SHOWWINDOW);
+		//SetParent( g_GameWindow, g_AfxGoldSrcComClient.GetParentWindow() );
+		SetWindowPos( g_GameWindow, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_FRAMECHANGED|SWP_NOSIZE|SWP_SHOWWINDOW);
 
 		g_GameWindowUndocked = false;
 	}

@@ -4,7 +4,10 @@
 Half-Life Advanced Effects project
 */
 
-#include "newsky.h"
+#include <windows.h>
+#include <gl\gl.h>
+#include <gl\glu.h>
+
 
 #include "cmdregister.h"
 #include "hooks/HookHw.h"
@@ -128,6 +131,22 @@ skyimage_t *LoadSky(const char *pszFileName, bool bFlipY)
 
 ///////////////////////////////////////////////////////////////////////////////
 // CNewSky
+
+class CNewSky
+{
+public:
+	CNewSky();
+
+	void User_ForceReload(bool bEnableCustomSky, bool bOldFormat);
+
+private:
+	int _iSkyQuadsCount;
+
+	GLuint _SkyTextures[6];
+
+	void EnsureGLTextureIndices();
+	bool ReloadTexturesFromFile(bool oldFormat);
+};
 
 CNewSky::CNewSky()
 {

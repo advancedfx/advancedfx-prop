@@ -6,13 +6,17 @@
 //
 // Documentation (in HLAE source code)
 //
-// [1] docs/notes_goldsrc/debug_cstrike_crosshair.txt
-// [2] docs/notes_goldsrc/debug_cstrike_deathmessage.txt
-// [3] docs/notes_goldsrc/debug_cstrike_smoke.txt
-// [4] docs/notes_goldsrc/debug_forceres.txt
-// [5] docs/notes_goldsrc/debug_engine_ifaces.txt
-// [6] docs/notes_goldsrc/debug_sound.txt
-
+// [1] doc/notes_goldsrc/debug_cstrike_crosshair.txt
+// *[2] doc/notes_goldsrc/debug_cstrike_deathmessage.txt
+// [3] doc/notes_goldsrc/debug_cstrike_smoke.txt
+// *[4] doc/notes_goldsrc/debug_valve_UpdateSpectatorPanel.txt
+// *[5] doc/notes_goldsrc/debug_engine_ifaces.txt
+// *[6] doc/notes_goldsrc/debug_sound.txt
+// *[7] doc/notes_goldsrc/debug_SCR_UpdateScreen.txt
+// *[8] doc/notes_goldsrc/debug_Host_Frame.txt
+// *[9] doc/notes_goldsrc/debug_ClientFunctionTable
+// *[10] doc/notes_goldsrc/debug_CL_ParseServerMessage.txt
+// *[11] doc/notes_goldsrc/debug_R_DrawWorld_and_sky.txt
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -24,116 +28,97 @@ function afx_OnHwDllLoaded()
 	// Engine-to-client interfaces:
 	//
 	
-	addr.p_cl_enginefuncs_s = addr.hwDll + 0x166A98; // [5]
-	addr.p_engine_studio_api_s = addr.hwDll + 0x1829B8; // [5]
-	addr.p_playermove_s = addr.hwDll + 0xFD5AE0; // [5]
+	addr.p_cl_enginefuncs_s = addr.hwDll + 0x133260; // *[5]
+	addr.p_playermove_s = addr.hwDll + 0x1002DE0; // *[5]
+	addr.p_engine_studio_api_s = addr.hwDll + 0x14E840; // *[5]
 	
 	//
 	// General engine hooks:
 	//
 	
-	addr.Host_Frame = addr.hwDll +0x62B00;
-	addr.Host_Frame_DSZ = 0x05;
+	addr.Host_Frame = addr.hwDll +0x566B0; // *[8]
+	addr.Host_Frame_DSZ = 0x05; // *[8]
 	
-	addr.UnkDevCapsChecks = addr.hwDll +0xC6A26; // [4]
-	addr.UnkDevCapsChecks_BYTES = 0x14; // [4]
+	addr.CL_EmitEntities = addr.hwDll + 0x148D0; // *[8]
+	addr.CL_EmitEntities_DSZ = 0x05; // *[8]
 	
-	addr.ClientFunctionTable = addr.hwDll +0x11FE320;
+	addr.ClientFunctionTable = addr.hwDll +0x122B620; // *[9]
 	
 	//
 	// Rendering related:
 	//
 	
-	addr.CL_EmitEntities = addr.hwDll + 0x21C40;
-	addr.CL_EmitEntities_DSZ = 0x05;
+	addr.UnkDrawHud = addr.hwDll + 0x4F990; // *[7]
+	addr.UnkDrawHud_DSZ = 0x06; // *[7]
 	
-	addr.Mod_LeafPVS = addr.hwDll + 0x35E30;
-	addr.DTOURSZ_Mod_LeafPVS = 0x0e;
+	addr.R_RenderView = addr.hwDll + 0x45890; // *[7]
+	addr.DTOURSZ_R_RenderView = 0x6; // *[7]
 	
-	addr.R_RenderView = addr.hwDll + 0x52130;
-	addr.DTOURSZ_R_RenderView = 0x6;
+	addr.R_DrawViewModel = addr.hwDll +0x43E90; // *[7]
+	addr.DTOURSZ_R_DrawViewModel = 0x09; // *[7]
 	
-	addr.R_DrawParticles = addr.hwDll + 0x91C10;
-	addr.DTOURSZ_R_DrawParticles = 0x08;
+	addr.R_PolyBlend = addr.hwDll +0x44400; // *[7]
+	addr.DTOURSZ_R_PolyBlend  = 0x09; // *[7]
 	
-	addr.R_DrawSkyBoxEx = addr.hwDll + 0x5BAB6;
-	addr.R_DrawSkyBoxEx_DSZ = 0x08;
+	addr.r_refdef = addr.hwDll + 0xEC28E0; // *[7]
 	
-	addr.R_DrawEntitiesOnList = addr.hwDll + 0x504a0;
-	addr.DTOURSZ_R_DrawEntitiesOnList = 0x0c;
+	addr.Mod_LeafPVS = addr.hwDll + 0x28600; // *[7]
+	addr.DTOURSZ_Mod_LeafPVS = 0x0e; // *[7]
 	
-	addr.R_DrawViewModel = addr.hwDll +0x506f0;
-	addr.DTOURSZ_R_DrawViewModel = 0x09;
+	addr.R_DrawEntitiesOnList = addr.hwDll + 0x43C50; // *[7]
+	addr.DTOURSZ_R_DrawEntitiesOnList = 0x0c; // *[7]
 	
-	addr.R_PolyBlend = addr.hwDll +0x50C60;
-	addr.DTOURSZ_R_PolyBlend  = 0x09;
+	addr.R_DrawParticles = addr.hwDll + 0x7B4B0; // *[7]
+	addr.DTOURSZ_R_DrawParticles = 0x08; // *[7]
 	
-	addr.SCR_UpdateScreen = addr.hwDll + 0xCE570;
-	addr.DTOURSZ_SCR_UpdateScreen = 0x09;
-	addr.HUD_TOURIN = addr.SCR_UpdateScreen + 0xBD;
-	addr.HUD_TOUROUT = addr.HUD_TOURIN + 0x87;
+	addr.R_DrawSkyBoxEx = addr.hwDll + 0x4F74E; // *[11]
+	addr.R_DrawSkyBoxEx_DSZ = 0x09; // *[11]
 	
-	addr.r_refdef = addr.hwDll + 0xE95600;
-	
-	addr.skytextures = addr.hwDll +0xA83620;
-	
-	
-	// DecalTexture hook:
-	//   this function is called in a unknown sub function of R_DrawWorld that is
-	//   called before R_BlendLightmaps. the unknown functions draws out all
-	//   decals of the map as it seems or s.th. and uses this one to get
-	//   a decal's texture
-	addr.UnkGetDecalTexture = addr.hwDll + 0x3C600;
-	addr.DTOURSZ_UnkGetDecalTexture = 0x05;
+	addr.skytextures = addr.hwDll + 0x63C664; // *[11]
 	
 	
 	//
 	// Sound system related:
 	//
 	
-	addr.GetSoundtime = addr.hwDll + 0xA3B30; // [6]
-	addr.DTOURSZ_GetSoundtime = 0x06; // [6]
+	addr.GetSoundtime = addr.hwDll + 0x8BFE0; // *[6]
+	addr.DTOURSZ_GetSoundtime = 0x07; // *[6]
 	
-	addr.S_PaintChannels = addr.hwDll + 0xA60E0; // [6]
-	addr.DTOURSZ_S_PaintChannels = 0x06; // [6]
+	addr.S_PaintChannels = addr.hwDll + 0x8DC60; // *[6]
+	addr.DTOURSZ_S_PaintChannels = 0x06; // *[6]
 	
-	addr.S_TransferPaintBuffer = addr.hwDll + 0xA58F0; // [6]
-	addr.DTOURSZ_S_TransferPaintBuffer = 0x05; // [6]
+	addr.paintedtime = addr.hwDll + 0xA27F60; // *[6]
+	addr.shm = addr.hwDll + 0x6B43F0; // *[6]
+	addr.soundtime = addr.hwDll + 0xA27F5C; // *[6]
 	
-	addr.shm = addr.hwDll + 0x73F758; // [6]
-	addr.paintedtime = addr.hwDll + 0x9FA880; // [6]
-	addr.paintbuffer = addr.hwDll + 0x9EE720; // [6]
-	addr.soundtime = addr.hwDll + 0x9FA87C; // [6]
+	addr.paintbuffer = addr.hwDll + 0xA1DE20; // *[6]
 	
-	addr.SND_PickChannel = addr.hwDll + 0xA25F0; // [6]
-	addr.DTOURSZ_SND_PickChannel = 0x05; // [6]
+	addr.S_TransferPaintBuffer = addr.hwDll + 0x8D580; // *[6]
+	addr.DTOURSZ_S_TransferPaintBuffer = 0x06; // *[6]
+	
+	addr.SND_PickChannel = addr.hwDll + 0x8B200; // *[6]
+	addr.DTOURSZ_SND_PickChannel = 0x06; // *[6]
 	
 	
 	//
 	// Demo parsing related:
 	//
 	
-	addr.CL_ParseServerMessage = addr.hwDll + 0x2A660;
-	addr.net_message_cursize = addr.hwDll + 0xA6E630;
-	addr.net_message = addr.net_message_cursize - 0x10;
-	addr.msg_readcount = addr.hwDll + 0xFD3D28;
-	addr.CL_ParseServerMessage_CmdRead = addr.CL_ParseServerMessage + 0x0E3;
-	addr.DTOURSZ_CL_ParseServerMessage_CmdRead = 0x07;
+	addr.CL_ParseServerMessage_CmdRead = addr.hwDll + 0x1CEF3; // *[10]
+	addr.CL_ParseServerMessage_CmdRead_DSZ = 0x07; // *[10]
+	addr.msg_readcount = addr.hwDll + 0x1001028; // *[10]
+	addr.net_message = addr.hwDll +0xA9B930 - 0x10; // *[10]
 	
 	//
 	// other
 	//
 	
 	// tfc DemoEdit campath fix:
-	addr.HudSpectator_tfc = addr.hlExe + 0x509A00
-	addr.HudSpectator_cmp_tfc = addr.HudSpectator_tfc + 0x23;
+	// currently not supported // addr.HudSpectator_tfc = addr.hlExe + 0x509A00;
+	// currently not supported // addr.HudSpectator_cmp_tfc = addr.HudSpectator_tfc + 0x23;
 	
 	// UpdateSpectatorPanel overviewmode check jump (for HLTV menu removal):
-	addr.UpdateSpectatorPanel_checkjmp_tfc = addr.hlExe + 0x5439A1; // Team Fortress Classic (tfc)
-	addr.UpdateSpectatorPanel_checkjmp_valve = addr.hlExe + 0x540221; //Half-Life (valve)
-	
-	// unused // p_enginefuncs_s = addr.hwDll + 0x18B9F0 // may be unused
-	// unused // p_globalvars_s = addr.hwDll + 0x7CD0E0 // may be unused
+	// currently not supported // addr.UpdateSpectatorPanel_checkjmp_tfc = addr.hlExe + 0x5439A1; // Team Fortress Classic (tfc)
 }
 events.onHwDllLoaded = afx_OnHwDllLoaded;
 delete afx_OnHwDllLoaded;
@@ -147,28 +132,24 @@ function afx_OnClientDllLoaded()
 	// game: cstrike
 	//
 	
-	// cstrike Team color hook:
-	addr.GetClientColor = addr.clientDll + 0x45CD0; // function, used by head-up and overview i.e.
-	addr.DTOURSZ_GetClientColor = 0x0a;
-	addr.unkInlineClientColorA = addr.clientDll + 0x4629A; // inline, used to draw attacker color, also check hook
-	addr.SZ_unkInlineClientColorA = 0x3E;
-	addr.unkInlineClientColorV = addr.clientDll + 0x46320; // inline, used to draw victim color, also check hook // todo
-	addr.SZ_unkInlineClientColorV = 0x3C;
-	
 	// cstrike CrossHair fix related:
-	addr.cstrike_UnkCrosshairFn = addr.clientDll + 0x42EB0; // [1]
-	addr.cstrike_UnkCrosshairFn_DSZ = 0x09; // at least 8 bytes req. // [1]
-	addr.cstrike_UnkCrosshairFn_add_fac = addr.clientDll + 0xCD450; // [1]
-	addr.cstrike_UnkCrosshairFn_mul_fac = addr.clientDll + 0xC3298; // [1]
+	addr.cstrike_UnkCrosshairFn = addr.clientDll + 0x41800; // *[1]
+	addr.cstrike_UnkCrosshairFn_DSZ = 0x09; // at least 8 bytes req. // *[1]
+	addr.cstrike_UnkCrosshairFn_add_fac = addr.clientDll + 0xC32B8; // *[1]
+	addr.cstrike_UnkCrosshairFn_mul_fac = addr.clientDll + 0xCD520; // *[1]
 	
 	// cstrike EV_CreateSmoke:
-	addr.cstrike_EV_CreateSmoke = addr.clientDll + 0xa420; // [3]
+	addr.cstrike_EV_CreateSmoke = addr.clientDll + 0xA080; // *[3]
+	addr.cstrike_EV_CreateSmoke_DSZ = 0x0a; // *[3]
 	
 	// cstrike DeathMsg related (client.dll offsets):
-	addr.cstrike_rgDeathNoticeList = addr.clientDll + 0x121DF8; // [2]
-	addr.cstrike_CHudDeathNotice_Draw = addr.clientDll + 0x45E10; // [2]
-	addr.cstrike_CHudDeathNotice_MsgFunc_DeathMsg = addr.clientDll + 0x46190; // [2]
-	addr.cstrike_MsgFunc_DeathMsg = addr.clientDll + 0x45CB0; // [2]
+	addr.cstrike_MsgFunc_DeathMsg = addr.clientDll + 0x44610; // *[2]
+	addr.cstrike_MsgFunc_DeathMsg_DSZ = 0x08; // *[2]
+	addr.cstrike_CHudDeathNotice_MsgFunc_DeathMsg = addr.clientDll + 0x44AF0; // *[2]
+	addr.cstrike_CHudDeathNotice_MsgFunc_DeathMsg_DSZ = 0x08; // at least 8 bytes req. // *[2]
+	addr.cstrike_rgDeathNoticeList = addr.clientDll + 0x124D88; // *[2]
+	addr.cstrike_CHudDeathNotice_Draw = addr.clientDll + 0x44770; // *[2]
+	addr.cstrike_CHudDeathNotice_Draw_DSZ = 0x0a; // at least 8 bytes req. // *[2]
 	
 	//
 	// other games
@@ -177,6 +158,7 @@ function afx_OnClientDllLoaded()
 	// UpdateSpectatorPanel overviewmode check jump (for HLTV menu removal):
 	addr.UpdateSpectatorPanel_checkjmp_ag = addr.clientDll + 0x028091; // Adrenaline-Gamer (ag)
 	addr.UpdateSpectatorPanel_checkjmp_ns = addr.clientDll + 0x033F3D; // Natuaral Selection (ns)
+	addr.UpdateSpectatorPanel_checkjmp_valve = addr.clientDll + 0x4A6A4; // Half-Life (valve) // *[4]
 }
 events.onClientDllLoaded = afx_OnClientDllLoaded;
 delete afx_OnClientDllLoaded;

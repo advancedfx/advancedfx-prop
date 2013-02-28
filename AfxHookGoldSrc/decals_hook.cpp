@@ -130,6 +130,12 @@ REGISTER_DEBUGCMD_FUNC(test_filtermask)
 typedef texture_t * (* UnkGetDecalTexture_t)( int decaltexture );
 UnkGetDecalTexture_t detoured_UnkGetDecalTexture = NULL;
 
+// DecalTexture hook:
+//   this function is called in a unknown sub function of R_DrawWorld that is
+//   called before R_BlendLightmaps. the unknown functions draws out all
+//   decals of the map as it seems or s.th. and uses this one to get
+//   a decal's texture
+
 texture_t * touring_UnkGetDecalTexture( int decaltexture )
 {
 	texture_t *tex;

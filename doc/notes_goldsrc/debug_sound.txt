@@ -1,3 +1,5 @@
+Version: Febraury 20 update
+
 For more info about whats going on here see:
 C:\Libraries\q1source\QW\client\snd_mix.c
 C:\Libraries\q1source\QW\client\snd_dma.c
@@ -8,237 +10,252 @@ Modules loaded:
 
 First we try to locate S_Update_ :
 
-0:017> s -a hw L1000000 "Couldn't get sound buffer status\n"
-036a4640  43 6f 75 6c 64 6e 27 74-20 67 65 74 20 73 6f 75  Couldn't get sou
-0:017> s hw L1000000 40 46 6a 03
-035c3e37  40 46 6a 03 e8 b0 5d f9-ff 83 c4 04 f6 44 24 0c  @Fj...]......D$.
+0:000> s -a hw L1000000 "Couldn't get sound buffer status\n"
+0366fda0  43 6f 75 6c 64 6e 27 74-20 67 65 74 20 73 6f 75  Couldn't get sou
+0:000> s hw L1000000 a0 fd 66 03
+035ac1c7  a0 fd 66 03 e8 b0 01 fa-ff 83 c4 04 f6 44 24 08  ..f..........D$.
 
-035c3e2f ff5224          call    dword ptr [edx+24h]
-035c3e32 85c0            test    eax,eax
-035c3e34 740d            je      hw!QGL_D3DInit+0x26b43 (035c3e43)
-035c3e36 6840466a03      push    offset hw!vgui::Frame::`vftable'+0x3937c (036a4640) // "Couldn't get sound buffer status\n"
+035ac1bf ff5124          call    dword ptr [ecx+24h]
+035ac1c2 85c0            test    eax,eax
+035ac1c4 740d            je      hw!CreateInterface+0x2eb73 (035ac1d3)
+035ac1c6 68a0fd6603      push    offset hw!vgui::Frame::`vftable'+0x34064 (0366fda0)
 
-break on 035c3e34 and follow till ret:
+break on 035ac1c4 and follow till ret:
 
-035c3b20 e83b010000      call    hw!QGL_D3DInit+0x26960 (035c3c60)
-035c3b25 5f              pop     edi
+03576636 e865580300      call    hw!CreateInterface+0x2e840 (035abea0)
+0357663b 83c410          add     esp,10h
+0357663e 83c424          add     esp,24h
 
-== >
-035c3c60 == hw + 0xA3C60 is S_Update_
+==>
+03576636 => 035abea0 is not S_Update_
 
+Let me explain: the compiler merged several calls into
+a single call, you will have to follow till the first
+single jmp instruction and then you get the address of
+S_Update_:
 
 // S_Update_
 //
-035c3c60 51              push    ecx
-035c3c61 a15cf7c503      mov     eax,dword ptr [hw!vgui::Frame::`vftable'+0x5f4498 (03c5f75c)]
-035c3c66 85c0            test    eax,eax
-035c3c68 0f8417020000    je      hw!QGL_D3DInit+0x26b85 (035c3e85)
-035c3c6e a150f7c503      mov     eax,dword ptr [hw!vgui::Frame::`vftable'+0x5f448c (03c5f750)]
-035c3c73 85c0            test    eax,eax
-035c3c75 0f8f0a020000    jg      hw!QGL_D3DInit+0x26b85 (035c3e85)
-035c3c7b 53              push    ebx
-035c3c7c 56              push    esi
-035c3c7d 57              push    edi
+035ac130 51              push    ecx
+035ac131 a1f443bd03      mov     eax,dword ptr [hw!vgui::Frame::`vftable'+0x5986b8 (03bd43f4)]
+035ac136 85c0            test    eax,eax
+035ac138 0f84d4000000    je      hw!CreateInterface+0x2ebb2 (035ac212)
+035ac13e a1e843bd03      mov     eax,dword ptr [hw!vgui::Frame::`vftable'+0x5986ac (03bd43e8)]
+035ac143 85c0            test    eax,eax
+035ac145 0f8fc7000000    jg      hw!CreateInterface+0x2ebb2 (035ac212)
+035ac14b 56              push    esi
+035ac14c 57              push    edi
 //
 // GetSoundtime();
-035c3c7e e8adfeffff      call    hw!QGL_D3DInit+0x26830 (035c3b30)
-// ...
-035c3e2f ff5224          call    dword ptr [edx+24h]
-035c3e32 85c0            test    eax,eax
-035c3e34 740d            je      hw!QGL_D3DInit+0x26b43 (035c3e43)
-035c3e36 6840466a03      push    offset hw!vgui::Frame::`vftable'+0x3937c (036a4640) // "Couldn't get sound buffer status\n"
-// ...
+035ac14d e88efeffff      call    hw!CreateInterface+0x2e980 (035abfe0)
+...
+035ac1bf ff5124          call    dword ptr [ecx+24h]
+035ac1c2 85c0            test    eax,eax
+035ac1c4 740d            je      hw!CreateInterface+0x2eb73 (035ac1d3)
+035ac1c6 68a0fd6603      push    offset hw!vgui::Frame::`vftable'+0x34064 (0366fda0) // "Couldn't get sound buffer status\n"
+...
 // 	S_PaintChannels (endtime);
-
+//
 // 	SNDDMA_Submit ();
-035c3e72 d1ef            shr     edi,1
-035c3e74 57              push    edi
-035c3e75 e866220000      call    hw!QGL_D3DInit+0x28de0 (035c60e0)
-035c3e7a 83c404          add     esp,4
-035c3e7d e8ee750000      call    hw!QGL_D3DInit+0x2e170 (035cb470)
-035c3e82 5f              pop     edi
-035c3e83 5e              pop     esi
-035c3e84 5b              pop     ebx
-035c3e85 59              pop     ecx
-035c3e86 c3              ret
+035ac1fd d1ef            shr     edi,1
+035ac1ff 57              push    edi
+035ac200 e85b1a0000      call    hw!CreateInterface+0x30600 (035adc60)
+035ac205 83c404          add     esp,4
+035ac208 5f              pop     edi
+035ac209 5e              pop     esi
+035ac20a 83c404          add     esp,4
+035ac20d e94e4e0000      jmp     hw!CreateInterface+0x33a00 (035b1060)
+035ac212 59              pop     ecx
+035ac213 c3              ret
 
 ==>
-035c3c7e ==> 035c3b30 == hw + 0xA3B30 is void GetSoundtime(void)
-035c3e75 ==> 035c60e0 == hw + 0xA60E0 is void S_PaintChannels(int endtime)
-
+035ac14d => 035abfe0 is void GetSoundtime(void)
+035ac200 => 035adc60 is void S_PaintChannels(int endtime)
 
 // void GetSoundtime(void)
 //
-035c3b30 8b0d58f7c503    mov     ecx,dword ptr [hw!vgui::Frame::`vftable'+0x5f4494 (03c5f758)]
-035c3b36 56              push    esi
-035c3b37 57              push    edi
-035c3b38 8b4110          mov     eax,dword ptr [ecx+10h]
-035c3b3b 99              cdq
-035c3b3c f7790c          idiv    eax,dword ptr [ecx+0Ch]
-035c3b3f 8bf8            mov     edi,eax
-035c3b41 e82a730000      call    hw!QGL_D3DInit+0x2db70 (035cae70)
-035c3b46 8bf0            mov     esi,eax
-035c3b48 a148f7c503      mov     eax,dword ptr [hw!vgui::Frame::`vftable'+0x5f4484 (03c5f748)]
-035c3b4d 3bf0            cmp     esi,eax
-035c3b4f 7d33            jge     hw!QGL_D3DInit+0x26884 (035c3b84)
-035c3b51 8b0d4cf7c503    mov     ecx,dword ptr [hw!vgui::Frame::`vftable'+0x5f4488 (03c5f74c)]
+035abfe0 51              push    ecx
+035abfe1 8b0df043bd03    mov     ecx,dword ptr [hw!vgui::Frame::`vftable'+0x5986b4 (03bd43f0)]
+035abfe7 56              push    esi
+035abfe8 85c9            test    ecx,ecx
+035abfea 57              push    edi
+035abfeb 740b            je      hw!CreateInterface+0x2e998 (035abff8)
+035abfed 8b4110          mov     eax,dword ptr [ecx+10h]
+035abff0 99              cdq
+035abff1 f7790c          idiv    eax,dword ptr [ecx+0Ch]
+035abff4 8bf8            mov     edi,eax
+035abff6 eb04            jmp     hw!CreateInterface+0x2e99c (035abffc)
+035abff8 8b7c2408        mov     edi,dword ptr [esp+8]
+035abffc e8ef4f0000      call    hw!CreateInterface+0x33990 (035b0ff0)
+035ac001 8bf0            mov     esi,eax
+35ac003 a1e043bd03      mov     eax,dword ptr [hw!vgui::Frame::`vftable'+0x5986a4 (03bd43e0)]
+035ac008 3bf0            cmp     esi,eax
+035ac00a 7d33            jge     hw!CreateInterface+0x2e9df (035ac03f)
+035ac00c 8b0de443bd03    mov     ecx,dword ptr [hw!vgui::Frame::`vftable'+0x5986a8 (03bd43e4)]
 //
 //		buffers++;					// buffer wrapped
 //		
 //		if (paintedtime > 0x40000000)
-035c3b57 a180a8f103      mov     eax,dword ptr [hw!vgui::Frame::`vftable'+0x8af5bc (03f1a880)]
-035c3b5c 41              inc     ecx
-035c3b5d 3d00000040      cmp     eax,offset msi!MsiPreviewBillboardA+0x151c5a (40000000)
-035c3b62 890d4cf7c503    mov     dword ptr [hw!vgui::Frame::`vftable'+0x5f4488 (03c5f74c)],ecx
+035ac012 a1607ff403      mov     eax,dword ptr [hw!vgui::Frame::`vftable'+0x90c224 (03f47f60)]
+035ac017 41              inc     ecx
+035ac018 3d00000040      cmp     eax,offset <Unloaded_ud.drv>+0x3fffffff (40000000)
 //
-035c3b68 7e1a            jle     hw!QGL_D3DInit+0x26884 (035c3b84)
-035c3b6a 6a01            push    1
-035c3b6c c7054cf7c50300000000 mov dword ptr [hw!vgui::Frame::`vftable'+0x5f4488 (03c5f74c)],0
-035c3b76 893d80a8f103    mov     dword ptr [hw!vgui::Frame::`vftable'+0x8af5bc (03f1a880)],edi
-035c3b7c e8cff6ffff      call    hw!QGL_D3DInit+0x25f50 (035c3250)
-035c3b81 83c404          add     esp,4
-035c3b84 8b0d58f7c503    mov     ecx,dword ptr [hw!vgui::Frame::`vftable'+0x5f4494 (03c5f758)]
-035c3b8a 8bc6            mov     eax,esi
-035c3b8c 99              cdq
-035c3b8d 893548f7c503    mov     dword ptr [hw!vgui::Frame::`vftable'+0x5f4484 (03c5f748)],esi
-035c3b93 f7790c          idiv    eax,dword ptr [ecx+0Ch]
-035c3b96 8bd0            mov     edx,eax
-035c3b98 a14cf7c503      mov     eax,dword ptr [hw!vgui::Frame::`vftable'+0x5f4488 (03c5f74c)]
-035c3b9d 0fafc7          imul    eax,edi
-035c3ba0 03d0            add     edx,eax
-035c3ba2 5f              pop     edi
-035c3ba3 89157ca8f103    mov     dword ptr [hw!vgui::Frame::`vftable'+0x8af5b8 (03f1a87c)],edx
-035c3ba9 5e              pop     esi
-035c3baa c3              ret
+035ac023 7e1a            jle     hw!CreateInterface+0x2e9df (035ac03f)
+035ac025 6a01            push    1
+035ac027 c705e443bd0300000000 mov dword ptr [hw!vgui::Frame::`vftable'+0x5986a8 (03bd43e4)],0
+035ac031 893d607ff403    mov     dword ptr [hw!vgui::Frame::`vftable'+0x90c224 (03f47f60)],edi
+035ac037 e814fbffff      call    hw!CreateInterface+0x2e4f0 (035abb50)
+035ac03c 83c404          add     esp,4
+035ac03f 8b0df043bd03    mov     ecx,dword ptr [hw!vgui::Frame::`vftable'+0x5986b4 (03bd43f0)]
+035ac045 8935e043bd03    mov     dword ptr [hw!vgui::Frame::`vftable'+0x5986a4 (03bd43e0)],esi
+035ac04b 85c9            test    ecx,ecx
+035ac04d 7418            je      hw!CreateInterface+0x2ea07 (035ac067)
+035ac04f 8bc6            mov     eax,esi
+035ac051 99              cdq
+035ac052 f7790c          idiv    eax,dword ptr [ecx+0Ch]
+035ac055 8bc8            mov     ecx,eax
+035ac057 a1e443bd03      mov     eax,dword ptr [hw!vgui::Frame::`vftable'+0x5986a8 (03bd43e4)]
+035ac05c 0fafc7          imul    eax,edi
+035ac05f 03c8            add     ecx,eax
+035ac061 890d5c7ff403    mov     dword ptr [hw!vgui::Frame::`vftable'+0x90c220 (03f47f5c)],ecx
+035ac067 5f              pop     edi
+035ac068 5e              pop     esi
+035ac069 59              pop     ecx
+035ac06a c3              ret
 
 ==>
-035c3b57 => 03f1a880 == hw + 0x9FA880 is paintedtime
-035c3ba3 => 03f1a87c == hw + 0x9FA87C is soundtime
-035c3b84 => 03c5f758 == hw + 0x73F758 is shm
-
+035ac012 => 03f47f60 is paintedtime
+035ac03f => 03bd43f0 is shm
+035ac061 => 03f47f5c is soundtime
 
 // void S_PaintChannels(int endtime)
 // {
 // 	while (paintedtime < endtime)
 // 	{
-035c60e0 a180a8f103      mov     eax,dword ptr [hw!vgui::Frame::`vftable'+0x8af5bc (03f1a880)]
-035c60e5 55              push    ebp
-035c60e6 8b6c2408        mov     ebp,dword ptr [esp+8]
-035c60ea 3bc5            cmp     eax,ebp
-035c60ec 0f8de0030000    jge     hw!QGL_D3DInit+0x291d2 (035c64d2)
+035adc60 a1607ff403      mov     eax,dword ptr [hw!vgui::Frame::`vftable'+0x90c224 (03f47f60)]
+035adc65 55              push    ebp
+035adc66 8b6c2408        mov     ebp,dword ptr [esp+8]
+035adc6a 3bc5            cmp     eax,ebp
+035adc6c 0f8d7b010000    jge     hw!CreateInterface+0x3078d (035added)
 //
-035c60f2 53              push    ebx
-035c60f3 56              push    esi
-035c60f4 57              push    edi
-035c60f5 8bcd            mov     ecx,ebp
-035c60f7 8bdd            mov     ebx,ebp
-035c60f9 2bc8            sub     ecx,eax
-035c60fb 81f900020000    cmp     ecx,offset <Unloaded_papi.dll>+0x1ff (00000200)
-035c6101 7e06            jle     hw!QGL_D3DInit+0x28e09 (035c6109)
-035c6103 8d9800020000    lea     ebx,<Unloaded_papi.dll>+0x1ff (00000200)[eax]
-035c6109 8bf3            mov     esi,ebx
-035c610b 2bf0            sub     esi,eax
-035c610d 8d3cf500000000  lea     edi,[esi*8]
+035adc72 53              push    ebx
+035adc73 56              push    esi
+035adc74 57              push    edi
+035adc75 8bcd            mov     ecx,ebp
+035adc77 8bdd            mov     ebx,ebp
+035adc79 2bc8            sub     ecx,eax
+035adc7b 81f900020000    cmp     ecx,offset <Unloaded_ud.drv>+0x1ff (00000200)
+035adc81 7e06            jle     hw!CreateInterface+0x30629 (035adc89)
+035adc83 8d9800020000    lea     ebx,<Unloaded_ud.drv>+0x1ff (00000200)[eax]
+035adc89 8bf3            mov     esi,ebx
+035adc8b 2bf0            sub     esi,eax
+035adc8d 8d14f500000000  lea     edx,[esi*8]
 //
 // Q_memset(paintbuffer, 0, (end - paintedtime) * sizeof(portable_samplepair_t));
-035c6114 57              push    edi
-035c6115 6a00            push    0
-035c6117 6820e7f003      push    offset hw!vgui::Frame::`vftable'+0x8a345c (03f0e720)
-035c611c e8cf04f9ff      call    hw+0x365f0 (035565f0)
-// ...
-//
-035c64b7 53              push    ebx
-035c64b8 e833f4ffff      call    hw!QGL_D3DInit+0x285f0 (035c58f0)
-035c64bd 83c404          add     esp,4
-035c64c0 8bc3            mov     eax,ebx
-035c64c2 3bdd            cmp     ebx,ebp
-035c64c4 a380a8f103      mov     dword ptr [hw!vgui::Frame::`vftable'+0x8af5bc (03f1a880)],eax
-035c64c9 0f8c26fcffff    jl      hw!QGL_D3DInit+0x28df5 (035c60f5)
-035c64cf 5f              pop     edi
-035c64d0 5e              pop     esi
-035c64d1 5b              pop     ebx
-035c64d2 5d              pop     ebp
-035c64d3 c3              ret
+035adc94 52              push    edx
+035adc95 6a00            push    0
+035adc97 6820def303      push    offset hw!vgui::Frame::`vftable'+0x9020e4 (03f3de20)
+035adc9c e80fb1f9ff      call    hw+0x28db0 (03548db0)
+...
+035addcf 83c40c          add     esp,0Ch
+035addd2 53              push    ebx
+035addd3 e818f9ffff      call    hw!CreateInterface+0x30090 (035ad6f0)
+035addd8 83c404          add     esp,4
+035adddb 8bc3            mov     eax,ebx
+035adddd 3bdd            cmp     ebx,ebp
+035adddf a3607ff403      mov     dword ptr [hw!vgui::Frame::`vftable'+0x90c224 (03f47f60)],eax
+035adde4 0f8c8bfeffff    jl      hw!CreateInterface+0x30615 (035adc75)
+035addea 5f              pop     edi
+035addeb 5e              pop     esi
+035addec 5b              pop     ebx
+035added 5d              pop     ebp
+035addee c3              ret
 
 ==>
-035c6117 => 03f0e720 == hw + 0x9EE720 is paintbuffer
-035c64b8 => 035c58f0 == hw + 0xA58F0 is void S_TransferPaintBuffer(int endtime)
+035adc97 => 03f3de20 is paintbuffer
+035addd3 => 035ad6f0 is void S_TransferPaintBuffer(int endtime)
 
 
- Now we try to locate SND_PickChannel:
- It's called in S_StartSound, thus we try to locate S_StartSound first:
- S_Startsound is called in S_LocalSound:
- 
- 0:000> s -a hw L1000000 "S_LocalSound: can't cache %s\n"
-036a46a4  53 5f 4c 6f 63 61 6c 53-6f 75 6e 64 3a 20 63 61  S_LocalSound: ca
-0:000> s hw L1000000 a4 46 6a 03
-035c4100  a4 46 6a 03 e8 e7 5a f9-ff 83 c4 08 5e c3 6a 64  .Fj...Z.....^.jd
+Now we try to locate SND_PickChannel:
+It's called in S_StartSound, thus we try to locate S_StartSound first:
+S_Startsound is called in S_LocalSound:
 
-035c4100 -1 == 035c40ff is inside S_LocalSound
+0:000> s -a hw L1000000 "S_LocalSound: can't cache %s\n"
+0366fe00  53 5f 4c 6f 63 61 6c 53-6f 75 6e 64 3a 20 63 61  S_LocalSound: ca
+0:000> s hw L1000000 00 fe 66 03
+035ac480  00 fe 66 03 e8 f7 fe f9-ff 83 c4 08 5e c3 6a 64  ..f.........^.jd
+
+035ac480 -1 == 035ac47f is inside S_LocalSound
 
 // S_LocalSound
 //
-// ...
+...
 // 		Con_Printf ("S_LocalSound: can't cache %s\n", sound);
-035c40fe 56              push    esi
-035c40ff 68a4466a03      push    offset hw!vgui::Frame::`vftable'+0x393e0 (036a46a4)
-035c4104 e8e75af9ff      call    hw+0x39bf0 (03559bf0)
+035ac47e 56              push    esi
+035ac47f 6800fe6603      push    offset hw!vgui::Frame::`vftable'+0x340c4 (0366fe00)
+035ac484 e8f7fef9ff      call    hw+0x2c380 (0354c380)
 //		return;
-035c4109 83c408          add     esp,8
-035c410c 5e              pop     esi
-035c410d c3              ret
+035ac489 83c408          add     esp,8
+035ac48c 5e              pop     esi
+035ac48d c3              ret
 //
 // 	}
 // 	S_StartSound (cl.viewentity, -1, sfx, vec3_origin, 1, 1, 0, 0x64);
-035c410e 6a64            push    64h
-035c4110 6a00            push    0
-035c4112 680000803f      push    offset <Unloaded_papi.dll>+0x3f7fffff (3f800000)
-035c4117 680000803f      push    offset <Unloaded_papi.dll>+0x3f7fffff (3f800000)
-035c411c 682442ba03      push    offset hw!vgui::Frame::`vftable'+0x538f60 (03ba4224)
-035c4122 a1acf26e04      mov     eax,dword ptr [hw!qwglMakeCurrent+0x7713a8 (046ef2ac)]
-035c4127 6aff            push    0FFFFFFFFh
-035c4129 50              push    eax
-035c412a e891eaffff      call    hw!QGL_D3DInit+0x258c0 (035c2bc0)
-035c412f 83c420          add     esp,20h
-035c4132 5e              pop     esi
-035c4133 c3              ret
+035ac48e 6a64            push    64h
+035ac490 6a00            push    0
+035ac492 680000803f      push    offset <Unloaded_ud.drv>+0x3f7fffff (3f800000)
+035ac497 680000803f      push    offset <Unloaded_ud.drv>+0x3f7fffff (3f800000)
+035ac49c 68acd4b503      push    offset hw!vgui::Frame::`vftable'+0x521770 (03b5d4ac)
+035ac4a1 50              push    eax
+035ac4a2 a1acc57104      mov     eax,dword ptr [hw!qwglMakeCurrent+0x7713a0 (0471c5ac)]
+035ac4a7 6aff            push    0FFFFFFFFh
+035ac4a9 50              push    eax
+035ac4aa e891f1ffff      call    hw!CreateInterface+0x2dfe0 (035ab640)
+035ac4af 83c420          add     esp,20h
+035ac4b2 5e              pop     esi
+035ac4b3 c3              ret
 
 ==>
-035c412a => 035c2bc0 == hw + 0xA2BC0 is S_StartSound with two more params, Half-Life calls it S_StartDynamicSound
+035ac4aa => 035ab640 is S_StartSound with two more params, Half-Life calls it S_StartDynamicSound
 
 // S_StartSound / S_StartDynamicSound
 //
-035c2bc0 83ec48          sub     esp,48h
-// ...
-035c2caa 85f6            test    esi,esi
-035c2cac 7515            jne     hw!QGL_D3DInit+0x259c3 (035c2cc3)
-035c2cae 6894426a03      push    offset hw!vgui::Frame::`vftable'+0x38fd0 (036a4294)
-035c2cb3 e85870f9ff      call    hw+0x39d10 (03559d10)
-035c2cb8 83c404          add     esp,4
-035c2cbb 5f              pop     edi
-035c2cbc 5e              pop     esi
-035c2cbd 5d              pop     ebp
-035c2cbe 5b              pop     ebx
-035c2cbf 83c448          add     esp,48h
-035c2cc2 c3              ret
-035c2cc3 d90544986903    fld     dword ptr [hw!vgui::Frame::`vftable'+0x2e580 (03699844)]
-035c2cc9 d8051c976603    fadd    dword ptr [hw!vgui::Frame::operator=+0x71a3c (0366971c)]
-035c2ccf db442478        fild    dword ptr [esp+78h]
-035c2cd3 d95c2478        fstp    dword ptr [esp+78h]
-035c2cd7 d84c2478        fmul    dword ptr [esp+78h]
-035c2cdb d80d00976603    fmul    dword ptr [hw!vgui::Frame::operator=+0x71a20 (03669700)]
-035c2ce1 e826b20800      call    hw!vgui::Frame::operator=+0x5622c (0364df0c)
-035c2ce6 8b4c2464        mov     ecx,dword ptr [esp+64h]
-035c2cea 89442478        mov     dword ptr [esp+78h],eax
-035c2cee 51              push    ecx
-035c2cef 6a00            push    0
-035c2cf1 53              push    ebx
-035c2cf2 55              push    ebp
-035c2cf3 e8f8f8ffff      call    hw!QGL_D3DInit+0x252f0 (035c25f0)
+035ab640 83ec48          sub     esp,48h
+...
+035ab720 85c0            test    eax,eax
+035ab722 7515            jne     hw!CreateInterface+0x2e0d9 (035ab739)
+035ab724 6844fc6603      push    offset hw!vgui::Frame::`vftable'+0x33f08 (0366fc44)
+035ab729 e8720dfaff      call    hw+0x2c4a0 (0354c4a0)
+035ab72e 83c404          add     esp,4
+035ab731 5f              pop     edi
+035ab732 5e              pop     esi
+035ab733 5d              pop     ebp
+035ab734 5b              pop     ebx
+035ab735 83c448          add     esp,48h
+035ab738 c3              ret
+035ab739 d905e05a6603    fld     dword ptr [hw!vgui::Frame::`vftable'+0x29da4 (03665ae0)]
+035ab73f d805d4a16303    fadd    dword ptr [hw!vgui::Frame::operator=+0x5c384 (0363a1d4)]
+035ab745 db442478        fild    dword ptr [esp+78h]
+035ab749 d95c2478        fstp    dword ptr [esp+78h]
+035ab74d d84c2478        fmul    dword ptr [esp+78h]
+035ab751 d80d34aa6303    fmul    dword ptr [hw!vgui::Frame::operator=+0x5cbe4 (0363aa34)]
+035ab757 e80c8e0700      call    hw!vgui::Frame::operator=+0x46718 (03624568)
+035ab75c 56              push    esi
+035ab75d 53              push    ebx
+035ab75e 55              push    ebp
+035ab75f 89842484000000  mov     dword ptr <Unloaded_ud.drv>+0x83 (00000084)[esp],eax
+035ab766 e895faffff      call    hw!CreateInterface+0x2dba0 (035ab200)
+035ab76b 8bf0            mov     esi,eax
+035ab76d 83c40c          add     esp,0Ch
+035ab770 85f6            test    esi,esi
+035ab772 0f848a010000    je      hw!CreateInterface+0x2e2a2 (035ab902)
+...
+035ab902 5f              pop     edi
+035ab903 5e              pop     esi
+035ab904 5d              pop     ebp
+035ab905 5b              pop     ebx
+035ab906 83c448          add     esp,48h
+035ab909 c3              ret
 
 ==>
-035c2cf3 => 035c25f0 == hw + 0xA25F0 is SND_Pickchannel with two more params
-
-// channel_t * SND_PickChannel(int entnum, int entchannel, int _unknown1, int _unknown2)
-//
-
+035ab766 => 035ab200 is SND_Pickchannel with two more params

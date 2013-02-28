@@ -1,82 +1,88 @@
-03520000 hw
+Version: Febraury 20 update
 
-03572000 R_Renderscene
+For more information see:
+debug_SCR_UpdateScreen.txt
+C:\Libraries\q1source\QW\client\gl_rsurf.c
 
-035751c0 R_DrawWorld
+Modules
+hw 03520000
+
+For finding R_DrawWorld see debug_SCR_UpdateScreen.txt.
+
+03568910 R_DrawWorld
 ...
-0357530b 83c404          add     esp,4
-0357530e c7052c27ba0300000000 mov dword ptr [hw!vgui::Frame::`vftable'+0x537468 (03ba272c)],0
-03575318 e803f5ffff      call    hw+0x54820 (03574820)
-0357531d e81ee90400      call    hw!QGL_D3DInit+0x26940 (035c3c40)
-03575322 e8c984fdff      call    hw+0x2d7f0 (0354d7f0)
-03575327 85c0            test    eax,eax
-03575329 750e            jne     hw+0x55339 (03575339)
-....
-0357533f c3              ret
+03568a5b 83c404          add     esp,4
+03568a5e c705a8b8b50300000000 mov dword ptr [hw!vgui::Frame::`vftable'+0x51fb6c (03b5b8a8)],0
+03568a68 e803f5ffff      call    hw+0x47f70 (03567f70)
+03568a6d e88e360400      call    hw!CreateInterface+0x2eaa0 (035ac100)
+03568a72 e82975fdff      call    hw+0x1ffa0 (0353ffa0)
+03568a77 85c0            test    eax,eax
+03568a79 7511            jne     hw+0x48a8c (03568a8c)
+...
+03568a92 c3              ret
 
+==>
+03568a68 => 03567f70 is DrawTextureChains
 
-03574820 DrawTextureChains
-....
+03567f70 DrawTextureChains
+...
 // 		t = cl.worldmodel->textures[i];
 //		if (!t)
 //			continue;
-03574884 8b8874010000    mov     ecx,dword ptr <Unloaded_st.dll>+0x163 (00000174)[eax]
-0357488a 8b3ca9          mov     edi,dword ptr [ecx+ebp*4]
-0357488d 85ff            test    edi,edi
+03567fd4 8b8874010000    mov     ecx,dword ptr [eax+174h]
+03567fda 8b3ca9          mov     edi,dword ptr [ecx+ebp*4]
+03567fdd 85ff            test    edi,edi
 ...
 //		s = t->texturechain;
 //		if (!s)
 //			continue;
-03574895 8b771c          mov     esi,dword ptr [edi+1Ch]
-03574898 85f6            test    esi,esi
-0357489a 747a            je      hw+0x54916 (03574916)
+03567fe5 8b771c          mov     esi,dword ptr [edi+1Ch]
+03567fe8 85f6            test    esi,esi
+03567fea 747a            je      hw+0x48066 (03568066)
 //		if (i == skytexturenum)
 //			R_DrawSkyChain (s);
-0357489c 3b2d044a3b04    cmp     ebp,dword ptr [hw!qwglMakeCurrent+0x436b00 (043b4a04)]
-035748a2 750b            jne     hw+0x548af (035748af)
-035748a4 56              push    esi
-035748a5 e89c6f0000      call    hw+0x5b846 (0357b846)
-035748aa 83c404          add     esp,4
+03567fec 3b2de41c3e04    cmp     ebp,dword ptr [hw!qwglMakeCurrent+0x436ad8 (043e1ce4)]
+03567ff2 750b            jne     hw+0x47fff (03567fff)
+03567ff4 56              push    esi
+03567ff5 e8c4740000      call    hw+0x4f4be (0356f4be)
+03567ffa 83c404          add     esp,4
 ...
-0357b845 c3              ret
-0357b846
 
+==>
+03567ff5 => 0356f4be is R_DrawSkyChain
 
-0357b846 R_DrawSkyChain
+0356f4be R_DrawSkyChain
 ...
 // ClipSkyPolygon (p->numverts, verts[0], 0);
-0357b8bb 6a00            push    0
-0357b8bd 50              push    eax
-0357b8be 51              push    ecx
-0357b8bf e818faffff      call    hw+0x5b2dc (0357b2dc)
+0356f533 6a00            push    0
+0356f535 50              push    eax
+0356f536 51              push    ecx
+0356f537 e816faffff      call    hw+0x4ef52 (0356ef52)
 ...
-0357b8d5 e8dc010000      call    hw+0x5bab6 (0357bab6)
-0357b8da 5f              pop     edi
-0357b8db 81c400030000    add     esp,offset <Unloaded_papi.dll>+0x2ff (00000300)
-0357b8e1 c3              ret
-0357b8e2 
+0356f54e 81c400030000    add     esp,300h
+0356f554 e9f5010000      jmp     hw+0x4f74e (0356f74e)
+0356f559 81c400030000    add     esp,300h
+0356f55f c3              ret
 
+==>
+0356f537 => 0356ef52 is ClipSkyPolygon
+0356f554 => 0356f74e is Similar to R_DrawSkyBox
 
-0357b2dc ClipSkyPolygon
+0356f74e Similar to R_DrawSkyBOx
 ...
-0357b306 51              push    ecx
-0357b307 e860fdffff      call    hw+0x5b06c (0357b06c)
-
-
-0357bab6 Similar to R_DrawSkyBox
-....
-0357bc03 8b04b5d0856903  mov     eax,dword ptr hw!vgui::Frame::`vftable'+0x2d30c (036985d0)[esi*4]
-0357bc0a 8b0c852036fa03  mov     ecx,dword ptr hw!qwglMakeCurrent+0x2571c (03fa3620)[eax*4]
-0357bc11 51              push    ecx
-0357bc12 e8c9bbfeff      call    hw+0x477e0 (035677e0)
-0357bc17 83c404          add     esp,4
-0357bc1a 55              push    ebp
-0357bc1b 53              push    ebx
-0357bc1c 57              push    edi
-0357bc1d ff1590d6f703    call    dword ptr [hw!vgui::Frame::`vftable'+0x9123cc (03f7d690)]
-0357bc23 6a07            push    7
+0356f8a4 8b04b568486603  mov     eax,dword ptr hw!vgui::Frame::`vftable'+0x28b2c (03664868)[esi*4]
+0356f8ab 8b0c8564c6b503  mov     ecx,dword ptr hw!vgui::Frame::`vftable'+0x520928 (03b5c664)[eax*4]
+0356f8b2 51              push    ecx
+0356f8b3 e888b9feff      call    hw+0x3b240 (0355b240)
+0356f8b8 83c404          add     esp,4
+0356f8bb 55              push    ebp
+0356f8bc 53              push    ebx
+0356f8bd 57              push    edi
+0356f8be ff156ca9fa03    call    dword ptr [hw!vgui::Frame::`vftable'+0x96ec30 (03faa96c)]
+0356f8c4 6a07            push    7
 ...
 
-035677e0 is GL_Bind
-036985d0 is skytexorder
-03fa3620 is 03fa3620 SKY_TEX texture id array
+==>
+0356f8b3 => 0355b240 is GL_Bind
+0356f8a4 => 03664868 is skytexorder
+0356f8ab => 03b5c664 is SKY_TEX texture id array

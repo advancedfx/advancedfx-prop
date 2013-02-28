@@ -15,6 +15,7 @@
 #include "../zooming.h"
 
 #include "HookHw.h"
+#include "hw/Host_Frame.h"
 
 #include "../modules/ModColor.h"
 #include "../modules/ModColorMask.h"
@@ -171,6 +172,11 @@ bool	g_bIsSucceedingViewport = false;
 
 void APIENTRY NewGlBegin(GLenum mode)
 {
+	if(!g_Host_Frame_Called) {
+		glBegin(mode);
+		return;
+	}
+
 	ScriptEvent_OnGlBegin((unsigned int)mode);
 
 	if (g_Filming.doWireframe(mode) == Filming::DR_HIDE) {
@@ -210,6 +216,11 @@ void APIENTRY NewGlBegin(GLenum mode)
 
 void APIENTRY NewGlEnd(void)
 {
+	if(!g_Host_Frame_Called) {
+		glEnd();
+		return;
+	}
+
 	ScriptEvent_OnGlEnd();
 
 	glEnd();
@@ -230,6 +241,11 @@ void APIENTRY NewGlEnd(void)
 
 void APIENTRY NewGlClear(GLbitfield mask)
 {
+	if(!g_Host_Frame_Called) {
+		glClear(mask);
+		return;
+	}
+
 	// check if we want to clear (it also might set clearcolor and stuff like that):
 	if (!g_Filming.checkClear(mask))
 		return;
@@ -240,14 +256,19 @@ void APIENTRY NewGlClear(GLbitfield mask)
 
 void APIENTRY NewGlViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 {
+	if(!g_Host_Frame_Called) {
+		glViewport(x,y,width,height);
+		return;
+	}
+
 	static bool bFirstRun = true;
 
 	g_bIsSucceedingViewport = true;
 
 	if (bFirstRun)
 	{
-#ifdef MDT_DEBUG
-		MessageBox(0,"First my_glViewport","MDT_DEBUG",MB_OK|MB_ICONINFORMATION);
+#if MDT_DEBUG
+		MessageBox(0,"First NewGlViewport","MDT_DEBUG",MB_OK|MB_ICONINFORMATION);
 #endif
 
 		HookGameLoaded();
@@ -283,6 +304,11 @@ void APIENTRY NewGlViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 
 void APIENTRY NewGlFrustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble zNear, GLdouble zFar)
 {
+	if(!g_Host_Frame_Called) {
+		glFrustum(left, right, bottom, top, zNear, zFar);
+		return;
+	}
+
 	g_Filming.SupplyZClipping(zNear, zFar);
 	g_Zooming.adjustFrustumParams(left, right, top, bottom);
 	glFrustum(left, right, bottom, top, zNear, zFar);
@@ -293,6 +319,12 @@ void APIENTRY NewGlFrustum(GLdouble left, GLdouble right, GLdouble bottom, GLdou
 // for HUD elements that don't use blending (luckily almost all do).
 void APIENTRY NewGlBlendFunc (GLenum sfactor, GLenum dfactor)
 {
+	if(!g_Host_Frame_Called) {
+		glBlendFunc(sfactor,dfactor);
+		return;
+	}
+
+
 	switch(g_Filming.giveHudRqState())
 	{
 	case Filming::HUDRQ_CAPTURE_ALPHA:
@@ -317,7 +349,7 @@ void APIENTRY NewGlBlendFunc (GLenum sfactor, GLenum dfactor)
 }
 
 
-BOOL (APIENTRY *OldWglSwapBuffers)(HDC hDC);
+wglSwapBuffers_t OldWglSwapBuffers;
 
 BOOL APIENTRY NewWglSwapBuffers(HDC hDC)
 {
@@ -353,7 +385,7 @@ BOOL APIENTRY NewWglSwapBuffers(HDC hDC)
 		// carry out preparerations on the backbuffer for the next frame:
 		g_Filming.FullClear();
 	}
-	else if(gl_previewclear->value)
+	else if(g_Host_Frame_Called && gl_previewclear->value)
 		g_Filming.FullClear();
 
 	return bResWglSwapBuffers;
@@ -364,7 +396,12 @@ HGLRC Init_Support_Renderer(HWND hMainWindow, HDC hMainWindowDC, int iWidth, int
 
 HGLRC WINAPI NewWglCreateContext(HDC hDc)
 {
-	return Init_Support_Renderer( g_GameWindow, hDc, g_Width, g_Height );
+	static int iCallCount = 0;
+	iCallCount++;
+	if(2 == iCallCount)
+		return Init_Support_Renderer( g_GameWindow, hDc, g_Width, g_Height );
+
+	return wglCreateContext(hDc);
 }
 
 

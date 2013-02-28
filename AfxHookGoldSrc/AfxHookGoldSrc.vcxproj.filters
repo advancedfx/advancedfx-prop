@@ -60,16 +60,7 @@
     <ClCompile Include="cstrike_ch.cpp">
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
-    <ClCompile Include="cstrike_clientcolor.cpp">
-      <Filter>AfxHookGoldSrc</Filter>
-    </ClCompile>
-    <ClCompile Include="cstrike_deathmsg.cpp">
-      <Filter>AfxHookGoldSrc</Filter>
-    </ClCompile>
     <ClCompile Include="demozoom.cpp">
-      <Filter>AfxHookGoldSrc</Filter>
-    </ClCompile>
-    <ClCompile Include="decals_hook.cpp">
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
     <ClCompile Include="demo_tools.cpp">
@@ -91,9 +82,6 @@
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
     <ClCompile Include="filming.cpp">
-      <Filter>AfxHookGoldSrc</Filter>
-    </ClCompile>
-    <ClCompile Include="forceres.cpp">
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
     <ClCompile Include="hl_addresses.cpp">
@@ -174,9 +162,6 @@
     <ClCompile Include="hooks\OpenGl32Hooks.cpp">
       <Filter>AfxHookGoldSrc\hooks</Filter>
     </ClCompile>
-    <ClCompile Include="newsky.cpp">
-      <Filter>AfxHookGoldSrc</Filter>
-    </ClCompile>
     <ClCompile Include="..\shared\com\PipeCom.cpp">
       <Filter>shared\com</Filter>
     </ClCompile>
@@ -231,9 +216,6 @@
     <ClCompile Include="hooks\hw\ClientFunctions.cpp">
       <Filter>AfxHookGoldSrc\hooks\hw</Filter>
     </ClCompile>
-    <ClCompile Include="hooks\hw\R_DrawSkyBoxEx.cpp">
-      <Filter>AfxHookGoldSrc\hooks\hw</Filter>
-    </ClCompile>
     <ClCompile Include="hooks\client\cstrike\CrossHairFix.cpp">
       <Filter>AfxHookGoldSrc\hooks\client\cstrike</Filter>
     </ClCompile>
@@ -241,9 +223,6 @@
       <Filter>AfxHookGoldSrc\hooks\client</Filter>
     </ClCompile>
     <ClCompile Include="hooks\hw\R_RenderView.cpp">
-      <Filter>AfxHookGoldSrc\hooks\hw</Filter>
-    </ClCompile>
-    <ClCompile Include="hooks\hw\SCR_UpdateScreen.cpp">
       <Filter>AfxHookGoldSrc\hooks\hw</Filter>
     </ClCompile>
     <ClCompile Include="move_to.cpp">
@@ -263,6 +242,18 @@
     </ClCompile>
     <ClCompile Include="..\shared\vcpp\Ref.cpp">
       <Filter>shared\vcpp</Filter>
+    </ClCompile>
+    <ClCompile Include="hooks\hw\UnkDrawHud.cpp">
+      <Filter>AfxHookGoldSrc\hooks\hw</Filter>
+    </ClCompile>
+    <ClCompile Include="hooks\hw\R_DrawSkyBoxEx.cpp">
+      <Filter>AfxHookGoldSrc\hooks\hw</Filter>
+    </ClCompile>
+    <ClCompile Include="newsky.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="cstrike_deathmsg.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -303,9 +294,6 @@
       <Filter>AfxHookGoldSrc</Filter>
     </ClInclude>
     <ClInclude Include="filming.h">
-      <Filter>AfxHookGoldSrc</Filter>
-    </ClInclude>
-    <ClInclude Include="forceres.h">
       <Filter>AfxHookGoldSrc</Filter>
     </ClInclude>
     <ClInclude Include="hl_addresses.h">
@@ -386,9 +374,6 @@
     <ClInclude Include="hooks\OpenGl32Hooks.h">
       <Filter>AfxHookGoldSrc\hooks</Filter>
     </ClInclude>
-    <ClInclude Include="newsky.h">
-      <Filter>AfxHookGoldSrc</Filter>
-    </ClInclude>
     <ClInclude Include="..\shared\com\PipeCom.h">
       <Filter>shared\com</Filter>
     </ClInclude>
@@ -437,9 +422,6 @@
     <ClInclude Include="hooks\hw\ClientFunctions.h">
       <Filter>AfxHookGoldSrc\hooks\hw</Filter>
     </ClInclude>
-    <ClInclude Include="hooks\hw\R_DrawSkyBoxEx.h">
-      <Filter>AfxHookGoldSrc\hooks\hw</Filter>
-    </ClInclude>
     <ClInclude Include="hooks\client\cstrike\CrossHairFix.h">
       <Filter>AfxHookGoldSrc\hooks\client\cstrike</Filter>
     </ClInclude>
@@ -447,9 +429,6 @@
       <Filter>AfxHookGoldSrc\hooks\client</Filter>
     </ClInclude>
     <ClInclude Include="hooks\hw\R_RenderView.h">
-      <Filter>AfxHookGoldSrc\hooks\hw</Filter>
-    </ClInclude>
-    <ClInclude Include="hooks\hw\SCR_UpdateScreen.h">
       <Filter>AfxHookGoldSrc\hooks\hw</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\vcpp\AfxAddr.h">
@@ -466,6 +445,12 @@
     </ClInclude>
     <ClInclude Include="..\shared\vcpp\Ref.h">
       <Filter>shared\vcpp</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\hw\UnkDrawHud.h">
+      <Filter>AfxHookGoldSrc\hooks\hw</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\hw\R_DrawSkyBoxEx.h">
+      <Filter>AfxHookGoldSrc\hooks\hw</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

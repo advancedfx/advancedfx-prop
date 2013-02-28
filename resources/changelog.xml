@@ -6,6 +6,38 @@
 
 <release>
 <name>HLAE</name>
+<version>2.3.0.0</version>
+<time>2013-02-28T18:44Z</time>
+<changes>
+<change type="updated">
+Adjusted addresses and hooks to February 20 Steam Counter-Strike and Half-Life updates.
+</change>
+<change type="removed">
+Temporarily removed decal filtering (mirv_decalfilter, mirv_noadverts).
+</change>
+<change type="removed">
+Removed cstrike team color hook (mirv_playercolors).
+</change>
+<change type="removed">
+Removed res forcing code, HLAE will fully relay on Valve's new -forceres code.
+</change>
+<change type="removed">
+Currently the game won't dock inside the HLAE GUI anymore.
+</change>
+<change type="removed">
+Temporarily removed mirv_demoeditfix tfc and mirv_disable_specmenu for TFC, since TFC is not updated by Valve yet.
+</change>
+</changes>
+<comments>
+Please remember that the launch path changed to s.th. like
+C:\Programs\Steam\steamapps\common\Half-Life.
+We could not fully test HLAE, please report bugs in the forum.
+</comments>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.2.21.14</version>
 <time>2013-02-09T14:16Z</time>
 <changes>

@@ -8,7 +8,7 @@ Build order:
    doc\how_to_build_spidermonkey.txt for details.
    
    Download the Half-Life SDK from
-   http://metamod.sourceforge.net/files/sdk/
+   http://metamod.sourceforge.net/files/sdk/hlsdk-2.3-p3.zip
    and install it into C:\Libraries\hlsdk
 
 2) Build (Configuration=Release): AfxHookGoldSrc, AfxHookSource, AfxCppCli

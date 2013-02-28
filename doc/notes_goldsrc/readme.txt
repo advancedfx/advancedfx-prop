@@ -7,7 +7,7 @@ directly.
 Several names and background information used refer to
 
 a) The Half-Life SDK which can be found on
-   http://metamod.sourceforge.net/files/sdk/
+   http://metamod.sourceforge.net/files/sdk/hlsdk-2.3-p3.zip
 
 b) The Quake 1 source code, since Valve built Half-Life on the QuakeWorld source
    code and several Half-Life internals and parts of the structure remained

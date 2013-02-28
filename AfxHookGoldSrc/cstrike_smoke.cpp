@@ -40,13 +40,9 @@ bool InstallHook_cstrike_EN_CreateSmoke()
 
 	if (bFirstRun && (NULL != HL_ADDR_GET(cstrike_EV_CreateSmoke)))
 	{
-		DWORD dwClientDLL;
-
 		bFirstRun = false;
 
-		dwClientDLL = (DWORD)GetModuleHandle("client.dll");
-
-		detoured_cstrike_EN_CreateSmoke = (pfnEvent_t) DetourApply((BYTE *)HL_ADDR_GET(cstrike_EV_CreateSmoke), (BYTE *)touring_cstrike_EN_CreateSmoke, 0x0a);
+		detoured_cstrike_EN_CreateSmoke = (pfnEvent_t) DetourApply((BYTE *)HL_ADDR_GET(cstrike_EV_CreateSmoke), (BYTE *)touring_cstrike_EN_CreateSmoke, (int)HL_ADDR_GET(cstrike_EV_CreateSmoke_DSZ));
 	}
 
 
