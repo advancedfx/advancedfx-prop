@@ -253,7 +253,6 @@ void APIENTRY NewGlClear(GLbitfield mask)
 	glClear(mask);
 }
 
-
 void APIENTRY NewGlViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 {
 	if(!g_Host_Frame_Called) {
@@ -399,7 +398,7 @@ HGLRC WINAPI NewWglCreateContext(HDC hDc)
 	static int iCallCount = 0;
 	iCallCount++;
 	if(2 == iCallCount)
-		return Init_Support_Renderer( g_GameWindow, hDc, g_Width, g_Height );
+		return Init_Support_Renderer( g_GameWindow, hDc, g_AfxGoldSrcComClient.GetWidth(), g_AfxGoldSrcComClient.GetHeight() );
 
 	return wglCreateContext(hDc);
 }

@@ -91,6 +91,8 @@ AfxGoldSrcComClient::AfxGoldSrcComClient()
 	ok = 1;
 	this->WriteBytes(&ok, sizeof(ok));
 
+	this->ReadBytes(&m_Width, sizeof(m_Width));
+	this->ReadBytes(&m_Height, sizeof(m_Height));
 	this->ReadBytes(&m_ForceAlpha8, sizeof(m_ForceAlpha8));
 	this->ReadBytes(&m_FullScreen, sizeof(m_FullScreen));
 	this->ReadBytes(&m_OptimizeCaptureVis, sizeof(m_OptimizeCaptureVis));
@@ -125,6 +127,11 @@ bool AfxGoldSrcComClient::GetForceAlpha8()
 	return m_ForceAlpha8;
 }
 
+int AfxGoldSrcComClient::GetHeight()
+{
+	return m_Height;
+}
+
 
 HWND AfxGoldSrcComClient::GetParentWindow()
 {
@@ -141,6 +148,12 @@ bool AfxGoldSrcComClient::GetOptimizeCaptureVis()
 {
 	return m_OptimizeCaptureVis;
 }
+
+int AfxGoldSrcComClient::GetWidth()
+{
+	return m_Width;
+}
+
 
 ServerMessage AfxGoldSrcComClient::RecvMessage(void)
 {

@@ -248,6 +248,8 @@ class AfxGoldSrc : IDisposable
         if (!m_PipeComServer.ReadBoolean()) // ok?
             return false; // abort
 
+        m_PipeComServer.Write((Int32)m_StartSettings.Width);
+        m_PipeComServer.Write((Int32)m_StartSettings.Height);
         m_PipeComServer.Write((Boolean)m_StartSettings.Alpha8);
         m_PipeComServer.Write((Boolean)m_StartSettings.FullScreen);
         m_PipeComServer.Write((Boolean)m_StartSettings.OptWindowVisOnRec);

@@ -125,7 +125,6 @@ void HookHw(HMODULE hHw)
 		// user32.dll:
 		if(!InterceptDllCall(hSdl, "user32.dll", "CreateWindowExW", (DWORD) &NewCreateWindowExW) ) { bIcepOk = false; MessageBox(0,"Interception failed: user32.dll!CreateWindowExW","MDT_ERROR",MB_OK|MB_ICONHAND); }
 		if(!InterceptDllCall(hSdl, "user32.dll", "DestroyWindow", (DWORD) &NewDestroyWindow) ) { bIcepOk = false; MessageBox(0,"Interception failed: user32.dll!DestroyWindow","MDT_ERROR",MB_OK|MB_ICONHAND); }
-		if(!InterceptDllCall(hSdl, "user32.dll", "SetWindowPos", (DWORD) &NewSetWindowPos) ) { bIcepOk = false; MessageBox(0,"Interception failed: user32.dll!SetWindowPos","MDT_ERROR",MB_OK|MB_ICONHAND); }
 
 		// gdi32.dll:
 		if(!(OldWglSwapBuffers=(wglSwapBuffers_t)InterceptDllCall(hSdl, "gdi32.dll", "SwapBuffers", (DWORD) &NewWglSwapBuffers) )) { bIcepOk = false; MessageBox(0,"Interception failed: gdi32.dll!SwapBuffers","MDT_ERROR",MB_OK|MB_ICONHAND); }

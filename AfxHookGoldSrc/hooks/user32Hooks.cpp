@@ -11,9 +11,7 @@ HWND g_GameWindow = NULL;
 bool g_GameWindowActive = false;
 WNDPROC g_GameWindowProc = NULL;
 bool g_GameWindowUndocked = false;
-int g_Height = 0;
 DWORD g_OldWindowStyle;
-int g_Width = 0;
 
 
 LRESULT CALLBACK NewGameWindowProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
@@ -74,11 +72,6 @@ HWND APIENTRY NewCreateWindowExW(DWORD dwExStyle,LPCWSTR lpClassName,LPCWSTR lpW
 
 	// it's the window we want.
 	
-	g_Height = nHeight;
-	g_Width = nWidth;
-	
-	g_AfxGoldSrcComClient.UpdateWindowSize(nHeight, nWidth);
-	
 	if(!g_AfxGoldSrcComClient.GetFullScreen())
 	{
 		// currently won't work:
@@ -124,25 +117,6 @@ BOOL APIENTRY NewDestroyWindow(HWND hWnd)
 }
 
 
-BOOL WINAPI NewSetWindowPos(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, UINT uFlags)
-{
-	if( NULL == hWnd
-		|| hWnd != g_GameWindow
-		|| g_AfxGoldSrcComClient.GetFullScreen() )
-		return SetWindowPos(hWnd, hWndInsertAfter, X, Y, cx, cy, uFlags);
-
-	if ( !(uFlags & SWP_NOSIZE) && (cx != g_Width || cy != g_Height ) )
-	{
-		g_Width = cx;
-		g_Height = cy;
-
-		g_AfxGoldSrcComClient.UpdateWindowSize(cx, cy);
-	}
-
-	return SetWindowPos(hWnd,HWND_TOP,0,0,cx,cy,uFlags);//SWP_SHOWWINDOW);
-}
-
-
 void CloseGameWindow()
 {
 	if(0 != g_GameWindow)
@@ -155,10 +129,14 @@ void RedockGameWindow()
 {
 	if(!g_AfxGoldSrcComClient.GetFullScreen() && g_GameWindowUndocked)
 	{
+		DWORD dwExStyle = GetWindowLong(g_GameWindow, GWL_EXSTYLE);
+
 		// restore old style and parent (see SetParent() on MSDN2, why we do it in this order):
 		SetWindowLongPtr( g_GameWindow, GWL_STYLE, g_OldWindowStyle);
 		//SetParent( g_GameWindow, g_AfxGoldSrcComClient.GetParentWindow() );
-		SetWindowPos( g_GameWindow, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_FRAMECHANGED|SWP_NOSIZE|SWP_SHOWWINDOW);
+		RECT windowRect = {0, 0, g_AfxGoldSrcComClient.GetWidth(), g_AfxGoldSrcComClient.GetHeight() };
+		AdjustWindowRectEx(&windowRect, g_OldWindowStyle, FALSE, dwExStyle);
+		SetWindowPos( g_GameWindow, HWND_NOTOPMOST, 0, 0, windowRect.right -windowRect.left, windowRect.bottom -windowRect.top, SWP_FRAMECHANGED|SWP_SHOWWINDOW);
 
 		g_GameWindowUndocked = false;
 	}
@@ -172,10 +150,12 @@ void UndockGameWindowForCapture()
 		g_GameWindowUndocked = true;
 
 		g_OldWindowStyle = GetWindowLongPtr(g_GameWindow, GWL_STYLE);
-
+		DWORD dwExStyle = GetWindowLong(g_GameWindow, GWL_EXSTYLE);
 		// set new parent and style (see SetParent() on MSDN2, why we do it in this order):
 		SetParent( g_GameWindow, NULL );
 		SetWindowLongPtr( g_GameWindow, GWL_STYLE, WS_POPUP );
-		SetWindowPos( g_GameWindow, HWND_TOPMOST, 0, 0, 0, 0, SWP_FRAMECHANGED|SWP_NOSIZE|SWP_SHOWWINDOW);
+		RECT windowRect = {0, 0, g_AfxGoldSrcComClient.GetWidth(), g_AfxGoldSrcComClient.GetHeight() };
+		AdjustWindowRectEx(&windowRect, WS_POPUP, FALSE, dwExStyle);
+		SetWindowPos( g_GameWindow, HWND_TOPMOST, 0, 0, windowRect.right -windowRect.left, windowRect.bottom -windowRect.top, SWP_FRAMECHANGED|SWP_SHOWWINDOW);
 	}
 }

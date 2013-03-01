@@ -34,8 +34,12 @@ public:
 	/// <summary> force alpha bit planes request? </summary>
 	bool GetForceAlpha8();
 
+	int GetHeight();
+
 	/// <summary> GameWindow parent (for docked mode) </summary>
 	HWND GetParentWindow();
+
+	int GetWidth();
 
 	/// <summary> Desired render mode. </summary>
 	ComRenderMode GetRenderMode();
@@ -61,9 +65,11 @@ private:
 	bool m_Connected;
 	ComBool m_ForceAlpha8;
 	ComBool m_FullScreen;
+	ComInt m_Height;
 	ComBool m_OptimizeCaptureVis;
 	ComHandle m_ParentWindow;
 	ComRenderMode m_RenderMode;
+	ComInt m_Width;
 
 	ServerMessage RecvMessage(void);
 	void SendMessage(ClientMessage message);

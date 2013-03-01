@@ -6,6 +6,18 @@
 
 <release>
 <name>HLAE</name>
+<version>2.3.0.2</version>
+<time>2013-03-01T21:23Z</time>
+<changes>
+<change type="fixed">
+Fixed image being cropped incorrectly when optimze vis was enabled.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.3.0.1</version>
 <time>2013-03-01T18:55Z</time>
 <changes>
