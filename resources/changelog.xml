@@ -6,6 +6,21 @@
 
 <release>
 <name>HLAE</name>
+<version>2.3.0.1</version>
+<time>2013-03-01T18:55Z</time>
+<changes>
+<change type="fixed">
+Fixed mirv_movie_separatehud.
+</change>
+<change type="fixed">
+Fixed mirv_cstrike_deathmsg.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.3.0.0</version>
 <time>2013-02-28T18:44Z</time>
 <changes>

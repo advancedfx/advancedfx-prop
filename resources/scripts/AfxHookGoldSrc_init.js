@@ -48,8 +48,9 @@ function afx_OnHwDllLoaded()
 	// Rendering related:
 	//
 	
-	addr.UnkDrawHud = addr.hwDll + 0x4F990; // *[7]
-	addr.UnkDrawHud_DSZ = 0x06; // *[7]
+	addr.UnkDrawHud = addr.hwDll + 0xBB50; // *[7]
+	addr.UnkDrawHudCall = addr.hwDll + 0xB4AF0; // *[7]
+	addr.UnkDrawHudCallAfter = addr.UnkDrawHudCall + 0x5; // *[7]
 	
 	addr.R_RenderView = addr.hwDll + 0x45890; // *[7]
 	addr.DTOURSZ_R_RenderView = 0x6; // *[7]

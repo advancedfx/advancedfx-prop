@@ -98,10 +98,17 @@ Locate SCR_UpdateScreen:
 035d4ab5 a1c0285704      mov     eax,dword ptr [hw!qwglMakeCurrent+0x5c76b4 (045728c0)]
 035d4aba bd05000000      mov     ebp,offset <Unloaded_ud.drv>+0x4 (00000005)
 035d4abf 3bc5            cmp     eax,ebp
+...
+035d4ae5 8b4c2414        mov     ecx,dword ptr [esp+14h]
+035d4ae9 81e1ff000000    and     ecx,offset <Unloaded_ud.drv>+0xfe (000000ff)
+035d4aef 51              push    ecx
+035d4af0 e85b70f5ff      call    hw+0xbb50 (0352bb50)
+035d4af5 6a01            push    1
+035d4af7 e8b4f8f8ff      call    hw+0x443b0 (035643b0)
 
 ==>
 035d4aab => 035dee20 draws the level action without hud
-035d4ab0 => 0356f990 is UnkDrawHud, draws the hud without scoreboard and other vgui panels
+035d4af0 => 0352bb50 is UnkDrawHud, draws the hud without scoreboard and other vgui panels
 
 035dee20 a10c075204      mov     eax,dword ptr [hw!qwglMakeCurrent+0x575500 (0452070c)]
 ...

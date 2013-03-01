@@ -116,8 +116,11 @@ int __stdcall touring_cstrike_DeathMsg_Draw(DWORD *this_ptr, float flTime )
 		if(
 			0 == cstrike_rgDeathNoticeList[0].iId
 		) {
+			cstrike_DeathMsg_Draw_ItemIndex--;
 			it = cstrike_DeathNotices.erase(it);
 		}
+
+		cstrike_rgDeathNoticeList[0].iId = 0;
 	}
 
 	return iRet;
@@ -125,6 +128,11 @@ int __stdcall touring_cstrike_DeathMsg_Draw(DWORD *this_ptr, float flTime )
 
 int __stdcall touring_cstrike_DeathMsg_Msg(DWORD *this_ptr, const char *pszName, int iSize, void *pbuf )
 {
+	for(int i=0; i<MAX_DEATHNOTICES; i++)
+	{
+		cstrike_rgDeathNoticeList[i].iId = 0;
+	}
+
 	int i = detoured_cstrike_DeathMsg_Msg(this_ptr, pszName, iSize, pbuf);
 
 	if(i)
@@ -143,6 +151,8 @@ int __stdcall touring_cstrike_DeathMsg_Msg(DWORD *this_ptr, const char *pszName,
 		else
 			cstrike_DeathNotices.clear();
 	}
+
+	cstrike_rgDeathNoticeList[0].iId = 0;
 
 	return i;
 }
