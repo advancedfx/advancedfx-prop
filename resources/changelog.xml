@@ -6,6 +6,18 @@
 
 <release>
 <name>HLAE</name>
+<version>2.3.0.3</version>
+<time>2013-03-02T12:27Z</time>
+<changes>
+<change type="fixed">
+Fixed mirv_fx_skyhd not working.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.3.0.2</version>
 <time>2013-03-01T21:23Z</time>
 <changes>
