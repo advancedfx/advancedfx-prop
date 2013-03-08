@@ -1,17 +1,23 @@
+Version: March 06 update
 
-Clues :
+Modules:
+client 0d1b0000 - 0d30d000
 
-0:003> s -a client L1000000 "cl_crosshair_size"
-0d5e6df8  63 6c 5f 63 72 6f 73 73-68 61 69 72 5f 73 69 7a  cl_crosshair_siz
-0d5e6fd3  63 6c 5f 63 72 6f 73 73-68 61 69 72 5f 73 69 7a  cl_crosshair_siz
-0d895f8c  63 6c 5f 63 72 6f 73 73-68 61 69 72 5f 73 69 7a  cl_crosshair_siz
-0d895fb0  63 6c 5f 63 72 6f 73 73-68 61 69 72 5f 73 69 7a  cl_crosshair_siz
-....
+Clues:
+
+0:000> s -a client L1000000 "cl_crosshair_size"
+0d297d28  63 6c 5f 63 72 6f 73 73-68 61 69 72 5f 73 69 7a  cl_crosshair_siz
+0d297f03  63 6c 5f 63 72 6f 73 73-68 61 69 72 5f 73 69 7a  cl_crosshair_siz
+0d402a0c  63 6c 5f 63 72 6f 73 73-68 61 69 72 5f 73 69 7a  cl_crosshair_siz
+0d402a30  63 6c 5f 63 72 6f 73 73-68 61 69 72 5f 73 69 7a  cl_crosshair_siz
+0d402a48  63 6c 5f 63 72 6f 73 73-68 61 69 72 5f 73 69 7a  cl_crosshair_siz
+0d402a74  63 6c 5f 63 72 6f 73 73-68 61 69 72 5f 73 69 7a  cl_crosshair_siz
+0d402a9c  63 6c 5f 63 72 6f 73 73-68 61 69 72 5f 73 69 7a  cl_crosshair_siz
 
 frist match:
-0:003> s client L1000000 f8 6d 5e 0d
-0d541198  f8 6d 5e 0d ff 15 c8 1b-62 0d 8b 46 10 b9 40 0a  .m^.....b..F..@.
-0d542326  f8 6d 5e 0d ff 15 d0 1b-62 0d 8b e8 83 c4 04 85  .m^.....b.......
+0:000> s client L1000000 28 7d 29 0d
+0d1efdc8  28 7d 29 0d ff 15 a0 4b-2d 0d 8b 46 10 b9 40 0a  (})....K-..F..@.
+0d1f0f27  28 7d 29 0d 89 74 24 10-ff 15 a8 4b 2d 0d 8b e8  (})..t$....K-...
 
 the first address belongs to a function that set's the default
 cl_crosshair_size value.
@@ -24,75 +30,74 @@ is just a usage string that is spammed into the console by the function above
 
 i.e. this is what the function does when cl_crosshair_size is auto:
 
-0d5423f1 a13819620d      mov     eax,dword ptr [client!V_CalcRefdef+0xb33e8 (0d621938)]
-0d5423f6 3d80020000      cmp     eax,280h
-0d5423fb 7e17            jle     client!IN_ClearStates+0x12ee4 (0d542414)
-0d5423fd 3d00040000      cmp     eax,400h
-0d542402 7c20            jl      client!IN_ClearStates+0x12ef4 (0d542424)
-0d542404 5f              pop     edi
-0d542405 c7436c80020000  mov     dword ptr [ebx+6Ch],280h
-0d54240c 5d              pop     ebp
-0d54240d 5b              pop     ebx
-0d54240e c3              ret
+0d1f0fd9 a110492d0d      mov     eax,dword ptr [client!V_CalcRefdef+0xb7f00 (0d2d4910)]
+0d1f0fde 3d80020000      cmp     eax,offset <Unloaded_ud.drv>+0x27f (00000280)
+0d1f0fe3 7e18            jle     client!IN_ClearStates+0x1295d (0d1f0ffd)
+0d1f0fe5 3d00040000      cmp     eax,offset <Unloaded_ud.drv>+0x3ff (00000400)
+0d1f0fea 7c22            jl      client!IN_ClearStates+0x1296e (0d1f100e)
+0d1f0fec c7466c80020000  mov     dword ptr [esi+6Ch],offset <Unloaded_ud.drv>+0x27f (00000280)
+0d1f0ff3 5e              pop     esi
+0d1f0ff4 5d              pop     ebp
+0d1f1017 5b              pop     ebx
+0d1f1018 59              pop     ecx
+0d1f1019 c3              ret
 
-ebx is a copy of what was in ecx when the funcion was called:
+This is where the function is called:
 
-0d503169 8bcf            mov     ecx,edi
-0d50316b e8b0f1ffff      call    client!IN_ClearStates+0x12df0 (0d502320)
-0d503170 8b4f6c          mov     ecx,dword ptr [edi+6Ch] ds:0023:0d5dd618=00000400
+0d1f1dca 8bcf            mov     ecx,edi
+0d1f1dcc e84ff1ffff      call    client!IN_ClearStates+0x12880 (0d1f0f20)
+0d1f1dd1 8b4f6c          mov     ecx,dword ptr [edi+6Ch]
 
-anways, this function is called by a mor ecomplex unknown function that is called as follows:
+anways, this function is called by a more ecomplex unknown function that is called as follows:
 
-0d50283e 50              push    eax
-0d50283f 56              push    esi
-0d502840 8bcd            mov     ecx,ebp
-0d502842 e869060000      call    client!IN_ClearStates+0x13980 (0d502eb0)
-0d502847 391df0cd5b0d    cmp     dword ptr [client!V_CalcRefdef+0x8e8a0 (0d5bcdf0)],ebx
+0d1f14b2 50              push    eax
+0d1f14b3 56              push    esi
+0d1f14b4 8bcd            mov     ecx,ebp
+0d1f14b6 e865060000      call    client!IN_ClearStates+0x13480 (0d1f1b20)
+0d1f14bb 391d50012b0d    cmp     dword ptr [client!V_CalcRefdef+0x93740 (0d2b0150)],ebx
 
 this is actually a class function (probably client hud class or s.th.)
 which gets passed two parameters, one seems to be the time, the other the weaponcode (id):
 
-0d502eb0 83ec08          sub     esp,8
-0d502eb3 53              push    ebx
-0d502eb4 55              push    ebp
-0d502eb5 56              push    esi
-0d502eb6 57              push    edi
-0d502eb7 8bf9            mov     edi,ecx
-0d502eb9 be05000000      mov     esi,5
-0d502ebe 8b4c2420        mov     ecx,dword ptr [esp+20h] ss:0023:0012f8a8=00000011
-0d502ec2 897c2414        mov     dword ptr [esp+14h],edi
-0d502ec6 8d69ff          lea     ebp,[ecx-1]
-0d502ec9 83fd1d          cmp     ebp,1Dh
-0d502ecc 0f87a1000000    ja      client!IN_ClearStates+0x13a43 (0d502f73)
+0d1f1b20 83ec08          sub     esp,8
+0d1f1b23 8b442410        mov     eax,dword ptr [esp+10h]
+0d1f1b27 53              push    ebx
+0d1f1b28 55              push    ebp
+0d1f1b29 56              push    esi
+0d1f1b2a 57              push    edi
+0d1f1b2b 8bf9            mov     edi,ecx
+0d1f1b2d 8d48ff          lea     ecx,[eax-1]
+0d1f1b30 897c2414        mov     dword ptr [esp+14h],edi
+0d1f1b34 83f91d          cmp     ecx,1Dh
+0d1f1b37 ba04000000      mov     edx,offset <Unloaded_ud.drv>+0x3 (00000004)
+0d1f1b3c be05000000      mov     esi,offset <Unloaded_ud.drv>+0x4 (00000005)
+0d1f1b41 0f8791000000    ja      client!IN_ClearStates+0x13538 (0d1f1bd8)
 
 // here it would do some adjustments accordings to the weapon
-
-....
+...
 
 // this checks cl_dynamic crosshair:
 
-0d502f96 a1d8d25d0d      mov     eax,dword ptr [client!V_CalcRefdef+0xaed88 (0d5dd2d8)]
-0d502f9b 85c0            test    eax,eax
-0d502f9d 0f84c9000000    je      client!IN_ClearStates+0x13b3c (0d50306c)
-0d502fa3 d9400c          fld     dword ptr [eax+0Ch]
-0d502fa6 d81df031580d    fcomp   dword ptr [client!V_CalcRefdef+0x54ca0 (0d5831f0)] ds:0023:0d5831f0=00000000
-0d502fac dfe0            fnstsw  ax
-
-....
-
-// i.e. here it checks some walking stuff:
-0d50306c 8b0d94d25d0d    mov     ecx,dword ptr [client!V_CalcRefdef+0xaed44 (0d5dd294)]
-0d503072 8b4740          mov     eax,dword ptr [edi+40h]
-0d503075 3bc8            cmp     ecx,eax
+0d1f1bf7 a18c022d0d      mov     eax,dword ptr [client!V_CalcRefdef+0xb387c (0d2d028c)]
+0d1f1bfc 85c0            test    eax,eax
+0d1f1bfe 0f84c8000000    je      client!IN_ClearStates+0x1362c (0d1f1ccc)
+0d1f1c04 d9400c          fld     dword ptr [eax+0Ch]
+0d1f1c07 d81d2432270d    fcomp   dword ptr [client!V_CalcRefdef+0x56814 (0d273224)]
+0d1f1c0d dfe0            fnstsw  ax
 ...
 
+// i.e. here it checks some walking stuff:
+0d1f1ccc 8b0d4c022d0d    mov     ecx,dword ptr [client!V_CalcRefdef+0xb383c (0d2d024c)]
+0d1f1cd2 8b4740          mov     eax,dword ptr [edi+40h]
+0d1f1cd5 3bc8            cmp     ecx,eax
+
 // here it loads from the class pointer (edi) the old drawing position (so it always draws a delta somewhat)
-0d5030b0 d94744          fld     dword ptr [edi+44h]
-0d5030b3 d9c0            fld     st(0)
-0d5030b5 dc0d50d4580d    fmul    qword ptr [client!V_CalcRefdef+0x5ef00 (0d58d450)]
-0d5030bb 8b4748          mov     eax,dword ptr [edi+48h]
-0d5030be 83c002          add     eax,2
-0d5030c1 dc059832580d    fadd    qword ptr [client!V_CalcRefdef+0x54d48 (0d583298)]
+0d1f1d12 d94744          fld     dword ptr [edi+44h]
+0d1f1d15 dd0530d5270d    fld     qword ptr [client!V_CalcRefdef+0x60b20 (0d27d530)]
+0d1f1d1b d8c9            fmul    st,st(1)
+0d1f1d1d 83c002          add     eax,2
+0d1f1d20 894748          mov     dword ptr [edi+48h],eax
+0d1f1d23 dc05c832270d    fadd    qword ptr [client!V_CalcRefdef+0x568b8 (0d2732c8)]
 
 // as you can see two constants get used here, one for multiplication (fmul) and one for addition (fadd)
 
@@ -101,21 +106,21 @@ which gets passed two parameters, one seems to be the time, the other the weapon
 // and here is where the drawing function is called:
 
 ...
-0d503324 a138195e0d      mov     eax,dword ptr [client!V_CalcRefdef+0xb33e8 (0d5e1938)]
-0d503329 99              cdq
-0d50332a 2bc2            sub     eax,edx
-0d50332c d1f8            sar     eax,1
-0d50332e 50              push    eax
-0d50332f ff15bc1b5e0d    call    dword ptr [client!V_CalcRefdef+0xb366c (0d5e1bbc)] ds:0023:0d5e1bbc=03568db0
-0d503335 83c440          add     esp,40h
-0d503338 b801000000      mov     eax,1
-0d50333d 5f              pop     edi
-0d50333e 5e              pop     esi
-0d50333f 5d              pop     ebp
-0d503340 5b              pop     ebx
-0d503341 83c408          add     esp,8
-0d503344 c20800          ret     8
+0d1f1f78 a110492d0d      mov     eax,dword ptr [client!V_CalcRefdef+0xb7f00 (0d2d4910)]
+0d1f1f7d 99              cdq
+0d1f1f7e 2bc2            sub     eax,edx
+0d1f1f80 d1f8            sar     eax,1
+0d1f1f82 50              push    eax
+0d1f1f83 ff15944b2d0d    call    dword ptr [client!V_CalcRefdef+0xb8184 (0d2d4b94)]
+0d1f1f89 83c440          add     esp,40h
+0d1f1f8c b801000000      mov     eax,offset <Unloaded_ud.drv> (00000001)
+0d1f1f91 5f              pop     edi
+0d1f1f92 5e              pop     esi
+0d1f1f93 5d              pop     ebp
+0d1f1f94 5b              pop     ebx
+0d1f1f95 83c408          add     esp,8
+0d1f1f98 c20800          ret     8
 
 So what you need to do is detour the class function
-(0d502eb0) and access the two parameters (fmul) and
+(0d1f1b20) and access the two parameters (fmul) and
 (fadd), see above.

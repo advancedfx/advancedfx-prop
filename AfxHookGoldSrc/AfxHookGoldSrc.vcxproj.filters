@@ -195,9 +195,6 @@
     <ClCompile Include="supportrender.cpp">
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
-    <ClCompile Include="temporary_dominik_0004.cpp">
-      <Filter>AfxHookGoldSrc</Filter>
-    </ClCompile>
     <ClCompile Include="temporary_dominik_0005.cpp">
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>

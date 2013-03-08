@@ -170,10 +170,16 @@ public:
 	float GetZNear() { return m_ZNear; }
 	float GetZFar() { return m_ZFar; }
 
+	void EnableDebugCapture(bool bEnable) {
+		m_DebugCapture = bEnable;
+	}
+	void DoCanDebugCapture(void);
+
 
 private:
 	enum FILMING_STATE { FS_INACTIVE, FS_STARTING, FS_ACTIVE };
 
+	bool m_DebugCapture;
 	bool m_EnableStereoMode;
 	int m_Height;
 	unsigned int m_HostFrameCount;

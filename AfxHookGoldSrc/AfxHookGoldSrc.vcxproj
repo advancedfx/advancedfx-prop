@@ -160,7 +160,6 @@
     </ClCompile>
     <ClCompile Include="Store.cpp" />
     <ClCompile Include="supportrender.cpp" />
-    <ClCompile Include="temporary_dominik_0004.cpp" />
     <ClCompile Include="temporary_dominik_0005.cpp" />
     <ClCompile Include="zooming.cpp" />
     <ClCompile Include="modules\ModColor.cpp" />

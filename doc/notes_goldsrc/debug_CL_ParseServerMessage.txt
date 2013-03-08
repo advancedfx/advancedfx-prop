@@ -1,4 +1,4 @@
-Version: Febraury 20 update
+Version: March 06 update
 
 For more information see:
 C:\Libraries\q1source\QW\client\cl_parse.c
@@ -12,43 +12,43 @@ sample svc_voicdata (including message code):
 (unsigned short) 0x0014 --> 14 bytes of data follow
 ... data 
 
-0:016> s -a hw L1000000 "CL_ParseServerMessage: Bad server"
-036590f8  43 4c 5f 50 61 72 73 65-53 65 72 76 65 72 4d 65  CL_ParseServerMe
-0:016> s hw L1000000 f8 90 65 03
-0353cee1  f8 90 65 03 e8 c6 82 03-00 8b 3d 28 10 52 04 83  ..e.......=(.R..
+0:000> s -a hw L1000000 "CL_ParseServerMessage: Bad server"
+0365a128  43 4c 5f 50 61 72 73 65-53 65 72 76 65 72 4d 65  CL_ParseServerMe
+0:000> s hw L1000000 28 a1 65 03
+0353d021  28 a1 65 03 e8 d6 88 03-00 8b 3d a8 20 52 04 83  (.e.......=. R..
 
-0353cee0 68f8906503      push    offset hw!vgui::Frame::`vftable'+0x1d3bc (036590f8)
-0353cee5 e8c6820300      call    hw+0x551b0 (035751b0)
-0353ceea 8b3d28105204    mov     edi,dword ptr [hw!qwglMakeCurrent+0x575e1c (04521028)]
-0353cef0 83c404          add     esp,4
-0353cef3 8bdf            mov     ebx,edi
-0353cef5 e8c6d30000      call    hw+0x2a2c0 (0354a2c0)
-0353cefa 8bf0            mov     esi,eax
-0353cefc 83feff          cmp     esi,0FFFFFFFFh
-0353ceff 0f8496020000    je      hw+0x1d19b (0353d19b)
+0353d020 6828a16503      push    offset hw!vgui::Frame::`vftable'+0x1d3ec (0365a128)
+0353d025 e8d6880300      call    hw+0x55900 (03575900)
+0353d02a 8b3da8205204    mov     edi,dword ptr [hw!qwglMakeCurrent+0x575e1c (045220a8)]
+0353d030 83c404          add     esp,4
+0353d033 8bdf            mov     ebx,edi
+0353d035 e8e6d60000      call    hw+0x2a720 (0354a720)
+0353d03a 8bf0            mov     esi,eax
+0353d03c 83feff          cmp     esi,0FFFFFFFFh
+0353d03f 0f8496020000    je      hw+0x1d2db (0353d2db)
 ...
-0353d244 83c408          add     esp,8
-0353d247 5e              pop     esi
-0353d248 5d              pop     ebp
-0353d249 c3              ret
+0353d384 83c408          add     esp,8
+0353d387 5e              pop     esi
+0353d388 5d              pop     ebp
+0353d389 c3              ret
 
 ==>
-0353cef5 => 0354a2c0 is MSG_ReadByte
-[0353cef3...0353cefa) is where we detour cmd_read so we can fetch the server messages
+0353d035 => 0354a720 is MSG_ReadByte
+[0353d033...0353d03a) is where we detour cmd_read so we can fetch the server messages (our code is specific to this snippet and needs to be checked too on a update).
 
-0354a2c0 MSG_ReadByte
-0354a2c0 a128105204      mov     eax,dword ptr [hw!qwglMakeCurrent+0x575e1c (04521028)]
-0354a2c5 8b1530b9fb03    mov     edx,dword ptr [hw!qwglMakeCurrent+0x10724 (03fbb930)]
-0354a2cb 8d4801          lea     ecx,[eax+1]
-0354a2ce 3bca            cmp     ecx,edx
-0354a2d0 7e0e            jle     hw+0x2a2e0 (0354a2e0)
-0354a2d2 c7052c10520401000000 mov dword ptr [hw!qwglMakeCurrent+0x575e20 (0452102c)],offset <Unloaded_ud.drv> (00000001)
-0354a2dc 83c8ff          or      eax,0FFFFFFFFh
-0354a2df c3              ret
-0354a2e0 56              push    esi
-0354a2e1 8b3528b9fb03    mov     esi,dword ptr [hw!qwglMakeCurrent+0x1071c (03fbb928)]
+0354a720 MSG_ReadByte
+0354a720 a1a8205204      mov     eax,dword ptr [hw!qwglMakeCurrent+0x575e1c (045220a8)]
+0354a725 8b15b0c9fb03    mov     edx,dword ptr [hw!qwglMakeCurrent+0x10724 (03fbc9b0)]
+0354a72b 8d4801          lea     ecx,[eax+1]
+0354a72e 3bca            cmp     ecx,edx
+0354a730 7e0e            jle     hw+0x2a740 (0354a740)
+0354a732 c705ac20520401000000 mov dword ptr [hw!qwglMakeCurrent+0x575e20 (045220ac)],offset <Unloaded_ud.drv> (00000001)
+0354a73c 83c8ff          or      eax,0FFFFFFFFh
+0354a73f c3              ret
+0354a740 56              push    esi
+0354a741 8b35a8c9fb03    mov     esi,dword ptr [hw!qwglMakeCurrent+0x1071c (03fbc9a8)]
 
 ==>
-0354a2c0 => 04521028 is msg_readcount
-0354a2c5 => 03fbb930 is net_message.cursize
-         => 03fbb930 -0x10 is netmessage
+0354a720 => 045220a8 is msg_readcount
+0354a725 => 03fbc9b0 is net_message.cursize
+         => 03fbc9b0 -0x10 is netmessage

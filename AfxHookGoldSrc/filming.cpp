@@ -96,7 +96,7 @@ REGISTER_CVAR(sample_sps, "180", 0);
 // Our filming singleton
 Filming g_Filming;
 
-FilmingStream * g_Filming_Stream[12];
+FilmingStream * g_Filming_Stream[13];
 
 enum FilmingStreamSlot {
 	FS_all, FS_all_right,
@@ -104,7 +104,8 @@ enum FilmingStreamSlot {
 	FS_entity, 	FS_entity_right,
 	FS_depthall, FS_depthall_right,
 	FS_depthworld, FS_depthworld_right,
-	FS_hudcolor,FS_hudalpha
+	FS_hudcolor, FS_hudalpha,
+	FS_debug
 };
 
 // from HL1SDK/multiplayer/common/mathlib.h:
@@ -456,6 +457,11 @@ Filming::~Filming()
 {
 }
 
+void Filming::DoCanDebugCapture()
+{
+	if(isFilming() && g_Filming_Stream[FS_debug]) g_Filming_Stream[FS_debug]->Capture(m_time, &m_GlRawPic, m_fps);
+}
+
 void Filming::GetCameraOfs(float *right, float *up, float *forward)
 {
 	*right = _cameraofs.right;
@@ -718,6 +724,7 @@ void Filming::Start()
 		g_Filming_Stream[FS_depthworld_right] = 0;
 		g_Filming_Stream[FS_hudcolor] = 0;
 		g_Filming_Stream[FS_hudalpha] = 0;
+		g_Filming_Stream[FS_debug] = 0;
 
 		if(bAll)
 		{
@@ -838,6 +845,16 @@ void Filming::Start()
 				);
 			}
 		}
+
+		if(m_DebugCapture)
+		{
+			g_Filming_Stream[FS_debug] = new FilmingStream(
+				takePath, L"debug",
+				FB_COLOR,
+				samplingFrameDuration,
+				x, y, width, height
+			);
+		}
 	}
 
 
@@ -864,6 +881,7 @@ void Filming::Stop()
 	if(g_Filming_Stream[FS_depthworld_right]) delete g_Filming_Stream[FS_depthworld_right];
 	if(g_Filming_Stream[FS_hudcolor]) delete g_Filming_Stream[FS_hudcolor];
 	if(g_Filming_Stream[FS_hudalpha]) delete g_Filming_Stream[FS_hudalpha];
+	if(g_Filming_Stream[FS_debug]) delete g_Filming_Stream[FS_debug];
 
 	//
 

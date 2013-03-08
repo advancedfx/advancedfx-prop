@@ -6,6 +6,18 @@
 
 <release>
 <name>HLAE</name>
+<version>2.3.1.0</version>
+<time>2013-03-08T17:24Z</time>
+<changes>
+<change type="updated">
+Adjusted addresses and hooks to March 06 Steam Counter-Strike and Half-Life updates.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.3.0.3</version>
 <time>2013-03-02T12:27Z</time>
 <changes>

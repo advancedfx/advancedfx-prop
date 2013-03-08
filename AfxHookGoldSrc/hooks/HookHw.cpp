@@ -116,9 +116,9 @@ void HookHw(HMODULE hHw)
 	if(!InterceptDllCall(hHw, "Kernel32.dll", "LoadLibraryA", (DWORD) &NewHwLoadLibraryA)) { bIcepOk = false; MessageBox(0,"Interception failed: Kernel32.dll!LoadLibraryA","MDT_ERROR",MB_OK|MB_ICONHAND); }
 
 	// opengl32.dll:
-	if(!(g_Old_SDL_GL_GetProcAddress=(SDL_GL_GetProcAddress_t)InterceptDllCall(hHw, "sdl.dll", "SDL_GL_GetProcAddress", (DWORD) &New_SDL_GL_GetProcAddress) )) { bIcepOk = false; MessageBox(0,"Interception failed: sdl.dll!SDL_GL_GetProcAddress","MDT_ERROR",MB_OK|MB_ICONHAND); }
+	if(!(g_Old_SDL_GL_GetProcAddress=(SDL_GL_GetProcAddress_t)InterceptDllCall(hHw, "sdl2.dll", "SDL_GL_GetProcAddress", (DWORD) &New_SDL_GL_GetProcAddress) )) { bIcepOk = false; MessageBox(0,"Interception failed: sdl.dll!SDL_GL_GetProcAddress","MDT_ERROR",MB_OK|MB_ICONHAND); }
 
-	HMODULE hSdl = GetModuleHandle("sdl.dll");
+	HMODULE hSdl = GetModuleHandle("sdl2.dll");
 	if(hSdl)
 	{
 		if(!InterceptDllCall(hSdl, "Kernel32.dll", "GetProcAddress", (DWORD) &NewSdlGetProcAddress) ) { bIcepOk = false; MessageBox(0,"Interception failed: Kernel32.dll!GetProcAddress","MDT_ERROR",MB_OK|MB_ICONHAND); }

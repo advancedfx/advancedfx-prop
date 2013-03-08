@@ -1,4 +1,4 @@
-Version: Febraury 20 update
+Version: March 06 update
 
 For more information see:
 C:\Libraries\q1source\QW\client\gl_screen.c
@@ -12,195 +12,195 @@ You need to join the game during debugging!
 
 Locate SCR_UpdateScreen:
 
-0:016> s -a hw L1000000 "load failed.\n"
-03663a18  6c 6f 61 64 20 66 61 69-6c 65 64 2e 0a 00 00 00  load failed.....
-0:016> s hw L1000000 18 3a 66 03
-0356b9c0  18 3a 66 03 e8 b7 09 fe-ff 68 28 3a 66 03 6a 01  .:f......h(:f.j.
+0:000> s -a hw L1000000 "load failed.\n"
+03664a98  6c 6f 61 64 20 66 61 69-6c 65 64 2e 0a 00 00 00  load failed.....
+0:000> s hw L1000000 98 4a 66 03
+0356c0d0  98 4a 66 03 e8 47 07 fe-ff 68 a8 4a 66 03 6a 01  .Jf..G...h.Jf.j.
 
-0356b9c0 -1 == 0356b9bf is inside SCR_UpdateScreen:
+0356c0d0 -1 == 0356c0cf is inside SCR_UpdateScreen:
 
 (break a bit before and follow till ret to find the call.)
 
-0356b8f0 is SCR_UpdateScreen
+0356c000 is SCR_UpdateScreen
 
-0356b8f0 a12cc5b503      mov     eax,dword ptr [hw!vgui::Frame::`vftable'+0x5207f0 (03b5c52c)]
-0356b8f5 83ec10          sub     esp,10h
-0356b8f8 56              push    esi
-0356b8f9 33f6            xor     esi,esi
-0356b8fb 3bc6            cmp     eax,esi
-0356b8fd 0f8517020000    jne     hw+0x4bb1a (0356bb1a)
+0356c000 a1a4d5b503      mov     eax,dword ptr [hw!vgui::Frame::`vftable'+0x520868 (03b5d5a4)]
+0356c005 83ec10          sub     esp,10h
+0356c008 56              push    esi
+0356c009 33f6            xor     esi,esi
+0356c00b 3bc6            cmp     eax,esi
+0356c00d 0f8517020000    jne     hw+0x4c22a (0356c22a)
 ...
-0356b9bf 68183a6603      push    offset hw!vgui::Frame::`vftable'+0x27cdc (03663a18)
+0356c0cf 68984a6603      push    offset hw!vgui::Frame::`vftable'+0x27d5c (03664a98)
 ...
 //
 // GL_BeginRendering (&glx, &gly, &glwidth, &glheight);
-0356b9ed 68e40dfd03      push    offset hw!qwglMakeCurrent+0x25bd8 (03fd0de4)
-0356b9f2 68240efd03      push    offset hw!qwglMakeCurrent+0x25c18 (03fd0e24)
-0356b9f7 685c09fd03      push    offset hw!qwglMakeCurrent+0x25750 (03fd095c)
-0356b9fc 685809fd03      push    offset hw!qwglMakeCurrent+0x2574c (03fd0958)
-0356ba01 e8ea0d0000      call    hw+0x4c7f0 (0356c7f0)
+0356c0fd 68641efd03      push    offset hw!qwglMakeCurrent+0x25bd8 (03fd1e64)
+0356c102 68a41efd03      push    offset hw!qwglMakeCurrent+0x25c18 (03fd1ea4)
+0356c107 68dc19fd03      push    offset hw!qwglMakeCurrent+0x25750 (03fd19dc)
+0356c10c 68d819fd03      push    offset hw!qwglMakeCurrent+0x2574c (03fd19d8)
+0356c111 e8ea0d0000      call    hw+0x4cf00 (0356cf00)
 ...
-0356bac1 83c404          add     esp,4
-0356bac4 e8a70afeff      call    hw+0x2c570 (0354c570)
-0356bac9 e832020000      call    hw+0x4bd00 (0356bd00)
-0356bace e83d1f0700      call    hw!vgui::Dar<vgui::RepaintSignal *>::operator[]+0xc0 (035dda10)
-0356bad3 e8a8400000      call    hw+0x4fb80 (0356fb80)
-0356bad8 e8b33e0000      call    hw+0x4f990 (0356f990)
-0356badd e87edf0100      call    hw!CreateInterface+0xc400 (03589a60)
-0356bae2 e8e9d80100      call    hw!CreateInterface+0xbd70 (035893d0)
-0356bae7 e894b5fbff      call    hw+0x7080 (03527080)
-0356baec 85c0            test    eax,eax
-0356baee 7505            jne     hw+0x4baf5 (0356baf5)
+0356c1d1 83c404          add     esp,4
+0356c1d4 e83708feff      call    hw+0x2ca10 (0354ca10)
+0356c1d9 e832020000      call    hw+0x4c410 (0356c410)
+0356c1de e85d1d0700      call    hw!vgui::Dar<vgui::RepaintSignal *>::operator[]+0xc0 (035ddf40)
+0356c1e3 e8e8400000      call    hw+0x502d0 (035702d0)
+0356c1e8 e8f33e0000      call    hw+0x500e0 (035700e0)
+0356c1ed e8eedd0100      call    hw!CreateInterface+0xc200 (03589fe0)
+0356c1f2 e859d70100      call    hw!CreateInterface+0xbb70 (03589950)
+0356c1f7 e874affbff      call    hw+0x7170 (03527170)
+0356c1fc 85c0            test    eax,eax
+0356c1fe 7505            jne     hw+0x4c205 (0356c205)
 ...
 
 ==>
-0356bace => 035dda10 could be related to or at least call V_RenderView
+0356c1de => 035ddf40 could be related to or at least call V_RenderView
 
-035dda10
+035ddf40
 ...
-035dda23 50              push    eax
-035dda24 e8170a0000      call    hw!vgui::Frame::operator=+0x5f0 (035de440)
-035dda29 83c404          add     esp,4
-035dda2c e94f97f4ff      jmp     hw+0x7180 (03527180)
-035dda31 6a00            push    0
-035dda33 e8080a0000      call    hw!vgui::Frame::operator=+0x5f0 (035de440)
-035dda38 83c404          add     esp,4
-035dda3b e94097f4ff      jmp     hw+0x7180 (03527180)
-035dda40 e9bb96f4ff      jmp     hw+0x7100 (03527100)
+035ddf53 50              push    eax
+035ddf54 e8170a0000      call    hw!vgui::Frame::operator=+0x5f0 (035de970)
+035ddf59 83c404          add     esp,4
+035ddf5c e90f93f4ff      jmp     hw+0x7270 (03527270)
+035ddf61 6a00            push    0
+035ddf63 e8080a0000      call    hw!vgui::Frame::operator=+0x5f0 (035de970)
+035ddf68 83c404          add     esp,4
+035ddf6b e90093f4ff      jmp     hw+0x7270 (03527270)
+035ddf70 e97b92f4ff      jmp     hw+0x71f0 (035271f0)
 
 ==>
-035dda33 => 035de440 is unknown drawing function
+035ddf63 => 035de970 is unknown drawing function
 
-035de440
+035de970
 
-035de440 d905288c6703    fld     dword ptr [hw!vgui::Frame::`vftable'+0x3ceec (03678c28)]
-035de446 d81d1ca06303    fcomp   dword ptr [hw!vgui::Frame::operator=+0x5c1cc (0363a01c)]
-035de44c 83ec10          sub     esp,10h
+035de970 d905889c6703    fld     dword ptr [hw!vgui::Frame::`vftable'+0x3cf4c (03679c88)]
+035de976 d81d1cb06303    fcomp   dword ptr [hw!vgui::Frame::operator=+0x5cc9c (0363b01c)]
+035de97c 83ec10          sub     esp,10h
 ...
-035de4be 8d542404        lea     edx,[esp+4]
-035de4c2 52              push    edx
-035de4c3 e80865ffff      call    hw!F+0x9c80 (035d49d0)
-035de4c8 83c404          add     esp,4
-035de4cb 5e              pop     esi
-035de4cc 83c410          add     esp,10h
-035de4cf c3              ret
+035de9ee 8d542404        lea     edx,[esp+4]
+035de9f2 52              push    edx
+035de9f3 e81865ffff      call    hw!F+0x9c50 (035d4f10)
+035de9f8 83c404          add     esp,4
+035de9fb 5e              pop     esi
+035de9fc 83c410          add     esp,10h
+035de9ff c3              ret
 
 ==>
-035de4c3 => 035d49d0 is unknown ingame drawing function
+035de9f3 => 035d4f10 is unknown ingame drawing function
 
-035d49d0 83ec2c          sub     esp,2Ch
+035d4f10 83ec2c          sub     esp,2Ch
 ...
-035d4a9b 892d240efd03    mov     dword ptr [hw!qwglMakeCurrent+0x25c18 (03fd0e24)],ebp
-035d4aa1 a3e40dfd03      mov     dword ptr [hw!qwglMakeCurrent+0x25bd8 (03fd0de4)],eax
-035d4aa6 e88568f9ff      call    hw+0x4b330 (0356b330)
-035d4aab e870a30000      call    hw!vgui::Frame::operator=+0xfd0 (035dee20)
-035d4ab0 e8dbaef9ff      call    hw+0x4f990 (0356f990)
-035d4ab5 a1c0285704      mov     eax,dword ptr [hw!qwglMakeCurrent+0x5c76b4 (045728c0)]
-035d4aba bd05000000      mov     ebp,offset <Unloaded_ud.drv>+0x4 (00000005)
-035d4abf 3bc5            cmp     eax,ebp
+035d4fdb 892da41efd03    mov     dword ptr [hw!qwglMakeCurrent+0x25c18 (03fd1ea4)],ebp
+035d4fe1 a3641efd03      mov     dword ptr [hw!qwglMakeCurrent+0x25bd8 (03fd1e64)],eax
+035d4fe6 e8456af9ff      call    hw+0x4ba30 (0356ba30)
+035d4feb e8a0a30000      call    hw!vgui::Frame::operator=+0x1010 (035df390)
+035d4ff0 e8ebb0f9ff      call    hw+0x500e0 (035700e0)
+035d4ff5 a140395704      mov     eax,dword ptr [hw!qwglMakeCurrent+0x5c76b4 (04573940)]
+035d4ffa bd05000000      mov     ebp,offset <Unloaded_ud.drv>+0x4 (00000005)
+035d4fff 3bc5            cmp     eax,ebp
 ...
-035d4ae5 8b4c2414        mov     ecx,dword ptr [esp+14h]
-035d4ae9 81e1ff000000    and     ecx,offset <Unloaded_ud.drv>+0xfe (000000ff)
-035d4aef 51              push    ecx
-035d4af0 e85b70f5ff      call    hw+0xbb50 (0352bb50)
-035d4af5 6a01            push    1
-035d4af7 e8b4f8f8ff      call    hw+0x443b0 (035643b0)
+035d5025 8b4c2414        mov     ecx,dword ptr [esp+14h]
+035d5029 81e1ff000000    and     ecx,offset <Unloaded_ud.drv>+0xfe (000000ff)
+035d502f 51              push    ecx
+035d5030 e8fb6bf5ff      call    hw+0xbc30 (0352bc30)
+035d5035 6a01            push    1
+035d5037 e8a4faf8ff      call    hw+0x44ae0 (03564ae0)
 
 ==>
-035d4aab => 035dee20 draws the level action without hud
-035d4af0 => 0352bb50 is UnkDrawHud, draws the hud without scoreboard and other vgui panels
+035d4feb => 035df390 draws the level action without hud
+035d5030 => 0352bc30 is UnkDrawHud, draws the hud without scoreboard and other vgui panels
 
-035dee20 a10c075204      mov     eax,dword ptr [hw!qwglMakeCurrent+0x575500 (0452070c)]
+035df390 a18c175204      mov     eax,dword ptr [hw!qwglMakeCurrent+0x575500 (0452178c)]
 ...
-035df0c3 eb05            jmp     hw!vgui::Frame::operator=+0x127a (035df0ca)
-035df0c5 e8c667f8ff      call    hw+0x45890 (03565890)
-035df0ca 39b424f8000000  cmp     dword ptr <Unloaded_ud.drv>+0xf7 (000000f8)[esp],esi
+035df633 eb05            jmp     hw!vgui::Frame::operator=+0x12ba (035df63a)
+035df635 e88669f8ff      call    hw+0x45fc0 (03565fc0)
+035df63a 39b424f8000000  cmp     dword ptr <Unloaded_ud.drv>+0xf7 (000000f8)[esp],esi
 
 ==>
-035df0c5 => 03565890 is R_RenderView (since it pushes "R_RenderView: NULL worldmodel", break shortly before to see that)
+035df635 => 03565fc0 is R_RenderView (since it pushes "R_RenderView: NULL worldmodel", break shortly before to see that)
 
-03565890 R_RenderView 
+03565fc0 R_RenderView
 //
 // 	if (r_norefresh.value)
 //		return;
-03565890 d905d82d6603    fld     dword ptr [hw!vgui::Frame::`vftable'+0x2709c (03662dd8)]
-03565896 d81d1ca06303    fcomp   dword ptr [hw!vgui::Frame::operator=+0x5c1cc (0363a01c)]
-0356589c 83ec14          sub     esp,14h
-0356589f dfe0            fnstsw  ax
-035658a1 f6c444          test    ah,44h
-035658a4 0f8a1a010000    jp      hw+0x459c4 (035659c4)
+03565fc0 d905f03e6603    fld     dword ptr [hw!vgui::Frame::`vftable'+0x271b4 (03663ef0)]
+03565fc6 d81d1cb06303    fcomp   dword ptr [hw!vgui::Frame::operator=+0x5cc9c (0363b01c)]
+03565fcc 83ec14          sub     esp,14h
+03565fcf dfe0            fnstsw  ax
+03565fd1 f6c444          test    ah,44h
+03565fd4 0f8a1a010000    jp      hw+0x460f4 (035660f4)
 ...
-03565917 e824e9ffff      call    hw+0x44240 (03564240)
-0356591c e87ffeffff      call    hw+0x457a0 (035657a0)
-03565921 a16c293e04      mov     eax,dword ptr [hw!qwglMakeCurrent+0x437760 (043e296c)]
-03565926 85c0            test    eax,eax
-03565928 750a            jne     hw+0x45934 (03565934)
-0356592a e861e5ffff      call    hw+0x43e90 (03563e90)
-0356592f e8cceaffff      call    hw+0x44400 (03564400)
-03565934 e8c7670400      call    hw!CreateInterface+0x2eaa0 (035ac100)
+03566047 e824e9ffff      call    hw+0x44970 (03564970)
+0356604c e87ffeffff      call    hw+0x45ed0 (03565ed0)
+03566051 a1ec393e04      mov     eax,dword ptr [hw!qwglMakeCurrent+0x437760 (043e39ec)]
+03566056 85c0            test    eax,eax
+03566058 750a            jne     hw+0x46064 (03566064)
+0356605a e861e5ffff      call    hw+0x445c0 (035645c0)
+0356605f e8cceaffff      call    hw+0x44b30 (03564b30)
+03566064 e807660400      call    hw!CreateInterface+0x2e890 (035ac670)
 //
 // if (r_speeds.value)
-03565939 d905482e6603    fld     dword ptr [hw!vgui::Frame::`vftable'+0x2710c (03662e48)]
-0356593f d81d1ca06303    fcomp   dword ptr [hw!vgui::Frame::operator=+0x5c1cc (0363a01c)]
-03565945 dfe0            fnstsw  ax
-03565947 f6c444          test    ah,44h
-0356594a 7b78            jnp     hw+0x459c4 (035659c4)
+03566069 d905603f6603    fld     dword ptr [hw!vgui::Frame::`vftable'+0x27224 (03663f60)]
+0356606f d81d1cb06303    fcomp   dword ptr [hw!vgui::Frame::operator=+0x5cc9c (0363b01c)]
+03566075 dfe0            fnstsw  ax
+03566077 f6c444          test    ah,44h
+0356607a 7b78            jnp     hw+0x460f4 (035660f4)
 
 ==>
-0356591c => 035657a0 is R_RenderScene
-0356592a => 03563e90 is R_DrawViewModel
-0356592f => 03564400 is R_PolyBlend
+0356604c => 03565ed0 is R_RenderScene
+0356605a => 035645c0 is R_DrawViewModel
+0356605f => 03564b30 is R_PolyBlend
 
-035657a0 R_RenderScene
+03565ed0 R_RenderScene
 ...
-035657b3 83c404          add     esp,4
-035657b6 e8a5f2ffff      call    hw+0x44a60 (03564a60)
-035657bb e8d0eeffff      call    hw+0x44690 (03564690)
-035657c0 e85bf5ffff      call    hw+0x44d20 (03564d20)
-035657c5 e8d6320000      call    hw+0x48aa0 (03568aa0)
+03565ee3 83c404          add     esp,4
+03565ee6 e8a5f2ffff      call    hw+0x45190 (03565190)
+03565eeb e8d0eeffff      call    hw+0x44dc0 (03564dc0)
+03565ef0 e85bf5ffff      call    hw+0x45450 (03565450)
+03565ef5 e8a6320000      call    hw+0x491a0 (035691a0)
 ...
-035657f8 e813310000      call    hw+0x48910 (03568910)
-035657fd e8fe680400      call    hw!CreateInterface+0x2eaa0 (035ac100)
-03565802 e849e4ffff      call    hw+0x43c50 (03563c50)
-03565807 a1e4b5f403      mov     eax,dword ptr [hw!vgui::Frame::`vftable'+0x90f8a8 (03f4b5e4)]
-0356580c 85c0            test    eax,eax
-0356580e 7405            je      hw+0x45815 (03565815)
+03565f28 e8e3300000      call    hw+0x49010 (03569010)
+03565f2d e83e670400      call    hw!CreateInterface+0x2e890 (035ac670)
+03565f32 e849e4ffff      call    hw+0x44380 (03564380)
+03565f37 a164c6f403      mov     eax,dword ptr [hw!vgui::Frame::`vftable'+0x90f928 (03f4c664)]
+03565f3c 85c0            test    eax,eax
+03565f3e 7405            je      hw+0x45f45 (03565f45)
 ...
 
-03565878 e9335c0300      jmp     hw!CreateInterface+0x1de50 (0359b4b0)
+03565fa8 e9835a0300      jmp     hw!CreateInterface+0x1dc50 (0359ba30)
 
 ==>
-035657c0 => 03564d20 is R_SetupGL
-035657c5 => 03568aa0 is R_MarkLeaves (can be found by searching for access to r_novis value)
-035657f8 => 03568910 is R_DrawWorld
-035657fd => 035ac100 is S_ExtraUpdate
-03565802 => 03563c50 is R_DrawEntitiesOnList
-03565878 => 0359b4b0 might be R_DrawParticles
+03565ef0 => 03565450 is R_SetupGL
+03565ef5 => 035691a0 is R_MarkLeaves (can be found by searching for access to r_novis value)
+03565f28 => 03569010 is R_DrawWorld
+03565f2d => 035ac670 is S_ExtraUpdate
+03565f32 => 03564380 is R_DrawEntitiesOnList
+03565fa8 => 0359ba30 might be R_DrawParticles
 
-03564d20 R_SetupGL
+03565450 R_SetupGL
 ...
 // glMatrixMode(GL_PROJECTION);
-03564d2d 6801170000      push    offset <Unloaded_ud.drv>+0x1700 (00001701)
-03564d32 ff15fcaafa03    call    dword ptr [hw!qwglCreateContext+0x34 (03faaafc)]
+0356545d 6801170000      push    offset <Unloaded_ud.drv>+0x1700 (00001701)
+03565462 ff157cbbfa03    call    dword ptr [hw!qwglCreateContext+0x34 (03fabb7c)]
 // glLoadIdentity ();
-03564d38 ff15b8a8fa03    call    dword ptr [hw!vgui::Frame::`vftable'+0x96eb7c (03faa8b8)]
+03565468 ff1538b9fa03    call    dword ptr [hw!vgui::Frame::`vftable'+0x96ebfc (03fab938)]
 //
-03564d3e 8b3de0283e04    mov     edi,dword ptr [hw!qwglMakeCurrent+0x4376d4 (043e28e0)]
+0356546e 8b3d60393e04    mov     edi,dword ptr [hw!qwglMakeCurrent+0x4376d4 (043e3960)]
 
 ==>
-03564d3e => 043e28e0 is r_refdef
+0356546e => 043e3960 is r_refdef
 
-03568aa0 R_MarkLeaves
+035691a0 R_MarkLeaves
 ...
-03568b1c 51              push    ecx
-03568b1d 68ff000000      push    offset <Unloaded_ud.drv>+0xfe (000000ff)
-03568b22 52              push    edx
-03568b23 e88802feff      call    hw+0x28db0 (03548db0)
-03568b28 83c40c          add     esp,0Ch
-03568b2b eb0c            jmp     hw+0x48b39 (03568b39)
-03568b2d 50              push    eax
-03568b2e 51              push    ecx
-03568b2f e8ccfafdff      call    hw+0x28600 (03548600)
+0356921c 51              push    ecx
+0356921d 68ff000000      push    offset <Unloaded_ud.drv>+0xfe (000000ff)
+03569222 52              push    edx
+03569223 e8e8fffdff      call    hw+0x29210 (03549210)
+03569228 83c40c          add     esp,0Ch
+0356922b eb0c            jmp     hw+0x49239 (03569239)
+0356922d 50              push    eax
+0356922e 51              push    ecx
+0356922f e82cf8fdff      call    hw+0x28a60 (03548a60)
 
 ==>
-03568b2f => 03548600 is Mod_LeafPVS
+0356922f => 03548a60 is Mod_LeafPVS
