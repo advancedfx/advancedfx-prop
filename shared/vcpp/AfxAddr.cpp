@@ -18,8 +18,6 @@
 
 class AfxAddresses {
 public:
-	~AfxAddresses();
-
 	void Register(_AfxAddrInfo * info);
 	AfxAddr * GetByName(char const * name);
 
@@ -46,15 +44,6 @@ _AfxAddrInfo::_AfxAddrInfo(AfxAddr * addr, char const * name)
 	GetAfxAddresses().Register(this);
 }
 
-
-AfxAddresses::~AfxAddresses()
-{
-	std::list<_AfxAddrInfo *>::iterator it;
-	for (it = m_AddrInfos.begin(); it != m_AddrInfos.end(); it++)
-	{
-		delete (*it);
-	}
-}
 
 void AfxAddresses::Register(_AfxAddrInfo * info)
 {
