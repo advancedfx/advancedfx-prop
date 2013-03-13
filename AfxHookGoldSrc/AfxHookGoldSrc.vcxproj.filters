@@ -252,6 +252,9 @@
     <ClCompile Include="cstrike_deathmsg.cpp">
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
+    <ClCompile Include="decals_hook.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">

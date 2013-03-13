@@ -17,6 +17,7 @@
 // *[9] doc/notes_goldsrc/debug_ClientFunctionTable
 // *[10] doc/notes_goldsrc/debug_CL_ParseServerMessage.txt
 // *[11] doc/notes_goldsrc/debug_R_DrawWorld_and_sky.txt
+// *[12] doc/notes_goldsrc/debug_R_DecalShoot.txt
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -77,6 +78,8 @@ function afx_OnHwDllLoaded()
 	
 	addr.skytextures = addr.hwDll + 0x63D6DC; // *[11]
 	
+	addr.UnkGetDecalTexture = addr.hwDll + 0x2F4C0; // *[12]
+	addr.UnkGetDecalTexture_DSZ = 0x05; // *[12]
 	
 	//
 	// Sound system related:

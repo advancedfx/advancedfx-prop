@@ -178,7 +178,7 @@ bool InstallHook_UnkGetDecalTexture()
 		g_decals_hook.b_debugprint = false;
 		g_decals_hook.b_ListActive = false;
 
-		detoured_UnkGetDecalTexture = (UnkGetDecalTexture_t) DetourApply((BYTE *)HL_ADDR_GET(UnkGetDecalTexture), (BYTE *)touring_UnkGetDecalTexture, (int)HL_ADDR_GET(DTOURSZ_UnkGetDecalTexture));
+		detoured_UnkGetDecalTexture = (UnkGetDecalTexture_t) DetourApply((BYTE *)HL_ADDR_GET(UnkGetDecalTexture), (BYTE *)touring_UnkGetDecalTexture, (int)HL_ADDR_GET(UnkGetDecalTexture_DSZ));
 	}
 
 	return detoured_UnkGetDecalTexture != NULL;

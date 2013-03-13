@@ -126,6 +126,7 @@
     <ClCompile Include="cstrike_ch.cpp" />
     <ClCompile Include="cstrike_deathmsg.cpp" />
     <ClCompile Include="cstrike_smoke.cpp" />
+    <ClCompile Include="decals_hook.cpp" />
     <ClCompile Include="demo_tools.cpp" />
     <ClCompile Include="demoeditfix.cpp" />
     <ClCompile Include="demozoom.cpp" />
