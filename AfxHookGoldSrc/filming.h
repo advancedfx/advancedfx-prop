@@ -155,7 +155,7 @@ public:
 	STEREO_STATE GetStereoState();
 
 	void OnHudBeginEvent(); // called by Hud Begin tour
-	bool OnHudEndEvnet(); // called by Hud End tour, if pDoLoop is true the toor will cause an loop, otherwise it will continue normal HL code operation
+	bool OnHudEndEvent(); // called by Hud End tour, if pDoLoop is true the toor will cause an loop, otherwise it will continue normal HL code operation
 
 
 	void SetCameraOfs(float right, float up, float forward); // you can set an static cameraofs here, however during stereomode it should be 0
@@ -179,6 +179,7 @@ public:
 private:
 	enum FILMING_STATE { FS_INACTIVE, FS_STARTING, FS_ACTIVE };
 
+	bool m_CaptureEarly;
 	bool m_DebugCapture;
 	bool m_EnableStereoMode;
 	int m_Height;

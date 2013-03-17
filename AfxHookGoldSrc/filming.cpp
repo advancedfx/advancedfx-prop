@@ -78,6 +78,7 @@ REGISTER_CVAR(movie_depthdump, "0", 0);
 REGISTER_CVAR(movie_export_sound, "0", 0); // should default to 1, but I don't want to mess up other updates
 REGISTER_CVAR(movie_filename, "untitled_rec", 0);
 REGISTER_CVAR(movie_fps, "30", 0);
+REGISTER_CVAR(movie_hidepanels, "0", 0);
 REGISTER_CVAR(movie_separate_hud, "0", 0);
 REGISTER_CVAR(movie_simulate, "0", 0);
 REGISTER_CVAR(movie_simulate_delay, "0", 0);
@@ -522,7 +523,7 @@ void Filming::OnHudBeginEvent()
 	}
 }
 
-bool Filming::OnHudEndEvnet()
+bool Filming::OnHudEndEvent()
 {
 	//MessageBox(NULL,"OUT","HUD Event",MB_OK);
 	switch(giveHudRqState())
@@ -542,6 +543,21 @@ bool Filming::OnHudEndEvnet()
 		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); // restore default color mask again!
 		break;
 	}
+
+	if(m_CaptureEarly && isFilming() && m_iFilmingState != FS_STARTING)
+	{
+		if(MS_ALL == m_iMatteStage)
+		{
+			if(g_Filming_Stream[FS_all]) g_Filming_Stream[FS_all]->Capture(m_time, &m_GlRawPic, m_fps);
+			if(g_Filming_Stream[FS_depthall]) g_Filming_Stream[FS_depthall]->Capture(m_time, &m_GlRawPic, m_fps);
+		}
+		else if(MS_WORLD == m_iMatteStage)
+		{
+			if(g_Filming_Stream[FS_world]) g_Filming_Stream[FS_world]->Capture(m_time, &m_GlRawPic, m_fps);
+			if(g_Filming_Stream[FS_depthworld]) g_Filming_Stream[FS_depthworld]->Capture(m_time, &m_GlRawPic, m_fps);
+		}
+	}
+
 	return false; // do not loop
 }
 
@@ -857,6 +873,7 @@ void Filming::Start()
 		}
 	}
 
+	m_CaptureEarly = (0.0 != movie_hidepanels->value) && !g_Filming_Stream[FS_hudcolor];
 
 	//
 
@@ -1364,8 +1381,8 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 			}
 			else
 			{
-				if(g_Filming_Stream[FS_all]) g_Filming_Stream[FS_all]->Capture(m_time, &m_GlRawPic, m_fps);
-				if(g_Filming_Stream[FS_depthall]) g_Filming_Stream[FS_depthall]->Capture(m_time, &m_GlRawPic, m_fps);
+				if(!m_CaptureEarly && g_Filming_Stream[FS_all]) g_Filming_Stream[FS_all]->Capture(m_time, &m_GlRawPic, m_fps);
+				if(!m_CaptureEarly && g_Filming_Stream[FS_depthall]) g_Filming_Stream[FS_depthall]->Capture(m_time, &m_GlRawPic, m_fps);
 			}
 
 			// Swap:
@@ -1386,8 +1403,8 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 				}
 				else
 				{
-					if(g_Filming_Stream[FS_world]) g_Filming_Stream[FS_world]->Capture(m_time, &m_GlRawPic, m_fps);
-					if(g_Filming_Stream[FS_depthworld]) g_Filming_Stream[FS_depthworld]->Capture(m_time, &m_GlRawPic, m_fps);
+					if(!m_CaptureEarly && g_Filming_Stream[FS_world]) g_Filming_Stream[FS_world]->Capture(m_time, &m_GlRawPic, m_fps);
+					if(!m_CaptureEarly && g_Filming_Stream[FS_depthworld]) g_Filming_Stream[FS_depthworld]->Capture(m_time, &m_GlRawPic, m_fps);
 				}
 
 				// Swap:

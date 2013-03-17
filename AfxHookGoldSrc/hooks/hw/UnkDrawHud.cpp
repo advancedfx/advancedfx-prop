@@ -16,7 +16,7 @@ void New_UnkDrawHud (void * punk)
 	do {
 		g_Filming.OnHudBeginEvent();
 		g_UnkDrawHud(punk);
-	} while(g_Filming.OnHudEndEvnet());
+	} while(g_Filming.OnHudEndEvent());
 }
 
 __declspec(naked) void New_UnkDrawHudCall() {

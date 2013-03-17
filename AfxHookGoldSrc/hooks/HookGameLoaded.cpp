@@ -203,4 +203,3 @@ void HookGameLoaded()
 	if (!(g_CmdTools.HookCommand("startmovie", Hook_startmovie))) pEngfuncs->Con_Printf("HLAE warning: Failed hooking startmovie");
 	if (!(g_CmdTools.HookCommand("endmovie", Hook_endmovie))) pEngfuncs->Con_Printf("HLAE warning: Failed hooking endmovie");
 }
-

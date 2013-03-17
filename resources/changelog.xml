@@ -6,6 +6,18 @@
 
 <release>
 <name>HLAE</name>
+<version>2.3.3.0</version>
+<time>2013-03-17T13:30Z</time>
+<changes>
+<change type="added">
+Added mirv_movie_hidepanels (if set to 1 hides panels such as spectator menu from the capture).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.3.2.0</version>
 <time>2013-03-13T19:00Z</time>
 <changes>
