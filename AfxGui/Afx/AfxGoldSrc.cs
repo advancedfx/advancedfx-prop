@@ -96,7 +96,7 @@ class AfxGoldSrc : IDisposable
 
 	    // gfx settings
 
-	    cmds += startSettings.FullScreen ? " -full" : " -window";
+        cmds += startSettings.FullScreen ? " -full -stretchaspect" : " -window";
 
 	    s1 = startSettings.Bpp.ToString();
 	    if( 0 < s1.Length) cmds += " -" + "bpp";

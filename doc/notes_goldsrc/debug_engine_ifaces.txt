@@ -1,4 +1,4 @@
-Version: Febraury 20 update
+Version: April 02 update
 
 This requires a modification that loads a client.dll (i.e. cstrike).
 

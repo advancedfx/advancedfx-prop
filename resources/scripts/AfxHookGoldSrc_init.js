@@ -29,78 +29,78 @@ function afx_OnHwDllLoaded()
 	// Engine-to-client interfaces:
 	//
 	
-	addr.p_cl_enginefuncs_s = addr.hwDll + 0x134260; // *[5]
-	addr.p_playermove_s = addr.hwDll + 0x1003E60; // *[5]
-	addr.p_engine_studio_api_s = addr.hwDll + 0x14F910; // *[5]
+	addr.p_cl_enginefuncs_s = addr.hwDll + 0x136260; // *[5]
+	addr.p_playermove_s = addr.hwDll + 0x1007E60; // *[5]
+	addr.p_engine_studio_api_s = addr.hwDll + 0x151BC0; // *[5]
 	
 	//
 	// General engine hooks:
 	//
 	
-	addr.Host_Frame = addr.hwDll +0x56E10; // *[8]
+	addr.Host_Frame = addr.hwDll +0x57470; // *[8]
 	addr.Host_Frame_DSZ = 0x05; // *[8]
 	
-	addr.CL_EmitEntities = addr.hwDll + 0x149B0; // *[8]
+	addr.CL_EmitEntities = addr.hwDll + 0x14A30; // *[8]
 	addr.CL_EmitEntities_DSZ = 0x05; // *[8]
 	
-	addr.ClientFunctionTable = addr.hwDll +0x122C6A0; // *[9]
+	addr.ClientFunctionTable = addr.hwDll +0x12306A0; // *[9]
 	
 	//
 	// Rendering related:
 	//
 	
-	addr.UnkDrawHud = addr.hwDll + 0xBC30; // *[7]
-	addr.UnkDrawHudCall = addr.hwDll + 0xB5030; // *[7]
+	addr.UnkDrawHud = addr.hwDll + 0xBB90; // *[7]
+	addr.UnkDrawHudCall = addr.hwDll + 0xB6D40; // *[7]
 	addr.UnkDrawHudCallAfter = addr.UnkDrawHudCall + 0x5; // *[7]
 	
-	addr.R_RenderView = addr.hwDll + 0x45FC0; // *[7]
+	addr.R_RenderView = addr.hwDll + 0x45ED0; // *[7]
 	addr.DTOURSZ_R_RenderView = 0x6; // *[7]
 	
-	addr.R_DrawViewModel = addr.hwDll +0x445C0; // *[7]
+	addr.R_DrawViewModel = addr.hwDll +0x444D0; // *[7]
 	addr.DTOURSZ_R_DrawViewModel = 0x09; // *[7]
 	
-	addr.R_PolyBlend = addr.hwDll +0x44B30; // *[7]
+	addr.R_PolyBlend = addr.hwDll +0x44A40; // *[7]
 	addr.DTOURSZ_R_PolyBlend  = 0x06; // *[7]
 	
-	addr.r_refdef = addr.hwDll + 0xEC3960; // *[7]
+	addr.r_refdef = addr.hwDll + 0xEC7960; // *[7]
 	
-	addr.Mod_LeafPVS = addr.hwDll + 0x28A60; // *[7]
+	addr.Mod_LeafPVS = addr.hwDll + 0x28AE0; // *[7]
 	addr.DTOURSZ_Mod_LeafPVS = 0x08; // *[7]
 	
-	addr.R_DrawEntitiesOnList = addr.hwDll + 0x44380; // *[7]
+	addr.R_DrawEntitiesOnList = addr.hwDll + 0x44290; // *[7]
 	addr.DTOURSZ_R_DrawEntitiesOnList = 0x06; // *[7]
 	
-	addr.R_DrawParticles = addr.hwDll + 0x7BA30; // *[7]
+	addr.R_DrawParticles = addr.hwDll + 0x7C080; // *[7]
 	addr.DTOURSZ_R_DrawParticles = 0x08; // *[7]
 	
-	addr.R_DrawSkyBoxEx = addr.hwDll + 0x4FE9E; // *[11]
-	addr.R_DrawSkyBoxEx_DSZ = 0x08; // *[11]
+	addr.R_DrawSkyBoxEx = addr.hwDll + 0x504FE; // *[11]
+	addr.R_DrawSkyBoxEx_DSZ = 0x06; // *[11]
 	
-	addr.skytextures = addr.hwDll + 0x63D6DC; // *[11]
+	addr.skytextures = addr.hwDll + 0x6416D8; // *[11]
 	
-	addr.UnkGetDecalTexture = addr.hwDll + 0x2F4C0; // *[12]
+	addr.UnkGetDecalTexture = addr.hwDll + 0x2F320; // *[12]
 	addr.UnkGetDecalTexture_DSZ = 0x05; // *[12]
 	
 	//
 	// Sound system related:
 	//
 	
-	addr.GetSoundtime = addr.hwDll + 0x8C550; // *[6]
+	addr.GetSoundtime = addr.hwDll + 0x8CBA0; // *[6]
 	addr.DTOURSZ_GetSoundtime = 0x07; // *[6]
 	
-	addr.S_PaintChannels = addr.hwDll + 0x8E1D0; // *[6]
+	addr.S_PaintChannels = addr.hwDll + 0x8E820; // *[6]
 	addr.DTOURSZ_S_PaintChannels = 0x05; // *[6]
 	
-	addr.paintedtime = addr.hwDll + 0xA28FE0; // *[6]
-	addr.shm = addr.hwDll + 0x6B5468; // *[6]
-	addr.soundtime = addr.hwDll + 0xA28FDC; // *[6]
+	addr.paintedtime = addr.hwDll + 0xA2CFE0; // *[6]
+	addr.shm = addr.hwDll + 0x6B9468; // *[6]
+	addr.soundtime = addr.hwDll + 0xA2CFDC; // *[6]
 	
-	addr.paintbuffer = addr.hwDll + 0xA1EEA0; // *[6]
+	addr.paintbuffer = addr.hwDll + 0xA22EA0; // *[6]
 	
-	addr.S_TransferPaintBuffer = addr.hwDll + 0x8DAF0; // *[6]
+	addr.S_TransferPaintBuffer = addr.hwDll + 0x8E140; // *[6]
 	addr.DTOURSZ_S_TransferPaintBuffer = 0x06; // *[6]
 	
-	addr.SND_PickChannel = addr.hwDll + 0x8B770; // *[6]
+	addr.SND_PickChannel = addr.hwDll + 0x8BDC0; // *[6]
 	addr.DTOURSZ_SND_PickChannel = 0x06; // *[6]
 	
 	
@@ -108,10 +108,10 @@ function afx_OnHwDllLoaded()
 	// Demo parsing related:
 	//
 	
-	addr.CL_ParseServerMessage_CmdRead = addr.hwDll + 0x1D033; // *[10]
+	addr.CL_ParseServerMessage_CmdRead = addr.hwDll + 0x1D0B3; // *[10]
 	addr.CL_ParseServerMessage_CmdRead_DSZ = 0x07; // *[10]
-	addr.msg_readcount = addr.hwDll + 0x10020A8; // *[10]
-	addr.net_message = addr.hwDll +0xA9C9B0 - 0x10; // *[10]
+	addr.msg_readcount = addr.hwDll + 0x10060A8; // *[10]
+	addr.net_message = addr.hwDll +0xAA09B0 - 0x10; // *[10]
 	
 	//
 	// other
@@ -137,22 +137,22 @@ function afx_OnClientDllLoaded()
 	//
 	
 	// cstrike CrossHair fix related:
-	addr.cstrike_UnkCrosshairFn = addr.clientDll + 0x41B20; // *[1]
+	addr.cstrike_UnkCrosshairFn = addr.clientDll + 0x417A0; // *[1]
 	addr.cstrike_UnkCrosshairFn_DSZ = 0x08; // at least 8 bytes req. // *[1]
 	addr.cstrike_UnkCrosshairFn_add_fac = addr.clientDll + 0xC32C8; // *[1]
-	addr.cstrike_UnkCrosshairFn_mul_fac = addr.clientDll + 0xCD530; // *[1]
+	addr.cstrike_UnkCrosshairFn_mul_fac = addr.clientDll + 0xCD4C8; // *[1]
 	
 	// cstrike EV_CreateSmoke:
 	addr.cstrike_EV_CreateSmoke = addr.clientDll + 0xA080; // *[3]
 	addr.cstrike_EV_CreateSmoke_DSZ = 0x0a; // *[3]
 	
 	// cstrike DeathMsg related (client.dll offsets):
-	addr.cstrike_MsgFunc_DeathMsg = addr.clientDll + 0x44930; // *[2]
+	addr.cstrike_MsgFunc_DeathMsg = addr.clientDll + 0x445A0; // *[2]
 	addr.cstrike_MsgFunc_DeathMsg_DSZ = 0x08; // *[2]
-	addr.cstrike_CHudDeathNotice_MsgFunc_DeathMsg = addr.clientDll + 0x44E10; // *[2]
+	addr.cstrike_CHudDeathNotice_MsgFunc_DeathMsg = addr.clientDll + 0x44A80; // *[2]
 	addr.cstrike_CHudDeathNotice_MsgFunc_DeathMsg_DSZ = 0x08; // at least 8 bytes req. // *[2]
-	addr.cstrike_rgDeathNoticeList = addr.clientDll + 0x124DC8; // *[2]
-	addr.cstrike_CHudDeathNotice_Draw = addr.clientDll + 0x44A90; // *[2]
+	addr.cstrike_rgDeathNoticeList = addr.clientDll + 0x124EC0; // *[2]
+	addr.cstrike_CHudDeathNotice_Draw = addr.clientDll + 0x44700; // *[2]
 	addr.cstrike_CHudDeathNotice_Draw_DSZ = 0x0a; // at least 8 bytes req. // *[2]
 	
 	//
@@ -162,7 +162,7 @@ function afx_OnClientDllLoaded()
 	// UpdateSpectatorPanel overviewmode check jump (for HLTV menu removal):
 	addr.UpdateSpectatorPanel_checkjmp_ag = addr.clientDll + 0x028091; // Adrenaline-Gamer (ag)
 	addr.UpdateSpectatorPanel_checkjmp_ns = addr.clientDll + 0x033F3D; // Natuaral Selection (ns)
-	addr.UpdateSpectatorPanel_checkjmp_valve = addr.clientDll + 0x4A6C4; // Half-Life (valve) // *[4]
+	addr.UpdateSpectatorPanel_checkjmp_valve = addr.clientDll + 0x4A6E4; // Half-Life (valve) // *[4]
 }
 events.onClientDllLoaded = afx_OnClientDllLoaded;
 delete afx_OnClientDllLoaded;

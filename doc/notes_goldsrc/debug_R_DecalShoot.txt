@@ -1,17 +1,17 @@
-Version: March 06 update
+Version: April 02 update
 
 Modules
 hw 07520000
 
 
-pEngfuncs->pEfxAPI->R_DecalShoot = 0x0756a8d0
+pEngfuncs->pEfxAPI->R_DecalShoot = 0x0756a7e0
 
-0756a8d0 R_DecalShoot
-0756a8d0 56              push    esi
-0756a8d1 8b742408        mov     esi,dword ptr [esp+8]
-0756a8d5 56              push    esi
-0756a8d6 e8e54bfeff      call    hw+0x2f4c0 (0754f4c0)
+0756a7e0 R_DecalShoot
+0756a7e0 56              push    esi
+0756a7e1 8b742408        mov     esi,dword ptr [esp+8]
+0756a7e5 56              push    esi
+0756a7e6 e8354bfeff      call    hw+0x2f320 (0754f320)
 ...
 
 
-0754f4c0 is UnkGetDecalTexture, which is also called during DecalDrawing
+0754f320 is UnkGetDecalTexture, which is also called during DecalDrawing

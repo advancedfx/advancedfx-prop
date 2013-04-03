@@ -13,16 +13,24 @@
 // - Sync to Client on Connect (Create Object and Sync Properties)
 // - Destroy in Client when object is disposed
 // - Sync Propeties when Changed to client
-/*
+
 using System;
 using System.Collections.Generic;
 using System.Threading;
 
 namespace Afx {
 
+enum SyncedObjectAction
+{
+    NoMoreObjects = 0,
+    Delete,
+    Create,
+    Property
+}
+
 class SyncedObjectHost
 {
-    public Int32 AddObject(SyncedObject syncedObject)
+    public void AddObject(SyncedObject syncedObject)
     {
         Int32 lastValue = -1;
         LinkedListNode<HostedObject> node;
@@ -54,7 +62,29 @@ class SyncedObjectHost
             );
         }
 
-        return newValue;
+        syncedObject.ObjectId = newValue;
+        
+        if(null != m_Syncer) syncedObject.ConnectSyncer(m_Syncer);
+    }
+
+    public virtual void ConnectSyncer(Syncer syncer)
+    {
+        m_Syncer = syncer;
+
+        foreach (HostedObject hostedObject in m_HostedObjects)
+        {
+            hostedObject.Object.ConnectSyncer(syncer);
+        }
+    }
+
+    public virtual void DisconnectSyncer()
+    {
+        foreach (HostedObject hostedObject in m_HostedObjects)
+        {
+            hostedObject.Object.DisconnectSyncer();
+        }
+
+        m_Syncer = null;
     }
 
     public void RemoveObject(SyncedObject syncedObject)
@@ -81,21 +111,70 @@ class SyncedObjectHost
         }
     }
 
-    LinkedList<HostedObject> m_HostedObjects;
+    LinkedList<HostedObject> m_HostedObjects = new LinkedList<HostedObject>();
+    Syncer m_Syncer;
 }
 
-class SyncedObject : IDisposable
+class SyncedObject : SyncPoint, IDisposable
 {
-    public SyncedObject(Int32 classId, SyncedObjectHost host)
+    public SyncedObject(SyncedObjectHost host, Int32 classId)
     {
         m_ClassId = classId;
         m_Host = host;
-        m_ObjectId = host.AddObject(this);
+        
+        host.AddObject(this);
     }
 
     public void AddProperty(SyncedProperty syncedProperty)
     {
         m_Properties.Add(syncedProperty);
+
+        if (null != m_Syncer) syncedProperty.ConnectSyncer(m_Syncer);
+    }
+
+    public override void ConnectSyncer(Syncer syncer)
+    {
+        base.ConnectSyncer(syncer);
+
+        foreach (SyncedProperty syncedProperty in m_Properties)
+        {
+            syncedProperty.ConnectSyncer(syncer);
+        }
+    }
+
+    public override void DisconnectSyncer()
+    {
+        foreach (SyncedProperty syncedProperty in m_Properties)
+        {
+            syncedProperty.DisconnectSyncer();
+        }
+
+        base.DisconnectSyncer();
+    }
+
+    public void Dispose()
+    {
+        if (m_Disposed) return;
+
+        m_Disposed = true;
+
+        m_Host.RemoveObject(this);
+        RequestSync();
+    }
+
+    public override void Sync(PipeCom pipeCom)
+    {
+        if (m_Disposed)
+        {
+            pipeCom.Write((Int32)SyncedObjectAction.Delete);
+            pipeCom.Write((Int32)m_ObjectId);
+        }
+        else
+        {
+            pipeCom.Write((Int32)SyncedObjectAction.Create);
+            pipeCom.Write((Int32)m_ClassId);
+            pipeCom.Write((Int32)m_ObjectId);
+        }
     }
 
     public Int32 ClassId
@@ -106,28 +185,15 @@ class SyncedObject : IDisposable
     public Int32 ObjectId
     {
         get { return m_ObjectId; }
+        set { m_ObjectId = value; }
     }
 
     Int32 m_ClassId;
+    bool m_Disposed;
     SyncedObjectHost m_Host;
     Int32 m_ObjectId;
-    List<SyncedProperty> m_Properties;
+    List<SyncedProperty> m_Properties = new List<SyncedProperty>();
 
-    void OnSpawn(PipeCom pipeCom)
-    {
-        pipeCom.Write((Int32)m_ClassId);
-        pipeCom.Write((Int32)m_ObjectId);
-
-        foreach (SyncedProperty synedProperty in m_Properties)
-        {
-            synedProperty.Sync(pipeCom);
-        }
-    }
-
-    void OnSyncProperty(SyncedProperty syncedProperty, PipeCom pipeCom)
-    {
-        
-    }
 }
 
 class SyncedProperty : SyncPoint
@@ -135,26 +201,59 @@ class SyncedProperty : SyncPoint
     public SyncedProperty(SyncedObject syncedObject, Int32 propertyId)
     {
         m_SyncedObject = syncedObject;
+        m_PropertyId = propertyId;
 
         syncedObject.AddProperty(this);
     }
 
-    public virtual void Sync(PipeCom pipeCom)
+    public override void Sync(PipeCom pipeCom)
     {
+        pipeCom.Write((Int32)SyncedObjectAction.Property);
+        pipeCom.Write((Int32)m_SyncedObject.ClassId);
+        pipeCom.Write((Int32)m_SyncedObject.ObjectId);
         pipeCom.Write(m_PropertyId);
-    }
-
-    protected void RequestSync()
-    {
-
     }
 
     Int32 m_PropertyId;
     SyncedObject m_SyncedObject;
 }
 
+class SyncedBoolean : SyncedProperty
+{
+    public SyncedBoolean(SyncedObject syncedObject, Int32 propertyId)
+        : base(syncedObject, propertyId)
+    {
+    }
+
+    public Boolean Value
+    {
+        get
+        {
+            return m_Value;
+        }
+        set
+        {
+            m_Value = value;
+            RequestSync();
+        }
+    }
+
+    public override void Sync(PipeCom pipeCom)
+    {
+        base.Sync(pipeCom);
+        pipeCom.Write((Boolean)m_Value);
+    }
+
+    Boolean m_Value;
+}
+
 class SyncedInt32 : SyncedProperty
 {
+    public SyncedInt32(SyncedObject syncedObject, Int32 propertyId)
+    : base(syncedObject, propertyId)
+    {
+    }
+
     public Int32 Value
     {
         get
@@ -168,68 +267,52 @@ class SyncedInt32 : SyncedProperty
         }
     }
 
-    public virtual void Sync(PipeCom pipeCom)
+    public override void Sync(PipeCom pipeCom)
     {
         base.Sync(pipeCom);
-        pipeCom.Write(m_Value);
+        pipeCom.Write((Int32)m_Value);
     }
 
     Int32 m_Value;
 }
 
 
-class SyncPoint : IDisposable
+abstract class SyncPoint
 {
     //
     // Public members:
 
-    public void ConnectSyncer(Syncer syncer)
+    public virtual void ConnectSyncer(Syncer syncer)
     {
         DisconnectSyncer();
 
         m_Syncer = syncer;
-        if (m_UpdateRequested) Update();
+        RequestSync();
     }
 
-    public void DisconnectSyncer()
+    public virtual void DisconnectSyncer()
     {
         if (null != m_Syncer) m_Syncer.RemoveSyncPoint(this);
         m_Syncer = null;
     }
 
-    public void Dispose()
-    {
-        DisconnectSyncer();
-    }
-
-    public virtual abstract void Sync(PipeCom pipeCom);
+    public abstract void Sync(PipeCom pipeCom);
 
     //
     // Protected members:
 
-    protected virtual abstract void OnSyncerConnect(PipeCom pipeCom);
+    protected Syncer m_Syncer;
 
     protected void RequestSync()
-    {
-        m_UpdateRequested = true;
-        Update();
-    }
-
-    //
-    // Private members:
-
-    Syncer m_Syncer;
-    bool m_UpdateRequested;
-
-    void Update()
     {
         if (null != m_Syncer)
         {
             m_Syncer.AddSyncPoint(this);
-            m_UpdateRequested = false;
         }
     }
 
+    //
+    // Private members:
 }
 
 class Syncer
@@ -283,10 +366,11 @@ class Syncer
         {
             Monitor.Exit(m_SyncPoints);
         }
+
+        pipeCom.Write((Int32)SyncedObjectAction.NoMoreObjects);
     }
 
-    LinkedList<SyncPoint> m_SyncPoints;
+    LinkedList<SyncPoint> m_SyncPoints = new LinkedList<SyncPoint>();
 }
 
 } // namespace Afx {
-*/

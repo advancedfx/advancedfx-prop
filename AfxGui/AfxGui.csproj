@@ -64,11 +64,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AfxData.cs" />
     <Compile Include="Afx\AfxGoldSrc.cs" />
     <Compile Include="Afx\SyncedCom.cs" />
     <Compile Include="Config.cs" />
-    <Compile Include="Projects\Projects.cs" />
     <Compile Include="Globals.cs" />
     <Compile Include="Launcher.cs" />
     <Compile Include="LauncherForm.cs">
