@@ -74,7 +74,7 @@ function afx_OnHwDllLoaded()
 	addr.DTOURSZ_R_DrawParticles = 0x08; // *[7]
 	
 	addr.R_DrawSkyBoxEx = addr.hwDll + 0x504FE; // *[11]
-	addr.R_DrawSkyBoxEx_DSZ = 0x06; // *[11]
+	addr.R_DrawSkyBoxEx_DSZ = 0x08; // *[11]
 	
 	addr.skytextures = addr.hwDll + 0x6416D8; // *[11]
 	
