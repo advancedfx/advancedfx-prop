@@ -2,4 +2,4 @@
 
 #include <windows.h>
 
-int WINAPI NewChoosePixelFormat( HDC hdc, CONST PIXELFORMATDESCRIPTOR *ppfd);
+BOOL  WINAPI NewSetPixelFormat(__in HDC hdc, __in int format, __in CONST PIXELFORMATDESCRIPTOR * ppfd);

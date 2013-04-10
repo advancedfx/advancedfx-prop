@@ -129,7 +129,7 @@ void HookHw(HMODULE hHw)
 
 		// gdi32.dll:
 		if(!(OldWglSwapBuffers=(wglSwapBuffers_t)InterceptDllCall(hSdl, "gdi32.dll", "SwapBuffers", (DWORD) &NewWglSwapBuffers) )) { bIcepOk = false; MessageBox(0,"Interception failed: gdi32.dll!SwapBuffers","MDT_ERROR",MB_OK|MB_ICONHAND); }
-		if(!InterceptDllCall(hSdl, "gdi32.dll", "ChoosePixelFormat", (DWORD) &NewChoosePixelFormat) ) { bIcepOk = false; MessageBox(0,"Interception failed: gdi32.dll!ChoosePixelFormat","MDT_ERROR",MB_OK|MB_ICONHAND); }
+		if(!InterceptDllCall(hSdl, "gdi32.dll", "SetPixelFormat", (DWORD) &NewSetPixelFormat) ) { bIcepOk = false; MessageBox(0,"Interception failed: gdi32.dll!SetPixelFormat","MDT_ERROR",MB_OK|MB_ICONHAND); }
 	}
 	else
 		bIcepOk = false;
