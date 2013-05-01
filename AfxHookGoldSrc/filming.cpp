@@ -1817,7 +1817,7 @@ void FilmingStream::Capture(float time, CMdt_Media_RAWGLPIC * usePic, float spsH
 		return;
 	}
 
-	if (!usePic->DoGlReadPixels(m_X, m_Y, m_Width, m_Height, m_GlBuffer, m_GlType, m_Bmp))
+	if (!usePic->DoGlReadPixels(m_X, m_Y, m_Width, m_Height, m_GlBuffer, m_GlType, !m_Bmp))
 	{
 		pEngfuncs->Con_Printf("MDT ERROR: failed to capture a frame (%d).\n", usePic->GetLastUnhandledError());
 		return;

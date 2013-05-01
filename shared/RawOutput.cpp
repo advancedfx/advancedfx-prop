@@ -118,7 +118,7 @@ bool WriteRawBitmap(
 		fclose(pFile);
 		return true;
 	}
-	else if(pitch >  realLineSize)
+	else if(pitch <  realLineSize)
 	{
 		int iPaddings = realLineSize-pitch;
 		char pad=0x00;
