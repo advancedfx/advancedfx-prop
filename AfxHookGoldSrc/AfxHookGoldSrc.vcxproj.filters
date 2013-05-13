@@ -31,6 +31,9 @@
     <Filter Include="AfxHookGoldSrc\hooks\client\cstrike">
       <UniqueIdentifier>{7e8fbdd2-d971-4e37-8b5c-88e4425b88d1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="AfxHookGoldSrc\hooks\demoplayer">
+      <UniqueIdentifier>{048cd8c4-348f-41e6-b7df-70d0bb102ed0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\bvhexport.cpp">
@@ -255,6 +258,12 @@
     <ClCompile Include="decals_hook.cpp">
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
+    <ClCompile Include="hooks\DemoPlayer\DemoPlayer.cpp">
+      <Filter>AfxHookGoldSrc\hooks\demoplayer</Filter>
+    </ClCompile>
+    <ClCompile Include="hooks\interface.cpp">
+      <Filter>AfxHookGoldSrc\hooks</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -451,6 +460,12 @@
     </ClInclude>
     <ClInclude Include="hooks\hw\R_DrawSkyBoxEx.h">
       <Filter>AfxHookGoldSrc\hooks\hw</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\DemoPlayer\DemoPlayer.h">
+      <Filter>AfxHookGoldSrc\hooks\demoplayer</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\interface.h">
+      <Filter>AfxHookGoldSrc\hooks</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

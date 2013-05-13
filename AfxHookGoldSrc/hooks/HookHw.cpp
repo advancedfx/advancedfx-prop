@@ -9,6 +9,7 @@
 #include "gdi32Hooks.h"
 #include "user32Hooks.h"
 
+#include "DemoPlayer/DemoPlayer.h"
 #include "hw/Host_Frame.h"
 #include "hw/Mod_LeafPvs.h"
 #include "hw/R_DrawEntitiesOnList.h"
@@ -83,6 +84,7 @@ void *New_SDL_GL_GetProcAddress(const char* proc)
 HMODULE WINAPI NewHwLoadLibraryA( LPCSTR lpLibFileName )
 {
 	static bool bClientLoaded = false;
+	static bool bDemoPlayerLoaded = false;
 
 	HMODULE hRet = LoadLibraryA( lpLibFileName );
 
@@ -94,6 +96,12 @@ HMODULE WINAPI NewHwLoadLibraryA( LPCSTR lpLibFileName )
 		HL_ADDR_SET(clientDll, (HlAddress_t)hRet);
 	
 		OnClientDllLoaded();
+	}
+	else if( !bDemoPlayerLoaded && StringEndsWith( lpLibFileName, "demoplayer.dll") )
+	{
+		bDemoPlayerLoaded = true;
+
+		Hook_DemoPlayer((void *)hRet);
 	}
 
 	return hRet;

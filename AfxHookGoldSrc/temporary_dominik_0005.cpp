@@ -10,6 +10,7 @@
 
 #include <hooks/HookHw.h>
 #include "hooks/user32Hooks.h"
+#include "hooks/DemoPlayer/DemoPlayer.h"
 
 #include "filming.h"
 #include "hl_addresses.h"
@@ -61,4 +62,11 @@ REGISTER_DEBUGCMD_FUNC(tst_info)
 	DWORD dw = (DWORD)pEngfuncs->pEfxAPI->R_DecalShoot;
 
 	pEngfuncs->Con_Printf("pEngfuncs->pEfxAPI->R_DecalShoot = 0x%08x\n", dw);
+}
+
+REGISTER_DEBUGCMD_FUNC(tst_demotime)
+{
+	double demoTime = g_DemoPlayer->GetDemoTime();
+
+	pEngfuncs->Con_Printf("DemoTime: %f\n", demoTime);
 }

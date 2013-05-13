@@ -1,7 +1,7 @@
 ﻿// Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-06-26 by dominik.matrixstorm.com
+// 2013-05-06 by dominik.matrixstorm.com
 //
 // First changes:
 // 2009-12-06 by dominik.matrixstorm.com
@@ -22,6 +22,16 @@ class AfxGoldSrc : IDisposable
         Default = 0,
         FrameBufferObject,
         MemoryDC
+    }
+
+    public class CameraSplines
+    {
+        public AfxGui.Spline X = new AfxGui.Spline();
+        public AfxGui.Spline Y = new AfxGui.Spline();
+        public AfxGui.Spline Z = new AfxGui.Spline();
+        public AfxGui.Spline Pitch = new AfxGui.Spline();
+        public AfxGui.Spline Yaw = new AfxGui.Spline();
+        public AfxGui.Spline Roll = new AfxGui.Spline();
     }
 
     public class StartSettings
