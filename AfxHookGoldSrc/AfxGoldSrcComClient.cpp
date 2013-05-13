@@ -74,30 +74,30 @@ AfxGoldSrcComClient::AfxGoldSrcComClient()
 : PipeCom(GetClientReadPipe(), GetClientWritePipe())
 , m_Connected(false)
 {
-	ComVersion version;
-	ComBool ok = 0;
+	ComUInt32 version;
+	bool ok = false;
 
 	m_Connected = false;
 
-	this->ReadBytes(&version, sizeof(version));
+	version = this->ReadUInt32();
 
 	if(COM_VERSION != version)
 	{
-		this->WriteBytes(&ok, sizeof(ok));
+		this->Write((ComBoolean)ok);
 		throw "AfxGoldSrcComVersion mismatch";
 		return;
 	}
 
-	ok = 1;
-	this->WriteBytes(&ok, sizeof(ok));
+	ok = true;
+	this->Write((ComBoolean)ok);
 
-	this->ReadBytes(&m_Width, sizeof(m_Width));
-	this->ReadBytes(&m_Height, sizeof(m_Height));
-	this->ReadBytes(&m_ForceAlpha8, sizeof(m_ForceAlpha8));
-	this->ReadBytes(&m_FullScreen, sizeof(m_FullScreen));
-	this->ReadBytes(&m_OptimizeCaptureVis, sizeof(m_OptimizeCaptureVis));
-	this->ReadBytes(&m_ParentWindow, sizeof(m_ParentWindow));
-	this->ReadBytes(&m_RenderMode, sizeof(m_RenderMode));
+	m_Width = this->ReadInt32();
+	m_Height = this->ReadInt32();
+	m_ForceAlpha8 = this->ReadBoolean();
+	m_FullScreen = this->ReadBoolean();
+	m_OptimizeCaptureVis = this->ReadBoolean();
+	m_ParentWindow = this->ReadInt32();
+	m_RenderMode = (ComRenderMode)this->ReadInt32();
 
 	m_Connected = ok;
 }
@@ -157,17 +157,12 @@ int AfxGoldSrcComClient::GetWidth()
 
 ServerMessage AfxGoldSrcComClient::RecvMessage(void)
 {
-	ComInt msg;
-
-	ReadBytes(&msg, sizeof(msg));
-
-	return (ServerMessage)msg;
+	return (ServerMessage)this->ReadInt32();
 }
 
 void AfxGoldSrcComClient::SendMessage(ClientMessage message)
 {
-	ComInt msg = (ComInt)message;
-	WriteBytes(&msg, sizeof(msg));
+	this->Write((ComInt32)message);
 }
 
 
@@ -202,10 +197,10 @@ void AfxGoldSrcComClient::OnHostFrame()
 }
 
 
-void AfxGoldSrcComClient::UpdateWindowSize(ComInt x, ComInt y)
+void AfxGoldSrcComClient::UpdateWindowSize(int x, int y)
 {
 	SendMessage(CLM_UpdateWindowSize);
 
-	WriteBytes(&x, sizeof(x));
-	WriteBytes(&y, sizeof(y));
+	this->Write((ComInt32)x);
+	this->Write((ComInt32)y);
 }

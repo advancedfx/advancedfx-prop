@@ -120,6 +120,7 @@
     <ClCompile Include="..\shared\vcpp\Ref.cpp" />
     <ClCompile Include="AfxGoldSrcComClient.cpp" />
     <ClCompile Include="aiming.cpp" />
+    <ClCompile Include="camera.cpp" />
     <ClCompile Include="camexport.cpp" />
     <ClCompile Include="camimport.cpp" />
     <ClCompile Include="cmd_tools.cpp" />

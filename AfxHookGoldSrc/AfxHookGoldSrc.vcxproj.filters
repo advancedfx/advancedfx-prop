@@ -264,6 +264,9 @@
     <ClCompile Include="hooks\interface.cpp">
       <Filter>AfxHookGoldSrc\hooks</Filter>
     </ClCompile>
+    <ClCompile Include="camera.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">

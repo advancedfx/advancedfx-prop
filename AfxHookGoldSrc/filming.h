@@ -147,6 +147,9 @@ public:
 
 	bool bRequestingMatteTextUpdate;
 
+	double LastCameraOrigin[3];
+	double LastCameraAngles[3];
+
 
 	// those are used by R_RenderView, since it doesn't sit in the class yet ( I didn't want to mess around with static properties and this pointers etc.)
 	void GetCameraOfs(float *right, float *up, float *forward); // will copy the current camera ofs to the supplied addresses

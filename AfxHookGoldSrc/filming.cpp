@@ -20,6 +20,7 @@
 #include "hooks/hw/Mod_LeafPvs.h"
 #include "hooks/hw/R_RenderView.h"
 #include "hooks/client/cstrike/CrossHairFix.h"
+#include "hooks/DemoPlayer/DemoPlayer.h"
 
 #include "AfxGoldSrcComClient.h"
 #include "supportrender.h"
@@ -240,7 +241,30 @@ void do_camera_test(vec3_t & vieworg, vec3_t & viewangles) {
 }
 
 
-void Filming::OnR_RenderView(Vector & vieworg, Vector & viewangles) {
+void Filming::OnR_RenderView(Vector & vieworg, Vector & viewangles)
+{
+	//
+	// Camera spline interaction:
+
+	g_AfxGoldSrcComClient.SendMessage(CLM_CameraGet);
+	{
+		PipeCom * pc = &g_AfxGoldSrcComClient;
+
+		if(pc->ReadBoolean())
+		{
+			// active.
+			pc->Write((ComDouble)g_DemoPlayer->GetDemoTime());
+
+			vieworg[0] = pc->ReadDouble();
+			vieworg[1] = pc->ReadDouble();
+			vieworg[2] = pc->ReadDouble();
+
+			viewangles[PITCH] = pc->ReadDouble();
+			viewangles[YAW] = pc->ReadDouble();
+			viewangles[ROLL] = pc->ReadDouble();
+		}
+	}
+
 	//
 	// override by cammotion import:
 	if(g_CamImport.IsActive())
@@ -382,6 +406,12 @@ void Filming::OnR_RenderView(Vector & vieworg, Vector & viewangles) {
 
 	}
 
+	LastCameraOrigin[0] = vieworg[0];
+	LastCameraOrigin[1] = vieworg[1];
+	LastCameraOrigin[2] = vieworg[2];
+	LastCameraAngles[PITCH] = viewangles[PITCH];
+	LastCameraAngles[YAW] = viewangles[YAW];
+	LastCameraAngles[ROLL] = viewangles[ROLL];
 
 	if(print_pos->value!=0.0)
 		pEngfuncs->Con_Printf("(%f,%f,%f) (%f,%f,%f)\n",

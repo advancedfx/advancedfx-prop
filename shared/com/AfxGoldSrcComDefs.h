@@ -20,7 +20,13 @@ enum ClientMessage
 	CLM_OnHostFrame,
 	CLM_OnRecordStarting,
 	CLM_OnRecordEnded,
-	CLM_UpdateWindowSize
+	CLM_UpdateWindowSize,
+	CLM_CameraAdd,
+	CLM_CameraRemove,
+	CLM_CameraPrint,
+	CLM_CameraClear,
+	CLM_CameraActive,
+	CLM_CameraGet
 };
 
 enum ServerMessage
@@ -29,8 +35,6 @@ enum ServerMessage
 	SVM_Close
 };
 
-typedef unsigned __int32 ComVersion;
-
 enum ComRenderMode
 {
 	RM_Standard = 0,
@@ -38,8 +42,5 @@ enum ComRenderMode
 	RM_MemoryDc
 };
 
-typedef unsigned char ComBool;
-typedef __int32 ComHandle;
-typedef __int32 ComInt;
 
 } // namespace AfxGoldSrcCom {

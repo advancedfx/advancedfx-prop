@@ -32,6 +32,8 @@ class AfxGoldSrc : IDisposable
         public AfxGui.Spline Pitch = new AfxGui.Spline();
         public AfxGui.Spline Yaw = new AfxGui.Spline();
         public AfxGui.Spline Roll = new AfxGui.Spline();
+
+        public bool Active = false;
     }
 
     public class StartSettings
@@ -180,7 +182,13 @@ class AfxGoldSrc : IDisposable
 	    OnHostFrame,
 	    OnRecordStarting,
 	    OnRecordEnded,
-	    UpdateWindowSize
+	    UpdateWindowSize,
+        CameraAdd,
+        CameraRemove,
+        CameraPrint,
+        CameraClear,
+        CameraActive,
+        CameraGet
     };
 
     enum ServerMessage
@@ -200,6 +208,7 @@ class AfxGoldSrc : IDisposable
 
     const int COM_VERSION = 0;
 
+    CameraSplines m_CameraSplines = new CameraSplines();
     bool m_Disposed;
     IntPtr m_GameWindowParentHandle;
     PipeComServer m_PipeComServer;
@@ -208,6 +217,89 @@ class AfxGoldSrc : IDisposable
     bool m_ServerShutdown;
     Thread m_ServerThread;
 
+    void ClientMessage_CameraAdd()
+    {
+        double time = m_PipeComServer.ReadDouble();
+
+        m_CameraSplines.X.AddPoint(time, m_PipeComServer.ReadDouble());
+        m_CameraSplines.Y.AddPoint(time, m_PipeComServer.ReadDouble());
+        m_CameraSplines.Z.AddPoint(time, m_PipeComServer.ReadDouble());
+        m_CameraSplines.Pitch.AddPoint(time, m_PipeComServer.ReadDouble());
+        m_CameraSplines.Yaw.AddPoint(time, m_PipeComServer.ReadDouble());
+        m_CameraSplines.Roll.AddPoint(time, m_PipeComServer.ReadDouble());
+    }
+
+    void ClientMessage_CameraRemove()
+    {
+        int index = m_PipeComServer.ReadInt32();
+
+        if (0 <= index && index < m_CameraSplines.X.Keys.Count)
+        {
+            double x = m_CameraSplines.X.Keys[index];
+
+            m_CameraSplines.X.RemovePoint(x);
+            m_CameraSplines.Y.RemovePoint(x);
+            m_CameraSplines.Z.RemovePoint(x);
+            m_CameraSplines.Pitch.RemovePoint(x);
+            m_CameraSplines.Yaw.RemovePoint(x);
+            m_CameraSplines.Roll.RemovePoint(x);
+        }
+    }
+
+
+    void ClientMessage_CameraPrint()
+    {
+        int count = m_CameraSplines.X.Keys.Count;
+
+        m_PipeComServer.Write((Int32)count);
+
+        for(int i=0;i<count;i++)
+        {
+            m_PipeComServer.Write((Double)m_CameraSplines.X.Keys[i]);
+            m_PipeComServer.Write((Double)m_CameraSplines.X.Values[i]);
+            m_PipeComServer.Write((Double)m_CameraSplines.Y.Values[i]);
+            m_PipeComServer.Write((Double)m_CameraSplines.Z.Values[i]);
+            m_PipeComServer.Write((Double)m_CameraSplines.Pitch.Values[i]);
+            m_PipeComServer.Write((Double)m_CameraSplines.Yaw.Values[i]);
+            m_PipeComServer.Write((Double)m_CameraSplines.Roll.Values[i]);
+        }
+    }
+
+    void ClientMessage_CameraClear()
+    {
+        while (0 < m_CameraSplines.X.Keys.Count)
+        {
+            double x = m_CameraSplines.X.Keys[0];
+
+            m_CameraSplines.X.RemovePoint(x);
+            m_CameraSplines.Y.RemovePoint(x);
+            m_CameraSplines.Z.RemovePoint(x);
+            m_CameraSplines.Pitch.RemovePoint(x);
+            m_CameraSplines.Yaw.RemovePoint(x);
+            m_CameraSplines.Roll.RemovePoint(x);
+        }
+    }
+
+    void ClientMessage_CameraActive()
+    {
+        m_CameraSplines.Active = m_PipeComServer.ReadBoolean();
+    }
+
+    void ClientMessage_CameraGet()
+    {
+        m_PipeComServer.Write((Boolean)m_CameraSplines.Active);
+        if (m_CameraSplines.Active)
+        {
+            double x = m_PipeComServer.ReadDouble();
+
+            m_PipeComServer.Write((Double)m_CameraSplines.X.Eval(x));
+            m_PipeComServer.Write((Double)m_CameraSplines.Y.Eval(x));
+            m_PipeComServer.Write((Double)m_CameraSplines.Z.Eval(x));
+            m_PipeComServer.Write((Double)m_CameraSplines.Pitch.Eval(x));
+            m_PipeComServer.Write((Double)m_CameraSplines.Yaw.Eval(x));
+            m_PipeComServer.Write((Double)m_CameraSplines.Roll.Eval(x));
+        }
+    }
 
     void ClientMessage_OnHostFrame()
     {
@@ -287,6 +379,24 @@ class AfxGoldSrc : IDisposable
             case ClientMessage.UpdateWindowSize:
                 ClientMessage_UpdateWindowSize();
 			    break;
+            case ClientMessage.CameraAdd:
+                ClientMessage_CameraAdd();
+                break;
+            case ClientMessage.CameraRemove:
+                ClientMessage_CameraRemove();
+                break;
+            case ClientMessage.CameraPrint:
+                ClientMessage_CameraPrint();
+                break;
+            case ClientMessage.CameraClear:
+                ClientMessage_CameraClear();
+                break;
+            case ClientMessage.CameraActive:
+                ClientMessage_CameraActive();
+                break;
+            case ClientMessage.CameraGet:
+                ClientMessage_CameraGet();
+                break;
 		    }
 	    }
     }

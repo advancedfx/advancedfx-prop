@@ -55,25 +55,25 @@ public:
 
 	void OnHostFrame();
 
+	ServerMessage RecvMessage(void);
+
+	void SendMessage(ClientMessage message);
+
 	/// <summary> Update Parent Window with new GameWindow size. </summary>
-	void UpdateWindowSize(ComInt x, ComInt y);
+	void UpdateWindowSize(int x, int y);
 
 	//
 	// Events:
 
 private:
 	bool m_Connected;
-	ComBool m_ForceAlpha8;
-	ComBool m_FullScreen;
-	ComInt m_Height;
-	ComBool m_OptimizeCaptureVis;
-	ComHandle m_ParentWindow;
+	bool m_ForceAlpha8;
+	bool m_FullScreen;
+	int m_Height;
+	bool m_OptimizeCaptureVis;
+	int m_ParentWindow;
 	ComRenderMode m_RenderMode;
-	ComInt m_Width;
-
-	ServerMessage RecvMessage(void);
-	void SendMessage(ClientMessage message);
-
+	int m_Width;
 };
 
 /// <summary> global static singleton instance. </summary>

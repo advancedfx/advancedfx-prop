@@ -41,6 +41,24 @@ DWORD PipeCom::IncomingBytes()
 }
 
 
+ComBoolean PipeCom::ReadBoolean()
+{
+	ComBoolean value;
+
+	ReadBytes(&value, sizeof(value));
+
+	return value;
+}
+
+ComByte PipeCom::ReadByte()
+{
+	ComByte value;
+
+	ReadBytes(&value, sizeof(value));
+
+	return value;
+}
+
 void PipeCom::ReadBytes(LPVOID outBuffer, DWORD bytesToRead)
 {
 	DWORD bytesRead;
@@ -55,6 +73,57 @@ void PipeCom::ReadBytes(LPVOID outBuffer, DWORD bytesToRead)
 	}
 }
 
+ComDouble PipeCom::ReadDouble()
+{
+	ComDouble value;
+
+	ReadBytes(&value, sizeof(value));
+
+	return value;
+}
+
+ComInt32 PipeCom::ReadInt32()
+{
+	ComInt32 value;
+
+	ReadBytes(&value, sizeof(value));
+
+	return value;
+}
+
+ComUInt32 PipeCom::ReadUInt32()
+{
+	ComUInt32 value;
+
+	ReadBytes(&value, sizeof(value));
+
+	return value;
+}
+
+void PipeCom::Write(ComBoolean value)
+{
+	WriteBytes(&value, sizeof(value));
+}
+
+void PipeCom::Write(ComByte value)
+{
+	WriteBytes(&value, sizeof(value));
+}
+
+void PipeCom::Write(ComDouble value)
+{
+	WriteBytes(&value, sizeof(value));
+}
+
+void PipeCom::Write(ComInt32 value)
+{
+	WriteBytes(&value, sizeof(value));
+}
+
+void PipeCom::Write(ComUInt32 value)
+{
+	WriteBytes(&value, sizeof(value));
+}
 
 void PipeCom::WriteBytes(LPVOID buffer, DWORD bytesToWrite)
 {

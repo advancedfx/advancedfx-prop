@@ -18,8 +18,8 @@ class Spline
 
     public Spline()
     {
-        m_PointsKeysRo = new System.Collections.ObjectModel.ReadOnlyCollection<float>(m_Points.Keys);
-        m_PointsValuesRo = new System.Collections.ObjectModel.ReadOnlyCollection<float>(m_Points.Values);
+        m_PointsKeysRo = new System.Collections.ObjectModel.ReadOnlyCollection<double>(m_Points.Keys);
+        m_PointsValuesRo = new System.Collections.ObjectModel.ReadOnlyCollection<double>(m_Points.Values);
     }
 
     /// <summary>
@@ -30,7 +30,7 @@ class Spline
     /// <remarks>
     /// If the point already exists it's value will be overriden.
     /// </remarks>
-    public void AddPoint(float x, float y)
+    public void AddPoint(double x, double y)
     {
         m_Points[x] = y;
 
@@ -42,9 +42,9 @@ class Spline
     /// </summary>
     /// <param name="x">Key</param>
     /// <returns>Value for Key</returns>
-    public float Eval(float x)
+    public double Eval(double x)
     {
-        float y = 0;
+        double y = 0;
 
         if (2 <= m_Points.Count)
         {
@@ -52,7 +52,7 @@ class Spline
             {
                 m_Rebuild = false;
 
-                m_Points2 = new float[m_Points.Count];
+                m_Points2 = new double[m_Points.Count];
 
                 spline(m_Points.Keys, m_Points.Values, m_Points.Count, null, null, m_Points2);
             }
@@ -71,7 +71,7 @@ class Spline
     /// Removes a point.
     /// </summary>
     /// <param name="x">Key of point to remove.</param>
-    public void RemovePoint(float x)
+    public void RemovePoint(double x)
     {
         m_Points.Remove(x);
 
@@ -82,20 +82,20 @@ class Spline
     /// Readonly access to the Keys of the Spline points,
     /// the Keys are sorted and will contain no dublicates.
     /// </summary>
-    public IList<float> Keys {
+    public IList<double> Keys {
         get {
-            return new System.Collections.ObjectModel.ReadOnlyCollection<float>(m_Points.Keys);
+            return m_PointsKeysRo;
         }
     }
 
     /// <summary>
     /// Readonly access to the Values of the Spline points.
     /// </summary>
-    public IList<float> Values
+    public IList<double> Values
     {
         get
         {
-            return new System.Collections.ObjectModel.ReadOnlyCollection<float>(m_Points.Values);
+            return m_PointsValuesRo;
         }
     }
 
@@ -103,18 +103,18 @@ class Spline
     //
     // Private members:
 
-    SortedList<float, float> m_Points = new SortedList<float, float>();
-    IList<float> m_Points2;
-    IList<float> m_PointsKeysRo;
-    IList<float> m_PointsValuesRo;
+    SortedList<double, double> m_Points = new SortedList<double, double>();
+    IList<double> m_Points2;
+    IList<double> m_PointsKeysRo;
+    IList<double> m_PointsValuesRo;
     bool m_Rebuild;
 
     // Copyright (c) by NUMERICAL RECIPES IN C: THE ART OF SCIENTIFIC COMPUTING (ISBN 0-521-43108-5)
-    void spline(IList<float> x, IList<float> y, int n, float? yp1, float? ypn, IList<float> y2)
+    void spline(IList<double> x, IList<double> y, int n, double? yp1, double? ypn, IList<double> y2)
     {
         int i, k;
-        float p, qn, sig, un;
-        float[] u = new float[n - 1 - 1 + 1];
+        double p, qn, sig, un;
+        double[] u = new double[n - 1 - 1 + 1];
 
         if (!yp1.HasValue)
             y2[0] = u[0] = 0.0f;
@@ -148,10 +148,10 @@ class Spline
     }
 
     // Copyright (c) by NUMERICAL RECIPES IN C: THE ART OF SCIENTIFIC COMPUTING (ISBN 0-521-43108-5)
-    void splint(IList<float> xa, IList<float> ya, IList<float> y2a, int n, float x, out float y)
+    void splint(IList<double> xa, IList<double> ya, IList<double> y2a, int n, double x, out double y)
     {
         int klo, khi, k;
-        float h, b, a;
+        double h, b, a;
 
         klo = 0;
         khi = n - 1;

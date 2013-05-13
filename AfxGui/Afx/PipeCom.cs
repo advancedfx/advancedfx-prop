@@ -77,6 +77,15 @@ class PipeCom
         return bytes[0];
     }
 
+    public Double ReadDouble()
+    {
+        Byte[] bytes = new Byte[8];
+
+        Read(bytes);
+
+        return BitConverter.ToDouble(bytes, 0);
+    }
+
     public Int32 ReadInt32()
     {
         Byte[] bytes = new Byte[4];
@@ -124,6 +133,11 @@ class PipeCom
     public void Write(Byte value)
     {
         Write(new Byte[]{value}, 0, 1);
+    }
+
+    public void Write(Double value)
+    {
+        Write(BitConverter.GetBytes(value));
     }
 
     public void Write(Int32 value)
