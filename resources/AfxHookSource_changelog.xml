@@ -6,6 +6,19 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.0.3.33</version>
+<time>2013-05-14T17:23Z</time>
+<changes>
+<change type="updated">
+Adjusted to 29 Apr 2013 CSS update.
+</change>
+</changes>
+<comments>Thanks and greetings to xQd!</comments>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.0.3.32</version>
 <time>2013-03-23T19:48Z</time>
 <changes>

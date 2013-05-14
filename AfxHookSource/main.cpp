@@ -232,50 +232,57 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 {
 	static bool bFirstClient = true;
 	static bool bFirstEngine = true;
-	static bool bFirstFileSystemSteam = true;
-	static bool bFirstLaucher = true;
-	static bool bFirstMaterialSystem = true;
-	static bool bFirstShaderapidx9 = true;
-	static bool bHasTier0 = false;
+	static bool bFirstTier0 = true;
+	static bool bFirstGameOverlayRenderer = true;
+	static bool bFirstLauncher = true;
+	static bool bFirstfilesystem_stdio = true;
 
 	if(!hModule || !lpLibFileName)
 		return;
 
+#if 0
+	static FILE *f1=NULL;
+
+	if( !f1 ) f1=fopen("mdt_log_LibraryHooksA.txt","wb");
+	fprintf(f1,"%s\n", lpLibFileName);
+	fflush(f1);
+#endif
+
 	// do not use messageboxes here, there is some friggin hooking going on in between by the
 	// Source engine.
 
-	if(!bHasTier0)
+	if(bFirstTier0)
 	{
-		HMODULE hTier0 = GetModuleHandleA("bin\\tier0.dll");
-		if(!hTier0)
-			return;
+		HMODULE hTier0;
+		if(hTier0 = GetModuleHandleA("tier0.dll"))
+		{
+			bFirstTier0 = false;
 
-		bHasTier0 = true;
-
-		Tier0_Msg = (Tier0MsgFn)GetProcAddress(hTier0, "Msg");
-		Tier0_DMsg = (Tier0DMsgFn)GetProcAddress(hTier0, "DMsg");
-		Tier0_Warning = (Tier0MsgFn)GetProcAddress(hTier0, "Warning");
-		Tier0_DWarning = (Tier0DMsgFn)GetProcAddress(hTier0, "DWarning");
-		Tier0_Log = (Tier0MsgFn)GetProcAddress(hTier0, "Log");
-		Tier0_DLog = (Tier0DMsgFn)GetProcAddress(hTier0, "DLog");
-		Tier0_Error = (Tier0MsgFn)GetProcAddress(hTier0, "Error");
-		Tier0_ConMsg = (Tier0MsgFn)GetProcAddress(hTier0, "ConMsg");
-		Tier0_ConWarning = (Tier0MsgFn)GetProcAddress(hTier0, "ConWarning");
-		Tier0_ConLog = (Tier0MsgFn)GetProcAddress(hTier0, "ConLog");
+			Tier0_Msg = (Tier0MsgFn)GetProcAddress(hTier0, "Msg");
+			Tier0_DMsg = (Tier0DMsgFn)GetProcAddress(hTier0, "DMsg");
+			Tier0_Warning = (Tier0MsgFn)GetProcAddress(hTier0, "Warning");
+			Tier0_DWarning = (Tier0DMsgFn)GetProcAddress(hTier0, "DWarning");
+			Tier0_Log = (Tier0MsgFn)GetProcAddress(hTier0, "Log");
+			Tier0_DLog = (Tier0DMsgFn)GetProcAddress(hTier0, "DLog");
+			Tier0_Error = (Tier0MsgFn)GetProcAddress(hTier0, "Error");
+			Tier0_ConMsg = (Tier0MsgFn)GetProcAddress(hTier0, "ConMsg");
+			Tier0_ConWarning = (Tier0MsgFn)GetProcAddress(hTier0, "ConWarning");
+			Tier0_ConLog = (Tier0MsgFn)GetProcAddress(hTier0, "ConLog");
+		}
 	}
-	
-	if(bFirstLaucher && StringEndsWith( lpLibFileName, "launcher.dll"))
-	{
-		bFirstLaucher = false;
 
+	if(bFirstLauncher && StringEndsWith( lpLibFileName, "launcher.dll"))
+	{
+		bFirstLauncher = false;
+		
 		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryExA", (DWORD) &new_LoadLibraryExA);
 		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryA", (DWORD) &new_LoadLibraryA);
 	}
 	else
-	if(bFirstFileSystemSteam && StringEndsWith( lpLibFileName, "filesystem_steam.dll"))
+	if(bFirstfilesystem_stdio && StringEndsWith( lpLibFileName, "filesystem_stdio.dll"))
 	{
-		bFirstFileSystemSteam = false;
-
+		bFirstfilesystem_stdio = false;
+		
 		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryExA", (DWORD) &new_LoadLibraryExA);
 		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryA", (DWORD) &new_LoadLibraryA);
 	}
@@ -289,9 +296,9 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryA", (DWORD) &new_LoadLibraryA);
 	}
 	else
-	if(bFirstMaterialSystem && StringEndsWith( lpLibFileName, "materialsystem.dll"))
+	if(bFirstGameOverlayRenderer && StringEndsWith( lpLibFileName, "gameoverlayrenderer.dll"))
 	{
-		bFirstMaterialSystem = false;
+		bFirstGameOverlayRenderer = false;
 		
 		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryExA", (DWORD) &new_LoadLibraryExA);
 		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryA", (DWORD) &new_LoadLibraryA);
