@@ -1,4 +1,4 @@
-Version: April 02 update
+Version: May 16 update
 
 See:
 C:\Libraries\hlsdk\multiplayer\cl_dll\vgui_TeamFortressViewport.cpp
@@ -9,35 +9,36 @@ valve
 Modules:
 client 0d1c0000 - 0d298000
 
-0:014> s -a client L1000000 "#Spec_Mode%d"
+0:016> s -a client L1000000 "#Spec_Mode%d"
 0d240604  23 53 70 65 63 5f 4d 6f-64 65 25 64 00 00 00 00  #Spec_Mode%d....
 
-0:014> s client L1000000 04 06 24 0d
-0d1c473b  04 06 24 0d 50 e8 bf e1-04 00 8d 4c 24 34 51 e8  ..$.P......L$4Q.
-0d20a7a7  04 06 24 0d 51 e8 53 81-00 00 8b 15 fc fd 26 0d  ..$.Q.S.......&.
-0d20a7c0  04 06 24 0d 50 e8 3a 81-00 00 83 c4 18 ff 15 60  ..$.P.:........`
+0:016> s client L1000000 04 06 24 0d
+0d1c473b  04 06 24 0d 50 e8 df e3-04 00 8d 4c 24 34 51 e8  ..$.P......L$4Q.
+0d20a9c7  04 06 24 0d 51 e8 53 81-00 00 8b 15 24 fe 26 0d  ..$.Q.S.....$.&.
+0d20a9e0  04 06 24 0d 50 e8 3a 81-00 00 83 c4 18 ff 15 70  ..$.P.:........p
 
-0d20a7a7 - 1 is inside TeamFortressViewport::UpdateSpectatorPanel
+0d20a9c7 - 1 is inside TeamFortressViewport::UpdateSpectatorPanel
 
-0d20a6b0 is TeamFortressViewport::UpdateSpectatorPanel
-0d20a6b0 a1fcfd260d      mov     eax,dword ptr [client!`string'+0x26c9c (0d26fdfc)]
-0d20a6b5 81ec40020000    sub     esp,offset <Unloaded_ud.drv>+0x23f (00000240)
-0d20a6bb 56              push    esi
-0d20a6bc 8bf1            mov     esi,ecx
-0d20a6be 898624020000    mov     dword ptr <Unloaded_ud.drv>+0x223 (00000224)[esi],eax
-0d20a6c4 8b0d00fe260d    mov     ecx,dword ptr [client!`string'+0x26ca0 (0d26fe00)]
-0d20a6ca 898e28020000    mov     dword ptr <Unloaded_ud.drv>+0x227 (00000228)[esi],ecx
-0d20a6d0 8b8e180a0000    mov     ecx,dword ptr <Unloaded_ud.drv>+0xa17 (00000a18)[esi]
-0d20a6d6 8b1504fe260d    mov     edx,dword ptr [client!`string'+0x26ca4 (0d26fe04)]
+0d20a8d0 is TeamFortressViewport::UpdateSpectatorPanel
+0d20a8d0 a124fe260d      mov     eax,dword ptr [client!`string'+0x26cb4 (0d26fe24)]
+0d20a8d5 81ec40020000    sub     esp,offset <Unloaded_ud.drv>+0x23f (00000240)
+0d20a8db 56              push    esi
+0d20a8dc 8bf1            mov     esi,ecx
+0d20a8de 898624020000    mov     dword ptr <Unloaded_ud.drv>+0x223 (00000224)[esi],eax
+0d20a8e4 8b0d28fe260d    mov     ecx,dword ptr [client!`string'+0x26cb8 (0d26fe28)]
+0d20a8ea 898e28020000    mov     dword ptr <Unloaded_ud.drv>+0x227 (00000228)[esi],ecx
+0d20a8f0 8b8e180a0000    mov     ecx,dword ptr <Unloaded_ud.drv>+0xa17 (00000a18)[esi]
+0d20a8f6 8b152cfe260d    mov     edx,dword ptr [client!`string'+0x26cbc (0d26fe2c)]
 
 // 	if (!m_pSpectatorPanel)
 //		return;
-0d20a6dc 85c9            test    ecx,ecx
-0d20a6de 89962c020000    mov     dword ptr <Unloaded_ud.drv>+0x22b (0000022c)[esi],edx
-0d20a6e4 0f84b4030000    je      client!vgui::BuildGroup::operator=+0x2bbe (0d20aa9e)
+0d20a8fc 85c9            test    ecx,ecx
+0d20a8fe 89962c020000    mov     dword ptr <Unloaded_ud.drv>+0x22b (0000022c)[esi],edx
+0d20a904 0f84b4030000    je      client!vgui::BuildGroup::operator=+0x2bbe (0d20acbe)
 ...
-0d20aa9e 5e              pop     esi
-0d20aa9f 81c440020000    add     esp,offset <Unloaded_ud.drv>+0x23f (00000240)
-0d20aaa5 c3              ret
+0d20acbe 5e              pop     esi
+0d20acbf 81c440020000    add     esp,offset <Unloaded_ud.drv>+0x23f (00000240)
+0d20acc5 c3              ret
+
 ==>
-We patch at 0d20a6e4 (Toggle JE/JMP instruction)
+We patch at 0d20a904 (Toggle JE/JMP instruction)

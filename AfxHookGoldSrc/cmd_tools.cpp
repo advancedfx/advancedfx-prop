@@ -4,6 +4,8 @@
 
 #include <hlsdk.h>
 
+#include "hl_addresses.h"
+
 #include "cmd_tools.h"
 
 //extern cl_enginefuncs_s *pEngfuncs;
@@ -15,19 +17,19 @@ void *getCommandTreeBasePtr(void* pfnAddCommand)
 	DWORD tint;
 
 	// get addr of second function call in pfnAddCommnad:
-	addr += 0x1A;
+	addr += AFXADDR_GET(CmdTools_Ofs1);
 	tint = *(DWORD *)(addr+0x01); 
 	addr += tint + 0x05; // relative call (0xe8)
 
 	// in that function get address of the first and only function call:
 	// relative call (0xe8)
-	addr += 0x0C;
+	addr += AFXADDR_GET(CmdTools_Ofs2);
 	tint = *(DWORD *)(addr+0x01);
 	addr += tint + 0x05; // relative call (0xe8)
 
 	// now we are in a function that is similar to Cmd_AddCommand in Quake 1 cmd.c!
 	// and in that function we retrive the cmd_functions base pointer:
-	addr += 0x26;
+	addr += AFXADDR_GET(CmdTools_Ofs3);
 	tint = *(DWORD *)(addr+0x02);
 	addr = (char *)tint; // mov esi,[absolute address] (0x8b35)
 

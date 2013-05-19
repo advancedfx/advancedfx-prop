@@ -59,9 +59,12 @@ REGISTER_DEBUGCMD_FUNC(tst_dock)
 
 REGISTER_DEBUGCMD_FUNC(tst_info)
 {
-	DWORD dw = (DWORD)pEngfuncs->pEfxAPI->R_DecalShoot;
-
+	DWORD dw;
+	
+	dw = (DWORD)pEngfuncs->pEfxAPI->R_DecalShoot;
 	pEngfuncs->Con_Printf("pEngfuncs->pEfxAPI->R_DecalShoot = 0x%08x\n", dw);
+	dw = (DWORD)pEngfuncs->pfnAddCommand;
+	pEngfuncs->Con_Printf("pEngfuncs->pfnAddCommand = 0x%08x\n", dw);
 }
 
 REGISTER_DEBUGCMD_FUNC(tst_demotime)

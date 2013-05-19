@@ -1,4 +1,4 @@
-Version: April 02 update
+Version: May 16 update
 
 For more information see:
 C:\Libraries\q1source\QW\client\cl_parse.c
@@ -13,42 +13,45 @@ sample svc_voicdata (including message code):
 ... data 
 
 0:000> s -a hw L1000000 "CL_ParseServerMessage: Bad server"
-0365c150  43 4c 5f 50 61 72 73 65-53 65 72 76 65 72 4d 65  CL_ParseServerMe
-0:000> s hw L1000000 50 c1 65 03
-0353d0a1  50 c1 65 03 e8 b6 8e 03-00 8b 3d a8 60 52 04 83  P.e.......=.`R..
+0365a150  43 4c 5f 50 61 72 73 65-53 65 72 76 65 72 4d 65  CL_ParseServerMe
+0:000> s hw L1000000 50 a1 65 03
+0353ced4  50 a1 65 03 e8 63 7c 03-00 8b 3d 28 46 52 04 83  P.e..c|...=(FR..
 
-0353d0a0 6850c16503      push    offset hw!vgui::Frame::`vftable'+0x1d3ec (0365c150)
-0353d0a5 e8b68e0300      call    hw+0x55f60 (03575f60)
-0353d0aa 8b3da8605204    mov     edi,dword ptr [hw!qwglMakeCurrent+0x575e1c (045260a8)]
-0353d0b0 83c404          add     esp,4
-0353d0b3 8bdf            mov     ebx,edi
-0353d0b5 e8e6d60000      call    hw+0x2a7a0 (0354a7a0)
-0353d0ba 8bf0            mov     esi,eax
-0353d0bc 83feff          cmp     esi,0FFFFFFFFh
-0353d0bf 0f8496020000    je      hw+0x1d35b (0353d35b)
+0353ced3 6850a16503      push    offset hw!vgui::Frame::`vftable'+0x1d3ec (0365a150)
+0353ced8 e8637c0300      call    hw+0x54b40 (03574b40)
+0353cedd 8b3d28465204    mov     edi,dword ptr [hw!qwglMakeCurrent+0x575e1c (04524628)]
+0353cee3 83c404          add     esp,4
+0353cee6 8bdf            mov     ebx,edi
+0353cee8 e8a3ce0000      call    hw+0x29d90 (03549d90)
+0353ceed 8bf0            mov     esi,eax
+0353ceef 83feff          cmp     esi,0FFFFFFFFh
+0353cef2 0f8498020000    je      hw+0x1d190 (0353d190)
 ...
-0353d404 83c408          add     esp,8
-0353d407 5e              pop     esi
-0353d408 5d              pop     ebp
-0353d409 c3              ret
+0353d23d 83c408          add     esp,8
+0353d240 5f              pop     edi
+0353d241 5e              pop     esi
+0353d242 5b              pop     ebx
+0353d243 8be5            mov     esp,ebp
+0353d245 5d              pop     ebp
+0353d246 c3              ret
 
 ==>
-0353d0b5 => 0354a7a0 is MSG_ReadByte
-[0353d0b3...0353d0ba) is where we detour cmd_read so we can fetch the server messages (our code is specific to this snippet and needs to be checked too on a update).
+0353cee8 => 03549d90 is MSG_ReadByte
+[0353cee6...0353ceed) is where we detour cmd_read so we can fetch the server messages (our code is specific to this snippet and needs to be checked too on a update).
 
-0354a7a0 MSG_ReadByte
-0354a7a0 a1a8605204      mov     eax,dword ptr [hw!qwglMakeCurrent+0x575e1c (045260a8)]
-0354a7a5 8b15b009fc03    mov     edx,dword ptr [hw!qwglMakeCurrent+0x10724 (03fc09b0)]
-0354a7ab 8d4801          lea     ecx,[eax+1]
-0354a7ae 3bca            cmp     ecx,edx
-0354a7b0 7e0e            jle     hw+0x2a7c0 (0354a7c0)
-0354a7b2 c705ac60520401000000 mov dword ptr [hw!qwglMakeCurrent+0x575e20 (045260ac)],offset <Unloaded_ud.drv> (00000001)
-0354a7bc 83c8ff          or      eax,0FFFFFFFFh
-0354a7bf c3              ret
-0354a7c0 56              push    esi
-0354a7c1 8b35a809fc03    mov     esi,dword ptr [hw!qwglMakeCurrent+0x1071c (03fc09a8)]
+03549d90 MSG_ReadByte
+03549d90 a128465204      mov     eax,dword ptr [hw!qwglMakeCurrent+0x575e1c (04524628)]
+03549d95 8b1530effb03    mov     edx,dword ptr [hw!qwglMakeCurrent+0x10724 (03fbef30)]
+03549d9b 8d4801          lea     ecx,[eax+1]
+03549d9e 3bca            cmp     ecx,edx
+03549da0 7e0e            jle     hw+0x29db0 (03549db0)
+03549da2 c7052c46520401000000 mov dword ptr [hw!qwglMakeCurrent+0x575e20 (0452462c)],offset <Unloaded_ud.drv> (00000001)
+03549dac 83c8ff          or      eax,0FFFFFFFFh
+03549daf c3              ret
+03549db0 56              push    esi
+03549db1 8b3528effb03    mov     esi,dword ptr [hw!qwglMakeCurrent+0x1071c (03fbef28)]
 
 ==>
-0354a7a0 => 045260a8 is msg_readcount
-0354a7a5 => 03fc09b0 is net_message.cursize
-         => 03fc09b0 -0x10 is netmessage
+03549d90 => 04524628 is msg_readcount
+03549d95 => 03fbef30 is net_message.cursize
+         => 03fbef30 -0x10 is netmessage
