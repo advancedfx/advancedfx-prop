@@ -8,12 +8,10 @@
 
 #include "cmd_tools.h"
 
-//extern cl_enginefuncs_s *pEngfuncs;
-
 void *getCommandTreeBasePtr(void* pfnAddCommand)
 // WARNING: not x64 safe!
 {
-	char *addr = (char *)pfnAddCommand;
+	char *addr = (char *)pfnAddCommand; // pfnAddCommand = poi(pEngfuncs +0x44)
 	DWORD tint;
 
 	// get addr of second function call in pfnAddCommnad:

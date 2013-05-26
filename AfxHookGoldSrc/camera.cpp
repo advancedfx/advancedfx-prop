@@ -14,7 +14,7 @@
 #include "AfxGoldSrcComClient.h"
 #include "hooks/HookHw.h"
 
-REGISTER_DEBUGCMD_FUNC(camera)
+REGISTER_DEBUGCMD_FUNC(tst_camera_broken)
 {
 	int argc = pEngfuncs->Cmd_Argc();
 
@@ -97,6 +97,7 @@ REGISTER_DEBUGCMD_FUNC(camera)
 	}
 
 	pEngfuncs->Con_Printf(
+		"THIS COMMAND IS NOT SUPPORTED AT THE MOMENT, IT DOESN'T WORK PROPERLY!\n"
 		PREFIX "camera add - adds current demotime and view as keyframe\n"
 		PREFIX "camera active 0|1 - set whether the camera splines are active or not\n"
 		PREFIX "camera clear - removes all keyframes\n"

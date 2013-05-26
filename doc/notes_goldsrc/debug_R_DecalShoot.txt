@@ -4,7 +4,9 @@ Modules
 hw 07520000
 
 
-pEngfuncs->pEfxAPI->R_DecalShoot = 0x075698d0
+pEngfuncs->pEfxAPI->R_DecalShoot
+= poi(poi(pEngfuncs +14c)+d4)
+= 0x075698d0
 
 0x075698d0 R_DecalShoot
 075698d0 55              push    ebp

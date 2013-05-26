@@ -111,7 +111,7 @@ class AfxGoldSrc : IDisposable
         cmds += startSettings.FullScreen ? " -full -stretchaspect" : " -window";
 
 	    s1 = startSettings.Bpp.ToString();
-	    if( 0 < s1.Length) cmds += " -" + "bpp";
+	    if( 0 < s1.Length) cmds += " -" + s1 + "bpp";
 
 	    s1 = startSettings.Width.ToString();
 	    if( 0 < s1.Length) cmds += " -w " + s1;

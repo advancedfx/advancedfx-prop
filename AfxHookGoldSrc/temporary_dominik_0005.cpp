@@ -34,6 +34,7 @@ __declspec(naked) void DoRecursiveWorldNodeCall (void)
 	}
 }
 
+/*
 REGISTER_DEBUGCMD_FUNC(tst_debugcapture)
 {
 	g_Filming.EnableDebugCapture(true);
@@ -45,6 +46,7 @@ REGISTER_DEBUGCMD_FUNC(tst_debugcapture)
 		g_CallContinue = ((DWORD)HL_ADDR_GET(hwDll) +0x48A56 +0x05);
 	}
 }
+*/
 
 REGISTER_DEBUGCMD_FUNC(tst_undock)
 {
@@ -59,12 +61,15 @@ REGISTER_DEBUGCMD_FUNC(tst_dock)
 
 REGISTER_DEBUGCMD_FUNC(tst_info)
 {
-	DWORD dw;
+	DWORD dw,dw2,dw3;
 	
 	dw = (DWORD)pEngfuncs->pEfxAPI->R_DecalShoot;
-	pEngfuncs->Con_Printf("pEngfuncs->pEfxAPI->R_DecalShoot = 0x%08x\n", dw);
+	dw2 = (DWORD)&(pEngfuncs->pEfxAPI) - (DWORD)pEngfuncs;
+	dw3 =(DWORD)&(pEngfuncs->pEfxAPI->R_DecalShoot) - (DWORD)pEngfuncs->pEfxAPI;
+	pEngfuncs->Con_Printf("pEngfuncs->pEfxAPI->R_DecalShoot = 0x%08x (ofs1: 0x%08x, ofs2: 0x%08x)\n", dw, dw2, dw3);
 	dw = (DWORD)pEngfuncs->pfnAddCommand;
-	pEngfuncs->Con_Printf("pEngfuncs->pfnAddCommand = 0x%08x\n", dw);
+	dw2 = (DWORD)&(pEngfuncs->pfnAddCommand) - (DWORD)pEngfuncs;
+	pEngfuncs->Con_Printf("pEngfuncs->pfnAddCommand = 0x%08x (ofs1: 0x%08x)\n", dw ,dw2);
 }
 
 REGISTER_DEBUGCMD_FUNC(tst_demotime)
