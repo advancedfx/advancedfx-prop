@@ -5,7 +5,6 @@
 // Additional libraries:
 #pragma comment(lib,"OpenGL32.lib")
 #pragma comment(lib,"GLu32.lib")
-#pragma comment(lib,"js32.lib")
 
 /*
 // Direct show:
@@ -25,8 +24,6 @@
 #include "hooks/HookHl.h"
 
 #include "AfxGoldSrcComClient.h"
-#include "initscript.h"
-#include "mirv_scripting.h"
 
 
 bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
@@ -39,21 +36,14 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 			MessageBox(0,"DLL_PROCESS_ATTACH","MDT_DEBUG",MB_OK);
 #endif
 
-			JsStartUp();
-
-			RunInitScript();
-
 			HookHl();
 
 			break;
 		}
 		case DLL_PROCESS_DETACH:
 		{
-			g_Script_CanConsolePrint = false;
-
 			g_AfxGoldSrcComClient.Close();
 
-			JsShutDown();
 			break;
 		}
 		case DLL_THREAD_ATTACH:

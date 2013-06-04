@@ -4,9 +4,6 @@
     <Filter Include="AfxHookGoldSrc">
       <UniqueIdentifier>{0a3f7a39-87fc-4038-85aa-709bf2d77244}</UniqueIdentifier>
     </Filter>
-    <Filter Include="AfxHookGoldSrc\modules">
-      <UniqueIdentifier>{8e270edb-eea8-4868-ae86-e6ee864b4699}</UniqueIdentifier>
-    </Filter>
     <Filter Include="AfxHookGoldSrc\hooks">
       <UniqueIdentifier>{1bc528f3-f592-4b42-a33b-b8fc93926d72}</UniqueIdentifier>
     </Filter>
@@ -108,9 +105,6 @@
     <ClCompile Include="hooks\hw\Host_Frame.cpp">
       <Filter>AfxHookGoldSrc\hooks\hw</Filter>
     </ClCompile>
-    <ClCompile Include="InitScript.cpp">
-      <Filter>AfxHookGoldSrc</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
@@ -126,41 +120,8 @@
     <ClCompile Include="mirv_info.cpp">
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
-    <ClCompile Include="mirv_scripting.cpp">
-      <Filter>AfxHookGoldSrc</Filter>
-    </ClCompile>
     <ClCompile Include="hooks\hw\Mod_LeafPvs.cpp">
       <Filter>AfxHookGoldSrc\hooks\hw</Filter>
-    </ClCompile>
-    <ClCompile Include="modules\ModColor.cpp">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClCompile>
-    <ClCompile Include="modules\ModColor_S.cpp">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClCompile>
-    <ClCompile Include="modules\ModColorMask.cpp">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClCompile>
-    <ClCompile Include="modules\ModColorMask_S.cpp">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClCompile>
-    <ClCompile Include="modules\ModHide.cpp">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClCompile>
-    <ClCompile Include="modules\ModHide_S.cpp">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClCompile>
-    <ClCompile Include="modules\ModInfo.cpp">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClCompile>
-    <ClCompile Include="modules\ModInfo_S.cpp">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClCompile>
-    <ClCompile Include="modules\ModReplace.cpp">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClCompile>
-    <ClCompile Include="modules\ModReplace_S.cpp">
-      <Filter>AfxHookGoldSrc\modules</Filter>
     </ClCompile>
     <ClCompile Include="hooks\OpenGl32Hooks.cpp">
       <Filter>AfxHookGoldSrc\hooks</Filter>
@@ -335,12 +296,6 @@
     <ClInclude Include="hooks\hw\Host_Frame.h">
       <Filter>AfxHookGoldSrc\hooks\hw</Filter>
     </ClInclude>
-    <ClInclude Include="mirv_scripting.h">
-      <Filter>AfxHookGoldSrc</Filter>
-    </ClInclude>
-    <ClInclude Include="InitScript.h">
-      <Filter>AfxHookGoldSrc</Filter>
-    </ClInclude>
     <ClInclude Include="mdt_media.h">
       <Filter>AfxHookGoldSrc</Filter>
     </ClInclude>
@@ -352,36 +307,6 @@
     </ClInclude>
     <ClInclude Include="hooks\hw\Mod_LeafPvs.h">
       <Filter>AfxHookGoldSrc\hooks\hw</Filter>
-    </ClInclude>
-    <ClInclude Include="modules\ModReplace_S.h">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClInclude>
-    <ClInclude Include="modules\ModColor.h">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClInclude>
-    <ClInclude Include="modules\ModColor_S.h">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClInclude>
-    <ClInclude Include="modules\ModColorMask.h">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClInclude>
-    <ClInclude Include="modules\ModColorMask_S.h">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClInclude>
-    <ClInclude Include="modules\ModHide.h">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClInclude>
-    <ClInclude Include="modules\ModHide_S.h">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClInclude>
-    <ClInclude Include="modules\ModInfo.h">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClInclude>
-    <ClInclude Include="modules\ModInfo_S.h">
-      <Filter>AfxHookGoldSrc\modules</Filter>
-    </ClInclude>
-    <ClInclude Include="modules\ModReplace.h">
-      <Filter>AfxHookGoldSrc\modules</Filter>
     </ClInclude>
     <ClInclude Include="hooks\OpenGl32Hooks.h">
       <Filter>AfxHookGoldSrc\hooks</Filter>

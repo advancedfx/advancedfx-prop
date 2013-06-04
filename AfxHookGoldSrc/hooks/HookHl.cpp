@@ -32,7 +32,7 @@ void HookHl()
 {
 	HMODULE hHl = GetModuleHandle(NULL);
 
-	HL_ADDR_SET(hlExe, (HlAddress_t)hHl);
+	Addresses_InitHlExe((AfxAddr)hHl);
 
 	if(!InterceptDllCall(hHl, "Kernel32.dll", "LoadLibraryA", (DWORD) &new_LoadLibraryA))
 		MessageBox(0,"Base interception failed","MDT_ERROR",MB_OK|MB_ICONHAND);

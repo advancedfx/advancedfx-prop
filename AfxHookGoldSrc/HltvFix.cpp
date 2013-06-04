@@ -6,7 +6,6 @@
 
 #include "hooks/HookHw.h"
 #include "hooks/hw/ClientFunctions.h"
-#include "modules/ModInfo.h"
 
 #include "cmdregister.h"
 #include "hl_addresses.h"

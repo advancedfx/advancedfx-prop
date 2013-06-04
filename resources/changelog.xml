@@ -6,6 +6,24 @@
 
 <release>
 <name>HLAE</name>
+<version>2.3.6.2</version>
+<time>2013-06-04T19:58Z</time>
+<changes>
+<change type="updated">
+HLAE now adds -nofbo to the launch options to prevent FBO related problems in fullscreen.
+</change>
+<change type="fixed">
+Fixed mirv_decalfilter mask wildcard matching being incorrect for advanced cases.
+</change>
+<change type="removed">
+Removed JavaScript features (afx command).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.3.6.1</version>
 <time>2013-05-26T14:35Z</time>
 <changes>

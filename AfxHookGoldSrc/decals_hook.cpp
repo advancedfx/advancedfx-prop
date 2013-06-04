@@ -6,8 +6,10 @@
 #include "hl_addresses.h"
 
 #include <shared/detours.h>
+#include <shared/StringTools.h>
 
 #include <list>
+#include <string>
 
 extern cl_enginefuncs_s *pEngfuncs;
 
@@ -30,85 +32,79 @@ bool g_decals_hook_installed = false;
 bool IsFilterEntryMatched( decal_filter_entry_s *pentry, const char * sz_Target )
 {
 	const char * sz_Mask = pentry->sz_Mask;
-	size_t len_mask = strlen(sz_Mask);
-	size_t len_target = strlen(sz_Target);
 
-	size_t leftpos_target = 0;
-	size_t leftpos_mask = 0;
+	std::list<std::string> maskWords;
+	bool leadingWildCard = false;
+	bool trailingWildCard = false;
 
-	size_t rollbackpos_mask; // if wildcard is active
-
-	bool bMatched = false;
-	bool bWildCardActive = false;
-
-	while( true )
 	{
-		if( leftpos_mask == len_mask )
+		bool firstMatch = true;
+		bool lastWasWildCard = false;
+		std::string curWord;
+		bool hasWord = false;
+
+		for(const char * curMask = sz_Mask; *curMask; curMask++)
 		{
-			// mask completly parsed
-
-			// success if either target matched completly or we have an wildcard:
-			bMatched = bWildCardActive || leftpos_target == len_target;
-			break;
-		}
-
-		// Assert( leftpos_mask < len_mask );
-
-		char maskmatchchar = sz_Mask[leftpos_mask];
-
-		// parse escape sequences in mask:
-		if( leftpos_mask+1 < len_mask && '\\' == maskmatchchar )
-		{
-			switch(sz_Mask[leftpos_mask+1] )
+			if('\\' == *curMask)
 			{
-			case '*':
-				// wildcard
-				leftpos_mask += 2;
-				rollbackpos_mask = leftpos_mask;
-				bWildCardActive = true;
-				continue;
-				break;
-			case '\\':
-				// escaped escape char (backslash)
-				leftpos_mask += 2;
-				maskmatchchar =  '\\';
-				break;
-			default:
-				leftpos_mask++;
+				curMask++;
+
+				if('*' == *curMask)
+				{
+					if(firstMatch)
+					{
+						firstMatch = false;
+						leadingWildCard = true;
+					}
+
+					if(hasWord)
+					{
+						maskWords.push_back(curWord);
+						hasWord = false;
+					}
+
+					lastWasWildCard = true;
+
+					continue;
+				}
 			}
+
+			firstMatch = false;
+			lastWasWildCard = false;
+			if(!hasWord) curWord.assign("");
+			hasWord = true;
+			curWord.push_back(*curMask);
 		}
 
-		// we have a true character that needs to be matched:
-		if( leftpos_target == len_target )
-		{
-			// target too short, can never match
-			break;
-		}
-
-		// Assert( leftpos_target < len_target )
-		char targetchar = sz_Target[leftpos_target];
-
-		if( targetchar != maskmatchchar )
-		{
-			if( bWildCardActive )
-			{
-				// we have a active wildcard, it's okay:
-				leftpos_target++;
-				leftpos_mask = rollbackpos_mask; // rollback the mask positon for next attempt
-				continue; //
-			} else {
-				// without a wildcard we cannot win
-				break;
-			}
-		} else {
-			leftpos_mask++;
-			leftpos_target++;
-		}
-
+		if(hasWord) maskWords.push_back(curWord);
+		trailingWildCard = lastWasWildCard;
 	}
 
+	if(0 == maskWords.size())
+		return 0 == strlen(sz_Target) || leadingWildCard && trailingWildCard;
 
-	return bMatched;
+	int idx = 0;
+
+	for(std::list<std::string>::iterator it = maskWords.begin(); it != maskWords.end(); it++)
+	{
+		const char * matchPos = strstr(sz_Target, it->c_str());
+		
+		if(!matchPos)
+			return false;
+
+		if(0 == idx && !leadingWildCard && 0 < matchPos - sz_Target)
+			return false;
+
+		if(idx + 1 == maskWords.size() && !trailingWildCard)
+		{
+			return StringEndsWith(sz_Target, it->c_str());
+		}
+
+		idx++;
+		sz_Target = matchPos +strlen(it->c_str()); // words don't overlap
+	}
+
+	return true;
 }
 
 REGISTER_DEBUGCMD_FUNC(test_filtermask)

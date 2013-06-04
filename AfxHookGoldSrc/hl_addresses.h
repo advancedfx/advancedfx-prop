@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2009-11-37 dominik.matrixstorm.com
+// 2013-06-04 dominik.matrixstorm.com
 //
 // First changes:
 // 2007-09-13T13:37Z dominik.matrixstorm.com
@@ -86,3 +86,7 @@ AFXADDR_DECL(r_refdef)
 AFXADDR_DECL(shm)
 AFXADDR_DECL(skytextures)
 AFXADDR_DECL(soundtime)
+
+void Addresses_InitHlExe(AfxAddr hlExe);
+void Addresses_InitHwDll(AfxAddr hwDll);
+void Addresses_InitClientDll(AfxAddr clientDll);

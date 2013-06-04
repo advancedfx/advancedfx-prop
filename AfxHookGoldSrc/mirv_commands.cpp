@@ -9,8 +9,6 @@
 #include <hlsdk.h>
 #include <list>
 
-#define NULLPTR 0
-
 struct AfxCvarEntry
 {
 	char * Name;
@@ -35,16 +33,30 @@ std::list<AfxCmdEntry> & GetAfxCmdEntries() {
 	return afxCmdEntries;
 }
 
+bool CompareAfxCvarEntry(AfxCvarEntry first, AfxCvarEntry second)
+{
+	return 0 <= stricmp(first.Name, second.Name); // sort backwards
+}
+
+bool CompareAfxCmdEntry(AfxCmdEntry first, AfxCmdEntry second)
+{
+	return 0 <= stricmp(first.Name, second.Name); // sort backwards
+}
+
+
 void AfxRegisterCommands()
 {
 	// Register the cvars:
 	{
+		// sort the list so that Valve's console autocompletion won't be confused:
+		GetAfxCvarEntries().sort(CompareAfxCvarEntry);
+
 		for(
 			std::list<AfxCvarEntry>::iterator i = GetAfxCvarEntries().begin();
 			i != GetAfxCvarEntries().end();
 			i++
 		) {
-			if(NULLPTR != i->OutCvar)
+			if(0 != i->OutCvar)
 				*(i->OutCvar) = pEngfuncs->pfnRegisterVariable(i->Name, i->Value, i->Flags);
 			else
 				pEngfuncs->pfnRegisterVariable(i->Name, i->Value, i->Flags);
@@ -53,6 +65,9 @@ void AfxRegisterCommands()
 
 	// Register the commands:
 	{
+		// sort the list so that Valve's console autocompletion won't be confused:
+		GetAfxCmdEntries().sort(CompareAfxCmdEntry);
+
 		for(
 			std::list<AfxCmdEntry>::iterator i = GetAfxCmdEntries().begin();
 			i != GetAfxCmdEntries().end();
@@ -83,7 +98,7 @@ REGISTER_DEBUGCMD_FUNC(listcmds)
 
 	pEngfuncs->Con_Printf("---- cvars ----\n");
 
-	// Register the cvars:
+	// cvars:
 	{
 		for(
 			std::list<AfxCvarEntry>::iterator i = GetAfxCvarEntries().begin();
@@ -97,7 +112,7 @@ REGISTER_DEBUGCMD_FUNC(listcmds)
 
 	pEngfuncs->Con_Printf("---- cmds ----\n");
 
-	// Register the commands:
+	// commands:
 	{
 		for(
 			std::list<AfxCmdEntry>::iterator i = GetAfxCmdEntries().begin();

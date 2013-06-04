@@ -46,11 +46,6 @@ Microsoft
   for VC++, MSDN Library, ...
   http://www.microsoft.com/
   
-SpiderMonkey
-  HLAE uses parts of the SpiderMonkey script engine.
-  The SpiderMonkey source code can be obtained from
-  http://www.mozilla.org/js/spidermonkey/
-  
 Valve
   for HLSDK
   http://www.valvesoftware.com/

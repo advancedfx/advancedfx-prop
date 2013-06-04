@@ -6,16 +6,16 @@
 
 #include <shared/detours.h>
 
-#include "../../modules/ModInfo.h"
+bool g_In_R_DrawViewModel = false;
 
 typedef void (*R_DrawViewModel_t) (void);
 R_DrawViewModel_t g_Old_R_DrawViewModel = 0;
 
 void New_R_DrawViewModel(void)
 {
-	g_ModInfo.SetIn_R_DrawViewModel(true);
+	g_In_R_DrawViewModel = true;
 	g_Old_R_DrawViewModel();
-	g_ModInfo.SetIn_R_DrawViewModel(false);
+	g_In_R_DrawViewModel = false;
 }
 
 void Hook_R_DrawViewModel()

@@ -5,9 +5,7 @@
 #include <shared/detours.h>
 #include <hl_addresses.h>
 
-#include "../../modules/ModInfo.h"
 #include "../../filming.h"
-#include "../../mirv_scripting.h"
 
 typedef void (*R_RenderView_t)( void );
 
@@ -80,17 +78,12 @@ void New_R_RenderView(void)
 	bool bLoop;
 	do {
 		bLoop = false;
-		if(ScriptEvent_OnRenderViewBegin()) {
-			//
-			// call original R_RenderView_
-			//
 
-			g_ModInfo.SetIn_R_Renderview(true);
-			g_Old_R_RenderView();
-			g_ModInfo.SetIn_R_Renderview(false);
+		//
+		// call original R_RenderView_
+		//
 
-			bLoop = ScriptEvent_OnRenderViewEnd();
-		}
+		g_Old_R_RenderView();
 
 		// restore original values
 		memcpy (p_r_refdef->vieworg,oldorigin,3*sizeof(float));

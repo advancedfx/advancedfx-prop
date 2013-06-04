@@ -6,18 +6,16 @@
 
 #include <shared/detours.h>
 
-#include "../../modules/ModInfo.h"
-
-
+bool g_In_R_DrawEntitiesOnList = false;
 
 typedef void (*R_DrawEntitiesOnList_t) (void);
 R_DrawEntitiesOnList_t g_Old_R_DrawEntitiesOnList = 0;
 
 void New_R_DrawEntitiesOnList (void)
 {
-	g_ModInfo.SetIn_R_DrawEntitiesOnList(true);
+	g_In_R_DrawEntitiesOnList = true;
 	g_Old_R_DrawEntitiesOnList();
-	g_ModInfo.SetIn_R_DrawEntitiesOnList(false);
+	g_In_R_DrawEntitiesOnList = false;
 }
 
 

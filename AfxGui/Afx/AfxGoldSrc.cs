@@ -10,6 +10,8 @@ using System;
 using System.Threading;
 using System.Windows.Forms;
 
+using AfxGui;
+
 namespace Afx {
 
 class AfxGoldSrc : IDisposable
@@ -29,9 +31,7 @@ class AfxGoldSrc : IDisposable
         public AfxGui.Spline X = new AfxGui.Spline();
         public AfxGui.Spline Y = new AfxGui.Spline();
         public AfxGui.Spline Z = new AfxGui.Spline();
-        public AfxGui.Spline Pitch = new AfxGui.Spline();
-        public AfxGui.Spline Yaw = new AfxGui.Spline();
-        public AfxGui.Spline Roll = new AfxGui.Spline();
+        public AfxGui.QuaternionTest Q = new AfxGui.QuaternionTest();
 
         public bool Active = false;
     }
@@ -107,6 +107,8 @@ class AfxGoldSrc : IDisposable
 	    cmds += " -game " + startSettings.Modification;
 
 	    // gfx settings
+
+        cmds += " -nofbo";
 
         cmds += startSettings.FullScreen ? " -full -stretchaspect" : " -window";
 
@@ -224,9 +226,11 @@ class AfxGoldSrc : IDisposable
         m_CameraSplines.X.AddPoint(time, m_PipeComServer.ReadDouble());
         m_CameraSplines.Y.AddPoint(time, m_PipeComServer.ReadDouble());
         m_CameraSplines.Z.AddPoint(time, m_PipeComServer.ReadDouble());
-        m_CameraSplines.Pitch.AddPoint(time, m_PipeComServer.ReadDouble());
-        m_CameraSplines.Yaw.AddPoint(time, m_PipeComServer.ReadDouble());
-        m_CameraSplines.Roll.AddPoint(time, m_PipeComServer.ReadDouble());
+        m_CameraSplines.Q.AddPoint(time, Quaternion.FromEulerAngles(new EulerAngles(
+            Math.PI * m_PipeComServer.ReadDouble() / 180.0d,
+            Math.PI * m_PipeComServer.ReadDouble() / 180.0d,
+            Math.PI * m_PipeComServer.ReadDouble() / 180.0d
+        )));
     }
 
     void ClientMessage_CameraRemove()
@@ -240,9 +244,7 @@ class AfxGoldSrc : IDisposable
             m_CameraSplines.X.RemovePoint(x);
             m_CameraSplines.Y.RemovePoint(x);
             m_CameraSplines.Z.RemovePoint(x);
-            m_CameraSplines.Pitch.RemovePoint(x);
-            m_CameraSplines.Yaw.RemovePoint(x);
-            m_CameraSplines.Roll.RemovePoint(x);
+            m_CameraSplines.Q.RemovePoint(x);
         }
     }
 
@@ -259,9 +261,12 @@ class AfxGoldSrc : IDisposable
             m_PipeComServer.Write((Double)m_CameraSplines.X.Values[i]);
             m_PipeComServer.Write((Double)m_CameraSplines.Y.Values[i]);
             m_PipeComServer.Write((Double)m_CameraSplines.Z.Values[i]);
-            m_PipeComServer.Write((Double)m_CameraSplines.Pitch.Values[i]);
-            m_PipeComServer.Write((Double)m_CameraSplines.Yaw.Values[i]);
-            m_PipeComServer.Write((Double)m_CameraSplines.Roll.Values[i]);
+
+            EulerAngles ea = m_CameraSplines.Q.Values[i].ToEulerAngles();
+
+            m_PipeComServer.Write((Double)(180.0d*ea.Pitch/Math.PI));
+            m_PipeComServer.Write((Double)(180.0d*ea.Yaw/Math.PI));
+            m_PipeComServer.Write((Double)(180.0d*ea.Roll / Math.PI));
         }
     }
 
@@ -274,9 +279,7 @@ class AfxGoldSrc : IDisposable
             m_CameraSplines.X.RemovePoint(x);
             m_CameraSplines.Y.RemovePoint(x);
             m_CameraSplines.Z.RemovePoint(x);
-            m_CameraSplines.Pitch.RemovePoint(x);
-            m_CameraSplines.Yaw.RemovePoint(x);
-            m_CameraSplines.Roll.RemovePoint(x);
+            m_CameraSplines.Q.RemovePoint(x);
         }
     }
 
@@ -295,9 +298,13 @@ class AfxGoldSrc : IDisposable
             m_PipeComServer.Write((Double)m_CameraSplines.X.Eval(x));
             m_PipeComServer.Write((Double)m_CameraSplines.Y.Eval(x));
             m_PipeComServer.Write((Double)m_CameraSplines.Z.Eval(x));
-            m_PipeComServer.Write((Double)m_CameraSplines.Pitch.Eval(x));
-            m_PipeComServer.Write((Double)m_CameraSplines.Yaw.Eval(x));
-            m_PipeComServer.Write((Double)m_CameraSplines.Roll.Eval(x));
+
+            EulerAngles ea = //new EulerAngles(0, 0, 0);//
+                m_CameraSplines.Q.Eval(x).ToEulerAngles();
+
+            m_PipeComServer.Write((Double)(180.0d * ea.Pitch / Math.PI));
+            m_PipeComServer.Write((Double)(180.0d * ea.Yaw / Math.PI));
+            m_PipeComServer.Write((Double)(180.0d * ea.Roll / Math.PI));
         }
     }
 

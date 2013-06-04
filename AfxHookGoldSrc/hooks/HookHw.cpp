@@ -21,7 +21,6 @@
 #include "hw/UnkDrawHud.h"
 
 #include "../hl_addresses.h"
-#include "../mirv_scripting.h"
 
 
 struct cl_enginefuncs_s * pEngfuncs		= (struct cl_enginefuncs_s *)0;
@@ -93,9 +92,7 @@ HMODULE WINAPI NewHwLoadLibraryA( LPCSTR lpLibFileName )
 	{
 		bClientLoaded = true;
 
-		HL_ADDR_SET(clientDll, (HlAddress_t)hRet);
-	
-		OnClientDllLoaded();
+		Addresses_InitClientDll((AfxAddr)hRet);
 	}
 	else if( !bDemoPlayerLoaded && StringEndsWith( lpLibFileName, "demoplayer.dll") )
 	{
@@ -111,9 +108,7 @@ void HookHw(HMODULE hHw)
 {
 	bool bIcepOk = true;
 
-	HL_ADDR_SET(hwDll, (HlAddress_t)hHw);
-
-	OnHwDllLoaded();
+	Addresses_InitHwDll((AfxAddr)hHw);
 
 	// hw.dll:
 	pEngfuncs		= (cl_enginefuncs_s*)HL_ADDR_GET(p_cl_enginefuncs_s);

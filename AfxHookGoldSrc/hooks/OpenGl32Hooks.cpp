@@ -10,18 +10,11 @@
 #include "../filming.h"
 #include "../GlPrimMods.h"
 #include "../mirv_glext.h"
-#include "../mirv_scripting.h"
 #include "../supportrender.h"
 #include "../zooming.h"
 
 #include "HookHw.h"
 #include "hw/Host_Frame.h"
-
-#include "../modules/ModColor.h"
-#include "../modules/ModColorMask.h"
-#include "../modules/ModHide.h"
-#include "../modules/ModReplace.h"
-#include "../modules/ModInfo.h"
 
 #include <hlsdk.h>
 
@@ -177,8 +170,6 @@ void APIENTRY NewGlBegin(GLenum mode)
 		return;
 	}
 
-	ScriptEvent_OnGlBegin((unsigned int)mode);
-
 	if (g_Filming.doWireframe(mode) == Filming::DR_HIDE) {
 		return;
 	}
@@ -204,14 +195,7 @@ void APIENTRY NewGlBegin(GLenum mode)
 			return;
 	}
 
-	g_ModReplace.OnGlBegin(mode);
-
-	g_ModColor.OnGlBegin(mode);
-
-	g_ModColorMask.OnGlBegin(mode);
-
-	if(g_ModHide.OnGlBegin(mode))
-		glBegin(mode);
+	glBegin(mode);
 }
 
 void APIENTRY NewGlEnd(void)
@@ -221,15 +205,7 @@ void APIENTRY NewGlEnd(void)
 		return;
 	}
 
-	ScriptEvent_OnGlEnd();
-
 	glEnd();
-
-	g_ModColorMask.OnGlEnd();
-
-	g_ModColor.OnGlEnd();
-
-	g_ModReplace.OnGlEnd();
 
 	if(Filming::MM_KEY == g_Filming.GetMatteMethod())
 		ModeKey_End();

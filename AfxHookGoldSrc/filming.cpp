@@ -14,10 +14,12 @@
 #include <shared/RawOutput.h>
 
 #include <hlsdk.h>
-#include <modules/ModInfo.h>
 
 #include "hooks/user32Hooks.h"
 #include "hooks/hw/Mod_LeafPvs.h"
+#include "hooks/hw/R_DrawEntitiesOnList.h"
+#include "hooks/hw/R_DrawParticles.h"
+#include "hooks/hw/R_DrawViewModel.h"
 #include "hooks/hw/R_RenderView.h"
 #include "hooks/client/cstrike/CrossHairFix.h"
 #include "hooks/DemoPlayer/DemoPlayer.h"
@@ -29,7 +31,6 @@
 #include "cmdregister.h"
 #include "hl_addresses.h"
 #include "mirv_glext.h"
-#include "mirv_scripting.h"
 
 
 using namespace std;
@@ -632,8 +633,6 @@ void Filming::Start()
 		pEngfuncs->Con_Printf("Recording (simulated).");
 	}
 
-	ScriptEvent_OnRecordStarting();
-
 	g_AfxGoldSrcComClient.OnRecordStarting();
 
 	if(g_AfxGoldSrcComClient.GetOptimizeCaptureVis())
@@ -904,18 +903,10 @@ void Filming::Start()
 	}
 
 	m_CaptureEarly = (0.0 != movie_hidepanels->value) && !g_Filming_Stream[FS_hudcolor];
-
-	//
-
-	g_ModInfo.SetRecording(true);
 }
 
 void Filming::Stop()
 {
-	g_ModInfo.SetRecording(false);
-
-	//
-
 	if(g_Filming_Stream[FS_all]) delete g_Filming_Stream[FS_all];
 	if(g_Filming_Stream[FS_all_right]) delete g_Filming_Stream[FS_all_right];
 	if(g_Filming_Stream[FS_world]) delete g_Filming_Stream[FS_world];
@@ -959,8 +950,6 @@ void Filming::Stop()
 		RedockGameWindow();
 
 	g_AfxGoldSrcComClient.OnRecordEnded();
-
-	ScriptEvent_OnRecordEnded();
 
 	// Print stats:
 	{
@@ -1239,7 +1228,7 @@ Filming::DRAW_RESULT Filming::shouldDraw(GLenum mode)
 	bool bEntityQuadEntity = 0x02 & iMatteEntityQuads;
 
 	// in R_Particles:
-	if(g_ModInfo.In_R_DrawParticles_get()) {
+	if(g_In_R_DrawParticles) {
 		switch(m_iMatteStage) {
 		case MS_WORLD:
 			return bParticleWorld ? DR_NORMAL : DR_HIDE;
@@ -1250,7 +1239,7 @@ Filming::DRAW_RESULT Filming::shouldDraw(GLenum mode)
 	}
 
 	// in R_DrawEntitiesOnList:
-	else if(g_ModInfo.In_R_DrawEntitiesOnList_get()) {
+	else if(g_In_R_DrawEntitiesOnList) {
 		cl_entity_t *ce = pEngStudio->GetCurrentEntity();
 
 		if(!ce)
@@ -1301,7 +1290,7 @@ Filming::DRAW_RESULT Filming::shouldDraw(GLenum mode)
 	}
 
 	// in R_DrawViewModel
-	else if(g_ModInfo.In_R_DrawViewModel_get()) {
+	else if(g_In_R_DrawViewModel) {
 		switch(m_iMatteStage) {
 		case MS_WORLD:
 			return bViewModelWorld ? DR_NORMAL : DR_HIDE;
