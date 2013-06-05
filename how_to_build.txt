@@ -4,10 +4,7 @@ will do).
 
 Build order:
 
-1) Download and build SpiderMonkey (Release), please see
-   doc\how_to_build_spidermonkey.txt for details.
-   
-   Download the Half-Life SDK from
+1) Download the Half-Life SDK from
    http://metamod.sourceforge.net/files/sdk/hlsdk-2.3-p3.zip
    and install it into C:\Libraries\hlsdk
 
@@ -23,8 +20,5 @@ Build order:
 
 6) Copy msvcp100.dll, msvcr100.dll (CRT runtime, required by C++ and C++/CLI
    projects) from your system folders to build\Release\bin
-   
-   Copy js32.dll (Spider monkey) from C:\Libraries\js\src\Release
-   to build\Release\bin
 
 7) Remove all temporary / unneeded files such as *.pdb and hlaeconfig.xml

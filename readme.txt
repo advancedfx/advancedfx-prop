@@ -39,7 +39,7 @@ misc/
   miscellaneous
   
 resources/
-  files that should be packaged with an release, curently you have to copy them manually!
+  files that should be packaged with an release, use copy_resources_release.bat.
   
 shared/
   files and source code used in more than one project go here
@@ -48,7 +48,8 @@ tools/
   small tools not part of the hlae core download
   
 copy_resources_release.bat
-  Helper for copying required files from the resource folder to build\Release\bin
+  Helper for copying required files from the resource folder to
+  build\Release\bin
   
 how_to_build.txt
   Info on how to build HLAE.  
