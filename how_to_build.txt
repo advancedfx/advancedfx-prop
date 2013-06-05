@@ -1,6 +1,6 @@
-For building HLAE you will need Microsoft Visual C++ and Microsoft Visual C#
-which you can obtain for free from http://www.microsoft.com (Express editions
-will do).
+For building HLAE you will need Microsoft Visual C++ 2010 and Microsoft Visual
+C# 2010, which you can obtain for free from http://www.microsoft.com (Express
+editions will do).
 
 Build order:
 
