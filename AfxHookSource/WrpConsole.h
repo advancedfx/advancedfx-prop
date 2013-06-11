@@ -30,7 +30,6 @@ typedef void (*WrpCommandCallback)(IWrpCommandArgs * args);
 
 // WrpConCommand ///////////////////////////////////////////////////////////////
 
-
 class WrpConCommand
 {
 public:
@@ -66,6 +65,15 @@ public:
 	virtual bool RegisterConCommandBase(ConCommandBase_004 *pVar);
 };
 
+// WrpConCommandsRegistrar_007 /////////////////////////////////////////////////
+
+class WrpConCommandsRegistrar_007 :
+	public IConCommandBaseAccessor_007
+{
+public:
+	virtual bool RegisterConCommandBase(ConCommandBase_007 *pVar);
+};
+
 
 // WrpConCommands //////////////////////////////////////////////////////////////
 
@@ -82,16 +90,19 @@ public:
 
 	static void RegisterCommands(ICvar_003 * cvarIface, IVEngineClient_012 * vEngineClientInterface);
 	static void RegisterCommands(ICvar_004 * cvarIface);
+	static void RegisterCommands(ICvar_007 * cvarIface);
 
 	static void WrpConCommand_Register(WrpConCommand * cmd);
 	static void WrpConCommand_Unregister(WrpConCommand * cmd);
 
 	static bool WrpConCommandsRegistrar_003_Register(ConCommandBase_003 *pVar);
 	static bool WrpConCommandsRegistrar_004_Register(ConCommandBase_004 *pVar);
+	static bool WrpConCommandsRegistrar_007_Register(ConCommandBase_007 *pVar);
 
 private:
 	static ICvar_003 * m_CvarIface_003;
 	static ICvar_004 * m_CvarIface_004;
+	static ICvar_007 * m_CvarIface_007;
 	static WrpConCommandsListEntry * m_CommandListRoot;
 	static IVEngineClient_012 * m_VEngineClient_012;
 };

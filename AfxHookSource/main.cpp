@@ -55,13 +55,54 @@ void PrintInfo() {
 	Tier0_Msg("|" "\n");
 }
 
-void MySetup(CreateInterfaceFn appSystemFactory) {
+IClientEngineTools_001 * g_Engine_ClientEngineTools;
+
+class ClientEngineTools : public IClientEngineTools_001
+{
+public:
+	// TODO: we should call the destructor of g_Engine_ClientEngineTools on destuction?
+
+	virtual void LevelInitPreEntityAllTools() { g_Engine_ClientEngineTools->LevelInitPreEntityAllTools(); }
+	virtual void LevelInitPostEntityAllTools() { g_Engine_ClientEngineTools->LevelInitPostEntityAllTools(); }
+	virtual void LevelShutdownPreEntityAllTools() { g_Engine_ClientEngineTools->LevelShutdownPreEntityAllTools(); }
+	virtual void LevelShutdownPostEntityAllTools() { g_Engine_ClientEngineTools->LevelShutdownPostEntityAllTools(); }
+	virtual void PreRenderAllTools() { g_Engine_ClientEngineTools->PreRenderAllTools(); }
+	virtual void PostRenderAllTools() { g_Engine_ClientEngineTools->PostRenderAllTools(); }
+	virtual void PostToolMessage( HTOOLHANDLE hEntity, KeyValues *msg ) { g_Engine_ClientEngineTools->PostToolMessage(hEntity, msg); }
+	virtual void AdjustEngineViewport( int& x, int& y, int& width, int& height ) { g_Engine_ClientEngineTools->AdjustEngineViewport(x, y, width, height); }
+	
+	virtual bool SetupEngineView( Vector &origin, QAngle &angles, float &fov )
+	{
+		bool bRet = g_Engine_ClientEngineTools->SetupEngineView(origin, angles, fov);
+
+		g_Hook_VClient_RenderView.OnViewOverride(
+			origin.x, origin.y, origin.z,
+			angles.x, angles.y, angles.z
+		);
+
+		return bRet;
+	}
+	
+	virtual bool SetupAudioState( AudioState_t &audioState ) { return g_Engine_ClientEngineTools->SetupAudioState(audioState); }
+	virtual void VGui_PreRenderAllTools( int paintMode ) { g_Engine_ClientEngineTools->VGui_PreRenderAllTools(paintMode); }
+	virtual void VGui_PostRenderAllTools( int paintMode ) { g_Engine_ClientEngineTools->VGui_PostRenderAllTools(paintMode); }
+	virtual bool IsThirdPersonCamera() { return g_Engine_ClientEngineTools->IsThirdPersonCamera(); }
+	virtual bool InToolMode()  { return g_Engine_ClientEngineTools->InToolMode(); }
+} g_ClientEngineTools;
+
+CreateInterfaceFn g_AppSystemFactory = 0;
+
+void MySetup(CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGlobals)
+{
 	static bool bFirstRun = true;
 
-	if(bFirstRun) {
+	if(bFirstRun)
+	{
+		bFirstRun = false;
+
 		void *iface , *iface2;
 
-		bFirstRun = false;
+		g_AppSystemFactory = appSystemFactory;
 
 		if(iface = appSystemFactory(VENGINE_CLIENT_INTERFACE_VERSION_013, NULL)) {
 			g_Info_VEngineClient = VENGINE_CLIENT_INTERFACE_VERSION_013;
@@ -75,7 +116,13 @@ void MySetup(CreateInterfaceFn appSystemFactory) {
 			ErrorBox("Could not get a supported VEngineClient interface.");
 		}
 
-		if(iface = appSystemFactory( VENGINE_CVAR_INTERFACE_VERSION_004, NULL )) {
+		if((iface = appSystemFactory( CVAR_INTERFACE_VERSION_007, NULL )))
+		{
+			g_Info_VEngineCvar = CVAR_INTERFACE_VERSION_007;
+			WrpConCommands::RegisterCommands((ICvar_007 *)iface);
+		}
+		else if((iface = appSystemFactory( VENGINE_CVAR_INTERFACE_VERSION_004, NULL )))
+		{
 			g_Info_VEngineCvar = VENGINE_CVAR_INTERFACE_VERSION_004;
 			WrpConCommands::RegisterCommands((ICvar_004 *)iface);
 		}
@@ -89,13 +136,29 @@ void MySetup(CreateInterfaceFn appSystemFactory) {
 		else {
 			ErrorBox("Could not get a supported VEngineCvar interface.");
 		}
+
+		if(iface = appSystemFactory(VCLIENTENGINETOOLS_INTERFACE_VERSION_001, NULL))
+		{
+			g_Engine_ClientEngineTools = (IClientEngineTools_001 *)iface;
+		}
+		else {
+			ErrorBox("Could not get a supported VClientEngineTools interface.");
+		}
+		
+		g_Hook_VClient_RenderView.Install(pGlobals);
+
+		PrintInfo();
+	}
+}
+
+void* AppSystemFactory_ForClient(const char *pName, int *pReturnCode)
+{
+	if(!strcmp(VCLIENTENGINETOOLS_INTERFACE_VERSION_001, pName))
+	{
+		return &g_ClientEngineTools;
 	}
 
-	if(g_VEngineClient) {
-		g_Hook_VClient_RenderView.Install(g_VEngineClient->GetGameDirectory());
-	}
-
-	PrintInfo();
+	return g_AppSystemFactory(pName, pReturnCode);
 }
 
 void * old_Client_Init;
@@ -104,23 +167,23 @@ int __stdcall new_Client_Init(DWORD *this_ptr, CreateInterfaceFn appSystemFactor
 	static bool bFirstCall = true;
 	int myret;
 
+	if(bFirstCall) {
+		bFirstCall = false;
+
+		MySetup(appSystemFactory, pGlobals);
+	}
+
 	__asm {
 		MOV ecx, pGlobals
 		PUSH ecx
 		MOV ecx, physicsFactory
 		PUSH ecx
-		MOV ecx, appSystemFactory
+		MOV ecx, AppSystemFactory_ForClient
 		PUSH ecx
 
 		MOV ecx, this_ptr		
 		CALL old_Client_Init
 		MOV	myret, eax
-	}
-
-	if(bFirstCall) {
-		bFirstCall = false;
-
-		MySetup(appSystemFactory);
 	}
 
 	return myret;
@@ -147,50 +210,146 @@ __declspec(naked) void hook_Client_Init() {
 	}
 }
 
+void * HookInterfaceFn(void * iface, int idx, void * fn)
+{
+	MdtMemBlockInfos mbis;
+	void * ret = 0;
+
+	if(iface)
+	{
+		void **padr =  *(void ***)iface;
+		ret = *(padr+idx);
+		MdtMemAccessBegin((padr+idx), sizeof(void *), &mbis);
+		*padr = fn;
+		MdtMemAccessEnd(&mbis);
+	}
+
+	return ret;
+}
+
+void * old_csgo_ClientInit;
+void * new_csgo_VClientIface = 0;
+
+int __stdcall new_csgo_ClientInit(DWORD *this_ptr, CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGlobals)
+{
+	static bool bFirstCall = true;
+	int myret;
+
+	if(bFirstCall)
+	{
+		bFirstCall = false;
+
+		MySetup(appSystemFactory, pGlobals);
+	}
+
+	__asm {
+		MOV ecx, pGlobals
+		PUSH ecx
+		MOV ecx, AppSystemFactory_ForClient
+		PUSH ecx
+
+		MOV ecx, this_ptr		
+		CALL old_csgo_ClientInit
+		MOV	myret, eax
+	}
+}
+
+__declspec(naked) void hook_csgo_ClientInit()
+{
+	static unsigned char * tempMem[8];
+	__asm {
+		POP eax
+		MOV tempMem[0], eax
+		MOV tempMem[4], ecx
+
+		PUSH ecx
+		CALL new_csgo_ClientInit
+
+		MOV ecx, tempMem[4]
+		PUSH 0
+		PUSH eax
+		MOV eax, tempMem[0]
+		MOV [esp+4], eax
+		POP eax
+
+		RET
+	}
+}
+
+void HookClientDllInterface_011_Init(void * iface)
+{
+	old_Client_Init = HookInterfaceFn(iface, 0, (void *)hook_Client_Init);
+}
+
 CreateInterfaceFn old_Client_CreateInterface = 0;
+
 void* new_Client_CreateInterface(const char *pName, int *pReturnCode)
 {
 	static bool bFirstCall = true;
-	MdtMemBlockInfos mbis;
+	static bool isCsgo = false;
 
 	void * pRet = old_Client_CreateInterface(pName, pReturnCode);
 
-	if(bFirstCall) {
+	if(bFirstCall)
+	{
 		bFirstCall = false;
 
 		void * iface = NULL;
+		char filePath[MAX_PATH] = { 0 };
+		GetModuleFileName( 0, filePath, MAX_PATH );
 
-		if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_017, NULL)) {
-			g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_017;
-		}
-		else if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_016, NULL)) {
-			g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_016;
-		}
-		else if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_015, NULL)) {
-			g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_015;
-		}
-		else if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_013, NULL)) {
-			g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_013;
-		}
-		else if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_012, NULL)) {
-			g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_012;
-		}
-		else if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_011, NULL)) {
-			g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_011;
-		}
-		else {
-			ErrorBox("Could not get a supported VClient interface.");
-		}
-
-		if(iface)
+		if(StringEndsWith(filePath,"csgo.exe"))
 		{
-			void **padr =  *(void ***)iface;
-			old_Client_Init = *padr;
-			MdtMemAccessBegin(padr, sizeof(void *), &mbis);
-			*padr = (void *)hook_Client_Init;
-			MdtMemAccessEnd(&mbis);
+			isCsgo = true;
+		}
+		else
+		{
+			if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_017, NULL)) {
+				g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_017;
+				HookClientDllInterface_011_Init(iface);
+			}
+			else if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_016, NULL)) {
+				g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_016;
+				HookClientDllInterface_011_Init(iface);
+			}
+			else if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_015, NULL)) {
+				g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_015;
+				HookClientDllInterface_011_Init(iface);
+			}
+			else if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_013, NULL)) {
+				g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_013;
+				HookClientDllInterface_011_Init(iface);
+			}
+			else if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_012, NULL)) {
+				g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_012;
+				HookClientDllInterface_011_Init(iface);
+			}
+			else if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_011, NULL)) {
+				g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_011;
+				HookClientDllInterface_011_Init(iface);
+			}
+			else
+			{
+				ErrorBox("Could not get a supported VClient interface.");
+			}
+		}
+	}
+
+	if(isCsgo && !strcmp(pName, CLIENT_DLL_INTERFACE_VERSION_CSGO_016))
+	{
+		if(!new_csgo_VClientIface)
+		{
+			static void ** vtable = (void **)MdtAllocExecuteableMemory(CLIENT_DLL_INTERFACE_CSGO_016_VTABLESIZE);
+			memcpy(vtable, *(void **)pRet, CLIENT_DLL_INTERFACE_CSGO_016_VTABLESIZE);
+			old_csgo_ClientInit = *(vtable+2);
+			*(vtable+2) = hook_csgo_ClientInit;
+
+			new_csgo_VClientIface = &vtable;
+		
+			g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_CSGO_016 " (CS:GO)";
 		}
 
+		pRet = new_csgo_VClientIface;
 	}
 
 	return pRet;
@@ -348,6 +507,10 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 	{ 
 		case DLL_PROCESS_ATTACH:
 		{
+#if 0
+			MessageBox(0,"DLL_PROCESS_ATTACH","MDT_DEBUG",MB_OK);
+#endif
+
 			if(!(
 				InterceptDllCall(GetModuleHandle(NULL), "Kernel32.dll", "LoadLibraryExA", (DWORD) &new_LoadLibraryExA)
 				||InterceptDllCall(GetModuleHandle(NULL), "Kernel32.dll", "LoadLibraryA", (DWORD) &new_LoadLibraryA)

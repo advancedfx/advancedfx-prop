@@ -60,6 +60,20 @@ CreateInterfaceFn Sys_GetFactory( CSysModule *pModule );
 typedef float vec_t;
 
 
+// Vector //////////////////////////////////////////////////////////////////////
+
+class MdtVector;
+typedef MdtVector Vector;
+
+class MdtVector				
+{
+public:
+	// Members
+	vec_t x, y, z;
+
+	// shortened.
+};
+
 
 // QAngle //////////////////////////////////////////////////////////////////////
 
@@ -109,6 +123,9 @@ class ICommandCallback_004
 public:
 	virtual void CommandCallback( const CCommand_004 &command ) = 0;
 };
+
+
+typedef int CVarDLLIdentifier_t_007;
 
 
 
@@ -452,6 +469,50 @@ public:
 	virtual void Shutdown() = 0;
 };
 
+// IAppSystem_swarm ////////////////////////////////////////////////////////////
+
+struct AppSystemInfo_t
+{
+	const char *m_pModuleName;
+	const char *m_pInterfaceName;
+};
+
+enum AppSystemTier_t
+{
+	APP_SYSTEM_TIER0 = 0,
+	APP_SYSTEM_TIER1,
+	APP_SYSTEM_TIER2,
+	APP_SYSTEM_TIER3,
+
+	APP_SYSTEM_TIER_OTHER,
+};
+
+class IAppSystem_swarm abstract
+{
+public:
+	// Here's where the app systems get to learn about each other 
+	virtual bool Connect( CreateInterfaceFn factory ) = 0;
+	virtual void Disconnect() = 0;
+
+	// Here's where systems can access other interfaces implemented by this object
+	// Returns NULL if it doesn't implement the requested interface
+	virtual void *QueryInterface( const char *pInterfaceName ) = 0;
+
+	// Init, shutdown
+	virtual InitReturnVal_t Init() = 0;
+	virtual void Shutdown() = 0;
+
+	// Returns all dependent libraries
+	virtual const AppSystemInfo_t* GetDependencies() = 0;
+
+	// Returns the tier
+	virtual AppSystemTier_t GetTier() = 0;
+
+	// Reconnect to a particular interface
+	virtual void Reconnect( CreateInterfaceFn factory, const char *pInterfaceName ) = 0;
+};
+
+
 
 // ICvar_003 ///////////////////////////////////////////////////////////////////
 
@@ -495,6 +556,10 @@ public:
 class ICvar_004 abstract : public IAppSystem
 {
 public:
+/*	virtual void _Unknown_001(void);
+	virtual void _Unknown_002(void);
+	virtual void _Unknown_003(void);
+*/
 	// Allocate a unique DLL identifier
 	virtual CVarDLLIdentifier_t_004 AllocateDLLIdentifier() = 0;
 
@@ -537,8 +602,371 @@ public:
 #endif
 };
 
+// ICvar_007 ///////////////////////////////////////////////////////////////////
 
-class CViewSetup_013;
+#define CVAR_INTERFACE_VERSION_007 "VEngineCvar007"
+
+class ConCommandBase_007;
+class ConVar_007;
+class ConCommand_007;
+class IConVar_007;
+class CCommand_007;
+
+typedef void ( *FnChangeCallback_t_007 )( IConVar_007 *var, const char *pOldValue, float flOldValue );
+
+class IConCommandBaseAccessor_007
+{
+public:
+	// Flags is a combination of FCVAR flags in cvar.h.
+	// hOut is filled in with a handle to the variable.
+	virtual bool RegisterConCommandBase( ConCommandBase_007 *pVar ) = 0;
+};
+
+typedef void ( *FnCommandCallbackV1_t_007 )( void );
+typedef void ( *FnCommandCallback_t_007 )( const CCommand_007 &command );
+
+#define COMMAND_COMPLETION_MAXITEMS_007		64
+#define COMMAND_COMPLETION_ITEM_LENGTH_007	64
+
+//-----------------------------------------------------------------------------
+// Returns 0 to COMMAND_COMPLETION_MAXITEMS worth of completion strings
+//-----------------------------------------------------------------------------
+typedef int  ( *FnCommandCompletionCallback_007 )( const char *partial, char commands[ COMMAND_COMPLETION_MAXITEMS_007	 ][ COMMAND_COMPLETION_ITEM_LENGTH_007 ] );
+
+class ICommandCallback_007
+{
+public:
+	virtual void CommandCallback( const CCommand_007 &command ) = 0;
+};
+
+class ICommandCompletionCallback_007;
+
+
+class ConCommandBase_007
+{
+	friend WrpConCommands; // ugly hack, just like Valve did
+
+public:
+								ConCommandBase_007( void );
+								ConCommandBase_007( const char *pName, const char *pHelpString = 0, 
+									int flags = 0 );
+
+	virtual						~ConCommandBase_007( void );
+
+	virtual	bool				IsCommand( void ) const;
+
+	// Check flag
+	virtual bool				IsFlagSet( int flag ) const;
+	// Set flag
+	virtual void				AddFlags( int flags );
+	// Clear flag
+	virtual void				RemoveFlags( int flags );
+
+	virtual int					GetFlags() const;
+
+	// Return name of cvar
+	virtual const char			*GetName( void ) const;
+
+	// Return help text for cvar
+	virtual const char			*GetHelpText( void ) const;
+
+	// Deal with next pointer
+	const ConCommandBase_007		*GetNext( void ) const;
+	ConCommandBase_007				*GetNext( void );
+	
+	virtual bool				IsRegistered( void ) const;
+
+	// Returns the DLL identifier
+	virtual CVarDLLIdentifier_t_007	GetDLLIdentifier() const;
+
+protected:
+	virtual void				Create( const char *pName, const char *pHelpString = 0, 
+									int flags = 0 );
+
+	// Used internally by OneTimeInit to initialize/shutdown
+	virtual void				Init();
+	void _NOT_IMPLEMENTED_Shutdown();
+
+	// Internal copy routine ( uses new operator from correct module )
+	void _NOT_IMPLEMENTED_CopyString(void);
+
+private:
+	// Next ConVar in chain
+	// Prior to register, it points to the next convar in the DLL.
+	// Once registered, though, m_pNext is reset to point to the next
+	// convar in the global list
+	ConCommandBase_007				*m_pNext;
+
+	// Has the cvar been added to the global list?
+	bool						m_bRegistered;
+
+	// Static data
+	char 					*m_pszName;
+	char 					*m_pszHelpString;
+	
+	// ConVar flags
+	int							m_nFlags;
+
+protected:
+	// ConVars add themselves to this list for the executable. 
+	// Then ConVar_Register runs through  all the console variables 
+	// and registers them into a global list stored in vstdlib.dll
+	static ConCommandBase_007		*s_pConCommandBases;
+
+	// ConVars in this executable use this 'global' to access values.
+	static IConCommandBaseAccessor_007	*s_pAccessor;
+};
+
+
+//-----------------------------------------------------------------------------
+// Command tokenizer
+//-----------------------------------------------------------------------------
+class CCommand_007
+{
+public:
+	CCommand_007();
+	CCommand_007( int nArgC, const char **ppArgV );
+	bool _NOT_IMPLEMENTED_Tokenize(void);
+	void _NOT_IMPLEMENTED_Reset(void);
+
+	int ArgC() const;
+	const char **ArgV() const;
+	const char *ArgS() const;					// All args that occur after the 0th arg, in string form
+	const char *GetCommandString() const;		// The entire command in string form, including the 0th arg
+	const char *operator[]( int nIndex ) const;	// Gets at arguments
+	const char *Arg( int nIndex ) const;		// Gets at arguments
+	
+	// Helper functions to parse arguments to commands.
+	void _NOT_IMPLEMENTED_FindArg(void) const;
+	void _NOT_IMPLEMENTED_FindArgInt(void) const;
+
+	static int MaxCommandLength();
+	static void _NOT_IMPLEMENTED_DefaultBreakSet();
+
+private:
+	enum
+	{
+		COMMAND_MAX_ARGC = 64,
+		COMMAND_MAX_LENGTH = 512,
+	};
+
+	int		m_nArgc;
+	int		m_nArgv0Size;
+	char	m_pArgSBuffer[ COMMAND_MAX_LENGTH ];
+	char	m_pArgvBuffer[ COMMAND_MAX_LENGTH ];
+	const char*	m_ppArgv[ COMMAND_MAX_ARGC ];
+};
+
+inline int CCommand_007::MaxCommandLength()
+{
+	return COMMAND_MAX_LENGTH - 1;
+}
+
+inline int CCommand_007::ArgC() const
+{
+	return m_nArgc;
+}
+
+inline const char **CCommand_007::ArgV() const
+{
+	return m_nArgc ? (const char**)m_ppArgv : 0;
+}
+
+inline const char *CCommand_007::ArgS() const
+{
+	return m_nArgv0Size ? &m_pArgSBuffer[m_nArgv0Size] : "";
+}
+
+inline const char *CCommand_007::GetCommandString() const
+{
+	return m_nArgc ? m_pArgSBuffer : "";
+}
+
+inline const char *CCommand_007::Arg( int nIndex ) const
+{
+	// FIXME: Many command handlers appear to not be particularly careful
+	// about checking for valid argc range. For now, we're going to
+	// do the extra check and return an empty string if it's out of range
+	if ( nIndex < 0 || nIndex >= m_nArgc )
+		return "";
+	return m_ppArgv[nIndex];
+}
+
+inline const char *CCommand_007::operator[]( int nIndex ) const
+{
+	return Arg( nIndex );
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: The console invoked command
+//-----------------------------------------------------------------------------
+class ConCommand_007 : public ConCommandBase_007
+{
+friend class CCvar_007;
+
+public:
+	typedef ConCommandBase_007 BaseClass;
+
+	/// <remarks>not implemented</remarks>
+	ConCommand_007( const char *pName, FnCommandCallbackV1_t_007 callback, 
+		const char *pHelpString = 0, int flags = 0, FnCommandCompletionCallback_007 completionFunc = 0 );
+	
+	/// <remarks> tweaked since we don't support completition and use a callback wrapper </remarks>
+	ConCommand_007( const char *pName, WrpCommandCallback callback, 
+		const char *pHelpString = 0, int flags = 0, FnCommandCompletionCallback_007 completionFunc = 0 );
+	
+	/// <remarks>not implemented</remarks>
+	ConCommand_007( const char *pName, ICommandCallback_007 *pCallback, 
+		const char *pHelpString = 0, int flags = 0, ICommandCompletionCallback_007 *pCommandCompletionCallback = 0 );
+
+	virtual ~ConCommand_007( void );
+
+	virtual	bool IsCommand( void ) const;
+
+	/// <remarks> we don't support autocompletition, thus we always return 0 </remarks>
+	virtual int	AutoCompleteSuggest(void * dummy1, void * dummy2);
+
+	/// <remarks> we don't support autocompletition, thus we always return false </remarks>
+	virtual bool CanAutoComplete( void );
+
+	// Invoke the function
+	virtual void Dispatch( const CCommand_007 &command );
+
+private:
+	// NOTE: To maintain backward compat, we have to be very careful:
+	// All public virtual methods must appear in the same order always
+	// since engine code will be calling into this code, which *does not match*
+	// in the mod code; it's using slightly different, but compatible versions
+	// of this class. Also: Be very careful about adding new fields to this class.
+	// Those fields will not exist in the version of this class that is instanced
+	// in mod code.
+
+	// Call this function when executing the command
+	union
+	{
+		FnCommandCallbackV1_t_007 m_fnCommandCallbackV1;
+		WrpCommandCallback m_fnCommandCallback;
+		ICommandCallback_007 *m_pCommandCallback; 
+	};
+
+	union
+	{
+		FnCommandCompletionCallback_007	m_fnCompletionCallback;
+		ICommandCompletionCallback_007 *m_pCommandCompletionCallback;
+	};
+
+	bool m_bHasCompletionCallback : 1;
+	bool m_bUsingNewCommandCallback : 1;
+	bool m_bUsingCommandCallbackInterface : 1;
+};
+
+
+
+class ICvar_007 abstract : public IAppSystem_swarm
+{
+public:
+	// Allocate a unique DLL identifier
+	virtual CVarDLLIdentifier_t_007 AllocateDLLIdentifier() = 0;
+
+	// Register, unregister commands
+	virtual void			RegisterConCommand( ConCommandBase_007 *pCommandBase ) = 0;
+	virtual void			UnregisterConCommand( ConCommandBase_007 *pCommandBase ) = 0;
+	virtual void			UnregisterConCommands( CVarDLLIdentifier_t_007 id ) = 0;
+
+	// If there is a +<varname> <value> on the command line, this returns the value.
+	// Otherwise, it returns NULL.
+	virtual const char*		GetCommandLineValue( const char *pVariableName ) = 0;
+
+	// Try to find the cvar pointer by name
+	virtual ConCommandBase_007 *FindCommandBase( const char *name ) = 0;
+	virtual const ConCommandBase_007 *FindCommandBase( const char *name ) const = 0;
+	virtual ConVar_007			*FindVar ( const char *var_name ) = 0;
+	virtual const ConVar_007	*FindVar ( const char *var_name ) const = 0;
+	virtual ConCommand_007		*FindCommand( const char *name ) = 0;
+	virtual const ConCommand_007 *FindCommand( const char *name ) const = 0;
+
+
+
+	// Install a global change callback (to be called when any convar changes) 
+	virtual void			InstallGlobalChangeCallback( FnChangeCallback_t_007 callback ) = 0;
+	virtual void			RemoveGlobalChangeCallback( FnChangeCallback_t_007 callback ) = 0;
+	virtual void			CallGlobalChangeCallbacks( ConVar_007 *var, const char *pOldString, float flOldValue ) = 0;
+
+	virtual void			_UNUSED_InstallConsoleDisplayFunc( void ) = 0;
+	virtual void			_UNUSED_RemoveConsoleDisplayFunc( void ) = 0;
+	virtual void			_UNUSED_ConsoleColorPrintf( void ) const = 0;
+	virtual void			_UNUSED_ConsolePrintf( void ) const = 0;
+	virtual void			_UNUSED_ConsoleDPrintf( void ) const = 0;
+	virtual void			_UNUSED_RevertFlaggedConVars( void ) = 0;
+	virtual void			_UNUSED_InstallCVarQuery( void ) = 0;
+
+#if defined( _X360 )
+	virtual void			_UNUSED_PublishToVXConsole( ) = 0;
+#endif
+
+	virtual void			_UNUSED_SetMaxSplitScreenSlots( int nSlots ) = 0;
+	virtual int				_UNUSED_GetMaxSplitScreenSlots() const = 0;
+
+	virtual void			_UNUSED_AddSplitScreenConVars() = 0;
+	virtual void			_UNUSED_RemoveSplitScreenConVars( CVarDLLIdentifier_t_007 id ) = 0;
+
+	virtual int				_UNUSED_GetConsoleDisplayFuncCount() const = 0;
+	virtual void			_UNUSED_GetConsoleText( int nDisplayFuncIndex, char *pchText, size_t bufSize ) const = 0;
+
+	virtual bool			_UNUSED_IsMaterialThreadSetAllowed( ) const = 0;
+	virtual void			_UNUSED_QueueMaterialThreadSetValue( ConVar_007 *pConVar, const char *pValue ) = 0;
+	virtual void			_UNUSED_QueueMaterialThreadSetValue( ConVar_007 *pConVar, int nValue ) = 0;
+	virtual void			_UNUSED_QueueMaterialThreadSetValue( ConVar_007 *pConVar, float flValue ) = 0;
+	virtual bool			_UNUSED_HasQueuedMaterialThreadConVarSets() const = 0;
+	virtual int				_UNUSED_ProcessQueuedMaterialThreadConVarSets() = 0;
+
+protected:	class ICVarIteratorInternal;
+public:
+	/// Iteration over all cvars. 
+	/// (THIS IS A SLOW OPERATION AND YOU SHOULD AVOID IT.)
+	/// usage: 
+	/// { ICVar::Iterator iter(g_pCVar); 
+	///   for ( iter.SetFirst() ; iter.IsValid() ; iter.Next() )
+	///   {  
+	///       ConCommandBase *cmd = iter.Get();
+	///   } 
+	/// }
+	/// The Iterator class actually wraps the internal factory methods
+	/// so you don't need to worry about new/delete -- scope takes care
+	//  of it.
+	/// We need an iterator like this because we can't simply return a 
+	/// pointer to the internal data type that contains the cvars -- 
+	/// it's a custom, protected class with unusual semantics and is
+	/// prone to change.
+	class Iterator
+	{
+	public:
+		inline Iterator(ICvar_007 *icvar);
+		inline ~Iterator(void);
+		inline void		SetFirst( void );
+		inline void		Next( void );
+		inline bool		IsValid( void );
+		inline ConCommandBase_007 *Get( void );
+	private:
+		ICVarIteratorInternal *m_pIter;
+	};
+
+protected:
+	// internals for  ICVarIterator
+	class ICVarIteratorInternal
+	{
+	public:
+		virtual void		SetFirst( void ) = 0;
+		virtual void		Next( void ) = 0;
+		virtual	bool		IsValid( void ) = 0;
+		virtual ConCommandBase_007 *Get( void ) = 0;
+	};
+
+	virtual ICVarIteratorInternal	*FactoryInternalIterator( void ) = 0;
+	friend class Iterator;
+};
+
 
 // IVEngineClient_012 //////////////////////////////////////////////////////////
 
@@ -1196,8 +1624,165 @@ public:
 
 // IBaseClientDll_016 //////////////////////////////////////////////////////////
 
-#define CLIENT_DLL_INTERFACE_VERSION_016		"VClient016"
+#define CLIENT_DLL_INTERFACE_VERSION_016		"VClient016" 
 
 // IBaseClientDll_017 //////////////////////////////////////////////////////////
 
 #define CLIENT_DLL_INTERFACE_VERSION_017		"VClient017"
+
+
+// IBaseInterface //////////////////////////////////////////////////////////////
+
+class IBaseInterface
+{
+public:
+	virtual	~IBaseInterface() {}
+};
+
+// IClientEngineTools //////////////////////////////////////////////////////////
+
+typedef void * HTOOLHANDLE;
+typedef void KeyValues;
+typedef struct {} AudioState_t;
+
+class IClientEngineTools_001 : public IBaseInterface
+{
+public:
+	// Level init, shutdown
+	virtual void LevelInitPreEntityAllTools() = 0;
+	// entities are created / spawned / precached here
+	virtual void LevelInitPostEntityAllTools() = 0;
+
+	virtual void LevelShutdownPreEntityAllTools() = 0;
+	// Entities are deleted / released here...
+	virtual void LevelShutdownPostEntityAllTools() = 0;
+
+	virtual void PreRenderAllTools() = 0;
+	virtual void PostRenderAllTools() = 0;
+
+	virtual void PostToolMessage( HTOOLHANDLE hEntity, KeyValues *msg ) = 0;
+
+	virtual void AdjustEngineViewport( int& x, int& y, int& width, int& height ) = 0;
+	virtual bool SetupEngineView( Vector &origin, QAngle &angles, float &fov ) = 0;
+	virtual bool SetupAudioState( AudioState_t &audioState ) = 0;
+
+	// Paintmode is an enum declared in ienginevgui.h
+	virtual void VGui_PreRenderAllTools( int paintMode ) = 0;
+	virtual void VGui_PostRenderAllTools( int paintMode ) = 0;
+
+	virtual bool IsThirdPersonCamera( ) = 0;
+
+	virtual bool InToolMode() = 0;
+};
+
+#define VCLIENTENGINETOOLS_INTERFACE_VERSION_001 "VCLIENTENGINETOOLS001"
+
+
+// IBaseClientDll_csgo_016 /////////////////////////////////////////////////////
+
+#define CLIENT_DLL_INTERFACE_VERSION_CSGO_016 "VClient016"
+
+// TODO: this is not the exact size, minium is 89, maybe it's 99
+#define CLIENT_DLL_INTERFACE_CSGO_016_VTABLESIZE (4*99)
+
+class IBaseClientDLL_csgo_016 abstract
+{
+public:
+	// Connect appsystem components, get global interfaces, don't run any other init code
+	virtual int			Connect( CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGlobals ) = 0;
+
+	virtual void			Disonnect() = 0;
+
+	// run other init code here
+	virtual int				Init( CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGlobals ) = 0;
+
+	virtual void			PostInit() = 0;
+
+	// Called once when the client DLL is being unloaded
+	virtual void			Shutdown( void ) = 0;
+	
+	virtual void _UNUSED_LevelInitPreEntity(void) = 0;
+	virtual void _UNUSED_LevelInitPostEntity(void) = 0;
+	virtual void _UNUSED_LevelShutdown(void) = 0;
+	virtual void _UNUSED_GetAllClasses(void) = 0;
+	virtual void _UNUSED_HudVidInit(void) = 0;
+	virtual void _UNUSED_HudProcessInput(void) = 0;
+	virtual void _UNUSED_HudUpdate(void) = 0;
+	virtual void _UNUSED_HudReset(void) = 0;
+	virtual void _UNUSED_HudText(void) = 0;
+	virtual void _UNUSED_ShouldDrawDropdownConsole(void) = 0;
+	virtual void _UNUSED_IN_ActivateMouse(void) = 0;
+	virtual void _UNUSED_IN_DeactivateMouse(void) = 0;
+	virtual void _UNUSED_IN_Accumulate (void) = 0;
+	virtual void _UNUSED_IN_ClearStates (void) = 0;
+	virtual void _UNUSED_IN_IsKeyDown(void ) = 0;
+	virtual void _UNUSED_IN_KeyEvent(void) = 0;
+	virtual void _UNUSED_CreateMove (void) = 0;				
+	virtual void _UNUSED_ExtraMouseSample(void) = 0;
+	virtual void _UNUSED_WriteUsercmdDeltaToBuffer(void) = 0;
+	virtual void _UNUSED_EncodeUserCmdToBuffer(void) = 0;
+	virtual void _UNUSED_DecodeUserCmdFromBuffer(void) = 0;
+	virtual void _UNUSED_View_Render(void) = 0;
+	virtual void _UNUSED_RenderView(void) = 0;
+	virtual void _UNUSED_View_Fade(void) = 0;
+	virtual void _UNUSED_SetCrosshairAngle(void) = 0;
+	virtual void _UNUSED_InitSprite(void) = 0;
+	virtual void _UNUSED_ShutdownSprite(void) = 0;
+	virtual void _UNUSED_GetSpriteSize(void) const = 0;
+	virtual void _UNUSED_VoiceStatus(void) = 0;
+	virtual void _UNUSED_PlayerAudible(void) = 0;
+	virtual void _UNUSED_InstallStringTableCallback(void) = 0;
+	virtual void _UNUSED_FrameStageNotify(void) = 0;
+	virtual void _UNUSED_DispatchUserMessage(void) = 0;
+	virtual void _UNUSED_SaveInit(void) = 0;
+	virtual void _UNUSED_SaveWriteFields(void) = 0;
+	virtual void _UNUSED_SaveReadFields(void) = 0;
+	virtual void _UNUSED_PreSave(void) = 0;
+	virtual void _UNUSED_Save(void) = 0;
+	virtual void _UNUSED_WriteSaveHeaders(void) = 0;
+	virtual void _UNUSED_ReadRestoreHeaders(void) = 0;
+	virtual void _UNUSED_Restore(void) = 0;
+	virtual void _UNUSED_DispatchOnRestore(void) = 0;
+	virtual void _UNUSED_GetStandardRecvProxies(void) = 0;
+	virtual void _UNUSED_WriteSaveGameScreenshot(void) = 0;
+	virtual void _UNUSED_EmitSentenceCloseCaption(void) = 0;
+	virtual void _UNUSED_EmitCloseCaption(void) = 0;
+	virtual void _UNUSED_CanRecordDemo(void) const = 0;
+	virtual void _UNUSED_OnDemoRecordStart(void) = 0;
+	virtual void _UNUSED_OnDemoRecordStop(void) = 0;
+	virtual void _UNUSED_OnDemoPlaybackStart(void) = 0;
+	virtual void _UNUSED_OnDemoPlaybackStop(void) = 0;
+	virtual void _UNUSED_RecordDemoPolishUserInput(void) = 0;
+	virtual void _UNUSED_CacheReplayRagdolls(void) = 0;
+	virtual void _UNUSED_ReplayUI_SendMessage(void) = 0;
+	virtual void _UNUSED_GetReplayFactory(void) = 0;
+	virtual void _UNUSED_ClearLocalPlayerReplayPtr(void) = 0;
+	virtual void _UNUSED_GetScreenWidth(void) = 0;
+	virtual void _UNUSED_GetScreenHeight(void) = 0;
+	virtual void _UNUSED_WriteSaveGameScreenshotOfSize(void) = 0;
+	virtual void _UNUSED_WriteReplayScreenshotBadParams(void) = 0;
+	virtual void _UNUSED_UpdateReplayScreenshotCache(void) = 0;
+	virtual void _UNUSED_GetPlayerView(void) = 0;
+	virtual void _UNUSED_ShouldHideLoadingPlaque(void) = 0;
+	virtual void _UNUSED_InvalidateMdlCache(void) = 0;
+	virtual void _UNUSED_IN_SetSampleTime(void) = 0;
+	virtual void _UNUSED_OnActiveSplitscreenPlayerChanged(void) = 0;
+	virtual void _UNUSED_OnSplitScreenStateChanged(void) = 0;
+	virtual void _UNUSED_CenterStringOff(void) = 0;
+	virtual void _UNUSED_OnScreenSizeChanged(void) = 0;
+	virtual void _UNUSED_InstantiateMaterialProxy(void) = 0;
+	virtual void _UNUSED_GetFullscreenClientDLLVPanel(void) = 0;
+	virtual void _UNUSED_MarkEntitiesAsTouching(void) = 0;
+	virtual void _UNUSED_OnKeyBindingChanged(void) = 0;
+	virtual void _UNUSED_SetBlurFade(void) = 0;
+	virtual void _UNUSED_ResetHudCloseCaption(void) = 0;
+	virtual void _UNUSED_HandleGameUIEvent(void) = 0;
+	virtual void _UNUSED_GetSoundSpatializationBadParams(void) = 0;
+	virtual void _UNUSED_Hud_SaveStarted(void) = 0;
+	virtual void _UNUSED_ShutdownMovies(void) = 0; 
+	virtual void _UNUSED_IsChatRaised(void) = 0;
+	virtual void _UNUSED_IsRadioPanelRaised(void) = 0;
+	virtual void _UNUSED_IsBindMenuRaised(void) = 0;
+	virtual void _UNUSED_IsTeamMenuRaised(void) = 0;
+	virtual void _UNUSED_IsLoadingScreenRaised(void) = 0;
+};

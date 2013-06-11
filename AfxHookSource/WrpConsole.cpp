@@ -55,6 +55,7 @@ char const * WrpConCommand::GetName() {
 
 ICvar_003 * WrpConCommands::m_CvarIface_003 = 0;
 ICvar_004 * WrpConCommands::m_CvarIface_004 = 0;
+ICvar_007 * WrpConCommands::m_CvarIface_007 = 0;
 WrpConCommandsListEntry * WrpConCommands::m_CommandListRoot = 0;
 IVEngineClient_012 * WrpConCommands::m_VEngineClient_012 = 0;
 
@@ -95,6 +96,22 @@ void WrpConCommands::RegisterCommands(ICvar_004 * cvarIface) {
 	}
 }
 
+void WrpConCommands::RegisterCommands(ICvar_007 * cvarIface) {
+	if(m_CvarIface_007)
+		// already registered the current list
+		return;
+
+	m_CvarIface_007 = cvarIface;
+	ConCommandBase_007::s_pAccessor = new WrpConCommandsRegistrar_007();
+
+	for(WrpConCommandsListEntry * entry = m_CommandListRoot; entry; entry = entry->Next) {
+		WrpConCommand * cmd = entry->Command;
+
+		// will init themself since s_pAccessor is set:
+		new ConCommand_007(cmd->GetName(), cmd->GetCallback(), cmd->GetHelpString(), FCVAR_CLIENTDLL);
+	}
+}
+
 void WrpConCommands::WrpConCommand_Register(WrpConCommand * cmd) {
 	WrpConCommandsListEntry * entry = new WrpConCommandsListEntry();
 	entry->Command = cmd;
@@ -104,10 +121,11 @@ void WrpConCommands::WrpConCommand_Register(WrpConCommand * cmd) {
 	// if the list is already live, create (and thus register) the command instantly
 	// in the engine:
 
-	if(m_CvarIface_004)
+	if(m_CvarIface_007)
+		new ConCommand_007(cmd->GetName(), cmd->GetCallback(), cmd->GetHelpString());
+	else if(m_CvarIface_004)
 		new ConCommand_004(cmd->GetName(), cmd->GetCallback(), cmd->GetHelpString());
-	else
-	if(m_CvarIface_003)
+	else if(m_CvarIface_003)
 		new ConCommand_003(cmd->GetName(), cmd->GetCallback(), cmd->GetHelpString());
 }
 
@@ -144,6 +162,15 @@ bool WrpConCommands::WrpConCommandsRegistrar_004_Register( ConCommandBase_004 *p
 	return true;
 }
 
+bool WrpConCommands::WrpConCommandsRegistrar_007_Register( ConCommandBase_007 *pVar ) {
+	if(!m_CvarIface_007)
+		return false;
+
+//	MessageBox(0, "WrpConCommands::WrpConCommandsRegistrar_007_Register", "AFX_DEBUG", MB_OK);
+
+	m_CvarIface_007->RegisterConCommand(pVar);
+	return true;
+}
 
 
 // WrpConCommandsRegistrar_003 ////////////////////////////////////////////////////
@@ -156,4 +183,10 @@ bool WrpConCommandsRegistrar_003::RegisterConCommandBase( ConCommandBase_003 *pV
 
 bool WrpConCommandsRegistrar_004::RegisterConCommandBase( ConCommandBase_004 *pVar ) {
 	return WrpConCommands::WrpConCommandsRegistrar_004_Register(pVar);
+}
+
+// WrpConCommandsRegistrar_007 ////////////////////////////////////////////////////
+
+bool WrpConCommandsRegistrar_007::RegisterConCommandBase( ConCommandBase_007 *pVar ) {
+	return WrpConCommands::WrpConCommandsRegistrar_007_Register(pVar);
 }

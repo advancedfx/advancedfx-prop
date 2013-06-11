@@ -28,28 +28,6 @@
 #include "WrpVEngineClient.h"
 
 
-extern WrpVEngineClient * g_VEngineClient;
-
-
-//// >>>> Valve SrcSDK
-
-
-class MdtVector;
-typedef MdtVector Vector;
-
-class MdtVector				
-{
-public:
-	// Members
-	vec_t x, y, z;
-
-	// shortened.
-};
-
-
-//// <<<< Valve SrcSDK
-
-
 BvhExport * g_BvhExport = NULL;
 
 BvhImport g_BvhImport;
@@ -76,68 +54,7 @@ void SetCvarFloat(void * pcvar, float value)
 	*pf = value;
 }
 
-
-typedef bool (__stdcall *CViewRender_SetUpView_t)(DWORD *this_ptr);
-
-typedef void * CalcDemoViewOverride_t;
-
-CViewRender_SetUpView_t g_Hooked_CViewRender_SetUpView;
-CalcDemoViewOverride_t g_Hooked_CalcDemoViewOverride;
-
-void * g_Cl_DemoViewOverride;
-
 float * g_value_curtime;
-
-float g_Old_Cl_DemoViewOverride;
-
-
-void __stdcall Hooking_CViewRender_SetUpView(DWORD *this_ptr)
-{
-	g_Old_Cl_DemoViewOverride = GetCvarFloat(g_Cl_DemoViewOverride);
-
-	SetCvarFloat(g_Cl_DemoViewOverride, 1);
-
-	g_Hooked_CViewRender_SetUpView(this_ptr);
-	
-	SetCvarFloat(g_Cl_DemoViewOverride, g_Old_Cl_DemoViewOverride);
-}
-
-void Hooking2_CalcDemoViewOverride(Vector * origin, QAngle * angles)
-{
-	g_Hook_VClient_RenderView.OnViewOverride(
-		origin->x, origin->y, origin->z,
-		angles->x, angles->y, angles->z
-	);
-
-	if(g_Old_Cl_DemoViewOverride > 0.0f)
-	{
-		SetCvarFloat(g_Cl_DemoViewOverride, g_Old_Cl_DemoViewOverride);
-
-		__asm
-		{
-			mov edi, origin
-			mov esi, angles
-			call g_Hooked_CalcDemoViewOverride
-		}
-
-		SetCvarFloat(g_Cl_DemoViewOverride, 1);
-	}
-}
-
-__declspec(naked) void Hooking_CalcDemoViewOverride()
-{
-	__asm
-	{
-		push esi
-		push edi
-		call Hooking2_CalcDemoViewOverride
-		pop edi
-		pop esi
-		ret
-	}
-}
-
-
 
 
 // Hook_VClient_RenderView /////////////////////////////////////////////////////
@@ -201,38 +118,16 @@ void Hook_VClient_RenderView::ImportEnd() {
 	m_Import = false;
 }
 
-void Hook_VClient_RenderView::Install(const char * gameDir)
+void Hook_VClient_RenderView::Install(CGlobalVarsBase * pGlobals)
 {
-	if(StringEndsWith(gameDir, "\\cstrike"))
-		Install_cstrike();
-	else
-		Tier0_Msg("%s is not supported\n", gameDir);
-}
-
-
-void Hook_VClient_RenderView::Install_cstrike(void) {
 	if(m_IsInstalled)
 		return;
 
-	g_Hooked_CViewRender_SetUpView = (CViewRender_SetUpView_t)DetourClassFunc(
-		(BYTE *)AFXADDR_GET(cstrike_CViewRender_SetUpView),
-		(BYTE *)Hooking_CViewRender_SetUpView,
-		AFXADDR_GET(cstrike_CViewRender_SetUpView_DSZ)
-	);
-	g_Hooked_CalcDemoViewOverride = (CalcDemoViewOverride_t)DetourApply(
-		(BYTE *)AFXADDR_GET(cstrike_CalcDemoViewOverride),
-		(BYTE *)Hooking_CalcDemoViewOverride,
-		AFXADDR_GET(cstrike_CalcDemoViewOverride_DSZ)
-	);
-
-	g_Cl_DemoViewOverride = (void *)AFXADDR_GET(cstrike_cl_demoviewoverride);
-
-	g_value_curtime = (float *)(*(BYTE **)AFXADDR_GET(cstrike_gpGLobals) +AFXADDR_GET(cstrike_gpGlobals_OFS_curtime));
-
-	g_OfsCvarFloatValue = AFXADDR_GET(cstrike_OFS_CvarFloatValue);
+	g_value_curtime = (float *)((BYTE *)pGlobals +AFXADDR_GET(cstrike_gpGlobals_OFS_curtime));
 
 	m_IsInstalled = true;
 }
+
 
 
 bool Hook_VClient_RenderView::IsInstalled(void) {
@@ -242,12 +137,7 @@ bool Hook_VClient_RenderView::IsInstalled(void) {
 
 void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, float &Rx, float &Ry, float &Rz) {
 	float curTime = GetCurTime();
-/*	if(curTime == m_LastTime) {
-		curTime += g_VEngineClient->Time() -m_SubTime;
-	}
-	else
-		m_SubTime = g_VEngineClient->Time();
-*/
+
 	if(m_Import) {
 		float Tf[6];
 

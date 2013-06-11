@@ -6,6 +6,23 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.0.4.0</version>
+<time>2013-06-11T19:15Z</time>
+<changes>
+<change type="updated">
+Updated AfxHookSource to support more modifications for Camera Motion Data I/O.
+Also made AfxHookSource more stable against game updates.
+The exact Source engine modifications supported are unknown at the moment and need to be tested.
+Currently known to work: Counter-Strike:Source, Counter-Strike:Global Offensive.
+Please note: Currently CS:GO will crash when the demo end is reached, we couldn't fix this so far.
+</change>
+</changes>
+<comments>Thanks and greetings to Dec and how-hiGh!</comments>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.0.3.34</version>
 <time>2013-05-26T14:34Z</time>
 <changes>

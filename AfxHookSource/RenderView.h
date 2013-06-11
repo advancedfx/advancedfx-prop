@@ -37,7 +37,7 @@ public:
 	bool ImportBegin(wchar_t const *fileName);
 	void ImportEnd();
 
-	void Install(const char * gameDir);
+	void Install(CGlobalVarsBase * pGlobals);
 
 	bool IsInstalled(void);
 
