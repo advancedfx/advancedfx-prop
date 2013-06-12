@@ -227,54 +227,351 @@ void * HookInterfaceFn(void * iface, int idx, void * fn)
 	return ret;
 }
 
-void * old_csgo_ClientInit;
-void * new_csgo_VClientIface = 0;
+void * csgo_VClient = 0;
 
-int __stdcall new_csgo_ClientInit(DWORD *this_ptr, CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGlobals)
+// The first 3 asm instructions unroll the compiler epiloge code,
+// this might need to be updated. I couldn't find a better way yet,
+// since __declspec(naked) won't work on member functions.
+// TODO:
+// A better way might be filling a struct with function pointers
+// and returning a pointer to that maybe.
+#define JMP_IFACE_FN(iface,index) \
+	__asm pop ecx \
+	__asm mov esp, ebp \
+	__asm pop ebp \
+	__asm mov ecx, csgo_VClient \
+	__asm mov eax, [ecx] \
+	__asm mov eax, [eax +4*index] \
+	__asm jmp eax
+
+class CBaseClientDllWrapper_csgo
 {
-	static bool bFirstCall = true;
-	int myret;
+public:
+	virtual int Connect( CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGlobals )
+	{ JMP_IFACE_FN(csgo_VClient, 0) }
 
-	if(bFirstCall)
+	virtual void Disconnect()
+	{ JMP_IFACE_FN(csgo_VClient, 1) }
+
+	virtual int Init( CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGlobals )
 	{
-		bFirstCall = false;
+		static bool bFirstCall = true;
+		int myret;
 
-		MySetup(appSystemFactory, pGlobals);
+		if(bFirstCall)
+		{
+			bFirstCall = false;
+
+			MySetup(appSystemFactory, pGlobals);
+		}
+
+		__asm {
+			MOV ecx, pGlobals
+			PUSH ecx
+			MOV ecx, AppSystemFactory_ForClient
+			PUSH ecx
+
+			mov ecx, csgo_VClient
+			mov eax, [ecx]
+			mov eax, [eax +4*2]
+			call eax
+
+			MOV	myret, eax
+		}
+
+		return myret;
 	}
 
-	__asm {
-		MOV ecx, pGlobals
-		PUSH ecx
-		MOV ecx, AppSystemFactory_ForClient
-		PUSH ecx
+	virtual void			PostInit()
+	{ JMP_IFACE_FN(csgo_VClient, 3) }
 
-		MOV ecx, this_ptr		
-		CALL old_csgo_ClientInit
-		MOV	myret, eax
-	}
-}
 
-__declspec(naked) void hook_csgo_ClientInit()
-{
-	static unsigned char * tempMem[8];
-	__asm {
-		POP eax
-		MOV tempMem[0], eax
-		MOV tempMem[4], ecx
+	virtual void Shutdown( void )
+	{ JMP_IFACE_FN(csgo_VClient, 4) }
 
-		PUSH ecx
-		CALL new_csgo_ClientInit
+	
+	virtual void _UNUSED_LevelInitPreEntity(void)
+	{ JMP_IFACE_FN(csgo_VClient, 5) }
 
-		MOV ecx, tempMem[4]
-		PUSH 0
-		PUSH eax
-		MOV eax, tempMem[0]
-		MOV [esp+4], eax
-		POP eax
+	virtual void _UNUSED_LevelInitPostEntity(void)
+	{ JMP_IFACE_FN(csgo_VClient, 6) }
 
-		RET
-	}
-}
+	virtual void _UNUSED_LevelShutdown(void)
+	{ JMP_IFACE_FN(csgo_VClient, 7) }
+
+	virtual void _UNUSED_GetAllClasses(void)
+	{ JMP_IFACE_FN(csgo_VClient, 8) }
+
+	virtual void _UNUSED_HudVidInit(void)
+	{ JMP_IFACE_FN(csgo_VClient, 9) }
+
+	virtual void _UNUSED_HudProcessInput(void)
+	{ JMP_IFACE_FN(csgo_VClient, 10) }
+
+	virtual void _UNUSED_HudUpdate(void)
+	{ JMP_IFACE_FN(csgo_VClient, 11) }
+
+	virtual void _UNUSED_HudReset(void)
+	{ JMP_IFACE_FN(csgo_VClient, 12) }
+
+	virtual void _UNUSED_HudText(void)
+	{ JMP_IFACE_FN(csgo_VClient, 13) }
+
+	virtual void _UNUSED_ShouldDrawDropdownConsole(void)
+	{ JMP_IFACE_FN(csgo_VClient, 14) }
+
+	virtual void _UNUSED_IN_ActivateMouse(void)
+	{ JMP_IFACE_FN(csgo_VClient, 15) }
+
+	virtual void _UNUSED_IN_DeactivateMouse(void)
+	{ JMP_IFACE_FN(csgo_VClient, 16) }
+
+	virtual void _UNUSED_IN_Accumulate (void)
+	{ JMP_IFACE_FN(csgo_VClient, 17) }
+
+	virtual void _UNUSED_IN_ClearStates (void)
+	{ JMP_IFACE_FN(csgo_VClient, 18) }
+
+	virtual void _UNUSED_IN_IsKeyDown(void )
+	{ JMP_IFACE_FN(csgo_VClient, 19) }
+
+	virtual void _UNUSED_IN_KeyEvent(void)
+	{ JMP_IFACE_FN(csgo_VClient, 20) }
+
+	virtual void _UNUSED_CreateMove (void)
+	{ JMP_IFACE_FN(csgo_VClient, 21) }
+		
+	virtual void _UNUSED_ExtraMouseSample(void)
+	{ JMP_IFACE_FN(csgo_VClient, 22) }
+
+	virtual void _UNUSED_WriteUsercmdDeltaToBuffer(void)
+	{ JMP_IFACE_FN(csgo_VClient, 23) }
+
+	virtual void _UNUSED_EncodeUserCmdToBuffer(void)
+	{ JMP_IFACE_FN(csgo_VClient, 24) }
+
+	virtual void _UNUSED_DecodeUserCmdFromBuffer(void)
+	{ JMP_IFACE_FN(csgo_VClient, 25) }
+
+	virtual void _UNUSED_View_Render(void)
+	{ JMP_IFACE_FN(csgo_VClient, 26) }
+
+	virtual void _UNUSED_RenderView(void)
+	{ JMP_IFACE_FN(csgo_VClient, 27) }
+
+	virtual void _UNUSED_View_Fade(void)
+	{ JMP_IFACE_FN(csgo_VClient, 28) }
+
+	virtual void _UNUSED_SetCrosshairAngle(void)
+	{ JMP_IFACE_FN(csgo_VClient, 29) }
+
+	virtual void _UNUSED_InitSprite(void)
+	{ JMP_IFACE_FN(csgo_VClient, 30) }
+
+	virtual void _UNUSED_ShutdownSprite(void)
+	{ JMP_IFACE_FN(csgo_VClient, 31) }
+
+	virtual void _UNUSED_GetSpriteSize(void) const
+	{ JMP_IFACE_FN(csgo_VClient, 32) }
+
+	virtual void _UNUSED_VoiceStatus(void)
+	{ JMP_IFACE_FN(csgo_VClient, 33) }
+
+	virtual void _UNUSED_PlayerAudible(void)
+	{ JMP_IFACE_FN(csgo_VClient, 34) }
+
+	virtual void _UNUSED_InstallStringTableCallback(void)
+	{ JMP_IFACE_FN(csgo_VClient, 35) }
+
+	virtual void _UNUSED_FrameStageNotify(void)
+	{ JMP_IFACE_FN(csgo_VClient, 36) }
+
+	virtual void _UNUSED_DispatchUserMessage(void)
+	{ JMP_IFACE_FN(csgo_VClient, 37) }
+
+	virtual void _UNUSED_SaveInit(void)
+	{ JMP_IFACE_FN(csgo_VClient, 38) }
+
+	virtual void _UNUSED_SaveWriteFields(void)
+	{ JMP_IFACE_FN(csgo_VClient, 39) }
+
+	virtual void _UNUSED_SaveReadFields(void)
+	{ JMP_IFACE_FN(csgo_VClient, 40) }
+
+	virtual void _UNUSED_PreSave(void)
+	{ JMP_IFACE_FN(csgo_VClient, 41) }
+
+	virtual void _UNUSED_Save(void)
+	{ JMP_IFACE_FN(csgo_VClient, 42) }
+
+	virtual void _UNUSED_WriteSaveHeaders(void)
+	{ JMP_IFACE_FN(csgo_VClient, 43) }
+
+	virtual void _UNUSED_ReadRestoreHeaders(void)
+	{ JMP_IFACE_FN(csgo_VClient, 44) }
+
+	virtual void _UNUSED_Restore(void)
+	{ JMP_IFACE_FN(csgo_VClient, 45) }
+
+	virtual void _UNUSED_DispatchOnRestore(void)
+	{ JMP_IFACE_FN(csgo_VClient, 46) }
+
+	virtual void _UNUSED_GetStandardRecvProxies(void)
+	{ JMP_IFACE_FN(csgo_VClient, 47) }
+
+	virtual void _UNUSED_WriteSaveGameScreenshot(void)
+	{ JMP_IFACE_FN(csgo_VClient, 48) }
+
+	virtual void _UNUSED_EmitSentenceCloseCaption(void)
+	{ JMP_IFACE_FN(csgo_VClient, 49) }
+
+	virtual void _UNUSED_EmitCloseCaption(void)
+	{ JMP_IFACE_FN(csgo_VClient, 50) }
+
+	virtual void _UNUSED_CanRecordDemo(void) const
+	{ JMP_IFACE_FN(csgo_VClient, 51) }
+
+	virtual void _UNUSED_OnDemoRecordStart(void)
+	{ JMP_IFACE_FN(csgo_VClient, 52) }
+
+	virtual void _UNUSED_OnDemoRecordStop(void)
+	{ JMP_IFACE_FN(csgo_VClient, 53) }
+
+	virtual void _UNUSED_OnDemoPlaybackStart(void)
+	{ JMP_IFACE_FN(csgo_VClient, 54) }
+
+	virtual void _UNUSED_OnDemoPlaybackStop(void)
+	{ JMP_IFACE_FN(csgo_VClient, 55) }
+
+	virtual void _UNUSED_RecordDemoPolishUserInput(void)
+	{ JMP_IFACE_FN(csgo_VClient, 56) }
+
+	virtual void _UNUSED_CacheReplayRagdolls(void)
+	{ JMP_IFACE_FN(csgo_VClient, 57) }
+
+	virtual void _UNUSED_ReplayUI_SendMessage(void)
+	{ JMP_IFACE_FN(csgo_VClient, 58) }
+
+	virtual void _UNUSED_GetReplayFactory(void)
+	{ JMP_IFACE_FN(csgo_VClient, 59) }
+
+	virtual void _UNUSED_ClearLocalPlayerReplayPtr(void)
+	{ JMP_IFACE_FN(csgo_VClient, 60) }
+
+	virtual void _UNUSED_GetScreenWidth(void)
+	{ JMP_IFACE_FN(csgo_VClient, 61) }
+
+	virtual void _UNUSED_GetScreenHeight(void)
+	{ JMP_IFACE_FN(csgo_VClient, 62) }
+
+	virtual void _UNUSED_WriteSaveGameScreenshotOfSize(void)
+	{ JMP_IFACE_FN(csgo_VClient, 63) }
+
+	virtual void _UNUSED_WriteReplayScreenshotBadParams(void)
+	{ JMP_IFACE_FN(csgo_VClient, 64) }
+
+	virtual void _UNUSED_UpdateReplayScreenshotCache(void)
+	{ JMP_IFACE_FN(csgo_VClient, 65) }
+
+	virtual void _UNUSED_GetPlayerView(void)
+	{ JMP_IFACE_FN(csgo_VClient, 66) }
+
+	virtual void _UNUSED_ShouldHideLoadingPlaque(void)
+	{ JMP_IFACE_FN(csgo_VClient, 67) }
+
+	virtual void _UNUSED_InvalidateMdlCache(void)
+	{ JMP_IFACE_FN(csgo_VClient, 68) }
+
+	virtual void _UNUSED_IN_SetSampleTime(void)
+	{ JMP_IFACE_FN(csgo_VClient, 69) }
+
+	virtual void _UNUSED_OnActiveSplitscreenPlayerChanged(void)
+	{ JMP_IFACE_FN(csgo_VClient, 70) }
+
+	virtual void _UNUSED_OnSplitScreenStateChanged(void)
+	{ JMP_IFACE_FN(csgo_VClient, 71) }
+
+	virtual void _UNUSED_CenterStringOff(void)
+	{ JMP_IFACE_FN(csgo_VClient, 72) }
+
+	virtual void _UNUSED_OnScreenSizeChanged(void)
+	{ JMP_IFACE_FN(csgo_VClient, 73) }
+
+	virtual void _UNUSED_InstantiateMaterialProxy(void)
+	{ JMP_IFACE_FN(csgo_VClient, 74) }
+
+	virtual void _UNUSED_GetFullscreenClientDLLVPanel(void)
+	{ JMP_IFACE_FN(csgo_VClient, 75) }
+
+	virtual void _UNUSED_MarkEntitiesAsTouching(void)
+	{ JMP_IFACE_FN(csgo_VClient, 76) }
+
+	virtual void _UNUSED_OnKeyBindingChanged(void)
+	{ JMP_IFACE_FN(csgo_VClient, 77) }
+
+	virtual void _UNUSED_SetBlurFade(void)
+	{ JMP_IFACE_FN(csgo_VClient, 78) }
+
+	virtual void _UNUSED_ResetHudCloseCaption(void)
+	{ JMP_IFACE_FN(csgo_VClient, 79) }
+
+	virtual void _UNUSED_HandleGameUIEvent(void)
+	{ JMP_IFACE_FN(csgo_VClient, 80) }
+
+	virtual void _UNUSED_GetSoundSpatializationBadParams(void)
+	{ JMP_IFACE_FN(csgo_VClient, 81) }
+
+	virtual void _UNUSED_Hud_SaveStarted(void)
+	{ JMP_IFACE_FN(csgo_VClient, 82) }
+
+	virtual void _UNUSED_ShutdownMovies(void)
+	{ JMP_IFACE_FN(csgo_VClient, 83) }
+
+	virtual void _UNUSED_IsChatRaised(void)
+	{ JMP_IFACE_FN(csgo_VClient, 84) }
+
+	virtual void _UNUSED_IsRadioPanelRaised(void)
+	{ JMP_IFACE_FN(csgo_VClient, 85) }
+
+	virtual void _UNUSED_IsBindMenuRaised(void)
+	{ JMP_IFACE_FN(csgo_VClient, 86) }
+
+	virtual void _UNUSED_IsTeamMenuRaised(void)
+	{ JMP_IFACE_FN(csgo_VClient, 87) }
+
+	virtual void _UNUSED_IsLoadingScreenRaised(void)
+	{ JMP_IFACE_FN(csgo_VClient, 88) }
+
+	virtual void _UNKOWN_089(void)
+	{ JMP_IFACE_FN(csgo_VClient, 89) }
+
+	virtual void _UNKOWN_090(void)
+	{ JMP_IFACE_FN(csgo_VClient, 90) }
+
+	virtual void _UNKOWN_091(void)
+	{ JMP_IFACE_FN(csgo_VClient, 91) }
+
+	virtual void _UNKOWN_092(void)
+	{ JMP_IFACE_FN(csgo_VClient, 92) }
+
+	virtual void _UNKOWN_093(void)
+	{ JMP_IFACE_FN(csgo_VClient, 93) }
+
+	virtual void _UNKOWN_094(void)
+	{ JMP_IFACE_FN(csgo_VClient, 94) }
+
+	virtual void _UNKOWN_095(void)
+	{ JMP_IFACE_FN(csgo_VClient, 95) }
+
+	virtual void _UNKOWN_096(void)
+	{ JMP_IFACE_FN(csgo_VClient, 96) }
+
+	virtual void _UNKOWN_097(void)
+	{ JMP_IFACE_FN(csgo_VClient, 97) }
+
+	virtual void _UNKOWN_098(void)
+	{ JMP_IFACE_FN(csgo_VClient, 98) }
+} g_BaseClientDllWrapper_csgo;
 
 void HookClientDllInterface_011_Init(void * iface)
 {
@@ -337,19 +634,13 @@ void* new_Client_CreateInterface(const char *pName, int *pReturnCode)
 
 	if(isCsgo && !strcmp(pName, CLIENT_DLL_INTERFACE_VERSION_CSGO_016))
 	{
-		if(!new_csgo_VClientIface)
+		if(!csgo_VClient)
 		{
-			static void ** vtable = (void **)MdtAllocExecuteableMemory(CLIENT_DLL_INTERFACE_CSGO_016_VTABLESIZE);
-			memcpy(vtable, *(void **)pRet, CLIENT_DLL_INTERFACE_CSGO_016_VTABLESIZE);
-			old_csgo_ClientInit = *(vtable+2);
-			*(vtable+2) = hook_csgo_ClientInit;
-
-			new_csgo_VClientIface = &vtable;
-		
 			g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_CSGO_016 " (CS:GO)";
+			csgo_VClient = pRet;
 		}
 
-		pRet = new_csgo_VClientIface;
+		pRet = &g_BaseClientDllWrapper_csgo;
 	}
 
 	return pRet;

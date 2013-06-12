@@ -1685,7 +1685,7 @@ public:
 // TODO: this is not the exact size, minium is 89, maybe it's 99
 #define CLIENT_DLL_INTERFACE_CSGO_016_VTABLESIZE (4*99)
 
-class IBaseClientDLL_csgo_016 abstract
+class IBaseClientDll_csgo_016 abstract
 {
 public:
 	// Connect appsystem components, get global interfaces, don't run any other init code

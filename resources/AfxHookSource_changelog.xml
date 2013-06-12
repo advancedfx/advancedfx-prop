@@ -6,6 +6,19 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.0.4.1</version>
+<time>2013-06-12T17:40Z</time>
+<changes>
+<change type="updated">
+Fixed CS:GO crashing in some situations.
+</change>
+</changes>
+<comments>Thanks and greetings to how-hiGh!</comments>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.0.4.0</version>
 <time>2013-06-11T19:15Z</time>
 <changes>
