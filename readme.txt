@@ -55,7 +55,7 @@ how_to_build.txt
   Info on how to build HLAE.  
   
 mdt.sln
-  Solution file for Microsoft Visual Studio 2008 .NET (VC++) which organizes C++
+  Solution file for Microsoft Visual C++ 2010 Express which organizes C++
   and C++/CLI  projects.
   
 readme.txt

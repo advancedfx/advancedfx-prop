@@ -157,12 +157,27 @@ int __stdcall touring_cstrike_DeathMsg_Msg(DWORD *this_ptr, const char *pszName,
 	return i;
 }
 
+bool g_DeathMsg_ForceOffset = false;
+int g_DeathMsg_Offset;
+
 __declspec(naked) void cstrike_DeathMsg_DrawHelperY() {
 	__asm {
-		mov     ebp,dword ptr [esi+18h]
-		mov     edx,dword ptr [esp+38h]
-		; imul    ebp,ebx
+		mov     ebp,dword ptr [esi+18h] ; original code
+
+		mov dl, g_DeathMsg_ForceOffset
+		test dl, dl
+		JZ __OrgValue
+
+		mov edx, g_DeathMsg_Offset
+		JMP __Continue
+
+		__OrgValue:
+		mov     edx,dword ptr [esp+38h] ; original code
+		
+		__Continue:
+		; imul    ebp,ebx ; original code
 		imul    ebp, cstrike_DeathMsg_Draw_ItemIndex
+		
 		JMP [cstrike_DeathMsg_Draw_AfterYRes]
 	}
 }
@@ -297,6 +312,28 @@ REGISTER_CMD_FUNC(cstrike_deathmsg)
 			);
 			return;
 		}
+		if(!stricmp(acmd, "offset"))
+		{
+			if(3==argc)
+			{
+				acmd = pEngfuncs->Cmd_Argv(2);
+				g_DeathMsg_ForceOffset = 0 != stricmp(acmd, "default");
+				if(g_DeathMsg_ForceOffset) g_DeathMsg_Offset = atoi(acmd);
+				deathMessagesMax = atoi(pEngfuncs->Cmd_Argv(2));
+				return;
+			}
+
+			pEngfuncs->Con_Printf(
+				"mirv_cstrike_deathmsg offset default|<value>\n"
+				"If you want the same height like in in-eye demos for HLTV demos use 40 as value.\n"
+			);
+			if(!g_DeathMsg_ForceOffset)
+				pEngfuncs->Con_Printf("Current: default\n");
+			else
+				pEngfuncs->Con_Printf("Current: %i\n", g_DeathMsg_ForceOffset);
+
+			return;
+		}
 	}
 
 	pEngfuncs->Con_Printf(
@@ -304,5 +341,6 @@ REGISTER_CMD_FUNC(cstrike_deathmsg)
 		"\tblock - block messages\n"
 		"\tfake - fake a message\n"
 		"\tmax - maximum hud history row count\n"
+		"\toffset - set death message screen offset\n"
 	);
 }
