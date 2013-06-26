@@ -6,6 +6,10 @@
 // First changes:
 // 2013-05-27 by dominik.matrixstorm.com
 
+//
+// Note: Please don't trust Wikipedia.
+//
+
 using System;
 using System.Collections.Generic;
 
@@ -91,7 +95,6 @@ struct Quaternion
         return Math.Sqrt(m_Q0 * m_Q0 + m_Q1 * m_Q1 + m_Q2 * m_Q2 + m_Q3 * m_Q3);
     }
 
-    // this needs to be checked if it follows the correct rotation order
     public EulerAngles ToEulerAngles()
     {
         double angle = 2.0d * Math.Acos(m_Q0);
@@ -105,32 +108,32 @@ struct Quaternion
         // |r*p(1-cos(a)) - q*sin(a), r*q(1-cos(a))+p*sin(a) , cos(a) + r*r(1-cos(a))  |
 
         // X =                  Y =                  Z =
-        // |1, 0      , 0     | |cos(y), 0, -sin(y)| |cos(z) , sin(z), 0|
-        // |0, cos(x) , sin(x)| |0     , 1, 0      | |-sin(z), cos(z), 0|
-        // |0, -sin(x), cos(x)| |sin(y), 0, cos(y) | |0      , 0     , 1|
+        // |1, 0     , 0      | |cos(y) , 0, sin(y)| |cos(z), -sin(z), 0|
+        // |0, cos(x), -sin(x)| |0      , 1, 0     | |sin(z), cos(z) , 0|
+        // |0, sin(x), cos(x) | |-sin(y), 0, cos(y)| |0     , 0      , 1|
 
-        // ZY = Z*Y =
-        // |cos(z)*cos(y) , sin(z), -cos(z)*sin(y)|
-        // |-sin(z)*cos(y), cos(z), sin(z)*sin(y) |
-        // |sin(y)        , 0     , cos(y)        |
+        // Z*Y =
+        // |cos(z)*cos(y), -sin(z), cos(z)*sin(y)|
+        // |sin(z)*cos(y), cos(z) , sin(z)*sin(y)|
+        // |-sin(y)      , 0      , cos(y)       |
 
-        // XZY = X*ZY =
-        // |cos(z)*cos(y)                        , sin(z)        , -cos(z)*sin(y)                       |
-        // |-cos(x)*sin(z)*cos(y) + sin(x)*sin(y), cos(x)*cos(z) , cos(x)*sin(z)*sin(y) + sin(x)*cos(y) |
-        // |sin(x)*sin(z)*cos(y) + cos(x)*sin(y) , -sin(x)*cos(z), -sin(x)*sin(z)*sin(y) + cos(x)*cos(y)|
+        // X*Z*Y =
+        // |cos(z)*cos(y)                      , -sin(z)      , cos(z)*sin(y)                      |
+        // |cos(x)*sin(z)*cos(y) +sin(x)*sin(y), cos(x)*cos(z), cos(x)*sin(z)*sin(y) -sin(x)*cos(y)|
+        // |sin(x)*sin(z)*cos(y) -cos(x)*sin(y), sin(x)*cos(z), sin(x)*sin(z)*sin(y) +cos(x)*cos(y)|
 
-        // XZY = R:
-        // 1) cos(z)*cos(y)                         = cos(a) + p*p(1-cos(a))
-        // 2) sin(z)                                = p*q(1-cos(a)) -r*sin(a)
-        // 3) -cos(z)*sin(y)                        = p*r(1-cos(a)) + q*sin(a)
-        // 4) -cos(x)*sin(z)*cos(y) + sin(x)*sin(y) = q*p(1-cos(a)) + r*sin(a)
-        // 5) cos(x)*cos(z)                         = cos(a) +q*q(1-cos(a))
-        // 6) cos(x)*sin(z)*sin(y) + sin(x)*cos(y)  = q*r(1-cos(a)) - p*sin(a)
-        // 7) sin(x)*sin(z)*cos(y) + cos(x)*sin(y)  = r*p(1-cos(a)) - q*sin(a)
-        // 8) -sin(x)*cos(z)                        = r*q(1-cos(a))+p*sin(a)
-        // 9) -sin(x)*sin(z)*sin(y) + cos(x)*cos(y) = cos(a) + r*r(1-cos(a))
+        // X*Z*Y = R:
+        // 1) cos(z)*cos(y)                       = cos(a) + p*p(1-cos(a))
+        // 2) -sin(z)                             = p*q(1-cos(a)) -r*sin(a)
+        // 3) cos(z)*sin(y)                       = p*r(1-cos(a)) + q*sin(a)
+        // 4) cos(x)*sin(z)*cos(y) +sin(x)*sin(y) = q*p(1-cos(a)) + r*sin(a)
+        // 5) cos(x)*cos(z)                       = cos(a) +q*q(1-cos(a))
+        // 6) cos(x)*sin(z)*sin(y) -sin(x)*cos(y) = q*r(1-cos(a)) - p*sin(a)
+        // 7) sin(x)*sin(z)*cos(y) -cos(x)*sin(y) = r*p(1-cos(a)) - q*sin(a)
+        // 8) sin(x)*cos(z)                       = r*q(1-cos(a))+p*sin(a)
+        // 9) sin(x)*sin(z)*sin(y) +cos(x)*cos(y) = cos(a) + r*r(1-cos(a))
         // =>
-        // 2=> z =  arcsin( p*q(1-cos(a)) -r*sin(a) )
+        // 2=> z =  arcsin( -p*q(1-cos(a)) +r*sin(a) )
         // 5=> x = arccos((cos(a) +q*q(1-cos(a))) / cos(z))
         // 1=> y = arccos((cos(a) + p*p(1-cos(a))) / cos(z))
         // shit I suck at math
@@ -142,13 +145,14 @@ struct Quaternion
         //
         // angle = a.Yaw
         // v = |0,0,Math.Sin(yawH)|
-        // zYaw = arcsin( p*q(1-cos(a)) -r*sin(a) )
-        //      = arcsin( -1 * sin(a.Yaw) )
-        //
-        // obviously there is a sign error in beween, fuck.
+        // zYaw = arcsin( -p*q(1-cos(angle)) +r*sin(angle) )
+        //      = arcsin( 1 * sin(a.Yaw) )
+        //      = a.Yaw
+        // correct now.
+
 
         double cosA = Math.Cos(angle);
-        double zYaw = Math.Asin(vector[0] * vector[1] * (1 - Math.Cos(angle)) - vector[2] * Math.Sin(angle));
+        double zYaw = Math.Asin(-vector[0] * vector[1] * (1.0d - Math.Cos(angle)) + vector[2] * Math.Sin(angle));
         double cosZ = Math.Cos(zYaw);
         double xRoll = 0.0d; // Math.Acos(0.0d != cosZ ? (cosA + vector[1] * vector[1] * (1 - cosA)) / cosZ : 0.0d);
         double yPitch = 0.0d; // Math.Acos(0.0d != cosZ ? (cosA + vector[0] * vector[0] * (1 - cosA)) / cosZ : 0.0d);

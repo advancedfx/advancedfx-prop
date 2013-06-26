@@ -319,7 +319,6 @@ REGISTER_CMD_FUNC(cstrike_deathmsg)
 				acmd = pEngfuncs->Cmd_Argv(2);
 				g_DeathMsg_ForceOffset = 0 != stricmp(acmd, "default");
 				if(g_DeathMsg_ForceOffset) g_DeathMsg_Offset = atoi(acmd);
-				deathMessagesMax = atoi(pEngfuncs->Cmd_Argv(2));
 				return;
 			}
 
@@ -330,7 +329,7 @@ REGISTER_CMD_FUNC(cstrike_deathmsg)
 			if(!g_DeathMsg_ForceOffset)
 				pEngfuncs->Con_Printf("Current: default\n");
 			else
-				pEngfuncs->Con_Printf("Current: %i\n", g_DeathMsg_ForceOffset);
+				pEngfuncs->Con_Printf("Current: %i\n", g_DeathMsg_Offset);
 
 			return;
 		}
