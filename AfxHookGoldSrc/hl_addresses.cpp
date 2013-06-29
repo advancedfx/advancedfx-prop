@@ -45,9 +45,12 @@ AFXADDR_DEF(R_RenderView)
 AFXADDR_DEF(SND_PickChannel)
 AFXADDR_DEF(S_PaintChannels)
 AFXADDR_DEF(S_TransferPaintBuffer)
-AFXADDR_DEF(UnkDrawHud)
-AFXADDR_DEF(UnkDrawHudCall)
-AFXADDR_DEF(UnkDrawHudCallAfter)
+AFXADDR_DEF(UnkDrawHudIn)
+AFXADDR_DEF(UnkDrawHudInCall)
+AFXADDR_DEF(UnkDrawHudInContinue)
+AFXADDR_DEF(UnkDrawHudOut)
+AFXADDR_DEF(UnkDrawHudOutCall)
+AFXADDR_DEF(UnkDrawHudOutContinue)
 AFXADDR_DEF(UnkGetDecalTexture)
 AFXADDR_DEF(UnkGetDecalTexture_DSZ)
 AFXADDR_DEF(UpdateSpectatorPanel_checkjmp_ag)
@@ -136,11 +139,14 @@ void Addresses_InitHwDll(AfxAddr hwDll)
 	//
 	// Rendering related:
 	//
-	
-	AFXADDR_SET(UnkDrawHud, hwDll + 0xBDD0); // *[7]
-	AFXADDR_SET(UnkDrawHudCall, hwDll + 0xB4FD1); // *[7]
-	AFXADDR_SET(UnkDrawHudCallAfter, AFXADDR_GET(UnkDrawHudCall) + 0x5); // *[7]
-	
+
+	AFXADDR_SET(UnkDrawHudInCall, hwDll +0x43D00); // *[7]
+	AFXADDR_SET(UnkDrawHudOutCall, hwDll +0x5C460); // *[7]
+	AFXADDR_SET(UnkDrawHudIn, hwDll +0xB4FC1); // *[7]
+	AFXADDR_SET(UnkDrawHudInContinue, AFXADDR_GET(UnkDrawHudIn) + 0x6); // *[7]
+	AFXADDR_SET(UnkDrawHudOut, hwDll +0xB5014); // *[7]
+	AFXADDR_SET(UnkDrawHudOutContinue, AFXADDR_GET(UnkDrawHudOut) + 0x5); // *[7]
+		
 	AFXADDR_SET(R_RenderView, hwDll + 0x45140); // *[7]
 	AFXADDR_SET(DTOURSZ_R_RenderView, 0x6); // *[7]
 	

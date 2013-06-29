@@ -106,16 +106,40 @@ Locate SCR_UpdateScreen:
 035d4f9e bf05000000      mov     edi,offset <Unloaded_ud.drv>+0x4 (00000005)
 035d4fa3 3bc7            cmp     eax,edi
 ...
+035d4fc1 53              push    ebx
+035d4fc2 e839edf8ff      call    hw+0x43d00 (03563d00)
 035d4fc7 8b4dfc          mov     ecx,dword ptr [ebp-4]
 035d4fca 81e1ff000000    and     ecx,offset <Unloaded_ud.drv>+0xfe (000000ff)
 035d4fd0 51              push    ecx
 035d4fd1 e8fa6df5ff      call    hw+0xbdd0 (0352bdd0)
 035d4fd6 6a01            push    1
 035d4fd8 e823edf8ff      call    hw+0x43d00 (03563d00)
+035d4fdd 83c40c          add     esp,0Ch
+035d4fe0 391d3444fd03    cmp     dword ptr [hw!qwglMakeCurrent+0x25c28 (03fd4434)],ebx
+035d4fe6 7516            jne     hw!F+0xb74e (035d4ffe)
+035d4fe8 833d40765a0401  cmp     dword ptr [hw!qwglMakeCurrent+0x5f8e34 (045a7640)],1
+035d4fef 7508            jne     hw!F+0xb749 (035d4ff9)
+035d4ff1 391da40ab603    cmp     dword ptr [hw!vgui::Frame::`vftable'+0x523d40 (03b60aa4)],ebx
+035d4ff7 7405            je      hw!F+0xb74e (035d4ffe)
+035d4ff9 e8125cf9ff      call    hw+0x4ac10 (0356ac10)
+035d5003 393dc05e5704    cmp     dword ptr [hw!qwglMakeCurrent+0x5c76b4 (04575ec0)],edi
+035d5009 750e            jne     hw!F+0xb769 (035d5019)
+035d500b 833ddc93570402  cmp     dword ptr [hw!qwglMakeCurrent+0x5cabd0 (045793dc)],2
+035d5012 7505            jne     hw!F+0xb769 (035d5019)
+035d5014 e84774faff      call    hw+0x5c460 (0357c460)
+035d5019 e862a7f9ff      call    hw+0x4f780 (0356f780)
+035d501e
 
 ==>
-035d4f8f => 035df8d0 draws the level action without hud
-035d4fd1 => 0352bdd0 is UnkDrawHud, draws the hud without scoreboard and other vgui panels
+035d4f8f => 035df8d0 draws the level action without hud (could be V_RenderView)
+035d4f94 => 0356f5b0 is GL_Set2D
+035d4fd1 => 0352bdd0 is UnkDrawHud, draws the hud without scoreboard and other vgui panels, calls client!HUD_Redraw
+035d5014 => 0357c460 draws the crosshair
+035d5019 => 0356f780 restores changes by GL_Set2D
+
+On 035d4fc1, 035d5019 and 035d501e the stack pointer will be the same, thus we can detour
+near those points. Code in UnkDrawHud.cpp might need adjustment.
+We detour [035d4fc1, 035d5019).
 
 035df8d0 55              push    ebp
 035df8d1 8bec            mov     ebp,esp
