@@ -62,7 +62,7 @@
     </ClCompile>
     <Link>
       <OutputFile>$(OutDir)AfxHookGoldSrc.dll</OutputFile>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Libraries\libpng\projects\vstudio\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(OutDir)AfxHookGoldSrc.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
@@ -93,7 +93,7 @@
     </ClCompile>
     <Link>
       <OutputFile>$(OutDir)AfxHookGoldSrc.dll</OutputFile>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Libraries\libpng\projects\vstudio\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>

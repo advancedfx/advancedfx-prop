@@ -30,7 +30,9 @@ __declspec(naked) void New_UnkDrawHudOut(void)
 	__asm call [g_UnkDrawHudOutCall]
 	
 	__asm push ecx
+	__asm push eax
 	tempMem = g_Filming.OnHudEndEvent();
+	__asm pop eax
 	__asm pop ecx
 
 	__asm cmp tempMem, 0

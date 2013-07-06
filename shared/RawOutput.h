@@ -6,10 +6,6 @@
 //
 // Raw means dumb, no checks etc..
 
-#include <windows.h>
-#include <winbase.h>
-
-
 int CalcPitch(int width, unsigned char bytePerPixel, int byteAlignment);
 
 //	WriteRawTarga
@@ -46,4 +42,14 @@ bool WriteRawBitmap(
 	unsigned short usHeight,
 	unsigned char ucBpp,
 	int pitch
+);
+
+bool WriteRawPng (
+	wchar_t const * fileName,
+	unsigned char const * data,
+	unsigned short width,
+	unsigned short height,
+	unsigned char bpp,
+	int pitch,
+	bool grayScale
 );

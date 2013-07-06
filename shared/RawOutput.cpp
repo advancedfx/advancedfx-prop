@@ -5,6 +5,9 @@
 #include <windows.h>
 #include <stdio.h>
 
+#include <libpng/png.h>
+#include <zlib/zlib.h>
+
 int CalcPitch(int width, unsigned char bytePerPixel, int byteAlignment)
 {
 	if(byteAlignment < 1)
@@ -169,4 +172,91 @@ bool WriteRawTarga(
 	}
 
 	return false;
+}
+
+bool WriteRawPng (
+	wchar_t const * fileName,
+	unsigned char const * data,
+	unsigned short width,
+	unsigned short height,
+	unsigned char bpp,
+	int pitch,
+	bool grayScale
+)
+{
+    FILE * fp;
+    png_structp png_ptr = NULL;
+    png_infop info_ptr = NULL;
+    size_t y;
+    png_byte ** row_pointers = NULL;
+
+    bool status = false;
+    int depth = 8;
+    
+    fp = _wfopen(fileName, L"wb");
+    if (! fp) {
+        goto fopen_failed;
+    }
+
+    png_ptr = png_create_write_struct (PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (png_ptr == NULL) {
+        goto png_create_write_struct_failed;
+    }
+    
+    info_ptr = png_create_info_struct (png_ptr);
+    if (info_ptr == NULL) {
+        goto png_create_info_struct_failed;
+    }
+    
+    // Set up error handling:
+
+    if (setjmp (png_jmpbuf (png_ptr))) {
+        goto png_failure;
+    }
+    
+    // Set image attributes:
+
+	png_set_IHDR (png_ptr,
+		info_ptr,
+		width,
+		height,
+		grayScale ? bpp : bpp/3,
+		grayScale ? PNG_COLOR_TYPE_GRAY : PNG_COLOR_TYPE_RGB,
+		PNG_INTERLACE_NONE,
+		PNG_COMPRESSION_TYPE_DEFAULT,
+		PNG_FILTER_TYPE_DEFAULT);
+
+	if(!grayScale) png_set_bgr(png_ptr);
+
+	// setting better compression is not really worth it, filesize is 95%
+	// and it takes 5 times longer compared to default settings:
+//	png_set_compression_level(png_ptr, Z_BEST_COMPRESSION);
+
+    // Initialize rows of PNG:
+
+    row_pointers = (png_byte **)png_malloc (png_ptr, height * sizeof (png_byte *));
+    for (y = 0; y < height; y++)
+	{
+        png_byte *row = (png_byte *)data + (height -1 -y)*pitch;
+        row_pointers[y] = row;
+    }
+    
+	// Write the image data to "fp":
+
+    png_init_io (png_ptr, fp);
+    png_set_rows (png_ptr, info_ptr, row_pointers);
+    png_write_png (png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
+
+	// Success:
+
+    status = true;
+        
+png_failure:
+	png_free (png_ptr, row_pointers);
+png_create_info_struct_failed:
+	png_destroy_write_struct (&png_ptr, &info_ptr);
+png_create_write_struct_failed:
+	fclose (fp);
+fopen_failed:
+	return status;
 }

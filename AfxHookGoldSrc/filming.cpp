@@ -75,10 +75,10 @@ REGISTER_CVAR(matte_worldmodels, "1", 0);
 REGISTER_CVAR(matte_xray, "0", 0);
 
 REGISTER_CVAR(movie_clearscreen, "0", 0);
-REGISTER_CVAR(movie_bmp, "1", 0);
 REGISTER_CVAR(movie_depthdump, "0", 0);
 REGISTER_CVAR(movie_export_sound, "0", 0); // should default to 1, but I don't want to mess up other updates
 REGISTER_CVAR(movie_filename, "untitled_rec", 0);
+REGISTER_CVAR(movie_format, "bmp", 0);
 REGISTER_CVAR(movie_fps, "30", 0);
 REGISTER_CVAR(movie_hidepanels, "0", 0);
 REGISTER_CVAR(movie_separate_hud, "0", 0);
@@ -1686,7 +1686,6 @@ FilmingStream::FilmingStream(
 {
 	size_t nameBufferLength = wcslen(name) +1;
 
-	m_Bmp = 0.0f != movie_bmp->value;
 	m_Buffer = buffer;
 
 	unsigned char ucDepthDump = (unsigned char)movie_depthdump->value;
@@ -1723,6 +1722,11 @@ FilmingStream::FilmingStream(
 	}
 
 	m_DirCreated = false;
+
+	m_Format = FF_BMP;
+	if(!stricmp("tga", movie_format->string)) m_Format = FF_TARGA;
+	else if(!stricmp("png", movie_format->string)) m_Format = FF_PNG;
+
 	m_FrameCount = 0;
 	m_Sampler = 0;
 	m_Width = width;
@@ -1770,7 +1774,7 @@ FilmingStream::FilmingStream(
 		m_BytesPerPixel = 3;
 	};
 
-	m_Pitch = CalcPitch(m_Width, m_BytesPerPixel, m_Bmp ? 4 : 1);
+	m_Pitch = CalcPitch(m_Width, m_BytesPerPixel, m_Format != FF_TARGA ? 4 : 1);
 
 	if(0 < samplingFrameDuration && (FB_COLOR == buffer || FB_ALPHA == buffer))
 	{
@@ -1836,7 +1840,7 @@ void FilmingStream::Capture(float time, CMdt_Media_RAWGLPIC * usePic, float spsH
 		return;
 	}
 
-	if (!usePic->DoGlReadPixels(m_X, m_Y, m_Width, m_Height, m_GlBuffer, m_GlType, !m_Bmp))
+	if (!usePic->DoGlReadPixels(m_X, m_Y, m_Width, m_Height, m_GlBuffer, m_GlType, m_Format == FF_TARGA))
 	{
 		pEngfuncs->Con_Printf("MDT ERROR: failed to capture a frame (%d).\n", usePic->GetLastUnhandledError());
 		return;
@@ -1906,14 +1910,38 @@ void FilmingStream::Print(unsigned char const * data)
 		return;
 
 	bool bColor = m_Buffer == FB_COLOR;
+
+	wchar_t const * fileExtension;
+	switch(m_Format)
+	{
+	case FF_TARGA:
+		fileExtension = L".tga";
+		break;
+	case FF_PNG:
+		fileExtension = L".png";
+		break;
+	case FF_BMP:
+	default:
+		fileExtension = L".bmp";
+		break;
+	}
 	
 	std::wostringstream os;
-	os << m_Path << L"\\" << setfill(L'0') << setw(5) << m_FrameCount << setw(0) << (m_Bmp ? L".bmp" : L".tga");
+	os << m_Path << L"\\" << setfill(L'0') << setw(5) << m_FrameCount << setw(0) << fileExtension;
 	
-	if( m_Bmp )
-		WriteRawBitmap(data, os.str().c_str(), m_Width, m_Height, m_BytesPerPixel<<3, m_Pitch); // align is still 4 byte probably
-	else
+	switch(m_Format)
+	{
+	case FF_TARGA:
 		WriteRawTarga(data, os.str().c_str(), m_Width, m_Height, m_BytesPerPixel<<3, !bColor);
+		break;
+	case FF_PNG:
+		WriteRawPng(os.str().c_str(), data, m_Width, m_Height, m_BytesPerPixel<<3, m_Pitch, !bColor);
+		break;
+	case FF_BMP:
+	default:
+		WriteRawBitmap(data, os.str().c_str(), m_Width, m_Height, m_BytesPerPixel<<3, m_Pitch); // align is still 4 byte probably
+		break;
+	}
 
 	m_FrameCount++;
 }
