@@ -7,13 +7,6 @@ Build order:
 1) Download the Half-Life SDK from
    http://metamod.sourceforge.net/files/sdk/hlsdk-2.3-p3.zip
    and install it into C:\Libraries\hlsdk
-   
-   Download zlib from http://zlib.net/ and extract it into C:\Libraries\zlib
-   
-   Download libpng from http://www.libpng.org/pub/png/libpng.html and
-   extract it into C:\Libraries\libpng and build it (Release) using
-   C:\Libraries\libpng\projects\vstudio\vstudio.sln. (Don't forget to set up
-   C:\Libraries\libpng\projects\vstudio\zlib.props using an editor first.)
 
 2) Build (Configuration=Release): AfxHookGoldSrc, AfxHookSource, AfxCppCli
 

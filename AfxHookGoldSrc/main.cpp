@@ -5,7 +5,6 @@
 // Additional libraries:
 #pragma comment(lib,"OpenGL32.lib")
 #pragma comment(lib,"GLu32.lib")
-#pragma comment(lib,"libpng16.lib")
 
 /*
 // Direct show:

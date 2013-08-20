@@ -24,7 +24,7 @@ Description : see mdt_gltools.h
 
 enum FILMING_BUFFER { FB_COLOR, FB_DEPTH, FB_ALPHA };
 enum FILMING_DEPTHFN { FD_INV, FD_LINEAR, FD_LOG };
-enum FILMING_FORMAT { FF_TARGA, FF_BMP, FF_PNG };
+
 
 class FilmingStream :
 	private IFramePrinter,
@@ -44,6 +44,7 @@ public:
 	void Capture(float sampleDuration, CMdt_Media_RAWGLPIC * usePic, float spsHint);
 
 private:
+	bool m_Bmp;
 	FILMING_BUFFER m_Buffer;
 	unsigned char m_BytesPerPixel;
 	bool m_DepthDebug;
@@ -51,7 +52,6 @@ private:
 	float m_DepthSliceLo;
 	float m_DepthSliceHi;
 	bool m_DirCreated;
-	FILMING_FORMAT m_Format;
 	int m_FrameCount;
 	GLenum m_GlBuffer;
 	GLenum m_GlType;

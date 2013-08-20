@@ -53,6 +53,12 @@ Valve
 id Software
   for Quake 1 source code
   http://www.idsoftware.com/
+  
+libpng
+  http://www.libpng.org/pub/png/libpng.html
+  
+ zlib
+   http://www.zlib.net/
 
 And everyone that feels he/she/it should have been mentioned here.
 

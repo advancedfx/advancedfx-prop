@@ -6,60 +6,8 @@
 
 <release>
 <name>HLAE</name>
-<version>2.3.9.0</version>
-<time>2013-07-06T12:19Z</time>
-<changes>
-<change type="added">
-Added mirv_movie_format cvar, can be bmp (default), tga, or png (new).
-</change>
-<change type="removed">
-Removed mirv_movie_bmp, replaced by mirv_movie_format.
-</change>
-</changes>
-</release>
-
-
-<release>
-<name>HLAE</name>
-<version>2.3.8.2</version>
-<time>2013-06-29T09:37Z</time>
-<changes>
-<change type="fixed">
-Fixed crosshair sprite missing for mirv_movie_separate_hud and mirv_movie_hidepanels.
-</change>
-</changes>
-</release>
-
-
-<release>
-<name>HLAE</name>
-<version>2.3.8.1</version>
-<time>2013-06-26T05:17Z</time>
-<changes>
-<change type="fixed">
-Fixed mistake in mirv_cstrike_deathmsg offset affecting mirv_cstrike_deathmsg max.
-</change>
-</changes>
-</release>
-
-
-<release>
-<name>HLAE</name>
-<version>2.3.8.0</version>
-<time>2013-06-18T17:42Z</time>
-<changes>
-<change type="added">
-Added mirv_cstrike_deathmsg offset command, allows to set the screen offset of the deathmessages.
-Set to 40 if you want same height for HLTV-demos as in in-eye demos (useful with mirv_movie_hidepanels 1).
-</change>
-</changes>
-</release>
-
-
-<release>
-<name>HLAE</name>
 <version>2.3.7.1</version>
-<time>2013-06-12T17:40Z</time>
+<time>2013-06-11T19:15Z</time>
 <changes>
 <change type="updated">
 Included AfxHookSource 0.0.4.1 (2013-06-12T17:40Z).

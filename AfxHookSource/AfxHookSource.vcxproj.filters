@@ -21,9 +21,6 @@
     <ClCompile Include="..\shared\detours.cpp">
       <Filter>shared</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\RawOutput.cpp">
-      <Filter>shared</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>AfxHookSource</Filter>
     </ClCompile>
@@ -60,9 +57,6 @@
       <Filter>shared</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\detours.h">
-      <Filter>shared</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\RawOutput.h">
       <Filter>shared</Filter>
     </ClInclude>
     <ClInclude Include="RenderView.h">
