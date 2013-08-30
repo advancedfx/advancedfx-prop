@@ -66,9 +66,6 @@
     <ClCompile Include="demo_tools.cpp">
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
-    <ClCompile Include="demoeditfix.cpp">
-      <Filter>AfxHookGoldSrc</Filter>
-    </ClCompile>
     <ClCompile Include="..\shared\detours.cpp">
       <Filter>shared</Filter>
     </ClCompile>
@@ -143,9 +140,6 @@
     </ClCompile>
     <ClCompile Include="..\shared\RawOutput.cpp">
       <Filter>shared</Filter>
-    </ClCompile>
-    <ClCompile Include="specmenu.cpp">
-      <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>AfxHookGoldSrc</Filter>

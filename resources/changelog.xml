@@ -6,6 +6,21 @@
 
 <release>
 <name>HLAE</name>
+<version>2.3.10.0</version>
+<time>2013-08-30T08:10Z</time>
+<changes>
+<change type="removed">
+Removed inactive mirv_demoedit_fix tfc code, this feature is obsolete, since Valve recently added native CAMPATH support to Half-Life 1 (valve) and Team Fortress Classic (tfc).
+</change>
+<change type="removed">
+Removed mirv_disable_specmenu, since this is obsolete due to mirv_movie_hidepanels.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.3.8.2</version>
 <time>2013-06-29T09:37Z</time>
 <changes>

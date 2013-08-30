@@ -129,7 +129,6 @@
     <ClCompile Include="cstrike_smoke.cpp" />
     <ClCompile Include="decals_hook.cpp" />
     <ClCompile Include="demo_tools.cpp" />
-    <ClCompile Include="demoeditfix.cpp" />
     <ClCompile Include="demozoom.cpp" />
     <ClCompile Include="EasySampler.cpp" />
     <ClCompile Include="film_sound.cpp" />
@@ -153,7 +152,6 @@
     <ClCompile Include="mirv_info.cpp" />
     <ClCompile Include="move_to.cpp" />
     <ClCompile Include="newsky.cpp" />
-    <ClCompile Include="specmenu.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stdafx.h</PrecompiledHeaderFile>

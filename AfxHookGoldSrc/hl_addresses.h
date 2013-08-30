@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2013-06-04 dominik.matrixstorm.com
+// 2013-08-30 dominik.matrixstorm.com
 //
 // First changes:
 // 2007-09-13T13:37Z dominik.matrixstorm.com
@@ -37,8 +37,6 @@ AFXADDR_DECL(DTOURSZ_S_TransferPaintBuffer)
 AFXADDR_DECL(GetSoundtime)
 AFXADDR_DECL(Host_Frame)
 AFXADDR_DECL(Host_Frame_DSZ)
-AFXADDR_DECL(HudSpectator_cmp_tfc)
-AFXADDR_DECL(HudSpectator_tfc)
 AFXADDR_DECL(Mod_LeafPVS)
 AFXADDR_DECL(R_DrawEntitiesOnList)
 AFXADDR_DECL(R_DrawParticles)
@@ -58,10 +56,6 @@ AFXADDR_DECL(UnkDrawHudOutCall)
 AFXADDR_DECL(UnkDrawHudOutContinue)
 AFXADDR_DECL(UnkGetDecalTexture)
 AFXADDR_DECL(UnkGetDecalTexture_DSZ)
-AFXADDR_DECL(UpdateSpectatorPanel_checkjmp_ag)
-AFXADDR_DECL(UpdateSpectatorPanel_checkjmp_ns)
-AFXADDR_DECL(UpdateSpectatorPanel_checkjmp_tfc)
-AFXADDR_DECL(UpdateSpectatorPanel_checkjmp_valve)
 AFXADDR_DECL(clientDll)
 AFXADDR_DECL(cstrike_CHudDeathNotice_Draw)
 AFXADDR_DECL(cstrike_CHudDeathNotice_Draw_DSZ)

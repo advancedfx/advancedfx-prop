@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2013-06-04 dominik.matrixstorm.com
+// 2013-08-30 dominik.matrixstorm.com
 //
 // First changes:
 // 2007-09-13T13:37Z dominik.matrixstorm.com
@@ -32,8 +32,6 @@ AFXADDR_DEF(DTOURSZ_S_TransferPaintBuffer)
 AFXADDR_DEF(GetSoundtime)
 AFXADDR_DEF(Host_Frame)
 AFXADDR_DEF(Host_Frame_DSZ)
-AFXADDR_DEF(HudSpectator_cmp_tfc)
-AFXADDR_DEF(HudSpectator_tfc)
 AFXADDR_DEF(Mod_LeafPVS)
 AFXADDR_DEF(R_DrawEntitiesOnList)
 AFXADDR_DEF(R_DrawParticles)
@@ -53,10 +51,6 @@ AFXADDR_DEF(UnkDrawHudOutCall)
 AFXADDR_DEF(UnkDrawHudOutContinue)
 AFXADDR_DEF(UnkGetDecalTexture)
 AFXADDR_DEF(UnkGetDecalTexture_DSZ)
-AFXADDR_DEF(UpdateSpectatorPanel_checkjmp_ag)
-AFXADDR_DEF(UpdateSpectatorPanel_checkjmp_ns)
-AFXADDR_DEF(UpdateSpectatorPanel_checkjmp_tfc)
-AFXADDR_DEF(UpdateSpectatorPanel_checkjmp_valve)
 AFXADDR_DEF(clientDll)
 AFXADDR_DEF(cstrike_CHudDeathNotice_Draw)
 AFXADDR_DEF(cstrike_CHudDeathNotice_Draw_DSZ)
@@ -91,7 +85,6 @@ AFXADDR_DEF(soundtime)
 // *[1] doc/notes_goldsrc/debug_cstrike_crosshair.txt
 // *[2] doc/notes_goldsrc/debug_cstrike_deathmessage.txt
 // [3] doc/notes_goldsrc/debug_cstrike_smoke.txt
-// *[4] doc/notes_goldsrc/debug_valve_UpdateSpectatorPanel.txt
 // *[5] doc/notes_goldsrc/debug_engine_ifaces.txt
 // *[6] doc/notes_goldsrc/debug_sound.txt
 // *[7] doc/notes_goldsrc/debug_SCR_UpdateScreen.txt
@@ -205,20 +198,9 @@ void Addresses_InitHwDll(AfxAddr hwDll)
 	AFXADDR_SET(CL_ParseServerMessage_CmdRead_DSZ, 0x07); // *[10]
 	AFXADDR_SET(msg_readcount, hwDll + 0x1004628); // *[10]
 	AFXADDR_SET(net_message, hwDll +0xA9EF30 - 0x10); // *[10]
-	
-	//
-	// other
-	//
-	
-	// tfc DemoEdit campath fix:
-	// currently not supported // addr.HudSpectator_tfc = addr.hlExe + 0x509A00;
-	// currently not supported // addr.HudSpectator_cmp_tfc = addr.HudSpectator_tfc + 0x23;
-	
-	// UpdateSpectatorPanel overviewmode check jump (for HLTV menu removal):
-	// currently not supported // addr.UpdateSpectatorPanel_checkjmp_tfc = addr.hlExe + 0x5439A1; // Team Fortress Classic (tfc)
 }
 
-/// <remarks>Not called when no client.dll is loaded (tfc).</remarks>
+/// <remarks>Not called when no client.dll is loaded.</remarks>
 void Addresses_InitClientDll(AfxAddr clientDll)
 {
 	AFXADDR_SET(clientDll, clientDll);
@@ -245,13 +227,4 @@ void Addresses_InitClientDll(AfxAddr clientDll)
 	AFXADDR_SET(cstrike_rgDeathNoticeList, clientDll + 0x124EC0); // *[2]
 	AFXADDR_SET(cstrike_CHudDeathNotice_Draw, clientDll + 0x445F0); // *[2]
 	AFXADDR_SET(cstrike_CHudDeathNotice_Draw_DSZ, 0x0a); // at least 8 bytes req. // *[2]
-	
-	//
-	// other games
-	//
-	
-	// UpdateSpectatorPanel overviewmode check jump (for HLTV menu removal):
-	AFXADDR_SET(UpdateSpectatorPanel_checkjmp_ag, clientDll + 0x028091); // Adrenaline-Gamer (ag)
-	AFXADDR_SET(UpdateSpectatorPanel_checkjmp_ns, clientDll + 0x033F3D); // Natuaral Selection (ns)
-	AFXADDR_SET(UpdateSpectatorPanel_checkjmp_valve, clientDll + 0x4A904); // Half-Life (valve) // *[4]
 }
