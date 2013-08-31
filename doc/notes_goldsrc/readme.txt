@@ -1,5 +1,5 @@
 The debug_*.txt files are traces on how to find addresses with WinDbg.
-They are used in ../resources/scripts/AfxHookGoldSrc_init.js, the file
+They are used in ../AfxHookGoldSrc/hl_addresses.cpp, the file
 AfxHookGoldSrc uses to initiate the addresses.
 Also some code in ../AfxHookGoldSrc uses info gained from the debugging
 directly.
@@ -7,7 +7,7 @@ directly.
 Several names and background information used refer to
 
 a) The Half-Life SDK which can be found on
-   http://metamod.sourceforge.net/files/sdk/hlsdk-2.3-p3.zip
+   http://github.com/ValveSoftware/halflife
 
 b) The Quake 1 source code, since Valve built Half-Life on the QuakeWorld source
    code and several Half-Life internals and parts of the structure remained

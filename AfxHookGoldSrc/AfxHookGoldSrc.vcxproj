@@ -52,7 +52,7 @@
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>./;../;C:\Libraries;C:\Libraries\hlsdk\multiplayer\common;C:\Libraries\hlsdk\multiplayer\engine;C:\Libraries\hlsdk\multiplayer\pm_shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;../;C:\Libraries;C:\Libraries\halflife\common;C:\Libraries\halflife\engine;C:\Libraries\halflife\pm_shared;C:\Libraries\halflife\public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;_BIND_TO_CURRENT_CRT_VERSION=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -83,7 +83,7 @@
       </Command>
     </PreBuildEvent>
     <ClCompile>
-      <AdditionalIncludeDirectories>./;../;C:\Libraries;C:\Libraries\hlsdk\multiplayer\common;C:\Libraries\hlsdk\multiplayer\engine;C:\Libraries\hlsdk\multiplayer\pm_shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;../;C:\Libraries;C:\Libraries\halflife\common;C:\Libraries\halflife\engine;C:\Libraries\halflife\pm_shared;C:\Libraries\halflife\public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;_BIND_TO_CURRENT_CRT_VERSION=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>

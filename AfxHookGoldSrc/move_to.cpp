@@ -8,7 +8,7 @@
 #include "cmdregister.h"
 
 #include <hlsdk.h>
-#include <hlsdk/multiplayer/common/ref_params.h>
+#include <halflife/common/ref_params.h>
 
 typedef void (*HUD_PlayerMove_t)( struct playermove_s *ppmove, int server );
 

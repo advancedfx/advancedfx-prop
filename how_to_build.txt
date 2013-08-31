@@ -5,8 +5,8 @@ editions will do).
 Build order:
 
 1) Download the Half-Life SDK from
-   http://metamod.sourceforge.net/files/sdk/hlsdk-2.3-p3.zip
-   and install it into C:\Libraries\hlsdk
+   http://github.com/ValveSoftware/halflife
+   and install it into C:\Libraries\halflife
 
 2) Build (Configuration=Release): AfxHookGoldSrc, AfxHookSource, AfxCppCli
 
