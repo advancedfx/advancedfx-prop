@@ -6,6 +6,24 @@
 
 <release>
 <name>HLAE</name>
+<version>2.3.11.0</version>
+<time>2013-09-04T17:33Z</time>
+<changes>
+<change type="updated">
+Adjusted addresses and hooks to September 02 Steam Half-Life update.
+</change>
+<change type="updated">
+HLAE now always forces gl_ztrick_old 0 (controlled by __mirv_gl_force_noztrick) to avoid image flickering and depthdump problems.
+</change>
+</changes>
+<comments>
+Thanks to Dec for testing.
+</comments>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.3.10.0</version>
 <time>2013-08-30T08:10Z</time>
 <changes>

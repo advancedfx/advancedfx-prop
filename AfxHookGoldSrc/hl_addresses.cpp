@@ -82,9 +82,9 @@ AFXADDR_DEF(soundtime)
 //
 // Documentation (in HLAE source code)
 //
-// *[1] doc/notes_goldsrc/debug_cstrike_crosshair.txt
-// *[2] doc/notes_goldsrc/debug_cstrike_deathmessage.txt
-// [3] doc/notes_goldsrc/debug_cstrike_smoke.txt
+// o[1] doc/notes_goldsrc/debug_cstrike_crosshair.txt
+// o[2] doc/notes_goldsrc/debug_cstrike_deathmessage.txt
+// n[3] doc/notes_goldsrc/debug_cstrike_smoke.txt
 // *[5] doc/notes_goldsrc/debug_engine_ifaces.txt
 // *[6] doc/notes_goldsrc/debug_sound.txt
 // *[7] doc/notes_goldsrc/debug_SCR_UpdateScreen.txt
@@ -92,7 +92,7 @@ AFXADDR_DEF(soundtime)
 // *[9] doc/notes_goldsrc/debug_ClientFunctionTable
 // *[10] doc/notes_goldsrc/debug_CL_ParseServerMessage.txt
 // *[11] doc/notes_goldsrc/debug_R_DrawWorld_and_sky.txt
-// [12] doc/notes_goldsrc/debug_R_DecalShoot.txt
+// n[12] doc/notes_goldsrc/debug_R_DecalShoot.txt
 // *[13] AfxHookGoldSrc/cmd_tools.cpp/getCommandTreeBasePtr
 //
 
@@ -110,20 +110,20 @@ void Addresses_InitHwDll(AfxAddr hwDll)
 	//
 	
 	AFXADDR_SET(p_cl_enginefuncs_s, hwDll + 0x134260); // *[5]
-	AFXADDR_SET(p_playermove_s, hwDll + 0x10063E0); // *[5]
-	AFXADDR_SET(p_engine_studio_api_s, hwDll + 0x1500A8); // *[5]
+	AFXADDR_SET(p_playermove_s, hwDll + 0x1006AE0); // *[5]
+	AFXADDR_SET(p_engine_studio_api_s, hwDll + 0x1502F0); // *[5]
 	
 	//
 	// General engine hooks:
 	//
 	
-	AFXADDR_SET(Host_Frame, hwDll +0x56010); // *[8]
+	AFXADDR_SET(Host_Frame, hwDll +0x561E0); // *[8]
 	AFXADDR_SET(Host_Frame_DSZ, 0x05); // *[8]
 	
 	AFXADDR_SET(CL_EmitEntities, hwDll + 0x14A30); // *[8]
 	AFXADDR_SET(CL_EmitEntities_DSZ, 0x05); // *[8]
 	
-	AFXADDR_SET(ClientFunctionTable, hwDll +0x122EE40); // *[9]
+	AFXADDR_SET(ClientFunctionTable, hwDll +0x122F540); // *[9]
 	
 	AFXADDR_SET(CmdTools_Ofs1, 0x19); // *[13]
 	AFXADDR_SET(CmdTools_Ofs2, 0x0D); // *[13]
@@ -133,71 +133,71 @@ void Addresses_InitHwDll(AfxAddr hwDll)
 	// Rendering related:
 	//
 
-	AFXADDR_SET(UnkDrawHudInCall, hwDll +0x43D00); // *[7]
-	AFXADDR_SET(UnkDrawHudOutCall, hwDll +0x5C460); // *[7]
-	AFXADDR_SET(UnkDrawHudIn, hwDll +0xB4FC1); // *[7]
+	AFXADDR_SET(UnkDrawHudInCall, hwDll +0x43EA0); // *[7]
+	AFXADDR_SET(UnkDrawHudOutCall, hwDll +0x5C670); // *[7]
+	AFXADDR_SET(UnkDrawHudIn, hwDll +0xB52E1); // *[7]
 	AFXADDR_SET(UnkDrawHudInContinue, AFXADDR_GET(UnkDrawHudIn) + 0x6); // *[7]
-	AFXADDR_SET(UnkDrawHudOut, hwDll +0xB5014); // *[7]
+	AFXADDR_SET(UnkDrawHudOut, hwDll +0xB5334); // *[7]
 	AFXADDR_SET(UnkDrawHudOutContinue, AFXADDR_GET(UnkDrawHudOut) + 0x5); // *[7]
 		
-	AFXADDR_SET(R_RenderView, hwDll + 0x45140); // *[7]
+	AFXADDR_SET(R_RenderView, hwDll + 0x452E0); // *[7]
 	AFXADDR_SET(DTOURSZ_R_RenderView, 0x6); // *[7]
 	
-	AFXADDR_SET(R_DrawViewModel, hwDll +0x437F0); // *[7]
+	AFXADDR_SET(R_DrawViewModel, hwDll +0x43990); // *[7]
 	AFXADDR_SET(DTOURSZ_R_DrawViewModel, 0x06); // *[7]
 	
-	AFXADDR_SET(R_PolyBlend, hwDll +0x43D50); // *[7]
+	AFXADDR_SET(R_PolyBlend, hwDll +0x43EF0); // *[7]
 	AFXADDR_SET(DTOURSZ_R_PolyBlend, 0x06); // *[7]
 	
-	AFXADDR_SET(r_refdef, hwDll + 0xEC5EE0); // *[7]
+	AFXADDR_SET(r_refdef, hwDll + 0xEC61E0); // *[7]
 	
-	AFXADDR_SET(Mod_LeafPVS, hwDll + 0x28050); // *[7]
+	AFXADDR_SET(Mod_LeafPVS, hwDll + 0x28270); // *[7]
 	AFXADDR_SET(DTOURSZ_Mod_LeafPVS, 0x06); // *[7]
 	
-	AFXADDR_SET(R_DrawEntitiesOnList, hwDll + 0x435B0); // *[7]
+	AFXADDR_SET(R_DrawEntitiesOnList, hwDll + 0x43750); // *[7]
 	AFXADDR_SET(DTOURSZ_R_DrawEntitiesOnList, 0x06); // *[7]
 	
-	AFXADDR_SET(R_DrawParticles, hwDll + 0x7AF80); // *[7]
+	AFXADDR_SET(R_DrawParticles, hwDll + 0x7B1B0); // *[7]
 	AFXADDR_SET(DTOURSZ_R_DrawParticles, 0x06); // *[7]
 	
-	AFXADDR_SET(R_DrawSkyBoxEx, hwDll + 0x4F38E); // *[11]
+	AFXADDR_SET(R_DrawSkyBoxEx, hwDll + 0x4F55E); // *[11]
 	AFXADDR_SET(R_DrawSkyBoxEx_DSZ,  0x06); // *[11]
 	
-	AFXADDR_SET(skytextures, hwDll + 0x63FC68); // *[11]
+	AFXADDR_SET(skytextures, hwDll + 0x63FF48); // *[11]
 	
-	AFXADDR_SET(UnkGetDecalTexture, hwDll + 0x2E8E0); // *[12]
+	AFXADDR_SET(UnkGetDecalTexture, hwDll + 0x2EB30); // *[12]
 	AFXADDR_SET(UnkGetDecalTexture_DSZ, 0x06); // *[12]
 	
 	//
 	// Sound system related:
 	//
 	
-	AFXADDR_SET(GetSoundtime, hwDll + 0x8AF10); // *[6]
+	AFXADDR_SET(GetSoundtime, hwDll + 0x8B140); // *[6]
 	AFXADDR_SET(DTOURSZ_GetSoundtime, 0x0a); // *[6]
 	
-	AFXADDR_SET(S_PaintChannels, hwDll + 0x8CB00); // *[6]
+	AFXADDR_SET(S_PaintChannels, hwDll + 0x8CD60); // *[6]
 	AFXADDR_SET(DTOURSZ_S_PaintChannels, 0x08); // *[6]
 	
-	AFXADDR_SET(paintedtime, hwDll + 0xA2B560); // *[6]
-	AFXADDR_SET(shm, hwDll + 0x6B79F8); // *[6]
-	AFXADDR_SET(soundtime, hwDll + 0xA2B55C); // *[6]
+	AFXADDR_SET(paintedtime, hwDll + 0xA2B860); // *[6]
+	AFXADDR_SET(shm, hwDll + 0x6B7CD8); // *[6]
+	AFXADDR_SET(soundtime, hwDll + 0xA2B85C); // *[6]
 	
-	AFXADDR_SET(paintbuffer, hwDll + 0xA21420); // *[6]
+	AFXADDR_SET(paintbuffer, hwDll + 0xA21720); // *[6]
 	
-	AFXADDR_SET(S_TransferPaintBuffer, hwDll + 0x8C5A0); // *[6]
+	AFXADDR_SET(S_TransferPaintBuffer, hwDll + 0x8C800); // *[6]
 	AFXADDR_SET(DTOURSZ_S_TransferPaintBuffer, 0x06); // *[6]
 	
-	AFXADDR_SET(SND_PickChannel, hwDll + 0x8A1B0); // *[6]
+	AFXADDR_SET(SND_PickChannel, hwDll + 0x8A3E0); // *[6]
 	AFXADDR_SET(DTOURSZ_SND_PickChannel, 0x07); // *[6]
 	
 	//
 	// Demo parsing related:
 	//
 	
-	AFXADDR_SET(CL_ParseServerMessage_CmdRead, hwDll + 0x1CEE6); // *[10]
+	AFXADDR_SET(CL_ParseServerMessage_CmdRead, hwDll + 0x1CFC6); // *[10]
 	AFXADDR_SET(CL_ParseServerMessage_CmdRead_DSZ, 0x07); // *[10]
-	AFXADDR_SET(msg_readcount, hwDll + 0x1004628); // *[10]
-	AFXADDR_SET(net_message, hwDll +0xA9EF30 - 0x10); // *[10]
+	AFXADDR_SET(msg_readcount, hwDll + 0x1004D28); // *[10]
+	AFXADDR_SET(net_message, hwDll +0xA9F230 - 0x10); // *[10]
 }
 
 /// <remarks>Not called when no client.dll is loaded.</remarks>

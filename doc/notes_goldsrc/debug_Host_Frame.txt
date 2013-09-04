@@ -1,51 +1,51 @@
-Version: May 16 update
+Version: Sep 02 update
 
 Modules:
-hw 03520000
+hw 01d00000
 
 Locate Host_Frame:
 
 0:000> s -a hw L1000000 "host_speeds"
-03666f38  68 6f 73 74 5f 73 70 65-65 64 73 00 30 00 00 00  host_speeds.0...
+01e47158  68 6f 73 74 5f 73 70 65-65 64 73 00 30 00 00 00  host_speeds.0...
 
-(03666f38 +E +E == 03666f54  is host_speeds.value and E bytes after the end of "host_speeds" "0" texts.)
+(01e47158 +E +E == 01e47174  is host_speeds.value and E bytes after the end of "host_speeds" "0" texts.)
 
-0:000> s hw L1000000 54 6f 66 03
-03575da0  54 6f 66 03 d8 1d 48 b0-63 03 df e0 f6 c4 44 7b  Tof...H.c.....D{
+0:000> s hw L1000000 74 71 e4 01
+01d55f70  74 71 e4 01 d8 1d 48 b0-e1 01 df e0 f6 c4 44 7b  tq....H.......D{
 
-03575d9e == 03575da0 -2:
-03575d9e d905546f6603    fld     dword ptr [hw!vgui::Frame::`vftable'+0x2a1f0 (03666f54)]
-03575da4 d81d48b06303    fcomp   dword ptr [hw!vgui::Frame::operator=+0x5c6d8 (0363b048)]
-03575daa dfe0            fnstsw  ax
-03575dac f6c444          test    ah,44h
-03575daf 7b5b            jnp     hw+0x55e0c (03575e0c)
+01d55f6e == 01d55f70 -2:
+01d55f6e d9057471e401    fld     dword ptr [hw!vgui::Frame::`vftable'+0x2a410 (01e47174)]
+01d55f74 d81d48b0e101    fcomp   dword ptr [hw!vgui::Frame::operator=+0x5c3b8 (01e1b048)]
+01d55f7a dfe0            fnstsw  ax
+01d55f7c f6c444          test    ah,44h
+01d55f7f 7b5b            jnp     hw+0x55fdc (01d55fdc)
 
 This is inside a sub function, set a breakpoint and follow till ret.
 
 Then you are inside Host_Frame, follow till ret again and you will get the Host_Frame call address:
 
-03576010 is Host_Frame
+01d561e0 is Host_Frame
 ...
-035760db 83c408          add     esp,8
-035760de e83da0fcff      call    hw+0x20120 (03540120)
-035760e3 e8680dfcff      call    hw+0x16e50 (03536e50)
-035760e8 e843a0fcff      call    hw+0x20130 (03540130)
-035760ed e81efeffff      call    hw+0x55f10 (03575f10)
-035760f2 e839e9fbff      call    hw+0x14a30 (03534a30)
-035760f7 e8c41afcff      call    hw+0x17bc0 (03537bc0)
-035760fc e8ef5afcff      call    hw+0x1bbf0 (0353bbf0)
-03576101 85c0            test    eax,eax
-03576103 75f7            jne     hw+0x560fc (035760fc)
-03576105 e8d6effbff      call    hw+0x150e0 (035350e0)
-0357610a e8a1feffff      call    hw+0x55fb0 (03575fb0)
-0357610f e8fc16feff      call    hw+0x37810 (03557810)
-03576114 e847ce0400      call    hw!CreateInterface+0x460c0 (035c2f60)
-03576119 e8225afbff      call    hw+0xbb40 (0352bb40)
-0357611e e85da3fcff      call    hw+0x20480 (03540480)
-03576123 e8c8220500      call    hw!CreateInterface+0x4b550 (035c83f0)
-03576128 dd1d18feb503    fstp    qword ptr [hw!vgui::Frame::`vftable'+0x5230b4 (03b5fe18)]
-0357612e e80dfdffff      call    hw+0x55e40 (03575e40)
+01d562ab 83c408          add     esp,8
+01d562ae e88da0fcff      call    hw+0x20340 (01d20340)
+01d562b3 e8980bfcff      call    hw+0x16e50 (01d16e50)
+01d562b8 e893a0fcff      call    hw+0x20350 (01d20350)
+01d562bd e81efeffff      call    hw+0x560e0 (01d560e0)
+01d562c2 e869e7fbff      call    hw+0x14a30 (01d14a30)
+01d562c7 e80419fcff      call    hw+0x17bd0 (01d17bd0)
+01d562cc e8ff59fcff      call    hw+0x1bcd0 (01d1bcd0)
+01d562d1 85c0            test    eax,eax
+01d562d3 75f7            jne     hw+0x562cc (01d562cc)
+01d562d5 e806eefbff      call    hw+0x150e0 (01d150e0)
+01d562da e8a1feffff      call    hw+0x56180 (01d56180)
+01d562df e87c17feff      call    hw+0x37a60 (01d37a60)
+01d562e4 e897ce0400      call    hw!CreateInterface+0x460d0 (01da3180)
+01d562e9 e85258fbff      call    hw+0xbb40 (01d0bb40)
+01d562ee e8ada3fcff      call    hw+0x206a0 (01d206a0)
+01d562f3 e818230500      call    hw!CreateInterface+0x4b560 (01da8610)
+01d562f8 dd1df8003402    fstp    qword ptr [hw!vgui::Frame::`vftable'+0x523394 (023400f8)]
+01d562fe e80dfdffff      call    hw+0x56010 (01d56010)
 ...
 ==>
-035760f2 => 03534a30 is CL_EmitEntities
-0357612e => calls 03575e40 where SCR_UpdateScreen is called
+01d562c2 => 01d14a30 is CL_EmitEntities
+01d562fe => calls 01d56010 where SCR_UpdateScreen is called

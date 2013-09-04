@@ -1,4 +1,4 @@
-Version: May 16 update
+Version: Sep 02 update
 
 For more information see:
 debug_SCR_UpdateScreen.txt
@@ -9,104 +9,104 @@ hw 03520000
 
 For finding R_DrawWorld see debug_SCR_UpdateScreen.txt.
 
-03568130 R_DrawWorld
+01d482d0 R_DrawWorld
 ...
 // 	currenttexture = -1;
 //	glColor3f (1,1,1);
-03568197 680000803f      push    offset <Unloaded_ud.drv>+0x3f7fffff (3f800000)
-0356819c 680000803f      push    offset <Unloaded_ud.drv>+0x3f7fffff (3f800000)
-035681a1 680000803f      push    offset <Unloaded_ud.drv>+0x3f7fffff (3f800000)
-035681a6 c70590f56503ffffffff mov dword ptr [hw!vgui::Frame::`vftable'+0x2282c (0365f590)],0FFFFFFFFh
-035681b0 888548f7ffff    mov     byte ptr [ebp-8B8h],al
-035681b6 888d49f7ffff    mov     byte ptr [ebp-8B7h],cl
-035681bc 88954af7ffff    mov     byte ptr [ebp-8B6h],dl
-035681c2 ff156cdffa03    call    dword ptr [hw!vgui::Frame::`vftable'+0x971208 (03fadf6c)]
+01d48337 680000803f      push    offset <Unloaded_ud.drv>+0x3f7fffff (3f800000)
+01d4833c 680000803f      push    offset <Unloaded_ud.drv>+0x3f7fffff (3f800000)
+01d48341 680000803f      push    offset <Unloaded_ud.drv>+0x3f7fffff (3f800000)
+01d48346 c705a0f7e301ffffffff mov dword ptr [hw!vgui::Frame::`vftable'+0x22a3c (01e3f7a0)],0FFFFFFFFh
+01d48350 888548f7ffff    mov     byte ptr [ebp-8B8h],al
+01d48356 888d49f7ffff    mov     byte ptr [ebp-8B7h],cl
+01d4835c 88954af7ffff    mov     byte ptr [ebp-8B6h],dl
+01d48362 ff156ce27802    call    dword ptr [hw!vgui::Frame::`vftable'+0x971508 (0278e26c)]
 //
 // 	memset (lightmap_polys, 0, sizeof(lightmap_polys));
-035681c8 6800010000      push    offset <Unloaded_ud.drv>+0xff (00000100)
-035681cd 6a00            push    0
-035681cf 68a058fd03      push    offset hw!qwglMakeCurrent+0x27094 (03fd58a0)
-035681d4 e85706feff      call    hw+0x28830 (03548830)
+01d48368 6800010000      push    offset <Unloaded_ud.drv>+0xff (00000100)
+01d4836d 6a00            push    0
+01d4836f 68a05b7b02      push    offset hw!qwglMakeCurrent+0x27094 (027b5ba0)
+01d48374 e8d706feff      call    hw+0x28a50 (01d28a50)
 ...
-0356826f 8b88a4000000    mov     ecx,dword ptr <Unloaded_ud.drv>+0xa3 (000000a4)[eax]
-03568275 51              push    ecx
-03568276 e895fcffff      call    hw+0x47f10 (03567f10)
-0356827b 83c404          add     esp,4
-0356827e c705a0eeb50300000000 mov dword ptr [hw!vgui::Frame::`vftable'+0x52213c (03b5eea0)],0
-03568288 e813f5ffff      call    hw+0x477a0 (035677a0)
-0356828d e89e2d0400      call    hw!CreateInterface+0x2e190 (035ab030)
-03568292 e8097ffdff      call    hw+0x201a0 (035401a0)
-03568297 85c0            test    eax,eax
-03568299 750e            jne     hw+0x482a9 (035682a9)
+01d4840f 8b88a4000000    mov     ecx,dword ptr <Unloaded_ud.drv>+0xa3 (000000a4)[eax]
+01d48415 51              push    ecx
+01d48416 e895fcffff      call    hw+0x480b0 (01d480b0)
+01d4841b 83c404          add     esp,4
+01d4841e c70580f1330200000000 mov dword ptr [hw!vgui::Frame::`vftable'+0x52241c (0233f180)],0
+01d48428 e813f5ffff      call    hw+0x47940 (01d47940)
+01d4842d e82e2e0400      call    hw!CreateInterface+0x2e1b0 (01d8b260)
+01d48432 e8897ffdff      call    hw+0x203c0 (01d203c0)
+01d48437 85c0            test    eax,eax
+01d48439 750e            jne     hw+0x48449 (01d48449)
 ...
-035682ac c3              ret
+01d4844c c3              ret
 
 ==>
-03568276 => 03567f10 is void R_RecursiveWorldNode (mnode_t *node)
-03568288 => 035677a0 is DrawTextureChains
+01d48416 => 01d480b0 is void R_RecursiveWorldNode (mnode_t *node)
+01d48428 => 01d47940 is DrawTextureChains
 
-035677a0 DrawTextureChains
+01d47940 DrawTextureChains
 ...
 // 		t = cl.worldmodel->textures[i];
 //		if (!t)
 //			continue;
-03567809 8b8874010000    mov     ecx,dword ptr <Unloaded_ud.drv>+0x173 (00000174)[eax]
-0356780f 8b3c99          mov     edi,dword ptr [ecx+ebx*4]
-03567812 85ff            test    edi,edi
-...
+01d479a9 8b8874010000    mov     ecx,dword ptr <Unloaded_ud.drv>+0x173 (00000174)[eax]
+01d479af 8b3c99          mov     edi,dword ptr [ecx+ebx*4]
+01d479b2 85ff            test    edi,edi
+01d479b4 0f848d000000    je      hw+0x47a47 (01d47a47)
 //		s = t->texturechain;
 //		if (!s)
 //			continue;
-0356781a 8b771c          mov     esi,dword ptr [edi+1Ch]
-0356781d 85f6            test    esi,esi
-0356781f 0f8482000000    je      hw+0x478a7 (035678a7)
+01d479ba 8b771c          mov     esi,dword ptr [edi+1Ch]
+01d479bd 85f6            test    esi,esi
+01d479bf 0f8482000000    je      hw+0x47a47 (01d47a47)
 //		if (i == skytexturenum)
 //			R_DrawSkyChain (s);
-03567825 3b1de4523e04    cmp     ebx,dword ptr [hw!qwglMakeCurrent+0x436ad8 (043e52e4)]
-0356782b 750b            jne     hw+0x47838 (03567838)
-0356782d 56              push    esi
-0356782e e8fb780000      call    hw+0x4f12e (0356f12e)
-03567833 83c404          add     esp,4
+01d479c5 3b1de455bc02    cmp     ebx,dword ptr [hw!qwglMakeCurrent+0x436ad8 (02bc55e4)]
+01d479cb 750b            jne     hw+0x479d8 (01d479d8)
+01d479cd 56              push    esi
+01d479ce e82b790000      call    hw+0x4f2fe (01d4f2fe)
+01d479d3 83c404          add     esp,4
 ...
 
 ==>
-0356782e => 0356f12e is R_DrawSkyChain
+01d479ce => 01d4f2fe is R_DrawSkyChain
 
-0356f12e R_DrawSkyChain
+01d4f2fe R_DrawSkyChain
 ...
 // ClipSkyPolygon (p->numverts, verts[0], 0);
-0356f1a6 6a00            push    0
-0356f1a8 50              push    eax
-0356f1a9 51              push    ecx
-0356f1aa e813faffff      call    hw+0x4ebc2 (0356ebc2)
+01d4f376 6a00            push    0
+01d4f378 50              push    eax
+01d4f379 51              push    ecx
+01d4f37a e813faffff      call    hw+0x4ed92 (01d4ed92)
 ...
-0356f1bf 5e              pop     esi
-0356f1c0 e8c9010000      call    hw+0x4f38e (0356f38e)
-0356f1c5 5f              pop     edi
-0356f1c6 8be5            mov     esp,ebp
-0356f1c8 5d              pop     ebp
-0356f1c9 c3              ret
+01d4f38f 5e              pop     esi
+01d4f390 e8c9010000      call    hw+0x4f55e (01d4f55e)
+01d4f395 5f              pop     edi
+01d4f396 8be5            mov     esp,ebp
+01d4f398 5d              pop     ebp
+01d4f399 c3              ret
 
 ==>
-0356f1aa => 0356ebc2 is ClipSkyPolygon
-0356f1c0 => 0356f38e is Similar to R_DrawSkyBox
+01d4f37a => 01d4ed92 is ClipSkyPolygon
+01d4f390 => 01d4f55e is Similar to R_DrawSkyBox
 
-0356f38e Similar to R_DrawSkyBox
+01d4f55e Similar to R_DrawSkyBox
 ...
-0356f4d0 8b04b5d85b6603  mov     eax,dword ptr hw!vgui::Frame::`vftable'+0x28e74 (03665bd8)[esi*4]
-0356f4d7 8b0c8568fcb503  mov     ecx,dword ptr hw!vgui::Frame::`vftable'+0x522f04 (03b5fc68)[eax*4]
-0356f4de 51              push    ecx
-0356f4df e8ccb9feff      call    hw+0x3aeb0 (0355aeb0)
-0356f4e4 8b55fc          mov     edx,dword ptr [ebp-4]
-0356f4e7 83c404          add     esp,4
-0356f4ea 52              push    edx
-0356f4eb 53              push    ebx
-0356f4ec 57              push    edi
-0356f4ed ff156cdffa03    call    dword ptr [hw!vgui::Frame::`vftable'+0x971208 (03fadf6c)]
-0356f4f3 6a07            push    7
+01d4f6a0 8b04b5f85de401  mov     eax,dword ptr hw!vgui::Frame::`vftable'+0x29094 (01e45df8)[esi*4]
+01d4f6a7 8b0c8548ff3302  mov     ecx,dword ptr hw!vgui::Frame::`vftable'+0x5231e4 (0233ff48)[eax*4]
+01d4f6ae 51              push    ecx
+01d4f6af e84cbafeff      call    hw+0x3b100 (01d3b100)
+01d4f6b4 8b55fc          mov     edx,dword ptr [ebp-4]
+01d4f6b7 83c404          add     esp,4
+01d4f6ba 52              push    edx
+01d4f6bb 53              push    ebx
+01d4f6bc 57              push    edi
+01d4f6bd ff156ce27802    call    dword ptr [hw!vgui::Frame::`vftable'+0x971508 (0278e26c)]
+01d4f6c3 6a07            push    7
 ...
 
 ==>
-0356f4df => 0355aeb0 is GL_Bind
-0356f4d0 => 03665bd8 is skytexorder
-0356f4d7 => 03b5fc68 is SKY_TEX texture id array
+01d4f6af => 01d3b100 is GL_Bind
+01d4f6a0 => 01e45df8 is skytexorder
+01d4f6a7 => 0233ff48 is SKY_TEX texture id array

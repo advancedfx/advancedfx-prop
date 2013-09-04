@@ -48,7 +48,6 @@ REGISTER_DEBUGCVAR(camera_test, "0", 0);
 REGISTER_DEBUGCVAR(depth_bpp, "8", 0);
 REGISTER_DEBUGCVAR(depth_slice_lo, "0.0", 0);
 REGISTER_DEBUGCVAR(depth_slice_hi, "1.0", 0);
-REGISTER_DEBUGCVAR(gl_force_noztrick, "1", 0);
 REGISTER_DEBUGCVAR(sample_frame_strength, "1.0", 0);
 REGISTER_DEBUGCVAR(sample_smethod, "1", 0);
 REGISTER_DEBUGCVAR(print_frame, "0", 0);
@@ -694,12 +693,6 @@ void Filming::Start()
 		pEngfuncs->Cvar_SetValue("hud_draw", 0);
 		pEngfuncs->Cvar_SetValue("crosshair", 0);
 	}
-
-	//
-	// gl_ztrick:
-	// we force it to 0 by default, cause otherwise it could mess up the z-buffer, see ID SOftware's Quake 1 source for more info why this has to be done
-	if (gl_force_noztrick->value)
-		pEngfuncs->Cvar_SetValue("gl_ztrick", 0);
 
 	// indicate sound export if requested:
 	_bExportingSound = !_bSimulate2 && (movie_export_sound->value!=0.0f);

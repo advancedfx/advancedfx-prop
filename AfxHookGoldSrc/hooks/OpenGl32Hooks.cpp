@@ -21,6 +21,7 @@
 
 REGISTER_CVAR(disableautodirector, "0", 0);
 
+REGISTER_DEBUGCVAR(gl_force_noztrick, "1", 0);
 REGISTER_DEBUGCVAR(gl_previewclear, "1", 0);
 
 
@@ -256,6 +257,13 @@ void APIENTRY NewGlViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 	if (g_nViewports == 0)
 	{
 		//g_Filming.setScreenSize(width, height);
+
+		//
+		// gl_ztrick:
+		// we force it to 0 by default, since we don't want the code for 1 to kick in (see Quake 1 source code for more info)
+		if (gl_force_noztrick->value)
+			pEngfuncs->Cvar_SetValue("gl_ztrick_old", 0);
+
 
 		// Always get rid of auto_director
 		if (disableautodirector->value != 0.0f)
