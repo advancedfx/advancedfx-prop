@@ -152,7 +152,7 @@ public:
 	float Exposure_get() const;
 	float FrameDuration_get() const;
 	float FrameStrength_get() const;
-	float Height_get() const;
+	int Height_get() const;
 	Method Method_get() const;
 	float StartTime_get() const;
 	int Width_get() const;

@@ -7,7 +7,7 @@
 void MbPrintPixelFormatDescriptor(char const * title, PIXELFORMATDESCRIPTOR const * pfd)
 {
 	char szTmp[1000];
-	_snprintf(szTmp, sizeof(szTmp) - 1,
+	_snprintf_s(szTmp, _TRUNCATE,
 		"ColorBits: %u\nDepthBits: %u\nRedBits: %u, RedShift: %u\nGreenBits: %u, GreenShift: %u\nBlueBits: %u, BlueShift: %u\nAlphaBits: %u, AlphaShift: %u",
 		pfd->cColorBits,
 		pfd->cDepthBits,

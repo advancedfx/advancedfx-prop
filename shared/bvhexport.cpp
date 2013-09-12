@@ -20,7 +20,7 @@ using namespace std;
 BvhExport::BvhExport(wchar_t const * fileName, char const * rootName, float frameTime)
 {
 	m_FrameCount = 0;
-	m_pMotionFile = _wfopen(fileName, L"wb");
+	_wfopen_s(&m_pMotionFile, fileName, L"wb");
 
 	if (m_pMotionFile != NULL)
 		BeginContent(m_pMotionFile, rootName, frameTime, m_lMotionTPos);
@@ -32,7 +32,7 @@ BvhExport::~BvhExport()
 
 	if (m_pMotionFile) {
 		fseek(m_pMotionFile, m_lMotionTPos, SEEK_SET);
-		_snprintf(pTmp, sizeof(pTmp)-1, "Frames: %11i", m_FrameCount);
+		_snprintf_s(pTmp, _TRUNCATE, "Frames: %11i", m_FrameCount);
 		fputs(pTmp, m_pMotionFile);
 		fclose(m_pMotionFile);
 		m_pMotionFile = NULL;
@@ -53,14 +53,14 @@ void BvhExport::BeginContent(FILE *pFile, char const * pRootName, float frameTim
 	ulTPos = ftell(pFile);
 	fputs("Frames: 0123456789A\n",pFile);
 
-	_snprintf(szTmp, sizeof(szTmp) - 1,"Frame Time: %f\n", frameTime);
+	_snprintf_s(szTmp, _TRUNCATE,"Frame Time: %f\n", frameTime);
 	fputs(szTmp,pFile);
 }
 
 void BvhExport::WriteFrame(float Xposition, float Yposition, float Zposition, float Zrotation, float Xrotation, float Yrotation) {
 	char pszT[249];
 
-	_snprintf(pszT, sizeof(pszT)-1, "%f %f %f %f %f %f\n", Xposition, Yposition, Zposition, Zrotation, Xrotation, Yrotation);
+	_snprintf_s(pszT, _TRUNCATE, "%f %f %f %f %f %f\n", Xposition, Yposition, Zposition, Zrotation, Xrotation, Yrotation);
 
 	if (m_pMotionFile) fputs(pszT, m_pMotionFile);
 

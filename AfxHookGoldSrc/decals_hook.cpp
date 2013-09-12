@@ -213,8 +213,9 @@ void CreateFilterEntry( std::list<decal_filter_entry_s *> *pfilters, const char 
 {
 	decal_filter_entry_s *entry = (decal_filter_entry_s *)malloc(sizeof(decal_filter_entry_s));
 
-	entry->sz_Mask = (char *)malloc(sizeof(char)*(strlen(sz_Mask)+1));
-	strcpy(entry->sz_Mask,sz_Mask);
+	size_t bufLen = strlen(sz_Mask)+1;
+	entry->sz_Mask = (char *)malloc(sizeof(char)*bufLen);
+	strcpy_s(entry->sz_Mask, bufLen, sz_Mask);
 	entry->i_TargetDecalIndex = i_TargetDecalIndex;
 
 	pfilters->push_back(entry);
@@ -312,27 +313,27 @@ REGISTER_CMD_FUNC(decalfilter)
 	if( argc >= 1+1 )
 	{
 		char * command = pEngfuncs->Cmd_Argv(1);
-		if(!stricmp(command,"clearall"))
+		if(!_stricmp(command,"clearall"))
 		{
 			DecalFilter_Clear();
 			bShowHelp = false;
 		}
-		else if(!stricmp(command,"list"))
+		else if(!_stricmp(command,"list"))
 		{
 			DecalFilter_List();
 			bShowHelp = false;
 		}
-		else if(!stricmp(command,"debug") && argc == 1+2)
+		else if(!_stricmp(command,"debug") && argc == 1+2)
 		{
 			DecalFilter_Debug(0 != atoi(pEngfuncs->Cmd_Argv(2)));
 			bShowHelp = false;
 		}
-		else if(!stricmp(command,"remove") && argc == 1+2)
+		else if(!_stricmp(command,"remove") && argc == 1+2)
 		{
 			DecalFilter_Remove( pEngfuncs->Cmd_Argv(2) );
 			bShowHelp = false;
 		}
-		else if(!stricmp(command,"add") && argc == 1+3)
+		else if(!_stricmp(command,"add") && argc == 1+3)
 		{
 			DecalFilter_Add(  pEngfuncs->Cmd_Argv(2),  pEngfuncs->Cmd_Argv(3) );
 			bShowHelp = false;

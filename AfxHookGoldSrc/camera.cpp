@@ -22,7 +22,7 @@ REGISTER_DEBUGCMD_FUNC(tst_camera_broken)
 	{
 		char * subcmd = pEngfuncs->Cmd_Argv(1);
 
-		if(!stricmp("add", subcmd) && 2 == argc)
+		if(!_stricmp("add", subcmd) && 2 == argc)
 		{
 			g_AfxGoldSrcComClient.SendMessage(CLM_CameraAdd);
 			PipeCom * pc = &g_AfxGoldSrcComClient;
@@ -38,7 +38,7 @@ REGISTER_DEBUGCMD_FUNC(tst_camera_broken)
 
 			return;
 		}
-		else if(!stricmp("active", subcmd) && 3 == argc)
+		else if(!_stricmp("active", subcmd) && 3 == argc)
 		{
 			g_AfxGoldSrcComClient.SendMessage(CLM_CameraActive);
 			PipeCom * pc = &g_AfxGoldSrcComClient;
@@ -47,13 +47,13 @@ REGISTER_DEBUGCMD_FUNC(tst_camera_broken)
 
 			return;
 		}
-		else if(!stricmp("clear", subcmd) && 2 == argc)
+		else if(!_stricmp("clear", subcmd) && 2 == argc)
 		{
 			g_AfxGoldSrcComClient.SendMessage(CLM_CameraClear);
 
 			return;
 		}
-		else if(!stricmp("print", subcmd) && 2 == argc)
+		else if(!_stricmp("print", subcmd) && 2 == argc)
 		{
 			g_AfxGoldSrcComClient.SendMessage(CLM_CameraPrint);
 			PipeCom * pc = &g_AfxGoldSrcComClient;
@@ -85,7 +85,7 @@ REGISTER_DEBUGCMD_FUNC(tst_camera_broken)
 
 			return;
 		}
-		else if(!stricmp("remove", subcmd) && 3 == argc)
+		else if(!_stricmp("remove", subcmd) && 3 == argc)
 		{
 			g_AfxGoldSrcComClient.SendMessage(CLM_CameraRemove);
 			PipeCom * pc = &g_AfxGoldSrcComClient;

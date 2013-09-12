@@ -509,7 +509,7 @@ REGISTER_CMD_FUNC(aim_layers)
 	{
 		char const * cmd1 = pEngfuncs->Cmd_Argv(1);
 
-		if(2 == argc && !stricmp("list", cmd1))
+		if(2 == argc && !_stricmp("list", cmd1))
 		{
 			g_Aiming.showAimLayers();
 			showHelp = false;
@@ -518,12 +518,12 @@ REGISTER_CMD_FUNC(aim_layers)
 		{
 			int slot = atoi(pEngfuncs->Cmd_Argv(2));
 			
-			if(3 == argc && !stricmp("del", cmd1))
+			if(3 == argc && !_stricmp("del", cmd1))
 			{
 				g_Aiming.removeAimLayer(slot);
 				showHelp = false;
 			}
-			else if(4 == argc && !stricmp("add", cmd1))
+			else if(4 == argc && !_stricmp("add", cmd1))
 			{
 				int ent = atoi(pEngfuncs->Cmd_Argv(3));
 				g_Aiming.addAimLayer(slot, ent);
@@ -566,7 +566,7 @@ REGISTER_CMD_FUNC(showentities)
 REGISTER_CMD_FUNC(aim_offset)
 {
 	if (pEngfuncs->Cmd_Argc() == 4)
-		g_Aiming.SetAimOfs(atof(pEngfuncs->Cmd_Argv(1)),atof(pEngfuncs->Cmd_Argv(3)),atof(pEngfuncs->Cmd_Argv(2)));
+		g_Aiming.SetAimOfs((float)atof(pEngfuncs->Cmd_Argv(1)),(float)atof(pEngfuncs->Cmd_Argv(3)),(float)atof(pEngfuncs->Cmd_Argv(2)));
 	else
 		pEngfuncs->Con_Printf("Usage: " PREFIX "aim_offset <right> <up> <forward>\n");
 }

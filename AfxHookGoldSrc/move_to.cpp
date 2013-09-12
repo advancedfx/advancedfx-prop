@@ -71,16 +71,16 @@ REGISTER_DEBUGCMD_FUNC(moveto)
 	{
 		showHelp = false;
 
-		g_Move.origin[0] = atof(pEngfuncs->Cmd_Argv(1));
-		g_Move.origin[1] = atof(pEngfuncs->Cmd_Argv(2));
-		g_Move.origin[2] = atof(pEngfuncs->Cmd_Argv(3));
+		g_Move.origin[0] = (float)atof(pEngfuncs->Cmd_Argv(1));
+		g_Move.origin[1] = (float)atof(pEngfuncs->Cmd_Argv(2));
+		g_Move.origin[2] = (float)atof(pEngfuncs->Cmd_Argv(3));
 		g_Move.setOrigin = true;
 
 		if(7 == argc)
 		{
-			g_Move.angles[0] = atof(pEngfuncs->Cmd_Argv(4));
-			g_Move.angles[1] = atof(pEngfuncs->Cmd_Argv(5));
-			g_Move.angles[2] = atof(pEngfuncs->Cmd_Argv(6));
+			g_Move.angles[0] = (float)atof(pEngfuncs->Cmd_Argv(4));
+			g_Move.angles[1] = (float)atof(pEngfuncs->Cmd_Argv(5));
+			g_Move.angles[2] = (float)atof(pEngfuncs->Cmd_Argv(6));
 			g_Move.setAngles = true;
 
 			pEngfuncs->SetViewAngles(g_Move.angles);

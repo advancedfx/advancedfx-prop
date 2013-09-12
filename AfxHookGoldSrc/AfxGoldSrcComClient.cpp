@@ -45,11 +45,11 @@ void GetAfxPipes()
 		strEnd = cmdLine +strlen(cmdLine);
 
 	memset(tmp, 0, 33);
-	strncpy(tmp, strRead, min(32, strWrite -strRead -1));
+	strncpy_s(tmp, strRead, min(32, strWrite -strRead -1));
 	g_ReadPipe = (HANDLE)atoi(tmp);
 
 	memset(tmp, 0, 33);
-	strncpy(tmp, strWrite, min(32, strEnd -strWrite));
+	strncpy_s(tmp, strWrite, min(32, strEnd -strWrite));
 	g_WritePipe = (HANDLE)atoi(tmp);
 }
 

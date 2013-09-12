@@ -42,14 +42,17 @@ skyimage_t *LoadSky(const char *pszFileName, bool bFlipY)
 		return 0;
 	}
 
+	fopen_s(&pFile, pszFileName, "rb");
+
 	if (
-		!(pFile = fopen(pszFileName, "rb")) // could not open file
+		!pFile // could not open file
 		|| fseek(pFile,0,SEEK_END) // could not seek to file end
 		|| !(cbSize = ftell(pFile)) // file size is zero
 		|| fseek(pFile,0,SEEK_SET) // could not seek back
 	)
 	{
 		pEngfuncs->Con_Printf("Error: could not open sky image %s.\n",pszFileName);
+		if(pFile) fclose(pFile);
 		free(pSkyImage);
 		return 0;
 	}
@@ -111,9 +114,8 @@ skyimage_t *LoadSky(const char *pszFileName, bool bFlipY)
 
 	if(bFlipY)
 	{
-		unsigned char bytes[3];
 		unsigned int iH = pSkyImage->height; 
-		for(int iY=0; iY<(iH>>1); iY++)
+		for(unsigned int iY=0; iY<(iH>>1); iY++)
 		{
 			void *pUp = (void *)((unsigned char *)(pSkyImage->data) + iY*cbLineSize);
 			void *pDn = (void *)((unsigned char *)(pSkyImage->data) + (iH-iY-1)*cbLineSize);

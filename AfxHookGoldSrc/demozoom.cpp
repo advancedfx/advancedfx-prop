@@ -72,17 +72,17 @@ REGISTER_DEBUGCMD_FUNC(demozoom)
 	int argc = pEngfuncs->Cmd_Argc();
 
 	if(2 <= argc) {
-		if(!stricmp("block",pEngfuncs->Cmd_Argv(1))) {
+		if(!_stricmp("block",pEngfuncs->Cmd_Argv(1))) {
 			g_DemoZoomMode = DZM_BLOCK;
 			return;
 		}
-		else if(!stricmp("default",pEngfuncs->Cmd_Argv(1))) {
+		else if(!_stricmp("default",pEngfuncs->Cmd_Argv(1))) {
 			g_DemoZoomMode = DZM_DEFAULT;
 			return;
 		}
-		else if(3 <= argc && !stricmp("set",pEngfuncs->Cmd_Argv(1))) {
+		else if(3 <= argc && !_stricmp("set",pEngfuncs->Cmd_Argv(1))) {
 			g_DemoZoomMode = DZM_SET;
-			g_DemoZoomMode_SetValue = atof(pEngfuncs->Cmd_Argv(2));
+			g_DemoZoomMode_SetValue = (float)atof(pEngfuncs->Cmd_Argv(2));
 			return;
 		}
 	}

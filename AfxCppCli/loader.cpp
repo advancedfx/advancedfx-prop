@@ -58,7 +58,7 @@ LPCTSTR GetPluginVersion(LPCTSTR pszName)
 
 	if (VerQueryValue(lpVI, _T("\\"), (LPVOID *) &lpFFI, (UINT *) &dwBufSize))
 	{
-		_stprintf(szVersion, _T("%d.%d.%d.%d"),
+		_stprintf_s(szVersion, _T("%d.%d.%d.%d"),
 			HIWORD(lpFFI->dwFileVersionMS),
 			LOWORD(lpFFI->dwFileVersionMS),
 			HIWORD(lpFFI->dwFileVersionLS),
@@ -77,7 +77,7 @@ LPCTSTR GetPluginVersion(LPCTSTR pszName)
 class AfxHook
 {
 public:
-	AfxHook(char const * imageFileName)
+	AfxHook(LPCTSTR imageFileName)
 	{
 		m_BootImage = 0;
 		m_BootImageSize = 0;
@@ -124,7 +124,7 @@ public:
 		))
 		{
 			TCHAR strErr[33];
-			_itot(GetLastError(), strErr, 10);
+			_itot_s(GetLastError(), strErr, 10);
 			MessageBox( 0, _T("Failed to launch the program."), (LPCTSTR)strErr, MB_OK|MB_ICONERROR );
 			return false;
 		}
@@ -149,12 +149,14 @@ private:
 	unsigned char * m_BootImage;
 	size_t m_BootImageSize;
 
-	void LoadImage(char const * imageFileName)
+	void LoadImage(LPCTSTR imageFileName)
 	{
-		FILE * file = 0;
+		FILE * file;
+
+		_tfopen_s(&file, imageFileName, _T("rb"));
 
 		bool bOk =
-			0 != (file= fopen(imageFileName, "r"))
+			0 != file
 			&& 0 == fseek(file, 0, SEEK_END)
 			&& -1 != (m_BootImageSize = ftell(file))
 			&& 0 == fseek(file, 0, SEEK_SET)
@@ -312,6 +314,7 @@ bool CustomLoader(System::String ^ strHookPath, System::String ^ strProgramPath,
 	LPCTSTR programDirectory = 0;
 	LPTSTR programOptions = 0;
 	LPCTSTR programPath = 0;
+	LPCTSTR imageFileName = 0;
 
 #ifdef _UNICODE
 	dllDirectory = (LPCTSTR)(int)Marshal::StringToHGlobalUni( strDllDirectory );
@@ -319,16 +322,15 @@ bool CustomLoader(System::String ^ strHookPath, System::String ^ strProgramPath,
 	programDirectory = (LPCTSTR)(int)Marshal::StringToHGlobalUni( strProgramDirectory );
 	programOptions = (LPTSTR)(int)Marshal::StringToHGlobalUni( strOptsB->ToString() );
 	programPath = (LPCTSTR)(int)Marshal::StringToHGlobalUni( strProgramPath );
+	imageFileName = (LPCTSTR)(int)Marshal::StringToHGlobalUni( strImageFileName );
 #else
 	dllDirectory = (LPCTSTR)(int)Marshal::StringToHGlobalAnsi( strDllDirectory );
 	dllFileName = (LPCTSTR)(int)Marshal::StringToHGlobalAnsi( strHookPath );
 	programDirectory = (LPCTSTR)(int)Marshal::StringToHGlobalAnsi( strProgramDirectory );
 	programOptions = (LPTSTR)(int)Marshal::StringToHGlobalAnsi( strOptsB->ToString() );
 	programPath = (LPCTSTR)(int)Marshal::StringToHGlobalAnsi( strProgramPath );
+	imageFileName = (LPCTSTR)(int)Marshal::StringToHGlobalAnsi( strImageFileName );
 #endif
-
-	char const * imageFileName = (char const *)(int)Marshal::StringToHGlobalAnsi( strImageFileName );
-
 
 	AfxHook afxHook(imageFileName);
 
@@ -338,7 +340,6 @@ bool CustomLoader(System::String ^ strHookPath, System::String ^ strProgramPath,
 	);
 
 	Marshal::FreeHGlobal( (System::IntPtr)(int)imageFileName );	
-
 	Marshal::FreeHGlobal( (System::IntPtr)(int)programPath );
 	Marshal::FreeHGlobal( (System::IntPtr)(int)programOptions );
 	Marshal::FreeHGlobal( (System::IntPtr)(int)programDirectory );

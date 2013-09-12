@@ -54,9 +54,6 @@ bool InstallHook_cstrike_EN_CreateSmoke()
 
 void FakeSmoke(float x, float y, float z, float pitch, float yaw, float roll) {
 	event_args_s args;
-	float origin[3];
-	float angles[3];
-
 
 	args.flags    = 0;
 	args.entindex = 0;
@@ -102,24 +99,24 @@ REGISTER_CMD_FUNC(cstrike_smoke)
 	if(2 <= argc) {
 		char * subcmd = pEngfuncs->Cmd_Argv(1);
 
-		if(!stricmp("block", subcmd) && 2 == argc) {
+		if(!_stricmp("block", subcmd) && 2 == argc) {
 			pEngfuncs->Con_Printf( "Block is %s.\n", g_cstrike_EN_CreateSmoke_Block ? "enabled" : "disabled");
 			return;
 		}
-		else if(!stricmp("block", subcmd) && 3 == argc) {
+		else if(!_stricmp("block", subcmd) && 3 == argc) {
 			g_cstrike_EN_CreateSmoke_Block = 1 == atoi(pEngfuncs->Cmd_Argv(2));
 
 			return;
 		}
 		else
-		if(!stricmp("create", subcmd) && 8 == argc) {
+		if(!_stricmp("create", subcmd) && 8 == argc) {
 			FakeSmoke(
-				atof(pEngfuncs->Cmd_Argv(2)),
-				atof(pEngfuncs->Cmd_Argv(3)),
-				atof(pEngfuncs->Cmd_Argv(4)),
-				atof(pEngfuncs->Cmd_Argv(5)),
-				atof(pEngfuncs->Cmd_Argv(6)),
-				atof(pEngfuncs->Cmd_Argv(7))
+				(float)atof(pEngfuncs->Cmd_Argv(2)),
+				(float)atof(pEngfuncs->Cmd_Argv(3)),
+				(float)atof(pEngfuncs->Cmd_Argv(4)),
+				(float)atof(pEngfuncs->Cmd_Argv(5)),
+				(float)atof(pEngfuncs->Cmd_Argv(6)),
+				(float)atof(pEngfuncs->Cmd_Argv(7))
 			);
 
 			return;

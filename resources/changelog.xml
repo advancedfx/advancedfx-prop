@@ -3,6 +3,17 @@
 
 <changelog>
 
+<release>
+<name>HLAE</name>
+<version>2.3.TBA</version>
+<time>TBA</time>
+<changes>
+<change type="fixed">
+Fixed bug that could affect ability to use Memory DC Render Mode.
+</change>
+</changes>
+</release>
+
 
 <release>
 <name>HLAE</name>

@@ -88,14 +88,14 @@ void Hook_startmovie(void)
 
 	psztemp[sizeof(psztemp)-1]=0;
 	pszpath[sizeof(pszpath)-1]=0;
-	if (paddpath) _snprintf(pszpath,sizeof(pszpath)-1,"%s/%s",paddpath,pcmdfname);
-	else strncpy(pszpath,pcmdfname,sizeof(pszpath)-1);
+	if (paddpath) _snprintf_s(pszpath,_TRUNCATE,"%s/%s",paddpath,pcmdfname);
+	else strncpy_s(pszpath,pcmdfname,_TRUNCATE);
 
-	_snprintf(psztemp,sizeof(psztemp)-1,"mirv_movie_filename \"%s\"",pszpath);
+	_snprintf_s(psztemp,_TRUNCATE,"mirv_movie_filename \"%s\"",pszpath);
 
 	pEngfuncs->pfnClientCmd(psztemp);
 
-	pEngfuncs->Cvar_SetValue("mirv_movie_fps",atof(pEngfuncs->Cmd_Argv(2)));
+	pEngfuncs->Cvar_SetValue("mirv_movie_fps",(float)atof(pEngfuncs->Cmd_Argv(2)));
 
 	// command won't have finished here, so we do a evil hack:
 	// we also can't simply free and alloc here, because Quake 1 / H-L piggy backs infos:

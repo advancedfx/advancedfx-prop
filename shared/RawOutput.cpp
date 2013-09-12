@@ -32,7 +32,8 @@ bool WriteRawBitmap(
 	if(ucBpp > 24) return false;
 
 	FILE *pFile;
-	if (!(pFile = _wfopen(fileName, L"wb"))) return false;
+	_wfopen_s(&pFile, fileName, L"wb");
+	if (!pFile) return false;
 
 	BITMAPINFOHEADER bmInfoH;
 	BITMAPFILEHEADER bmFileH;
@@ -88,10 +89,10 @@ bool WriteRawBitmap(
 	if( bmInfoH.biClrUsed <= 256)
 	{
 		// gray fade (okay may have some rounding errors hehe):
-		float tmpf = (BYTE)(255.0f / (bmInfoH.biClrUsed-1));
+		float tmpf = (BYTE)(255.0f / (bmInfoH.biClrUsed-1)); // TODO: check if the BYTE conversion is correct
 		for( DWORD cols = 0; cols<bmInfoH.biClrUsed; cols++)
 		{
-			rgbquad.rgbRed = (float)cols * tmpf;
+			rgbquad.rgbRed = (BYTE)((float)cols * tmpf);
 			rgbquad.rgbGreen = rgbquad.rgbRed;
 			rgbquad.rgbBlue = rgbquad.rgbRed;
 			fwrite(&rgbquad,sizeof(rgbquad),1,pFile);
@@ -156,7 +157,8 @@ bool WriteRawTarga(
 	unsigned char szHeader[6] = { (unsigned char)(usWidth & 0xFF), (unsigned char)(usWidth >> 8), (unsigned char)(usHeight & 0xFF), (unsigned char)(usHeight >> 8), ucBpp, 0 };
 	FILE *pFile;
 
-	if ((pFile = _wfopen(fileName, L"wb")) != NULL)
+	_wfopen_s(&pFile, fileName, L"wb");
+	if (NULL != pFile)
 	{
 		fwrite(szTgaheader, sizeof(unsigned char), 12, pFile);
 		fwrite(szHeader, sizeof(unsigned char), 6, pFile);

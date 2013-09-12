@@ -35,12 +35,12 @@ std::list<AfxCmdEntry> & GetAfxCmdEntries() {
 
 bool CompareAfxCvarEntry(AfxCvarEntry first, AfxCvarEntry second)
 {
-	return 0 <= stricmp(first.Name, second.Name); // sort backwards
+	return 0 <= _stricmp(first.Name, second.Name); // sort backwards
 }
 
 bool CompareAfxCmdEntry(AfxCmdEntry first, AfxCmdEntry second)
 {
-	return 0 <= stricmp(first.Name, second.Name); // sort backwards
+	return 0 <= _stricmp(first.Name, second.Name); // sort backwards
 }
 
 

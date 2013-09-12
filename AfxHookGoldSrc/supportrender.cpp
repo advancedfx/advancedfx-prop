@@ -28,7 +28,7 @@ char g_ErrorMessageBuffer[300];
 #define ERROR_MESSAGE(errmsg) MessageBoxA(0, errmsg, "SupportRender:",MB_OK|MB_ICONERROR);
 #define ERROR_MESSAGE_LE(errmsg) \
 	{ \
-		_snprintf(g_ErrorMessageBuffer,sizeof(g_ErrorMessageBuffer)-1,"SupportRender:" errmsg "\nGetLastError: %i",::GetLastError()); \
+		_snprintf_s(g_ErrorMessageBuffer, _TRUNCATE, "SupportRender:" errmsg "\nGetLastError: %i",::GetLastError()); \
 		g_ErrorMessageBuffer[sizeof(g_ErrorMessageBuffer)-1]=0; \
 		MessageBoxA(0, g_ErrorMessageBuffer, "SupportRender:",MB_OK|MB_ICONERROR); \
 	}
@@ -433,7 +433,7 @@ HGLRC CHlaeSupportRender::_Create_RT_MEMORYDC (HDC hGameWindowDC)
 	PIXELFORMATDESCRIPTOR *ppfd = new (PIXELFORMATDESCRIPTOR);
 	DescribePixelFormat( hGameWindowDC, iPixelFormat, sizeof(PIXELFORMATDESCRIPTOR), ppfd );
 
-	ppfd->dwFlags = (ppfd->dwFlags & !( (DWORD)PFD_DRAW_TO_WINDOW | (DWORD)PFD_DOUBLEBUFFER  )) | PFD_DRAW_TO_BITMAP;
+	ppfd->dwFlags = (ppfd->dwFlags & ~( (DWORD)PFD_DRAW_TO_WINDOW | (DWORD)PFD_DOUBLEBUFFER  )) | PFD_DRAW_TO_BITMAP;
 	//ppfd->dwFlags = PFD_DRAW_TO_BITMAP | PFD_SUPPORT_OPENGL | PFD_GENERIC_ACCELERATED;
 
 	iPixelFormat = ChoosePixelFormat(_MemoryDc_r.ownHDC,ppfd);
@@ -676,10 +676,10 @@ BOOL CHlaeSupportRender::_SwapBuffers_RT_FRAMEBUFFEROBJECT (HDC hGameWindowDC)
 
 		// Draw fbo texture quad on screen:
 		glBegin(GL_QUADS);
-			glTexCoord2f(0.0f, 1.0f); glVertex3f(    0.0f,     0.0f, 0.0f);	// Top Left
-			glTexCoord2f(1.0f, 1.0f); glVertex3f( _iWidth,     0.0f, 0.0f);	// Top Right
-			glTexCoord2f(1.0f, 0.0f); glVertex3f( _iWidth, _iHeight, 0.0f);	// Bottom Right
-			glTexCoord2f(0.0f, 0.0f); glVertex3f(    0.0f, _iHeight, 0.0f);	// Bottom Left
+			glTexCoord2d(0.0, 1.0); glVertex3d(     0.0,      0.0, 0.0);	// Top Left
+			glTexCoord2d(1.0, 1.0); glVertex3d( _iWidth,      0.0, 0.0);	// Top Right
+			glTexCoord2d(1.0, 0.0); glVertex3d( _iWidth, _iHeight, 0.0);	// Bottom Right
+			glTexCoord2d(0.0, 0.0); glVertex3d(     0.0, _iHeight, 0.0);	// Bottom Left
 		glEnd();
 		
 

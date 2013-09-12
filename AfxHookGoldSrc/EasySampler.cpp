@@ -708,7 +708,7 @@ float EasySamplerSettings::FrameStrength_get() const
 {
 	return m_FrameStrength;
 }
-float EasySamplerSettings::Height_get() const
+int EasySamplerSettings::Height_get() const
 {
 	return m_Height;	
 }

@@ -198,7 +198,7 @@ bool BvhImport::GetCamPositon(float fTimeOfs, float outCamdata[6])
 		*pc2 = 0;
 
 		fff = 0;
-		fff = atof(pc);
+		fff = (float)atof(pc);
 
 		m_Cache[channelcode[ichan]] = fff;
 
@@ -227,7 +227,7 @@ bool BvhImport::LoadMotionFile(wchar_t const * fileName)
 	if(m_Active)
 		CloseMotionFile();
 
-	m_File = _wfopen(fileName,L"rb");
+	_wfopen_s(&m_File, fileName, L"rb");
 
 	if(!m_File)
 		return false;
@@ -308,7 +308,7 @@ bool BvhImport::LoadMotionFile(wchar_t const * fileName)
 		return false;
 	}
 	pc += strlen("Frame Time:");
-	m_FrameTime = atof(pc);
+	m_FrameTime = (float)atof(pc);
 	if(m_FrameTime <= 0)
 	{
 		fclose(m_File);

@@ -29,7 +29,7 @@ REGISTER_CMD_FUNC(camimport_load)
 		if(ic==2)
 			fBase = g_Filming.GetDebugClientTime();
 		else
-			fBase = atof(pEngfuncs->Cmd_Argv(2));
+			fBase = (float)atof(pEngfuncs->Cmd_Argv(2));
 
 		std::wstring wideString;
 
@@ -58,7 +58,7 @@ REGISTER_CMD_FUNC(camimport_basetime)
 		if(!strcmp(pEngfuncs->Cmd_Argv(1),"current"))
 			g_CamImport.SetBaseTime(g_Filming.GetDebugClientTime());
 		else
-			g_CamImport.SetBaseTime(atof(pEngfuncs->Cmd_Argv(1)));
+			g_CamImport.SetBaseTime((float)atof(pEngfuncs->Cmd_Argv(1)));
 	} else {
 		pEngfuncs->Con_Printf("Usage:\n" PREFIX "camimport_basetime (<basetime>|current)\nCurrent: %f",g_CamImport.GetBaseTime());
 	}

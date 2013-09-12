@@ -240,7 +240,8 @@ FILE* CFilmSound::_fBeginWave(wchar_t const * fileName, DWORD dwSamplesPerSec)
 
 	_dwWaveSmaplesWritten = 0; // clear written samples num
 
-	FILE *pHandle=_wfopen(fileName, L"wb");
+	FILE *pHandle;
+	_wfopen_s(&pHandle, fileName, L"wb");
 
 	if (!pHandle) return NULL;
 

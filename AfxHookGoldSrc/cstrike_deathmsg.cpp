@@ -71,7 +71,7 @@ struct DeathMsgFilterItem {
 
 std::list<DeathMsgFilterItem> deathMessageFilter;
 
-int deathMessagesMax = MAX_DEATHNOTICES;
+size_t deathMessagesMax = MAX_DEATHNOTICES;
 
 int touring_cstrike_MsgFunc_DeathMsg(const char *pszName, int iSize, void *pbuf)
 {
@@ -227,7 +227,7 @@ REGISTER_CMD_FUNC(cstrike_deathmsg)
 	if(2 <= argc) {
 		char * acmd = pEngfuncs->Cmd_Argv(1);
 
-		if(!stricmp(acmd, "block")) {
+		if(!_stricmp(acmd, "block")) {
 			if(4 == argc) {
 				DeathMsgFilterItem di;
 
@@ -245,7 +245,7 @@ REGISTER_CMD_FUNC(cstrike_deathmsg)
 			}
 			if(3 == argc) {
 				acmd = pEngfuncs->Cmd_Argv(2);
-				if(!stricmp(acmd, "list")) {
+				if(!_stricmp(acmd, "list")) {
 					pEngfuncs->Con_Printf("Attacker -> Victim\n");
 					for(std::list<DeathMsgFilterItem>::iterator it = deathMessageFilter.begin(); it != deathMessageFilter.end(); it++) {
 						DeathMsgFilterItem di = *it;
@@ -256,7 +256,7 @@ REGISTER_CMD_FUNC(cstrike_deathmsg)
 					}
 					return;
 				}
-				if(!stricmp(acmd, "clear")) {
+				if(!_stricmp(acmd, "clear")) {
 					deathMessageFilter.clear();
 					return;
 				}
@@ -269,19 +269,19 @@ REGISTER_CMD_FUNC(cstrike_deathmsg)
 			);
 			return;
 		}
-		if(!stricmp(acmd, "fake")) {
+		if(!_stricmp(acmd, "fake")) {
 			if(6 == argc) {
 				int iA = atoi(pEngfuncs->Cmd_Argv(2));
 				int iV = atoi(pEngfuncs->Cmd_Argv(3));
 				int iT = atoi(pEngfuncs->Cmd_Argv(4));
 				acmd = pEngfuncs->Cmd_Argv(5);
-				int sz = 3*sizeof(BYTE)+sizeof(char)*(1+strlen(acmd));
+				size_t sz = 3*sizeof(BYTE)+sizeof(char)*(1+strlen(acmd));
 
 				BYTE * pMem = (BYTE *)malloc(sz);
 				pMem[0] = iA;
 				pMem[1] = iV;
 				pMem[2] = iT;
-				strcpy((char *)(&pMem[3]), acmd);
+				strcpy_s((char *)(&pMem[3]), sz-3, acmd);
 				detoured_cstrike_MsgFunc_DeathMsg("DeathMsg", (int)sz, pMem);
 				free(pMem);
 				return;
@@ -291,7 +291,7 @@ REGISTER_CMD_FUNC(cstrike_deathmsg)
 			);
 			return;
 		}
-		if(!stricmp(acmd, "max")) {
+		if(!_stricmp(acmd, "max")) {
 			if(3==argc) {
 				deathMessagesMax = atoi(pEngfuncs->Cmd_Argv(2));
 		
@@ -312,12 +312,12 @@ REGISTER_CMD_FUNC(cstrike_deathmsg)
 			);
 			return;
 		}
-		if(!stricmp(acmd, "offset"))
+		if(!_stricmp(acmd, "offset"))
 		{
 			if(3==argc)
 			{
 				acmd = pEngfuncs->Cmd_Argv(2);
-				g_DeathMsg_ForceOffset = 0 != stricmp(acmd, "default");
+				g_DeathMsg_ForceOffset = 0 != _stricmp(acmd, "default");
 				if(g_DeathMsg_ForceOffset) g_DeathMsg_Offset = atoi(acmd);
 				return;
 			}

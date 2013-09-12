@@ -125,7 +125,7 @@ enum FilmingStreamSlot {
 REGISTER_CMD_FUNC(cameraofs_cs)
 {
 	if (pEngfuncs->Cmd_Argc() == 4)
-		g_Filming.SetCameraOfs(atof(pEngfuncs->Cmd_Argv(1)),atof(pEngfuncs->Cmd_Argv(2)),atof(pEngfuncs->Cmd_Argv(3)));
+		g_Filming.SetCameraOfs((float)atof(pEngfuncs->Cmd_Argv(1)), (float)atof(pEngfuncs->Cmd_Argv(2)), (float)atof(pEngfuncs->Cmd_Argv(3)));
 	else
 		pEngfuncs->Con_Printf("Usage: " PREFIX "cameraofs_cs <right> <up> <forward>\nNot neccessary for stereo mode, use mirv_movie_stereo instead\n");
 }
@@ -230,9 +230,9 @@ void do_camera_test(vec3_t & vieworg, vec3_t & viewangles) {
 		static char szInfo[100];
 
 		if(state < 4)
-			_snprintf(szInfo, 100, "ofs=(%f, %f, %f)", ofs[0], ofs[1], ofs[2]);
+			_snprintf_s(szInfo, 100, _TRUNCATE, "ofs=(%f, %f, %f)", ofs[0], ofs[1], ofs[2]);
 		else if(state < 10)
-			_snprintf(szInfo, 100, "ang=(%f, %f, %f)", angles[0], angles[1], angles[2]);
+			_snprintf_s(szInfo, 100, _TRUNCATE, "ang=(%f, %f, %f)", angles[0], angles[1], angles[2]);
 
 		pEngfuncs->pfnCenterPrint(szInfo);
 	}
@@ -255,13 +255,13 @@ void Filming::OnR_RenderView(Vector & vieworg, Vector & viewangles)
 			// active.
 			pc->Write((ComDouble)g_DemoPlayer->GetDemoTime());
 
-			vieworg[0] = pc->ReadDouble();
-			vieworg[1] = pc->ReadDouble();
-			vieworg[2] = pc->ReadDouble();
+			vieworg[0] = (float)pc->ReadDouble();
+			vieworg[1] = (float)pc->ReadDouble();
+			vieworg[2] = (float)pc->ReadDouble();
 
-			viewangles[PITCH] = pc->ReadDouble();
-			viewangles[YAW] = pc->ReadDouble();
-			viewangles[ROLL] = pc->ReadDouble();
+			viewangles[PITCH] = (float)pc->ReadDouble();
+			viewangles[YAW] = (float)pc->ReadDouble();
+			viewangles[ROLL] = (float)pc->ReadDouble();
 		}
 	}
 
@@ -707,7 +707,7 @@ void Filming::Start()
 
 	// Prepare streams:
 	{
-		float samplingFrameDuration = enableSampling ? 1.0f / max(movie_fps->value, 1.0f) : 0.0;
+		float samplingFrameDuration = enableSampling ? 1.0f / max(movie_fps->value, 1.0f) : 0.0f;
 
 		int x = 0;
 		int y = (int)crop_yofs->value;
@@ -1201,24 +1201,24 @@ void GLfloatArrayToXByteArray(GLfloat *pBuffer, unsigned int width, unsigned int
 
 Filming::DRAW_RESULT Filming::shouldDraw(GLenum mode)
 {
-	bool bMatteXray = matte_xray->value ;
+	bool bMatteXray = 0 != matte_xray->value ;
 	bool bFilterEntities = matte_entities_r.bNotEmpty;
 
 	int iMatteParticles = (int)matte_particles->value;
-	bool bParticleWorld  = 0x01 & iMatteParticles;
-	bool bParticleEntity = 0x02 & iMatteParticles;
+	bool bParticleWorld  = 0 != (0x01 & iMatteParticles);
+	bool bParticleEntity = 0 != (0x02 & iMatteParticles);
 
 	int iMatteViewModel = (int)matte_viewmodel->value;
-	bool bViewModelWorld  = 0x01 & iMatteViewModel;
-	bool bViewModelEntity = 0x02 & iMatteViewModel;
+	bool bViewModelWorld  = 0 != (0x01 & iMatteViewModel);
+	bool bViewModelEntity = 0 != (0x02 & iMatteViewModel);
 
 	int iMatteWmodels = (int)matte_worldmodels->value;
-	bool bWmodelWorld  = 0x01 & iMatteWmodels;
-	bool bWmodelEntity = 0x02 & iMatteWmodels;
+	bool bWmodelWorld  = 0 != (0x01 & iMatteWmodels);
+	bool bWmodelEntity = 0 != (0x02 & iMatteWmodels);
 
 	int iMatteEntityQuads = (int)matte_entityquads->value;
-	bool bEntityQuadWorld  = 0x01 & iMatteEntityQuads;
-	bool bEntityQuadEntity = 0x02 & iMatteEntityQuads;
+	bool bEntityQuadWorld  = 0 != (0x01 & iMatteEntityQuads);
+	bool bEntityQuadEntity = 0 != (0x02 & iMatteEntityQuads);
 
 	// in R_Particles:
 	if(g_In_R_DrawParticles) {
@@ -1684,7 +1684,7 @@ FilmingStream::FilmingStream(
 
 	unsigned char ucDepthDump = (unsigned char)movie_depthdump->value;
 
-	m_DepthDebug = 0x4 & ucDepthDump;
+	m_DepthDebug = 0 != (0x4 & ucDepthDump);
 
 	switch(ucDepthDump)
 	{
@@ -2101,10 +2101,10 @@ REGISTER_CMD_FUNC(matte_entities)
 
 
 REGISTER_DEBUGCMD_FUNC(depth_info) {
-	float N = g_Filming.GetZNear();
-	float F = g_Filming.GetZFar();
-	float E = (F-N)/256.0f;
-	float P = (F-N) ? 100*E/(F-N) : 0;
+	GLdouble N = g_Filming.GetZNear();
+	GLdouble F = g_Filming.GetZFar();
+	GLdouble E = (F-N)/256.0f;
+	GLdouble P = (F-N) ? 100*E/(F-N) : 0;
 	pEngfuncs->Con_Printf("zNear: %f\nzFar: %f\nMax linear error (8bit): %f (%f %%)\n", N, F, E, P);
 }
 

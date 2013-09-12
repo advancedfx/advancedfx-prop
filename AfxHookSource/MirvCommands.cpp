@@ -72,15 +72,15 @@ CON_COMMAND(mirv_camexport, "controls camera motion data export") {
 	if(2 <= argc)
 	{
 		char const * arg1 = args->ArgV(1);
-		if(0 == stricmp("stop", arg1))
+		if(0 == _stricmp("stop", arg1))
 		{
 			g_Hook_VClient_RenderView.ExportEnd();
 			return;
 		}
 		else
-		if(0 == stricmp("start", arg1) && 4 <= argc) {
+		if(0 == _stricmp("start", arg1) && 4 <= argc) {
 			char const * fileName = args->ArgV(2);
-			float fps = atof(args->ArgV(3));
+			float fps = (float)atof(args->ArgV(3));
 			if(fps < 0.1f) fps = 0.1f;
 
 			std::wstring wideFileName;
@@ -92,7 +92,7 @@ CON_COMMAND(mirv_camexport, "controls camera motion data export") {
 
 			return;
 		}
-		if(0 == stricmp("timeinfo", arg1))
+		if(0 == _stricmp("timeinfo", arg1))
 		{			
 			Tier0_Msg("Current (interpolated client) time: %f\n", g_Hook_VClient_RenderView.GetCurTime());
 			return;
@@ -119,12 +119,12 @@ CON_COMMAND(mirv_camimport, "controls camera motion data import") {
 
 	if(2 <= argc) {
 		char const * arg1 = args->ArgV(1);
-		if(0 == stricmp("stop", arg1)) {
+		if(0 == _stricmp("stop", arg1)) {
 			g_Hook_VClient_RenderView.ImportEnd();
 			return;
 		}
 		else
-		if(0 == stricmp("start", arg1) && 3 <= argc) {
+		if(0 == _stricmp("start", arg1) && 3 <= argc) {
 			char const * fileName = args->ArgV(2);
 			g_Hook_VClient_RenderView.SetImportBaseTime(g_Hook_VClient_RenderView.GetCurTime());
 
@@ -136,13 +136,13 @@ CON_COMMAND(mirv_camimport, "controls camera motion data import") {
 			return;
 		}
 		else
-		if(0 == stricmp("basetime", arg1)) {
+		if(0 == _stricmp("basetime", arg1)) {
 			if(3 <= argc) {
 				char const * newTime = args->ArgV(2);
-				if(0 == stricmp("current", newTime))
+				if(0 == _stricmp("current", newTime))
 					g_Hook_VClient_RenderView.SetImportBaseTime(g_Hook_VClient_RenderView.GetCurTime());
 				else
-					g_Hook_VClient_RenderView.SetImportBaseTime(atof(newTime));
+					g_Hook_VClient_RenderView.SetImportBaseTime((float)atof(newTime));
 				return;
 			}
 

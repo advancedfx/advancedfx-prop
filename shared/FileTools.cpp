@@ -17,12 +17,13 @@ bool SuggestTakePath(wchar_t const * takePath, int takeDigits, std::wstring & ou
 {
 	bool bOk;
 	LPWSTR buf = NULL;
-	
+	size_t bufLen = wcslen(takePath) +takeDigits +1;
+
 	if(takeDigits < 0)
 		takeDigits = 0;
 
 	bOk =
-		0 != (buf = (LPWSTR)malloc(sizeof(WCHAR)*(wcslen(takePath) +takeDigits +1)))
+		0 != (buf = (LPWSTR)malloc(sizeof(WCHAR)*bufLen))
 	;
 		
 	if(bOk)
@@ -32,7 +33,7 @@ bool SuggestTakePath(wchar_t const * takePath, int takeDigits, std::wstring & ou
 		WIN32_FIND_DATAW findData;
 		HANDLE hFindFile;
 
-		wcscpy(buf, takePath);
+		wcscpy_s(buf, bufLen, takePath);
 
 		for(int i=0; i<takeDigits; i++)
 		{
@@ -64,7 +65,7 @@ bool SuggestTakePath(wchar_t const * takePath, int takeDigits, std::wstring & ou
 
 		wchar_t tmpDigits[33];
 
-		_itow(iMax, tmpDigits, 10);
+		_itow_s(iMax, tmpDigits, 10);
 
 		for(int i=0; i<takeDigits; i++)
 		{

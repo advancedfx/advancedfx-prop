@@ -170,8 +170,8 @@ public:
 
 	void SupplyZClipping(GLdouble zNear, GLdouble zFar);
 
-	float GetZNear() { return m_ZNear; }
-	float GetZFar() { return m_ZFar; }
+	GLdouble GetZNear() { return m_ZNear; }
+	GLdouble GetZFar() { return m_ZFar; }
 
 	void EnableDebugCapture(bool bEnable) {
 		m_DebugCapture = bEnable;
