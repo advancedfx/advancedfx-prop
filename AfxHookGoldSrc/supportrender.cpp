@@ -429,12 +429,23 @@ HGLRC CHlaeSupportRender::_Create_RT_MEMORYDC (HDC hGameWindowDC)
 		return NULL;
 	}
 
-	int iPixelFormat = GetPixelFormat( hGameWindowDC );
-	PIXELFORMATDESCRIPTOR *ppfd = new (PIXELFORMATDESCRIPTOR);
-	DescribePixelFormat( hGameWindowDC, iPixelFormat, sizeof(PIXELFORMATDESCRIPTOR), ppfd );
+	int iPixelFormat; // = GetPixelFormat( hGameWindowDC );
 
-	ppfd->dwFlags = (ppfd->dwFlags & ~( (DWORD)PFD_DRAW_TO_WINDOW | (DWORD)PFD_DOUBLEBUFFER  )) | PFD_DRAW_TO_BITMAP;
-	//ppfd->dwFlags = PFD_DRAW_TO_BITMAP | PFD_SUPPORT_OPENGL | PFD_GENERIC_ACCELERATED;
+	PIXELFORMATDESCRIPTOR *ppfd =new (PIXELFORMATDESCRIPTOR);
+	
+	memset(ppfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
+	
+	//DescribePixelFormat( hGameWindowDC, iPixelFormat, sizeof(PIXELFORMATDESCRIPTOR), ppfd );
+
+	ppfd->nSize = sizeof(PIXELFORMATDESCRIPTOR);
+	ppfd->nVersion = 1;
+	ppfd->dwFlags = PFD_DRAW_TO_BITMAP | PFD_SUPPORT_OPENGL | PFD_GENERIC_ACCELERATED;
+	ppfd->iPixelType = PFD_TYPE_RGBA;
+	ppfd->cColorBits = 32;
+    ppfd->cDepthBits = 32;
+    ppfd->cStencilBits = 0;
+    ppfd->cAuxBuffers = 0;
+    ppfd->iLayerType = PFD_MAIN_PLANE;
 
 	iPixelFormat = ChoosePixelFormat(_MemoryDc_r.ownHDC,ppfd);
 	if (iPixelFormat == 0)
@@ -466,6 +477,11 @@ HGLRC CHlaeSupportRender::_Create_RT_MEMORYDC (HDC hGameWindowDC)
 		return NULL;
 	}
 
+	if(!(RC_BITBLT & GetDeviceCaps(_MemoryDc_r.ownHDC, RASTERCAPS)))
+	{
+		ERROR_MESSAGE_LE("Memory DC doesn't support RC_BITBLT in RASTERCAPS")
+	}
+
 	_eRenderTarget=RT_MEMORYDC;
 
 	return _ownHGLRC;
@@ -495,6 +511,13 @@ BOOL CHlaeSupportRender::_MakeCurrent_RT_MEMORYDC (HDC hGameWindowDC)
 BOOL CHlaeSupportRender::_SwapBuffers_RT_MEMORYDC (HDC hGameWindowDC)
 {
 	BOOL bwRet=FALSE;
+
+	RECT drawRect = { 0, 0, 640, 480 };
+
+	char tmpStr[100];
+	_snprintf_s(tmpStr,_TRUNCATE,"HLAE memory DC Active. glGetError = %i", glGetError());
+	DrawText(_MemoryDc_r.ownHDC, tmpStr, -1, &drawRect, DT_CENTER);
+
 	bwRet=BitBlt(hGameWindowDC,0,0,_iWidth,_iHeight,_MemoryDc_r.ownHDC,0,0,SRCCOPY);
 	//SwapBuffers(hGameWindowDC);
 	return bwRet;

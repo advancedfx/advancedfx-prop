@@ -5,13 +5,17 @@
 
 <release>
 <name>HLAE</name>
-<version>2.3.TBA</version>
-<time>TBA</time>
+<version>2.3.11.1</version>
+<time>2013-09-13T19:15Z</time>
 <changes>
 <change type="fixed">
-Fixed bug that could affect ability to use Memory DC Render Mode.
+Fixed bugs that could affect ability to use Memory DC Render Mode.
+Please be aware that Memory DC will usually fall back to the Microsoft GDI Generic (software) renderer and thus things will be very slow and some features like Half-Life's detail textures and HLAE's alpha matte won't work (since that renderer doesn't have the required extensions).
 </change>
 </changes>
+<comments>
+Thanks and greetings to how-hiGh for helping with testing.
+</comments>
 </release>
 
 
