@@ -512,11 +512,11 @@ BOOL CHlaeSupportRender::_SwapBuffers_RT_MEMORYDC (HDC hGameWindowDC)
 {
 	BOOL bwRet=FALSE;
 
-	RECT drawRect = { 0, 0, 640, 480 };
+	//RECT drawRect = { 0, 0, 640, 480 };
 
-	char tmpStr[100];
-	_snprintf_s(tmpStr,_TRUNCATE,"HLAE memory DC Active. glGetError = %i", glGetError());
-	DrawText(_MemoryDc_r.ownHDC, tmpStr, -1, &drawRect, DT_CENTER);
+	//char tmpStr[100];
+	//_snprintf_s(tmpStr,_TRUNCATE,"HLAE memory DC Active. glGetError = %i", glGetError());
+	//DrawText(_MemoryDc_r.ownHDC, tmpStr, -1, &drawRect, DT_CENTER);
 
 	bwRet=BitBlt(hGameWindowDC,0,0,_iWidth,_iHeight,_MemoryDc_r.ownHDC,0,0,SRCCOPY);
 	//SwapBuffers(hGameWindowDC);

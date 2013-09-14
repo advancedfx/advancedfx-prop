@@ -5,6 +5,18 @@
 
 <release>
 <name>HLAE</name>
+<version>2.3.12.0</version>
+<time>2013-09-14T19:58Z</time>
+<changes>
+<change type="added">
+mirv_cstrike_deathmsg block now allows blocking frags except of one player (by putting a ! before the id), see HLAE online Manual for examples.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.3.11.1</version>
 <time>2013-09-13T19:15Z</time>
 <changes>

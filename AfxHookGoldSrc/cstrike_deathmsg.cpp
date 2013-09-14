@@ -14,6 +14,11 @@
 #include "hl_addresses.h"
 
 #include <shared/detours.h>
+#include <shared/StringTools.h>
+
+#include <list>
+#include <unordered_set>
+
 
 // >> HLSDK
 
@@ -38,8 +43,6 @@ struct cstrike_DeathNoticeItem {
 
 extern cl_enginefuncs_s *pEngfuncs;
 
-#include <list>
-
 cstrike_DeathNoticeItem * cstrike_rgDeathNoticeList;
 
 #define OFS_Draw_YRes 0x114
@@ -62,34 +65,38 @@ cstrike_DeathMsg_Msg_t detoured_cstrike_DeathMsg_Msg;
 cstrike_MsgFunc_DeathMsg_t detoured_cstrike_MsgFunc_DeathMsg;
 
 
-struct DeathMsgFilterItem {
+struct DeathMsgBlockKey
+{
 	BYTE attackerId;
-	bool anyAttacker;
 	BYTE victimId;
-	bool anyVictim;
+
+	bool operator == (const DeathMsgBlockKey &right) const
+	{
+		return attackerId == right.attackerId && victimId == right.victimId;
+	}
 };
 
-std::list<DeathMsgFilterItem> deathMessageFilter;
+struct DeathMsgBlockKeyHash
+{
+	std::size_t operator () ( const DeathMsgBlockKey& p ) const
+	{
+		return (p.attackerId << 8) + p.victimId;
+	}
+};
+
+std::unordered_set<DeathMsgBlockKey, DeathMsgBlockKeyHash> deathMessageBlock;
+
 
 size_t deathMessagesMax = MAX_DEATHNOTICES;
 
 int touring_cstrike_MsgFunc_DeathMsg(const char *pszName, int iSize, void *pbuf)
 {
-	if(2 <= iSize && 0 < deathMessageFilter.size()) {
+	if(2 <= iSize && 0 < deathMessageBlock.size())
+	{
 
-		bool bBlock = false;
-		for(
-			std::list<DeathMsgFilterItem>::iterator it = deathMessageFilter.begin();
-			it != deathMessageFilter.end() && !bBlock; it++
-		) {
-			DeathMsgFilterItem df = *it;
+		DeathMsgBlockKey key = { ((BYTE *)pbuf)[0], ((BYTE *)pbuf)[1] }; 
 
-			bBlock = 
-				(df.anyAttacker || df.attackerId == ((BYTE *)pbuf)[0])
-				&&(df.anyVictim || df.victimId == ((BYTE *)pbuf)[1])
-			;
-		}
-		if(bBlock)
+		if(0 < deathMessageBlock.count(key))
 			return 1;
 	}
 
@@ -228,42 +235,64 @@ REGISTER_CMD_FUNC(cstrike_deathmsg)
 		char * acmd = pEngfuncs->Cmd_Argv(1);
 
 		if(!_stricmp(acmd, "block")) {
-			if(4 == argc) {
-				DeathMsgFilterItem di;
+			if(4 == argc)
+			{
+				int attackerId = -1;
+				int victimId = -1;
 
 				acmd = pEngfuncs->Cmd_Argv(2);
-				di.anyAttacker = !strcmp("*", acmd);
-				if(!di.anyAttacker) di.attackerId = atoi(acmd);
+				bool anyAttacker = !strcmp("*", acmd);
+				bool notAttacker = StringBeginsWith(acmd, "!");
+				if(!anyAttacker) attackerId = atoi(notAttacker ? (acmd +1) : acmd);
 
 				acmd = pEngfuncs->Cmd_Argv(3);
-				di.anyVictim = !strcmp("*", acmd);
-				if(!di.anyVictim) di.victimId = atoi(acmd);
+				bool anyVictim = !strcmp("*", acmd);
+				bool notVictim = StringBeginsWith(acmd, "!");
+				if(!anyVictim) victimId = atoi(notVictim ? (acmd +1) : acmd);
 
-				deathMessageFilter.push_back(di);
+				for (int j = 0; j <= pEngfuncs->GetMaxClients(); j++)
+				{
+					for (int i = 0; i <= pEngfuncs->GetMaxClients(); i++)
+					{
+						cl_entity_t *eA = pEngfuncs->GetEntityByIndex(j);
+						cl_entity_t *eV = pEngfuncs->GetEntityByIndex(i);
+						if (eA && eA->player && eV && eV->player)
+						{
+							if(
+								(anyAttacker || notAttacker && j != attackerId || !notAttacker && j == attackerId)
+								&&(anyVictim || notVictim && i != victimId || !notVictim && i == victimId)
+							)
+							{
+								DeathMsgBlockKey key = { j, i };
+
+								deathMessageBlock.insert(key);
+							}
+						}
+					}
+				}
+
 				return;
-
 			}
 			if(3 == argc) {
 				acmd = pEngfuncs->Cmd_Argv(2);
 				if(!_stricmp(acmd, "list")) {
 					pEngfuncs->Con_Printf("Attacker -> Victim\n");
-					for(std::list<DeathMsgFilterItem>::iterator it = deathMessageFilter.begin(); it != deathMessageFilter.end(); it++) {
-						DeathMsgFilterItem di = *it;
-						if(di.anyAttacker) pEngfuncs->Con_Printf("*"); else pEngfuncs->Con_Printf("%i", di.attackerId);
-						pEngfuncs->Con_Printf(" -> ");
-						if(di.anyVictim) pEngfuncs->Con_Printf("*"); else pEngfuncs->Con_Printf("%i", di.victimId);
-						pEngfuncs->Con_Printf("\n");
+					for(std::unordered_set<DeathMsgBlockKey>::iterator it = deathMessageBlock.begin(); it != deathMessageBlock.end(); it++)
+					{
+						DeathMsgBlockKey key = *it;
+						
+						pEngfuncs->Con_Printf("%i -> %i\n", key.attackerId, key.victimId);
 					}
 					return;
 				}
 				if(!_stricmp(acmd, "clear")) {
-					deathMessageFilter.clear();
+					deathMessageBlock.clear();
 					return;
 				}
 			}
 			pEngfuncs->Con_Printf(
 				"mirv_cstrike_deathmsg block\n"
-				"\t<attackerId> <victimId> - adds a block, use * to match any id\n"
+				"\t<attackerId> <victimId> - adds a block, use * to match any id, use !x to match any id apart from x\n"
 				"\tlist - lists current blocks\n"
 				"\tclear - clears all blocks\n"
 			);
