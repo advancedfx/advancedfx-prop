@@ -17,7 +17,6 @@
 #include <shared/StringTools.h>
 
 #include <list>
-#include <unordered_set>
 
 
 // >> HLSDK
@@ -64,27 +63,22 @@ cstrike_DeathMsg_Draw_t detoured_cstrike_DeathMsg_Draw;
 cstrike_DeathMsg_Msg_t detoured_cstrike_DeathMsg_Msg;
 cstrike_MsgFunc_DeathMsg_t detoured_cstrike_MsgFunc_DeathMsg;
 
+enum DeathMsgBlockMode
+{
+	DMBM_EQUAL,
+	DMBM_EXCEPT,
+	DMBM_ANY
+};
 
-struct DeathMsgBlockKey
+struct DeathMsgBlockEntry
 {
 	BYTE attackerId;
+	DeathMsgBlockMode attackerMode;
 	BYTE victimId;
-
-	bool operator == (const DeathMsgBlockKey &right) const
-	{
-		return attackerId == right.attackerId && victimId == right.victimId;
-	}
+	DeathMsgBlockMode victimMode;
 };
 
-struct DeathMsgBlockKeyHash
-{
-	std::size_t operator () ( const DeathMsgBlockKey& p ) const
-	{
-		return (p.attackerId << 8) + p.victimId;
-	}
-};
-
-std::unordered_set<DeathMsgBlockKey, DeathMsgBlockKeyHash> deathMessageBlock;
+std::list<DeathMsgBlockEntry> deathMessageBlock;
 
 
 size_t deathMessagesMax = MAX_DEATHNOTICES;
@@ -93,11 +87,43 @@ int touring_cstrike_MsgFunc_DeathMsg(const char *pszName, int iSize, void *pbuf)
 {
 	if(2 <= iSize && 0 < deathMessageBlock.size())
 	{
+		for(std::list<DeathMsgBlockEntry>::iterator it = deathMessageBlock.begin(); it != deathMessageBlock.end(); it++)
+		{
+			DeathMsgBlockEntry e = *it;
 
-		DeathMsgBlockKey key = { ((BYTE *)pbuf)[0], ((BYTE *)pbuf)[1] }; 
+			bool attackerBlocked;
+			switch(e.attackerMode)
+			{
+			case DMBM_ANY:
+				attackerBlocked = true;
+				break;
+			case DMBM_EXCEPT:
+				attackerBlocked = e.attackerId != ((BYTE *)pbuf)[0];
+				break;
+			case DMBM_EQUAL:
+			default:
+				attackerBlocked = e.attackerId == ((BYTE *)pbuf)[0];
+				break;
+			}
 
-		if(0 < deathMessageBlock.count(key))
-			return 1;
+			bool victimBlocked;
+			switch(e.victimMode)
+			{
+			case DMBM_ANY:
+				victimBlocked = true;
+				break;
+			case DMBM_EXCEPT:
+				victimBlocked = e.victimId != ((BYTE *)pbuf)[1];
+				break;
+			case DMBM_EQUAL:
+			default:
+				victimBlocked = e.victimId == ((BYTE *)pbuf)[1];
+				break;
+			}
+
+			if(attackerBlocked && victimBlocked)
+				return 1;
+		}
 	}
 
 	return detoured_cstrike_MsgFunc_DeathMsg(pszName, iSize, pbuf);
@@ -250,38 +276,49 @@ REGISTER_CMD_FUNC(cstrike_deathmsg)
 				bool notVictim = StringBeginsWith(acmd, "!");
 				if(!anyVictim) victimId = atoi(notVictim ? (acmd +1) : acmd);
 
-				for (int j = 0; j <= pEngfuncs->GetMaxClients(); j++)
-				{
-					for (int i = 0; i <= pEngfuncs->GetMaxClients(); i++)
-					{
-						cl_entity_t *eA = pEngfuncs->GetEntityByIndex(j);
-						cl_entity_t *eV = pEngfuncs->GetEntityByIndex(i);
-						if (eA && eA->player && eV && eV->player)
-						{
-							if(
-								(anyAttacker || notAttacker && j != attackerId || !notAttacker && j == attackerId)
-								&&(anyVictim || notVictim && i != victimId || !notVictim && i == victimId)
-							)
-							{
-								DeathMsgBlockKey key = { j, i };
+				DeathMsgBlockEntry entry = {
+					attackerId,
+					anyAttacker ? DMBM_ANY : (notAttacker ? DMBM_EXCEPT : DMBM_EQUAL),
+					victimId,
+					anyVictim ? DMBM_ANY : (notVictim ? DMBM_EXCEPT : DMBM_EQUAL)
+				};
 
-								deathMessageBlock.insert(key);
-							}
-						}
-					}
-				}
+				deathMessageBlock.push_back(entry);
 
 				return;
 			}
-			if(3 == argc) {
+			if(3 == argc)
+			{
 				acmd = pEngfuncs->Cmd_Argv(2);
-				if(!_stricmp(acmd, "list")) {
+				if(!_stricmp(acmd, "list"))
+				{
 					pEngfuncs->Con_Printf("Attacker -> Victim\n");
-					for(std::unordered_set<DeathMsgBlockKey>::iterator it = deathMessageBlock.begin(); it != deathMessageBlock.end(); it++)
+					for(std::list<DeathMsgBlockEntry>::iterator it = deathMessageBlock.begin(); it != deathMessageBlock.end(); it++)
 					{
-						DeathMsgBlockKey key = *it;
+						DeathMsgBlockEntry e = *it;
 						
-						pEngfuncs->Con_Printf("%i -> %i\n", key.attackerId, key.victimId);
+						if(DMBM_ANY == e.attackerMode)
+							pEngfuncs->Con_Printf("*");
+						else
+						{
+							if(DMBM_EXCEPT == e.attackerMode)
+							{
+								pEngfuncs->Con_Printf("!");
+							}
+							pEngfuncs->Con_Printf("%i", e.attackerId);
+						}
+						pEngfuncs->Con_Printf(" -> ");
+						if(DMBM_ANY == e.victimMode)
+							pEngfuncs->Con_Printf("*");
+						else
+						{
+							if(DMBM_EXCEPT == e.victimMode)
+							{
+								pEngfuncs->Con_Printf("!");
+							}
+							pEngfuncs->Con_Printf("%i", e.victimId);
+						}
+						pEngfuncs->Con_Printf("\n");
 					}
 					return;
 				}
