@@ -5,6 +5,19 @@
 
 <release>
 <name>HLAE</name>
+<version>2.3.12.2</version>
+<time>2013-11-30T13:44Z</time>
+<changes>
+<change type="fixed">
+Fixed HLAE crashing with R_RenderView: NULL worldmodel when no level was loaded / level was changed when mirv_movie_separate_hud or mirv_movie_splitstreams was used.
+For now it will record blank streams during level change / when no level is loaded.
+If you don't like this behaviour, please don't use mirv_movie_splitstreams / mirv_movie_separate_hud.
+</change>
+</changes>
+</release>
+
+<release>
+<name>HLAE</name>
 <version>2.3.12.0</version>
 <time>2013-09-14T19:58Z</time>
 <changes>

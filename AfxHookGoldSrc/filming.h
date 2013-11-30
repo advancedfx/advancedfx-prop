@@ -41,7 +41,7 @@ public:
 	);
 	~FilmingStream();
 
-	void Capture(float sampleDuration, CMdt_Media_RAWGLPIC * usePic, float spsHint);
+	void Capture(float time, CMdt_Media_RAWGLPIC * usePic, float spsHint);
 
 private:
 	bool m_Bmp;
@@ -187,6 +187,7 @@ private:
 	bool m_EnableStereoMode;
 	int m_Height;
 	unsigned int m_HostFrameCount;
+	bool m_HudDrawnInFrame;
 	unsigned int m_LastCamFrameMid;
 	unsigned int m_LastCamFrameLeft;
 	unsigned int m_LastCamFrameRight;

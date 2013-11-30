@@ -38,10 +38,6 @@ Credits:
 In addition to the mentions in the changelog we want to credit the following
 people, companies or organizations:
 
-MetaMod
-  for HLSDK p3
-  http://www.metamod.org/
-
 Microsoft
   for VC++, MSDN Library, ...
   http://www.microsoft.com/

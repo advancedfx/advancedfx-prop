@@ -59,8 +59,8 @@ namespace AfxGui
 
             m_Guids = new Guid[]{
                 // always put the current guid first.
-				new Guid("3b717543-4929-467a-b44e-40f14785350e"),
-				new Guid("f963d977-12cb-480c-8f83-d1282e292cab")
+				new Guid("db234fd8-f2c7-4d7c-b4bd-6081b93347f8"),
+				new Guid("3b717543-4929-467a-b44e-40f14785350e")
             };
 
 	        m_Targets = new LinkedList<UpdateCheckNotificationTarget>();

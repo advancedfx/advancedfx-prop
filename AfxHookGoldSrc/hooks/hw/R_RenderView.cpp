@@ -5,6 +5,7 @@
 #include <shared/detours.h>
 #include <hl_addresses.h>
 
+#include "../HookHw.h"
 #include "../../filming.h"
 
 typedef void (*R_RenderView_t)( void );
@@ -83,7 +84,13 @@ void New_R_RenderView(void)
 		// call original R_RenderView_
 		//
 
-		g_Old_R_RenderView();
+		cl_entity_t *e;
+
+		if((e = pEngfuncs->GetEntityByIndex(0)) && e->model)
+		{
+			// only when not NULL worldmodel.
+			g_Old_R_RenderView();
+		}
 
 		// restore original values
 		memcpy (p_r_refdef->vieworg,oldorigin,3*sizeof(float));

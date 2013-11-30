@@ -555,6 +555,8 @@ void Filming::OnHudBeginEvent()
 
 bool Filming::OnHudEndEvent()
 {
+	m_HudDrawnInFrame = true;
+
 	//MessageBox(NULL,"OUT","HUD Event",MB_OK);
 	switch(giveHudRqState())
 	{
@@ -618,7 +620,7 @@ void Filming::Start()
 		{
 			std::string ansiTakeDir;
 
-			pEngfuncs->Con_Printf("Recoding to \"%s\".\n", WideStringToAnsiString(m_TakeDir.c_str(), ansiTakeDir) ? ansiTakeDir.c_str() : "?");
+			pEngfuncs->Con_Printf("Recording to \"%s\".\n", WideStringToAnsiString(m_TakeDir.c_str(), ansiTakeDir) ? ansiTakeDir.c_str() : "?");
 
 		}
 		else
@@ -1358,6 +1360,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 		FullClear();
 
 		m_iFilmingState = FS_ACTIVE;
+		m_HudDrawnInFrame = false;
 
 		_bRecordBuffers_FirstCall = true;
 		return true;
@@ -1373,6 +1376,20 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 	{
 		// since for HUD captures we waste a whole frame, request a new one:
 
+		if(!m_HudDrawnInFrame)
+		{
+			// the hud hasn't been rendered for some reason, add
+			// fake frames:
+
+			// Swap for preview:
+			if (_pSupportRender) *bSwapRes = _pSupportRender->hlaeSwapBuffers(hSwapHDC);
+			else *bSwapRes=SwapBuffers(hSwapHDC);
+
+			do {
+				this->OnHudBeginEvent();
+			} while(this->OnHudEndEvent());
+		}
+
 		_HudRqState = HUDRQ_NORMAL;
 
 		// Delay:
@@ -1381,6 +1398,8 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 		FullClear();
 		New_R_RenderView(); // re-render view
 	}
+
+	m_HudDrawnInFrame = false;
 
 	do
 	{
