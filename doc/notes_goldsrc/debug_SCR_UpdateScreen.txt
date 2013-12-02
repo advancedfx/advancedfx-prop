@@ -100,7 +100,7 @@ Locate SCR_UpdateScreen:
 01db529f 893d24477b02    mov     dword ptr [hw!qwglMakeCurrent+0x25c18 (027b4724)],edi
 01db52a5 a3e4467b02      mov     dword ptr [hw!qwglMakeCurrent+0x25bd8 (027b46e4)],eax
 01db52aa e88158f9ff      call    hw+0x4ab30 (01d4ab30)
-01db52af e83ca90000      call    hw!vgui::Frame::operator=+0xf60 (01dbfbf0)
+01db52af e87ca90000      call    hw!vgui::Frame::operator=+0xf60 (01dbfc30)
 01db52b4 e8c7a4f9ff      call    hw+0x4f780 (01d4f780)
 01db52b9 a1c065d502      mov     eax,dword ptr [hw!qwglMakeCurrent+0x5c7ab4 (02d565c0)]
 01db52be bf05000000      mov     edi,offset <Unloaded_ud.drv>+0x4 (00000005)
@@ -132,7 +132,7 @@ Locate SCR_UpdateScreen:
 01db533e
 
 ==>
-01db52af => 01dbfbf0 draws the level action without hud (could be V_RenderView)
+01db52af => 01dbfc30 is V_RenderView (heavily extended)
 01db52b4 => 01d4f780 is GL_Set2D
 01db52f1 => 01d0bdd0 is UnkDrawHud, draws the hud without scoreboard and other vgui panels, calls client!HUD_Redraw
 01db5334 => 01d5c670 draws the crosshair
@@ -142,17 +142,22 @@ On 01db52e1, 01db5339 and 01db533e the stack pointer will be the same, thus we c
 near those points. Code in UnkDrawHud.cpp might need adjustment.
 We detour [01db52e1, 01db5339).
 
-01dbfbf0 55              push    ebp
-01dbfbf1 8bec            mov     ebp,esp
-01dbfbf3 81ecf4000000    sub     esp,offset <Unloaded_ud.drv>+0xf3 (000000f4)
-01dbfbf9 a10c40d002      mov     eax,dword ptr [hw!qwglMakeCurrent+0x575500 (02d0400c)]
+01dbfc30 55              push    ebp
+01dbfc31 8bec            mov     ebp,esp
+01dbfc33 81ecf4000000    sub     esp,offset <Unloaded_ud.drv>+0xf3 (000000f4)
+01dbfc39 a10c40d002      mov     eax,dword ptr [hw!qwglMakeCurrent+0x575500 (02d0400c)]
 ...
-01dbfeaa eb05            jmp     hw!vgui::Frame::operator=+0x1221 (01dbfeb1)
-01dbfeac e82f54f8ff      call    hw+0x452e0 (01d452e0)
-01dbfeb1 3975f0          cmp     dword ptr [ebp-10h],esi
+01dbfdc0 7b05            jnp     hw!vgui::Frame::operator=+0x10f7 (01dbfdc7)
+01dbfdc2 e8c9cff4ff      call    hw+0xcd90 (01d0cd90)
+01dbfdc7 e8c424f8ff      call    hw+0x42290 (01d42290)
+...
+01dbfeea eb05            jmp     hw!vgui::Frame::operator=+0x1221 (01dbfef1)
+01dbfeec e8ef53f8ff      call    hw+0x452e0 (01d452e0)
+01dbfef1 3975f0          cmp     dword ptr [ebp-10h],esi
 
 ==>
-01dbfeac => 01d452e0 is R_RenderView (since it pushes "R_RenderView: NULL worldmodel", break shortly before to see that)
+01dbfdc7 => 01d42290 is R_PushDlights
+01dbfeec => 01d452e0 is R_RenderView (since it pushes "R_RenderView: NULL worldmodel", break shortly before to see that)
 
 01d452e0 R_RenderView
 01d452e0 55              push    ebp

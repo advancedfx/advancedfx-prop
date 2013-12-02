@@ -17,13 +17,13 @@
 #include "hw/Host_Frame.h"
 
 #include <hlsdk.h>
-
+#include <halflife/common/demo_api.h>
 
 REGISTER_CVAR(disableautodirector, "0", 0);
+REGISTER_CVAR(movie_playdemostop, "0", 0);
 
 REGISTER_DEBUGCVAR(gl_force_noztrick, "1", 0);
 REGISTER_DEBUGCVAR(gl_previewclear, "1", 0);
-
 
 struct {
 	bool restore;
@@ -268,6 +268,23 @@ void APIENTRY NewGlViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 		// Always get rid of auto_director
 		if (disableautodirector->value != 0.0f)
 			pEngfuncs->Cvar_SetValue("spec_autodirector", 0.0f);
+
+		static bool wasPlayingDemo = false;
+
+		// autostop on demo end if requested:
+		if(pEngfuncs->pDemoAPI->IsPlayingback())
+		{
+			wasPlayingDemo = true;
+		}
+		else if(wasPlayingDemo)
+		{
+			wasPlayingDemo = false;
+			if(g_Filming.isFilming() && 0.0f != movie_playdemostop->value)
+			{
+					pEngfuncs->Con_Printf("Auto stopping filming as requested (not playing a demo anymore) ...\n");
+					g_Filming.Stop();
+			}
+		}
 
 		// This is called whether we're zooming or not
 		g_Zooming.handleZoom();

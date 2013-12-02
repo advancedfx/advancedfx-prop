@@ -15,38 +15,27 @@
 #include "filming.h"
 #include "hl_addresses.h"
 
-typedef void (*R_RecursiveWorldNode_t) (void * node);
+typedef void (*Unk_RenderView_t) (void);
 
-R_RecursiveWorldNode_t R_RecursiveWorldNode = 0;
-DWORD g_CallContinue = 0;
+Unk_RenderView_t g_Old_Unk_RenderView = 0;
 
-void DoDebugCall (void * node) {
+void New_Unk_RenderView (void) {
 	g_Filming.FullClear();
-	R_RecursiveWorldNode(node);
+	g_Old_Unk_RenderView();
 	g_Filming.DoCanDebugCapture();
 }
 
-__declspec(naked) void DoRecursiveWorldNodeCall (void)
-{
-	__asm {
-		CALL DoDebugCall
-		JMP [g_CallContinue]
-	}
-}
 
-/*
 REGISTER_DEBUGCMD_FUNC(tst_debugcapture)
 {
 	g_Filming.EnableDebugCapture(true);
 
-	if(!R_RecursiveWorldNode)
+/*	if(!g_Old_Unk_RenderView)
 	{
-		R_RecursiveWorldNode = (R_RecursiveWorldNode_t)((DWORD)HL_ADDR_GET(hwDll) +0x486E0);
-		Asm32ReplaceWithJmp((void *)((DWORD)HL_ADDR_GET(hwDll) +0x48A56), 0x05, DoRecursiveWorldNodeCall);
-		g_CallContinue = ((DWORD)HL_ADDR_GET(hwDll) +0x48A56 +0x05);
+		g_Old_Unk_RenderView = (Unk_RenderView_t) DetourApply((BYTE *)((DWORD)HL_ADDR_GET(hwDll)+0xBFC30), (BYTE *)New_Unk_RenderView, (int)0x09);
 	}
-}
 */
+}
 
 REGISTER_DEBUGCMD_FUNC(tst_undock)
 {

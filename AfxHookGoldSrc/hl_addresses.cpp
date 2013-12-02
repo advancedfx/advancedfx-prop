@@ -39,6 +39,7 @@ AFXADDR_DEF(R_DrawSkyBoxEx)
 AFXADDR_DEF(R_DrawSkyBoxEx_DSZ)
 AFXADDR_DEF(R_DrawViewModel)
 AFXADDR_DEF(R_PolyBlend)
+AFXADDR_DEF(R_PushDlights)
 AFXADDR_DEF(R_RenderView)
 AFXADDR_DEF(SND_PickChannel)
 AFXADDR_DEF(S_PaintChannels)
@@ -140,6 +141,8 @@ void Addresses_InitHwDll(AfxAddr hwDll)
 	AFXADDR_SET(UnkDrawHudOut, hwDll +0xB5334); // *[7]
 	AFXADDR_SET(UnkDrawHudOutContinue, AFXADDR_GET(UnkDrawHudOut) + 0x5); // *[7]
 		
+	AFXADDR_SET(R_PushDlights, hwDll + 0x42290); // *[7]
+
 	AFXADDR_SET(R_RenderView, hwDll + 0x452E0); // *[7]
 	AFXADDR_SET(DTOURSZ_R_RenderView, 0x6); // *[7]
 	

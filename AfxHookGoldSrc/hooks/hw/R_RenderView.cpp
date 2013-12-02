@@ -9,9 +9,10 @@
 #include "../../filming.h"
 
 typedef void (*R_RenderView_t)( void );
+typedef void (*R_PushDlights_t)( void );
 
 R_RenderView_t g_Old_R_RenderView = 0;
-
+R_PushDlights_t g_R_PushDlights = 0;
 
 // BEGIN from ID Software's Quake 1 Source:
 
@@ -76,26 +77,26 @@ void New_R_RenderView(void)
 
 	g_Filming.OnR_RenderView(p_r_refdef->vieworg, p_r_refdef->viewangles);
 
-	bool bLoop;
-	do {
-		bLoop = false;
+	g_Old_R_RenderView();
 
-		//
-		// call original R_RenderView_
-		//
+	// restore original values
+	memcpy (p_r_refdef->vieworg,oldorigin,3*sizeof(float));
+	memcpy (p_r_refdef->viewangles,oldangles,3*sizeof(float));
+}
 
-		cl_entity_t *e;
+void Additional_R_RenderView(void)
+{
+	cl_entity_t *e;
 
-		if((e = pEngfuncs->GetEntityByIndex(0)) && e->model)
-		{
-			// only when not NULL worldmodel.
-			g_Old_R_RenderView();
-		}
+	if((e = pEngfuncs->GetEntityByIndex(0)) && e->model)
+	{
+		// only when not NULL worldmodel.
 
-		// restore original values
-		memcpy (p_r_refdef->vieworg,oldorigin,3*sizeof(float));
-		memcpy (p_r_refdef->viewangles,oldangles,3*sizeof(float));
-	} while(bLoop);
+		// repush dynamic lights, so flashlight won't be off:
+		g_R_PushDlights();
+
+		New_R_RenderView();
+	}
 }
 
 void Hook_R_RenderView()
@@ -104,7 +105,8 @@ void Hook_R_RenderView()
 	if(!firstRun) return;
 	firstRun = false;
 
-	if(!HL_ADDR_GET(R_RenderView)) return;
+	if(!HL_ADDR_GET(R_RenderView) || !HL_ADDR_GET(R_PushDlights)) return;
 
 	g_Old_R_RenderView = (R_RenderView_t)DetourApply((BYTE *)HL_ADDR_GET(R_RenderView), (BYTE *)New_R_RenderView, (int)HL_ADDR_GET(DTOURSZ_R_RenderView));
+	g_R_PushDlights = (R_PushDlights_t)HL_ADDR_GET(R_PushDlights);
 }

@@ -1396,7 +1396,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 		if (_bSimulate2 && movie_simulate_delay->value > 0) Sleep((DWORD)movie_simulate_delay->value);
 
 		FullClear();
-		New_R_RenderView(); // re-render view
+		Additional_R_RenderView(); // re-render view
 	}
 
 	m_HudDrawnInFrame = false;
@@ -1449,7 +1449,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 				{
 					m_iMatteStage = MS_ENTITY; // next is entity
 					clearBuffers();
-					New_R_RenderView(); // re-render view
+					Additional_R_RenderView(); // re-render view
 				}
 			}
 
@@ -1482,7 +1482,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 		{
 			_stereo_state=STS_RIGHT;
 			FullClear();
-			New_R_RenderView(); // rerender frame instant!!!!
+			Additional_R_RenderView(); // rerender frame instant!!!!
 		} else _stereo_state=STS_LEFT;
 
 	} while (_stereo_state!=STS_LEFT);
