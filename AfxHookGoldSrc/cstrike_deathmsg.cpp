@@ -163,7 +163,7 @@ int __stdcall touring_cstrike_DeathMsg_Msg(DWORD *this_ptr, const char *pszName,
 {
 	for(int i=0; i<MAX_DEATHNOTICES; i++)
 	{
-		cstrike_rgDeathNoticeList[i].iId = 0;
+		memset(&cstrike_rgDeathNoticeList[i], 0, sizeof(cstrike_DeathNoticeItem));
 	}
 
 	int i = detoured_cstrike_DeathMsg_Msg(this_ptr, pszName, iSize, pbuf);
@@ -185,7 +185,7 @@ int __stdcall touring_cstrike_DeathMsg_Msg(DWORD *this_ptr, const char *pszName,
 			cstrike_DeathNotices.clear();
 	}
 
-	cstrike_rgDeathNoticeList[0].iId = 0;
+	memset(&cstrike_rgDeathNoticeList[0], 0, sizeof(cstrike_DeathNoticeItem));
 
 	return i;
 }

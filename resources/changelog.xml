@@ -5,6 +5,18 @@
 
 <release>
 <name>HLAE</name>
+<version>2.3.13.1</version>
+<time>2013-12-15T09:09Z</time>
+<changes>
+<change type="fixed">
+Fixed mirv_cstrike_deathmsg screwing up when suicides occour.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.3.13.0</version>
 <time>2013-12-02T20:47Z</time>
 <changes>
