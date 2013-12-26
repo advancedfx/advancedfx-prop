@@ -85,18 +85,23 @@ public class HlaeRemote_1 : MarshalByRefObject, IHlaeRemote_1
 
 	bool IHlaeRemote_1.LaunchEx(String OverrideCustomArgs)
 	{
-		// first check if HL.exe is already running:
-		CfgLauncher cfg = new CfgLauncher();
+        Func<bool> start = delegate
+        {
+            // first check if HL.exe is already running:
+            CfgLauncher cfg = new CfgLauncher();
 
-        cfg.CopyFrom(GlobalConfig.Instance.Settings.Launcher);
+            cfg.CopyFrom(GlobalConfig.Instance.Settings.Launcher);
 
-        cfg.CustomCmdLine = OverrideCustomArgs;
+            cfg.CustomCmdLine = OverrideCustomArgs;
 
-        Afx.AfxGoldSrc ag = GlobalAfxGoldSrc.GetInstanceOrCreate();
+            Afx.AfxGoldSrc ag = GlobalAfxGoldSrc.GetInstanceOrCreate();
 
-        Afx.AfxGoldSrc.StartSettings ags = cfg.MakeStartSettings(m_GameWindowParent);
+            Afx.AfxGoldSrc.StartSettings ags = cfg.MakeStartSettings(m_GameWindowParent);
 
-        return ag.Start(ags);
+            return ag.Start(ags);
+        };
+
+        return (bool)m_GameWindowParent.Invoke(start);
 	}
 
     //
