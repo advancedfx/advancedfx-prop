@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.0.4.2</version>
+<time>2014-01-03T11:37Z</time>
+<changes>
+<change type="updated">
+Updated AfxHookSource to support CS:GO again.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.0.4.1</version>
 <time>2013-06-12T17:40Z</time>
 <changes>

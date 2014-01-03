@@ -12,6 +12,7 @@
 #include "../mirv_glext.h"
 #include "../supportrender.h"
 #include "../zooming.h"
+#include "../scripting.h"
 
 #include "HookHw.h"
 #include "hw/Host_Frame.h"
@@ -171,6 +172,8 @@ void APIENTRY NewGlBegin(GLenum mode)
 		return;
 	}
 
+	ScriptEvent_OnGlBegin(mode);
+
 	if (g_Filming.doWireframe(mode) == Filming::DR_HIDE) {
 		return;
 	}
@@ -214,6 +217,8 @@ void APIENTRY NewGlEnd(void)
 		ModeAlpha_End();
 
 	g_Filming.DoWorldFxEnd();
+
+	ScriptEvent_OnGlEnd();
 }
 
 void APIENTRY NewGlClear(GLbitfield mask)
@@ -358,6 +363,9 @@ BOOL APIENTRY NewWglSwapBuffers(HDC hDC)
 
 	// Next viewport will be the first of the new frame
 	g_nViewports = 0;
+
+	if(ScriptEnvent_OnSwapBuffers(hDC, bResWglSwapBuffers))
+		return bResWglSwapBuffers;
 
 	if (g_Filming.isFilming())
 	{

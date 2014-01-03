@@ -5,6 +5,7 @@
 // Additional libraries:
 #pragma comment(lib,"OpenGL32.lib")
 #pragma comment(lib,"GLu32.lib")
+#pragma comment(lib,"mozjs-24.lib")
 
 /*
 // Direct show:
@@ -25,6 +26,8 @@
 
 #include "AfxGoldSrcComClient.h"
 
+#include "scripting.h"
+
 
 bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 {
@@ -32,17 +35,20 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 	{ 
 		case DLL_PROCESS_ATTACH:
 		{
-#if MDT_DEBUG
+#if 1
 			MessageBox(0,"DLL_PROCESS_ATTACH","MDT_DEBUG",MB_OK);
 #endif
-
 			HookHl();
 
 			break;
 		}
 		case DLL_PROCESS_DETACH:
 		{
+			g_Script_CanConsolePrint = false;
+
 			g_AfxGoldSrcComClient.Close();
+
+			JsShutDown();
 
 			break;
 		}

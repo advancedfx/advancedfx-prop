@@ -8,6 +8,7 @@
 #include "../filming.h"
 #include "../mirv_glext.h"
 #include "../HltvFix.h"
+#include "../scripting.h"
 #include "HookHw.h"
 #include "hw/ClientFunctions.h"
 
@@ -166,6 +167,8 @@ void HookGameLoaded()
 
 	// Re-Hook ClientFunctionTable:
 	HookClientFunctions();
+
+	g_Script_CanConsolePrint = true;
 
 	// Now is a good time to install OpenGl extensions:
 	Install_All_Gl_Extensions();

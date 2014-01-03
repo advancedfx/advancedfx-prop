@@ -1,31 +1,41 @@
 #include "stdafx.h"
 
 #include "HookHw.h"
-
 #include <windows.h>
-
 #include <shared/detours.h>
-
 #include "HookHw.h"
-
 #include "../hl_addresses.h"
+#include "../scripting.h"
 
 HMODULE WINAPI new_LoadLibraryA( LPCSTR lpLibFileName )
 {
-		static bool bHwLoaded = false;
+	static bool bHwLoaded = false;
+	static bool firstRun = true;
 
-		if( !bHwLoaded && !lstrcmp( lpLibFileName, "hw.dll") )
-		{
-			bHwLoaded = true;
-			HMODULE hHw = LoadLibraryA( lpLibFileName );
+	if(firstRun)
+	{
+		firstRun = false;
 
-			if( hHw )
-				HookHw(hHw);
+		// Start Js engine as early as possible on the main thread
+		// (we cannot do this in DllMain, because that
+		// attachment happens on a different thread).
+		// JS_GC() will crash when run from a different thread.
+		JsStartUp();
+	}
 
-			return hHw;
-		}
 
-		return LoadLibraryA( lpLibFileName );
+	if( !bHwLoaded && !lstrcmp( lpLibFileName, "hw.dll") )
+	{
+		bHwLoaded = true;
+		HMODULE hHw = LoadLibraryA( lpLibFileName );
+
+		if( hHw )
+			HookHw(hHw);
+
+		return hHw;
+	}
+
+	return LoadLibraryA( lpLibFileName );
 }
 
 void HookHl()

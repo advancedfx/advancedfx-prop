@@ -210,6 +210,7 @@ __declspec(naked) void hook_Client_Init() {
 	}
 }
 
+
 void * HookInterfaceFn(void * iface, int idx, void * fn)
 {
 	MdtMemBlockInfos mbis;
@@ -571,6 +572,19 @@ public:
 
 	virtual void _UNKOWN_098(void)
 	{ JMP_IFACE_FN(csgo_VClient, 98) }
+
+	virtual void _UNKOWN_099(void)
+	{ JMP_IFACE_FN(csgo_VClient, 99) }
+
+	virtual void _UNKOWN_100(void)
+	{ JMP_IFACE_FN(csgo_VClient, 100) }
+
+	virtual void _UNKOWN_101(void)
+	{ JMP_IFACE_FN(csgo_VClient, 101) }
+
+	// this is probably not needed:
+	virtual void _UNKOWN_102(void)
+	{ JMP_IFACE_FN(csgo_VClient, 102) }
 } g_BaseClientDllWrapper_csgo;
 
 void HookClientDllInterface_011_Init(void * iface)

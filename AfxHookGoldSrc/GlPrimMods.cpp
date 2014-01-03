@@ -210,7 +210,7 @@ ChannelMode DepthMask::GetDepth()
 
 void DepthMask::OnGlBegin(GLenum mode)
 {
-	glGetBooleanv(GL_COLOR_WRITEMASK, &m_Old_Depth);
+	glGetBooleanv(GL_DEPTH_WRITEMASK, &m_Old_Depth);
 
 	glDepthMask(
 		ToGLboolean(m_Depth, m_Old_Depth)

@@ -1,0 +1,1034 @@
+#include "stdafx.h"
+
+// Copyright (c) by advancedfx.org
+//
+// Last changes:
+// 2013-12-27 dominik.matrixstorm.com
+//
+// First changes
+// 2009-11-16 dominik.matrixstorm.com
+
+#include "scripting.h"
+
+#include <windows.h>
+#include <gl\gl.h>
+
+#include <hlsdk.h>
+
+#include "cmdregister.h"
+#include "hooks/HookHw.h"
+#include "hooks/OpenGl32Hooks.h"
+#include "hooks/hw/R_DrawEntitiesOnList.h"
+#include "hooks/hw/R_DrawParticles.h"
+#include "hooks/hw/R_DrawViewModel.h"
+#include "hooks/hw/R_RenderView.h"
+#include "mirv_glext.h"
+#include "supportrender.h"
+
+#include <string>
+#include <sstream>
+
+#include <script.h>
+
+#define SCRIPT_FOLDER "scripts\\"
+#define DLL_NAME	"AfxHookGoldSrc.dll"
+
+std::string g_ScriptFolder("");
+
+struct {
+	bool Has;
+	std::string String;
+} g_LastFirstError = { false, "" };
+
+JSRuntime * g_JsRt = NULL;
+JSContext * g_JsCx = NULL;
+JSObject * g_JsGlobal = NULL;
+bool g_JsRunning = false;
+bool g_Script_CanConsolePrint = false;
+
+
+void reportError(JSContext *cx, const char *message, JSErrorReport *report)
+{
+	if(g_LastFirstError.Has)
+		return;
+
+	g_LastFirstError.Has = true;
+
+	std::ostringstream oss;
+	
+	oss << "AFX ERROR: "
+		<< (report->filename ? report->filename : "<no filename>") << ":"
+		<< (unsigned int) report->lineno << ":"
+		<< message
+	;
+
+	g_LastFirstError.String = oss.str();
+}
+
+// JsTestObject ////////////////////////////////////////////////////////////////
+
+class JsTestObject
+{
+public:
+	JsTestObject() {
+		if(g_Script_CanConsolePrint) pEngfuncs->Con_Printf("JsTestObject(0x%08x)::JsTestObject\n", this);
+	}
+
+	~JsTestObject() {
+		if(g_Script_CanConsolePrint) pEngfuncs->Con_Printf("JsTestObject(0x%08x)::~JsTestObject\n", this);
+	}
+
+	void SetValue(int value)
+	{
+		if(g_Script_CanConsolePrint) pEngfuncs->Con_Printf("JsTestObject(0x%08x)::SetValue(%i)\n", this, value);
+		m_Value = value;
+	}
+
+	int GetValue()
+	{
+		if(g_Script_CanConsolePrint) pEngfuncs->Con_Printf("JsTestObject(0x%08x)::GetValue = (%i)\n", this, m_Value);
+		return m_Value;
+	}
+private:
+	int m_Value;
+};
+
+
+void JsTestObject_finalize(JSFreeOp *fop, JSObject *obj)
+{
+	JsTestObject *p = (JsTestObject *)JS_GetPrivate(obj);
+	delete p;
+}
+
+static JSClass JsTestObject_class = {
+	"TestObject", JSCLASS_HAS_PRIVATE,
+	JS_PropertyStub,
+	JS_DeletePropertyStub,
+	JS_PropertyStub,
+	JS_StrictPropertyStub,
+	JS_EnumerateStub,
+	JS_ResolveStub,
+	JS_ConvertStub,
+	JsTestObject_finalize,
+	JSCLASS_NO_OPTIONAL_MEMBERS
+};
+
+static JSBool
+JsTestObject_value_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
+{
+	JsTestObject *p = (JsTestObject *)JS_GetPrivate(obj);
+
+	vp.set(JS_NumberValue(p->GetValue()));
+    return JS_TRUE;
+}
+
+static JSBool
+JsTestObject_value_set(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JSBool strict, JS::MutableHandleValue vp)
+{
+	JsTestObject *p = (JsTestObject *)JS_GetPrivate(obj);
+
+	int32_t value;
+
+	JS::ToInt32(cx, vp.get(), &value);
+
+	p->SetValue(value);
+
+	return JS_TRUE;
+}
+
+static JSPropertySpec  JsTestObject_properties[] = {
+	{"value", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED, JSOP_WRAPPER(JsTestObject_value_get), JSOP_WRAPPER(JsTestObject_value_set)},
+	{0, 0, 0, 0, 0}
+};
+
+// Global //////////////////////////////////////////////////////////////////////
+
+static JSClass afxjs_global_class = {
+	"global", JSCLASS_GLOBAL_FLAGS,
+	JS_PropertyStub,
+	JS_DeletePropertyStub,
+	JS_PropertyStub,
+	JS_StrictPropertyStub,
+	JS_EnumerateStub,
+	JS_ResolveStub,
+	JS_ConvertStub,
+	NULL,
+	JSCLASS_NO_OPTIONAL_MEMBERS
+};
+
+static JSBool
+afxjs_global_additionalRRenderView(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+	Additional_R_RenderView();
+
+	JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
+afxjs_global_gc(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+	JS_GC(g_JsRt);
+
+	JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
+afxjs_global_glClear(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(1 > args.length())
+		return JS_FALSE;
+
+	GLbitfield mask;
+
+	if(!JS::ToUint32(cx, args[0], &mask))
+		return JS_FALSE;
+	
+	glClear(mask);
+
+	JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
+afxjs_global_glClearColor(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(4 > args.length())
+		return JS_FALSE;
+
+	double color[4];
+	
+	if(
+		!JS::ToNumber(cx, args[0], &color[0])
+		|| !JS::ToNumber(cx, args[1], &color[1])
+		|| !JS::ToNumber(cx, args[2], &color[2])
+		|| !JS::ToNumber(cx, args[3], &color[3])
+	)
+		return JS_FALSE;
+
+	glClearColor((GLfloat)color[0], (GLfloat)color[1], (GLfloat)color[2], (GLfloat)color[3]);
+
+	JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
+afxjs_global_glColor4d(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(4 > args.length())
+		return JS_FALSE;
+
+	double color[4];
+	
+	if(
+		!JS::ToNumber(cx, args[0], &color[0])
+		|| !JS::ToNumber(cx, args[1], &color[1])
+		|| !JS::ToNumber(cx, args[2], &color[2])
+		|| !JS::ToNumber(cx, args[3], &color[3])
+	)
+		return JS_FALSE;
+
+	glColor4d(color[0], color[1], color[2], color[3]);
+
+	JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
+afxjs_global_glColorMask(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(4 > args.length())
+		return JS_FALSE;
+
+	glColorMask(JS::ToBoolean(args[0]), JS::ToBoolean(args[1]), JS::ToBoolean(args[2]), JS::ToBoolean(args[3]));
+
+	JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
+afxjs_global_glDeleteTextures(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(1 > args.length())
+		return JS_FALSE;
+
+	JSObject * obj;
+	if(!JS_ValueToObject(cx, args[0], &obj))
+		return JS_FALSE;
+
+	if(!JS_IsArrayObject(cx, obj))
+		return JS_FALSE;
+
+	uint32_t length;
+	if(!JS_GetArrayLength(cx, obj, &length))
+		return JS_FALSE;
+
+	GLuint * textureIds = new GLuint[length];
+
+	bool bOk = true;
+	for(uint32_t i=0; i<length; i++)
+	{
+		jsval val;
+		bOk = bOk && JS_GetElement(cx, obj, i, &val);
+		bOk = bOk && JS::ToUint32(cx, val, &textureIds[i]);
+	}
+
+	if(!bOk)
+	{
+		delete textureIds;
+		return JS_FALSE;
+	}
+
+	glDeleteTextures(length, textureIds);
+
+	delete textureIds;
+	
+	JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
+afxjs_global_glGenTextures(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(1 > args.length())
+		return JS_FALSE;
+
+	uint32_t length;
+	if(!JS::ToUint32(cx, args[0], &length))
+		return JS_FALSE;
+
+	GLuint * textures = new GLuint[length];
+	jsval * jsTextures = new jsval[length];
+
+	glGenTextures(length, textures);
+
+	for(uint32_t i=0; i<length; i++)
+	{
+		jsTextures[i] = JS_NumberValue(textures[i]);
+	}
+
+	delete textures;
+
+	JSObject * retObj = JS_NewArrayObject(cx, length, jsTextures);
+
+	delete jsTextures;
+
+	if(!retObj)
+		return JS_FALSE;
+
+	JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(retObj));
+
+	return JS_TRUE;
+}
+
+static JSBool
+afxjs_global_glGetColorWriteMask(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+	boolean oldColorWriteMask[4];
+	
+	glGetBooleanv(GL_COLOR_WRITEMASK, oldColorWriteMask);
+	
+	jsval jsOldColorWriteMask[4] = { BOOLEAN_TO_JSVAL(oldColorWriteMask[0]), BOOLEAN_TO_JSVAL(oldColorWriteMask[1]), BOOLEAN_TO_JSVAL(oldColorWriteMask[2]), BOOLEAN_TO_JSVAL(oldColorWriteMask[3]) };
+
+	JSObject * retObj = JS_NewArrayObject(cx, 4, jsOldColorWriteMask);
+
+	if(!retObj)
+		return JS_FALSE;
+
+	JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(retObj));
+
+	return JS_TRUE;
+}
+
+static JSBool
+afxjs_global_glGetCurrentColor(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+	double oldColor[4];
+	
+	glGetDoublev(GL_CURRENT_COLOR, oldColor);
+	
+	jsval jsOldColor[4] = { JS_NumberValue(oldColor[0]), JS_NumberValue(oldColor[1]), JS_NumberValue(oldColor[2]), JS_NumberValue(oldColor[3]) };
+
+	JSObject * retObj = JS_NewArrayObject(cx, 4, jsOldColor);
+
+	if(!retObj)
+		return JS_FALSE;
+
+	JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(retObj));
+
+	return JS_TRUE;
+}
+
+static JSBool
+afxjs_global_glDepthMask(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(1 > args.length())
+		return JS_FALSE;
+
+	glDepthMask(JS::ToBoolean(args[0]));
+
+	JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
+afxjs_global_glGetDepthWriteMask(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+	boolean oldDepthWriteMask;
+	
+	glGetBooleanv(GL_DEPTH_WRITEMASK, &oldDepthWriteMask);
+
+	JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(oldDepthWriteMask));
+
+	return JS_TRUE;
+}
+
+static JSBool
+afxjs_global_load(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(1 > args.length())
+		return JS_FALSE;
+
+    JSString *str = JS_ValueToString(cx, args[0]);
+    if (!str)
+        return JS_FALSE;
+
+    char *filename = JS_EncodeString(cx, str);
+	if(!filename)
+		return JS_FALSE;
+
+	std::string strFile(filename);
+
+	JS_free(cx, filename);
+
+    JS::RootedObject thisobj(cx, JS_THIS_OBJECT(cx, vp));
+    if (!thisobj)
+        return false;
+
+	JSScript *script = JS::Compile(cx, thisobj, JS::CompileOptions(cx), strFile.c_str());
+	if(!script)
+		return JS_FALSE;
+
+	jsval result;
+
+	if(!JS_ExecuteScript(cx, thisobj, script, &result))
+		return JS_FALSE;
+
+	JS_SET_RVAL(cx, vp, result);
+	return JS_TRUE;
+}
+
+
+static JSBool
+afxjs_global_hlClientCommand(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(1 > args.length())
+		return JS_FALSE;
+
+    JSString *str = JS_ValueToString(cx, args[0]);
+    if (!str)
+        return JS_FALSE;
+
+    char * cmd = JS_EncodeString(cx, str);
+	if(!cmd)
+		return JS_FALSE;
+
+	pEngfuncs->pfnClientCmd(cmd);
+
+	JS_free(cx, cmd);
+
+	JS_SET_RVAL(cx, vp, JSVAL_VOID);
+	return JS_TRUE;
+}
+
+static JSBool
+afxjs_global_hlCvarSetValue(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(2 > args.length())
+		return JS_FALSE;
+
+    JSString *str = JS_ValueToString(cx, args[0]);
+    if (!str)
+        return JS_FALSE;
+
+    char * cvar = JS_EncodeString(cx, str);
+	if(!cvar)
+		return JS_FALSE;
+
+	std::string strCvar(cvar);
+
+	JS_free(cx, cvar);
+
+	double value;
+
+	if(!JS::ToNumber(cx, args[1], &value))
+		return JS_FALSE;
+
+	pEngfuncs->Cvar_SetValue(const_cast<char *>(strCvar.c_str()), (float)value);
+
+	JS_SET_RVAL(cx, vp, JSVAL_VOID);
+	return JS_TRUE;
+}
+
+static JSBool
+afxjs_global_maybeGc(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+	JS_MaybeGC(cx);
+
+	JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
+afxjs_global_modReplaceOnGlBegin(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(1 > args.length())
+		return JS_FALSE;
+
+	GLint newTextureBinding2d;
+
+	if(!JS::ToInt32(cx, args[0], &newTextureBinding2d))
+		return JS_FALSE;
+
+	GLint oldActiveTextureArb;
+	GLboolean oldTexture2d;
+	GLint oldTextureBinding2d;
+	GLint oldTextureEnvMode;
+	
+	glGetIntegerv(GL_ACTIVE_TEXTURE_ARB, &oldActiveTextureArb);
+
+	glActiveTextureARB(GL_TEXTURE2_ARB);
+
+	oldTexture2d = glIsEnabled(GL_TEXTURE_2D);
+	glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldTextureBinding2d);
+	glGetTexEnviv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &oldTextureEnvMode);
+
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, newTextureBinding2d);
+	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+	
+	jsval jsOldVals[4] = { JS_NumberValue(oldActiveTextureArb), BOOLEAN_TO_JSVAL(oldTexture2d), JS_NumberValue(oldTextureBinding2d), JS_NumberValue(oldTextureEnvMode) };
+
+	JSObject * retObj = JS_NewArrayObject(cx, 4, jsOldVals);
+
+	if(!retObj)
+		return JS_FALSE;
+
+	JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(retObj));
+
+	return JS_TRUE;
+}
+
+static JSBool
+afxjs_global_modReplaceOnGlEnd(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(4 > args.length())
+		return JS_FALSE;
+
+	GLint oldActiveTextureArb;
+	GLboolean oldTexture2d;
+	GLint oldTextureBinding2d;
+	GLint oldTextureEnvMode;
+
+	if(!JS::ToInt32(cx, args[0], &oldActiveTextureArb))
+		return JS_FALSE;
+
+	oldTexture2d = JS::ToBoolean(args[1]);
+
+	if(!JS::ToInt32(cx, args[2], &oldTextureBinding2d))
+		return JS_FALSE;
+	if(!JS::ToInt32(cx, args[3], &oldTextureEnvMode))
+		return JS_FALSE;
+
+	
+	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, oldTextureEnvMode);
+	glBindTexture(GL_TEXTURE_2D, oldTextureBinding2d);
+	if(!oldTexture2d) glDisable(GL_TEXTURE_2D);
+
+	glActiveTextureARB(oldActiveTextureArb);
+	
+	JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
+afxjs_global_modReplaceRefreshTexture(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(4 > args.length())
+		return JS_FALSE;
+
+	GLuint texture;
+	uint32_t red;
+	uint32_t green;
+	uint32_t blue;
+
+	if(!JS::ToUint32(cx, args[0], &texture))
+		return JS_FALSE;
+	if(!JS::ToUint32(cx, args[1], &red))
+		return JS_FALSE;
+	if(!JS::ToUint32(cx, args[2], &green))
+		return JS_FALSE;
+	if(!JS::ToUint32(cx, args[3], &blue))
+		return JS_FALSE;
+
+	GLint oldtex;
+	GLubyte texmem[48];
+
+	glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldtex);
+		
+	for(int i=0; i<16; i++)
+	{
+		texmem[3*i  ] = (GLubyte)red;
+		texmem[3*i+1] = (GLubyte)green;
+		texmem[3*i+2] = (GLubyte)blue;
+	}
+
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 4, 4, 0, GL_RGB, GL_UNSIGNED_BYTE, texmem);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP);
+
+	glBindTexture(GL_TEXTURE_2D, oldtex);
+	
+	JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
+afxjs_global_print(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(1 > args.length())
+		return JS_FALSE;
+
+    JSString *str = JS_ValueToString(cx, args[0]);
+    if (!str)
+        return JS_FALSE;
+
+    char *c_str = JS_EncodeString(cx, str);
+	if(!c_str)
+		return JS_FALSE;
+
+	pEngfuncs->Con_Printf("%s\n", c_str);
+
+	JS_free(cx, c_str);
+
+	JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
+afxjs_global_swapBuffers(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(1 > args.length())
+		return JS_FALSE;
+
+	HDC hDC;
+	if(!JS::ToUint32(cx, args[0], (unsigned int *)&hDC))
+		return JS_FALSE;
+
+	BOOL bResWglSwapBuffers;
+
+	if (g_pSupportRender)
+		bResWglSwapBuffers = g_pSupportRender->hlaeSwapBuffers(hDC);
+	else
+		bResWglSwapBuffers = OldWglSwapBuffers(hDC);
+
+	JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(bResWglSwapBuffers));
+    return JS_TRUE;
+}
+
+static JSBool
+afxjs_global_testObject(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+   JS::RootedObject thisobj(cx, JS_THIS_OBJECT(cx, vp));
+    if (!thisobj)
+        return false;
+
+	/*
+	JS::RootedObject obj(cx, JS_InitClass(cx, thisobj, NULL,
+		&JsTestObject_class, NULL,
+		0, NULL, NULL, NULL, NULL
+	));*/
+
+	JSObject *obj = JS_NewObjectWithGivenProto(cx, &JsTestObject_class, NULL, JS_GetGlobalForScopeChain(cx));
+    
+	JS_DefineProperties(cx, obj, JsTestObject_properties);
+
+	JS_SetPrivate(obj, new JsTestObject());
+
+	JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(obj));
+    return JS_TRUE;
+}
+
+static JSFunctionSpec afxjs_global_functions[] = {
+    JS_FS("additionalRRenderView", afxjs_global_additionalRRenderView, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("gc", afxjs_global_gc, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("glClear", afxjs_global_glClear, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("glClearColor", afxjs_global_glClearColor, 4, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("glColor4d", afxjs_global_glColor4d, 4, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("glColorMask", afxjs_global_glColorMask, 4, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("glDeleteTextures", afxjs_global_glDeleteTextures, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("glDepthMask", afxjs_global_glDepthMask, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("glGenTextures", afxjs_global_glGenTextures, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("glGetColorWriteMask", afxjs_global_glGetColorWriteMask, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("glGetCurrentColor", afxjs_global_glGetCurrentColor, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("glGetDepthWriteMask", afxjs_global_glGetDepthWriteMask, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("hlClientCommand", afxjs_global_hlClientCommand, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("hlCvarSetValue", afxjs_global_hlCvarSetValue, 2, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("load", afxjs_global_load, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("maybeGc", afxjs_global_maybeGc, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("modReplaceOnGlBegin", afxjs_global_modReplaceOnGlBegin, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("modReplaceOnGlEnd", afxjs_global_modReplaceOnGlEnd, 4, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("modReplaceRefreshTexture", afxjs_global_modReplaceRefreshTexture, 4, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("print", afxjs_global_print, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("swapBuffers", afxjs_global_swapBuffers, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("testObject", afxjs_global_testObject, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS_END
+};
+
+static JSBool
+afxjs_global_currentEntityIndex_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
+{
+	cl_entity_t *ce = pEngStudio->GetCurrentEntity();
+
+	int idx = ce ? ce->index : -1;
+
+	vp.set(JS_NumberValue(idx));
+    return JS_TRUE;
+}
+
+static JSBool
+afxjs_global_hasGlArbMultiTexture_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
+{
+	vp.set(g_Has_GL_ARB_multitexture ? JSVAL_TRUE : JSVAL_FALSE);
+    return JS_TRUE;
+}
+
+static JSBool
+afxjs_global_inRDrawEntitiesOnList_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
+{
+	vp.set(g_In_R_DrawEntitiesOnList ? JSVAL_TRUE : JSVAL_FALSE);
+    return JS_TRUE;
+}
+
+static JSBool
+afxjs_global_inRDrawParticles_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
+{
+	vp.set(g_In_R_DrawParticles ? JSVAL_TRUE : JSVAL_FALSE);
+    return JS_TRUE;
+}
+
+static JSBool
+afxjs_global_isCurrentEntityWorldModel_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
+{
+	cl_entity_t *ce = pEngStudio->GetCurrentEntity();
+
+	bool bIs = ce && ce->model && ce->model->type == mod_brush && 0 != strncmp(ce->model->name, "maps/", 5);
+
+	vp.set(bIs ? JSVAL_TRUE : JSVAL_FALSE);
+    return JS_TRUE;
+}
+
+static JSBool
+afxjs_global_inRDrawViewModel_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
+{
+	vp.set(g_In_R_DrawViewModel ? JSVAL_TRUE : JSVAL_FALSE);
+    return JS_TRUE;
+}
+
+static JSBool
+afxjs_global_lfError_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
+{
+	if(g_LastFirstError.Has)
+	{
+		g_LastFirstError.Has = false;
+
+		JSString * str = JS_NewStringCopyZ(cx, g_LastFirstError.String.c_str());
+
+		vp.set(STRING_TO_JSVAL(str));
+	}
+	else
+	{
+		vp.set(JSVAL_NULL);
+	}
+    return true;
+}
+
+static JSBool
+afxjs_global_scriptFolder_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
+{
+	JSString * str = JS_NewStringCopyZ(cx, g_ScriptFolder.c_str());
+
+    vp.set(STRING_TO_JSVAL(str));
+    return true;
+}
+
+static JSPropertySpec  afxjs_global_properties[] = {
+	{"currentEntityIndex", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(afxjs_global_currentEntityIndex_get), JSOP_NULLWRAPPER},
+	{"hasGlArbMultiTexture", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(afxjs_global_hasGlArbMultiTexture_get), JSOP_NULLWRAPPER},
+	{"inRDrawEntitiesOnList", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(afxjs_global_inRDrawEntitiesOnList_get), JSOP_NULLWRAPPER},
+	{"inRDrawParticles", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(afxjs_global_inRDrawParticles_get), JSOP_NULLWRAPPER},
+	{"inRDrawViewModel", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(afxjs_global_inRDrawViewModel_get), JSOP_NULLWRAPPER},
+	{"isCurrentEntityWorldModel", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(afxjs_global_isCurrentEntityWorldModel_get), JSOP_NULLWRAPPER},
+	{"lfError", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(afxjs_global_lfError_get), JSOP_NULLWRAPPER},
+	{"onGlBegin", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER},
+	{"onGlEnd", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER},
+	{"onSwapBuffers", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER},
+	{"scriptFolder", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(afxjs_global_scriptFolder_get), JSOP_NULLWRAPPER},
+	{0, 0, 0, 0, 0}
+};
+
+
+static JSObject *
+NewGlobalObject(JSContext *cx)
+{
+    JS::RootedObject glob(cx, JS_NewGlobalObject(cx, &afxjs_global_class, NULL, JS::CompartmentOptions()));
+    if(!glob)
+        return NULL;
+
+    {
+        JSAutoCompartment ac(cx, glob);
+
+        if(!JS_InitStandardClasses(cx, glob))
+            return NULL;
+
+		if(!JS_DefineFunctions(cx, glob, afxjs_global_functions))
+			return NULL;
+
+        if (!JS_DefineProperties(cx, glob, afxjs_global_properties))
+            return NULL;
+    }
+
+    return glob;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void SetScriptFolder()
+{
+	char hookPath[1025];
+	bool bCfgres = false;
+	HMODULE hHookDll = GetModuleHandle(DLL_NAME);
+
+	hookPath[0]=NULL;
+	
+	if (hHookDll)
+	{
+		GetModuleFileName(hHookDll, hookPath, sizeof(hookPath)/sizeof(*hookPath) -1);
+
+		std::string strFolder(hookPath);
+		size_t fp = strFolder.find_last_of('\\');
+		if(std::string::npos != fp)
+		{
+			strFolder.resize(fp+1);
+		}
+
+		strFolder += SCRIPT_FOLDER;
+
+		g_ScriptFolder = strFolder;
+	}
+}
+
+bool JsExecute(char const * script) {
+	if(!g_JsRunning) return false;
+
+	jsval rval;
+	return JS_TRUE == JS_EvaluateScript(g_JsCx, JS_GetGlobalForScopeChain(g_JsCx), script, strlen(script), NULL, 0, &rval);
+}
+
+bool JsIsRunning() {
+	return g_JsRunning;
+}
+
+void JsShutDown() {
+	g_JsRunning = false;
+	if(g_JsCx) JS_DestroyContext(g_JsCx);
+	if(g_JsRt) JS_DestroyRuntime(g_JsRt);
+	JS_ShutDown();
+}
+
+bool JsStartUp()
+{
+	SetScriptFolder();
+
+	bool bOk = true;
+
+	bOk =
+		NULL != (g_JsRt = JS_NewRuntime(1L * 1024L * 1024L, JS_USE_HELPER_THREADS))
+		&& NULL != (g_JsCx = JS_NewContext(g_JsRt, 8192))
+		&& (
+			JS_SetOptions(g_JsCx, JSOPTION_VAROBJFIX),
+			JS_SetErrorReporter(g_JsCx, reportError),
+			true
+		)
+	
+		// . (global):
+		&& NULL != (g_JsGlobal = NewGlobalObject(g_JsCx))
+	;
+	
+	if(bOk)
+	{
+		JSAutoCompartment ac(g_JsCx, g_JsGlobal);
+		JS_SetGlobalObject(g_JsCx, g_JsGlobal);
+
+		//char * loadInitScript = "load(scriptFolder+'AfxGoldSrcInit.js');";
+		//jsval rval;
+		//bOk = bOk && JS_EvaluateScript(g_JsCx, JS_GetGlobalForScopeChain(g_JsCx), loadInitScript, strlen(loadInitScript), NULL, 0, &rval);
+	}
+
+	if(!bOk)
+	{
+		MessageBox(0, "Failed to init scripting engine.", "Error", MB_OK|MB_ICONERROR);
+		JsShutDown();
+	}
+
+	g_JsRunning = bOk;
+
+	return bOk;
+}
+
+void ScriptEvent_OnGlBegin(unsigned int mode)
+{
+	JSAutoCompartment ac(g_JsCx, g_JsGlobal);
+
+	jsval f;
+
+	if(!JS_GetProperty(g_JsCx, g_JsGlobal, "onGlBegin", &f) || JSVAL_IS_PRIMITIVE(f))
+		return;
+
+	jsval y;
+	jsval x[1] = {INT_TO_JSVAL(mode)};
+
+	JS_CallFunctionValue(g_JsCx, g_JsGlobal, f, 1, x, &y);
+}
+
+void ScriptEvent_OnGlEnd()
+{
+	JSAutoCompartment ac(g_JsCx, g_JsGlobal);
+
+	jsval f;
+
+	if(!JS_GetProperty(g_JsCx, g_JsGlobal, "onGlEnd", &f) || JSVAL_IS_PRIMITIVE(f))
+		return;
+
+	jsval y;
+	JS_CallFunctionValue(g_JsCx, g_JsGlobal, f, 0, NULL, &y);
+}
+
+bool ScriptEnvent_OnSwapBuffers(HDC hDC, BOOL & bSwapRes)
+{
+	JSAutoCompartment ac(g_JsCx, g_JsGlobal);
+
+	jsval f;
+
+	if(!JS_GetProperty(g_JsCx, g_JsGlobal, "onSwapBuffers", &f) || JSVAL_IS_PRIMITIVE(f))
+		return false;
+
+	jsval y;
+	jsval x[1] = { JS_NumberValue((unsigned int)hDC) };
+
+	if(!JS_CallFunctionValue(g_JsCx, g_JsGlobal, f, 1, x, &y))
+		return false;
+
+	bSwapRes = JS::ToBoolean(y);
+
+	return true;
+}
+
+// Client console access ///////////////////////////////////////////////////////
+
+_REGISTER_CMD("afx", afx_cmd)
+void afx_cmd() {
+	if(!g_JsRunning) {
+		pEngfuncs->Con_Printf("Error: script engine not running.\n");
+		return;
+	}
+
+	int argc = pEngfuncs->Cmd_Argc();
+
+	if(argc < 2) {
+		// Print help and return:
+		pEngfuncs->Con_Printf(
+			"Usage: afx <script command(s)>\n"
+		);
+		return;
+	}
+
+	//
+	// concat arguments to full string:
+
+	char *ttt, *ct;
+	unsigned int len=0;
+
+	// calculate required space:
+	for(int i=0; i<argc; i++) len += strlen(pEngfuncs->Cmd_Argv(i))+1;
+	if(len<1) len=1;
+
+	ct = ttt = (char *)malloc(sizeof(char)*len);
+
+	if(!ct) {
+		pEngfuncs->Con_Printf("ERROR: malloc failed.\n");
+		return;
+	}
+
+	for(int i=1; i<argc; i++) {
+		char const * cur = pEngfuncs->Cmd_Argv(i);
+		unsigned int lcur = strlen(cur);
+		
+		if(1<i) {
+			*ct = ' ';
+			ct++;
+			len--;
+		}
+
+		strcpy_s(ct, len, cur);
+		ct += lcur;
+		len -= lcur;
+	}
+	*ct = 0; // Term
+
+	jsval rval;
+	JSBool ok;
+	JSAutoCompartment ac(g_JsCx, g_JsGlobal);
+
+	pEngfuncs->Con_DPrintf("%s\n", ttt);
+	ok = JS_EvaluateScript(g_JsCx, JS_GetGlobalForScopeChain(g_JsCx), ttt, strlen(ttt), NULL, 0, &rval);
+
+	if(!ok)
+		pEngfuncs->Con_Printf("Error.\n");
+	else if (!JSVAL_IS_VOID(rval)) 
+	{
+		JSString *str = JS_ValueToSource(g_JsCx, rval);
+		if(str)
+		{
+			char *c_str = JS_EncodeString(g_JsCx, str);
+			if(c_str)
+			{
+				pEngfuncs->Con_Printf("Result: %s\n", c_str);
+				JS_free(g_JsCx, c_str);
+			}
+		}
+		else
+			pEngfuncs->Con_Printf("Result error.\n");
+	}
+
+	free(ttt);
+}
