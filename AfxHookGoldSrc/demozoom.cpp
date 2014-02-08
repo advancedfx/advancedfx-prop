@@ -90,7 +90,7 @@ REGISTER_DEBUGCMD_FUNC(demozoom)
 	pEngfuncs->Con_Printf(
 		"Commands:\n"
 		"__mirv_demozoom block - blocks demozoom demo events.\n"
-		"__mirv_demozoom ride <fov> - overrides the event with a float value.\n"
+		"__mirv_demozoom set <fov> - overrides the event with a float value.\n"
 		"__mirv_demozoom default - restores the game's default behaviour.\n"
 		"Current mode: "
 	);

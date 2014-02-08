@@ -16,6 +16,8 @@
 
 #include "HookHw.h"
 #include "hw/Host_Frame.h"
+#include "hw/R_RenderView.h"
+#include "hw/UnkDrawHud.h"
 
 #include <hlsdk.h>
 #include <halflife/common/demo_api.h>
@@ -395,6 +397,10 @@ BOOL APIENTRY NewWglSwapBuffers(HDC hDC)
 	}
 	else if(g_Host_Frame_Called && gl_previewclear->value)
 		g_Filming.FullClear();
+
+	// reset call trackers:
+	Reset_R_RenderViewCalledFromEngine();
+	Reset_UnkDrawHudCalledFromEngine();
 
 	return bResWglSwapBuffers;
 }

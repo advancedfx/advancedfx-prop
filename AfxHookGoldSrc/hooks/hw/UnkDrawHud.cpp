@@ -6,17 +6,39 @@
 #include <hl_addresses.h>
 
 #include "../../filming.h"
+#include "../../scripting.h"
 
 void * g_UnkDrawHudInContinue = 0;
 void * g_UnkDrawHudOutContinue;
 void * g_UnkDrawHudInCall;
 void * g_UnkDrawHudOutCall;
 
+bool g_UnkDrawHudCallFromEngine = true;
+bool g_UnkDrawHudCalledFromEngine = false;
+
+
+void Wrapper_UnkDrawHudIn(void)
+{
+	ScriptEvent_OnHudBegin();
+	g_Filming.OnHudBeginEvent();
+}
+
+
+bool Wrapper_UnkDrawHudOut(void)
+{
+	bool b1, b2;
+	b1 = g_Filming.OnHudEndEvent();
+	b2 = ScriptEvent_OnHudEnd();
+
+	if(g_UnkDrawHudCallFromEngine)
+		g_UnkDrawHudCalledFromEngine = true;
+
+	return b1 || b2;
+}
+
 __declspec(naked) void New_UnkDrawHudIn(void)
 {
-	__asm push ecx
-	g_Filming.OnHudBeginEvent();
-	__asm pop ecx
+	Wrapper_UnkDrawHudIn();
 
 	__asm push ebx
 	__asm call [g_UnkDrawHudInCall]
@@ -25,19 +47,40 @@ __declspec(naked) void New_UnkDrawHudIn(void)
 
 __declspec(naked) void New_UnkDrawHudOut(void)
 {
-	static bool tempMem;
-
 	__asm call [g_UnkDrawHudOutCall]
 	
-	__asm push ecx
 	__asm push eax
-	tempMem = g_Filming.OnHudEndEvent();
+	__asm call Wrapper_UnkDrawHudOut
+	__asm cmp al, 0
 	__asm pop eax
-	__asm pop ecx
+	__asm jnz New_UnkDrawHudIn
 
-	__asm cmp tempMem, 0
-	__asm JNZ New_UnkDrawHudIn
+	__asm push eax
+	__asm mov al, g_UnkDrawHudCallFromEngine
+	__asm cmp al, 0
+	__asm pop eax
+	__asm jnz __ContinueJmp
+	__asm ret
+	
+	__asm __ContinueJmp:
 	__asm JMP [g_UnkDrawHudOutContinue]
+}
+
+void Additional_UnkDrawHud()
+{
+	g_UnkDrawHudCallFromEngine = false;
+
+	if(g_UnkDrawHudCalledFromEngine)
+	{
+		New_UnkDrawHudIn();
+	}
+
+	g_UnkDrawHudCallFromEngine = true;
+}
+
+void Reset_UnkDrawHudCalledFromEngine()
+{
+	g_UnkDrawHudCalledFromEngine = false;
 }
 
 void Hook_UnkDrawHud()

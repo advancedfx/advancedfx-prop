@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2013-12-27 dominik.matrixstorm.com
+// 2014-01-08 dominik.matrixstorm.com
 //
 // First changes
 // 2009-11-16 dominik.matrixstorm.com
@@ -22,8 +22,15 @@
 #include "hooks/hw/R_DrawParticles.h"
 #include "hooks/hw/R_DrawViewModel.h"
 #include "hooks/hw/R_RenderView.h"
+#include "hooks/hw/UnkDrawHud.h"
 #include "mirv_glext.h"
 #include "supportrender.h"
+#include "AfxGlImage.h"
+#include "AfxImageUtils.h"
+#include "filming.h"
+
+#include <shared/FileTools.h>
+#include <shared/StringTools.h>
 
 #include <string>
 #include <sstream>
@@ -141,10 +148,272 @@ static JSPropertySpec  JsTestObject_properties[] = {
 	{0, 0, 0, 0, 0}
 };
 
-// Global //////////////////////////////////////////////////////////////////////
+// AfxGlImage //////////////////////////////////////////////////////////////////
 
-static JSClass afxjs_global_class = {
-	"global", JSCLASS_GLOBAL_FLAGS,
+void AfxGlImage_finalize(JSFreeOp *fop, JSObject *obj)
+{
+	AfxGlImage *p = (AfxGlImage *)JS_GetPrivate(obj);
+	delete p;
+}
+
+static JSClass AfxGlImage_class = {
+	"AfxGlImage", JSCLASS_HAS_PRIVATE,
+	JS_PropertyStub,
+	JS_DeletePropertyStub,
+	JS_PropertyStub,
+	JS_StrictPropertyStub,
+	JS_EnumerateStub,
+	JS_ResolveStub,
+	JS_ConvertStub,
+	AfxGlImage_finalize,
+	JSCLASS_NO_OPTIONAL_MEMBERS
+};
+
+static JSBool
+AfxGlImage_debugFloatDepthBuffer(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(0 > args.length())
+		return JS_FALSE;
+
+	JSObject * jsObj;
+	if(!JS_ValueToObject(cx, args.thisv(), &jsObj))
+		return JS_FALSE;
+
+	AfxGlImage *afxGlImage = (AfxGlImage *)JS_GetPrivate(jsObj);
+
+	if(!AfxImageUtils::DebugFloatDepthBuffer(afxGlImage))
+		return JS_FALSE;
+
+	args.rval().set(JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
+AfxGlImage_floatDepthBufferToByteBuffer(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(0 > args.length())
+		return JS_FALSE;
+
+	JSObject * jsObj;
+	if(!JS_ValueToObject(cx, args.thisv(), &jsObj))
+		return JS_FALSE;
+
+	AfxGlImage *afxGlImage = (AfxGlImage *)JS_GetPrivate(jsObj);
+
+	if(!AfxImageUtils::FloatDepthBufferToByteBuffer(afxGlImage))
+		return JS_FALSE;
+
+	args.rval().set(JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
+AfxGlImage_glReadPixels(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(6 > args.length())
+		return JS_FALSE;
+
+	JSObject * jsObj;
+	if(!JS_ValueToObject(cx, args.thisv(), &jsObj))
+		return JS_FALSE;
+
+	AfxGlImage *afxGlImage = (AfxGlImage *)JS_GetPrivate(jsObj);
+
+	GLint x;
+	GLint y;
+	GLsizei width;
+	GLsizei height;
+	GLenum  format;
+	GLenum  type;
+	
+	if(!(
+		JS::ToInt32(cx, args[0], &x)
+		&& JS::ToInt32(cx, args[1], &y)
+		&& JS::ToInt32(cx, args[2], &width)
+		&& JS::ToInt32(cx, args[3], &height)
+		&& JS::ToUint32(cx, args[4], &format)
+		&& JS::ToUint32(cx, args[5], &type)
+	))
+		return JS_FALSE;
+
+	if(!afxGlImage->GlReadPixels(x, y, width, height, format, type))
+		return JS_FALSE;
+
+	args.rval().set(JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
+AfxGlImage_inverseFloatDepthBuffer(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(2 > args.length())
+		return JS_FALSE;
+
+	JSObject * jsObj;
+	if(!JS_ValueToObject(cx, args.thisv(), &jsObj))
+		return JS_FALSE;
+
+	AfxGlImage *afxGlImage = (AfxGlImage *)JS_GetPrivate(jsObj);
+
+	GLdouble zNear;
+	GLdouble zFar;
+	
+	if(!(
+		JS::ToNumber(cx, args[0], &zNear)
+		&& JS::ToNumber(cx, args[1], &zFar)
+	))
+		return JS_FALSE;
+
+	if(!AfxImageUtils::InverseFloatDepthBuffer(afxGlImage, zNear, zFar))
+		return JS_FALSE;
+
+	args.rval().set(JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
+AfxGlImage_linearizeFloatDepthBuffer(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(2 > args.length())
+		return JS_FALSE;
+
+	JSObject * jsObj;
+	if(!JS_ValueToObject(cx, args.thisv(), &jsObj))
+		return JS_FALSE;
+
+	AfxGlImage *afxGlImage = (AfxGlImage *)JS_GetPrivate(jsObj);
+
+	GLdouble zNear;
+	GLdouble zFar;
+	
+	if(!(
+		JS::ToNumber(cx, args[0], &zNear)
+		&& JS::ToNumber(cx, args[1], &zFar)
+	))
+		return JS_FALSE;
+
+	if(!AfxImageUtils::LinearizeFloatDepthBuffer(afxGlImage, zNear, zFar))
+		return JS_FALSE;
+
+	args.rval().set(JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
+AfxGlImage_logarithmizeFloatDepthBuffer(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(2 > args.length())
+		return JS_FALSE;
+
+	JSObject * jsObj;
+	if(!JS_ValueToObject(cx, args.thisv(), &jsObj))
+		return JS_FALSE;
+
+	AfxGlImage *afxGlImage = (AfxGlImage *)JS_GetPrivate(jsObj);
+
+	GLdouble zNear;
+	GLdouble zFar;
+	
+	if(!(
+		JS::ToNumber(cx, args[0], &zNear)
+		&& JS::ToNumber(cx, args[1], &zFar)
+	))
+		return JS_FALSE;
+
+	if(!AfxImageUtils::LogarithmizeFloatDepthBuffer(afxGlImage, zNear, zFar))
+		return JS_FALSE;
+
+	args.rval().set(JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
+AfxGlImage_sliceFloatDepthBuffer(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(2 > args.length())
+		return JS_FALSE;
+
+	JSObject * jsObj;
+	if(!JS_ValueToObject(cx, args.thisv(), &jsObj))
+		return JS_FALSE;
+
+	AfxGlImage *afxGlImage = (AfxGlImage *)JS_GetPrivate(jsObj);
+
+	GLdouble sliceLo;
+	GLdouble sliceHi;
+	
+	if(!(
+		JS::ToNumber(cx, args[0], &sliceLo)
+		&& JS::ToNumber(cx, args[1], &sliceHi)
+	))
+		return JS_FALSE;
+
+	if(!AfxImageUtils::SliceFloatDepthBuffer(afxGlImage, sliceLo, sliceHi))
+		return JS_FALSE;
+
+	args.rval().set(JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
+AfxGlImage_writeBitmap(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(1 > args.length())
+		return JS_FALSE;
+
+	JSObject * jsObj;
+	if(!JS_ValueToObject(cx, args.thisv(), &jsObj))
+		return JS_FALSE;
+
+	AfxGlImage *afxGlImage = (AfxGlImage *)JS_GetPrivate(jsObj);
+
+    JSString *str = JS_ValueToString(cx, args[0]);
+    if (!str)
+        return JS_FALSE;
+
+    char *c_str = JS_EncodeString(cx, str);
+	if(!c_str)
+		return JS_FALSE;
+
+	std::wstring wFileName;
+
+	bool bOk = AnsiStringToWideString(c_str, wFileName);
+
+	JS_free(cx, c_str);
+
+	if(!bOk
+		&& AfxImageUtils::WriteBitmap(afxGlImage, wFileName.c_str()))
+		return JS_FALSE;
+
+	args.rval().set(JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSFunctionSpec AfxGlImage_functions[] = {
+    JS_FS("debugFloatDepthBuffer", AfxGlImage_debugFloatDepthBuffer, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("floatDepthBufferToByteBuffer", AfxGlImage_floatDepthBufferToByteBuffer, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("glReadPixels", AfxGlImage_glReadPixels, 6, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("inverseFloatDepthBuffer", AfxGlImage_inverseFloatDepthBuffer, 2, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("linearizeFloatDepthBuffer", AfxGlImage_linearizeFloatDepthBuffer, 2, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("logarithmizeFloatDepthBuffer", AfxGlImage_logarithmizeFloatDepthBuffer, 2, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("sliceFloatDepthBuffer", AfxGlImage_sliceFloatDepthBuffer, 2, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("writeBitmap", AfxGlImage_writeBitmap, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS_END
+};
+
+
+// AfxGlobal ///////////////////////////////////////////////////////////////////
+
+static JSClass AfxGlobal_class = {
+	"AfxGlobal", JSCLASS_GLOBAL_FLAGS,
 	JS_PropertyStub,
 	JS_DeletePropertyStub,
 	JS_PropertyStub,
@@ -157,25 +426,121 @@ static JSClass afxjs_global_class = {
 };
 
 static JSBool
-afxjs_global_additionalRRenderView(JSContext *cx, unsigned argc, JS::Value *vp)
+AfxGlobal_additionalRRenderView(JSContext *cx, unsigned argc, JS::Value *vp)
 {
+	JS::CallReceiver rec = JS::CallReceiverFromVp(vp);
+
 	Additional_R_RenderView();
 
-	JS_SET_RVAL(cx, vp, JSVAL_VOID);
+	rec.rval().set(JSVAL_VOID);
     return JS_TRUE;
 }
 
 static JSBool
-afxjs_global_gc(JSContext *cx, unsigned argc, JS::Value *vp)
+AfxGlobal_additionalUnkDrawHud(JSContext *cx, unsigned argc, JS::Value *vp)
 {
+	JS::CallReceiver rec = JS::CallReceiverFromVp(vp);
+
+	Additional_UnkDrawHud();
+
+	rec.rval().set(JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
+AfxGlobal_createPath(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(1 > args.length())
+		return JS_FALSE;
+
+    JSString *str = JS_ValueToString(cx, args[0]);
+    if (!str)
+        return JS_FALSE;
+
+    char *c_str = JS_EncodeString(cx, str);
+	if(!c_str)
+		return JS_FALSE;
+
+	bool bOk = false;
+
+	std::wstring wPath;
+	std::string path;
+
+	if(AnsiStringToWideString(c_str, wPath)
+		&& CreatePath(wPath.c_str(), wPath)
+		&& WideStringToAnsiString(wPath.c_str(), path))
+	{
+		JSString * str = JS_NewStringCopyZ(cx, path.c_str());
+
+		args.rval().set(STRING_TO_JSVAL(str));
+	}
+	else
+		args.rval().set(JSVAL_NULL);
+
+	JS_free(cx, c_str);
+
+    return JS_TRUE;
+}
+
+static JSBool
+AfxGlobal_gc(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+	JS::CallReceiver rec = JS::CallReceiverFromVp(vp);
+
 	JS_GC(g_JsRt);
 
-	JS_SET_RVAL(cx, vp, JSVAL_VOID);
+	rec.rval().set(JSVAL_VOID);
     return JS_TRUE;
 }
 
 static JSBool
-afxjs_global_glClear(JSContext *cx, unsigned argc, JS::Value *vp)
+AfxGlobal_getZFar(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+	JS::CallReceiver rec = JS::CallReceiverFromVp(vp);
+
+	double value = g_Filming.GetZFar();
+
+	rec.rval().set(JS_NumberValue(value));
+
+	return JS_TRUE;
+}
+
+static JSBool
+AfxGlobal_getZNear(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+	JS::CallReceiver rec = JS::CallReceiverFromVp(vp);
+
+	double value = g_Filming.GetZNear();
+
+	rec.rval().set(JS_NumberValue(value));
+
+	return JS_TRUE;
+}
+
+static JSBool
+AfxGlobal_glBlendFunc(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(4 > args.length())
+		return JS_FALSE;
+
+	GLenum sfactor, dfactor;
+	
+	if(!(
+		JS::ToUint32(cx, args[0], &sfactor)
+		&& JS::ToUint32(cx, args[1], &dfactor)
+	))
+		return JS_FALSE;
+
+	glBlendFunc(sfactor, dfactor);
+
+	args.rval().set(JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
+AfxGlobal_glClear(JSContext *cx, unsigned argc, JS::Value *vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 	if(1 > args.length())
@@ -188,12 +553,12 @@ afxjs_global_glClear(JSContext *cx, unsigned argc, JS::Value *vp)
 	
 	glClear(mask);
 
-	JS_SET_RVAL(cx, vp, JSVAL_VOID);
+	args.rval().set(JSVAL_VOID);
     return JS_TRUE;
 }
 
 static JSBool
-afxjs_global_glClearColor(JSContext *cx, unsigned argc, JS::Value *vp)
+AfxGlobal_glClearColor(JSContext *cx, unsigned argc, JS::Value *vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 	if(4 > args.length())
@@ -211,12 +576,12 @@ afxjs_global_glClearColor(JSContext *cx, unsigned argc, JS::Value *vp)
 
 	glClearColor((GLfloat)color[0], (GLfloat)color[1], (GLfloat)color[2], (GLfloat)color[3]);
 
-	JS_SET_RVAL(cx, vp, JSVAL_VOID);
+	args.rval().set(JSVAL_VOID);
     return JS_TRUE;
 }
 
 static JSBool
-afxjs_global_glColor4d(JSContext *cx, unsigned argc, JS::Value *vp)
+AfxGlobal_glColor4d(JSContext *cx, unsigned argc, JS::Value *vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 	if(4 > args.length())
@@ -234,12 +599,12 @@ afxjs_global_glColor4d(JSContext *cx, unsigned argc, JS::Value *vp)
 
 	glColor4d(color[0], color[1], color[2], color[3]);
 
-	JS_SET_RVAL(cx, vp, JSVAL_VOID);
+	args.rval().set(JSVAL_VOID);
     return JS_TRUE;
 }
 
 static JSBool
-afxjs_global_glColorMask(JSContext *cx, unsigned argc, JS::Value *vp)
+AfxGlobal_glColorMask(JSContext *cx, unsigned argc, JS::Value *vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 	if(4 > args.length())
@@ -247,12 +612,12 @@ afxjs_global_glColorMask(JSContext *cx, unsigned argc, JS::Value *vp)
 
 	glColorMask(JS::ToBoolean(args[0]), JS::ToBoolean(args[1]), JS::ToBoolean(args[2]), JS::ToBoolean(args[3]));
 
-	JS_SET_RVAL(cx, vp, JSVAL_VOID);
+	args.rval().set(JSVAL_VOID);
     return JS_TRUE;
 }
 
 static JSBool
-afxjs_global_glDeleteTextures(JSContext *cx, unsigned argc, JS::Value *vp)
+AfxGlobal_glDeleteTextures(JSContext *cx, unsigned argc, JS::Value *vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 	if(1 > args.length())
@@ -289,12 +654,12 @@ afxjs_global_glDeleteTextures(JSContext *cx, unsigned argc, JS::Value *vp)
 
 	delete textureIds;
 	
-	JS_SET_RVAL(cx, vp, JSVAL_VOID);
+	args.rval().set(JSVAL_VOID);
     return JS_TRUE;
 }
 
 static JSBool
-afxjs_global_glGenTextures(JSContext *cx, unsigned argc, JS::Value *vp)
+AfxGlobal_glGenTextures(JSContext *cx, unsigned argc, JS::Value *vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 	if(1 > args.length())
@@ -323,14 +688,38 @@ afxjs_global_glGenTextures(JSContext *cx, unsigned argc, JS::Value *vp)
 	if(!retObj)
 		return JS_FALSE;
 
-	JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(retObj));
+	args.rval().set(OBJECT_TO_JSVAL(retObj));
 
 	return JS_TRUE;
 }
 
 static JSBool
-afxjs_global_glGetColorWriteMask(JSContext *cx, unsigned argc, JS::Value *vp)
+AfxGlobal_glGetBlendFunc(JSContext *cx, unsigned argc, JS::Value *vp)
 {
+	JS::CallReceiver rec = JS::CallReceiverFromVp(vp);
+
+	GLint sfactor, dfactor;
+	
+	glGetIntegerv(GL_BLEND_SRC, &sfactor);
+	glGetIntegerv(GL_BLEND_DST, &dfactor);
+	
+	jsval jsVals[2] = { JS_NumberValue(sfactor), JS_NumberValue(dfactor) };
+
+	JSObject * retObj = JS_NewArrayObject(cx, 2, jsVals);
+
+	if(!retObj)
+		return JS_FALSE;
+
+	rec.rval().set(OBJECT_TO_JSVAL(retObj));
+
+	return JS_TRUE;
+}
+
+static JSBool
+AfxGlobal_glGetColorWriteMask(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+	JS::CallReceiver rec = JS::CallReceiverFromVp(vp);
+
 	boolean oldColorWriteMask[4];
 	
 	glGetBooleanv(GL_COLOR_WRITEMASK, oldColorWriteMask);
@@ -342,14 +731,16 @@ afxjs_global_glGetColorWriteMask(JSContext *cx, unsigned argc, JS::Value *vp)
 	if(!retObj)
 		return JS_FALSE;
 
-	JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(retObj));
+	rec.rval().set(OBJECT_TO_JSVAL(retObj));
 
 	return JS_TRUE;
 }
 
 static JSBool
-afxjs_global_glGetCurrentColor(JSContext *cx, unsigned argc, JS::Value *vp)
+AfxGlobal_glGetCurrentColor(JSContext *cx, unsigned argc, JS::Value *vp)
 {
+	JS::CallReceiver rec = JS::CallReceiverFromVp(vp);
+
 	double oldColor[4];
 	
 	glGetDoublev(GL_CURRENT_COLOR, oldColor);
@@ -361,13 +752,27 @@ afxjs_global_glGetCurrentColor(JSContext *cx, unsigned argc, JS::Value *vp)
 	if(!retObj)
 		return JS_FALSE;
 
-	JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(retObj));
+	rec.rval().set(OBJECT_TO_JSVAL(retObj));
 
 	return JS_TRUE;
 }
 
 static JSBool
-afxjs_global_glDepthMask(JSContext *cx, unsigned argc, JS::Value *vp)
+AfxGlobal_glGetDepthWriteMask(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+	JS::CallReceiver rec = JS::CallReceiverFromVp(vp);
+
+	boolean oldDepthWriteMask;
+	
+	glGetBooleanv(GL_DEPTH_WRITEMASK, &oldDepthWriteMask);
+
+	rec.rval().set(BOOLEAN_TO_JSVAL(oldDepthWriteMask));
+
+	return JS_TRUE;
+}
+
+static JSBool
+AfxGlobal_glDepthMask(JSContext *cx, unsigned argc, JS::Value *vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 	if(1 > args.length())
@@ -375,24 +780,12 @@ afxjs_global_glDepthMask(JSContext *cx, unsigned argc, JS::Value *vp)
 
 	glDepthMask(JS::ToBoolean(args[0]));
 
-	JS_SET_RVAL(cx, vp, JSVAL_VOID);
+	args.rval().set(JSVAL_VOID);
     return JS_TRUE;
 }
 
 static JSBool
-afxjs_global_glGetDepthWriteMask(JSContext *cx, unsigned argc, JS::Value *vp)
-{
-	boolean oldDepthWriteMask;
-	
-	glGetBooleanv(GL_DEPTH_WRITEMASK, &oldDepthWriteMask);
-
-	JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(oldDepthWriteMask));
-
-	return JS_TRUE;
-}
-
-static JSBool
-afxjs_global_load(JSContext *cx, unsigned argc, JS::Value *vp)
+AfxGlobal_load(JSContext *cx, unsigned argc, JS::Value *vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 	if(1 > args.length())
@@ -423,13 +816,13 @@ afxjs_global_load(JSContext *cx, unsigned argc, JS::Value *vp)
 	if(!JS_ExecuteScript(cx, thisobj, script, &result))
 		return JS_FALSE;
 
-	JS_SET_RVAL(cx, vp, result);
+	args.rval().set(result);
 	return JS_TRUE;
 }
 
 
 static JSBool
-afxjs_global_hlClientCommand(JSContext *cx, unsigned argc, JS::Value *vp)
+AfxGlobal_hlClientCommand(JSContext *cx, unsigned argc, JS::Value *vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 	if(1 > args.length())
@@ -447,12 +840,12 @@ afxjs_global_hlClientCommand(JSContext *cx, unsigned argc, JS::Value *vp)
 
 	JS_free(cx, cmd);
 
-	JS_SET_RVAL(cx, vp, JSVAL_VOID);
+	args.rval().set(JSVAL_VOID);
 	return JS_TRUE;
 }
 
 static JSBool
-afxjs_global_hlCvarSetValue(JSContext *cx, unsigned argc, JS::Value *vp)
+AfxGlobal_hlCvarSetValue(JSContext *cx, unsigned argc, JS::Value *vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 	if(2 > args.length())
@@ -477,21 +870,23 @@ afxjs_global_hlCvarSetValue(JSContext *cx, unsigned argc, JS::Value *vp)
 
 	pEngfuncs->Cvar_SetValue(const_cast<char *>(strCvar.c_str()), (float)value);
 
-	JS_SET_RVAL(cx, vp, JSVAL_VOID);
+	args.rval().set(JSVAL_VOID);
 	return JS_TRUE;
 }
 
 static JSBool
-afxjs_global_maybeGc(JSContext *cx, unsigned argc, JS::Value *vp)
+AfxGlobal_maybeGc(JSContext *cx, unsigned argc, JS::Value *vp)
 {
+	JS::CallReceiver rec = JS::CallReceiverFromVp(vp);
+
 	JS_MaybeGC(cx);
 
-	JS_SET_RVAL(cx, vp, JSVAL_VOID);
+	rec.rval().set(JSVAL_VOID);
     return JS_TRUE;
 }
 
 static JSBool
-afxjs_global_modReplaceOnGlBegin(JSContext *cx, unsigned argc, JS::Value *vp)
+AfxGlobal_modReplaceOnGlBegin(JSContext *cx, unsigned argc, JS::Value *vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 	if(1 > args.length())
@@ -526,13 +921,13 @@ afxjs_global_modReplaceOnGlBegin(JSContext *cx, unsigned argc, JS::Value *vp)
 	if(!retObj)
 		return JS_FALSE;
 
-	JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(retObj));
+	args.rval().set(OBJECT_TO_JSVAL(retObj));
 
 	return JS_TRUE;
 }
 
 static JSBool
-afxjs_global_modReplaceOnGlEnd(JSContext *cx, unsigned argc, JS::Value *vp)
+AfxGlobal_modReplaceOnGlEnd(JSContext *cx, unsigned argc, JS::Value *vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 	if(4 > args.length())
@@ -560,12 +955,12 @@ afxjs_global_modReplaceOnGlEnd(JSContext *cx, unsigned argc, JS::Value *vp)
 
 	glActiveTextureARB(oldActiveTextureArb);
 	
-	JS_SET_RVAL(cx, vp, JSVAL_VOID);
+	args.rval().set(JSVAL_VOID);
     return JS_TRUE;
 }
 
 static JSBool
-afxjs_global_modReplaceRefreshTexture(JSContext *cx, unsigned argc, JS::Value *vp)
+AfxGlobal_modReplaceRefreshTexture(JSContext *cx, unsigned argc, JS::Value *vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 	if(4 > args.length())
@@ -606,12 +1001,25 @@ afxjs_global_modReplaceRefreshTexture(JSContext *cx, unsigned argc, JS::Value *v
 
 	glBindTexture(GL_TEXTURE_2D, oldtex);
 	
-	JS_SET_RVAL(cx, vp, JSVAL_VOID);
+	args.rval().set(JSVAL_VOID);
     return JS_TRUE;
 }
 
 static JSBool
-afxjs_global_print(JSContext *cx, unsigned argc, JS::Value *vp)
+AfxGlobal_newAfxGlImage(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+	JSObject *obj = JS_NewObjectWithGivenProto(cx, &AfxGlImage_class, NULL, JS_GetGlobalForScopeChain(cx));
+    
+	JS_DefineFunctions(cx, obj, AfxGlImage_functions);
+
+	JS_SetPrivate(obj, new AfxGlImage());
+
+	JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(obj));
+    return JS_TRUE;
+}
+
+static JSBool
+AfxGlobal_print(JSContext *cx, unsigned argc, JS::Value *vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 	if(1 > args.length())
@@ -629,12 +1037,53 @@ afxjs_global_print(JSContext *cx, unsigned argc, JS::Value *vp)
 
 	JS_free(cx, c_str);
 
-	JS_SET_RVAL(cx, vp, JSVAL_VOID);
+	args.rval().set(JSVAL_VOID);
     return JS_TRUE;
 }
 
 static JSBool
-afxjs_global_swapBuffers(JSContext *cx, unsigned argc, JS::Value *vp)
+AfxGlobal_suggestTakePath(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(2 > args.length())
+		return JS_FALSE;
+
+    JSString *str = JS_ValueToString(cx, args[0]);
+    if (!str)
+        return JS_FALSE;
+
+	int32_t takeDigits;
+
+	if(!JS::ToInt32(cx, args[1], &takeDigits))
+		return JS_FALSE;
+
+    char *c_str = JS_EncodeString(cx, str);
+	if(!c_str)
+		return JS_FALSE;
+
+	std::wstring wTakePath;
+	std::string takePath;
+
+
+	if(AnsiStringToWideString(c_str, wTakePath)
+		&& SuggestTakePath(wTakePath.c_str(), takeDigits, wTakePath)
+		&& WideStringToAnsiString(wTakePath.c_str(), takePath))
+	{
+		JSString * str = JS_NewStringCopyZ(cx, takePath.c_str());
+
+		args.rval().set(STRING_TO_JSVAL(str));		
+	}
+	else
+		args.rval().set(JSVAL_NULL);
+
+	JS_free(cx, c_str);
+
+	
+    return JS_TRUE;
+}
+
+static JSBool
+AfxGlobal_swapBuffers(JSContext *cx, unsigned argc, JS::Value *vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 	if(1 > args.length())
@@ -651,22 +1100,16 @@ afxjs_global_swapBuffers(JSContext *cx, unsigned argc, JS::Value *vp)
 	else
 		bResWglSwapBuffers = OldWglSwapBuffers(hDC);
 
-	JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(bResWglSwapBuffers));
+	args.rval().set(BOOLEAN_TO_JSVAL(bResWglSwapBuffers));
     return JS_TRUE;
 }
 
 static JSBool
-afxjs_global_testObject(JSContext *cx, unsigned argc, JS::Value *vp)
+AfxGlobal_testObject(JSContext *cx, unsigned argc, JS::Value *vp)
 {
-   JS::RootedObject thisobj(cx, JS_THIS_OBJECT(cx, vp));
+	JS::RootedObject thisobj(cx, JS_THIS_OBJECT(cx, vp));
     if (!thisobj)
         return false;
-
-	/*
-	JS::RootedObject obj(cx, JS_InitClass(cx, thisobj, NULL,
-		&JsTestObject_class, NULL,
-		0, NULL, NULL, NULL, NULL
-	));*/
 
 	JSObject *obj = JS_NewObjectWithGivenProto(cx, &JsTestObject_class, NULL, JS_GetGlobalForScopeChain(cx));
     
@@ -678,34 +1121,42 @@ afxjs_global_testObject(JSContext *cx, unsigned argc, JS::Value *vp)
     return JS_TRUE;
 }
 
-static JSFunctionSpec afxjs_global_functions[] = {
-    JS_FS("additionalRRenderView", afxjs_global_additionalRRenderView, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
-    JS_FS("gc", afxjs_global_gc, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
-    JS_FS("glClear", afxjs_global_glClear, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
-    JS_FS("glClearColor", afxjs_global_glClearColor, 4, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
-    JS_FS("glColor4d", afxjs_global_glColor4d, 4, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
-    JS_FS("glColorMask", afxjs_global_glColorMask, 4, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
-    JS_FS("glDeleteTextures", afxjs_global_glDeleteTextures, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
-    JS_FS("glDepthMask", afxjs_global_glDepthMask, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
-    JS_FS("glGenTextures", afxjs_global_glGenTextures, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
-    JS_FS("glGetColorWriteMask", afxjs_global_glGetColorWriteMask, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
-    JS_FS("glGetCurrentColor", afxjs_global_glGetCurrentColor, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
-    JS_FS("glGetDepthWriteMask", afxjs_global_glGetDepthWriteMask, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
-    JS_FS("hlClientCommand", afxjs_global_hlClientCommand, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
-    JS_FS("hlCvarSetValue", afxjs_global_hlCvarSetValue, 2, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
-    JS_FS("load", afxjs_global_load, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
-    JS_FS("maybeGc", afxjs_global_maybeGc, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
-    JS_FS("modReplaceOnGlBegin", afxjs_global_modReplaceOnGlBegin, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
-    JS_FS("modReplaceOnGlEnd", afxjs_global_modReplaceOnGlEnd, 4, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
-    JS_FS("modReplaceRefreshTexture", afxjs_global_modReplaceRefreshTexture, 4, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
-    JS_FS("print", afxjs_global_print, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
-    JS_FS("swapBuffers", afxjs_global_swapBuffers, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
-    JS_FS("testObject", afxjs_global_testObject, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+static JSFunctionSpec AfxGlobal_functions[] = {
+    JS_FS("additionalRRenderView", AfxGlobal_additionalRRenderView, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("additionalUnkDrawHud", AfxGlobal_additionalUnkDrawHud, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("createPath", AfxGlobal_createPath, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("gc", AfxGlobal_gc, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("getZFar", AfxGlobal_getZFar, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("getZNear", AfxGlobal_getZNear, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("glBlendFunc", AfxGlobal_glBlendFunc, 2, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("glClear", AfxGlobal_glClear, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("glClearColor", AfxGlobal_glClearColor, 4, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("glColor4d", AfxGlobal_glColor4d, 4, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("glColorMask", AfxGlobal_glColorMask, 4, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("glDeleteTextures", AfxGlobal_glDeleteTextures, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("glDepthMask", AfxGlobal_glDepthMask, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("glGenTextures", AfxGlobal_glGenTextures, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("glGetBlendFunc", AfxGlobal_glGetBlendFunc, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("glGetColorWriteMask", AfxGlobal_glGetColorWriteMask, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("glGetCurrentColor", AfxGlobal_glGetCurrentColor, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("glGetDepthWriteMask", AfxGlobal_glGetDepthWriteMask, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("hlClientCommand", AfxGlobal_hlClientCommand, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("hlCvarSetValue", AfxGlobal_hlCvarSetValue, 2, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("load", AfxGlobal_load, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("maybeGc", AfxGlobal_maybeGc, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("modReplaceOnGlBegin", AfxGlobal_modReplaceOnGlBegin, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("modReplaceOnGlEnd", AfxGlobal_modReplaceOnGlEnd, 4, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("modReplaceRefreshTexture", AfxGlobal_modReplaceRefreshTexture, 4, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("newAfxGlImage", AfxGlobal_newAfxGlImage, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("newTestObject", AfxGlobal_testObject, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("print", AfxGlobal_print, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("suggestTakePath", AfxGlobal_suggestTakePath, 2, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("swapBuffers", AfxGlobal_swapBuffers, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
     JS_FS_END
 };
 
 static JSBool
-afxjs_global_currentEntityIndex_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
+AfxGlobal_currentEntityIndex_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
 {
 	cl_entity_t *ce = pEngStudio->GetCurrentEntity();
 
@@ -716,28 +1167,28 @@ afxjs_global_currentEntityIndex_get(JSContext *cx, JS::HandleObject obj, JS::Han
 }
 
 static JSBool
-afxjs_global_hasGlArbMultiTexture_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
+AfxGlobal_hasGlArbMultiTexture_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
 {
 	vp.set(g_Has_GL_ARB_multitexture ? JSVAL_TRUE : JSVAL_FALSE);
     return JS_TRUE;
 }
 
 static JSBool
-afxjs_global_inRDrawEntitiesOnList_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
+AfxGlobal_inRDrawEntitiesOnList_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
 {
 	vp.set(g_In_R_DrawEntitiesOnList ? JSVAL_TRUE : JSVAL_FALSE);
     return JS_TRUE;
 }
 
 static JSBool
-afxjs_global_inRDrawParticles_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
+AfxGlobal_inRDrawParticles_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
 {
 	vp.set(g_In_R_DrawParticles ? JSVAL_TRUE : JSVAL_FALSE);
     return JS_TRUE;
 }
 
 static JSBool
-afxjs_global_isCurrentEntityWorldModel_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
+AfxGlobal_isCurrentEntityWorldModel_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
 {
 	cl_entity_t *ce = pEngStudio->GetCurrentEntity();
 
@@ -748,14 +1199,14 @@ afxjs_global_isCurrentEntityWorldModel_get(JSContext *cx, JS::HandleObject obj, 
 }
 
 static JSBool
-afxjs_global_inRDrawViewModel_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
+AfxGlobal_inRDrawViewModel_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
 {
 	vp.set(g_In_R_DrawViewModel ? JSVAL_TRUE : JSVAL_FALSE);
     return JS_TRUE;
 }
 
 static JSBool
-afxjs_global_lfError_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
+AfxGlobal_lfError_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
 {
 	if(g_LastFirstError.Has)
 	{
@@ -773,7 +1224,7 @@ afxjs_global_lfError_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, J
 }
 
 static JSBool
-afxjs_global_scriptFolder_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
+AfxGlobal_scriptFolder_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
 {
 	JSString * str = JS_NewStringCopyZ(cx, g_ScriptFolder.c_str());
 
@@ -781,18 +1232,20 @@ afxjs_global_scriptFolder_get(JSContext *cx, JS::HandleObject obj, JS::HandleId 
     return true;
 }
 
-static JSPropertySpec  afxjs_global_properties[] = {
-	{"currentEntityIndex", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(afxjs_global_currentEntityIndex_get), JSOP_NULLWRAPPER},
-	{"hasGlArbMultiTexture", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(afxjs_global_hasGlArbMultiTexture_get), JSOP_NULLWRAPPER},
-	{"inRDrawEntitiesOnList", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(afxjs_global_inRDrawEntitiesOnList_get), JSOP_NULLWRAPPER},
-	{"inRDrawParticles", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(afxjs_global_inRDrawParticles_get), JSOP_NULLWRAPPER},
-	{"inRDrawViewModel", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(afxjs_global_inRDrawViewModel_get), JSOP_NULLWRAPPER},
-	{"isCurrentEntityWorldModel", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(afxjs_global_isCurrentEntityWorldModel_get), JSOP_NULLWRAPPER},
-	{"lfError", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(afxjs_global_lfError_get), JSOP_NULLWRAPPER},
+static JSPropertySpec  AfxGlobal_properties[] = {
+	{"currentEntityIndex", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(AfxGlobal_currentEntityIndex_get), JSOP_NULLWRAPPER},
+	{"hasGlArbMultiTexture", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(AfxGlobal_hasGlArbMultiTexture_get), JSOP_NULLWRAPPER},
+	{"inRDrawEntitiesOnList", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(AfxGlobal_inRDrawEntitiesOnList_get), JSOP_NULLWRAPPER},
+	{"inRDrawParticles", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(AfxGlobal_inRDrawParticles_get), JSOP_NULLWRAPPER},
+	{"inRDrawViewModel", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(AfxGlobal_inRDrawViewModel_get), JSOP_NULLWRAPPER},
+	{"isCurrentEntityWorldModel", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(AfxGlobal_isCurrentEntityWorldModel_get), JSOP_NULLWRAPPER},
+	{"lfError", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(AfxGlobal_lfError_get), JSOP_NULLWRAPPER},
 	{"onGlBegin", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER},
 	{"onGlEnd", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER},
+	{"onHudBegin", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER},
+	{"onHudEnd", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER},
 	{"onSwapBuffers", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER},
-	{"scriptFolder", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(afxjs_global_scriptFolder_get), JSOP_NULLWRAPPER},
+	{"scriptFolder", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(AfxGlobal_scriptFolder_get), JSOP_NULLWRAPPER},
 	{0, 0, 0, 0, 0}
 };
 
@@ -800,7 +1253,7 @@ static JSPropertySpec  afxjs_global_properties[] = {
 static JSObject *
 NewGlobalObject(JSContext *cx)
 {
-    JS::RootedObject glob(cx, JS_NewGlobalObject(cx, &afxjs_global_class, NULL, JS::CompartmentOptions()));
+    JS::RootedObject glob(cx, JS_NewGlobalObject(cx, &AfxGlobal_class, NULL, JS::CompartmentOptions()));
     if(!glob)
         return NULL;
 
@@ -810,10 +1263,10 @@ NewGlobalObject(JSContext *cx)
         if(!JS_InitStandardClasses(cx, glob))
             return NULL;
 
-		if(!JS_DefineFunctions(cx, glob, afxjs_global_functions))
+		if(!JS_DefineFunctions(cx, glob, AfxGlobal_functions))
 			return NULL;
 
-        if (!JS_DefineProperties(cx, glob, afxjs_global_properties))
+        if (!JS_DefineProperties(cx, glob, AfxGlobal_properties))
             return NULL;
     }
 
@@ -847,25 +1300,26 @@ void SetScriptFolder()
 	}
 }
 
-bool JsExecute(char const * script) {
+bool ScriptEngine_Execute(char const * script) {
 	if(!g_JsRunning) return false;
 
+	JSAutoCompartment ac(g_JsCx, g_JsGlobal);
 	jsval rval;
 	return JS_TRUE == JS_EvaluateScript(g_JsCx, JS_GetGlobalForScopeChain(g_JsCx), script, strlen(script), NULL, 0, &rval);
 }
 
-bool JsIsRunning() {
+bool ScriptEngine_IsRunning() {
 	return g_JsRunning;
 }
 
-void JsShutDown() {
+void ScriptEngine_ShutDown() {
 	g_JsRunning = false;
-	if(g_JsCx) JS_DestroyContext(g_JsCx);
-	if(g_JsRt) JS_DestroyRuntime(g_JsRt);
+	if(g_JsCx) { JS_DestroyContext(g_JsCx); g_JsCx = 0; }
+	if(g_JsRt) { JS_DestroyRuntime(g_JsRt); g_JsRt = 0; }
 	JS_ShutDown();
 }
 
-bool JsStartUp()
+bool ScriptEngine_StartUp()
 {
 	SetScriptFolder();
 
@@ -897,7 +1351,7 @@ bool JsStartUp()
 	if(!bOk)
 	{
 		MessageBox(0, "Failed to init scripting engine.", "Error", MB_OK|MB_ICONERROR);
-		JsShutDown();
+		ScriptEngine_ShutDown();
 	}
 
 	g_JsRunning = bOk;
@@ -931,6 +1385,36 @@ void ScriptEvent_OnGlEnd()
 
 	jsval y;
 	JS_CallFunctionValue(g_JsCx, g_JsGlobal, f, 0, NULL, &y);
+}
+
+
+void ScriptEvent_OnHudBegin()
+{
+	JSAutoCompartment ac(g_JsCx, g_JsGlobal);
+
+	jsval f;
+
+	if(!JS_GetProperty(g_JsCx, g_JsGlobal, "onHudBegin", &f) || JSVAL_IS_PRIMITIVE(f))
+		return;
+
+	jsval y;
+
+	JS_CallFunctionValue(g_JsCx, g_JsGlobal, f, 0, NULL, &y);
+}
+
+bool ScriptEvent_OnHudEnd()
+{
+	JSAutoCompartment ac(g_JsCx, g_JsGlobal);
+
+	jsval f;
+
+	if(!JS_GetProperty(g_JsCx, g_JsGlobal, "onHudEnd", &f) || JSVAL_IS_PRIMITIVE(f))
+		return false;
+
+	jsval y;
+	JS_CallFunctionValue(g_JsCx, g_JsGlobal, f, 0, NULL, &y);
+
+	return JS::ToBoolean(y);
 }
 
 bool ScriptEnvent_OnSwapBuffers(HDC hDC, BOOL & bSwapRes)

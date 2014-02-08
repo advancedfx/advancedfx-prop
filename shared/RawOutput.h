@@ -15,8 +15,7 @@ int CalcPitch(int width, unsigned char bytePerPixel, int byteAlignment);
 //	WriteRawTarga
 //
 //	Writes out prepared data to an tga file:
-//	This function assumes that the data is already coorectly
-//	packed and alligned in memory and that the given
+//	This function assumes that the given
 //	parameters are correct, no additional consistency checks
 //	are performed.
 //
@@ -31,7 +30,8 @@ int CalcPitch(int width, unsigned char bytePerPixel, int byteAlignment);
 bool WriteRawTarga(
 	unsigned char const * pData, wchar_t const * fileName,
 	unsigned short usWidth, unsigned short usHeight,
-	unsigned char ucBpp, bool bGrayScale
+	unsigned char ucBpp, bool bGrayScale,
+	int pitch
 );
 
 //	WriteRawBitmap

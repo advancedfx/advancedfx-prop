@@ -13,6 +13,8 @@ typedef void (*R_PushDlights_t)( void );
 
 R_RenderView_t g_Old_R_RenderView = 0;
 R_PushDlights_t g_R_PushDlights = 0;
+bool g_R_RenderViewCallFromEngine = true;
+bool g_R_RenderViewCalledFromEngine = false;
 
 // BEGIN from ID Software's Quake 1 Source:
 
@@ -79,6 +81,8 @@ void New_R_RenderView(void)
 
 	g_Old_R_RenderView();
 
+	if(g_R_RenderViewCallFromEngine) g_R_RenderViewCalledFromEngine = true;
+
 	// restore original values
 	memcpy (p_r_refdef->vieworg,oldorigin,3*sizeof(float));
 	memcpy (p_r_refdef->viewangles,oldangles,3*sizeof(float));
@@ -86,17 +90,22 @@ void New_R_RenderView(void)
 
 void Additional_R_RenderView(void)
 {
-	cl_entity_t *e;
+	g_R_RenderViewCallFromEngine = false;
 
-	if((e = pEngfuncs->GetEntityByIndex(0)) && e->model)
+	if(g_R_RenderViewCalledFromEngine)
 	{
-		// only when not NULL worldmodel.
-
 		// repush dynamic lights, so flashlight won't be off:
 		g_R_PushDlights();
 
 		New_R_RenderView();
 	}
+
+	g_R_RenderViewCallFromEngine = true;
+}
+
+void Reset_R_RenderViewCalledFromEngine()
+{
+	g_R_RenderViewCalledFromEngine = false;
 }
 
 void Hook_R_RenderView()

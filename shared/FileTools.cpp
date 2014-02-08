@@ -12,15 +12,18 @@
 
 #include <windows.h>
 
-
+// TODO: this needs to be checked for errors:
+// There are probably errors when takeDigits is 0 or when all digits are taken.
 bool SuggestTakePath(wchar_t const * takePath, int takeDigits, std::wstring & outPath)
 {
 	bool bOk;
 	LPWSTR buf = NULL;
-	size_t bufLen = wcslen(takePath) +takeDigits +1;
+	size_t bufLen;
 
 	if(takeDigits < 0)
 		takeDigits = 0;
+
+	bufLen = wcslen(takePath) +takeDigits +1;
 
 	bOk =
 		0 != (buf = (LPWSTR)malloc(sizeof(WCHAR)*bufLen))

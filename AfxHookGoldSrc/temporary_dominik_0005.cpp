@@ -67,3 +67,8 @@ REGISTER_DEBUGCMD_FUNC(tst_demotime)
 
 	pEngfuncs->Con_Printf("DemoTime: %f\n", demoTime);
 }
+
+REGISTER_DEBUGCMD_FUNC(tst_isspectateonly)
+{
+	pEngfuncs->Con_Printf(" pEngfuncs->IsSpectateOnly: %s\n", pEngfuncs->IsSpectateOnly() ? "true" : "false");
+}

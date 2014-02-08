@@ -20,7 +20,7 @@ HMODULE WINAPI new_LoadLibraryA( LPCSTR lpLibFileName )
 		// (we cannot do this in DllMain, because that
 		// attachment happens on a different thread).
 		// JS_GC() will crash when run from a different thread.
-		JsStartUp();
+		ScriptEngine_StartUp();
 	}
 
 

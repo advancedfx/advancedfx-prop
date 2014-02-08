@@ -20,6 +20,17 @@ Description : see mdt_gltools.h
 #include "mdt_media.h"
 #include "supportrender.h"
 
+void LinearizeFloatDepthBuffer(GLfloat *pBuffer, unsigned int count, GLdouble zNear, GLdouble zFar);
+void InverseFloatDepthBuffer(GLfloat *pBuffer, unsigned int count, GLdouble zNear, GLdouble zFar);
+void LogarithmizeDepthBuffer(GLfloat *pBuffer, unsigned int count, GLdouble zNear, GLdouble zFar);
+void DebugDepthBuffer(GLfloat *pBuffer, unsigned int count);
+void SliceDepthBuffer(GLfloat *pBuffer, unsigned int count, GLfloat sliceLo, GLfloat sliceHi);
+
+// Constraints: 
+// - assumes the GLfloat buffer to contain values in [0.0f,1.0f] v
+// - assumes GLfloat to conform with IEEE 754-2008 binary32
+// - componentBytes \in 1,2,3
+void GLfloatArrayToXByteArray(GLfloat *pBuffer, unsigned int width, unsigned int height, unsigned char componentBytes);
 
 
 enum FILMING_BUFFER { FB_COLOR, FB_DEPTH, FB_ALPHA };

@@ -3,6 +3,22 @@
 
 <changelog>
 
+
+<release>
+<name>HLAE</name>
+<version>2.3.13.3</version>
+<time>2014-02-08T12:21Z</time>
+<changes>
+<change type="updated">
+Included AfxHookSource 0.0.4.3 (2014-02-08T12:20Z).
+</change>
+<change type="fixed">
+Fixed __mirv_demozoom set being incorectly labelled in the command help.
+</change>
+</changes>
+</release>
+
+
 <release>
 <name>HLAE</name>
 <version>2.3.13.2</version>

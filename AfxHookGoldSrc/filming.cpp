@@ -1925,7 +1925,7 @@ void FilmingStream::Print(unsigned char const * data)
 	if( m_Bmp )
 		WriteRawBitmap(data, os.str().c_str(), m_Width, m_Height, m_BytesPerPixel<<3, m_Pitch); // align is still 4 byte probably
 	else
-		WriteRawTarga(data, os.str().c_str(), m_Width, m_Height, m_BytesPerPixel<<3, !bColor);
+		WriteRawTarga(data, os.str().c_str(), m_Width, m_Height, m_BytesPerPixel<<3, !bColor, m_Pitch);
 
 	m_FrameCount++;
 }

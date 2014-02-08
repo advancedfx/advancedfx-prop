@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2013-12-27 dominik.matrixstorm.com
+// 2014-01-08 dominik.matrixstorm.com
 //
 // First changes
 // 2009-11-16 dominik.matrixstorm.com

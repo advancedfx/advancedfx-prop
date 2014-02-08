@@ -186,18 +186,6 @@
     <ClCompile Include="..\shared\vcpp\AfxAddr.cpp">
       <Filter>shared\vcpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\vcpp\Data.cpp">
-      <Filter>shared\vcpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\vcpp\GlImage.cpp">
-      <Filter>shared\vcpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\vcpp\Image.cpp">
-      <Filter>shared\vcpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\vcpp\Ref.cpp">
-      <Filter>shared\vcpp</Filter>
-    </ClCompile>
     <ClCompile Include="hooks\hw\UnkDrawHud.cpp">
       <Filter>AfxHookGoldSrc\hooks\hw</Filter>
     </ClCompile>
@@ -223,6 +211,15 @@
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
     <ClCompile Include="scripting.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="AfxMemory.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="AfxGlImage.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="AfxImageUtils.cpp">
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
   </ItemGroup>
@@ -368,18 +365,6 @@
     <ClInclude Include="..\shared\vcpp\AfxAddr.h">
       <Filter>shared\vcpp</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\vcpp\Data.h">
-      <Filter>shared\vcpp</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\vcpp\GlImage.h">
-      <Filter>shared\vcpp</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\vcpp\Image.h">
-      <Filter>shared\vcpp</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\vcpp\Ref.h">
-      <Filter>shared\vcpp</Filter>
-    </ClInclude>
     <ClInclude Include="hooks\hw\UnkDrawHud.h">
       <Filter>AfxHookGoldSrc\hooks\hw</Filter>
     </ClInclude>
@@ -393,6 +378,15 @@
       <Filter>AfxHookGoldSrc\hooks</Filter>
     </ClInclude>
     <ClInclude Include="scripting.h">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="AfxMemory.h">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="AfxGlImage.h">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="AfxImageUtils.h">
       <Filter>AfxHookGoldSrc</Filter>
     </ClInclude>
   </ItemGroup>

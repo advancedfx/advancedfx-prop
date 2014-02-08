@@ -148,7 +148,8 @@ bool WriteRawTarga(
 	unsigned short usWidth,
 	unsigned short usHeight,
 	unsigned char ucBpp,
-	bool bGrayScale
+	bool bGrayScale,
+	int pitch
 )
 {
 	unsigned char ucBppCeilDiv8 =  (ucBpp & 0x07) ? (ucBpp >> 3)+1 : (ucBpp >> 3);
@@ -163,7 +164,17 @@ bool WriteRawTarga(
 		fwrite(szTgaheader, sizeof(unsigned char), 12, pFile);
 		fwrite(szHeader, sizeof(unsigned char), 6, pFile);
 
-		fwrite(pData, sizeof(unsigned char), usWidth * usHeight * ucBppCeilDiv8, pFile);
+		if(usWidth * ucBppCeilDiv8 == pitch)
+			// already packed
+			fwrite(pData, sizeof(unsigned char), usWidth * usHeight * ucBppCeilDiv8, pFile);
+		else
+		{
+			for(unsigned short i = 0; i<usHeight; i++)
+			{
+				fwrite(pData, sizeof(unsigned char), usWidth * ucBppCeilDiv8, pFile);
+				pData += pitch;
+			}
+		}
 
 		fclose(pFile);
 

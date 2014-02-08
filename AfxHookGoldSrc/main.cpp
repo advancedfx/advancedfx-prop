@@ -48,7 +48,7 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 
 			g_AfxGoldSrcComClient.Close();
 
-			JsShutDown();
+			ScriptEngine_ShutDown();
 
 			break;
 		}

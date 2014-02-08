@@ -114,11 +114,10 @@
   <ItemGroup>
     <ClCompile Include="..\shared\FileTools.cpp" />
     <ClCompile Include="..\shared\vcpp\AfxAddr.cpp" />
-    <ClCompile Include="..\shared\vcpp\Data.cpp" />
-    <ClCompile Include="..\shared\vcpp\GlImage.cpp" />
-    <ClCompile Include="..\shared\vcpp\Image.cpp" />
-    <ClCompile Include="..\shared\vcpp\Ref.cpp" />
     <ClCompile Include="AfxGoldSrcComClient.cpp" />
+    <ClCompile Include="AfxGlImage.cpp" />
+    <ClCompile Include="AfxImageUtils.cpp" />
+    <ClCompile Include="AfxMemory.cpp" />
     <ClCompile Include="aiming.cpp" />
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="camexport.cpp" />
@@ -185,11 +184,10 @@
   <ItemGroup>
     <ClInclude Include="..\shared\FileTools.h" />
     <ClInclude Include="..\shared\vcpp\AfxAddr.h" />
-    <ClInclude Include="..\shared\vcpp\Data.h" />
-    <ClInclude Include="..\shared\vcpp\GlImage.h" />
-    <ClInclude Include="..\shared\vcpp\Image.h" />
-    <ClInclude Include="..\shared\vcpp\Ref.h" />
     <ClInclude Include="AfxGoldSrcComClient.h" />
+    <ClInclude Include="AfxGlImage.h" />
+    <ClInclude Include="AfxImageUtils.h" />
+    <ClInclude Include="AfxMemory.h" />
     <ClInclude Include="aiming.h" />
     <ClInclude Include="camexport.h" />
     <ClInclude Include="camimport.h" />
