@@ -105,7 +105,14 @@ Locate SCR_UpdateScreen:
 01db52b9 a1c065d502      mov     eax,dword ptr [hw!qwglMakeCurrent+0x5c7ab4 (02d565c0)]
 01db52be bf05000000      mov     edi,offset <Unloaded_ud.drv>+0x4 (00000005)
 01db52c3 3bc7            cmp     eax,edi
-...
+01db52c5 7539            jne     hw!F+0xb7f0 (01db5300)
+01db52c7 833ddc9ad50202  cmp     dword ptr [hw!qwglMakeCurrent+0x5cafd0 (02d59adc)],2
+01db52ce 7530            jne     hw!F+0xb7f0 (01db5300)
+01db52d0 a1407dd802      mov     eax,dword ptr [hw!qwglMakeCurrent+0x5f9234 (02d87d40)]
+01db52d5 885dfc          mov     byte ptr [ebp-4],bl
+01db52d8 83f801          cmp     eax,1
+01db52db 7504            jne     hw!F+0xb7d1 (01db52e1)
+01db52dd c645fc01        mov     byte ptr [ebp-4],1
 01db52e1 53              push    ebx
 01db52e2 e8b9ebf8ff      call    hw+0x43ea0 (01d43ea0)
 01db52e7 8b4dfc          mov     ecx,dword ptr [ebp-4]
@@ -138,9 +145,9 @@ Locate SCR_UpdateScreen:
 01db5334 => 01d5c670 draws the crosshair
 01db5339 => 01d4f950 restores changes by GL_Set2D
 
-On 01db52e1, 01db5339 and 01db533e the stack pointer will be the same, thus we can detour
+On 01db52b4, 01db533e the stack pointer will be the same, thus we can detour
 near those points. Code in UnkDrawHud.cpp might need adjustment.
-We detour [01db52e1, 01db5339).
+We detour [01db52b4, 01db533e).
 
 01dbfc30 55              push    ebp
 01dbfc31 8bec            mov     ebp,esp

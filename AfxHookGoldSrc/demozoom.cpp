@@ -10,6 +10,11 @@
 extern cl_enginefuncs_s *pEngfuncs;
 
 
+// TODO: The detour would need to be updated when the game code changes and
+// depends on the modification selected. The GetProcAddress from
+// hw.dll to client.dll should be hooked instead, which would be less likely
+// to break.
+
 #define TYPE_ZOOM 1
 #define DTOURSZ_Demo_ReadBuffer 0x06
 

@@ -134,11 +134,11 @@ void Addresses_InitHwDll(AfxAddr hwDll)
 	// Rendering related:
 	//
 
-	AFXADDR_SET(UnkDrawHudInCall, hwDll +0x43EA0); // *[7]
-	AFXADDR_SET(UnkDrawHudOutCall, hwDll +0x5C670); // *[7]
-	AFXADDR_SET(UnkDrawHudIn, hwDll +0xB52E1); // *[7]
-	AFXADDR_SET(UnkDrawHudInContinue, AFXADDR_GET(UnkDrawHudIn) + 0x6); // *[7]
-	AFXADDR_SET(UnkDrawHudOut, hwDll +0xB5334); // *[7]
+	AFXADDR_SET(UnkDrawHudInCall, hwDll +0x4F780); // *[7]
+	AFXADDR_SET(UnkDrawHudOutCall, hwDll +0x4F950); // *[7]
+	AFXADDR_SET(UnkDrawHudIn, hwDll +0xB52B4); // *[7]
+	AFXADDR_SET(UnkDrawHudInContinue, AFXADDR_GET(UnkDrawHudIn) + 0x5); // *[7]
+	AFXADDR_SET(UnkDrawHudOut, hwDll +0xB5339); // *[7]
 	AFXADDR_SET(UnkDrawHudOutContinue, AFXADDR_GET(UnkDrawHudOut) + 0x5); // *[7]
 		
 	AFXADDR_SET(R_PushDlights, hwDll + 0x42290); // *[7]

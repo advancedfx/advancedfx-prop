@@ -755,6 +755,17 @@ Filming.prototype.onSwapBuffers = function(hDc)
 			this.activeStream = streams[i];
 			
 			additionalRRenderView();
+			
+			this.activeStream.capture();
+		}
+
+		for(var i=0, len=this.hudStreams.length; i<len; i++)
+		{
+			this.activeStream = hudStreams[i];
+			
+			additionalUnkDrawHud();
+			
+			this.activeStream.capture();
 		}
 		
 		this.activeStream = mainStream;

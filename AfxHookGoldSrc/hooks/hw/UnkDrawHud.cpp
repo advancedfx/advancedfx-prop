@@ -36,34 +36,45 @@ bool Wrapper_UnkDrawHudOut(void)
 	return b1 || b2;
 }
 
+DWORD g_New_UnkDrawHudIn_TempMem;
+
 __declspec(naked) void New_UnkDrawHudIn(void)
 {
-	Wrapper_UnkDrawHudIn();
+	__asm call Wrapper_UnkDrawHudIn
 
+	__asm mov al, g_UnkDrawHudCallFromEngine
+	__asm cmp al, 0
+	__asm jnz __ContinueJmp
+
+	__asm ; emulate prologue (since we are called as function):
 	__asm push ebx
+	__asm xor ebx, ebx
+	__asm mov ebp, offset g_New_UnkDrawHudIn_TempMem
+	__asm add ebp, 4
+
+	__asm __ContinueJmp:
 	__asm call [g_UnkDrawHudInCall]
-	__asm JMP [g_UnkDrawHudInContinue]
+	__asm jmp [g_UnkDrawHudInContinue]
 }
 
 __declspec(naked) void New_UnkDrawHudOut(void)
 {
 	__asm call [g_UnkDrawHudOutCall]
 	
-	__asm push eax
 	__asm call Wrapper_UnkDrawHudOut
 	__asm cmp al, 0
-	__asm pop eax
 	__asm jnz New_UnkDrawHudIn
 
-	__asm push eax
 	__asm mov al, g_UnkDrawHudCallFromEngine
 	__asm cmp al, 0
-	__asm pop eax
 	__asm jnz __ContinueJmp
+
+	__asm ; emulate epilogue (since we are called as function):
+	__asm pop ebx
 	__asm ret
 	
 	__asm __ContinueJmp:
-	__asm JMP [g_UnkDrawHudOutContinue]
+	__asm jmp [g_UnkDrawHudOutContinue]
 }
 
 void Additional_UnkDrawHud()
