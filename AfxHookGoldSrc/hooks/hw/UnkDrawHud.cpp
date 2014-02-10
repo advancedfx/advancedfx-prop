@@ -47,6 +47,7 @@ __declspec(naked) void New_UnkDrawHudIn(void)
 	__asm jnz __ContinueJmp
 
 	__asm ; emulate prologue (since we are called as function):
+	__asm push ebp
 	__asm push ebx
 	__asm xor ebx, ebx
 	__asm mov ebp, offset g_New_UnkDrawHudIn_TempMem
@@ -71,6 +72,7 @@ __declspec(naked) void New_UnkDrawHudOut(void)
 
 	__asm ; emulate epilogue (since we are called as function):
 	__asm pop ebx
+	__asm pop ebp
 	__asm ret
 	
 	__asm __ContinueJmp:
