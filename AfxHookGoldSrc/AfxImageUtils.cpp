@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2014-01-30 dominik.matrixstorm.com
+// 2014-02-11 dominik.matrixstorm.com
 //
 // First changes
 // 2014-01-30 dominik.matrixstorm.com
@@ -138,7 +138,7 @@ bool AfxImageUtils::WriteBitmap(AfxGlImage * image, wchar_t const * fileName)
 	unsigned char sizeComponent;
 	unsigned char numComponents;
 
-	switch(format)
+	switch(type)
 	{
 	case GL_UNSIGNED_BYTE:
 		sizeComponent = 1;
@@ -147,12 +147,9 @@ bool AfxImageUtils::WriteBitmap(AfxGlImage * image, wchar_t const * fileName)
 		return false;
 	}
 
-	switch(type)
+	switch(format)
 	{
 	case GL_DEPTH_COMPONENT:
-	case GL_RED:
-	case GL_GREEN:
-	case GL_BLUE:
 	case GL_ALPHA:
 	case GL_LUMINANCE:
 		// currently all those are treated as grey.

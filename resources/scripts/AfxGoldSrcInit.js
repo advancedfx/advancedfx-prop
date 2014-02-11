@@ -86,6 +86,10 @@ GL_RGBA            = 0x1908;
 GL_LUMINANCE       = 0x1909;
 GL_LUMINANCE_ALPHA = 0x190A;
 
+/* EXT_bgra */
+GL_BGR_EXT  = 0x80E0;
+GL_BGRA_EXT = 0x80E1;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -101,10 +105,23 @@ var GlModChannelMode = {
 	}
 };
 
-// reuse or define afxGlImage:
-if(undefined == afxGlImage)
+/**
+ * Converts a number to a string, with at least the given width b filling with '0' or the given z character
+ * @param n - number to convert
+ * @param width - minimum width
+ * @param z - zero character, optional
+ */
+function pad(n, width, z)
 {
-	afxGlImage = newAfxGlImage();
+	z = z || '0';
+	n = n + '';
+	return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+}
+
+// reuse or define afxGlImage:
+if(!this.afxGlImage)
+{
+	this.afxGlImage = newAfxGlImage();
 }
 
 
@@ -568,7 +585,7 @@ ProcArray.prototype.process = function()
 {
 	for(var i=0, len=this.array.length; i<len; i++)
 	{
-		array[i].process();
+		this.array[i].process();
 	}
 }
 
@@ -576,33 +593,34 @@ function ProcCapture(x, y, width, height, format, type)
 {
 	this.x = x;
 	this.y = y;
-	this.height = heigth;
+	this.width = width;
+	this.height = height;
 	this.format = format;
 	this.type = type;
 }
 
 ProcCapture.prototype.process = function()
 {
-	afxGlImage.glReadPixels(this.x, this.y, this.height, this.format, this.type);
+	afxGlImage.glReadPixels(this.x, this.y, this.width, this.height, this.format, this.type);
 }
 
 function newProcCaptureAlpha(x, y, width, height)
 {
-	return new ProcCapture(x, y, width, heihgt, GL_UNSIGNED_BYTE, GL_ALPHA);
+	return new ProcCapture(x, y, width, height, GL_ALPHA, GL_UNSIGNED_BYTE);
 }
 
 function newProcCaptureDepth(x, y, width, height)
 {
-	return new ProcCapture(x, y, width, heihgt, GL_FLOAT, GL_DEPTH_COMPONENT);
+	return new ProcCapture(x, y, width, height, GL_DEPTH_COMPONENT, GL_FLOAT);
 }
 
 function newProcCaptureRgb(x, y, width, height)
 {
-	return new ProcCapture(x, y, width, heihgt, GL_UNSIGNED_BYTE, GL_BGR_EXT);
+	return new ProcCapture(x, y, width, height, GL_BGR_EXT, GL_UNSIGNED_BYTE);
 }
 
 /**
- * @param nameFn - function that evaluates to string that determines the name
+ * @param nameFn - function that evaluates to string that determines the name (without file extension)
  */
 function ProcWriteBitmap(nameFn)
 {
@@ -611,7 +629,7 @@ function ProcWriteBitmap(nameFn)
 
 ProcWriteBitmap.prototype.process = function()
 {
-	afxGlImage.writeBitmap(this.nameFn());
+	afxGlImage.writeBitmap(this.nameFn()+'.bmp');
 }
 
 /**
@@ -625,7 +643,7 @@ function ProcTransDepthLinear(zNearFn,zFarFn)
 
 ProcTransDepthLinear.prototype.process = function()
 {
-	afxGlImage.linearizeFloatDepthBuffer(zNearFn(), zFarFn());
+	afxGlImage.linearizeFloatDepthBuffer(this.zNearFn(), this.zFarFn());
 }
 
 /**
@@ -639,8 +657,8 @@ function ProcTransDepthLog(zNearFn,zFarFn)
 
 ProcTransDepthLog.prototype.process = function()
 {
-	afxGlImage.linearizeFloatDepthBuffer(zNearFn(), zFarFn());
-	afxGlImage.logarithmizeFloatDepthBuffer(zNearFn(), zFarFn());
+	afxGlImage.linearizeFloatDepthBuffer(this.zNearFn(), this.zFarFn());
+	afxGlImage.logarithmizeFloatDepthBuffer(this.zNearFn(), this.zFarFn());
 }
 
 function ProcTransDepthByte()
@@ -652,45 +670,166 @@ ProcTransDepthByte.prototype.process = function()
 	afgGlImage.floatDepthBufferToByteBuffer();
 }
 
-function CapturePoint(filming,name,captureFn)
+// CapturePoint ////////////////////////////////////////////////////////////////
+
+function CapturePoint(name)
 {
-	this.captureFn = captureFn;
-	this.filming = filming;
+	this.capturePath = null;
 	this.frame = 0;
 	this.name = name;
-}
-
-CapturePoint.prototype.finish = function()
-{
-	print('FakeCapturePoint('+this.name+').finish');
+	this.proc = null;
 }
 
 CapturePoint.prototype.capture = function()
 {
-	print('FakeCapturePoint('+this.name+').capture: '+this.frame);
+	if(this.proc) this.proc.process();
 	
 	this.frame++;
 }
 
+CapturePoint.prototype.nameFn = function()
+{
+	return this.capturePath+'\\'+pad(this.frame, 5);
+}
+
+CapturePoint.prototype.startRecording = function(takePath)
+{
+	var wantPath = takePath+'\\'+this.name;
+	this.capturePath = createPath(wantPath);
+	
+	if(null == this.capturePath)
+	{
+		print('CapturePoint.startRecording error: createPath(\''+wantPath+'\') failed.');
+	}
+}
+
+CapturePoint.prototype.stopRecording = function()
+{
+}
+
+// Stream //////////////////////////////////////////////////////////////////////
+
+/**
+ * @param clearnFn - function to call for clearing
+ * @param capturePoints - array of CapturePoints to use.
+ * @param glMod - GlMod object to use, optional.
+ */
+function Stream(clearFn, capturePoints, glMod)
+{
+	this.capturePoints = capturePoints;
+	this.clearFn = clearFn;
+	this.glMod = glMod;
+}
+
+Stream.prototype.clear = function()
+{
+	this.clearFn();
+}
+
+Stream.prototype.capture = function()
+{
+	for(var i in this.capturePoints) this.capturePoints[i].capture();
+}
+
+Stream.prototype.hasCaptureName = function(name)
+{
+	var found = false;
+	
+	for(var i in this.capturePoints) found = found || this.capturePoints[i].name == name;
+	
+	return found;
+}
+
+Stream.prototype.onGlBegin = function(mode)
+{
+	if(this.glMod) glMod.onGlBegin(mode);
+};
+
+Stream.prototype.onGlEnd = function()
+{
+	if(this.glMod) glMod.onGlEnd();
+};
+
+Stream.prototype.startRecording = function(takePath)
+{
+	for(var i in this.capturePoints) this.capturePoints[i].startRecording(takePath);
+}
+
+Stream.prototype.stopRecording = function()
+{
+	for(var i in this.capturePoints) this.capturePoints[i].stopRecording();
+}
+
+
+
 // Filming /////////////////////////////////////////////////////////////////////
 
-function Filming()
+function Filming(path)
 {
 	this.mainStream = null;
 	this.streams = [];
 	this.hudStreams = [];
 	this.activeStream = null;
+	this.frameTime = 1.0/90.0;
 	this.recording = false;
+	this.recordSound = true;
+	this.recordingSound = false;
+	this.soundVolume = 0.4;
+	this.path = path;
+}
+
+/**
+ * Checks if a stream with give name already exists
+ */
+Filming.prototype.hasCaptureName = function(name)
+{
+	var bFound = false;
+		
+	if(this.mainStream) bFound = bFound || this.mainStream.hasCaptureName(name);
+	for(var i in this.streams) bFound = bFound || this.streams[i].hasCaptureName(name);
+	for(var i in this.hudStreams) bFound = bFound || this.hudStreams[i].hasCaptureName(name);
+	
+	return bFound;
 }
 
 Filming.prototype.startRecording = function()
 {
-	stopRecording();
+	this.stopRecording();
 	
-	if(this.mainStream) mainStream.startRecording();
-	for(var i in this.streams) i.startRecording();
-	for(var i in this.hudStreams) i.StartRecording();
+	var takePath = suggestTakePath(this.path+'\\take', 4);
 	
+	if(null == takePath)
+	{
+		print('Filming.startRecording error: suggestTakePath(\''+takePath+'\') failed.');
+		return;
+	}
+	
+	takePath = createPath(takePath);
+	
+	if(null == takePath)
+	{
+		print('Filming.startRecording error: createPath(\''+takePath+'\') failed.');
+		return;
+	}
+	
+	afxFilmingStart();
+	
+	hlCvarSetValue('host_framerate', this.frameTime);
+	
+	if(this.mainStream) mainStream.startRecording(takePath);
+	for(var i in this.streams) this.streams[i].startRecording(takePath);
+	for(var i in this.hudStreams) this.hudStreams[i].StartRecording(takePath);
+	
+	print('takePath = '+takePath);
+	
+	if(this.recordSound)
+	{
+		this.recordingSound = soundRecStart(takePath+'\\sound.wav', this.soundVolume);
+		if(!this.recordingSound) print('Filming.startRecording error: soundRecStart failed.');
+	}
+	
+	this.activeStream = this.mainStream;
+	this.recTime = 0.0;
 	this.recording = true;
 };
 
@@ -699,47 +838,48 @@ Filming.prototype.stopRecording = function()
 	if(!this.recording)
 		return;
 		
-	if(this.mainStream) mainStream.stopRecording();
-	for(var i in this.streams) i.stopRecording();
-	for(var i in this.hudStreams) i.stopRecording();
+	if(this.recordingSound)
+	{
+		soundRecStop();
+		this.recordingSound = false;
+	}
+	
+	if(this.mainStream) this.mainStream.stopRecording();
+	for(var i in this.streams) this.streams[i].stopRecording();
+	for(var i in this.hudStreams) this.hudStreams[i].stopRecording();
 
+	this.activeStream = null;
+	
+	hlCvarSetValue('host_framerate', 0);
+	
+	afxFilmingStop();
+	
 	this.recording = false;
 };
 
-Filming.prototype.previewStream = function(stream)
-{
-	
-};
-
-Filming.prototype.previewEnd = function()
-{
-	
-};
-
-
 Filming.prototype.finish = function()
 {
-	stopRecording();
+	this.stopRecording();
 };
 
 Filming.prototype.onGlBegin = function(mode)
 {
-	if(null != this.activeStream) this.activeStream.onGlBegin(mode);
+	if(this.activeStream) this.activeStream.onGlBegin(mode);
 };
 
 Filming.prototype.onGlEnd = function()
 {
-	if(null != this.activeStream) this.activeStream.onGlEnd();
+	if(this.activeStream) this.activeStream.onGlEnd();
 };
 
 Filming.prototype.onHudBegin = function()
 {
-	print('Filming.onHudBegin');
+	//print('Filming.onHudBegin');
 };
 
 Filming.prototype.onHudEnd = function()
 {
-	print('Filming.onHudEnd');
+	//print('Filming.onHudEnd');
 
 	return false;
 };
@@ -750,9 +890,18 @@ Filming.prototype.onSwapBuffers = function(hDc)
 	
 	if(this.recording)
 	{
+		this.recTime += this.frameTime;
+		
+		if(this.recordingSound) soundRecAdvance(this.recTime);
+	
+		cstrikeCrossHairBlock(true);
+		soundBlockChannels(true);
+	
 		for(var i=0, len=this.streams.length; i<len; i++)
 		{
-			this.activeStream = streams[i];
+			this.activeStream = this.streams[i];
+			
+			this.activeStream.clear();
 			
 			additionalRRenderView();
 			
@@ -761,18 +910,187 @@ Filming.prototype.onSwapBuffers = function(hDc)
 
 		for(var i=0, len=this.hudStreams.length; i<len; i++)
 		{
-			this.activeStream = hudStreams[i];
+			this.activeStream = this.hudStreams[i];
+			
+			this.activeStream.clear();
 			
 			additionalUnkDrawHud();
 			
 			this.activeStream.capture();
 		}
 		
-		this.activeStream = mainStream;
+		this.activeStream = this.mainStream;
+		
+		soundBlockChannels(false);
+		cstrikeCrossHairBlock(false);
+		
+		hlCvarSetValue('host_framerate', this.frameTime);
 	}
 	
 	return result;
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @param glMod - optional
+ */
+function easyRgbStream(name, glMod)
+{
+	var cap = new CapturePoint(name);
+	var nameFn = function() {
+		return cap.nameFn();
+	};
+	var proc = new ProcArray([
+		newProcCaptureRgb(0, 0, width, height),
+		new ProcWriteBitmap(nameFn)
+	]);
+	cap.proc = proc;
+	var clearFn = function() {
+		glClearColor(0.0, 0.0, 0.0, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	};
+	var stream = new Stream(clearFn, [cap], glMod);
+	
+	return stream;
+}
+
+/**
+ * @param glMod - optional
+ */
+function easyDepthStreamInverse(name, glMod)
+{
+	var cap = new CapturePoint(name);
+	var nameFn = function() {
+		return cap.nameFn();
+	};
+	var proc = new ProcArray([
+		newProcCaptureDepth(0, 0, width, height),
+		new ProcTransDepthByte(),
+		new ProcWriteBitmap(nameFn)
+	]);
+	cap.proc = proc;
+	var clearFn = function() {
+		glClearColor(0.0, 0.0, 0.0, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	};
+	var stream = new Stream(clearFn, [cap], glMod);
+	
+	return stream;
+}
+
+/**
+ * @param glMod - optional
+ */
+function easyDepthStreamLinear(name, glMod)
+{
+	var cap = new CapturePoint(name);
+	var nameFn = function() {
+		return cap.nameFn();
+	};
+	var proc = new ProcArray([
+		newProcCaptureDepth(0, 0, width, height),
+		new ProcTransDepthLinear(getZNear, getZFar),
+		new ProcTransDepthByte(),
+		new ProcWriteBitmap(nameFn)
+	]);
+	cap.proc = proc;
+	var clearFn = function() {
+		glClearColor(0.0, 0.0, 0.0, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	};
+	var stream = new Stream(clearFn, [cap], glMod);
+	
+	return stream;
+}
+
+/**
+ * @param glMod - optional
+ */
+function easyDepthStreamLog(name, glMod)
+{
+	var cap = new CapturePoint(name);
+	var nameFn = function() {
+		return cap.nameFn();
+	};
+	var proc = new ProcArray([
+		newProcCaptureDepth(0, 0, width, height),
+		new ProcTransDepthLog(getZNear, getZFar),
+		new ProcTransDepthByte(),
+		new ProcWriteBitmap(nameFn)
+	]);
+	cap.proc = proc;
+	var clearFn = function() {
+		glClearColor(0.0, 0.0, 0.0, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	};
+	var stream = new Stream(clearFn, [cap], glMod);
+	
+	return stream;
+}
+
+function easyHudColorStream(name)
+{
+	var cap = new CapturePoint(name);
+	var nameFn = function() {
+		return cap.nameFn();
+	};
+	var proc = new ProcArray([
+		newProcCaptureRgb(0, 0, width, height),
+		new ProcWriteBitmap(nameFn)
+	]);
+	cap.proc = proc;
+	var clearFn = function() {
+		glClearColor(0.0, 0.0, 0.0, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	};
+	var stream = new Stream(clearFn, [cap], null);
+	
+	return stream;
+}
+
+function easyHudAlphaStream(name)
+{
+	var cap = new CapturePoint(name);
+	var nameFn = function() {
+		return cap.nameFn();
+	};
+	var proc = new ProcArray([
+		newProcCaptureAlpha(0, 0, width, height),
+		new ProcWriteBitmap(nameFn)
+	]);
+	cap.proc = proc;
+	var clearFn = function() {
+		glClearColor(0.0, 0.0, 0.0, 0.0);
+		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	};
+	var stream = new Stream(clearFn, [cap], new GlModHudAlpha());
+	
+	return stream;
+}
+
+function checkStreamName(filming, stream)
+{
+	for(var i in stream.capturePoints)
+	{
+		if(filming.hasCaptureName(stream.capturePoints[i].name))
+			throw new Error('Filming object already has a stream with a CapturePoint named \''+i.name+'\'.');
+	}
+}
+
+function addStream(filming, stream)
+{
+	checkStreamName(filming, stream);
+	
+	filming.streams[filming.streams.length] = stream;
+}
+
+function addHudStream(filming, stream)
+{
+	checkStreamName(filming, stream);
+	
+	filming.hudStreams[filming.hudStreams.length] = stream;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -802,6 +1120,8 @@ function finishFilming(filming)
 
 /*
 
+Some notes to myself:
+
 - Capture Points: possibly onEvent
 - additonal render passes (R_RenderView)
 - main render pass (SwapBuffers)
@@ -822,7 +1142,10 @@ function finishFilming(filming)
    - Sampling object (float/byte)
    - File writing object (bmp/tga)
    - Transform object (i.e. transform GLfloat buffer into GLbyte buffer)
-   
-   Maybe for now we will just port FilmingStream (meaning all packed together into a single object to use)
 
 */
+
+// TODO: check for circular references, there are probably some:
+// Especially check nameFn referencing capture objects, being referenced by procs, which are inderectly referenced by the capture object
+
+// TODO: multiple capture points per stream (i.e. color and depth at the same time).

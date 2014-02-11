@@ -22,4 +22,4 @@ void ScriptEvent_OnGlBegin(unsigned int mode);
 void ScriptEvent_OnGlEnd();
 void ScriptEvent_OnHudBegin();
 bool ScriptEvent_OnHudEnd();
-bool ScriptEnvent_OnSwapBuffers(HDC hDC, BOOL & bSwapRes);
+bool ScriptEvent_OnSwapBuffers(HDC hDC, BOOL & bSwapRes);

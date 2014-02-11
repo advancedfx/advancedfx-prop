@@ -366,8 +366,14 @@ BOOL APIENTRY NewWglSwapBuffers(HDC hDC)
 	// Next viewport will be the first of the new frame
 	g_nViewports = 0;
 
-	if(ScriptEnvent_OnSwapBuffers(hDC, bResWglSwapBuffers))
+	if(ScriptEvent_OnSwapBuffers(hDC, bResWglSwapBuffers))
+	{
+		// reset call trackers:
+		Reset_R_RenderViewCalledFromEngine();
+		Reset_UnkDrawHudCalledFromEngine();
+
 		return bResWglSwapBuffers;
+	}
 
 	if (g_Filming.isFilming())
 	{

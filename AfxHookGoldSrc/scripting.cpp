@@ -3,21 +3,26 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2014-01-08 dominik.matrixstorm.com
+// 2014-02-11 dominik.matrixstorm.com
 //
 // First changes
 // 2009-11-16 dominik.matrixstorm.com
 
+// TODO: JS_ReportError before return JS_FALSE, so users actually see an
+// error and not only the program flow is interrupted.
+
 #include "scripting.h"
 
-#include <windows.h>
-#include <gl\gl.h>
+#include <Windows.h>
+#include <GL/GL.h>
 
 #include <hlsdk.h>
 
 #include "cmdregister.h"
 #include "hooks/HookHw.h"
 #include "hooks/OpenGl32Hooks.h"
+#include "hooks/user32Hooks.h"
+#include "hooks/client/cstrike/CrossHairFix.h"
 #include "hooks/hw/R_DrawEntitiesOnList.h"
 #include "hooks/hw/R_DrawParticles.h"
 #include "hooks/hw/R_DrawViewModel.h"
@@ -27,7 +32,9 @@
 #include "supportrender.h"
 #include "AfxGlImage.h"
 #include "AfxImageUtils.h"
+#include "film_sound.h"
 #include "filming.h"
+#include "AfxGoldSrcComClient.h"
 
 #include <shared/FileTools.h>
 #include <shared/StringTools.h>
@@ -389,8 +396,8 @@ AfxGlImage_writeBitmap(JSContext *cx, unsigned argc, JS::Value *vp)
 
 	JS_free(cx, c_str);
 
-	if(!bOk
-		&& AfxImageUtils::WriteBitmap(afxGlImage, wFileName.c_str()))
+	if(!(bOk
+		&& AfxImageUtils::WriteBitmap(afxGlImage, wFileName.c_str())))
 		return JS_FALSE;
 
 	args.rval().set(JSVAL_VOID);
@@ -431,6 +438,40 @@ AfxGlobal_additionalRRenderView(JSContext *cx, unsigned argc, JS::Value *vp)
 	JS::CallReceiver rec = JS::CallReceiverFromVp(vp);
 
 	Additional_R_RenderView();
+
+	rec.rval().set(JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
+AfxGlobal_afxFilmingStart(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+	JS::CallReceiver rec = JS::CallReceiverFromVp(vp);
+
+	g_AfxGoldSrcComClient.OnRecordStarting();
+
+	if(g_AfxGoldSrcComClient.GetOptimizeCaptureVis())
+		UndockGameWindowForCapture();
+
+	if (g_pSupportRender)
+		g_pSupportRender->hlaeOnFilmingStart();
+
+	rec.rval().set(JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
+AfxGlobal_afxFilmingStop(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+	JS::CallReceiver rec = JS::CallReceiverFromVp(vp);
+
+	if (g_pSupportRender)
+		g_pSupportRender->hlaeOnFilmingStop();
+
+	if(g_AfxGoldSrcComClient.GetOptimizeCaptureVis())
+		RedockGameWindow();
+
+	g_AfxGoldSrcComClient.OnRecordEnded();
 
 	rec.rval().set(JSVAL_VOID);
     return JS_TRUE;
@@ -480,6 +521,19 @@ AfxGlobal_createPath(JSContext *cx, unsigned argc, JS::Value *vp)
 
 	JS_free(cx, c_str);
 
+    return JS_TRUE;
+}
+
+static JSBool
+AfxGlobal_cstrikeCrossHairBlock(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(1 > args.length())
+		return JS_FALSE;
+
+	g_Cstrike_CrossHair_Block = JS::ToBoolean(args[0]);
+
+	args.rval().set(JSVAL_VOID);
     return JS_TRUE;
 }
 
@@ -1042,6 +1096,86 @@ AfxGlobal_print(JSContext *cx, unsigned argc, JS::Value *vp)
 }
 
 static JSBool
+AfxGlobal_soundBlockChannels(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(1 > args.length())
+		return JS_FALSE;
+
+	FilmSound_BlockChannels(JS::ToBoolean(args[0]));
+
+	args.rval().set(JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
+AfxGlobal_soundRecAdvance(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(1 > args.length())
+		return JS_FALSE;
+
+	double targetTime;
+
+	if(!JS::ToNumber(cx, args[0], &targetTime))
+		return JS_FALSE;
+
+	g_Filming.GetFilmSound()->AdvanceFrame((float)targetTime);
+
+	args.rval().set(JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
+AfxGlobal_soundRecStart(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(2 > args.length())
+		return JS_FALSE;
+
+	double volume;
+
+	if(!JS::ToNumber(cx, args[1], &volume))
+		return JS_FALSE;
+
+    JSString *str = JS_ValueToString(cx, args[0]);
+    if (!str)
+        return JS_FALSE;
+
+    char *c_str = JS_EncodeString(cx, str);
+	if(!c_str)
+		return JS_FALSE;
+
+	std::wstring wPath;
+
+	if(!AnsiStringToWideString(c_str, wPath))
+	{
+		JS_free(cx, c_str);
+		return JS_FALSE;
+	}
+
+	JS_free(cx, c_str);
+
+	bool result = g_Filming.GetFilmSound()->Start(wPath.c_str(), 0, (float)volume);
+
+	args.rval().set(BOOLEAN_TO_JSVAL(result));
+    return JS_TRUE;
+}
+
+static JSBool
+AfxGlobal_soundRecStop(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+	if(0 > args.length())
+		return JS_FALSE;
+
+	g_Filming.GetFilmSound()->Stop();
+
+	args.rval().set(JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
 AfxGlobal_suggestTakePath(JSContext *cx, unsigned argc, JS::Value *vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
@@ -1124,7 +1258,10 @@ AfxGlobal_testObject(JSContext *cx, unsigned argc, JS::Value *vp)
 static JSFunctionSpec AfxGlobal_functions[] = {
     JS_FS("additionalRRenderView", AfxGlobal_additionalRRenderView, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
     JS_FS("additionalUnkDrawHud", AfxGlobal_additionalUnkDrawHud, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("afxFilmingStart", AfxGlobal_afxFilmingStart, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("afxFilmingStop", AfxGlobal_afxFilmingStop, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
     JS_FS("createPath", AfxGlobal_createPath, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("cstrikeCrossHairBlock", AfxGlobal_cstrikeCrossHairBlock, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
     JS_FS("gc", AfxGlobal_gc, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
     JS_FS("getZFar", AfxGlobal_getZFar, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
     JS_FS("getZNear", AfxGlobal_getZNear, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
@@ -1150,6 +1287,10 @@ static JSFunctionSpec AfxGlobal_functions[] = {
     JS_FS("newAfxGlImage", AfxGlobal_newAfxGlImage, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
     JS_FS("newTestObject", AfxGlobal_testObject, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
     JS_FS("print", AfxGlobal_print, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("soundBlockChannels", AfxGlobal_soundBlockChannels, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("soundRecAdvance", AfxGlobal_soundRecAdvance, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("soundRecStart", AfxGlobal_soundRecStart, 2, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
+    JS_FS("soundRecStop", AfxGlobal_soundRecStop, 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
     JS_FS("suggestTakePath", AfxGlobal_suggestTakePath, 2, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
     JS_FS("swapBuffers", AfxGlobal_swapBuffers, 1, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_READONLY),
     JS_FS_END
@@ -1170,6 +1311,15 @@ static JSBool
 AfxGlobal_hasGlArbMultiTexture_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
 {
 	vp.set(g_Has_GL_ARB_multitexture ? JSVAL_TRUE : JSVAL_FALSE);
+    return JS_TRUE;
+}
+
+static JSBool
+AfxGlobal_height_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
+{
+	int value = g_AfxGoldSrcComClient.GetHeight();
+
+	vp.set(JS_NumberValue(value));
     return JS_TRUE;
 }
 
@@ -1232,9 +1382,20 @@ AfxGlobal_scriptFolder_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
     return true;
 }
 
+static JSBool
+AfxGlobal_width_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
+{
+	int value = g_AfxGoldSrcComClient.GetWidth();
+
+	vp.set(JS_NumberValue(value));
+    return JS_TRUE;
+}
+
+
 static JSPropertySpec  AfxGlobal_properties[] = {
 	{"currentEntityIndex", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(AfxGlobal_currentEntityIndex_get), JSOP_NULLWRAPPER},
 	{"hasGlArbMultiTexture", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(AfxGlobal_hasGlArbMultiTexture_get), JSOP_NULLWRAPPER},
+	{"height", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(AfxGlobal_height_get), JSOP_NULLWRAPPER},
 	{"inRDrawEntitiesOnList", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(AfxGlobal_inRDrawEntitiesOnList_get), JSOP_NULLWRAPPER},
 	{"inRDrawParticles", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(AfxGlobal_inRDrawParticles_get), JSOP_NULLWRAPPER},
 	{"inRDrawViewModel", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(AfxGlobal_inRDrawViewModel_get), JSOP_NULLWRAPPER},
@@ -1246,6 +1407,7 @@ static JSPropertySpec  AfxGlobal_properties[] = {
 	{"onHudEnd", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER},
 	{"onSwapBuffers", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER},
 	{"scriptFolder", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(AfxGlobal_scriptFolder_get), JSOP_NULLWRAPPER},
+	{"width", 0, JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED|JSPROP_READONLY, JSOP_WRAPPER(AfxGlobal_width_get), JSOP_NULLWRAPPER},
 	{0, 0, 0, 0, 0}
 };
 
@@ -1417,7 +1579,7 @@ bool ScriptEvent_OnHudEnd()
 	return JS::ToBoolean(y);
 }
 
-bool ScriptEnvent_OnSwapBuffers(HDC hDC, BOOL & bSwapRes)
+bool ScriptEvent_OnSwapBuffers(HDC hDC, BOOL & bSwapRes)
 {
 	JSAutoCompartment ac(g_JsCx, g_JsGlobal);
 

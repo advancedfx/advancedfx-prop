@@ -1520,7 +1520,6 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 	m_nFrames++;
 	m_time += frameDuration;
 	
-	float flNextFrameDuration = frameDuration;
 	pEngfuncs->Cvar_SetValue("host_framerate", frameDuration);
 
 	_bRecordBuffers_FirstCall = true;

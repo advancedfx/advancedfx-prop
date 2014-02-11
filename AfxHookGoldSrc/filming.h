@@ -102,6 +102,7 @@ public:
 	void FullClear();
 
 	MATTE_METHOD GetMatteMethod();
+	CFilmSound * GetFilmSound() { return &_FilmSound; }
 
 	void SupplySupportRenderer(CHlaeSupportRender *pSupportRender)
 	{
