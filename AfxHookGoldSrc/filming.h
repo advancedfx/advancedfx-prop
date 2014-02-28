@@ -10,7 +10,6 @@ Description : see mdt_gltools.h
 #include <windows.h>
 
 #include <gl\gl.h>
-#include <gl\glu.h>
 
 #include <list>
 #include <string>

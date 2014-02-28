@@ -6,6 +6,23 @@
 
 <release>
 <name>HLAE</name>
+<version>2.3.14.0</version>
+<time>2014-02-28T17:51Z</time>
+<changes>
+<change type="added">
+Added __mirv_force_players_solid, which can be 0 (default) or 1. Set to 1 if you have HLTV recordings on KZ maps
+with Kreetz plugins that force the players to be not solid. Setting to 1 allows them to be spectated normally
+(which would not work otherwise). Might allow to spectate dead players lol.
+</change>
+</changes>
+<comments>
+Greetings to [ru]Evgeny and HLAE crew (#hlae on QuakeNet.org).
+</comments>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.3.13.3</version>
 <time>2014-02-08T12:21Z</time>
 <changes>

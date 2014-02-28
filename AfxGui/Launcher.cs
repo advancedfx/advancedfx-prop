@@ -5,7 +5,7 @@ namespace AfxGui {
 
 class Launcher
 {
-    public static bool RunLauncher(IWin32Window dialogOwner, ScrollableControl gameWindowParent)
+    public static bool RunLauncher(IWin32Window dialogOwner, Afx.AfxGoldSrc afxGoldSrc)
     {
         bool bOk;
 
@@ -24,9 +24,7 @@ class Launcher
             {
                 frm.WriteToConfig(cfg);
 
-                Afx.AfxGoldSrc ag = GlobalAfxGoldSrc.GetInstanceOrCreate();
-
-                bOk = ag.Start(cfg.MakeStartSettings(gameWindowParent));
+                bOk = afxGoldSrc.Start(cfg.MakeStartSettings());
 
                 if (!bOk)
                     MessageBox.Show("Launching failed.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);

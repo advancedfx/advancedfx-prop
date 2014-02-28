@@ -1,7 +1,7 @@
 ﻿// Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2013-05-06 by dominik.matrixstorm.com
+// 2014-02-12 by dominik.matrixstorm.com
 //
 // First changes:
 // 2009-12-06 by dominik.matrixstorm.com
@@ -43,7 +43,6 @@ class AfxGoldSrc : IDisposable
         public String CustomLaunchOptions;
         public bool ForceRes;
         public bool FullScreen;
-        public ScrollableControl GameWindowParent;
         public String HalfLifePath;
         public uint Height;
         public String Modification;
@@ -52,7 +51,6 @@ class AfxGoldSrc : IDisposable
         public uint Width;
 
         public StartSettings(
-            ScrollableControl gameWindowParent,
             String halfLifePath,
             String modification
         )
@@ -62,7 +60,6 @@ class AfxGoldSrc : IDisposable
             CustomLaunchOptions = "";
             ForceRes = true;
             FullScreen = false;
-            GameWindowParent = gameWindowParent;
             HalfLifePath = halfLifePath;
             Height = 480;
             Modification = modification;
@@ -72,9 +69,9 @@ class AfxGoldSrc : IDisposable
         }
     }
 
-    public AfxGoldSrc()
+    public AfxGoldSrc(MainForm mainForm)
     {
-        m_DoUpdateWindowSize = new DoUpdateWindowSizeDelegate(DoUpdateWindowSize);
+        m_MainForm = mainForm;
 
         m_PipeComServer = new PipeComServer();
     }
@@ -141,7 +138,6 @@ class AfxGoldSrc : IDisposable
 	    //
 	    // Launch:
 
-        m_GameWindowParentHandle = startSettings.GameWindowParent.Handle;
         m_StartSettings = startSettings;
 
         StartServer();
@@ -167,7 +163,6 @@ class AfxGoldSrc : IDisposable
     {
         StopServer();
 
-        m_GameWindowParentHandle = IntPtr.Zero;
         m_StartSettings = null;
     }
 
@@ -206,15 +201,12 @@ class AfxGoldSrc : IDisposable
 	    MemoryDc
     };
 
-    delegate void DoUpdateWindowSizeDelegate(int width, int height);
-
     const int COM_VERSION = 0;
 
     CameraSplines m_CameraSplines = new CameraSplines();
     bool m_Disposed;
-    IntPtr m_GameWindowParentHandle;
+    MainForm m_MainForm;
     PipeComServer m_PipeComServer;
-    DoUpdateWindowSizeDelegate m_DoUpdateWindowSize;
     StartSettings m_StartSettings;
     bool m_ServerShutdown;
     Thread m_ServerThread;
@@ -315,18 +307,12 @@ class AfxGoldSrc : IDisposable
         SendMessage(ServerMessage.EOT);
     }
 
-
     void ClientMessage_UpdateWindowSize()
     {
 	    int width, height;
 
         width = m_PipeComServer.ReadInt32();
         height = m_PipeComServer.ReadInt32();
-
-        m_StartSettings.GameWindowParent.Invoke(
-            m_DoUpdateWindowSize,
-            new object[] { width, height }
-        );
     }
 
     IntPtr DoGetHandle(IWin32Window window)
@@ -334,10 +320,6 @@ class AfxGoldSrc : IDisposable
         return window.Handle;
     }
 
-    void DoUpdateWindowSize(int width, int height)
-    {
-	    m_StartSettings.GameWindowParent.AutoScrollMinSize = new System.Drawing.Size(width, height);
-    }
 
     ClientMessage RecvMessage()
     {
@@ -362,7 +344,7 @@ class AfxGoldSrc : IDisposable
         m_PipeComServer.Write((Boolean)m_StartSettings.Alpha8);
         m_PipeComServer.Write((Boolean)m_StartSettings.FullScreen);
         m_PipeComServer.Write((Boolean)m_StartSettings.OptWindowVisOnRec);
-        m_PipeComServer.Write((Int32)m_GameWindowParentHandle.ToInt32());
+        m_PipeComServer.Write((Int32)0); // GameWindowParentHandle not supported atm
         m_PipeComServer.Write((Int32)m_StartSettings.RenderMode);
 
 	    return true;

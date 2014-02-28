@@ -52,8 +52,8 @@
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>./;../;C:\Libraries;C:\Libraries\halflife\common;C:\Libraries\halflife\engine;C:\Libraries\halflife\pm_shared;C:\Libraries\halflife\public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;_BIND_TO_CURRENT_CRT_VERSION=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>./;../;C:\Libraries;C:\Libraries\halflife\common;C:\Libraries\halflife\engine;C:\Libraries\halflife\pm_shared;C:\Libraries\halflife\public;C:\Libraries\libRocket\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;_BIND_TO_CURRENT_CRT_VERSION=1;AFX_GUI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -62,7 +62,7 @@
     </ClCompile>
     <Link>
       <OutputFile>$(OutDir)AfxHookGoldSrc.dll</OutputFile>
-      <AdditionalLibraryDirectories>C:\Libraries\js\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Libraries\js\lib;C:\Libraries\libRocket\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(OutDir)AfxHookGoldSrc.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
@@ -83,7 +83,7 @@
       </Command>
     </PreBuildEvent>
     <ClCompile>
-      <AdditionalIncludeDirectories>./;../;C:\Libraries;C:\Libraries\halflife\common;C:\Libraries\halflife\engine;C:\Libraries\halflife\pm_shared;C:\Libraries\halflife\public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;../;C:\Libraries;C:\Libraries\halflife\common;C:\Libraries\halflife\engine;C:\Libraries\halflife\pm_shared;C:\Libraries\halflife\public;C:\Libraries\libRocket\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;_BIND_TO_CURRENT_CRT_VERSION=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -93,7 +93,7 @@
     </ClCompile>
     <Link>
       <OutputFile>$(OutDir)AfxHookGoldSrc.dll</OutputFile>
-      <AdditionalLibraryDirectories>C:\Libraries\js\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Libraries\js\lib;C:\Libraries\libRocket\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -132,8 +132,14 @@
     <ClCompile Include="EasySampler.cpp" />
     <ClCompile Include="film_sound.cpp" />
     <ClCompile Include="filming.cpp" />
+    <ClCompile Include="forcePlayersSolid.cpp" />
     <ClCompile Include="fx_noblend.cpp" />
     <ClCompile Include="GlPrimMods.cpp" />
+    <ClCompile Include="gui\Gui.cpp" />
+    <ClCompile Include="gui\GuiFileInterface.cpp" />
+    <ClCompile Include="gui\GuiRenderInterfaceOpenGL.cpp" />
+    <ClCompile Include="gui\GuiSystemInterface.cpp" />
+    <ClCompile Include="hlaeFolder.cpp" />
     <ClCompile Include="hl_addresses.cpp" />
     <ClCompile Include="HltvFix.cpp" />
     <ClCompile Include="hooks\client\cstrike\CrossHairFix.cpp" />
@@ -197,6 +203,11 @@
     <ClInclude Include="film_sound.h" />
     <ClInclude Include="filming.h" />
     <ClInclude Include="GlPrimMods.h" />
+    <ClInclude Include="gui\Gui.h" />
+    <ClInclude Include="gui\GuiFileInterface.h" />
+    <ClInclude Include="gui\GuiRenderInterfaceOpenGL.h" />
+    <ClInclude Include="gui\GuiSystemInterface.h" />
+    <ClInclude Include="hlaeFolder.h" />
     <ClInclude Include="hl_addresses.h" />
     <ClInclude Include="hlsdk.h" />
     <ClInclude Include="HltvFix.h" />

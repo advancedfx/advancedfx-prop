@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2014-02-11 dominik.matrixstorm.com
+// 2014-02-12 dominik.matrixstorm.com
 //
 // First changes
 // 2009-11-16 dominik.matrixstorm.com
@@ -35,6 +35,7 @@
 #include "film_sound.h"
 #include "filming.h"
 #include "AfxGoldSrcComClient.h"
+#include "hlaeFolder.h"
 
 #include <shared/FileTools.h>
 #include <shared/StringTools.h>
@@ -45,7 +46,6 @@
 #include <script.h>
 
 #define SCRIPT_FOLDER "scripts\\"
-#define DLL_NAME	"AfxHookGoldSrc.dll"
 
 std::string g_ScriptFolder("");
 
@@ -444,6 +444,17 @@ AfxGlobal_additionalRRenderView(JSContext *cx, unsigned argc, JS::Value *vp)
 }
 
 static JSBool
+AfxGlobal_additionalUnkDrawHud(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+	JS::CallReceiver rec = JS::CallReceiverFromVp(vp);
+
+	Additional_UnkDrawHud();
+
+	rec.rval().set(JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
 AfxGlobal_afxFilmingStart(JSContext *cx, unsigned argc, JS::Value *vp)
 {
 	JS::CallReceiver rec = JS::CallReceiverFromVp(vp);
@@ -472,17 +483,6 @@ AfxGlobal_afxFilmingStop(JSContext *cx, unsigned argc, JS::Value *vp)
 		RedockGameWindow();
 
 	g_AfxGoldSrcComClient.OnRecordEnded();
-
-	rec.rval().set(JSVAL_VOID);
-    return JS_TRUE;
-}
-
-static JSBool
-AfxGlobal_additionalUnkDrawHud(JSContext *cx, unsigned argc, JS::Value *vp)
-{
-	JS::CallReceiver rec = JS::CallReceiverFromVp(vp);
-
-	Additional_UnkDrawHud();
 
 	rec.rval().set(JSVAL_VOID);
     return JS_TRUE;
@@ -1439,27 +1439,8 @@ NewGlobalObject(JSContext *cx)
 
 void SetScriptFolder()
 {
-	char hookPath[1025];
-	bool bCfgres = false;
-	HMODULE hHookDll = GetModuleHandle(DLL_NAME);
-
-	hookPath[0]=NULL;
-	
-	if (hHookDll)
-	{
-		GetModuleFileName(hHookDll, hookPath, sizeof(hookPath)/sizeof(*hookPath) -1);
-
-		std::string strFolder(hookPath);
-		size_t fp = strFolder.find_last_of('\\');
-		if(std::string::npos != fp)
-		{
-			strFolder.resize(fp+1);
-		}
-
-		strFolder += SCRIPT_FOLDER;
-
-		g_ScriptFolder = strFolder;
-	}
+	g_ScriptFolder.assign(GetHlaeFolder());
+	g_ScriptFolder += SCRIPT_FOLDER;
 }
 
 bool ScriptEngine_Execute(char const * script) {

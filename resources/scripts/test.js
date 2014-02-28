@@ -3,7 +3,11 @@ this.finishFunc = null;
 var filming = new Filming('testRec');
 
 {
-	addStream(filming, easyRgbStream('rgb', null));
+	addStream(filming, easyStream(
+		easyClearFnAll(0.0, 0.0, 0.0),
+		[easyCaptureRgb('rgb')],
+		null
+	));
 	
 	hookFilming(filming);
 		

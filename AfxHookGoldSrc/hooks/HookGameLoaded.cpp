@@ -2,6 +2,10 @@
 
 #include "HookGameLoaded.h"
 
+#ifdef AFX_GUI
+#include "../gui/Gui.h"
+#endif // AFX_GUI
+
 #include "../mirv_commands.h"
 #include "../cmdregister.h"
 #include "../cmd_tools.h"
@@ -172,6 +176,11 @@ void HookGameLoaded()
 
 	// Now is a good time to install OpenGl extensions:
 	Install_All_Gl_Extensions();
+
+#ifdef AFX_GUI
+	// Install Gui
+	AfxGui_Init();
+#endif // AFX_GUI
 
 	// Register commands amd Cvars (may not be used beforehand):
 	AfxRegisterCommands();

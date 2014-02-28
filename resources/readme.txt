@@ -38,17 +38,33 @@ Credits:
 In addition to the mentions in the changelog we want to credit the following
 people, companies or organizations:
 
+FreeType
+  Portions of this software are copyright © 2012 The FreeType
+  Project (www.freetype.org).  All rights reserved.
+
 Microsoft
-  for VC++, MSDN Library, ...
+  For VC++, MSDN Library, ... .
   http://www.microsoft.com/
   
+Mozilla
+  For SpiderMonkey.
+  http://www.mozilla.org/
+  
+SourceForge
+  For hosting the project.
+  http://sourceforge.net/
+  
 Valve
-  for HLSDK
+  For HLSDK.
   http://www.valvesoftware.com/
   
 id Software
-  for Quake 1 source code
+  For Quake 1 source code.
   http://www.idsoftware.com/
+  
+libRocket
+  For libRocket
+  http://librocket.com/
 
 And everyone that feels he/she/it should have been mentioned here.
 

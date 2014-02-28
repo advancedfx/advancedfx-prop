@@ -12,7 +12,6 @@
 #include <windows.h>
 
 #include <gl\gl.h>
-#include <gl\glu.h>
 #include <shared\ogl\glext.h>
 
 #include <hlsdk.h>
@@ -679,7 +678,7 @@ BOOL CHlaeSupportRender::_SwapBuffers_RT_FRAMEBUFFEROBJECT (HDC hGameWindowDC)
 		glMatrixMode(GL_PROJECTION);
 		glPushMatrix();
 		glLoadIdentity();
-		gluOrtho2D(0, _iWidth, _iHeight, 0);
+		glOrtho(0, _iWidth, _iHeight, 0, -1, 1);
 
 		// Back to model for rendering
 		glMatrixMode(GL_MODELVIEW);

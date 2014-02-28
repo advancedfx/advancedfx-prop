@@ -4,6 +4,8 @@
 
 #include <shared/detours.h>
 
+#include <halflife/external/SDL2/SDL.h>
+
 #include "HookHw.h"
 #include "OpenGl32Hooks.h"
 #include "gdi32Hooks.h"
@@ -21,7 +23,9 @@
 #include "hw/UnkDrawHud.h"
 
 #include "../hl_addresses.h"
-
+#ifdef AFX_GUI
+#include "../gui/Gui.h"
+#endif // AFX_GUI
 
 struct cl_enginefuncs_s * pEngfuncs		= (struct cl_enginefuncs_s *)0;
 struct engine_studio_api_s * pEngStudio	= (struct engine_studio_api_s *)0;
@@ -80,6 +84,52 @@ void *New_SDL_GL_GetProcAddress(const char* proc)
 	return g_Old_SDL_GL_GetProcAddress(proc);
 }
 
+typedef int (*SDL_SetRelativeMouseMode_t) (SDL_bool enabled);
+SDL_SetRelativeMouseMode_t g_Old_SDL_SetRelativeMouseMode;
+
+int New_SDL_SetRelativeMouseMode(SDL_bool enabled)
+{
+	return g_Old_SDL_SetRelativeMouseMode(enabled);
+}
+
+typedef int (*SDL_WaitEventTimeout_t)(SDL_Event* event,int timeout);
+SDL_WaitEventTimeout_t g_Old_SDL_WaitEventTimeout;
+
+int New_SDL_WaitEventTimeout(SDL_Event* event,int timeout)
+{
+#ifdef AFX_GUI
+	int result;
+	bool handled = false;
+
+	while(0 != (result = g_Old_SDL_WaitEventTimeout(event, handled ? 0 : timeout))
+		&& (handled = AfxGui_HandleSdlEvent(event)))
+	;
+
+	return result;
+#else
+	return g_Old_SDL_WaitEventTimeout(event, timeout);
+#endif // AFX_GUI
+}
+
+typedef int (*SDL_PollEvent_t)(SDL_Event* event);
+SDL_PollEvent_t g_Old_SDL_PollEvent;
+
+int New_SDL_PollEvent(SDL_Event* event)
+{
+#ifdef AFX_GUI
+	int result;
+	bool handled = false;
+
+	while(0 != (result = g_Old_SDL_PollEvent(event))
+		&& (handled = AfxGui_HandleSdlEvent(event)))
+	;
+
+	return result;
+#else
+	return g_Old_SDL_PollEvent(event);
+#endif // AFX_GUI
+}
+
 HMODULE WINAPI NewHwLoadLibraryA( LPCSTR lpLibFileName )
 {
 	static bool bClientLoaded = false;
@@ -118,9 +168,12 @@ void HookHw(HMODULE hHw)
 	// Kernel32.dll:
 	if(!InterceptDllCall(hHw, "Kernel32.dll", "LoadLibraryA", (DWORD) &NewHwLoadLibraryA)) { bIcepOk = false; MessageBox(0,"Interception failed: Kernel32.dll!LoadLibraryA","MDT_ERROR",MB_OK|MB_ICONHAND); }
 
-	// opengl32.dll:
-	if(!(g_Old_SDL_GL_GetProcAddress=(SDL_GL_GetProcAddress_t)InterceptDllCall(hHw, "sdl2.dll", "SDL_GL_GetProcAddress", (DWORD) &New_SDL_GL_GetProcAddress) )) { bIcepOk = false; MessageBox(0,"Interception failed: sdl.dll!SDL_GL_GetProcAddress","MDT_ERROR",MB_OK|MB_ICONHAND); }
-
+	// sdl2.dll:
+	if(!(g_Old_SDL_GL_GetProcAddress=(SDL_GL_GetProcAddress_t)InterceptDllCall(hHw, "sdl2.dll", "SDL_GL_GetProcAddress", (DWORD) &New_SDL_GL_GetProcAddress) )) { bIcepOk = false; MessageBox(0,"Interception failed: sdl2.dll!SDL_GL_GetProcAddress","MDT_ERROR",MB_OK|MB_ICONHAND); }
+	if(!(g_Old_SDL_SetRelativeMouseMode=(SDL_SetRelativeMouseMode_t)InterceptDllCall(hHw, "sdl2.dll", "SDL_SetRelativeMouseMode", (DWORD) &New_SDL_SetRelativeMouseMode) )) { bIcepOk = false; MessageBox(0,"Interception failed: sdl2.dll!SDL_SetRelativeMouseMode","MDT_ERROR",MB_OK|MB_ICONHAND); }
+	if(!(g_Old_SDL_WaitEventTimeout=(SDL_WaitEventTimeout_t)InterceptDllCall(hHw, "sdl2.dll", "SDL_WaitEventTimeout", (DWORD) &New_SDL_WaitEventTimeout) )) { bIcepOk = false; MessageBox(0,"Interception failed: sdl2.dll!SDL_WaitEventTimeout","MDT_ERROR",MB_OK|MB_ICONHAND); }
+	if(!(g_Old_SDL_PollEvent=(SDL_PollEvent_t)InterceptDllCall(hHw, "sdl2.dll", "SDL_PollEvent", (DWORD) &New_SDL_PollEvent) )) { bIcepOk = false; MessageBox(0,"Interception failed: sdl2.dll!SDL_PollEvent","MDT_ERROR",MB_OK|MB_ICONHAND); }
+	
 	HMODULE hSdl = GetModuleHandle("sdl2.dll");
 	if(hSdl)
 	{

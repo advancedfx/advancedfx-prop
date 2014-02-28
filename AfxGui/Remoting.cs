@@ -94,28 +94,26 @@ public class HlaeRemote_1 : MarshalByRefObject, IHlaeRemote_1
 
             cfg.CustomCmdLine = OverrideCustomArgs;
 
-            Afx.AfxGoldSrc ag = GlobalAfxGoldSrc.GetInstanceOrCreate();
+            Afx.AfxGoldSrc.StartSettings settings = cfg.MakeStartSettings();
 
-            Afx.AfxGoldSrc.StartSettings ags = cfg.MakeStartSettings(m_GameWindowParent);
-
-            return ag.Start(ags);
+            return m_MainForm.AfxGoldSrc.Start(settings);
         };
 
-        return (bool)m_GameWindowParent.Invoke(start);
+        return (bool)m_MainForm.Invoke(start);
 	}
 
     //
     // Internal members:
 
-	internal HlaeRemote_1(System.Windows.Forms.ScrollableControl gameWindowParent)
+	internal HlaeRemote_1(MainForm mainForm)
 	{
-		m_GameWindowParent = gameWindowParent;
+        m_MainForm = mainForm;
 	}
 
     //
     // Private members:
 
-    System.Windows.Forms.ScrollableControl m_GameWindowParent;
+    MainForm m_MainForm;
 };
 
 
@@ -127,12 +125,12 @@ class HlaeRemoting : IDisposable
     //
     // Public members:
 
-    public HlaeRemoting(System.Windows.Forms.ScrollableControl gameWindowParent)
+    public HlaeRemoting(MainForm mainForm)
 	{
 		//
 		// Init global scope class that will be accessed by the remote:
 
-		m_HlaeRemote_1 = new HlaeRemote_1(gameWindowParent);
+        m_HlaeRemote_1 = new HlaeRemote_1(mainForm);
 		
 		//
 		// Start remoting server:

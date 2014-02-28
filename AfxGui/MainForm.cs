@@ -1,7 +1,7 @@
 ﻿// Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-06-19 by dominik.matrixstorm.com
+// 2014-02-12 by dominik.matrixstorm.com
 //
 // First changes:
 // 2008-05-18 by dominik.matrixstorm.com
@@ -33,11 +33,20 @@ namespace AfxGui
             m_UpdateCheckNotification = new UpdateCheckNotificationTarget(this, new UpdateCheckedDelegate(OnUpdateChecked));
         }
 
+        internal Afx.AfxGoldSrc AfxGoldSrc
+        {
+            get
+            {
+                return m_AfxGoldSrc;
+            }
+        }
+
         //
         // Private members:
 
-        Guid m_LastUpdateGuid;
+        Afx.AfxGoldSrc m_AfxGoldSrc;
         hlae.remoting.HlaeRemoting m_HlaeRemoting;
+        Guid m_LastUpdateGuid;
         UpdateCheckNotificationTarget m_UpdateCheckNotification;
 
         void OnUpdateChecked(object o, IUpdateCheckResult checkResult)
@@ -131,9 +140,12 @@ namespace AfxGui
                 this.stripEnableUpdateCheck.Visible = true;
             }
 
+            // init AfxGoldSrc:
+            m_AfxGoldSrc = new Afx.AfxGoldSrc(this);
+
 	        // start up public remoting system (if requested):
 	        if( System.Environment.CommandLine.Contains( "-ipcremote" ) )
-                m_HlaeRemoting = new hlae.remoting.HlaeRemoting(gameWindowPanel);
+                m_HlaeRemoting = new hlae.remoting.HlaeRemoting(this);
 
         }
 
@@ -143,8 +155,7 @@ namespace AfxGui
             if (null != m_HlaeRemoting) m_HlaeRemoting.Dispose();
 
             // close down ag:
-            Afx.AfxGoldSrc ag = GlobalAfxGoldSrc.Instance;
-            if (null != ag) ag.Dispose();
+            m_AfxGoldSrc.Dispose();
 
             GlobalUpdateCheck.Instance.EndCheckedNotification(m_UpdateCheckNotification);
         }
@@ -224,7 +235,7 @@ namespace AfxGui
 
         private void menuLaunch_Click(object sender, EventArgs e)
         {
-            Launcher.RunLauncher(this, this.gameWindowPanel);
+            Launcher.RunLauncher(this, m_AfxGoldSrc);
         }
 
         private void menuGuidToClipBoard_Click(object sender, EventArgs e)

@@ -6,9 +6,6 @@ Half-Life Advanced Effects project
 
 #include <windows.h>
 #include <gl\gl.h>
-#include <gl\glu.h>
-
-
 #include "cmdregister.h"
 #include "hooks/HookHw.h"
 #include "hooks/hw/R_DrawSkyBoxEx.h"

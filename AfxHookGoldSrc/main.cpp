@@ -1,11 +1,14 @@
 #include "stdafx.h"
 
 //
-
 // Additional libraries:
+
 #pragma comment(lib,"OpenGL32.lib")
-#pragma comment(lib,"GLu32.lib")
 #pragma comment(lib,"mozjs-24.lib")
+
+#ifdef AFX_GUI
+#pragma comment(lib,"RocketCore.lib")
+#endif
 
 /*
 // Direct show:
@@ -28,6 +31,11 @@
 
 #include "scripting.h"
 
+#ifdef AFX_GUI
+#include "gui/Gui.h"
+#endif
+
+#include "Rocket/Core/ReferenceCountable.h"
 
 bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 {
@@ -44,11 +52,19 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 		}
 		case DLL_PROCESS_DETACH:
 		{
+#if 0
+			MessageBox(0,"DLL_PROCESS_DETACH","MDT_DEBUG",MB_OK);
+#endif
+
 			g_Script_CanConsolePrint = false;
 
 			g_AfxGoldSrcComClient.Close();
 
 			ScriptEngine_ShutDown();
+
+#ifdef AFX_GUI
+			AfxGui_ShutDown();
+#endif
 
 			break;
 		}

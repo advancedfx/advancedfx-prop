@@ -52,13 +52,13 @@
             this.checkNowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.statusLabelUpdate = new System.Windows.Forms.ToolStripStatusLabel();
+            this.statusLabelIgnore = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusLabelHide = new System.Windows.Forms.ToolStripStatusLabel();
             this.stripEnableUpdateCheck = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusLabelAutoYes = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusLabelAutoNo = new System.Windows.Forms.ToolStripStatusLabel();
             this.gameWindowPanel = new System.Windows.Forms.Panel();
-            this.statusLabelIgnore = new System.Windows.Forms.ToolStripStatusLabel();
             this.mainMenu.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.stripEnableUpdateCheck.SuspendLayout();
@@ -253,10 +253,21 @@
             // statusLabelUpdate
             // 
             this.statusLabelUpdate.Name = "statusLabelUpdate";
-            this.statusLabelUpdate.Size = new System.Drawing.Size(257, 17);
+            this.statusLabelUpdate.Size = new System.Drawing.Size(288, 17);
             this.statusLabelUpdate.Spring = true;
             this.statusLabelUpdate.Text = "Update status known";
             this.statusLabelUpdate.Click += new System.EventHandler(this.statusLabelUpdate_Click);
+            // 
+            // statusLabelIgnore
+            // 
+            this.statusLabelIgnore.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top)
+                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right)
+                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
+            this.statusLabelIgnore.Name = "statusLabelIgnore";
+            this.statusLabelIgnore.Size = new System.Drawing.Size(43, 17);
+            this.statusLabelIgnore.Text = "Ignore";
+            this.statusLabelIgnore.Visible = false;
+            this.statusLabelIgnore.Click += new System.EventHandler(this.statusLabelIgnore_Click);
             // 
             // statusLabelHide
             // 
@@ -317,19 +328,8 @@
             this.gameWindowPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.gameWindowPanel.Location = new System.Drawing.Point(0, 24);
             this.gameWindowPanel.Name = "gameWindowPanel";
-            this.gameWindowPanel.Size = new System.Drawing.Size(370, 227);
+            this.gameWindowPanel.Size = new System.Drawing.Size(370, 249);
             this.gameWindowPanel.TabIndex = 3;
-            // 
-            // statusLabelIgnore
-            // 
-            this.statusLabelIgnore.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top)
-                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right)
-                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
-            this.statusLabelIgnore.Name = "statusLabelIgnore";
-            this.statusLabelIgnore.Size = new System.Drawing.Size(43, 17);
-            this.statusLabelIgnore.Text = "Ignore";
-            this.statusLabelIgnore.Visible = false;
-            this.statusLabelIgnore.Click += new System.EventHandler(this.statusLabelIgnore_Click);
             // 
             // MainForm
             // 

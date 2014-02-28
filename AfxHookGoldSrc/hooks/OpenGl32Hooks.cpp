@@ -4,6 +4,10 @@
 #include "OpenGl32Hooks.h"
 #include "user32Hooks.h"
 
+#ifdef AFX_GUI
+#include "../gui/Gui.h"
+#endif
+
 #include "../AfxGoldSrcComClient.h"
 #include "../aiming.h"
 #include "../cmdregister.h"
@@ -263,6 +267,10 @@ void APIENTRY NewGlViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 	// Only on the first viewport
 	if (g_nViewports == 0)
 	{
+#ifdef AFX_GUI
+		AfxGui_SetViewport(width, height);
+#endif
+
 		//g_Filming.setScreenSize(width, height);
 
 		//
@@ -365,6 +373,13 @@ BOOL APIENTRY NewWglSwapBuffers(HDC hDC)
 
 	// Next viewport will be the first of the new frame
 	g_nViewports = 0;
+
+#ifdef AFX_GUI
+	// Give the Gui a chance to render:
+	// TODO: this needs to be moved elsewhere in case we don't want to fuck up
+	// the main image with the GUI.
+	AfxGui_Render();
+#endif
 
 	if(ScriptEvent_OnSwapBuffers(hDC, bResWglSwapBuffers))
 	{

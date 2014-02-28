@@ -31,6 +31,9 @@
     <Filter Include="AfxHookGoldSrc\hooks\demoplayer">
       <UniqueIdentifier>{048cd8c4-348f-41e6-b7df-70d0bb102ed0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="AfxHookGoldSrc\gui">
+      <UniqueIdentifier>{2c5410c6-e49c-4d57-9384-bc37cf50f0c9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\bvhexport.cpp">
@@ -222,6 +225,24 @@
     <ClCompile Include="AfxImageUtils.cpp">
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
+    <ClCompile Include="gui\GuiFileInterface.cpp">
+      <Filter>AfxHookGoldSrc\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\GuiRenderInterfaceOpenGL.cpp">
+      <Filter>AfxHookGoldSrc\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\GuiSystemInterface.cpp">
+      <Filter>AfxHookGoldSrc\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\Gui.cpp">
+      <Filter>AfxHookGoldSrc\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="hlaeFolder.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="forcePlayersSolid.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -387,6 +408,21 @@
       <Filter>AfxHookGoldSrc</Filter>
     </ClInclude>
     <ClInclude Include="AfxImageUtils.h">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\GuiFileInterface.h">
+      <Filter>AfxHookGoldSrc\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\GuiRenderInterfaceOpenGL.h">
+      <Filter>AfxHookGoldSrc\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\GuiSystemInterface.h">
+      <Filter>AfxHookGoldSrc\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\Gui.h">
+      <Filter>AfxHookGoldSrc\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="hlaeFolder.h">
       <Filter>AfxHookGoldSrc</Filter>
     </ClInclude>
   </ItemGroup>

@@ -23,19 +23,4 @@ class GlobalUpdateCheck
     static UpdateCheck m_Instance;
 }
 
-
-class GlobalAfxGoldSrc
-{
-    public static Afx.AfxGoldSrc GetInstanceOrCreate()
-    {
-        if (null == m_Instance) m_Instance = new Afx.AfxGoldSrc();
-        return m_Instance;
-    }
-
-    public static Afx.AfxGoldSrc Instance { get { return m_Instance; } set { m_Instance = value; } }
-
-    static Afx.AfxGoldSrc m_Instance;
-}
-
-
 } //namespace AfxGui {

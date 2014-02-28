@@ -930,35 +930,24 @@ Filming.prototype.onSwapBuffers = function(hDc)
 	return result;
 };
 
-////////////////////////////////////////////////////////////////////////////////
+// easy* ///////////////////////////////////////////////////////////////////////
 
-/**
- * @param glMod - optional
- */
-function easyRgbStream(name, glMod)
+function easyCaptureAlpha(name)
 {
 	var cap = new CapturePoint(name);
 	var nameFn = function() {
 		return cap.nameFn();
 	};
 	var proc = new ProcArray([
-		newProcCaptureRgb(0, 0, width, height),
+		newProcCaptureAlpha(0, 0, width, height),
 		new ProcWriteBitmap(nameFn)
 	]);
 	cap.proc = proc;
-	var clearFn = function() {
-		glClearColor(0.0, 0.0, 0.0, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-	};
-	var stream = new Stream(clearFn, [cap], glMod);
 	
-	return stream;
+	return cap;
 }
 
-/**
- * @param glMod - optional
- */
-function easyDepthStreamInverse(name, glMod)
+function easyCaptureDepthInverse(name)
 {
 	var cap = new CapturePoint(name);
 	var nameFn = function() {
@@ -970,19 +959,11 @@ function easyDepthStreamInverse(name, glMod)
 		new ProcWriteBitmap(nameFn)
 	]);
 	cap.proc = proc;
-	var clearFn = function() {
-		glClearColor(0.0, 0.0, 0.0, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-	};
-	var stream = new Stream(clearFn, [cap], glMod);
 	
-	return stream;
+	return cap;
 }
 
-/**
- * @param glMod - optional
- */
-function easyDepthStreamLinear(name, glMod)
+function easyCaptureDepthLinear(name)
 {
 	var cap = new CapturePoint(name);
 	var nameFn = function() {
@@ -995,19 +976,11 @@ function easyDepthStreamLinear(name, glMod)
 		new ProcWriteBitmap(nameFn)
 	]);
 	cap.proc = proc;
-	var clearFn = function() {
-		glClearColor(0.0, 0.0, 0.0, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-	};
-	var stream = new Stream(clearFn, [cap], glMod);
 	
-	return stream;
+	return cap;
 }
 
-/**
- * @param glMod - optional
- */
-function easyDepthStreamLog(name, glMod)
+function easyCaptureDepthLog(name)
 {
 	var cap = new CapturePoint(name);
 	var nameFn = function() {
@@ -1020,16 +993,11 @@ function easyDepthStreamLog(name, glMod)
 		new ProcWriteBitmap(nameFn)
 	]);
 	cap.proc = proc;
-	var clearFn = function() {
-		glClearColor(0.0, 0.0, 0.0, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-	};
-	var stream = new Stream(clearFn, [cap], glMod);
 	
-	return stream;
+	return cap;
 }
 
-function easyHudColorStream(name)
+function easyCaptureRgb(name)
 {
 	var cap = new CapturePoint(name);
 	var nameFn = function() {
@@ -1040,34 +1008,62 @@ function easyHudColorStream(name)
 		new ProcWriteBitmap(nameFn)
 	]);
 	cap.proc = proc;
-	var clearFn = function() {
-		glClearColor(0.0, 0.0, 0.0, 1.0);
+	
+	return cap;
+}
+
+function easyClearFnAll(red, green, blue)
+{
+	return function() {
+		glClearColor(red, green, blue, 0.0);
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 	};
-	var stream = new Stream(clearFn, [cap], null);
+}
+
+function easyClearFnColor(red, green, blue)
+{
+	return function() {
+		glClearColor(red, green, blue, 0.0);
+		glClear(GL_COLOR_BUFFER_BIT);
+	};
+}
+
+function easyClearFnDepth()
+{
+	return function() {
+		glClear(GL_DEPTH_BUFFER_BIT);
+	};
+}
+
+function easyClearFnNone()
+{
+	return function() {
+	};
+}
+
+/**
+ * @param clearFn - clear function to use.
+ * @param capArray - array of CapturePoints.
+ * @param glMod - optional
+ */
+function easyStream(clearFn, capArray, glMod)
+{
+	return new Stream(clearFn, capArray, glMod);
+}
+
+function easyStreamHudColor(name)
+{
+	return easyStream(easyClearFnAll(), [easyCaptureRgb(name)], null);
+}
+
+function easyStreamHudAlpha(name)
+{
+	return easyStream(easyClearFnAll(), [easyCaptureAlpha(name)], new GlModHudAlpha());
 	
 	return stream;
 }
 
-function easyHudAlphaStream(name)
-{
-	var cap = new CapturePoint(name);
-	var nameFn = function() {
-		return cap.nameFn();
-	};
-	var proc = new ProcArray([
-		newProcCaptureAlpha(0, 0, width, height),
-		new ProcWriteBitmap(nameFn)
-	]);
-	cap.proc = proc;
-	var clearFn = function() {
-		glClearColor(0.0, 0.0, 0.0, 0.0);
-		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-	};
-	var stream = new Stream(clearFn, [cap], new GlModHudAlpha());
-	
-	return stream;
-}
+////////////////////////////////////////////////////////////////////////////////
 
 function checkStreamName(filming, stream)
 {
@@ -1147,5 +1143,3 @@ Some notes to myself:
 
 // TODO: check for circular references, there are probably some:
 // Especially check nameFn referencing capture objects, being referenced by procs, which are inderectly referenced by the capture object
-
-// TODO: multiple capture points per stream (i.e. color and depth at the same time).

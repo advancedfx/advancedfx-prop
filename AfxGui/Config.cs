@@ -65,11 +65,9 @@ public class CfgLauncher
 		this.RenderMode = from.RenderMode;
 	}
 
-    internal Afx.AfxGoldSrc.StartSettings MakeStartSettings(
-        System.Windows.Forms.ScrollableControl gameWindowParent
-    ) {
+    internal Afx.AfxGoldSrc.StartSettings MakeStartSettings()
+    {
         Afx.AfxGoldSrc.StartSettings s = new Afx.AfxGoldSrc.StartSettings(
-            gameWindowParent,
             this.GamePath,
             this.Modification
         );
