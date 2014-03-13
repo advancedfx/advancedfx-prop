@@ -79,6 +79,17 @@ AFXADDR_DEF(r_refdef)
 AFXADDR_DEF(shm)
 AFXADDR_DEF(skytextures)
 AFXADDR_DEF(soundtime)
+AFXADDR_DEF(tfc_CHudDeathNotice_Draw)
+AFXADDR_DEF(tfc_CHudDeathNotice_Draw_DSZ)
+AFXADDR_DEF(tfc_CHudDeathNotice_MsgFunc_DeathMsg)
+AFXADDR_DEF(tfc_CHudDeathNotice_MsgFunc_DeathMsg_DSZ)
+AFXADDR_DEF(tfc_MsgFunc_DeathMsg)
+AFXADDR_DEF(tfc_MsgFunc_DeathMsg_DSZ)
+AFXADDR_DEF(tfc_TeamFortressViewport_UpdateSpecatorPanel)
+AFXADDR_DEF(tfc_TeamFortressViewport_UpdateSpecatorPanel_DSZ)
+AFXADDR_DEF(tfc_rgDeathNoticeList)
+AFXADDR_DEF(valve_TeamFortressViewport_UpdateSpecatorPanel)
+AFXADDR_DEF(valve_TeamFortressViewport_UpdateSpecatorPanel_DSZ)
 
 //
 // Documentation (in HLAE source code)
@@ -86,6 +97,7 @@ AFXADDR_DEF(soundtime)
 // o[1] doc/notes_goldsrc/debug_cstrike_crosshair.txt
 // o[2] doc/notes_goldsrc/debug_cstrike_deathmessage.txt
 // n[3] doc/notes_goldsrc/debug_cstrike_smoke.txt
+// *[4] doc/notes_goldsrc/debug_tfc_UpdateSpectatorPanel.txt
 // *[5] doc/notes_goldsrc/debug_engine_ifaces.txt
 // *[6] doc/notes_goldsrc/debug_sound.txt
 // *[7] doc/notes_goldsrc/debug_SCR_UpdateScreen.txt
@@ -95,7 +107,7 @@ AFXADDR_DEF(soundtime)
 // *[11] doc/notes_goldsrc/debug_R_DrawWorld_and_sky.txt
 // n[12] doc/notes_goldsrc/debug_R_DecalShoot.txt
 // *[13] AfxHookGoldSrc/cmd_tools.cpp/getCommandTreeBasePtr
-//
+// *[14] doc/notes_goldsrc/debug_tfc_deathmessage.txt
 
 void Addresses_InitHlExe(AfxAddr hlExe)
 {
@@ -230,4 +242,28 @@ void Addresses_InitClientDll(AfxAddr clientDll)
 	AFXADDR_SET(cstrike_rgDeathNoticeList, clientDll + 0x124EC0); // *[2]
 	AFXADDR_SET(cstrike_CHudDeathNotice_Draw, clientDll + 0x445F0); // *[2]
 	AFXADDR_SET(cstrike_CHudDeathNotice_Draw_DSZ, 0x0a); // at least 8 bytes req. // *[2]
+
+	//
+	// game: tfc
+	//
+
+	// tfc DeathMsg related:
+	AFXADDR_SET(tfc_MsgFunc_DeathMsg, clientDll + 0x27F60); // *[14]
+	AFXADDR_SET(tfc_MsgFunc_DeathMsg_DSZ, 0x08); // *[14]
+	AFXADDR_SET(tfc_CHudDeathNotice_MsgFunc_DeathMsg, clientDll + 0x28300); // *[14]
+	AFXADDR_SET(tfc_CHudDeathNotice_MsgFunc_DeathMsg_DSZ, 0x08); // at least 8 bytes req. // *[14]
+	AFXADDR_SET(tfc_rgDeathNoticeList, clientDll + 0xA79B0); // *[14]
+	AFXADDR_SET(tfc_CHudDeathNotice_Draw, clientDll + 0x28060); // *[14]
+	AFXADDR_SET(tfc_CHudDeathNotice_Draw_DSZ, 0x09); // at least 8 bytes req. // *[14]
+
+	//
+	AFXADDR_SET(tfc_TeamFortressViewport_UpdateSpecatorPanel, clientDll + 0x4E830); // *[4]
+	AFXADDR_SET(tfc_TeamFortressViewport_UpdateSpecatorPanel_DSZ, 0x0b); // at least 8 bytes req. // *[4]
+
+	//
+	// game: valve (Half-Life)
+	//
+
+	AFXADDR_SET(valve_TeamFortressViewport_UpdateSpecatorPanel, clientDll + 0x4ACB0); // *[4]
+	AFXADDR_SET(valve_TeamFortressViewport_UpdateSpecatorPanel_DSZ, 0x0b); // at least 8 bytes req. // *[4]
 }

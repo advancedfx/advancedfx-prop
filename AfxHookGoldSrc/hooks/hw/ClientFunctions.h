@@ -45,7 +45,7 @@ enum ClientFunctionTableEntry
 	CFTE_HUD_DirectorMessage,
 	CFTE_HUD_GetStudioModelInterface,
 	CFTE_HUD_ChatInputPosition,
-	CFTE__UNUSED__0001,
+	CFTE_HUD_GetPlayerTeam, // unused it seems, not sure if it works
 	CFTE_ClientFactory
 };
 

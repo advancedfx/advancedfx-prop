@@ -6,6 +6,26 @@
 
 <release>
 <name>HLAE</name>
+<version>2.3.15.0</version>
+<time>2014-03-13T10:21Z</time>
+<changes>
+<change type="added">
+Added mirv_disable_specmenu 0|1, for modifications tfc and valve. Normaly you would use mirv_movie_hidepanels instead,
+however adding this for Rojola, because CGshader won't work with mirv_movie_hidepanels 1.
+</change>
+<change type="added">
+Added mirv_deathmsg. This has the same functionality as mirv_cstrike_deathmsg had, however it also supports TFC now.
+Also it won't crash anymore in case the modification used is not supported.
+</change>
+<change type="updated">
+Updated mirv_cstrike_deathmsg: it is now only an alias to mirv_deathmsg.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.3.14.0</version>
 <time>2014-02-28T17:51Z</time>
 <changes>

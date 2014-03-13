@@ -6,7 +6,10 @@
 #include <hl_addresses.h>
 
 #include "../../filming.h"
+
+#ifdef AFX_SCRIPT
 #include "../../scripting.h"
+#endif // AFX_SCRIPT
 
 void * g_UnkDrawHudInContinue = 0;
 void * g_UnkDrawHudOutContinue;
@@ -19,7 +22,9 @@ bool g_UnkDrawHudCalledFromEngine = false;
 
 void Wrapper_UnkDrawHudIn(void)
 {
+#ifdef AFX_SCRIPT
 	ScriptEvent_OnHudBegin();
+#endif // AFX_SCRIPT
 	g_Filming.OnHudBeginEvent();
 }
 
@@ -28,7 +33,11 @@ bool Wrapper_UnkDrawHudOut(void)
 {
 	bool b1, b2;
 	b1 = g_Filming.OnHudEndEvent();
+#ifdef AFX_SCRIPT
 	b2 = ScriptEvent_OnHudEnd();
+#else
+	b2 = false;
+#endif // AFX_SCRIPT
 
 	if(g_UnkDrawHudCallFromEngine)
 		g_UnkDrawHudCalledFromEngine = true;

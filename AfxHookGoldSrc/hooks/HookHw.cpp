@@ -84,6 +84,8 @@ void *New_SDL_GL_GetProcAddress(const char* proc)
 	return g_Old_SDL_GL_GetProcAddress(proc);
 }
 
+#ifdef AFX_GUI
+
 typedef int (*SDL_SetRelativeMouseMode_t) (SDL_bool enabled);
 SDL_SetRelativeMouseMode_t g_Old_SDL_SetRelativeMouseMode;
 
@@ -92,12 +94,15 @@ int New_SDL_SetRelativeMouseMode(SDL_bool enabled)
 	return g_Old_SDL_SetRelativeMouseMode(enabled);
 }
 
+#endif // AFX_GUI
+
+#ifdef AFX_GUI
+
 typedef int (*SDL_WaitEventTimeout_t)(SDL_Event* event,int timeout);
 SDL_WaitEventTimeout_t g_Old_SDL_WaitEventTimeout;
 
 int New_SDL_WaitEventTimeout(SDL_Event* event,int timeout)
 {
-#ifdef AFX_GUI
 	int result;
 	bool handled = false;
 
@@ -106,17 +111,17 @@ int New_SDL_WaitEventTimeout(SDL_Event* event,int timeout)
 	;
 
 	return result;
-#else
-	return g_Old_SDL_WaitEventTimeout(event, timeout);
-#endif // AFX_GUI
 }
+
+#endif // AFX_GUI
+
+#ifdef AFX_GUI
 
 typedef int (*SDL_PollEvent_t)(SDL_Event* event);
 SDL_PollEvent_t g_Old_SDL_PollEvent;
 
 int New_SDL_PollEvent(SDL_Event* event)
 {
-#ifdef AFX_GUI
 	int result;
 	bool handled = false;
 
@@ -125,10 +130,9 @@ int New_SDL_PollEvent(SDL_Event* event)
 	;
 
 	return result;
-#else
-	return g_Old_SDL_PollEvent(event);
-#endif // AFX_GUI
 }
+
+#endif // AFX_GUI
 
 HMODULE WINAPI NewHwLoadLibraryA( LPCSTR lpLibFileName )
 {
@@ -170,9 +174,11 @@ void HookHw(HMODULE hHw)
 
 	// sdl2.dll:
 	if(!(g_Old_SDL_GL_GetProcAddress=(SDL_GL_GetProcAddress_t)InterceptDllCall(hHw, "sdl2.dll", "SDL_GL_GetProcAddress", (DWORD) &New_SDL_GL_GetProcAddress) )) { bIcepOk = false; MessageBox(0,"Interception failed: sdl2.dll!SDL_GL_GetProcAddress","MDT_ERROR",MB_OK|MB_ICONHAND); }
+#ifdef AFX_GUI
 	if(!(g_Old_SDL_SetRelativeMouseMode=(SDL_SetRelativeMouseMode_t)InterceptDllCall(hHw, "sdl2.dll", "SDL_SetRelativeMouseMode", (DWORD) &New_SDL_SetRelativeMouseMode) )) { bIcepOk = false; MessageBox(0,"Interception failed: sdl2.dll!SDL_SetRelativeMouseMode","MDT_ERROR",MB_OK|MB_ICONHAND); }
 	if(!(g_Old_SDL_WaitEventTimeout=(SDL_WaitEventTimeout_t)InterceptDllCall(hHw, "sdl2.dll", "SDL_WaitEventTimeout", (DWORD) &New_SDL_WaitEventTimeout) )) { bIcepOk = false; MessageBox(0,"Interception failed: sdl2.dll!SDL_WaitEventTimeout","MDT_ERROR",MB_OK|MB_ICONHAND); }
 	if(!(g_Old_SDL_PollEvent=(SDL_PollEvent_t)InterceptDllCall(hHw, "sdl2.dll", "SDL_PollEvent", (DWORD) &New_SDL_PollEvent) )) { bIcepOk = false; MessageBox(0,"Interception failed: sdl2.dll!SDL_PollEvent","MDT_ERROR",MB_OK|MB_ICONHAND); }
+#endif // AFX_GUI
 	
 	HMODULE hSdl = GetModuleHandle("sdl2.dll");
 	if(hSdl)

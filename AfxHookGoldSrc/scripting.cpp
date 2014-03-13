@@ -11,6 +11,8 @@
 // TODO: JS_ReportError before return JS_FALSE, so users actually see an
 // error and not only the program flow is interrupted.
 
+#ifdef AFX_SCRIPT
+
 #include "scripting.h"
 
 #include <Windows.h>
@@ -1659,3 +1661,5 @@ void afx_cmd() {
 
 	free(ttt);
 }
+
+#endif // AFX_SCRIPT

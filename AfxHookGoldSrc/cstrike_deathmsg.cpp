@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2010-01-16 dominik.matrixtstorm.com
+// 2014-03-12 dominik.matrixtstorm.com
 //
 // First changes:
 // 2010-01-16 dominik.matrixtstorm.com
@@ -19,8 +19,7 @@
 #include <list>
 
 
-// >> HLSDK
-
+// HLSDK:
 #define MAX_PLAYER_NAME_LENGTH		32
 #define MAX_DEATHNOTICES 4
 
@@ -38,30 +37,44 @@ struct cstrike_DeathNoticeItem {
 	float *KillerColor;
 	float *VictimColor;
 };
-// << HLSDK
+
+struct tfc_DeathNoticeItem {
+	char szKiller[MAX_PLAYER_NAME_LENGTH*2];
+	char szVictim[MAX_PLAYER_NAME_LENGTH*2];
+	int iId;	// the index number of the associated sprite
+	int iSuicide;
+	int iTeamKill;
+	int iNonPlayerKill;
+	float flDisplayTime;
+	float *KillerColor;
+	float *VictimColor;
+};
 
 extern cl_enginefuncs_s *pEngfuncs;
 
 cstrike_DeathNoticeItem * cstrike_rgDeathNoticeList;
+tfc_DeathNoticeItem * tfc_rgDeathNoticeList;
 
-#define OFS_Draw_YRes 0x114
-#define OFS_Draw_AfterYRes (OFS_Draw_YRes +0x0A)
+#define cstrike_OFS_Draw_YRes 0x114
+#define cstrike_OFS_Draw_AfterYRes (cstrike_OFS_Draw_YRes +0x0A)
 
-DWORD cstrike_DeathMsg_Draw_AfterYRes;
+#define tfc_OFS_Draw_YRes 0x1fa
+#define tfc_OFS_Draw_AfterYRes (tfc_OFS_Draw_YRes +0x05)
 
+DWORD DeathMsg_Draw_AfterYRes;
 
 std::list<cstrike_DeathNoticeItem> cstrike_DeathNotices;
+std::list<tfc_DeathNoticeItem> tfc_DeathNotices;
 
-DWORD cstrike_DeathMsg_Draw_ItemIndex;
+DWORD DeathMsg_Draw_ItemIndex;
 
-typedef int (* cstrike_MsgFunc_DeathMsg_t)(const char *pszName, int iSize, void *pbuf);
+typedef int (* MsgFunc_DeathMsg_t)(const char *pszName, int iSize, void *pbuf);
+typedef int (__stdcall *DeathMsg_Draw_t)(DWORD *this_ptr, float flTime );
+typedef int (__stdcall *DeathMsg_Msg_t)(DWORD *this_ptr, const char *pszName, int iSize, void *pbuf );
 
-typedef int (__stdcall *cstrike_DeathMsg_Draw_t)(DWORD *this_ptr, float flTime );
-typedef int (__stdcall *cstrike_DeathMsg_Msg_t)(DWORD *this_ptr, const char *pszName, int iSize, void *pbuf );
-
-cstrike_DeathMsg_Draw_t detoured_cstrike_DeathMsg_Draw;
-cstrike_DeathMsg_Msg_t detoured_cstrike_DeathMsg_Msg;
-cstrike_MsgFunc_DeathMsg_t detoured_cstrike_MsgFunc_DeathMsg;
+MsgFunc_DeathMsg_t detoured_MsgFunc_DeathMsg;
+DeathMsg_Draw_t detoured_DeathMsg_Draw;
+DeathMsg_Msg_t detoured_DeathMsg_Msg;
 
 enum DeathMsgBlockMode
 {
@@ -83,7 +96,7 @@ std::list<DeathMsgBlockEntry> deathMessageBlock;
 
 size_t deathMessagesMax = MAX_DEATHNOTICES;
 
-int touring_cstrike_MsgFunc_DeathMsg(const char *pszName, int iSize, void *pbuf)
+int touring_MsgFunc_DeathMsg(const char *pszName, int iSize, void *pbuf)
 {
 	if(2 <= iSize && 0 < deathMessageBlock.size())
 	{
@@ -126,69 +139,78 @@ int touring_cstrike_MsgFunc_DeathMsg(const char *pszName, int iSize, void *pbuf)
 		}
 	}
 
-	return detoured_cstrike_MsgFunc_DeathMsg(pszName, iSize, pbuf);
+	return detoured_MsgFunc_DeathMsg(pszName, iSize, pbuf);
 }
 
-
-int __stdcall touring_cstrike_DeathMsg_Draw(DWORD *this_ptr, float flTime )
-{
-	int iRet = 1;
-	cstrike_DeathMsg_Draw_ItemIndex = -1;
-
-	for(
-		std::list<cstrike_DeathNoticeItem>::iterator it = cstrike_DeathNotices.begin();
-		1 == iRet && it != cstrike_DeathNotices.end();
-		it++
-	) {
-		cstrike_DeathMsg_Draw_ItemIndex++;
-		cstrike_rgDeathNoticeList[0] = *it;
-
-		iRet = detoured_cstrike_DeathMsg_Draw(this_ptr, flTime);
-
-		// check if the message has been deleted:
-		if(
-			0 == cstrike_rgDeathNoticeList[0].iId
-		) {
-			cstrike_DeathMsg_Draw_ItemIndex--;
-			it = cstrike_DeathNotices.erase(it);
-		}
-
-		cstrike_rgDeathNoticeList[0].iId = 0;
-	}
-
-	return iRet;
+#define DEF_DeathMsg_Draw(modification) \
+int __stdcall modification ## _touring_DeathMsg_Draw(DWORD *this_ptr, float flTime ) \
+{ \
+	int iRet = 1; \
+	DeathMsg_Draw_ItemIndex = -1; \
+	\
+	for( \
+		std::list<modification ## _DeathNoticeItem>::iterator it =  modification ## _DeathNotices.begin(); \
+		1 == iRet && it !=  modification ## _DeathNotices.end(); \
+		it++ \
+	) { \
+		DeathMsg_Draw_ItemIndex++; \
+		modification ## _rgDeathNoticeList[0] = *it; \
+		\
+		iRet = detoured_DeathMsg_Draw(this_ptr, flTime); \
+		\
+		/* check if the message has been deleted: */ \
+		if( \
+			0 == modification ## _rgDeathNoticeList[0].iId \
+		) { \
+			DeathMsg_Draw_ItemIndex--; \
+			it =  modification ## _DeathNotices.erase(it); \
+		} \
+		\
+		modification ## _rgDeathNoticeList[0].iId = 0; \
+	} \
+	\
+	return iRet; \
 }
 
-int __stdcall touring_cstrike_DeathMsg_Msg(DWORD *this_ptr, const char *pszName, int iSize, void *pbuf )
-{
-	for(int i=0; i<MAX_DEATHNOTICES; i++)
-	{
-		memset(&cstrike_rgDeathNoticeList[i], 0, sizeof(cstrike_DeathNoticeItem));
-	}
+DEF_DeathMsg_Draw(cstrike)
 
-	int i = detoured_cstrike_DeathMsg_Msg(this_ptr, pszName, iSize, pbuf);
+DEF_DeathMsg_Draw(tfc)
 
-	if(i)
-	{
-		if(0 < deathMessagesMax)
-		{
-			// make space for new element:
-			while(deathMessagesMax <= cstrike_DeathNotices.size())
-				cstrike_DeathNotices.pop_front();
-
-			// Pick up the message:
-			cstrike_DeathNoticeItem di = cstrike_rgDeathNoticeList[0];
-
-			cstrike_DeathNotices.push_back(di);
-		}
-		else
-			cstrike_DeathNotices.clear();
-	}
-
-	memset(&cstrike_rgDeathNoticeList[0], 0, sizeof(cstrike_DeathNoticeItem));
-
-	return i;
+#define DEF_DeathMsg_Msg(modification) \
+int __stdcall modification ## _touring_DeathMsg_Msg(DWORD *this_ptr, const char *pszName, int iSize, void *pbuf ) \
+{ \
+	for(int i=0; i<MAX_DEATHNOTICES; i++) \
+	{ \
+		memset(&modification ## _rgDeathNoticeList[i], 0, sizeof(modification ## _DeathNoticeItem)); \
+	} \
+	\
+	int i = detoured_DeathMsg_Msg(this_ptr, pszName, iSize, pbuf); \
+	\
+	if(i) \
+	{ \
+		if(0 < deathMessagesMax) \
+		{ \
+			/* make space for new element: */ \
+			while(deathMessagesMax <= modification ## _DeathNotices.size()) \
+				modification ## _DeathNotices.pop_front(); \
+			\
+			/* Pick up the message: */ \
+			modification ## _DeathNoticeItem di = modification ## _rgDeathNoticeList[0]; \
+			\
+			modification ## _DeathNotices.push_back(di); \
+		} \
+		else \
+			modification ## _DeathNotices.clear(); \
+	} \
+	\
+	memset(&modification ## _rgDeathNoticeList[0], 0, sizeof(modification ## _DeathNoticeItem)); \
+	\
+	return i; \
 }
+
+DEF_DeathMsg_Msg(cstrike)
+
+DEF_DeathMsg_Msg(tfc)
 
 bool g_DeathMsg_ForceOffset = false;
 int g_DeathMsg_Offset;
@@ -209,49 +231,101 @@ __declspec(naked) void cstrike_DeathMsg_DrawHelperY() {
 		
 		__Continue:
 		; imul    ebp,ebx ; original code
-		imul    ebp, cstrike_DeathMsg_Draw_ItemIndex
+		imul    ebp, DeathMsg_Draw_ItemIndex
 		
-		JMP [cstrike_DeathMsg_Draw_AfterYRes]
+		JMP [DeathMsg_Draw_AfterYRes]
 	}
 }
 
+__declspec(naked) void tfc_DeathMsg_DrawHelperY() {
+	__asm {
+		mov ebp, DeathMsg_Draw_ItemIndex
+		imul ebp, 0x14
 
+		push eax
+		mov al, g_DeathMsg_ForceOffset
+		test al, al
+		JZ __OrgValue
 
-bool Install_cstrike_DeatMsg()
+		add ebp, g_DeathMsg_Offset
+		JMP __Continue
+
+		__OrgValue:
+		add ebp, 0x22
+		
+		__Continue:
+		pop eax
+
+		push eax ; Original code
+		push ebp ; . (ebp has y)
+		push esi ; .
+		push 0   ; .
+
+		JMP [DeathMsg_Draw_AfterYRes]
+	}
+}
+
+#define DEF_Hook_DeathMsg(modification) \
+bool Hook_DeathMsg_ ## modification() \
+{ \
+	/* 1. Fill addresses: */ \
+	\
+	modification ## _rgDeathNoticeList = (modification ## _DeathNoticeItem *)HL_ADDR_GET(modification ## _rgDeathNoticeList); \
+	\
+	DWORD dwDraw = (DWORD)HL_ADDR_GET(modification ## _CHudDeathNotice_Draw); \
+	\
+	DeathMsg_Draw_AfterYRes = dwDraw +modification ## _OFS_Draw_AfterYRes; \
+	\
+	/* Detour Functions: */ \
+	detoured_MsgFunc_DeathMsg = (MsgFunc_DeathMsg_t)DetourApply((BYTE *)HL_ADDR_GET(modification ## _MsgFunc_DeathMsg), (BYTE *)touring_MsgFunc_DeathMsg, (int)HL_ADDR_GET(modification ## _MsgFunc_DeathMsg_DSZ)); \
+	\
+	detoured_DeathMsg_Draw = (DeathMsg_Draw_t)DetourClassFunc((BYTE *)dwDraw, (BYTE *)modification ## _touring_DeathMsg_Draw, (int)HL_ADDR_GET(modification ## _CHudDeathNotice_Draw_DSZ)); \
+	detoured_DeathMsg_Msg = (DeathMsg_Msg_t)DetourClassFunc((BYTE *)HL_ADDR_GET(modification ## _CHudDeathNotice_MsgFunc_DeathMsg), (BYTE *)modification ## _touring_DeathMsg_Msg, (int)HL_ADDR_GET(modification ## _CHudDeathNotice_MsgFunc_DeathMsg_DSZ)); \
+	\
+	/* Patch Draw fn: */ \
+	Asm32ReplaceWithJmp((void *)(dwDraw + modification ## _OFS_Draw_YRes), modification ## _OFS_Draw_AfterYRes - modification ## _OFS_Draw_YRes, (void *)modification ## _DeathMsg_DrawHelperY); \
+	\
+	return true; \
+}
+
+DEF_Hook_DeathMsg(cstrike)
+
+DEF_Hook_DeathMsg(tfc)
+
+bool Hook_DeathMsg()
 {
-	static bool bFirstRun = true;
-	if(!bFirstRun)
-		return true;
+	static bool firstResult = false;
+	static bool firstRun = true;
+	if(!firstRun) return firstResult;
+	firstRun = false;
 
-	bFirstRun = false;
+	const char *gameDir = pEngfuncs->pfnGetGameDirectory();
+	
+	if(gameDir)
+	{	
+		if(!strcmp("cstrike",gameDir))
+		{
+			firstResult = Hook_DeathMsg_cstrike();
+		}
+		else if(!strcmp("tfc",gameDir))
+		{
+			firstResult = Hook_DeathMsg_tfc();
+		}
+	}
 
-	// 1. Fill addresses:
-
-	cstrike_rgDeathNoticeList = (cstrike_DeathNoticeItem *)HL_ADDR_GET(cstrike_rgDeathNoticeList);
-
-	DWORD dwDraw = (DWORD)HL_ADDR_GET(cstrike_CHudDeathNotice_Draw);
-	DWORD dwMsg = (DWORD)HL_ADDR_GET(cstrike_CHudDeathNotice_MsgFunc_DeathMsg);
-
-	cstrike_DeathMsg_Draw_AfterYRes = dwDraw +OFS_Draw_AfterYRes;
-
-	// Detour Functions:
-	detoured_cstrike_MsgFunc_DeathMsg = (cstrike_MsgFunc_DeathMsg_t)DetourApply((BYTE *)HL_ADDR_GET(cstrike_MsgFunc_DeathMsg), (BYTE *)touring_cstrike_MsgFunc_DeathMsg, (int)HL_ADDR_GET(cstrike_MsgFunc_DeathMsg_DSZ));
-
-	detoured_cstrike_DeathMsg_Draw = (cstrike_DeathMsg_Draw_t)DetourClassFunc((BYTE *)dwDraw, (BYTE *)touring_cstrike_DeathMsg_Draw, (int)HL_ADDR_GET(cstrike_CHudDeathNotice_Draw_DSZ));
-	detoured_cstrike_DeathMsg_Msg = (cstrike_DeathMsg_Msg_t)DetourClassFunc((BYTE *)dwMsg, (BYTE *)touring_cstrike_DeathMsg_Msg, (int)HL_ADDR_GET(cstrike_CHudDeathNotice_MsgFunc_DeathMsg_DSZ));
-
-	// Patch Draw fn:
-	Asm32ReplaceWithJmp((void *)(dwDraw + OFS_Draw_YRes), OFS_Draw_AfterYRes - OFS_Draw_YRes, (void *)cstrike_DeathMsg_DrawHelperY);
-
-	return true;
+	return firstResult;
 }
 
 
-
-REGISTER_CMD_FUNC(cstrike_deathmsg)
+REGISTER_CMD_FUNC(deathmsg)
 {
-	if(!Install_cstrike_DeatMsg()) {
-		pEngfuncs->Con_Printf("Hook not installed.\n");
+	if(!Hook_DeathMsg())
+	{
+		pEngfuncs->Con_Printf(
+			"Error: Hook not installed.\n"
+			"Maybe your modification \"%s\" is not supported?\n",
+			pEngfuncs->pfnGetGameDirectory()
+		);
 		return;
 	}
 
@@ -328,7 +402,7 @@ REGISTER_CMD_FUNC(cstrike_deathmsg)
 				}
 			}
 			pEngfuncs->Con_Printf(
-				"mirv_cstrike_deathmsg block\n"
+				PREFIX "deathmsg block\n"
 				"\t<attackerId> <victimId> - adds a block, use * to match any id, use !x to match any id apart from x\n"
 				"\tlist - lists current blocks\n"
 				"\tclear - clears all blocks\n"
@@ -348,12 +422,12 @@ REGISTER_CMD_FUNC(cstrike_deathmsg)
 				pMem[1] = iV;
 				pMem[2] = iT;
 				strcpy_s((char *)(&pMem[3]), sz-3, acmd);
-				detoured_cstrike_MsgFunc_DeathMsg("DeathMsg", (int)sz, pMem);
+				detoured_MsgFunc_DeathMsg("DeathMsg", (int)sz, pMem);
 				free(pMem);
 				return;
 			}
 			pEngfuncs->Con_Printf(
-				"mirv_cstrike_deathmsg fake <attackerId> <victimId> <0|1> <weaponString> - Use at your own risk.\n"
+				PREFIX "deathmsg fake <attackerId> <victimId> <0|1> <weaponString> - Use at your own risk.\n"
 			);
 			return;
 		}
@@ -361,18 +435,12 @@ REGISTER_CMD_FUNC(cstrike_deathmsg)
 			if(3==argc) {
 				deathMessagesMax = atoi(pEngfuncs->Cmd_Argv(2));
 		
-				if(deathMessagesMax < 1) {
-					deathMessagesMax = 0;
-					cstrike_DeathNotices.clear();
-				} else {
-					while(deathMessagesMax <= cstrike_DeathNotices.size())
-						cstrike_DeathNotices.pop_front();
-				}
+				if(deathMessagesMax < 0) deathMessagesMax = 0;
 				return;
 			}
 			
 			pEngfuncs->Con_Printf(
-				"mirv_cstrike_deathmsg max <value>\n"
+				PREFIX "deathmsg max <value>\n"
 				"Current: %i\n",
 				deathMessagesMax
 			);
@@ -389,7 +457,7 @@ REGISTER_CMD_FUNC(cstrike_deathmsg)
 			}
 
 			pEngfuncs->Con_Printf(
-				"mirv_cstrike_deathmsg offset default|<value>\n"
+				PREFIX "deathmsg offset default|<value>\n"
 				"If you want the same height like in in-eye demos for HLTV demos use 40 as value.\n"
 			);
 			if(!g_DeathMsg_ForceOffset)
@@ -402,10 +470,15 @@ REGISTER_CMD_FUNC(cstrike_deathmsg)
 	}
 
 	pEngfuncs->Con_Printf(
-		"mirv_cstrike_deathmsg\n"
+		PREFIX "deathmsg\n"
 		"\tblock - block messages\n"
 		"\tfake - fake a message\n"
 		"\tmax - maximum hud history row count\n"
 		"\toffset - set death message screen offset\n"
 	);
+}
+
+REGISTER_CMD_FUNC(cstrike_deathmsg)
+{
+	CALL_CMD(deathmsg)
 }

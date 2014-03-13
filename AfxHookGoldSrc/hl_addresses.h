@@ -84,6 +84,17 @@ AFXADDR_DECL(r_refdef)
 AFXADDR_DECL(shm)
 AFXADDR_DECL(skytextures)
 AFXADDR_DECL(soundtime)
+AFXADDR_DECL(tfc_CHudDeathNotice_Draw)
+AFXADDR_DECL(tfc_CHudDeathNotice_Draw_DSZ)
+AFXADDR_DECL(tfc_CHudDeathNotice_MsgFunc_DeathMsg)
+AFXADDR_DECL(tfc_CHudDeathNotice_MsgFunc_DeathMsg_DSZ)
+AFXADDR_DECL(tfc_MsgFunc_DeathMsg)
+AFXADDR_DECL(tfc_MsgFunc_DeathMsg_DSZ)
+AFXADDR_DECL(tfc_TeamFortressViewport_UpdateSpecatorPanel)
+AFXADDR_DECL(tfc_TeamFortressViewport_UpdateSpecatorPanel_DSZ)
+AFXADDR_DECL(tfc_rgDeathNoticeList)
+AFXADDR_DECL(valve_TeamFortressViewport_UpdateSpecatorPanel)
+AFXADDR_DECL(valve_TeamFortressViewport_UpdateSpecatorPanel_DSZ)
 
 void Addresses_InitHlExe(AfxAddr hlExe);
 void Addresses_InitHwDll(AfxAddr hwDll);

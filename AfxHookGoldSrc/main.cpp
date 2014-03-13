@@ -4,11 +4,14 @@
 // Additional libraries:
 
 #pragma comment(lib,"OpenGL32.lib")
+
+#ifdef AFX_SCRIPT
 #pragma comment(lib,"mozjs-24.lib")
+#endif // AFX_SCRIPT
 
 #ifdef AFX_GUI
 #pragma comment(lib,"RocketCore.lib")
-#endif
+#endif // AFX_GUI
 
 /*
 // Direct show:
@@ -29,7 +32,9 @@
 
 #include "AfxGoldSrcComClient.h"
 
+#ifdef AFX_SCRIPT
 #include "scripting.h"
+#endif // AFX_SCRIPT
 
 #ifdef AFX_GUI
 #include "gui/Gui.h"
@@ -56,11 +61,15 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 			MessageBox(0,"DLL_PROCESS_DETACH","MDT_DEBUG",MB_OK);
 #endif
 
+#ifdef AFX_SCRIPT
 			g_Script_CanConsolePrint = false;
+#endif // AFX_SCRIPT
 
 			g_AfxGoldSrcComClient.Close();
 
+#ifdef AFX_SCRIPT
 			ScriptEngine_ShutDown();
+#endif // AFX_SCRIPT
 
 #ifdef AFX_GUI
 			AfxGui_ShutDown();

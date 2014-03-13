@@ -12,7 +12,11 @@
 #include "../filming.h"
 #include "../mirv_glext.h"
 #include "../HltvFix.h"
+
+#ifdef AFX_SCRIPT
 #include "../scripting.h"
+#endif // AFX_SCRIPT
+
 #include "HookHw.h"
 #include "hw/ClientFunctions.h"
 
@@ -172,7 +176,9 @@ void HookGameLoaded()
 	// Re-Hook ClientFunctionTable:
 	HookClientFunctions();
 
+#ifdef AFX_SCRIPT
 	g_Script_CanConsolePrint = true;
+#endif // AFX_SCRIPT
 
 	// Now is a good time to install OpenGl extensions:
 	Install_All_Gl_Extensions();

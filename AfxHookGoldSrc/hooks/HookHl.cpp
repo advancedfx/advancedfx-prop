@@ -5,7 +5,10 @@
 #include <shared/detours.h>
 #include "HookHw.h"
 #include "../hl_addresses.h"
+
+#ifdef AFX_SCRIPT
 #include "../scripting.h"
+#endif // AFX_SCRIPT
 
 HMODULE WINAPI new_LoadLibraryA( LPCSTR lpLibFileName )
 {
@@ -16,11 +19,13 @@ HMODULE WINAPI new_LoadLibraryA( LPCSTR lpLibFileName )
 	{
 		firstRun = false;
 
+#ifdef AFX_SCRIPT
 		// Start Js engine as early as possible on the main thread
 		// (we cannot do this in DllMain, because that
 		// attachment happens on a different thread).
 		// JS_GC() will crash when run from a different thread.
 		ScriptEngine_StartUp();
+#endif // AFX_SCRIPT
 	}
 
 

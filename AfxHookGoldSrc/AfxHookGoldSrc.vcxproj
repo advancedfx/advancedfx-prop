@@ -53,7 +53,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>./;../;C:\Libraries;C:\Libraries\halflife\common;C:\Libraries\halflife\engine;C:\Libraries\halflife\pm_shared;C:\Libraries\halflife\public;C:\Libraries\libRocket\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;_BIND_TO_CURRENT_CRT_VERSION=1;AFX_GUI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;_BIND_TO_CURRENT_CRT_VERSION=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -129,6 +129,7 @@
     <ClCompile Include="decals_hook.cpp" />
     <ClCompile Include="demo_tools.cpp" />
     <ClCompile Include="demozoom.cpp" />
+    <ClCompile Include="disable_spec_menu.cpp" />
     <ClCompile Include="EasySampler.cpp" />
     <ClCompile Include="film_sound.cpp" />
     <ClCompile Include="filming.cpp" />

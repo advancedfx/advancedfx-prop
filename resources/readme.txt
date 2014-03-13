@@ -41,13 +41,14 @@ people, companies or organizations:
 FreeType
   Portions of this software are copyright © 2012 The FreeType
   Project (www.freetype.org).  All rights reserved.
+  (Currently not used in Release build.)
 
 Microsoft
   For VC++, MSDN Library, ... .
   http://www.microsoft.com/
   
 Mozilla
-  For SpiderMonkey.
+  For SpiderMonkey (Currently not used in Release build.).
   http://www.mozilla.org/
   
 SourceForge
@@ -63,7 +64,7 @@ id Software
   http://www.idsoftware.com/
   
 libRocket
-  For libRocket
+  For libRocket (Currently not used in Release build.).
   http://librocket.com/
 
 And everyone that feels he/she/it should have been mentioned here.
@@ -91,6 +92,7 @@ msthavoc
 Dec
   Forum, IRC.
   Since March 2011.
+  http://www.youtube.com/user/AMDECKARN
 
 Past members:
 

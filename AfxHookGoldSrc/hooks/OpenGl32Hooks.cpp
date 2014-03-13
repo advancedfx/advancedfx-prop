@@ -16,7 +16,10 @@
 #include "../mirv_glext.h"
 #include "../supportrender.h"
 #include "../zooming.h"
+
+#ifdef AFX_SCRIPT
 #include "../scripting.h"
+#endif
 
 #include "HookHw.h"
 #include "hw/Host_Frame.h"
@@ -178,7 +181,9 @@ void APIENTRY NewGlBegin(GLenum mode)
 		return;
 	}
 
+#ifdef AFX_SCRIPT
 	ScriptEvent_OnGlBegin(mode);
+#endif // AFX_SCRIPT
 
 	if (g_Filming.doWireframe(mode) == Filming::DR_HIDE) {
 		return;
@@ -224,7 +229,9 @@ void APIENTRY NewGlEnd(void)
 
 	g_Filming.DoWorldFxEnd();
 
+#ifdef AFX_SCRIPT
 	ScriptEvent_OnGlEnd();
+#endif // AFX_SCRIPT
 }
 
 void APIENTRY NewGlClear(GLbitfield mask)
@@ -381,6 +388,7 @@ BOOL APIENTRY NewWglSwapBuffers(HDC hDC)
 	AfxGui_Render();
 #endif
 
+#ifdef AFX_SCRIPT
 	if(ScriptEvent_OnSwapBuffers(hDC, bResWglSwapBuffers))
 	{
 		// reset call trackers:
@@ -389,6 +397,7 @@ BOOL APIENTRY NewWglSwapBuffers(HDC hDC)
 
 		return bResWglSwapBuffers;
 	}
+#endif // AFX_SCRIPT
 
 	if (g_Filming.isFilming())
 	{

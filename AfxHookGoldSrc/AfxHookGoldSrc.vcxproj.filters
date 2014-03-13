@@ -243,6 +243,9 @@
     <ClCompile Include="forcePlayersSolid.cpp">
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
+    <ClCompile Include="disable_spec_menu.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
