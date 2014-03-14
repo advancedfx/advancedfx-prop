@@ -58,7 +58,7 @@ tfc_DeathNoticeItem * tfc_rgDeathNoticeList;
 #define cstrike_OFS_Draw_YRes 0x114
 #define cstrike_OFS_Draw_AfterYRes (cstrike_OFS_Draw_YRes +0x0A)
 
-#define tfc_OFS_Draw_YRes 0x1fa
+#define tfc_OFS_Draw_YRes 0x09
 #define tfc_OFS_Draw_AfterYRes (tfc_OFS_Draw_YRes +0x05)
 
 DWORD DeathMsg_Draw_AfterYRes;
@@ -255,11 +255,6 @@ __declspec(naked) void tfc_DeathMsg_DrawHelperY() {
 		
 		__Continue:
 		pop eax
-
-		push eax ; Original code
-		push ebp ; . (ebp has y)
-		push esi ; .
-		push 0   ; .
 
 		JMP [DeathMsg_Draw_AfterYRes]
 	}

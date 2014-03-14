@@ -75,7 +75,20 @@ next thing to patch is the drawing function, so we search for acces rgDeathNotic
 0f298094 -2 = 0f298092 is inside CHudDeathNotice :: Draw
 
 0f298060 CHudDeathNotice :: Draw
-...
+0f298060 83ec30          sub     esp,30h
+0f298063 53              push    ebx
+0f298064 55              push    ebp
+0f298065 56              push    esi
+0f298066 57              push    edi
+0f298067 33ff            xor     edi,edi
+0f298069 bd22000000      mov     ebp,offset <Unloaded_ud.drv>+0x21 (00000022)
+0f29806e 894c242c        mov     dword ptr [esp+2Ch],ecx
+0f298072 897c2418        mov     dword ptr [esp+18h],edi
+0f298076 c7442414f079310f mov     dword ptr [esp+14h],offset client!`string'+0x125bc (0f3179f0)
+0f29807e c7442410b079310f mov     dword ptr [esp+10h],offset client!`string'+0x1257c (0f3179b0)
+0f298086 896c2428        mov     dword ptr [esp+28h],ebp
+0f29808a c744241c4c7a310f mov     dword ptr [esp+1Ch],offset client!`string'+0x12618 (0f317a4c)
+
 // 		if ( rgDeathNoticeList[i].iId == 0 )
 // 			break;  // we've gone through them all
 0f298092 8b87307a310f    mov     eax,dword ptr client!`string'+0x125fc (0f317a30)[edi]
@@ -146,6 +159,7 @@ next thing to patch is the drawing function, so we search for acces rgDeathNotic
 0f298159 89542420        mov     dword ptr [esp+20h],edx
 0f29815d eb04            jmp     client!F+0x823 (0f298163)
 0f29815f 89442420        mov     dword ptr [esp+20h],eax
+0f298163 
 
 //
 ...
@@ -161,5 +175,5 @@ next thing to patch is the drawing function, so we search for acces rgDeathNotic
 ...
 
 Note:
-In the code we also patch the y-value before the SPR_DrawAdditive (in tfc_DeathMsg_DrawHelperY),
-this might need to be adjusted too upon updates.
+In the code we also patch the y-value which is initalized at 0f298069.
+(Initalized to 0x22 = 32+2 and every new line has an offset of 0x14).

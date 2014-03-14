@@ -3,6 +3,17 @@
 
 <changelog>
 
+<release>
+<name>HLAE</name>
+<version>2.3.15.1</version>
+<time>2014-03-14T19:49Z</time>
+<changes>
+<change type="fixed">
+Fixed mirv_deathmsg not working correctly in TFC (thanks to Rojola for testing).
+</change>
+</changes>
+</release>
+
 
 <release>
 <name>HLAE</name>
