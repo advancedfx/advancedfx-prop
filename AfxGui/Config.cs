@@ -109,7 +109,7 @@ public class CfgCustomLoader
 	{
 		HookDllPath = "";
 		ProgramPath = "";
-		CmdLine = "-steam -window -console -game cstrike";
+		CmdLine = "-steam -insecure -window -console -game cstrike";
 	}
 }
 

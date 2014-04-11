@@ -170,31 +170,34 @@ void HookHw(HMODULE hHw)
 	ppmove			= (playermove_s*)HL_ADDR_GET(p_playermove_s);
 
 	// Kernel32.dll:
-	if(!InterceptDllCall(hHw, "Kernel32.dll", "LoadLibraryA", (DWORD) &NewHwLoadLibraryA)) { bIcepOk = false; MessageBox(0,"Interception failed: Kernel32.dll!LoadLibraryA","MDT_ERROR",MB_OK|MB_ICONHAND); }
+	if(!InterceptDllCall(hHw, "Kernel32.dll", "LoadLibraryA", (DWORD) &NewHwLoadLibraryA)) { bIcepOk = false; MessageBox(0,"Interception failed:\nhw.dll:Kernel32.dll!LoadLibraryA","MDT_ERROR",MB_OK|MB_ICONHAND); }
 
 	// sdl2.dll:
-	if(!(g_Old_SDL_GL_GetProcAddress=(SDL_GL_GetProcAddress_t)InterceptDllCall(hHw, "sdl2.dll", "SDL_GL_GetProcAddress", (DWORD) &New_SDL_GL_GetProcAddress) )) { bIcepOk = false; MessageBox(0,"Interception failed: sdl2.dll!SDL_GL_GetProcAddress","MDT_ERROR",MB_OK|MB_ICONHAND); }
+	if(!(g_Old_SDL_GL_GetProcAddress=(SDL_GL_GetProcAddress_t)InterceptDllCall(hHw, "sdl2.dll", "SDL_GL_GetProcAddress", (DWORD) &New_SDL_GL_GetProcAddress) )) { bIcepOk = false; MessageBox(0,"Interception failed:\nhw.dll:sdl2.dll!SDL_GL_GetProcAddress","MDT_ERROR",MB_OK|MB_ICONHAND); }
 #ifdef AFX_GUI
-	if(!(g_Old_SDL_SetRelativeMouseMode=(SDL_SetRelativeMouseMode_t)InterceptDllCall(hHw, "sdl2.dll", "SDL_SetRelativeMouseMode", (DWORD) &New_SDL_SetRelativeMouseMode) )) { bIcepOk = false; MessageBox(0,"Interception failed: sdl2.dll!SDL_SetRelativeMouseMode","MDT_ERROR",MB_OK|MB_ICONHAND); }
-	if(!(g_Old_SDL_WaitEventTimeout=(SDL_WaitEventTimeout_t)InterceptDllCall(hHw, "sdl2.dll", "SDL_WaitEventTimeout", (DWORD) &New_SDL_WaitEventTimeout) )) { bIcepOk = false; MessageBox(0,"Interception failed: sdl2.dll!SDL_WaitEventTimeout","MDT_ERROR",MB_OK|MB_ICONHAND); }
-	if(!(g_Old_SDL_PollEvent=(SDL_PollEvent_t)InterceptDllCall(hHw, "sdl2.dll", "SDL_PollEvent", (DWORD) &New_SDL_PollEvent) )) { bIcepOk = false; MessageBox(0,"Interception failed: sdl2.dll!SDL_PollEvent","MDT_ERROR",MB_OK|MB_ICONHAND); }
+	if(!(g_Old_SDL_SetRelativeMouseMode=(SDL_SetRelativeMouseMode_t)InterceptDllCall(hHw, "sdl2.dll", "SDL_SetRelativeMouseMode", (DWORD) &New_SDL_SetRelativeMouseMode) )) { bIcepOk = false; MessageBox(0,"Interception failed:\nhw.dll:sdl2.dll!SDL_SetRelativeMouseMode","MDT_ERROR",MB_OK|MB_ICONHAND); }
+	if(!(g_Old_SDL_WaitEventTimeout=(SDL_WaitEventTimeout_t)InterceptDllCall(hHw, "sdl2.dll", "SDL_WaitEventTimeout", (DWORD) &New_SDL_WaitEventTimeout) )) { bIcepOk = false; MessageBox(0,"Interception failed:\nhw.dll:sdl2.dll!SDL_WaitEventTimeout","MDT_ERROR",MB_OK|MB_ICONHAND); }
+	if(!(g_Old_SDL_PollEvent=(SDL_PollEvent_t)InterceptDllCall(hHw, "sdl2.dll", "SDL_PollEvent", (DWORD) &New_SDL_PollEvent) )) { bIcepOk = false; MessageBox(0,"Interception failed:\nhw.dll:sdl2.dll!SDL_PollEvent","MDT_ERROR",MB_OK|MB_ICONHAND); }
 #endif // AFX_GUI
 	
 	HMODULE hSdl = GetModuleHandle("sdl2.dll");
 	if(hSdl)
 	{
-		if(!InterceptDllCall(hSdl, "Kernel32.dll", "GetProcAddress", (DWORD) &NewSdlGetProcAddress) ) { bIcepOk = false; MessageBox(0,"Interception failed: Kernel32.dll!GetProcAddress","MDT_ERROR",MB_OK|MB_ICONHAND); }
+		if(!InterceptDllCall(hSdl, "Kernel32.dll", "GetProcAddress", (DWORD) &NewSdlGetProcAddress) ) { bIcepOk = false; MessageBox(0,"Interception failed:\nsdl2.dll:Kernel32.dll!GetProcAddress","MDT_ERROR",MB_OK|MB_ICONHAND); }
 
 		// user32.dll:
-		if(!InterceptDllCall(hSdl, "user32.dll", "CreateWindowExW", (DWORD) &NewCreateWindowExW) ) { bIcepOk = false; MessageBox(0,"Interception failed: user32.dll!CreateWindowExW","MDT_ERROR",MB_OK|MB_ICONHAND); }
-		if(!InterceptDllCall(hSdl, "user32.dll", "DestroyWindow", (DWORD) &NewDestroyWindow) ) { bIcepOk = false; MessageBox(0,"Interception failed: user32.dll!DestroyWindow","MDT_ERROR",MB_OK|MB_ICONHAND); }
+		if(!InterceptDllCall(hSdl, "user32.dll", "CreateWindowExW", (DWORD) &NewCreateWindowExW) ) { bIcepOk = false; MessageBox(0,"Interception failed:\nsdl2.dll:user32.dll!CreateWindowExW","MDT_ERROR",MB_OK|MB_ICONHAND); }
+		if(!InterceptDllCall(hSdl, "user32.dll", "DestroyWindow", (DWORD) &NewDestroyWindow) ) { bIcepOk = false; MessageBox(0,"Interception failed:\nsdl2.dll:user32.dll!DestroyWindow","MDT_ERROR",MB_OK|MB_ICONHAND); }
 
 		// gdi32.dll:
-		if(!(OldWglSwapBuffers=(wglSwapBuffers_t)InterceptDllCall(hSdl, "gdi32.dll", "SwapBuffers", (DWORD) &NewWglSwapBuffers) )) { bIcepOk = false; MessageBox(0,"Interception failed: gdi32.dll!SwapBuffers","MDT_ERROR",MB_OK|MB_ICONHAND); }
+		if(!(OldWglSwapBuffers=(wglSwapBuffers_t)InterceptDllCall(hSdl, "gdi32.dll", "SwapBuffers", (DWORD) &NewWglSwapBuffers) )) { bIcepOk = false; MessageBox(0,"Interception failed:\nsdl2.dll:gdi32.dll!SwapBuffers","MDT_ERROR",MB_OK|MB_ICONHAND); }
 		if(!InterceptDllCall(hSdl, "gdi32.dll", "SetPixelFormat", (DWORD) &NewSetPixelFormat) ) { bIcepOk = false; MessageBox(0,"Interception failed: gdi32.dll!SetPixelFormat","MDT_ERROR",MB_OK|MB_ICONHAND); }
 	}
 	else
+	{
 		bIcepOk = false;
+		MessageBox(0,"Could not get module handle for sdl2.dll.","MDT_ERROR",MB_OK|MB_ICONHAND);
+	}
 
 	if( !bIcepOk )
 		MessageBox(0,"One or more interceptions failed","MDT_ERROR",MB_OK|MB_ICONHAND);

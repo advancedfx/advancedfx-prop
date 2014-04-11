@@ -596,6 +596,9 @@ public:
 
 	virtual void _UNKOWN_106(void)
 	{ JMP_IFACE_FN(csgo_VClient, 106) }
+
+	virtual void _UNKOWN_107(void)
+	{ JMP_IFACE_FN(csgo_VClient, 107) }
 } g_BaseClientDllWrapper_csgo;
 
 void HookClientDllInterface_011_Init(void * iface)
