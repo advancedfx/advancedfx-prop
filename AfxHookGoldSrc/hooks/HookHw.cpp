@@ -22,6 +22,8 @@
 #include "hw/R_RenderView.h"
 #include "hw/UnkDrawHud.h"
 
+#include "client/Server_GetBlendingInterface.h"
+
 #include "../hl_addresses.h"
 #ifdef AFX_GUI
 #include "../gui/Gui.h"
@@ -134,6 +136,34 @@ int New_SDL_PollEvent(SDL_Event* event)
 
 #endif // AFX_GUI
 
+FARPROC WINAPI NewHwGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
+{
+	FARPROC nResult;
+	nResult = GetProcAddress(hModule, lpProcName);
+
+	if (HIWORD(lpProcName))
+	{
+#if 0
+		static bool bFirst = true;
+		static FILE *f1=NULL;
+		static char ttt[100];
+
+		if( !f1 ) f1=fopen("mdt_log_NewHwGetProcAddress.txt","wb");
+		GetModuleFileName(hModule,ttt,99);
+		fprintf(f1,"%s %s\n",ttt, lpProcName);
+		fflush(f1);
+#endif
+
+		if (!lstrcmp(lpProcName, "GetProcAddress"))
+			return (FARPROC) &NewHwGetProcAddress;
+
+		if(!lstrcmp(lpProcName, "Server_GetBlendingInterface"))
+			return Hook_ServerGetBlendingInterface(nResult);
+	}
+
+	return nResult;
+}
+
 HMODULE WINAPI NewHwLoadLibraryA( LPCSTR lpLibFileName )
 {
 	static bool bClientLoaded = false;
@@ -171,6 +201,7 @@ void HookHw(HMODULE hHw)
 
 	// Kernel32.dll:
 	if(!InterceptDllCall(hHw, "Kernel32.dll", "LoadLibraryA", (DWORD) &NewHwLoadLibraryA)) { bIcepOk = false; MessageBox(0,"Interception failed:\nhw.dll:Kernel32.dll!LoadLibraryA","MDT_ERROR",MB_OK|MB_ICONHAND); }
+	if(!InterceptDllCall(hHw, "Kernel32.dll", "GetProcAddress", (DWORD) &NewHwGetProcAddress) ) { bIcepOk = false; MessageBox(0,"Interception failed:\nhw.dll:Kernel32.dll!GetProcAddress","MDT_ERROR",MB_OK|MB_ICONHAND); }
 
 	// sdl2.dll:
 	if(!(g_Old_SDL_GL_GetProcAddress=(SDL_GL_GetProcAddress_t)InterceptDllCall(hHw, "sdl2.dll", "SDL_GL_GetProcAddress", (DWORD) &New_SDL_GL_GetProcAddress) )) { bIcepOk = false; MessageBox(0,"Interception failed:\nhw.dll:sdl2.dll!SDL_GL_GetProcAddress","MDT_ERROR",MB_OK|MB_ICONHAND); }

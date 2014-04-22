@@ -8,6 +8,9 @@
 #include <halflife/cl_dll/cl_dll.h>
 #include <halflife/cl_dll/in_defs.h> // PITCH YAW ROLL // HL1 sdk
 #include <halflife/engine/cdll_int.h>
+#include <halflife/engine/progdefs.h>
+#include <halflife/engine/eiface.h>
+#include <halflife/engine/studio.h>
 #include <halflife/common/cl_entity.h>
 #include <halflife/common/com_model.h>
 #include <halflife/common/cvardef.h>

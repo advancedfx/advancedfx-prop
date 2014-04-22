@@ -249,6 +249,9 @@
     <ClCompile Include="sv_hitboxes.cpp">
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
+    <ClCompile Include="hooks\client\Server_GetBlendingInterface.cpp">
+      <Filter>AfxHookGoldSrc\hooks\client</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -433,6 +436,9 @@
     </ClInclude>
     <ClInclude Include="sv_hitboxes.h">
       <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\client\Server_GetBlendingInterface.h">
+      <Filter>AfxHookGoldSrc\hooks\client</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
