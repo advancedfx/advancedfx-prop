@@ -246,6 +246,9 @@
     <ClCompile Include="disable_spec_menu.cpp">
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
+    <ClCompile Include="sv_hitboxes.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -426,6 +429,9 @@
       <Filter>AfxHookGoldSrc\gui</Filter>
     </ClInclude>
     <ClInclude Include="hlaeFolder.h">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClInclude>
+    <ClInclude Include="sv_hitboxes.h">
       <Filter>AfxHookGoldSrc</Filter>
     </ClInclude>
   </ItemGroup>

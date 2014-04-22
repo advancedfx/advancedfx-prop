@@ -167,6 +167,7 @@
     </ClCompile>
     <ClCompile Include="Store.cpp" />
     <ClCompile Include="supportrender.cpp" />
+    <ClCompile Include="sv_hitboxes.cpp" />
     <ClCompile Include="temporary_dominik_0005.cpp" />
     <ClCompile Include="zooming.cpp" />
     <ClCompile Include="hooks\gdi32Hooks.cpp" />
@@ -228,6 +229,7 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Store.h" />
     <ClInclude Include="supportrender.h" />
+    <ClInclude Include="sv_hitboxes.h" />
     <ClInclude Include="zooming.h" />
     <ClInclude Include="hooks\gdi32Hooks.h" />
     <ClInclude Include="hooks\HookGameLoaded.h" />
