@@ -8,6 +8,14 @@
 // First changes
 // 2014-04-22 dominik.matrixstorm.com
 
+
+// Helpful documentation:
+// 
+// http://www.mail-archive.com/hlcoders@list.valvesoftware.com/msg07085.html
+// http://www.mail-archive.com/hlcoders@list.valvesoftware.com/msg01224.html
+// http://www.mail-archive.com/hlcoders@list.valvesoftware.com/msg02724.html
+
+
 #include "Server_GetBlendingInterface.h"
 
 #include <hlsdk.h>
