@@ -1,6 +1,14 @@
 #pragma once
 
 // BEGIN HLSDK includes
+#pragma push_macro("ARRAYSIZE")
+#ifdef ARRAYSIZE
+#undef ARRAYSIZE
+#endif
+#pragma push_macro("offsetof")
+#ifdef offsetof
+#undef offsetof
+#endif
 #pragma push_macro("HSPRITE")
 #define HSPRITE MDTHACKED_HSPRITE
 //
@@ -25,4 +33,6 @@
 //
 #undef HSPRITE
 #pragma pop_macro("HSPRITE")
+#pragma pop_macro("offsetof")
+#pragma pop_macro("ARRAYSIZE")
 // END HLSDK includes

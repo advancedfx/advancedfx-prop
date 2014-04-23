@@ -5,6 +5,23 @@
 
 <release>
 <name>HLAE</name>
+<version>2.3.16.0</version>
+<time>2014-04-23T06:32Z</time>
+<changes>
+<change type="added">
+Added mirv_draw_sv_hitboxes. This will draw the serve-side hitboxes (for the listenserver / New Game), when the
+engine offers the server DLL (mp.dll for cstrike) them through the SV_StudioSetupBones blending interface function.
+In order for this to work you need at least another player looking at a player. Also you will notice the hitboxes
+to be flashing then, this is because the server doesn't call the function before every client.dll frame (only for a
+share of frames). Please make sure that VAC is disabled when creating a New Game / joining the listenserver (which
+is usually the case), otherwise you might get VAC banned.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.3.15.2</version>
 <time>2014-04-11T18:21Z</time>
 <changes>
