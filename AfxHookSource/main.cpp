@@ -3,10 +3,14 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2010-05-24 by dominik.matrixstorm.com
+// 2014-04-30 by dominik.matrixstorm.com
 //
 // First changes:
 // 2009-09-29 by dominik.matrixstorm.com
+
+
+// TODO:
+// - Memory for Wrp* is never freed atm
 
 #include <windows.h>
 
@@ -19,6 +23,7 @@
 #include "SourceInterfaces.h"
 #include "WrpVEngineClient.h"
 #include "WrpConsole.h"
+#include "WrpGlobals.h"
 
 //#include "d3d9Hooks.h"
 
@@ -92,7 +97,7 @@ public:
 
 CreateInterfaceFn g_AppSystemFactory = 0;
 
-void MySetup(CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGlobals)
+void MySetup(CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals)
 {
 	static bool bFirstRun = true;
 
@@ -170,7 +175,7 @@ int __stdcall new_Client_Init(DWORD *this_ptr, CreateInterfaceFn appSystemFactor
 	if(bFirstCall) {
 		bFirstCall = false;
 
-		MySetup(appSystemFactory, pGlobals);
+		MySetup(appSystemFactory, new WrpGlobalsOther(pGlobals));
 	}
 
 	__asm {
@@ -263,7 +268,7 @@ public:
 		{
 			bFirstCall = false;
 
-			MySetup(appSystemFactory, pGlobals);
+			MySetup(appSystemFactory, new WrpGlobalsCsGo(pGlobals));
 		}
 
 		__asm {

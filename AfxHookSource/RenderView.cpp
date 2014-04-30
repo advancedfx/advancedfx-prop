@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2010-05-20 by dominik.matrixstorm.com
+// 2014-04-30 by dominik.matrixstorm.com
 //
 // First changes:
 // 2009-11-01 by dominik.matrixstorm.com
@@ -54,8 +54,6 @@ void SetCvarFloat(void * pcvar, float value)
 	*pf = value;
 }
 
-float * g_value_curtime;
-
 
 // Hook_VClient_RenderView /////////////////////////////////////////////////////
 
@@ -96,7 +94,7 @@ void Hook_VClient_RenderView::ExportEnd() {
 }
 
 float Hook_VClient_RenderView::GetCurTime() {
-	return *g_value_curtime;
+	return m_Globals->curtime_get();
 }
 
 float Hook_VClient_RenderView::GetImportBasteTime() {
@@ -118,12 +116,12 @@ void Hook_VClient_RenderView::ImportEnd() {
 	m_Import = false;
 }
 
-void Hook_VClient_RenderView::Install(CGlobalVarsBase * pGlobals)
+void Hook_VClient_RenderView::Install(WrpGlobals * globals)
 {
 	if(m_IsInstalled)
 		return;
 
-	g_value_curtime = (float *)((BYTE *)pGlobals +AFXADDR_GET(cstrike_gpGlobals_OFS_curtime));
+	m_Globals = globals;
 
 	m_IsInstalled = true;
 }

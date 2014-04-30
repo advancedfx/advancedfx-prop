@@ -3,13 +3,13 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2009-11-01 by dominik.matrixstorm.com
+// 2014-04-30 by dominik.matrixstorm.com
 //
 // First changes:
 // 2009-11-01 by dominik.matrixstorm.com
 
 
-#include "SourceInterfaces.h"
+#include "WrpGlobals.h"
 
 
 class Hook_VClient_RenderView;
@@ -37,7 +37,7 @@ public:
 	bool ImportBegin(wchar_t const *fileName);
 	void ImportEnd();
 
-	void Install(CGlobalVarsBase * pGlobals);
+	void Install(WrpGlobals * globals);
 
 	bool IsInstalled(void);
 
@@ -48,6 +48,7 @@ public:
 private:
 	bool m_Export;
 	float m_FrameTime;
+	WrpGlobals * m_Globals;
 	bool m_Import;
 	float m_ImportBaseTime;
 	bool m_IsInstalled;

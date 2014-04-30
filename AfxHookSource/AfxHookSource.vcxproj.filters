@@ -48,6 +48,9 @@
     <ClCompile Include="addresses.cpp">
       <Filter>AfxHookSource</Filter>
     </ClCompile>
+    <ClCompile Include="WrpGlobals.cpp">
+      <Filter>AfxHookSource</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -81,6 +84,9 @@
       <Filter>shared\vcpp</Filter>
     </ClInclude>
     <ClInclude Include="addresses.h">
+      <Filter>AfxHookSource</Filter>
+    </ClInclude>
+    <ClInclude Include="WrpGlobals.h">
       <Filter>AfxHookSource</Filter>
     </ClInclude>
   </ItemGroup>
