@@ -5,6 +5,20 @@
 
 <release>
 <name>HLAE</name>
+<version>2.3.17.0</version>
+<time>2014-07-20T17:28Z</time>
+<changes>
+<change type="added">
+Added several command line options to HLAE to allow automatic launching (of AfxHookGoldSrc) without having
+to use .NET remoting.
+The command line options will be documented in the HLAEwiki in the Interfaces section or s.th. alike.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.3.16.1</version>
 <time>2014-04-30T19:22Z</time>
 <changes>

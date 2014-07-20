@@ -144,8 +144,22 @@ namespace AfxGui
             m_AfxGoldSrc = new Afx.AfxGoldSrc(this);
 
 	        // start up public remoting system (if requested):
-	        if( System.Environment.CommandLine.Contains( "-ipcremote" ) )
+            if (Globals.EnableHlaeRemote)
+            {
                 m_HlaeRemoting = new hlae.remoting.HlaeRemoting(this);
+            }
+
+            // start-up AfxHookGoldSrc if requested (i.e. by command line)
+            if (Globals.AutoStartAfxHookGoldSrc)
+            {
+                CfgLauncher cfg = new CfgLauncher();
+
+                cfg.CopyFrom(GlobalConfig.Instance.Settings.Launcher);
+
+                Afx.AfxGoldSrc.StartSettings settings = cfg.MakeStartSettings();
+
+                m_AfxGoldSrc.Start(settings);
+            }
 
         }
 

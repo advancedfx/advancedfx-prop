@@ -11,22 +11,26 @@ Hint:
    http://github.com/ValveSoftware/halflife
    and install it into C:\Libraries\halflife
    
-3) Download the Mozilla Build Environment from
+3) This step is not required by default, only when you plan to build AfxHookGoldSrc with AFX_SCRIPT!
+   Download the Mozilla Build Environment from
    http://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe
    and install it into a folder you like.
 
-4) Download the Mozilla SpiderMonkey (JS) library from
+4) This step is not required by default, only when you plan to build AfxHookGoldSrc with AFX_SCRIPT!
+   Download the Mozilla SpiderMonkey (JS) library from
    http://ftp.mozilla.org/pub/mozilla.org/js/mozjs-24.2.0.tar.bz2
    and extract it into a folder you like.
    
-5) Compile the SpiderMonkey (JS) library using the Mozilla Build Environment
+5) This step is not required by default, only when you plan to build AfxHookGoldSrc with AFX_SCRIPT!
+   Compile the SpiderMonkey (JS) library using the Mozilla Build Environment
    ( start-msvc10.bat ) using the following commands:
    cd path_to_js_library/js/src
    autoconf-2.13
    ./configure
    make
    
-6) Copy the contents of the created JS dist folder (js/src/build-release/dist
+6) This step is not required by default, only when you plan to build AfxHookGoldSrc with AFX_SCRIPT! 
+   Copy the contents of the created JS dist folder (js/src/build-release/dist
    to c:\Libraries\js
 
 7) Obtain the HLAE source code from http://advancedfx.org and extract it into a
@@ -45,5 +49,8 @@ B) Copy all files and folders from resources\ to build\Release\bin,
 
 C) Copy msvcp100.dll, msvcr100.dll (CRT runtime, required by C++ and C++/CLI
    projects) from your system folders to build\Release\bin
+   
+D) This step is not required by default, only when you plan to build AfxHookGoldSrc with AFX_SCRIPT!
+   Copy mozjs-24.dll from C:\Libraries\js\bin to build\Release\bin
 
-D) Remove all temporary / unneeded files such as *.pdb and hlaeconfig.xml
+E) Remove all temporary / unneeded files such as *.pdb and hlaeconfig.xml
