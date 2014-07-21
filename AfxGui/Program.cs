@@ -145,7 +145,12 @@ namespace AfxGui
             {
             }
 
-            if (0 < argv.Length) Array.Copy(argv, 1, argv, 0, argv.Length - 1);
+            if (0 < argv.Length)
+            {
+                string[] tmp = new string[argv.Length - 1];
+                Array.Copy(argv, 1, tmp, 0, argv.Length - 1);
+                argv = tmp;
+            }
 
             Globals.EnableHlaeRemote = Array.Exists<string>(argv, p => p == "-ipcremote");
 
