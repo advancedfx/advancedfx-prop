@@ -72,3 +72,9 @@ REGISTER_DEBUGCMD_FUNC(tst_isspectateonly)
 {
 	pEngfuncs->Con_Printf(" pEngfuncs->IsSpectateOnly: %s\n", pEngfuncs->IsSpectateOnly() ? "true" : "false");
 }
+
+REGISTER_DEBUGCMD_FUNC(debug_cmdline)
+{
+	LPSTR cmdLine = GetCommandLine();
+	pEngfuncs->Con_Printf("GetCommandLine()==\"%s\"", cmdLine);
+}

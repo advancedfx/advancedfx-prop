@@ -3,6 +3,22 @@
 
 <changelog>
 
+
+<release>
+<name>HLAE</name>
+<version>2.3.18.0</version>
+<time>2014-08-15T19:53Z</time>
+<changes>
+<change type="fixed">
+Fixed __mirv_sample_frame_strength (controls cross-frame motion blur) not working as expected.
+</change>
+</changes>
+<comments>
+Greetings and thanks to Dec.
+</comments>
+</release>
+
+
 <release>
 <name>HLAE</name>
 <version>2.3.17.0</version>

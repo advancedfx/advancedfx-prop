@@ -63,9 +63,7 @@ bool EasyByteSampler::CanSkipConstant(float time, float durationPerSample)
 
 void EasyByteSampler::ClearFrame(float frameStrength)
 {
-	float w = m_Frame->WhitePoint * (1.0f -frameStrength);
-
-	if(w) w = 1 / w;
+	float w = 1.0f -frameStrength;
 
 	ScaleFrame(w);
 }
@@ -275,9 +273,7 @@ bool EasyFloatSampler::CanSkipConstant(float time, float durationPerSample)
 
 void EasyFloatSampler::ClearFrame(float frameStrength)
 {
-	float w = m_FrameWhitePoint * (1.0f -frameStrength);
-
-	if(w) w = 1 / w;
+	float w = 1.0f -frameStrength;
 
 	ScaleFrame(w);
 }
