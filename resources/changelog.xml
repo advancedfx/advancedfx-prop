@@ -6,6 +6,18 @@
 
 <release>
 <name>HLAE</name>
+<version>2.3.18.1</version>
+<time>2014-08-27T18:33Z</time>
+<changes>
+<change type="added">
+Added promotion for the Creative Minds Editing Competition.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.3.18.0</version>
 <time>2014-08-15T19:53Z</time>
 <changes>

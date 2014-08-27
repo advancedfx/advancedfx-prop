@@ -29,6 +29,7 @@ namespace AfxGui
         {
             InitializeComponent();
             this.Icon = Program.Icon;
+            panelContest.Visible = (new DateTime(2014, 10, 26)) >= DateTime.Today;
 
             m_UpdateCheckNotification = new UpdateCheckNotificationTarget(this, new UpdateCheckedDelegate(OnUpdateChecked));
         }
@@ -262,6 +263,23 @@ namespace AfxGui
             GlobalConfig.Instance.Settings.IgnoreUpdateGuid = m_LastUpdateGuid;
             this.statusStrip.Visible = false;
             this.statusLabelIgnore.Visible = false;
+        }
+
+        private void openContestLink()
+        {
+            System.Diagnostics.Process.Start(
+                 "http://www.style-productions.net/index.php?page=read_article&id=560&p=1"
+            );
+        }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+            openContestLink();
+        }
+
+        private void linkLabelContest_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            openContestLink();
         }
     }
 }
