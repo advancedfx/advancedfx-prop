@@ -257,7 +257,7 @@
             // statusLabelUpdate
             // 
             this.statusLabelUpdate.Name = "statusLabelUpdate";
-            this.statusLabelUpdate.Size = new System.Drawing.Size(331, 17);
+            this.statusLabelUpdate.Size = new System.Drawing.Size(288, 17);
             this.statusLabelUpdate.Spring = true;
             this.statusLabelUpdate.Text = "Update status known";
             this.statusLabelUpdate.Click += new System.EventHandler(this.statusLabelUpdate_Click);
@@ -359,8 +359,8 @@
             this.linkLabelContest.Size = new System.Drawing.Size(370, 54);
             this.linkLabelContest.TabIndex = 1;
             this.linkLabelContest.TabStop = true;
-            this.linkLabelContest.Text = "Enter the Creative Minds Editing Competition\r\nwith a prize pool of 300 EUR (~400$" +
-                ")!\r\nClick here for more information!";
+            this.linkLabelContest.Text = "Enter the Creative Minds Editing Competition\r\nwith a prize pool of 300 EUR!\r\nClic" +
+                "k here for more information!";
             this.linkLabelContest.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.linkLabelContest.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelContest_LinkClicked);
             // 
