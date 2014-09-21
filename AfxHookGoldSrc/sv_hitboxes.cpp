@@ -18,6 +18,7 @@
 #include "cmdregister.h"
 
 REGISTER_CVAR(draw_sv_hitboxes, "0", 0);
+REGISTER_CVAR(draw_sv_hitboxes_width, "1.0", 0);
 
 #include <GL/GL.h>
 
@@ -28,6 +29,8 @@ typedef struct temp_box_s {
 } temp_box_t;
 
 std::list<temp_box_t> tempBoxes;
+
+double hitboxesColor[3] = { 1.0, 0.0, 0.0 };
 
 //enginefuncs_t * g_pSvEnginefuncs;
 
@@ -112,18 +115,25 @@ void Draw_SV_Hitboxes(void)
 {
 	if(!draw_sv_hitboxes->value) return;
 
+	GLfloat lineWidth;
 	GLboolean depth = glIsEnabled(GL_DEPTH_TEST);
 	GLboolean text = glIsEnabled(GL_TEXTURE_2D);
+
+	glGetFloatv(GL_LINE_WIDTH, &lineWidth);
 
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_TEXTURE_2D);
 
+	glLineWidth(draw_sv_hitboxes_width->value);
+
 	for(std::list<temp_box_t>::iterator it = tempBoxes.begin(); it != tempBoxes.end(); it++)
 	{
-		DrawBox(*it, 1.0, 0.0, 0.0);
+		DrawBox(*it, hitboxesColor[0], hitboxesColor[1], hitboxesColor[2]);
 	}
 
 	tempBoxes.clear();
+
+	glLineWidth(lineWidth);
 
 	if(text) glEnable(GL_TEXTURE_2D);
 	if(!depth) glDisable(GL_DEPTH_TEST);
@@ -171,4 +181,36 @@ void FetchHitboxes(struct server_studio_api_s *pstudio, float (*bonetransform)[M
 
 		tempBoxes.push_back(p);
 	}
+}
+
+double clamp(double i, double min, double max)
+{
+	if (i < min)
+		return min;
+	if (i > max)
+		return max;
+	else
+		return i;
+}
+
+REGISTER_CMD_FUNC(draw_sv_hitboxes_setcolor)
+{
+	if (pEngfuncs->Cmd_Argc() != 4)
+	{
+		pEngfuncs->Con_Printf("Useage: " PREFIX "draw_sv_hitboxes_setcolor <red: 0-255> <green: 0-255> <blue: 0-255>\n");
+		return;
+	}
+
+	double red = (double) atoi(pEngfuncs->Cmd_Argv(1)) / 255.0;
+	double green = (double) atoi(pEngfuncs->Cmd_Argv(2)) / 255.0;
+	double blue = (double) atoi(pEngfuncs->Cmd_Argv(3)) / 255.0;
+
+	// ensure that the values are within the falid range
+	clamp(red, 0.0, 1.0);
+	clamp(green, 0.0, 1.0);	
+	clamp(blue, 0.0, 1.0);
+
+	hitboxesColor[0] = red;
+	hitboxesColor[1] = green;
+	hitboxesColor[2] = blue;
 }

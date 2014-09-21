@@ -6,6 +6,21 @@
 
 <release>
 <name>HLAE</name>
+<version>2.3.18.3</version>
+<time>2014-09-21T16:39Z</time>
+<changes>
+<change type="added">
+mirv_draw_sv_hitboxes_width f cvar (takes a floating point number as line width).
+</change>
+<change type="added">
+mirv_draw_sv_hitboxes_setcolor r g b command (takes 3 values from 0 to 255).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.3.18.1</version>
 <time>2014-08-27T18:33Z</time>
 <changes>
