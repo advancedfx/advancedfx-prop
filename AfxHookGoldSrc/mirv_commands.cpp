@@ -9,33 +9,54 @@
 #include <hlsdk.h>
 #include <list>
 
-struct AfxCvarEntry
+struct AfxCmdCvarData
 {
-	char * Name;
 	char * Value;
 	int Flags;
 	struct cvar_s * * OutCvar;
 };
 
-struct AfxCmdEntry
+struct AfxCmdCmdData
 {
-	char * Name;
 	void (*Function)(void);
 };
 
-std::list<AfxCvarEntry> & GetAfxCvarEntries() {
-	static std::list<AfxCvarEntry> afxCvarEntries;
-	return afxCvarEntries;
-}
+enum AfxCmdEntryType
+{
+	ACET_NULL,
+	ACET_Cmd,
+	ACET_Cvar
+};
+
+struct AfxCmdEntry
+{
+	char * Name;
+	AfxCmdEntryType Type;
+	union {
+		AfxCmdCmdData Cmd;
+		AfxCmdCvarData Cvar;
+	} Data;
+
+	AfxCmdEntry(char * name, void (*function)(void))
+	{
+		this->Name = name;
+		this->Type = ACET_Cmd;
+		this->Data.Cmd.Function = function;
+	}
+
+	AfxCmdEntry(char * name, char * value, int flags, struct cvar_s * * outCvar)
+	{
+		this->Name = name;
+		this->Type = ACET_Cvar;
+		this->Data.Cvar.Value = value;
+		this->Data.Cvar.Flags = flags;
+		this->Data.Cvar.OutCvar = outCvar;
+	}
+};
 
 std::list<AfxCmdEntry> & GetAfxCmdEntries() {
 	static std::list<AfxCmdEntry> afxCmdEntries;
 	return afxCmdEntries;
-}
-
-bool CompareAfxCvarEntry(AfxCvarEntry first, AfxCvarEntry second)
-{
-	return 0 <= _stricmp(first.Name, second.Name); // sort backwards
 }
 
 bool CompareAfxCmdEntry(AfxCmdEntry first, AfxCmdEntry second)
@@ -43,29 +64,13 @@ bool CompareAfxCmdEntry(AfxCmdEntry first, AfxCmdEntry second)
 	return 0 <= _stricmp(first.Name, second.Name); // sort backwards
 }
 
-
 void AfxRegisterCommands()
 {
-	// Register the cvars:
-	{
-		// sort the list so that Valve's console autocompletion won't be confused:
-		GetAfxCvarEntries().sort(CompareAfxCvarEntry);
-
-		for(
-			std::list<AfxCvarEntry>::iterator i = GetAfxCvarEntries().begin();
-			i != GetAfxCvarEntries().end();
-			i++
-		) {
-			if(0 != i->OutCvar)
-				*(i->OutCvar) = pEngfuncs->pfnRegisterVariable(i->Name, i->Value, i->Flags);
-			else
-				pEngfuncs->pfnRegisterVariable(i->Name, i->Value, i->Flags);
-		}
-	}
-
 	// Register the commands:
 	{
 		// sort the list so that Valve's console autocompletion won't be confused:
+		// Acutally this will only work partially, Commands will still take
+		// precedence over Cvars, despite our sorting effort.
 		GetAfxCmdEntries().sort(CompareAfxCmdEntry);
 
 		for(
@@ -73,20 +78,35 @@ void AfxRegisterCommands()
 			i != GetAfxCmdEntries().end();
 			i++
 		)
-			pEngfuncs->pfnAddCommand(i->Name, i->Function);
+		{
+			switch(i->Type)
+			{
+			case ACET_Cmd:
+				pEngfuncs->pfnAddCommand(i->Name, i->Data.Cmd.Function);
+				break;
+			case ACET_Cvar:
+				if(0 != i->Data.Cvar.OutCvar)
+					*(i->Data.Cvar.OutCvar) = pEngfuncs->pfnRegisterVariable(i->Name, i->Data.Cvar.Value, i->Data.Cvar.Flags);
+				else
+					pEngfuncs->pfnRegisterVariable(i->Name, i->Data.Cvar.Value, i->Data.Cvar.Flags);
+				break;
+			default:
+				throw "Unsopported AfxCmdEntryType.";
+			}
+		}
 	}
 }
 
 
 RegisterCvar::RegisterCvar(char * name, char * value, int flags, struct cvar_s * * outCvar)
 {
-	AfxCvarEntry entry = { name, value, flags, outCvar };
-	GetAfxCvarEntries().push_back(entry);
+	AfxCmdEntry entry(name, value, flags, outCvar);
+	GetAfxCmdEntries().push_back(entry);
 }
 
 RegisterCmd::RegisterCmd(char * name, void (*function)(void))
 {
-	AfxCmdEntry entry = { name, function };
+	AfxCmdEntry entry(name, function);
 	GetAfxCmdEntries().push_back(entry);
 }
 
@@ -96,21 +116,7 @@ REGISTER_DEBUGCMD_FUNC(listcmds)
 	int cntCmds = 0;
 	int cntVars = 0;
 
-	pEngfuncs->Con_Printf("---- cvars ----\n");
-
-	// cvars:
-	{
-		for(
-			std::list<AfxCvarEntry>::iterator i = GetAfxCvarEntries().begin();
-			i != GetAfxCvarEntries().end();
-			i++
-		) {
-			pEngfuncs->Con_Printf("%s, %s, 0x%08x\n", i->Name, i->Value, i->Flags);
-			cntVars++;
-		}
-	}
-
-	pEngfuncs->Con_Printf("---- cmds ----\n");
+	pEngfuncs->Con_Printf("---- cmds/cvars ----\n");
 
 	// commands:
 	{
@@ -119,8 +125,19 @@ REGISTER_DEBUGCMD_FUNC(listcmds)
 			i != GetAfxCmdEntries().end();
 			i++
 		) {
-			pEngfuncs->Con_Printf("%s\n", i->Name);
-			cntCmds++;
+			switch(i->Type)
+			{
+			case ACET_Cmd:
+				pEngfuncs->Con_Printf("%s\n", i->Name);
+				cntCmds++;
+				break;
+			case ACET_Cvar:
+				pEngfuncs->Con_Printf("%s, %s, 0x%08x\n", i->Name, i->Data.Cvar.Value, i->Data.Cvar.Flags);
+				cntVars++;
+				break;
+			default:
+				throw "Unsopported AfxCmdEntryType.";
+			}
 		}
 	}
 

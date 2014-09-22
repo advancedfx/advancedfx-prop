@@ -22,7 +22,8 @@
 #include "hw/R_RenderView.h"
 #include "hw/UnkDrawHud.h"
 
-#include "client/Server_GetBlendingInterface.h"
+#include "svdll/Server_GetBlendingInterface.h"
+#include "svdll/GiveFnptrsToDll.h"
 
 #include "../hl_addresses.h"
 #ifdef AFX_GUI
@@ -159,6 +160,9 @@ FARPROC WINAPI NewHwGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 
 		if(!lstrcmp(lpProcName, "Server_GetBlendingInterface"))
 			return Hook_ServerGetBlendingInterface(nResult);
+
+		if(!lstrcmp(lpProcName, "GiveFnptrsToDll"))
+			return Hook_GiveFnptrsToDll(nResult);
 	}
 
 	return nResult;

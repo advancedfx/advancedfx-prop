@@ -14,6 +14,7 @@
 #include <shared/RawOutput.h>
 
 #include <hlsdk.h>
+#include <halflife/common/r_studioint.h>
 
 #include "hooks/user32Hooks.h"
 #include "hooks/hw/Mod_LeafPvs.h"

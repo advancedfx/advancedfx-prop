@@ -26,7 +26,7 @@
 #include <halflife/common/entity_types.h>
 #include <halflife/common/event_args.h>
 #include <halflife/common/net_api.h>
-#include <halflife/common/r_studioint.h>
+//#include <halflife/common/r_studioint.h>
 #include <halflife/pm_shared/pm_defs.h>
 #include <halflife/common/r_efx.h>
 #include <halflife/common/com_model.h>

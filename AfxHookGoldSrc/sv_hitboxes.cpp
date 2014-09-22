@@ -3,52 +3,54 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2014-04-22 dominik.matrixstorm.com
+// 2014-09-22 dominik.matrixstorm.com
 //
 // First changes
 // 2014-04-21 dominik.matrixstorm.com
 
+// hack hack hack:
+typedef float vec_t;
+#ifdef DID_VEC3_T_DEFINE
+#undef DID_VEC3_T_DEFINE
+#undef vec3_t
+#endif
+#ifndef DID_VEC3_T_DEFINE
+#define DID_VEC3_T_DEFINE
+typedef float vec3_t[3];
+#endif
+
 #include "sv_hitboxes.h"
 
 #include <hlsdk.h>
+#include <halflife/common/r_studioint.h>
 
 #include "hooks/HookHw.h"
+
 #include "hl_addresses.h"
-
 #include "cmdregister.h"
-
-REGISTER_CVAR(draw_sv_hitboxes, "0", 0);
-REGISTER_CVAR(draw_sv_hitboxes_width, "1.0", 0);
+#include "mirv_glext.h"
 
 #include <GL/GL.h>
-
 #include <list>
+#include <map>
+
+REGISTER_CVAR(draw_sv_hitboxes_enable, "0", 0);
+REGISTER_CVAR(draw_sv_hitboxes_ignore1, "0", 0);
+REGISTER_CVAR(draw_sv_hitboxes_width, "1.0", 0);
 
 typedef struct temp_box_s {
 	float data[8][3];
 } temp_box_t;
 
-std::list<temp_box_t> tempBoxes;
+typedef struct temp_edictboxes_s {
+	bool isFresh;
+	std::list<temp_box_t> tempBoxes;
+} temp_edictboxes_t;	
+
+std::map<int, temp_edictboxes_t> tempEdicts;
 
 double hitboxesColor[3] = { 1.0, 0.0, 0.0 };
-
-//enginefuncs_t * g_pSvEnginefuncs;
-
-bool Install_Hooks(void)
-{
-	static bool firstRun = true;
-	static bool firstResult = false;
-	if(!firstRun) return firstResult;
-	firstRun = false;
-
-//	g_pSvGlobals = (globalvars_t *)AFXADDR_GET(p_sv_globals);
-//	g_pSvEnginefuncs = (enginefuncs_t *)AFXADDR_GET(p_sv_enginefuncs);
-//	g_pBoneTransform = (BoneTransform_t *)AFXADDR_GET(p_sv_bonetransform);
-
-	firstResult = true;
-	return firstResult;
-}
-
+double hitboxesColorU[3] = { 1.0, 1.0, 1.0 };
 
 void DrawBox(temp_box_t p, double red, double green, double blue)
 {
@@ -113,37 +115,96 @@ void VectorTransform (const float *in1, float in2[3][4], float *out)
 
 void Draw_SV_Hitboxes(void)
 {
-	if(!draw_sv_hitboxes->value) return;
+	if(!draw_sv_hitboxes_enable->value) return;
+
+	GLint activeTextureARB = GL_TEXTURE0_ARB;
+	GLboolean arbActive;
+	if(g_Has_GL_ARB_multitexture)
+	{
+		glGetIntegerv(GL_ACTIVE_TEXTURE_ARB, &activeTextureARB);
+	}
+	if(GL_TEXTURE1_ARB == activeTextureARB)
+	{
+		arbActive = glIsEnabled(GL_TEXTURE_2D);
+		glDisable(GL_TEXTURE_2D);
+		glActiveTextureARB(GL_TEXTURE0_ARB);
+	}
 
 	GLfloat lineWidth;
 	GLboolean depth = glIsEnabled(GL_DEPTH_TEST);
 	GLboolean text = glIsEnabled(GL_TEXTURE_2D);
-
 	glGetFloatv(GL_LINE_WIDTH, &lineWidth);
 
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_TEXTURE_2D);
 
+
 	glLineWidth(draw_sv_hitboxes_width->value);
 
-	for(std::list<temp_box_t>::iterator it = tempBoxes.begin(); it != tempBoxes.end(); it++)
+	for(std::map<int, temp_edictboxes_t>::iterator it = tempEdicts.begin(); it != tempEdicts.end(); it++)
 	{
-		DrawBox(*it, hitboxesColor[0], hitboxesColor[1], hitboxesColor[2]);
-	}
+		if(draw_sv_hitboxes_ignore1->value && 1 == it->first) {
+			continue;
+		}
 
-	tempBoxes.clear();
+		double red, green, blue;
+		temp_edictboxes_t & tempEdict = it->second;
+
+		if(tempEdict.isFresh)
+		{
+			red = hitboxesColorU[0];
+			green = hitboxesColorU[1];
+			blue = hitboxesColorU[2];
+		}
+		else
+		{
+			red = hitboxesColor[0];
+			green = hitboxesColor[1];
+			blue = hitboxesColor[2];
+		}
+
+		tempEdict.isFresh = false;
+
+		for(std::list<temp_box_t>::iterator it2 = tempEdict.tempBoxes.begin(); it2 != tempEdict.tempBoxes.end(); it2++)
+		{
+			DrawBox(*it2, red, green, blue);
+		}
+
+	}
 
 	glLineWidth(lineWidth);
 
 	if(text) glEnable(GL_TEXTURE_2D);
 	if(!depth) glDisable(GL_DEPTH_TEST);
+
+	if(GL_TEXTURE1_ARB == activeTextureARB)
+	{
+		glActiveTextureARB(GL_TEXTURE1_ARB);
+		if(arbActive) glEnable(GL_TEXTURE_2D);
+	}
 }
 
-void FetchHitboxes(struct server_studio_api_s *pstudio, float (*bonetransform)[MAXSTUDIOBONES][3][4], struct model_s *pModel, const edict_t *pEdict)
-{
-	Install_Hooks();
+extern enginefuncs_t g_engfuncs;
 
-	if(!draw_sv_hitboxes->value) return;
+void FetchHitboxes(struct server_studio_api_s *pstudio,
+	float (*bonetransform)[MAXSTUDIOBONES][3][4],
+	struct model_s *pModel, float frame, int sequence, const vec3_t angles,
+	const vec3_t origin, const byte *pcontroller, const byte *pblending, 
+	int iBone, const edict_t *pEdict)
+{
+	/*pEngfuncs->Con_Printf(
+		"FetchHitboxes(0x%08x): 0x%08x,0x%08x,0x%08x,%f,%i,(%f,%f,%f),(%f,%f,%f),0x%08x,0x%08x,%i,0x%08x --> %i\n",
+		&FetchHitboxes,
+		pstudio, bonetransform, pModel,
+		frame, sequence,
+		angles[0],angles[1],angles[2],
+		origin[0],origin[1],origin[2],
+		pcontroller, pblending,
+		iBone, pEdict,
+		g_engfuncs.pfnIndexOfEdict(pEdict)
+	);*/
+
+	if(!draw_sv_hitboxes_enable->value) return;
 
 	studiohdr_t *pstudiohdr = (studiohdr_t *)pstudio->Mod_Extradata(pModel);
 
@@ -152,13 +213,17 @@ void FetchHitboxes(struct server_studio_api_s *pstudio, float (*bonetransform)[M
 		pEngfuncs->Con_Printf("Error: no model for pEdict (serialnumber=%i)\n",pEdict->serialnumber);
 		return;
 	}
-	
+
 	mstudiobbox_t *pbbox;
 	vec3_t tmp;
 	temp_box_t p;
 	int i,j;
 
 	pbbox = (mstudiobbox_t *)((byte *)pstudiohdr+ pstudiohdr->hitboxindex);
+
+	temp_edictboxes_t & tempEdict = tempEdicts[g_engfuncs.pfnIndexOfEdict(pEdict)];
+	tempEdict.isFresh = true;
+	tempEdict.tempBoxes.clear();
 
 	for (i = 0; i < pstudiohdr->numhitboxes; i++)
 	{
@@ -179,7 +244,7 @@ void FetchHitboxes(struct server_studio_api_s *pstudio, float (*bonetransform)[M
 			VectorTransform( tmp, (*bonetransform)[pbbox[i].bone], p.data[j] );
 		}
 
-		tempBoxes.push_back(p);
+		tempEdict.tempBoxes.push_back(p);
 	}
 }
 
@@ -193,11 +258,11 @@ double clamp(double i, double min, double max)
 		return i;
 }
 
-REGISTER_CMD_FUNC(draw_sv_hitboxes_setcolor)
+REGISTER_CMD_FUNC(draw_sv_hitboxes_seticolor)
 {
 	if (pEngfuncs->Cmd_Argc() != 4)
 	{
-		pEngfuncs->Con_Printf("Useage: " PREFIX "draw_sv_hitboxes_setcolor <red: 0-255> <green: 0-255> <blue: 0-255>\n");
+		pEngfuncs->Con_Printf("Useage: " PREFIX "draw_sv_hitboxes_seticolor <red: 0-255> <green: 0-255> <blue: 0-255>\n");
 		return;
 	}
 
@@ -213,4 +278,26 @@ REGISTER_CMD_FUNC(draw_sv_hitboxes_setcolor)
 	hitboxesColor[0] = red;
 	hitboxesColor[1] = green;
 	hitboxesColor[2] = blue;
+}
+
+REGISTER_CMD_FUNC(draw_sv_hitboxes_setucolor)
+{
+	if (pEngfuncs->Cmd_Argc() != 4)
+	{
+		pEngfuncs->Con_Printf("Useage: " PREFIX "draw_sv_hitboxes_setucolor <red: 0-255> <green: 0-255> <blue: 0-255>\n");
+		return;
+	}
+
+	double red = (double) atoi(pEngfuncs->Cmd_Argv(1)) / 255.0;
+	double green = (double) atoi(pEngfuncs->Cmd_Argv(2)) / 255.0;
+	double blue = (double) atoi(pEngfuncs->Cmd_Argv(3)) / 255.0;
+
+	// ensure that the values are within the falid range
+	clamp(red, 0.0, 1.0);
+	clamp(green, 0.0, 1.0);	
+	clamp(blue, 0.0, 1.0);
+
+	hitboxesColorU[0] = red;
+	hitboxesColorU[1] = green;
+	hitboxesColorU[2] = blue;
 }

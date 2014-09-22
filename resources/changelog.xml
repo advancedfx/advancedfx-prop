@@ -6,14 +6,38 @@
 
 <release>
 <name>HLAE</name>
+<version>2.3.19.0</version>
+<time>2014-09-22T15:55Z</time>
+<changes>
+<change type="added">
+Added mirv_draw_sv_hitboxes_ignore1 0|1 cvar (whether to ignore palyer 1 or not).
+</change>
+<change type="added">
+Added mirv_draw_sv_hitboxes_seticolor r g b command (takes 3 values from 0 to 255, sets the inactive/hold color).
+</change>
+<change type="added">
+Added mirv_draw_sv_hitboxes_setucolor r g b command (takes 3 values from 0 to 255, sets the refresh/update color).
+</change>
+<change type="updated">
+Renamed mirv_draw_sv_hitboxes to mirv_draw_sv_hitboxes_enable in order to avoid problems with auto console completion.
+</change>
+<change type="removed">
+Removed mirv_draw_sv_hitboxes_setcolor.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.3.18.3</version>
 <time>2014-09-21T16:39Z</time>
 <changes>
 <change type="added">
-mirv_draw_sv_hitboxes_width f cvar (takes a floating point number as line width).
+Added mirv_draw_sv_hitboxes_width f cvar (takes a floating point number as line width).
 </change>
 <change type="added">
-mirv_draw_sv_hitboxes_setcolor r g b command (takes 3 values from 0 to 255).
+Added mirv_draw_sv_hitboxes_setcolor r g b command (takes 3 values from 0 to 255).
 </change>
 </changes>
 </release>

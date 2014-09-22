@@ -73,9 +73,6 @@ AFXADDR_DEF(net_message)
 AFXADDR_DEF(p_cl_enginefuncs_s)
 AFXADDR_DEF(p_engine_studio_api_s)
 AFXADDR_DEF(p_playermove_s)
-//AFXADDR_DEF(p_sv_bonetransform)
-//AFXADDR_DEF(p_sv_enginefuncs)
-//AFXADDR_DEF(p_sv_globals)
 AFXADDR_DEF(paintbuffer)
 AFXADDR_DEF(paintedtime)
 AFXADDR_DEF(r_refdef)
@@ -129,14 +126,6 @@ void Addresses_InitHwDll(AfxAddr hwDll)
 	AFXADDR_SET(p_cl_enginefuncs_s, hwDll + 0x134260); // *[5]
 	AFXADDR_SET(p_playermove_s, hwDll + 0x1006AE0); // *[5]
 	AFXADDR_SET(p_engine_studio_api_s, hwDll + 0x1502F0); // *[5]
-
-	//
-	// Engine-to-server interfaces:
-	//
-
-	//AFXADDR_SET(p_sv_enginefuncs, hwDll + 0x157E58); // *[15]
-	//AFXADDR_SET(p_sv_globals, hwDll + 0x804120); // *[15]
-	//AFXADDR_SET(p_sv_bonetransform, hwDll + 0xA8B740); // *[15]
 	
 	//
 	// General engine hooks:
