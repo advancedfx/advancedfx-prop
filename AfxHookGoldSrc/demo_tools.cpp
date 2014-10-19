@@ -79,9 +79,9 @@ void Handle_CmdRead_Intercepted(void)
 				return; // msg_badread
 
 			ucEntity = (unsigned char)(pnet_message->data[myreadcount]);
-			myreadcount++;
-			uscbSize = (unsigned short)(pnet_message->data[myreadcount]);
-			myreadcount += 2+ uscbSize;
+			myreadcount += (int)sizeof(ucEntity);
+			uscbSize = *(unsigned short *)((unsigned char *)(pnet_message->data) +myreadcount);
+			myreadcount += (int)sizeof(uscbSize)+ uscbSize;
 
 			if (myreadcount > pnet_message->cursize)
 				return; // msg_badread
