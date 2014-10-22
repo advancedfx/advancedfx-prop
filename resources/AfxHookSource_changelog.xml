@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.0.5.0</version>
+<time>2014-10-22T12:06Z</time>
+<changes>
+<change type="added">
+Added mirv_deathmsg for CS:GO. Please note this will break with the next CS:GO update and either needs to be updated or hardened againt further updates then.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.0.4.5</version>
 <time>2014-04-30T19:21Z</time>
 <changes>

@@ -168,16 +168,22 @@ void __stdcall touring_csgo_CHudDeathNotice_FireGameEvent(DWORD *this_ptr, csgo_
 	if(!blocked) detoured_csgo_CHudDeathNotice_FireGameEvent(this_ptr, event);
 }
 
+extern void * csgo_VClient;
+
 bool csgo_CHudDeathNotice_Install(void)
 {
-	static bool firstResult;
+	static bool firstResult = false;
 	static bool firstRun = true;
 	if(!firstRun) return firstResult;
 	firstRun = false;
 
-	detoured_csgo_CHudDeathNotice_FireGameEvent = (csgo_CHudDeathNotice_FireGameEvent_t)DetourClassFunc((BYTE *)AFXADDR_GET(csgo_CHudDeathNotice_FireGameEvent), (BYTE *)touring_csgo_CHudDeathNotice_FireGameEvent, (int)AFXADDR_GET(csgo_CHudDeathNotice_FireGameEvent_DSZ));
+	if(csgo_VClient)
+	{
+		detoured_csgo_CHudDeathNotice_FireGameEvent = (csgo_CHudDeathNotice_FireGameEvent_t)DetourClassFunc((BYTE *)AFXADDR_GET(csgo_CHudDeathNotice_FireGameEvent), (BYTE *)touring_csgo_CHudDeathNotice_FireGameEvent, (int)AFXADDR_GET(csgo_CHudDeathNotice_FireGameEvent_DSZ));
 
-	firstResult = true;
+		firstResult = true;
+	}
+
 	return firstResult;
 }
 
