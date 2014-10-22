@@ -19,6 +19,7 @@
 #include "WrpVEngineClient.h"
 #include "WrpConsole.h"
 #include "WrpVEngineClient.h"
+#include "csgo_CHudDeathNotice.h"
 
 #include <malloc.h>
 #include <stdlib.h>
@@ -160,6 +161,133 @@ CON_COMMAND(mirv_camimport, "controls camera motion data import") {
 		"mirv_camimport start <filename>\n"
 		"mirv_camimport stop\n"
 		"mirv_camimport basetime\n"
+	);
+}
+
+CON_COMMAND(mirv_deathmsg, "controls death notification options")
+{
+	if(!csgo_CHudDeathNotice_Install())
+	{
+		Tier0_Warning("Error: Hook not installed.\n");
+		return;
+	}
+
+	int argc = args->ArgC();
+
+	if(2 <= argc)
+	{
+		char const * arg1 = args->ArgV(1);
+		if(0 == _stricmp("debug", arg1))
+		{
+			if(3 <= argc)
+			{
+				csgo_debug_CHudDeathNotice_FireGameEvent = atoi(args->ArgV(2));
+				return;
+			}
+			Tier0_Msg(
+				"Usage:\n"
+				"mirv_deathmsg debug 0|1|2 - disbale/enable printing of ids of current death notices.\n"
+				"Current setting: %i\n",
+				csgo_debug_CHudDeathNotice_FireGameEvent
+			);
+			return;
+		}
+		else
+		if(0 == _stricmp("block", arg1))
+		{
+			if(4 <= argc)
+			{
+				char const * uidAttacker = args->ArgV(2);
+				char const * uidVictim = args->ArgV(3);
+				char const * uidAssister = 5 <= argc ? args->ArgV(4) : "*";
+
+				csgo_CHudDeathNotice_Block(uidAttacker, uidVictim, uidAssister);
+
+				return;
+			}
+			else
+			if(3 <= argc)
+			{
+				char const * arg2 = args->ArgV(2);
+
+				if(0 == _stricmp("list", arg2))
+				{
+					csgo_CHudDeathNotice_Block_List();
+					return;
+				}
+				else
+				if(0 == _stricmp("clear", arg2))
+				{
+					csgo_CHudDeathNotice_Block_Clear();
+					return;
+				}
+				
+			}
+			Tier0_Msg(
+				"Usage:\n"
+				"mirv_deathmsg block <uidAttacker> <uidVictim> - block these ids\n"
+				"\tRemarks: * to match any uid, use !x to match any uid apart from x.\n"
+				"mirv_deathmsg block <uidAttacker> <uidVictim> <uidAssister> - block these ids\n"
+				"\tRemarks: * to match any uid, use !x to match any uid apart from x.\n"
+				"mirv_deathmsg block list - list current blocks\n"
+				"mirv_deathmsg block clear - clear curent blocks\n"
+				"(Use mirv_deathmsg debug 1 to get the uids.)\n"
+			);
+			return;
+		}
+		else
+		if(0 == _stricmp("cfg", arg1))
+		{
+			if(4 <= argc)
+			{
+				char const * arg2 = args->ArgV(2);
+				float arg3 = (float)atof(args->ArgV(3));
+
+				if(0 == _stricmp("scrollInTime", arg2))
+				{
+					csgo_CHudDeathNotice_nScrollInTime = arg3;
+					return;
+				}
+				else
+				if(0 == _stricmp("fadeOutTime", arg2))
+				{
+					csgo_CHudDeathNotice_nFadeOutTime = arg3;
+					return;
+				}
+				else
+				if(0 == _stricmp("noticeLifeTime", arg2))
+				{
+					csgo_CHudDeathNotice_nNoticeLifeTime = arg3;
+					return;
+				}
+				else
+				if(0 == _stricmp("localPlayerLifeTimeMod", arg2))
+				{
+					csgo_CHudDeathNotice_nLocalPlayerLifeTimeMod = arg3;
+					return;
+				}
+			}
+			Tier0_Msg(
+				"Usage:\n"
+				"mirv_deathmsg config scrollInTime f - Current: %f\n"
+				"mirv_deathmsg config fadeOutTime f - Current: %f\n"
+				"mirv_deathmsg config noticeLifeTime f - This is what you want. Current: %f\n"
+				"mirv_deathmsg config localPlayerLifeTimeMod f - Current: %f\n"
+				"Where f is a floating point value in seconds. Use -1 (a negative value) to use the orginal value instead.\n",
+				csgo_CHudDeathNotice_nScrollInTime,
+				csgo_CHudDeathNotice_nFadeOutTime,
+				csgo_CHudDeathNotice_nNoticeLifeTime,
+				csgo_CHudDeathNotice_nLocalPlayerLifeTimeMod
+			);
+			return;
+		}
+
+	}
+	Tier0_Msg(
+		"Usage:\n"
+		"mirv_deathmsg block\n"
+		"mirv_deathmsg cfg\n"
+		"mirv_deathmsg debug\n"
 	);
 }
 

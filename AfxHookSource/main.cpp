@@ -235,6 +235,9 @@ void * HookInterfaceFn(void * iface, int idx, void * fn)
 
 void * csgo_VClient = 0;
 
+#pragma warning(push)
+#pragma warning(disable:4731) // frame pointer register 'ebp' modified by inline assembly code
+
 // The first 3 asm instructions unroll the compiler epiloge code,
 // this might need to be updated. I couldn't find a better way yet,
 // since __declspec(naked) won't work on member functions.
@@ -605,6 +608,8 @@ public:
 	virtual void _UNKOWN_107(void)
 	{ JMP_IFACE_FN(csgo_VClient, 107) }
 } g_BaseClientDllWrapper_csgo;
+
+#pragma warning(pop)
 
 void HookClientDllInterface_011_Init(void * iface)
 {

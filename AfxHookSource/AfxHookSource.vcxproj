@@ -81,6 +81,7 @@
     <ClCompile Include="..\shared\detours.cpp" />
     <ClCompile Include="..\shared\vcpp\AfxAddr.cpp" />
     <ClCompile Include="addresses.cpp" />
+    <ClCompile Include="csgo_CHudDeathNotice.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MirvCommands.cpp" />
     <ClCompile Include="RenderView.cpp" />
@@ -96,6 +97,7 @@
     <ClInclude Include="..\shared\detours.h" />
     <ClInclude Include="..\shared\vcpp\AfxAddr.h" />
     <ClInclude Include="addresses.h" />
+    <ClInclude Include="csgo_CHudDeathNotice.h" />
     <ClInclude Include="RenderView.h" />
     <ClInclude Include="SourceInterfaces.h" />
     <ClInclude Include="stdafx.h" />
