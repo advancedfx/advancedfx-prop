@@ -76,6 +76,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\shared\binutils.cpp" />
     <ClCompile Include="..\shared\bvhexport.cpp" />
     <ClCompile Include="..\shared\bvhimport.cpp" />
     <ClCompile Include="..\shared\detours.cpp" />
@@ -92,6 +93,7 @@
     <ClCompile Include="..\shared\StringTools.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\shared\binutils.h" />
     <ClInclude Include="..\shared\bvhexport.h" />
     <ClInclude Include="..\shared\bvhimport.h" />
     <ClInclude Include="..\shared\detours.h" />

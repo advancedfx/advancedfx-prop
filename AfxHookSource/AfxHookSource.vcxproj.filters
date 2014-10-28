@@ -54,6 +54,9 @@
     <ClCompile Include="csgo_CHudDeathNotice.cpp">
       <Filter>AfxHookSource</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\binutils.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -94,6 +97,9 @@
     </ClInclude>
     <ClInclude Include="csgo_CHudDeathNotice.h">
       <Filter>AfxHookSource</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\binutils.h">
+      <Filter>shared</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

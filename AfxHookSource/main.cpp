@@ -617,11 +617,11 @@ void HookClientDllInterface_011_Init(void * iface)
 }
 
 CreateInterfaceFn old_Client_CreateInterface = 0;
+bool isCsgo = false;
 
 void* new_Client_CreateInterface(const char *pName, int *pReturnCode)
 {
 	static bool bFirstCall = true;
-	static bool isCsgo = false;
 
 	void * pRet = old_Client_CreateInterface(pName, pReturnCode);
 
@@ -630,14 +630,8 @@ void* new_Client_CreateInterface(const char *pName, int *pReturnCode)
 		bFirstCall = false;
 
 		void * iface = NULL;
-		char filePath[MAX_PATH] = { 0 };
-		GetModuleFileName( 0, filePath, MAX_PATH );
-
-		if(StringEndsWith(filePath,"csgo.exe"))
-		{
-			isCsgo = true;
-		}
-		else
+		
+		if(!isCsgo)
 		{
 			if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_017, NULL)) {
 				g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_017;
@@ -805,7 +799,15 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 
 		g_H_ClientDll = hModule;
 
-		Addresses_InitClientDll((AfxAddr)g_H_ClientDll);
+		char filePath[MAX_PATH] = { 0 };
+		GetModuleFileName( 0, filePath, MAX_PATH );
+
+		if(StringEndsWith(filePath,"csgo.exe"))
+		{
+			isCsgo = true;
+		}
+
+		Addresses_InitClientDll((AfxAddr)g_H_ClientDll, isCsgo);
 	}
 }
 

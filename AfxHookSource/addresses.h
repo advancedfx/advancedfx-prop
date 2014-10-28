@@ -16,4 +16,4 @@ AFXADDR_DECL(csgo_gpGlobals_OFS_curtime)
 AFXADDR_DECL(cstrike_gpGlobals_OFS_curtime)
 AFXADDR_DECL(cstrike_OFS_CvarFloatValue)
 
-void Addresses_InitClientDll(AfxAddr clientDll);
+void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo);
