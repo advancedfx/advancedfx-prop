@@ -57,6 +57,12 @@
     <ClCompile Include="..\shared\binutils.cpp">
       <Filter>shared</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\AfxMath.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\CamPath.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -99,6 +105,12 @@
       <Filter>AfxHookSource</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\binutils.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\AfxMath.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\CamPath.h">
       <Filter>shared</Filter>
     </ClInclude>
   </ItemGroup>

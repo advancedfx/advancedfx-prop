@@ -44,8 +44,7 @@ extern playermove_s *ppmove;
 extern float clamp(float, float, float);
 
 REGISTER_DEBUGCVAR(camera_test, "0", 0);
-
-
+REGISTER_DEBUGCVAR(debug_quat, "0", 0);
 REGISTER_DEBUGCVAR(depth_bpp, "8", 0);
 REGISTER_DEBUGCVAR(depth_slice_lo, "0.0", 0);
 REGISTER_DEBUGCVAR(depth_slice_hi, "1.0", 0);
@@ -244,25 +243,40 @@ void do_camera_test(vec3_t & vieworg, vec3_t & viewangles) {
 
 void Filming::OnR_RenderView(Vector & vieworg, Vector & viewangles)
 {
+	if(debug_quat->value)
+	{
+		Quaternion Q = Quaternion::FromQREulerAngles(QREulerAngles::FromQEulerAngles(QEulerAngles(
+			viewangles[PITCH],
+			viewangles[YAW],
+			viewangles[ROLL]
+		)));
+
+		QEulerAngles A = Q.ToQREulerAngles().ToQEulerAngles();
+
+		viewangles[PITCH] = (float)A.Pitch;
+		viewangles[YAW] = (float)A.Yaw;
+		viewangles[ROLL] = (float)A.Roll;
+	}
+
 	//
 	// Camera spline interaction:
 
-	g_AfxGoldSrcComClient.SendMessage(CLM_CameraGet);
+	if(m_CamPath.IsEnabled())
 	{
-		PipeCom * pc = &g_AfxGoldSrcComClient;
+		double time = g_DemoPlayer->GetDemoTime();
 
-		if(pc->ReadBoolean())
+		// no extrapolation:
+		if(m_CamPath.GetLowerBound() <= time && time <= m_CamPath.GetUpperBound())
 		{
-			// active.
-			pc->Write((ComDouble)g_DemoPlayer->GetDemoTime());
+			CamPathValue val = m_CamPath.Eval( time );
 
-			vieworg[0] = (float)pc->ReadDouble();
-			vieworg[1] = (float)pc->ReadDouble();
-			vieworg[2] = (float)pc->ReadDouble();
+			vieworg[0] = (float)val.X;
+			vieworg[1] = (float)val.Y;
+			vieworg[2] = (float)val.Z;
 
-			viewangles[PITCH] = (float)pc->ReadDouble();
-			viewangles[YAW] = (float)pc->ReadDouble();
-			viewangles[ROLL] = (float)pc->ReadDouble();
+			viewangles[PITCH] = (float)val.Pitch;
+			viewangles[YAW] = (float)val.Yaw;
+			viewangles[ROLL] = (float)val.Roll;
 		}
 	}
 

@@ -10,10 +10,9 @@
 
 
 #include "WrpGlobals.h"
-
+#include <shared/CamPath.h>
 
 class Hook_VClient_RenderView;
-
 
 // global singelton instance:
 extern Hook_VClient_RenderView g_Hook_VClient_RenderView;
@@ -24,6 +23,8 @@ extern Hook_VClient_RenderView g_Hook_VClient_RenderView;
 class Hook_VClient_RenderView
 {
 public:
+	CamPath m_CamPath;
+
 	Hook_VClient_RenderView();
 	~Hook_VClient_RenderView();
 

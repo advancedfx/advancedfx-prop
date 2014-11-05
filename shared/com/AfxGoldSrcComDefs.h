@@ -20,13 +20,7 @@ enum ClientMessage
 	CLM_OnHostFrame,
 	CLM_OnRecordStarting,
 	CLM_OnRecordEnded,
-	CLM_UpdateWindowSize,
-	CLM_CameraAdd,
-	CLM_CameraRemove,
-	CLM_CameraPrint,
-	CLM_CameraClear,
-	CLM_CameraActive,
-	CLM_CameraGet
+	CLM_UpdateWindowSize
 };
 
 enum ServerMessage

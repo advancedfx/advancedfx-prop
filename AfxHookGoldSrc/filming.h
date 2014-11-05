@@ -19,6 +19,8 @@ Description : see mdt_gltools.h
 #include "mdt_media.h"
 #include "supportrender.h"
 
+#include <shared/CamPath.h>
+
 void LinearizeFloatDepthBuffer(GLfloat *pBuffer, unsigned int count, GLdouble zNear, GLdouble zFar);
 void InverseFloatDepthBuffer(GLfloat *pBuffer, unsigned int count, GLdouble zNear, GLdouble zFar);
 void LogarithmizeDepthBuffer(GLfloat *pBuffer, unsigned int count, GLdouble zNear, GLdouble zFar);
@@ -99,6 +101,11 @@ public:
 
 	// used in OpenGl32Hooks.cpp
 	void FullClear();
+
+	CamPath * GetCamPath()
+	{
+		return &m_CamPath;
+	}
 
 	MATTE_METHOD GetMatteMethod();
 	CFilmSound * GetFilmSound() { return &_FilmSound; }
@@ -193,6 +200,7 @@ public:
 private:
 	enum FILMING_STATE { FS_INACTIVE, FS_STARTING, FS_ACTIVE };
 
+	CamPath m_CamPath;
 	bool m_CaptureEarly;
 	bool m_DebugCapture;
 	bool m_EnableStereoMode;

@@ -213,9 +213,6 @@
     <ClCompile Include="hooks\interface.cpp">
       <Filter>AfxHookGoldSrc\hooks</Filter>
     </ClCompile>
-    <ClCompile Include="camera.cpp">
-      <Filter>AfxHookGoldSrc</Filter>
-    </ClCompile>
     <ClCompile Include="scripting.cpp">
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
@@ -257,6 +254,15 @@
     </ClCompile>
     <ClCompile Include="hooks\svdll\GiveFnptrsToDll.cpp">
       <Filter>AfxHookGoldSrc\hooks\svdll</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\AfxMath.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\CamPath.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="mirv_campath.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -448,6 +454,12 @@
     </ClInclude>
     <ClInclude Include="hooks\svdll\GiveFnptrsToDll.h">
       <Filter>AfxHookGoldSrc\hooks\svdll</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\AfxMath.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\CamPath.h">
+      <Filter>shared</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

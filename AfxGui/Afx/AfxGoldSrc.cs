@@ -26,16 +26,6 @@ class AfxGoldSrc : IDisposable
         MemoryDC
     }
 
-    public class CameraSplines
-    {
-        public AfxGui.Spline X = new AfxGui.Spline();
-        public AfxGui.Spline Y = new AfxGui.Spline();
-        public AfxGui.Spline Z = new AfxGui.Spline();
-        public AfxGui.QuaternionTest Q = new AfxGui.QuaternionTest();
-
-        public bool Active = false;
-    }
-
     public class StartSettings
     {
         public bool Alpha8;
@@ -179,13 +169,7 @@ class AfxGoldSrc : IDisposable
 	    OnHostFrame,
 	    OnRecordStarting,
 	    OnRecordEnded,
-	    UpdateWindowSize,
-        CameraAdd,
-        CameraRemove,
-        CameraPrint,
-        CameraClear,
-        CameraActive,
-        CameraGet
+	    UpdateWindowSize
     };
 
     enum ServerMessage
@@ -203,102 +187,12 @@ class AfxGoldSrc : IDisposable
 
     const int COM_VERSION = 0;
 
-    CameraSplines m_CameraSplines = new CameraSplines();
     bool m_Disposed;
     MainForm m_MainForm;
     PipeComServer m_PipeComServer;
     StartSettings m_StartSettings;
     bool m_ServerShutdown;
     Thread m_ServerThread;
-
-    void ClientMessage_CameraAdd()
-    {
-        double time = m_PipeComServer.ReadDouble();
-
-        m_CameraSplines.X.AddPoint(time, m_PipeComServer.ReadDouble());
-        m_CameraSplines.Y.AddPoint(time, m_PipeComServer.ReadDouble());
-        m_CameraSplines.Z.AddPoint(time, m_PipeComServer.ReadDouble());
-        m_CameraSplines.Q.AddPoint(time, Quaternion.FromEulerAngles(new EulerAngles(
-            Math.PI * m_PipeComServer.ReadDouble() / 180.0d,
-            Math.PI * m_PipeComServer.ReadDouble() / 180.0d,
-            Math.PI * m_PipeComServer.ReadDouble() / 180.0d
-        )));
-    }
-
-    void ClientMessage_CameraRemove()
-    {
-        int index = m_PipeComServer.ReadInt32();
-
-        if (0 <= index && index < m_CameraSplines.X.Keys.Count)
-        {
-            double x = m_CameraSplines.X.Keys[index];
-
-            m_CameraSplines.X.RemovePoint(x);
-            m_CameraSplines.Y.RemovePoint(x);
-            m_CameraSplines.Z.RemovePoint(x);
-            m_CameraSplines.Q.RemovePoint(x);
-        }
-    }
-
-
-    void ClientMessage_CameraPrint()
-    {
-        int count = m_CameraSplines.X.Keys.Count;
-
-        m_PipeComServer.Write((Int32)count);
-
-        for(int i=0;i<count;i++)
-        {
-            m_PipeComServer.Write((Double)m_CameraSplines.X.Keys[i]);
-            m_PipeComServer.Write((Double)m_CameraSplines.X.Values[i]);
-            m_PipeComServer.Write((Double)m_CameraSplines.Y.Values[i]);
-            m_PipeComServer.Write((Double)m_CameraSplines.Z.Values[i]);
-
-            EulerAngles ea = m_CameraSplines.Q.Values[i].ToEulerAngles();
-
-            m_PipeComServer.Write((Double)(180.0d*ea.Pitch/Math.PI));
-            m_PipeComServer.Write((Double)(180.0d*ea.Yaw/Math.PI));
-            m_PipeComServer.Write((Double)(180.0d*ea.Roll / Math.PI));
-        }
-    }
-
-    void ClientMessage_CameraClear()
-    {
-        while (0 < m_CameraSplines.X.Keys.Count)
-        {
-            double x = m_CameraSplines.X.Keys[0];
-
-            m_CameraSplines.X.RemovePoint(x);
-            m_CameraSplines.Y.RemovePoint(x);
-            m_CameraSplines.Z.RemovePoint(x);
-            m_CameraSplines.Q.RemovePoint(x);
-        }
-    }
-
-    void ClientMessage_CameraActive()
-    {
-        m_CameraSplines.Active = m_PipeComServer.ReadBoolean();
-    }
-
-    void ClientMessage_CameraGet()
-    {
-        m_PipeComServer.Write((Boolean)m_CameraSplines.Active);
-        if (m_CameraSplines.Active)
-        {
-            double x = m_PipeComServer.ReadDouble();
-
-            m_PipeComServer.Write((Double)m_CameraSplines.X.Eval(x));
-            m_PipeComServer.Write((Double)m_CameraSplines.Y.Eval(x));
-            m_PipeComServer.Write((Double)m_CameraSplines.Z.Eval(x));
-
-            EulerAngles ea = //new EulerAngles(0, 0, 0);//
-                m_CameraSplines.Q.Eval(x).ToEulerAngles();
-
-            m_PipeComServer.Write((Double)(180.0d * ea.Pitch / Math.PI));
-            m_PipeComServer.Write((Double)(180.0d * ea.Yaw / Math.PI));
-            m_PipeComServer.Write((Double)(180.0d * ea.Roll / Math.PI));
-        }
-    }
 
     void ClientMessage_OnHostFrame()
     {
@@ -368,24 +262,6 @@ class AfxGoldSrc : IDisposable
             case ClientMessage.UpdateWindowSize:
                 ClientMessage_UpdateWindowSize();
 			    break;
-            case ClientMessage.CameraAdd:
-                ClientMessage_CameraAdd();
-                break;
-            case ClientMessage.CameraRemove:
-                ClientMessage_CameraRemove();
-                break;
-            case ClientMessage.CameraPrint:
-                ClientMessage_CameraPrint();
-                break;
-            case ClientMessage.CameraClear:
-                ClientMessage_CameraClear();
-                break;
-            case ClientMessage.CameraActive:
-                ClientMessage_CameraActive();
-                break;
-            case ClientMessage.CameraGet:
-                ClientMessage_CameraGet();
-                break;
 		    }
 	    }
     }

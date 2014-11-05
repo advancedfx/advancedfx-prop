@@ -112,6 +112,8 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\shared\AfxMath.cpp" />
+    <ClCompile Include="..\shared\CamPath.cpp" />
     <ClCompile Include="..\shared\FileTools.cpp" />
     <ClCompile Include="..\shared\vcpp\AfxAddr.cpp" />
     <ClCompile Include="AfxGoldSrcComClient.cpp" />
@@ -119,7 +121,6 @@
     <ClCompile Include="AfxImageUtils.cpp" />
     <ClCompile Include="AfxMemory.cpp" />
     <ClCompile Include="aiming.cpp" />
-    <ClCompile Include="camera.cpp" />
     <ClCompile Include="camexport.cpp" />
     <ClCompile Include="camimport.cpp" />
     <ClCompile Include="cmd_tools.cpp" />
@@ -155,6 +156,7 @@
     <ClCompile Include="hooks\svdll\Server_GetBlendingInterface.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mdt_media.cpp" />
+    <ClCompile Include="mirv_campath.cpp" />
     <ClCompile Include="mirv_commands.cpp" />
     <ClCompile Include="mirv_glext.cpp" />
     <ClCompile Include="mirv_info.cpp" />
@@ -192,6 +194,8 @@
     <ClCompile Include="..\shared\com\PipeCom.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\shared\AfxMath.h" />
+    <ClInclude Include="..\shared\CamPath.h" />
     <ClInclude Include="..\shared\FileTools.h" />
     <ClInclude Include="..\shared\vcpp\AfxAddr.h" />
     <ClInclude Include="AfxGoldSrcComClient.h" />
