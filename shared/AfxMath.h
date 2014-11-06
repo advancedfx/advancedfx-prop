@@ -69,6 +69,7 @@ struct Quaternion
 
     double Norm();
 
+	/// <remarks>Don't use this function for security critical things, it may still have some bugs.</remarks>
     QREulerAngles ToQREulerAngles();
 };
 
@@ -91,6 +92,7 @@ typedef double TripArray[3];
 typedef double QuatArray[4];
 typedef std::map<double,COSValue> COSPoints;
 
+// TODO: make thread safe.
 /// <remarks>Currently NOT threadsafe (TODO), because of use of temporary static global variables (slew3_*).</remarks>
 class CubicObjectSpline
 {

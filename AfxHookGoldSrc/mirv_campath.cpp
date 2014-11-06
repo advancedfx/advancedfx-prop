@@ -12,6 +12,7 @@
 #include "filming.h"
 #include "hooks/DemoPlayer/DemoPlayer.h"
 #include "hooks/HookHw.h"
+#include <shared/StringTools.h>
 
 REGISTER_CMD_FUNC(campath)
 {
@@ -109,15 +110,38 @@ REGISTER_CMD_FUNC(campath)
 
 			return;
 		}
+		else if(!_stricmp("load", subcmd) && 3 == argc)
+		{	
+			std::wstring wideString;
+			bool bOk = AnsiStringToWideString(pEngfuncs->Cmd_Argv(2), wideString)
+				&& g_Filming.GetCamPath()->Load(wideString.c_str())
+			;
+
+			pEngfuncs->Con_Printf("Loading campath: %s.\n", bOk ? "OK" : "ERROR");
+
+			return;
+		}
+		else if(!_stricmp("save", subcmd) && 3 == argc)
+		{	
+			std::wstring wideString;
+			bool bOk = AnsiStringToWideString(pEngfuncs->Cmd_Argv(2), wideString)
+				&& g_Filming.GetCamPath()->Save(wideString.c_str())
+			;
+
+			pEngfuncs->Con_Printf("Saving campath: %s.\n", bOk ? "OK" : "ERROR");
+
+			return;
+		}
 	}
 
 	pEngfuncs->Con_Printf(
-		"THIS COMMAND IS NOT SUPPORTED AT THE MOMENT, IT DOESN'T WORK PROPERLY!\n"
 		PREFIX "campath add - adds current demotime and view as keyframe\n"
 		PREFIX "campath enable 0|1 - set whether the camera splines are active or not. Please note that currently at least 4 Points are required to make it active successfully!\n"
 		PREFIX "campath clear - removes all keyframes\n"
 		PREFIX "campath print - prints keyframes\n"
 		PREFIX "campath remove <id> - removes a keyframe\n"
+		PREFIX "campath load <fileName> - loads the campath from the file (XML format)\n"
+		PREFIX "campath save <fileName> - saves the campath to the file (XML format)\n"
 	);
 	return;
 }

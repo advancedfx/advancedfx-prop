@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2014-11-03 dominik.matrixstorm.com
+// 2014-11-06 dominik.matrixstorm.com
 //
 // First changes:
 // 2014-11-03 dominik.matrixstorm.com
@@ -70,6 +70,9 @@ public:
 
 	/// <remarks>Must not be called if IsEnabled is false!</remarks>
 	CamPathValue Eval(double t);
+
+	bool Save(wchar_t const * fileName);
+	bool Load(wchar_t const * fileName);
 
 private:
 	bool m_Enabled;

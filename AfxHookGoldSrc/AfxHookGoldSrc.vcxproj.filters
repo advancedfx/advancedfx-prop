@@ -37,6 +37,9 @@
     <Filter Include="AfxHookGoldSrc\hooks\svdll">
       <UniqueIdentifier>{a8976221-7300-4cc2-9ea0-700d9db75d9e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shared\rapidxml">
+      <UniqueIdentifier>{14cce315-c13b-454e-a3ef-c05598a2a291}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\bvhexport.cpp">
@@ -460,6 +463,18 @@
     </ClInclude>
     <ClInclude Include="..\shared\CamPath.h">
       <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\rapidxml\rapidxml.hpp">
+      <Filter>shared\rapidxml</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\rapidxml\rapidxml_iterators.hpp">
+      <Filter>shared\rapidxml</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\rapidxml\rapidxml_print.hpp">
+      <Filter>shared\rapidxml</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\rapidxml\rapidxml_utils.hpp">
+      <Filter>shared\rapidxml</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
