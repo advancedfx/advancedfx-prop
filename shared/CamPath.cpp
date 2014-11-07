@@ -98,8 +98,14 @@ void CamPath::Add(double time, CamPathValue value)
 	val.T.Y = value.Y;
 	val.T.Z = value.Z;
 
-	m_Spline.Add(time, val);
+	Add(time, val);
 }
+
+void CamPath::Add(double time, COSValue value)
+{
+	m_Spline.Add(time, value);
+}
+
 
 void CamPath::Remove(double time)
 {
@@ -178,6 +184,16 @@ bool CamPath::Save(wchar_t const * fileName)
 	rapidxml::xml_node<> * pts = doc.allocate_node(rapidxml::node_element, "points");
 	cam->append_node(pts);
 
+	rapidxml::xml_node<> * cmt = doc.allocate_node(rapidxml::node_comment,0,
+		"Points are in Quake coordinates, meaning x=forward, y=left, z=up and rotation order is first rx, then ry and lastly rz.\n"
+		"Rotation direction follows the right-hand grip rule.\n"
+		"rx (roll), ry (pitch), rz(yaw) are the Euler angles in degrees.\n"
+		"qw, qx, qy, qz are the quaternion values.\n"
+		"When read it is sufficient that either rx, ry, rz OR qw, qx, qy, qz are present.\n"
+		"If both are pesent then qw, qx, qy, qz take precedence."
+	);
+	pts->append_node(cmt);
+
 	for(CamPathIterator it = GetBegin(); it != GetEnd(); ++it)
 	{
 		double time = it.GetTime();
@@ -191,6 +207,10 @@ bool CamPath::Save(wchar_t const * fileName)
 		pt->append_attribute(doc.allocate_attribute("rx", double2xml(doc,val.Roll)));
 		pt->append_attribute(doc.allocate_attribute("ry", double2xml(doc,val.Pitch)));
 		pt->append_attribute(doc.allocate_attribute("rz", double2xml(doc,val.Yaw)));
+		pt->append_attribute(doc.allocate_attribute("qw", double2xml(doc,it.wrapped->second.R.W)));
+		pt->append_attribute(doc.allocate_attribute("qx", double2xml(doc,it.wrapped->second.R.X)));
+		pt->append_attribute(doc.allocate_attribute("qy", double2xml(doc,it.wrapped->second.R.Y)));
+		pt->append_attribute(doc.allocate_attribute("qz", double2xml(doc,it.wrapped->second.R.Z)));
 		pts->append_node(pt);
 	}
 
@@ -259,20 +279,42 @@ bool CamPath::Load(wchar_t const * fileName)
 					rapidxml::xml_attribute<> * rxA = cur_node->first_attribute("rx");
 					rapidxml::xml_attribute<> * ryA = cur_node->first_attribute("ry");
 					rapidxml::xml_attribute<> * rzA = cur_node->first_attribute("rz");
+					rapidxml::xml_attribute<> * qwA = cur_node->first_attribute("qw");
+					rapidxml::xml_attribute<> * qxA = cur_node->first_attribute("qx");
+					rapidxml::xml_attribute<> * qyA = cur_node->first_attribute("qy");
+					rapidxml::xml_attribute<> * qzA = cur_node->first_attribute("qz");
 
 					double dT = atof(timeAttr->value());
 					double dX = xA ? atof(xA->value()) : 0.0;
 					double dY = yA ? atof(yA->value()) : 0.0;
 					double dZ = zA ? atof(zA->value()) : 0.0;
-					double dRXroll = rxA ? atof(rxA->value()) : 0.0;
-					double dRYpitch = ryA ? atof(ryA->value()) : 0.0;
-					double dRZyaw = rzA ? atof(rzA->value()) : 0.0;
 
-					// Add point:
-					Add(dT, CamPathValue(
-						dX, dY, dZ,
-						dRYpitch, dRZyaw, dRXroll
-					));
+					if(qwA && qxA && qyA && qzA)
+					{
+						COSValue r;
+						r.T.X = dX;
+						r.T.Y = dY;
+						r.T.Z = dZ;
+						r.R.W = atof(qwA->value());
+						r.R.X = atof(qxA->value());
+						r.R.Y = atof(qyA->value());
+						r.R.Z = atof(qzA->value());
+
+						// Add point:
+						Add(dT, r);
+					}
+					else
+					{
+						double dRXroll = rxA ? atof(rxA->value()) : 0.0;
+						double dRYpitch = ryA ? atof(ryA->value()) : 0.0;
+						double dRZyaw = rzA ? atof(rzA->value()) : 0.0;
+
+						// Add point:
+						Add(dT, CamPathValue(
+							dX, dY, dZ,
+							dRYpitch, dRZyaw, dRXroll
+						));
+					}
 				}
 			}
 			while (false);

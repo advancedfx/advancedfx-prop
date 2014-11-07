@@ -55,6 +55,7 @@ public:
 	bool IsEnabled();
 
 	void Add(double time, CamPathValue value);
+	void Add(double time, COSValue value);
 	void Remove(double time);
 	void Clear();
 
