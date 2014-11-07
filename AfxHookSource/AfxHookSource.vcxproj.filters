@@ -10,6 +10,9 @@
     <Filter Include="shared\vcpp">
       <UniqueIdentifier>{e3023297-861a-49fe-96b9-a38e1f33d3b9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shared\rapidxml">
+      <UniqueIdentifier>{354e9d3b-f0ce-481c-afa3-245f414e0bb7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\bvhexport.cpp">
@@ -112,6 +115,18 @@
     </ClInclude>
     <ClInclude Include="..\shared\CamPath.h">
       <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\rapidxml\rapidxml.hpp">
+      <Filter>shared\rapidxml</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\rapidxml\rapidxml_iterators.hpp">
+      <Filter>shared\rapidxml</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\rapidxml\rapidxml_print.hpp">
+      <Filter>shared\rapidxml</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\rapidxml\rapidxml_utils.hpp">
+      <Filter>shared\rapidxml</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

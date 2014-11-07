@@ -24,6 +24,8 @@ class Hook_VClient_RenderView
 {
 public:
 	CamPath m_CamPath;
+	double LastCameraOrigin[3];
+	double LastCameraAngles[3];
 
 	Hook_VClient_RenderView();
 	~Hook_VClient_RenderView();

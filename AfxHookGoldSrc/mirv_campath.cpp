@@ -63,13 +63,14 @@ REGISTER_CMD_FUNC(campath)
 		{
 			pEngfuncs->Con_Printf("passed id: time -> (x,y,z) (pitch,yaw,roll)\n");
 			
+			double curtime = g_DemoPlayer->GetDemoTime();
+
 			int i=0;
 			for(CamPathIterator it = g_Filming.GetCamPath()->GetBegin(); it != g_Filming.GetCamPath()->GetEnd(); ++it)
 			{
 				double vieworigin[3];
 				double viewangles[3];
 
-				double curtime = g_DemoPlayer->GetDemoTime();
 				double time = it.GetTime();
 				CamPathValue val = it.GetValue();
 
@@ -90,7 +91,7 @@ REGISTER_CMD_FUNC(campath)
 
 				i++;
 			}
-			pEngfuncs->Con_Printf("---- Current time: %f\n", g_DemoPlayer->GetDemoTime());
+			pEngfuncs->Con_Printf("---- Current time: %f\n", curtime);
 
 			return;
 		}
@@ -142,6 +143,7 @@ REGISTER_CMD_FUNC(campath)
 		PREFIX "campath remove <id> - removes a keyframe\n"
 		PREFIX "campath load <fileName> - loads the campath from the file (XML format)\n"
 		PREFIX "campath save <fileName> - saves the campath to the file (XML format)\n"
+		"Please note: you might want to use mirv_fx_xtendvis with mirv_campath!\n"
 	);
 	return;
 }

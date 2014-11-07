@@ -101,6 +101,10 @@
     <ClInclude Include="..\shared\bvhimport.h" />
     <ClInclude Include="..\shared\CamPath.h" />
     <ClInclude Include="..\shared\detours.h" />
+    <ClInclude Include="..\shared\rapidxml\rapidxml.hpp" />
+    <ClInclude Include="..\shared\rapidxml\rapidxml_iterators.hpp" />
+    <ClInclude Include="..\shared\rapidxml\rapidxml_print.hpp" />
+    <ClInclude Include="..\shared\rapidxml\rapidxml_utils.hpp" />
     <ClInclude Include="..\shared\vcpp\AfxAddr.h" />
     <ClInclude Include="addresses.h" />
     <ClInclude Include="csgo_CHudDeathNotice.h" />

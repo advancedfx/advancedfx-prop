@@ -136,6 +136,23 @@ bool Hook_VClient_RenderView::IsInstalled(void) {
 void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, float &Rx, float &Ry, float &Rz) {
 	float curTime = GetCurTime();
 
+	if(m_CamPath.IsEnabled())
+	{
+		// no extrapolation:
+		if(m_CamPath.GetLowerBound() <= curTime && curTime <= m_CamPath.GetUpperBound())
+		{
+			CamPathValue val = m_CamPath.Eval( curTime );
+
+			Tx = (float)val.X;
+			Ty = (float)val.Y;
+			Tz = (float)val.Z;
+
+			Rx = (float)val.Pitch;
+			Ry = (float)val.Yaw;
+			Rz = (float)val.Roll;
+		}
+	}
+
 	if(m_Import) {
 		float Tf[6];
 
@@ -158,6 +175,13 @@ void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, fl
 			-Rz, -Rx, +Ry
 		);
 	}
+
+	LastCameraOrigin[0] = Tx;
+	LastCameraOrigin[1] = Ty;
+	LastCameraOrigin[2] = Tz;
+	LastCameraAngles[0] = Rx;
+	LastCameraAngles[1] = Ry;
+	LastCameraAngles[2] = Rz;
 }
 
 

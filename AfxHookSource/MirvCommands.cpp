@@ -61,6 +61,139 @@ CON_COMMAND(__mirv_exec, "client command execution: __mirv_exec <as you would ha
 	delete ttt;
 }
 
+CON_COMMAND(mirv_campath,"easy camera paths")
+{
+	int argc = args->ArgC();
+
+	if(2 <= argc)
+	{
+		char const * subcmd = args->ArgV(1);
+
+		if(!_stricmp("add", subcmd) && 2 == argc)
+		{
+			g_Hook_VClient_RenderView.m_CamPath.Add(
+				g_Hook_VClient_RenderView.GetCurTime(),
+				CamPathValue(
+					g_Hook_VClient_RenderView.LastCameraOrigin[0],
+					g_Hook_VClient_RenderView.LastCameraOrigin[1],
+					g_Hook_VClient_RenderView.LastCameraOrigin[2],
+					g_Hook_VClient_RenderView.LastCameraAngles[0],
+					g_Hook_VClient_RenderView.LastCameraAngles[1],
+					g_Hook_VClient_RenderView.LastCameraAngles[2]
+				)
+			);
+
+			return;
+		}
+		else if(!_stricmp("enable", subcmd) && 3 == argc)
+		{
+			bool enable = 0 != atoi(args->ArgV(2));
+			bool enabled = g_Hook_VClient_RenderView.m_CamPath.Enable(
+				enable
+			);
+
+			if(enable && !enabled)
+				Tier0_Msg(
+					"Error: Could not enable CamPath.\n"
+					"Did you add enough point already?\n"
+				);
+
+			return;
+		}
+		else if(!_stricmp("clear", subcmd) && 2 == argc)
+		{
+			g_Hook_VClient_RenderView.m_CamPath.Clear();
+
+			return;
+		}
+		else if(!_stricmp("print", subcmd) && 2 == argc)
+		{
+			Tier0_Msg("passed id: time -> (x,y,z) (pitch,yaw,roll)\n");
+
+			double curtime = g_Hook_VClient_RenderView.GetCurTime();
+			
+			int i=0;
+			for(CamPathIterator it = g_Hook_VClient_RenderView.m_CamPath.GetBegin(); it != g_Hook_VClient_RenderView.m_CamPath.GetEnd(); ++it)
+			{
+				double vieworigin[3];
+				double viewangles[3];
+
+				double time = it.GetTime();
+				CamPathValue val = it.GetValue();
+
+				vieworigin[0] = val.X;
+				vieworigin[1] = val.Y;
+				vieworigin[2] = val.Z;
+				viewangles[0] = val.Pitch;
+				viewangles[1] = val.Yaw;
+				viewangles[2] = val.Roll;
+
+				Tier0_Msg(
+					"%s %i: %f -> (%f,%f,%f) (%f,%f,%f)\n",
+					time <= curtime ? "Y" : "n",
+					i, time,
+					vieworigin[0],vieworigin[1],vieworigin[2],
+					viewangles[0],viewangles[1],viewangles[2]
+				);
+
+				i++;
+			}
+			Tier0_Msg("---- Current time: %f\n", curtime);
+
+			return;
+		}
+		else if(!_stricmp("remove", subcmd) && 3 == argc)
+		{
+			int idx = atoi(args->ArgV(2));
+			int i=0;
+			for(CamPathIterator it = g_Hook_VClient_RenderView.m_CamPath.GetBegin(); it != g_Hook_VClient_RenderView.m_CamPath.GetEnd(); ++it)
+			{
+				if(i == idx)
+				{
+					double time = it.GetTime();
+					g_Hook_VClient_RenderView.m_CamPath.Remove(time);
+					break;
+				}
+			}
+
+			return;
+		}
+		else if(!_stricmp("load", subcmd) && 3 == argc)
+		{	
+			std::wstring wideString;
+			bool bOk = AnsiStringToWideString(args->ArgV(2), wideString)
+				&& g_Hook_VClient_RenderView.m_CamPath.Load(wideString.c_str())
+			;
+
+			Tier0_Msg("Loading campath: %s.\n", bOk ? "OK" : "ERROR");
+
+			return;
+		}
+		else if(!_stricmp("save", subcmd) && 3 == argc)
+		{	
+			std::wstring wideString;
+			bool bOk = AnsiStringToWideString(args->ArgV(2), wideString)
+				&& g_Hook_VClient_RenderView.m_CamPath.Save(wideString.c_str())
+			;
+
+			Tier0_Msg("Saving campath: %s.\n", bOk ? "OK" : "ERROR");
+
+			return;
+		}
+	}
+
+	Tier0_Msg(
+		"mirv_campath add - adds current demotime and view as keyframe\n"
+		"mirv_campath enable 0|1 - set whether the camera splines are active or not. Please note that currently at least 4 Points are required to make it active successfully!\n"
+		"mirv_campath clear - removes all keyframes\n"
+		"mirv_campath print - prints keyframes\n"
+		"mirv_campath remove <id> - removes a keyframe\n"
+		"mirv_campath load <fileName> - loads the campath from the file (XML format)\n"
+		"mirv_campath save <fileName> - saves the campath to the file (XML format)\n"
+	);
+	return;
+}
+
 CON_COMMAND(mirv_camexport, "controls camera motion data export") {
 	if(!g_Hook_VClient_RenderView.IsInstalled())
 	{
