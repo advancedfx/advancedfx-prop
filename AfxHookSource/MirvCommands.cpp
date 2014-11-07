@@ -154,6 +154,7 @@ CON_COMMAND(mirv_campath,"easy camera paths")
 					g_Hook_VClient_RenderView.m_CamPath.Remove(time);
 					break;
 				}
+				i++;
 			}
 
 			return;

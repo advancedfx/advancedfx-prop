@@ -6,6 +6,26 @@
 
 <release>
 <name>HLAE</name>
+<version>2.4.0.0</version>
+<time>2014-11-07T19:38Z</time>
+<changes>
+<change type="updated">
+Included AfxHookSource 0.0.6.0 (2014-11-07T19:32Z).
+</change>
+<change type="added">
+Added mirv_campath for creating campaths easily. As the command says you currently should use it in combination with mirv_fx_xtendvis 1, so that player models will be drawn regardless of original camera position.
+If there is a bug, then please save the campath using mirv_campath save test.xml (will go to the folder of the game.exe file) and report with that file.
+</change>
+</changes>
+<comments>
+Thanks to James McEnnan for sharing qspline under the CC0 license and helping with problems!
+Greetings to all #hlae members, especially Dec and how-hiGh.
+</comments>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.3.20.2</version>
 <time>2014-10-28T21:14Z</time>
 <changes>

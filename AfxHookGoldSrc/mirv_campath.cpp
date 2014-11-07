@@ -107,6 +107,7 @@ REGISTER_CMD_FUNC(campath)
 					g_Filming.GetCamPath()->Remove(time);
 					break;
 				}
+				i++;
 			}
 
 			return;

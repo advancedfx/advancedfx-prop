@@ -1070,6 +1070,8 @@ COSValue CubicObjectSpline::Eval(double t)
 		m_Build.Q_w = new double[n][3];
 
 		{
+			Quaternion QLast;
+
 			int i = 0;
 			for(COSPoints::iterator it = m_Points.begin(); it!=m_Points.end(); it++)
 			{
@@ -1077,11 +1079,26 @@ COSValue CubicObjectSpline::Eval(double t)
 				m_Build.X[i] = it->second.T.X;
 				m_Build.Y[i] = it->second.T.Y;
 				m_Build.Z[i] = it->second.T.Z;
-				m_Build.Q_y[i][0] = it->second.R.X;
-				m_Build.Q_y[i][1] = it->second.R.Y;
-				m_Build.Q_y[i][2] = it->second.R.Z;
-				m_Build.Q_y[i][3] = it->second.R.W;
 
+				Quaternion Q = it->second.R;
+				
+				// Make sure we will travel the short way:
+				if(0<i)
+				{
+					// hasLast.
+					double dotProduct = DotProduct(Q,QLast);
+					if(dotProduct<0.0)
+					{
+						Q = -1.0 * Q;
+					}
+				}
+
+				m_Build.Q_y[i][0] = Q.X;
+				m_Build.Q_y[i][1] = Q.Y;
+				m_Build.Q_y[i][2] = Q.Z;
+				m_Build.Q_y[i][3] = Q.W;
+
+				QLast = Q;
 				i++;
 			}
 		}
@@ -1092,7 +1109,7 @@ COSValue CubicObjectSpline::Eval(double t)
 
 		double wi[3] = {0.0,0.0,0.0};
 		double wf[3] = {0.0,0.0,0.0};
-		qspline_init(n, 50, EPS, wi, wf, m_Build.T, m_Build.Q_y, m_Build.Q_h, m_Build.Q_dtheta, m_Build.Q_e, m_Build.Q_w);
+		qspline_init(n, 2, EPS, wi, wf, m_Build.T, m_Build.Q_y, m_Build.Q_h, m_Build.Q_dtheta, m_Build.Q_e, m_Build.Q_w);
 	}
 
 	double x,y,z;
@@ -1250,6 +1267,11 @@ Quaternion operator *(Quaternion a, Quaternion b)
     );
 }
 
+double DotProduct(Quaternion a, Quaternion b)
+{
+	return a.W*b.W + a.X*b.X +a.Y*b.Y +a.Z*b.Z;
+}
+
 Quaternion Quaternion::FromQREulerAngles(QREulerAngles a)
 {
 	// double pitchH = 0.5 * a.Pitch;
@@ -1317,10 +1339,14 @@ QREulerAngles Quaternion::ToQREulerAngles()
 {
 	// TODO: There might still be a problem with singualrities in here!
 
-	double angle = 2.0 * acos(W);
-    double norm = sqrt(X * X + Y * Y + Z * Z);
+	double qNorm = Norm();
+	double qNormInv = 0.0 != qNorm ? 1.0/qNorm : 0.0;
+	Quaternion QUnit = qNormInv * (*this);	
+
+	double angle = 2.0 * acos(QUnit.W);
+    double norm = sqrt(QUnit.X * QUnit.X + QUnit.Y * QUnit.Y + QUnit.Z * QUnit.Z);
 	double invNorm = 0.0 != norm ? 1.0 / norm : 0.0;
-	double vector[3] = { invNorm*X, invNorm*Y, invNorm*Z };
+	double vector[3] = { invNorm*QUnit.X, invNorm*QUnit.Y, invNorm*QUnit.Z };
 
 	// R = 
 	// |c_a +p*p(1 -c_a)   , p*q(1 -c_a) -r*s_a , p*r(1 -c_a) +q*s_a|
@@ -1429,7 +1455,7 @@ QREulerAngles Quaternion::ToQREulerAngles()
 		// Z/W = tan(xRollH +zYawH)
 		// xRollH +zYawH = atan2(Z,W)
 
-		xRoll = -2.0*atan2(Z,W);
+		xRoll = -2.0*atan2(QUnit.Z,QUnit.W);
 		zYaw = 0;
 	}
 	else
@@ -1438,7 +1464,7 @@ QREulerAngles Quaternion::ToQREulerAngles()
 		// north pole singularity:
 
 		yPitch = -M_PI / 2.0;
-		xRoll = 2.0*atan2(Z,W);
+		xRoll = 2.0*atan2(QUnit.Z,QUnit.W);
 		zYaw = 0;
 	}
 	else

@@ -6,6 +6,22 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.0.6.0</version>
+<time>2014-11-07T19:32Z</time>
+<changes>
+<change type="added">
+Added mirv_campath for creating campaths easily.
+If there is a bug, then please save the campath using mirv_campath save test.xml (will go to the folder of the game.exe file) and report with that file.
+</change>
+</changes>
+<comments>
+Thanks to James McEnnan for sharing qspline under the CC0 license and helping with problems!
+</comments>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.0.5.1</version>
 <time>2014-10-28T21:10Z</time>
 <changes>

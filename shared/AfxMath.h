@@ -55,6 +55,8 @@ Quaternion operator *(double a, Quaternion b);
 
 Quaternion operator *(Quaternion a, Quaternion b);
 
+double DotProduct(Quaternion a, Quaternion b);
+
 struct Quaternion
 {
     static Quaternion FromQREulerAngles(QREulerAngles a);
