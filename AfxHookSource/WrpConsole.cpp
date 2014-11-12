@@ -1,13 +1,12 @@
 #include "stdafx.h"
 
-
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2009-10-02 by dominik.matrixstorm.com
+// 2014-11-12 dominik.matrixstorm.com
 //
 // First changes:
-// 2009-10-02 by dominik.matrixstorm.com
+// 2009-10-02 dominik.matrixstorm.com
 
 #include "WrpConsole.h"
 
@@ -61,6 +60,11 @@ IVEngineClient_012 * WrpConCommands::m_VEngineClient_012 = 0;
 
 IVEngineClient_012 * WrpConCommands::GetVEngineClient_012() {
 	return m_VEngineClient_012;
+}
+
+ICvar_007 * WrpConCommands::GetVEngineCvar007()
+{
+	return m_CvarIface_007;
 }
 
 void WrpConCommands::RegisterCommands(ICvar_003 * cvarIface, IVEngineClient_012 * vEngineClientInterface) {

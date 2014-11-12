@@ -298,6 +298,32 @@ CON_COMMAND(mirv_camimport, "controls camera motion data import") {
 	);
 }
 
+CON_COMMAND(mirv_cvar_unhide_all,"(CS:GO only) removes hidden and development only flags from all cvars.")
+{
+	ICvar_007 * pCvar = WrpConCommands::GetVEngineCvar007();
+	if(!pCvar)
+	{
+		Tier0_Warning("Error: No suitable Cvar interface found.\n");
+		return;
+	}
+
+	ICvar_007::Iterator iter(pCvar);
+
+	int nUnhidden = 0;
+
+	for(iter.SetFirst(); iter.IsValid(); iter.Next())
+	{
+		ConCommandBase_007 * cmd = iter.Get();
+
+		if(cmd->IsFlagSet(FCVAR_DEVELOPMENTONLY | FCVAR_HIDDEN))
+			nUnhidden++;
+
+		cmd->RemoveFlags(FCVAR_DEVELOPMENTONLY | FCVAR_HIDDEN);
+	}
+
+	Tier0_Msg("Removed FCVAR_DEVELOPMENTONLY or FCVAR_HIDDEN from %i ConVars.\n", nUnhidden);
+}
+
 CON_COMMAND(mirv_deathmsg, "controls death notification options")
 {
 	if(!csgo_CHudDeathNotice_Install())

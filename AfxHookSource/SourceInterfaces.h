@@ -967,6 +967,35 @@ protected:
 	friend class Iterator;
 };
 
+inline ICvar_007::Iterator::Iterator(ICvar_007 *ICvar_007)
+{
+	m_pIter = ICvar_007->FactoryInternalIterator();
+}
+
+inline ICvar_007::Iterator::~Iterator( void )
+{
+	delete m_pIter;
+}
+
+inline void ICvar_007::Iterator::SetFirst( void )
+{
+	m_pIter->SetFirst();
+}
+
+inline void ICvar_007::Iterator::Next( void )
+{
+	m_pIter->Next();
+}
+
+inline bool ICvar_007::Iterator::IsValid( void )
+{
+	return m_pIter->IsValid();
+}
+
+inline ConCommandBase_007 * ICvar_007::Iterator::Get( void )
+{
+	return m_pIter->Get();
+}
 
 // IVEngineClient_012 //////////////////////////////////////////////////////////
 

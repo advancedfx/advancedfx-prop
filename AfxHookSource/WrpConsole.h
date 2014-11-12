@@ -3,10 +3,10 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2009-10-02 by dominik.matrixstorm.com
+// 2014-11-12 dominik.matrixstorm.com
 //
 // First changes:
-// 2009-10-02 by dominik.matrixstorm.com
+// 2009-10-02 dominik.matrixstorm.com
 
 // Description:
 // Wrapper(s) for Source engine ConCommands and ConVars.
@@ -87,6 +87,9 @@ class WrpConCommands
 public:
 	/// <remarks> only valid when Registered with ICvar_003 </remarks>
 	static IVEngineClient_012 * GetVEngineClient_012();
+	
+	/// <remarks> only valid when Registered with ICvar_007 </remarks>
+	static ICvar_007 * GetVEngineCvar007();
 
 	static void RegisterCommands(ICvar_003 * cvarIface, IVEngineClient_012 * vEngineClientInterface);
 	static void RegisterCommands(ICvar_004 * cvarIface);
