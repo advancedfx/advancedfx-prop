@@ -6,6 +6,30 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.0.7.1</version>
+<time>2014-11-13T13:37Z</time>
+<changes>
+<change type="updated">
+Fixed mirv_cvar_unhide_all crashing.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
+<version>0.0.7.0</version>
+<time>2014-11-12T17:28Z</time>
+<changes>
+<change type="added">
+Added mirv_cvar_unhide_all for CS:GO, which when executed unhides all cvars (inlcuding development cvars).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.0.6.0</version>
 <time>2014-11-07T19:32Z</time>
 <changes>

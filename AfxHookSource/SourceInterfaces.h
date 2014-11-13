@@ -127,7 +127,23 @@ public:
 
 typedef int CVarDLLIdentifier_t_007;
 
+// IMemAlloc ///////////////////////////////////////////////////////////////////////
 
+class IMemAlloc_csgo
+{
+public:
+	virtual void _UNUSED_000(void) = 0;
+	virtual void _UNUSED_001(void) = 0;
+	virtual void _UNUSED_002(void) = 0;
+	virtual void _UNUSED_003(void) = 0;
+	virtual void _UNUSED_004(void) = 0;
+	virtual void Free( void *pMem ) = 0;
+
+	// There is more, but we don't need it at the moment
+	// [....]
+};
+
+IMemAlloc_csgo * Get_g_pMemAlloc(void);
 
 // IConCommandBaseAccessor_003 /////////////////////////////////////////////////////
 
@@ -967,14 +983,14 @@ protected:
 	friend class Iterator;
 };
 
-inline ICvar_007::Iterator::Iterator(ICvar_007 *ICvar_007)
+inline ICvar_007::Iterator::Iterator(ICvar_007 *icvar)
 {
-	m_pIter = ICvar_007->FactoryInternalIterator();
+	m_pIter = icvar->FactoryInternalIterator();
 }
 
 inline ICvar_007::Iterator::~Iterator( void )
 {
-	delete m_pIter;
+	Get_g_pMemAlloc()->Free(m_pIter);
 }
 
 inline void ICvar_007::Iterator::SetFirst( void )

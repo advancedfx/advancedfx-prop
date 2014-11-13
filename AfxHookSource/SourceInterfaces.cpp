@@ -46,6 +46,23 @@ CreateInterfaceFn Sys_GetFactory( CSysModule *pModule )
 	return reinterpret_cast<CreateInterfaceFn>(GetProcAddress( hDLL, CREATEINTERFACE_PROCNAME ));
 }
 
+IMemAlloc_csgo * Get_g_pMemAlloc(void)
+{
+	static IMemAlloc_csgo * result = 0;
+	static bool firstRun = true;
+
+	if(!firstRun)
+	{
+		return result;
+	}
+	firstRun = false;
+
+	HMODULE hModule = GetModuleHandle("tier0");
+	result = *(IMemAlloc_csgo **)GetProcAddress(hModule, "g_pMemAlloc");
+
+	return result;
+}
+
 //
 // Helpers for wrapping command args:
 

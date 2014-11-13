@@ -6,6 +6,33 @@
 
 <release>
 <name>HLAE</name>
+<version>2.4.1.1</version>
+<time>2014-11-13T13:37Z</time>
+<changes>
+<change type="updated">
+Included AfxHookSource 0.0.7.1 (2014-11-13T13:37Z).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
+<version>2.4.1.0</version>
+<time>2014-11-12T17:29Z</time>
+<changes>
+<change type="updated">
+Included AfxHookSource 0.0.7.0 (2014-11-12T17:28Z).
+</change>
+</changes>
+<comments>
+AfxHookSource users: Please check that you are adding -insecure +sv_lan 1 to the launch options when launching, to avoid getting VAC banned! The defaults for HLAE have been changed accordingly, however if hlaeconfig.xml already exists default are overriden.
+</comments>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.4.0.0</version>
 <time>2014-11-07T19:38Z</time>
 <changes>
