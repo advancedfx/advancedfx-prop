@@ -6,6 +6,20 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.0.7.2</version>
+<time>2014-11-13T20:47Z</time>
+<changes>
+<change type="updated">
+Fixed random crashes i.e. when loading a differet demo.
+</change>
+</changes>
+<comments>
+Thanks to flippoz for helping.
+</comments>
+</release>
+
+<release>
+<name>AfxHookSource</name>
 <version>0.0.7.1</version>
 <time>2014-11-13T13:37Z</time>
 <changes>

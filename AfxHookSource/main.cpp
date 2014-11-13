@@ -607,6 +607,47 @@ public:
 
 	virtual void _UNKOWN_107(void)
 	{ JMP_IFACE_FN(csgo_VClient, 107) }
+
+	virtual void _UNKOWN_108(void)
+	{ JMP_IFACE_FN(csgo_VClient, 108) }
+
+	// and a few more to be save from updates:
+
+	virtual void _UNKOWN_109(void)
+	{ JMP_IFACE_FN(csgo_VClient, 109) }
+
+	virtual void _UNKOWN_110(void)
+	{ JMP_IFACE_FN(csgo_VClient, 110) }
+
+	virtual void _UNKOWN_111(void)
+	{ JMP_IFACE_FN(csgo_VClient, 111) }
+
+	virtual void _UNKOWN_112(void)
+	{ JMP_IFACE_FN(csgo_VClient, 112) }
+
+	virtual void _UNKOWN_113(void)
+	{ JMP_IFACE_FN(csgo_VClient, 113) }
+
+	virtual void _UNKOWN_114(void)
+	{ JMP_IFACE_FN(csgo_VClient, 114) }
+
+	virtual void _UNKOWN_115(void)
+	{ JMP_IFACE_FN(csgo_VClient, 115) }
+
+	virtual void _UNKOWN_116(void)
+	{ JMP_IFACE_FN(csgo_VClient, 116) }
+
+	virtual void _UNKOWN_117(void)
+	{ JMP_IFACE_FN(csgo_VClient, 117) }
+
+	virtual void _UNKOWN_118(void)
+	{ JMP_IFACE_FN(csgo_VClient, 118) }
+
+	virtual void _UNKOWN_119(void)
+	{ JMP_IFACE_FN(csgo_VClient, 119) }
+
+	virtual void _UNKOWN_120(void)
+	{ JMP_IFACE_FN(csgo_VClient, 120) }
 } g_BaseClientDllWrapper_csgo;
 
 #pragma warning(pop)
