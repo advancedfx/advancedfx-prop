@@ -429,10 +429,10 @@ CON_COMMAND(mirv_deathmsg, "controls death notification options")
 			}
 			Tier0_Msg(
 				"Usage:\n"
-				"mirv_deathmsg config scrollInTime f - Current: %f\n"
-				"mirv_deathmsg config fadeOutTime f - Current: %f\n"
-				"mirv_deathmsg config noticeLifeTime f - This is what you want. Current: %f\n"
-				"mirv_deathmsg config localPlayerLifeTimeMod f - Current: %f\n"
+				"mirv_deathmsg cfg scrollInTime f - Current: %f\n"
+				"mirv_deathmsg cfg fadeOutTime f - Current: %f\n"
+				"mirv_deathmsg cfg noticeLifeTime f - This is what you want. Current: %f\n"
+				"mirv_deathmsg cfg localPlayerLifeTimeMod f - Current: %f\n"
 				"Where f is a floating point value in seconds. Use -1 (a negative value) to use the orginal value instead.\n",
 				csgo_CHudDeathNotice_nScrollInTime,
 				csgo_CHudDeathNotice_nFadeOutTime,

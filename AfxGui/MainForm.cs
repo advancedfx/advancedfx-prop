@@ -29,8 +29,7 @@ namespace AfxGui
         {
             InitializeComponent();
             this.Icon = Program.Icon;
-            panelContest.Visible = (new DateTime(2014, 11, 08)) >= DateTime.Today;
-
+ 
             m_UpdateCheckNotification = new UpdateCheckNotificationTarget(this, new UpdateCheckedDelegate(OnUpdateChecked));
         }
 

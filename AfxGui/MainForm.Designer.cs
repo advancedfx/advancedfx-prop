@@ -58,14 +58,9 @@
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusLabelAutoYes = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusLabelAutoNo = new System.Windows.Forms.ToolStripStatusLabel();
-            this.panelContest = new System.Windows.Forms.Panel();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.linkLabelContest = new System.Windows.Forms.LinkLabel();
             this.mainMenu.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.stripEnableUpdateCheck.SuspendLayout();
-            this.panelContest.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
             // mainMenu
@@ -94,19 +89,19 @@
             // menuLaunch
             // 
             this.menuLaunch.Name = "menuLaunch";
-            this.menuLaunch.Size = new System.Drawing.Size(119, 22);
+            this.menuLaunch.Size = new System.Drawing.Size(152, 22);
             this.menuLaunch.Text = "Launch";
             this.menuLaunch.Click += new System.EventHandler(this.menuLaunch_Click);
             // 
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(116, 6);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(149, 6);
             // 
             // menuExit
             // 
             this.menuExit.Name = "menuExit";
-            this.menuExit.Size = new System.Drawing.Size(119, 22);
+            this.menuExit.Size = new System.Drawing.Size(152, 22);
             this.menuExit.Text = "Exit";
             this.menuExit.Click += new System.EventHandler(this.menuExit_Click);
             // 
@@ -257,7 +252,7 @@
             // statusLabelUpdate
             // 
             this.statusLabelUpdate.Name = "statusLabelUpdate";
-            this.statusLabelUpdate.Size = new System.Drawing.Size(288, 17);
+            this.statusLabelUpdate.Size = new System.Drawing.Size(331, 17);
             this.statusLabelUpdate.Spring = true;
             this.statusLabelUpdate.Text = "Update status known";
             this.statusLabelUpdate.Click += new System.EventHandler(this.statusLabelUpdate_Click);
@@ -290,7 +285,7 @@
             this.toolStripStatusLabel1,
             this.statusLabelAutoYes,
             this.statusLabelAutoNo});
-            this.stripEnableUpdateCheck.Location = new System.Drawing.Point(0, 24);
+            this.stripEnableUpdateCheck.Location = new System.Drawing.Point(0, 0);
             this.stripEnableUpdateCheck.Name = "stripEnableUpdateCheck";
             this.stripEnableUpdateCheck.Size = new System.Drawing.Size(370, 22);
             this.stripEnableUpdateCheck.SizingGrip = false;
@@ -327,49 +322,11 @@
             this.statusLabelAutoNo.Text = "No";
             this.statusLabelAutoNo.Click += new System.EventHandler(this.statusLabelAuto_Click);
             // 
-            // panelContest
-            // 
-            this.panelContest.Controls.Add(this.pictureBox1);
-            this.panelContest.Controls.Add(this.linkLabelContest);
-            this.panelContest.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panelContest.Location = new System.Drawing.Point(0, 24);
-            this.panelContest.Name = "panelContest";
-            this.panelContest.Size = new System.Drawing.Size(370, 249);
-            this.panelContest.TabIndex = 3;
-            this.panelContest.Visible = false;
-            // 
-            // pictureBox1
-            // 
-            this.pictureBox1.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.pictureBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pictureBox1.Image = global::AfxGui.Properties.Resources.the_creative_minds_competition;
-            this.pictureBox1.Location = new System.Drawing.Point(0, 0);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(370, 195);
-            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
-            this.pictureBox1.TabIndex = 0;
-            this.pictureBox1.TabStop = false;
-            this.pictureBox1.Click += new System.EventHandler(this.pictureBox1_Click);
-            // 
-            // linkLabelContest
-            // 
-            this.linkLabelContest.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.linkLabelContest.Location = new System.Drawing.Point(0, 195);
-            this.linkLabelContest.Name = "linkLabelContest";
-            this.linkLabelContest.Size = new System.Drawing.Size(370, 54);
-            this.linkLabelContest.TabIndex = 1;
-            this.linkLabelContest.TabStop = true;
-            this.linkLabelContest.Text = "Enter the Creative Minds Editing Competition\r\nwith a prize pool of 300 EUR!\r\nClic" +
-                "k here for more information!";
-            this.linkLabelContest.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.linkLabelContest.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelContest_LinkClicked);
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(370, 273);
-            this.Controls.Add(this.panelContest);
             this.Controls.Add(this.mainMenu);
             this.Controls.Add(this.statusStrip);
             this.Controls.Add(this.stripEnableUpdateCheck);
@@ -384,8 +341,6 @@
             this.statusStrip.PerformLayout();
             this.stripEnableUpdateCheck.ResumeLayout(false);
             this.stripEnableUpdateCheck.PerformLayout();
-            this.panelContest.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -421,10 +376,7 @@
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
         private System.Windows.Forms.ToolStripStatusLabel statusLabelAutoYes;
         private System.Windows.Forms.ToolStripStatusLabel statusLabelAutoNo;
-        private System.Windows.Forms.Panel panelContest;
         private System.Windows.Forms.ToolStripMenuItem menuGuidToClipBoard;
         private System.Windows.Forms.ToolStripStatusLabel statusLabelIgnore;
-        private System.Windows.Forms.PictureBox pictureBox1;
-        private System.Windows.Forms.LinkLabel linkLabelContest;
     }
 }
