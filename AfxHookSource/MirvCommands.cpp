@@ -20,10 +20,13 @@
 #include "WrpConsole.h"
 #include "WrpVEngineClient.h"
 #include "csgo_CHudDeathNotice.h"
+#include "csgo_GetPlayerName.h"
+//#include "csgo_viewrender.h"
 
 #include <malloc.h>
 #include <stdlib.h>
 #include <string.h>
+#include <cctype>
 
 extern WrpVEngineClient * g_VEngineClient;
 
@@ -390,7 +393,7 @@ CON_COMMAND(mirv_deathmsg, "controls death notification options")
 				"mirv_deathmsg block <uidAttacker> <uidVictim> <uidAssister> - block these ids\n"
 				"\tRemarks: * to match any uid, use !x to match any uid apart from x.\n"
 				"mirv_deathmsg block list - list current blocks\n"
-				"mirv_deathmsg block clear - clear curent blocks\n"
+				"mirv_deathmsg block clear - clear current blocks\n"
 				"(Use mirv_deathmsg debug 1 to get the uids.)\n"
 			);
 			return;
@@ -451,16 +454,82 @@ CON_COMMAND(mirv_deathmsg, "controls death notification options")
 	);
 }
 
+CON_COMMAND(mirv_replace_name, "allows repalcing playernames")
+{
+	if(!csgo_GetPlayerName_Install())
+	{
+		Tier0_Warning("Error: Hook not installed.\n");
+		return;
+	}
+
+	int argc = args->ArgC();
+
+	if(2 <= argc)
+	{
+		char const * arg1 = args->ArgV(1);
+
+		if(0 == _stricmp("list", arg1))
+		{
+			csgo_GetPlayerName_Replace_List();
+			return;
+		}
+		else
+		if(0 == _stricmp("clear", arg1))
+		{
+			csgo_GetPlayerName_Replace_Clear();
+			return;
+		}
+
+		if(3 <= argc)
+		{
+			const char * arg2 = args->ArgV(2);
+
+			if(0 == _stricmp("debug", arg1))
+			{
+				csgo_debug_GetPlayerName = 0 != atoi(arg2);
+				return;
+			}
+			else
+			if(0 == _stricmp("delete", arg1))
+			{
+				csgo_GetPlayerName_Replace_Delete(arg2);
+				return;
+			}
+
+			if(1 <= strlen(arg1) && isdigit(arg1[0]))
+			{
+				csgo_GetPlayerName_Replace(arg1, arg2);
+				return;
+			}
+		}
+	}
+
+	Tier0_Msg(
+		"Usage:\n"
+		"mirv_replace_name <playerId> <name> - replace <playerId> with given <name>.\n"
+		"mirv_replace_name debug 0|1 - print <playerId> -> <name> paris into console as they get queried by the game.\n"
+		"mirv_replace_name delete <playerId> - delete replacement for <playerId>.\n"
+		"mirv_replace_name list - list all <playerId> -> <name> replacements currently active.\n"
+		"mirv_replace_name clear - clear all replacements.\n"
+	);
+}
+
 /*
 CON_COMMAND(mirv_shader, "shader effects")
 {
+	if(!csgo_viewrender_Install())
+	{
+		Tier0_Warning("Error: Hook not installed or modification not supported.\n");
+		return;
+	}
+
 	int argc = args->ArgC();
 
 	if(2 <= argc)
 	{
 		char const * arg1 = args->ArgV(1);
 		
-		if(0 == stricmp("enabled", arg1))
+		if(0 == _stricmp("enabled", arg1))
 		{
 			if(3 == argc)
 			{
@@ -475,18 +544,11 @@ CON_COMMAND(mirv_shader, "shader effects")
 			);
 			return;
 		}
-		else if(0 == stricmp("loadpso", arg1) && 3 == argc)
-		{
-			g_MirvShader.LoadPso(args->ArgV(2));
-			g_MirvShader.Enabled_set(true);
-			return;
-		}
 	}
 
 	Tier0_Msg(
 		"Usage:\n"
 		"mirv_shader enabled [0|1]\n"
-		"mirv_shader loadpso <fileName>\n"
 	);
 }
 */

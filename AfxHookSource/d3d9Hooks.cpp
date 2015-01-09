@@ -72,9 +72,23 @@ struct NewDirect3DDevice9
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetRenderTarget, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, SetDepthStencilSurface, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetDepthStencilSurface, g_OldDirect3DDevice9);
-    IFACE_PASSTHROUGH(IDirect3DDevice9, BeginScene, g_OldDirect3DDevice9);
+    
+    STDMETHOD(BeginScene)(THIS)
+	{
+		g_MirvShader.OnBeginScene();
+
+		return g_OldDirect3DDevice9->BeginScene();
+	}
+
     IFACE_PASSTHROUGH(IDirect3DDevice9, EndScene, g_OldDirect3DDevice9);
-    IFACE_PASSTHROUGH(IDirect3DDevice9, Clear, g_OldDirect3DDevice9);
+
+    STDMETHOD(Clear)(THIS_ DWORD Count,CONST D3DRECT* pRects,DWORD Flags,D3DCOLOR Color,float Z,DWORD Stencil)
+	{
+		g_MirvShader.OnClear(Count);
+
+		return g_OldDirect3DDevice9->Clear(Count,pRects,Flags,Color,Z,Stencil);
+	}
+
     IFACE_PASSTHROUGH(IDirect3DDevice9, SetTransform, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetTransform, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, MultiplyTransform, g_OldDirect3DDevice9);
@@ -88,7 +102,13 @@ struct NewDirect3DDevice9
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetLightEnable, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, SetClipPlane, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetClipPlane, g_OldDirect3DDevice9);
-    IFACE_PASSTHROUGH(IDirect3DDevice9, SetRenderState, g_OldDirect3DDevice9);
+
+	STDMETHOD(SetRenderState)(THIS_ D3DRENDERSTATETYPE State,DWORD Value)
+	{
+		g_MirvShader.OnSetRenderState(State, Value);
+		return g_OldDirect3DDevice9->SetRenderState(State, Value);
+	}
+
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetRenderState, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, CreateStateBlock, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, BeginStateBlock, g_OldDirect3DDevice9);
@@ -123,14 +143,40 @@ struct NewDirect3DDevice9
     IFACE_PASSTHROUGH(IDirect3DDevice9, SetFVF, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetFVF, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, CreateVertexShader, g_OldDirect3DDevice9);
-    IFACE_PASSTHROUGH(IDirect3DDevice9, SetVertexShader, g_OldDirect3DDevice9);
-    IFACE_PASSTHROUGH(IDirect3DDevice9, GetVertexShader, g_OldDirect3DDevice9);
-    IFACE_PASSTHROUGH(IDirect3DDevice9, SetVertexShaderConstantF, g_OldDirect3DDevice9);
-    IFACE_PASSTHROUGH(IDirect3DDevice9, GetVertexShaderConstantF, g_OldDirect3DDevice9);
-    IFACE_PASSTHROUGH(IDirect3DDevice9, SetVertexShaderConstantI, g_OldDirect3DDevice9);
-    IFACE_PASSTHROUGH(IDirect3DDevice9, GetVertexShaderConstantI, g_OldDirect3DDevice9);
-    IFACE_PASSTHROUGH(IDirect3DDevice9, SetVertexShaderConstantB, g_OldDirect3DDevice9);
-    IFACE_PASSTHROUGH(IDirect3DDevice9, GetVertexShaderConstantB, g_OldDirect3DDevice9);
+    
+    STDMETHOD(SetVertexShader)(THIS_ IDirect3DVertexShader9* pShader)
+	{
+		return g_OldDirect3DDevice9->SetVertexShader(g_MirvShader.OnSetVertexShader(pShader));
+	}
+
+	IFACE_PASSTHROUGH(IDirect3DDevice9, GetVertexShader, g_OldDirect3DDevice9);
+    
+    STDMETHOD(SetVertexShaderConstantF)(THIS_ UINT StartRegister,CONST float* pConstantData,UINT Vector4fCount)
+	{
+		if(g_MirvShader.IsBlockedVertexShaderConstant(StartRegister))
+			return D3D_OK;
+		return g_OldDirect3DDevice9->SetVertexShaderConstantF(StartRegister,pConstantData, Vector4fCount);
+	}
+    
+	IFACE_PASSTHROUGH(IDirect3DDevice9, GetVertexShaderConstantF, g_OldDirect3DDevice9);
+    
+    STDMETHOD(SetVertexShaderConstantI)(THIS_ UINT StartRegister,CONST int* pConstantData,UINT Vector4iCount)
+	{
+		if(g_MirvShader.IsBlockedVertexShaderConstant(StartRegister))
+			return D3D_OK;
+		return g_OldDirect3DDevice9->SetVertexShaderConstantI(StartRegister,pConstantData, Vector4iCount);
+	}
+    
+	IFACE_PASSTHROUGH(IDirect3DDevice9, GetVertexShaderConstantI, g_OldDirect3DDevice9);
+    
+    STDMETHOD(SetVertexShaderConstantB)(THIS_ UINT StartRegister,CONST BOOL* pConstantData,UINT  BoolCount)
+	{
+		if(g_MirvShader.IsBlockedVertexShaderConstant(StartRegister))
+			return D3D_OK;
+		return g_OldDirect3DDevice9->SetVertexShaderConstantB(StartRegister,pConstantData, BoolCount);
+	}
+
+	IFACE_PASSTHROUGH(IDirect3DDevice9, GetVertexShaderConstantB, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, SetStreamSource, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetStreamSource, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, SetStreamSourceFreq, g_OldDirect3DDevice9);
@@ -145,12 +191,33 @@ struct NewDirect3DDevice9
 	}
 
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetPixelShader, g_OldDirect3DDevice9);
-    IFACE_PASSTHROUGH(IDirect3DDevice9, SetPixelShaderConstantF, g_OldDirect3DDevice9);
+
+    STDMETHOD(SetPixelShaderConstantF)(THIS_ UINT StartRegister,CONST float* pConstantData,UINT Vector4fCount)
+	{
+		if(g_MirvShader.IsBlockedPixelShaderConstant(StartRegister))
+			return D3D_OK;
+		return g_OldDirect3DDevice9->SetPixelShaderConstantF(StartRegister, pConstantData, Vector4fCount);
+	}
+
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetPixelShaderConstantF, g_OldDirect3DDevice9);
-    IFACE_PASSTHROUGH(IDirect3DDevice9, SetPixelShaderConstantI, g_OldDirect3DDevice9);
+
+	STDMETHOD(SetPixelShaderConstantI)(THIS_ UINT StartRegister,CONST int* pConstantData,UINT Vector4iCount)
+	{
+		if(g_MirvShader.IsBlockedPixelShaderConstant(StartRegister))
+			return D3D_OK;
+		return g_OldDirect3DDevice9->SetPixelShaderConstantI(StartRegister, pConstantData, Vector4iCount);
+	}
+    
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetPixelShaderConstantI, g_OldDirect3DDevice9);
-    IFACE_PASSTHROUGH(IDirect3DDevice9, SetPixelShaderConstantB, g_OldDirect3DDevice9);
-    IFACE_PASSTHROUGH(IDirect3DDevice9, GetPixelShaderConstantB, g_OldDirect3DDevice9);
+	
+	STDMETHOD(SetPixelShaderConstantB)(THIS_ UINT StartRegister,CONST BOOL* pConstantData,UINT  BoolCount)
+	{
+		if(g_MirvShader.IsBlockedPixelShaderConstant(StartRegister))
+			return D3D_OK;
+		return g_OldDirect3DDevice9->SetPixelShaderConstantB(StartRegister, pConstantData, BoolCount);
+	}
+
+	IFACE_PASSTHROUGH(IDirect3DDevice9, GetPixelShaderConstantB, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, DrawRectPatch, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, DrawTriPatch, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, DeletePatch, g_OldDirect3DDevice9);

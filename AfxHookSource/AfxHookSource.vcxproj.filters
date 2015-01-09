@@ -66,6 +66,9 @@
     <ClCompile Include="..\shared\CamPath.cpp">
       <Filter>shared</Filter>
     </ClCompile>
+    <ClCompile Include="csgo_GetPlayerName.cpp">
+      <Filter>AfxHookSource</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -127,6 +130,9 @@
     </ClInclude>
     <ClInclude Include="..\shared\rapidxml\rapidxml_utils.hpp">
       <Filter>shared\rapidxml</Filter>
+    </ClInclude>
+    <ClInclude Include="csgo_GetPlayerName.h">
+      <Filter>AfxHookSource</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

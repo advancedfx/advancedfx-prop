@@ -24,7 +24,6 @@
 #include "WrpVEngineClient.h"
 #include "WrpConsole.h"
 #include "WrpGlobals.h"
-
 //#include "d3d9Hooks.h"
 
 
@@ -756,14 +755,16 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 	static bool bFirstClient = true;
 	static bool bFirstEngine = true;
 	static bool bFirstTier0 = true;
-	static bool bFirstGameOverlayRenderer = true;
+	//static bool bFirstGameOverlayRenderer = true;
 	static bool bFirstLauncher = true;
 	static bool bFirstfilesystem_stdio = true;
+	static bool bFirstShaderapidx9 = true;
+	static bool bFirstMaterialsystem = true;
 
 	if(!hModule || !lpLibFileName)
 		return;
 
-#if 0
+#if 1
 	static FILE *f1=NULL;
 
 	if( !f1 ) f1=fopen("mdt_log_LibraryHooksA.txt","wb");
@@ -819,21 +820,21 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryA", (DWORD) &new_LoadLibraryA);
 	}
 	else
-	if(bFirstGameOverlayRenderer && StringEndsWith( lpLibFileName, "gameoverlayrenderer.dll"))
+	if(bFirstMaterialsystem && StringEndsWith( lpLibFileName, "materialsystem.dll"))
 	{
-		bFirstGameOverlayRenderer = false;
+		bFirstMaterialsystem = false;
 		
 		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryExA", (DWORD) &new_LoadLibraryExA);
 		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryA", (DWORD) &new_LoadLibraryA);
 	}
-/*	else
+	else
 	if(bFirstShaderapidx9 && StringEndsWith( lpLibFileName, "shaderapidx9.dll"))
 	{
 		bFirstShaderapidx9 = false;
 
-		old_Direct3DCreate9 = (Direct3DCreate9_t)InterceptDllCall(hModule, "d3d9.dll", "Direct3DCreate9", (DWORD) &new_Direct3DCreate9);
+		//old_Direct3DCreate9 = (Direct3DCreate9_t)InterceptDllCall(hModule, "d3d9.dll", "Direct3DCreate9", (DWORD) &new_Direct3DCreate9);
 	}
-*/	else
+	else
 	if(bFirstClient && StringEndsWith( lpLibFileName, "client.dll"))
 	{
 		bFirstClient = false;

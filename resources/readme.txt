@@ -42,6 +42,10 @@ FreeType
   Portions of this software are copyright © 2012 The FreeType
   Project (www.freetype.org).  All rights reserved.
   (Currently not used in Release build.)
+  
+Hex-Rays
+  For IDA v5.0 free
+  http://www.hex-rays.com/
 
 Microsoft
   For VC++, MSDN Library, ... .

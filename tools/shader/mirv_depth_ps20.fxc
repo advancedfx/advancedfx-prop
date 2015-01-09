@@ -1,0 +1,13 @@
+struct PS_INPUT
+{
+	float3 zValue : TEXCOORD0;
+};
+
+float4 main( PS_INPUT i ) :COLOR
+{
+	float z = i.zValue.z;
+	
+	float4 color = float4(z, z, z, 1.0f );
+	
+	return color;
+}

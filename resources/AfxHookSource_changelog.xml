@@ -6,6 +6,21 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.0.8.0</version>
+<time>2015-01-09T14:16Z</time>
+<changes>
+<change type="added">
+Added mirv_replace_name. Allows to replace name in death notices and bottom bar, however won't replace GOTV player bars on left/right side of the screen.
+</change>
+</changes>
+<comments>
+Thanks to Lupus for testing.
+</comments>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.0.7.2</version>
 <time>2014-11-13T20:47Z</time>
 <changes>

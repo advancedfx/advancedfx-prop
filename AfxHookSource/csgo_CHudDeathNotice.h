@@ -3,10 +3,10 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2014-10-21 by dominik.matrixstorm.com
+// 2014-10-21 dominik.matrixstorm.com
 //
 // First changes:
-// 2014-10-21  dominik.matrixstorm.com
+// 2014-10-21 dominik.matrixstorm.com
 
 extern int csgo_debug_CHudDeathNotice_FireGameEvent;
 
