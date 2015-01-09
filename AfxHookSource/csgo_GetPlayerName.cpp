@@ -83,6 +83,9 @@ void csgo_GetPlayerName_Replace(char const * uidPlayer, char const * newName)
 
 	wcscpy_s( newString, strLen, widePlayerName.c_str() );
 
+	// remove old element first:
+	csgo_GetPlayerName_Replace_Delete(uidPlayer);
+
 	getPlayerNameReplace[iUidPlayer] = newString;
 }
 

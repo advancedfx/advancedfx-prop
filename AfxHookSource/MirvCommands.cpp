@@ -454,7 +454,7 @@ CON_COMMAND(mirv_deathmsg, "controls death notification options")
 	);
 }
 
-CON_COMMAND(mirv_replace_name, "allows repalcing playernames")
+CON_COMMAND(mirv_replace_name, "allows replacing player names")
 {
 	if(!csgo_GetPlayerName_Install())
 	{
@@ -507,7 +507,7 @@ CON_COMMAND(mirv_replace_name, "allows repalcing playernames")
 	Tier0_Msg(
 		"Usage:\n"
 		"mirv_replace_name <playerId> <name> - replace <playerId> with given <name>.\n"
-		"mirv_replace_name debug 0|1 - print <playerId> -> <name> paris into console as they get queried by the game.\n"
+		"mirv_replace_name debug 0|1 - print <playerId> -> <name> pairs into console as they get queried by the game.\n"
 		"mirv_replace_name delete <playerId> - delete replacement for <playerId>.\n"
 		"mirv_replace_name list - list all <playerId> -> <name> replacements currently active.\n"
 		"mirv_replace_name clear - clear all replacements.\n"
