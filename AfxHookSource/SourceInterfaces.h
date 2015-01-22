@@ -877,6 +877,17 @@ private:
 	bool m_bUsingCommandCallbackInterface : 1;
 };
 
+class Color;
+
+class IConsoleDisplayFunc abstract
+{
+public:
+	virtual void ColorPrint( const Color& clr, const char *pMessage ) = 0;
+	virtual void Print( const char *pMessage ) = 0;
+	virtual void DPrint( const char *pMessage ) = 0;
+
+	virtual void GetConsoleText( char *pchText, size_t bufSize ) const = 0;
+};
 
 
 class ICvar_007 abstract : public IAppSystem_swarm
@@ -909,8 +920,8 @@ public:
 	virtual void			RemoveGlobalChangeCallback( FnChangeCallback_t_007 callback ) = 0;
 	virtual void			CallGlobalChangeCallbacks( ConVar_007 *var, const char *pOldString, float flOldValue ) = 0;
 
-	virtual void			_UNUSED_InstallConsoleDisplayFunc( void ) = 0;
-	virtual void			_UNUSED_RemoveConsoleDisplayFunc( void ) = 0;
+	virtual void			InstallConsoleDisplayFunc( IConsoleDisplayFunc* pDisplayFunc ) = 0;
+	virtual void			RemoveConsoleDisplayFunc( IConsoleDisplayFunc* pDisplayFunc ) = 0;
 	virtual void			_UNUSED_ConsoleColorPrintf( void ) const = 0;
 	virtual void			_UNUSED_ConsolePrintf( void ) const = 0;
 	virtual void			_UNUSED_ConsoleDPrintf( void ) const = 0;
@@ -1257,6 +1268,9 @@ public:
 	// Returns true if the loading plaque should be drawn
 	virtual bool				IsDrawingLoadingImage( void ) = 0;
 
+	// new in csgo:
+	virtual void				HideLoadingPlaque( void ) = 0;
+
 	// Prints the formatted string to the notification area of the screen ( down the right hand edge
 	//  numbered lines starting at position 0
 	virtual void				Con_NPrintf( int pos, const char *fmt, ... ) = 0;
@@ -1287,6 +1301,7 @@ public:
 	virtual void _UNUSED_GetChapterName(void)=0;
 
 	virtual char const	*GetLevelName( void ) = 0;
+	virtual int GetLevelVersion( void ) = 0;
 
 #if !defined( NO_VOICE )
 	virtual void _UNUSED_GetVoiceTweakAPI(void)=0;
@@ -1298,6 +1313,10 @@ public:
 	virtual void _UNUSED_FireEvents(void)=0;
 	virtual void _UNUSED_GetLeavesArea(void)=0;
 	virtual void _UNUSED_DoesBoxTouchAreaFrustum(void)=0;
+	
+	// new in csgo:
+	virtual void _UNUSED_GetFrustumList(void) = 0;
+
 	virtual void _UNUSED_SetAudioState(void)=0;
 	virtual void _UNUSED_SentenceGroupPick(void)=0;
 	virtual void _UNUSED_SentenceGroupPickSequential(void)=0;
@@ -1320,12 +1339,30 @@ public:
 	virtual bool		IsPlayingDemo( void ) = 0;
 	virtual bool		IsRecordingDemo( void ) = 0;
 	virtual bool		IsPlayingTimeDemo( void ) = 0;
+
+	// new in csgo:
+	virtual int			GetDemoRecordingTick( void ) = 0;
+	virtual int			GetDemoPlaybackTick( void ) = 0;
+	virtual int			GetDemoPlaybackStartTick( void ) = 0;
+	virtual float		GetDemoPlaybackTimeScale( void ) = 0;
+	virtual int			GetDemoPlaybackTotalTicks( void ) = 0;
+
 	// Is the game paused?
 	virtual bool		IsPaused( void ) = 0;
 	// Is the game currently taking a screenshot?
+
+	// new in csgo:
+	// What is the game timescale multiplied with the host_timescale?
+	virtual float GetTimescale( void ) const = 0;
+
 	virtual bool		IsTakingScreenshot( void ) = 0;
 	// Is this a HLTV broadcast ?
 	virtual bool		IsHLTV( void ) = 0;
+	
+	// new in csgo:
+	// Is this a Replay demo?
+	virtual bool		IsReplay( void ) = 0;
+
 	// is this level loaded as just the background to the main menu? (active, but unplayable)
 	virtual bool		IsLevelMainMenuBackground( void ) = 0;
 	// returns the name of the background level
@@ -1344,6 +1381,11 @@ public:
 
 	virtual void _UNUSED_REMOVED_SteamRefreshLogin(void)=0;
 	virtual void _UNUSED_REMOVED_SteamProcessCall(void)=0;
+
+	virtual void _UNUSED_WildGuess( void ) = 0;
+	virtual void _UNUSED_WildGuess2( void ) = 0;
+	virtual void _UNUSED_WildGuess3( void ) = 0;
+//	virtual void _UNUSED_WildGuess4( void ) = 0;
 
 	// allow other modules to know about engine versioning (one use is a proxy for network compatability)
 	virtual unsigned int	GetEngineBuildNumber() = 0; // engines build
@@ -1364,7 +1406,10 @@ public:
 	virtual int	GetAppID() = 0;
 
 	virtual void _UNUSED_GetLightForPointFast(void)=0;
-	virtual void _UNUSED_ClientCmd_Unrestricted(void)=0;
+
+	// This version does NOT check against FCVAR_CLIENTCMD_CAN_EXECUTE.
+	virtual void ClientCmd_Unrestricted( const char *szCmdString ) = 0;
+
 	virtual void _UNUSED_SetRestrictServerCommands(void)=0;
 	virtual void _UNUSED_SetRestrictClientCommands(void)=0;
 	virtual void _UNUSED_SetOverlayBindProxy(void)=0;
@@ -1385,6 +1430,8 @@ public:
 	virtual void _UNUSED_ResetDemoInterpolation(void)=0;
 	virtual void _UNUSED_SetGamestatsData(void)=0;
 	virtual void _UNUSED_GetGamestatsData(void)=0;
+
+	// .... might be more in some games (i.e. source-sdk-2013)
 };
 
 

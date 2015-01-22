@@ -38,6 +38,10 @@ Credits:
 In addition to the mentions in the changelog we want to credit the following
 people, companies, organizations and projects:
 
+AlliedModders
+  For csgo hl2sdk.
+  http://alliedmods.net
+
 FreeType
   Portions of this software are copyright © 2012 The FreeType
   Project (www.freetype.org).  All rights reserved.

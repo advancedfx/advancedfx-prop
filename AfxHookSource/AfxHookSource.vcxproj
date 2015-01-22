@@ -86,6 +86,7 @@
     <ClCompile Include="addresses.cpp" />
     <ClCompile Include="csgo_CHudDeathNotice.cpp" />
     <ClCompile Include="csgo_GetPlayerName.cpp" />
+    <ClCompile Include="csgo_SndMixTimeScalePatch.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MirvCommands.cpp" />
     <ClCompile Include="RenderView.cpp" />
@@ -110,6 +111,7 @@
     <ClInclude Include="addresses.h" />
     <ClInclude Include="csgo_CHudDeathNotice.h" />
     <ClInclude Include="csgo_GetPlayerName.h" />
+    <ClInclude Include="csgo_SndMixTimeScalePatch.h" />
     <ClInclude Include="RenderView.h" />
     <ClInclude Include="SourceInterfaces.h" />
     <ClInclude Include="stdafx.h" />

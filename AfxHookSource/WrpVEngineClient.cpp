@@ -37,10 +37,6 @@ bool WrpVEngineClient_012::Con_IsVisible( void ) {
 	return m_VEngineClient_012->Con_IsVisible();
 }
 
-float WrpVEngineClient_012::Time( void ) {
-	return m_VEngineClient_012->Time();
-}
-
 float WrpVEngineClient_012::GetLastTimeStamp( void ) {
 	return m_VEngineClient_012->GetLastTimeStamp();
 }
@@ -150,6 +146,11 @@ int	WrpVEngineClient_012::GetAppID() {
 	return m_VEngineClient_012->GetAppID();
 }
 
+void WrpVEngineClient_012::ClientCmd_Unrestricted( const char *szCmdString )
+{
+	// In 012 this is unrestricted:
+	ClientCmd(szCmdString);
+}
 
 
 // WrpVEngineClient_013 ///////////////////////////////////////////////////////////
@@ -172,10 +173,6 @@ void WrpVEngineClient_013::ClientCmd( const char *szCmdString ) {
 
 bool WrpVEngineClient_013::Con_IsVisible( void ) {
 	return m_VEngineClient_013->Con_IsVisible();
-}
-
-float WrpVEngineClient_013::Time( void ) {
-	return m_VEngineClient_013->Time();
 }
 
 float WrpVEngineClient_013::GetLastTimeStamp( void ) {
@@ -288,4 +285,6 @@ int	WrpVEngineClient_013::GetAppID() {
 	return m_VEngineClient_013->GetAppID();
 }
 
-
+void WrpVEngineClient_013::ClientCmd_Unrestricted( const char *szCmdString ) {
+	m_VEngineClient_013->ClientCmd_Unrestricted(szCmdString);
+}

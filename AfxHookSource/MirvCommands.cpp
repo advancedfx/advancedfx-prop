@@ -21,7 +21,9 @@
 #include "WrpVEngineClient.h"
 #include "csgo_CHudDeathNotice.h"
 #include "csgo_GetPlayerName.h"
-//#include "csgo_viewrender.h"
+#include "csgo_SndMixTimeScalePatch.h"
+
+#include "addresses.h"
 
 #include <malloc.h>
 #include <stdlib.h>
@@ -30,6 +32,18 @@
 
 extern WrpVEngineClient * g_VEngineClient;
 
+
+CON_COMMAND(__mirv_test, "")
+{
+/*
+	Tier0_Msg(
+		"LevelName: %s\n"
+		"ProductVersionString: %s\n",
+		g_VEngineClient->GetLevelName(),
+		g_VEngineClient->GetProductVersionString()
+	);
+*/
+}
 
 CON_COMMAND(__mirv_exec, "client command execution: __mirv_exec <as you would have typed here>") {
 	unsigned int len=0;
@@ -511,6 +525,41 @@ CON_COMMAND(mirv_replace_name, "allows replacing player names")
 		"mirv_replace_name delete <playerId> - delete replacement for <playerId>.\n"
 		"mirv_replace_name list - list all <playerId> -> <name> replacements currently active.\n"
 		"mirv_replace_name clear - clear all replacements.\n"
+	);
+}
+
+extern char * onSetupEngineView;
+
+CON_COMMAND(mirv_snd_timescale, "(CS:GO only) allows to override host_timescale value for sound system.")
+{
+	if(!Hook_csgo_SndMixTimeScalePatch)
+	{
+		Tier0_Warning("Error: Hook not installed.\n");
+		return;
+	}
+
+	int argc = args->ArgC();
+
+	if(2 <= argc)
+	{
+		const char * arg1 = args->ArgV(1);
+
+		if(0 == _stricmp("default", arg1))
+		{
+			csgo_SndMixTimeScalePatch_enable = false;
+			return;
+		}
+		else
+		{
+			csgo_SndMixTimeScalePatch_enable = true;
+			csgo_SndMixTimeScalePatch_value = (float)atof(arg1);
+			return;
+		}
+	}
+	Tier0_Msg(
+		"Usage:\n"
+		"mirv_snd_timescale <fValue> - override sound system host_timescale value with floating point value <fValue>.\n"
+		"mirv_snd_timescale default - don't override.\n"
 	);
 }
 

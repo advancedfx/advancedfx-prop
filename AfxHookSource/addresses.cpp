@@ -10,7 +10,6 @@
 
 #include "addresses.h"
 
-#include "SourceInterfaces.h"
 #include <shared/binutils.h>
 
 using namespace Afx::BinUtils;
@@ -22,6 +21,8 @@ AFXADDR_DEF(csgo_CHudDeathNotice_FireGameEvent_DSZ)
 AFXADDR_DEF(csgo_CViewRender_Render)
 AFXADDR_DEF(csgo_CViewRender_Render_DSZ)
 AFXADDR_DEF(csgo_gpGlobals_OFS_curtime)
+AFXADDR_DEF(csgo_snd_mix_timescale_patch)
+AFXADDR_DEF(csgo_snd_mix_timescale_patch_DSZ)
 AFXADDR_DEF(cstrike_gpGlobals_OFS_curtime)
 AFXADDR_DEF(cstrike_OFS_CvarFloatValue)
 
@@ -30,6 +31,78 @@ void ErrorBox(char const * messageText);
 #define STRINGIZE(x) STRINGIZE2(x)
 #define STRINGIZE2(x) #x
 #define MkErrStr(file,line) "Problem in " file ":" STRINGIZE(line)
+
+void Addresses_InitEngineDll(AfxAddr engineDll, bool isCsgo)
+{
+	if(isCsgo)
+	{
+		// csgo_Host_RunFrame:
+		{
+			DWORD addr = 0;
+			DWORD strAddr = 0;
+			{
+				ImageSectionsReader sections((HMODULE)engineDll);
+				if(!sections.EOF())
+				{
+					sections.Next(); // skip .text
+					if(!sections.EOF())
+					{
+						MemRange result = FindCString(sections.GetMemRange(), "Start profiling MIX_PaintChannels\n");
+						if(!result.IsEmpty())
+						{
+							strAddr = result.Start;
+						}
+						else ErrorBox(MkErrStr(__FILE__,__LINE__));
+					}
+					else ErrorBox(MkErrStr(__FILE__,__LINE__));
+				}
+				else ErrorBox(MkErrStr(__FILE__,__LINE__));
+			}
+			if(strAddr)
+			{
+				ImageSectionsReader sections((HMODULE)engineDll);
+			
+				MemRange baseRange = sections.GetMemRange();
+				MemRange result = FindBytes(baseRange, (char const *)&strAddr, sizeof(strAddr));
+				if(!result.IsEmpty())
+				{
+					addr = result.Start +0xB9;
+
+					addr = addr +4 + *(DWORD *)addr;
+					// in MIX_PaintChannels now.
+
+					addr = addr +0x237;
+
+					addr = addr +4 + *(DWORD *)addr;
+					// In SoundMixFunction2 now.
+
+					addr = addr +0xED;
+
+					addr = addr +4 + *(DWORD *)addr;
+					// In SoundMixFunction now.
+
+					addr = addr +0x66;
+
+					// After call VEnglineClient013::GetTimeScale now.
+				}
+				else ErrorBox(MkErrStr(__FILE__,__LINE__));
+			}
+			if(addr)
+			{
+				AFXADDR_SET(csgo_snd_mix_timescale_patch, addr);
+			}
+			else
+			{
+				AFXADDR_SET(csgo_snd_mix_timescale_patch, 0x0);
+			}
+		}
+	}
+	else
+	{
+		AFXADDR_SET(csgo_snd_mix_timescale_patch, 0x0);
+	}
+	AFXADDR_SET(csgo_snd_mix_timescale_patch_DSZ, 0x09);
+}
 
 void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 {
@@ -201,7 +274,6 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 	AFXADDR_SET(csgo_CUnknown_GetPlayerName_DSZ, 0x08);
 	AFXADDR_SET(csgo_CHudDeathNotice_FireGameEvent_DSZ, 0x0b);
 	AFXADDR_SET(csgo_CViewRender_Render_DSZ, 0x0c);
-
 	AFXADDR_SET(cstrike_gpGlobals_OFS_curtime, 3*4);
 	AFXADDR_SET(cstrike_OFS_CvarFloatValue, 0x2c);
 }

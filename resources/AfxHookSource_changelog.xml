@@ -6,16 +6,13 @@
 
 <release>
 <name>AfxHookSource</name>
-<version>0.0.8.0</version>
-<time>2015-01-09T14:16Z</time>
+<version>0.0.9.0</version>
+<time>2015-01-22T08:50Z</time>
 <changes>
 <change type="added">
-Added mirv_replace_name. Allows to replace name in death notices and bottom bar, however won't replace GOTV player bars on left/right side of the screen.
+Added mirv_snd_timescale. Allows to set the timescale for the sound system independently of host_timescale. Useful for GOTV demos with startmovie and high host_framerate where host_timescale 0 is required in order to avoid lag / skipping in recoding (set mirv_snd_timescale to 1.0).
 </change>
 </changes>
-<comments>
-Thanks to Lupus for testing.
-</comments>
 </release>
 
 

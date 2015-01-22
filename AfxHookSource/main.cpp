@@ -25,6 +25,7 @@
 #include "WrpConsole.h"
 #include "WrpGlobals.h"
 //#include "d3d9Hooks.h"
+#include "csgo_SndMixTimeScalePatch.h"
 
 
 WrpVEngineClient * g_VEngineClient = 0;
@@ -752,6 +753,7 @@ HMODULE WINAPI new_LoadLibraryExA(LPCSTR lpLibFileName, HANDLE hFile, DWORD dwFl
 
 void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 {
+	static bool bFirstRun = true;
 	static bool bFirstClient = true;
 	static bool bFirstEngine = true;
 	static bool bFirstTier0 = true;
@@ -774,6 +776,21 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 
 	// do not use messageboxes here, there is some friggin hooking going on in between by the
 	// Source engine.
+
+	if(bFirstRun)
+	{
+		bFirstRun = false;
+
+		// detect if we are csgo:
+
+		char filePath[MAX_PATH] = { 0 };
+		GetModuleFileName( 0, filePath, MAX_PATH );
+
+		if(StringEndsWith(filePath,"csgo.exe"))
+		{
+			isCsgo = true;
+		}
+	}
 
 	if(bFirstTier0)
 	{
@@ -815,9 +832,14 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 	{
 		bFirstEngine = false;
 
+		Addresses_InitEngineDll((AfxAddr)hModule, isCsgo);
+
 		InterceptDllCall(hModule, "Kernel32.dll", "GetProcAddress", (DWORD) &new_Engine_GetProcAddress);
 		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryExA", (DWORD) &new_LoadLibraryExA);
 		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryA", (DWORD) &new_LoadLibraryA);
+
+		// Init the hook early, so we don't run into issues with threading:
+		Hook_csgo_SndMixTimeScalePatch();
 	}
 	else
 	if(bFirstMaterialsystem && StringEndsWith( lpLibFileName, "materialsystem.dll"))
@@ -840,14 +862,6 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 		bFirstClient = false;
 
 		g_H_ClientDll = hModule;
-
-		char filePath[MAX_PATH] = { 0 };
-		GetModuleFileName( 0, filePath, MAX_PATH );
-
-		if(StringEndsWith(filePath,"csgo.exe"))
-		{
-			isCsgo = true;
-		}
 
 		Addresses_InitClientDll((AfxAddr)g_H_ClientDll, isCsgo);
 	}

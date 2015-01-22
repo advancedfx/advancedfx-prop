@@ -22,7 +22,6 @@ public:
 	virtual void ServerCmd( const char *szCmdString, bool bReliable = true ) abstract = 0;
 	virtual void ClientCmd( const char *szCmdString ) abstract = 0;
 	virtual bool Con_IsVisible( void ) abstract = 0;
-	virtual float Time( void ) abstract = 0; 
 	virtual float GetLastTimeStamp( void ) abstract = 0; 
 	virtual void GetViewAngles( QAngle& va ) abstract = 0;
 	virtual void SetViewAngles( QAngle& va ) abstract = 0;
@@ -50,6 +49,7 @@ public:
 	virtual bool IsHammerRunning( ) const abstract = 0;
 	virtual void ExecuteClientCmd( const char *szCmdString ) abstract = 0;
 	virtual int	GetAppID() abstract = 0;
+	virtual void ClientCmd_Unrestricted( const char *szCmdString ) abstract = 0;
 };
 
 
@@ -64,7 +64,6 @@ public:
 	virtual void ServerCmd( const char *szCmdString, bool bReliable = true );
 	virtual void ClientCmd( const char *szCmdString );
 	virtual bool Con_IsVisible( void );
-	virtual float Time( void ); 
 	virtual float GetLastTimeStamp( void ); 
 	virtual void GetViewAngles( QAngle& va );
 	virtual void SetViewAngles( QAngle& va );
@@ -92,6 +91,7 @@ public:
 	virtual bool IsHammerRunning( ) const;
 	virtual void ExecuteClientCmd( const char *szCmdString );
 	virtual int	GetAppID();
+	virtual void ClientCmd_Unrestricted( const char *szCmdString );
 
 private:
 	IVEngineClient_012 * m_VEngineClient_012;
@@ -108,7 +108,6 @@ public:
 	virtual void ServerCmd( const char *szCmdString, bool bReliable = true );
 	virtual void ClientCmd( const char *szCmdString );
 	virtual bool Con_IsVisible( void );
-	virtual float Time( void ); 
 	virtual float GetLastTimeStamp( void ); 
 	virtual void GetViewAngles( QAngle& va );
 	virtual void SetViewAngles( QAngle& va );
@@ -136,6 +135,7 @@ public:
 	virtual bool IsHammerRunning( ) const;
 	virtual void ExecuteClientCmd( const char *szCmdString );
 	virtual int	GetAppID();
+	virtual void ClientCmd_Unrestricted( const char *szCmdString );
 
 private:
 	IVEngineClient_013 * m_VEngineClient_013;
