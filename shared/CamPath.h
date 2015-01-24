@@ -62,6 +62,7 @@ public:
 	size_t GetSize();
 	CamPathIterator GetBegin();
 	CamPathIterator GetEnd();
+	double GetDuration();
 
 	/// <remarks>Must not be called if IsEnabled is false!</remarks>
 	double GetLowerBound();
@@ -74,9 +75,18 @@ public:
 
 	bool Save(wchar_t const * fileName);
 	bool Load(wchar_t const * fileName);
+	
+	/// <remarks>In the current implementation if points happen to fall on the same time value, then the last point's value will be used (no interpolation).</remarks>
+	void SetStart(double t);
+	
+	/// <remarks>In the current implementation if points happen to fall on the same time value, then the last point's value will be used (no interpolation).
+	/// Setting duration for a path with less than 2 points will do nothing.</remarks>
+	void SetDuration(double t);
 
 private:
 	bool m_Enabled;
 	CubicObjectSpline m_Spline;
+
+	void CopyCOS(CubicObjectSpline & dst, CubicObjectSpline & src);
 
 };

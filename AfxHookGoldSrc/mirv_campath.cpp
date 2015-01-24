@@ -134,6 +134,30 @@ REGISTER_CMD_FUNC(campath)
 
 			return;
 		}
+		else if(!_stricmp("edit", subcmd) && 3 <= argc)
+		{	
+			const char * arg2 = pEngfuncs->Cmd_Argv(2);
+			
+			if(!_stricmp("start", arg2))
+			{
+				g_Filming.GetCamPath()->SetStart(
+					g_DemoPlayer->GetDemoTime()
+				);
+
+				return;
+			}
+			else
+			if(!_stricmp("duration", arg2) && 4 <= argc)
+			{
+				double duration = atof(pEngfuncs->Cmd_Argv(3));
+
+				g_Filming.GetCamPath()->SetDuration(
+					duration
+				);
+
+				return;
+			}
+		}
 	}
 
 	pEngfuncs->Con_Printf(
@@ -144,6 +168,8 @@ REGISTER_CMD_FUNC(campath)
 		PREFIX "campath remove <id> - removes a keyframe\n"
 		PREFIX "campath load <fileName> - loads the campath from the file (XML format)\n"
 		PREFIX "campath save <fileName> - saves the campath to the file (XML format)\n"
+		PREFIX "campath edit start - set current demotime as new start time for the path you created\n"
+		PREFIX "campath edit duration <dValue> - set floating point value <dValue> as new duration for the path you created (in seconds). Please see remarks in HLAE manual.\n"
 		"Please note: you might want to use mirv_fx_xtendvis with mirv_campath!\n"
 	);
 	return;

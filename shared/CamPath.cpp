@@ -331,3 +331,74 @@ bool CamPath::Load(wchar_t const * fileName)
 
 	return bOk;
 }
+
+void CamPath::SetStart(double t)
+{
+	if(m_Spline.GetSize()<1) return;
+
+	CubicObjectSpline tempSline;
+	double deltaT = t -m_Spline.GetBegin()->first;
+
+	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	{
+		double curT = it->first;
+		COSValue curValue = it->second;
+
+		tempSline.Add(deltaT+curT, curValue);
+	}
+
+	CopyCOS(m_Spline, tempSline);
+
+	Enable(m_Enabled);
+}
+	
+void CamPath::SetDuration(double t)
+{
+	if(m_Spline.GetSize()<2) return;
+
+	CubicObjectSpline tempSline;
+
+	CopyCOS(tempSline, m_Spline);
+
+	double oldDuration = GetDuration();
+
+	m_Spline.Clear();
+
+	double scale = oldDuration ? t / oldDuration : 0.0;
+	bool isFirst = true;
+	double firstT = 0;
+
+	for(COSPoints::const_iterator it = tempSline.GetBegin(); it != tempSline.GetEnd(); ++it)
+	{
+		double curT = it->first;
+		COSValue curValue = it->second;
+
+		if(isFirst)
+		{
+			m_Spline.Add(curT, curValue);
+			firstT = curT;
+			isFirst = false;
+		}
+		else
+			m_Spline.Add(firstT+scale*(curT-firstT), curValue);
+	}
+
+	Enable(m_Enabled);
+}
+
+void CamPath::CopyCOS(CubicObjectSpline & dst, CubicObjectSpline & src)
+{
+	dst.Clear();
+
+	for(COSPoints::const_iterator it = src.GetBegin(); it != src.GetEnd(); ++it)
+	{
+		dst.Add(it->first, it->second);
+	}
+}
+
+double CamPath::GetDuration()
+{
+	if(m_Spline.GetSize()<2) return 0.0;
+
+	return (--m_Spline.GetEnd())->first - m_Spline.GetBegin()->first;
+}

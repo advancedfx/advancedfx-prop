@@ -198,6 +198,30 @@ CON_COMMAND(mirv_campath,"easy camera paths")
 
 			return;
 		}
+		else if(!_stricmp("edit", subcmd) && 3 <= argc)
+		{	
+			const char * arg2 = args->ArgV(2);
+			
+			if(!_stricmp("start", arg2))
+			{
+				g_Hook_VClient_RenderView.m_CamPath.SetStart(
+					g_Hook_VClient_RenderView.GetCurTime()
+				);
+
+				return;
+			}
+			else
+			if(!_stricmp("duration", arg2) && 4 <= argc)
+			{
+				double duration = atof(args->ArgV(3));
+
+				g_Hook_VClient_RenderView.m_CamPath.SetDuration(
+					duration
+				);
+
+				return;
+			}
+		}
 	}
 
 	Tier0_Msg(
@@ -208,6 +232,8 @@ CON_COMMAND(mirv_campath,"easy camera paths")
 		"mirv_campath remove <id> - removes a keyframe\n"
 		"mirv_campath load <fileName> - loads the campath from the file (XML format)\n"
 		"mirv_campath save <fileName> - saves the campath to the file (XML format)\n"
+		"mirv_campath edit start - set current demotime as new start time for the path you created\n"
+		"mirv_campath edit duration <dValue> - set floating point value <dValue> as new duration for the path you created (in seconds). Please see remarks in HLAE manual.\n"
 	);
 	return;
 }
@@ -532,7 +558,7 @@ extern char * onSetupEngineView;
 
 CON_COMMAND(mirv_snd_timescale, "(CS:GO only) allows to override host_timescale value for sound system.")
 {
-	if(!Hook_csgo_SndMixTimeScalePatch)
+	if(!Hook_csgo_SndMixTimeScalePatch())
 	{
 		Tier0_Warning("Error: Hook not installed.\n");
 		return;
