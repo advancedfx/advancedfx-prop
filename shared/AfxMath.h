@@ -120,7 +120,8 @@ public:
 	COSValue Eval(double t);
 
 private:
-	struct {
+	struct Build_s
+	{
 		double * T;
 		double * X;
 		double * X2;
@@ -133,6 +134,9 @@ private:
 		double * Q_dtheta;
 		double (*Q_e)[3];
 		double (*Q_w)[3];
+
+		Build_s() : T(0), X(0), X2(0), Y(0), Y2(0), Z(0), Z2(0), Q_y(0), Q_h(0),
+			Q_dtheta(0), Q_e(0), Q_w(0) {}
 	} m_Build;
 	COSPoints m_Points;
 	bool m_Rebuild;

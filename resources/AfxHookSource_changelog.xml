@@ -6,6 +6,21 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.0.10.1</version>
+<time>2015-01-25T19:54Z</time>
+<changes>
+<change type="fixed">
+Fixed unitialized C++ class members leading to a crash when using mirv_campath edit functions.
+</change>
+</changes>
+<comments>
+Thanks to xyanide for testing.
+</comments>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.0.9.0</version>
 <time>2015-01-22T08:50Z</time>
 <changes>

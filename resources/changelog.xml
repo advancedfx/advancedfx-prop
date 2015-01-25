@@ -6,6 +6,21 @@
 
 <release>
 <name>HLAE</name>
+<version>2.4.4.1</version>
+<time>2015-01-25T19:55Z</time>
+<changes>
+<change type="updated">
+Included AfxHookSource 0.0.10.1 (2015-01-25T19:54Z).
+</change>
+<change type="fixed">
+Fixed unitialized C++ class members leading to a crash when using mirv_campath edit functions.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.4.4.0</version>
 <time>2015-01-24T15:50Z</time>
 <changes>
