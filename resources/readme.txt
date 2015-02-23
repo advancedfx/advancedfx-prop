@@ -131,11 +131,6 @@ Dec
   Forum, IRC.
   Since March 2011.
   http://www.youtube.com/AMDECKARN
-  
-RusTCSMoViES
-  Demotools research
-  Since December 2014.
-  http://www.youtube.com/rustcsmovies
 
 Past members:
 
