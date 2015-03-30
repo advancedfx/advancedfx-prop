@@ -163,6 +163,7 @@ void __stdcall touring_csgo_CHudDeathNotice_FireGameEvent(DWORD *this_ptr, csgo_
 		}
 
 		blocked = attackerBlocked && victimBlocked && assisterBlocked;
+		if(blocked) break;
 	}
 
 	if(!blocked) detoured_csgo_CHudDeathNotice_FireGameEvent(this_ptr, event);

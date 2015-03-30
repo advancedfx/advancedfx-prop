@@ -6,6 +6,21 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.0.10.2</version>
+<time>2015-03-30T15:29Z</time>
+<changes>
+<change type="fixed">
+Fixed mirv_deathmsg block not ORing the blocks in the list (the last one always determined the outcome).
+</change>
+</changes>
+<comments>
+Thanks to tweeday for finding this bug.
+</comments>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.0.10.1</version>
 <time>2015-01-25T19:54Z</time>
 <changes>
