@@ -7,6 +7,19 @@
 <release>
 <name>HLAE</name>
 <version>2.4.4.2</version>
+<time>2015-04-01T18:39Z</time>
+<changes>
+<change type="added">
+Added several command line options to HLAE to allow automatic launching of the CustomLoader.
+The command line options will be documented in the HLAEwiki in the Interfaces section or s.th. alike.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
+<version>2.4.4.2</version>
 <time>2015-03-30T15:30Z</time>
 <changes>
 <change type="updated">

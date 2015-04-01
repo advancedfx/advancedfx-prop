@@ -161,6 +161,14 @@ namespace AfxGui
                 m_AfxGoldSrc.Start(settings);
             }
 
+            // start-up CustomLoader if requested (i.e. by command line)
+            if (Globals.AutoStartCustomLoader)
+            {
+                bool bOk = AfxCppCli.AfxHook.LauchAndHook(GlobalConfig.Instance.Settings.CustomLoader.ProgramPath, GlobalConfig.Instance.Settings.CustomLoader.CmdLine, GlobalConfig.Instance.Settings.CustomLoader.HookDllPath);
+
+                if (!bOk)
+                    MessageBox.Show("CustomLoader failed", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e)

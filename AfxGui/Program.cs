@@ -133,6 +133,41 @@ namespace AfxGui
             }
         }
 
+        static void ProcessArgsCustomLoader(string[] args)
+        {
+            for (int i = 0; i < args.Length; i++)
+            {
+                string arg = args[i];
+                switch (arg)
+                {
+                    case "-autoStart":
+                        Globals.AutoStartCustomLoader = true;
+                        break;
+                    case "-hookDllPath":
+                        if (i + 1 < args.Length)
+                        {
+                            GlobalConfig.Instance.Settings.CustomLoader.HookDllPath = args[i + 1];
+                            i++;
+                        }
+                        break;
+                    case "-programPath":
+                        if (i + 1 < args.Length)
+                        {
+                            GlobalConfig.Instance.Settings.CustomLoader.ProgramPath = args[i + 1];
+                            i++;
+                        }
+                        break;
+                    case "-cmdLine":
+                        if (i + 1 < args.Length)
+                        {
+                            GlobalConfig.Instance.Settings.CustomLoader.CmdLine = args[i + 1];
+                            i++;
+                        }
+                        break;
+                }
+            }
+        }
+
         static void ProcessCommandLine()
         {
             string [] argv = new string[0];
@@ -157,6 +192,10 @@ namespace AfxGui
             if (Array.Exists<string>(argv, p => p == "-afxHookGoldSrc"))
             {
                 ProcessArgsAfxHookGoldSrc(argv);
+            }
+            else if (Array.Exists<string>(argv, p => p == "-customLoader"))
+            {
+                ProcessArgsCustomLoader(argv);
             }
         }
 

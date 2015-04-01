@@ -12,9 +12,11 @@ namespace AfxGui {
 class Globals
 {
     internal static bool AutoStartAfxHookGoldSrc { get { return m_AutoStartAfxHookGoldSrc; } set { m_AutoStartAfxHookGoldSrc = value; } }
+    internal static bool AutoStartCustomLoader { get { return m_AutoStartCustomLoader; } set { m_AutoStartCustomLoader = value; } }
     internal static bool EnableHlaeRemote { get { return m_EnableHlaeRemote; } set { m_EnableHlaeRemote = value; } }
 
     static bool m_AutoStartAfxHookGoldSrc;
+    static bool m_AutoStartCustomLoader;
     static bool m_EnableHlaeRemote;
 }
 
