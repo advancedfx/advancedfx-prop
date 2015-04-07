@@ -32,7 +32,8 @@ REGISTER_CMD_FUNC(campath)
 					g_Filming.LastCameraOrigin[2],
 					g_Filming.LastCameraAngles[PITCH],
 					g_Filming.LastCameraAngles[YAW],
-					g_Filming.LastCameraAngles[ROLL]
+					g_Filming.LastCameraAngles[ROLL],
+					90.0
 				)
 			);
 
@@ -48,7 +49,7 @@ REGISTER_CMD_FUNC(campath)
 			if(enable && !enabled)
 				pEngfuncs->Con_Printf(
 					"Error: Could not enable CamPath.\n"
-					"Did you add enough point already?\n"
+					"Did you add enough points already?\n"
 				);
 
 			return;

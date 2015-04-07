@@ -80,6 +80,12 @@ CON_COMMAND(__mirv_exec, "client command execution: __mirv_exec <as you would ha
 
 CON_COMMAND(mirv_campath,"easy camera paths")
 {
+	if(!g_Hook_VClient_RenderView.IsInstalled())
+	{
+		Tier0_Warning("Error: Hook not installed.\n");
+		return;
+	}
+
 	int argc = args->ArgC();
 
 	if(2 <= argc)
@@ -96,7 +102,8 @@ CON_COMMAND(mirv_campath,"easy camera paths")
 					g_Hook_VClient_RenderView.LastCameraOrigin[2],
 					g_Hook_VClient_RenderView.LastCameraAngles[0],
 					g_Hook_VClient_RenderView.LastCameraAngles[1],
-					g_Hook_VClient_RenderView.LastCameraAngles[2]
+					g_Hook_VClient_RenderView.LastCameraAngles[2],
+					g_Hook_VClient_RenderView.LastCameraFov
 				)
 			);
 
@@ -112,7 +119,7 @@ CON_COMMAND(mirv_campath,"easy camera paths")
 			if(enable && !enabled)
 				Tier0_Msg(
 					"Error: Could not enable CamPath.\n"
-					"Did you add enough point already?\n"
+					"Did you add enough points already?\n"
 				);
 
 			return;
@@ -125,7 +132,7 @@ CON_COMMAND(mirv_campath,"easy camera paths")
 		}
 		else if(!_stricmp("print", subcmd) && 2 == argc)
 		{
-			Tier0_Msg("passed id: time -> (x,y,z) (pitch,yaw,roll)\n");
+			Tier0_Msg("passed id: time -> (x,y,z) fov (pitch,yaw,roll)\n");
 
 			double curtime = g_Hook_VClient_RenderView.GetCurTime();
 			
@@ -134,6 +141,7 @@ CON_COMMAND(mirv_campath,"easy camera paths")
 			{
 				double vieworigin[3];
 				double viewangles[3];
+				double fov;
 
 				double time = it.GetTime();
 				CamPathValue val = it.GetValue();
@@ -144,12 +152,14 @@ CON_COMMAND(mirv_campath,"easy camera paths")
 				viewangles[0] = val.Pitch;
 				viewangles[1] = val.Yaw;
 				viewangles[2] = val.Roll;
+				fov = val.Fov;
 
 				Tier0_Msg(
-					"%s %i: %f -> (%f,%f,%f) (%f,%f,%f)\n",
+					"%s %i: %f -> (%f,%f,%f) %f (%f,%f,%f)\n",
 					time <= curtime ? "Y" : "n",
 					i, time,
 					vieworigin[0],vieworigin[1],vieworigin[2],
+					fov,
 					viewangles[0],viewangles[1],viewangles[2]
 				);
 
@@ -491,6 +501,39 @@ CON_COMMAND(mirv_deathmsg, "controls death notification options")
 		"mirv_deathmsg block\n"
 		"mirv_deathmsg cfg\n"
 		"mirv_deathmsg debug\n"
+	);
+}
+
+CON_COMMAND(mirv_fov,"allows overriding FOV (Filed Of View) of the camera")
+{
+	if(!g_Hook_VClient_RenderView.IsInstalled())
+	{
+		Tier0_Warning("Error: Hook not installed.\n");
+		return;
+	}
+
+	int argc = args->ArgC();
+
+	if(2 <= argc)
+	{
+		char const * arg1 = args->ArgV(1);
+
+		if(0 == _stricmp("default", arg1))
+		{
+			g_Hook_VClient_RenderView.FovDefault();
+			return;
+		}
+		else
+		{
+			g_Hook_VClient_RenderView.FovOverride(atof(arg1));
+			return;
+		}
+	}
+
+	Tier0_Msg(
+		"Usage:\n"
+		"mirv_fov f - Override fov with given floating point value (f).\n"
+		"mirv_fov default - Revert to the game's default behaviour.\n"
 	);
 }
 

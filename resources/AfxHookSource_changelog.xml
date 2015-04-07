@@ -6,6 +6,23 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.0.11.0</version>
+<time>2015-04-07T17:14Z</time>
+<changes>
+<change type="added">
+Added mirv_fov, allows to override the games FOV (Field Of View).
+The features related to mirv_campath will now pick up and interpolate the FOV.
+Please note that for technical reasons mirv_camexport and mirv_camimport will ignore the FOV.
+</change>
+</changes>
+<comments>
+Thanks to xyanide for suggesting this feature.
+</comments>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.0.10.2</version>
 <time>2015-03-30T15:29Z</time>
 <changes>

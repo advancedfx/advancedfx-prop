@@ -1068,6 +1068,8 @@ COSValue CubicObjectSpline::Eval(double t)
 		m_Build.Q_dtheta = new double[n-1];
 		m_Build.Q_e = new double[n-1][3];
 		m_Build.Q_w = new double[n][3];
+		m_Build.Fov = new double[n];
+		m_Build.Fov2 = new double[n];
 
 		{
 			Quaternion QLast;
@@ -1110,16 +1112,21 @@ COSValue CubicObjectSpline::Eval(double t)
 		double wi[3] = {0.0,0.0,0.0};
 		double wf[3] = {0.0,0.0,0.0};
 		qspline_init(n, 2, EPS, wi, wf, m_Build.T, m_Build.Q_y, m_Build.Q_h, m_Build.Q_dtheta, m_Build.Q_e, m_Build.Q_w);
+
+		spline(m_Build.T , m_Build.Fov, n, false, 0.0, false, 0.0, m_Build.Fov2);
 	}
 
 	double x,y,z;
 	double Q[4],dum1[4],dum2[4];
+	double fov;
 
 	splint(m_Build.T, m_Build.X, m_Build.X2, n, t, &x);
 	splint(m_Build.T, m_Build.Y, m_Build.Y2, n, t, &y);
 	splint(m_Build.T, m_Build.Z, m_Build.Z2, n, t, &z);
 
 	qspline_interp(n, t, m_Build.T, m_Build.Q_y, m_Build.Q_h, m_Build.Q_dtheta, m_Build.Q_e, m_Build.Q_w, Q, dum1, dum2);
+
+	splint(m_Build.T, m_Build.Fov, m_Build.Fov2, n, t, &fov);
 
 	result.T.X = x;
 	result.T.Y = y;
@@ -1128,12 +1135,17 @@ COSValue CubicObjectSpline::Eval(double t)
 	result.R.X = Q[0];
 	result.R.Y = Q[1];
 	result.R.Z = Q[2];
+	result.Fov = fov;
 
 	return result;
 }
 
 void CubicObjectSpline::Free()
 {
+	delete m_Build.Fov2;
+	m_Build.Fov2 = 0;
+	delete m_Build.Fov;
+	m_Build.Fov = 0;
 	delete [] m_Build.Q_w;
 	m_Build.Q_w = 0;
 	delete [] m_Build.Q_e;

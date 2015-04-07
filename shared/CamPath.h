@@ -22,9 +22,11 @@ struct CamPathValue
 	double Yaw;
 	double Roll;
 
+	double Fov;
+
 	CamPathValue();
 
-	CamPathValue(double x, double y, double z, double pitch, double yaw, double roll);
+	CamPathValue(double x, double y, double z, double pitch, double yaw, double roll, double fov);
 };
 
 struct CamPathIterator

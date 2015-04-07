@@ -88,6 +88,7 @@ struct COSValue
 {
 	Vec3 T;
 	Quaternion R;
+	double Fov;
 };
 
 typedef double TripArray[3];
@@ -134,9 +135,11 @@ private:
 		double * Q_dtheta;
 		double (*Q_e)[3];
 		double (*Q_w)[3];
+		double * Fov;
+		double * Fov2;
 
 		Build_s() : T(0), X(0), X2(0), Y(0), Y2(0), Z(0), Z2(0), Q_y(0), Q_h(0),
-			Q_dtheta(0), Q_e(0), Q_w(0) {}
+			Q_dtheta(0), Q_e(0), Q_w(0), Fov(0), Fov2(0) {}
 	} m_Build;
 	COSPoints m_Points;
 	bool m_Rebuild;

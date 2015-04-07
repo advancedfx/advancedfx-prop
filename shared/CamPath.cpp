@@ -16,11 +16,12 @@
 #include <stdio.h>
 
 CamPathValue::CamPathValue()
+: X(0.0), Y(0.0), Z(0.0), Pitch(0.0), Yaw(0.0), Roll(0.0), Fov(90.0)
 {
 }
 
-CamPathValue::CamPathValue(double x, double y, double z, double pitch, double yaw, double roll)
-: X(x), Y(y), Z(z), Pitch(pitch), Yaw(yaw), Roll(roll)
+CamPathValue::CamPathValue(double x, double y, double z, double pitch, double yaw, double roll, double fov)
+: X(x), Y(y), Z(z), Pitch(pitch), Yaw(yaw), Roll(roll), Fov(fov)
 {
 }
 
@@ -44,7 +45,8 @@ CamPathValue CamPathIterator::GetValue()
 		wrapped->second.T.Z,
 		angles.Pitch,
 		angles.Yaw,
-		angles.Roll
+		angles.Roll,
+		wrapped->second.Fov
 	);
 
 	return result;
@@ -97,6 +99,8 @@ void CamPath::Add(double time, CamPathValue value)
 	val.T.X = value.X;
 	val.T.Y = value.Y;
 	val.T.Z = value.Z;
+
+	val.Fov = value.Fov;
 
 	Add(time, val);
 }
@@ -158,7 +162,8 @@ CamPathValue CamPath::Eval(double t)
 		val.T.Z,
 		angles.Pitch,
 		angles.Yaw,
-		angles.Roll
+		angles.Roll,
+		val.Fov
 	);
 }
 
@@ -204,6 +209,7 @@ bool CamPath::Save(wchar_t const * fileName)
 		pt->append_attribute(doc.allocate_attribute("x", double2xml(doc,val.X)));
 		pt->append_attribute(doc.allocate_attribute("y", double2xml(doc,val.Y)));
 		pt->append_attribute(doc.allocate_attribute("z", double2xml(doc,val.Z)));
+		pt->append_attribute(doc.allocate_attribute("fov", double2xml(doc,val.Fov)));
 		pt->append_attribute(doc.allocate_attribute("rx", double2xml(doc,val.Roll)));
 		pt->append_attribute(doc.allocate_attribute("ry", double2xml(doc,val.Pitch)));
 		pt->append_attribute(doc.allocate_attribute("rz", double2xml(doc,val.Yaw)));
@@ -276,6 +282,7 @@ bool CamPath::Load(wchar_t const * fileName)
 					rapidxml::xml_attribute<> * xA = cur_node->first_attribute("x");
 					rapidxml::xml_attribute<> * yA = cur_node->first_attribute("y");
 					rapidxml::xml_attribute<> * zA = cur_node->first_attribute("z");
+					rapidxml::xml_attribute<> * fovA = cur_node->first_attribute("fov");
 					rapidxml::xml_attribute<> * rxA = cur_node->first_attribute("rx");
 					rapidxml::xml_attribute<> * ryA = cur_node->first_attribute("ry");
 					rapidxml::xml_attribute<> * rzA = cur_node->first_attribute("rz");
@@ -288,6 +295,7 @@ bool CamPath::Load(wchar_t const * fileName)
 					double dX = xA ? atof(xA->value()) : 0.0;
 					double dY = yA ? atof(yA->value()) : 0.0;
 					double dZ = zA ? atof(zA->value()) : 0.0;
+					double dFov = fovA ? atof(fovA->value()) : 90.0;
 
 					if(qwA && qxA && qyA && qzA)
 					{
@@ -299,6 +307,7 @@ bool CamPath::Load(wchar_t const * fileName)
 						r.R.X = atof(qxA->value());
 						r.R.Y = atof(qyA->value());
 						r.R.Z = atof(qzA->value());
+						r.Fov = dFov;
 
 						// Add point:
 						Add(dT, r);
@@ -312,7 +321,8 @@ bool CamPath::Load(wchar_t const * fileName)
 						// Add point:
 						Add(dT, CamPathValue(
 							dX, dY, dZ,
-							dRYpitch, dRZyaw, dRXroll
+							dRYpitch, dRZyaw, dRXroll,
+							dFov
 						));
 					}
 				}

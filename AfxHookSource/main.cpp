@@ -82,7 +82,8 @@ public:
 
 		g_Hook_VClient_RenderView.OnViewOverride(
 			origin.x, origin.y, origin.z,
-			angles.x, angles.y, angles.z
+			angles.x, angles.y, angles.z,
+			fov
 		);
 
 		return bRet;
@@ -766,7 +767,7 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 	if(!hModule || !lpLibFileName)
 		return;
 
-#if 1
+#if 0
 	static FILE *f1=NULL;
 
 	if( !f1 ) f1=fopen("mdt_log_LibraryHooksA.txt","wb");

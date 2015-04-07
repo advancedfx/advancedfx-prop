@@ -60,6 +60,8 @@ void SetCvarFloat(void * pcvar, float value)
 Hook_VClient_RenderView::Hook_VClient_RenderView()
 {
 	m_Export = false;
+	m_FovOverride = false;
+	m_FovValue = 0.0;
 	m_FrameTime = 0;
 	m_Import = false;
 	m_ImportBaseTime = 0;
@@ -91,6 +93,17 @@ void Hook_VClient_RenderView::ExportEnd() {
 	delete g_BvhExport;
 	g_BvhExport = 0;
 	m_Export = false;
+}
+
+void Hook_VClient_RenderView::FovOverride(double value)
+{
+	m_FovValue = value;
+	m_FovOverride = true;
+}
+
+void Hook_VClient_RenderView::FovDefault()
+{
+	m_FovOverride = false;
 }
 
 float Hook_VClient_RenderView::GetCurTime() {
@@ -133,8 +146,10 @@ bool Hook_VClient_RenderView::IsInstalled(void) {
 }
 
 
-void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, float &Rx, float &Ry, float &Rz) {
+void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, float &Rx, float &Ry, float &Rz, float &Fov) {
 	float curTime = GetCurTime();
+
+	if(m_FovOverride) Fov = (float)m_FovValue;
 
 	if(m_CamPath.IsEnabled())
 	{
@@ -150,6 +165,8 @@ void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, fl
 			Rx = (float)val.Pitch;
 			Ry = (float)val.Yaw;
 			Rz = (float)val.Roll;
+
+			Fov = (float)val.Fov;
 		}
 	}
 
@@ -182,6 +199,7 @@ void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, fl
 	LastCameraAngles[0] = Rx;
 	LastCameraAngles[1] = Ry;
 	LastCameraAngles[2] = Rz;
+	LastCameraFov = Fov;
 }
 
 

@@ -26,12 +26,16 @@ public:
 	CamPath m_CamPath;
 	double LastCameraOrigin[3];
 	double LastCameraAngles[3];
+	double LastCameraFov;
 
 	Hook_VClient_RenderView();
 	~Hook_VClient_RenderView();
 
 	bool ExportBegin(wchar_t const *fileName, float frameTime);
 	void ExportEnd();
+
+	void FovOverride(double value);
+	void FovDefault();
 
 	float GetCurTime();
 
@@ -44,12 +48,14 @@ public:
 
 	bool IsInstalled(void);
 
-	void OnViewOverride(float &Tx, float &Ty, float &Tz, float &Rx, float &Ry, float &Rz);
+	void OnViewOverride(float &Tx, float &Ty, float &Tz, float &Rx, float &Ry, float &Rz, float &Fov);
 
 	void SetImportBaseTime(float value);
 
 private:
 	bool m_Export;
+	bool m_FovOverride;
+	double m_FovValue;
 	float m_FrameTime;
 	WrpGlobals * m_Globals;
 	bool m_Import;
