@@ -1081,6 +1081,7 @@ COSValue CubicObjectSpline::Eval(double t)
 				m_Build.X[i] = it->second.T.X;
 				m_Build.Y[i] = it->second.T.Y;
 				m_Build.Z[i] = it->second.T.Z;
+				m_Build.Fov[i] = it->second.Fov;
 
 				Quaternion Q = it->second.R;
 				
