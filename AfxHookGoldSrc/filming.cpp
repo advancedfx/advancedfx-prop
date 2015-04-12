@@ -284,16 +284,16 @@ void Filming::OnR_RenderView(Vector & vieworg, Vector & viewangles)
 	// override by cammotion import:
 	if(g_CamImport.IsActive())
 	{
-		static float ftmp[6];
+		static double dtmp[6];
 	
-		if(g_CamImport.GetCamPositon(g_Filming.GetDebugClientTime(),ftmp))
+		if(g_CamImport.GetCamPositon(g_Filming.GetDebugClientTime(),dtmp))
 		{
-			vieworg[1] = -ftmp[0];
-			vieworg[2] = +ftmp[1];
-			vieworg[0] = -ftmp[2];
-			viewangles[ROLL] = -ftmp[3];
-			viewangles[PITCH] = -ftmp[4];
-			viewangles[YAW] = +ftmp[5];
+			vieworg[1] = (float)-dtmp[0];
+			vieworg[2] = (float)+dtmp[1];
+			vieworg[0] = (float)-dtmp[2];
+			viewangles[ROLL] = (float)-dtmp[3];
+			viewangles[PITCH] = (float)-dtmp[4];
+			viewangles[YAW] = (float)+dtmp[5];
 		}
 	}
 
@@ -515,7 +515,7 @@ void Filming::GetCameraOfs(float *right, float *up, float *forward)
 	*forward = _cameraofs.forward;
 }
 
-float Filming::GetDebugClientTime()
+double Filming::GetDebugClientTime()
 {
 	if(m_iFilmingState != FS_INACTIVE)
 		return m_StartClientTime + m_time;
@@ -663,7 +663,8 @@ void Filming::Start()
 	}
 
 	m_fps = max(movie_fps->value,1.0f);
-	m_time = 0;
+	m_time = 0.0;
+	m_LastHostTime = m_time;
 
 	if (_pSupportRender)
 		_pSupportRender->hlaeOnFilmingStart();	
@@ -689,7 +690,7 @@ void Filming::Start()
 	// setup camexport:
 	if (!_bSimulate2) {
 		float fc = camexport_mode->value;
-		float frameTime = 1.0f / m_fps;
+		double frameTime = 1.0 / (double)m_fps;
 
 		if(fc && fc != 2.0f) g_CamExport.BeginFileMain(m_TakeDir.c_str(), frameTime);
 		if(fc && fc >= 2.0f) g_CamExport.BeginFileLeft(m_TakeDir.c_str(), frameTime);
@@ -724,7 +725,7 @@ void Filming::Start()
 
 	// Prepare streams:
 	{
-		float samplingFrameDuration = enableSampling ? 1.0f / max(movie_fps->value, 1.0f) : 0.0f;
+		double samplingFrameDuration = enableSampling ? 1.0 / (double)(max(movie_fps->value, 1.0f)) : 0.0;
 
 		int x = 0;
 		int y = (int)crop_yofs->value;
@@ -1347,7 +1348,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 	}
 	_bRecordBuffers_FirstCall = false;
 
-	float frameDuration = ((m_nFrames+1)/m_fps)-(m_nFrames/m_fps); // pay attention when changing s.th. here because of handling of precision errors!
+	double frameDuration = 1.0/(double)m_fps;
 	m_HostFrameCount++;
 
 	// If we've only just started, delay until the next scene so that
@@ -1359,6 +1360,10 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 		m_iMatteStage = g_Filming_Stream[FS_all] ? MS_ALL : MS_WORLD;
 
 		m_time += frameDuration;
+		float fHostDuration = (float)(m_time - m_LastHostTime);
+		m_LastHostTime += fHostDuration;
+
+		pEngfuncs->Cvar_SetValue("host_framerate", fHostDuration);
 
 		if (g_Filming_Stream[FS_hudcolor])
 		{
@@ -1534,8 +1539,10 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 
 	m_nFrames++;
 	m_time += frameDuration;
+	float fHostDuration = (float)(m_time - m_LastHostTime);
+	m_LastHostTime += fHostDuration;
 	
-	pEngfuncs->Cvar_SetValue("host_framerate", frameDuration);
+	pEngfuncs->Cvar_SetValue("host_framerate", fHostDuration);
 
 	_bRecordBuffers_FirstCall = true;
 
@@ -1706,7 +1713,7 @@ void Filming::DoWorldFx2(GLenum mode)
 FilmingStream::FilmingStream(
 	wchar_t const * takePath, wchar_t const * name,
 	FILMING_BUFFER buffer,
-	float samplingFrameDuration,
+	double samplingFrameDuration,
 	int x, int y, int width, int height
 )
 {
@@ -1849,9 +1856,9 @@ FilmingStream::~FilmingStream()
 	if(m_Sampler) delete m_Sampler;
 }
 
-void FilmingStream::Capture(float time, CMdt_Media_RAWGLPIC * usePic, float spsHint)
+void FilmingStream::Capture(double time, CMdt_Media_RAWGLPIC * usePic, float spsHint)
 {
-	if(m_Sampler && 0 < spsHint && m_Sampler->CanSkipConstant(time, 1 / spsHint))
+	if(m_Sampler && 0 < spsHint && m_Sampler->CanSkipConstant(time, 1.0 / (double)spsHint))
 	{
 		// we can skip the capture safely:
 		m_Sampler->Sample(

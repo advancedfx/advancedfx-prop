@@ -6,6 +6,21 @@
 
 <release>
 <name>HLAE</name>
+<version>2.4.5.2</version>
+<time>2015-04-12T16:48Z</time>
+<changes>
+<change type="fixed">
+Fixed timing precision being too low for longer recordings (i.e. 20 Minutes of game footage).
+</change>
+</changes>
+<comments>
+Thanks to YaLTeR for reporting these problems and testing.
+</comments>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.4.5.1</version>
 <time>2015-04-07T17:53Z</time>
 <changes>

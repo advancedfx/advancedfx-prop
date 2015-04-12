@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-05-20 dominik.matrixstorm.com
+// 2015-04-12 dominik.matrixstorm.com
 //
 // First changes
 // 2007-10-22T17:39Z dominik.matrixstorm.com
@@ -77,7 +77,8 @@ SND_PickChannel_t detoured_SND_PickChannel = NULL;
 
 CFilmSound* g_FilmSound = 0;
 
-float g_TargetTime, g_CurrentTime, g_Volume;
+double g_TargetTime, g_CurrentTime;
+float g_Volume;
 
 bool g_FilmSound_BlockChannels = false;
 
@@ -107,33 +108,33 @@ void touring_S_PaintChannels(int endtime)
 
 	if (FSS_IDLE != g_FilmSoundState)
 	{
-		float fDeltaTime;
+		double dDeltaTime;
 		int deltaTime;
 
 		shm = *(dma_HL_t **)HL_ADDR_GET(shm);
 
-		fDeltaTime = (
+		dDeltaTime = (
 			g_TargetTime - g_CurrentTime
-		) * (float)shm->Quake_speed;
+		) * (double)shm->Quake_speed;
 
 		// and override
 		if (FSS_STOPPING == g_FilmSoundState)
-			deltaTime = (int)ceil(fDeltaTime); // we preffer having too much samples when stopping
+			deltaTime = (int)ceil(dDeltaTime); // we preffer having too much samples when stopping
 		else {
-			deltaTime = (int)floor(fDeltaTime); // we preffer having faster updates and therefore less samples during filming
+			deltaTime = (int)floor(dDeltaTime); // we preffer having faster updates and therefore less samples during filming
 		}
 
 		// we cannot go back in time, so stfu:
 		if(deltaTime < 0) deltaTime = 0;
 
-		fDeltaTime = (float)deltaTime / (float)shm->Quake_speed;
+		dDeltaTime = (double)deltaTime / (double)shm->Quake_speed;
 
 		// >> Sound painting
 		detoured_S_PaintChannels(*(int *)HL_ADDR_GET(paintedtime) +deltaTime);
 		// << Sound painting
 
 		// update Our class's _CurrentTime:
-		g_CurrentTime = g_CurrentTime +fDeltaTime;
+		g_CurrentTime = g_CurrentTime +dDeltaTime;
 
 		if (FSS_STOPPING == g_FilmSoundState) {
 			g_FilmSound->Snd_Finished();
@@ -301,7 +302,7 @@ void CFilmSound::_fEndWave(FILE* pHandle)
 	fclose(pHandle);
 }
 
-bool CFilmSound::Start(wchar_t const * fileName, float fTargetTime, float fUseVolume)
+bool CFilmSound::Start(wchar_t const * fileName, double dTargetTime, float fUseVolume)
 {
 	InstallHooks(); // make sure hooks are installed
 
@@ -310,8 +311,8 @@ bool CFilmSound::Start(wchar_t const * fileName, float fTargetTime, float fUseVo
 		// only start when idle
 		
 		// init time:
-		g_TargetTime = fTargetTime;
-		g_CurrentTime = 0;
+		g_TargetTime = dTargetTime;
+		g_CurrentTime = 0.0;
 
 		// set volume:
 		g_Volume = fUseVolume;
@@ -329,10 +330,10 @@ bool CFilmSound::Start(wchar_t const * fileName, float fTargetTime, float fUseVo
 		return false;
 }
 
-void CFilmSound::AdvanceFrame(float fTargetTime)
+void CFilmSound::AdvanceFrame(double dTargetTime)
 {
 	// update frame time:
-	g_TargetTime = fTargetTime;
+	g_TargetTime = dTargetTime;
 }
 
 void CFilmSound::Stop()

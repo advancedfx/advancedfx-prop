@@ -15,14 +15,14 @@ public:
 
 	// outformat: see BvhImport::BvhChannel_t
 	// return: truew if successful
-	bool GetCamPositon(float fTimeOfs, float outCamdata[6]);
+	bool GetCamPositon(double fTimeOfs, double outCamdata[6]);
 
-	float GetBaseTime();
+	double GetBaseTime();
 
-	void SetBaseTime(float fBaseTime);
+	void SetBaseTime(double fBaseTime);
 
 private:
-	float m_BaseTime;
+	double m_BaseTime;
 	BvhImport m_BvhImport;
 };
 

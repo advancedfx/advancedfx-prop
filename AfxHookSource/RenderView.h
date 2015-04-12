@@ -31,7 +31,7 @@ public:
 	Hook_VClient_RenderView();
 	~Hook_VClient_RenderView();
 
-	bool ExportBegin(wchar_t const *fileName, float frameTime);
+	bool ExportBegin(wchar_t const *fileName, double frameTime);
 	void ExportEnd();
 
 	void FovOverride(double value);
@@ -56,13 +56,10 @@ private:
 	bool m_Export;
 	bool m_FovOverride;
 	double m_FovValue;
-	float m_FrameTime;
 	WrpGlobals * m_Globals;
 	bool m_Import;
 	float m_ImportBaseTime;
 	bool m_IsInstalled;
-	float m_LastTime;
-	float m_SubTime;
 
 	void Install_cstrike(void);
 	void Install_ep2(void);

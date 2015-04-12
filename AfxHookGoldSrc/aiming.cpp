@@ -268,7 +268,7 @@ void Aiming::aim()
 	if (!getValidTarget(target))
 		return;
 
-	float curAimTime = g_Filming.GetDebugClientTime();
+	double curAimTime = g_Filming.GetDebugClientTime();
 	Vector idealaim;
 
 	AnglesFromTo(ppmove->origin, target, idealaim);		
@@ -287,7 +287,7 @@ void Aiming::aim()
 	{
 		float angles[3];
 		float reaim[2];
-		float deltaT = curAimTime - m_LastAimTime;
+		float deltaT = (float)(curAimTime - m_LastAimTime);
 
 		if(deltaT < 0) deltaT = 0;
 

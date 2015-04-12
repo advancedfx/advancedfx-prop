@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2010-05-20 by dominik.matrixstorm.com
+// 2015-04-12 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-08-31 by dominik.matrixstorm.com
@@ -20,14 +20,14 @@ class BvhExport
 {
 public:
 	/// <summary> Creates a new BVH file </summary>
-	BvhExport(wchar_t const * fileName, char const * rootName, float frameTime);
+	BvhExport(wchar_t const * fileName, char const * rootName, double frameTime);
 
 	/// </summary> Closes the BVH file </summary>
 	~BvhExport();
 
 	void WriteFrame(
-		float Xposition, float Yposition, float Zposition,
-		float Zrotation, float Xrotation, float Yrotation
+		double Xposition, double Yposition, double Zposition,
+		double Zrotation, double Xrotation, double Yrotation
 	);
 
 private:
@@ -35,7 +35,7 @@ private:
 	FILE * m_pMotionFile;
 	long m_lMotionTPos;
 
-	void BeginContent(FILE *pFile ,char const * pRootName, float frameTime, long &ulTPos);
+	void BeginContent(FILE *pFile ,char const * pRootName, double frameTime, long &ulTPos);
 
 };
 

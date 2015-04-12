@@ -54,7 +54,7 @@ void Zooming::adjustFrustumParams(GLdouble &left, GLdouble &right, GLdouble &bot
 
 void Zooming::handleZoom()
 {
-	static float flLastTime = 0;
+	static double flLastTime = 0;
 
 	if (!isZooming())
 	{
@@ -62,8 +62,8 @@ void Zooming::handleZoom()
 		return;
 	}
 	
-	float curTime = g_Filming.GetDebugClientTime();
-	float flTimeDelta = curTime - flLastTime;
+	double curTime = g_Filming.GetDebugClientTime();
+	float flTimeDelta = (float)(curTime - flLastTime);
 
 	if (flTimeDelta<0) flTimeDelta=0;
 

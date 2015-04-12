@@ -19,7 +19,7 @@ private:
 	bool m_Awake[2];
 	float m_D0[2];
 	float m_D1[2];
-	float m_LastAimTime;
+	double m_LastAimTime;
 
 	int m_iHighestSlot;
 	int m_iCurrentEntity;

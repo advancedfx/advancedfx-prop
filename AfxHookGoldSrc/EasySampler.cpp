@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2011-07-12 dominik.matrixstorm.com
+// 2015-04-12 dominik.matrixstorm.com
 //
 // First changes
 // 2010-03-23 dominik.matrixstorm.com
@@ -55,7 +55,7 @@ EasyByteSampler::~EasyByteSampler()
 	delete m_Frame;
 }
 
-bool EasyByteSampler::CanSkipConstant(float time, float durationPerSample)
+bool EasyByteSampler::CanSkipConstant(double time, double durationPerSample)
 {
 	return EasySamplerBase::CanSkipConstant(time, durationPerSample, m_LastSample ? 1 : 0);
 }
@@ -180,7 +180,7 @@ void EasyByteSampler::PrintFrame()
 }
 
 
-void EasyByteSampler::Sample(unsigned char const * data, float time)
+void EasyByteSampler::Sample(unsigned char const * data, double time)
 {
 	m_CurSample = data;
 
@@ -265,7 +265,7 @@ EasyFloatSampler::~EasyFloatSampler()
 	delete m_FrameData;
 }
 
-bool EasyFloatSampler::CanSkipConstant(float time, float durationPerSample)
+bool EasyFloatSampler::CanSkipConstant(double time, double durationPerSample)
 {
 	return EasySamplerBase::CanSkipConstant(time, durationPerSample, m_LastSample ? 1 : 0);
 }
@@ -379,7 +379,7 @@ void EasyFloatSampler::PrintFrame()
 }
 
 
-void EasyFloatSampler::Sample(float const * data, float time)
+void EasyFloatSampler::Sample(float const * data, double time)
 {
 	m_CurSample = data;
 
@@ -435,25 +435,25 @@ void EasyFloatSampler::ScaleFrame(float factor)
 
 
 EasySamplerBase::EasySamplerBase(
-	float frameDuration,
-	float startTime,
-	float exposure)
+	double frameDuration,
+	double startTime,
+	double exposure)
 {
 	m_FrameDuration = frameDuration;
 	m_LastFrameTime = startTime;
 	m_LastSampleTime = startTime;
-	m_ShutterOpen = 0.0f < exposure;
-	m_ShutterOpenDuration = frameDuration * min(max(exposure, 0.0f), 1.0f);
+	m_ShutterOpen = 0.0 < exposure;
+	m_ShutterOpenDuration = frameDuration * min(max(exposure, 0.0), 1.0);
 	m_ShutterTime = m_LastFrameTime;
 }
 
 
-bool EasySamplerBase::CanSkipConstant(float time, float durationPerSample, int numPreviousSamplesRequired)
+bool EasySamplerBase::CanSkipConstant(double time, double durationPerSample, int numPreviousSamplesRequired)
 {
 	// skipping is only allowed when enough samples are guaranteed to be captured to allow interpolation before the shutter is opened.
 
-	float prepareTime = numPreviousSamplesRequired * durationPerSample;
-	float timeLeft = m_FrameDuration -(time -m_LastFrameTime);
+	double prepareTime = numPreviousSamplesRequired * durationPerSample;
+	double timeLeft = m_FrameDuration -(time -m_LastFrameTime);
 
 	return
 		!m_ShutterOpen && prepareTime < timeLeft
@@ -461,16 +461,16 @@ bool EasySamplerBase::CanSkipConstant(float time, float durationPerSample, int n
 }
 
 
-void EasySamplerBase::Integrator_Fn(ISampleFns *fns, void const * sampleA, void const *sampleB, float timeA, float timeB, float subTimeA, float subTimeB)
+void EasySamplerBase::Integrator_Fn(ISampleFns *fns, void const * sampleA, void const *sampleB, double timeA, double timeB, double subTimeA, double subTimeB)
 {
-	float weightA;
-	float weightB;
+	double weightA;
+	double weightB;
 
 	{
 		// Calculate weigths:
-		float dAB = timeB -timeA;
-		float w1 = (subTimeB -subTimeA) / 2.0f;
-		float w2 = dAB ? (subTimeA +subTimeB -2.0f * timeA) / dAB : 0.0f;
+		double dAB = timeB -timeA;
+		double w1 = (subTimeB -subTimeA) / 2.0;
+		double w2 = dAB ? (subTimeA +subTimeB -2.0 * timeA) / dAB : 0.0;
 		weightA = w1 * (2 -w2);
 		weightB = w1 * w2;
 	}
@@ -529,7 +529,7 @@ void EasySamplerBase::Integrator_Fn(ISampleFns *fns, void const * sampleA, void 
 		}
 		else
 		{
-			fns->Fn_2(sampleA, weightA);
+			fns->Fn_2(sampleA, (float)weightA);
 		}
 	}
 	else
@@ -547,7 +547,7 @@ void EasySamplerBase::Integrator_Fn(ISampleFns *fns, void const * sampleA, void 
 			}
 			else
 			{
-				fns->Fn_4(sampleA, sampleB, weightA);
+				fns->Fn_4(sampleA, sampleB, (float)weightA);
 			}
 		}
 		else
@@ -555,7 +555,7 @@ void EasySamplerBase::Integrator_Fn(ISampleFns *fns, void const * sampleA, void 
 			if(1 == weightB)
 			{
 				void const *tS = sampleA;
-				float tW = weightA;
+				double tW = weightA;
 
 				sampleA = sampleB;
 				sampleB = tS;
@@ -567,21 +567,21 @@ void EasySamplerBase::Integrator_Fn(ISampleFns *fns, void const * sampleA, void 
 			if(1 == weightA)
 			{
 				fns->Fn_1(sampleA);
-				fns->Fn_2(sampleB, weightB);
+				fns->Fn_2(sampleB, (float)weightB);
 			}
 			else
 			{
-				fns->Fn_2(sampleA, weightA);
-				fns->Fn_2(sampleB, weightB);
+				fns->Fn_2(sampleA, (float)weightA);
+				fns->Fn_2(sampleB, (float)weightB);
 			}
 		}
 	}
 }
 
 
-void EasySamplerBase::Sample(float time)
+void EasySamplerBase::Sample(double time)
 {	
-	float subMin = m_LastSampleTime;
+	double subMin = m_LastSampleTime;
 
 #ifdef DEBUG_EASYSAMPLER
 	pEngfuncs->Con_Printf("Sample: [%f, %f]\n", m_LastSampleTime, time);
@@ -589,10 +589,10 @@ void EasySamplerBase::Sample(float time)
 
 	while(subMin < time)
 	{		
-		float subMax = time;
+		double subMax = time;
 
-		float shutterEvent = m_ShutterTime+ (m_ShutterOpen ? m_ShutterOpenDuration : m_FrameDuration);
-		float frameEnd = m_LastFrameTime +m_FrameDuration;
+		double shutterEvent = m_ShutterTime+ (m_ShutterOpen ? m_ShutterOpenDuration : m_FrameDuration);
+		double frameEnd = m_LastFrameTime +m_FrameDuration;
 
 		// apply restrictions:
 
@@ -663,9 +663,9 @@ EasySamplerSettings::EasySamplerSettings(
 	int width, 
 	int height,
 	Method method,
-	float frameDuration,
-	float startTime,
-	float exposure,
+	double frameDuration,
+	double startTime,
+	double exposure,
 	float frameStrength
 )
 {
@@ -692,11 +692,11 @@ EasySamplerSettings::EasySamplerSettings(EasySamplerSettings const & settings)
 	m_Width = settings.Width_get();
 }
 
-float EasySamplerSettings::Exposure_get() const
+double EasySamplerSettings::Exposure_get() const
 {
 	return m_Exposure;	
 }
-float EasySamplerSettings::FrameDuration_get() const
+double EasySamplerSettings::FrameDuration_get() const
 {
 	return m_FrameDuration;
 }
@@ -712,7 +712,7 @@ EasySamplerSettings::Method EasySamplerSettings::Method_get() const
 {
 	return m_Method;
 }
-float EasySamplerSettings::StartTime_get() const
+double EasySamplerSettings::StartTime_get() const
 {
 	return m_StartTime;
 }
@@ -720,4 +720,3 @@ int EasySamplerSettings::Width_get() const
 {
 	return m_Width;
 }
-

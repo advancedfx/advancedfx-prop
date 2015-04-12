@@ -30,9 +30,9 @@ char * CrLfZ2LfZ(char * opz) {
 	return opz;
 }
 
-inline int myround(float x)
+inline int myround(double x)
 {
-	return x < 0 ? (int)(x -0.5f) : (int)(x +0.5f);
+	return x < 0 ? (int)(x -0.5) : (int)(x +0.5);
 }
 
 
@@ -78,7 +78,7 @@ int BvhImport::DecodeBvhChannel(char * pszRemainder, char * & aoutNewRemainder)
 	return iret;
 }
 
-bool BvhImport::GetCamPositon(float fTimeOfs, float outCamdata[6])
+bool BvhImport::GetCamPositon(double fTimeOfs, double outCamdata[6])
 {
 	char * pc;
 
@@ -183,7 +183,7 @@ bool BvhImport::GetCamPositon(float fTimeOfs, float outCamdata[6])
 	int ichan;
 	char tc = 0;
 	char * pc2;
-	float fff;
+	double fff;
 
 	pc = ms_readbuff;
 	for(ichan = 0; ichan < 6; ichan++)
@@ -198,7 +198,7 @@ bool BvhImport::GetCamPositon(float fTimeOfs, float outCamdata[6])
 		*pc2 = 0;
 
 		fff = 0;
-		fff = (float)atof(pc);
+		fff = atof(pc);
 
 		m_Cache[channelcode[ichan]] = fff;
 
@@ -308,7 +308,7 @@ bool BvhImport::LoadMotionFile(wchar_t const * fileName)
 		return false;
 	}
 	pc += strlen("Frame Time:");
-	m_FrameTime = (float)atof(pc);
+	m_FrameTime = atof(pc);
 	if(m_FrameTime <= 0)
 	{
 		fclose(m_File);
@@ -323,7 +323,7 @@ bool BvhImport::LoadMotionFile(wchar_t const * fileName)
 }
 
 
-char BvhImport::ms_readbuff[200];
+char BvhImport::ms_readbuff[1024];
 
 BvhImport::~BvhImport()
 {

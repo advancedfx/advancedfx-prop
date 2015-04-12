@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2009-11-01 by dominik.matrixstorm.com
+// 2015-04-12 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-08-31 by dominik.matrixstorm.com
@@ -17,7 +17,7 @@ using namespace std;
 
 // BvhExport //////////////////////////////////////////////////////////////////
 
-BvhExport::BvhExport(wchar_t const * fileName, char const * rootName, float frameTime)
+BvhExport::BvhExport(wchar_t const * fileName, char const * rootName, double frameTime)
 {
 	m_FrameCount = 0;
 	_wfopen_s(&m_pMotionFile, fileName, L"wb");
@@ -39,9 +39,9 @@ BvhExport::~BvhExport()
 	}
 }
 
-void BvhExport::BeginContent(FILE *pFile, char const * pRootName, float frameTime, long &ulTPos)
+void BvhExport::BeginContent(FILE *pFile, char const * pRootName, double frameTime, long &ulTPos)
 {
-	char szTmp[196];
+	char szTmp[1024];
 
 	fputs("HIERARCHY\n",pFile);
 
@@ -57,8 +57,8 @@ void BvhExport::BeginContent(FILE *pFile, char const * pRootName, float frameTim
 	fputs(szTmp,pFile);
 }
 
-void BvhExport::WriteFrame(float Xposition, float Yposition, float Zposition, float Zrotation, float Xrotation, float Yrotation) {
-	char pszT[249];
+void BvhExport::WriteFrame(double Xposition, double Yposition, double Zposition, double Zrotation, double Xrotation, double Yrotation) {
+	char pszT[1024];
 
 	_snprintf_s(pszT, _TRUNCATE, "%f %f %f %f %f %f\n", Xposition, Yposition, Zposition, Zrotation, Xrotation, Yrotation);
 

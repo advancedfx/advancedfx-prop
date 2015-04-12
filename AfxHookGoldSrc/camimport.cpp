@@ -24,12 +24,12 @@ REGISTER_CMD_FUNC(camimport_load)
 
 	if((2 == ic)||(3 == ic))
 	{
-		float fBase;
+		double fBase;
 
 		if(ic==2)
 			fBase = g_Filming.GetDebugClientTime();
 		else
-			fBase = (float)atof(pEngfuncs->Cmd_Argv(2));
+			fBase = atof(pEngfuncs->Cmd_Argv(2));
 
 		std::wstring wideString;
 
@@ -58,7 +58,7 @@ REGISTER_CMD_FUNC(camimport_basetime)
 		if(!strcmp(pEngfuncs->Cmd_Argv(1),"current"))
 			g_CamImport.SetBaseTime(g_Filming.GetDebugClientTime());
 		else
-			g_CamImport.SetBaseTime((float)atof(pEngfuncs->Cmd_Argv(1)));
+			g_CamImport.SetBaseTime(atof(pEngfuncs->Cmd_Argv(1)));
 	} else {
 		pEngfuncs->Con_Printf("Usage:\n" PREFIX "camimport_basetime (<basetime>|current)\nCurrent: %f",g_CamImport.GetBaseTime());
 	}
@@ -79,7 +79,7 @@ void CCamImport::CloseMotionFile()
 	m_BvhImport.CloseMotionFile();
 }
 
-bool CCamImport::GetCamPositon(float fTimeOfs, float outCamdata[6])
+bool CCamImport::GetCamPositon(double fTimeOfs, double outCamdata[6])
 {
 	if(m_BvhImport.IsActive())
 		return m_BvhImport.GetCamPositon(fTimeOfs -m_BaseTime, outCamdata);
@@ -98,12 +98,12 @@ bool CCamImport::LoadMotionFile(wchar_t const * fileName)
 	return m_BvhImport.LoadMotionFile(fileName);
 }
 
-float CCamImport::GetBaseTime()
+double CCamImport::GetBaseTime()
 {
 	return m_BaseTime;
 }
 
-void CCamImport::SetBaseTime(float fBaseTime)
+void CCamImport::SetBaseTime(double fBaseTime)
 {
 	m_BaseTime = fBaseTime;
 }

@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-05-20 dominik.matrixstorm.com
+// 2015-04-12 dominik.matrixstorm.com
 //
 // First changes
 // 2007-10-22T17:39Z dominik.matrixstorm.com
@@ -24,13 +24,13 @@ public:
 	// Only starts when eFilmSoundState()==FSS_IDLE
 	// if starting failed it will return false
 	// the targettime should be the delta frametime on the first call (so it is not null) and advance with every frame
-	bool Start(wchar_t const * fileName, float fTargetTime, float fUseVolume);
+	bool Start(wchar_t const * fileName, double dTargetTime, float fUseVolume);
 
 	// this has to be called every engineframe (main loop)
 	// to supply a new targettime
 	// the targettime should advance with every frame (absoulte to starting)
 	// it is suggested that you derive your targettime from the framecount to avoid problems with precision (when accumulating deltatime i.e.)
-	void AdvanceFrame(float fTargetTime);
+	void AdvanceFrame(double dTargetTime);
 
 	// We cannot stop instantly, we finally stopped when eFilmSoundState()==FSS_IDLE.
 	void Stop();

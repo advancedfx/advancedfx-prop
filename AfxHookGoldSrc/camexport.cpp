@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2009-09-11 by dominik.matrixstorm.com
+// 2015-04-12 by dominik.matrixstorm.com
 //
 // First changes:
 // 2009-08-31 by dominik.matrixstorm.com
@@ -60,7 +60,7 @@ void CCamExport::EndFile(BvhExport * & bvhFile) {
 	bvhFile = NULL;
 }
 
-BvhExport * CCamExport::BeginFile(wchar_t const * folder, wchar_t const * fileName, char const * rootName, float frameTime) {
+BvhExport * CCamExport::BeginFile(wchar_t const * folder, wchar_t const * fileName, char const * rootName, double frameTime) {
 	
 	std::wstring strFileName(folder);
 	if(folder && 0 < wcslen(folder))
@@ -76,15 +76,15 @@ BvhExport * CCamExport::BeginFile(wchar_t const * folder, wchar_t const * fileNa
 	return bvhFile;
 }
 
-void CCamExport::BeginFileLeft(wchar_t const * folder, float frameTime) {
+void CCamExport::BeginFileLeft(wchar_t const * folder, double frameTime) {
 	m_BvhFileLeft = BeginFile(folder, L"motion_left.bvh", "MdtCamLeft", frameTime);
 }
 
-void CCamExport::BeginFileMain(wchar_t const * folder, float frameTime) {
+void CCamExport::BeginFileMain(wchar_t const * folder, double frameTime) {
 	m_BvhFileMain = BeginFile(folder, L"motion.bvh", "MdtCam", frameTime);
 }
 
-void CCamExport::BeginFileRight(wchar_t const * folder, float frameTime) {
+void CCamExport::BeginFileRight(wchar_t const * folder, double frameTime) {
 	m_BvhFileRight = BeginFile(folder, L"motion_right.bvh", "MdtCamRight", frameTime);
 }
 
@@ -109,20 +109,20 @@ void CCamExport::EndFiles() {
 }
 
 
-void CCamExport::WriteFrame(BvhExport * bvhFile, float Xposition, float Yposition, float Zposition, float Zrotation, float Xrotation, float Yrotation) {
+void CCamExport::WriteFrame(BvhExport * bvhFile, double Xposition, double Yposition, double Zposition, double Zrotation, double Xrotation, double Yrotation) {
 	if(bvhFile)
 		bvhFile->WriteFrame(Xposition, Yposition, Zposition, Zrotation, Xrotation, Yrotation);
 }
 
-void CCamExport::WriteLeftFrame(float Xposition, float Yposition, float Zposition, float Zrotation, float Xrotation, float Yrotation) {
+void CCamExport::WriteLeftFrame(double Xposition, double Yposition, double Zposition, double Zrotation, double Xrotation, double Yrotation) {
 	WriteFrame(m_BvhFileLeft, Xposition, Yposition, Zposition, Zrotation, Xrotation, Yrotation);
 }
 
-void CCamExport::WriteMainFrame(float Xposition, float Yposition, float Zposition, float Zrotation, float Xrotation, float Yrotation) {
+void CCamExport::WriteMainFrame(double Xposition, double Yposition, double Zposition, double Zrotation, double Xrotation, double Yrotation) {
 	WriteFrame(m_BvhFileMain, Xposition, Yposition, Zposition, Zrotation, Xrotation, Yrotation);
 }
 
-void CCamExport::WriteRightFrame(float Xposition, float Yposition, float Zposition, float Zrotation, float Xrotation, float Yrotation) {
+void CCamExport::WriteRightFrame(double Xposition, double Yposition, double Zposition, double Zrotation, double Xrotation, double Yrotation) {
 	WriteFrame(m_BvhFileRight, Xposition, Yposition, Zposition, Zrotation, Xrotation, Yrotation);
 }
 

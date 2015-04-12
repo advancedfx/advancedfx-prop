@@ -48,12 +48,12 @@ public:
 	FilmingStream(
 		wchar_t const * takePath, wchar_t const * name,
 		FILMING_BUFFER buffer,
-		float samplingFrameDuration,
+		double samplingFrameDuration,
 		int x, int y, int width, int height
 	);
 	~FilmingStream();
 
-	void Capture(float time, CMdt_Media_RAWGLPIC * usePic, float spsHint);
+	void Capture(double time, CMdt_Media_RAWGLPIC * usePic, float spsHint);
 
 private:
 	bool m_Bmp;
@@ -184,7 +184,7 @@ public:
 
 	void OnR_RenderView(Vector & vieworg, Vector & viewangles);
 
-	float GetDebugClientTime();
+	double GetDebugClientTime();
 
 	void SupplyZClipping(GLdouble zNear, GLdouble zFar);
 
@@ -211,14 +211,15 @@ private:
 	unsigned int m_LastCamFrameLeft;
 	unsigned int m_LastCamFrameRight;
 	MATTE_METHOD m_MatteMethod;
-	float m_StartClientTime;
+	double m_StartClientTime;
 	DWORD m_StartTickCount;
 	std::wstring m_TakeDir;
 	int m_Width;
 	GLdouble m_ZFar;
 	GLdouble m_ZNear;
 	float m_fps;
-	float m_time;
+	double m_time;
+	double m_LastHostTime;
 
 
 	CHlaeSupportRender *_pSupportRender;

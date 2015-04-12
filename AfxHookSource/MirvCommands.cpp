@@ -268,13 +268,13 @@ CON_COMMAND(mirv_camexport, "controls camera motion data export") {
 		else
 		if(0 == _stricmp("start", arg1) && 4 <= argc) {
 			char const * fileName = args->ArgV(2);
-			float fps = (float)atof(args->ArgV(3));
+			double fps = atof(args->ArgV(3));
 			if(fps < 0.1f) fps = 0.1f;
 
 			std::wstring wideFileName;
 			if(
 				!AnsiStringToWideString(fileName, wideFileName)
-				|| !g_Hook_VClient_RenderView.ExportBegin(wideFileName.c_str(), 1.0f/fps)
+				|| !g_Hook_VClient_RenderView.ExportBegin(wideFileName.c_str(), 1.0/fps)
 			)
 				Tier0_Msg("Error: exporting failed.");
 

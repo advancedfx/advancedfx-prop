@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2010-05-20 by dominik.matrixstorm.com
+// 2015-04-12 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-08-31 by dominik.matrixstorm.com
@@ -19,9 +19,9 @@ public:
 	CCamExport();
 	~CCamExport();
 
-	void BeginFileLeft(wchar_t const * folder, float frameTime);
-	void BeginFileMain(wchar_t const * folder, float frameTime);
-	void BeginFileRight(wchar_t const * folder, float frameTime);
+	void BeginFileLeft(wchar_t const * folder, double frameTime);
+	void BeginFileMain(wchar_t const * folder, double frameTime);
+	void BeginFileRight(wchar_t const * folder, double frameTime);
 
 	void EndFileLeft();
 	void EndFileMain();
@@ -32,9 +32,9 @@ public:
 	bool HasFileMain();
 	bool HasFileRight();
 
-	void WriteLeftFrame(float Xposition, float Yposition, float Zposition, float Zrotation, float Xrotation, float Yrotation);
-	void WriteMainFrame(float Xposition, float Yposition, float Zposition, float Zrotation, float Xrotation, float Yrotation);
-	void WriteRightFrame(float Xposition, float Yposition, float Zposition, float Zrotation, float Xrotation, float Yrotation);
+	void WriteLeftFrame(double Xposition, double Yposition, double Zposition, double Zrotation, double Xrotation, double Yrotation);
+	void WriteMainFrame(double Xposition, double Yposition, double Zposition, double Zrotation, double Xrotation, double Yrotation);
+	void WriteRightFrame(double Xposition, double Yposition, double Zposition, double Zrotation, double Xrotation, double Yrotation);
 
 private:
 	BvhExport * m_BvhFileLeft;
@@ -42,11 +42,11 @@ private:
 	BvhExport * m_BvhFileRight;
 	unsigned int m_FrameCount;
 
-	BvhExport * BeginFile(wchar_t const * folder, wchar_t const * fileName, char const * rootName, float frameTime);
+	BvhExport * BeginFile(wchar_t const * folder, wchar_t const * fileName, char const * rootName, double frameTime);
 
 	void EndFile(BvhExport * & bvhFile);
 
-	void WriteFrame(BvhExport * bvhFile, float Xposition, float Yposition, float Zposition, float Zrotation, float Xrotation, float Yrotation);
+	void WriteFrame(BvhExport * bvhFile, double Xposition, double Yposition, double Zposition, double Zrotation, double Xrotation, double Yrotation);
 };
 
 extern CCamExport g_CamExport;

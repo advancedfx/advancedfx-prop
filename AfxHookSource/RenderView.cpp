@@ -62,12 +62,9 @@ Hook_VClient_RenderView::Hook_VClient_RenderView()
 	m_Export = false;
 	m_FovOverride = false;
 	m_FovValue = 0.0;
-	m_FrameTime = 0;
 	m_Import = false;
 	m_ImportBaseTime = 0;
 	m_IsInstalled = false;
-	m_LastTime = 0;
-	m_SubTime = 0;
 }
 
 
@@ -76,14 +73,11 @@ Hook_VClient_RenderView::~Hook_VClient_RenderView() {
 	ImportEnd();
 }
 
-bool Hook_VClient_RenderView::ExportBegin(wchar_t const *fileName, float frameTime) {
+bool Hook_VClient_RenderView::ExportBegin(wchar_t const *fileName, double frameTime) {
 	ExportEnd();
 
 	g_BvhExport = new BvhExport(fileName, "MdtCam", frameTime);
 	m_Export = true;
-
-	m_SubTime = 0;
-	m_FrameTime = frameTime;
 
 	return m_Export;
 }
@@ -171,18 +165,18 @@ void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, fl
 	}
 
 	if(m_Import) {
-		float Tf[6];
+		double Tf[6];
 
 		if(g_BvhImport.GetCamPositon(
 			curTime -m_ImportBaseTime,
 			Tf
 		)) {
-			Ty = -Tf[0];
-			Tz = +Tf[1];
-			Tx = -Tf[2];
-			Rz = -Tf[3];
-			Rx = -Tf[4];
-			Ry = +Tf[5];
+			Ty = (float)(-Tf[0]);
+			Tz = (float)(+Tf[1]);
+			Tx = (float)(-Tf[2]);
+			Rz = (float)(-Tf[3]);
+			Rx = (float)(-Tf[4]);
+			Ry = (float)(+Tf[5]);
 		}
 	}
 

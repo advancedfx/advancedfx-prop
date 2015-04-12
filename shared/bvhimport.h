@@ -18,7 +18,7 @@ public:
 
 	// outformat: see BvhChannel_t
 	// return: true on success, false otherwise
-	bool GetCamPositon(float fTimeOfs, float outCamdata[6]);
+	bool GetCamPositon(double fTimeOfs, double outCamdata[6]);
 
 private:
 	enum BvhChannel_t { BC_Xposition=0, BC_Yposition, BC_Zposition, BC_Zrotation, BC_Xrotation, BC_Yrotation };
@@ -26,12 +26,12 @@ private:
 	int channelcode[6];
 	bool m_Active;
 	FILE * m_File;
-	float m_Cache[6];
+	double m_Cache[6];
 	int m_Frames;
 	int m_LastFrame;
-	float m_FrameTime;
+	double m_FrameTime;
 	long m_MotionFPos;
-	static char ms_readbuff[200];
+	static char ms_readbuff[1024];
 
 	int DecodeBvhChannel(char * pszRemainder, char * & aoutNewRemainder);
 };

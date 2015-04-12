@@ -10,6 +10,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AfxHookGoldSrc", "AfxHookGo
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DummyDll", "tests\DummyDll\DummyDll.vcxproj", "{3E037249-89F2-467D-8D42-9F27C0F33A9D}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RoundingErrors", "tests\RoundingErrors\RoundingErrors.vcxproj", "{450B6761-36BF-4FA0-A076-14F900373D8D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -36,6 +38,10 @@ Global
 		{3E037249-89F2-467D-8D42-9F27C0F33A9D}.Debug|Win32.Build.0 = Debug|Win32
 		{3E037249-89F2-467D-8D42-9F27C0F33A9D}.Release|Win32.ActiveCfg = Release|Win32
 		{3E037249-89F2-467D-8D42-9F27C0F33A9D}.Release|Win32.Build.0 = Release|Win32
+		{450B6761-36BF-4FA0-A076-14F900373D8D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{450B6761-36BF-4FA0-A076-14F900373D8D}.Debug|Win32.Build.0 = Debug|Win32
+		{450B6761-36BF-4FA0-A076-14F900373D8D}.Release|Win32.ActiveCfg = Release|Win32
+		{450B6761-36BF-4FA0-A076-14F900373D8D}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
