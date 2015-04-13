@@ -6,6 +6,18 @@
 
 <release>
 <name>HLAE</name>
+<version>2.4.6.1</version>
+<time>2015-04-13T19:24Z</time>
+<changes>
+<change type="added">
+Added mirv_fov command for AfxHookGoldSrc, mirv_campath will use it, just as in AfxHookSource. For technical reasons mirv_cameport and mirv_camimport don't honour the fov setting.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.4.6.0</version>
 <time>2015-04-13T07:27Z</time>
 <changes>

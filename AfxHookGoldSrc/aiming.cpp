@@ -28,9 +28,8 @@ float TraceLine(cl_entity_t *target);
 float clamp(float i, float min, float max);
 void MakeLocalCoords(Vector vAngles,Vector &vUp,Vector &vRight,Vector &vForward);
 
-#define PI 3.14159265358979323846f
 #ifndef M_PI
-#define M_PI PI
+#define M_PI		3.14159265358979323846	// matches value in gcc v2 math.h
 #endif
 
 void Aiming::addAimLayer(int iSlot, int iEnt)
@@ -378,7 +377,7 @@ void AnglesFromTo(Vector &from, Vector &to, Vector &angles)
 
 	float dot_product = (dir.x * vForward.x) + (dir.y * vForward.y) + (dir.z * vForward.z);
 
-	float angle = acos(dot_product) * 180.0f / PI;
+	float angle = acos(dot_product) * 180.0f / (float)M_PI;
 
 	if (dir.y < 0)
 		angle = 360.0f - angle;
@@ -387,7 +386,7 @@ void AnglesFromTo(Vector &from, Vector &to, Vector &angles)
 	if (length == 0)
 		length = 0.01f;
 
-	float pitch = atan(dz / length) * 180.0f / PI;
+	float pitch = atan(dz / length) * 180.0f / (float)M_PI;
 
 	angles.x = angle;
 	angles.y = -pitch;

@@ -67,6 +67,7 @@ AFXADDR_DEF(cstrike_UnkCrosshairFn_DSZ)
 AFXADDR_DEF(cstrike_UnkCrosshairFn_add_fac)
 AFXADDR_DEF(cstrike_UnkCrosshairFn_mul_fac)
 AFXADDR_DEF(cstrike_rgDeathNoticeList)
+AFXADDR_DEF(g_fov)
 AFXADDR_DEF(hlExe)
 AFXADDR_DEF(hwDll)
 AFXADDR_DEF(msg_readcount)
@@ -110,7 +111,8 @@ AFXADDR_DEF(valve_TeamFortressViewport_UpdateSpecatorPanel_DSZ)
 // *[13] AfxHookGoldSrc/cmd_tools.cpp/getCommandTreeBasePtr
 // *[14] doc/notes_goldsrc/debug_tfc_deathmessage.txt
 // *[15] doc/notes_goldsrc/debug_sv_variables.txt
-// *[16] doc/notes_goldsrc/debug_CL_Disconnect.txt
+// n[16] doc/notes_goldsrc/debug_CL_Disconnect.txt
+// n[17] doc/notes_goldsrc/debug_fov.txt
 
 void Addresses_InitHlExe(AfxAddr hlExe)
 {
@@ -188,6 +190,8 @@ void Addresses_InitHwDll(AfxAddr hwDll)
 	
 	AFXADDR_SET(UnkGetDecalTexture, hwDll + 0x2EB30); // *[12]
 	AFXADDR_SET(UnkGetDecalTexture_DSZ, 0x06); // *[12]
+
+	AFXADDR_SET(g_fov , hwDll +0x144A8C); // *[17]
 	
 	//
 	// Sound system related:

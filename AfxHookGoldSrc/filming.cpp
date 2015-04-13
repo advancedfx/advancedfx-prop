@@ -142,7 +142,7 @@ REGISTER_CMD_FUNC(cameraofs_cs)
 //{ if (m_iFilmingState == FS_INACTIVE) _bNoMatteInterpolation = bSet; }
 
 
-void do_camera_test(vec3_t & vieworg, vec3_t & viewangles) {
+void do_camera_test(float vieworg[3], float viewangles[3]) {
 	static unsigned int state = 0;
 	static float angles[3];
 	static float ofs[3];
@@ -243,8 +243,18 @@ void do_camera_test(vec3_t & vieworg, vec3_t & viewangles) {
 		pEngfuncs->pfnCenterPrint("zZz");
 }
 
+void Filming::FovOverride(double value)
+{
+	m_FovValue = value;
+	m_FovOverride = true;
+}
 
-void Filming::OnR_RenderView(Vector & vieworg, Vector & viewangles)
+void Filming::FovDefault()
+{
+	m_FovOverride = false;
+}
+
+void Filming::OnR_RenderView(float vieworg[3], float viewangles[3], float & fov)
 {
 	if(debug_quat->value)
 	{
@@ -259,6 +269,11 @@ void Filming::OnR_RenderView(Vector & vieworg, Vector & viewangles)
 		viewangles[PITCH] = (float)A.Pitch;
 		viewangles[YAW] = (float)A.Yaw;
 		viewangles[ROLL] = (float)A.Roll;
+	}
+
+	if(m_FovOverride)
+	{
+		fov = (float)m_FovValue;
 	}
 
 	//
@@ -280,6 +295,8 @@ void Filming::OnR_RenderView(Vector & vieworg, Vector & viewangles)
 			viewangles[PITCH] = (float)val.Pitch;
 			viewangles[YAW] = (float)val.Yaw;
 			viewangles[ROLL] = (float)val.Roll;
+
+			fov = (float)val.Fov;
 		}
 	}
 
@@ -299,6 +316,12 @@ void Filming::OnR_RenderView(Vector & vieworg, Vector & viewangles)
 			viewangles[YAW] = (float)+dtmp[5];
 		}
 	}
+
+	//
+	// limit fov to sane values:
+
+	if(fov<1) fov = 1;
+	else if(fov>179) fov = 179;
 
 	// >> begin calculate transform vectors
 	// we have to calculate our own transformation vectors from the angles and can not use pparams->forward etc., because in spectator mode they might be not present:
@@ -430,6 +453,7 @@ void Filming::OnR_RenderView(Vector & vieworg, Vector & viewangles)
 	LastCameraAngles[PITCH] = viewangles[PITCH];
 	LastCameraAngles[YAW] = viewangles[YAW];
 	LastCameraAngles[ROLL] = viewangles[ROLL];
+	LastCameraFov = fov;
 
 	if(print_pos->value!=0.0)
 		pEngfuncs->Con_Printf("(%f,%f,%f) (%f,%f,%f)\n",
@@ -2091,7 +2115,6 @@ REGISTER_CMD_FUNC(fx_wh_tint_colorf)
 }
 
 REGISTER_CMD_FUNC(matte_entities)
-
 {
 	bool bShowHelp=true;
 	int icarg=pEngfuncs->Cmd_Argc();
@@ -2161,3 +2184,29 @@ REGISTER_DEBUGCMD_FUNC(depth_info) {
 	pEngfuncs->Con_Printf("zNear: %f\nzFar: %f\nMax linear error (8bit): %f (%f %%)\n", N, F, E, P);
 }
 
+REGISTER_CMD_FUNC(fov)
+{
+	int argc = pEngfuncs->Cmd_Argc();;
+
+	if(2 <= argc)
+	{
+		char const * arg1 = pEngfuncs->Cmd_Argv(1);
+
+		if(0 == _stricmp("default", arg1))
+		{
+			g_Filming.FovDefault();
+			return;
+		}
+		else
+		{
+			g_Filming.FovOverride(atof(arg1));
+			return;
+		}
+	}
+
+	pEngfuncs->Con_Printf(
+		"Usage:\n"
+		PREFIX "fov f - Override fov with given floating point value (f).\n"
+		PREFIX "fov default - Revert to the game's default behaviour.\n"
+	);
+}

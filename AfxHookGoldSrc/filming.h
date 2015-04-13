@@ -99,6 +99,9 @@ public:
 	Filming();
 	~Filming();
 
+	void FovOverride(double value);
+	void FovDefault();
+
 	// used in OpenGl32Hooks.cpp
 	void FullClear();
 
@@ -169,6 +172,7 @@ public:
 
 	double LastCameraOrigin[3];
 	double LastCameraAngles[3];
+	double LastCameraFov;
 
 
 	// those are used by R_RenderView, since it doesn't sit in the class yet ( I didn't want to mess around with static properties and this pointers etc.)
@@ -184,7 +188,7 @@ public:
 	void SetCameraOfs(float right, float up, float forward); // you can set an static cameraofs here, however during stereomode it should be 0
 	void SetStereoOfs(float left_and_rightofs); // will be used in stereo mode to displace the camera left and right, suggested values are between 1.0 - 1.4, value should be positive, otherewise you would switch left and right cam
 
-	void OnR_RenderView(Vector & vieworg, Vector & viewangles);
+	void OnR_RenderView(float vieworg[3], float viewangles[3], float & fov);
 
 	double GetDebugClientTime();
 
@@ -206,6 +210,8 @@ private:
 	bool m_CaptureEarly;
 	bool m_DebugCapture;
 	bool m_EnableStereoMode;
+	bool m_FovOverride;
+	double m_FovValue;
 	int m_Height;
 	unsigned int m_HostFrameCount;
 	bool m_HudDrawnInFrame;

@@ -8,6 +8,17 @@
 #include "../HookHw.h"
 #include "../../filming.h"
 
+// hack hack hack (make it use correct definition):
+typedef float vec_t;
+#ifdef DID_VEC3_T_DEFINE
+#undef DID_VEC3_T_DEFINE
+#undef vec3_t
+#endif
+#ifndef DID_VEC3_T_DEFINE
+#define DID_VEC3_T_DEFINE
+typedef vec_t vec3_t[3];
+#endif
+
 typedef void (*R_RenderView_t)( void );
 typedef void (*R_PushDlights_t)( void );
 
@@ -72,12 +83,23 @@ void New_R_RenderView(void)
 
 	static vec3_t oldorigin;
 	static vec3_t oldangles;
+	float old_fov;
+	float cur_fov;
 	
 	// save original values
 	memcpy (oldorigin,p_r_refdef->vieworg,3*sizeof(float));
 	memcpy (oldangles,p_r_refdef->viewangles,3*sizeof(float));
+	old_fov = *(float*)HL_ADDR_GET(g_fov);
 
-	g_Filming.OnR_RenderView(p_r_refdef->vieworg, p_r_refdef->viewangles);
+	cur_fov = old_fov;
+	g_Filming.OnR_RenderView(p_r_refdef->vieworg, p_r_refdef->viewangles, cur_fov);
+
+	if(cur_fov != old_fov)
+	{
+		// Filming system changed fov.
+
+		*(float*)HL_ADDR_GET(g_fov) = cur_fov;
+	}
 
 	g_Old_R_RenderView();
 
@@ -86,6 +108,7 @@ void New_R_RenderView(void)
 	// restore original values
 	memcpy (p_r_refdef->vieworg,oldorigin,3*sizeof(float));
 	memcpy (p_r_refdef->viewangles,oldangles,3*sizeof(float));
+	*(float*)HL_ADDR_GET(g_fov) = old_fov;
 }
 
 void Additional_R_RenderView(void)

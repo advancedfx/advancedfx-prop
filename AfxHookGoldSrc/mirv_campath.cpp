@@ -33,7 +33,7 @@ REGISTER_CMD_FUNC(campath)
 					g_Filming.LastCameraAngles[PITCH],
 					g_Filming.LastCameraAngles[YAW],
 					g_Filming.LastCameraAngles[ROLL],
-					90.0
+					g_Filming.LastCameraFov
 				)
 			);
 
@@ -62,7 +62,7 @@ REGISTER_CMD_FUNC(campath)
 		}
 		else if(!_stricmp("print", subcmd) && 2 == argc)
 		{
-			pEngfuncs->Con_Printf("passed id: time -> (x,y,z) (pitch,yaw,roll)\n");
+			pEngfuncs->Con_Printf("passed id: time -> (x,y,z) fov (pitch,yaw,roll)\n");
 			
 			double curtime = g_DemoPlayer->GetDemoTime();
 
@@ -71,6 +71,7 @@ REGISTER_CMD_FUNC(campath)
 			{
 				double vieworigin[3];
 				double viewangles[3];
+				double fov;
 
 				double time = it.GetTime();
 				CamPathValue val = it.GetValue();
@@ -81,12 +82,14 @@ REGISTER_CMD_FUNC(campath)
 				viewangles[PITCH] = val.Pitch;
 				viewangles[YAW] = val.Yaw;
 				viewangles[ROLL] =  val.Roll;
+				fov = val.Fov;
 
 				pEngfuncs->Con_Printf(
-					"%s %i: %f -> (%f,%f,%f) (%f,%f,%f)\n",
+					"%s %i: %f -> (%f,%f,%f) %f (%f,%f,%f)\n",
 					time <= curtime ? "Y" : "n",
 					i, time,
 					vieworigin[0],vieworigin[1],vieworigin[2],
+					fov,
 					viewangles[PITCH],viewangles[YAW],viewangles[ROLL]
 				);
 
