@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2015-04-12 dominik.matrixstorm.com
+// 2015-04-13 dominik.matrixstorm.com
 //
 // First changes
 // 2007-10-22T17:39Z dominik.matrixstorm.com
@@ -82,16 +82,17 @@ float g_Volume;
 
 bool g_FilmSound_BlockChannels = false;
 
-enum FilmSoundState {
-	FSS_IDLE,
-	FSS_STARTING,
-	FSS_FILMING,
-	FSS_STOPPING
-} g_FilmSoundState = FSS_IDLE;
+bool g_FilmSound_Capturing = false;
+
+enum FilmSound_TimeRounding_e {
+	FS_TR_FLOOR,
+	FS_TR_CEIL
+} g_FilmSound_TimeRounding = FS_TR_FLOOR;
 
 void touring_GetSoundtime(void)
 {
-	if(FSS_FILMING != g_FilmSoundState) {
+	if(!g_FilmSound_Capturing)
+	{
 		// do not update during filming
 		detoured_GetSoundtime();
 	}
@@ -101,12 +102,7 @@ void touring_S_PaintChannels(int endtime)
 {
 	static volatile dma_HL_t *shm;
 
-	if (FSS_STARTING == g_FilmSoundState)
-	{
-		g_FilmSoundState = FSS_FILMING;
-	}
-
-	if (FSS_IDLE != g_FilmSoundState)
+	if (g_FilmSound_Capturing)
 	{
 		double dDeltaTime;
 		int deltaTime;
@@ -118,10 +114,15 @@ void touring_S_PaintChannels(int endtime)
 		) * (double)shm->Quake_speed;
 
 		// and override
-		if (FSS_STOPPING == g_FilmSoundState)
+		switch(g_FilmSound_TimeRounding)
+		{
+		case FS_TR_CEIL:
 			deltaTime = (int)ceil(dDeltaTime); // we preffer having too much samples when stopping
-		else {
+			break;
+		case FS_TR_FLOOR:
+		default:
 			deltaTime = (int)floor(dDeltaTime); // we preffer having faster updates and therefore less samples during filming
+			break;
 		}
 
 		// we cannot go back in time, so stfu:
@@ -135,28 +136,19 @@ void touring_S_PaintChannels(int endtime)
 
 		// update Our class's _CurrentTime:
 		g_CurrentTime = g_CurrentTime +dDeltaTime;
-
-		if (FSS_STOPPING == g_FilmSoundState) {
-			g_FilmSound->Snd_Finished();
-
-			// make soundsystem catch up:
-			touring_GetSoundtime();
-			*(int *)HL_ADDR_GET(paintedtime) = (*(int *)HL_ADDR_GET(soundtime)) >> 1;
-			pEngfuncs->pfnClientCmd("stopsound");
-		}
-
-	} else {
+	}
+	else
+	{
 		// don't do anything abnormal
 		detoured_S_PaintChannels(endtime);
 	}
-
 }
 
 void touring_S_TransferPaintBuffer(int endtime)
 {
 	static volatile dma_HL_t *shm;
 
-	if (FSS_IDLE != g_FilmSoundState)
+	if (g_FilmSound_Capturing)
 	{
 		// filming
 
@@ -235,80 +227,92 @@ CFilmSound::CFilmSound()
 	g_FilmSound = this;
 }
 
-FILE* CFilmSound::_fBeginWave(wchar_t const * fileName, DWORD dwSamplesPerSec)
+CFilmSound::FilmSoundFile * CFilmSound::_fBeginWave(wchar_t const * fileName, DWORD dwSamplesPerSec)
 {
-	memset(&_wave_header,0,sizeof(_wave_header)); // clear header
+	FilmSoundFile * pfsf = new FilmSoundFile();
 
-	_dwWaveSmaplesWritten = 0; // clear written samples num
+	memset(&pfsf->wave_header,0,sizeof(pfsf->wave_header)); // clear header
+
+	pfsf->wave_smaples_written = 0; // clear written samples num
 
 	FILE *pHandle;
 	_wfopen_s(&pHandle, fileName, L"wb");
 
-	if (!pHandle) return NULL;
+	if (!pHandle)
+	{
+		delete pfsf;
+		return NULL;
+	}
 
 	// write temporary header:
-	memcpy(_wave_header.riff_hdr.id,"RIFF",4);
-	_wave_header.riff_hdr.len=0;
+	memcpy(pfsf->wave_header.riff_hdr.id,"RIFF",4);
+	pfsf->wave_header.riff_hdr.len=0;
 
-	memcpy(_wave_header.wave_id,"WAVE",4);
+	memcpy(pfsf->wave_header.wave_id,"WAVE",4);
 
-	memcpy(_wave_header.fmt_chunk_hdr.id,"fmt ",4);
-	_wave_header.fmt_chunk_hdr.len = sizeof(_wave_header.fmt_chunk_pcm);
+	memcpy(pfsf->wave_header.fmt_chunk_hdr.id,"fmt ",4);
+	pfsf->wave_header.fmt_chunk_hdr.len = sizeof(pfsf->wave_header.fmt_chunk_pcm);
 
-	_wave_header.fmt_chunk_pcm.wFormatTag = 0x0001; // Microsoft PCM
-	_wave_header.fmt_chunk_pcm.wChannels = 2;
-	_wave_header.fmt_chunk_pcm.dwSamplesPerSec = dwSamplesPerSec;
-	_wave_header.fmt_chunk_pcm.dwAvgBytesPerSec = 2 * dwSamplesPerSec * (16 / 8);
-	_wave_header.fmt_chunk_pcm.wBlockAlign = 2 * (16 / 8);
-	_wave_header.fmt_chunk_pcm.wBitsPerSample = 16;
+	pfsf->wave_header.fmt_chunk_pcm.wFormatTag = 0x0001; // Microsoft PCM
+	pfsf->wave_header.fmt_chunk_pcm.wChannels = 2;
+	pfsf->wave_header.fmt_chunk_pcm.dwSamplesPerSec = dwSamplesPerSec;
+	pfsf->wave_header.fmt_chunk_pcm.dwAvgBytesPerSec = 2 * dwSamplesPerSec * (16 / 8);
+	pfsf->wave_header.fmt_chunk_pcm.wBlockAlign = 2 * (16 / 8);
+	pfsf->wave_header.fmt_chunk_pcm.wBitsPerSample = 16;
 
-	memcpy(_wave_header.data_chunk_hdr.id,"data",4);
-	_wave_header.data_chunk_hdr.len = 0;
+	memcpy(pfsf->wave_header.data_chunk_hdr.id,"data",4);
+	pfsf->wave_header.data_chunk_hdr.len = 0;
 
-	fwrite(&_wave_header,sizeof(_wave_header),1,pHandle);
+	fwrite(&pfsf->wave_header,sizeof(pfsf->wave_header),1,pHandle);
 
-	return pHandle;
+	pfsf->file_handle = pHandle;
+
+	return pfsf;
 
 }
 
-void CFilmSound::_fWriteWave(FILE *pHandle,WORD leftchan,WORD rightchan)
+void CFilmSound::_fWriteWave(FilmSoundFile *pfsf,WORD leftchan,WORD rightchan)
 {
-	if (!pHandle) return;
+	if (!pfsf) return;
 	
 	WORD chans[2];
 
 	chans[0]=leftchan;
 	chans[1]=rightchan;
 
-	fwrite(chans,sizeof(WORD),2,pHandle);
-	_dwWaveSmaplesWritten++;
+	fwrite(chans,sizeof(WORD),2,pfsf->file_handle);
+	pfsf->wave_smaples_written++;
 }
 
-void CFilmSound::_fEndWave(FILE* pHandle)
+void CFilmSound::_fEndWave(FilmSoundFile* pfsf)
 {
-	if (!pHandle) return;
+	if (!pfsf) return;
 
-	long lfpos = ftell(pHandle);
+	long lfpos = ftell(pfsf->file_handle);
 	
-	fseek(pHandle,0,SEEK_SET);
+	fseek(pfsf->file_handle,0,SEEK_SET);
 	
 	// we need fo finish the header:
-	_wave_header.riff_hdr.len=lfpos-4;
-	_wave_header.data_chunk_hdr.len= _dwWaveSmaplesWritten * (_wave_header.fmt_chunk_pcm.wBitsPerSample/8) * _wave_header.fmt_chunk_pcm.wChannels;
+	pfsf->wave_header.riff_hdr.len=lfpos-4;
+	pfsf->wave_header.data_chunk_hdr.len= pfsf->wave_smaples_written * (pfsf->wave_header.fmt_chunk_pcm.wBitsPerSample/8) * pfsf->wave_header.fmt_chunk_pcm.wChannels;
 
 	// and write it:
-	fwrite(&_wave_header,sizeof(_wave_header),1,pHandle);
+	fwrite(&pfsf->wave_header,sizeof(pfsf->wave_header),1,pfsf->file_handle);
 
-	fclose(pHandle);
+	fclose(pfsf->file_handle);
+
+	delete pfsf;
 }
 
-bool CFilmSound::Start(wchar_t const * fileName, double dTargetTime, float fUseVolume)
+bool CFilmSound::Start(wchar_t const * fileName, double dTargetTime, float fUseVolume, wchar_t const * extraFileName, double extraTime)
 {
 	InstallHooks(); // make sure hooks are installed
 
-	if (g_FilmSoundState == FSS_IDLE)
+	if (!g_FilmSound_Capturing)
 	{
 		// only start when idle
+
+		g_FilmSound_TimeRounding = FS_TR_FLOOR;
 		
 		// init time:
 		g_TargetTime = dTargetTime;
@@ -323,11 +327,24 @@ bool CFilmSound::Start(wchar_t const * fileName, double dTargetTime, float fUseV
 		if(!(_pWaveFile=_fBeginWave(fileName, shm->Valve_speed))) // we use Quake speed since we capture the internal mixer
 			return false; // on fail return false
 
-		g_FilmSoundState = FSS_STARTING; // switch to filming mode
+		m_pWaveFileExtra = 0;
+		if(0 < extraTime)
+		{
+			m_ExtraTime = extraTime;
+
+			if(!(m_pWaveFileExtra = _fBeginWave(extraFileName, shm->Valve_speed)))
+			{
+				_fEndWave(_pWaveFile);
+				return false;
+			}
+		}
+
+		g_FilmSound_Capturing = true; // switch to filming mode
 
 		return true;
-	} else
-		return false;
+	}
+
+	return false;
 }
 
 void CFilmSound::AdvanceFrame(double dTargetTime)
@@ -338,8 +355,46 @@ void CFilmSound::AdvanceFrame(double dTargetTime)
 
 void CFilmSound::Stop()
 {
-	if (g_FilmSoundState != FSS_IDLE)
-		g_FilmSoundState = FSS_STOPPING; // we cannot stop instantly
+	if(!g_FilmSound_Capturing)
+		return;
+
+	// for sound finishing and extra sound make it ceil:
+	g_FilmSound_TimeRounding = FS_TR_CEIL;
+
+	//
+	// finish the painting:
+
+	touring_S_PaintChannels(*(int *)HL_ADDR_GET(paintedtime));
+	_fEndWave(_pWaveFile); // finish the wave file
+	_pWaveFile = 0;
+
+	//
+	// do any extra painting:
+
+	if(m_pWaveFileExtra)
+	{
+		_pWaveFile = m_pWaveFileExtra;
+		m_pWaveFileExtra = 0;
+		g_TargetTime += m_ExtraTime;
+
+		touring_S_PaintChannels(*(int *)HL_ADDR_GET(paintedtime));
+		_fEndWave(_pWaveFile); // finish the wave file
+
+		_pWaveFile = 0;
+	}
+
+	// done capturing, stop and restore:
+
+	g_FilmSound_Capturing = false;
+	
+	pEngfuncs->Con_Printf("Sound system finished stopping (almost :).\n");
+
+	//
+	// make soundsystem catch up:
+
+	touring_GetSoundtime();
+	*(int *)HL_ADDR_GET(paintedtime) = (*(int *)HL_ADDR_GET(soundtime)) >> 1;
+	pEngfuncs->pfnClientCmd("stopsound");
 }
 
 
@@ -347,10 +402,4 @@ void CFilmSound::Snd_Supply(WORD leftchan, WORD rightchan) {
 	_fWriteWave(_pWaveFile, leftchan, rightchan);
 }
 
-void CFilmSound::Snd_Finished() {
-	_fEndWave(_pWaveFile); // finish the wave file
-	g_FilmSoundState = FSS_IDLE; // we will be idle again
-	
-	pEngfuncs->Con_Printf("Sound system finished stopping.\n");
-}
 

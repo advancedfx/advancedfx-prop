@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2013-08-30 dominik.matrixstorm.com
+// 2014-04-13 dominik.matrixstorm.com
 //
 // First changes:
 // 2007-09-13T13:37Z dominik.matrixstorm.com
@@ -15,7 +15,8 @@ typedef AfxAddr HlAddress_t;
 #define HL_ADDR_GET(name) AFXADDR_GET(name)
 #define HL_ADDR_SET(name,value) AFXADDR_SET(name,value)
 
-
+AFXADDR_DECL(CL_Disconnect)
+AFXADDR_DECL(CL_Disconnect_DSZ)
 AFXADDR_DECL(CL_EmitEntities)
 AFXADDR_DECL(CL_EmitEntities_DSZ)
 AFXADDR_DECL(CL_ParseServerMessage_CmdRead)

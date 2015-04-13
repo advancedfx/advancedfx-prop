@@ -6,6 +6,22 @@
 
 <release>
 <name>HLAE</name>
+<version>2.4.6.0</version>
+<time>2015-04-13T07:27Z</time>
+<changes>
+<change type="added">
+Added mirv_movie_sound_extra, if greater than 0 (and sound export is enabled) an sound_extra.wav will be created,
+which is mixing out the soundbuffer for the specified number of seconds after the recording has been stopped.
+</change>
+<change type="updated">
+Updated mirv_movie_playdemostop.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.4.5.2</version>
 <time>2015-04-12T16:48Z</time>
 <changes>

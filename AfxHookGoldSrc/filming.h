@@ -110,6 +110,8 @@ public:
 	MATTE_METHOD GetMatteMethod();
 	CFilmSound * GetFilmSound() { return &_FilmSound; }
 
+	void On_CL_Disconnect(void);
+
 	void SupplySupportRenderer(CHlaeSupportRender *pSupportRender)
 	{
 		_pSupportRender = pSupportRender;

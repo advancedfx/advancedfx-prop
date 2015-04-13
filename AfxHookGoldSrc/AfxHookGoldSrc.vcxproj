@@ -148,6 +148,7 @@
     <ClCompile Include="hooks\client\HookClient.cpp" />
     <ClCompile Include="hooks\DemoPlayer\DemoPlayer.cpp" />
     <ClCompile Include="hooks\hw\ClientFunctions.cpp" />
+    <ClCompile Include="hooks\hw\CL_Disconnect.cpp" />
     <ClCompile Include="hooks\hw\R_DrawSkyBoxEx.cpp" />
     <ClCompile Include="hooks\hw\R_RenderView.cpp" />
     <ClCompile Include="hooks\hw\UnkDrawHud.cpp" />
@@ -227,6 +228,7 @@
     <ClInclude Include="hooks\client\HookClient.h" />
     <ClInclude Include="hooks\DemoPlayer\DemoPlayer.h" />
     <ClInclude Include="hooks\hw\ClientFunctions.h" />
+    <ClInclude Include="hooks\hw\CL_Disconnect.h" />
     <ClInclude Include="hooks\hw\R_DrawSkyBoxEx.h" />
     <ClInclude Include="hooks\hw\R_RenderView.h" />
     <ClInclude Include="hooks\hw\UnkDrawHud.h" />

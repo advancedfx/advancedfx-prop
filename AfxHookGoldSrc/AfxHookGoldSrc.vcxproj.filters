@@ -267,6 +267,9 @@
     <ClCompile Include="mirv_campath.cpp">
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
+    <ClCompile Include="hooks\hw\CL_Disconnect.cpp">
+      <Filter>AfxHookGoldSrc\hooks\hw</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -475,6 +478,9 @@
     </ClInclude>
     <ClInclude Include="..\shared\rapidxml\rapidxml_utils.hpp">
       <Filter>shared\rapidxml</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\hw\CL_Disconnect.h">
+      <Filter>AfxHookGoldSrc\hooks\hw</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

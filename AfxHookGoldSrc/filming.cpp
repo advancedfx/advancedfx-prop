@@ -15,6 +15,7 @@
 
 #include <hlsdk.h>
 #include <halflife/common/r_studioint.h>
+#include <halflife/common/demo_api.h>
 
 #include "hooks/user32Hooks.h"
 #include "hooks/hw/Mod_LeafPvs.h"
@@ -80,10 +81,12 @@ REGISTER_CVAR(movie_export_sound, "0", 0); // should default to 1, but I don't w
 REGISTER_CVAR(movie_filename, "untitled_rec", 0);
 REGISTER_CVAR(movie_fps, "30", 0);
 REGISTER_CVAR(movie_hidepanels, "0", 0);
+REGISTER_CVAR(movie_playdemostop,"0",0);
 REGISTER_CVAR(movie_separate_hud, "0", 0);
 REGISTER_CVAR(movie_simulate, "0", 0);
 REGISTER_CVAR(movie_simulate_delay, "0", 0);
 REGISTER_CVAR(movie_sound_volume, "0.4", 0); // volume 0.8 is CS 1.6 default
+REGISTER_CVAR(movie_sound_extra, "0", 0);
 REGISTER_CVAR(movie_stereomode,"0",0);
 REGISTER_CVAR(movie_stereo_centerdist,"1.3",0);
 REGISTER_CVAR(movie_stereo_yawdegrees,"0.0",0);
@@ -439,7 +442,17 @@ void Filming::OnR_RenderView(Vector & vieworg, Vector & viewangles)
 		);
 }
 
+void Filming::On_CL_Disconnect(void)
+{
+	if(!(g_Filming.isFilming()
+		&& pEngfuncs->pDemoAPI->IsPlayingback()
+		&& movie_playdemostop->value))
+		return;
 
+
+	pEngfuncs->Con_Printf("Auto stopping filming as requested (on CL_Disconnect) ...\n");
+	g_Filming.Stop();
+}
 
 void Filming::SupplyZClipping(GLdouble zNear, GLdouble zFar) {
 	m_ZNear = zNear;
@@ -1521,12 +1534,12 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 
 			// try to init sound filming system:
 			std::wstring fileName(m_TakeDir);
+			std::wstring extraFileName(m_TakeDir);
 
 			fileName.append(L"\\sound.wav");
+			extraFileName.append(L"\\sound_extra.wav");
 
-			_bExportingSound = _FilmSound.Start(fileName.c_str() , m_time, movie_sound_volume->value);
-			// the soundsystem will get deactivated here, if it fails
-			//pEngfuncs->Con_Printf("sound t: %f\n",flTime);
+			_bExportingSound = _FilmSound.Start(fileName.c_str() , m_time, movie_sound_volume->value, extraFileName.c_str(), movie_sound_extra->value);
 
 			if (!_bExportingSound) pEngfuncs->Con_Printf("ERROR: Starting MDT Sound Recording System failed!\n");
 

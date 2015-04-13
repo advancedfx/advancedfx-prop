@@ -3,14 +3,15 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2013-08-30 dominik.matrixstorm.com
+// 2014-04-13 dominik.matrixstorm.com
 //
 // First changes:
 // 2007-09-13T13:37Z dominik.matrixstorm.com
 
 #include "hl_addresses.h"
 
-
+AFXADDR_DEF(CL_Disconnect)
+AFXADDR_DEF(CL_Disconnect_DSZ)
 AFXADDR_DEF(CL_EmitEntities)
 AFXADDR_DEF(CL_EmitEntities_DSZ)
 AFXADDR_DEF(CL_ParseServerMessage_CmdRead)
@@ -109,6 +110,7 @@ AFXADDR_DEF(valve_TeamFortressViewport_UpdateSpecatorPanel_DSZ)
 // *[13] AfxHookGoldSrc/cmd_tools.cpp/getCommandTreeBasePtr
 // *[14] doc/notes_goldsrc/debug_tfc_deathmessage.txt
 // *[15] doc/notes_goldsrc/debug_sv_variables.txt
+// *[16] doc/notes_goldsrc/debug_CL_Disconnect.txt
 
 void Addresses_InitHlExe(AfxAddr hlExe)
 {
@@ -136,6 +138,9 @@ void Addresses_InitHwDll(AfxAddr hwDll)
 	
 	AFXADDR_SET(CL_EmitEntities, hwDll + 0x14A30); // *[8]
 	AFXADDR_SET(CL_EmitEntities_DSZ, 0x05); // *[8]
+
+	AFXADDR_SET(CL_Disconnect, hwDll + 0x17470); // *[16]
+	AFXADDR_SET(CL_Disconnect_DSZ, 0x06); // *[16]
 	
 	AFXADDR_SET(ClientFunctionTable, hwDll +0x122F540); // *[9]
 	

@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2015-04-12 dominik.matrixstorm.com
+// 2015-04-13 dominik.matrixstorm.com
 //
 // First changes
 // 2007-10-22T17:39Z dominik.matrixstorm.com
@@ -24,7 +24,8 @@ public:
 	// Only starts when eFilmSoundState()==FSS_IDLE
 	// if starting failed it will return false
 	// the targettime should be the delta frametime on the first call (so it is not null) and advance with every frame
-	bool Start(wchar_t const * fileName, double dTargetTime, float fUseVolume);
+	bool Start(wchar_t const * fileName, double dTargetTime, float fUseVolume,
+		wchar_t const * extraFileName, double extraTime);
 
 	// this has to be called every engineframe (main loop)
 	// to supply a new targettime
@@ -36,7 +37,6 @@ public:
 	void Stop();
 
 	void Snd_Supply(WORD leftchan, WORD rightchan);
-	void Snd_Finished();
 
 private:
 
@@ -51,7 +51,7 @@ private:
 		DWORD len;		// remaining chunk length after header
 	} chunk_hdr_t;
 
-	struct
+	struct wave_header_s
 	{
 		struct {     
 			char	id[4];	// identifier string = "RIFF"
@@ -77,17 +77,21 @@ private:
 
 		chunk_hdr_t data_chunk_hdr; // Fmt chunk header
 
-	} _wave_header;
+	};
 
-	DWORD _dwWaveSmaplesWritten;
+	struct FilmSoundFile
+	{
+		FILE * file_handle;
+		wave_header_s wave_header;
+		DWORD wave_smaples_written;
+	};
 
+	FilmSoundFile * _pWaveFile;
+	
+	FilmSoundFile * m_pWaveFileExtra;
+	double m_ExtraTime;
 
-	//static int _initial_paintedtime;
-	//static _loc_soundtime;
-
-	FILE *_pWaveFile;
-
-	FILE* _fBeginWave(wchar_t const * fileName, DWORD dwSamplesPerSec);
-	void _fWriteWave(FILE *pHandle,WORD leftchan,WORD rightchan);
-	void _fEndWave(FILE* pHandle);
+	FilmSoundFile * _fBeginWave(wchar_t const * fileName, DWORD dwSamplesPerSec);
+	void _fWriteWave(FilmSoundFile * pfsf,WORD leftchan,WORD rightchan);
+	void _fEndWave(FilmSoundFile * pfsf);
 };
