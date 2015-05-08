@@ -3,54 +3,58 @@ Hint:
   here:
   http://sourceforge.net/projects/advancedfx/files/developer/build-tools/
 
-1) Download and install Microsoft Visual C++ 2010 and Microsoft Visual
-   C# 2010, which you can obtain for free from http://www.microsoft.com (Express
-   editions will do).
+01) Download and install Microsoft Visual C++ 2010 and Microsoft Visual
+    C# 2010, which you can obtain for free from http://www.microsoft.com (Express
+    editions will do).
 
-2) Download the Half-Life SDK from
-   http://github.com/ValveSoftware/halflife
-   and install it into C:\Libraries\halflife
-   
-3) This step is not required by default, only when you plan to build AfxHookGoldSrc with AFX_SCRIPT!
-   Download the Mozilla Build Environment from
-   http://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe
-   and install it into a folder you like.
+02) _After that_ download and install Micrsoft Visual Studio 2010 SP1,
+    which you can obtain for free from http://www.microsoft.com
 
-4) This step is not required by default, only when you plan to build AfxHookGoldSrc with AFX_SCRIPT!
-   Download the Mozilla SpiderMonkey (JS) library from
-   http://ftp.mozilla.org/pub/mozilla.org/js/mozjs-24.2.0.tar.bz2
-   and extract it into a folder you like.
-   
-5) This step is not required by default, only when you plan to build AfxHookGoldSrc with AFX_SCRIPT!
-   Compile the SpiderMonkey (JS) library using the Mozilla Build Environment
-   ( start-msvc10.bat ) using the following commands:
-   cd path_to_js_library/js/src
-   autoconf-2.13
-   ./configure
-   make
-   
-6) This step is not required by default, only when you plan to build AfxHookGoldSrc with AFX_SCRIPT! 
-   Copy the contents of the created JS dist folder (js/src/build-release/dist
-   to c:\Libraries\js
+03) Download the Half-Life SDK from
+    http://github.com/ValveSoftware/halflife
+    and install it into C:\Libraries\halflife
 
-7) Obtain the HLAE source code from http://advancedfx.org and extract it into a
-   folder you like.
-   
-8) Open mdt.sln in the HLAE source code and Build (Configuration=Release):
-   AfxHookGoldSrc, AfxHookSource, AfxCppCli
+04) This step is not required by default, only when you plan to build AfxHookGoldSrc with AFX_SCRIPT!
+    Download the Mozilla Build Environment from
+    http://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe
+    and install it into a folder you like.
 
-9) AfxHook\recompile.bat, move AfxHook.dat into build\Release\bin\
+05) This step is not required by default, only when you plan to build AfxHookGoldSrc with AFX_SCRIPT!
+    Download the Mozilla SpiderMonkey (JS) library from
+    http://ftp.mozilla.org/pub/mozilla.org/js/mozjs-24.2.0.tar.bz2
+    and extract it into a folder you like.
 
-A) Build AfxGui (Release), move and rename AfxGui.exe to
+06) This step is not required by default, only when you plan to build AfxHookGoldSrc with AFX_SCRIPT!
+    Compile the SpiderMonkey (JS) library using the Mozilla Build Environment
+    ( start-msvc10.bat ) using the following commands:
+    cd path_to_js_library/js/src
+    autoconf-2.13
+    ./configure
+    make
+
+07) This step is not required by default, only when you plan to build AfxHookGoldSrc with AFX_SCRIPT! 
+    Copy the contents of the created JS dist folder (js/src/build-release/dist
+    to c:\Libraries\js
+
+08) Obtain the HLAE source code from http://advancedfx.org and extract it into a
+    folder you like.
+
+09) Open mdt.sln in the HLAE source code and Build (Configuration=Release):
+    AfxHookGoldSrc, AfxHookSource, AfxCppCli
+
+10) AfxHook\recompile.bat, move AfxHook.dat into build\Release\bin\
+
+11) Build AfxGui (Release), move and rename AfxGui.exe to
    build\Release\bin\HLAE.exe
 
-B) Copy all files and folders from resources\ to build\Release\bin,
-   you can use copy_resources_release.bat in order to do that.
+12) Copy all files and folders from resources\ to build\Release\bin,
+    you can use copy_resources_release.bat in order to do that.
 
-C) Copy msvcp100.dll, msvcr100.dll (CRT runtime, required by C++ and C++/CLI
-   projects) from your system folders to build\Release\bin
-   
-D) This step is not required by default, only when you plan to build AfxHookGoldSrc with AFX_SCRIPT!
+13) Copy msvcp100.dll, msvcr100.dll (CRT runtime, required by C++ and C++/CLI
+    projects) from your system folders (C:\Windows\system32) to build\Release\bin
+
+14) This step is not required by default, only when you plan to build AfxHookGoldSrc with AFX_SCRIPT!
    Copy mozjs-24.dll from C:\Libraries\js\bin to build\Release\bin
 
-E) Remove all temporary / unneeded files such as *.pdb and hlaeconfig.xml
+15) Packaging the final .zip file is not trivial (selecting only the files required),
+    if you are using a default built, use the latest download as template :-)

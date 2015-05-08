@@ -6,6 +6,21 @@
 
 <release>
 <name>AfxHookGoldSrc</name>
+<version>2.4.6.2</version>
+<time>2015-05-08T20:10Z</time>
+<changes>
+<change type="updated">
+Turns out Visual Studio 2010 SP1 was not properly installed on the build computer, reinstalled it and updated or
+rebuild all files included in the HLAE download accordingly.
+Hopefully this fixes some problems on Windows 8 some users
+are experiencing i.e. with AfxHookSource (but maybe not).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookGoldSrc</name>
 <version>2.4.6.1</version>
 <time>2015-04-13T19:24Z</time>
 <changes>
