@@ -1,7 +1,7 @@
 ﻿// Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-06-19 by dominik.matrixstorm.com
+// 2015-05-16 by dominik.matrixstorm.com
 //
 // First changes:
 // 2008-10-18 by dominik.matrixstorm.com
@@ -203,6 +203,9 @@ public class Config
             {
                 config = null;
             }
+
+            if (null != fs)
+                fs.Close();
         }
 
         if(null != config)

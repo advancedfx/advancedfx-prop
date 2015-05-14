@@ -6,6 +6,25 @@
 
 <release>
 <name>HLAE</name>
+<version>2.4.6.3</version>
+<time>2015-05-14T17:54Z</time>
+<changes>
+<change type="fixed">
+Fixed writing of hlaeconfig.xml failing randomly, due to the file stream for reading it not being closed
+deterministically beforehand.
+</change>
+</changes>
+<comments>
+We are aware of a small number of Windows 8 / 8.1 users that have random crashes and freezes
+(i.e. when loading a demo) with HLAE / AfxHookSource.<br />
+If you are affected by it, consider contacting us in the appropriate forum thread:
+http://advancedfx.org/forum/viewtopic.php?f=6&amp;t=1666
+</comments>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.4.6.2</version>
 <time>2015-05-08T20:10Z</time>
 <changes>
