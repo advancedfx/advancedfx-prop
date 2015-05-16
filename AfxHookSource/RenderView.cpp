@@ -180,6 +180,10 @@ void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, fl
 		}
 	}
 
+	// limit fov to sane values:
+	if(Fov<1) Fov = 1;
+	else if(Fov>179) Fov = 179;
+
 	if(m_Export) {
 		g_BvhExport->WriteFrame(
 			-Ty, +Tz, -Tx,

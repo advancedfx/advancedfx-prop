@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.0.11.x</version>
+<time>2015-05-15T14:48Z</time>
+<changes>
+<change type="updated">
+Limited usable fov (Field Of View) range (affects mirv_fov and mirv_campath) to between 1 degree to 179 degrees.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.0.11.2</version>
 <time>2015-05-08T20:10Z</time>
 <changes>
