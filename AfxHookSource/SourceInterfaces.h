@@ -485,7 +485,7 @@ public:
 	virtual void Shutdown() = 0;
 };
 
-// IAppSystem_swarm ////////////////////////////////////////////////////////////
+// IAppSystem_csgo ////////////////////////////////////////////////////////////
 
 struct AppSystemInfo_t
 {
@@ -503,7 +503,7 @@ enum AppSystemTier_t
 	APP_SYSTEM_TIER_OTHER,
 };
 
-class IAppSystem_swarm abstract
+class IAppSystem_csgo abstract
 {
 public:
 	// Here's where the app systems get to learn about each other 
@@ -526,6 +526,9 @@ public:
 
 	// Reconnect to a particular interface
 	virtual void Reconnect( CreateInterfaceFn factory, const char *pInterfaceName ) = 0;
+
+	// Returns whether or not the app system is a singleton
+	virtual bool IsSingleton() = 0;
 };
 
 
@@ -890,7 +893,7 @@ public:
 };
 
 
-class ICvar_007 abstract : public IAppSystem_swarm
+class ICvar_007 abstract : public IAppSystem_csgo
 {
 public:
 	// Allocate a unique DLL identifier
@@ -1878,3 +1881,86 @@ public:
 	virtual void _UNUSED_IsTeamMenuRaised(void) = 0;
 	virtual void _UNUSED_IsLoadingScreenRaised(void) = 0;
 };
+
+// IMaterialSystem_csgo ////////////////////////////////////////////////////////
+/*
+class IMaterialSystem_csgo abstract : public IAppSystem_csgo
+{
+public:
+	virtual void _UNKNOWN_000(void) = 0;
+	virtual void _UNKNOWN_001(void) = 0;
+	virtual void _UNKNOWN_002(void) = 0;
+	virtual void _UNKNOWN_003(void) = 0;
+	virtual void _UNKNOWN_004(void) = 0;
+	virtual void _UNKNOWN_005(void) = 0;
+	virtual void _UNKNOWN_006(void) = 0;
+	virtual void _UNKNOWN_007(void) = 0;
+	virtual void _UNKNOWN_008(void) = 0;
+	virtual void _UNKNOWN_009(void) = 0;
+	virtual void _UNKNOWN_010(void) = 0;
+	virtual void _UNKNOWN_011(void) = 0;
+	virtual void _UNKNOWN_012(void) = 0;
+	virtual void _UNKNOWN_013(void) = 0;
+	virtual void _UNKNOWN_014(void) = 0;
+	virtual void _UNKNOWN_015(void) = 0;
+	virtual void _UNKNOWN_016(void) = 0;
+	virtual void _UNKNOWN_017(void) = 0;
+	virtual void _UNKNOWN_018(void) = 0;
+	virtual void _UNKNOWN_019(void) = 0;
+	virtual void _UNKNOWN_020(void) = 0;
+	virtual void _UNKNOWN_021(void) = 0;
+	virtual void _UNKNOWN_022(void) = 0;
+	virtual void _UNKNOWN_023(void) = 0;
+	virtual void _UNKNOWN_024(void) = 0;
+	virtual void _UNKNOWN_025(void) = 0;
+	virtual void _UNKNOWN_026(void) = 0;
+	virtual void _UNKNOWN_027(void) = 0;
+	virtual void _UNKNOWN_028(void) = 0;
+	virtual void _UNKNOWN_029(void) = 0;
+	virtual void _UNKNOWN_030(void) = 0;
+	virtual void _UNKNOWN_031(void) = 0;
+	virtual void _UNKNOWN_032(void) = 0;
+	virtual void _UNKNOWN_033(void) = 0;
+	virtual void _UNKNOWN_034(void) = 0;
+	virtual void _UNKNOWN_035(void) = 0;
+	virtual void _UNKNOWN_036(void) = 0;
+	virtual void _UNKNOWN_037(void) = 0;
+	virtual void _UNKNOWN_038(void) = 0;
+	virtual void _UNKNOWN_039(void) = 0;
+	virtual void _UNKNOWN_040(void) = 0;
+	virtual void _UNKNOWN_041(void) = 0;
+	virtual void _UNKNOWN_042(void) = 0;
+	virtual void _UNKNOWN_043(void) = 0;
+	virtual void _UNKNOWN_044(void) = 0;
+	virtual void _UNKNOWN_045(void) = 0;
+	virtual void _UNKNOWN_046(void) = 0;
+	virtual void _UNKNOWN_047(void) = 0;
+	virtual void _UNKNOWN_048(void) = 0;
+	virtual void _UNKNOWN_049(void) = 0;
+	virtual void _UNKNOWN_050(void) = 0;
+	virtual void _UNKNOWN_051(void) = 0;
+	virtual void _UNKNOWN_052(void) = 0;
+	virtual void _UNKNOWN_053(void) = 0;
+	virtual void _UNKNOWN_054(void) = 0;
+	virtual void _UNKNOWN_055(void) = 0;
+	virtual void _UNKNOWN_056(void) = 0;
+	virtual void _UNKNOWN_057(void) = 0;
+	virtual void _UNKNOWN_058(void) = 0;
+	virtual void _UNKNOWN_059(void) = 0;
+	virtual void _UNKNOWN_060(void) = 0;
+	virtual void _UNKNOWN_061(void) = 0;
+	virtual void _UNKNOWN_062(void) = 0;
+	virtual void _UNKNOWN_063(void) = 0;
+	virtual void _UNKNOWN_064(void) = 0;
+	virtual void _UNKNOWN_065(void) = 0;
+	virtual void _UNKNOWN_066(void) = 0;
+	virtual void _UNKNOWN_067(void) = 0;
+	virtual void _UNKNOWN_068(void) = 0;
+	virtual void _UNKNOWN_069(void) = 0;
+	virtual void _UNKNOWN_070(void) = 0;
+	virtual void _UNKNOWN_071(void) = 0;
+	virtual void _UNKNOWN_072(void) = 0;
+	virtual void _UNKNOWN_073(void) = 0;
+	virtual void _UNKNOWN_074(void) = 0;
+	virtual void _UNKNOWN_075(void) = 0;
+*/	

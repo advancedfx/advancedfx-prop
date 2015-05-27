@@ -6,9 +6,12 @@
 
 <release>
 <name>AfxHookSource</name>
-<version>0.0.11.x</version>
-<time>2015-05-15T14:48Z</time>
+<version>0.0.11.3</version>
+<time>2015-05-27T14:05Z</time>
 <changes>
+<change type="updated">
+Adjusted AfxHookSource to 26th May 2015 CS:GO update.
+</change>
 <change type="updated">
 Limited usable fov (Field Of View) range (affects mirv_fov and mirv_campath) to between 1 degree to 179 degrees.
 </change>

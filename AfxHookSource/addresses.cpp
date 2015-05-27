@@ -24,7 +24,6 @@ AFXADDR_DEF(csgo_gpGlobals_OFS_curtime)
 AFXADDR_DEF(csgo_snd_mix_timescale_patch)
 AFXADDR_DEF(csgo_snd_mix_timescale_patch_DSZ)
 AFXADDR_DEF(cstrike_gpGlobals_OFS_curtime)
-AFXADDR_DEF(cstrike_OFS_CvarFloatValue)
 
 void ErrorBox(char const * messageText);
 
@@ -36,7 +35,7 @@ void Addresses_InitEngineDll(AfxAddr engineDll, bool isCsgo)
 {
 	if(isCsgo)
 	{
-		// csgo_Host_RunFrame:
+		// csgo_snd_mix_timescale_patch:
 		{
 			DWORD addr = 0;
 			DWORD strAddr = 0;
@@ -140,7 +139,7 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 				MemRange result = FindBytes(baseRange, (char const *)&strAddr, sizeof(strAddr));
 				if(!result.IsEmpty())
 				{
-					addr = result.Start -0x2E5;
+					addr = result.Start -0x35F;
 
 					// check for pattern to see if it is the right address:
 					unsigned char pattern[3] = { 0x55, 0x8B, 0xEC };
@@ -267,13 +266,12 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 	}
 	else
 	{
-		AFXADDR_SET(csgo_CUnknown_GetPlayerName_DSZ, 0x0);
+		AFXADDR_SET(csgo_CUnknown_GetPlayerName, 0x0);
 		AFXADDR_SET(csgo_CHudDeathNotice_FireGameEvent, 0x0);
 		AFXADDR_SET(csgo_CViewRender_Render, 0x0);
 	}
-	AFXADDR_SET(csgo_CUnknown_GetPlayerName_DSZ, 0x08);
+	AFXADDR_SET(csgo_CUnknown_GetPlayerName_DSZ, 0x0b);
 	AFXADDR_SET(csgo_CHudDeathNotice_FireGameEvent_DSZ, 0x0b);
-	AFXADDR_SET(csgo_CViewRender_Render_DSZ, 0x0c);
+	//AFXADDR_SET(csgo_CViewRender_Render_DSZ, 0x0c);
 	AFXADDR_SET(cstrike_gpGlobals_OFS_curtime, 3*4);
-	AFXADDR_SET(cstrike_OFS_CvarFloatValue, 0x2c);
 }

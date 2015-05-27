@@ -56,6 +56,7 @@ void PrintInfo() {
 	Tier0_Msg("| VEngineClient: %s\n", g_Info_VEngineClient);
 	Tier0_Msg("| VEngineCvar: %s\n", g_Info_VEngineCvar);
 	Tier0_Msg("| GameDirectory: %s\n", g_VEngineClient->GetGameDirectory());
+	Tier0_Msg("| WrpConCommands::GetVEngineCvar007() == 0x%08x\n", WrpConCommands::GetVEngineCvar007());
 
 	Tier0_Msg("|" "\n");
 }
