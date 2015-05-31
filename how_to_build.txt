@@ -1,7 +1,7 @@
 Hint:
   In case some of the required downloads are not reachable, we have a backup
   here:
-  http://sourceforge.net/projects/advancedfx/files/developer/build-tools/
+  https://cloud.gmx.net/ngcloud/external?locale=de&guestToken=OHS9FADDSUqEBYNOQ8SSig&loginName=programmer99@gmx.de
 
 01) Download and install Microsoft Visual C++ 2010 and Microsoft Visual
     C# 2010, which you can obtain for free from http://www.microsoft.com (Express
