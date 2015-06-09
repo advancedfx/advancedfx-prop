@@ -27,6 +27,8 @@
 //#include "d3d9Hooks.h"
 #include "csgo_SndMixTimeScalePatch.h"
 
+#include "AfxHookSourceInput.h"
+
 
 WrpVEngineClient * g_VEngineClient = 0;
 ICvar_003 * g_Cvar = 0;
@@ -749,6 +751,145 @@ FARPROC WINAPI new_Engine_GetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 
 }
 
+WNDPROC g_NextWindProc;
+static bool g_afxWindowProcSet = false;
+
+LRESULT CALLBACK new_Afx_WindowProc(
+	__in HWND hwnd,
+	__in UINT uMsg,
+	__in WPARAM wParam,
+	__in LPARAM lParam
+)
+{
+	switch(uMsg)
+	{
+	case WM_CHAR:
+		if(g_AfxHookSourceInput.Supply_CharEvent(wParam, lParam))
+			return 0;
+		break;
+	case WM_KEYDOWN:
+		if(g_AfxHookSourceInput.Supply_KeyEvent(AfxHookSourceInput::KS_DOWN, wParam, lParam))
+			return 0;
+		break;
+	case WM_KEYUP:
+		if(g_AfxHookSourceInput.Supply_KeyEvent(AfxHookSourceInput::KS_UP,wParam, lParam))
+			return 0;
+		break;
+	case WM_INPUT:
+		{
+			HRAWINPUT hRawInput = (HRAWINPUT)lParam;
+			RAWINPUT inp;
+			UINT size = sizeof(inp);
+
+			GetRawInputData(hRawInput, RID_INPUT, &inp, &size, sizeof(RAWINPUTHEADER));
+
+			if(inp.header.dwType == RIM_TYPEMOUSE)
+			{
+				RAWMOUSE * rawmouse = &inp.data.mouse;
+				LONG dX, dY;
+
+				if((rawmouse->usFlags & 0x01) == MOUSE_MOVE_RELATIVE)
+				{
+					dX = rawmouse->lLastX;
+					dY = rawmouse->lLastY;
+				}
+				else
+				{
+					static bool initial = true;
+					static LONG lastX = 0;
+					static LONG lastY = 0;
+
+					if(initial)
+					{
+						initial = false;
+						lastX = rawmouse->lLastX;
+						lastY = rawmouse->lLastY;
+					}
+
+					dX = rawmouse->lLastX -lastX;
+					dY = rawmouse->lLastY -lastY;
+
+					lastX = rawmouse->lLastX;
+					lastY = rawmouse->lLastY;
+				}
+
+				if(g_AfxHookSourceInput.Supply_RawMouseMotion(dX,dY))
+					return 0;
+			}
+		}
+		break;
+	}
+
+	return CallWindowProcW(g_NextWindProc, hwnd, uMsg, wParam, lParam);
+}
+
+
+// TODO: this is risky, actually we should track the hWnd maybe.
+LONG WINAPI new_GetWindowLongW(
+	__in HWND hWnd,
+	__in int nIndex
+)
+{
+	if(nIndex == GWL_WNDPROC)
+	{
+		if(g_afxWindowProcSet)
+		{
+			return (LONG)g_NextWindProc;
+		}
+	}
+
+	return GetWindowLongW(hWnd, nIndex);
+}
+
+// TODO: this is risky, actually we should track the hWnd maybe.
+LONG WINAPI new_SetWindowLongW(
+	__in HWND hWnd,
+	__in int nIndex,
+	__in LONG dwNewLong
+)
+{
+	if(nIndex == GWL_WNDPROC)
+	{
+		LONG lResult = SetWindowLongW(hWnd, nIndex, (LONG)new_Afx_WindowProc);
+
+		if(!g_afxWindowProcSet)
+		{
+			g_afxWindowProcSet = true;
+		}
+		else
+		{
+			lResult = (LONG)g_NextWindProc;
+		}
+
+		g_NextWindProc = (WNDPROC)dwNewLong;
+
+		return lResult;
+	}
+
+	return SetWindowLongW(hWnd, nIndex, dwNewLong);
+}
+
+BOOL WINAPI new_GetCursorPos(
+	__out LPPOINT lpPoint
+)
+{
+	BOOL result = GetCursorPos(lpPoint);
+
+	g_AfxHookSourceInput.Supply_GetCursorPos(lpPoint);
+
+	return result;
+}
+
+BOOL WINAPI new_SetCursorPos(
+	__in int X,
+	__in int Y
+)
+{
+	g_AfxHookSourceInput.Supply_SetCursorPos(X,Y);
+
+	return SetCursorPos(X,Y);
+}
+
 
 HMODULE WINAPI new_LoadLibraryA(LPCSTR lpLibFileName);
 HMODULE WINAPI new_LoadLibraryExA(LPCSTR lpLibFileName, HANDLE hFile, DWORD dwFlags);
@@ -758,6 +899,7 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 	static bool bFirstRun = true;
 	static bool bFirstClient = true;
 	static bool bFirstEngine = true;
+	static bool bFirstInputsystem = true;
 	static bool bFirstTier0 = true;
 	//static bool bFirstGameOverlayRenderer = true;
 	static bool bFirstLauncher = true;
@@ -840,8 +982,23 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryExA", (DWORD) &new_LoadLibraryExA);
 		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryA", (DWORD) &new_LoadLibraryA);
 
+		// actually this is not required, since engine.dll calls first and thus is lower in the chain:
+		InterceptDllCall(hModule, "USER32.dll", "GetWindowLongW", (DWORD) &new_GetWindowLongW);
+		InterceptDllCall(hModule, "USER32.dll", "SetWindowLongW", (DWORD) &new_SetWindowLongW);
+
 		// Init the hook early, so we don't run into issues with threading:
 		Hook_csgo_SndMixTimeScalePatch();
+	}
+	else
+	if(bFirstInputsystem && StringEndsWith( lpLibFileName, "inputsystem.dll"))
+	{
+		bFirstInputsystem = false;
+
+		InterceptDllCall(hModule, "USER32.dll", "GetWindowLongW", (DWORD) &new_GetWindowLongW);
+		InterceptDllCall(hModule, "USER32.dll", "SetWindowLongW", (DWORD) &new_SetWindowLongW);
+
+		InterceptDllCall(hModule, "USER32.dll", "GetCursorPos", (DWORD) &new_GetCursorPos);
+		InterceptDllCall(hModule, "USER32.dll", "SetCursorPos", (DWORD) &new_SetCursorPos);
 	}
 	else
 	if(bFirstMaterialsystem && StringEndsWith( lpLibFileName, "materialsystem.dll"))

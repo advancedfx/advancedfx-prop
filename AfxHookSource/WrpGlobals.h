@@ -8,8 +8,10 @@
 // First changes:
 // 2014-04-30 by dominik.matrixstorm.com
 
-class WrpGlobals abstract {
+class WrpGlobals abstract
+{
 public:
+	virtual float absoluteframetime_get(void) abstract = 0;
 	virtual float curtime_get(void) abstract = 0;
 };
 
@@ -18,6 +20,7 @@ class WrpGlobalsCsGo : public WrpGlobals
 public:
 	WrpGlobalsCsGo(void * pGlobals);
 
+	virtual float absoluteframetime_get(void);
 	virtual float curtime_get(void);
 
 private:
@@ -29,6 +32,7 @@ class WrpGlobalsOther : public WrpGlobals
 public:
 	WrpGlobalsOther(void * pGlobals);
 
+	virtual float absoluteframetime_get(void);
 	virtual float curtime_get(void);
 
 private:

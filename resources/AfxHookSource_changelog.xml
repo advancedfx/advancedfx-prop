@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.0.12.0</version>
+<time>2015-06-09T07:45Z</time>
+<changes>
+<change type="added">
+Added mirv_input for input control (i.e. of camera), the command will be documented in the HLAE Manual.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.0.11.3</version>
 <time>2015-05-27T14:05Z</time>
 <changes>

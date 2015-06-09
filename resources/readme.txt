@@ -47,6 +47,10 @@ FreeType
   Project (www.freetype.org).  All rights reserved.
   (Currently not used in Release build.)
   
+GitHub
+  For hosting the project.
+  http://github.com/
+  
 Hex-Rays
   For IDA v5.0 free
   http://www.hex-rays.com/
@@ -83,9 +87,9 @@ RapidXml
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
   IN THE SOFTWARE.
   
-SourceForge
-  For hosting the project.
-  http://sourceforge.net/
+Style-Productions
+  For hosting the forum.
+  http://www.style-productions.net/
   
 Valve
   For HLSDK.

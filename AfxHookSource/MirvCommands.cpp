@@ -22,6 +22,7 @@
 #include "csgo_CHudDeathNotice.h"
 #include "csgo_GetPlayerName.h"
 #include "csgo_SndMixTimeScalePatch.h"
+#include "AfxHookSourceInput.h"
 
 #include "addresses.h"
 
@@ -597,7 +598,76 @@ CON_COMMAND(mirv_replace_name, "allows replacing player names")
 	);
 }
 
-extern char * onSetupEngineView;
+CON_COMMAND(mirv_input, "Input mode configuration.")
+{
+	int argc = args->ArgC();
+
+	if(2 <= argc)
+	{
+		char const * arg1 = args->ArgV(1);
+
+		if(0 == _stricmp("camera", arg1))
+		{
+			g_AfxHookSourceInput.SetCameraControlMode(true);
+			return;
+		}
+		else
+		if(0 == _stricmp("cfg", arg1))
+		{
+			if(3 <= argc)
+			{
+				char const * arg2 = args->ArgV(2);
+
+				if(0 == _stricmp("msens", arg2))
+				{
+					if(4 <= argc)
+					{
+						double value = atof(args->ArgV(3));
+						g_AfxHookSourceInput.SetMouseSensitivity(value);
+						return;
+					}
+					Tier0_Msg("Value: %f", g_AfxHookSourceInput.GetMouseSensitivty());
+					return;
+				}
+				else
+				if(0 == _stricmp("ksens", arg2))
+				{
+					if(4 <= argc)
+					{
+						double value = atof(args->ArgV(3));
+						g_AfxHookSourceInput.SetKeyboardSensitivity(value);
+						return;
+					}
+					Tier0_Msg("Value: %f", g_AfxHookSourceInput.GetKeyboardSensitivty());
+					return;
+				}
+			}
+
+			Tier0_Msg(
+				"Usage:\n"
+				"mirv_input cfg msens - Get mouse sensitiviy.\n"
+				"mirv_input cfg msens <dValue> - Set mouse sensitiviy.\n"
+				"mirv_input cfg ksens - Get keyboard sensitivity.\n"
+				"mirv_input cfg ksens <dValue> - Set keyboard sensitivity.\n"
+			);
+			return;
+		}
+		else
+		if(0 == _stricmp("end", arg1))
+		{
+			g_AfxHookSourceInput.SetCameraControlMode(false);
+			return;
+		}
+	}
+
+		Tier0_Msg(
+			"Usage:\n"
+			"mirv_input camera - Enable camera input mode, see HLAE manual for keys etc.\n"
+			"mirv_input cfg - Control input mode configuration.\n"
+			"mirv_input end - End input mode(s).\n"
+		);
+
+}
 
 CON_COMMAND(mirv_snd_timescale, "(CS:GO only) allows to override host_timescale value for sound system.")
 {

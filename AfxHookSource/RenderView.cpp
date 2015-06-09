@@ -26,6 +26,12 @@
 
 #include "addresses.h"
 #include "WrpVEngineClient.h"
+#include "AfxHookSourceInput.h"
+
+
+#ifndef M_PI
+#define M_PI		3.14159265358979323846	// matches value in gcc v2 math.h
+#endif
 
 
 BvhExport * g_BvhExport = NULL;
@@ -65,6 +71,15 @@ Hook_VClient_RenderView::Hook_VClient_RenderView()
 	m_Import = false;
 	m_ImportBaseTime = 0;
 	m_IsInstalled = false;
+
+	LastCameraOrigin[0] = 0.0;
+	LastCameraOrigin[1] = 0.0;
+	LastCameraOrigin[2] = 0.0;
+	LastCameraAngles[0] = 0.0;
+	LastCameraAngles[1] = 0.0;
+	LastCameraAngles[2] = 0.0;
+
+	LastCameraFov = 90.0;
 }
 
 
@@ -180,6 +195,60 @@ void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, fl
 		}
 	}
 
+	if(g_AfxHookSourceInput.GetCameraControlMode())
+	{
+		double dT = m_Globals->absoluteframetime_get();
+		double dForward = dT * g_AfxHookSourceInput.GetCamDForward();
+		double dLeft = dT * g_AfxHookSourceInput.GetCamDLeft();
+		double dUp = dT * g_AfxHookSourceInput.GetCamDUp();
+		double dPitch = dT * g_AfxHookSourceInput.GetCamDPitch();
+		double dRoll = dT * g_AfxHookSourceInput.GetCamDRoll();
+		double dYaw = dT * g_AfxHookSourceInput.GetCamDYaw();
+		double dFov = dT * g_AfxHookSourceInput.GetCamDFov();
+		double forward[3], right[3], up[3];
+		double angle;
+		double sr, sp, sy, cr, cp, cy;
+
+		Rx = (float)(LastCameraAngles[0] +dPitch);
+		Ry = (float)(LastCameraAngles[1] +dYaw);
+		Rz = (float)(LastCameraAngles[2] +dRoll);
+		Fov = (float)(LastCameraFov +dFov);
+
+		if(g_AfxHookSourceInput.GetCamResetView())
+		{
+			Rx = 0;
+			Ry = 0;
+			Rz = 0;
+			Fov = 90.0;
+		}
+
+		angle = Ry * (M_PI*2 / 360);
+		sy = sin(angle);
+		cy = cos(angle);
+		angle = Rx * (M_PI*2 / 360);
+		sp = sin(angle);
+		cp = cos(angle);
+		angle = Rz * (M_PI*2 / 360);
+		sr = sin(angle);
+		cr = cos(angle);
+
+		forward[0] = cp*cy;
+		forward[1] = cp*sy;
+		forward[2] = -sp;
+
+		right[0] = (-1*sr*sp*cy+-1*cr*-sy);
+		right[1] = (-1*sr*sp*sy+-1*cr*cy);
+		right[2] = -1*sr*cp;
+
+		up[0] = (cr*sp*cy+-sr*-sy);
+		up[1] = (cr*sp*sy+-sr*cy);
+		up[2] = cr*cp;
+
+		Tx = (float)(LastCameraOrigin[0] + dForward*forward[0] -dLeft*right[0] +dUp*up[0]);
+		Ty = (float)(LastCameraOrigin[1] + dForward*forward[1] -dLeft*right[1] +dUp*up[1]);
+		Tz = (float)(LastCameraOrigin[2] + dForward*forward[2] -dLeft*right[2] +dUp*up[2]);
+	}
+
 	// limit fov to sane values:
 	if(Fov<1) Fov = 1;
 	else if(Fov>179) Fov = 179;
@@ -198,6 +267,8 @@ void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, fl
 	LastCameraAngles[1] = Ry;
 	LastCameraAngles[2] = Rz;
 	LastCameraFov = Fov;
+
+	g_AfxHookSourceInput.Supply_MouseFrameEnd();
 }
 
 

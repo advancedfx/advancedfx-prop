@@ -23,6 +23,7 @@ AFXADDR_DEF(csgo_CViewRender_Render_DSZ)
 AFXADDR_DEF(csgo_gpGlobals_OFS_curtime)
 AFXADDR_DEF(csgo_snd_mix_timescale_patch)
 AFXADDR_DEF(csgo_snd_mix_timescale_patch_DSZ)
+AFXADDR_DEF(cstrike_gpGlobals_OFS_absoluteframetime)
 AFXADDR_DEF(cstrike_gpGlobals_OFS_curtime)
 
 void ErrorBox(char const * messageText);
@@ -274,4 +275,5 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 	AFXADDR_SET(csgo_CHudDeathNotice_FireGameEvent_DSZ, 0x0b);
 	//AFXADDR_SET(csgo_CViewRender_Render_DSZ, 0x0c);
 	AFXADDR_SET(cstrike_gpGlobals_OFS_curtime, 3*4);
+	AFXADDR_SET(cstrike_gpGlobals_OFS_absoluteframetime, 2*4);
 }
