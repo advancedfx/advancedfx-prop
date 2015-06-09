@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.0.12.1</version>
+<time>2015-06-09T11:59Z</time>
+<changes>
+<change type="fixed">
+Fixed mirv_input camera mouse being trapped in window for POV demos.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.0.12.0</version>
 <time>2015-06-09T07:45Z</time>
 <changes>

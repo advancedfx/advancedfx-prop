@@ -317,9 +317,24 @@ void AfxHookSourceInput::Supply_SetCursorPos(int x, int y)
 
 void AfxHookSourceInput::Supply_MouseFrameEnd(void)
 {
-	m_CamYawM = 0.0;
-	m_CamPitchM = 0.0;
-	m_FirstGetCursorPos = true;
+	if(GetConsoleOpen())
+		return;
+
+	if(m_CameraControlMode)
+	{
+		if(m_FirstGetCursorPos)
+		{
+			// TODO: HACK: In POV-Demos only rawinput is available, because
+			// they don't call SetCursorPos / GetCursorPos to read player mouse
+			// input. We make room to move here (so the mouse won't leave
+			// the window).
+			SetCursorPos(m_LastCursorX, m_LastCursorY);
+		}
+
+		m_CamYawM = 0.0;
+		m_CamPitchM = 0.0;
+		m_FirstGetCursorPos = true;
+	}
 }
 
 
