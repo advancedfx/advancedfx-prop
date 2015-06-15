@@ -32,7 +32,7 @@ class ImageSectionsReader
 public:
 	ImageSectionsReader(HMODULE hModule);
 
-	bool EOF(void);
+	bool Eof(void);
 
 	void Next(void);
 

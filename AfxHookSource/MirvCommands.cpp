@@ -23,6 +23,7 @@
 #include "csgo_GetPlayerName.h"
 #include "csgo_SndMixTimeScalePatch.h"
 #include "AfxHookSourceInput.h"
+#include <shared/hooks/gameOverlayRenderer.h>
 
 #include "addresses.h"
 
@@ -699,6 +700,32 @@ CON_COMMAND(mirv_snd_timescale, "(CS:GO only) allows to override host_timescale 
 		"Usage:\n"
 		"mirv_snd_timescale <fValue> - override sound system host_timescale value with floating point value <fValue>.\n"
 		"mirv_snd_timescale default - don't override.\n"
+	);
+}
+
+CON_COMMAND(mirv_gameoverlay, "GameOverlayRenderer control.")
+{
+	int argc = args->ArgC();
+
+	if(3 <= argc)
+	{
+		const char * arg1 = args->ArgV(1);
+
+		if(0 == _stricmp("enable", arg1))
+		{
+			bool value = 0 != atoi(args->ArgV(2));
+			Tier0_Msg(
+				"%s %s.\n",
+				value ? "Enable" : "Disable",
+				GameOverlay_Enable(value) ? "OK" : "FAILED"
+			);
+			return;
+		}
+	}
+
+	Tier0_Msg(
+		"Usage:\n"
+		"mirv_gameoverlay enable 0|1 - Disable/Enable the GameOverlay (will only do s.th. useful when it was enabled initally).\n"
 	);
 }
 

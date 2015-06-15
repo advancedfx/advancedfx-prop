@@ -82,6 +82,7 @@
     <ClCompile Include="..\shared\bvhimport.cpp" />
     <ClCompile Include="..\shared\CamPath.cpp" />
     <ClCompile Include="..\shared\detours.cpp" />
+    <ClCompile Include="..\shared\hooks\gameOverlayRenderer.cpp" />
     <ClCompile Include="..\shared\vcpp\AfxAddr.cpp" />
     <ClCompile Include="addresses.cpp" />
     <ClCompile Include="AfxHookSourceInput.cpp" />
@@ -104,6 +105,7 @@
     <ClInclude Include="..\shared\bvhimport.h" />
     <ClInclude Include="..\shared\CamPath.h" />
     <ClInclude Include="..\shared\detours.h" />
+    <ClInclude Include="..\shared\hooks\gameOverlayRenderer.h" />
     <ClInclude Include="..\shared\rapidxml\rapidxml.hpp" />
     <ClInclude Include="..\shared\rapidxml\rapidxml_iterators.hpp" />
     <ClInclude Include="..\shared\rapidxml\rapidxml_print.hpp" />

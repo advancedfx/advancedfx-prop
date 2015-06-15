@@ -174,7 +174,7 @@ REGISTER_CMD_FUNC(campath)
 		PREFIX "campath save <fileName> - saves the campath to the file (XML format)\n"
 		PREFIX "campath edit start - set current demotime as new start time for the path you created\n"
 		PREFIX "campath edit duration <dValue> - set floating point value <dValue> as new duration for the path you created (in seconds). Please see remarks in HLAE manual.\n"
-		"Please note: you might want to use mirv_fx_xtendvis with mirv_campath!\n"
+		"Please note: you might want to use " PREFIX "fx_xtendvis with " PREFIX "campath!\n"
 	);
 	return;
 }

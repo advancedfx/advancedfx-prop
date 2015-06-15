@@ -71,14 +71,14 @@ ImageSectionsReader::ImageSectionsReader(HMODULE hModule)
 	m_Section = (PIMAGE_SECTION_HEADER) PtrFromRva( NtHeader, sizeof(IMAGE_NT_HEADERS) );
 }
 
-bool ImageSectionsReader::EOF(void)
+bool ImageSectionsReader::Eof(void)
 {
 	return !(0 < m_SectionsLeft);
 }
 
 void ImageSectionsReader::Next(void)
 {
-	if(EOF()) return;
+	if(Eof()) return;
 
 	m_SectionsLeft--;
 	m_Section = (PIMAGE_SECTION_HEADER) PtrFromRva( m_Section, sizeof(IMAGE_SECTION_HEADER) );
@@ -86,7 +86,7 @@ void ImageSectionsReader::Next(void)
 
 void ImageSectionsReader::Next(DWORD characteristicsFilter)
 {
-	for(;!EOF();Next())
+	for(;!Eof();Next())
 	{
 		if(characteristicsFilter == (m_Section->Characteristics & characteristicsFilter))
 			break;

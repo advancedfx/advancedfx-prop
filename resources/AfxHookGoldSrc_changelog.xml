@@ -6,6 +6,20 @@
 
 <release>
 <name>AfxHookGoldSrc</name>
+<version>2.4.7.0</version>
+<time>2015-06-15T19:14Z</time>
+<changes>
+<change type="added">
+Added mirv_gameoverlay command for lazy people (you know who you are) that allows to disable / enable the gameoverlay.
+This command is problably not useful in AfxHookGoldSrc, since the gameoverlay will not be recorded by HLAE anyway probably.
+Please note that this will not disable Steam notification sounds, but those are not recorded by HLAE anyway.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookGoldSrc</name>
 <version>2.4.6.2</version>
 <time>2015-05-08T20:10Z</time>
 <changes>

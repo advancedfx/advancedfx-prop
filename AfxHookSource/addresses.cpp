@@ -42,10 +42,10 @@ void Addresses_InitEngineDll(AfxAddr engineDll, bool isCsgo)
 			DWORD strAddr = 0;
 			{
 				ImageSectionsReader sections((HMODULE)engineDll);
-				if(!sections.EOF())
+				if(!sections.Eof())
 				{
 					sections.Next(); // skip .text
-					if(!sections.EOF())
+					if(!sections.Eof())
 					{
 						MemRange result = FindCString(sections.GetMemRange(), "Start profiling MIX_PaintChannels\n");
 						if(!result.IsEmpty())
@@ -116,10 +116,10 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 			DWORD strAddr = 0;
 			{
 				ImageSectionsReader sections((HMODULE)clientDll);
-				if(!sections.EOF())
+				if(!sections.Eof())
 				{
 					sections.Next(); // skip .text
-					if(!sections.EOF())
+					if(!sections.Eof())
 					{
 						MemRange result = FindCString(sections.GetMemRange(), "#SFUI_bot_controlled_by");
 						if(!result.IsEmpty())
@@ -173,10 +173,10 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 			DWORD strAddr = 0;
 			{
 				ImageSectionsReader sections((HMODULE)clientDll);
-				if(!sections.EOF())
+				if(!sections.Eof())
 				{
 					sections.Next(); // skip .text
-					if(!sections.EOF())
+					if(!sections.Eof())
 					{
 						MemRange result = FindCString(sections.GetMemRange(), "SFHudDeathNoticeAndBotStatus");
 						if(!result.IsEmpty())
@@ -225,10 +225,10 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 			DWORD strAddr = 0;
 			{
 				ImageSectionsReader sections((HMODULE)clientDll);
-				if(!sections.EOF())
+				if(!sections.Eof())
 				{
 					sections.Next(); // skip .text
-					if(!sections.EOF())
+					if(!sections.Eof())
 					{
 						MemRange result = FindCString(sections.GetMemRange(), "CViewRender::Render");
 						if(!result.IsEmpty())

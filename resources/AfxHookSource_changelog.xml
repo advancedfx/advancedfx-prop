@@ -6,6 +6,20 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.0.13.0</version>
+<time>2015-06-15T19:14Z</time>
+<changes>
+<change type="added">
+Added mirv_gameoverlay command for lazy people (you know who you are) that allows to disable / enable the gameoverlay.
+This command is useful in AfxHookSource, since the gameoverlay will be recorded with startmovie otherwise.
+Please note that this will not disable Steam notification sounds, but those are not recorded by startmovie anyway.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.0.12.1</version>
 <time>2015-06-09T11:59Z</time>
 <changes>

@@ -40,6 +40,9 @@
     <Filter Include="shared\rapidxml">
       <UniqueIdentifier>{14cce315-c13b-454e-a3ef-c05598a2a291}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shared\hooks">
+      <UniqueIdentifier>{6436494e-5241-4a4f-bed0-ef4f6d083f60}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\bvhexport.cpp">
@@ -270,6 +273,15 @@
     <ClCompile Include="hooks\hw\CL_Disconnect.cpp">
       <Filter>AfxHookGoldSrc\hooks\hw</Filter>
     </ClCompile>
+    <ClCompile Include="variousCommands.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\hooks\gameOverlayRenderer.cpp">
+      <Filter>shared\hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\binutils.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -481,6 +493,12 @@
     </ClInclude>
     <ClInclude Include="hooks\hw\CL_Disconnect.h">
       <Filter>AfxHookGoldSrc\hooks\hw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\hooks\gameOverlayRenderer.h">
+      <Filter>shared\hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\binutils.h">
+      <Filter>shared</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

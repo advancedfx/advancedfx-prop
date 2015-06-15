@@ -13,6 +13,9 @@
     <Filter Include="shared\rapidxml">
       <UniqueIdentifier>{354e9d3b-f0ce-481c-afa3-245f414e0bb7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shared\hooks">
+      <UniqueIdentifier>{7c634ae7-379f-48e5-b446-bd992d03a428}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\bvhexport.cpp">
@@ -74,6 +77,9 @@
     </ClCompile>
     <ClCompile Include="AfxHookSourceInput.cpp">
       <Filter>AfxHookSource</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\hooks\gameOverlayRenderer.cpp">
+      <Filter>shared\hooks</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -145,6 +151,9 @@
     </ClInclude>
     <ClInclude Include="AfxHookSourceInput.h">
       <Filter>AfxHookSource</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\hooks\gameOverlayRenderer.h">
+      <Filter>shared\hooks</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
