@@ -29,6 +29,8 @@
 
 #include "AfxHookSourceInput.h"
 
+#include <map>
+
 
 WrpVEngineClient * g_VEngineClient = 0;
 ICvar_003 * g_Cvar = 0;
@@ -101,6 +103,10 @@ public:
 
 CreateInterfaceFn g_AppSystemFactory = 0;
 
+bool isCsgo = false;
+
+IMaterialSystem_csgo * g_MaterialSystem_csgo = 0;
+
 void MySetup(CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals)
 {
 	static bool bFirstRun = true;
@@ -152,6 +158,17 @@ void MySetup(CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals)
 		}
 		else {
 			ErrorBox("Could not get a supported VClientEngineTools interface.");
+		}
+
+		if(isCsgo)
+		{
+			if(iface = appSystemFactory(MATERIAL_SYSTEM_INTERFACE_VERSION_CSGO_80, NULL))
+			{
+				g_MaterialSystem_csgo = (IMaterialSystem_csgo *)iface;
+			}
+			else {
+				ErrorBox("Could not get a supported VMaterialSystem interface.");
+			}
 		}
 		
 		g_Hook_VClient_RenderView.Install(pGlobals);
@@ -239,6 +256,21 @@ void * HookInterfaceFn(void * iface, int idx, void * fn)
 
 void * csgo_VClient = 0;
 
+class CViewSetup_csgo;
+
+struct vrect_t_csgo
+{
+	int				x,y,width,height;
+	vrect_t_csgo			*pnext;
+};
+
+bool g_bTakeScreenShot = false;
+
+HANDLE hRenderContextMapLock = 0;
+
+
+IMaterial_csgo * errMaterial;
+
 #pragma warning(push)
 #pragma warning(disable:4731) // frame pointer register 'ebp' modified by inline assembly code
 
@@ -252,10 +284,869 @@ void * csgo_VClient = 0;
 	__asm pop ecx \
 	__asm mov esp, ebp \
 	__asm pop ebp \
-	__asm mov ecx, csgo_VClient \
+	__asm mov ecx, iface \
 	__asm mov eax, [ecx] \
 	__asm mov eax, [eax +4*index] \
 	__asm jmp eax
+
+#define JMP_CLASSMEMBERIFACE_FN(classType,classMemberIface,index) \
+	__asm CALL Use \
+	__asm mov eax, this \
+	__asm mov eax, [eax]classType.classMemberIface \
+	__asm pop ecx \
+	__asm mov esp, ebp \
+	__asm pop ebp \
+	__asm mov ecx, eax \
+	__asm mov eax, [ecx] \
+	__asm mov eax, [eax +4*index] \
+	__asm jmp eax
+
+class CMatRenderContextWrapper_csgo : public IMatRenderContext_csgo
+{
+public:
+	CMatRenderContextWrapper_csgo(IMatRenderContext_csgo * parent)
+	: m_Parent(parent)
+	, m_TrackUsed(false)
+	, m_UsedCount(0)
+	, m_Active(false)
+	{
+	}
+
+	void Use()
+	{
+		if(m_TrackUsed)
+		{
+			m_UsedCount++;
+			Tier0_Msg("0x%08x used %i times\n",this,m_UsedCount);
+		}
+	}
+
+	void TrackUsed()
+	{
+		m_TrackUsed = true;
+	}
+
+	void SetActive(bool value)
+	{
+		m_Active = value;
+	}
+
+
+	// 000:
+	virtual int AddRef()
+	{
+		Use();
+		return m_Parent->AddRef();
+	}
+
+	// 001:
+	virtual int Release()
+	{
+		Use();
+		return m_Parent->Release();
+	}
+
+	// 002:
+	virtual void BeginRender()
+	{
+		Use();
+
+		m_Parent->BeginRender();
+	}
+
+	// 003:
+	virtual void EndRender()
+	{
+		Use();
+
+		m_Parent->EndRender();
+	}
+
+	// 004;
+	virtual void Flush( bool flushHardware = false )
+	{
+		Use();
+		m_Parent->Flush(flushHardware);
+	}
+
+	virtual void _UNKNOWN_005(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 5) }
+
+	virtual void _UNKNOWN_006(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 6) }
+
+	virtual void _UNKNOWN_007(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 7) }
+
+	virtual void _UNUSED_008_GetRenderTargetDimensions(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 8) }
+
+	virtual void Bind( IMaterial_csgo * material, void *proxyData = 0 )
+	{
+		Use();
+
+//		if(material)
+//			Tier0_Msg("Mat: %s | %s\n", material->GetName(), material->GetTextureGroupName());
+
+		if(m_Active)
+		{
+			const char * groupName =  material->GetTextureGroupName();
+
+			if(!_stricmp("World textures", groupName)
+				||  !_stricmp("SkyBox textures", groupName)
+				|| !_stricmp("StaticProp textures", groupName)
+			)
+				m_Parent->Bind( errMaterial, proxyData );
+			else
+				m_Parent->Bind( material, proxyData );
+		}
+		else
+			m_Parent->Bind( material, proxyData );
+	}
+
+	virtual void _UNKNOWN_010(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 10) }
+
+	virtual void _UNKNOWN_011(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 11) }
+
+	virtual void _UNKNOWN_012(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 12) }
+
+	virtual void _UNKNOWN_013(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 13) }
+
+	virtual void _UNKNOWN_014(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 14) }
+
+	virtual void _UNKNOWN_015(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 15) }
+
+	virtual void _UNKNOWN_016(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 16) }
+
+	virtual void _UNKNOWN_017(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 17) }
+
+	virtual void _UNKNOWN_018(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 18) }
+
+	virtual void _UNKNOWN_019(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 19) }
+
+	virtual void _UNKNOWN_020(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 20) }
+
+	virtual void _UNKNOWN_021(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 21) }
+
+	virtual void _UNKNOWN_022(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 22) }
+
+	virtual void _UNKNOWN_023(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 23) }
+
+	virtual void _UNKNOWN_024(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 24) }
+
+	virtual void _UNKNOWN_025(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 25) }
+
+	virtual void _UNKNOWN_026(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 26) }
+
+	virtual void _UNKNOWN_027(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 27) }
+
+	virtual void _UNKNOWN_028(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 28) }
+
+	virtual void _UNKNOWN_029(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 29) }
+
+	virtual void _UNKNOWN_030(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 30) }
+
+	virtual void _UNKNOWN_031(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 31) }
+
+	virtual void _UNKNOWN_032(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 32) }
+
+	virtual void _UNKNOWN_033(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 33) }
+
+	virtual void _UNKNOWN_034(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 34) }
+
+	virtual void _UNKNOWN_035(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 35) }
+
+	virtual void _UNKNOWN_036(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 36) }
+
+	virtual void _UNKNOWN_037(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 37) }
+
+	virtual void _UNKNOWN_038(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 38) }
+
+	virtual void _UNKNOWN_039(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 39) }
+
+	virtual void _UNKNOWN_040(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 40) }
+
+	virtual void _UNKNOWN_041(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 41) }
+
+	virtual void _UNKNOWN_042(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 42) }
+
+	virtual void _UNKNOWN_043(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 43) }
+
+	virtual void _UNKNOWN_044(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 44) }
+
+	virtual void _UNKNOWN_045(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 45) }
+
+	virtual void _UNKNOWN_046(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 46) }
+
+	virtual void _UNKNOWN_047(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 47) }
+
+	virtual void _UNKNOWN_048(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 48) }
+
+	virtual void _UNKNOWN_049(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 49) }
+
+	virtual void _UNKNOWN_050(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 50) }
+
+	virtual void _UNKNOWN_051(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 51) }
+
+	virtual void _UNKNOWN_052(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 52) }
+
+	virtual void _UNKNOWN_053(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 53) }
+
+	virtual void _UNKNOWN_054(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 54) }
+
+	virtual void _UNKNOWN_055(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 55) }
+
+	virtual void _UNKNOWN_056(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 56) }
+
+	virtual void _UNKNOWN_057(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 57) }
+
+	virtual void _UNKNOWN_058(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 58) }
+
+	virtual void _UNKNOWN_059(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 59) }
+
+	virtual void _UNKNOWN_060(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 60) }
+
+	virtual void _UNKNOWN_061(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 61) }
+
+	virtual void _UNKNOWN_062(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 62) }
+
+	virtual void _UNKNOWN_063(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 63) }
+
+	virtual void _UNKNOWN_064(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 64) }
+
+	virtual void _UNKNOWN_065(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 65) }
+
+	virtual void _UNKNOWN_066(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 66) }
+
+	virtual void _UNKNOWN_067(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 67) }
+
+	virtual void _UNKNOWN_068(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 68) }
+
+	virtual void _UNKNOWN_069(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 69) }
+
+	virtual void _UNKNOWN_070(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 70) }
+
+	virtual void _UNKNOWN_071(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 71) }
+
+	virtual void _UNKNOWN_072(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 72) }
+
+	virtual void _UNKNOWN_073(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 73) }
+
+	virtual void _UNKNOWN_074(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 74) }
+
+	virtual void _UNKNOWN_075(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 75) }
+
+	virtual void _UNKNOWN_076(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 76) }
+
+	virtual void _UNKNOWN_077(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 77) }
+
+	virtual void _UNKNOWN_078(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 78) }
+
+	virtual void _UNKNOWN_079(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 79) }
+
+	virtual void _UNKNOWN_080(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 80) }
+
+	virtual void _UNKNOWN_081(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 81) }
+
+	virtual void _UNKNOWN_082(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 82) }
+
+	virtual void _UNKNOWN_083(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 83) }
+
+	virtual void _UNKNOWN_084(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 84) }
+
+	virtual void _UNKNOWN_085(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 85) }
+
+	virtual void _UNKNOWN_086(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 86) }
+
+	virtual void _UNKNOWN_087(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 87) }
+
+	virtual void _UNKNOWN_088(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 88) }
+
+	virtual void _UNKNOWN_089(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 89) }
+
+	virtual void _UNKNOWN_090(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 90) }
+
+	virtual void _UNKNOWN_091(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 91) }
+
+	virtual void _UNKNOWN_092(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 92) }
+
+	virtual void _UNKNOWN_093(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 93) }
+
+	virtual void _UNKNOWN_094(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 94) }
+
+	virtual void _UNKNOWN_095(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 95) }
+
+	virtual void _UNKNOWN_096(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 96) }
+
+	virtual void _UNKNOWN_097(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 97) }
+
+	virtual void _UNKNOWN_098(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 98) }
+
+	virtual void _UNKNOWN_099(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 99) }
+
+	virtual void _UNKNOWN_100(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 100) }
+
+	virtual void _UNKNOWN_101(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 101) }
+
+	virtual void _UNKNOWN_102(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 102) }
+
+	virtual void _UNKNOWN_103(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 103) }
+
+	virtual void _UNKNOWN_104(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 104) }
+
+	virtual void _UNKNOWN_105(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 105) }
+
+	virtual void _UNKNOWN_106(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 106) }
+
+	virtual void _UNKNOWN_107(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 107) }
+
+	virtual void _UNKNOWN_108(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 108) }
+
+	virtual void _UNKNOWN_109(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 109) }
+
+	virtual void _UNKNOWN_110(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 110) }
+
+	virtual void _UNKNOWN_111(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 111) }
+
+	virtual void _UNKNOWN_112(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 112) }
+
+	virtual void _UNKNOWN_113(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 113) }
+
+	virtual void _UNKNOWN_114(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 114) }
+
+	virtual void _UNKNOWN_115(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 115) }
+
+	virtual void _UNKNOWN_116(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 116) }
+
+	virtual void _UNKNOWN_117(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 117) }
+
+	virtual void _UNKNOWN_118(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 118) }
+
+	virtual void _UNKNOWN_119(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 119) }
+
+	virtual void _UNKNOWN_120(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 120) }
+
+	virtual void _UNKNOWN_121(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 121) }
+
+	virtual void _UNKNOWN_122(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 122) }
+
+	virtual void _UNKNOWN_123(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 123) }
+
+	virtual void _UNKNOWN_124(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 124) }
+
+	virtual void _UNKNOWN_125(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 125) }
+
+	virtual void _UNKNOWN_126(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 126) }
+
+	virtual void _UNKNOWN_127(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 127) }
+
+	virtual void _UNKNOWN_128(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 128) }
+
+	virtual void _UNKNOWN_129(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 129) }
+
+	virtual void _UNKNOWN_130(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 130) }
+
+	virtual void _UNKNOWN_131(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 131) }
+
+	virtual void _UNKNOWN_132(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 132) }
+
+	virtual void _UNKNOWN_133(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 133) }
+
+	virtual void _UNKNOWN_134(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 134) }
+
+	virtual void _UNKNOWN_135(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 135) }
+
+	virtual void _UNKNOWN_136(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 136) }
+
+	virtual void _UNKNOWN_137(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 137) }
+
+	virtual void _UNKNOWN_138(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 138) }
+
+	virtual void _UNKNOWN_139(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 139) }
+
+	virtual void _UNKNOWN_140(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 140) }
+
+	virtual void _UNKNOWN_141(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 141) }
+
+	virtual void _UNKNOWN_142(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 142) }
+
+	virtual void _UNKNOWN_143(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 143) }
+
+	virtual void _UNKNOWN_144(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 144) }
+
+	virtual void _UNKNOWN_145(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 145) }
+
+	virtual void _UNKNOWN_146(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 146) }
+
+	virtual void _UNKNOWN_147(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 147) }
+
+	virtual void _UNKNOWN_148(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 148) }
+
+	virtual void _UNKNOWN_149(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 149) }
+
+	virtual void _UNKNOWN_150(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 150) }
+
+	virtual void _UNKNOWN_151(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 151) }
+
+	virtual void _UNKNOWN_152(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 152) }
+
+	virtual void _UNKNOWN_153(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 153) }
+
+	virtual void _UNKNOWN_154(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 154) }
+
+	virtual void _UNKNOWN_155(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 155) }
+
+	virtual void _UNKNOWN_156(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 156) }
+
+	virtual void _UNKNOWN_157(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 157) }
+
+	virtual void _UNKNOWN_158(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 158) }
+
+	virtual void _UNKNOWN_159(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 159) }
+
+	virtual void _UNKNOWN_160(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 160) }
+
+	virtual void _UNKNOWN_161(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 161) }
+
+	virtual void _UNKNOWN_162(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 162) }
+
+	virtual void _UNKNOWN_163(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 163) }
+
+	virtual void _UNKNOWN_164(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 164) }
+
+	virtual void _UNKNOWN_165(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 165) }
+
+	virtual void _UNKNOWN_166(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 166) }
+
+	virtual void _UNKNOWN_167(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 167) }
+
+	virtual void _UNKNOWN_168(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 168) }
+
+	virtual void _UNKNOWN_169(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 169) }
+
+	virtual void _UNKNOWN_170(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 170) }
+
+	virtual void _UNKNOWN_171(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 171) }
+
+	virtual void _UNKNOWN_172(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 172) }
+
+	virtual void _UNKNOWN_173(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 173) }
+
+	virtual void _UNKNOWN_174(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 174) }
+
+	virtual void _UNKNOWN_175(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 175) }
+
+	virtual void _UNKNOWN_176(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 176) }
+
+	virtual void _UNKNOWN_177(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 177) }
+
+	virtual void _UNKNOWN_178(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 178) }
+
+	virtual void _UNKNOWN_179(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 179) }
+
+	virtual void _UNKNOWN_180(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 180) }
+
+	virtual void _UNKNOWN_181(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 181) }
+
+	virtual void _UNKNOWN_182(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 182) }
+
+	virtual void _UNKNOWN_183(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 183) }
+
+	virtual void _UNKNOWN_184(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 184) }
+
+	virtual void _UNKNOWN_185(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 185) }
+
+	virtual void _UNKNOWN_186(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 186) }
+
+	virtual void _UNKNOWN_187(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 187) }
+
+	virtual void _UNKNOWN_188(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 188) }
+
+	virtual void _UNKNOWN_189(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 189) }
+
+	virtual void _UNKNOWN_190(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 190) }
+
+	virtual void _UNKNOWN_191(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 191) }
+
+	virtual void _UNKNOWN_192(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 192) }
+
+	virtual void _UNKNOWN_193(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 193) }
+
+	virtual void _UNKNOWN_194(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 194) }
+
+	virtual void _UNKNOWN_195(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 195) }
+
+	virtual void _UNKNOWN_196(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 196) }
+
+	virtual void _UNKNOWN_197(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 197) }
+
+	virtual void _UNKNOWN_198(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 198) }
+
+	virtual void _UNKNOWN_199(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 199) }
+
+	virtual void _UNKNOWN_200(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 200) }
+
+	virtual void _UNKNOWN_201(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 201) }
+
+	virtual void _UNKNOWN_202(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 202) }
+
+	virtual void _UNKNOWN_203(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 203) }
+
+	virtual void _UNKNOWN_204(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 204) }
+
+	virtual void _UNKNOWN_205(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 205) }
+
+	virtual void _UNKNOWN_206(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 206) }
+
+	virtual void _UNKNOWN_207(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 207) }
+
+	virtual void _UNKNOWN_208(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 208) }
+
+	virtual void _UNKNOWN_209(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 209) }
+
+	virtual void _UNKNOWN_210(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 210) }
+
+	virtual void _UNKNOWN_211(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 211) }
+
+	virtual void _UNKNOWN_212(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 212) }
+
+	virtual void _UNKNOWN_213(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 213) }
+
+	virtual void _UNKNOWN_214(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 214) }
+
+	virtual void _UNKNOWN_215(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 215) }
+
+	virtual void _UNKNOWN_216(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 216) }
+
+	virtual void _UNKNOWN_217(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 217) }
+
+	virtual void _UNKNOWN_218(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 218) }
+
+	virtual void _UNKNOWN_219(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 219) }
+
+	virtual void _UNKNOWN_220(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 220) }
+
+	virtual void _UNKNOWN_221(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 221) }
+
+	virtual void _UNKNOWN_222(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 222) }
+
+	virtual void _UNKNOWN_223(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 223) }
+
+	virtual void _UNKNOWN_224(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 224) }
+
+	virtual void _UNKNOWN_225(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 225) }
+
+	virtual void _UNKNOWN_226(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 226) }
+
+	virtual void _UNKNOWN_227(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 227) }
+
+	virtual void _UNKNOWN_228(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 228) }
+
+	virtual void _UNKNOWN_229(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 229) }
+
+	virtual void _UNKNOWN_230(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 230) }
+
+	virtual void _UNKNOWN_231(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 231) }
+
+	virtual void _UNKNOWN_232(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 232) }
+
+	virtual void _UNKNOWN_233(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 233) }
+
+	virtual void _UNKNOWN_234(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 234) }
+
+	virtual void _UNKNOWN_235(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 235) }
+
+	virtual void _UNKNOWN_236(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 236) }
+
+	virtual void _UNKNOWN_237(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 237) }
+
+	virtual void _UNKNOWN_238(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 238) }
+
+	virtual void _UNKNOWN_239(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 239) }
+
+	virtual void _UNKNOWN_240(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 240) }
+
+	virtual void _UNKNOWN_241(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 241) }
+
+	virtual void _UNKNOWN_242(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 242) }
+
+	virtual void _UNKNOWN_243(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 243) }
+
+	virtual void _UNKNOWN_244(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 244) }
+
+	virtual void _UNKNOWN_245(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 245) }
+
+	virtual void _UNKNOWN_246(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 246) }
+
+	virtual void _UNKNOWN_247(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 247) }
+
+	virtual void _UNKNOWN_248(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 248) }
+
+	virtual void _UNKNOWN_249(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 249) }
+
+	virtual void _UNKNOWN_250(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 250) }
+
+	virtual void _UNKNOWN_251(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 251) }
+
+	virtual void _UNKNOWN_252(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 252) }
+
+	virtual void _UNKNOWN_253(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 253) }
+
+	virtual void _UNKNOWN_254(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 254) }
+
+private:
+	IMatRenderContext_csgo * m_Parent;
+	bool m_TrackUsed;
+	int m_UsedCount;
+	bool m_Active;
+};
+
+std::map<IMatRenderContext_csgo *,CMatRenderContextWrapper_csgo *> g_RenderContextMap_csgo;
 
 class CBaseClientDllWrapper_csgo
 {
@@ -268,6 +1159,8 @@ public:
 
 	virtual int Init( CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGlobals )
 	{
+		// JMP_IFACE_FN(csgo_VClient, 2)
+
 		static bool bFirstCall = true;
 		int myret;
 
@@ -292,267 +1185,330 @@ public:
 			MOV	myret, eax
 		}
 
+		if(g_MaterialSystem_csgo)
+		{
+			errMaterial = g_MaterialSystem_csgo->FindMaterial("afx/greenmatte",NULL);
+		}
+
 		return myret;
 	}
 
-	virtual void			PostInit()
+	virtual void PostInit()
 	{ JMP_IFACE_FN(csgo_VClient, 3) }
-
 
 	virtual void Shutdown( void )
 	{ JMP_IFACE_FN(csgo_VClient, 4) }
-
 	
-	virtual void _UNUSED_LevelInitPreEntity(void)
+	virtual void _UNKOWN_005(void)
 	{ JMP_IFACE_FN(csgo_VClient, 5) }
 
-	virtual void _UNUSED_LevelInitPostEntity(void)
+	virtual void _UNKOWN_006(void)
 	{ JMP_IFACE_FN(csgo_VClient, 6) }
 
-	virtual void _UNUSED_LevelShutdown(void)
+	virtual void _UNKOWN_007(void)
 	{ JMP_IFACE_FN(csgo_VClient, 7) }
 
-	virtual void _UNUSED_GetAllClasses(void)
+	virtual void _UNKOWN_008(void)
 	{ JMP_IFACE_FN(csgo_VClient, 8) }
 
-	virtual void _UNUSED_HudVidInit(void)
+	virtual void _UNKOWN_009(void)
 	{ JMP_IFACE_FN(csgo_VClient, 9) }
 
-	virtual void _UNUSED_HudProcessInput(void)
+	virtual void _UNKOWN_010(void)
 	{ JMP_IFACE_FN(csgo_VClient, 10) }
 
-	virtual void _UNUSED_HudUpdate(void)
+	virtual void _UNKOWN_011(void)
 	{ JMP_IFACE_FN(csgo_VClient, 11) }
 
-	virtual void _UNUSED_HudReset(void)
+	virtual void _UNKOWN_012(void)
 	{ JMP_IFACE_FN(csgo_VClient, 12) }
 
-	virtual void _UNUSED_HudText(void)
+	virtual void _UNKOWN_013(void)
 	{ JMP_IFACE_FN(csgo_VClient, 13) }
 
-	virtual void _UNUSED_ShouldDrawDropdownConsole(void)
+	virtual void _UNKOWN_014(void)
 	{ JMP_IFACE_FN(csgo_VClient, 14) }
 
-	virtual void _UNUSED_IN_ActivateMouse(void)
+	virtual void _UNKOWN_015(void)
 	{ JMP_IFACE_FN(csgo_VClient, 15) }
 
-	virtual void _UNUSED_IN_DeactivateMouse(void)
+	virtual void _UNKOWN_016(void)
 	{ JMP_IFACE_FN(csgo_VClient, 16) }
 
-	virtual void _UNUSED_IN_Accumulate (void)
+	virtual void _UNKOWN_017 (void)
 	{ JMP_IFACE_FN(csgo_VClient, 17) }
 
-	virtual void _UNUSED_IN_ClearStates (void)
+	virtual void _UNKOWN_018 (void)
 	{ JMP_IFACE_FN(csgo_VClient, 18) }
 
-	virtual void _UNUSED_IN_IsKeyDown(void )
+	virtual void _UNKOWN_019(void )
 	{ JMP_IFACE_FN(csgo_VClient, 19) }
 
-	virtual void _UNUSED_IN_KeyEvent(void)
+	virtual void _UNKOWN_020(void)
 	{ JMP_IFACE_FN(csgo_VClient, 20) }
 
-	virtual void _UNUSED_CreateMove (void)
+	virtual void _UNKOWN_021 (void)
 	{ JMP_IFACE_FN(csgo_VClient, 21) }
 		
-	virtual void _UNUSED_ExtraMouseSample(void)
+	virtual void _UNKOWN_022(void)
 	{ JMP_IFACE_FN(csgo_VClient, 22) }
 
-	virtual void _UNUSED_WriteUsercmdDeltaToBuffer(void)
+	virtual void _UNKOWN_023(void)
 	{ JMP_IFACE_FN(csgo_VClient, 23) }
 
-	virtual void _UNUSED_EncodeUserCmdToBuffer(void)
+	virtual void _UNKOWN_024(void)
 	{ JMP_IFACE_FN(csgo_VClient, 24) }
 
-	virtual void _UNUSED_DecodeUserCmdFromBuffer(void)
+	virtual void _UNKOWN_025(void)
 	{ JMP_IFACE_FN(csgo_VClient, 25) }
 
-	virtual void _UNUSED_View_Render(void)
-	{ JMP_IFACE_FN(csgo_VClient, 26) }
+	virtual void View_Render( vrect_t_csgo *rect )
+	{
+		// JMP_IFACE_FN(csgo_VClient, 26)
 
-	virtual void _UNUSED_RenderView(void)
+		bool rectNull = rect->width == 0 || rect->height == 0;
+
+		__asm {
+			mov ecx, rect
+			push ecx
+
+			mov ecx, csgo_VClient
+			mov eax, [ecx]
+			mov eax, [eax +4*26]
+			call eax
+		}
+
+		if(!rectNull && g_MaterialSystem_csgo && g_bTakeScreenShot)
+		{
+			CMatRenderContextWrapper_csgo * wrapper;
+			IMatRenderContext_csgo * oldContext = g_MaterialSystem_csgo->GetRenderContext();
+
+			WaitForSingleObject(hRenderContextMapLock, INFINITE);
+			
+			std::map<IMatRenderContext_csgo *, CMatRenderContextWrapper_csgo *>::iterator it = g_RenderContextMap_csgo.find(oldContext);
+
+			if(it != g_RenderContextMap_csgo.end())
+			{
+				if(it->first == it->second)
+				{
+					Tier0_Msg("Found own context 0x%08x.\n", (DWORD)oldContext);
+				}
+				else
+				{
+					Tier0_Msg("Found known context 0x%08x.\n", (DWORD)oldContext);
+				}
+				wrapper = it->second; // re-use
+			}
+			else
+			{
+				Tier0_Msg("New context 0x%08x.\n", (DWORD)oldContext);
+				wrapper = new CMatRenderContextWrapper_csgo(oldContext);
+
+				g_RenderContextMap_csgo[oldContext] = wrapper; // track new context
+				g_RenderContextMap_csgo[wrapper] = wrapper; // make it possible to detect our selfs
+			}
+
+			SetEvent(hRenderContextMapLock);
+
+
+			while((IMatRenderContext_csgo *)wrapper != g_MaterialSystem_csgo->GetRenderContext())
+			{
+				g_MaterialSystem_csgo->SetRenderContext(wrapper);
+				wrapper->Release(); // SetRenderContext calls AddRef
+			}
+
+			wrapper->SetActive(true);
+
+			this->WriteSaveGameScreenshotOfSize("test.tga", 640, 480); //rect->width, rect->height
+
+			wrapper->SetActive(false);
+		}
+	}
+
+	virtual void RenderView( const CViewSetup_csgo &view, int nClearFlags, int whatToDraw )
 	{ JMP_IFACE_FN(csgo_VClient, 27) }
 
-	virtual void _UNUSED_View_Fade(void)
+	virtual void _UNKOWN_028(void)
 	{ JMP_IFACE_FN(csgo_VClient, 28) }
 
-	virtual void _UNUSED_SetCrosshairAngle(void)
+	virtual void _UNKOWN_029(void)
 	{ JMP_IFACE_FN(csgo_VClient, 29) }
 
-	virtual void _UNUSED_InitSprite(void)
+	virtual void _UNKOWN_030(void)
 	{ JMP_IFACE_FN(csgo_VClient, 30) }
 
-	virtual void _UNUSED_ShutdownSprite(void)
+	virtual void _UNKOWN_031(void)
 	{ JMP_IFACE_FN(csgo_VClient, 31) }
 
-	virtual void _UNUSED_GetSpriteSize(void) const
+	virtual void _UNKOWN_032(void) const
 	{ JMP_IFACE_FN(csgo_VClient, 32) }
 
-	virtual void _UNUSED_VoiceStatus(void)
+	virtual void _UNKOWN_033(void)
 	{ JMP_IFACE_FN(csgo_VClient, 33) }
 
-	virtual void _UNUSED_PlayerAudible(void)
+	virtual void _UNKOWN_034(void)
 	{ JMP_IFACE_FN(csgo_VClient, 34) }
 
-	virtual void _UNUSED_InstallStringTableCallback(void)
+	virtual void _UNKOWN_035(void)
 	{ JMP_IFACE_FN(csgo_VClient, 35) }
 
-	virtual void _UNUSED_FrameStageNotify(void)
+	virtual void _UNKOWN_036(void)
 	{ JMP_IFACE_FN(csgo_VClient, 36) }
 
-	virtual void _UNUSED_DispatchUserMessage(void)
+	virtual void _UNKOWN_037(void)
 	{ JMP_IFACE_FN(csgo_VClient, 37) }
 
-	virtual void _UNUSED_SaveInit(void)
+	virtual void _UNKOWN_038(void)
 	{ JMP_IFACE_FN(csgo_VClient, 38) }
 
-	virtual void _UNUSED_SaveWriteFields(void)
+	virtual void _UNKOWN_039(void)
 	{ JMP_IFACE_FN(csgo_VClient, 39) }
 
-	virtual void _UNUSED_SaveReadFields(void)
+	virtual void _UNKOWN_040(void)
 	{ JMP_IFACE_FN(csgo_VClient, 40) }
 
-	virtual void _UNUSED_PreSave(void)
+	virtual void _UNKOWN_041(void)
 	{ JMP_IFACE_FN(csgo_VClient, 41) }
 
-	virtual void _UNUSED_Save(void)
+	virtual void _UNKOWN_042(void)
 	{ JMP_IFACE_FN(csgo_VClient, 42) }
 
-	virtual void _UNUSED_WriteSaveHeaders(void)
+	virtual void _UNKOWN_043(void)
 	{ JMP_IFACE_FN(csgo_VClient, 43) }
 
-	virtual void _UNUSED_ReadRestoreHeaders(void)
+	virtual void _UNKOWN_044(void)
 	{ JMP_IFACE_FN(csgo_VClient, 44) }
 
-	virtual void _UNUSED_Restore(void)
+	virtual void _UNKOWN_045(void)
 	{ JMP_IFACE_FN(csgo_VClient, 45) }
 
-	virtual void _UNUSED_DispatchOnRestore(void)
+	virtual void _UNKOWN_046(void)
 	{ JMP_IFACE_FN(csgo_VClient, 46) }
 
-	virtual void _UNUSED_GetStandardRecvProxies(void)
+	virtual void _UNKOWN_047(void)
 	{ JMP_IFACE_FN(csgo_VClient, 47) }
 
-	virtual void _UNUSED_WriteSaveGameScreenshot(void)
+	virtual void _UNKOWN_048(void)
 	{ JMP_IFACE_FN(csgo_VClient, 48) }
 
-	virtual void _UNUSED_EmitSentenceCloseCaption(void)
+	virtual void _UNKOWN_049(void)
 	{ JMP_IFACE_FN(csgo_VClient, 49) }
 
-	virtual void _UNUSED_EmitCloseCaption(void)
+	virtual void _UNKOWN_050(void)
 	{ JMP_IFACE_FN(csgo_VClient, 50) }
 
-	virtual void _UNUSED_CanRecordDemo(void) const
+	virtual void _UNKOWN_051(void) const
 	{ JMP_IFACE_FN(csgo_VClient, 51) }
 
-	virtual void _UNUSED_OnDemoRecordStart(void)
+	virtual void _UNKOWN_052(void)
 	{ JMP_IFACE_FN(csgo_VClient, 52) }
 
-	virtual void _UNUSED_OnDemoRecordStop(void)
+	virtual void _UNKOWN_053(void)
 	{ JMP_IFACE_FN(csgo_VClient, 53) }
 
-	virtual void _UNUSED_OnDemoPlaybackStart(void)
+	virtual void _UNKOWN_054(void)
 	{ JMP_IFACE_FN(csgo_VClient, 54) }
 
-	virtual void _UNUSED_OnDemoPlaybackStop(void)
+	virtual void _UNKOWN_055(void)
 	{ JMP_IFACE_FN(csgo_VClient, 55) }
 
-	virtual void _UNUSED_RecordDemoPolishUserInput(void)
+	virtual void _UNKOWN_056(void)
 	{ JMP_IFACE_FN(csgo_VClient, 56) }
 
-	virtual void _UNUSED_CacheReplayRagdolls(void)
+	virtual void _UNKOWN_057(void)
 	{ JMP_IFACE_FN(csgo_VClient, 57) }
 
-	virtual void _UNUSED_ReplayUI_SendMessage(void)
+	virtual void _UNKOWN_058(void)
 	{ JMP_IFACE_FN(csgo_VClient, 58) }
 
-	virtual void _UNUSED_GetReplayFactory(void)
+	virtual void _UNKOWN_059(void)
 	{ JMP_IFACE_FN(csgo_VClient, 59) }
 
-	virtual void _UNUSED_ClearLocalPlayerReplayPtr(void)
+	virtual void _UNKOWN_060(void)
 	{ JMP_IFACE_FN(csgo_VClient, 60) }
 
-	virtual void _UNUSED_GetScreenWidth(void)
+	virtual void _UNKOWN_061(void)
 	{ JMP_IFACE_FN(csgo_VClient, 61) }
 
-	virtual void _UNUSED_GetScreenHeight(void)
+	virtual void _UNKOWN_062(void)
 	{ JMP_IFACE_FN(csgo_VClient, 62) }
 
-	virtual void _UNUSED_WriteSaveGameScreenshotOfSize(void)
+	virtual void _UNUSED_GetScreenWidth(void)
 	{ JMP_IFACE_FN(csgo_VClient, 63) }
 
-	virtual void _UNUSED_WriteReplayScreenshotBadParams(void)
+	virtual void _UNUSED_GetScreenHeight(void)
 	{ JMP_IFACE_FN(csgo_VClient, 64) }
 
-	virtual void _UNUSED_UpdateReplayScreenshotCache(void)
+	virtual void WriteSaveGameScreenshotOfSize( const char *pFilename, int width, int height, bool bCreatePowerOf2Padded = false, bool bWriteVTF = false )
 	{ JMP_IFACE_FN(csgo_VClient, 65) }
 
-	virtual void _UNUSED_GetPlayerView(void)
+	virtual void _UNKOWN_066(void)
 	{ JMP_IFACE_FN(csgo_VClient, 66) }
 
-	virtual void _UNUSED_ShouldHideLoadingPlaque(void)
+	virtual void _UNKOWN_067(void)
 	{ JMP_IFACE_FN(csgo_VClient, 67) }
 
-	virtual void _UNUSED_InvalidateMdlCache(void)
+	virtual void _UNKOWN_068(void)
 	{ JMP_IFACE_FN(csgo_VClient, 68) }
 
-	virtual void _UNUSED_IN_SetSampleTime(void)
+	virtual void _UNKOWN_069(void)
 	{ JMP_IFACE_FN(csgo_VClient, 69) }
 
-	virtual void _UNUSED_OnActiveSplitscreenPlayerChanged(void)
+	virtual void _UNKOWN_070(void)
 	{ JMP_IFACE_FN(csgo_VClient, 70) }
 
-	virtual void _UNUSED_OnSplitScreenStateChanged(void)
+	virtual void _UNKOWN_071(void)
 	{ JMP_IFACE_FN(csgo_VClient, 71) }
 
-	virtual void _UNUSED_CenterStringOff(void)
+	virtual void _UNKOWN_072(void)
 	{ JMP_IFACE_FN(csgo_VClient, 72) }
 
-	virtual void _UNUSED_OnScreenSizeChanged(void)
+	virtual void _UNKOWN_073(void)
 	{ JMP_IFACE_FN(csgo_VClient, 73) }
 
-	virtual void _UNUSED_InstantiateMaterialProxy(void)
+	virtual void _UNKOWN_074(void)
 	{ JMP_IFACE_FN(csgo_VClient, 74) }
 
-	virtual void _UNUSED_GetFullscreenClientDLLVPanel(void)
+	virtual void _UNKOWN_075(void)
 	{ JMP_IFACE_FN(csgo_VClient, 75) }
 
-	virtual void _UNUSED_MarkEntitiesAsTouching(void)
+	virtual void _UNKOWN_076(void)
 	{ JMP_IFACE_FN(csgo_VClient, 76) }
 
-	virtual void _UNUSED_OnKeyBindingChanged(void)
+	virtual void _UNKOWN_077(void)
 	{ JMP_IFACE_FN(csgo_VClient, 77) }
 
-	virtual void _UNUSED_SetBlurFade(void)
+	virtual void _UNKOWN_078(void)
 	{ JMP_IFACE_FN(csgo_VClient, 78) }
 
-	virtual void _UNUSED_ResetHudCloseCaption(void)
+	virtual void _UNKOWN_079(void)
 	{ JMP_IFACE_FN(csgo_VClient, 79) }
 
-	virtual void _UNUSED_HandleGameUIEvent(void)
+	virtual void _UNKOWN_080(void)
 	{ JMP_IFACE_FN(csgo_VClient, 80) }
 
-	virtual void _UNUSED_GetSoundSpatializationBadParams(void)
+	virtual void _UNKOWN_081(void)
 	{ JMP_IFACE_FN(csgo_VClient, 81) }
 
-	virtual void _UNUSED_Hud_SaveStarted(void)
+	virtual void _UNKOWN_082(void)
 	{ JMP_IFACE_FN(csgo_VClient, 82) }
 
-	virtual void _UNUSED_ShutdownMovies(void)
+	virtual void _UNKOWN_083(void)
 	{ JMP_IFACE_FN(csgo_VClient, 83) }
 
-	virtual void _UNUSED_IsChatRaised(void)
+	virtual void _UNKOWN_084(void)
 	{ JMP_IFACE_FN(csgo_VClient, 84) }
 
-	virtual void _UNUSED_IsRadioPanelRaised(void)
+	virtual void _UNKOWN_085(void)
 	{ JMP_IFACE_FN(csgo_VClient, 85) }
 
-	virtual void _UNUSED_IsBindMenuRaised(void)
+	virtual void _UNKOWN_086(void)
 	{ JMP_IFACE_FN(csgo_VClient, 86) }
 
-	virtual void _UNUSED_IsTeamMenuRaised(void)
+	virtual void _UNKOWN_087(void)
 	{ JMP_IFACE_FN(csgo_VClient, 87) }
 
-	virtual void _UNUSED_IsLoadingScreenRaised(void)
+	virtual void _UNKOWN_088(void)
 	{ JMP_IFACE_FN(csgo_VClient, 88) }
 
 	virtual void _UNKOWN_089(void)
@@ -615,13 +1571,13 @@ public:
 	virtual void _UNKOWN_108(void)
 	{ JMP_IFACE_FN(csgo_VClient, 108) }
 
-	// and a few more to be save from updates:
-
 	virtual void _UNKOWN_109(void)
 	{ JMP_IFACE_FN(csgo_VClient, 109) }
 
 	virtual void _UNKOWN_110(void)
 	{ JMP_IFACE_FN(csgo_VClient, 110) }
+
+	// and a few more to be save from updates:
 
 	virtual void _UNKOWN_111(void)
 	{ JMP_IFACE_FN(csgo_VClient, 111) }
@@ -652,6 +1608,36 @@ public:
 
 	virtual void _UNKOWN_120(void)
 	{ JMP_IFACE_FN(csgo_VClient, 120) }
+
+	virtual void _UNKOWN_121(void)
+	{ JMP_IFACE_FN(csgo_VClient, 121) }
+
+	virtual void _UNKOWN_122(void)
+	{ JMP_IFACE_FN(csgo_VClient, 122) }
+
+	virtual void _UNKOWN_123(void)
+	{ JMP_IFACE_FN(csgo_VClient, 123) }
+
+	virtual void _UNKOWN_124(void)
+	{ JMP_IFACE_FN(csgo_VClient, 124) }
+
+	virtual void _UNKOWN_125(void)
+	{ JMP_IFACE_FN(csgo_VClient, 125) }
+
+	virtual void _UNKOWN_126(void)
+	{ JMP_IFACE_FN(csgo_VClient, 126) }
+
+	virtual void _UNKOWN_127(void)
+	{ JMP_IFACE_FN(csgo_VClient, 127) }
+
+	virtual void _UNKOWN_128(void)
+	{ JMP_IFACE_FN(csgo_VClient, 128) }
+
+	virtual void _UNKOWN_129(void)
+	{ JMP_IFACE_FN(csgo_VClient, 129) }
+
+	virtual void _UNKOWN_130(void)
+	{ JMP_IFACE_FN(csgo_VClient, 130) }
 } g_BaseClientDllWrapper_csgo;
 
 #pragma warning(pop)
@@ -662,7 +1648,6 @@ void HookClientDllInterface_011_Init(void * iface)
 }
 
 CreateInterfaceFn old_Client_CreateInterface = 0;
-bool isCsgo = false;
 
 void* new_Client_CreateInterface(const char *pName, int *pReturnCode)
 {
@@ -1063,11 +2048,22 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 			))
 				ErrorBox();
 
+			hRenderContextMapLock = CreateEvent(NULL, FALSE, TRUE, NULL);
+
 			break;
 		}
 		case DLL_PROCESS_DETACH:
 		{
-			// source terminates the process, this will never get called
+			// actually this gets called now.
+
+			for(std::map<IMatRenderContext_csgo *, CMatRenderContextWrapper_csgo *>::iterator it = g_RenderContextMap_csgo.begin(); it != g_RenderContextMap_csgo.end(); ++it)
+			{
+				delete it->second;
+			}
+
+			CloseHandle(hRenderContextMapLock);
+
+			//ErrorBox("If you see this error message, tell the developers :-)");
 
 			break;
 		}

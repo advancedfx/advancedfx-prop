@@ -34,9 +34,15 @@
 
 extern WrpVEngineClient * g_VEngineClient;
 
+extern bool g_bTakeScreenShot;
 
 CON_COMMAND(__mirv_test, "")
 {
+	if(2 <= args->ArgC())
+	{
+		g_bTakeScreenShot = 0 != atoi(args->ArgV(1));
+	}
+
 /*
 	Tier0_Msg(
 		"LevelName: %s\n"

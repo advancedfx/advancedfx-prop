@@ -1777,126 +1777,49 @@ public:
 
 #define CLIENT_DLL_INTERFACE_VERSION_CSGO_016 "VClient016"
 
-// TODO: this is not the exact size, minium is 89, maybe it's 99
-#define CLIENT_DLL_INTERFACE_CSGO_016_VTABLESIZE (4*99)
+// IMaterial_csgo //////////////////////////////////////////////////////////////
 
-class IBaseClientDll_csgo_016 abstract
+class IMaterial_csgo abstract
 {
 public:
-	// Connect appsystem components, get global interfaces, don't run any other init code
-	virtual int			Connect( CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGlobals ) = 0;
+	virtual const char *	GetName() const = 0;
+	virtual const char *	GetTextureGroupName() const = 0;
 
-	virtual void			Disonnect() = 0;
-
-	// run other init code here
-	virtual int				Init( CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGlobals ) = 0;
-
-	virtual void			PostInit() = 0;
-
-	// Called once when the client DLL is being unloaded
-	virtual void			Shutdown( void ) = 0;
-	
-	virtual void _UNUSED_LevelInitPreEntity(void) = 0;
-	virtual void _UNUSED_LevelInitPostEntity(void) = 0;
-	virtual void _UNUSED_LevelShutdown(void) = 0;
-	virtual void _UNUSED_GetAllClasses(void) = 0;
-	virtual void _UNUSED_HudVidInit(void) = 0;
-	virtual void _UNUSED_HudProcessInput(void) = 0;
-	virtual void _UNUSED_HudUpdate(void) = 0;
-	virtual void _UNUSED_HudReset(void) = 0;
-	virtual void _UNUSED_HudText(void) = 0;
-	virtual void _UNUSED_ShouldDrawDropdownConsole(void) = 0;
-	virtual void _UNUSED_IN_ActivateMouse(void) = 0;
-	virtual void _UNUSED_IN_DeactivateMouse(void) = 0;
-	virtual void _UNUSED_IN_Accumulate (void) = 0;
-	virtual void _UNUSED_IN_ClearStates (void) = 0;
-	virtual void _UNUSED_IN_IsKeyDown(void ) = 0;
-	virtual void _UNUSED_IN_KeyEvent(void) = 0;
-	virtual void _UNUSED_CreateMove (void) = 0;				
-	virtual void _UNUSED_ExtraMouseSample(void) = 0;
-	virtual void _UNUSED_WriteUsercmdDeltaToBuffer(void) = 0;
-	virtual void _UNUSED_EncodeUserCmdToBuffer(void) = 0;
-	virtual void _UNUSED_DecodeUserCmdFromBuffer(void) = 0;
-	virtual void _UNUSED_View_Render(void) = 0;
-	virtual void _UNUSED_RenderView(void) = 0;
-	virtual void _UNUSED_View_Fade(void) = 0;
-	virtual void _UNUSED_SetCrosshairAngle(void) = 0;
-	virtual void _UNUSED_InitSprite(void) = 0;
-	virtual void _UNUSED_ShutdownSprite(void) = 0;
-	virtual void _UNUSED_GetSpriteSize(void) const = 0;
-	virtual void _UNUSED_VoiceStatus(void) = 0;
-	virtual void _UNUSED_PlayerAudible(void) = 0;
-	virtual void _UNUSED_InstallStringTableCallback(void) = 0;
-	virtual void _UNUSED_FrameStageNotify(void) = 0;
-	virtual void _UNUSED_DispatchUserMessage(void) = 0;
-	virtual void _UNUSED_SaveInit(void) = 0;
-	virtual void _UNUSED_SaveWriteFields(void) = 0;
-	virtual void _UNUSED_SaveReadFields(void) = 0;
-	virtual void _UNUSED_PreSave(void) = 0;
-	virtual void _UNUSED_Save(void) = 0;
-	virtual void _UNUSED_WriteSaveHeaders(void) = 0;
-	virtual void _UNUSED_ReadRestoreHeaders(void) = 0;
-	virtual void _UNUSED_Restore(void) = 0;
-	virtual void _UNUSED_DispatchOnRestore(void) = 0;
-	virtual void _UNUSED_GetStandardRecvProxies(void) = 0;
-	virtual void _UNUSED_WriteSaveGameScreenshot(void) = 0;
-	virtual void _UNUSED_EmitSentenceCloseCaption(void) = 0;
-	virtual void _UNUSED_EmitCloseCaption(void) = 0;
-	virtual void _UNUSED_CanRecordDemo(void) const = 0;
-	virtual void _UNUSED_OnDemoRecordStart(void) = 0;
-	virtual void _UNUSED_OnDemoRecordStop(void) = 0;
-	virtual void _UNUSED_OnDemoPlaybackStart(void) = 0;
-	virtual void _UNUSED_OnDemoPlaybackStop(void) = 0;
-	virtual void _UNUSED_RecordDemoPolishUserInput(void) = 0;
-	virtual void _UNUSED_CacheReplayRagdolls(void) = 0;
-	virtual void _UNUSED_ReplayUI_SendMessage(void) = 0;
-	virtual void _UNUSED_GetReplayFactory(void) = 0;
-	virtual void _UNUSED_ClearLocalPlayerReplayPtr(void) = 0;
-	virtual void _UNUSED_GetScreenWidth(void) = 0;
-	virtual void _UNUSED_GetScreenHeight(void) = 0;
-	virtual void _UNUSED_WriteSaveGameScreenshotOfSize(void) = 0;
-	virtual void _UNUSED_WriteReplayScreenshotBadParams(void) = 0;
-	virtual void _UNUSED_UpdateReplayScreenshotCache(void) = 0;
-	virtual void _UNUSED_GetPlayerView(void) = 0;
-	virtual void _UNUSED_ShouldHideLoadingPlaque(void) = 0;
-	virtual void _UNUSED_InvalidateMdlCache(void) = 0;
-	virtual void _UNUSED_IN_SetSampleTime(void) = 0;
-	virtual void _UNUSED_OnActiveSplitscreenPlayerChanged(void) = 0;
-	virtual void _UNUSED_OnSplitScreenStateChanged(void) = 0;
-	virtual void _UNUSED_CenterStringOff(void) = 0;
-	virtual void _UNUSED_OnScreenSizeChanged(void) = 0;
-	virtual void _UNUSED_InstantiateMaterialProxy(void) = 0;
-	virtual void _UNUSED_GetFullscreenClientDLLVPanel(void) = 0;
-	virtual void _UNUSED_MarkEntitiesAsTouching(void) = 0;
-	virtual void _UNUSED_OnKeyBindingChanged(void) = 0;
-	virtual void _UNUSED_SetBlurFade(void) = 0;
-	virtual void _UNUSED_ResetHudCloseCaption(void) = 0;
-	virtual void _UNUSED_HandleGameUIEvent(void) = 0;
-	virtual void _UNUSED_GetSoundSpatializationBadParams(void) = 0;
-	virtual void _UNUSED_Hud_SaveStarted(void) = 0;
-	virtual void _UNUSED_ShutdownMovies(void) = 0; 
-	virtual void _UNUSED_IsChatRaised(void) = 0;
-	virtual void _UNUSED_IsRadioPanelRaised(void) = 0;
-	virtual void _UNUSED_IsBindMenuRaised(void) = 0;
-	virtual void _UNUSED_IsTeamMenuRaised(void) = 0;
-	virtual void _UNUSED_IsLoadingScreenRaised(void) = 0;
+	// ...
+	// there are more here that we don't care about.
 };
 
-// IMaterialSystem_csgo ////////////////////////////////////////////////////////
-/*
-class IMaterialSystem_csgo abstract : public IAppSystem_csgo
+// IRefCounted_csgo ////////////////////////////////////////////////////////////
+
+class IRefCounted_csgo abstract
 {
 public:
-	virtual void _UNKNOWN_000(void) = 0;
-	virtual void _UNKNOWN_001(void) = 0;
-	virtual void _UNKNOWN_002(void) = 0;
-	virtual void _UNKNOWN_003(void) = 0;
-	virtual void _UNKNOWN_004(void) = 0;
+	virtual int AddRef() = 0;
+	virtual int Release() = 0;
+};
+
+// IMatRenderContext_csgo //////////////////////////////////////////////////////
+
+class IMatRenderContext_csgo abstract : public IRefCounted_csgo
+{
+public:
+	// 002:
+	virtual void BeginRender() = 0;
+
+	// 003:
+	virtual void EndRender() = 0;
+
+	// 004;
+	virtual void Flush( bool flushHardware = false ) = 0;
+
 	virtual void _UNKNOWN_005(void) = 0;
 	virtual void _UNKNOWN_006(void) = 0;
 	virtual void _UNKNOWN_007(void) = 0;
-	virtual void _UNKNOWN_008(void) = 0;
-	virtual void _UNKNOWN_009(void) = 0;
+	virtual void _UNUSED_008_GetRenderTargetDimensions(void) = 0;
+
+	// 009:
+	virtual void Bind( IMaterial_csgo *material, void *proxyData = 0 ) = 0;
+
 	virtual void _UNKNOWN_010(void) = 0;
 	virtual void _UNKNOWN_011(void) = 0;
 	virtual void _UNKNOWN_012(void) = 0;
@@ -1963,4 +1886,321 @@ public:
 	virtual void _UNKNOWN_073(void) = 0;
 	virtual void _UNKNOWN_074(void) = 0;
 	virtual void _UNKNOWN_075(void) = 0;
-*/	
+	virtual void _UNKNOWN_076(void) = 0;
+	virtual void _UNKNOWN_077(void) = 0;
+	virtual void _UNKNOWN_078(void) = 0;
+	virtual void _UNKNOWN_079(void) = 0;
+	virtual void _UNKNOWN_080(void) = 0;
+	virtual void _UNKNOWN_081(void) = 0;
+	virtual void _UNKNOWN_082(void) = 0;
+	virtual void _UNKNOWN_083(void) = 0;
+	virtual void _UNKNOWN_084(void) = 0;
+	virtual void _UNKNOWN_085(void) = 0;
+	virtual void _UNKNOWN_086(void) = 0;
+	virtual void _UNKNOWN_087(void) = 0;
+	virtual void _UNKNOWN_088(void) = 0;
+	virtual void _UNKNOWN_089(void) = 0;
+	virtual void _UNKNOWN_090(void) = 0;
+	virtual void _UNKNOWN_091(void) = 0;
+	virtual void _UNKNOWN_092(void) = 0;
+	virtual void _UNKNOWN_093(void) = 0;
+	virtual void _UNKNOWN_094(void) = 0;
+	virtual void _UNKNOWN_095(void) = 0;
+	virtual void _UNKNOWN_096(void) = 0;
+	virtual void _UNKNOWN_097(void) = 0;
+	virtual void _UNKNOWN_098(void) = 0;
+	virtual void _UNKNOWN_099(void) = 0;
+	virtual void _UNKNOWN_100(void) = 0;
+	virtual void _UNKNOWN_101(void) = 0;
+	virtual void _UNKNOWN_102(void) = 0;
+	virtual void _UNKNOWN_103(void) = 0;
+	virtual void _UNKNOWN_104(void) = 0;
+	virtual void _UNKNOWN_105(void) = 0;
+	virtual void _UNKNOWN_106(void) = 0;
+	virtual void _UNKNOWN_107(void) = 0;
+	virtual void _UNKNOWN_108(void) = 0;
+	virtual void _UNKNOWN_109(void) = 0;
+	virtual void _UNKNOWN_110(void) = 0;
+	virtual void _UNKNOWN_111(void) = 0;
+	virtual void _UNKNOWN_112(void) = 0;
+	virtual void _UNKNOWN_113(void) = 0;
+	virtual void _UNKNOWN_114(void) = 0;
+	virtual void _UNKNOWN_115(void) = 0;
+	virtual void _UNKNOWN_116(void) = 0;
+	virtual void _UNKNOWN_117(void) = 0;
+	virtual void _UNKNOWN_118(void) = 0;
+	virtual void _UNKNOWN_119(void) = 0;
+	virtual void _UNKNOWN_120(void) = 0;
+	virtual void _UNKNOWN_121(void) = 0;
+	virtual void _UNKNOWN_122(void) = 0;
+	virtual void _UNKNOWN_123(void) = 0;
+	virtual void _UNKNOWN_124(void) = 0;
+	virtual void _UNKNOWN_125(void) = 0;
+	virtual void _UNKNOWN_126(void) = 0;
+	virtual void _UNKNOWN_127(void) = 0;
+	virtual void _UNKNOWN_128(void) = 0;
+	virtual void _UNKNOWN_129(void) = 0;
+	virtual void _UNKNOWN_130(void) = 0;
+	virtual void _UNKNOWN_131(void) = 0;
+	virtual void _UNKNOWN_132(void) = 0;
+	virtual void _UNKNOWN_133(void) = 0;
+	virtual void _UNKNOWN_134(void) = 0;
+	virtual void _UNKNOWN_135(void) = 0;
+	virtual void _UNKNOWN_136(void) = 0;
+	virtual void _UNKNOWN_137(void) = 0;
+	virtual void _UNKNOWN_138(void) = 0;
+	virtual void _UNKNOWN_139(void) = 0;
+	virtual void _UNKNOWN_140(void) = 0;
+	virtual void _UNKNOWN_141(void) = 0;
+	virtual void _UNKNOWN_142(void) = 0;
+	virtual void _UNKNOWN_143(void) = 0;
+	virtual void _UNKNOWN_144(void) = 0;
+	virtual void _UNKNOWN_145(void) = 0;
+	virtual void _UNKNOWN_146(void) = 0;
+	virtual void _UNKNOWN_147(void) = 0;
+	virtual void _UNKNOWN_148(void) = 0;
+	virtual void _UNKNOWN_149(void) = 0;
+	virtual void _UNKNOWN_150(void) = 0;
+	virtual void _UNKNOWN_151(void) = 0;
+	virtual void _UNKNOWN_152(void) = 0;
+	virtual void _UNKNOWN_153(void) = 0;
+	virtual void _UNKNOWN_154(void) = 0;
+	virtual void _UNKNOWN_155(void) = 0;
+	virtual void _UNKNOWN_156(void) = 0;
+	virtual void _UNKNOWN_157(void) = 0;
+	virtual void _UNKNOWN_158(void) = 0;
+	virtual void _UNKNOWN_159(void) = 0;
+	virtual void _UNKNOWN_160(void) = 0;
+	virtual void _UNKNOWN_161(void) = 0;
+	virtual void _UNKNOWN_162(void) = 0;
+	virtual void _UNKNOWN_163(void) = 0;
+	virtual void _UNKNOWN_164(void) = 0;
+	virtual void _UNKNOWN_165(void) = 0;
+	virtual void _UNKNOWN_166(void) = 0;
+	virtual void _UNKNOWN_167(void) = 0;
+	virtual void _UNKNOWN_168(void) = 0;
+	virtual void _UNKNOWN_169(void) = 0;
+	virtual void _UNKNOWN_170(void) = 0;
+	virtual void _UNKNOWN_171(void) = 0;
+	virtual void _UNKNOWN_172(void) = 0;
+	virtual void _UNKNOWN_173(void) = 0;
+	virtual void _UNKNOWN_174(void) = 0;
+	virtual void _UNKNOWN_175(void) = 0;
+	virtual void _UNKNOWN_176(void) = 0;
+	virtual void _UNKNOWN_177(void) = 0;
+	virtual void _UNKNOWN_178(void) = 0;
+	virtual void _UNKNOWN_179(void) = 0;
+	virtual void _UNKNOWN_180(void) = 0;
+	virtual void _UNKNOWN_181(void) = 0;
+	virtual void _UNKNOWN_182(void) = 0;
+	virtual void _UNKNOWN_183(void) = 0;
+	virtual void _UNKNOWN_184(void) = 0;
+	virtual void _UNKNOWN_185(void) = 0;
+	virtual void _UNKNOWN_186(void) = 0;
+	virtual void _UNKNOWN_187(void) = 0;
+	virtual void _UNKNOWN_188(void) = 0;
+	virtual void _UNKNOWN_189(void) = 0;
+	virtual void _UNKNOWN_190(void) = 0;
+	virtual void _UNKNOWN_191(void) = 0;
+	virtual void _UNKNOWN_192(void) = 0;
+	virtual void _UNKNOWN_193(void) = 0;
+	virtual void _UNKNOWN_194(void) = 0;
+	virtual void _UNKNOWN_195(void) = 0;
+	virtual void _UNKNOWN_196(void) = 0;
+	virtual void _UNKNOWN_197(void) = 0;
+	virtual void _UNKNOWN_198(void) = 0;
+	virtual void _UNKNOWN_199(void) = 0;
+	virtual void _UNKNOWN_200(void) = 0;
+	virtual void _UNKNOWN_201(void) = 0;
+	virtual void _UNKNOWN_202(void) = 0;
+	virtual void _UNKNOWN_203(void) = 0;
+	virtual void _UNKNOWN_204(void) = 0;
+	virtual void _UNKNOWN_205(void) = 0;
+	virtual void _UNKNOWN_206(void) = 0;
+	virtual void _UNKNOWN_207(void) = 0;
+	virtual void _UNKNOWN_208(void) = 0;
+	virtual void _UNKNOWN_209(void) = 0;
+	virtual void _UNKNOWN_210(void) = 0;
+	virtual void _UNKNOWN_211(void) = 0;
+	virtual void _UNKNOWN_212(void) = 0;
+	virtual void _UNKNOWN_213(void) = 0;
+	virtual void _UNKNOWN_214(void) = 0;
+	virtual void _UNKNOWN_215(void) = 0;
+	virtual void _UNKNOWN_216(void) = 0;
+	virtual void _UNKNOWN_217(void) = 0;
+	virtual void _UNKNOWN_218(void) = 0;
+	virtual void _UNKNOWN_219(void) = 0;
+	virtual void _UNKNOWN_220(void) = 0;
+	virtual void _UNKNOWN_221(void) = 0;
+	virtual void _UNKNOWN_222(void) = 0;
+	virtual void _UNKNOWN_223(void) = 0;
+	virtual void _UNKNOWN_224(void) = 0;
+	virtual void _UNKNOWN_225(void) = 0;
+	virtual void _UNKNOWN_226(void) = 0;
+	virtual void _UNKNOWN_227(void) = 0;
+	virtual void _UNKNOWN_228(void) = 0;
+	virtual void _UNKNOWN_229(void) = 0;
+	virtual void _UNKNOWN_230(void) = 0;
+	virtual void _UNKNOWN_231(void) = 0;
+	virtual void _UNKNOWN_232(void) = 0;
+	virtual void _UNKNOWN_233(void) = 0;
+	virtual void _UNKNOWN_234(void) = 0;
+	virtual void _UNKNOWN_235(void) = 0;
+	virtual void _UNKNOWN_236(void) = 0;
+	virtual void _UNKNOWN_237(void) = 0;
+	virtual void _UNKNOWN_238(void) = 0;
+	virtual void _UNKNOWN_239(void) = 0;
+	virtual void _UNKNOWN_240(void) = 0;
+	virtual void _UNKNOWN_241(void) = 0;
+	virtual void _UNKNOWN_242(void) = 0;
+	virtual void _UNKNOWN_243(void) = 0;
+	virtual void _UNKNOWN_244(void) = 0;
+	virtual void _UNKNOWN_245(void) = 0;
+	virtual void _UNKNOWN_246(void) = 0;
+	virtual void _UNKNOWN_247(void) = 0;
+	virtual void _UNKNOWN_248(void) = 0;
+	virtual void _UNKNOWN_249(void) = 0;
+	virtual void _UNKNOWN_250(void) = 0;
+	virtual void _UNKNOWN_251(void) = 0;
+	virtual void _UNKNOWN_252(void) = 0;
+	virtual void _UNKNOWN_253(void) = 0;
+	virtual void _UNKNOWN_254(void) = 0;
+};
+
+// IMaterialSystem_csgo ////////////////////////////////////////////////////////
+
+#define MATERIAL_SYSTEM_INTERFACE_VERSION_CSGO_80 "VMaterialSystem080"
+
+typedef void * MaterialLock_t_csgo;
+
+class IMaterialSystem_csgo abstract : public IAppSystem_csgo
+{
+public:
+	virtual void _UNKNOWN_009(void) = 0;
+	virtual void _UNKNOWN_010(void) = 0;
+	virtual void _UNKNOWN_011(void) = 0;
+	virtual void _UNKNOWN_012(void) = 0;
+	virtual void _UNKNOWN_013(void) = 0;
+	virtual void _UNKNOWN_014(void) = 0;
+	virtual void _UNKNOWN_015(void) = 0;
+	virtual void _UNKNOWN_016(void) = 0;
+	virtual void _UNKNOWN_017(void) = 0;
+	virtual void _UNKNOWN_018(void) = 0;
+	virtual void _UNKNOWN_019(void) = 0;
+	virtual void _UNKNOWN_020(void) = 0;
+	virtual void _UNKNOWN_021(void) = 0;
+	virtual void _UNKNOWN_022(void) = 0;
+	virtual void _UNKNOWN_023(void) = 0;
+	virtual void _UNKNOWN_024(void) = 0;
+	virtual void _UNKNOWN_025(void) = 0;
+	virtual void _UNKNOWN_026(void) = 0;
+	virtual void _UNKNOWN_027(void) = 0;
+	virtual void _UNKNOWN_028(void) = 0;
+	virtual void _UNKNOWN_029(void) = 0;
+	virtual void _UNKNOWN_030(void) = 0;
+	virtual void _UNKNOWN_031(void) = 0;
+	virtual void _UNKNOWN_032(void) = 0;
+	virtual void _UNKNOWN_033(void) = 0;
+	virtual void _UNKNOWN_034(void) = 0;
+	virtual void _UNKNOWN_035(void) = 0;
+	virtual void _UNKNOWN_036(void) = 0;
+	virtual void _UNKNOWN_037(void) = 0;
+	virtual void _UNKNOWN_038(void) = 0;
+	virtual void _UNKNOWN_039(void) = 0;
+	virtual void _UNKNOWN_040(void) = 0;
+	virtual void _UNKNOWN_041(void) = 0;
+	virtual void _UNKNOWN_042(void) = 0;
+	virtual void _UNKNOWN_043(void) = 0;
+	virtual void _UNKNOWN_044(void) = 0;
+	virtual void _UNKNOWN_045(void) = 0;
+
+	// 046:
+	virtual void SwapBuffers() = 0;
+
+	virtual void _UNKNOWN_047(void) = 0;
+	virtual void _UNKNOWN_048(void) = 0;
+	virtual void _UNKNOWN_049(void) = 0;
+	virtual void _UNKNOWN_050(void) = 0;
+	virtual void _UNKNOWN_051(void) = 0;
+	virtual void _UNKNOWN_052(void) = 0;
+	virtual void _UNKNOWN_053(void) = 0;
+	virtual void _UNKNOWN_054(void) = 0;
+	virtual void _UNKNOWN_055(void) = 0;
+	virtual void _UNKNOWN_056(void) = 0;
+	virtual void _UNKNOWN_057(void) = 0;
+	virtual void _UNKNOWN_058(void) = 0;
+	virtual void _UNKNOWN_059(void) = 0;
+	virtual void _UNKNOWN_060(void) = 0;
+	virtual void _UNKNOWN_061(void) = 0;
+	virtual void _UNKNOWN_062(void) = 0;
+	virtual void _UNKNOWN_063(void) = 0;
+	virtual void _UNKNOWN_064(void) = 0;
+	virtual void _UNKNOWN_065(void) = 0;
+	virtual void _UNKNOWN_066(void) = 0;
+	virtual void _UNKNOWN_067(void) = 0;
+	virtual void _UNKNOWN_068(void) = 0;
+	virtual void _UNKNOWN_069(void) = 0;
+	virtual void _UNKNOWN_070(void) = 0;
+	virtual void _UNKNOWN_071(void) = 0;
+	virtual void _UNKNOWN_072(void) = 0;
+	virtual void _UNKNOWN_073(void) = 0;
+	virtual void _UNKNOWN_074(void) = 0;
+	virtual void _UNKNOWN_075(void) = 0;
+	virtual void _UNKNOWN_076(void) = 0;
+	virtual void _UNKNOWN_077(void) = 0;
+	virtual void _UNKNOWN_078(void) = 0;
+	virtual void _UNKNOWN_079(void) = 0;
+	virtual void _UNKNOWN_080(void) = 0;
+	virtual void _UNKNOWN_081(void) = 0;
+	virtual void _UNKNOWN_082(void) = 0;
+
+	// 083:
+	virtual IMaterial_csgo * FindMaterial( char const* pMaterialName, const char *pTextureGroupName, bool complain = true, const char *pComplainPrefix = 0 ) = 0;
+	
+	virtual void _UNKNOWN_084(void) = 0;
+	virtual void _UNKNOWN_085(void) = 0;
+	virtual void _UNKNOWN_086(void) = 0;
+	virtual void _UNKNOWN_087(void) = 0;
+	virtual void _UNKNOWN_088(void) = 0;
+	virtual void _UNKNOWN_089(void) = 0;
+	virtual void _UNKNOWN_090(void) = 0;
+	virtual void _UNKNOWN_091(void) = 0;
+	virtual void _UNKNOWN_092(void) = 0;
+	virtual void _UNKNOWN_093(void) = 0;
+	virtual void _UNKNOWN_094(void) = 0;
+	virtual void _UNKNOWN_095(void) = 0;
+	virtual void _UNKNOWN_096(void) = 0;
+	virtual void _UNKNOWN_097(void) = 0;
+	virtual void _UNKNOWN_098(void) = 0;
+	virtual void _UNKNOWN_099(void) = 0;
+	virtual void _UNKNOWN_100(void) = 0;
+	virtual void _UNKNOWN_101(void) = 0;
+	virtual void _UNKNOWN_102(void) = 0;
+	virtual void _UNKNOWN_103(void) = 0;
+	virtual void _UNKNOWN_104(void) = 0;
+	virtual void _UNKNOWN_105(void) = 0;
+	virtual void _UNKNOWN_106(void) = 0;
+	virtual void _UNKNOWN_107(void) = 0;
+	virtual void _UNKNOWN_108(void) = 0;
+	virtual void _UNKNOWN_109(void) = 0;
+	virtual void _UNKNOWN_110(void) = 0;
+	virtual void _UNKNOWN_111(void) = 0;
+	virtual void _UNKNOWN_112(void) = 0;
+	virtual void _UNKNOWN_113(void) = 0;
+	virtual void _UNKNOWN_114(void) = 0;
+	
+	// 115:
+	virtual IMatRenderContext_csgo *	GetRenderContext() = 0;
+
+	virtual void _UNKNOWN_116(void) = 0;
+	virtual void _UNKNOWN_117(void) = 0;
+	virtual void _UNKNOWN_118(void) = 0;
+	virtual void _UNKNOWN_119(void) = 0;
+	virtual void _UNKNOWN_120(void) = 0;
+
+	// 121:
+	virtual IMatRenderContext_csgo *SetRenderContext( IMatRenderContext_csgo * ) = 0;
+
+	// ...
+	// more that we don't care about
+};
