@@ -29,7 +29,10 @@
 
 #include "AfxHookSourceInput.h"
 
+//#include <string.h>
+
 #include <map>
+#include <set>
 
 
 WrpVEngineClient * g_VEngineClient = 0;
@@ -106,6 +109,7 @@ CreateInterfaceFn g_AppSystemFactory = 0;
 bool isCsgo = false;
 
 IMaterialSystem_csgo * g_MaterialSystem_csgo = 0;
+IVRenderView_csgo * g_RenderView_csgo = 0;
 
 void MySetup(CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals)
 {
@@ -169,6 +173,14 @@ void MySetup(CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals)
 			else {
 				ErrorBox("Could not get a supported VMaterialSystem interface.");
 			}
+
+			if(iface = appSystemFactory(VENGINE_RENDERVIEW_INTERFACE_VERSION_CSGO_013, NULL))
+			{
+				g_RenderView_csgo = (IVRenderView_csgo *)iface;
+			}
+			else {
+				ErrorBox("Could not get a supported VEngineRenderView interface.");
+			}				
 		}
 		
 		g_Hook_VClient_RenderView.Install(pGlobals);
@@ -177,11 +189,239 @@ void MySetup(CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals)
 	}
 }
 
+
+// The first 3 asm instructions unroll the compiler epiloge code,
+// this might need to be updated. I couldn't find a better way yet,
+// since __declspec(naked) won't work on member functions.
+// TODO:
+// A better way might be filling a struct with function pointers
+// and returning a pointer to that maybe.
+#define JMP_IFACE_FN(iface,index) \
+	__asm pop ecx \
+	__asm mov esp, ebp \
+	__asm pop ebp \
+	__asm mov ecx, iface \
+	__asm mov eax, [ecx] \
+	__asm mov eax, [eax +4*index] \
+	__asm jmp eax
+
+#define JMP_CLASSMEMBERIFACE_FN(classType,classMemberIface,index) \
+	__asm CALL Use \
+	__asm mov eax, this \
+	__asm mov eax, [eax]classType.classMemberIface \
+	__asm pop ecx \
+	__asm mov esp, ebp \
+	__asm pop ebp \
+	__asm mov ecx, eax \
+	__asm mov eax, [ecx] \
+	__asm mov eax, [eax +4*index] \
+	__asm jmp eax
+
+
+#pragma warning(push)
+#pragma warning(disable:4731) // frame pointer register 'ebp' modified by inline assembly code
+
+class CRenderViewWrapper_csgo
+{
+public:
+	virtual void _UNKOWN_000(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 0) }
+
+	virtual void _UNKOWN_001(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 1) }
+
+	virtual void _UNKOWN_002(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 2) }
+
+	virtual void _UNKOWN_003(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 3) }
+
+	virtual void _UNKOWN_004(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 4) }
+
+	virtual void _UNKOWN_005(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 5) }
+
+	virtual void SetColorModulation( float const* blend )
+	{
+		// JMP_IFACE_FN(g_RenderView_csgo, 6)
+		float color[3] = { 1.0f, 0.0f, 0.0f };
+		g_RenderView_csgo->SetColorModulation(color);
+	}
+
+	virtual void _UNKOWN_007(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 7) }
+
+	virtual void _UNKOWN_008(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 8) }
+
+	virtual void _UNKOWN_009(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 9) }
+
+	virtual void _UNKOWN_010(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 10) }
+
+	virtual void _UNKOWN_011(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 11) }
+
+	virtual void _UNKOWN_012(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 12) }
+
+	virtual void _UNKOWN_013(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 13) }
+
+	virtual void _UNKOWN_014(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 14) }
+
+	virtual void _UNKOWN_015(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 15) }
+
+	virtual void _UNKOWN_016(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 16) }
+
+	virtual void _UNKOWN_017(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 17) }
+
+	virtual void _UNKOWN_018(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 18) }
+
+	virtual void _UNKOWN_019(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 19) }
+
+	virtual void _UNKOWN_020(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 20) }
+
+	virtual void _UNKOWN_021(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 21) }
+
+	virtual void _UNKOWN_022(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 22) }
+
+	virtual void _UNKOWN_023(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 23) }
+
+	virtual void _UNKOWN_024(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 24) }
+
+	virtual void _UNKOWN_025(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 25) }
+
+	virtual void _UNKOWN_026(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 26) }
+
+	virtual void _UNKOWN_027(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 27) }
+
+	virtual void _UNKOWN_028(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 28) }
+
+	virtual void _UNKOWN_029(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 29) }
+
+	virtual void _UNKOWN_030(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 30) }
+
+	virtual void _UNKOWN_031(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 31) }
+
+	virtual void _UNKOWN_032(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 32) }
+
+	virtual void _UNKOWN_033(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 33) }
+
+	virtual void _UNKOWN_034(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 34) }
+
+	virtual void _UNKOWN_035(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 35) }
+
+	virtual void _UNKOWN_036(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 36) }
+
+	virtual void _UNKOWN_037(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 37) }
+
+	virtual void _UNKOWN_038(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 38) }
+
+	virtual void _UNKOWN_039(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 39) }
+
+	virtual void _UNKOWN_040(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 40) }
+
+	virtual void _UNKOWN_041(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 41) }
+
+	virtual void _UNKOWN_042(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 42) }
+
+	virtual void _UNKOWN_043(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 43) }
+
+	virtual void _UNKOWN_044(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 44) }
+
+	virtual void _UNKOWN_045(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 45) }
+
+	virtual void _UNKOWN_046(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 46) }
+
+	virtual void _UNKOWN_047(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 47) }
+
+	virtual void _UNKOWN_048(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 48) }
+
+	virtual void _UNKOWN_049(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 49) }
+
+	virtual void _UNKOWN_050(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 50) }
+
+	virtual void _UNKOWN_051(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 51) }
+
+	virtual void _UNKOWN_052(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 52) }
+
+	virtual void _UNKOWN_053(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 53) }
+
+	virtual void _UNKOWN_054(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 54) }
+
+	virtual void _UNKOWN_055(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 55) }
+
+	virtual void _UNKOWN_056(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 56) }
+
+	virtual void _UNKOWN_057(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 57) }
+
+	virtual void _UNKOWN_058(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 58) }
+
+	virtual void _UNKOWN_059(void)
+	{ JMP_IFACE_FN(g_RenderView_csgo, 59) }
+
+} g_RenderViewWrapper_csgo;
+
+#pragma warning(pop)
+
 void* AppSystemFactory_ForClient(const char *pName, int *pReturnCode)
 {
 	if(!strcmp(VCLIENTENGINETOOLS_INTERFACE_VERSION_001, pName))
 	{
 		return &g_ClientEngineTools;
+	}
+	else
+	if(isCsgo && !strcmp(VENGINE_RENDERVIEW_INTERFACE_VERSION_CSGO_013, pName))
+	{
+		return &g_RenderViewWrapper_csgo;
 	}
 
 	return g_AppSystemFactory(pName, pReturnCode);
@@ -267,39 +507,85 @@ struct vrect_t_csgo
 bool g_bTakeScreenShot = false;
 
 HANDLE hRenderContextMapLock = 0;
+HANDLE hMaterialInfoSetLock = 0;
 
+struct CAfxMaterialValue_csgo
+{
+public:
+	CAfxMaterialValue_csgo(IMaterial_csgo * material)
+	: m_Material(material)
+	{
+		m_Material->IncrementReferenceCount();
+	}
+
+	CAfxMaterialValue_csgo(const CAfxMaterialValue_csgo & x)
+	: m_Material(x.GetMaterial())
+	{
+		m_Material->IncrementReferenceCount();
+	}
+
+	~CAfxMaterialValue_csgo()
+	{
+		m_Material->DecrementReferenceCount();
+	}
+
+	IMaterial_csgo * GetMaterial() const
+	{
+		return m_Material;
+	}
+
+private:
+	IMaterial_csgo * m_Material;
+
+};
+
+struct CAfxMaterialKey_csgo : public CAfxMaterialValue_csgo
+{
+public:
+	CAfxMaterialKey_csgo(IMaterial_csgo * material)
+	: CAfxMaterialValue_csgo(material)
+	{
+	}
+
+	bool operator < (const CAfxMaterialKey_csgo & y) const
+	{
+		int cmp1 = strcmp(this->GetMaterial()->GetTextureGroupName(), y.GetMaterial()->GetTextureGroupName());
+		if(cmp1 < 0)
+			return true;
+		else
+		if(cmp1 > 0)
+			return false;
+
+		return strcmp(this->GetMaterial()->GetName(), y.GetMaterial()->GetName()) < 0;
+	}
+};
+
+std::set<CAfxMaterialKey_csgo> g_MaterialInfoSet_csgo;
+
+void PrintMaterialInfoSetToFile(void)
+{
+	FILE *f1=NULL;
+
+	f1=fopen("afx_material_info.txt","wb");
+
+	if(!f1) return;
+
+	WaitForSingleObject(hMaterialInfoSetLock, INFINITE);
+
+	for(std::set<CAfxMaterialKey_csgo>::iterator it = g_MaterialInfoSet_csgo.begin(); it != g_MaterialInfoSet_csgo.end(); ++it)
+	{
+		fprintf(f1,"%s %s\n", it->GetMaterial()->GetTextureGroupName(), it->GetMaterial()->GetName());
+	}
+
+	SetEvent(hMaterialInfoSetLock);
+
+	fclose(f1);
+}
 
 IMaterial_csgo * errMaterial;
 
 #pragma warning(push)
 #pragma warning(disable:4731) // frame pointer register 'ebp' modified by inline assembly code
-
-// The first 3 asm instructions unroll the compiler epiloge code,
-// this might need to be updated. I couldn't find a better way yet,
-// since __declspec(naked) won't work on member functions.
-// TODO:
-// A better way might be filling a struct with function pointers
-// and returning a pointer to that maybe.
-#define JMP_IFACE_FN(iface,index) \
-	__asm pop ecx \
-	__asm mov esp, ebp \
-	__asm pop ebp \
-	__asm mov ecx, iface \
-	__asm mov eax, [ecx] \
-	__asm mov eax, [eax +4*index] \
-	__asm jmp eax
-
-#define JMP_CLASSMEMBERIFACE_FN(classType,classMemberIface,index) \
-	__asm CALL Use \
-	__asm mov eax, this \
-	__asm mov eax, [eax]classType.classMemberIface \
-	__asm pop ecx \
-	__asm mov esp, ebp \
-	__asm pop ebp \
-	__asm mov ecx, eax \
-	__asm mov eax, [ecx] \
-	__asm mov eax, [eax +4*index] \
-	__asm jmp eax
 
 class CMatRenderContextWrapper_csgo : public IMatRenderContext_csgo
 {
@@ -390,11 +676,20 @@ public:
 
 		if(m_Active)
 		{
-			const char * groupName =  material->GetTextureGroupName();
+			CAfxMaterialKey_csgo key(material);
 
-			if(!_stricmp("World textures", groupName)
-				||  !_stricmp("SkyBox textures", groupName)
-				|| !_stricmp("StaticProp textures", groupName)
+			WaitForSingleObject(hMaterialInfoSetLock, INFINITE);
+
+			g_MaterialInfoSet_csgo.insert(key);
+
+			SetEvent(hMaterialInfoSetLock);
+
+			const char * groupName =  material->GetTextureGroupName();
+			const char * name = material->GetName();
+
+			if(
+				!_stricmp("World textures", groupName) ||  !_stricmp("SkyBox textures", groupName) || !_stricmp("StaticProp textures", groupName)
+				//!_stricmp("models/props/de_dust/dust_rusty_barrel", name)
 			)
 				m_Parent->Bind( errMaterial, proxyData );
 			else
@@ -402,6 +697,9 @@ public:
 		}
 		else
 			m_Parent->Bind( material, proxyData );
+
+		float color[3] = { 1.0f, 0.0f, 0.0f };
+		g_RenderView_csgo->SetColorModulation(color);
 	}
 
 	virtual void _UNKNOWN_010(void)
@@ -950,8 +1248,27 @@ public:
 	virtual void _UNKNOWN_191(void)
 	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 191) }
 
-	virtual void _UNKNOWN_192(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 192) }
+	virtual void DrawInstances( int nInstanceCount, const MeshInstanceData_t_csgo *pInstance )
+	{
+		// JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 192)
+
+		if(m_Active)
+		{
+			MeshInstanceData_t_csgo * first = const_cast<MeshInstanceData_t_csgo *>(pInstance);
+
+			for(int i = 0; i < nInstanceCount; ++i)
+			{
+				first->m_DiffuseModulation.x = 1.0;
+				first->m_DiffuseModulation.y = 0.0;
+				first->m_DiffuseModulation.z = 0.0;
+				first->m_DiffuseModulation.w = 1.0;
+
+				++first;
+			}
+		}
+
+		m_Parent->DrawInstances(nInstanceCount, pInstance);
+	}
 
 	virtual void _UNKNOWN_193(void)
 	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 193) }
@@ -1146,7 +1463,12 @@ private:
 	bool m_Active;
 };
 
+#pragma warning(pop)
+
 std::map<IMatRenderContext_csgo *,CMatRenderContextWrapper_csgo *> g_RenderContextMap_csgo;
+
+#pragma warning(push)
+#pragma warning(disable:4731) // frame pointer register 'ebp' modified by inline assembly code
 
 class CBaseClientDllWrapper_csgo
 {
@@ -1188,6 +1510,7 @@ public:
 		if(g_MaterialSystem_csgo)
 		{
 			errMaterial = g_MaterialSystem_csgo->FindMaterial("afx/greenmatte",NULL);
+			errMaterial->IncrementReferenceCount();
 		}
 
 		return myret;
@@ -1197,7 +1520,18 @@ public:
 	{ JMP_IFACE_FN(csgo_VClient, 3) }
 
 	virtual void Shutdown( void )
-	{ JMP_IFACE_FN(csgo_VClient, 4) }
+	{
+		// JMP_IFACE_FN(csgo_VClient, 4)
+
+		g_MaterialInfoSet_csgo.clear();
+
+		__asm {
+			mov ecx, csgo_VClient
+			mov eax, [ecx]
+			mov eax, [eax +4*4]
+			call eax
+		}
+	}
 	
 	virtual void _UNKOWN_005(void)
 	{ JMP_IFACE_FN(csgo_VClient, 5) }
@@ -2049,6 +2383,7 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 				ErrorBox();
 
 			hRenderContextMapLock = CreateEvent(NULL, FALSE, TRUE, NULL);
+			hMaterialInfoSetLock = CreateEvent(NULL, FALSE, TRUE, NULL);
 
 			break;
 		}
@@ -2061,6 +2396,7 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 				delete it->second;
 			}
 
+			CloseHandle(hMaterialInfoSetLock);
 			CloseHandle(hRenderContextMapLock);
 
 			//ErrorBox("If you see this error message, tell the developers :-)");

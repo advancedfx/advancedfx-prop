@@ -1782,8 +1782,25 @@ public:
 class IMaterial_csgo abstract
 {
 public:
+	// 000:
 	virtual const char *	GetName() const = 0;
+
+	// 001:
 	virtual const char *	GetTextureGroupName() const = 0;
+
+	virtual void _UNKNOWN_002(void) = 0;
+	virtual void _UNKNOWN_003(void) = 0;
+	virtual void _UNKNOWN_004(void) = 0;
+	virtual void _UNKNOWN_005(void) = 0;
+	virtual void _UNKNOWN_006(void) = 0;
+	virtual void _UNKNOWN_007(void) = 0;
+	virtual void _UNKNOWN_008(void) = 0;
+	virtual void _UNKNOWN_009(void) = 0;
+	virtual void _UNKNOWN_010(void) = 0;
+	virtual void _UNKNOWN_011(void) = 0;
+
+	virtual void IncrementReferenceCount( void ) = 0;
+	virtual void DecrementReferenceCount( void ) = 0;
 
 	// ...
 	// there are more here that we don't care about.
@@ -1799,6 +1816,42 @@ public:
 };
 
 // IMatRenderContext_csgo //////////////////////////////////////////////////////
+
+typedef void MeshBoneRemap_t_csgo;
+typedef void matrix3x4_t_csgo;
+typedef void ITexture_csgo;
+typedef void MaterialLightingState_t_csgo;
+typedef int MaterialPrimitiveType_t_csgo;
+typedef void IVertexBuffer_csgo;
+typedef void IIndexBuffer_csgo;
+typedef void ShaderStencilState_t_csgo;
+
+class Vector4D_csgo					
+{
+public:
+	// Members
+	vec_t x, y, z, w;
+};
+
+struct MeshInstanceData_t_csgo
+{
+	int						m_nIndexOffset;
+	int						m_nIndexCount;
+	int						m_nBoneCount;
+	MeshBoneRemap_t_csgo *		m_pBoneRemap;		// there are bone count of these, they index into pose to world
+	matrix3x4_t_csgo	*			m_pPoseToWorld;	// transforms for the *entire* model, indexed into by m_pBoneIndex. Potentially more than bone count of these
+	const ITexture_csgo *		m_pEnvCubemap;
+	MaterialLightingState_t_csgo *m_pLightingState;
+	MaterialPrimitiveType_t_csgo m_nPrimType;
+	const IVertexBuffer_csgo	*	m_pVertexBuffer;
+	int						m_nVertexOffsetInBytes;
+	const IIndexBuffer_csgo *	m_pIndexBuffer;
+	const IVertexBuffer_csgo	*	m_pColorBuffer;
+	int						m_nColorVertexOffsetInBytes;
+	ShaderStencilState_t_csgo *	m_pStencilState;
+	Vector4D_csgo				m_DiffuseModulation;
+	int _UNKNOWN_0x4c;
+};
 
 class IMatRenderContext_csgo abstract : public IRefCounted_csgo
 {
@@ -2002,7 +2055,10 @@ public:
 	virtual void _UNKNOWN_189(void) = 0;
 	virtual void _UNKNOWN_190(void) = 0;
 	virtual void _UNKNOWN_191(void) = 0;
-	virtual void _UNKNOWN_192(void) = 0;
+
+	// 192:
+	virtual void DrawInstances( int nInstanceCount, const MeshInstanceData_t_csgo *pInstance ) = 0;
+
 	virtual void _UNKNOWN_193(void) = 0;
 	virtual void _UNKNOWN_194(void) = 0;
 	virtual void _UNKNOWN_195(void) = 0;
@@ -2153,11 +2209,11 @@ public:
 	virtual void _UNKNOWN_080(void) = 0;
 	virtual void _UNKNOWN_081(void) = 0;
 	virtual void _UNKNOWN_082(void) = 0;
+	virtual void _UNKNOWN_083(void) = 0;
 
-	// 083:
+	// 084:
 	virtual IMaterial_csgo * FindMaterial( char const* pMaterialName, const char *pTextureGroupName, bool complain = true, const char *pComplainPrefix = 0 ) = 0;
 	
-	virtual void _UNKNOWN_084(void) = 0;
 	virtual void _UNKNOWN_085(void) = 0;
 	virtual void _UNKNOWN_086(void) = 0;
 	virtual void _UNKNOWN_087(void) = 0;
@@ -2203,4 +2259,28 @@ public:
 
 	// ...
 	// more that we don't care about
+};
+
+// IVRenderView_csgo ///////////////////////////////////////////////////////////
+
+#define VENGINE_RENDERVIEW_INTERFACE_VERSION_CSGO_013 "VEngineRenderView013"
+
+class IVRenderView_csgo
+{
+public:
+	virtual void _UNKNOWN_000(void) = 0;
+	virtual void _UNKNOWN_001(void) = 0;
+	virtual void _UNKNOWN_002(void) = 0;
+	virtual void _UNKNOWN_003(void) = 0;
+
+	// Sets global blending fraction
+	virtual void			SetBlend( float blend ) = 0;
+	virtual float			GetBlend( void ) = 0;
+
+	// Sets global color modulation
+	virtual void			SetColorModulation( float const* blend ) = 0;
+	virtual void			GetColorModulation( float* blend ) = 0;
+
+	// ...
+	// more that we don't care about.
 };

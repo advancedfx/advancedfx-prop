@@ -36,6 +36,13 @@ extern WrpVEngineClient * g_VEngineClient;
 
 extern bool g_bTakeScreenShot;
 
+void PrintMaterialInfoSetToFile(void);
+
+CON_COMMAND(__mirv_test2, "")
+{
+	PrintMaterialInfoSetToFile();
+}
+
 CON_COMMAND(__mirv_test, "")
 {
 	if(2 <= args->ArgC())
