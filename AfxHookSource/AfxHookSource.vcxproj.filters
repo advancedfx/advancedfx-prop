@@ -81,6 +81,15 @@
     <ClCompile Include="..\shared\hooks\gameOverlayRenderer.cpp">
       <Filter>shared\hooks</Filter>
     </ClCompile>
+    <ClCompile Include="hlaeFolder.cpp">
+      <Filter>AfxHookSource</Filter>
+    </ClCompile>
+    <ClCompile Include="AfxStreams.cpp">
+      <Filter>AfxHookSource</Filter>
+    </ClCompile>
+    <ClCompile Include="AfxClasses.cpp">
+      <Filter>AfxHookSource</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -154,6 +163,18 @@
     </ClInclude>
     <ClInclude Include="..\shared\hooks\gameOverlayRenderer.h">
       <Filter>shared\hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="hlaeFolder.h">
+      <Filter>AfxHookSource</Filter>
+    </ClInclude>
+    <ClInclude Include="AfxInterfaces.h">
+      <Filter>AfxHookSource</Filter>
+    </ClInclude>
+    <ClInclude Include="AfxStreams.h">
+      <Filter>AfxHookSource</Filter>
+    </ClInclude>
+    <ClInclude Include="AfxClasses.h">
+      <Filter>AfxHookSource</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

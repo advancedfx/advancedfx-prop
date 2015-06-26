@@ -24,7 +24,7 @@
 #include "csgo_SndMixTimeScalePatch.h"
 #include "AfxHookSourceInput.h"
 #include <shared/hooks/gameOverlayRenderer.h>
-
+#include "AfxStreams.h"
 #include "addresses.h"
 
 #include <malloc.h>
@@ -34,30 +34,156 @@
 
 extern WrpVEngineClient * g_VEngineClient;
 
-extern bool g_bTakeScreenShot;
+
+CON_COMMAND(__mirv_streams, "Access to streams system.")
+{
+	int argc = args->ArgC();
+
+	if(2 <= argc)
+	{
+		char const * cmd1 = args->ArgV(1);
+
+		if(_stricmp(cmd1, "add"))
+		{
+			if(3 <= argc)
+			{
+				char const * cmd2 = args->ArgV(2);
+
+				if(_stricmp(cmd2, "matteWorldStream"))
+				{
+					if(4 <= argc)
+					{
+						char const * cmd3 = args->ArgV(3);
+
+						g_AfxStreams.Console_AddMatteWorldStream(cmd3);
+
+						return;
+					}
+
+					Tier0_Msg(
+						"mirv_streams add matteWorldStream <name> - Add a matte world stream with name <name>.\n"
+					);
+					return;
+				}
+				else
+				if(_stricmp(cmd2, "matteEnitityStream"))
+				{
+					if(4 <= argc)
+					{
+						char const * cmd3 = args->ArgV(3);
+
+						g_AfxStreams.Console_AddMatteEntityStream(cmd3);
+
+						return;
+					}
+
+					Tier0_Msg(
+						"mirv_streams add matteEnitityStream <name> - Add a matte entity stream with name <name>.\n"
+					);
+					return;
+				}
+				
+			}
+
+			Tier0_Msg(
+				"mirv_streams add matteWorldStream [...] - Add a matte world stream.\n"
+				"mirv_streams add matteEnitityStream [...] - Add a matte entity stream.\n"
+			);
+			return;
+		}
+		else
+		if(_stricmp(cmd1, "remove"))
+		{
+			if(3 <= argc)
+			{
+				char const * cmd2 = args->ArgV(2);
+				int index = atoi(cmd2);
+				
+				g_AfxStreams.Console_RemoveStream(index);
+				return;
+			}
+
+			Tier0_Msg(
+				"mirv_streams remove <index> - Remove a stream with index <index>, you can get the value from mirv_streams print.\n"
+			);
+			return;
+		}
+		else
+		if(_stricmp(cmd1, "print"))
+		{
+			g_AfxStreams.Console_PrintStreams();
+
+			return;
+		}
+		else
+		if(_stricmp(cmd1, "record"))
+		{
+			if(3 <= argc)
+			{
+				char const * cmd2 = args->ArgV(2);
+
+				if(_stricmp(cmd2, "name"))
+				{
+					if(4 <= argc)
+					{
+						char const * cmd3 = args->ArgV(3);
+						g_AfxStreams.Console_RecordName_set(cmd3);
+						return;
+					}
+
+					Tier0_Msg(
+						"mirv_streams record name <name> - Set record name to <name>.\n"
+						"Current value: %s\n",
+						g_AfxStreams.Console_RecordName_get()
+					);
+					return;
+				}
+				else
+				if(_stricmp(cmd2, "start"))
+				{
+					g_AfxStreams.Console_Record_Start();
+					return;
+				}
+				else
+				if(_stricmp(cmd2, "end"))
+				{
+					g_AfxStreams.Console_Record_End();
+					return;
+				}
+			}
+
+			Tier0_Msg(
+				"mirv_streams record name [...] - Set/get record name.\n"
+				"mirv_streams record start - Begin recording.\n"
+				"mirv_streams record end - End reocrding.\n"
+			);
+			return;
+		}
+	}
+
+	Tier0_Msg(
+		"mirv_streams add [...]- Add a stream.\n"
+		"mirv_streams remove [...] - Remove a stream.\n"
+		"mirv_streams print - Print current streams.\n"
+		"mirv_streams record [...] - Recording control.\n"
+	);
+	return;
+
+}
 
 void PrintMaterialInfoSetToFile(void);
 
-CON_COMMAND(__mirv_test2, "")
+
+CON_COMMAND(__mirv_write_materialinfo, "")
 {
 	PrintMaterialInfoSetToFile();
 }
 
-CON_COMMAND(__mirv_test, "")
-{
-	if(2 <= args->ArgC())
-	{
-		g_bTakeScreenShot = 0 != atoi(args->ArgV(1));
-	}
+extern bool g_CollectMaterialInfo;
 
-/*
-	Tier0_Msg(
-		"LevelName: %s\n"
-		"ProductVersionString: %s\n",
-		g_VEngineClient->GetLevelName(),
-		g_VEngineClient->GetProductVersionString()
-	);
-*/
+CON_COMMAND(__mirv_collect_materialinfo, "")
+{
+	g_CollectMaterialInfo = true;
 }
 
 CON_COMMAND(__mirv_exec, "client command execution: __mirv_exec <as you would have typed here>") {

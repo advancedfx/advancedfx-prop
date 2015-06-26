@@ -2261,26 +2261,245 @@ public:
 	// more that we don't care about
 };
 
+// IBaseClientDLL_csgo /////////////////////////////////////////////////////////
+
+class CViewSetup_csgo;
+
+struct vrect_t_csgo
+{
+	int				x,y,width,height;
+	vrect_t_csgo			*pnext;
+};
+
+class IBaseClientDLL_csgo abstract
+{
+public:
+	// 000:
+	virtual int Connect( CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGlobals ) = 0;
+
+	// 001:
+	virtual void Disconnect() = 0;
+
+	// 002:
+	virtual int Init( CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGlobals ) = 0;
+
+	// 003:
+	virtual void PostInit() = 0;
+
+	// 004:
+	virtual void Shutdown( void ) = 0;
+	
+	virtual void _UNKOWN_005(void) = 0;
+	virtual void _UNKOWN_006(void) = 0;
+	virtual void _UNKOWN_007(void) = 0;
+	virtual void _UNKOWN_008(void) = 0;
+	virtual void _UNKOWN_009(void) = 0;
+	virtual void _UNKOWN_010(void) = 0;
+	virtual void _UNKOWN_011(void) = 0;
+	virtual void _UNKOWN_012(void) = 0;
+	virtual void _UNKOWN_013(void) = 0;
+	virtual void _UNKOWN_014(void) = 0;
+	virtual void _UNKOWN_015(void) = 0;
+	virtual void _UNKOWN_016(void) = 0;
+	virtual void _UNKOWN_017(void) = 0;
+	virtual void _UNKOWN_018(void) = 0;
+	virtual void _UNKOWN_019(void) = 0;
+	virtual void _UNKOWN_020(void) = 0;
+	virtual void _UNKOWN_021(void) = 0;
+	virtual void _UNKOWN_022(void) = 0;
+	virtual void _UNKOWN_023(void) = 0;
+	virtual void _UNKOWN_024(void) = 0;
+	virtual void _UNKOWN_025(void) = 0;
+
+	// 026:
+	virtual void View_Render( vrect_t_csgo *rect )= 0;
+
+	// 027:
+	virtual void RenderView( const CViewSetup_csgo &view, int nClearFlags, int whatToDraw )= 0;
+
+	virtual void _UNKOWN_028(void)= 0;
+	virtual void _UNKOWN_029(void) = 0;
+	virtual void _UNKOWN_030(void) = 0;
+	virtual void _UNKOWN_031(void) = 0;
+	virtual void _UNKOWN_032(void) = 0;
+	virtual void _UNKOWN_033(void) = 0;
+	virtual void _UNKOWN_034(void) = 0;
+	virtual void _UNKOWN_035(void) = 0;
+	virtual void _UNKOWN_036(void) = 0;
+	virtual void _UNKOWN_037(void) = 0;
+	virtual void _UNKOWN_038(void) = 0;
+	virtual void _UNKOWN_039(void) = 0;
+	virtual void _UNKOWN_040(void) = 0;
+	virtual void _UNKOWN_041(void) = 0;
+	virtual void _UNKOWN_042(void) = 0;
+	virtual void _UNKOWN_043(void) = 0;
+	virtual void _UNKOWN_044(void) = 0;
+	virtual void _UNKOWN_045(void) = 0;
+	virtual void _UNKOWN_046(void) = 0;
+	virtual void _UNKOWN_047(void) = 0;
+	virtual void _UNKOWN_048(void) = 0;
+	virtual void _UNKOWN_049(void) = 0;
+	virtual void _UNKOWN_050(void) = 0;
+	virtual void _UNKOWN_051(void) = 0;
+	virtual void _UNKOWN_052(void) = 0;
+	virtual void _UNKOWN_053(void) = 0;
+	virtual void _UNKOWN_054(void) = 0;
+	virtual void _UNKOWN_055(void) = 0;
+	virtual void _UNKOWN_056(void) = 0;
+	virtual void _UNKOWN_057(void) = 0;
+	virtual void _UNKOWN_058(void) = 0;
+	virtual void _UNKOWN_059(void) = 0;
+	virtual void _UNKOWN_060(void) = 0;
+	virtual void _UNKOWN_061(void) = 0;
+	virtual void _UNKOWN_062(void) = 0;
+
+	// 063:
+	virtual void _UNUSED_GetScreenWidth(void) = 0;
+	
+	// 064:
+	virtual void _UNUSED_GetScreenHeight(void) = 0;
+	
+	// 065:
+	virtual void WriteSaveGameScreenshotOfSize( const char *pFilename, int width, int height, bool bCreatePowerOf2Padded = false, bool bWriteVTF = false ) = 0;
+	
+	virtual void _UNKOWN_066(void) = 0;
+	virtual void _UNKOWN_067(void) = 0;
+	virtual void _UNKOWN_068(void) = 0;
+	virtual void _UNKOWN_069(void) = 0;
+	virtual void _UNKOWN_070(void) = 0;
+	virtual void _UNKOWN_071(void) = 0;
+	virtual void _UNKOWN_072(void) = 0;
+	virtual void _UNKOWN_073(void) = 0;
+	virtual void _UNKOWN_074(void) = 0;
+	virtual void _UNKOWN_075(void) = 0;
+	virtual void _UNKOWN_076(void) = 0;
+	virtual void _UNKOWN_077(void) = 0;
+	virtual void _UNKOWN_078(void) = 0;
+	virtual void _UNKOWN_079(void) = 0;
+	virtual void _UNKOWN_080(void) = 0;
+	virtual void _UNKOWN_081(void) = 0;
+	virtual void _UNKOWN_082(void) = 0;
+	virtual void _UNKOWN_083(void) = 0;
+	virtual void _UNKOWN_084(void) = 0;
+	virtual void _UNKOWN_085(void) = 0;
+	virtual void _UNKOWN_086(void) = 0;
+	virtual void _UNKOWN_087(void) = 0;
+	virtual void _UNKOWN_088(void) = 0;
+	virtual void _UNKOWN_089(void) = 0;
+	virtual void _UNKOWN_090(void) = 0;
+	virtual void _UNKOWN_091(void) = 0;
+	virtual void _UNKOWN_092(void) = 0;
+	virtual void _UNKOWN_093(void) = 0;
+	virtual void _UNKOWN_094(void) = 0;
+	virtual void _UNKOWN_095(void) = 0;
+	virtual void _UNKOWN_096(void) = 0;
+	virtual void _UNKOWN_097(void) = 0;
+	virtual void _UNKOWN_098(void) = 0;
+	virtual void _UNKOWN_099(void) = 0;
+	virtual void _UNKOWN_100(void) = 0;
+	virtual void _UNKOWN_101(void) = 0;
+	virtual void _UNKOWN_102(void) = 0;
+	virtual void _UNKOWN_103(void) = 0;
+	virtual void _UNKOWN_104(void) = 0;
+	virtual void _UNKOWN_105(void) = 0;
+	virtual void _UNKOWN_106(void) = 0;
+	virtual void _UNKOWN_107(void) = 0;
+	virtual void _UNKOWN_108(void) = 0;
+	virtual void _UNKOWN_109(void) = 0;
+	virtual void _UNKOWN_110(void) = 0;
+	
+	// and a few more to be save from updates:
+
+	virtual void _UNKOWN_111(void) = 0;
+	virtual void _UNKOWN_112(void) = 0;
+	virtual void _UNKOWN_113(void) = 0;
+	virtual void _UNKOWN_114(void) = 0;
+	virtual void _UNKOWN_115(void) = 0;
+	virtual void _UNKOWN_116(void) = 0;
+	virtual void _UNKOWN_117(void) = 0;
+	virtual void _UNKOWN_118(void) = 0;
+	virtual void _UNKOWN_119(void) = 0;
+	virtual void _UNKOWN_120(void) = 0;
+	virtual void _UNKOWN_121(void) = 0;
+	virtual void _UNKOWN_122(void) = 0;
+	virtual void _UNKOWN_123(void) = 0;
+	virtual void _UNKOWN_124(void) = 0;
+	virtual void _UNKOWN_125(void) = 0;
+	virtual void _UNKOWN_126(void) = 0;
+	virtual void _UNKOWN_127(void) = 0;
+	virtual void _UNKOWN_128(void) = 0;
+	virtual void _UNKOWN_129(void) = 0;
+	virtual void _UNKOWN_130(void) = 0;
+};
+
 // IVRenderView_csgo ///////////////////////////////////////////////////////////
 
 #define VENGINE_RENDERVIEW_INTERFACE_VERSION_CSGO_013 "VEngineRenderView013"
 
-class IVRenderView_csgo
+class IVRenderView_csgo abstract
 {
 public:
-	virtual void _UNKNOWN_000(void) = 0;
-	virtual void _UNKNOWN_001(void) = 0;
-	virtual void _UNKNOWN_002(void) = 0;
-	virtual void _UNKNOWN_003(void) = 0;
+	virtual void _UNKOWN_000(void) = 0;
+	virtual void _UNKOWN_001(void) = 0;
+	virtual void _UNKOWN_002(void) = 0;
+	virtual void _UNKOWN_003(void) = 0;
+	virtual void _UNKOWN_004(void) = 0;
+	virtual void _UNKOWN_005(void) = 0;
 
-	// Sets global blending fraction
-	virtual void			SetBlend( float blend ) = 0;
-	virtual float			GetBlend( void ) = 0;
+	// 006:
+	virtual void SetColorModulation( float const* blend ) = 0;
 
-	// Sets global color modulation
-	virtual void			SetColorModulation( float const* blend ) = 0;
-	virtual void			GetColorModulation( float* blend ) = 0;
-
-	// ...
-	// more that we don't care about.
+	virtual void _UNKOWN_007(void) = 0;
+	virtual void _UNKOWN_008(void) = 0;
+	virtual void _UNKOWN_009(void) = 0;
+	virtual void _UNKOWN_010(void) = 0;
+	virtual void _UNKOWN_011(void) = 0;
+	virtual void _UNKOWN_012(void) = 0;
+	virtual void _UNKOWN_013(void) = 0;
+	virtual void _UNKOWN_014(void) = 0;
+	virtual void _UNKOWN_015(void) = 0;
+	virtual void _UNKOWN_016(void) = 0;
+	virtual void _UNKOWN_017(void) = 0;
+	virtual void _UNKOWN_018(void) = 0;
+	virtual void _UNKOWN_019(void) = 0;
+	virtual void _UNKOWN_020(void) = 0;
+	virtual void _UNKOWN_021(void) = 0;
+	virtual void _UNKOWN_022(void) = 0;
+	virtual void _UNKOWN_023(void) = 0;
+	virtual void _UNKOWN_024(void) = 0;
+	virtual void _UNKOWN_025(void) = 0;
+	virtual void _UNKOWN_026(void) = 0;
+	virtual void _UNKOWN_027(void) = 0;
+	virtual void _UNKOWN_028(void) = 0;
+	virtual void _UNKOWN_029(void) = 0;
+	virtual void _UNKOWN_030(void) = 0;
+	virtual void _UNKOWN_031(void) = 0;
+	virtual void _UNKOWN_032(void) = 0;
+	virtual void _UNKOWN_033(void) = 0;
+	virtual void _UNKOWN_034(void) = 0;
+	virtual void _UNKOWN_035(void) = 0;
+	virtual void _UNKOWN_036(void) = 0;
+	virtual void _UNKOWN_037(void) = 0;
+	virtual void _UNKOWN_038(void) = 0;
+	virtual void _UNKOWN_039(void) = 0;
+	virtual void _UNKOWN_040(void) = 0;
+	virtual void _UNKOWN_041(void) = 0;
+	virtual void _UNKOWN_042(void) = 0;
+	virtual void _UNKOWN_043(void) = 0;
+	virtual void _UNKOWN_044(void) = 0;
+	virtual void _UNKOWN_045(void) = 0;
+	virtual void _UNKOWN_046(void) = 0;
+	virtual void _UNKOWN_047(void) = 0;
+	virtual void _UNKOWN_048(void) = 0;
+	virtual void _UNKOWN_049(void) = 0;
+	virtual void _UNKOWN_050(void) = 0;
+	virtual void _UNKOWN_051(void) = 0;
+	virtual void _UNKOWN_052(void) = 0;
+	virtual void _UNKOWN_053(void) = 0;
+	virtual void _UNKOWN_054(void) = 0;
+	virtual void _UNKOWN_055(void) = 0;
+	virtual void _UNKOWN_056(void) = 0;
+	virtual void _UNKOWN_057(void) = 0;
+	virtual void _UNKOWN_058(void) = 0;
+	virtual void _UNKOWN_059(void) = 0;
 };

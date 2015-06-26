@@ -18,3 +18,10 @@ bool AnsiStringToWideString(char const * ansiChars, std::wstring & outWideString
 bool StringEndsWith(char const * target, char const * ending);
 
 bool StringBeginsWith(char const * target, char const * beginning);
+
+
+bool StringIsAlNum(char const * value);
+
+bool StringIsEmpty(char const * value);
+
+bool StringIsNull(char const * value);

@@ -26,13 +26,42 @@
 #include "WrpGlobals.h"
 //#include "d3d9Hooks.h"
 #include "csgo_SndMixTimeScalePatch.h"
-
 #include "AfxHookSourceInput.h"
+#include "AfxClasses.h"
+#include "AfxStreams.h"
 
 //#include <string.h>
 
 #include <map>
 #include <set>
+
+
+// The first 3 asm instructions unroll the compiler epiloge code,
+// this might need to be updated. I couldn't find a better way yet,
+// since __declspec(naked) won't work on member functions.
+// TODO:
+// A better way might be filling a struct with function pointers
+// and returning a pointer to that maybe.
+#define JMP_IFACE_FN(iface,index) \
+	__asm pop ecx \
+	__asm mov esp, ebp \
+	__asm pop ebp \
+	__asm mov ecx, iface \
+	__asm mov eax, [ecx] \
+	__asm mov eax, [eax +4*index] \
+	__asm jmp eax
+
+#define JMP_CLASSMEMBERIFACE_FN(classType,classMemberIface,index) \
+	__asm mov eax, this \
+	__asm mov eax, [eax]classType.classMemberIface \
+	__asm pop ecx \
+	__asm mov esp, ebp \
+	__asm pop ebp \
+	__asm mov ecx, eax \
+	__asm mov eax, [ecx] \
+	__asm mov eax, [eax +4*index] \
+	__asm jmp eax
+
 
 
 WrpVEngineClient * g_VEngineClient = 0;
@@ -109,7 +138,234 @@ CreateInterfaceFn g_AppSystemFactory = 0;
 bool isCsgo = false;
 
 IMaterialSystem_csgo * g_MaterialSystem_csgo = 0;
-IVRenderView_csgo * g_RenderView_csgo = 0;
+
+
+#pragma warning(push)
+#pragma warning(disable:4731) // frame pointer register 'ebp' modified by inline assembly code
+
+class CAfxVRenderView : public IVRenderView_csgo, public IAfxVRenderView
+{
+public:
+	CAfxVRenderView(IVRenderView_csgo * parent)
+	: m_Parent(parent)
+	, m_OnSetColorModulation(0)
+	{
+	}
+
+	//
+	// IAfxVRenderView:
+
+	virtual IVRenderView_csgo * GetParent()
+	{
+		return m_Parent;
+	}
+
+	virtual void OnSetColorModulation_set(IAfxVRenderViewSetColorModulation * value)
+	{
+		m_OnSetColorModulation = value;
+	}
+
+	//
+	// IVRenderView_csgo:
+
+	virtual void _UNKOWN_000(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 0) }
+
+	virtual void _UNKOWN_001(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 1) }
+
+	virtual void _UNKOWN_002(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 2) }
+
+	virtual void _UNKOWN_003(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 3) }
+
+	virtual void _UNKOWN_004(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 4) }
+
+	virtual void _UNKOWN_005(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 5) }
+
+	// 006:
+	virtual void SetColorModulation( float const* blend )
+	{
+		if(m_OnSetColorModulation)
+		{
+			m_OnSetColorModulation->SetColorModulation(this, blend);
+		}
+		else
+		{
+			m_Parent->SetColorModulation(blend);
+		}
+	}
+
+	virtual void _UNKOWN_007(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 7) }
+
+	virtual void _UNKOWN_008(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 8) }
+
+	virtual void _UNKOWN_009(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 9) }
+
+	virtual void _UNKOWN_010(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 10) }
+
+	virtual void _UNKOWN_011(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 11) }
+
+	virtual void _UNKOWN_012(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 12) }
+
+	virtual void _UNKOWN_013(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 13) }
+
+	virtual void _UNKOWN_014(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 14) }
+
+	virtual void _UNKOWN_015(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 15) }
+
+	virtual void _UNKOWN_016(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 16) }
+
+	virtual void _UNKOWN_017(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 17) }
+
+	virtual void _UNKOWN_018(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 18) }
+
+	virtual void _UNKOWN_019(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 19) }
+
+	virtual void _UNKOWN_020(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 20) }
+
+	virtual void _UNKOWN_021(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 21) }
+
+	virtual void _UNKOWN_022(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 22) }
+
+	virtual void _UNKOWN_023(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 23) }
+
+	virtual void _UNKOWN_024(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 24) }
+
+	virtual void _UNKOWN_025(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 25) }
+
+	virtual void _UNKOWN_026(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 26) }
+
+	virtual void _UNKOWN_027(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 27) }
+
+	virtual void _UNKOWN_028(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 28) }
+
+	virtual void _UNKOWN_029(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 29) }
+
+	virtual void _UNKOWN_030(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 30) }
+
+	virtual void _UNKOWN_031(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 31) }
+
+	virtual void _UNKOWN_032(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 32) }
+
+	virtual void _UNKOWN_033(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 33) }
+
+	virtual void _UNKOWN_034(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 34) }
+
+	virtual void _UNKOWN_035(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 35) }
+
+	virtual void _UNKOWN_036(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 36) }
+
+	virtual void _UNKOWN_037(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 37) }
+
+	virtual void _UNKOWN_038(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 38) }
+
+	virtual void _UNKOWN_039(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 39) }
+
+	virtual void _UNKOWN_040(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 40) }
+
+	virtual void _UNKOWN_041(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 41) }
+
+	virtual void _UNKOWN_042(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 42) }
+
+	virtual void _UNKOWN_043(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 43) }
+
+	virtual void _UNKOWN_044(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 44) }
+
+	virtual void _UNKOWN_045(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 45) }
+
+	virtual void _UNKOWN_046(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 46) }
+
+	virtual void _UNKOWN_047(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 47) }
+
+	virtual void _UNKOWN_048(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 48) }
+
+	virtual void _UNKOWN_049(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 49) }
+
+	virtual void _UNKOWN_050(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 50) }
+
+	virtual void _UNKOWN_051(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 51) }
+
+	virtual void _UNKOWN_052(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 52) }
+
+	virtual void _UNKOWN_053(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 53) }
+
+	virtual void _UNKOWN_054(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 54) }
+
+	virtual void _UNKOWN_055(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 55) }
+
+	virtual void _UNKOWN_056(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 56) }
+
+	virtual void _UNKOWN_057(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 57) }
+
+	virtual void _UNKOWN_058(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 58) }
+
+	virtual void _UNKOWN_059(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 59) }
+
+private:
+	IVRenderView_csgo * m_Parent;
+	IAfxVRenderViewSetColorModulation * m_OnSetColorModulation;
+};
+
+#pragma warning(pop)
+
+CAfxVRenderView * g_AfxVRenderView = 0;
 
 void MySetup(CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals)
 {
@@ -169,6 +425,7 @@ void MySetup(CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals)
 			if(iface = appSystemFactory(MATERIAL_SYSTEM_INTERFACE_VERSION_CSGO_80, NULL))
 			{
 				g_MaterialSystem_csgo = (IMaterialSystem_csgo *)iface;
+				g_AfxStreams.OnMaterialSystem(g_MaterialSystem_csgo);
 			}
 			else {
 				ErrorBox("Could not get a supported VMaterialSystem interface.");
@@ -176,7 +433,8 @@ void MySetup(CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals)
 
 			if(iface = appSystemFactory(VENGINE_RENDERVIEW_INTERFACE_VERSION_CSGO_013, NULL))
 			{
-				g_RenderView_csgo = (IVRenderView_csgo *)iface;
+				g_AfxVRenderView = new CAfxVRenderView((IVRenderView_csgo *)iface);
+				g_AfxStreams.OnAfxVRenderView(g_AfxVRenderView);
 			}
 			else {
 				ErrorBox("Could not get a supported VEngineRenderView interface.");
@@ -189,229 +447,6 @@ void MySetup(CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals)
 	}
 }
 
-
-// The first 3 asm instructions unroll the compiler epiloge code,
-// this might need to be updated. I couldn't find a better way yet,
-// since __declspec(naked) won't work on member functions.
-// TODO:
-// A better way might be filling a struct with function pointers
-// and returning a pointer to that maybe.
-#define JMP_IFACE_FN(iface,index) \
-	__asm pop ecx \
-	__asm mov esp, ebp \
-	__asm pop ebp \
-	__asm mov ecx, iface \
-	__asm mov eax, [ecx] \
-	__asm mov eax, [eax +4*index] \
-	__asm jmp eax
-
-#define JMP_CLASSMEMBERIFACE_FN(classType,classMemberIface,index) \
-	__asm CALL Use \
-	__asm mov eax, this \
-	__asm mov eax, [eax]classType.classMemberIface \
-	__asm pop ecx \
-	__asm mov esp, ebp \
-	__asm pop ebp \
-	__asm mov ecx, eax \
-	__asm mov eax, [ecx] \
-	__asm mov eax, [eax +4*index] \
-	__asm jmp eax
-
-
-#pragma warning(push)
-#pragma warning(disable:4731) // frame pointer register 'ebp' modified by inline assembly code
-
-class CRenderViewWrapper_csgo
-{
-public:
-	virtual void _UNKOWN_000(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 0) }
-
-	virtual void _UNKOWN_001(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 1) }
-
-	virtual void _UNKOWN_002(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 2) }
-
-	virtual void _UNKOWN_003(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 3) }
-
-	virtual void _UNKOWN_004(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 4) }
-
-	virtual void _UNKOWN_005(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 5) }
-
-	virtual void SetColorModulation( float const* blend )
-	{
-		// JMP_IFACE_FN(g_RenderView_csgo, 6)
-		float color[3] = { 1.0f, 0.0f, 0.0f };
-		g_RenderView_csgo->SetColorModulation(color);
-	}
-
-	virtual void _UNKOWN_007(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 7) }
-
-	virtual void _UNKOWN_008(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 8) }
-
-	virtual void _UNKOWN_009(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 9) }
-
-	virtual void _UNKOWN_010(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 10) }
-
-	virtual void _UNKOWN_011(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 11) }
-
-	virtual void _UNKOWN_012(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 12) }
-
-	virtual void _UNKOWN_013(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 13) }
-
-	virtual void _UNKOWN_014(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 14) }
-
-	virtual void _UNKOWN_015(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 15) }
-
-	virtual void _UNKOWN_016(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 16) }
-
-	virtual void _UNKOWN_017(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 17) }
-
-	virtual void _UNKOWN_018(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 18) }
-
-	virtual void _UNKOWN_019(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 19) }
-
-	virtual void _UNKOWN_020(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 20) }
-
-	virtual void _UNKOWN_021(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 21) }
-
-	virtual void _UNKOWN_022(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 22) }
-
-	virtual void _UNKOWN_023(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 23) }
-
-	virtual void _UNKOWN_024(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 24) }
-
-	virtual void _UNKOWN_025(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 25) }
-
-	virtual void _UNKOWN_026(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 26) }
-
-	virtual void _UNKOWN_027(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 27) }
-
-	virtual void _UNKOWN_028(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 28) }
-
-	virtual void _UNKOWN_029(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 29) }
-
-	virtual void _UNKOWN_030(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 30) }
-
-	virtual void _UNKOWN_031(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 31) }
-
-	virtual void _UNKOWN_032(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 32) }
-
-	virtual void _UNKOWN_033(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 33) }
-
-	virtual void _UNKOWN_034(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 34) }
-
-	virtual void _UNKOWN_035(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 35) }
-
-	virtual void _UNKOWN_036(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 36) }
-
-	virtual void _UNKOWN_037(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 37) }
-
-	virtual void _UNKOWN_038(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 38) }
-
-	virtual void _UNKOWN_039(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 39) }
-
-	virtual void _UNKOWN_040(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 40) }
-
-	virtual void _UNKOWN_041(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 41) }
-
-	virtual void _UNKOWN_042(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 42) }
-
-	virtual void _UNKOWN_043(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 43) }
-
-	virtual void _UNKOWN_044(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 44) }
-
-	virtual void _UNKOWN_045(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 45) }
-
-	virtual void _UNKOWN_046(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 46) }
-
-	virtual void _UNKOWN_047(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 47) }
-
-	virtual void _UNKOWN_048(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 48) }
-
-	virtual void _UNKOWN_049(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 49) }
-
-	virtual void _UNKOWN_050(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 50) }
-
-	virtual void _UNKOWN_051(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 51) }
-
-	virtual void _UNKOWN_052(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 52) }
-
-	virtual void _UNKOWN_053(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 53) }
-
-	virtual void _UNKOWN_054(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 54) }
-
-	virtual void _UNKOWN_055(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 55) }
-
-	virtual void _UNKOWN_056(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 56) }
-
-	virtual void _UNKOWN_057(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 57) }
-
-	virtual void _UNKOWN_058(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 58) }
-
-	virtual void _UNKOWN_059(void)
-	{ JMP_IFACE_FN(g_RenderView_csgo, 59) }
-
-} g_RenderViewWrapper_csgo;
-
-#pragma warning(pop)
-
 void* AppSystemFactory_ForClient(const char *pName, int *pReturnCode)
 {
 	if(!strcmp(VCLIENTENGINETOOLS_INTERFACE_VERSION_001, pName))
@@ -421,7 +456,7 @@ void* AppSystemFactory_ForClient(const char *pName, int *pReturnCode)
 	else
 	if(isCsgo && !strcmp(VENGINE_RENDERVIEW_INTERFACE_VERSION_CSGO_013, pName))
 	{
-		return &g_RenderViewWrapper_csgo;
+		return g_AfxVRenderView;
 	}
 
 	return g_AppSystemFactory(pName, pReturnCode);
@@ -494,73 +529,9 @@ void * HookInterfaceFn(void * iface, int idx, void * fn)
 	return ret;
 }
 
-void * csgo_VClient = 0;
+bool g_CollectMaterialInfo = false;
 
-class CViewSetup_csgo;
-
-struct vrect_t_csgo
-{
-	int				x,y,width,height;
-	vrect_t_csgo			*pnext;
-};
-
-bool g_bTakeScreenShot = false;
-
-HANDLE hRenderContextMapLock = 0;
-HANDLE hMaterialInfoSetLock = 0;
-
-struct CAfxMaterialValue_csgo
-{
-public:
-	CAfxMaterialValue_csgo(IMaterial_csgo * material)
-	: m_Material(material)
-	{
-		m_Material->IncrementReferenceCount();
-	}
-
-	CAfxMaterialValue_csgo(const CAfxMaterialValue_csgo & x)
-	: m_Material(x.GetMaterial())
-	{
-		m_Material->IncrementReferenceCount();
-	}
-
-	~CAfxMaterialValue_csgo()
-	{
-		m_Material->DecrementReferenceCount();
-	}
-
-	IMaterial_csgo * GetMaterial() const
-	{
-		return m_Material;
-	}
-
-private:
-	IMaterial_csgo * m_Material;
-
-};
-
-struct CAfxMaterialKey_csgo : public CAfxMaterialValue_csgo
-{
-public:
-	CAfxMaterialKey_csgo(IMaterial_csgo * material)
-	: CAfxMaterialValue_csgo(material)
-	{
-	}
-
-	bool operator < (const CAfxMaterialKey_csgo & y) const
-	{
-		int cmp1 = strcmp(this->GetMaterial()->GetTextureGroupName(), y.GetMaterial()->GetTextureGroupName());
-		if(cmp1 < 0)
-			return true;
-		else
-		if(cmp1 > 0)
-			return false;
-
-		return strcmp(this->GetMaterial()->GetName(), y.GetMaterial()->GetName()) < 0;
-	}
-};
-
-std::set<CAfxMaterialKey_csgo> g_MaterialInfoSet_csgo;
+std::set<CAfxMaterialKey> g_MaterialInfoSet_csgo;
 
 void PrintMaterialInfoSetToFile(void)
 {
@@ -570,126 +541,121 @@ void PrintMaterialInfoSetToFile(void)
 
 	if(!f1) return;
 
-	WaitForSingleObject(hMaterialInfoSetLock, INFINITE);
-
-	for(std::set<CAfxMaterialKey_csgo>::iterator it = g_MaterialInfoSet_csgo.begin(); it != g_MaterialInfoSet_csgo.end(); ++it)
+	for(std::set<CAfxMaterialKey>::iterator it = g_MaterialInfoSet_csgo.begin(); it != g_MaterialInfoSet_csgo.end(); ++it)
 	{
-		fprintf(f1,"%s %s\n", it->GetMaterial()->GetTextureGroupName(), it->GetMaterial()->GetName());
+		fprintf(f1,"%s|%s\n", it->GetMaterial()->GetTextureGroupName(), it->GetMaterial()->GetName());
 	}
-
-	SetEvent(hMaterialInfoSetLock);
 
 	fclose(f1);
 }
 
-IMaterial_csgo * errMaterial;
-
 #pragma warning(push)
 #pragma warning(disable:4731) // frame pointer register 'ebp' modified by inline assembly code
 
-class CMatRenderContextWrapper_csgo : public IMatRenderContext_csgo
+class CAfxMatRenderContext : public IMatRenderContext_csgo, public IAfxMatRenderContext
 {
 public:
-	CMatRenderContextWrapper_csgo(IMatRenderContext_csgo * parent)
+	CAfxMatRenderContext(IMatRenderContext_csgo * parent)
 	: m_Parent(parent)
-	, m_TrackUsed(false)
-	, m_UsedCount(0)
-	, m_Active(false)
+	, m_OnBind(0)
+	, m_OnDrawInstances(0)
 	{
 	}
 
-	void Use()
+	//
+	// IAfxMatRenderContext
+
+	virtual IMatRenderContext_csgo * GetParent()
 	{
-		if(m_TrackUsed)
-		{
-			m_UsedCount++;
-			Tier0_Msg("0x%08x used %i times\n",this,m_UsedCount);
-		}
+		return m_Parent;
 	}
 
-	void TrackUsed()
+	virtual void OnBind_set(IAfxMatRenderContextBind * value)
 	{
-		m_TrackUsed = true;
+		m_OnBind = value;
 	}
 
-	void SetActive(bool value)
+	virtual void OnDrawInstances_set(IAfxMatRenderContextDrawInstances * value)
 	{
-		m_Active = value;
+		m_OnDrawInstances = value;
 	}
 
+
+	//
+	// IMatRenderContext_csgo:
 
 	// 000:
 	virtual int AddRef()
 	{
-		Use();
 		return m_Parent->AddRef();
 	}
 
 	// 001:
 	virtual int Release()
 	{
-		Use();
 		return m_Parent->Release();
 	}
 
 	// 002:
 	virtual void BeginRender()
 	{
-		Use();
-
 		m_Parent->BeginRender();
 	}
 
 	// 003:
 	virtual void EndRender()
 	{
-		Use();
-
 		m_Parent->EndRender();
 	}
 
 	// 004;
 	virtual void Flush( bool flushHardware = false )
 	{
-		Use();
 		m_Parent->Flush(flushHardware);
 	}
 
 	virtual void _UNKNOWN_005(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 5) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 5) }
 
 	virtual void _UNKNOWN_006(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 6) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 6) }
 
 	virtual void _UNKNOWN_007(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 7) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 7) }
 
 	virtual void _UNUSED_008_GetRenderTargetDimensions(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 8) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 8) }
 
 	virtual void Bind( IMaterial_csgo * material, void *proxyData = 0 )
 	{
-		Use();
-
-//		if(material)
-//			Tier0_Msg("Mat: %s | %s\n", material->GetName(), material->GetTextureGroupName());
-
-		if(m_Active)
+		if(g_CollectMaterialInfo)
 		{
-			CAfxMaterialKey_csgo key(material);
-
-			WaitForSingleObject(hMaterialInfoSetLock, INFINITE);
-
+			CAfxMaterialKey key(material);
 			g_MaterialInfoSet_csgo.insert(key);
+		}
 
-			SetEvent(hMaterialInfoSetLock);
+		if(m_OnBind)
+		{
+			m_OnBind->Bind(this, material, proxyData);
+		}
+		else
+		{
+			m_Parent->Bind(material, proxyData);
+		}
+
+
+/*		if(m_Active)
+		{
+			CAfxMaterialKey key(material);
+
 
 			const char * groupName =  material->GetTextureGroupName();
 			const char * name = material->GetName();
 
 			if(
-				!_stricmp("World textures", groupName) ||  !_stricmp("SkyBox textures", groupName) || !_stricmp("StaticProp textures", groupName)
-				//!_stricmp("models/props/de_dust/dust_rusty_barrel", name)
+				!strcmp("Model textures", groupName)
+				// !strcmp("World textures", groupName) ||  !strcmp("SkyBox textures", groupName) || !strcmp("StaticProp textures", groupName)
+				//!strcmp("models/props/de_dust/dust_rusty_barrel", name)
 			)
 				m_Parent->Bind( errMaterial, proxyData );
 			else
@@ -698,560 +664,570 @@ public:
 		else
 			m_Parent->Bind( material, proxyData );
 
-		float color[3] = { 1.0f, 0.0f, 0.0f };
-		g_RenderView_csgo->SetColorModulation(color);
+		*/
 	}
 
 	virtual void _UNKNOWN_010(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 10) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 10) }
 
 	virtual void _UNKNOWN_011(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 11) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 11) }
 
 	virtual void _UNKNOWN_012(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 12) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 12) }
 
 	virtual void _UNKNOWN_013(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 13) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 13) }
 
 	virtual void _UNKNOWN_014(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 14) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 14) }
 
 	virtual void _UNKNOWN_015(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 15) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 15) }
 
 	virtual void _UNKNOWN_016(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 16) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 16) }
 
 	virtual void _UNKNOWN_017(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 17) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 17) }
 
 	virtual void _UNKNOWN_018(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 18) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 18) }
 
 	virtual void _UNKNOWN_019(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 19) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 19) }
 
 	virtual void _UNKNOWN_020(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 20) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 20) }
 
 	virtual void _UNKNOWN_021(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 21) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 21) }
 
 	virtual void _UNKNOWN_022(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 22) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 22) }
 
 	virtual void _UNKNOWN_023(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 23) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 23) }
 
 	virtual void _UNKNOWN_024(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 24) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 24) }
 
 	virtual void _UNKNOWN_025(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 25) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 25) }
 
 	virtual void _UNKNOWN_026(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 26) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 26) }
 
 	virtual void _UNKNOWN_027(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 27) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 27) }
 
 	virtual void _UNKNOWN_028(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 28) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 28) }
 
 	virtual void _UNKNOWN_029(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 29) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 29) }
 
 	virtual void _UNKNOWN_030(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 30) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 30) }
 
 	virtual void _UNKNOWN_031(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 31) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 31) }
 
 	virtual void _UNKNOWN_032(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 32) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 32) }
 
 	virtual void _UNKNOWN_033(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 33) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 33) }
 
 	virtual void _UNKNOWN_034(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 34) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 34) }
 
 	virtual void _UNKNOWN_035(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 35) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 35) }
 
 	virtual void _UNKNOWN_036(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 36) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 36) }
 
 	virtual void _UNKNOWN_037(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 37) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 37) }
 
 	virtual void _UNKNOWN_038(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 38) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 38) }
 
 	virtual void _UNKNOWN_039(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 39) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 39) }
 
 	virtual void _UNKNOWN_040(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 40) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 40) }
 
 	virtual void _UNKNOWN_041(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 41) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 41) }
 
 	virtual void _UNKNOWN_042(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 42) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 42) }
 
 	virtual void _UNKNOWN_043(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 43) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 43) }
 
 	virtual void _UNKNOWN_044(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 44) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 44) }
 
 	virtual void _UNKNOWN_045(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 45) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 45) }
 
 	virtual void _UNKNOWN_046(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 46) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 46) }
 
 	virtual void _UNKNOWN_047(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 47) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 47) }
 
 	virtual void _UNKNOWN_048(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 48) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 48) }
 
 	virtual void _UNKNOWN_049(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 49) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 49) }
 
 	virtual void _UNKNOWN_050(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 50) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 50) }
 
 	virtual void _UNKNOWN_051(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 51) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 51) }
 
 	virtual void _UNKNOWN_052(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 52) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 52) }
 
 	virtual void _UNKNOWN_053(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 53) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 53) }
 
 	virtual void _UNKNOWN_054(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 54) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 54) }
 
 	virtual void _UNKNOWN_055(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 55) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 55) }
 
 	virtual void _UNKNOWN_056(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 56) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 56) }
 
 	virtual void _UNKNOWN_057(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 57) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 57) }
 
 	virtual void _UNKNOWN_058(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 58) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 58) }
 
 	virtual void _UNKNOWN_059(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 59) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 59) }
 
 	virtual void _UNKNOWN_060(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 60) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 60) }
 
 	virtual void _UNKNOWN_061(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 61) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 61) }
 
 	virtual void _UNKNOWN_062(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 62) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 62) }
 
 	virtual void _UNKNOWN_063(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 63) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 63) }
 
 	virtual void _UNKNOWN_064(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 64) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 64) }
 
 	virtual void _UNKNOWN_065(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 65) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 65) }
 
 	virtual void _UNKNOWN_066(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 66) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 66) }
 
 	virtual void _UNKNOWN_067(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 67) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 67) }
 
 	virtual void _UNKNOWN_068(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 68) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 68) }
 
 	virtual void _UNKNOWN_069(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 69) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 69) }
 
 	virtual void _UNKNOWN_070(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 70) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 70) }
 
 	virtual void _UNKNOWN_071(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 71) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 71) }
 
 	virtual void _UNKNOWN_072(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 72) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 72) }
 
 	virtual void _UNKNOWN_073(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 73) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 73) }
 
 	virtual void _UNKNOWN_074(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 74) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 74) }
 
 	virtual void _UNKNOWN_075(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 75) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 75) }
 
 	virtual void _UNKNOWN_076(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 76) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 76) }
 
 	virtual void _UNKNOWN_077(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 77) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 77) }
 
 	virtual void _UNKNOWN_078(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 78) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 78) }
 
 	virtual void _UNKNOWN_079(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 79) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 79) }
 
 	virtual void _UNKNOWN_080(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 80) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 80) }
 
 	virtual void _UNKNOWN_081(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 81) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 81) }
 
 	virtual void _UNKNOWN_082(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 82) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 82) }
 
 	virtual void _UNKNOWN_083(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 83) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 83) }
 
 	virtual void _UNKNOWN_084(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 84) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 84) }
 
 	virtual void _UNKNOWN_085(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 85) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 85) }
 
 	virtual void _UNKNOWN_086(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 86) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 86) }
 
 	virtual void _UNKNOWN_087(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 87) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 87) }
 
 	virtual void _UNKNOWN_088(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 88) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 88) }
 
 	virtual void _UNKNOWN_089(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 89) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 89) }
 
 	virtual void _UNKNOWN_090(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 90) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 90) }
 
 	virtual void _UNKNOWN_091(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 91) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 91) }
 
 	virtual void _UNKNOWN_092(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 92) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 92) }
 
 	virtual void _UNKNOWN_093(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 93) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 93) }
 
 	virtual void _UNKNOWN_094(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 94) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 94) }
 
 	virtual void _UNKNOWN_095(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 95) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 95) }
 
 	virtual void _UNKNOWN_096(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 96) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 96) }
 
 	virtual void _UNKNOWN_097(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 97) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 97) }
 
 	virtual void _UNKNOWN_098(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 98) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 98) }
 
 	virtual void _UNKNOWN_099(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 99) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 99) }
 
 	virtual void _UNKNOWN_100(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 100) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 100) }
 
 	virtual void _UNKNOWN_101(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 101) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 101) }
 
 	virtual void _UNKNOWN_102(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 102) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 102) }
 
 	virtual void _UNKNOWN_103(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 103) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 103) }
 
 	virtual void _UNKNOWN_104(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 104) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 104) }
 
 	virtual void _UNKNOWN_105(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 105) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 105) }
 
 	virtual void _UNKNOWN_106(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 106) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 106) }
 
 	virtual void _UNKNOWN_107(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 107) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 107) }
 
 	virtual void _UNKNOWN_108(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 108) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 108) }
 
 	virtual void _UNKNOWN_109(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 109) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 109) }
 
 	virtual void _UNKNOWN_110(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 110) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 110) }
 
 	virtual void _UNKNOWN_111(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 111) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 111) }
 
 	virtual void _UNKNOWN_112(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 112) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 112) }
 
 	virtual void _UNKNOWN_113(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 113) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 113) }
 
 	virtual void _UNKNOWN_114(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 114) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 114) }
 
 	virtual void _UNKNOWN_115(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 115) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 115) }
 
 	virtual void _UNKNOWN_116(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 116) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 116) }
 
 	virtual void _UNKNOWN_117(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 117) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 117) }
 
 	virtual void _UNKNOWN_118(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 118) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 118) }
 
 	virtual void _UNKNOWN_119(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 119) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 119) }
 
 	virtual void _UNKNOWN_120(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 120) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 120) }
 
 	virtual void _UNKNOWN_121(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 121) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 121) }
 
 	virtual void _UNKNOWN_122(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 122) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 122) }
 
 	virtual void _UNKNOWN_123(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 123) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 123) }
 
 	virtual void _UNKNOWN_124(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 124) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 124) }
 
 	virtual void _UNKNOWN_125(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 125) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 125) }
 
 	virtual void _UNKNOWN_126(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 126) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 126) }
 
 	virtual void _UNKNOWN_127(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 127) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 127) }
 
 	virtual void _UNKNOWN_128(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 128) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 128) }
 
 	virtual void _UNKNOWN_129(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 129) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 129) }
 
 	virtual void _UNKNOWN_130(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 130) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 130) }
 
 	virtual void _UNKNOWN_131(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 131) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 131) }
 
 	virtual void _UNKNOWN_132(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 132) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 132) }
 
 	virtual void _UNKNOWN_133(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 133) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 133) }
 
 	virtual void _UNKNOWN_134(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 134) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 134) }
 
 	virtual void _UNKNOWN_135(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 135) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 135) }
 
 	virtual void _UNKNOWN_136(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 136) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 136) }
 
 	virtual void _UNKNOWN_137(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 137) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 137) }
 
 	virtual void _UNKNOWN_138(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 138) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 138) }
 
 	virtual void _UNKNOWN_139(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 139) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 139) }
 
 	virtual void _UNKNOWN_140(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 140) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 140) }
 
 	virtual void _UNKNOWN_141(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 141) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 141) }
 
 	virtual void _UNKNOWN_142(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 142) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 142) }
 
 	virtual void _UNKNOWN_143(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 143) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 143) }
 
 	virtual void _UNKNOWN_144(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 144) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 144) }
 
 	virtual void _UNKNOWN_145(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 145) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 145) }
 
 	virtual void _UNKNOWN_146(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 146) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 146) }
 
 	virtual void _UNKNOWN_147(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 147) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 147) }
 
 	virtual void _UNKNOWN_148(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 148) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 148) }
 
 	virtual void _UNKNOWN_149(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 149) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 149) }
 
 	virtual void _UNKNOWN_150(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 150) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 150) }
 
 	virtual void _UNKNOWN_151(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 151) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 151) }
 
 	virtual void _UNKNOWN_152(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 152) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 152) }
 
 	virtual void _UNKNOWN_153(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 153) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 153) }
 
 	virtual void _UNKNOWN_154(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 154) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 154) }
 
 	virtual void _UNKNOWN_155(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 155) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 155) }
 
 	virtual void _UNKNOWN_156(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 156) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 156) }
 
 	virtual void _UNKNOWN_157(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 157) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 157) }
 
 	virtual void _UNKNOWN_158(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 158) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 158) }
 
 	virtual void _UNKNOWN_159(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 159) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 159) }
 
 	virtual void _UNKNOWN_160(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 160) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 160) }
 
 	virtual void _UNKNOWN_161(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 161) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 161) }
 
 	virtual void _UNKNOWN_162(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 162) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 162) }
 
 	virtual void _UNKNOWN_163(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 163) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 163) }
 
 	virtual void _UNKNOWN_164(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 164) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 164) }
 
 	virtual void _UNKNOWN_165(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 165) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 165) }
 
 	virtual void _UNKNOWN_166(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 166) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 166) }
 
 	virtual void _UNKNOWN_167(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 167) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 167) }
 
 	virtual void _UNKNOWN_168(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 168) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 168) }
 
 	virtual void _UNKNOWN_169(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 169) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 169) }
 
 	virtual void _UNKNOWN_170(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 170) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 170) }
 
 	virtual void _UNKNOWN_171(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 171) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 171) }
 
 	virtual void _UNKNOWN_172(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 172) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 172) }
 
 	virtual void _UNKNOWN_173(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 173) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 173) }
 
 	virtual void _UNKNOWN_174(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 174) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 174) }
 
 	virtual void _UNKNOWN_175(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 175) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 175) }
 
 	virtual void _UNKNOWN_176(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 176) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 176) }
 
 	virtual void _UNKNOWN_177(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 177) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 177) }
 
 	virtual void _UNKNOWN_178(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 178) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 178) }
 
 	virtual void _UNKNOWN_179(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 179) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 179) }
 
 	virtual void _UNKNOWN_180(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 180) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 180) }
 
 	virtual void _UNKNOWN_181(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 181) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 181) }
 
 	virtual void _UNKNOWN_182(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 182) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 182) }
 
 	virtual void _UNKNOWN_183(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 183) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 183) }
 
 	virtual void _UNKNOWN_184(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 184) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 184) }
 
 	virtual void _UNKNOWN_185(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 185) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 185) }
 
 	virtual void _UNKNOWN_186(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 186) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 186) }
 
 	virtual void _UNKNOWN_187(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 187) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 187) }
 
 	virtual void _UNKNOWN_188(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 188) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 188) }
 
 	virtual void _UNKNOWN_189(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 189) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 189) }
 
 	virtual void _UNKNOWN_190(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 190) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 190) }
 
 	virtual void _UNKNOWN_191(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 191) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 191) }
 
 	virtual void DrawInstances( int nInstanceCount, const MeshInstanceData_t_csgo *pInstance )
 	{
-		// JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 192)
+		// JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 192)
 
+		if(m_OnDrawInstances)
+		{
+
+			m_OnDrawInstances->DrawInstances(this, nInstanceCount, pInstance);
+		}
+		else
+		{
+			m_Parent->DrawInstances(nInstanceCount, pInstance);
+		}
+
+		/*
 		if(m_Active)
 		{
 			MeshInstanceData_t_csgo * first = const_cast<MeshInstanceData_t_csgo *>(pInstance);
@@ -1265,226 +1241,298 @@ public:
 
 				++first;
 			}
-		}
 
-		m_Parent->DrawInstances(nInstanceCount, pInstance);
+			m_Parent->DrawInstances(nInstanceCount, pInstance);
+		}
+		else
+			m_Parent->DrawInstances(nInstanceCount, pInstance);
+		*/
 	}
 
 	virtual void _UNKNOWN_193(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 193) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 193) }
 
 	virtual void _UNKNOWN_194(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 194) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 194) }
 
 	virtual void _UNKNOWN_195(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 195) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 195) }
 
 	virtual void _UNKNOWN_196(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 196) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 196) }
 
 	virtual void _UNKNOWN_197(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 197) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 197) }
 
 	virtual void _UNKNOWN_198(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 198) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 198) }
 
 	virtual void _UNKNOWN_199(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 199) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 199) }
 
 	virtual void _UNKNOWN_200(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 200) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 200) }
 
 	virtual void _UNKNOWN_201(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 201) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 201) }
 
 	virtual void _UNKNOWN_202(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 202) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 202) }
 
 	virtual void _UNKNOWN_203(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 203) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 203) }
 
 	virtual void _UNKNOWN_204(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 204) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 204) }
 
 	virtual void _UNKNOWN_205(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 205) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 205) }
 
 	virtual void _UNKNOWN_206(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 206) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 206) }
 
 	virtual void _UNKNOWN_207(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 207) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 207) }
 
 	virtual void _UNKNOWN_208(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 208) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 208) }
 
 	virtual void _UNKNOWN_209(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 209) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 209) }
 
 	virtual void _UNKNOWN_210(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 210) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 210) }
 
 	virtual void _UNKNOWN_211(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 211) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 211) }
 
 	virtual void _UNKNOWN_212(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 212) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 212) }
 
 	virtual void _UNKNOWN_213(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 213) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 213) }
 
 	virtual void _UNKNOWN_214(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 214) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 214) }
 
 	virtual void _UNKNOWN_215(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 215) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 215) }
 
 	virtual void _UNKNOWN_216(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 216) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 216) }
 
 	virtual void _UNKNOWN_217(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 217) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 217) }
 
 	virtual void _UNKNOWN_218(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 218) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 218) }
 
 	virtual void _UNKNOWN_219(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 219) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 219) }
 
 	virtual void _UNKNOWN_220(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 220) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 220) }
 
 	virtual void _UNKNOWN_221(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 221) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 221) }
 
 	virtual void _UNKNOWN_222(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 222) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 222) }
 
 	virtual void _UNKNOWN_223(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 223) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 223) }
 
 	virtual void _UNKNOWN_224(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 224) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 224) }
 
 	virtual void _UNKNOWN_225(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 225) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 225) }
 
 	virtual void _UNKNOWN_226(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 226) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 226) }
 
 	virtual void _UNKNOWN_227(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 227) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 227) }
 
 	virtual void _UNKNOWN_228(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 228) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 228) }
 
 	virtual void _UNKNOWN_229(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 229) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 229) }
 
 	virtual void _UNKNOWN_230(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 230) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 230) }
 
 	virtual void _UNKNOWN_231(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 231) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 231) }
 
 	virtual void _UNKNOWN_232(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 232) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 232) }
 
 	virtual void _UNKNOWN_233(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 233) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 233) }
 
 	virtual void _UNKNOWN_234(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 234) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 234) }
 
 	virtual void _UNKNOWN_235(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 235) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 235) }
 
 	virtual void _UNKNOWN_236(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 236) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 236) }
 
 	virtual void _UNKNOWN_237(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 237) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 237) }
 
 	virtual void _UNKNOWN_238(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 238) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 238) }
 
 	virtual void _UNKNOWN_239(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 239) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 239) }
 
 	virtual void _UNKNOWN_240(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 240) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 240) }
 
 	virtual void _UNKNOWN_241(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 241) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 241) }
 
 	virtual void _UNKNOWN_242(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 242) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 242) }
 
 	virtual void _UNKNOWN_243(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 243) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 243) }
 
 	virtual void _UNKNOWN_244(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 244) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 244) }
 
 	virtual void _UNKNOWN_245(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 245) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 245) }
 
 	virtual void _UNKNOWN_246(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 246) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 246) }
 
 	virtual void _UNKNOWN_247(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 247) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 247) }
 
 	virtual void _UNKNOWN_248(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 248) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 248) }
 
 	virtual void _UNKNOWN_249(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 249) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 249) }
 
 	virtual void _UNKNOWN_250(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 250) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 250) }
 
 	virtual void _UNKNOWN_251(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 251) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 251) }
 
 	virtual void _UNKNOWN_252(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 252) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 252) }
 
 	virtual void _UNKNOWN_253(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 253) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 253) }
 
 	virtual void _UNKNOWN_254(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CMatRenderContextWrapper_csgo, m_Parent, 254) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 254) }
 
 private:
 	IMatRenderContext_csgo * m_Parent;
-	bool m_TrackUsed;
-	int m_UsedCount;
-	bool m_Active;
+	IAfxMatRenderContextBind * m_OnBind;
+	IAfxMatRenderContextDrawInstances * m_OnDrawInstances;
 };
 
 #pragma warning(pop)
 
-std::map<IMatRenderContext_csgo *,CMatRenderContextWrapper_csgo *> g_RenderContextMap_csgo;
+/*
+void CRenderViewWrapper_csgo::SetColorModulation( float const* blend )
+{
+	// JMP_IFACE_FN(g_RenderView_csgo, 6)
+
+	if(m_CurrentCtx && m_CurrentCtx->GetActive())
+	{
+		float color[3] = { 1.0f, 1.0f, 1.0f };
+		g_RenderView_csgo->SetColorModulation(color);
+	}
+	else
+	{
+		float color[3] = { 0.0f, 0.0f, 1.0f };
+		g_RenderView_csgo->SetColorModulation(color);
+	}
+}
+*/
+
+std::map<IMatRenderContext_csgo *,CAfxMatRenderContext *> g_RenderContextMap_csgo;
 
 #pragma warning(push)
 #pragma warning(disable:4731) // frame pointer register 'ebp' modified by inline assembly code
 
-class CBaseClientDllWrapper_csgo
+class CAfxBaseClientDll
+: public IBaseClientDLL_csgo
+, public IAfxBaseClientDll
+, public IAfxFreeMaster
 {
 public:
+	CAfxBaseClientDll(IBaseClientDLL_csgo * parent)
+	: m_Parent(parent)
+	, m_OnShutdown(0)
+	, m_OnView_Render(0)
+	{
+	}
+
+	~CAfxBaseClientDll()
+	{
+	}
+
+	//
+	// IAfxFreeMaster:
+
+	virtual void AfxFreeable_Register(IAfxFreeable * value)
+	{
+		m_FreeMaster.AfxFreeable_Register(value);
+	}
+
+	virtual void AfxFreeable_Unregister(IAfxFreeable * value)
+	{
+		m_FreeMaster.AfxFreeable_Unregister(value);
+	}
+
+	//
+	// IAfxBaseClientDll:
+
+	virtual IBaseClientDLL_csgo * GetParent()
+	{
+		return m_Parent;
+	}
+
+	virtual IAfxFreeMaster * GetFreeMaster()
+	{
+		return &m_FreeMaster;
+	}
+
+	virtual void OnShutdown_set(IAfxBaseClientDllShutdown * value)
+	{
+		m_OnShutdown = value;
+	}
+
+	virtual void OnView_Render_set(IAfxBaseClientDllView_Render * value)
+	{
+		m_OnView_Render = value;
+	}
+
+	//
+	// IBaseClientDll_csgo:
+
 	virtual int Connect( CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGlobals )
-	{ JMP_IFACE_FN(csgo_VClient, 0) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 0) }
 
 	virtual void Disconnect()
-	{ JMP_IFACE_FN(csgo_VClient, 1) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 1) }
 
 	virtual int Init( CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGlobals )
 	{
-		// JMP_IFACE_FN(csgo_VClient, 2)
+		// JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 2)
 
 		static bool bFirstCall = true;
-		int myret;
 
 		if(bFirstCall)
 		{
@@ -1493,133 +1541,156 @@ public:
 			MySetup(appSystemFactory, new WrpGlobalsCsGo(pGlobals));
 		}
 
-		__asm {
-			MOV ecx, pGlobals
-			PUSH ecx
-			MOV ecx, AppSystemFactory_ForClient
-			PUSH ecx
+		int result = m_Parent->Init(AppSystemFactory_ForClient, pGlobals);
 
-			mov ecx, csgo_VClient
-			mov eax, [ecx]
-			mov eax, [eax +4*2]
-			call eax
-
-			MOV	myret, eax
-		}
-
-		if(g_MaterialSystem_csgo)
+/*		if(g_MaterialSystem_csgo)
 		{
 			errMaterial = g_MaterialSystem_csgo->FindMaterial("afx/greenmatte",NULL);
 			errMaterial->IncrementReferenceCount();
 		}
-
-		return myret;
+*/
+		return result;
 	}
 
 	virtual void PostInit()
-	{ JMP_IFACE_FN(csgo_VClient, 3) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 3) }
 
 	virtual void Shutdown( void )
 	{
-		// JMP_IFACE_FN(csgo_VClient, 4)
+		// JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 4)
+
+		if(m_OnShutdown) m_OnShutdown->Shutdown(this);
+
+		m_FreeMaster.AfxFree();
 
 		g_MaterialInfoSet_csgo.clear();
 
-		__asm {
-			mov ecx, csgo_VClient
-			mov eax, [ecx]
-			mov eax, [eax +4*4]
-			call eax
-		}
+		m_Parent->Shutdown();
 	}
 	
 	virtual void _UNKOWN_005(void)
-	{ JMP_IFACE_FN(csgo_VClient, 5) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 5) }
 
 	virtual void _UNKOWN_006(void)
-	{ JMP_IFACE_FN(csgo_VClient, 6) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 6) }
 
 	virtual void _UNKOWN_007(void)
-	{ JMP_IFACE_FN(csgo_VClient, 7) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 7) }
 
 	virtual void _UNKOWN_008(void)
-	{ JMP_IFACE_FN(csgo_VClient, 8) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 8) }
 
 	virtual void _UNKOWN_009(void)
-	{ JMP_IFACE_FN(csgo_VClient, 9) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 9) }
 
 	virtual void _UNKOWN_010(void)
-	{ JMP_IFACE_FN(csgo_VClient, 10) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 10) }
 
 	virtual void _UNKOWN_011(void)
-	{ JMP_IFACE_FN(csgo_VClient, 11) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 11) }
 
 	virtual void _UNKOWN_012(void)
-	{ JMP_IFACE_FN(csgo_VClient, 12) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 12) }
 
 	virtual void _UNKOWN_013(void)
-	{ JMP_IFACE_FN(csgo_VClient, 13) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 13) }
 
 	virtual void _UNKOWN_014(void)
-	{ JMP_IFACE_FN(csgo_VClient, 14) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 14) }
 
 	virtual void _UNKOWN_015(void)
-	{ JMP_IFACE_FN(csgo_VClient, 15) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 15) }
 
 	virtual void _UNKOWN_016(void)
-	{ JMP_IFACE_FN(csgo_VClient, 16) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 16) }
 
 	virtual void _UNKOWN_017 (void)
-	{ JMP_IFACE_FN(csgo_VClient, 17) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 17) }
 
 	virtual void _UNKOWN_018 (void)
-	{ JMP_IFACE_FN(csgo_VClient, 18) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 18) }
 
 	virtual void _UNKOWN_019(void )
-	{ JMP_IFACE_FN(csgo_VClient, 19) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 19) }
 
 	virtual void _UNKOWN_020(void)
-	{ JMP_IFACE_FN(csgo_VClient, 20) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 20) }
 
 	virtual void _UNKOWN_021 (void)
-	{ JMP_IFACE_FN(csgo_VClient, 21) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 21) }
 		
 	virtual void _UNKOWN_022(void)
-	{ JMP_IFACE_FN(csgo_VClient, 22) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 22) }
 
 	virtual void _UNKOWN_023(void)
-	{ JMP_IFACE_FN(csgo_VClient, 23) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 23) }
 
 	virtual void _UNKOWN_024(void)
-	{ JMP_IFACE_FN(csgo_VClient, 24) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 24) }
 
 	virtual void _UNKOWN_025(void)
-	{ JMP_IFACE_FN(csgo_VClient, 25) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 25) }
 
 	virtual void View_Render( vrect_t_csgo *rect )
 	{
-		// JMP_IFACE_FN(csgo_VClient, 26)
+		// JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 26)
 
 		bool rectNull = rect->width == 0 || rect->height == 0;
 
-		__asm {
-			mov ecx, rect
-			push ecx
-
-			mov ecx, csgo_VClient
-			mov eax, [ecx]
-			mov eax, [eax +4*26]
-			call eax
-		}
-
-		if(!rectNull && g_MaterialSystem_csgo && g_bTakeScreenShot)
+		if(!rectNull && g_MaterialSystem_csgo)
 		{
-			CMatRenderContextWrapper_csgo * wrapper;
+			CAfxMatRenderContext * wrapper;
 			IMatRenderContext_csgo * oldContext = g_MaterialSystem_csgo->GetRenderContext();
 
-			WaitForSingleObject(hRenderContextMapLock, INFINITE);
-			
-			std::map<IMatRenderContext_csgo *, CMatRenderContextWrapper_csgo *>::iterator it = g_RenderContextMap_csgo.find(oldContext);
+			std::map<IMatRenderContext_csgo *, CAfxMatRenderContext *>::iterator it = g_RenderContextMap_csgo.find(oldContext);
+
+			if(it != g_RenderContextMap_csgo.end())
+			{
+				if(it->first == it->second)
+				{
+					//Tier0_Msg("Found own context 0x%08x.\n", (DWORD)oldContext);
+				}
+				else
+				{
+					//Tier0_Msg("Found known context 0x%08x.\n", (DWORD)oldContext);
+				}
+				wrapper = it->second; // re-use
+			}
+			else
+			{
+				//Tier0_Msg("New context 0x%08x.\n", (DWORD)oldContext);
+				wrapper = new CAfxMatRenderContext(oldContext);
+
+				g_RenderContextMap_csgo[oldContext] = wrapper; // track new context
+				g_RenderContextMap_csgo[wrapper] = wrapper; // make it possible to detect our self
+			}
+
+			if((IMatRenderContext_csgo *)wrapper != oldContext)
+			{
+				g_MaterialSystem_csgo->SetRenderContext(wrapper);
+				wrapper->Release(); // SetRenderContext calls AddRef
+			}
+
+			if(m_OnView_Render)
+			{
+				m_OnView_Render->View_Render(this, wrapper, rect);
+			}
+			else
+			{
+				m_Parent->View_Render( rect );
+			}
+		}
+		else
+		{
+			m_Parent->View_Render( rect );
+		}
+/*
+		if(!rectNull && g_MaterialSystem_csgo && g_bTakeScreenShot)
+		{
+			CAfxMatRenderContext * wrapper;
+			IMatRenderContext_csgo * oldContext = g_MaterialSystem_csgo->GetRenderContext();
+
+			std::map<IMatRenderContext_csgo *, CAfxMatRenderContext *>::iterator it = g_RenderContextMap_csgo.find(oldContext);
 
 			if(it != g_RenderContextMap_csgo.end())
 			{
@@ -1636,14 +1707,11 @@ public:
 			else
 			{
 				Tier0_Msg("New context 0x%08x.\n", (DWORD)oldContext);
-				wrapper = new CMatRenderContextWrapper_csgo(oldContext);
+				wrapper = new CAfxMatRenderContext(oldContext);
 
 				g_RenderContextMap_csgo[oldContext] = wrapper; // track new context
 				g_RenderContextMap_csgo[wrapper] = wrapper; // make it possible to detect our selfs
 			}
-
-			SetEvent(hRenderContextMapLock);
-
 
 			while((IMatRenderContext_csgo *)wrapper != g_MaterialSystem_csgo->GetRenderContext())
 			{
@@ -1652,327 +1720,338 @@ public:
 			}
 
 			wrapper->SetActive(true);
+			g_RenderViewWrapper_csgo.SetCurrentContext(wrapper);
 
 			this->WriteSaveGameScreenshotOfSize("test.tga", 640, 480); //rect->width, rect->height
 
 			wrapper->SetActive(false);
+			g_RenderViewWrapper_csgo.SetCurrentContext(0);
 		}
+*/
 	}
 
 	virtual void RenderView( const CViewSetup_csgo &view, int nClearFlags, int whatToDraw )
-	{ JMP_IFACE_FN(csgo_VClient, 27) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 27) }
 
 	virtual void _UNKOWN_028(void)
-	{ JMP_IFACE_FN(csgo_VClient, 28) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 28) }
 
 	virtual void _UNKOWN_029(void)
-	{ JMP_IFACE_FN(csgo_VClient, 29) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 29) }
 
 	virtual void _UNKOWN_030(void)
-	{ JMP_IFACE_FN(csgo_VClient, 30) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 30) }
 
 	virtual void _UNKOWN_031(void)
-	{ JMP_IFACE_FN(csgo_VClient, 31) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 31) }
 
-	virtual void _UNKOWN_032(void) const
-	{ JMP_IFACE_FN(csgo_VClient, 32) }
+	virtual void _UNKOWN_032(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 32) }
 
 	virtual void _UNKOWN_033(void)
-	{ JMP_IFACE_FN(csgo_VClient, 33) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 33) }
 
 	virtual void _UNKOWN_034(void)
-	{ JMP_IFACE_FN(csgo_VClient, 34) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 34) }
 
 	virtual void _UNKOWN_035(void)
-	{ JMP_IFACE_FN(csgo_VClient, 35) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 35) }
 
 	virtual void _UNKOWN_036(void)
-	{ JMP_IFACE_FN(csgo_VClient, 36) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 36) }
 
 	virtual void _UNKOWN_037(void)
-	{ JMP_IFACE_FN(csgo_VClient, 37) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 37) }
 
 	virtual void _UNKOWN_038(void)
-	{ JMP_IFACE_FN(csgo_VClient, 38) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 38) }
 
 	virtual void _UNKOWN_039(void)
-	{ JMP_IFACE_FN(csgo_VClient, 39) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 39) }
 
 	virtual void _UNKOWN_040(void)
-	{ JMP_IFACE_FN(csgo_VClient, 40) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 40) }
 
 	virtual void _UNKOWN_041(void)
-	{ JMP_IFACE_FN(csgo_VClient, 41) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 41) }
 
 	virtual void _UNKOWN_042(void)
-	{ JMP_IFACE_FN(csgo_VClient, 42) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 42) }
 
 	virtual void _UNKOWN_043(void)
-	{ JMP_IFACE_FN(csgo_VClient, 43) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 43) }
 
 	virtual void _UNKOWN_044(void)
-	{ JMP_IFACE_FN(csgo_VClient, 44) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 44) }
 
 	virtual void _UNKOWN_045(void)
-	{ JMP_IFACE_FN(csgo_VClient, 45) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 45) }
 
 	virtual void _UNKOWN_046(void)
-	{ JMP_IFACE_FN(csgo_VClient, 46) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 46) }
 
 	virtual void _UNKOWN_047(void)
-	{ JMP_IFACE_FN(csgo_VClient, 47) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 47) }
 
 	virtual void _UNKOWN_048(void)
-	{ JMP_IFACE_FN(csgo_VClient, 48) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 48) }
 
 	virtual void _UNKOWN_049(void)
-	{ JMP_IFACE_FN(csgo_VClient, 49) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 49) }
 
 	virtual void _UNKOWN_050(void)
-	{ JMP_IFACE_FN(csgo_VClient, 50) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 50) }
 
-	virtual void _UNKOWN_051(void) const
-	{ JMP_IFACE_FN(csgo_VClient, 51) }
+	virtual void _UNKOWN_051(void)
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 51) }
 
 	virtual void _UNKOWN_052(void)
-	{ JMP_IFACE_FN(csgo_VClient, 52) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 52) }
 
 	virtual void _UNKOWN_053(void)
-	{ JMP_IFACE_FN(csgo_VClient, 53) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 53) }
 
 	virtual void _UNKOWN_054(void)
-	{ JMP_IFACE_FN(csgo_VClient, 54) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 54) }
 
 	virtual void _UNKOWN_055(void)
-	{ JMP_IFACE_FN(csgo_VClient, 55) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 55) }
 
 	virtual void _UNKOWN_056(void)
-	{ JMP_IFACE_FN(csgo_VClient, 56) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 56) }
 
 	virtual void _UNKOWN_057(void)
-	{ JMP_IFACE_FN(csgo_VClient, 57) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 57) }
 
 	virtual void _UNKOWN_058(void)
-	{ JMP_IFACE_FN(csgo_VClient, 58) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 58) }
 
 	virtual void _UNKOWN_059(void)
-	{ JMP_IFACE_FN(csgo_VClient, 59) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 59) }
 
 	virtual void _UNKOWN_060(void)
-	{ JMP_IFACE_FN(csgo_VClient, 60) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 60) }
 
 	virtual void _UNKOWN_061(void)
-	{ JMP_IFACE_FN(csgo_VClient, 61) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 61) }
 
 	virtual void _UNKOWN_062(void)
-	{ JMP_IFACE_FN(csgo_VClient, 62) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 62) }
 
 	virtual void _UNUSED_GetScreenWidth(void)
-	{ JMP_IFACE_FN(csgo_VClient, 63) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 63) }
 
 	virtual void _UNUSED_GetScreenHeight(void)
-	{ JMP_IFACE_FN(csgo_VClient, 64) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 64) }
 
 	virtual void WriteSaveGameScreenshotOfSize( const char *pFilename, int width, int height, bool bCreatePowerOf2Padded = false, bool bWriteVTF = false )
-	{ JMP_IFACE_FN(csgo_VClient, 65) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 65) }
 
 	virtual void _UNKOWN_066(void)
-	{ JMP_IFACE_FN(csgo_VClient, 66) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 66) }
 
 	virtual void _UNKOWN_067(void)
-	{ JMP_IFACE_FN(csgo_VClient, 67) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 67) }
 
 	virtual void _UNKOWN_068(void)
-	{ JMP_IFACE_FN(csgo_VClient, 68) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 68) }
 
 	virtual void _UNKOWN_069(void)
-	{ JMP_IFACE_FN(csgo_VClient, 69) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 69) }
 
 	virtual void _UNKOWN_070(void)
-	{ JMP_IFACE_FN(csgo_VClient, 70) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 70) }
 
 	virtual void _UNKOWN_071(void)
-	{ JMP_IFACE_FN(csgo_VClient, 71) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 71) }
 
 	virtual void _UNKOWN_072(void)
-	{ JMP_IFACE_FN(csgo_VClient, 72) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 72) }
 
 	virtual void _UNKOWN_073(void)
-	{ JMP_IFACE_FN(csgo_VClient, 73) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 73) }
 
 	virtual void _UNKOWN_074(void)
-	{ JMP_IFACE_FN(csgo_VClient, 74) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 74) }
 
 	virtual void _UNKOWN_075(void)
-	{ JMP_IFACE_FN(csgo_VClient, 75) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 75) }
 
 	virtual void _UNKOWN_076(void)
-	{ JMP_IFACE_FN(csgo_VClient, 76) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 76) }
 
 	virtual void _UNKOWN_077(void)
-	{ JMP_IFACE_FN(csgo_VClient, 77) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 77) }
 
 	virtual void _UNKOWN_078(void)
-	{ JMP_IFACE_FN(csgo_VClient, 78) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 78) }
 
 	virtual void _UNKOWN_079(void)
-	{ JMP_IFACE_FN(csgo_VClient, 79) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 79) }
 
 	virtual void _UNKOWN_080(void)
-	{ JMP_IFACE_FN(csgo_VClient, 80) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 80) }
 
 	virtual void _UNKOWN_081(void)
-	{ JMP_IFACE_FN(csgo_VClient, 81) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 81) }
 
 	virtual void _UNKOWN_082(void)
-	{ JMP_IFACE_FN(csgo_VClient, 82) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 82) }
 
 	virtual void _UNKOWN_083(void)
-	{ JMP_IFACE_FN(csgo_VClient, 83) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 83) }
 
 	virtual void _UNKOWN_084(void)
-	{ JMP_IFACE_FN(csgo_VClient, 84) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 84) }
 
 	virtual void _UNKOWN_085(void)
-	{ JMP_IFACE_FN(csgo_VClient, 85) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 85) }
 
 	virtual void _UNKOWN_086(void)
-	{ JMP_IFACE_FN(csgo_VClient, 86) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 86) }
 
 	virtual void _UNKOWN_087(void)
-	{ JMP_IFACE_FN(csgo_VClient, 87) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 87) }
 
 	virtual void _UNKOWN_088(void)
-	{ JMP_IFACE_FN(csgo_VClient, 88) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 88) }
 
 	virtual void _UNKOWN_089(void)
-	{ JMP_IFACE_FN(csgo_VClient, 89) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 89) }
 
 	virtual void _UNKOWN_090(void)
-	{ JMP_IFACE_FN(csgo_VClient, 90) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 90) }
 
 	virtual void _UNKOWN_091(void)
-	{ JMP_IFACE_FN(csgo_VClient, 91) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 91) }
 
 	virtual void _UNKOWN_092(void)
-	{ JMP_IFACE_FN(csgo_VClient, 92) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 92) }
 
 	virtual void _UNKOWN_093(void)
-	{ JMP_IFACE_FN(csgo_VClient, 93) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 93) }
 
 	virtual void _UNKOWN_094(void)
-	{ JMP_IFACE_FN(csgo_VClient, 94) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 94) }
 
 	virtual void _UNKOWN_095(void)
-	{ JMP_IFACE_FN(csgo_VClient, 95) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 95) }
 
 	virtual void _UNKOWN_096(void)
-	{ JMP_IFACE_FN(csgo_VClient, 96) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 96) }
 
 	virtual void _UNKOWN_097(void)
-	{ JMP_IFACE_FN(csgo_VClient, 97) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 97) }
 
 	virtual void _UNKOWN_098(void)
-	{ JMP_IFACE_FN(csgo_VClient, 98) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 98) }
 
 	virtual void _UNKOWN_099(void)
-	{ JMP_IFACE_FN(csgo_VClient, 99) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 99) }
 
 	virtual void _UNKOWN_100(void)
-	{ JMP_IFACE_FN(csgo_VClient, 100) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 100) }
 
 	virtual void _UNKOWN_101(void)
-	{ JMP_IFACE_FN(csgo_VClient, 101) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 101) }
 
 	virtual void _UNKOWN_102(void)
-	{ JMP_IFACE_FN(csgo_VClient, 102) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 102) }
 
 	virtual void _UNKOWN_103(void)
-	{ JMP_IFACE_FN(csgo_VClient, 103) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 103) }
 
 	virtual void _UNKOWN_104(void)
-	{ JMP_IFACE_FN(csgo_VClient, 104) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 104) }
 
 	virtual void _UNKOWN_105(void)
-	{ JMP_IFACE_FN(csgo_VClient, 105) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 105) }
 
 	virtual void _UNKOWN_106(void)
-	{ JMP_IFACE_FN(csgo_VClient, 106) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 106) }
 
 	virtual void _UNKOWN_107(void)
-	{ JMP_IFACE_FN(csgo_VClient, 107) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 107) }
 
 	virtual void _UNKOWN_108(void)
-	{ JMP_IFACE_FN(csgo_VClient, 108) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 108) }
 
 	virtual void _UNKOWN_109(void)
-	{ JMP_IFACE_FN(csgo_VClient, 109) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 109) }
 
 	virtual void _UNKOWN_110(void)
-	{ JMP_IFACE_FN(csgo_VClient, 110) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 110) }
 
 	// and a few more to be save from updates:
 
 	virtual void _UNKOWN_111(void)
-	{ JMP_IFACE_FN(csgo_VClient, 111) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 111) }
 
 	virtual void _UNKOWN_112(void)
-	{ JMP_IFACE_FN(csgo_VClient, 112) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 112) }
 
 	virtual void _UNKOWN_113(void)
-	{ JMP_IFACE_FN(csgo_VClient, 113) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 113) }
 
 	virtual void _UNKOWN_114(void)
-	{ JMP_IFACE_FN(csgo_VClient, 114) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 114) }
 
 	virtual void _UNKOWN_115(void)
-	{ JMP_IFACE_FN(csgo_VClient, 115) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 115) }
 
 	virtual void _UNKOWN_116(void)
-	{ JMP_IFACE_FN(csgo_VClient, 116) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 116) }
 
 	virtual void _UNKOWN_117(void)
-	{ JMP_IFACE_FN(csgo_VClient, 117) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 117) }
 
 	virtual void _UNKOWN_118(void)
-	{ JMP_IFACE_FN(csgo_VClient, 118) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 118) }
 
 	virtual void _UNKOWN_119(void)
-	{ JMP_IFACE_FN(csgo_VClient, 119) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 119) }
 
 	virtual void _UNKOWN_120(void)
-	{ JMP_IFACE_FN(csgo_VClient, 120) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 120) }
 
 	virtual void _UNKOWN_121(void)
-	{ JMP_IFACE_FN(csgo_VClient, 121) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 121) }
 
 	virtual void _UNKOWN_122(void)
-	{ JMP_IFACE_FN(csgo_VClient, 122) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 122) }
 
 	virtual void _UNKOWN_123(void)
-	{ JMP_IFACE_FN(csgo_VClient, 123) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 123) }
 
 	virtual void _UNKOWN_124(void)
-	{ JMP_IFACE_FN(csgo_VClient, 124) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 124) }
 
 	virtual void _UNKOWN_125(void)
-	{ JMP_IFACE_FN(csgo_VClient, 125) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 125) }
 
 	virtual void _UNKOWN_126(void)
-	{ JMP_IFACE_FN(csgo_VClient, 126) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 126) }
 
 	virtual void _UNKOWN_127(void)
-	{ JMP_IFACE_FN(csgo_VClient, 127) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 127) }
 
 	virtual void _UNKOWN_128(void)
-	{ JMP_IFACE_FN(csgo_VClient, 128) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 128) }
 
 	virtual void _UNKOWN_129(void)
-	{ JMP_IFACE_FN(csgo_VClient, 129) }
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 129) }
 
 	virtual void _UNKOWN_130(void)
-	{ JMP_IFACE_FN(csgo_VClient, 130) }
-} g_BaseClientDllWrapper_csgo;
+	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 130) }
+
+private:
+	IBaseClientDLL_csgo * m_Parent;
+	IAfxBaseClientDllShutdown * m_OnShutdown;
+	IAfxBaseClientDllView_Render * m_OnView_Render;
+	CAfxFreeMaster m_FreeMaster;
+};
+
+CAfxBaseClientDll * g_AfxBaseClientDll = 0;
 
 #pragma warning(pop)
 
@@ -2030,13 +2109,14 @@ void* new_Client_CreateInterface(const char *pName, int *pReturnCode)
 
 	if(isCsgo && !strcmp(pName, CLIENT_DLL_INTERFACE_VERSION_CSGO_016))
 	{
-		if(!csgo_VClient)
+		if(!g_AfxBaseClientDll)
 		{
 			g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_CSGO_016 " (CS:GO)";
-			csgo_VClient = pRet;
+			g_AfxBaseClientDll = new CAfxBaseClientDll((IBaseClientDLL_csgo *)pRet);
+			g_AfxStreams.OnAfxBaseClientDll(g_AfxBaseClientDll);
 		}
 
-		pRet = &g_BaseClientDllWrapper_csgo;
+		pRet = g_AfxBaseClientDll;
 	}
 
 	return pRet;
@@ -2253,6 +2333,8 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 		{
 			isCsgo = true;
 		}
+		
+		//ScriptEngine_StartUp();
 	}
 
 	if(bFirstTier0)
@@ -2365,7 +2447,6 @@ HMODULE WINAPI new_LoadLibraryExA(LPCSTR lpLibFileName, HANDLE hFile, DWORD dwFl
 	return hRet;
 }
 
-
 bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 {
 	switch (fdwReason) 
@@ -2382,8 +2463,11 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 			))
 				ErrorBox();
 
-			hRenderContextMapLock = CreateEvent(NULL, FALSE, TRUE, NULL);
-			hMaterialInfoSetLock = CreateEvent(NULL, FALSE, TRUE, NULL);
+			//
+			// Remember we are not on the main program thread here,
+			// instead we are on our own thread, so don't run
+			// things here that would have problems with that.
+			//
 
 			break;
 		}
@@ -2391,15 +2475,12 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 		{
 			// actually this gets called now.
 
-			for(std::map<IMatRenderContext_csgo *, CMatRenderContextWrapper_csgo *>::iterator it = g_RenderContextMap_csgo.begin(); it != g_RenderContextMap_csgo.end(); ++it)
+			for(std::map<IMatRenderContext_csgo *, CAfxMatRenderContext *>::iterator it = g_RenderContextMap_csgo.begin(); it != g_RenderContextMap_csgo.end(); ++it)
 			{
 				delete it->second;
 			}
 
-			CloseHandle(hMaterialInfoSetLock);
-			CloseHandle(hRenderContextMapLock);
-
-			//ErrorBox("If you see this error message, tell the developers :-)");
+			if(g_AfxBaseClientDll) { delete g_AfxBaseClientDll; g_AfxBaseClientDll = 0; }
 
 			break;
 		}

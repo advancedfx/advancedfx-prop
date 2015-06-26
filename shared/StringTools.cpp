@@ -111,3 +111,28 @@ bool StringBeginsWith(char const * target, char const * beginning) {
 
 	return true;
 }
+
+bool StringIsAlNum(char const * value)
+{
+	if(StringIsEmpty(value)) return true;
+
+	while(*value)
+	{
+		if(!isalnum(*value))
+			return false;
+
+		++value;
+	}
+
+	return true;
+}
+
+bool StringIsEmpty(char const * value)
+{
+	return !StringIsNull(value) && *value == '\0';
+}
+
+bool StringIsNull(char const * value)
+{
+	return 0 == value;
+}

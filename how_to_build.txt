@@ -16,7 +16,7 @@ Hint:
 
 04) This step is not required by default, only when you plan to build AfxHookGoldSrc with AFX_SCRIPT!
     Download the Mozilla Build Environment from
-    http://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe
+    http://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-1.8.0.exe
     and install it into a folder you like.
 
 05) This step is not required by default, only when you plan to build AfxHookGoldSrc with AFX_SCRIPT!

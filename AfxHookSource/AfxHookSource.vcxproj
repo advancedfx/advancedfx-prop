@@ -44,13 +44,13 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>./;../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;_BIND_TO_CURRENT_CRT_VERSION=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <AdditionalIncludeDirectories>./;../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -61,12 +61,12 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>./;../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;_BIND_TO_CURRENT_CRT_VERSION=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>./;../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -85,10 +85,13 @@
     <ClCompile Include="..\shared\hooks\gameOverlayRenderer.cpp" />
     <ClCompile Include="..\shared\vcpp\AfxAddr.cpp" />
     <ClCompile Include="addresses.cpp" />
+    <ClCompile Include="AfxClasses.cpp" />
     <ClCompile Include="AfxHookSourceInput.cpp" />
+    <ClCompile Include="AfxStreams.cpp" />
     <ClCompile Include="csgo_CHudDeathNotice.cpp" />
     <ClCompile Include="csgo_GetPlayerName.cpp" />
     <ClCompile Include="csgo_SndMixTimeScalePatch.cpp" />
+    <ClCompile Include="hlaeFolder.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MirvCommands.cpp" />
     <ClCompile Include="RenderView.cpp" />
@@ -112,10 +115,14 @@
     <ClInclude Include="..\shared\rapidxml\rapidxml_utils.hpp" />
     <ClInclude Include="..\shared\vcpp\AfxAddr.h" />
     <ClInclude Include="addresses.h" />
+    <ClInclude Include="AfxClasses.h" />
     <ClInclude Include="AfxHookSourceInput.h" />
+    <ClInclude Include="AfxInterfaces.h" />
+    <ClInclude Include="AfxStreams.h" />
     <ClInclude Include="csgo_CHudDeathNotice.h" />
     <ClInclude Include="csgo_GetPlayerName.h" />
     <ClInclude Include="csgo_SndMixTimeScalePatch.h" />
+    <ClInclude Include="hlaeFolder.h" />
     <ClInclude Include="RenderView.h" />
     <ClInclude Include="SourceInterfaces.h" />
     <ClInclude Include="stdafx.h" />
