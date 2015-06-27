@@ -642,29 +642,6 @@ public:
 		{
 			m_Parent->Bind(material, proxyData);
 		}
-
-
-/*		if(m_Active)
-		{
-			CAfxMaterialKey key(material);
-
-
-			const char * groupName =  material->GetTextureGroupName();
-			const char * name = material->GetName();
-
-			if(
-				!strcmp("Model textures", groupName)
-				// !strcmp("World textures", groupName) ||  !strcmp("SkyBox textures", groupName) || !strcmp("StaticProp textures", groupName)
-				//!strcmp("models/props/de_dust/dust_rusty_barrel", name)
-			)
-				m_Parent->Bind( errMaterial, proxyData );
-			else
-				m_Parent->Bind( material, proxyData );
-		}
-		else
-			m_Parent->Bind( material, proxyData );
-
-		*/
 	}
 
 	virtual void _UNKNOWN_010(void)
@@ -1226,27 +1203,6 @@ public:
 		{
 			m_Parent->DrawInstances(nInstanceCount, pInstance);
 		}
-
-		/*
-		if(m_Active)
-		{
-			MeshInstanceData_t_csgo * first = const_cast<MeshInstanceData_t_csgo *>(pInstance);
-
-			for(int i = 0; i < nInstanceCount; ++i)
-			{
-				first->m_DiffuseModulation.x = 1.0;
-				first->m_DiffuseModulation.y = 0.0;
-				first->m_DiffuseModulation.z = 0.0;
-				first->m_DiffuseModulation.w = 1.0;
-
-				++first;
-			}
-
-			m_Parent->DrawInstances(nInstanceCount, pInstance);
-		}
-		else
-			m_Parent->DrawInstances(nInstanceCount, pInstance);
-		*/
 	}
 
 	virtual void _UNKNOWN_193(void)
@@ -1443,24 +1399,6 @@ private:
 
 #pragma warning(pop)
 
-/*
-void CRenderViewWrapper_csgo::SetColorModulation( float const* blend )
-{
-	// JMP_IFACE_FN(g_RenderView_csgo, 6)
-
-	if(m_CurrentCtx && m_CurrentCtx->GetActive())
-	{
-		float color[3] = { 1.0f, 1.0f, 1.0f };
-		g_RenderView_csgo->SetColorModulation(color);
-	}
-	else
-	{
-		float color[3] = { 0.0f, 0.0f, 1.0f };
-		g_RenderView_csgo->SetColorModulation(color);
-	}
-}
-*/
-
 std::map<IMatRenderContext_csgo *,CAfxMatRenderContext *> g_RenderContextMap_csgo;
 
 #pragma warning(push)
@@ -1543,12 +1481,6 @@ public:
 
 		int result = m_Parent->Init(AppSystemFactory_ForClient, pGlobals);
 
-/*		if(g_MaterialSystem_csgo)
-		{
-			errMaterial = g_MaterialSystem_csgo->FindMaterial("afx/greenmatte",NULL);
-			errMaterial->IncrementReferenceCount();
-		}
-*/
 		return result;
 	}
 
@@ -1684,50 +1616,6 @@ public:
 		{
 			m_Parent->View_Render( rect );
 		}
-/*
-		if(!rectNull && g_MaterialSystem_csgo && g_bTakeScreenShot)
-		{
-			CAfxMatRenderContext * wrapper;
-			IMatRenderContext_csgo * oldContext = g_MaterialSystem_csgo->GetRenderContext();
-
-			std::map<IMatRenderContext_csgo *, CAfxMatRenderContext *>::iterator it = g_RenderContextMap_csgo.find(oldContext);
-
-			if(it != g_RenderContextMap_csgo.end())
-			{
-				if(it->first == it->second)
-				{
-					Tier0_Msg("Found own context 0x%08x.\n", (DWORD)oldContext);
-				}
-				else
-				{
-					Tier0_Msg("Found known context 0x%08x.\n", (DWORD)oldContext);
-				}
-				wrapper = it->second; // re-use
-			}
-			else
-			{
-				Tier0_Msg("New context 0x%08x.\n", (DWORD)oldContext);
-				wrapper = new CAfxMatRenderContext(oldContext);
-
-				g_RenderContextMap_csgo[oldContext] = wrapper; // track new context
-				g_RenderContextMap_csgo[wrapper] = wrapper; // make it possible to detect our selfs
-			}
-
-			while((IMatRenderContext_csgo *)wrapper != g_MaterialSystem_csgo->GetRenderContext())
-			{
-				g_MaterialSystem_csgo->SetRenderContext(wrapper);
-				wrapper->Release(); // SetRenderContext calls AddRef
-			}
-
-			wrapper->SetActive(true);
-			g_RenderViewWrapper_csgo.SetCurrentContext(wrapper);
-
-			this->WriteSaveGameScreenshotOfSize("test.tga", 640, 480); //rect->width, rect->height
-
-			wrapper->SetActive(false);
-			g_RenderViewWrapper_csgo.SetCurrentContext(0);
-		}
-*/
 	}
 
 	virtual void RenderView( const CViewSetup_csgo &view, int nClearFlags, int whatToDraw )

@@ -93,3 +93,20 @@ public:
 	virtual void OnShutdown_set(IAfxBaseClientDllShutdown * value) = 0;
 	virtual void OnView_Render_set(IAfxBaseClientDllView_Render * value) = 0;
 };
+
+class IAfxStreams4Stream abstract
+{
+public:
+	virtual IMaterialSystem_csgo * GetMaterialSystem(void) = 0;
+	virtual IAfxFreeMaster * GetFreeMaster(void) = 0;
+	virtual void OnBind_set(IAfxMatRenderContextBind * value) = 0;
+	virtual void OnDrawInstances_set(IAfxMatRenderContextDrawInstances * value) = 0;
+	virtual void OnSetColorModulation_set(IAfxVRenderViewSetColorModulation * value) = 0;
+};
+
+class IAfxStream4Streams abstract
+{
+public:
+	virtual void StreamAttach(IAfxStreams4Stream * streams) = 0;
+	virtual void StreamDetach(IAfxStreams4Stream * streams) = 0;
+};

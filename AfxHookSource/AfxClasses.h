@@ -12,6 +12,7 @@
 #include "SourceInterfaces.h"
 
 #include <list>
+#include <map>
 
 
 // CAfxFreeable ////////////////////////////////////////////////////////////////
@@ -60,6 +61,8 @@ class CAfxMaterial
 , public IAfxMaterial
 {
 public:
+	CAfxMaterial();
+
 	/// <remarks>
 	/// This should only be used, when you have proper control about destruction
 	//  at the right time.
@@ -104,4 +107,20 @@ public:
 	CAfxMaterialKey(const CAfxMaterialKey & x);
 
 	bool operator < (const CAfxMaterialKey & y) const;
+};
+
+// CAfxMaterialCache ///////////////////////////////////////////////////////////
+
+class CAfxMaterialCache
+{
+public:
+	CAfxMaterial * Lookup(CAfxMaterialKey & key);
+
+	CAfxMaterial * Insert(CAfxMaterialKey & key, CAfxMaterial & value);
+
+	void Ivalidate(void);
+
+private:
+	std::map<CAfxMaterialKey, CAfxMaterial> m_Map;
+
 };

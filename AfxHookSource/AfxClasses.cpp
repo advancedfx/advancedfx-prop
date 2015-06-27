@@ -90,6 +90,12 @@ void CAfxFreeMaster::AfxFreeable_Unregister(IAfxFreeable * value)
 
 // CAfxMaterial ////////////////////////////////////////////////////////////////
 
+CAfxMaterial::CAfxMaterial()
+: CAfxFreeable()
+, m_Material(0)
+{
+}
+
 CAfxMaterial::CAfxMaterial(IMaterial_csgo * material)
 : CAfxFreeable()
 , m_Material(material)
@@ -154,3 +160,24 @@ bool CAfxMaterialKey::operator < (const CAfxMaterialKey & y) const
 	return strcmp(this->m_Material->GetName(), y.m_Material->GetName()) < 0;
 }
 
+// CAfxMaterialCache ///////////////////////////////////////////////////////////
+
+CAfxMaterial * CAfxMaterialCache::Lookup(CAfxMaterialKey & key)
+{
+	std::map<CAfxMaterialKey, CAfxMaterial>::iterator it = m_Map.find(key);
+
+	if(it != m_Map.end())
+		return &(it->second);
+
+	return 0;
+}
+
+CAfxMaterial * CAfxMaterialCache::Insert(CAfxMaterialKey & key, CAfxMaterial & value)
+{
+	return &(m_Map[key] = value);
+}
+
+void CAfxMaterialCache::Ivalidate(void)
+{
+	m_Map.clear();
+}

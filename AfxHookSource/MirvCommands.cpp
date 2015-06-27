@@ -43,13 +43,13 @@ CON_COMMAND(__mirv_streams, "Access to streams system.")
 	{
 		char const * cmd1 = args->ArgV(1);
 
-		if(_stricmp(cmd1, "add"))
+		if(!_stricmp(cmd1, "add"))
 		{
 			if(3 <= argc)
 			{
 				char const * cmd2 = args->ArgV(2);
 
-				if(_stricmp(cmd2, "matteWorldStream"))
+				if(!_stricmp(cmd2, "matteWorldStream"))
 				{
 					if(4 <= argc)
 					{
@@ -66,7 +66,7 @@ CON_COMMAND(__mirv_streams, "Access to streams system.")
 					return;
 				}
 				else
-				if(_stricmp(cmd2, "matteEnitityStream"))
+				if(!_stricmp(cmd2, "matteEntityStream"))
 				{
 					if(4 <= argc)
 					{
@@ -87,12 +87,12 @@ CON_COMMAND(__mirv_streams, "Access to streams system.")
 
 			Tier0_Msg(
 				"mirv_streams add matteWorldStream [...] - Add a matte world stream.\n"
-				"mirv_streams add matteEnitityStream [...] - Add a matte entity stream.\n"
+				"mirv_streams add matteEntityStream [...] - Add a matte entity stream.\n"
 			);
 			return;
 		}
 		else
-		if(_stricmp(cmd1, "remove"))
+		if(!_stricmp(cmd1, "remove"))
 		{
 			if(3 <= argc)
 			{
@@ -109,20 +109,37 @@ CON_COMMAND(__mirv_streams, "Access to streams system.")
 			return;
 		}
 		else
-		if(_stricmp(cmd1, "print"))
+		if(!_stricmp(cmd1, "preview"))
+		{
+			if(3 <= argc)
+			{
+				char const * cmd2 = args->ArgV(2);
+				int index = atoi(cmd2);
+				
+				g_AfxStreams.Console_PreviewStream(index);
+				return;
+			}
+
+			Tier0_Msg(
+				"mirv_streams preview <index> - Preivew the stream with index <index>, you can get the value from mirv_streams print. To end previewing enter -1 for <index>!\n"
+			);
+			return;
+		}
+		else
+		if(!_stricmp(cmd1, "print"))
 		{
 			g_AfxStreams.Console_PrintStreams();
 
 			return;
 		}
 		else
-		if(_stricmp(cmd1, "record"))
+		if(!_stricmp(cmd1, "record"))
 		{
 			if(3 <= argc)
 			{
 				char const * cmd2 = args->ArgV(2);
 
-				if(_stricmp(cmd2, "name"))
+				if(!_stricmp(cmd2, "name"))
 				{
 					if(4 <= argc)
 					{
@@ -139,13 +156,13 @@ CON_COMMAND(__mirv_streams, "Access to streams system.")
 					return;
 				}
 				else
-				if(_stricmp(cmd2, "start"))
+				if(!_stricmp(cmd2, "start"))
 				{
 					g_AfxStreams.Console_Record_Start();
 					return;
 				}
 				else
-				if(_stricmp(cmd2, "end"))
+				if(!_stricmp(cmd2, "end"))
 				{
 					g_AfxStreams.Console_Record_End();
 					return;
@@ -164,11 +181,12 @@ CON_COMMAND(__mirv_streams, "Access to streams system.")
 	Tier0_Msg(
 		"mirv_streams add [...]- Add a stream.\n"
 		"mirv_streams remove [...] - Remove a stream.\n"
+		"mirv_streams preview [...] - Preview a stream.\n"
 		"mirv_streams print - Print current streams.\n"
 		"mirv_streams record [...] - Recording control.\n"
+		"+++ IMPORTANT NOTICE: While the preview shows the viewmodel (in-eye weapon) and HUD, the recorded files won't have these! +++\n"
 	);
 	return;
-
 }
 
 void PrintMaterialInfoSetToFile(void);
