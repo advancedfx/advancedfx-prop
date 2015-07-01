@@ -11,29 +11,82 @@
 #include "SourceInterfaces.h"
 #include "AfxInterfaces.h"
 #include "AfxClasses.h"
+#include "WrpConsole.h"
 
 #include <string>
 #include <list>
 #include <map>
 
+class CAfxDeveloperStream;
+class CAfxMatteEntityStream;
+
 class CAfxStream : 
 public IAfxStream4Streams
 {
 public:
-	CAfxStream(char const * streamName);
+	enum TopStreamType
+	{
+		TST_CAfxStream,
+		TST_CAfxDeveloperStream,
+		TST_CAfxMatteEntityStream
+	};
+
 	virtual ~CAfxStream();
 
+	virtual CAfxStream * AsAfxStream(void) { return this; }
+	virtual CAfxDeveloperStream * AsAfxDeveloperStream(void) { return 0; }
+	virtual CAfxMatteEntityStream * AsAfxMatteEntityStream(void) { return 0; }
+
 	char const * GetStreamName(void);
+	
+	TopStreamType GetTopStreamType(void);
 
 	virtual void StreamAttach(IAfxStreams4Stream * streams);
 	virtual void StreamDetach(IAfxStreams4Stream * streams);
 
 protected:
+	CAfxStream(TopStreamType topStreamType, char const * streamName);
+
 	/// <summary>This member is only valid between StreamAttach and StreamDeatach.</summary>
 	IAfxStreams4Stream * m_Streams;
 
 private:
 	std::string m_StreamName;
+	TopStreamType m_TopStreamType;
+};
+
+class CAfxDeveloperStream
+: public CAfxStream
+, public IAfxMatRenderContextBind
+{
+public:
+	CAfxDeveloperStream(char const * streamName);
+	virtual ~CAfxDeveloperStream();
+
+	virtual CAfxDeveloperStream * AsAfxDeveloperStream(void) { return this; }
+
+	void MatchName_set(char const * value);
+	char const * MatchName_get(void);
+
+	void MatchTextureGroupName_set(char const * value);
+	char const * MatchTextureGroupName_get(void);
+
+	void ReplaceName_set(char const * name);
+	char const * ReplaceName_get(void);
+
+	virtual void StreamAttach(IAfxStreams4Stream * streams);
+	virtual void StreamDetach(IAfxStreams4Stream * streams);
+
+	virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 );
+
+private:
+	std::string m_MatchTextureGroupName;
+	std::string m_MatchName;
+	std::string m_ReplaceName;
+	bool m_ReplaceUpdate;
+	bool m_Replace;
+
+	CAfxMaterial * m_ReplaceMaterial;
 };
 
 class CAfxMatteEntityStream
@@ -45,6 +98,8 @@ class CAfxMatteEntityStream
 public:
 	CAfxMatteEntityStream(char const * streamName);
 	virtual ~CAfxMatteEntityStream();
+
+	virtual CAfxMatteEntityStream * AsAfxMatteEntityStream(void) { return this; }
 
 	virtual void StreamAttach(IAfxStreams4Stream * streams);
 	virtual void StreamDetach(IAfxStreams4Stream * streams);
@@ -125,9 +180,55 @@ private:
 		CAfxMaterial m_MatteMaterial;
 	};
 
+	class CActionInvisible
+	: public CAction
+	{
+	public:
+		CActionInvisible(IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem)
+		: m_InvisibleMaterial(freeMaster, matSystem->FindMaterial("afx/invisible",NULL))
+		{
+		}
+
+		virtual ~CActionInvisible()
+		{
+		}
+
+		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 )
+		{
+			ctx->GetParent()->Bind(m_InvisibleMaterial.GetMaterial(), proxyData);
+		}
+
+		virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance )
+		{
+			MeshInstanceData_t_csgo * first = const_cast<MeshInstanceData_t_csgo *>(pInstance);
+
+			for(int i = 0; i < nInstanceCount; ++i)
+			{
+				first->m_DiffuseModulation.x = 0.0;
+				first->m_DiffuseModulation.y = 0.0;
+				first->m_DiffuseModulation.z = 0.0;
+				first->m_DiffuseModulation.w = 0.0;
+
+				++first;
+			}
+
+			ctx->GetParent()->DrawInstances(nInstanceCount, pInstance);
+		}
+
+		virtual void SetColorModulation(IAfxVRenderView * rv, float const* blend )
+		{
+			float color[3] = { 0.0f, 0.0f, 0.0f };
+			rv->GetParent()->SetColorModulation(color);
+		}
+
+	private:
+		CAfxMaterial m_InvisibleMaterial;
+	};
+
 	CAction * m_CurrentAction;
 	CAction * m_MatteAction;
 	CAction * m_PassthroughAction;
+	CAction * m_InvisibleAction;
 
 	std::map<CAfxMaterialKey, CAction *> m_Map;
 };
@@ -148,10 +249,12 @@ public:
 	const char * Console_RecordName_get();
 	void Console_Record_Start();
 	void Console_Record_End();
+	void Console_AddDeveloperStream(const char * streamName);
 	void Console_AddMatteWorldStream(const char * streamName);
 	void Console_AddMatteEntityStream(const char * streamName);
 	void Console_PrintStreams();
 	void Console_RemoveStream(int index);
+	void Console_EditStream(int index, IWrpCommandArgs * args, int argcOffset, char const * cmdPrefix);
 
 	/// <param name="index">stream index to preview or 0 if to preview nothing.</param>
 	void Console_PreviewStream(int index);

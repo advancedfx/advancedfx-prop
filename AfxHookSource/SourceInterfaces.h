@@ -1776,6 +1776,7 @@ public:
 // IBaseClientDll_csgo_016 /////////////////////////////////////////////////////
 
 #define CLIENT_DLL_INTERFACE_VERSION_CSGO_016 "VClient016"
+#define CLIENT_DLL_INTERFACE_VERSION_CSGO_017 "VClient017"
 
 // IMaterial_csgo //////////////////////////////////////////////////////////////
 

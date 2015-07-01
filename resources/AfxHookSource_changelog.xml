@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.0.13.1</version>
+<time>2015-07-01T17:13Z</time>
+<changes>
+<change type="updated">
+Adjusted AfxHookSource to 30th June 2015 CS:GO update.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.0.13.0</version>
 <time>2015-06-15T19:14Z</time>
 <changes>

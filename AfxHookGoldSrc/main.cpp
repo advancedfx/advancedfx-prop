@@ -38,9 +38,9 @@
 
 #ifdef AFX_GUI
 #include "gui/Gui.h"
+#include "Rocket/Core/ReferenceCountable.h"
 #endif
 
-#include "Rocket/Core/ReferenceCountable.h"
 
 bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 {

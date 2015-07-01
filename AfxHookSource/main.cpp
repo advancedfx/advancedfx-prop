@@ -1995,11 +1995,11 @@ void* new_Client_CreateInterface(const char *pName, int *pReturnCode)
 		}
 	}
 
-	if(isCsgo && !strcmp(pName, CLIENT_DLL_INTERFACE_VERSION_CSGO_016))
+	if(isCsgo && !strcmp(pName, CLIENT_DLL_INTERFACE_VERSION_CSGO_017))
 	{
 		if(!g_AfxBaseClientDll)
 		{
-			g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_CSGO_016 " (CS:GO)";
+			g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_CSGO_017 " (CS:GO)";
 			g_AfxBaseClientDll = new CAfxBaseClientDll((IBaseClientDLL_csgo *)pRet);
 			g_AfxStreams.OnAfxBaseClientDll(g_AfxBaseClientDll);
 		}
@@ -2197,7 +2197,7 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 	if(!hModule || !lpLibFileName)
 		return;
 
-#if 0
+#if 1
 	static FILE *f1=NULL;
 
 	if( !f1 ) f1=fopen("mdt_log_LibraryHooksA.txt","wb");

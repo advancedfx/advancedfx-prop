@@ -49,7 +49,7 @@ CON_COMMAND(__mirv_streams, "Access to streams system.")
 			{
 				char const * cmd2 = args->ArgV(2);
 
-				if(!_stricmp(cmd2, "matteWorldStream"))
+				if(!_stricmp(cmd2, "matteWorld"))
 				{
 					if(4 <= argc)
 					{
@@ -61,12 +61,12 @@ CON_COMMAND(__mirv_streams, "Access to streams system.")
 					}
 
 					Tier0_Msg(
-						"mirv_streams add matteWorldStream <name> - Add a matte world stream with name <name>.\n"
+						"mirv_streams add matteWorld <name> - Add a matte world stream with name <name>.\n"
 					);
 					return;
 				}
 				else
-				if(!_stricmp(cmd2, "matteEntityStream"))
+				if(!_stricmp(cmd2, "matteEntity"))
 				{
 					if(4 <= argc)
 					{
@@ -78,16 +78,50 @@ CON_COMMAND(__mirv_streams, "Access to streams system.")
 					}
 
 					Tier0_Msg(
-						"mirv_streams add matteEnitityStream <name> - Add a matte entity stream with name <name>.\n"
+						"mirv_streams add matteEnitity <name> - Add a matte entity stream with name <name>.\n"
 					);
 					return;
 				}
-				
+				else
+				if(!_stricmp(cmd2, "developer"))
+				{
+					if(4 <= argc)
+					{
+						char const * cmd3 = args->ArgV(3);
+
+						g_AfxStreams.Console_AddDeveloperStream(cmd3);
+
+						return;
+					}
+
+					Tier0_Msg(
+						"mirv_streams add developer <name> - Add a developer stream with name <name>.\n"
+					);
+					return;
+				}				
 			}
 
 			Tier0_Msg(
-				"mirv_streams add matteWorldStream [...] - Add a matte world stream.\n"
-				"mirv_streams add matteEntityStream [...] - Add a matte entity stream.\n"
+				"mirv_streams add matteWorld [...] - Add a matte world stream.\n"
+				"mirv_streams add matteEntity [...] - Add a matte entity stream.\n"
+				"mirv_streams add developer [...] - Add a developer stream.\n"
+			);
+			return;
+		}
+		else
+		if(!_stricmp(cmd1, "edit"))
+		{
+			if(3 <= argc)
+			{
+				char const * cmd2 = args->ArgV(2);
+				int index = atoi(cmd2);
+				
+				g_AfxStreams.Console_EditStream(index, args, 3, "mirv_streams edit <index>");
+				return;
+			}
+
+			Tier0_Msg(
+				"mirv_streams edit <index> [....] - Edit the stream with index <index>, you can get the value from mirv_streams print.\n"
 			);
 			return;
 		}
@@ -150,7 +184,7 @@ CON_COMMAND(__mirv_streams, "Access to streams system.")
 
 					Tier0_Msg(
 						"mirv_streams record name <name> - Set record name to <name>.\n"
-						"Current value: %s\n",
+						"Current value: %s.\n",
 						g_AfxStreams.Console_RecordName_get()
 					);
 					return;
@@ -180,6 +214,7 @@ CON_COMMAND(__mirv_streams, "Access to streams system.")
 
 	Tier0_Msg(
 		"mirv_streams add [...]- Add a stream.\n"
+		"mirv_streams edit [...]- Edit a stream.\n"
 		"mirv_streams remove [...] - Remove a stream.\n"
 		"mirv_streams preview [...] - Preview a stream.\n"
 		"mirv_streams print - Print current streams.\n"

@@ -22,8 +22,9 @@ CAfxStreams g_AfxStreams;
 
 // CAfxStream //////////////////////////////////////////////////////////////////
 
-CAfxStream::CAfxStream(char const * streamName)
-: m_StreamName(streamName)
+CAfxStream::CAfxStream(TopStreamType topStreamType, char const * streamName)
+: m_TopStreamType(topStreamType) 
+, m_StreamName(streamName)
 , m_Streams(0)
 {
 }
@@ -37,6 +38,11 @@ char const * CAfxStream::GetStreamName(void)
 	return m_StreamName.c_str();
 }
 
+CAfxStream::TopStreamType CAfxStream::GetTopStreamType(void)
+{
+	return m_TopStreamType;
+}
+
 void CAfxStream::StreamAttach(IAfxStreams4Stream * streams)
 {
 	m_Streams = streams;
@@ -47,19 +53,106 @@ void CAfxStream::StreamDetach(IAfxStreams4Stream * streams)
 	m_Streams = 0;
 }
 
+// CAfxDeveloperStream /////////////////////////////////////////////////////////
+
+CAfxDeveloperStream::CAfxDeveloperStream(char const * streamName)
+: CAfxStream(TST_CAfxDeveloperStream, streamName)
+, m_ReplaceUpdate(false)
+, m_Replace (false)
+, m_ReplaceMaterial(0)
+{
+}
+	
+CAfxDeveloperStream::~CAfxDeveloperStream()
+{
+	delete m_ReplaceMaterial;
+}
+
+void CAfxDeveloperStream::MatchName_set(char const * value)
+{
+	m_MatchName.assign(value);
+}
+
+char const * CAfxDeveloperStream::MatchName_get(void)
+{
+	return m_MatchName.c_str();
+}
+
+void CAfxDeveloperStream::MatchTextureGroupName_set(char const * value)
+{
+	m_MatchTextureGroupName.assign(value);
+}
+
+char const * CAfxDeveloperStream::MatchTextureGroupName_get(void)
+{
+	return m_MatchTextureGroupName.c_str();
+}
+
+void CAfxDeveloperStream::ReplaceName_set(char const * name)
+{
+	m_ReplaceName.assign(name);
+	m_ReplaceUpdate = true;
+}
+
+char const * CAfxDeveloperStream::ReplaceName_get(void)
+{
+	return m_ReplaceName.c_str();
+}
+
+void CAfxDeveloperStream::StreamAttach(IAfxStreams4Stream * streams)
+{
+	CAfxStream::StreamAttach(streams);
+
+	if(m_ReplaceUpdate)
+	{
+		m_ReplaceUpdate = false;
+		m_Replace = !m_ReplaceName.empty();
+
+		if(m_Replace)
+		{
+			delete m_ReplaceMaterial; m_ReplaceMaterial = 0;
+			m_ReplaceMaterial = new CAfxMaterial(streams->GetFreeMaster(), streams->GetMaterialSystem()->FindMaterial(m_ReplaceName.c_str(),NULL));
+		}
+	}
+
+	if(m_Replace) streams->OnBind_set(this);
+}
+
+void CAfxDeveloperStream::StreamDetach(IAfxStreams4Stream * streams)
+{
+	streams->OnBind_set(0);
+
+	CAfxStream::StreamDetach(streams);
+}
+
+void CAfxDeveloperStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData)
+{
+	bool replace =
+		m_Replace
+		&& !strcmp(material->GetTextureGroupName(), m_MatchTextureGroupName.c_str())
+		&& !strcmp(material->GetName(), m_MatchName.c_str())
+	;
+
+	if(replace)
+		Tier0_Msg("Replaced %s|%s with %s\n", material->GetTextureGroupName(), material->GetName(), m_ReplaceName.c_str());
+
+	ctx->GetParent()->Bind(replace ? m_ReplaceMaterial->GetMaterial() : material, proxyData);
+}
+
 // CAfxMatteEntityStream ///////////////////////////////////////////////////////
 
-
 CAfxMatteEntityStream::CAfxMatteEntityStream(char const * streamName)
-: CAfxStream(streamName)
+: CAfxStream(TST_CAfxMatteEntityStream, streamName)
 , m_CurrentAction(0)
 , m_MatteAction(0)
 , m_PassthroughAction(0)
+, m_InvisibleAction(0)
 {
 }
 
 CAfxMatteEntityStream::~CAfxMatteEntityStream()
 {
+	delete m_InvisibleAction;
 	delete m_PassthroughAction;
 	delete m_MatteAction;
 }
@@ -70,6 +163,7 @@ void CAfxMatteEntityStream::StreamAttach(IAfxStreams4Stream * streams)
 
 	if(!m_PassthroughAction) m_PassthroughAction = new CAction();
 	if(!m_MatteAction) m_MatteAction = new CActionMatte(streams->GetFreeMaster(), streams->GetMaterialSystem());
+	if(!m_InvisibleAction) m_InvisibleAction = new CActionInvisible(streams->GetFreeMaster(), streams->GetMaterialSystem());
 
 	// Set a default action, just in case:
 	m_CurrentAction = m_PassthroughAction;
@@ -103,16 +197,61 @@ void CAfxMatteEntityStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * ma
 		const char * groupName =  material->GetTextureGroupName();
 		const char * name = material->GetName();
 
+		Tier0_Msg("Material: %s %s -> ", groupName, name);
+
 		if(
 			!strcmp("World textures", groupName)
 			|| !strcmp("SkyBox textures", groupName)
 			|| !strcmp("StaticProp textures", groupName)
+			|| (
+				!strcmp("Model textures", groupName)
+				&& !StringBeginsWith(name, "models/player/")
+			)
+			|| (
+				!strcmp("Other textures", groupName)
+				&& (
+					!strcmp(name, "cable/cable")
+					|| StringBeginsWith(name, "cs_custom_material_")
+				)
+			)
 		)
+		{
+			Tier0_Msg("matte");
 			m_CurrentAction = m_MatteAction;
+		}
 		else
+		if(
+			!strcmp("Decal textures", groupName)
+/*			|| (
+				!strcmp("Other textures", groupName)
+				&& (
+					StringBeginsWith(name, "effects/")
+					|| (
+						StringBeginsWith(name, "particle/")
+					)
+				)
+			)*/
+/*			|| (
+				!strcmp("Precached", groupName)
+				&& (
+					StringBeginsWith(name, "effects/")
+					|| StringBeginsWith(name, "particle/")
+				)
+			) */
+		)
+		{
+			Tier0_Msg("invisible");
+			m_CurrentAction = m_InvisibleAction;
+		}
+		else
+		{
+			Tier0_Msg("passthrough");
 			m_CurrentAction = m_PassthroughAction;
+		}
 
 		m_Map[key] = m_CurrentAction;
+
+		Tier0_Msg("\n");
 	}
 
 	m_CurrentAction->Bind(ctx, material, proxyData);
@@ -216,6 +355,14 @@ void CAfxStreams::Console_Record_End()
 	m_Recording = false;
 }
 
+void CAfxStreams::Console_AddDeveloperStream(const char * streamName)
+{
+	if(!Console_CheckStreamName(streamName))
+		return;
+
+	m_Streams.push_back(new CAfxDeveloperStream(streamName));
+}
+
 void CAfxStreams::Console_AddMatteWorldStream(const char * streamName)
 {
 	Tier0_Msg("Error: Not implemented yet.\n");
@@ -286,6 +433,98 @@ void CAfxStreams::Console_PreviewStream(int index)
 	Tier0_Msg("Error: invalid index.\n");
 }
 
+void CAfxStreams::Console_EditStream(int index, IWrpCommandArgs * args, int argcOffset, char const * cmdPrefix)
+{
+	int curIndex = 0;
+	for(std::list<CAfxStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
+	{
+		if(curIndex == index)
+		{
+			CAfxStream * cur = *it;
+			CAfxDeveloperStream * curDeveloper = cur->AsAfxDeveloperStream();
+			CAfxMatteEntityStream * curMatteEntitiy = cur->AsAfxMatteEntityStream();
+
+			int argc = args->ArgC() -argcOffset;
+
+			if(1 <= argc)
+			{
+				char const * cmd0 = args->ArgV(argcOffset +0);
+
+				if(curDeveloper && !_stricmp(cmd0, "matchTextureGroupName"))
+				{
+					if(2 <= argc)
+					{
+						char const * cmd1 = args->ArgV(argcOffset +1);
+
+						curDeveloper->MatchTextureGroupName_set(cmd1);
+
+						return;
+					}
+
+					Tier0_Msg(
+						"%s matchTextureGroupName <name> - Set new texture group name to match.\n"
+						"Current value: %s.\n"
+						, cmdPrefix
+						, curDeveloper->MatchTextureGroupName_get()
+					);
+					return;
+				}
+				else
+				if(curDeveloper && !_stricmp(cmd0, "matchName"))
+				{
+					if(2 <= argc)
+					{
+						char const * cmd1 = args->ArgV(argcOffset +1);
+
+						curDeveloper->MatchName_set(cmd1);
+
+						return;
+					}
+
+					Tier0_Msg(
+						"%s matchName <name> - Set new name to match.\n"
+						"Current value: %s.\n"
+						, cmdPrefix
+						, curDeveloper->MatchName_get()
+					);
+					return;
+				}
+				else
+				if(curDeveloper && !_stricmp(cmd0, "replaceName"))
+				{
+					if(2 <= argc)
+					{
+						char const * cmd1 = args->ArgV(argcOffset +1);
+
+						curDeveloper->ReplaceName_set(cmd1);
+
+						return;
+					}
+
+					Tier0_Msg(
+						"%s replaceName <name> - Set the name of the replacement material, set an empty string(\"\") to replace nothing.\n"
+						"Current value: %s.\n"
+						, cmdPrefix
+						, curDeveloper->ReplaceName_get()
+					);
+					return;
+				}
+			}
+			
+			if(curDeveloper)
+			{
+				Tier0_Msg("%s matchTextureGroupName [....]\n", cmdPrefix);
+				Tier0_Msg("%s matchName [....]\n", cmdPrefix);
+				Tier0_Msg("%s replaceName [....]\n", cmdPrefix);
+			}
+			Tier0_Msg("No further options for this stream.\n");
+			return;
+		}
+
+		++curIndex;
+	}
+	Tier0_Msg("Error: invalid index.\n");
+}
 
 IMaterialSystem_csgo * CAfxStreams::GetMaterialSystem(void)
 {
