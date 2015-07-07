@@ -58,6 +58,7 @@ private:
 class CAfxDeveloperStream
 : public CAfxStream
 , public IAfxMatRenderContextBind
+, public IAfxMatRenderContextDrawInstances
 {
 public:
 	CAfxDeveloperStream(char const * streamName);
@@ -73,11 +74,15 @@ public:
 
 	void ReplaceName_set(char const * name);
 	char const * ReplaceName_get(void);
+	
+	void BlockDraw_set(bool value);
+	bool BlockDraw_get(void);
 
 	virtual void StreamAttach(IAfxStreams4Stream * streams);
 	virtual void StreamDetach(IAfxStreams4Stream * streams);
 
 	virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 );
+	virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance );
 
 private:
 	std::string m_MatchTextureGroupName;
@@ -85,14 +90,18 @@ private:
 	std::string m_ReplaceName;
 	bool m_ReplaceUpdate;
 	bool m_Replace;
-
 	CAfxMaterial * m_ReplaceMaterial;
+	bool m_ReplaceMaterialActive;
+	bool m_BlockDraw;
 };
 
 class CAfxMatteEntityStream
 : public CAfxStream
 , public IAfxMatRenderContextBind
+, public IAfxMatRenderContextOverrideDepthEnable
 , public IAfxMatRenderContextDrawInstances
+, public IAfxMatRenderContextOverrideAlphaWriteEnable
+, public IAfxMatRenderContextOverrideColorWriteEnable
 , public IAfxVRenderViewSetColorModulation
 {
 public:
@@ -105,17 +114,28 @@ public:
 	virtual void StreamDetach(IAfxStreams4Stream * streams);
 
 	virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 );
+	virtual void OverrideDepthEnable(IAfxMatRenderContext * ctx, bool bEnable, bool bDepthEnable, bool bUnknown = false);
 	virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance );
+	virtual void OverrideAlphaWriteEnable(IAfxMatRenderContext * ctx, bool bOverrideEnable, bool bAlphaWriteEnable );
+	virtual void OverrideColorWriteEnable(IAfxMatRenderContext * ctx, bool bOverrideEnable, bool bColorWriteEnable );
+
 	virtual void SetColorModulation(IAfxVRenderView * rv, float const* blend );
 
 private:
 	class CAction
 	: public IAfxMatRenderContextBind
+	, public IAfxMatRenderContextOverrideDepthEnable
 	, public IAfxMatRenderContextDrawInstances
+	, public IAfxMatRenderContextOverrideAlphaWriteEnable
+	, public IAfxMatRenderContextOverrideColorWriteEnable
 	, public IAfxVRenderViewSetColorModulation
 	{
 	public:
 		virtual ~CAction()
+		{
+		}
+
+		virtual void AfxUnbind(IAfxMatRenderContext * ctx)
 		{
 		}
 
@@ -124,9 +144,24 @@ private:
 			ctx->GetParent()->Bind(material, proxyData);
 		}
 
+		virtual void OverrideDepthEnable(IAfxMatRenderContext * ctx, bool bEnable, bool bDepthEnable, bool bUnknown = false)
+		{
+			ctx->GetParent()->OverrideDepthEnable(bEnable, bDepthEnable, bUnknown);
+		}
+
 		virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance )
 		{
 			ctx->GetParent()->DrawInstances(nInstanceCount, pInstance);
+		}
+
+		virtual void OverrideAlphaWriteEnable(IAfxMatRenderContext * ctx, bool bOverrideEnable, bool bAlphaWriteEnable )
+		{
+			ctx->GetParent()->OverrideAlphaWriteEnable(bOverrideEnable, bAlphaWriteEnable);
+		}
+		
+		virtual void OverrideColorWriteEnable(IAfxMatRenderContext * ctx, bool bOverrideEnable, bool bColorWriteEnable )
+		{
+			ctx->GetParent()->OverrideColorWriteEnable(bOverrideEnable, bColorWriteEnable);
 		}
 
 		virtual void SetColorModulation(IAfxVRenderView * rv, float const* blend )
@@ -225,10 +260,65 @@ private:
 		CAfxMaterial m_InvisibleMaterial;
 	};
 
+	class CActionNoDraw
+	: public CAction
+	{
+	public:
+		CActionNoDraw()
+		{
+		}
+
+		virtual ~CActionNoDraw()
+		{
+		}
+
+		virtual void AfxUnbind(IAfxMatRenderContext * ctx)
+		{
+			ctx->GetParent()->OverrideDepthEnable(false, true);
+			ctx->GetParent()->OverrideAlphaWriteEnable(false, true);
+			ctx->GetParent()->OverrideColorWriteEnable(false, true);
+		}
+
+		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 )
+		{
+			Tier0_Msg("BIND\n");
+
+			ctx->GetParent()->Bind(material, proxyData);
+
+			ctx->GetParent()->OverrideDepthEnable(true, false);
+			ctx->GetParent()->OverrideAlphaWriteEnable(true, false);
+			ctx->GetParent()->OverrideColorWriteEnable(true, false);
+		}
+
+		virtual void OverrideDepthEnable(IAfxMatRenderContext * ctx, bool bEnable, bool bDepthEnable, bool bUnknown = false)
+		{
+			return;
+		}
+
+		virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance )
+		{
+			return;
+		}
+
+		virtual void OverrideAlphaWriteEnable(IAfxMatRenderContext * ctx, bool bOverrideEnable, bool bAlphaWriteEnable )
+		{
+			return;
+		}
+		
+		virtual void OverrideColorWriteEnable(IAfxMatRenderContext * ctx, bool bOverrideEnable, bool bColorWriteEnable )
+		{
+			return;
+		}
+
+	};
+
+
 	CAction * m_CurrentAction;
 	CAction * m_MatteAction;
 	CAction * m_PassthroughAction;
 	CAction * m_InvisibleAction;
+	CAction * m_NoDrawAction;
+	bool m_BoundAction;
 
 	std::map<CAfxMaterialKey, CAction *> m_Map;
 };
@@ -261,8 +351,14 @@ public:
 
 	virtual IMaterialSystem_csgo * GetMaterialSystem(void);
 	virtual IAfxFreeMaster * GetFreeMaster(void);
+	virtual IAfxMatRenderContext * GetCurrentContext(void) ;
+
 	virtual void OnBind_set(IAfxMatRenderContextBind * value);
+	virtual void OnOverrideDepthEnable_set(IAfxMatRenderContextOverrideDepthEnable * value);
 	virtual void OnDrawInstances_set(IAfxMatRenderContextDrawInstances * value);
+	virtual void OnOverrideAlphaWriteEnable_set(IAfxMatRenderContextOverrideAlphaWriteEnable * value);
+	virtual void OnOverrideColorWriteEnable_set(IAfxMatRenderContextOverrideColorWriteEnable * value);
+
 	virtual void OnSetColorModulation_set(IAfxVRenderViewSetColorModulation * value);
 
 	virtual void View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx, vrect_t_csgo *rect);

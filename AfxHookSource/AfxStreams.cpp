@@ -60,6 +60,8 @@ CAfxDeveloperStream::CAfxDeveloperStream(char const * streamName)
 , m_ReplaceUpdate(false)
 , m_Replace (false)
 , m_ReplaceMaterial(0)
+, m_ReplaceMaterialActive(false)
+, m_BlockDraw(false)
 {
 }
 	
@@ -99,6 +101,16 @@ char const * CAfxDeveloperStream::ReplaceName_get(void)
 	return m_ReplaceName.c_str();
 }
 
+void CAfxDeveloperStream::BlockDraw_set(bool value)
+{
+	m_BlockDraw = value;
+}
+
+bool CAfxDeveloperStream::BlockDraw_get(void)
+{
+	return m_BlockDraw;
+}
+
 void CAfxDeveloperStream::StreamAttach(IAfxStreams4Stream * streams)
 {
 	CAfxStream::StreamAttach(streams);
@@ -115,11 +127,16 @@ void CAfxDeveloperStream::StreamAttach(IAfxStreams4Stream * streams)
 		}
 	}
 
-	if(m_Replace) streams->OnBind_set(this);
+	if(m_Replace)
+	{
+		streams->OnBind_set(this);
+		streams->OnDrawInstances_set(this);
+	}
 }
 
 void CAfxDeveloperStream::StreamDetach(IAfxStreams4Stream * streams)
 {
+	streams->OnDrawInstances_set(0);
 	streams->OnBind_set(0);
 
 	CAfxStream::StreamDetach(streams);
@@ -133,10 +150,18 @@ void CAfxDeveloperStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * mate
 		&& !strcmp(material->GetName(), m_MatchName.c_str())
 	;
 
+	m_ReplaceMaterialActive = replace;
+
 	if(replace)
 		Tier0_Msg("Replaced %s|%s with %s\n", material->GetTextureGroupName(), material->GetName(), m_ReplaceName.c_str());
 
 	ctx->GetParent()->Bind(replace ? m_ReplaceMaterial->GetMaterial() : material, proxyData);
+}
+
+void CAfxDeveloperStream::DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance )
+{
+	if(!(m_BlockDraw && m_ReplaceMaterialActive)) 
+		ctx->GetParent()->DrawInstances(nInstanceCount, pInstance);
 }
 
 // CAfxMatteEntityStream ///////////////////////////////////////////////////////
@@ -147,11 +172,14 @@ CAfxMatteEntityStream::CAfxMatteEntityStream(char const * streamName)
 , m_MatteAction(0)
 , m_PassthroughAction(0)
 , m_InvisibleAction(0)
+, m_NoDrawAction(0)
+, m_BoundAction(false)
 {
 }
 
 CAfxMatteEntityStream::~CAfxMatteEntityStream()
 {
+	delete m_NoDrawAction;
 	delete m_InvisibleAction;
 	delete m_PassthroughAction;
 	delete m_MatteAction;
@@ -164,19 +192,28 @@ void CAfxMatteEntityStream::StreamAttach(IAfxStreams4Stream * streams)
 	if(!m_PassthroughAction) m_PassthroughAction = new CAction();
 	if(!m_MatteAction) m_MatteAction = new CActionMatte(streams->GetFreeMaster(), streams->GetMaterialSystem());
 	if(!m_InvisibleAction) m_InvisibleAction = new CActionInvisible(streams->GetFreeMaster(), streams->GetMaterialSystem());
+	if(!m_NoDrawAction) m_NoDrawAction = new CActionNoDraw();
 
 	// Set a default action, just in case:
 	m_CurrentAction = m_PassthroughAction;
 
 	streams->OnBind_set(this);
+	streams->OnOverrideDepthEnable_set(this);
 	streams->OnDrawInstances_set(this);
+	streams->OnOverrideAlphaWriteEnable_set(this);
+	streams->OnOverrideColorWriteEnable_set(this);
 	streams->OnSetColorModulation_set(this);
 }
 
 void CAfxMatteEntityStream::StreamDetach(IAfxStreams4Stream * streams)
 {
+	if(m_BoundAction) m_CurrentAction->AfxUnbind(streams->GetCurrentContext());
+
 	streams->OnSetColorModulation_set(0);
+	streams->OnOverrideColorWriteEnable_set(0);
+	streams->OnOverrideAlphaWriteEnable_set(0);
 	streams->OnDrawInstances_set(0);
+	streams->OnOverrideDepthEnable_set(0);
 	streams->OnBind_set(0);
 
 	CAfxStream::StreamDetach(streams);
@@ -184,6 +221,8 @@ void CAfxMatteEntityStream::StreamDetach(IAfxStreams4Stream * streams)
 
 void CAfxMatteEntityStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData )
 {
+	if(m_BoundAction) m_CurrentAction->AfxUnbind(ctx);
+
 	CAfxMaterialKey key(material);
 
 	std::map<CAfxMaterialKey, CAction *>::iterator it = m_Map.find(key);
@@ -222,26 +261,24 @@ void CAfxMatteEntityStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * ma
 		else
 		if(
 			!strcmp("Decal textures", groupName)
-/*			|| (
+			|| (
 				!strcmp("Other textures", groupName)
 				&& (
 					StringBeginsWith(name, "effects/")
-					|| (
-						StringBeginsWith(name, "particle/")
-					)
+					|| StringBeginsWith(name, "particle/")
 				)
-			)*/
-/*			|| (
+			)
+			|| (
 				!strcmp("Precached", groupName)
 				&& (
 					StringBeginsWith(name, "effects/")
 					|| StringBeginsWith(name, "particle/")
 				)
-			) */
+			) 
 		)
 		{
-			Tier0_Msg("invisible");
-			m_CurrentAction = m_InvisibleAction;
+			Tier0_Msg("noDraw");
+			m_CurrentAction = m_NoDrawAction;
 		}
 		else
 		{
@@ -255,11 +292,28 @@ void CAfxMatteEntityStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * ma
 	}
 
 	m_CurrentAction->Bind(ctx, material, proxyData);
+
+	m_BoundAction = true;
+}
+
+void CAfxMatteEntityStream::OverrideDepthEnable(IAfxMatRenderContext * ctx, bool bEnable, bool bDepthEnable, bool bUnknown)
+{
+	m_CurrentAction->OverrideDepthEnable(ctx, bEnable, bDepthEnable, bUnknown);
 }
 
 void CAfxMatteEntityStream::DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance )
 {
 	m_CurrentAction->DrawInstances(ctx, nInstanceCount, pInstance);
+}
+
+void CAfxMatteEntityStream::OverrideAlphaWriteEnable(IAfxMatRenderContext * ctx, bool bOverrideEnable, bool bAlphaWriteEnable )
+{
+	m_CurrentAction->OverrideAlphaWriteEnable(ctx, bOverrideEnable, bAlphaWriteEnable);
+}
+
+void CAfxMatteEntityStream::OverrideColorWriteEnable(IAfxMatRenderContext * ctx, bool bOverrideEnable, bool bColorWriteEnable )
+{
+	m_CurrentAction->OverrideColorWriteEnable(ctx, bOverrideEnable, bColorWriteEnable);
 }
 
 void CAfxMatteEntityStream::SetColorModulation(IAfxVRenderView * rv, float const* blend)
@@ -509,6 +563,26 @@ void CAfxStreams::Console_EditStream(int index, IWrpCommandArgs * args, int argc
 					);
 					return;
 				}
+				else
+				if(curDeveloper && !_stricmp(cmd0, "blockDraw"))
+				{
+					if(2 <= argc)
+					{
+						char const * cmd1 = args->ArgV(argcOffset +1);
+
+						curDeveloper->BlockDraw_set(0 != atoi(cmd1));
+
+						return;
+					}
+
+					Tier0_Msg(
+						"%s blockDraw 0|1 - Whether to block drawing when replaceMaterial is active.\n"
+						"Current value: %i.\n"
+						, cmdPrefix
+						, curDeveloper->BlockDraw_get() ? 1L : 0L
+					);
+					return;
+				}
 			}
 			
 			if(curDeveloper)
@@ -516,6 +590,7 @@ void CAfxStreams::Console_EditStream(int index, IWrpCommandArgs * args, int argc
 				Tier0_Msg("%s matchTextureGroupName [....]\n", cmdPrefix);
 				Tier0_Msg("%s matchName [....]\n", cmdPrefix);
 				Tier0_Msg("%s replaceName [....]\n", cmdPrefix);
+				Tier0_Msg("%s blockDraw [....]\n", cmdPrefix);
 			}
 			Tier0_Msg("No further options for this stream.\n");
 			return;
@@ -537,14 +612,34 @@ IAfxFreeMaster * CAfxStreams::GetFreeMaster(void)
 	return 0;
 }
 
+IAfxMatRenderContext * CAfxStreams::GetCurrentContext(void)
+{
+	return m_CurrentContext;
+}
+
 void CAfxStreams::OnBind_set(IAfxMatRenderContextBind * value)
 {
 	if(m_CurrentContext) m_CurrentContext->OnBind_set(value);
 }
 
+void CAfxStreams::OnOverrideDepthEnable_set(IAfxMatRenderContextOverrideDepthEnable * value)
+{
+	if(m_CurrentContext) m_CurrentContext->OnOverrideDepthEnable_set(value);
+}
+
 void CAfxStreams::OnDrawInstances_set(IAfxMatRenderContextDrawInstances * value)
 {
 	if(m_CurrentContext) m_CurrentContext->OnDrawInstances_set(value);
+}
+
+void CAfxStreams::OnOverrideAlphaWriteEnable_set(IAfxMatRenderContextOverrideAlphaWriteEnable * value)
+{
+	if(m_CurrentContext) m_CurrentContext->OnOverrideAlphaWriteEnable_set(value);
+}
+
+void CAfxStreams::OnOverrideColorWriteEnable_set(IAfxMatRenderContextOverrideColorWriteEnable * value)
+{
+	if(m_CurrentContext) m_CurrentContext->OnOverrideColorWriteEnable_set(value);
 }
 
 void CAfxStreams::OnSetColorModulation_set(IAfxVRenderViewSetColorModulation * value)

@@ -1800,8 +1800,53 @@ public:
 	virtual void _UNKNOWN_010(void) = 0;
 	virtual void _UNKNOWN_011(void) = 0;
 
+	// 012:
 	virtual void IncrementReferenceCount( void ) = 0;
+
+	// 013:
 	virtual void DecrementReferenceCount( void ) = 0;
+
+	virtual void _UNKNOWN_014(void) = 0;
+	virtual void _UNKNOWN_015(void) = 0;
+	virtual void _UNKNOWN_016(void) = 0;
+	virtual void _UNKNOWN_017(void) = 0;
+	virtual void _UNKNOWN_018(void) = 0;
+	virtual void _UNKNOWN_019(void) = 0;
+
+	virtual void _UNKNOWN_020(void) = 0;
+	virtual void _UNKNOWN_021(void) = 0;
+	virtual void _UNKNOWN_022(void) = 0;
+	virtual void _UNKNOWN_023(void) = 0;
+	virtual void _UNKNOWN_024(void) = 0;
+	virtual void _UNKNOWN_025(void) = 0;
+	virtual void _UNKNOWN_026(void) = 0;
+	virtual void _UNKNOWN_027(void) = 0;
+	virtual void _UNKNOWN_028(void) = 0;
+	virtual void _UNKNOWN_029(void) = 0;
+
+	virtual void _UNKNOWN_030(void) = 0;
+	virtual void _UNKNOWN_031(void) = 0;
+	virtual void _UNKNOWN_032(void) = 0;
+	virtual void _UNKNOWN_033(void) = 0;
+	virtual void _UNKNOWN_034(void) = 0;
+	virtual void _UNKNOWN_035(void) = 0;
+	virtual void _UNKNOWN_036(void) = 0;
+	virtual void _UNKNOWN_037(void) = 0;
+	virtual void _UNKNOWN_038(void) = 0;
+	virtual void _UNKNOWN_039(void) = 0;
+
+	virtual void _UNKNOWN_040(void) = 0;
+	virtual void _UNKNOWN_041(void) = 0;
+	virtual void _UNKNOWN_042(void) = 0;
+	virtual void _UNKNOWN_043(void) = 0;
+	virtual void _UNKNOWN_044(void) = 0;
+	virtual void _UNKNOWN_045(void) = 0;
+	virtual void _UNKNOWN_046(void) = 0;
+	virtual void _UNKNOWN_047(void) = 0;
+	virtual void _UNKNOWN_048(void) = 0;
+
+	// 049:
+	virtual const char * GetShaderName() const = 0;
 
 	// ...
 	// there are more here that we don't care about.
@@ -1935,16 +1980,19 @@ public:
 	virtual void _UNKNOWN_068(void) = 0;
 	virtual void _UNKNOWN_069(void) = 0;
 	virtual void _UNKNOWN_070(void) = 0;
-	virtual void _UNKNOWN_071(void) = 0;
-	virtual void _UNKNOWN_072(void) = 0;
-	virtual void _UNKNOWN_073(void) = 0;
-	virtual void _UNKNOWN_074(void) = 0;
-	virtual void _UNKNOWN_075(void) = 0;
-	virtual void _UNKNOWN_076(void) = 0;
-	virtual void _UNKNOWN_077(void) = 0;
-	virtual void _UNKNOWN_078(void) = 0;
-	virtual void _UNKNOWN_079(void) = 0;
-	virtual void _UNKNOWN_080(void) = 0;
+	virtual void _UNKNOWN_071(void) = 0; // Draw
+	virtual void _UNKNOWN_072(void) = 0; // SelectionMode
+	virtual void _UNKNOWN_073(void) = 0; // SelectionBuffer
+	virtual void _UNKNOWN_074(void) = 0; // ClearSelectionNames
+	virtual void _UNKNOWN_075(void) = 0; // LoadSelectionName
+	virtual void _UNKNOWN_076(void) = 0; // PushSelectionName
+	virtual void _UNKNOWN_077(void) = 0; // PopSelectionName
+	virtual void _UNKNOWN_078(void) = 0; // ClearColor3ub
+	virtual void _UNKNOWN_079(void) = 0; // ClearColor4ub
+	
+	// 080:
+	virtual void OverrideDepthEnable( bool bEnable, bool bDepthEnable, bool bUnknown = false) = 0;
+
 	virtual void _UNKNOWN_081(void) = 0;
 	virtual void _UNKNOWN_082(void) = 0;
 	virtual void _UNKNOWN_083(void) = 0;
@@ -2060,8 +2108,12 @@ public:
 	// 192:
 	virtual void DrawInstances( int nInstanceCount, const MeshInstanceData_t_csgo *pInstance ) = 0;
 
-	virtual void _UNKNOWN_193(void) = 0;
-	virtual void _UNKNOWN_194(void) = 0;
+	// 193:
+	virtual void OverrideAlphaWriteEnable( bool bOverrideEnable, bool bAlphaWriteEnable ) = 0;
+	
+	// 194:
+	virtual void OverrideColorWriteEnable( bool bOverrideEnable, bool bColorWriteEnable ) = 0;
+
 	virtual void _UNKNOWN_195(void) = 0;
 	virtual void _UNKNOWN_196(void) = 0;
 	virtual void _UNKNOWN_197(void) = 0;

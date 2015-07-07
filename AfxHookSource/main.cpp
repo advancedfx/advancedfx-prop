@@ -552,13 +552,18 @@ void PrintMaterialInfoSetToFile(void)
 #pragma warning(push)
 #pragma warning(disable:4731) // frame pointer register 'ebp' modified by inline assembly code
 
-class CAfxMatRenderContext : public IMatRenderContext_csgo, public IAfxMatRenderContext
+class CAfxMatRenderContext
+: public IMatRenderContext_csgo
+, public IAfxMatRenderContext
 {
 public:
 	CAfxMatRenderContext(IMatRenderContext_csgo * parent)
 	: m_Parent(parent)
 	, m_OnBind(0)
+	, m_OnOverrideDepthEnable(0)
 	, m_OnDrawInstances(0)
+	, m_OnOverrideAlphaWriteEnable(0)
+	, m_OnOverrideColorWriteEnable(0)
 	{
 	}
 
@@ -575,11 +580,25 @@ public:
 		m_OnBind = value;
 	}
 
+	virtual void OnOverrideDepthEnable_set(IAfxMatRenderContextOverrideDepthEnable * value)
+	{
+		m_OnOverrideDepthEnable = value;
+	}
+
 	virtual void OnDrawInstances_set(IAfxMatRenderContextDrawInstances * value)
 	{
 		m_OnDrawInstances = value;
 	}
 
+	virtual void OnOverrideAlphaWriteEnable_set(IAfxMatRenderContextOverrideAlphaWriteEnable * value)
+	{
+		m_OnOverrideAlphaWriteEnable = value;
+	}
+
+	virtual void OnOverrideColorWriteEnable_set(IAfxMatRenderContextOverrideColorWriteEnable * value)
+	{
+		m_OnOverrideColorWriteEnable = value;
+	}
 
 	//
 	// IMatRenderContext_csgo:
@@ -854,8 +873,19 @@ public:
 	virtual void _UNKNOWN_079(void)
 	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 79) }
 
-	virtual void _UNKNOWN_080(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 80) }
+	virtual void OverrideDepthEnable( bool bEnable, bool bDepthEnable, bool bUnknown = false)
+	{
+		// JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 80)
+
+		if(m_OnOverrideDepthEnable)
+		{
+			m_OnOverrideDepthEnable->OverrideDepthEnable(this, bEnable, bDepthEnable, bUnknown);
+		}
+		else
+		{
+			m_Parent->OverrideDepthEnable(bEnable, bDepthEnable, bUnknown);
+		}
+	}
 
 	virtual void _UNKNOWN_081(void)
 	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 81) }
@@ -1205,11 +1235,35 @@ public:
 		}
 	}
 
-	virtual void _UNKNOWN_193(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 193) }
+	virtual void OverrideAlphaWriteEnable( bool bOverrideEnable, bool bAlphaWriteEnable )
+	{
+		// JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 193)
 
-	virtual void _UNKNOWN_194(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 194) }
+		if(m_OnOverrideAlphaWriteEnable)
+		{
+
+			m_OnOverrideAlphaWriteEnable->OverrideAlphaWriteEnable(this, bOverrideEnable, bAlphaWriteEnable);
+		}
+		else
+		{
+			m_Parent->OverrideAlphaWriteEnable(bOverrideEnable, bAlphaWriteEnable);
+		}
+	}
+
+	virtual void OverrideColorWriteEnable( bool bOverrideEnable, bool bColorWriteEnable )
+	{
+		// JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 194)
+	
+		if(m_OnOverrideColorWriteEnable)
+		{
+
+			m_OnOverrideColorWriteEnable->OverrideColorWriteEnable(this, bOverrideEnable, bColorWriteEnable);
+		}
+		else
+		{
+			m_Parent->OverrideColorWriteEnable(bOverrideEnable, bColorWriteEnable);
+		}	
+	}
 
 	virtual void _UNKNOWN_195(void)
 	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 195) }
@@ -1394,7 +1448,10 @@ public:
 private:
 	IMatRenderContext_csgo * m_Parent;
 	IAfxMatRenderContextBind * m_OnBind;
+	IAfxMatRenderContextOverrideDepthEnable * m_OnOverrideDepthEnable;
 	IAfxMatRenderContextDrawInstances * m_OnDrawInstances;
+	IAfxMatRenderContextOverrideAlphaWriteEnable * m_OnOverrideAlphaWriteEnable;
+	IAfxMatRenderContextOverrideColorWriteEnable * m_OnOverrideColorWriteEnable;
 };
 
 #pragma warning(pop)
