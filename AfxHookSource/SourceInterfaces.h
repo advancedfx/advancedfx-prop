@@ -1861,16 +1861,45 @@ public:
 	virtual int Release() = 0;
 };
 
-// IMatRenderContext_csgo //////////////////////////////////////////////////////
+// IMesh_csgo //////////////////////////////////////////////////////////////////
+
+typedef unsigned __int8 uint8;
+typedef unsigned __int32 uint32;
+typedef unsigned __int64 uint64;
+
+typedef uint64 VertexFormat_t_csgo;
 
 typedef void MeshBoneRemap_t_csgo;
 typedef void matrix3x4_t_csgo;
 typedef void ITexture_csgo;
 typedef void MaterialLightingState_t_csgo;
 typedef int MaterialPrimitiveType_t_csgo;
-typedef void IVertexBuffer_csgo;
-typedef void IIndexBuffer_csgo;
 typedef void ShaderStencilState_t_csgo;
+typedef int MaterialIndexFormat_t_csgo;
+
+
+class IMesh_csgo;
+
+struct VertexDesc_t_csgo
+{
+	// ...
+	// stuff we don't care about.
+};
+
+struct IndexDesc_t_csgo
+{
+	// ...
+	// stuff we don't care about.
+};
+
+struct MeshDesc_t_csgo : public VertexDesc_t_csgo, public IndexDesc_t_csgo
+{
+};
+
+struct MeshBuffersAllocationSettings_t_csgo
+{
+	uint32 m_uiIbUsageFlags;
+};
 
 class Vector4D_csgo					
 {
@@ -1878,6 +1907,166 @@ public:
 	// Members
 	vec_t x, y, z, w;
 };
+
+class IVertexBuffer_csgo abstract
+{
+public:
+	// NOTE: The following two methods are only valid for static vertex buffers
+	// Returns the number of vertices and the format of the vertex buffer
+	virtual int VertexCount() const = 0;
+	virtual VertexFormat_t_csgo GetVertexFormat() const = 0;
+
+	// Is this vertex buffer dynamic?
+	virtual bool IsDynamic() const = 0;
+
+	// NOTE: For dynamic vertex buffers only!
+	// Casts the memory of the dynamic vertex buffer to the appropriate type
+	virtual void BeginCastBuffer( VertexFormat_t_csgo format ) = 0;
+	virtual void EndCastBuffer() = 0;
+
+	// Returns the number of vertices that can still be written into the buffer
+	virtual int GetRoomRemaining() const = 0;
+
+	virtual bool Lock( int nVertexCount, bool bAppend, VertexDesc_t_csgo &desc ) = 0;
+	virtual void Unlock( int nVertexCount, VertexDesc_t_csgo &desc ) = 0;
+
+	// Spews the mesh data
+	virtual void Spew( int nVertexCount, const VertexDesc_t_csgo &desc ) = 0;
+
+	// Call this in debug mode to make sure our data is good.
+	virtual void ValidateData( int nVertexCount, const VertexDesc_t_csgo & desc ) = 0;
+};
+
+class IIndexBuffer_csgo abstract
+{
+public:
+	// NOTE: The following two methods are only valid for static index buffers
+	// Returns the number of indices and the format of the index buffer
+	virtual int IndexCount() const = 0;
+	virtual MaterialIndexFormat_t_csgo IndexFormat() const = 0;
+
+	// Is this index buffer dynamic?
+	virtual bool IsDynamic() const = 0;
+
+	// NOTE: For dynamic index buffers only!
+	// Casts the memory of the dynamic index buffer to the appropriate type
+	virtual void BeginCastBuffer( MaterialIndexFormat_t_csgo format ) = 0;
+	virtual void EndCastBuffer() = 0;
+
+	// Returns the number of indices that can still be written into the buffer
+	virtual int GetRoomRemaining() const = 0;
+
+	// Locks, unlocks the index buffer
+	virtual bool Lock( int nMaxIndexCount, bool bAppend, IndexDesc_t_csgo &desc ) = 0;
+	virtual void Unlock( int nWrittenIndexCount, IndexDesc_t_csgo &desc ) = 0;
+
+	// FIXME: Remove this!! Here only for backward compat on IMesh
+	// Locks, unlocks the index buffer for modify
+	virtual void ModifyBegin( bool bReadOnly, int nFirstIndex, int nIndexCount, IndexDesc_t_csgo& desc ) = 0;
+	virtual void ModifyEnd( IndexDesc_t_csgo& desc ) = 0;
+
+	// Spews the mesh data
+	virtual void Spew( int nIndexCount, const IndexDesc_t_csgo &desc ) = 0;
+
+	// Ensures the data in the index buffer is valid
+	virtual void ValidateData( int nIndexCount, const IndexDesc_t_csgo &desc ) = 0;
+
+	// For backward compat to IMesh
+	virtual IMesh_csgo* GetMesh() = 0;
+};
+
+class CPrimList_csgo;
+class CMeshBuilder_csgo;
+class ICachedPerFrameMeshData_csgo;
+
+class IMesh_csgo abstract : public IVertexBuffer_csgo, public IIndexBuffer_csgo
+{
+public:
+	// -----------------------------------
+
+	// Sets/gets the primitive type
+	virtual void SetPrimitiveType( MaterialPrimitiveType_t_csgo type ) = 0;
+
+	// Draws the mesh
+	virtual void Draw( int firstIndex = -1, int numIndices = 0 ) = 0;
+
+	virtual void SetColorMesh( IMesh_csgo *pColorMesh, int nVertexOffset ) = 0;
+
+	// Draw a list of (lists of) primitives. Batching your lists together that use
+	// the same lightmap, material, vertex and index buffers with multipass shaders
+	// can drastically reduce state-switching overhead.
+	// NOTE: this only works with STATIC meshes.
+	virtual void Draw( CPrimList_csgo *pLists, int nLists ) = 0;
+
+	// Copy verts and/or indices to a mesh builder. This only works for temp meshes!
+	virtual void CopyToMeshBuilder( 
+		int iStartVert,		// Which vertices to copy.
+		int nVerts, 
+		int iStartIndex,	// Which indices to copy.
+		int nIndices, 
+		int indexOffset,	// This is added to each index.
+		CMeshBuilder_csgo &builder ) = 0;
+
+	// Spews the mesh data
+	virtual void Spew( int numVerts, int numIndices, const MeshDesc_t_csgo &desc ) = 0;
+
+	// Call this in debug mode to make sure our data is good.
+	virtual void ValidateData( int numVerts, int numIndices, const MeshDesc_t_csgo &desc ) = 0;
+
+	// New version
+	// Locks/unlocks the mesh, providing space for numVerts and numIndices.
+	// numIndices of -1 means don't lock the index buffer...
+	virtual void LockMesh( int numVerts, int numIndices, MeshDesc_t_csgo &desc, MeshBuffersAllocationSettings_t_csgo *pSettings ) = 0;
+	virtual void ModifyBegin( int firstVertex, int numVerts, int firstIndex, int numIndices, MeshDesc_t_csgo& desc ) = 0;
+	virtual void ModifyEnd( MeshDesc_t_csgo& desc ) = 0;
+	virtual void UnlockMesh( int numVerts, int numIndices, MeshDesc_t_csgo &desc ) = 0;
+
+	virtual void ModifyBeginEx( bool bReadOnly, int firstVertex, int numVerts, int firstIndex, int numIndices, MeshDesc_t_csgo &desc ) = 0;
+
+	virtual void SetFlexMesh( IMesh_csgo *pMesh, int nVertexOffset ) = 0;
+
+	virtual void DisableFlexMesh() = 0;
+
+	virtual void MarkAsDrawn() = 0;
+
+	// NOTE: I chose to create this method strictly because it's 2 days to code lock
+	// and I could use the DrawInstances technique without a larger code change
+	// Draws the mesh w/ modulation.
+	virtual void DrawModulated( const Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 ) = 0;
+
+	virtual unsigned int ComputeMemoryUsed() = 0;
+
+	virtual void *AccessRawHardwareDataStream( uint8 nRawStreamIndex, uint32 numBytes, uint32 uiFlags, void *pvContext ) = 0;
+
+	virtual ICachedPerFrameMeshData_csgo *GetCachedPerFrameMeshData() = 0;
+	virtual void ReconstructFromCachedPerFrameMeshData( ICachedPerFrameMeshData_csgo *pData ) = 0;
+};
+
+class IMeshMgr_csgo abstract : public IMesh_csgo
+{
+public:
+	virtual void _UNKNOWN_030(void) = 0;
+	virtual void _UNKNOWN_031(void) = 0;
+	virtual void _UNKNOWN_032(void) = 0;
+	virtual void _UNKNOWN_033(void) = 0;
+	virtual void _UNKNOWN_034(void) = 0;
+	virtual void _UNKNOWN_035(void) = 0;
+	virtual void _UNKNOWN_036(void) = 0;
+	virtual void _UNKNOWN_037(void) = 0;
+	virtual void _UNKNOWN_038(void) = 0;
+	virtual void _UNKNOWN_039(void) = 0;
+	virtual void _UNKNOWN_040(void) = 0;
+	virtual void _UNKNOWN_041(void) = 0;
+	virtual void _UNKNOWN_042(void) = 0;
+	virtual void _UNKNOWN_043(void) = 0;
+	virtual void _UNKNOWN_044(void) = 0;
+	virtual void _UNKNOWN_045(void) = 0;
+	virtual void _UNKNOWN_046(void) = 0;
+	virtual void _UNKNOWN_047(void) = 0;
+	virtual void _UNKNOWN_048(void) = 0;
+};
+
+// IMatRenderContext_csgo //////////////////////////////////////////////////////
 
 struct MeshInstanceData_t_csgo
 {
@@ -1971,16 +2160,24 @@ public:
 	virtual void _UNKNOWN_059(void) = 0;
 	virtual void _UNKNOWN_060(void) = 0;
 	virtual void _UNKNOWN_061(void) = 0;
-	virtual void _UNKNOWN_062(void) = 0;
-	virtual void _UNKNOWN_063(void) = 0;
-	virtual void _UNKNOWN_064(void) = 0;
-	virtual void _UNKNOWN_065(void) = 0;
-	virtual void _UNKNOWN_066(void) = 0;
-	virtual void _UNKNOWN_067(void) = 0;
-	virtual void _UNKNOWN_068(void) = 0;
-	virtual void _UNKNOWN_069(void) = 0;
-	virtual void _UNKNOWN_070(void) = 0;
-	virtual void _UNKNOWN_071(void) = 0; // Draw
+
+	// 062:
+	// Actually this returns IMesh_csgo, however Valve seems to internally cast this to a derived class (dunno, but that's the way it is).
+	virtual IMeshMgr_csgo* GetDynamicMesh( 
+		bool buffered = true, 
+		IMesh_csgo* pVertexOverride = 0,	
+		IMesh_csgo* pIndexOverride = 0, 
+		IMaterial_csgo *pAutoBind = 0 ) = 0;
+
+	virtual void _UNKNOWN_063(void) = 0; // CreateStaticVertexBuffer*?
+	virtual void _UNKNOWN_064(void) = 0; // CreateStaticIndexBuffer*?
+	virtual void _UNKNOWN_065(void) = 0; // DestroyVertexBuffer*?
+	virtual void _UNKNOWN_066(void) = 0; // DestroyIndexBuffer*?
+	virtual void _UNKNOWN_067(void) = 0; // GetDynamicVertexBuffer*?
+	virtual void _UNKNOWN_068(void) = 0; // GetDynamicIndexBuffer?
+	virtual void _UNKNOWN_069(void) = 0; // BindVertexBuffer*?
+	virtual void _UNKNOWN_070(void) = 0; // BindIndexBuffer?
+	virtual void _UNKNOWN_071(void) = 0; // Draw?
 	virtual void _UNKNOWN_072(void) = 0; // SelectionMode
 	virtual void _UNKNOWN_073(void) = 0; // SelectionBuffer
 	virtual void _UNKNOWN_074(void) = 0; // ClearSelectionNames
@@ -1989,10 +2186,7 @@ public:
 	virtual void _UNKNOWN_077(void) = 0; // PopSelectionName
 	virtual void _UNKNOWN_078(void) = 0; // ClearColor3ub
 	virtual void _UNKNOWN_079(void) = 0; // ClearColor4ub
-	
-	// 080:
-	virtual void OverrideDepthEnable( bool bEnable, bool bDepthEnable, bool bUnknown = false) = 0;
-
+	virtual void _UNKNOWN_080(void) = 0; // OverrideDepthEnable
 	virtual void _UNKNOWN_081(void) = 0;
 	virtual void _UNKNOWN_082(void) = 0;
 	virtual void _UNKNOWN_083(void) = 0;
@@ -2044,9 +2238,9 @@ public:
 	virtual void _UNKNOWN_129(void) = 0;
 	virtual void _UNKNOWN_130(void) = 0;
 	virtual void _UNKNOWN_131(void) = 0;
-	virtual void _UNKNOWN_132(void) = 0;
-	virtual void _UNKNOWN_133(void) = 0;
-	virtual void _UNKNOWN_134(void) = 0;
+	virtual void _UNKNOWN_132(void) = 0; // GetMaxToRender
+	virtual void _UNKNOWN_133(void) = 0; // GetMaxVerticesToRender
+	virtual void _UNKNOWN_134(void) = 0; // GetMaxIndicesToRender
 	virtual void _UNKNOWN_135(void) = 0;
 	virtual void _UNKNOWN_136(void) = 0;
 	virtual void _UNKNOWN_137(void) = 0;
@@ -2108,12 +2302,8 @@ public:
 	// 192:
 	virtual void DrawInstances( int nInstanceCount, const MeshInstanceData_t_csgo *pInstance ) = 0;
 
-	// 193:
-	virtual void OverrideAlphaWriteEnable( bool bOverrideEnable, bool bAlphaWriteEnable ) = 0;
-	
-	// 194:
-	virtual void OverrideColorWriteEnable( bool bOverrideEnable, bool bColorWriteEnable ) = 0;
-
+	virtual void _UNKNOWN_193(void) = 0; // OverrideAlphaWriteEnable
+	virtual void _UNKNOWN_194(void) = 0; // OverrideColorWriteEnable
 	virtual void _UNKNOWN_195(void) = 0;
 	virtual void _UNKNOWN_196(void) = 0;
 	virtual void _UNKNOWN_197(void) = 0;

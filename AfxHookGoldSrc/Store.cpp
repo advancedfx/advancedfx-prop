@@ -135,8 +135,8 @@ FrequentStoreItem::FrequentStoreItem(FrequentStoreManager * manager)
 
 FrequentStoreItem::~FrequentStoreItem()
 {
-	if(m_Aquired)
-		throw logic_error("");
+	//if(m_Aquired)
+	//	throw logic_error("");
 
 	Delist();
 

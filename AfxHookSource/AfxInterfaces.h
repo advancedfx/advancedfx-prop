@@ -54,40 +54,18 @@ public:
 	virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 ) = 0;
 };
 
-class IAfxMatRenderContextOverrideDepthEnable abstract
-{
-public:
-	virtual void OverrideDepthEnable(IAfxMatRenderContext * ctx, bool bEnable, bool bDepthEnable, bool bUnknown = false) = 0;
-};
-
 class IAfxMatRenderContextDrawInstances abstract
 {
 public:
 	virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance ) = 0;
 };
-
-class IAfxMatRenderContextOverrideAlphaWriteEnable abstract
-{
-public:
-	virtual void OverrideAlphaWriteEnable(IAfxMatRenderContext * ctx, bool bOverrideEnable, bool bAlphaWriteEnable ) = 0;
-};
-	
-class IAfxMatRenderContextOverrideColorWriteEnable abstract
-{
-public:
-	virtual void OverrideColorWriteEnable(IAfxMatRenderContext * ctx, bool bOverrideEnable, bool bColorWriteEnable ) = 0;
-};
-
 class IAfxMatRenderContext abstract
 {
 public:
 	virtual IMatRenderContext_csgo * GetParent() = 0;
 
 	virtual void OnBind_set(IAfxMatRenderContextBind * value) = 0;
-	virtual void OnOverrideDepthEnable_set(IAfxMatRenderContextOverrideDepthEnable * value) = 0;
 	virtual void OnDrawInstances_set(IAfxMatRenderContextDrawInstances * value) = 0;
-	virtual void OnOverrideAlphaWriteEnable_set(IAfxMatRenderContextOverrideAlphaWriteEnable * value) = 0;
-	virtual void OnOverrideColorWriteEnable_set(IAfxMatRenderContextOverrideColorWriteEnable * value) = 0;
 };
 
 
@@ -115,6 +93,31 @@ public:
 	virtual void OnView_Render_set(IAfxBaseClientDllView_Render * value) = 0;
 };
 
+class IAfxMesh abstract
+{
+public:
+	virtual IMeshMgr_csgo * GetParent(void) = 0;
+};
+
+class IAfxMeshDraw abstract
+{
+public:
+	virtual void Draw(IAfxMesh * am, int firstIndex = -1, int numIndices = 0) = 0;
+};
+
+class IAfxMeshDraw_2 abstract
+{
+public:
+	virtual void Draw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists) = 0;
+};
+
+class IAfxMeshDrawModulated abstract
+{
+public:
+	virtual void DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 ) = 0;
+};
+
+
 class IAfxStreams4Stream abstract
 {
 public:
@@ -123,10 +126,11 @@ public:
 	virtual IAfxMatRenderContext * GetCurrentContext(void) = 0;
 
 	virtual void OnBind_set(IAfxMatRenderContextBind * value) = 0;
-	virtual void OnOverrideDepthEnable_set(IAfxMatRenderContextOverrideDepthEnable * value) = 0;
 	virtual void OnDrawInstances_set(IAfxMatRenderContextDrawInstances * value) = 0;
-	virtual void OnOverrideAlphaWriteEnable_set(IAfxMatRenderContextOverrideAlphaWriteEnable * value) = 0;
-	virtual void OnOverrideColorWriteEnable_set(IAfxMatRenderContextOverrideColorWriteEnable * value) = 0;
+
+	virtual void OnDraw_set(IAfxMeshDraw * value) = 0;
+	virtual void OnDraw_2_set(IAfxMeshDraw_2 * value) = 0;
+	virtual void OnDrawModulated_set(IAfxMeshDrawModulated * value) = 0;
 
 	virtual void OnSetColorModulation_set(IAfxVRenderViewSetColorModulation * value) = 0;
 };

@@ -1,4 +1,5 @@
 /build
+/ipch
 /*.opensdf
 /*.sdf
 /*.suo

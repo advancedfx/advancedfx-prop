@@ -22,10 +22,10 @@ CAfxStreams g_AfxStreams;
 
 // CAfxStream //////////////////////////////////////////////////////////////////
 
-CAfxStream::CAfxStream(TopStreamType topStreamType, char const * streamName)
-: m_TopStreamType(topStreamType) 
-, m_StreamName(streamName)
+CAfxStream::CAfxStream(char const * streamName)
+: m_StreamName(streamName)
 , m_Streams(0)
+, m_Record(true)
 {
 }
 
@@ -33,14 +33,20 @@ CAfxStream::~CAfxStream()
 {
 }
 
+
+bool CAfxStream::Record_get(void)
+{
+	return m_Record;
+}
+
+void CAfxStream::Record_set(bool value)
+{
+	m_Record = value;
+}
+
 char const * CAfxStream::GetStreamName(void)
 {
 	return m_StreamName.c_str();
-}
-
-CAfxStream::TopStreamType CAfxStream::GetTopStreamType(void)
-{
-	return m_TopStreamType;
 }
 
 void CAfxStream::StreamAttach(IAfxStreams4Stream * streams)
@@ -56,7 +62,7 @@ void CAfxStream::StreamDetach(IAfxStreams4Stream * streams)
 // CAfxDeveloperStream /////////////////////////////////////////////////////////
 
 CAfxDeveloperStream::CAfxDeveloperStream(char const * streamName)
-: CAfxStream(TST_CAfxDeveloperStream, streamName)
+: CAfxStream(streamName)
 , m_ReplaceUpdate(false)
 , m_Replace (false)
 , m_ReplaceMaterial(0)
@@ -130,6 +136,9 @@ void CAfxDeveloperStream::StreamAttach(IAfxStreams4Stream * streams)
 	if(m_Replace)
 	{
 		streams->OnBind_set(this);
+		streams->OnDraw_set(this);
+		streams->OnDraw_2_set(this);
+		streams->OnDrawModulated_set(this);
 		streams->OnDrawInstances_set(this);
 	}
 }
@@ -137,6 +146,9 @@ void CAfxDeveloperStream::StreamAttach(IAfxStreams4Stream * streams)
 void CAfxDeveloperStream::StreamDetach(IAfxStreams4Stream * streams)
 {
 	streams->OnDrawInstances_set(0);
+	streams->OnDrawModulated_set(0);
+	streams->OnDraw_2_set(0);
+	streams->OnDraw_set(0);
 	streams->OnBind_set(0);
 
 	CAfxStream::StreamDetach(streams);
@@ -152,8 +164,7 @@ void CAfxDeveloperStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * mate
 
 	m_ReplaceMaterialActive = replace;
 
-	if(replace)
-		Tier0_Msg("Replaced %s|%s with %s\n", material->GetTextureGroupName(), material->GetName(), m_ReplaceName.c_str());
+//	if(replace)	Tier0_Msg("Replaced %s|%s with %s\n", material->GetTextureGroupName(), material->GetName(), m_ReplaceName.c_str());
 
 	ctx->GetParent()->Bind(replace ? m_ReplaceMaterial->GetMaterial() : material, proxyData);
 }
@@ -164,20 +175,45 @@ void CAfxDeveloperStream::DrawInstances(IAfxMatRenderContext * ctx, int nInstanc
 		ctx->GetParent()->DrawInstances(nInstanceCount, pInstance);
 }
 
-// CAfxMatteEntityStream ///////////////////////////////////////////////////////
+void CAfxDeveloperStream::Draw(IAfxMesh * am, int firstIndex, int numIndices)
+{
+	if(!(m_BlockDraw && m_ReplaceMaterialActive)) 
+		am->GetParent()->Draw(firstIndex, numIndices);
+	else
+		am->GetParent()->MarkAsDrawn();
+}
 
-CAfxMatteEntityStream::CAfxMatteEntityStream(char const * streamName)
-: CAfxStream(TST_CAfxMatteEntityStream, streamName)
+void CAfxDeveloperStream::Draw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists)
+{
+	if(!(m_BlockDraw && m_ReplaceMaterialActive)) 
+		am->GetParent()->Draw(pLists, nLists);
+	else
+		am->GetParent()->MarkAsDrawn();
+}
+
+void CAfxDeveloperStream::DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex, int numIndices)
+{
+	if(!(m_BlockDraw && m_ReplaceMaterialActive)) 
+		am->GetParent()->DrawModulated(vecDiffuseModulation, firstIndex, numIndices);
+	else
+		am->GetParent()->MarkAsDrawn();
+}
+
+// CAfxMatteStream /////////////////////////////////////////////////////////////
+
+CAfxMatteStream::CAfxMatteStream(char const * streamName, bool isEntityStream)
+: CAfxStream(streamName)
 , m_CurrentAction(0)
 , m_MatteAction(0)
 , m_PassthroughAction(0)
 , m_InvisibleAction(0)
 , m_NoDrawAction(0)
 , m_BoundAction(false)
+, m_IsEntityStream(isEntityStream)
 {
 }
 
-CAfxMatteEntityStream::~CAfxMatteEntityStream()
+CAfxMatteStream::~CAfxMatteStream()
 {
 	delete m_NoDrawAction;
 	delete m_InvisibleAction;
@@ -185,7 +221,7 @@ CAfxMatteEntityStream::~CAfxMatteEntityStream()
 	delete m_MatteAction;
 }
 
-void CAfxMatteEntityStream::StreamAttach(IAfxStreams4Stream * streams)
+void CAfxMatteStream::StreamAttach(IAfxStreams4Stream * streams)
 {
 	CAfxStream::StreamAttach(streams);
 
@@ -198,28 +234,28 @@ void CAfxMatteEntityStream::StreamAttach(IAfxStreams4Stream * streams)
 	m_CurrentAction = m_PassthroughAction;
 
 	streams->OnBind_set(this);
-	streams->OnOverrideDepthEnable_set(this);
 	streams->OnDrawInstances_set(this);
-	streams->OnOverrideAlphaWriteEnable_set(this);
-	streams->OnOverrideColorWriteEnable_set(this);
+	streams->OnDraw_set(this);
+	streams->OnDraw_2_set(this);
+	streams->OnDrawModulated_set(this);
 	streams->OnSetColorModulation_set(this);
 }
 
-void CAfxMatteEntityStream::StreamDetach(IAfxStreams4Stream * streams)
+void CAfxMatteStream::StreamDetach(IAfxStreams4Stream * streams)
 {
 	if(m_BoundAction) m_CurrentAction->AfxUnbind(streams->GetCurrentContext());
 
 	streams->OnSetColorModulation_set(0);
-	streams->OnOverrideColorWriteEnable_set(0);
-	streams->OnOverrideAlphaWriteEnable_set(0);
+	streams->OnDrawModulated_set(0);
+	streams->OnDraw_2_set(0);
+	streams->OnDraw_set(0);
 	streams->OnDrawInstances_set(0);
-	streams->OnOverrideDepthEnable_set(0);
 	streams->OnBind_set(0);
 
 	CAfxStream::StreamDetach(streams);
 }
 
-void CAfxMatteEntityStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData )
+void CAfxMatteStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData )
 {
 	if(m_BoundAction) m_CurrentAction->AfxUnbind(ctx);
 
@@ -236,54 +272,116 @@ void CAfxMatteEntityStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * ma
 		const char * groupName =  material->GetTextureGroupName();
 		const char * name = material->GetName();
 
-		Tier0_Msg("Material: %s %s -> ", groupName, name);
+		Tier0_Msg("Stream %s: %s|%s -> ", GetStreamName(), groupName, name);
 
-		if(
-			!strcmp("World textures", groupName)
-			|| !strcmp("SkyBox textures", groupName)
-			|| !strcmp("StaticProp textures", groupName)
-			|| (
+		if(m_IsEntityStream)
+		{
+			if(
+				!strcmp("World textures", groupName)
+				|| !strcmp("SkyBox textures", groupName)
+				|| !strcmp("StaticProp textures", groupName)
+				|| (
+					!strcmp("Model textures", groupName)
+					&& !StringBeginsWith(name, "models/player/")
+				)
+				|| (
+					!strcmp("Other textures", groupName)
+					&& (
+						!strcmp(name, "cable/cable")
+						|| StringBeginsWith(name, "cs_custom_material_")
+					)
+				)
+			)
+			{
+				Tier0_Msg("matte");
+				m_CurrentAction = m_MatteAction;
+			}
+			else
+			if(
+				!strcmp("Decal textures", groupName)
+				|| (
+					!strcmp("Other textures", groupName)
+					&& (
+						StringBeginsWith(name, "effects/")
+						|| StringBeginsWith(name, "particle/")
+					)
+				)
+				|| (
+					!strcmp("Precached", groupName)
+					&& (
+						StringBeginsWith(name, "effects/")
+						|| StringBeginsWith(name, "particle/")
+					)
+				) 
+			)
+			{
+				Tier0_Msg("noDraw");
+				m_CurrentAction = m_NoDrawAction;
+			}
+			else
+			{
+				Tier0_Msg("passthrough");
+				m_CurrentAction = m_PassthroughAction;
+			}
+		}
+		else
+		{
+			if(
+				!strcmp("World textures", groupName)
+				|| !strcmp("SkyBox textures", groupName)
+				|| !strcmp("StaticProp textures", groupName)
+				|| (
+					!strcmp("Model textures", groupName)
+					&& !StringBeginsWith(name, "models/player/")
+				)
+				|| (
+					!strcmp("Other textures", groupName)
+					&& (
+						!strcmp(name, "cable/cable")
+						|| StringBeginsWith(name, "cs_custom_material_")
+					)
+				)
+			)
+			{
+				Tier0_Msg("passthrough");
+				m_CurrentAction = m_PassthroughAction;
+			}
+			else
+			if(
+				!strcmp("Decal textures", groupName)
+				|| (
+					!strcmp("Other textures", groupName)
+					&& (
+						StringBeginsWith(name, "effects/")
+						|| StringBeginsWith(name, "particle/")
+					)
+				)
+				|| (
+					!strcmp("Precached", groupName)
+					&& (
+						StringBeginsWith(name, "effects/")
+						|| StringBeginsWith(name, "particle/")
+					)
+				) 
+			)
+			{
+				Tier0_Msg("passthrough");
+				m_CurrentAction = m_PassthroughAction;
+			}
+			else
+			if(
 				!strcmp("Model textures", groupName)
-				&& !StringBeginsWith(name, "models/player/")
+				&& StringBeginsWith(name, "models/player/")
 			)
-			|| (
-				!strcmp("Other textures", groupName)
-				&& (
-					!strcmp(name, "cable/cable")
-					|| StringBeginsWith(name, "cs_custom_material_")
-				)
-			)
-		)
-		{
-			Tier0_Msg("matte");
-			m_CurrentAction = m_MatteAction;
-		}
-		else
-		if(
-			!strcmp("Decal textures", groupName)
-			|| (
-				!strcmp("Other textures", groupName)
-				&& (
-					StringBeginsWith(name, "effects/")
-					|| StringBeginsWith(name, "particle/")
-				)
-			)
-			|| (
-				!strcmp("Precached", groupName)
-				&& (
-					StringBeginsWith(name, "effects/")
-					|| StringBeginsWith(name, "particle/")
-				)
-			) 
-		)
-		{
-			Tier0_Msg("noDraw");
-			m_CurrentAction = m_NoDrawAction;
-		}
-		else
-		{
-			Tier0_Msg("passthrough");
-			m_CurrentAction = m_PassthroughAction;
+			{
+				Tier0_Msg("invisible");
+				m_CurrentAction = m_InvisibleAction;
+			}
+			else
+			{
+				Tier0_Msg("passthrough");
+				m_CurrentAction = m_PassthroughAction;
+			}
 		}
 
 		m_Map[key] = m_CurrentAction;
@@ -296,27 +394,27 @@ void CAfxMatteEntityStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * ma
 	m_BoundAction = true;
 }
 
-void CAfxMatteEntityStream::OverrideDepthEnable(IAfxMatRenderContext * ctx, bool bEnable, bool bDepthEnable, bool bUnknown)
-{
-	m_CurrentAction->OverrideDepthEnable(ctx, bEnable, bDepthEnable, bUnknown);
-}
-
-void CAfxMatteEntityStream::DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance )
+void CAfxMatteStream::DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance )
 {
 	m_CurrentAction->DrawInstances(ctx, nInstanceCount, pInstance);
 }
 
-void CAfxMatteEntityStream::OverrideAlphaWriteEnable(IAfxMatRenderContext * ctx, bool bOverrideEnable, bool bAlphaWriteEnable )
+void CAfxMatteStream::Draw(IAfxMesh * am, int firstIndex, int numIndices)
 {
-	m_CurrentAction->OverrideAlphaWriteEnable(ctx, bOverrideEnable, bAlphaWriteEnable);
+	m_CurrentAction->Draw(am, firstIndex, numIndices);
 }
 
-void CAfxMatteEntityStream::OverrideColorWriteEnable(IAfxMatRenderContext * ctx, bool bOverrideEnable, bool bColorWriteEnable )
+void CAfxMatteStream::Draw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists)
 {
-	m_CurrentAction->OverrideColorWriteEnable(ctx, bOverrideEnable, bColorWriteEnable);
+	m_CurrentAction->Draw_2(am, pLists, nLists);
 }
 
-void CAfxMatteEntityStream::SetColorModulation(IAfxVRenderView * rv, float const* blend)
+void CAfxMatteStream::DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex, int numIndices)
+{
+	m_CurrentAction->DrawModulated(am, vecDiffuseModulation, firstIndex, numIndices);
+}
+
+void CAfxMatteStream::SetColorModulation(IAfxVRenderView * rv, float const* blend)
 {
 	m_CurrentAction->SetColorModulation(rv, blend);
 }
@@ -333,6 +431,9 @@ CAfxStreams::CAfxStreams()
 , m_PreviewStream(0)
 , m_Recording(false)
 , m_Frame(0)
+, m_OnDraw(0)
+, m_OnDraw_2(0)
+, m_OnDrawModulated(0)
 {
 }
 
@@ -372,6 +473,30 @@ void CAfxStreams::OnAfxBaseClientDll(IAfxBaseClientDll * value)
 void CAfxStreams::OnAfxBaseClientDll_Free(void)
 {
 	if(m_AfxBaseClientDll) { m_AfxBaseClientDll->OnView_Render_set(0); m_AfxBaseClientDll = 0; }
+}
+
+void CAfxStreams::OnDraw(IAfxMesh * am, int firstIndex, int numIndices)
+{
+	if(m_OnDraw)
+		m_OnDraw->Draw(am, firstIndex, numIndices);
+	else
+		am->GetParent()->Draw(firstIndex, numIndices);
+}
+
+void CAfxStreams::OnDraw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists)
+{
+	if(m_OnDraw_2)
+		m_OnDraw_2->Draw_2(am, pLists, nLists);
+	else
+		am->GetParent()->Draw(pLists, nLists);
+}
+
+void CAfxStreams::OnDrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex, int numIndices)
+{
+	if(m_OnDrawModulated)
+		m_OnDrawModulated->DrawModulated(am, vecDiffuseModulation, firstIndex, numIndices);
+	else
+		am->GetParent()->DrawModulated(vecDiffuseModulation, firstIndex, numIndices);
 }
 
 void CAfxStreams::Console_RecordName_set(const char * value)
@@ -419,7 +544,10 @@ void CAfxStreams::Console_AddDeveloperStream(const char * streamName)
 
 void CAfxStreams::Console_AddMatteWorldStream(const char * streamName)
 {
-	Tier0_Msg("Error: Not implemented yet.\n");
+	if(!Console_CheckStreamName(streamName))
+		return;
+
+	m_Streams.push_back(new CAfxMatteWorldStream(streamName));
 }
 
 void CAfxStreams::Console_AddMatteEntityStream(const char * streamName)
@@ -432,11 +560,11 @@ void CAfxStreams::Console_AddMatteEntityStream(const char * streamName)
 
 void CAfxStreams::Console_PrintStreams()
 {
-	Tier0_Msg("index: name\n");
+	Tier0_Msg("index: name record\n");
 	int index = 0;
 	for(std::list<CAfxStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
 	{
-		Tier0_Msg("%i: %s\n", index, (*it)->GetStreamName());
+		Tier0_Msg("%i: %s %s\n", index, (*it)->GetStreamName(), (*it)->Record_get() ? "1" : "0");
 		++index;
 	}
 	Tier0_Msg(
@@ -445,12 +573,11 @@ void CAfxStreams::Console_PrintStreams()
 	);
 }
 
-void CAfxStreams::Console_RemoveStream(int index)
+void CAfxStreams::Console_RemoveStream(const char * streamName)
 {
-	int curIndex = 0;
 	for(std::list<CAfxStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
 	{
-		if(curIndex == index)
+		if(!_stricmp(streamName, (*it)->GetStreamName()))
 		{
 			CAfxStream * cur = *it;
 			m_Streams.erase(it);
@@ -458,147 +585,175 @@ void CAfxStreams::Console_RemoveStream(int index)
 			if(m_PreviewStream == cur) m_PreviewStream = 0;
 			return;
 		}
-
-		++curIndex;
 	}
-	Tier0_Msg("Error: invalid index.\n");
+	Tier0_Msg("Error: invalid streamName.\n");
 }
 
-void CAfxStreams::Console_PreviewStream(int index)
+void CAfxStreams::Console_PreviewStream(const char * streamName)
 {
-	if(index == -1)
+	if(StringIsEmpty(streamName))
 	{
 		m_PreviewStream = 0;
 		return;
 	}
 
-	int curIndex = 0;
 	for(std::list<CAfxStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
 	{
-		if(curIndex == index)
+		if(!_stricmp(streamName, (*it)->GetStreamName()))
 		{
 			CAfxStream * cur = *it;
 			m_PreviewStream = cur;
 			return;
 		}
-
-		++curIndex;
 	}
-	Tier0_Msg("Error: invalid index.\n");
+	Tier0_Msg("Error: invalid streamName.\n");
 }
 
-void CAfxStreams::Console_EditStream(int index, IWrpCommandArgs * args, int argcOffset, char const * cmdPrefix)
+void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * args, int argcOffset, char const * cmdPrefix)
 {
-	int curIndex = 0;
 	for(std::list<CAfxStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
 	{
-		if(curIndex == index)
+		if(!_stricmp(streamName, (*it)->GetStreamName()))
 		{
 			CAfxStream * cur = *it;
 			CAfxDeveloperStream * curDeveloper = cur->AsAfxDeveloperStream();
-			CAfxMatteEntityStream * curMatteEntitiy = cur->AsAfxMatteEntityStream();
 
 			int argc = args->ArgC() -argcOffset;
 
-			if(1 <= argc)
+			if(cur)
 			{
-				char const * cmd0 = args->ArgV(argcOffset +0);
-
-				if(curDeveloper && !_stricmp(cmd0, "matchTextureGroupName"))
+				if(1 <= argc)
 				{
-					if(2 <= argc)
+					char const * cmd0 = args->ArgV(argcOffset +0);
+
+					if(!_stricmp(cmd0, "record"))
 					{
-						char const * cmd1 = args->ArgV(argcOffset +1);
+						if(2 <= argc)
+						{
+							char const * cmd1 = args->ArgV(argcOffset +1);
 
-						curDeveloper->MatchTextureGroupName_set(cmd1);
+							cur->Record_set(atoi(cmd1) != 0 ? true : false);
 
+							return;
+						}
+
+						Tier0_Msg(
+							"%s record 0|1 - Disable / enable recording.\n"
+							"Current value: %s.\n"
+							, cmdPrefix
+							, cur->Record_get() ? "1" : "0"
+						);
 						return;
 					}
-
-					Tier0_Msg(
-						"%s matchTextureGroupName <name> - Set new texture group name to match.\n"
-						"Current value: %s.\n"
-						, cmdPrefix
-						, curDeveloper->MatchTextureGroupName_get()
-					);
-					return;
 				}
-				else
-				if(curDeveloper && !_stricmp(cmd0, "matchName"))
+			}
+
+			if(curDeveloper)
+			{
+				if(1 <= argc)
 				{
-					if(2 <= argc)
+					char const * cmd0 = args->ArgV(argcOffset +0);
+
+					if(!_stricmp(cmd0, "matchTextureGroupName"))
 					{
-						char const * cmd1 = args->ArgV(argcOffset +1);
+						if(2 <= argc)
+						{
+							char const * cmd1 = args->ArgV(argcOffset +1);
 
-						curDeveloper->MatchName_set(cmd1);
+							curDeveloper->MatchTextureGroupName_set(cmd1);
 
+							return;
+						}
+
+						Tier0_Msg(
+							"%s matchTextureGroupName <name> - Set new texture group name to match.\n"
+							"Current value: %s.\n"
+							, cmdPrefix
+							, curDeveloper->MatchTextureGroupName_get()
+						);
 						return;
 					}
-
-					Tier0_Msg(
-						"%s matchName <name> - Set new name to match.\n"
-						"Current value: %s.\n"
-						, cmdPrefix
-						, curDeveloper->MatchName_get()
-					);
-					return;
-				}
-				else
-				if(curDeveloper && !_stricmp(cmd0, "replaceName"))
-				{
-					if(2 <= argc)
+					else
+					if(!_stricmp(cmd0, "matchName"))
 					{
-						char const * cmd1 = args->ArgV(argcOffset +1);
+						if(2 <= argc)
+						{
+							char const * cmd1 = args->ArgV(argcOffset +1);
 
-						curDeveloper->ReplaceName_set(cmd1);
+							curDeveloper->MatchName_set(cmd1);
 
+							return;
+						}
+
+						Tier0_Msg(
+							"%s matchName <name> - Set new name to match.\n"
+							"Current value: %s.\n"
+							, cmdPrefix
+							, curDeveloper->MatchName_get()
+						);
 						return;
 					}
-
-					Tier0_Msg(
-						"%s replaceName <name> - Set the name of the replacement material, set an empty string(\"\") to replace nothing.\n"
-						"Current value: %s.\n"
-						, cmdPrefix
-						, curDeveloper->ReplaceName_get()
-					);
-					return;
-				}
-				else
-				if(curDeveloper && !_stricmp(cmd0, "blockDraw"))
-				{
-					if(2 <= argc)
+					else
+					if(!_stricmp(cmd0, "replaceName"))
 					{
-						char const * cmd1 = args->ArgV(argcOffset +1);
+						if(2 <= argc)
+						{
+							char const * cmd1 = args->ArgV(argcOffset +1);
 
-						curDeveloper->BlockDraw_set(0 != atoi(cmd1));
+							curDeveloper->ReplaceName_set(cmd1);
 
+							return;
+						}
+
+						Tier0_Msg(
+							"%s replaceName <name> - Set the name of the replacement material, set an empty string(\"\") to replace nothing.\n"
+							"Current value: %s.\n"
+							, cmdPrefix
+							, curDeveloper->ReplaceName_get()
+						);
 						return;
 					}
+					else
+					if(!_stricmp(cmd0, "blockDraw"))
+					{
+						if(2 <= argc)
+						{
+							char const * cmd1 = args->ArgV(argcOffset +1);
 
-					Tier0_Msg(
-						"%s blockDraw 0|1 - Whether to block drawing when replaceMaterial is active.\n"
-						"Current value: %i.\n"
-						, cmdPrefix
-						, curDeveloper->BlockDraw_get() ? 1L : 0L
-					);
-					return;
+							curDeveloper->BlockDraw_set(0 != atoi(cmd1));
+
+							return;
+						}
+
+						Tier0_Msg(
+							"%s blockDraw 0|1 - Whether to block drawing when replaceMaterial is active.\n"
+							"Current value: %i.\n"
+							, cmdPrefix
+							, curDeveloper->BlockDraw_get() ? 1L : 0L
+						);
+						return;
+					}
 				}
+			}
+
+			if(cur)
+			{
+				Tier0_Msg("%s record [...]\n");
 			}
 			
 			if(curDeveloper)
 			{
-				Tier0_Msg("%s matchTextureGroupName [....]\n", cmdPrefix);
-				Tier0_Msg("%s matchName [....]\n", cmdPrefix);
-				Tier0_Msg("%s replaceName [....]\n", cmdPrefix);
-				Tier0_Msg("%s blockDraw [....]\n", cmdPrefix);
+				Tier0_Msg("%s matchTextureGroupName [...]\n", cmdPrefix);
+				Tier0_Msg("%s matchName [...]\n", cmdPrefix);
+				Tier0_Msg("%s replaceName [...]\n", cmdPrefix);
+				Tier0_Msg("%s blockDraw [...]\n", cmdPrefix);
 			}
+
 			Tier0_Msg("No further options for this stream.\n");
 			return;
 		}
-
-		++curIndex;
 	}
-	Tier0_Msg("Error: invalid index.\n");
+	Tier0_Msg("Error: invalid streamName.\n");
 }
 
 IMaterialSystem_csgo * CAfxStreams::GetMaterialSystem(void)
@@ -622,24 +777,24 @@ void CAfxStreams::OnBind_set(IAfxMatRenderContextBind * value)
 	if(m_CurrentContext) m_CurrentContext->OnBind_set(value);
 }
 
-void CAfxStreams::OnOverrideDepthEnable_set(IAfxMatRenderContextOverrideDepthEnable * value)
-{
-	if(m_CurrentContext) m_CurrentContext->OnOverrideDepthEnable_set(value);
-}
-
 void CAfxStreams::OnDrawInstances_set(IAfxMatRenderContextDrawInstances * value)
 {
 	if(m_CurrentContext) m_CurrentContext->OnDrawInstances_set(value);
 }
 
-void CAfxStreams::OnOverrideAlphaWriteEnable_set(IAfxMatRenderContextOverrideAlphaWriteEnable * value)
+void CAfxStreams::OnDraw_set(IAfxMeshDraw * value)
 {
-	if(m_CurrentContext) m_CurrentContext->OnOverrideAlphaWriteEnable_set(value);
+	m_OnDraw = value;
 }
 
-void CAfxStreams::OnOverrideColorWriteEnable_set(IAfxMatRenderContextOverrideColorWriteEnable * value)
+void CAfxStreams::OnDraw_2_set(IAfxMeshDraw_2 * value)
 {
-	if(m_CurrentContext) m_CurrentContext->OnOverrideColorWriteEnable_set(value);
+	m_OnDraw_2 = value;
+}
+
+void CAfxStreams::OnDrawModulated_set(IAfxMeshDrawModulated * value)
+{
+	m_OnDrawModulated = value;
 }
 
 void CAfxStreams::OnSetColorModulation_set(IAfxVRenderViewSetColorModulation * value)
@@ -676,6 +831,8 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 		{
 			for(std::list<CAfxStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
 			{
+				if(!(*it)->Record_get()) continue;
+
 				std::ostringstream oss;
 	
 				oss << m_RecordName << "_"

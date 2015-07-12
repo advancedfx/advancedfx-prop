@@ -6,6 +6,7 @@
 #endif
 
 #include <list>
+#include <algorithm>
 
 #include <hlsdk.h>
 

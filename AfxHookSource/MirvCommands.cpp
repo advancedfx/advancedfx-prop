@@ -114,14 +114,13 @@ CON_COMMAND(__mirv_streams, "Access to streams system.")
 			if(3 <= argc)
 			{
 				char const * cmd2 = args->ArgV(2);
-				int index = atoi(cmd2);
 				
-				g_AfxStreams.Console_EditStream(index, args, 3, "mirv_streams edit <index>");
+				g_AfxStreams.Console_EditStream(cmd2, args, 3, "mirv_streams edit <streamName>");
 				return;
 			}
 
 			Tier0_Msg(
-				"mirv_streams edit <index> [....] - Edit the stream with index <index>, you can get the value from mirv_streams print.\n"
+				"mirv_streams edit <streamName> [...] - Edit the stream with name <streamName>, you can get the value from mirv_streams print.\n"
 			);
 			return;
 		}
@@ -131,14 +130,13 @@ CON_COMMAND(__mirv_streams, "Access to streams system.")
 			if(3 <= argc)
 			{
 				char const * cmd2 = args->ArgV(2);
-				int index = atoi(cmd2);
 				
-				g_AfxStreams.Console_RemoveStream(index);
+				g_AfxStreams.Console_RemoveStream(cmd2);
 				return;
 			}
 
 			Tier0_Msg(
-				"mirv_streams remove <index> - Remove a stream with index <index>, you can get the value from mirv_streams print.\n"
+				"mirv_streams remove <streamName> - Remove a stream with name <streamName>, you can get the value from mirv_streams print.\n"
 			);
 			return;
 		}
@@ -148,14 +146,13 @@ CON_COMMAND(__mirv_streams, "Access to streams system.")
 			if(3 <= argc)
 			{
 				char const * cmd2 = args->ArgV(2);
-				int index = atoi(cmd2);
 				
-				g_AfxStreams.Console_PreviewStream(index);
+				g_AfxStreams.Console_PreviewStream(cmd2);
 				return;
 			}
 
 			Tier0_Msg(
-				"mirv_streams preview <index> - Preivew the stream with index <index>, you can get the value from mirv_streams print. To end previewing enter -1 for <index>!\n"
+				"mirv_streams preview <streamName> - Preivew the stream with name <streamName>, you can get the value from mirv_streams print. To end previewing enter "" (empty string) for <streamName>!\n"
 			);
 			return;
 		}
@@ -224,19 +221,44 @@ CON_COMMAND(__mirv_streams, "Access to streams system.")
 	return;
 }
 
+void ClearMaterialInfoSet();
 void PrintMaterialInfoSetToFile(void);
-
-
-CON_COMMAND(__mirv_write_materialinfo, "")
-{
-	PrintMaterialInfoSetToFile();
-}
-
 extern bool g_CollectMaterialInfo;
 
-CON_COMMAND(__mirv_collect_materialinfo, "")
+CON_COMMAND(__mirv_materialinfo, "")
 {
-	g_CollectMaterialInfo = true;
+	int argc = args->ArgC();
+
+	if(2 <= argc)
+	{
+		char const * cmd1 = args->ArgV(1);
+
+		if(!_stricmp(cmd1, "collect") && 3 <= argc)
+		{
+			g_CollectMaterialInfo = atoi(args->ArgV(2)) != 0 ? true : false;
+			return;
+		}
+		else
+		if(!_stricmp(cmd1, "clear"))
+		{
+			ClearMaterialInfoSet();
+			return;
+		}
+		else
+		if(!_stricmp(cmd1, "write"))
+		{
+			PrintMaterialInfoSetToFile();
+			return;
+		}
+	}		
+
+	Tier0_Msg(
+		"__mirv_materialinfo collect 0|1 - Enable / disable collecting material info.\n"
+		"__mirv_materialinfo clear - Clear the collected set.\n"
+		"__mirv_materialinfo write - Write collected data to afx_material_info.txt in csgo.exe folder.\n"
+	);
+	return;
+
 }
 
 CON_COMMAND(__mirv_exec, "client command execution: __mirv_exec <as you would have typed here>") {

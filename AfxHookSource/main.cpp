@@ -62,6 +62,48 @@
 	__asm mov eax, [eax +4*index] \
 	__asm jmp eax
 
+#define JMP_CLASSMEMBERIFACE_FN_DBG(classType,classMemberIface,index) \
+	__asm mov ecx, this \
+	__asm mov eax, index \
+	__asm push eax \
+	__asm call Debug \
+	__asm mov eax, this \
+	__asm mov eax, [eax]classType.classMemberIface \
+	__asm pop ecx \
+	__asm mov esp, ebp \
+	__asm pop ebp \
+	__asm mov ecx, eax \
+	__asm mov eax, [ecx] \
+	__asm mov eax, [eax +4*index] \
+	__asm jmp eax
+
+#define JMP_CLASSMEMBERIFACE_OFS_FN(classType,classMemberIface,ofs,index) \
+	__asm mov eax, this \
+	__asm mov eax, [eax]classType.classMemberIface \
+	__asm pop ecx \
+	__asm mov esp, ebp \
+	__asm pop ebp \
+	__asm mov ecx, eax \
+	__asm mov eax, [ecx +4*ofs] \
+	__asm mov eax, [eax +4*index] \
+	__asm jmp eax
+
+#define JMP_CLASSMEMBERIFACE_OFS_FN_DBG(classType,classMemberIface,ofs,index) \
+	__asm mov ecx, this \
+	__asm mov eax, index \
+	__asm push eax \
+	__asm mov eax, ofs \
+	__asm push eax \
+	__asm call Debug \
+	__asm mov eax, this \
+	__asm mov eax, [eax]classType.classMemberIface \
+	__asm pop ecx \
+	__asm mov esp, ebp \
+	__asm pop ebp \
+	__asm mov ecx, eax \
+	__asm mov eax, [ecx +4*ofs] \
+	__asm mov eax, [eax +4*index] \
+	__asm jmp eax
 
 
 WrpVEngineClient * g_VEngineClient = 0;
@@ -83,7 +125,7 @@ char const * g_Info_VEngineCvar = "NULL";
 void PrintInfo() {
 	Tier0_Msg(
 		"|" "\n"
-		"| AfxHookSource ("  __DATE__ " "__TIME__ ")" "\n"
+		"| AfxHookSource (" __DATE__ " " __TIME__ ")" "\n"
 		"| http://advancedfx.org/" "\n"
 		"|" "\n"
 	);
@@ -438,7 +480,7 @@ void MySetup(CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals)
 			}
 			else {
 				ErrorBox("Could not get a supported VEngineRenderView interface.");
-			}				
+			}
 		}
 		
 		g_Hook_VClient_RenderView.Install(pGlobals);
@@ -454,11 +496,10 @@ void* AppSystemFactory_ForClient(const char *pName, int *pReturnCode)
 		return &g_ClientEngineTools;
 	}
 	else
-	if(isCsgo && !strcmp(VENGINE_RENDERVIEW_INTERFACE_VERSION_CSGO_013, pName))
+	if(isCsgo && !strcmp(VENGINE_RENDERVIEW_INTERFACE_VERSION_CSGO_013, pName) && g_AfxVRenderView)
 	{
 		return g_AfxVRenderView;
 	}
-
 	return g_AppSystemFactory(pName, pReturnCode);
 }
 
@@ -533,6 +574,11 @@ bool g_CollectMaterialInfo = false;
 
 std::set<CAfxMaterialKey> g_MaterialInfoSet_csgo;
 
+void ClearMaterialInfoSet()
+{
+	g_MaterialInfoSet_csgo.clear();
+};
+
 void PrintMaterialInfoSetToFile(void)
 {
 	FILE *f1=NULL;
@@ -549,6 +595,261 @@ void PrintMaterialInfoSetToFile(void)
 	fclose(f1);
 }
 
+bool g_DebugEnabled = false;
+
+
+#pragma warning(push)
+#pragma warning(disable:4731) // frame pointer register 'ebp' modified by inline assembly code
+
+class CAfxMesh
+: public IMeshMgr_csgo
+, public IAfxMesh
+{
+public:
+	CAfxMesh(IMeshMgr_csgo * parent)
+	: m_Parent(parent)
+	{
+	}
+
+private:
+	void Debug(int ofs, int index)
+	{
+		if(g_DebugEnabled)
+			Tier0_Msg("CAfxMesh::Debug(%i,%i)\n", ofs,index);
+	}
+
+public:
+
+	//
+	// IAfxMesh:
+
+	virtual IMeshMgr_csgo * GetParent(void)
+	{
+		return m_Parent;
+	}
+
+	//
+	// IVertexBuffer_csgo:
+
+	virtual int VertexCount() const
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,0) }
+
+	virtual VertexFormat_t_csgo GetVertexFormat() const
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,1) }
+
+	virtual bool IsDynamic() const
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,2) }
+
+	virtual void BeginCastBuffer( VertexFormat_t_csgo format )
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,3) }
+
+	virtual void EndCastBuffer()
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,4) }
+
+	virtual int GetRoomRemaining() const
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,5) }
+
+	virtual bool Lock( int nVertexCount, bool bAppend, VertexDesc_t_csgo &desc )
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,6) }
+
+	virtual void Unlock( int nVertexCount, VertexDesc_t_csgo &desc )
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,7) }
+
+	virtual void Spew( int nVertexCount, const VertexDesc_t_csgo &desc )
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,8) }
+
+	virtual void ValidateData( int nVertexCount, const VertexDesc_t_csgo & desc )
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,9) }
+
+	//
+	// IMesh_csgo:
+
+	virtual void SetPrimitiveType( MaterialPrimitiveType_t_csgo type )
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,10) }
+
+	virtual void Draw( int firstIndex = -1, int numIndices = 0 )
+	{
+		//JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,12) /* !ofs different due to overloaded method! */
+
+		Debug(0,12);
+
+		g_AfxStreams.OnDraw(this, firstIndex, numIndices);
+	}
+
+	virtual void SetColorMesh( IMesh_csgo *pColorMesh, int nVertexOffset )
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,13) /* !ofs different due to overloaded method! */ }
+
+	virtual void Draw( CPrimList_csgo *pLists, int nLists )
+	{
+		// JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,11) /* !ofs different due to overloaded method! */
+
+		Debug(0,11);
+
+		g_AfxStreams.OnDraw_2(this, pLists, nLists);
+	}
+
+	virtual void CopyToMeshBuilder(int iStartVert, int nVerts, int iStartIndex,	int nIndices, int indexOffset, CMeshBuilder_csgo &builder )
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,14) }
+
+	virtual void Spew( int numVerts, int numIndices, const MeshDesc_t_csgo &desc )
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,15) }
+
+	virtual void ValidateData( int numVerts, int numIndices, const MeshDesc_t_csgo &desc )
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,16) }
+
+	virtual void LockMesh( int numVerts, int numIndices, MeshDesc_t_csgo &desc, MeshBuffersAllocationSettings_t_csgo *pSettings )
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,17) }
+
+	virtual void ModifyBegin( int firstVertex, int numVerts, int firstIndex, int numIndices, MeshDesc_t_csgo& desc )
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,18) }
+
+	virtual void ModifyEnd( MeshDesc_t_csgo& desc )
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,19) }
+
+	virtual void UnlockMesh( int numVerts, int numIndices, MeshDesc_t_csgo &desc )
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,20) }
+
+	virtual void ModifyBeginEx( bool bReadOnly, int firstVertex, int numVerts, int firstIndex, int numIndices, MeshDesc_t_csgo &desc )
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,21) }
+
+	virtual void SetFlexMesh( IMesh_csgo *pMesh, int nVertexOffset )
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,22) }
+
+	virtual void DisableFlexMesh()
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,23) }
+
+	virtual void MarkAsDrawn()
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,24) }
+	
+	virtual void DrawModulated( const Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 )
+	{
+		// JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,25)
+	
+		g_AfxStreams.OnDrawModulated(this, vecDiffuseModulation, firstIndex, numIndices);
+	}
+
+	virtual unsigned int ComputeMemoryUsed()
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,26) }
+
+	virtual void *AccessRawHardwareDataStream( uint8 nRawStreamIndex, uint32 numBytes, uint32 uiFlags, void *pvContext )
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,27) }
+
+	virtual ICachedPerFrameMeshData_csgo *GetCachedPerFrameMeshData()
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,28) }
+
+	virtual void ReconstructFromCachedPerFrameMeshData( ICachedPerFrameMeshData_csgo *pData )
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,29) }
+
+	//
+	// IMeshMgr_csgo:
+
+	virtual void _UNKNOWN_030(void)
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,30) }
+
+	virtual void _UNKNOWN_031(void)
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,31) }
+
+	virtual void _UNKNOWN_032(void)
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,32) }
+
+	virtual void _UNKNOWN_033(void)
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,33) }
+
+	virtual void _UNKNOWN_034(void)
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,34) }
+
+	virtual void _UNKNOWN_035(void)
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,35) }
+
+	virtual void _UNKNOWN_036(void)
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,36) }
+
+	virtual void _UNKNOWN_037(void)
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,37) }
+
+	virtual void _UNKNOWN_038(void)
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,38) }
+
+	virtual void _UNKNOWN_039(void)
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,39) }
+
+	virtual void _UNKNOWN_040(void)
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,40) }
+
+	virtual void _UNKNOWN_041(void)
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,41) }
+
+	virtual void _UNKNOWN_042(void)
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,42) }
+
+	virtual void _UNKNOWN_043(void)
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,43) }
+
+	virtual void _UNKNOWN_044(void)
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,44) }
+
+	virtual void _UNKNOWN_045(void)
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,45) }
+
+	virtual void _UNKNOWN_046(void)
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,46) }
+
+	virtual void _UNKNOWN_047(void)
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,47) }
+
+	virtual void _UNKNOWN_048(void)
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,48) }
+
+	//
+	// IIndexBuffer_csgo:
+
+	virtual int IndexCount() const
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,0) }
+
+	virtual MaterialIndexFormat_t_csgo IndexFormat() const
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,1) }
+
+	//virtual bool IsDynamic() const
+	//{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,2) }
+
+	virtual void BeginCastBuffer( MaterialIndexFormat_t_csgo format )
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,3) }
+
+	//virtual void EndCastBuffer()
+	//{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,4) }
+
+	//virtual int GetRoomRemaining() const
+	//{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,5) }
+
+	virtual bool Lock( int nMaxIndexCount, bool bAppend, IndexDesc_t_csgo &desc )
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,6) }
+
+	virtual void Unlock( int nWrittenIndexCount, IndexDesc_t_csgo &desc )
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,7) }
+
+	virtual void ModifyBegin( bool bReadOnly, int nFirstIndex, int nIndexCount, IndexDesc_t_csgo& desc )
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,8) }
+
+	virtual void ModifyEnd( IndexDesc_t_csgo& desc )
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,9) }
+
+	virtual void Spew( int nIndexCount, const IndexDesc_t_csgo &desc )
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,10) }
+
+	virtual void ValidateData( int nIndexCount, const IndexDesc_t_csgo &desc )
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,11) }
+
+	virtual IMesh_csgo* GetMesh()
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,12) }
+
+private:
+	IMeshMgr_csgo * m_Parent;
+};
+
+#pragma warning(pop)
+
+std::map<IMeshMgr_csgo *,CAfxMesh *> g_MeshMap_csgo;
+
 #pragma warning(push)
 #pragma warning(disable:4731) // frame pointer register 'ebp' modified by inline assembly code
 
@@ -560,12 +861,19 @@ public:
 	CAfxMatRenderContext(IMatRenderContext_csgo * parent)
 	: m_Parent(parent)
 	, m_OnBind(0)
-	, m_OnOverrideDepthEnable(0)
 	, m_OnDrawInstances(0)
-	, m_OnOverrideAlphaWriteEnable(0)
-	, m_OnOverrideColorWriteEnable(0)
 	{
 	}
+
+private:
+
+	void Debug(int index)
+	{
+		if(g_DebugEnabled)
+			Tier0_Msg("CAfxMatRenderContext::Debug(%i)\n", index);
+	}
+
+public:
 
 	//
 	// IAfxMatRenderContext
@@ -580,24 +888,9 @@ public:
 		m_OnBind = value;
 	}
 
-	virtual void OnOverrideDepthEnable_set(IAfxMatRenderContextOverrideDepthEnable * value)
-	{
-		m_OnOverrideDepthEnable = value;
-	}
-
 	virtual void OnDrawInstances_set(IAfxMatRenderContextDrawInstances * value)
 	{
 		m_OnDrawInstances = value;
-	}
-
-	virtual void OnOverrideAlphaWriteEnable_set(IAfxMatRenderContextOverrideAlphaWriteEnable * value)
-	{
-		m_OnOverrideAlphaWriteEnable = value;
-	}
-
-	virtual void OnOverrideColorWriteEnable_set(IAfxMatRenderContextOverrideColorWriteEnable * value)
-	{
-		m_OnOverrideColorWriteEnable = value;
 	}
 
 	//
@@ -606,47 +899,65 @@ public:
 	// 000:
 	virtual int AddRef()
 	{
+		Debug(0);
+
 		return m_Parent->AddRef();
 	}
 
 	// 001:
 	virtual int Release()
 	{
+		Debug(1);
+
 		return m_Parent->Release();
 	}
 
 	// 002:
 	virtual void BeginRender()
 	{
+		Debug(2);
+
 		m_Parent->BeginRender();
 	}
 
 	// 003:
 	virtual void EndRender()
 	{
+		Debug(3);
+
+		g_DebugEnabled = false;
+
 		m_Parent->EndRender();
 	}
 
 	// 004;
 	virtual void Flush( bool flushHardware = false )
 	{
+		Debug(4);
+
 		m_Parent->Flush(flushHardware);
 	}
 
 	virtual void _UNKNOWN_005(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 5) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 5) }
 
 	virtual void _UNKNOWN_006(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 6) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 6) }
 
 	virtual void _UNKNOWN_007(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 7) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 7) }
 
 	virtual void _UNUSED_008_GetRenderTargetDimensions(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 8) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 8) }
 
 	virtual void Bind( IMaterial_csgo * material, void *proxyData = 0 )
 	{
+		// JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 9)
+
+		//g_DebugEnabled = material && !_stricmp(material->GetName(),"particle/beam_smoke_01");			
+
+		Debug(9);
+
 		if(g_CollectMaterialInfo)
 		{
 			CAfxMaterialKey key(material);
@@ -664,565 +975,579 @@ public:
 	}
 
 	virtual void _UNKNOWN_010(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 10) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 10) }
 
 	virtual void _UNKNOWN_011(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 11) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 11) }
 
 	virtual void _UNKNOWN_012(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 12) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 12) }
 
 	virtual void _UNKNOWN_013(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 13) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 13) }
 
 	virtual void _UNKNOWN_014(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 14) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 14) }
 
 	virtual void _UNKNOWN_015(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 15) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 15) }
 
 	virtual void _UNKNOWN_016(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 16) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 16) }
 
 	virtual void _UNKNOWN_017(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 17) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 17) }
 
 	virtual void _UNKNOWN_018(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 18) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 18) }
 
 	virtual void _UNKNOWN_019(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 19) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 19) }
 
 	virtual void _UNKNOWN_020(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 20) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 20) }
 
 	virtual void _UNKNOWN_021(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 21) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 21) }
 
 	virtual void _UNKNOWN_022(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 22) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 22) }
 
 	virtual void _UNKNOWN_023(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 23) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 23) }
 
 	virtual void _UNKNOWN_024(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 24) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 24) }
 
 	virtual void _UNKNOWN_025(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 25) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 25) }
 
 	virtual void _UNKNOWN_026(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 26) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 26) }
 
 	virtual void _UNKNOWN_027(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 27) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 27) }
 
 	virtual void _UNKNOWN_028(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 28) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 28) }
 
 	virtual void _UNKNOWN_029(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 29) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 29) }
 
 	virtual void _UNKNOWN_030(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 30) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 30) }
 
 	virtual void _UNKNOWN_031(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 31) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 31) }
 
 	virtual void _UNKNOWN_032(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 32) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 32) }
 
 	virtual void _UNKNOWN_033(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 33) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 33) }
 
 	virtual void _UNKNOWN_034(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 34) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 34) }
 
 	virtual void _UNKNOWN_035(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 35) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 35) }
 
 	virtual void _UNKNOWN_036(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 36) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 36) }
 
 	virtual void _UNKNOWN_037(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 37) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 37) }
 
 	virtual void _UNKNOWN_038(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 38) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 38) }
 
 	virtual void _UNKNOWN_039(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 39) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 39) }
 
 	virtual void _UNKNOWN_040(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 40) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 40) }
 
 	virtual void _UNKNOWN_041(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 41) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 41) }
 
 	virtual void _UNKNOWN_042(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 42) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 42) }
 
 	virtual void _UNKNOWN_043(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 43) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 43) }
 
 	virtual void _UNKNOWN_044(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 44) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 44) }
 
 	virtual void _UNKNOWN_045(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 45) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 45) }
 
 	virtual void _UNKNOWN_046(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 46) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 46) }
 
 	virtual void _UNKNOWN_047(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 47) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 47) }
 
 	virtual void _UNKNOWN_048(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 48) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 48) }
 
 	virtual void _UNKNOWN_049(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 49) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 49) }
 
 	virtual void _UNKNOWN_050(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 50) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 50) }
 
 	virtual void _UNKNOWN_051(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 51) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 51) }
 
 	virtual void _UNKNOWN_052(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 52) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 52) }
 
 	virtual void _UNKNOWN_053(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 53) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 53) }
 
 	virtual void _UNKNOWN_054(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 54) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 54) }
 
 	virtual void _UNKNOWN_055(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 55) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 55) }
 
 	virtual void _UNKNOWN_056(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 56) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 56) }
 
 	virtual void _UNKNOWN_057(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 57) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 57) }
 
 	virtual void _UNKNOWN_058(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 58) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 58) }
 
 	virtual void _UNKNOWN_059(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 59) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 59) }
 
 	virtual void _UNKNOWN_060(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 60) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 60) }
 
 	virtual void _UNKNOWN_061(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 61) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 61) }
 
-	virtual void _UNKNOWN_062(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 62) }
+	virtual IMeshMgr_csgo* GetDynamicMesh(bool buffered = true, IMesh_csgo* pVertexOverride = 0, IMesh_csgo* pIndexOverride = 0, IMaterial_csgo *pAutoBind = 0 )
+	{ //JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 62)
 
-	virtual void _UNKNOWN_063(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 63) }
+		Debug(62);
 
-	virtual void _UNKNOWN_064(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 64) }
+		IMeshMgr_csgo * iMesh = m_Parent->GetDynamicMesh(buffered, pVertexOverride, pIndexOverride, pAutoBind);
 
-	virtual void _UNKNOWN_065(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 65) }
+		std::map<IMeshMgr_csgo *, CAfxMesh *>::iterator it = g_MeshMap_csgo.find(iMesh);
+		CAfxMesh * afxMesh;
 
-	virtual void _UNKNOWN_066(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 66) }
-
-	virtual void _UNKNOWN_067(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 67) }
-
-	virtual void _UNKNOWN_068(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 68) }
-
-	virtual void _UNKNOWN_069(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 69) }
-
-	virtual void _UNKNOWN_070(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 70) }
-
-	virtual void _UNKNOWN_071(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 71) }
-
-	virtual void _UNKNOWN_072(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 72) }
-
-	virtual void _UNKNOWN_073(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 73) }
-
-	virtual void _UNKNOWN_074(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 74) }
-
-	virtual void _UNKNOWN_075(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 75) }
-
-	virtual void _UNKNOWN_076(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 76) }
-
-	virtual void _UNKNOWN_077(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 77) }
-
-	virtual void _UNKNOWN_078(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 78) }
-
-	virtual void _UNKNOWN_079(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 79) }
-
-	virtual void OverrideDepthEnable( bool bEnable, bool bDepthEnable, bool bUnknown = false)
-	{
-		// JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 80)
-
-		if(m_OnOverrideDepthEnable)
+		if(it != g_MeshMap_csgo.end())
 		{
-			m_OnOverrideDepthEnable->OverrideDepthEnable(this, bEnable, bDepthEnable, bUnknown);
+			//Tier0_Msg("Found known IMesh 0x%08x.\n", (DWORD)iMesh);
+			afxMesh = it->second; // re-use
 		}
 		else
 		{
-			m_Parent->OverrideDepthEnable(bEnable, bDepthEnable, bUnknown);
+			//Tier0_Msg("New IMesh 0x%08x.\n", (DWORD)iMesh);
+			afxMesh = new CAfxMesh(iMesh);
+
+			g_MeshMap_csgo[iMesh] = afxMesh; // track new mesh
 		}
+	
+		return afxMesh;
 	}
 
+	virtual void _UNKNOWN_063(void)
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 63) }
+
+	virtual void _UNKNOWN_064(void)
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 64) }
+
+	virtual void _UNKNOWN_065(void)
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 65) }
+
+	virtual void _UNKNOWN_066(void)
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 66) }
+
+	virtual void _UNKNOWN_067(void)
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 67) }
+
+	virtual void _UNKNOWN_068(void)
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 68) }
+
+	virtual void _UNKNOWN_069(void)
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 69) }
+
+	virtual void _UNKNOWN_070(void)
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 70) }
+
+	virtual void _UNKNOWN_071(void)
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 71) }
+
+	virtual void _UNKNOWN_072(void)
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 72) }
+
+	virtual void _UNKNOWN_073(void)
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 73) }
+
+	virtual void _UNKNOWN_074(void)
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 74) }
+
+	virtual void _UNKNOWN_075(void)
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 75) }
+
+	virtual void _UNKNOWN_076(void)
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 76) }
+
+	virtual void _UNKNOWN_077(void)
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 77) }
+
+	virtual void _UNKNOWN_078(void)
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 78) }
+
+	virtual void _UNKNOWN_079(void)
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 79) }
+
+	virtual void _UNKNOWN_080(void)
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 80) }
+
 	virtual void _UNKNOWN_081(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 81) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 81) }
 
 	virtual void _UNKNOWN_082(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 82) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 82) }
 
 	virtual void _UNKNOWN_083(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 83) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 83) }
 
 	virtual void _UNKNOWN_084(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 84) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 84) }
 
 	virtual void _UNKNOWN_085(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 85) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 85) }
 
 	virtual void _UNKNOWN_086(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 86) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 86) }
 
 	virtual void _UNKNOWN_087(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 87) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 87) }
 
 	virtual void _UNKNOWN_088(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 88) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 88) }
 
 	virtual void _UNKNOWN_089(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 89) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 89) }
 
 	virtual void _UNKNOWN_090(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 90) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 90) }
 
 	virtual void _UNKNOWN_091(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 91) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 91) }
 
 	virtual void _UNKNOWN_092(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 92) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 92) }
 
 	virtual void _UNKNOWN_093(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 93) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 93) }
 
 	virtual void _UNKNOWN_094(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 94) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 94) }
 
 	virtual void _UNKNOWN_095(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 95) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 95) }
 
 	virtual void _UNKNOWN_096(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 96) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 96) }
 
 	virtual void _UNKNOWN_097(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 97) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 97) }
 
 	virtual void _UNKNOWN_098(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 98) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 98) }
 
 	virtual void _UNKNOWN_099(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 99) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 99) }
 
 	virtual void _UNKNOWN_100(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 100) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 100) }
 
 	virtual void _UNKNOWN_101(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 101) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 101) }
 
 	virtual void _UNKNOWN_102(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 102) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 102) }
 
 	virtual void _UNKNOWN_103(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 103) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 103) }
 
 	virtual void _UNKNOWN_104(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 104) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 104) }
 
 	virtual void _UNKNOWN_105(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 105) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 105) }
 
 	virtual void _UNKNOWN_106(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 106) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 106) }
 
 	virtual void _UNKNOWN_107(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 107) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 107) }
 
 	virtual void _UNKNOWN_108(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 108) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 108) }
 
 	virtual void _UNKNOWN_109(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 109) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 109) }
 
 	virtual void _UNKNOWN_110(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 110) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 110) }
 
 	virtual void _UNKNOWN_111(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 111) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 111) }
 
 	virtual void _UNKNOWN_112(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 112) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 112) }
 
 	virtual void _UNKNOWN_113(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 113) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 113) }
 
 	virtual void _UNKNOWN_114(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 114) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 114) }
 
 	virtual void _UNKNOWN_115(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 115) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 115) }
 
 	virtual void _UNKNOWN_116(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 116) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 116) }
 
 	virtual void _UNKNOWN_117(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 117) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 117) }
 
 	virtual void _UNKNOWN_118(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 118) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 118) }
 
 	virtual void _UNKNOWN_119(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 119) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 119) }
 
 	virtual void _UNKNOWN_120(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 120) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 120) }
 
 	virtual void _UNKNOWN_121(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 121) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 121) }
 
 	virtual void _UNKNOWN_122(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 122) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 122) }
 
 	virtual void _UNKNOWN_123(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 123) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 123) }
 
 	virtual void _UNKNOWN_124(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 124) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 124) }
 
 	virtual void _UNKNOWN_125(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 125) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 125) }
 
 	virtual void _UNKNOWN_126(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 126) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 126) }
 
 	virtual void _UNKNOWN_127(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 127) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 127) }
 
 	virtual void _UNKNOWN_128(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 128) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 128) }
 
 	virtual void _UNKNOWN_129(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 129) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 129) }
 
 	virtual void _UNKNOWN_130(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 130) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 130) }
 
 	virtual void _UNKNOWN_131(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 131) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 131) }
 
 	virtual void _UNKNOWN_132(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 132) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 132) }
 
 	virtual void _UNKNOWN_133(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 133) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 133) }
 
 	virtual void _UNKNOWN_134(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 134) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 134) }
 
 	virtual void _UNKNOWN_135(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 135) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 135) }
 
 	virtual void _UNKNOWN_136(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 136) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 136) }
 
 	virtual void _UNKNOWN_137(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 137) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 137) }
 
 	virtual void _UNKNOWN_138(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 138) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 138) }
 
 	virtual void _UNKNOWN_139(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 139) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 139) }
 
 	virtual void _UNKNOWN_140(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 140) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 140) }
 
 	virtual void _UNKNOWN_141(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 141) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 141) }
 
 	virtual void _UNKNOWN_142(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 142) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 142) }
 
 	virtual void _UNKNOWN_143(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 143) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 143) }
 
 	virtual void _UNKNOWN_144(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 144) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 144) }
 
 	virtual void _UNKNOWN_145(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 145) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 145) }
 
 	virtual void _UNKNOWN_146(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 146) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 146) }
 
 	virtual void _UNKNOWN_147(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 147) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 147) }
 
 	virtual void _UNKNOWN_148(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 148) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 148) }
 
 	virtual void _UNKNOWN_149(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 149) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 149) }
 
 	virtual void _UNKNOWN_150(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 150) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 150) }
 
 	virtual void _UNKNOWN_151(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 151) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 151) }
 
 	virtual void _UNKNOWN_152(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 152) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 152) }
 
 	virtual void _UNKNOWN_153(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 153) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 153) }
 
 	virtual void _UNKNOWN_154(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 154) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 154) }
 
 	virtual void _UNKNOWN_155(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 155) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 155) }
 
 	virtual void _UNKNOWN_156(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 156) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 156) }
 
 	virtual void _UNKNOWN_157(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 157) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 157) }
 
 	virtual void _UNKNOWN_158(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 158) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 158) }
 
 	virtual void _UNKNOWN_159(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 159) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 159) }
 
 	virtual void _UNKNOWN_160(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 160) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 160) }
 
 	virtual void _UNKNOWN_161(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 161) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 161) }
 
 	virtual void _UNKNOWN_162(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 162) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 162) }
 
 	virtual void _UNKNOWN_163(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 163) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 163) }
 
 	virtual void _UNKNOWN_164(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 164) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 164) }
 
 	virtual void _UNKNOWN_165(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 165) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 165) }
 
 	virtual void _UNKNOWN_166(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 166) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 166) }
 
 	virtual void _UNKNOWN_167(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 167) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 167) }
 
 	virtual void _UNKNOWN_168(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 168) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 168) }
 
 	virtual void _UNKNOWN_169(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 169) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 169) }
 
 	virtual void _UNKNOWN_170(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 170) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 170) }
 
 	virtual void _UNKNOWN_171(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 171) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 171) }
 
 	virtual void _UNKNOWN_172(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 172) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 172) }
 
 	virtual void _UNKNOWN_173(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 173) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 173) }
 
 	virtual void _UNKNOWN_174(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 174) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 174) }
 
 	virtual void _UNKNOWN_175(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 175) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 175) }
 
 	virtual void _UNKNOWN_176(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 176) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 176) }
 
 	virtual void _UNKNOWN_177(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 177) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 177) }
 
 	virtual void _UNKNOWN_178(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 178) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 178) }
 
 	virtual void _UNKNOWN_179(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 179) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 179) }
 
 	virtual void _UNKNOWN_180(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 180) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 180) }
 
 	virtual void _UNKNOWN_181(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 181) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 181) }
 
 	virtual void _UNKNOWN_182(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 182) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 182) }
 
 	virtual void _UNKNOWN_183(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 183) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 183) }
 
 	virtual void _UNKNOWN_184(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 184) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 184) }
 
 	virtual void _UNKNOWN_185(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 185) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 185) }
 
 	virtual void _UNKNOWN_186(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 186) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 186) }
 
 	virtual void _UNKNOWN_187(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 187) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 187) }
 
 	virtual void _UNKNOWN_188(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 188) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 188) }
 
 	virtual void _UNKNOWN_189(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 189) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 189) }
 
 	virtual void _UNKNOWN_190(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 190) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 190) }
 
 	virtual void _UNKNOWN_191(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 191) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 191) }
 
 	virtual void DrawInstances( int nInstanceCount, const MeshInstanceData_t_csgo *pInstance )
 	{
-		// JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 192)
+		// JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 192)
+
+		Debug(192);
 
 		if(m_OnDrawInstances)
 		{
@@ -1235,223 +1560,196 @@ public:
 		}
 	}
 
-	virtual void OverrideAlphaWriteEnable( bool bOverrideEnable, bool bAlphaWriteEnable )
-	{
-		// JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 193)
+	virtual void _UNKNOWN_193(void)
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 193) }
 
-		if(m_OnOverrideAlphaWriteEnable)
-		{
-
-			m_OnOverrideAlphaWriteEnable->OverrideAlphaWriteEnable(this, bOverrideEnable, bAlphaWriteEnable);
-		}
-		else
-		{
-			m_Parent->OverrideAlphaWriteEnable(bOverrideEnable, bAlphaWriteEnable);
-		}
-	}
-
-	virtual void OverrideColorWriteEnable( bool bOverrideEnable, bool bColorWriteEnable )
-	{
-		// JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 194)
-	
-		if(m_OnOverrideColorWriteEnable)
-		{
-
-			m_OnOverrideColorWriteEnable->OverrideColorWriteEnable(this, bOverrideEnable, bColorWriteEnable);
-		}
-		else
-		{
-			m_Parent->OverrideColorWriteEnable(bOverrideEnable, bColorWriteEnable);
-		}	
-	}
+	virtual void _UNKNOWN_194(void)
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 194) }
 
 	virtual void _UNKNOWN_195(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 195) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 195) }
 
 	virtual void _UNKNOWN_196(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 196) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 196) }
 
 	virtual void _UNKNOWN_197(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 197) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 197) }
 
 	virtual void _UNKNOWN_198(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 198) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 198) }
 
 	virtual void _UNKNOWN_199(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 199) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 199) }
 
 	virtual void _UNKNOWN_200(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 200) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 200) }
 
 	virtual void _UNKNOWN_201(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 201) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 201) }
 
 	virtual void _UNKNOWN_202(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 202) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 202) }
 
 	virtual void _UNKNOWN_203(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 203) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 203) }
 
 	virtual void _UNKNOWN_204(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 204) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 204) }
 
 	virtual void _UNKNOWN_205(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 205) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 205) }
 
 	virtual void _UNKNOWN_206(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 206) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 206) }
 
 	virtual void _UNKNOWN_207(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 207) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 207) }
 
 	virtual void _UNKNOWN_208(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 208) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 208) }
 
 	virtual void _UNKNOWN_209(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 209) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 209) }
 
 	virtual void _UNKNOWN_210(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 210) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 210) }
 
 	virtual void _UNKNOWN_211(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 211) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 211) }
 
 	virtual void _UNKNOWN_212(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 212) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 212) }
 
 	virtual void _UNKNOWN_213(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 213) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 213) }
 
 	virtual void _UNKNOWN_214(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 214) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 214) }
 
 	virtual void _UNKNOWN_215(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 215) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 215) }
 
 	virtual void _UNKNOWN_216(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 216) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 216) }
 
 	virtual void _UNKNOWN_217(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 217) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 217) }
 
 	virtual void _UNKNOWN_218(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 218) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 218) }
 
 	virtual void _UNKNOWN_219(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 219) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 219) }
 
 	virtual void _UNKNOWN_220(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 220) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 220) }
 
 	virtual void _UNKNOWN_221(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 221) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 221) }
 
 	virtual void _UNKNOWN_222(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 222) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 222) }
 
 	virtual void _UNKNOWN_223(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 223) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 223) }
 
 	virtual void _UNKNOWN_224(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 224) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 224) }
 
 	virtual void _UNKNOWN_225(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 225) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 225) }
 
 	virtual void _UNKNOWN_226(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 226) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 226) }
 
 	virtual void _UNKNOWN_227(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 227) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 227) }
 
 	virtual void _UNKNOWN_228(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 228) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 228) }
 
 	virtual void _UNKNOWN_229(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 229) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 229) }
 
 	virtual void _UNKNOWN_230(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 230) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 230) }
 
 	virtual void _UNKNOWN_231(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 231) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 231) }
 
 	virtual void _UNKNOWN_232(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 232) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 232) }
 
 	virtual void _UNKNOWN_233(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 233) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 233) }
 
 	virtual void _UNKNOWN_234(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 234) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 234) }
 
 	virtual void _UNKNOWN_235(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 235) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 235) }
 
 	virtual void _UNKNOWN_236(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 236) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 236) }
 
 	virtual void _UNKNOWN_237(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 237) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 237) }
 
 	virtual void _UNKNOWN_238(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 238) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 238) }
 
 	virtual void _UNKNOWN_239(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 239) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 239) }
 
 	virtual void _UNKNOWN_240(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 240) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 240) }
 
 	virtual void _UNKNOWN_241(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 241) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 241) }
 
 	virtual void _UNKNOWN_242(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 242) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 242) }
 
 	virtual void _UNKNOWN_243(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 243) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 243) }
 
 	virtual void _UNKNOWN_244(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 244) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 244) }
 
 	virtual void _UNKNOWN_245(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 245) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 245) }
 
 	virtual void _UNKNOWN_246(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 246) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 246) }
 
 	virtual void _UNKNOWN_247(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 247) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 247) }
 
 	virtual void _UNKNOWN_248(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 248) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 248) }
 
 	virtual void _UNKNOWN_249(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 249) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 249) }
 
 	virtual void _UNKNOWN_250(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 250) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 250) }
 
 	virtual void _UNKNOWN_251(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 251) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 251) }
 
 	virtual void _UNKNOWN_252(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 252) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 252) }
 
 	virtual void _UNKNOWN_253(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 253) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 253) }
 
 	virtual void _UNKNOWN_254(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxMatRenderContext, m_Parent, 254) }
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 254) }
 
 private:
 	IMatRenderContext_csgo * m_Parent;
 	IAfxMatRenderContextBind * m_OnBind;
-	IAfxMatRenderContextOverrideDepthEnable * m_OnOverrideDepthEnable;
 	IAfxMatRenderContextDrawInstances * m_OnDrawInstances;
-	IAfxMatRenderContextOverrideAlphaWriteEnable * m_OnOverrideAlphaWriteEnable;
-	IAfxMatRenderContextOverrideColorWriteEnable * m_OnOverrideColorWriteEnable;
 };
 
 #pragma warning(pop)
@@ -2254,7 +2552,7 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 	if(!hModule || !lpLibFileName)
 		return;
 
-#if 1
+#if 0
 	static FILE *f1=NULL;
 
 	if( !f1 ) f1=fopen("mdt_log_LibraryHooksA.txt","wb");
@@ -2421,6 +2719,11 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 			// actually this gets called now.
 
 			for(std::map<IMatRenderContext_csgo *, CAfxMatRenderContext *>::iterator it = g_RenderContextMap_csgo.begin(); it != g_RenderContextMap_csgo.end(); ++it)
+			{
+				delete it->second;
+			}
+
+			for(std::map<IMeshMgr_csgo *, CAfxMesh *>::iterator it = g_MeshMap_csgo.begin(); it != g_MeshMap_csgo.end(); ++it)
 			{
 				delete it->second;
 			}

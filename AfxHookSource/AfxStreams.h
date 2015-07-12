@@ -18,6 +18,8 @@
 #include <map>
 
 class CAfxDeveloperStream;
+class CAfxMatteStream;
+class CAfxMatteWorldStream;
 class CAfxMatteEntityStream;
 
 class CAfxStream : 
@@ -28,43 +30,55 @@ public:
 	{
 		TST_CAfxStream,
 		TST_CAfxDeveloperStream,
-		TST_CAfxMatteEntityStream
+		TST_CAfxMatteStream,
+		TST_CAfxMatteEntityStream,
+		TST_CAfxMatteWorldStream
 	};
 
 	virtual ~CAfxStream();
 
 	virtual CAfxStream * AsAfxStream(void) { return this; }
 	virtual CAfxDeveloperStream * AsAfxDeveloperStream(void) { return 0; }
+	virtual CAfxMatteStream * AsAfxMatteStream(void) { return 0; }
 	virtual CAfxMatteEntityStream * AsAfxMatteEntityStream(void) { return 0; }
+	virtual CAfxMatteWorldStream * AsAfxMatteWolrdStream(void) { return 0; }
+
+	virtual TopStreamType GetTopStreamType(void) { return TST_CAfxStream; }
+
+	bool Record_get(void);
+	void Record_set(bool value);
 
 	char const * GetStreamName(void);
-	
-	TopStreamType GetTopStreamType(void);
 
 	virtual void StreamAttach(IAfxStreams4Stream * streams);
 	virtual void StreamDetach(IAfxStreams4Stream * streams);
 
 protected:
-	CAfxStream(TopStreamType topStreamType, char const * streamName);
+	CAfxStream(char const * streamName);
 
 	/// <summary>This member is only valid between StreamAttach and StreamDeatach.</summary>
 	IAfxStreams4Stream * m_Streams;
 
 private:
 	std::string m_StreamName;
-	TopStreamType m_TopStreamType;
+	bool m_Record;
 };
 
 class CAfxDeveloperStream
 : public CAfxStream
 , public IAfxMatRenderContextBind
 , public IAfxMatRenderContextDrawInstances
+, public IAfxMeshDraw
+, public IAfxMeshDraw_2
+, public IAfxMeshDrawModulated
 {
 public:
 	CAfxDeveloperStream(char const * streamName);
 	virtual ~CAfxDeveloperStream();
 
 	virtual CAfxDeveloperStream * AsAfxDeveloperStream(void) { return this; }
+
+	virtual TopStreamType GetTopStreamType(void) { return TST_CAfxDeveloperStream; }
 
 	void MatchName_set(char const * value);
 	char const * MatchName_get(void);
@@ -84,6 +98,10 @@ public:
 	virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 );
 	virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance );
 
+	virtual void Draw(IAfxMesh * am, int firstIndex = -1, int numIndices = 0);
+	virtual void Draw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists);
+	virtual void DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 );
+
 private:
 	std::string m_MatchTextureGroupName;
 	std::string m_MatchName;
@@ -95,39 +113,42 @@ private:
 	bool m_BlockDraw;
 };
 
-class CAfxMatteEntityStream
+class CAfxMatteStream
 : public CAfxStream
 , public IAfxMatRenderContextBind
-, public IAfxMatRenderContextOverrideDepthEnable
 , public IAfxMatRenderContextDrawInstances
-, public IAfxMatRenderContextOverrideAlphaWriteEnable
-, public IAfxMatRenderContextOverrideColorWriteEnable
+, public IAfxMeshDraw
+, public IAfxMeshDraw_2
+, public IAfxMeshDrawModulated
 , public IAfxVRenderViewSetColorModulation
 {
 public:
-	CAfxMatteEntityStream(char const * streamName);
-	virtual ~CAfxMatteEntityStream();
+	CAfxMatteStream(char const * streamName, bool isEntityStream);
+	virtual ~CAfxMatteStream();
 
-	virtual CAfxMatteEntityStream * AsAfxMatteEntityStream(void) { return this; }
+	virtual CAfxMatteStream * AsAfxMatteStream(void) { return this; }
+
+	virtual TopStreamType GetTopStreamType(void) { return TST_CAfxMatteStream; }
 
 	virtual void StreamAttach(IAfxStreams4Stream * streams);
 	virtual void StreamDetach(IAfxStreams4Stream * streams);
 
 	virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 );
-	virtual void OverrideDepthEnable(IAfxMatRenderContext * ctx, bool bEnable, bool bDepthEnable, bool bUnknown = false);
 	virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance );
-	virtual void OverrideAlphaWriteEnable(IAfxMatRenderContext * ctx, bool bOverrideEnable, bool bAlphaWriteEnable );
-	virtual void OverrideColorWriteEnable(IAfxMatRenderContext * ctx, bool bOverrideEnable, bool bColorWriteEnable );
+
+	virtual void Draw(IAfxMesh * am, int firstIndex = -1, int numIndices = 0);
+	virtual void Draw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists);
+	virtual void DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 );
 
 	virtual void SetColorModulation(IAfxVRenderView * rv, float const* blend );
 
 private:
 	class CAction
 	: public IAfxMatRenderContextBind
-	, public IAfxMatRenderContextOverrideDepthEnable
 	, public IAfxMatRenderContextDrawInstances
-	, public IAfxMatRenderContextOverrideAlphaWriteEnable
-	, public IAfxMatRenderContextOverrideColorWriteEnable
+	, public IAfxMeshDraw
+	, public IAfxMeshDraw_2
+	, public IAfxMeshDrawModulated
 	, public IAfxVRenderViewSetColorModulation
 	{
 	public:
@@ -144,30 +165,31 @@ private:
 			ctx->GetParent()->Bind(material, proxyData);
 		}
 
-		virtual void OverrideDepthEnable(IAfxMatRenderContext * ctx, bool bEnable, bool bDepthEnable, bool bUnknown = false)
-		{
-			ctx->GetParent()->OverrideDepthEnable(bEnable, bDepthEnable, bUnknown);
-		}
-
 		virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance )
 		{
 			ctx->GetParent()->DrawInstances(nInstanceCount, pInstance);
 		}
 
-		virtual void OverrideAlphaWriteEnable(IAfxMatRenderContext * ctx, bool bOverrideEnable, bool bAlphaWriteEnable )
+		virtual void Draw(IAfxMesh * am, int firstIndex = -1, int numIndices = 0)
 		{
-			ctx->GetParent()->OverrideAlphaWriteEnable(bOverrideEnable, bAlphaWriteEnable);
+			am->GetParent()->Draw(firstIndex, numIndices);
 		}
-		
-		virtual void OverrideColorWriteEnable(IAfxMatRenderContext * ctx, bool bOverrideEnable, bool bColorWriteEnable )
+
+		virtual void Draw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists)
 		{
-			ctx->GetParent()->OverrideColorWriteEnable(bOverrideEnable, bColorWriteEnable);
+			am->GetParent()->Draw(pLists, nLists);
 		}
 
 		virtual void SetColorModulation(IAfxVRenderView * rv, float const* blend )
 		{
 			rv->GetParent()->SetColorModulation(blend);
 		}
+
+		virtual void DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 )
+		{
+			am->GetParent()->DrawModulated(vecDiffuseModulation, firstIndex, numIndices);
+		}
+
 	};
 
 	class CActionMatte
@@ -274,25 +296,21 @@ private:
 
 		virtual void AfxUnbind(IAfxMatRenderContext * ctx)
 		{
-			ctx->GetParent()->OverrideDepthEnable(false, true);
-			ctx->GetParent()->OverrideAlphaWriteEnable(false, true);
-			ctx->GetParent()->OverrideColorWriteEnable(false, true);
 		}
 
-		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 )
+		virtual void Draw(IAfxMesh * am, int firstIndex = -1, int numIndices = 0)
 		{
-			Tier0_Msg("BIND\n");
-
-			ctx->GetParent()->Bind(material, proxyData);
-
-			ctx->GetParent()->OverrideDepthEnable(true, false);
-			ctx->GetParent()->OverrideAlphaWriteEnable(true, false);
-			ctx->GetParent()->OverrideColorWriteEnable(true, false);
+			am->GetParent()->MarkAsDrawn();
 		}
 
-		virtual void OverrideDepthEnable(IAfxMatRenderContext * ctx, bool bEnable, bool bDepthEnable, bool bUnknown = false)
+		virtual void Draw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists)
 		{
-			return;
+			am->GetParent()->MarkAsDrawn();
+		}
+
+		virtual void DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 )
+		{
+			am->GetParent()->MarkAsDrawn();
 		}
 
 		virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance )
@@ -300,18 +318,7 @@ private:
 			return;
 		}
 
-		virtual void OverrideAlphaWriteEnable(IAfxMatRenderContext * ctx, bool bOverrideEnable, bool bAlphaWriteEnable )
-		{
-			return;
-		}
-		
-		virtual void OverrideColorWriteEnable(IAfxMatRenderContext * ctx, bool bOverrideEnable, bool bColorWriteEnable )
-		{
-			return;
-		}
-
 	};
-
 
 	CAction * m_CurrentAction;
 	CAction * m_MatteAction;
@@ -319,9 +326,36 @@ private:
 	CAction * m_InvisibleAction;
 	CAction * m_NoDrawAction;
 	bool m_BoundAction;
+	bool m_IsEntityStream;
 
 	std::map<CAfxMaterialKey, CAction *> m_Map;
 };
+
+class CAfxMatteWorldStream
+: public CAfxMatteStream
+{
+public:
+	CAfxMatteWorldStream(char const * streamName) : CAfxMatteStream(streamName, false) {}
+	virtual ~CAfxMatteWorldStream() {}
+
+	virtual CAfxMatteWorldStream * AsAfxMatteWorldStream(void) { return this; }
+
+	virtual TopStreamType GetTopStreamType(void) { return TST_CAfxMatteWorldStream; }
+
+};
+
+class CAfxMatteEntityStream
+: public CAfxMatteStream
+{
+public:
+	CAfxMatteEntityStream(char const * streamName) : CAfxMatteStream(streamName, true) {}
+	virtual ~CAfxMatteEntityStream() {}
+
+	virtual CAfxMatteEntityStream * AsAfxMatteEntityStream(void) { return this; }
+
+	virtual TopStreamType GetTopStreamType(void) { return TST_CAfxMatteEntityStream; }
+};
+
 
 class CAfxStreams :
 public IAfxStreams4Stream,
@@ -334,6 +368,10 @@ public:
 	void OnMaterialSystem(IMaterialSystem_csgo * value);
 	void OnAfxVRenderView(IAfxVRenderView * value);
 	void OnAfxBaseClientDll(IAfxBaseClientDll * value);
+	void OnDraw(IAfxMesh * am, int firstIndex = -1, int numIndices = 0);
+	void OnDraw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists);
+	void OnDrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 );
+
 
 	void Console_RecordName_set(const char * value);
 	const char * Console_RecordName_get();
@@ -343,21 +381,22 @@ public:
 	void Console_AddMatteWorldStream(const char * streamName);
 	void Console_AddMatteEntityStream(const char * streamName);
 	void Console_PrintStreams();
-	void Console_RemoveStream(int index);
-	void Console_EditStream(int index, IWrpCommandArgs * args, int argcOffset, char const * cmdPrefix);
+	void Console_RemoveStream(const char * streamName);
+	void Console_EditStream(const char * streamName, IWrpCommandArgs * args, int argcOffset, char const * cmdPrefix);
 
 	/// <param name="index">stream index to preview or 0 if to preview nothing.</param>
-	void Console_PreviewStream(int index);
+	void Console_PreviewStream(const char * streamName);
 
 	virtual IMaterialSystem_csgo * GetMaterialSystem(void);
 	virtual IAfxFreeMaster * GetFreeMaster(void);
 	virtual IAfxMatRenderContext * GetCurrentContext(void) ;
 
 	virtual void OnBind_set(IAfxMatRenderContextBind * value);
-	virtual void OnOverrideDepthEnable_set(IAfxMatRenderContextOverrideDepthEnable * value);
 	virtual void OnDrawInstances_set(IAfxMatRenderContextDrawInstances * value);
-	virtual void OnOverrideAlphaWriteEnable_set(IAfxMatRenderContextOverrideAlphaWriteEnable * value);
-	virtual void OnOverrideColorWriteEnable_set(IAfxMatRenderContextOverrideColorWriteEnable * value);
+
+	virtual void OnDraw_set(IAfxMeshDraw * value);
+	virtual void OnDraw_2_set(IAfxMeshDraw_2 * value);
+	virtual void OnDrawModulated_set(IAfxMeshDrawModulated * value);
 
 	virtual void OnSetColorModulation_set(IAfxVRenderViewSetColorModulation * value);
 
@@ -403,6 +442,9 @@ private:
 	CAfxStream * m_PreviewStream;
 	bool m_Recording;
 	int m_Frame;
+	IAfxMeshDraw * m_OnDraw;
+	IAfxMeshDraw_2 * m_OnDraw_2;
+	IAfxMeshDrawModulated * m_OnDrawModulated;
 
 	void OnAfxBaseClientDll_Free(void);
 	bool Console_CheckStreamName(char const * value);

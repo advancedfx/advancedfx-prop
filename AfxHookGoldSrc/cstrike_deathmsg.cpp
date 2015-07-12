@@ -346,9 +346,9 @@ REGISTER_CMD_FUNC(deathmsg)
 				if(!anyVictim) victimId = atoi(notVictim ? (acmd +1) : acmd);
 
 				DeathMsgBlockEntry entry = {
-					attackerId,
+					(BYTE)attackerId,
 					anyAttacker ? DMBM_ANY : (notAttacker ? DMBM_EXCEPT : DMBM_EQUAL),
-					victimId,
+					(BYTE)victimId,
 					anyVictim ? DMBM_ANY : (notVictim ? DMBM_EXCEPT : DMBM_EQUAL)
 				};
 
