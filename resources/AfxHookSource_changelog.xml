@@ -6,6 +6,26 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.0.13.3</version>
+<time>2015-07-13T18:17Z</time>
+<changes>
+<change type="fixed">
+Fixed mirv_input camera sometimes reacting to mouse movements when console is open.
+</change>
+<change type="updated">
+Increased default mirv_input cfg msens to 0.1.
+</change>
+<change type="updated">
+Updated __mirv_streams: No need to copy (2) assets anymore, HLAE will mount them in the game file system instead.
+For more info about testing the matte system in a early stage refer to: http://advancedfx.style-productions.net/forum/viewtopic.php?f=17&amp;t=1693
+Please be aware that __mirv_streams is for testing only and subject to change.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.0.13.1</version>
 <time>2015-07-01T17:13Z</time>
 <changes>

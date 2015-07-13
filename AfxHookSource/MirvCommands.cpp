@@ -49,6 +49,23 @@ CON_COMMAND(__mirv_streams, "Access to streams system.")
 			{
 				char const * cmd2 = args->ArgV(2);
 
+				if(!_stricmp(cmd2, "normal"))
+				{
+					if(4 <= argc)
+					{
+						char const * cmd3 = args->ArgV(3);
+
+						g_AfxStreams.Console_AddStream(cmd3);
+
+						return;
+					}
+
+					Tier0_Msg(
+						"mirv_streams add normal <name> - Add a normal stream with name <name>.\n"
+					);
+					return;
+				}
+				else
 				if(!_stricmp(cmd2, "matteWorld"))
 				{
 					if(4 <= argc)
@@ -102,6 +119,7 @@ CON_COMMAND(__mirv_streams, "Access to streams system.")
 			}
 
 			Tier0_Msg(
+				"mirv_streams add normal [...] - Add a normal stream.\n"
 				"mirv_streams add matteWorld [...] - Add a matte world stream.\n"
 				"mirv_streams add matteEntity [...] - Add a matte entity stream.\n"
 				"mirv_streams add developer [...] - Add a developer stream.\n"

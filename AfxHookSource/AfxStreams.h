@@ -35,6 +35,8 @@ public:
 		TST_CAfxMatteWorldStream
 	};
 
+	CAfxStream(char const * streamName);
+
 	virtual ~CAfxStream();
 
 	virtual CAfxStream * AsAfxStream(void) { return this; }
@@ -54,8 +56,6 @@ public:
 	virtual void StreamDetach(IAfxStreams4Stream * streams);
 
 protected:
-	CAfxStream(char const * streamName);
-
 	/// <summary>This member is only valid between StreamAttach and StreamDeatach.</summary>
 	IAfxStreams4Stream * m_Streams;
 
@@ -377,6 +377,7 @@ public:
 	const char * Console_RecordName_get();
 	void Console_Record_Start();
 	void Console_Record_End();
+	void Console_AddStream(const char * streamName);
 	void Console_AddDeveloperStream(const char * streamName);
 	void Console_AddMatteWorldStream(const char * streamName);
 	void Console_AddMatteEntityStream(const char * streamName);

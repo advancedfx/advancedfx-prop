@@ -534,6 +534,15 @@ void CAfxStreams::Console_Record_End()
 	m_Recording = false;
 }
 
+void CAfxStreams::Console_AddStream(const char * streamName)
+{
+	if(!Console_CheckStreamName(streamName))
+		return;
+
+	m_Streams.push_back(new CAfxStream(streamName));
+}
+
+
 void CAfxStreams::Console_AddDeveloperStream(const char * streamName)
 {
 	if(!Console_CheckStreamName(streamName))

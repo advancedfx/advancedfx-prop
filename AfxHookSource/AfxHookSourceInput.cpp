@@ -43,7 +43,7 @@ AfxHookSourceInput::AfxHookSourceInput()
 , m_CamSpeed(1.0)
 , m_IgnoreKeyUp(false)
 , m_IgnoreNextKey(false)
-, m_MouseSens(1.0/40)
+, m_MouseSens(1.0/10)
 , m_KeyboardSens(1.0)
 , m_FirstGetCursorPos(true)
 , m_LastCursorX(0)
@@ -284,6 +284,12 @@ void AfxHookSourceInput::Supply_GetCursorPos(LPPOINT lpPoint)
 {
 	if(!lpPoint)
 		return;
+
+	if(GetConsoleOpen())
+	{
+		GetCursorPos(lpPoint);
+		return;
+	}
 
 	if(m_CameraControlMode)
 	{

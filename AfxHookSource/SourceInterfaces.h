@@ -2746,3 +2746,75 @@ public:
 	virtual void _UNKOWN_058(void) = 0;
 	virtual void _UNKOWN_059(void) = 0;
 };
+
+
+// IFileSystem_csgo ////////////////////////////////////////////////////////////
+
+enum FilesystemMountRetval_t_csgo
+{
+	FILESYSTEM_MOUNT_OK = 0,
+	FILESYSTEM_MOUNT_FAILED,
+};
+
+enum SearchPathAdd_t_csgo
+{
+	PATH_ADD_TO_HEAD,			// First path searched
+	PATH_ADD_TO_TAIL,			// Last path searched
+	PATH_ADD_TO_TAIL_ATINDEX,	// First path searched
+};
+
+class IBaseFileSystem_csgo abstract
+{
+public:
+	// ...
+	// more we don't care about.
+};
+
+#define FILESYSTEM_INTERFACE_VERSION_CSGO_017 "VFileSystem017"
+
+class IFileSystem_csgo abstract : public IAppSystem_csgo, public IBaseFileSystem_csgo
+{
+public:
+	//--------------------------------------------------------
+	// Steam operations
+	//--------------------------------------------------------
+
+	virtual bool			IsSteam() const = 0;
+
+	// Supplying an extra app id will mount this app in addition 
+	// to the one specified in the environment variable "steamappid"
+	// 
+	// If nExtraAppId is < -1, then it will mount that app ID only.
+	// (Was needed by the dedicated server b/c the "SteamAppId" env var only gets passed to steam.dll
+	// at load time, so the dedicated couldn't pass it in that way).
+	virtual	FilesystemMountRetval_t_csgo MountSteamContent( int nExtraAppId = -1 ) = 0;
+
+	//--------------------------------------------------------
+	// Search path manipulation
+	//--------------------------------------------------------
+
+	// Add paths in priority order (mod dir, game dir, ....)
+	// If one or more .pak files are in the specified directory, then they are
+	//  added after the file system path
+	// If the path is the relative path to a .bsp file, then any previous .bsp file 
+	//  override is cleared and the current .bsp is searched for an embedded PAK file
+	//  and this file becomes the highest priority search path ( i.e., it's looked at first
+	//   even before the mod's file system path ).
+	virtual void			AddSearchPath( const char *pPath, const char *pathID, SearchPathAdd_t_csgo addType = PATH_ADD_TO_TAIL ) = 0;
+	virtual bool			RemoveSearchPath( const char *pPath, const char *pathID = 0 ) = 0;
+
+	// Remove all search paths (including write path?)
+	virtual void			RemoveAllSearchPaths( void ) = 0;
+
+	// Remove search paths associated with a given pathID
+	virtual void			RemoveSearchPaths( const char *szPathID ) = 0;
+
+	// This is for optimization. If you mark a path ID as "by request only", then files inside it
+	// will only be accessed if the path ID is specifically requested. Otherwise, it will be ignored.
+	// If there are currently no search paths with the specified path ID, then it will still
+	// remember it in case you add search paths with this path ID.
+	virtual void			MarkPathIDByRequestOnly( const char *pPathID, bool bRequestOnly ) = 0;
+
+	// ...
+	// more we don't care about.
+};

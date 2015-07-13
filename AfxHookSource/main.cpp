@@ -29,11 +29,11 @@
 #include "AfxHookSourceInput.h"
 #include "AfxClasses.h"
 #include "AfxStreams.h"
+#include "hlaeFolder.h"
 
-//#include <string.h>
-
-#include <map>
 #include <set>
+#include <map>
+#include <string>
 
 
 // The first 3 asm instructions unroll the compiler epiloge code,
@@ -409,6 +409,8 @@ private:
 
 CAfxVRenderView * g_AfxVRenderView = 0;
 
+IFileSystem_csgo * g_FileSystem_csgo = 0;
+
 void MySetup(CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals)
 {
 	static bool bFirstRun = true;
@@ -477,6 +479,14 @@ void MySetup(CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals)
 			{
 				g_AfxVRenderView = new CAfxVRenderView((IVRenderView_csgo *)iface);
 				g_AfxStreams.OnAfxVRenderView(g_AfxVRenderView);
+			}
+			else {
+				ErrorBox("Could not get a supported VEngineRenderView interface.");
+			}
+
+			if(iface = appSystemFactory(FILESYSTEM_INTERFACE_VERSION_CSGO_017, NULL))
+			{
+				g_FileSystem_csgo = (IFileSystem_csgo *)iface;
 			}
 			else {
 				ErrorBox("Could not get a supported VEngineRenderView interface.");
@@ -1835,6 +1845,16 @@ public:
 		}
 
 		int result = m_Parent->Init(AppSystemFactory_ForClient, pGlobals);
+
+		// Add file system search path for our assets:
+		if(g_FileSystem_csgo)
+		{
+			std::string path(GetHlaeFolder());
+
+			path.append("resources\\AfxHookSource\\assets\\csgo"); 
+
+			g_FileSystem_csgo->AddSearchPath(path.c_str(), "GAME", PATH_ADD_TO_TAIL);
+		}
 
 		return result;
 	}
