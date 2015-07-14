@@ -6,6 +6,21 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.0.13.4</version>
+<time>2015-07-14T12:02Z</time>
+<changes>
+<change type="updated">
+Updated __mirv_streams: Better default behaviour for matteStreams now. Also exposed lots of matteStream settings to the console
+(use __mirv_streams edit),
+i.e. worldTexturesAction, skyBoxTexturesAction, staticPropTexturesAction, cableAction, playerModelsAction, weaponModelsAction, shellModelsAction,
+otherModelsAction, decalTexturesAction, effectsAction, shellParticleAction, otherParticleAction, stickerAction.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.0.13.3</version>
 <time>2015-07-13T18:17Z</time>
 <changes>

@@ -43,7 +43,7 @@ public:
 	virtual CAfxDeveloperStream * AsAfxDeveloperStream(void) { return 0; }
 	virtual CAfxMatteStream * AsAfxMatteStream(void) { return 0; }
 	virtual CAfxMatteEntityStream * AsAfxMatteEntityStream(void) { return 0; }
-	virtual CAfxMatteWorldStream * AsAfxMatteWolrdStream(void) { return 0; }
+	virtual CAfxMatteWorldStream * AsAfxMatteWorldStream(void) { return 0; }
 
 	virtual TopStreamType GetTopStreamType(void) { return TST_CAfxStream; }
 
@@ -123,6 +123,18 @@ class CAfxMatteStream
 , public IAfxVRenderViewSetColorModulation
 {
 public:
+	enum MaskableAction {
+		MA_Draw,
+		MA_Mask,
+		MA_Invisible
+	};
+
+	enum HideableAction
+	{
+		HA_Draw,
+		HA_NoDraw
+	};
+
 	CAfxMatteStream(char const * streamName, bool isEntityStream);
 	virtual ~CAfxMatteStream();
 
@@ -141,6 +153,50 @@ public:
 	virtual void DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 );
 
 	virtual void SetColorModulation(IAfxVRenderView * rv, float const* blend );
+
+	MaskableAction WorldTexturesAction_get(void);
+	void WorldTexturesAction_set(MaskableAction value);
+
+	MaskableAction SkyBoxTexturesAction_get(void);
+	void SkyBoxTexturesAction_set(MaskableAction value);
+
+	MaskableAction StaticPropTexturesAction_get(void);
+	void StaticPropTexturesAction_set(MaskableAction value);
+
+	MaskableAction CableAction_get(void);
+	void CableAction_set(MaskableAction value);
+
+	MaskableAction PlayerModelsAction_get(void);
+	void PlayerModelsAction_set(MaskableAction value);
+
+	MaskableAction WeaponModelsAction_get(void);
+	void WeaponModelsAction_set(MaskableAction value);
+
+	MaskableAction ShellModelsAction_get(void);
+	void ShellModelsAction_set(MaskableAction value);
+
+	MaskableAction OtherModelsAction_get(void);
+	void OtherModelsAction_set(MaskableAction value);
+
+	HideableAction DecalTexturesAction_get(void);
+	void DecalTexturesAction_set(HideableAction value);
+
+	HideableAction EffectsAction_get(void);
+	void EffectsAction_set(HideableAction value);
+
+	HideableAction ShellParticleAction_get(void);
+	void ShellParticleAction_set(HideableAction value);
+
+	HideableAction OtherParticleAction_get(void);
+	void OtherParticleAction_set(HideableAction value);
+
+	MaskableAction StickerAction_get(void);
+	void StickerAction_set(MaskableAction value);
+	
+	bool DebugPrint_get(void);
+	void DebugPrint_set(bool value);
+
+	void InvalidateCache(void);
 
 private:
 	class CAction
@@ -326,9 +382,25 @@ private:
 	CAction * m_InvisibleAction;
 	CAction * m_NoDrawAction;
 	bool m_BoundAction;
-	bool m_IsEntityStream;
+	MaskableAction m_WorldTexturesAction;
+	MaskableAction m_SkyBoxTexturesAction;
+	MaskableAction m_StaticPropTexturesAction;
+	MaskableAction m_CableAction;
+	MaskableAction m_PlayerModelsAction;
+	MaskableAction m_WeaponModelsAction;
+	MaskableAction m_ShellModelsAction;
+	MaskableAction m_OtherModelsAction;
+	HideableAction m_DecalTexturesAction;
+	HideableAction m_EffectsAction;
+	HideableAction m_ShellParticleAction;
+	HideableAction m_OtherParticleAction;
+	MaskableAction m_StickerAction;
+	bool m_DebugPrint;
 
 	std::map<CAfxMaterialKey, CAction *> m_Map;
+
+	CAction * GetAction(MaskableAction value);
+	CAction * GetAction(HideableAction value);
 };
 
 class CAfxMatteWorldStream
@@ -449,6 +521,10 @@ private:
 
 	void OnAfxBaseClientDll_Free(void);
 	bool Console_CheckStreamName(char const * value);
+	bool Console_ToMaskableAction(char const * value, CAfxMatteStream::MaskableAction & maskableAction);
+	bool Console_ToHideableAction(char const * value, CAfxMatteStream::HideableAction & hideableAction);
+	char const * Console_FromMaskableAction(CAfxMatteStream::MaskableAction maskableAction);
+	char const * Console_FromHideableAction(CAfxMatteStream::HideableAction hideableAction);
 
 	bool CheckCanFeedStreams(void);
 };

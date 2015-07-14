@@ -2766,6 +2766,8 @@ enum SearchPathAdd_t_csgo
 class IBaseFileSystem_csgo abstract
 {
 public:
+	void _UNKNOWN_IBaseFileSystem_csgo_Dummy(); // just to make sure that we get a vtable ptr reserved for this class.
+
 	// ...
 	// more we don't care about.
 };

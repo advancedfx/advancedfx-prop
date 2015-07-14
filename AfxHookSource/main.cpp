@@ -489,7 +489,7 @@ void MySetup(CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals)
 				g_FileSystem_csgo = (IFileSystem_csgo *)iface;
 			}
 			else {
-				ErrorBox("Could not get a supported VEngineRenderView interface.");
+				ErrorBox("Could not get a supported VFileSystem interface.");
 			}
 		}
 		
