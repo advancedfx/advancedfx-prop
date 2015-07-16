@@ -66,6 +66,40 @@ CON_COMMAND(__mirv_streams, "Access to streams system.")
 					return;
 				}
 				else
+				if(!_stricmp(cmd2, "baseFx"))
+				{
+					if(4 <= argc)
+					{
+						char const * cmd3 = args->ArgV(3);
+
+						g_AfxStreams.Console_AddBaseFxStream(cmd3);
+
+						return;
+					}
+
+					Tier0_Msg(
+						"mirv_streams add baseFx <name> - Add a baseFx stream with name <name>.\n"
+					);
+					return;
+				}
+				else
+				if(!_stricmp(cmd2, "depth"))
+				{
+					if(4 <= argc)
+					{
+						char const * cmd3 = args->ArgV(3);
+
+						g_AfxStreams.Console_AddDepthStream(cmd3);
+
+						return;
+					}
+
+					Tier0_Msg(
+						"mirv_streams add depth <name> - Add a depth stream with name <name>.\n"
+					);
+					return;
+				}
+				else
 				if(!_stricmp(cmd2, "matteWorld"))
 				{
 					if(4 <= argc)
@@ -83,6 +117,23 @@ CON_COMMAND(__mirv_streams, "Access to streams system.")
 					return;
 				}
 				else
+				if(!_stricmp(cmd2, "depthWorld"))
+				{
+					if(4 <= argc)
+					{
+						char const * cmd3 = args->ArgV(3);
+
+						g_AfxStreams.Console_AddDepthWorldStream(cmd3);
+
+						return;
+					}
+
+					Tier0_Msg(
+						"mirv_streams add depthWorld <name> - Add a depth world stream with name <name>.\n"
+					);
+					return;
+				}
+				else
 				if(!_stricmp(cmd2, "matteEntity"))
 				{
 					if(4 <= argc)
@@ -96,6 +147,23 @@ CON_COMMAND(__mirv_streams, "Access to streams system.")
 
 					Tier0_Msg(
 						"mirv_streams add matteEnitity <name> - Add a matte entity stream with name <name>.\n"
+					);
+					return;
+				}
+				else
+				if(!_stricmp(cmd2, "depthEntity"))
+				{
+					if(4 <= argc)
+					{
+						char const * cmd3 = args->ArgV(3);
+
+						g_AfxStreams.Console_AddDepthEntityStream(cmd3);
+
+						return;
+					}
+
+					Tier0_Msg(
+						"mirv_streams add depthEntity <name> - Add a depth entity stream with name <name>.\n"
 					);
 					return;
 				}
@@ -120,8 +188,12 @@ CON_COMMAND(__mirv_streams, "Access to streams system.")
 
 			Tier0_Msg(
 				"mirv_streams add normal [...] - Add a normal stream.\n"
+				"mirv_streams add baseFx [...] - Add a stream that allows effects, but should not look different from normal stream unless you edit its settings.\n"
+				"mirv_streams add depth [...] - Add a depth stream. WILL NOT WORK PROPERLY ATM, ESPECIALLY FOR GOTV DEMOS!\n"
 				"mirv_streams add matteWorld [...] - Add a matte world stream.\n"
+				"mirv_streams add depthWorld [...] - Add a depth world stream. WILL NOT WORK PROPERLY ATM, ESPECIALLY FOR GOTV DEMOS!\n"
 				"mirv_streams add matteEntity [...] - Add a matte entity stream.\n"
+				"mirv_streams add depthEntity [...] - Add a depth entity stream. WILL NOT WORK PROPERLY ATM, ESPECIALLY FOR GOTV DEMOS!\n"
 				"mirv_streams add developer [...] - Add a developer stream.\n"
 			);
 			return;
@@ -170,7 +242,7 @@ CON_COMMAND(__mirv_streams, "Access to streams system.")
 			}
 
 			Tier0_Msg(
-				"mirv_streams preview <streamName> - Preivew the stream with name <streamName>, you can get the value from mirv_streams print. To end previewing enter "" (empty string) for <streamName>!\n"
+				"mirv_streams preview <streamName> - Preivew the stream with name <streamName>, you can get the value from mirv_streams print. To end previewing enter \"\" (empty string) for <streamName>!\n"
 			);
 			return;
 		}
@@ -234,7 +306,11 @@ CON_COMMAND(__mirv_streams, "Access to streams system.")
 		"mirv_streams preview [...] - Preview a stream.\n"
 		"mirv_streams print - Print current streams.\n"
 		"mirv_streams record [...] - Recording control.\n"
-		"+++ IMPORTANT NOTICE: While the preview shows the viewmodel (in-eye weapon) and HUD, the recorded files won't have these! +++\n"
+		"\n"
+		">>> BEGIN IMPORTANT NOTICES >>>\n"
+		"1) This feature is in TESTING STAGE, meaning it will have lots of bugs and will not be officially documented yet and is SUBJECT TO CHANGE! However we are ready for feedback in the appropriate forum thread.\n"
+		"2) While the preview shows the viewmodel (in-eye weapon) and HUD, the recorded files won't have these!\n"
+		"<<< END IMPORTANT NOTICES <<<\n"
 	);
 	return;
 }

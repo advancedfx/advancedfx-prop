@@ -15,10 +15,11 @@
 
 #include <string>
 #include <list>
+#include <queue>
 #include <map>
 
 class CAfxDeveloperStream;
-class CAfxMatteStream;
+class CAfxBaseFxStream;
 class CAfxMatteWorldStream;
 class CAfxMatteEntityStream;
 
@@ -30,9 +31,7 @@ public:
 	{
 		TST_CAfxStream,
 		TST_CAfxDeveloperStream,
-		TST_CAfxMatteStream,
-		TST_CAfxMatteEntityStream,
-		TST_CAfxMatteWorldStream
+		TST_CAfxBaseFxStream
 	};
 
 	CAfxStream(char const * streamName);
@@ -41,9 +40,7 @@ public:
 
 	virtual CAfxStream * AsAfxStream(void) { return this; }
 	virtual CAfxDeveloperStream * AsAfxDeveloperStream(void) { return 0; }
-	virtual CAfxMatteStream * AsAfxMatteStream(void) { return 0; }
-	virtual CAfxMatteEntityStream * AsAfxMatteEntityStream(void) { return 0; }
-	virtual CAfxMatteWorldStream * AsAfxMatteWorldStream(void) { return 0; }
+	virtual CAfxBaseFxStream * AsAfxBaseFxStream(void) { return 0; }
 
 	virtual TopStreamType GetTopStreamType(void) { return TST_CAfxStream; }
 
@@ -113,7 +110,7 @@ private:
 	bool m_BlockDraw;
 };
 
-class CAfxMatteStream
+class CAfxBaseFxStream
 : public CAfxStream
 , public IAfxMatRenderContextBind
 , public IAfxMatRenderContextDrawInstances
@@ -124,23 +121,27 @@ class CAfxMatteStream
 {
 public:
 	enum MaskableAction {
+		MA_NotSet,
 		MA_Draw,
+		MA_DrawDepth,
 		MA_Mask,
 		MA_Invisible
 	};
 
 	enum HideableAction
 	{
+		HA_NotSet,
 		HA_Draw,
 		HA_NoDraw
 	};
 
-	CAfxMatteStream(char const * streamName, bool isEntityStream);
-	virtual ~CAfxMatteStream();
+	CAfxBaseFxStream(char const * streamName);
 
-	virtual CAfxMatteStream * AsAfxMatteStream(void) { return this; }
+	virtual ~CAfxBaseFxStream();
 
-	virtual TopStreamType GetTopStreamType(void) { return TST_CAfxMatteStream; }
+	virtual CAfxBaseFxStream * AsAfxBaseFxStream(void) { return this; }
+
+	virtual TopStreamType GetTopStreamType(void) { return TST_CAfxBaseFxStream; }
 
 	virtual void StreamAttach(IAfxStreams4Stream * streams);
 	virtual void StreamDetach(IAfxStreams4Stream * streams);
@@ -163,8 +164,8 @@ public:
 	MaskableAction StaticPropTexturesAction_get(void);
 	void StaticPropTexturesAction_set(MaskableAction value);
 
-	MaskableAction CableAction_get(void);
-	void CableAction_set(MaskableAction value);
+	HideableAction CableAction_get(void);
+	void CableAction_set(HideableAction value);
 
 	MaskableAction PlayerModelsAction_get(void);
 	void PlayerModelsAction_set(MaskableAction value);
@@ -197,6 +198,21 @@ public:
 	void DebugPrint_set(bool value);
 
 	void InvalidateCache(void);
+
+protected:
+	MaskableAction m_WorldTexturesAction;
+	MaskableAction m_SkyBoxTexturesAction;
+	MaskableAction m_StaticPropTexturesAction;
+	HideableAction m_CableAction;
+	MaskableAction m_PlayerModelsAction;
+	MaskableAction m_WeaponModelsAction;
+	MaskableAction m_ShellModelsAction;
+	MaskableAction m_OtherModelsAction;
+	HideableAction m_DecalTexturesAction;
+	HideableAction m_EffectsAction;
+	HideableAction m_ShellParticleAction;
+	HideableAction m_OtherParticleAction;
+	MaskableAction m_StickerAction;
 
 private:
 	class CAction
@@ -293,6 +309,28 @@ private:
 		CAfxMaterial m_MatteMaterial;
 	};
 
+	class CActionDepth
+	: public CAction
+	{
+	public:
+		CActionDepth(IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem)
+		: m_DepthMaterial(freeMaster, matSystem->FindMaterial("afx/depth",NULL))
+		{
+		}
+
+		virtual ~CActionDepth()
+		{
+		}
+
+		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 )
+		{
+			ctx->GetParent()->Bind(m_DepthMaterial.GetMaterial(), proxyData);
+		}
+
+	private:
+		CAfxMaterial m_DepthMaterial;
+	};
+
 	class CActionInvisible
 	: public CAction
 	{
@@ -350,10 +388,6 @@ private:
 		{
 		}
 
-		virtual void AfxUnbind(IAfxMatRenderContext * ctx)
-		{
-		}
-
 		virtual void Draw(IAfxMesh * am, int firstIndex = -1, int numIndices = 0)
 		{
 			am->GetParent()->MarkAsDrawn();
@@ -377,24 +411,12 @@ private:
 	};
 
 	CAction * m_CurrentAction;
+	CAction * m_DepthAction;
 	CAction * m_MatteAction;
 	CAction * m_PassthroughAction;
 	CAction * m_InvisibleAction;
 	CAction * m_NoDrawAction;
 	bool m_BoundAction;
-	MaskableAction m_WorldTexturesAction;
-	MaskableAction m_SkyBoxTexturesAction;
-	MaskableAction m_StaticPropTexturesAction;
-	MaskableAction m_CableAction;
-	MaskableAction m_PlayerModelsAction;
-	MaskableAction m_WeaponModelsAction;
-	MaskableAction m_ShellModelsAction;
-	MaskableAction m_OtherModelsAction;
-	HideableAction m_DecalTexturesAction;
-	HideableAction m_EffectsAction;
-	HideableAction m_ShellParticleAction;
-	HideableAction m_OtherParticleAction;
-	MaskableAction m_StickerAction;
 	bool m_DebugPrint;
 
 	std::map<CAfxMaterialKey, CAction *> m_Map;
@@ -403,29 +425,146 @@ private:
 	CAction * GetAction(HideableAction value);
 };
 
-class CAfxMatteWorldStream
-: public CAfxMatteStream
+class CAfxDepthStream
+: public CAfxBaseFxStream
 {
 public:
-	CAfxMatteWorldStream(char const * streamName) : CAfxMatteStream(streamName, false) {}
+	CAfxDepthStream(char const * streamName) : CAfxBaseFxStream(streamName)
+	{
+		m_WorldTexturesAction =  MA_DrawDepth;
+		m_SkyBoxTexturesAction =  MA_DrawDepth;
+		m_StaticPropTexturesAction =  MA_DrawDepth;
+		m_CableAction =  HA_NoDraw;
+		m_PlayerModelsAction =  MA_DrawDepth;
+		m_WeaponModelsAction =  MA_DrawDepth;
+		m_ShellModelsAction =  MA_DrawDepth;
+		m_OtherModelsAction =  MA_DrawDepth;
+		m_DecalTexturesAction =  HA_NoDraw;
+		m_EffectsAction =  HA_NoDraw;
+		m_ShellParticleAction =  HA_NoDraw;
+		m_OtherParticleAction =  HA_NoDraw;
+		m_StickerAction =  MA_Invisible;
+	}
+
+	virtual ~CAfxDepthStream() {}
+
+protected:
+};
+
+class CAfxMatteWorldStream
+: public CAfxBaseFxStream
+{
+public:
+	CAfxMatteWorldStream(char const * streamName) : CAfxBaseFxStream(streamName)
+	{
+		m_WorldTexturesAction = MA_Draw;
+		m_SkyBoxTexturesAction = MA_Draw;
+		m_StaticPropTexturesAction = MA_Draw;
+		m_CableAction =  HA_Draw;
+		m_PlayerModelsAction = MA_Invisible;
+		m_WeaponModelsAction = MA_Invisible;
+		m_ShellModelsAction = MA_Invisible;
+		m_OtherModelsAction = MA_Draw;
+		m_DecalTexturesAction = HA_Draw;
+		m_EffectsAction = HA_Draw;
+		m_ShellParticleAction = HA_NoDraw;
+		m_OtherParticleAction = HA_Draw;
+		m_StickerAction = MA_Invisible;
+	}
+
 	virtual ~CAfxMatteWorldStream() {}
 
-	virtual CAfxMatteWorldStream * AsAfxMatteWorldStream(void) { return this; }
+protected:
+};
 
-	virtual TopStreamType GetTopStreamType(void) { return TST_CAfxMatteWorldStream; }
+class CAfxDepthWorldStream
+: public CAfxBaseFxStream
+{
+public:
+	CAfxDepthWorldStream(char const * streamName) : CAfxBaseFxStream(streamName)
+	{
+		m_WorldTexturesAction = MA_DrawDepth;
+		m_SkyBoxTexturesAction = MA_DrawDepth;
+		m_StaticPropTexturesAction = MA_DrawDepth;
+		m_CableAction =  HA_NoDraw;
+		m_PlayerModelsAction = MA_Invisible;
+		m_WeaponModelsAction = MA_Invisible;
+		m_ShellModelsAction = MA_Invisible;
+		m_OtherModelsAction = MA_DrawDepth;
+		m_DecalTexturesAction = HA_NoDraw;
+		m_EffectsAction = HA_NoDraw;
+		m_ShellParticleAction = HA_NoDraw;
+		m_OtherParticleAction = HA_NoDraw;
+		m_StickerAction = MA_Invisible;
+	}
 
+	virtual ~CAfxDepthWorldStream() {}
+
+protected:
 };
 
 class CAfxMatteEntityStream
-: public CAfxMatteStream
+: public CAfxBaseFxStream
 {
 public:
-	CAfxMatteEntityStream(char const * streamName) : CAfxMatteStream(streamName, true) {}
+	CAfxMatteEntityStream(char const * streamName) : CAfxBaseFxStream(streamName)
+	{
+		m_WorldTexturesAction =  MA_Mask;
+		m_SkyBoxTexturesAction =  MA_Mask;
+		m_StaticPropTexturesAction =  MA_Mask;
+		m_CableAction =  HA_NoDraw;
+		m_PlayerModelsAction =  MA_Draw;
+		m_WeaponModelsAction =  MA_Draw;
+		m_ShellModelsAction =  MA_Draw;
+		m_OtherModelsAction =  MA_Mask;
+		m_DecalTexturesAction =  HA_NoDraw;
+		m_EffectsAction =  HA_NoDraw;
+		m_ShellParticleAction =  HA_Draw;
+		m_OtherParticleAction =  HA_NoDraw;
+		m_StickerAction =  MA_Draw;
+	}
+
 	virtual ~CAfxMatteEntityStream() {}
 
-	virtual CAfxMatteEntityStream * AsAfxMatteEntityStream(void) { return this; }
+protected:
+};
 
-	virtual TopStreamType GetTopStreamType(void) { return TST_CAfxMatteEntityStream; }
+class CAfxDepthEntityStream
+: public CAfxBaseFxStream
+{
+public:
+	CAfxDepthEntityStream(char const * streamName) : CAfxBaseFxStream(streamName)
+	{
+		m_WorldTexturesAction =  MA_DrawDepth;
+		m_SkyBoxTexturesAction =  MA_DrawDepth;
+		m_StaticPropTexturesAction =  MA_DrawDepth;
+		m_CableAction =  HA_NoDraw;
+		m_PlayerModelsAction =  MA_DrawDepth;
+		m_WeaponModelsAction =  MA_DrawDepth;
+		m_ShellModelsAction =  MA_DrawDepth;
+		m_OtherModelsAction =  MA_DrawDepth;
+		m_DecalTexturesAction =  HA_NoDraw;
+		m_EffectsAction =  HA_NoDraw;
+		m_ShellParticleAction =  HA_NoDraw;
+		m_OtherParticleAction =  HA_NoDraw;
+		m_StickerAction =  MA_Invisible;
+	}
+
+	virtual ~CAfxDepthEntityStream() {}
+
+protected:
+};
+
+class CAfxFileTracker
+{
+public:
+	void TrackFile(char const * filePath);
+
+	void WaitForFiles(unsigned int maxUnfinishedFiles);
+
+private:
+	std::queue<std::string> m_FilePaths;
+
 };
 
 
@@ -450,9 +589,13 @@ public:
 	void Console_Record_Start();
 	void Console_Record_End();
 	void Console_AddStream(const char * streamName);
+	void Console_AddBaseFxStream(const char * streamName);
 	void Console_AddDeveloperStream(const char * streamName);
+	void Console_AddDepthStream(const char * streamName);
 	void Console_AddMatteWorldStream(const char * streamName);
+	void Console_AddDepthWorldStream(const char * streamName);
 	void Console_AddMatteEntityStream(const char * streamName);
+	void Console_AddDepthEntityStream(const char * streamName);
 	void Console_PrintStreams();
 	void Console_RemoveStream(const char * streamName);
 	void Console_EditStream(const char * streamName, IWrpCommandArgs * args, int argcOffset, char const * cmdPrefix);
@@ -518,13 +661,14 @@ private:
 	IAfxMeshDraw * m_OnDraw;
 	IAfxMeshDraw_2 * m_OnDraw_2;
 	IAfxMeshDrawModulated * m_OnDrawModulated;
+	CAfxFileTracker m_FileTracker;
 
 	void OnAfxBaseClientDll_Free(void);
 	bool Console_CheckStreamName(char const * value);
-	bool Console_ToMaskableAction(char const * value, CAfxMatteStream::MaskableAction & maskableAction);
-	bool Console_ToHideableAction(char const * value, CAfxMatteStream::HideableAction & hideableAction);
-	char const * Console_FromMaskableAction(CAfxMatteStream::MaskableAction maskableAction);
-	char const * Console_FromHideableAction(CAfxMatteStream::HideableAction hideableAction);
+	bool Console_ToMaskableAction(char const * value, CAfxBaseFxStream::MaskableAction & maskableAction);
+	bool Console_ToHideableAction(char const * value, CAfxBaseFxStream::HideableAction & hideableAction);
+	char const * Console_FromMaskableAction(CAfxBaseFxStream::MaskableAction maskableAction);
+	char const * Console_FromHideableAction(CAfxBaseFxStream::HideableAction hideableAction);
 
 	bool CheckCanFeedStreams(void);
 };
