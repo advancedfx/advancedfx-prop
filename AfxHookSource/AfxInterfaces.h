@@ -77,6 +77,12 @@ public:
 	virtual void Shutdown(IAfxBaseClientDll * cl) = 0;
 };
 
+class IAfxBaseClientDllLevelShutdown abstract
+{
+public:
+	virtual void LevelShutdown(IAfxBaseClientDll * cl) = 0;
+};
+
 class IAfxBaseClientDllView_Render abstract
 {
 public:
@@ -90,6 +96,7 @@ public:
 	virtual IAfxFreeMaster * GetFreeMaster() = 0;
 
 	virtual void OnShutdown_set(IAfxBaseClientDllShutdown * value) = 0;
+	virtual void OnLevelShutdown_set(IAfxBaseClientDllLevelShutdown * value) = 0;
 	virtual void OnView_Render_set(IAfxBaseClientDllView_Render * value) = 0;
 };
 
@@ -133,11 +140,4 @@ public:
 	virtual void OnDrawModulated_set(IAfxMeshDrawModulated * value) = 0;
 
 	virtual void OnSetColorModulation_set(IAfxVRenderViewSetColorModulation * value) = 0;
-};
-
-class IAfxStream4Streams abstract
-{
-public:
-	virtual void StreamAttach(IAfxStreams4Stream * streams) = 0;
-	virtual void StreamDetach(IAfxStreams4Stream * streams) = 0;
 };

@@ -155,10 +155,9 @@ bool Hook_VClient_RenderView::IsInstalled(void) {
 }
 
 
-void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, float &Rx, float &Ry, float &Rz, float &Fov) {
+void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, float &Rx, float &Ry, float &Rz, float &Fov)
+{
 	float curTime = GetCurTime();
-
-	if(m_FovOverride) Fov = (float)m_FovValue;
 
 	if(m_CamPath.IsEnabled())
 	{
@@ -194,6 +193,8 @@ void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, fl
 			Ry = (float)(+Tf[5]);
 		}
 	}
+
+	if(m_FovOverride) Fov = (float)m_FovValue;
 
 	if(g_AfxHookSourceInput.GetCameraControlMode())
 	{

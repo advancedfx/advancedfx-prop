@@ -2518,23 +2518,35 @@ class IBaseClientDLL_csgo abstract
 {
 public:
 	// 000:
+	// Connect appsystem components, get global interfaces, don't run any other init code
 	virtual int Connect( CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGlobals ) = 0;
 
 	// 001:
 	virtual void Disconnect() = 0;
 
 	// 002:
+	// run other init code here
 	virtual int Init( CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGlobals ) = 0;
 
 	// 003:
 	virtual void PostInit() = 0;
 
 	// 004:
+	// Called once when the client DLL is being unloaded
 	virtual void Shutdown( void ) = 0;
+
+	// 005:
+	// Called at the start of each level change
+	virtual void LevelInitPreEntity( char const* pMapName ) = 0;
+
+	// 006:
+	// Called at the start of a new level, after the entities have been received and created
+	virtual void LevelInitPostEntity( ) = 0;
+
+	// 007:
+	// Called at the end of a level
+	virtual void LevelShutdown( void ) = 0;
 	
-	virtual void _UNKOWN_005(void) = 0;
-	virtual void _UNKOWN_006(void) = 0;
-	virtual void _UNKOWN_007(void) = 0;
 	virtual void _UNKOWN_008(void) = 0;
 	virtual void _UNKOWN_009(void) = 0;
 	virtual void _UNKOWN_010(void) = 0;

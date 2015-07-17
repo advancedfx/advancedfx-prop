@@ -1778,6 +1778,7 @@ public:
 	CAfxBaseClientDll(IBaseClientDLL_csgo * parent)
 	: m_Parent(parent)
 	, m_OnShutdown(0)
+	, m_OnLevelShutdown(0)
 	, m_OnView_Render(0)
 	{
 	}
@@ -1815,6 +1816,11 @@ public:
 	virtual void OnShutdown_set(IAfxBaseClientDllShutdown * value)
 	{
 		m_OnShutdown = value;
+	}
+
+	virtual void OnLevelShutdown_set(IAfxBaseClientDllLevelShutdown * value)
+	{
+		m_OnLevelShutdown = value;
 	}
 
 	virtual void OnView_Render_set(IAfxBaseClientDllView_Render * value)
@@ -1874,15 +1880,21 @@ public:
 
 		m_Parent->Shutdown();
 	}
-	
-	virtual void _UNKOWN_005(void)
+
+	virtual void LevelInitPreEntity( char const* pMapName )
 	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 5) }
 
-	virtual void _UNKOWN_006(void)
+	virtual void LevelInitPostEntity( )
 	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 6) }
 
-	virtual void _UNKOWN_007(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 7) }
+	virtual void LevelShutdown( void )
+	{
+		// JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 7)
+
+		if(m_OnLevelShutdown) m_OnLevelShutdown->LevelShutdown(this);
+
+		m_Parent->LevelShutdown();
+	}
 
 	virtual void _UNKOWN_008(void)
 	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 8) }
@@ -2310,6 +2322,7 @@ public:
 private:
 	IBaseClientDLL_csgo * m_Parent;
 	IAfxBaseClientDllShutdown * m_OnShutdown;
+	IAfxBaseClientDllLevelShutdown * m_OnLevelShutdown;
 	IAfxBaseClientDllView_Render * m_OnView_Render;
 	CAfxFreeMaster m_FreeMaster;
 };

@@ -23,8 +23,14 @@ class CAfxFreeable
 public:
 	CAfxFreeable();
 	CAfxFreeable(IAfxFreeMaster * parent);
-	~CAfxFreeable();
 
+	virtual ~CAfxFreeable();
+
+	/// <remarks>
+	/// Implementations must a) make sure that they can be called multiple times
+	/// and b) call the base class' AfxFree and c) call this in the destructor
+	/// of every derived class that overrides AfxFree (that's why there is b)
+	/// </remarks>
 	virtual void AfxFree(void);
 
 protected:
@@ -43,6 +49,8 @@ class CAfxFreeMaster
 public:
 	CAfxFreeMaster();
 	CAfxFreeMaster(IAfxFreeMaster * parent);
+
+	virtual ~CAfxFreeMaster();
 
 	virtual void AfxFree(void);
 
@@ -78,6 +86,8 @@ public:
 	/// </remarks>
 	CAfxMaterial(const CAfxMaterial & x);
 
+	virtual ~CAfxMaterial();
+
 	virtual IMaterial_csgo * GetMaterial() const;
 
 	virtual void AfxFree(void);
@@ -107,20 +117,4 @@ public:
 	CAfxMaterialKey(const CAfxMaterialKey & x);
 
 	bool operator < (const CAfxMaterialKey & y) const;
-};
-
-// CAfxMaterialCache ///////////////////////////////////////////////////////////
-
-class CAfxMaterialCache
-{
-public:
-	CAfxMaterial * Lookup(CAfxMaterialKey & key);
-
-	CAfxMaterial * Insert(CAfxMaterialKey & key, CAfxMaterial & value);
-
-	void Ivalidate(void);
-
-private:
-	std::map<CAfxMaterialKey, CAfxMaterial> m_Map;
-
 };

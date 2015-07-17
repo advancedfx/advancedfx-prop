@@ -23,8 +23,7 @@ class CAfxBaseFxStream;
 class CAfxMatteWorldStream;
 class CAfxMatteEntityStream;
 
-class CAfxStream : 
-public IAfxStream4Streams
+class CAfxStream
 {
 public:
 	enum TopStreamType
@@ -48,6 +47,8 @@ public:
 	void Record_set(bool value);
 
 	char const * GetStreamName(void);
+
+	virtual void LevelShutdown(IAfxStreams4Stream * streams);
 
 	virtual void StreamAttach(IAfxStreams4Stream * streams);
 	virtual void StreamDetach(IAfxStreams4Stream * streams);
@@ -142,6 +143,8 @@ public:
 	virtual CAfxBaseFxStream * AsAfxBaseFxStream(void) { return this; }
 
 	virtual TopStreamType GetTopStreamType(void) { return TST_CAfxBaseFxStream; }
+
+	virtual void LevelShutdown(IAfxStreams4Stream * streams);
 
 	virtual void StreamAttach(IAfxStreams4Stream * streams);
 	virtual void StreamDetach(IAfxStreams4Stream * streams);
@@ -568,9 +571,10 @@ private:
 };
 
 
-class CAfxStreams :
-public IAfxStreams4Stream,
-public IAfxBaseClientDllView_Render
+class CAfxStreams
+: public IAfxStreams4Stream
+, public IAfxBaseClientDllLevelShutdown
+, public IAfxBaseClientDllView_Render
 {
 public:
 	CAfxStreams();
@@ -615,6 +619,8 @@ public:
 	virtual void OnDrawModulated_set(IAfxMeshDrawModulated * value);
 
 	virtual void OnSetColorModulation_set(IAfxVRenderViewSetColorModulation * value);
+
+	virtual void LevelShutdown(IAfxBaseClientDll * cl);
 
 	virtual void View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx, vrect_t_csgo *rect);
 

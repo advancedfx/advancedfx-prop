@@ -189,11 +189,11 @@ CON_COMMAND(__mirv_streams, "Access to streams system.")
 			Tier0_Msg(
 				"mirv_streams add normal [...] - Add a normal stream.\n"
 				"mirv_streams add baseFx [...] - Add a stream that allows effects, but should not look different from normal stream unless you edit its settings.\n"
-				"mirv_streams add depth [...] - Add a depth stream. WILL NOT WORK PROPERLY ATM, ESPECIALLY FOR GOTV DEMOS!\n"
+				"mirv_streams add depth [...] - Add a depth stream. WILL NOT WORK PROPERLY ATM!\n"
 				"mirv_streams add matteWorld [...] - Add a matte world stream.\n"
-				"mirv_streams add depthWorld [...] - Add a depth world stream. WILL NOT WORK PROPERLY ATM, ESPECIALLY FOR GOTV DEMOS!\n"
+				"mirv_streams add depthWorld [...] - Add a depth world stream. WILL NOT WORK PROPERLY ATM!\n"
 				"mirv_streams add matteEntity [...] - Add a matte entity stream.\n"
-				"mirv_streams add depthEntity [...] - Add a depth entity stream. WILL NOT WORK PROPERLY ATM, ESPECIALLY FOR GOTV DEMOS!\n"
+				"mirv_streams add depthEntity [...] - Add a depth entity stream. WILL NOT WORK PROPERLY ATM!\n"
 				"mirv_streams add developer [...] - Add a developer stream.\n"
 			);
 			return;

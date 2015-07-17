@@ -15,6 +15,8 @@
 
 #include <shared/StringTools.h>
 
+#include <Windows.h>
+
 #include <stdio.h>
 #include <sstream>
 #include <iomanip>
@@ -80,6 +82,10 @@ void CAfxStream::Record_set(bool value)
 char const * CAfxStream::GetStreamName(void)
 {
 	return m_StreamName.c_str();
+}
+
+void CAfxStream::LevelShutdown(IAfxStreams4Stream * streams)
+{
 }
 
 void CAfxStream::StreamAttach(IAfxStreams4Stream * streams)
@@ -267,6 +273,13 @@ CAfxBaseFxStream::~CAfxBaseFxStream()
 	delete m_MatteAction;
 	delete m_DepthAction;
 	delete m_PassthroughAction;
+}
+
+void CAfxBaseFxStream::LevelShutdown(IAfxStreams4Stream * streams)
+{
+	InvalidateCache();
+
+	CAfxStream::LevelShutdown(streams);
 }
 
 void CAfxBaseFxStream::StreamAttach(IAfxStreams4Stream * streams)
@@ -605,7 +618,7 @@ void CAfxBaseFxStream::DebugPrint_set(bool value)
 
 void CAfxBaseFxStream::InvalidateCache(void)
 {
-	if(m_DebugPrint) Tier0_Msg("Stream %s: Invalidating material cache.\n");
+	if(m_DebugPrint) Tier0_Msg("Stream %s: Invalidating material cache.\n", GetStreamName());
 	m_Map.clear();
 }
 
@@ -689,13 +702,19 @@ void CAfxStreams::OnAfxBaseClientDll(IAfxBaseClientDll * value)
 	if(m_AfxBaseClientDll)
 	{
 		m_OnAfxBaseClientDll_Free = new CFreeDelegate(m_AfxBaseClientDll->GetFreeMaster(), this, &CAfxStreams::OnAfxBaseClientDll_Free);
+		m_AfxBaseClientDll->OnLevelShutdown_set(this);
 		m_AfxBaseClientDll->OnView_Render_set(this);
 	}
 }
 
 void CAfxStreams::OnAfxBaseClientDll_Free(void)
 {
-	if(m_AfxBaseClientDll) { m_AfxBaseClientDll->OnView_Render_set(0); m_AfxBaseClientDll = 0; }
+	if(m_AfxBaseClientDll)
+	{
+		m_AfxBaseClientDll->OnView_Render_set(0);
+		m_AfxBaseClientDll->OnLevelShutdown_set(0);
+		m_AfxBaseClientDll = 0;
+	}
 }
 
 void CAfxStreams::OnDraw(IAfxMesh * am, int firstIndex, int numIndices)
@@ -836,11 +855,11 @@ void CAfxStreams::Console_AddDepthEntityStream(const char * streamName)
 
 void CAfxStreams::Console_PrintStreams()
 {
-	Tier0_Msg("index: name record\n");
+	Tier0_Msg("index: name -> recorded?\n");
 	int index = 0;
 	for(std::list<CAfxStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
 	{
-		Tier0_Msg("%i: %s %s\n", index, (*it)->GetStreamName(), (*it)->Record_get() ? "1" : "0");
+		Tier0_Msg("%i: %s -> %s\n", index, (*it)->GetStreamName(), (*it)->Record_get() ? "RECORD ON (1)" : "record off (0)");
 		++index;
 	}
 	Tier0_Msg(
@@ -915,7 +934,7 @@ void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * 
 						}
 
 						Tier0_Msg(
-							"%s record 0|1 - Disable / enable recording.\n"
+							"%s record 0|1 - Whether to record this stream with mirv_streams record - 0 = record off, 1 = RECORD ON.\n"
 							"Current value: %s.\n"
 							, cmdPrefix
 							, cur->Record_get() ? "1" : "0"
@@ -1347,7 +1366,7 @@ void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * 
 
 			if(cur)
 			{
-				Tier0_Msg("%s record [...]\n", cmdPrefix);
+				Tier0_Msg("%s record [...] - Controlls whether or not this stream is recorded with mirv_streams record.\n", cmdPrefix);
 			}
 			
 			if(curDeveloper)
@@ -1430,6 +1449,14 @@ void CAfxStreams::OnSetColorModulation_set(IAfxVRenderViewSetColorModulation * v
 	if(m_VRenderView) m_VRenderView->OnSetColorModulation_set(value);
 }
 
+void CAfxStreams::LevelShutdown(IAfxBaseClientDll * cl)
+{
+	for(std::list<CAfxStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
+	{
+		(*it)->LevelShutdown(this);
+	}
+}
+
 void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx, vrect_t_csgo *rect)
 {
 	m_CurrentContext = cx;
@@ -1469,6 +1496,18 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 					<< ".tga"
 				;
 
+				std::string filePath(g_VEngineClient->GetGameDirectory());
+				filePath.append("\\");
+				filePath.append(oss.str());
+
+				//
+				// Delete file if it already exists, so tracking (waiting for it) works:
+
+				DeleteFileA(filePath.c_str()); // Todo: Use wide character version maybe, otherwise I hope MAX_PATH will do.
+
+				//
+				// Record the stream to a file:
+
 				(*it)->StreamAttach(this);
 
 				m_MaterialSystem->SwapBuffers();
@@ -1480,10 +1519,6 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 				//
 				// Make sure to wait for files to be written (and thus memory to be freed), otherwise we
 				// will run out of memory on most systems:
-
-				std::string filePath(g_VEngineClient->GetGameDirectory());
-				filePath.append("\\");
-				filePath.append(oss.str());
 
 				m_FileTracker.TrackFile(filePath.c_str());
 

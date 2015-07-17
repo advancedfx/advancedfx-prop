@@ -6,6 +6,21 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.0.13.6</version>
+<time>2015-07-17T18:00Z</time>
+<changes>
+<change type="updated">
+Updated mirv_fov, when enabled it now has a higher priority and is only superseded by mirv_input camera and otherwise supersedes any other FOV setting (i.e. by the game or mirv_campath).
+</change>
+<change type="updated">
+Updated and fixed __mirv_streams a bit. Depth streams are still heavily bugged though, especially when using Effect Detail higher than Low.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.0.13.5</version>
 <time>2015-07-16T17:33Z</time>
 <changes>
