@@ -141,5 +141,17 @@ namespace AfxGui
                 this.textBoxCustMod.Enabled = false;
             }
         }
+
+        private void textBoxResHeight_TextChanged(object sender, EventArgs e)
+        {
+            UInt16 height;
+
+            if (!UInt16.TryParse(this.textBoxResHeight.Text, out height))
+                errorProvider.SetError(this.textBoxResHeight, "Invalid value.");
+            else if(height < 480)
+                errorProvider.SetError(this.textBoxResHeight, "Warning: Values bellow 480 won't work properly\nunless an EngineFont for this case is added to TrackerScheme.res\nin Half-Life\\platform\\resource\\TracherScheme.res.");
+            else
+                errorProvider.SetError(this.textBoxResHeight, null);
+        }
     }
 }

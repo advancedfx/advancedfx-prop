@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-06-26 dominik.matrixstorm.com
+// 2015-07-20 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -12,6 +12,7 @@
 
 #include "SourceInterfaces.h"
 #include "WrpVEngineClient.h"
+//#include "MirvShader.h"
 
 #include <shared/StringTools.h>
 
@@ -25,7 +26,140 @@ extern WrpVEngineClient * g_VEngineClient;
 
 CAfxStreams g_AfxStreams;
 
-// CAfxFileTracker //////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+/* Doesn't work for some reason.
+void DebugDepthFixDraw(IMesh_csgo * pMesh)
+{
+	MeshDesc_t_csgo meshDesc;
+	VertexDesc_t_csgo vertexDesc;
+
+	int nMaxVertexCount, nMaxIndexCount;
+	nMaxVertexCount =  nMaxIndexCount = 4;
+
+	pMesh->SetPrimitiveType( MATERIAL_POINTS );
+
+	pMesh->LockMesh(nMaxVertexCount, nMaxIndexCount, meshDesc, 0);
+
+	IIndexBuffer_csgo * m_pIndexBuffer = pMesh;
+	int m_nIndexCount = 0;
+	int m_nMaxIndexCount = nMaxIndexCount;
+
+	int m_nIndexOffset = meshDesc.m_nFirstVertex;
+	unsigned short * m_pIndices = meshDesc.m_pIndices;
+	unsigned int m_nIndexSize = meshDesc.m_nIndexSize;
+	int m_nCurrentIndex = 0;
+
+	IVertexBuffer_csgo * m_pVertexBuffer = pMesh;
+	memcpy( static_cast<VertexDesc_t_csgo*>( &vertexDesc ), static_cast<const VertexDesc_t_csgo*>( &meshDesc ), sizeof(VertexDesc_t_csgo) );
+	int m_nMaxVertexCount = nMaxVertexCount;
+
+	unsigned int m_nTotalVertexCount = 0;
+	//unsigned int m_nBufferOffset = static_cast< const VertexDesc_t_csgo* >( &meshDesc )->m_nOffset;
+	//unsigned int m_nBufferFirstVertex = meshDesc.m_nFirstVertex;
+
+	int m_nVertexCount = 0;
+
+	int m_nCurrentVertex = 0;
+
+	float * m_pCurrPosition = vertexDesc.m_pPosition;
+	float * m_pCurrNormal = vertexDesc.m_pNormal;
+	float * m_pCurrTexCoord[VERTEX_MAX_TEXTURE_COORDINATES_csgo];
+	for ( size_t i = 0; i < VERTEX_MAX_TEXTURE_COORDINATES_csgo; i++ )
+	{
+		m_pCurrTexCoord[i] = vertexDesc.m_pTexCoord[i];
+	}
+	unsigned char * m_pCurrColor = vertexDesc.m_pColor;
+	// BEGIN actual "drawing":
+
+	// Position:
+	{
+		float *pDst = m_pCurrPosition;
+		*pDst++ = 0.0f;
+		*pDst++ = 0.0f;
+		*pDst = 0.0f;
+	}
+
+	// Color:
+	if(false) {
+		int r = 0;
+		int g = 0;
+		int b = 0;
+		int a = 0;
+
+		int col = b | (g << 8) | (r << 16) | (a << 24);
+
+		*(int*)m_pCurrColor = col;
+	}
+
+
+	// Normal:
+	{
+		float *pDst = m_pCurrNormal;
+		*pDst++ = 0.0f;
+		*pDst++ = 0.0f;
+		*pDst = 0.0f;
+	}
+
+
+	// TextCoord:
+	{
+		float *pDst = m_pCurrTexCoord[0];
+		*pDst++ = 1.0f;
+		*pDst++ = 0.0f;
+		*pDst = 0.0f;
+	}
+
+	// AdvanceVertex:
+	{
+		if ( ++m_nCurrentVertex > m_nVertexCount )
+		{
+			m_nVertexCount = m_nCurrentVertex;
+		}
+
+		//m_pCurrPosition = reinterpret_cast<float*>( reinterpret_cast<unsigned char*>( m_pCurrPosition ) + vertexDesc.m_VertexSize_Position );
+		//m_pCurrColor += vertexDesc.m_VertexSize_Color;
+	}
+
+	// End drawing:
+
+	{
+		int nIndexCount = 1;
+		if(0 != m_nIndexSize)
+		{
+			int nMaxIndices = m_nMaxIndexCount - m_nCurrentIndex;
+			nIndexCount = min( nMaxIndices, nIndexCount );
+			if ( nIndexCount != 0 )
+			{
+				unsigned short *pIndices = &m_pIndices[m_nCurrentIndex];
+
+				//GenerateSequentialIndexBuffer( pIndices, nIndexCount, m_nIndexOffset );
+				// What about m_IndexOffset? -> dunno.
+
+				*pIndices = m_nIndexOffset;
+			}
+
+			m_nCurrentIndex += nIndexCount * m_nIndexSize;
+			if ( m_nCurrentIndex > m_nIndexCount )
+			{
+				m_nIndexCount = m_nCurrentIndex; 
+			}
+		}
+	}
+	
+//	Tier0_Msg("Spew: ");
+//	pMesh->Spew( m_nVertexCount, m_nIndexCount, meshDesc );
+
+//	pMesh->ValidateData( m_nVertexCount ,m_nIndexCount, meshDesc );
+
+	pMesh->UnlockMesh( m_nVertexCount, m_nIndexCount, meshDesc );
+
+	// Draw!!!!
+	pMesh->Draw();
+}
+*/
+
+// CAfxFileTracker /////////////////////////////////////////////////////////////
 
 void CAfxFileTracker::TrackFile(char const * filePath)
 {
@@ -195,6 +329,8 @@ void CAfxDeveloperStream::StreamDetach(IAfxStreams4Stream * streams)
 
 void CAfxDeveloperStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData)
 {
+	//Tier0_Msg("CAfxDeveloperStream::Bind\n");
+
 	bool replace =
 		m_Replace
 		&& !strcmp(material->GetTextureGroupName(), m_MatchTextureGroupName.c_str())
@@ -203,19 +339,23 @@ void CAfxDeveloperStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * mate
 
 	m_ReplaceMaterialActive = replace;
 
-//	if(replace)	Tier0_Msg("Replaced %s|%s with %s\n", material->GetTextureGroupName(), material->GetName(), m_ReplaceName.c_str());
+	//if(replace)	Tier0_Msg("Replaced %s|%s with %s\n", material->GetTextureGroupName(), material->GetName(), m_ReplaceName.c_str());
 
 	ctx->GetParent()->Bind(replace ? m_ReplaceMaterial->GetMaterial() : material, proxyData);
 }
 
 void CAfxDeveloperStream::DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance )
 {
+	//if(m_ReplaceMaterialActive) Tier0_Msg("CAfxDeveloperStream::DrawInstances\n");
+
 	if(!(m_BlockDraw && m_ReplaceMaterialActive)) 
 		ctx->GetParent()->DrawInstances(nInstanceCount, pInstance);
 }
 
 void CAfxDeveloperStream::Draw(IAfxMesh * am, int firstIndex, int numIndices)
 {
+	//if(m_ReplaceMaterialActive) Tier0_Msg("CAfxDeveloperStream::Draw\n");
+
 	if(!(m_BlockDraw && m_ReplaceMaterialActive)) 
 		am->GetParent()->Draw(firstIndex, numIndices);
 	else
@@ -224,6 +364,8 @@ void CAfxDeveloperStream::Draw(IAfxMesh * am, int firstIndex, int numIndices)
 
 void CAfxDeveloperStream::Draw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists)
 {
+	//if(m_ReplaceMaterialActive) Tier0_Msg("CAfxDeveloperStream::Draw_2\n");
+
 	if(!(m_BlockDraw && m_ReplaceMaterialActive)) 
 		am->GetParent()->Draw(pLists, nLists);
 	else
@@ -232,6 +374,8 @@ void CAfxDeveloperStream::Draw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLis
 
 void CAfxDeveloperStream::DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex, int numIndices)
 {
+	//if(m_ReplaceMaterialActive) Tier0_Msg("CAfxDeveloperStream::DrawModulated\n");
+
 	if(!(m_BlockDraw && m_ReplaceMaterialActive)) 
 		am->GetParent()->DrawModulated(vecDiffuseModulation, firstIndex, numIndices);
 	else
@@ -333,14 +477,20 @@ void CAfxBaseFxStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * materia
 
 		const char * groupName =  material->GetTextureGroupName();
 		const char * name = material->GetName();
+		const char * shaderName = material->GetShaderName();
 
-		if(m_DebugPrint) Tier0_Msg("Stream %s: Caching Material: %s|%s -> ", GetStreamName(), groupName, name);
+		if(m_DebugPrint) Tier0_Msg("Stream %s: Caching Material: %s|%s|%s -> ", GetStreamName(), groupName, name, shaderName);
 
+		/*if(!strcmp("LightmappedGeneric", shaderName))
+			m_CurrentAction = GetAction(m_DecalTexturesAction);
+		else*/
 		if(!strcmp("Decal textures", groupName))
 			m_CurrentAction = GetAction(m_DecalTexturesAction);
 		else
 		if(!strcmp("World textures", groupName))
+		{
 			m_CurrentAction = GetAction(m_WorldTexturesAction);
+		}
 		else
 		if(!strcmp("SkyBox textures", groupName))
 			m_CurrentAction = GetAction(m_SkyBoxTexturesAction);
@@ -654,6 +804,18 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(HideableAction value)
 	return m_PassthroughAction;
 }
 
+// CAfxBaseFxStream::CActionDepth //////////////////////////////////////////////
+
+bool g_bActionDepthBound = false;
+
+void CAfxBaseFxStream::CActionDepth::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData)
+{
+	ctx->GetParent()->Bind(m_DepthMaterial.GetMaterial(), proxyData);
+
+	g_bActionDepthBound = true;
+
+	//g_MirvShader.DebugDepthFixDraw();
+}
 
 // CAfxStreams /////////////////////////////////////////////////////////////////
 

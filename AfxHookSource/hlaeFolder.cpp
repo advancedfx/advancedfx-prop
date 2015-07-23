@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2014-02-13 dominik.matrixstorm.com
+// 2014-07-22 dominik.matrixstorm.com
 //
 // First changes
 // 2009-11-16 dominik.matrixstorm.com
@@ -19,22 +19,42 @@ std::string g_HlaeFolder("");
 
 void CalculateHlaeFolder()
 {
-	char hookPath[1025];
-	HMODULE hHookDll = GetModuleHandle(DLL_NAME);
+	LPSTR fileName = 0;
+	HMODULE hm;
+	DWORD length;
 
-	hookPath[0]=NULL;
-	
-	if (hHookDll)
+	bool bOk =
+		0 != (hm = GetModuleHandle(DLL_NAME))
+	;
+
+	if(hm)
 	{
-		GetModuleFileName(hHookDll, hookPath, sizeof(hookPath)/sizeof(*hookPath) -1);
+		length = 100;
+		fileName = (LPSTR)malloc(length);
 
-		g_HlaeFolder.assign(hookPath);
+		while(fileName && length == GetModuleFileNameA(hm, fileName, length))
+			fileName = (LPSTR)realloc(fileName, (length += 100));
+
+		if(!fileName)
+			return;
+
+		bOk = 0 < length;
+	}
+
+	if(bOk)
+	{
+		g_HlaeFolder.assign(fileName);
+
 		size_t fp = g_HlaeFolder.find_last_of('\\');
 		if(std::string::npos != fp)
 		{
 			g_HlaeFolder.resize(fp+1);
 		}
 	}
+
+	free(fileName);
+
+	return;
 }
 
 char const * GetHlaeFolder()

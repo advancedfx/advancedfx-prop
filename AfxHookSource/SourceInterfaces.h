@@ -1873,23 +1873,144 @@ typedef void MeshBoneRemap_t_csgo;
 typedef void matrix3x4_t_csgo;
 typedef void ITexture_csgo;
 typedef void MaterialLightingState_t_csgo;
-typedef int MaterialPrimitiveType_t_csgo;
+
+enum MaterialPrimitiveType_t_csgo 
+{ 
+	MATERIAL_POINTS			= 0x0,
+	MATERIAL_LINES,
+	MATERIAL_TRIANGLES,
+	MATERIAL_TRIANGLE_STRIP,
+	MATERIAL_LINE_STRIP,
+	MATERIAL_LINE_LOOP,	// a single line loop
+	MATERIAL_POLYGON,	// this is a *single* polygon
+	MATERIAL_QUADS,
+	MATERIAL_SUBD_QUADS_EXTRA, // Extraordinary sub-d quads
+	MATERIAL_SUBD_QUADS_REG,   // Regular sub-d quads
+	MATERIAL_INSTANCED_QUADS, // (X360) like MATERIAL_QUADS, but uses vertex instancing
+
+	// This is used for static meshes that contain multiple types of
+	// primitive types.	When calling draw, you'll need to specify
+	// a primitive type.
+	MATERIAL_HETEROGENOUS
+};
+
+
 typedef void ShaderStencilState_t_csgo;
 typedef int MaterialIndexFormat_t_csgo;
 
 
 class IMesh_csgo;
 
+// For now, vertex compression is simply "on or off" (for the sake of simplicity
+// and MeshBuilder perf.), but later we may support multiple flavours.
+enum VertexCompressionType_t_csgo
+{
+	// This indicates an uninitialized VertexCompressionType_t value
+	VERTEX_COMPRESSION_INVALID = 0xFFFFFFFF,
+
+	// 'VERTEX_COMPRESSION_NONE' means that no elements of a vertex are compressed
+	VERTEX_COMPRESSION_NONE = 0,
+
+	// Currently (more stuff may be added as needed), 'VERTEX_COMPRESSION_ON' means:
+	//  - if a vertex contains VERTEX_ELEMENT_NORMAL, this is compressed
+	//    (see CVertexBuilder::CompressedNormal3f)
+	//  - if a vertex contains VERTEX_ELEMENT_USERDATA4 (and a normal - together defining a tangent
+	//    frame, with the binormal reconstructed in the vertex shader), this is compressed
+	//    (see CVertexBuilder::CompressedUserData)
+	//  - if a vertex contains VERTEX_ELEMENT_BONEWEIGHTSx, this is compressed
+	//    (see CVertexBuilder::CompressedBoneWeight3fv)
+	VERTEX_COMPRESSION_ON = 1
+};
+
+enum
+{
+	VERTEX_MAX_TEXTURE_COORDINATES_csgo = 8,
+	BONE_MATRIX_INDEX_INVALID_csgo = 255
+};
+
 struct VertexDesc_t_csgo
 {
-	// ...
-	// stuff we don't care about.
+	// These can be set to zero if there are pointers to dummy buffers, when the
+	// actual buffer format doesn't contain the data but it needs to be safe to
+	// use all the CMeshBuilder functions.
+	int	m_VertexSize_Position;
+	int m_VertexSize_BoneWeight;
+	int m_VertexSize_BoneMatrixIndex;
+	int	m_VertexSize_Normal;
+	int	m_VertexSize_Color;
+	int	m_VertexSize_Specular;
+	int m_VertexSize_TexCoord[VERTEX_MAX_TEXTURE_COORDINATES_csgo];
+	int m_VertexSize_TangentS;
+	int m_VertexSize_TangentT;
+	int m_VertexSize_Wrinkle;
+
+	int m_VertexSize_UserData;
+
+	int m_ActualVertexSize;	// Size of the vertices.. Some of the m_VertexSize_ elements above
+							// are set to this value and some are set to zero depending on which
+							// fields exist in a buffer's vertex format.
+
+	// The type of compression applied to this vertex data
+	VertexCompressionType_t_csgo m_CompressionType;
+
+	// Number of bone weights per vertex...
+	int m_NumBoneWeights;
+
+	// Pointers to our current vertex data
+	float			*m_pPosition;
+
+	float			*m_pBoneWeight;
+
+#ifndef NEW_SKINNING_csgo
+	unsigned char	*m_pBoneMatrixIndex;
+#else
+	float			*m_pBoneMatrixIndex;
+#endif
+
+	float			*m_pNormal;
+
+	unsigned char	*m_pColor;
+	unsigned char	*m_pSpecular;
+	float			*m_pTexCoord[VERTEX_MAX_TEXTURE_COORDINATES_csgo];
+
+	// Tangent space *associated with one particular set of texcoords*
+	float			*m_pTangentS;
+	float			*m_pTangentT;
+
+	float			*m_pWrinkle;
+
+	// user data
+	float			*m_pUserData;
+
+	// The first vertex index (used for buffered vertex buffers, or cards that don't support stream offset)
+	int	m_nFirstVertex;
+
+	// The offset in bytes of the memory we're writing into 
+	// from the start of the D3D buffer (will be 0 for static meshes)
+	unsigned int	m_nOffset;
+
+#ifdef DEBUG_WRITE_COMBINE_csgo
+	int m_nLastWrittenField;
+	unsigned char* m_pLastWrittenAddress;
+#endif
 };
 
 struct IndexDesc_t_csgo
 {
-	// ...
-	// stuff we don't care about.
+	// Pointers to the index data
+	unsigned short	*m_pIndices;
+
+	// The offset in bytes of the memory we're writing into 
+	// from the start of the D3D buffer (will be 0 for static meshes)
+	unsigned int	m_nOffset;
+
+	// The first index (used for buffered index buffers, or cards that don't support stream offset)
+	unsigned int	m_nFirstIndex;
+
+	// 1 if the device is active, 0 if the device isn't active.
+	// Faster than doing if checks for null m_pIndices if someone is
+	// trying to write the m_pIndices while the device is inactive.
+	unsigned int	m_nIndexSize;
 };
 
 struct MeshDesc_t_csgo : public VertexDesc_t_csgo, public IndexDesc_t_csgo

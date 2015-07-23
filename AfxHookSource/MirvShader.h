@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2010-04-22 by dominik.matrixstorm.com
+// 2015-07-20 by dominik.matrixstorm.com
 //
 // First changes:
 // 2010-04-22 by dominik.matrixstorm.com
@@ -16,40 +16,22 @@ public:
 	MirvShader();
 	~MirvShader();
 
-	bool Enabled_get();
-	void Enabled_set(bool value);
+	void BeginDevice(IDirect3DDevice9 * device);
+	void EndDevice();
 
-	bool IsBlockedVertexShaderConstant(UINT StartRegister);
-	bool IsBlockedPixelShaderConstant(UINT StartRegister);
+	bool OnSetVertexShader(IDirect3DVertexShader9 * pShader, HRESULT &outResult);
+	bool OnSetPixelShader(IDirect3DPixelShader9 * pShader, HRESULT &outResult);
 
-	void OnBeginScene();
-	void OnClear(DWORD Count);
-	void OnSetRenderState(D3DRENDERSTATETYPE State,DWORD Value);
-	IDirect3DVertexShader9 * OnSetVertexShader(IDirect3DVertexShader9* pShader);
-	IDirect3DPixelShader9 * OnSetPixelShader(IDirect3DPixelShader9* pShader);
-
-	void SetInRenderWorld(bool value);
+	void DebugDepthFixDraw();
 
 private:
-	unsigned int m_ClearCount;
-	bool m_Enabled;
-	bool m_DepthEnabled;
 	IDirect3DDevice9 * m_Device;
-	bool m_InRenderWorld;
 	IDirect3DPixelShader9 * m_PixelShader;
 	char * m_PsoFileName;
 	bool m_ReloadPixelShader;
 	bool m_ReloadVertexShader;
 	IDirect3DVertexShader9 * m_VertexShader;
 	char * m_VsoFileName;
-
-	bool IsActive();
-
-	void BeginDevice(IDirect3DDevice9 * device);
-
-	void Device_set(IDirect3DDevice9 * device);
-
-	void EndDevice();
 
 	void LoadPso(char const * fileName);
 	void LoadVso(char const * fileName);

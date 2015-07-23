@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.labelResDepth = new System.Windows.Forms.Label();
             this.textBoxResHeight = new System.Windows.Forms.TextBox();
             this.labelResHeight = new System.Windows.Forms.Label();
@@ -56,10 +57,12 @@
             this.groupBoxRes = new System.Windows.Forms.GroupBox();
             this.labelResWidth = new System.Windows.Forms.Label();
             this.checkBoxRemeber = new System.Windows.Forms.CheckBox();
+            this.errorProvider = new System.Windows.Forms.ErrorProvider(this.components);
             this.groupBoxGame.SuspendLayout();
             this.groupBoxCmdOpts.SuspendLayout();
             this.groupBoxMisc.SuspendLayout();
             this.groupBoxRes.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.errorProvider)).BeginInit();
             this.SuspendLayout();
             // 
             // labelResDepth
@@ -77,6 +80,7 @@
             this.textBoxResHeight.Name = "textBoxResHeight";
             this.textBoxResHeight.Size = new System.Drawing.Size(56, 20);
             this.textBoxResHeight.TabIndex = 3;
+            this.textBoxResHeight.TextChanged += new System.EventHandler(this.textBoxResHeight_TextChanged);
             // 
             // labelResHeight
             // 
@@ -348,6 +352,10 @@
             this.checkBoxRemeber.Text = "remember my changes";
             this.checkBoxRemeber.UseVisualStyleBackColor = true;
             // 
+            // errorProvider
+            // 
+            this.errorProvider.ContainerControl = this;
+            // 
             // LauncherForm
             // 
             this.AcceptButton = this.buttonOK;
@@ -375,6 +383,7 @@
             this.groupBoxMisc.PerformLayout();
             this.groupBoxRes.ResumeLayout(false);
             this.groupBoxRes.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.errorProvider)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -410,5 +419,6 @@
         private System.Windows.Forms.GroupBox groupBoxRes;
         private System.Windows.Forms.Label labelResWidth;
         private System.Windows.Forms.CheckBox checkBoxRemeber;
+        private System.Windows.Forms.ErrorProvider errorProvider;
     }
 }

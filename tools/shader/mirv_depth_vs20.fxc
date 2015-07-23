@@ -68,15 +68,24 @@ VS_OUTPUT main( const VS_INPUT v )
 {
 	VS_OUTPUT o;
 	
-	float3 worldPos;
-	SkinPosition( g_bSkinning, v.vPos, v.vBoneWeights, v.vBoneIndices, worldPos );
-	float4 projPos = mul( float4( worldPos, 1 ), cViewProj);
-	
+	//float3 worldPos;
+	//SkinPosition( g_bSkinning, v.vPos, v.vBoneWeights, v.vBoneIndices, worldPos );
+	//float4 projPos = mul( float4( worldPos, 1 ), cViewProj);
+	//o.zValue.z = (o.projPos.z -cDepthFactor.y) / cDepthFactor.x;
+
+	float3 worldPos = v.vPos.xyz;
+	float4 projPos;
+	projPos[0] = worldPos[0]*cViewProj[0][0]+worldPos[1]*cViewProj[1][0]+worldPos[2]*cViewProj[2][0]+1*cViewProj[3][0];
+	projPos[1] = worldPos[0]*cViewProj[0][1]+worldPos[1]*cViewProj[1][1]+worldPos[2]*cViewProj[2][1]+1*cViewProj[3][1];
+	projPos[2] = worldPos[0]*cViewProj[0][2]+worldPos[1]*cViewProj[1][2]+worldPos[2]*cViewProj[2][2]+1*cViewProj[3][2];
+	projPos[3] = worldPos[0]*cViewProj[0][3]+worldPos[1]*cViewProj[1][3]+worldPos[2]*cViewProj[2][3]+1*cViewProj[3][3];
+	//projPos = mul( float4( worldPos, 1 ), cViewProj);
+
 	o.projPos = projPos;
-	o.zValue.x = projPos.x;
-	o.zValue.y = projPos.y;
-	o.zValue.z = (o.projPos.z -cDepthFactor.y) / cDepthFactor.x;
-	
+	o.zValue.z = projPos.z / 1024.0f;
+	o.zValue.y = projPos.z / 1024.0f;
+	o.zValue.x = projPos.z / 1024.0f;
+		
 	return o;
 }
 

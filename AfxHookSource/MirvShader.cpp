@@ -3,73 +3,39 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2010-04-22 by dominik.matrixstorm.com
+// 2015-07-20 by dominik.matrixstorm.com
 //
 // First changes:
 // 2010-04-22 by dominik.matrixstorm.com
 
 #include "MirvShader.h"
 
+#include "SourceInterfaces.h"
+#include "hlaeFolder.h"
+
 #include <stdio.h>
 #include <string>
 
-#include <shared/RawOutput.h>
 
-#define DLL_NAME "AfxHookSource.dll"
+extern bool g_bActionDepthBound;
+
 
 MirvShader g_MirvShader;
 
-#include "SourceInterfaces.h"
 
 bool GetShaderDirectory(std::string & outShaderDirectory)
 {
-	LPSTR fileName = 0;
-	HMODULE hm;
-	DWORD length;
+	outShaderDirectory.assign(GetHlaeFolder());
 
-	bool bOk =
-		0 != (hm = GetModuleHandle(DLL_NAME))
-	;
+	outShaderDirectory.append("resources\\AfxHookSource\\shaders\\");
 
-	if(hm)
-	{
-		length = 100;
-		fileName = (LPSTR)malloc(length);
-
-		while(fileName && length == GetModuleFileNameA(hm, fileName, length))
-			fileName = (LPSTR)realloc(fileName, (length += 100));
-
-		if(!fileName)
-			return false;
-
-		bOk = 0 < length;
-	}
-
-	if(bOk)
-	{
-		outShaderDirectory.assign(fileName);
-
-		outShaderDirectory.erase(
-			strlen(fileName) -strlen(DLL_NAME),
-			strlen(DLL_NAME)
-		);
-
-		outShaderDirectory.append("shader");
-	}
-
-	free(fileName);
-
-	return bOk;
+	return true;
 }
 
 
 MirvShader::MirvShader()
 {
-	m_ClearCount = 0;
-	m_DepthEnabled = false;
 	m_Device = 0;
-	m_Enabled = false;
-	m_InRenderWorld = false;
 	m_PsoFileName = 0;
 	m_VsoFileName = 0;
 	m_ReloadPixelShader = false;
@@ -77,13 +43,12 @@ MirvShader::MirvShader()
 	m_PixelShader = 0;
 	m_VertexShader = 0;
 
-	LoadVso("mirv_depth_vs20.fxo");
-	LoadPso("mirv_depth_ps20.fxo");
+	LoadVso("afx_depthfix_vs20.fxo");
+	LoadPso("afx_depthfix_ps20.fxo");
 }
 
 MirvShader::~MirvShader()
 {
-	//EndDevice();
 	free(m_PsoFileName);
 	free(m_VsoFileName);
 }
@@ -103,22 +68,85 @@ void MirvShader::BeginDevice(IDirect3DDevice9 * device)
 	LoadShader();
 }
 
-void MirvShader::Device_set(IDirect3DDevice9 * device)
+void MirvShader::DebugDepthFixDraw()
 {
-	BeginDevice(device);
+/*	if(!(m_Device && m_PixelShader && m_VertexShader))
+	{
+		static bool firstError = true;
+
+		if(firstError)
+		{
+			firstError = false;
+			Tier0_Msg("AFXERROR: MirvShader::DebugDepthFixDraw: No Device or VertexShader or PixelShader not loaded\n");
+		}
+
+		return;
+	}
+
+	IDirect3DPixelShader9 * oldPixelShader;
+	m_Device->GetPixelShader(&oldPixelShader);
+	if(oldPixelShader) oldPixelShader->AddRef();
+
+	IDirect3DVertexShader9 * oldVertexShader;
+	m_Device->GetVertexShader(&oldVertexShader);
+	if(oldVertexShader) oldVertexShader->AddRef();
+
+	IDirect3DVertexBuffer9 * oldVertexBuffer;
+	UINT oldVertexBufferOffset;
+	UINT oldVertexBufferStride;
+
+	m_Device->GetStreamSource(0, &oldVertexBuffer, &oldVertexBufferOffset, &oldVertexBufferStride);
+	if(oldVertexBuffer) oldVertexBuffer->AddRef();
+
+	IDirect3DVertexDeclaration9 * oldDeclaration;
+	m_Device->GetVertexDeclaration(&oldDeclaration);
+	if(oldDeclaration) oldDeclaration->AddRef();
+
+	//
+
+	m_Device->SetPixelShader(m_PixelShader);
+	m_Device->SetVertexShader(m_VertexShader);
+
+	m_Device->SetFVF(D3DFVF_XYZ|D3DFVF_TEX1|D3DFVF_TEXCOORDSIZE3(0));
+
+	struct {
+		FLOAT x, y, z;
+		FLOAT u, v, w;
+	} vertexData = {0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f};
+
+	m_Device->DrawPrimitiveUP(
+		D3DPT_POINTLIST,
+		1,
+		&vertexData,
+		sizeof(vertexData)
+	);
+
+	//
+
+	m_Device->SetVertexDeclaration(oldDeclaration);
+	if(oldDeclaration) oldDeclaration->Release();
+
+	m_Device->SetStreamSource(0, oldVertexBuffer, oldVertexBufferOffset, oldVertexBufferStride);
+	if(oldVertexBuffer) oldVertexBuffer->Release();
+
+	m_Device->SetVertexShader(oldVertexShader);
+	if(oldVertexShader) oldVertexShader->Release();
+
+	m_Device->SetPixelShader(oldPixelShader);
+	if(oldPixelShader) oldPixelShader->Release();
+*/
+/*
+	float vecZFilter[4] = {1.0f, 0.0f, 0.0f, 1.0f};
+	m_Device->SetPixelShaderConstantF(1, vecZFilter, 1);
+
+	float vecModulationColor[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+	m_Device->SetPixelShaderConstantF(2, vecModulationColor, 1);
+
+	float vecZFactor[4] = {8000.0f -1.0f, 1.0f, 1.0f, 1.0f};
+	m_Device->SetVertexShaderConstantF(48, vecZFactor, 1);
+*/
+	//m_Device->Clear(0, 0, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER, D3DCOLOR_RGBA(0, 0, 0, 255), 1, 0);
 }
-
-bool MirvShader::Enabled_get()
-{
-	return m_Enabled;
-}
-
-
-void MirvShader::Enabled_set(bool value)
-{
-	m_Enabled = value;
-}
-
 
 void MirvShader::EndDevice()
 {
@@ -129,35 +157,6 @@ void MirvShader::EndDevice()
 
 	m_Device->Release();
 	m_Device = 0;
-}
-
-bool MirvShader::IsActive()
-{
-	return m_Enabled && m_DepthEnabled;
-}
-
-bool MirvShader::IsBlockedPixelShaderConstant(UINT StartRegister)
-{
-	if(!IsActive()) return false;
-
-	return true;
-}
-
-bool MirvShader::IsBlockedVertexShaderConstant(UINT StartRegister)
-{
-	if(!IsActive()) return false;
-
-	switch(StartRegister)
-	{
-	case 8: // cViewProj0
-	//case 9: // cViewProj1
-	//case 10: // cViewProj2
-	//case 11: // cViewProj02
-	case 58:
-		return false;
-	}
-
-	return true;
 }
 
 void MirvShader::LoadPso(char const * fileName)
@@ -206,7 +205,6 @@ DWORD * MirvShader::LoadShaderFileInMemory(char const * fileName)
 	if(!GetShaderDirectory(shaderDir))
 		return 0;
 
-	shaderDir.append("\\");
 	shaderDir.append(fileName);
 
 	FILE * file = 0;
@@ -289,91 +287,28 @@ void MirvShader::LoadVertexShader()
 	m_ReloadVertexShader = false;
 }
 
-void MirvShader::OnBeginScene()
+bool MirvShader::OnSetVertexShader(IDirect3DVertexShader9 * pShader, HRESULT &outResult)
 {
-	m_ClearCount = 0;
+	return false;
+
+	if(!g_bActionDepthBound)
+		return false;
+
+	outResult = m_Device->SetVertexShader(m_VertexShader);
+
+	return true;
 }
 
-void MirvShader::OnClear(DWORD Count)
+bool MirvShader::OnSetPixelShader(IDirect3DPixelShader9 * pShader, HRESULT &outResult)
 {
-	if(Count == 0) m_ClearCount++;
-}
+	return false;
 
-IDirect3DPixelShader9 * MirvShader::OnSetPixelShader(IDirect3DPixelShader9* pShader)
-{
-	if(pShader && !m_Device)
-	{
-		IDirect3DDevice9 * device;
+	if(!g_bActionDepthBound)
+		return false;
 
-		if(SUCCEEDED(pShader->GetDevice(&device)))
-			Device_set(device);
-	}
+	outResult = m_Device->SetPixelShader(m_PixelShader);
 
-	IDirect3DDevice9 * device;
-	if(pShader && SUCCEEDED(pShader->GetDevice(&device)))
-	{
-		if(m_Device != device) Tier0_Warning("Pixelshader Device mismatch.");
-	}
-
-	if(IsActive())
-	{
-		if(m_ReloadPixelShader)
-		{
-			LoadPixelShader();
-		}
-
-		if(0 != m_PixelShader)
-			return m_PixelShader;
-
-		m_Enabled = false;
-	}
-
-	return pShader;
-}
-
-void MirvShader::OnSetRenderState(D3DRENDERSTATETYPE State,DWORD Value)
-{
-	if(State == D3DRS_ZENABLE)
-	{
-		m_DepthEnabled = D3DZB_FALSE != Value;
-	}
-}
-
-IDirect3DVertexShader9 * MirvShader::OnSetVertexShader(IDirect3DVertexShader9* pShader)
-{
-	if(pShader && !m_Device)
-	{
-		IDirect3DDevice9 * device;
-
-		if(SUCCEEDED(pShader->GetDevice(&device)))
-			Device_set(device);
-	}
-
-	IDirect3DDevice9 * device;
-	if(pShader && SUCCEEDED(pShader->GetDevice(&device)))
-	{
-		if(m_Device != device) Tier0_Warning("Vertexshader Device mismatch.");
-	}
-
-	if(IsActive())
-	{
-		if(m_ReloadVertexShader)
-		{
-			LoadVertexShader();
-		}
-
-		if(0 != m_VertexShader)
-			return m_VertexShader;
-
-		m_Enabled = false;
-	}
-
-	return pShader;
-}
-
-void MirvShader::SetInRenderWorld(bool value)
-{
-	m_InRenderWorld = value;
+	return true;
 }
 
 void MirvShader::UnloadShader()

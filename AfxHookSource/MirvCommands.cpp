@@ -13,7 +13,6 @@
 
 #include <shared/StringTools.h>
 
-//#include "MirvShader.h"
 #include "RenderView.h"
 #include "SourceInterfaces.h"
 #include "WrpVEngineClient.h"
@@ -1036,42 +1035,3 @@ CON_COMMAND(mirv_gameoverlay, "GameOverlayRenderer control.")
 		"mirv_gameoverlay enable 0|1 - Disable/Enable the GameOverlay (will only do s.th. useful when it was enabled initally).\n"
 	);
 }
-
-/*
-CON_COMMAND(mirv_shader, "shader effects")
-{
-	if(!csgo_viewrender_Install())
-	{
-		Tier0_Warning("Error: Hook not installed or modification not supported.\n");
-		return;
-	}
-
-	int argc = args->ArgC();
-
-	if(2 <= argc)
-	{
-		char const * arg1 = args->ArgV(1);
-		
-		if(0 == _stricmp("enabled", arg1))
-		{
-			if(3 == argc)
-			{
-				int iEnable = atoi(args->ArgV(2));
-				g_MirvShader.Enabled_set(0 != iEnable);
-				return;
-			}
-
-			Tier0_Msg(
-				"mirv_shader enabled: %s.\n",
-				g_MirvShader.Enabled_get() ? "1" : "0"
-			);
-			return;
-		}
-	}
-
-	Tier0_Msg(
-		"Usage:\n"
-		"mirv_shader enabled [0|1]\n"
-	);
-}
-*/

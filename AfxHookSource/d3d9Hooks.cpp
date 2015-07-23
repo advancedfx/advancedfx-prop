@@ -26,12 +26,38 @@ IDirect3DDevice9 * g_OldDirect3DDevice9;
 
 ULONG g_NewDirect3DDevic9_RefCount = 0;
 
+extern bool g_bActionDepthBound;
+
 struct NewDirect3DDevice9
 {
+private:
+	int m_FirstCViewProj;
+
+public:
     /*** IUnknown methods ***/
     IFACE_PASSTHROUGH(IDirect3DDevice9, QueryInterface, g_OldDirect3DDevice9);
-    IFACE_PASSTHROUGH(IDirect3DDevice9, AddRef, g_OldDirect3DDevice9);
-    IFACE_PASSTHROUGH(IDirect3DDevice9, Release, g_OldDirect3DDevice9);
+
+	STDMETHOD_(ULONG,AddRef)(THIS)
+	{
+		ULONG result = g_OldDirect3DDevice9->AddRef();
+
+		if(0 == g_NewDirect3DDevic9_RefCount)
+			g_MirvShader.BeginDevice(g_OldDirect3DDevice9);
+
+		++g_NewDirect3DDevic9_RefCount;
+
+		return result;
+	}
+
+    STDMETHOD_(ULONG,Release)(THIS)
+	{
+		--g_NewDirect3DDevic9_RefCount;
+
+		if(0 == g_NewDirect3DDevic9_RefCount)
+			g_MirvShader.EndDevice();
+
+		return g_OldDirect3DDevice9->Release();
+	}
 
     /*** IDirect3DDevice9 methods ***/
     IFACE_PASSTHROUGH(IDirect3DDevice9, TestCooperativeLevel, g_OldDirect3DDevice9);
@@ -72,23 +98,16 @@ struct NewDirect3DDevice9
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetRenderTarget, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, SetDepthStencilSurface, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetDepthStencilSurface, g_OldDirect3DDevice9);
-    
-    STDMETHOD(BeginScene)(THIS)
+
+	STDMETHOD(BeginScene)(THIS)
 	{
-		g_MirvShader.OnBeginScene();
+		m_FirstCViewProj = 0;
 
 		return g_OldDirect3DDevice9->BeginScene();
 	}
 
     IFACE_PASSTHROUGH(IDirect3DDevice9, EndScene, g_OldDirect3DDevice9);
-
-    STDMETHOD(Clear)(THIS_ DWORD Count,CONST D3DRECT* pRects,DWORD Flags,D3DCOLOR Color,float Z,DWORD Stencil)
-	{
-		g_MirvShader.OnClear(Count);
-
-		return g_OldDirect3DDevice9->Clear(Count,pRects,Flags,Color,Z,Stencil);
-	}
-
+    IFACE_PASSTHROUGH(IDirect3DDevice9, Clear, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, SetTransform, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetTransform, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, MultiplyTransform, g_OldDirect3DDevice9);
@@ -102,12 +121,12 @@ struct NewDirect3DDevice9
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetLightEnable, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, SetClipPlane, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetClipPlane, g_OldDirect3DDevice9);
-
-	STDMETHOD(SetRenderState)(THIS_ D3DRENDERSTATETYPE State,DWORD Value)
+    
+    STDMETHOD(SetRenderState)(THIS_ D3DRENDERSTATETYPE State,DWORD Value)
 	{
-		g_MirvShader.OnSetRenderState(State, Value);
 		return g_OldDirect3DDevice9->SetRenderState(State, Value);
 	}
+
 
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetRenderState, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, CreateStateBlock, g_OldDirect3DDevice9);
@@ -142,83 +161,130 @@ struct NewDirect3DDevice9
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetVertexDeclaration, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, SetFVF, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetFVF, g_OldDirect3DDevice9);
-    IFACE_PASSTHROUGH(IDirect3DDevice9, CreateVertexShader, g_OldDirect3DDevice9);
+    IFACE_PASSTHROUGH(IDirect3DDevice9, CreateVertexShader, g_OldDirect3DDevice9);  
     
     STDMETHOD(SetVertexShader)(THIS_ IDirect3DVertexShader9* pShader)
 	{
-		return g_OldDirect3DDevice9->SetVertexShader(g_MirvShader.OnSetVertexShader(pShader));
+		HRESULT result;
+
+		return g_MirvShader.OnSetVertexShader(pShader, result) ? result : g_OldDirect3DDevice9->SetVertexShader(pShader);
 	}
 
 	IFACE_PASSTHROUGH(IDirect3DDevice9, GetVertexShader, g_OldDirect3DDevice9);
-    
+	
     STDMETHOD(SetVertexShaderConstantF)(THIS_ UINT StartRegister,CONST float* pConstantData,UINT Vector4fCount)
 	{
-		if(g_MirvShader.IsBlockedVertexShaderConstant(StartRegister))
-			return D3D_OK;
-		return g_OldDirect3DDevice9->SetVertexShaderConstantF(StartRegister,pConstantData, Vector4fCount);
+		return g_OldDirect3DDevice9->SetVertexShaderConstantF(StartRegister, pConstantData, Vector4fCount);
+
+		int lo = StartRegister;
+		int hi = StartRegister+Vector4fCount;
+		bool inRange = lo <= 8 && 8 < hi || lo <= 9 && 9 < hi || lo <= 10 && 10 < hi || lo <= 11 && 11 < hi;
+
+
+		if(m_FirstCViewProj<2 || !inRange)
+		{
+			if(g_bActionDepthBound && inRange)
+			{
+				++m_FirstCViewProj;
+			}
+
+			return g_OldDirect3DDevice9->SetVertexShaderConstantF(StartRegister, pConstantData, Vector4fCount);
+		}
+
+		return D3D_OK;
 	}
-    
+	
 	IFACE_PASSTHROUGH(IDirect3DDevice9, GetVertexShaderConstantF, g_OldDirect3DDevice9);
-    
+	
     STDMETHOD(SetVertexShaderConstantI)(THIS_ UINT StartRegister,CONST int* pConstantData,UINT Vector4iCount)
 	{
-		if(g_MirvShader.IsBlockedVertexShaderConstant(StartRegister))
-			return D3D_OK;
-		return g_OldDirect3DDevice9->SetVertexShaderConstantI(StartRegister,pConstantData, Vector4iCount);
+		int lo = StartRegister;
+		int hi = StartRegister+Vector4iCount;
+		bool inRange = lo <= 8 && 8 < hi || lo <= 9 && 9 < hi || lo <= 10 && 10 < hi || lo <= 11 && 11 < hi;
+
+		//if(!inRange)
+			return g_OldDirect3DDevice9->SetVertexShaderConstantI(StartRegister, pConstantData, Vector4iCount);
+
+		return D3D_OK;
 	}
-    
+	
 	IFACE_PASSTHROUGH(IDirect3DDevice9, GetVertexShaderConstantI, g_OldDirect3DDevice9);
-    
+	
     STDMETHOD(SetVertexShaderConstantB)(THIS_ UINT StartRegister,CONST BOOL* pConstantData,UINT  BoolCount)
 	{
-		if(g_MirvShader.IsBlockedVertexShaderConstant(StartRegister))
-			return D3D_OK;
-		return g_OldDirect3DDevice9->SetVertexShaderConstantB(StartRegister,pConstantData, BoolCount);
-	}
+		int lo = StartRegister;
+		int hi = StartRegister+BoolCount;
+		bool inRange = lo <= 8 && 8 < hi || lo <= 9 && 9 < hi || lo <= 10 && 10 < hi || lo <= 11 && 11 < hi;
 
+		//if(!inRange)
+			return g_OldDirect3DDevice9->SetVertexShaderConstantB(StartRegister, pConstantData, BoolCount);
+
+		return D3D_OK;
+	}
+	
 	IFACE_PASSTHROUGH(IDirect3DDevice9, GetVertexShaderConstantB, g_OldDirect3DDevice9);
-    IFACE_PASSTHROUGH(IDirect3DDevice9, SetStreamSource, g_OldDirect3DDevice9);
+    
+	IFACE_PASSTHROUGH(IDirect3DDevice9, SetStreamSource, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetStreamSource, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, SetStreamSourceFreq, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetStreamSourceFreq, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, SetIndices, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetIndices, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, CreatePixelShader, g_OldDirect3DDevice9);
-
+    
     STDMETHOD(SetPixelShader)(THIS_ IDirect3DPixelShader9* pShader)
 	{
-		return g_OldDirect3DDevice9->SetPixelShader(g_MirvShader.OnSetPixelShader(pShader));
+		HRESULT result;
+
+		return g_MirvShader.OnSetPixelShader(pShader, result) ? result : g_OldDirect3DDevice9->SetPixelShader(pShader);
 	}
 
-    IFACE_PASSTHROUGH(IDirect3DDevice9, GetPixelShader, g_OldDirect3DDevice9);
-
+    
+	IFACE_PASSTHROUGH(IDirect3DDevice9, GetPixelShader, g_OldDirect3DDevice9);
+	
     STDMETHOD(SetPixelShaderConstantF)(THIS_ UINT StartRegister,CONST float* pConstantData,UINT Vector4fCount)
 	{
-		if(g_MirvShader.IsBlockedPixelShaderConstant(StartRegister))
-			return D3D_OK;
-		return g_OldDirect3DDevice9->SetPixelShaderConstantF(StartRegister, pConstantData, Vector4fCount);
+		int lo = StartRegister;
+		int hi = StartRegister+Vector4fCount;
+		bool inRange = lo <= 1 && 1 < hi || lo <= 2 && 2 < hi;
+
+		//if(!g_bActionDepthBound || !inRange)
+			return g_OldDirect3DDevice9->SetPixelShaderConstantF(StartRegister, pConstantData, Vector4fCount);
+
+		return D3D_OK;
 	}
 
-    IFACE_PASSTHROUGH(IDirect3DDevice9, GetPixelShaderConstantF, g_OldDirect3DDevice9);
+	IFACE_PASSTHROUGH(IDirect3DDevice9, GetPixelShaderConstantF, g_OldDirect3DDevice9);
 
-	STDMETHOD(SetPixelShaderConstantI)(THIS_ UINT StartRegister,CONST int* pConstantData,UINT Vector4iCount)
+    STDMETHOD(SetPixelShaderConstantI)(THIS_ UINT StartRegister,CONST int* pConstantData,UINT Vector4iCount)
 	{
-		if(g_MirvShader.IsBlockedPixelShaderConstant(StartRegister))
-			return D3D_OK;
-		return g_OldDirect3DDevice9->SetPixelShaderConstantI(StartRegister, pConstantData, Vector4iCount);
+		int lo = StartRegister;
+		int hi = StartRegister+Vector4iCount;
+		bool inRange = lo <= 1 && 1 < hi || lo <= 2 && 2 < hi;
+
+		//if(!g_bActionDepthBound || !inRange)
+			return g_OldDirect3DDevice9->SetPixelShaderConstantI(StartRegister, pConstantData, Vector4iCount);
+
+		return D3D_OK;
 	}
-    
-    IFACE_PASSTHROUGH(IDirect3DDevice9, GetPixelShaderConstantI, g_OldDirect3DDevice9);
 	
-	STDMETHOD(SetPixelShaderConstantB)(THIS_ UINT StartRegister,CONST BOOL* pConstantData,UINT  BoolCount)
+	IFACE_PASSTHROUGH(IDirect3DDevice9, GetPixelShaderConstantI, g_OldDirect3DDevice9);
+	
+    STDMETHOD(SetPixelShaderConstantB)(THIS_ UINT StartRegister,CONST BOOL* pConstantData,UINT  BoolCount)
 	{
-		if(g_MirvShader.IsBlockedPixelShaderConstant(StartRegister))
-			return D3D_OK;
-		return g_OldDirect3DDevice9->SetPixelShaderConstantB(StartRegister, pConstantData, BoolCount);
-	}
+		int lo = StartRegister;
+		int hi = StartRegister+BoolCount;
+		bool inRange = lo <= 1 && 1 < hi || lo <= 2 && 2 < hi;
 
+		//if(!g_bActionDepthBound || !inRange)
+			return g_OldDirect3DDevice9->SetPixelShaderConstantB(StartRegister, pConstantData, BoolCount);
+
+		return D3D_OK;
+	}
+	
 	IFACE_PASSTHROUGH(IDirect3DDevice9, GetPixelShaderConstantB, g_OldDirect3DDevice9);
-    IFACE_PASSTHROUGH(IDirect3DDevice9, DrawRectPatch, g_OldDirect3DDevice9);
+    
+	IFACE_PASSTHROUGH(IDirect3DDevice9, DrawRectPatch, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, DrawTriPatch, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, DeletePatch, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, CreateQuery, g_OldDirect3DDevice9);

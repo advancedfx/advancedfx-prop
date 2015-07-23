@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-06-26 dominik.matrixstorm.com
+// 2015-07-20 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -22,6 +22,9 @@ class CAfxDeveloperStream;
 class CAfxBaseFxStream;
 class CAfxMatteWorldStream;
 class CAfxMatteEntityStream;
+
+void DebugDepthFixDraw(IMesh_csgo * pMesh);
+extern bool g_bActionDepthBound;
 
 class CAfxStream
 {
@@ -318,6 +321,8 @@ private:
 	public:
 		CActionDepth(IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem)
 		: m_DepthMaterial(freeMaster, matSystem->FindMaterial("afx/depth",NULL))
+		, m_InvisibleMaterial(freeMaster, matSystem->FindMaterial("afx/invisible",NULL))
+		, m_FirstBind(true)
 		{
 		}
 
@@ -325,13 +330,20 @@ private:
 		{
 		}
 
-		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 )
+		virtual void AfxUnbind(IAfxMatRenderContext * ctx)
 		{
-			ctx->GetParent()->Bind(m_DepthMaterial.GetMaterial(), proxyData);
+			//Tier0_Msg("AfxUnbind\n");
+
+			m_FirstBind = true;
+			g_bActionDepthBound = false;
 		}
+
+		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 );
 
 	private:
 		CAfxMaterial m_DepthMaterial;
+		CAfxMaterial m_InvisibleMaterial;
+		bool m_FirstBind;
 	};
 
 	class CActionInvisible

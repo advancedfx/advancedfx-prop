@@ -6,6 +6,23 @@
 
 <release>
 <name>HLAE</name>
+<version>2.4.9.0</version>
+<time>2015-07-23T16:00Z</time>
+<changes>
+<change type="fixed">
+Fixed 64 bit versions of msvcp100.dll, msvcr100.dll being packaged instead of 32 bit versions.
+</change>
+<change type="updated">
+Updated launcher for GoldSrc games (AfxHookGoldSrc) to display a warning icon and information if game resolution height is bellow 480 pixels,
+since then the Half-Life's TrackerScheme.res would need to be adjusted aka an EngineFont for bellow 480 pixels would need to be added, otherwise
+text (i.e. death notice text) will be missing in-game.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.4.8.6</version>
 <time>2015-07-17T18:00Z</time>
 <changes>
