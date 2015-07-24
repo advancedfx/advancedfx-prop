@@ -79,6 +79,7 @@
 
 #define JMP_CLASSMEMBERIFACE_OFS_FN(classType,classMemberIface,ofs,index) \
 	__asm mov eax, this \
+	__asm sub eax, 4*ofs \
 	__asm mov eax, [eax]classType.classMemberIface \
 	__asm pop ecx \
 	__asm mov esp, ebp \
@@ -90,12 +91,14 @@
 
 #define JMP_CLASSMEMBERIFACE_OFS_FN_DBG(classType,classMemberIface,ofs,index) \
 	__asm mov ecx, this \
+	__asm sub ecx, 4*ofs \
 	__asm mov eax, index \
 	__asm push eax \
 	__asm mov eax, ofs \
 	__asm push eax \
 	__asm call Debug \
 	__asm mov eax, this \
+	__asm sub eax, 4*ofs \
 	__asm mov eax, [eax]classType.classMemberIface \
 	__asm pop ecx \
 	__asm mov esp, ebp \

@@ -6,6 +6,19 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.0.13.7</version>
+<time>2015-07-24T17:30Z</time>
+<changes>
+<change type="fixed">
+Fixed crashes due to class pointer not being offset according to used interface in case of multiple inheritance in CAfxMesh (IMesh wrapper).
+Thanks to the great and mighty anthony for providing a demo with the problem.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.0.13.6</version>
 <time>2015-07-17T18:00Z</time>
 <changes>
