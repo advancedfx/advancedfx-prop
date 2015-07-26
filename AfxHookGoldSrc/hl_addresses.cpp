@@ -70,6 +70,7 @@ AFXADDR_DEF(cstrike_rgDeathNoticeList)
 AFXADDR_DEF(g_fov)
 AFXADDR_DEF(hlExe)
 AFXADDR_DEF(hwDll)
+AFXADDR_DEF(host_frametime)
 AFXADDR_DEF(msg_readcount)
 AFXADDR_DEF(net_message)
 AFXADDR_DEF(p_cl_enginefuncs_s)
@@ -137,6 +138,8 @@ void Addresses_InitHwDll(AfxAddr hwDll)
 	
 	AFXADDR_SET(Host_Frame, hwDll +0x561E0); // *[8]
 	AFXADDR_SET(Host_Frame_DSZ, 0x05); // *[8]
+
+	AFXADDR_SET(host_frametime, hwDll +0xAB4028); // *[8]
 	
 	AFXADDR_SET(CL_EmitEntities, hwDll + 0x14A30); // *[8]
 	AFXADDR_SET(CL_EmitEntities_DSZ, 0x05); // *[8]

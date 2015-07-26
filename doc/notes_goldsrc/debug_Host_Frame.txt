@@ -25,6 +25,21 @@ This is inside a sub function, set a breakpoint and follow till ret.
 Then you are inside Host_Frame, follow till ret again and you will get the Host_Frame call address:
 
 01d561e0 is Host_Frame
+01d561e0 55              push    ebp
+01d561e1 8bec            mov     ebp,esp
+01d561e3 6a00            push    0
+028761e5 6840402d03      push    offset hw!qwglMakeCurrent+0x25534 (032d4040)
+028761ea e865120b00      call    hw!vgui::Frame::operator=+0x48784 (02927454)
+028761ef 83c408          add     esp,8
+028761f2 85c0            test    eax,eax
+028761f4 0f859c010000    jne     hw+0x56396 (02876396)
+028761fa e8510afeff      call    hw+0x36c50 (02856c50)
+028761ff 8b4508          mov     eax,dword ptr [ebp+8]
+02876202 50              push    eax
+02876203 e848f9ffff      call    hw+0x55b50 (02875b50)
+02876208 83c404          add     esp,4
+0287620b 85c0            test    eax,eax
+0287620d 0f8483010000    je      hw+0x56396 (02876396) 
 ...
 01d562ab 83c408          add     esp,8
 01d562ae e88da0fcff      call    hw+0x20340 (01d20340)
@@ -47,5 +62,29 @@ Then you are inside Host_Frame, follow till ret again and you will get the Host_
 01d562fe e80dfdffff      call    hw+0x56010 (01d56010)
 ...
 ==>
+02876203 => 02875b50 is the function that decides whether or not Host_Frame is returned
+                     (or continues to run furhter engine code)
+                     and calculates the host_frametime etc.
 01d562c2 => 01d14a30 is CL_EmitEntities
 01d562fe => calls 01d56010 where SCR_UpdateScreen is called
+
+02875b50
+...
+02875d2a ded9            fcompp
+02875d2c dfe0            fnstsw  ax
+02875d2e 2500410000      and     eax,4100h
+02875d33 7506            jne     hw+0x55d3b (02875d3b)                   [br=1]
+02875d35 33c0            xor     eax,eax
+02875d37 8be5            mov     esp,ebp
+02875d39 5d              pop     ebp
+02875d3a c3              ret
+02875d3b dd0500412d03    fld     qword ptr [hw!qwglMakeCurrent+0x255f4 (032d4100)]
+02875d41 dc2598402d03    fsub    qword ptr [hw!qwglMakeCurrent+0x2558c (032d4098)]
+02875d47 8b0d00412d03    mov     ecx,dword ptr [hw!qwglMakeCurrent+0x255f4 (032d4100)]
+02875d4d 8b1504412d03    mov     edx,dword ptr [hw!qwglMakeCurrent+0x255f8 (032d4104)]
+02875d53 890d98402d03    mov     dword ptr [hw!qwglMakeCurrent+0x2558c (032d4098)],ecx
+02875d59 89159c402d03    mov     dword ptr [hw!qwglMakeCurrent+0x25590 (032d409c)],edx
+02875d5f dd1d28402d03    fstp    qword ptr [hw!qwglMakeCurrent+0x2551c (032d4028)]
+02875d65 dd0528402d03    fld     qword ptr [hw!qwglMakeCurrent+0x2551c (032d4028)]
+...
+02875d5f => 032d4028 is double (64 bit) host_frametime

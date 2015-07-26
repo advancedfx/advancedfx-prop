@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookGoldSrc</name>
+<version>2.4.7.1</version>
+<time>2015-07-26T18:10Z</time>
+<changes>
+<change type="fixed">
+Fixed crosshair fix when previewing (aka not recording) not using the correct host_frametime.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookGoldSrc</name>
 <version>2.4.7.0</version>
 <time>2015-06-15T19:14Z</time>
 <changes>

@@ -142,6 +142,9 @@ public:
 
 		ResumeThread(processInfo.hThread);
 
+		CloseHandle(processInfo.hThread);
+		CloseHandle(processInfo.hProcess);
+
 		return imageInjected;
 	}
 

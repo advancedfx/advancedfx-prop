@@ -51,7 +51,10 @@ Hint:
     you can use copy_resources_release.bat in order to do that.
 
 13) Copy msvcp100.dll, msvcr100.dll (CRT runtime, required by C++ and C++/CLI
-    projects) from your system folders (C:\Windows\system32) to build\Release\bin
+    projects) from your system folders (on 64 bit systems in C:\Windows\SysWOW64
+    on 32 bit systems in C:\Windows\system32) to build\Release\bin
+    Make sure to select the correct folder as suggested above, so that you end
+	up with the 32 bit binaries.
 
 14) This step is not required by default, only when you plan to build AfxHookGoldSrc with AFX_SCRIPT!
    Copy mozjs-24.dll from C:\Libraries\js\bin to build\Release\bin

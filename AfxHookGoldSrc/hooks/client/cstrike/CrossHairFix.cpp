@@ -44,10 +44,10 @@ void __stdcall CrosshairFix_Hooking_Func(  DWORD *this_ptr, float fUnkTime, DWOR
 	
 	if(fix)
 	{
-		float frameTime = pEngfuncs->pfnGetCvarFloat("host_framerate");
-		if(0 >= frameTime) frameTime = g_Host_Frame_time;
+		double frameTime = pEngfuncs->pfnGetCvarFloat("host_framerate");
+		if(0 >= frameTime) frameTime = *g_phost_frametime;
 
-		deltaT += (double)frameTime;
+		deltaT += frameTime;
 		
 		bool coolDown = g_cstrike_ch_frameT <= deltaT;
 
