@@ -24,8 +24,9 @@
 #include "WrpVEngineClient.h"
 #include "WrpConsole.h"
 #include "WrpGlobals.h"
-//#include "d3d9Hooks.h"
+#include "d3d9Hooks.h"
 #include "csgo_SndMixTimeScalePatch.h"
+#include "csgo_CSkyBoxView.h"
 #include "AfxHookSourceInput.h"
 #include "AfxClasses.h"
 #include "AfxStreams.h"
@@ -193,6 +194,7 @@ class CAfxVRenderView : public IVRenderView_csgo, public IAfxVRenderView
 public:
 	CAfxVRenderView(IVRenderView_csgo * parent)
 	: m_Parent(parent)
+	, m_OnSetBlend(0)
 	, m_OnSetColorModulation(0)
 	{
 	}
@@ -203,6 +205,11 @@ public:
 	virtual IVRenderView_csgo * GetParent()
 	{
 		return m_Parent;
+	}
+
+	virtual void OnSetBlend_set(IAfxVRenderViewSetBlend * value)
+	{
+		m_OnSetBlend = value;
 	}
 
 	virtual void OnSetColorModulation_set(IAfxVRenderViewSetColorModulation * value)
@@ -225,8 +232,18 @@ public:
 	virtual void _UNKOWN_003(void)
 	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 3) }
 
-	virtual void _UNKOWN_004(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 4) }
+	// 004:
+	virtual void SetBlend( float blend )
+	{
+		if(m_OnSetBlend)
+		{
+			m_OnSetBlend->SetBlend(this, blend);
+		}
+		else
+		{
+			m_Parent->SetBlend(blend);
+		}
+	}
 
 	virtual void _UNKOWN_005(void)
 	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 5) }
@@ -405,6 +422,7 @@ public:
 
 private:
 	IVRenderView_csgo * m_Parent;
+	IAfxVRenderViewSetBlend * m_OnSetBlend;
 	IAfxVRenderViewSetColorModulation * m_OnSetColorModulation;
 };
 
@@ -2688,13 +2706,13 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryExA", (DWORD) &new_LoadLibraryExA);
 		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryA", (DWORD) &new_LoadLibraryA);
 	}
-/*	else
+	else
 	if(bFirstShaderapidx9 && StringEndsWith( lpLibFileName, "shaderapidx9.dll"))
 	{
 		bFirstShaderapidx9 = false;
 
 		old_Direct3DCreate9 = (Direct3DCreate9_t)InterceptDllCall(hModule, "d3d9.dll", "Direct3DCreate9", (DWORD) &new_Direct3DCreate9);
-	}*/
+	}
 	else
 	if(bFirstClient && StringEndsWith( lpLibFileName, "client.dll"))
 	{
@@ -2703,6 +2721,11 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 		g_H_ClientDll = hModule;
 
 		Addresses_InitClientDll((AfxAddr)g_H_ClientDll, isCsgo);
+
+		//
+		// Install early hooks:
+
+		csgo_CSkyBoxView_Draw_Install();
 	}
 }
 

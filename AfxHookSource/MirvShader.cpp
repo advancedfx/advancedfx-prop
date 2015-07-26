@@ -18,7 +18,7 @@
 
 
 extern bool g_bActionDepthBound;
-
+extern bool g_bD3D9SRGBWriteEnableFix;
 
 MirvShader g_MirvShader;
 
@@ -70,6 +70,9 @@ void MirvShader::BeginDevice(IDirect3DDevice9 * device)
 
 void MirvShader::DebugDepthFixDraw()
 {
+	if(g_bD3D9SRGBWriteEnableFix)
+		m_Device->SetRenderState(D3DRS_SRGBWRITEENABLE, FALSE);
+
 /*	if(!(m_Device && m_PixelShader && m_VertexShader))
 	{
 		static bool firstError = true;

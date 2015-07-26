@@ -23,9 +23,6 @@ class CAfxBaseFxStream;
 class CAfxMatteWorldStream;
 class CAfxMatteEntityStream;
 
-void DebugDepthFixDraw(IMesh_csgo * pMesh);
-extern bool g_bActionDepthBound;
-
 class CAfxStream
 {
 public:
@@ -121,6 +118,7 @@ class CAfxBaseFxStream
 , public IAfxMeshDraw
 , public IAfxMeshDraw_2
 , public IAfxMeshDrawModulated
+, public IAfxVRenderViewSetBlend
 , public IAfxVRenderViewSetColorModulation
 {
 public:
@@ -159,6 +157,7 @@ public:
 	virtual void Draw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists);
 	virtual void DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 );
 
+	virtual void SetBlend(IAfxVRenderView * rv, float blend );
 	virtual void SetColorModulation(IAfxVRenderView * rv, float const* blend );
 
 	MaskableAction WorldTexturesAction_get(void);
@@ -227,6 +226,7 @@ private:
 	, public IAfxMeshDraw
 	, public IAfxMeshDraw_2
 	, public IAfxMeshDrawModulated
+	, public IAfxVRenderViewSetBlend
 	, public IAfxVRenderViewSetColorModulation
 	{
 	public:
@@ -256,6 +256,11 @@ private:
 		virtual void Draw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists)
 		{
 			am->GetParent()->Draw(pLists, nLists);
+		}
+
+		virtual void SetBlend(IAfxVRenderView * rv, float blend )
+		{
+			rv->GetParent()->SetBlend(blend);
 		}
 
 		virtual void SetColorModulation(IAfxVRenderView * rv, float const* blend )
@@ -321,8 +326,6 @@ private:
 	public:
 		CActionDepth(IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem)
 		: m_DepthMaterial(freeMaster, matSystem->FindMaterial("afx/depth",NULL))
-		, m_InvisibleMaterial(freeMaster, matSystem->FindMaterial("afx/invisible",NULL))
-		, m_FirstBind(true)
 		{
 		}
 
@@ -330,20 +333,13 @@ private:
 		{
 		}
 
-		virtual void AfxUnbind(IAfxMatRenderContext * ctx)
-		{
-			//Tier0_Msg("AfxUnbind\n");
-
-			m_FirstBind = true;
-			g_bActionDepthBound = false;
-		}
+		virtual void AfxUnbind(IAfxMatRenderContext * ctx);
 
 		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 );
 
 	private:
 		CAfxMaterial m_DepthMaterial;
-		CAfxMaterial m_InvisibleMaterial;
-		bool m_FirstBind;
+		unsigned long m_OldSrgbWriteEnable;
 	};
 
 	class CActionInvisible
@@ -630,6 +626,8 @@ public:
 	virtual void OnDraw_2_set(IAfxMeshDraw_2 * value);
 	virtual void OnDrawModulated_set(IAfxMeshDrawModulated * value);
 
+
+	virtual void OnSetBlend_set(IAfxVRenderViewSetBlend * value);
 	virtual void OnSetColorModulation_set(IAfxVRenderViewSetColorModulation * value);
 
 	virtual void LevelShutdown(IAfxBaseClientDll * cl);

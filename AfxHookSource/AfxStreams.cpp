@@ -12,7 +12,7 @@
 
 #include "SourceInterfaces.h"
 #include "WrpVEngineClient.h"
-//#include "MirvShader.h"
+#include "d3d9Hooks.h"
 
 #include <shared/StringTools.h>
 
@@ -444,6 +444,7 @@ void CAfxBaseFxStream::StreamAttach(IAfxStreams4Stream * streams)
 	streams->OnDraw_set(this);
 	streams->OnDraw_2_set(this);
 	streams->OnDrawModulated_set(this);
+	streams->OnSetBlend_set(this);
 	streams->OnSetColorModulation_set(this);
 }
 
@@ -452,6 +453,7 @@ void CAfxBaseFxStream::StreamDetach(IAfxStreams4Stream * streams)
 	if(m_BoundAction) m_CurrentAction->AfxUnbind(streams->GetCurrentContext());
 
 	streams->OnSetColorModulation_set(0);
+	streams->OnSetBlend_set(0);
 	streams->OnDrawModulated_set(0);
 	streams->OnDraw_2_set(0);
 	streams->OnDraw_set(0);
@@ -605,6 +607,11 @@ void CAfxBaseFxStream::Draw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists)
 void CAfxBaseFxStream::DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex, int numIndices)
 {
 	m_CurrentAction->DrawModulated(am, vecDiffuseModulation, firstIndex, numIndices);
+}
+
+void CAfxBaseFxStream::SetBlend(IAfxVRenderView * rv, float blend )
+{
+	m_CurrentAction->SetBlend(rv, blend);
 }
 
 void CAfxBaseFxStream::SetColorModulation(IAfxVRenderView * rv, float const* blend)
@@ -806,15 +813,17 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(HideableAction value)
 
 // CAfxBaseFxStream::CActionDepth //////////////////////////////////////////////
 
-bool g_bActionDepthBound = false;
+void CAfxBaseFxStream::CActionDepth::AfxUnbind(IAfxMatRenderContext * ctx)
+{
+	AfxD3D9SRGBWriteEnableFix(m_OldSrgbWriteEnable);
+}
+
 
 void CAfxBaseFxStream::CActionDepth::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData)
 {
 	ctx->GetParent()->Bind(m_DepthMaterial.GetMaterial(), proxyData);
 
-	g_bActionDepthBound = true;
-
-	//g_MirvShader.DebugDepthFixDraw();
+	m_OldSrgbWriteEnable = AfxD3D9SRGBWriteEnableFix(FALSE);
 }
 
 // CAfxStreams /////////////////////////////////////////////////////////////////
@@ -1605,6 +1614,12 @@ void CAfxStreams::OnDrawModulated_set(IAfxMeshDrawModulated * value)
 {
 	m_OnDrawModulated = value;
 }
+
+void CAfxStreams::OnSetBlend_set(IAfxVRenderViewSetBlend * value)
+{
+	if(m_VRenderView) m_VRenderView->OnSetBlend_set(value);
+}
+
 
 void CAfxStreams::OnSetColorModulation_set(IAfxVRenderViewSetColorModulation * value)
 {

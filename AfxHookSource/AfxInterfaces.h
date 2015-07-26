@@ -31,6 +31,12 @@ public:
 
 class IAfxVRenderView;
 
+class IAfxVRenderViewSetBlend abstract
+{
+public:
+	virtual void SetBlend(IAfxVRenderView * rv, float blend ) = 0;
+};
+
 class IAfxVRenderViewSetColorModulation abstract
 {
 public:
@@ -42,6 +48,7 @@ class IAfxVRenderView abstract
 public:
 	virtual IVRenderView_csgo * GetParent() = 0;
 
+	virtual void OnSetBlend_set(IAfxVRenderViewSetBlend * value) = 0;
 	virtual void OnSetColorModulation_set(IAfxVRenderViewSetColorModulation * value) = 0;
 };
 
@@ -139,5 +146,6 @@ public:
 	virtual void OnDraw_2_set(IAfxMeshDraw_2 * value) = 0;
 	virtual void OnDrawModulated_set(IAfxMeshDrawModulated * value) = 0;
 
+	virtual void OnSetBlend_set(IAfxVRenderViewSetBlend * value) = 0;
 	virtual void OnSetColorModulation_set(IAfxVRenderViewSetColorModulation * value) = 0;
 };

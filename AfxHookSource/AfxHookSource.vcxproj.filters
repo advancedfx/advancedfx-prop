@@ -90,6 +90,12 @@
     <ClCompile Include="AfxClasses.cpp">
       <Filter>AfxHookSource</Filter>
     </ClCompile>
+    <ClCompile Include="d3d9Hooks.cpp">
+      <Filter>AfxHookSource</Filter>
+    </ClCompile>
+    <ClCompile Include="csgo_CSkyBoxView.cpp">
+      <Filter>AfxHookSource</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -174,6 +180,12 @@
       <Filter>AfxHookSource</Filter>
     </ClInclude>
     <ClInclude Include="AfxClasses.h">
+      <Filter>AfxHookSource</Filter>
+    </ClInclude>
+    <ClInclude Include="d3d9Hooks.h">
+      <Filter>AfxHookSource</Filter>
+    </ClInclude>
+    <ClInclude Include="csgo_CSkyBoxView.h">
       <Filter>AfxHookSource</Filter>
     </ClInclude>
   </ItemGroup>

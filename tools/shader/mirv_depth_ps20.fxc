@@ -10,7 +10,7 @@ float4 main( PS_INPUT i ) :COLOR
 	float y = saturate(i.zValue.y);
 	float z = saturate(i.zValue.z);
 	
-	float4 color = float4(x, y, z, 1.0f );
+	float4 color = float4(0.5f, 0.5f, 0.5f, 1.0f );
 	
 	return color;
 }

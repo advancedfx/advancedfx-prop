@@ -2819,7 +2819,10 @@ public:
 	virtual void _UNKOWN_001(void) = 0;
 	virtual void _UNKOWN_002(void) = 0;
 	virtual void _UNKOWN_003(void) = 0;
-	virtual void _UNKOWN_004(void) = 0;
+	
+	// 004:
+	virtual void SetBlend( float blend ) = 0;
+
 	virtual void _UNKOWN_005(void) = 0;
 
 	// 006:

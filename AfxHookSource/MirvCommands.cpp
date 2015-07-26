@@ -33,6 +33,17 @@
 
 extern WrpVEngineClient * g_VEngineClient;
 
+CON_COMMAND(__mirv_skyboxscale, "print skyboxscale in CS:GO")
+{
+	if(AFXADDR_GET(csgo_pLocalPlayer) && 0 != *(unsigned char **)AFXADDR_GET(csgo_pLocalPlayer))
+	{
+		int skyBoxScale = *(int *)(*(unsigned char **)AFXADDR_GET(csgo_pLocalPlayer) +AFXADDR_GET(csgo_C_BasePlayer_OFS_m_skybox3d_scale));
+
+		Tier0_Msg("skyBoxScale: %i\n", skyBoxScale);
+	}
+	else
+		Tier0_Msg("skyBoxScale: n/a\n");
+}
 
 CON_COMMAND(__mirv_streams, "Access to streams system.")
 {
