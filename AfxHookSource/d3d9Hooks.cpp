@@ -20,6 +20,9 @@ typedef void * (__stdcall Interface_s::*InterfaceFn_t) (void *);
 		} \
 	}
 
+
+extern bool g_bCActionDepth;
+
 IDirect3DDevice9 * g_OldDirect3DDevice9 = 0;
 
 ULONG g_NewDirect3DDevic9_RefCount = 0;
@@ -171,19 +174,17 @@ public:
 	
     STDMETHOD(SetVertexShaderConstantF)(THIS_ UINT StartRegister,CONST float* pConstantData,UINT Vector4fCount)
 	{
-/*		int lo = StartRegister;
+		/*
+		int lo = StartRegister;
 		int hi = StartRegister+Vector4fCount;
-		bool inRange = lo <= 8 && 8 < hi || lo <= 9 && 9 < hi || lo <= 10 && 10 < hi || lo <= 11 && 11 < hi;
+		bool inRange = lo <= 48 && 48 < hi;
 
-		if(g_bD3D9DebugPrint && inRange)
+		if(g_bCActionDepth && inRange)
 		{
-			Tier0_Msg("SetVertexShaderConstantF: [%i-%i] %s:\n",StartRegister,StartRegister+Vector4fCount-1,g_bActionDepthBound ? "IN DEPTH" : "other");
-			for(int i=8; i<12;i++)
-			{
-				Tier0_Msg(" %i: %f,%f,%f,%f;\n", i, pConstantData[4*i+0], pConstantData[4*i+1], pConstantData[4*i+2], pConstantData[4*i+3]);
-			}
-		}
-*/
+			
+			return D3D_OK;
+		}*/
+
 		return g_OldDirect3DDevice9->SetVertexShaderConstantF(StartRegister, pConstantData, Vector4fCount);
 	}
 	
@@ -310,4 +311,11 @@ DWORD AfxD3D9SRGBWriteEnableFix(DWORD enable)
 	g_OldDirect3DDevice9->SetRenderState(D3DRS_SRGBWRITEENABLE, enable);
 
 	return oldValue;
+}
+
+HRESULT AfxD3D9SetVertexShaderConstantF(UINT StartRegister,CONST float* pConstantData,UINT Vector4fCount)
+{
+	if(!g_OldDirect3DDevice9) return S_FALSE;
+
+	return g_OldDirect3DDevice9->SetVertexShaderConstantF(StartRegister, pConstantData, Vector4fCount);
 }

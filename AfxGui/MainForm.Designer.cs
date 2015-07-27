@@ -43,7 +43,9 @@
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
             this.developerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuCustomLoader = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripSeparator();
             this.menuGuidToClipBoard = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuNewGuidToClipBoard = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuAdvancedFxOrg = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripSeparator();
@@ -83,25 +85,25 @@
             this.toolStripMenuItem1,
             this.menuExit});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(35, 20);
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
             // 
             // menuLaunch
             // 
             this.menuLaunch.Name = "menuLaunch";
-            this.menuLaunch.Size = new System.Drawing.Size(152, 22);
+            this.menuLaunch.Size = new System.Drawing.Size(113, 22);
             this.menuLaunch.Text = "Launch";
             this.menuLaunch.Click += new System.EventHandler(this.menuLaunch_Click);
             // 
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(149, 6);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(110, 6);
             // 
             // menuExit
             // 
             this.menuExit.Name = "menuExit";
-            this.menuExit.Size = new System.Drawing.Size(152, 22);
+            this.menuExit.Size = new System.Drawing.Size(113, 22);
             this.menuExit.Text = "Exit";
             this.menuExit.Click += new System.EventHandler(this.menuExit_Click);
             // 
@@ -110,13 +112,13 @@
             this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menuStatusBar});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
-            this.viewToolStripMenuItem.Size = new System.Drawing.Size(41, 20);
+            this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.viewToolStripMenuItem.Text = "View";
             // 
             // menuStatusBar
             // 
             this.menuStatusBar.Name = "menuStatusBar";
-            this.menuStatusBar.Size = new System.Drawing.Size(135, 22);
+            this.menuStatusBar.Size = new System.Drawing.Size(126, 22);
             this.menuStatusBar.Text = "Status Bar";
             this.menuStatusBar.Click += new System.EventHandler(this.statusBarToolStripMenuItem_Click);
             // 
@@ -129,13 +131,13 @@
             this.toolStripMenuItem2,
             this.developerToolStripMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
-            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
+            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(48, 20);
             this.toolsToolStripMenuItem.Text = "Tools";
             // 
             // demoToolsToolStripMenuItem
             // 
             this.demoToolsToolStripMenuItem.Name = "demoToolsToolStripMenuItem";
-            this.demoToolsToolStripMenuItem.Size = new System.Drawing.Size(141, 22);
+            this.demoToolsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.demoToolsToolStripMenuItem.Text = "Demo Tools";
             this.demoToolsToolStripMenuItem.Click += new System.EventHandler(this.demoToolsToolStripMenuItem_Click);
             // 
@@ -144,50 +146,64 @@
             this.calculatorsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menuFileSize});
             this.calculatorsToolStripMenuItem.Name = "calculatorsToolStripMenuItem";
-            this.calculatorsToolStripMenuItem.Size = new System.Drawing.Size(141, 22);
+            this.calculatorsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.calculatorsToolStripMenuItem.Text = "Calculators";
             // 
             // menuFileSize
             // 
             this.menuFileSize.Name = "menuFileSize";
-            this.menuFileSize.Size = new System.Drawing.Size(123, 22);
+            this.menuFileSize.Size = new System.Drawing.Size(115, 22);
             this.menuFileSize.Text = "File Size";
             this.menuFileSize.Click += new System.EventHandler(this.menuFileSize_Click);
             // 
             // skyToolStripMenuItem
             // 
             this.skyToolStripMenuItem.Name = "skyToolStripMenuItem";
-            this.skyToolStripMenuItem.Size = new System.Drawing.Size(141, 22);
+            this.skyToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.skyToolStripMenuItem.Text = "Sky Manger";
             this.skyToolStripMenuItem.Click += new System.EventHandler(this.skyToolStripMenuItem_Click);
             // 
             // toolStripMenuItem2
             // 
             this.toolStripMenuItem2.Name = "toolStripMenuItem2";
-            this.toolStripMenuItem2.Size = new System.Drawing.Size(138, 6);
+            this.toolStripMenuItem2.Size = new System.Drawing.Size(149, 6);
             // 
             // developerToolStripMenuItem
             // 
             this.developerToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menuCustomLoader,
-            this.menuGuidToClipBoard});
+            this.toolStripMenuItem4,
+            this.menuGuidToClipBoard,
+            this.menuNewGuidToClipBoard});
             this.developerToolStripMenuItem.Name = "developerToolStripMenuItem";
-            this.developerToolStripMenuItem.Size = new System.Drawing.Size(141, 22);
+            this.developerToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.developerToolStripMenuItem.Text = "Developer";
             // 
             // menuCustomLoader
             // 
             this.menuCustomLoader.Name = "menuCustomLoader";
-            this.menuCustomLoader.Size = new System.Drawing.Size(171, 22);
+            this.menuCustomLoader.Size = new System.Drawing.Size(198, 22);
             this.menuCustomLoader.Text = "Custom Loader";
             this.menuCustomLoader.Click += new System.EventHandler(this.menuCustomLoader_Click);
+            // 
+            // toolStripMenuItem4
+            // 
+            this.toolStripMenuItem4.Name = "toolStripMenuItem4";
+            this.toolStripMenuItem4.Size = new System.Drawing.Size(195, 6);
             // 
             // menuGuidToClipBoard
             // 
             this.menuGuidToClipBoard.Name = "menuGuidToClipBoard";
-            this.menuGuidToClipBoard.Size = new System.Drawing.Size(171, 22);
-            this.menuGuidToClipBoard.Text = "GUID to ClipBoard";
+            this.menuGuidToClipBoard.Size = new System.Drawing.Size(198, 22);
+            this.menuGuidToClipBoard.Text = "Own GUID to ClipBoard";
             this.menuGuidToClipBoard.Click += new System.EventHandler(this.menuGuidToClipBoard_Click);
+            // 
+            // menuNewGuidToClipBoard
+            // 
+            this.menuNewGuidToClipBoard.Name = "menuNewGuidToClipBoard";
+            this.menuNewGuidToClipBoard.Size = new System.Drawing.Size(198, 22);
+            this.menuNewGuidToClipBoard.Text = "New GUID to ClipBoard";
+            this.menuNewGuidToClipBoard.Click += new System.EventHandler(this.menuNewGuidToClipBoard_Click);
             // 
             // helpToolStripMenuItem
             // 
@@ -196,21 +212,21 @@
             this.toolStripMenuItem3,
             this.checkForUpdatesToolStripMenuItem});
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
-            this.helpToolStripMenuItem.Size = new System.Drawing.Size(40, 20);
+            this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.helpToolStripMenuItem.Text = "Help";
             // 
             // menuAdvancedFxOrg
             // 
             this.menuAdvancedFxOrg.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Underline);
             this.menuAdvancedFxOrg.Name = "menuAdvancedFxOrg";
-            this.menuAdvancedFxOrg.Size = new System.Drawing.Size(174, 22);
+            this.menuAdvancedFxOrg.Size = new System.Drawing.Size(171, 22);
             this.menuAdvancedFxOrg.Text = "advancedfx.org";
             this.menuAdvancedFxOrg.Click += new System.EventHandler(this.menuAdvancedFxOrg_Click);
             // 
             // toolStripMenuItem3
             // 
             this.toolStripMenuItem3.Name = "toolStripMenuItem3";
-            this.toolStripMenuItem3.Size = new System.Drawing.Size(171, 6);
+            this.toolStripMenuItem3.Size = new System.Drawing.Size(168, 6);
             // 
             // checkForUpdatesToolStripMenuItem
             // 
@@ -218,20 +234,20 @@
             this.menuAutoUpdateCheck,
             this.checkNowToolStripMenuItem});
             this.checkForUpdatesToolStripMenuItem.Name = "checkForUpdatesToolStripMenuItem";
-            this.checkForUpdatesToolStripMenuItem.Size = new System.Drawing.Size(174, 22);
+            this.checkForUpdatesToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
             this.checkForUpdatesToolStripMenuItem.Text = "Check for Updates";
             // 
             // menuAutoUpdateCheck
             // 
             this.menuAutoUpdateCheck.Name = "menuAutoUpdateCheck";
-            this.menuAutoUpdateCheck.Size = new System.Drawing.Size(140, 22);
+            this.menuAutoUpdateCheck.Size = new System.Drawing.Size(136, 22);
             this.menuAutoUpdateCheck.Text = "Auto Check";
             this.menuAutoUpdateCheck.Click += new System.EventHandler(this.menuAutoUpdateCheck_Click);
             // 
             // checkNowToolStripMenuItem
             // 
             this.checkNowToolStripMenuItem.Name = "checkNowToolStripMenuItem";
-            this.checkNowToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
+            this.checkNowToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
             this.checkNowToolStripMenuItem.Text = "Check Now";
             this.checkNowToolStripMenuItem.Click += new System.EventHandler(this.checkNowToolStripMenuItem_Click);
             // 
@@ -252,29 +268,29 @@
             // statusLabelUpdate
             // 
             this.statusLabelUpdate.Name = "statusLabelUpdate";
-            this.statusLabelUpdate.Size = new System.Drawing.Size(331, 17);
+            this.statusLabelUpdate.Size = new System.Drawing.Size(284, 17);
             this.statusLabelUpdate.Spring = true;
             this.statusLabelUpdate.Text = "Update status known";
             this.statusLabelUpdate.Click += new System.EventHandler(this.statusLabelUpdate_Click);
             // 
             // statusLabelIgnore
             // 
-            this.statusLabelIgnore.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top)
-                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right)
-                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
+            this.statusLabelIgnore.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top) 
+            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right) 
+            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
             this.statusLabelIgnore.Name = "statusLabelIgnore";
-            this.statusLabelIgnore.Size = new System.Drawing.Size(43, 17);
+            this.statusLabelIgnore.Size = new System.Drawing.Size(45, 17);
             this.statusLabelIgnore.Text = "Ignore";
             this.statusLabelIgnore.Visible = false;
             this.statusLabelIgnore.Click += new System.EventHandler(this.statusLabelIgnore_Click);
             // 
             // statusLabelHide
             // 
-            this.statusLabelHide.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top)
-                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right)
-                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
+            this.statusLabelHide.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top) 
+            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right) 
+            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
             this.statusLabelHide.Name = "statusLabelHide";
-            this.statusLabelHide.Size = new System.Drawing.Size(24, 17);
+            this.statusLabelHide.Size = new System.Drawing.Size(26, 17);
             this.statusLabelHide.Text = "Ok";
             this.statusLabelHide.Click += new System.EventHandler(this.statusLabelHide_Click);
             // 
@@ -298,27 +314,27 @@
             this.toolStripStatusLabel1.BackColor = System.Drawing.SystemColors.Info;
             this.toolStripStatusLabel1.ForeColor = System.Drawing.SystemColors.InfoText;
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(303, 17);
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(299, 17);
             this.toolStripStatusLabel1.Spring = true;
             this.toolStripStatusLabel1.Text = "Check for updates automatically?";
             // 
             // statusLabelAutoYes
             // 
-            this.statusLabelAutoYes.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top)
-                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right)
-                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
+            this.statusLabelAutoYes.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top) 
+            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right) 
+            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
             this.statusLabelAutoYes.Name = "statusLabelAutoYes";
-            this.statusLabelAutoYes.Size = new System.Drawing.Size(28, 17);
+            this.statusLabelAutoYes.Size = new System.Drawing.Size(29, 17);
             this.statusLabelAutoYes.Text = "Yes";
             this.statusLabelAutoYes.Click += new System.EventHandler(this.statusLabelAuto_Click);
             // 
             // statusLabelAutoNo
             // 
-            this.statusLabelAutoNo.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top)
-                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right)
-                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
+            this.statusLabelAutoNo.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top) 
+            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right) 
+            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
             this.statusLabelAutoNo.Name = "statusLabelAutoNo";
-            this.statusLabelAutoNo.Size = new System.Drawing.Size(24, 17);
+            this.statusLabelAutoNo.Size = new System.Drawing.Size(27, 17);
             this.statusLabelAutoNo.Text = "No";
             this.statusLabelAutoNo.Click += new System.EventHandler(this.statusLabelAuto_Click);
             // 
@@ -378,5 +394,7 @@
         private System.Windows.Forms.ToolStripStatusLabel statusLabelAutoNo;
         private System.Windows.Forms.ToolStripMenuItem menuGuidToClipBoard;
         private System.Windows.Forms.ToolStripStatusLabel statusLabelIgnore;
+        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem4;
+        private System.Windows.Forms.ToolStripMenuItem menuNewGuidToClipBoard;
     }
 }

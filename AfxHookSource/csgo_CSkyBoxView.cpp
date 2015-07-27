@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-07-25 dominik.matrixstorm.com
+// 2015-07-27 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-07-25 dominik.matrixstorm.com
@@ -18,15 +18,15 @@ typedef void (__stdcall *csgo_CSkyBoxView_Draw_t)(DWORD *this_ptr);
 
 csgo_CSkyBoxView_Draw_t detoured_csgo_CSkyBoxView_Draw;
 
-bool g_bIn_CSkyBoxView_Draw = false;
+bool g_bIn_csgo_CSkyBoxView_Draw = false;
 
 void __stdcall touring_csgo_CSkyBoxView_Draw(DWORD *this_ptr)
 {
-	g_bIn_CSkyBoxView_Draw = true;
+	g_bIn_csgo_CSkyBoxView_Draw = true;
 
 	detoured_csgo_CSkyBoxView_Draw(this_ptr);
 	
-	g_bIn_CSkyBoxView_Draw = false;
+	g_bIn_csgo_CSkyBoxView_Draw = false;
 }
 
 bool csgo_CSkyBoxView_Draw_Install(void)
@@ -36,7 +36,7 @@ bool csgo_CSkyBoxView_Draw_Install(void)
 	if(!firstRun) return firstResult;
 	firstRun = false;
 
-	if(AFXADDR_GET(csgo_CHudDeathNotice_FireGameEvent))
+	if(AFXADDR_GET(csgo_CSkyboxView_Draw))
 	{
 		detoured_csgo_CSkyBoxView_Draw = (csgo_CSkyBoxView_Draw_t)DetourClassFunc((BYTE *)AFXADDR_GET(csgo_CSkyboxView_Draw), (BYTE *)touring_csgo_CSkyBoxView_Draw, (int)AFXADDR_GET(csgo_CSkyboxView_Draw_DSZ));
 
@@ -44,4 +44,17 @@ bool csgo_CSkyBoxView_Draw_Install(void)
 	}
 
 	return firstResult;
+}
+
+float csgo_CSkyBoxView_GetScale(void)
+{
+	if(AFXADDR_GET(csgo_pLocalPlayer) && 0 != *(unsigned char **)AFXADDR_GET(csgo_pLocalPlayer))
+	{
+		int skyBoxScale = *(int *)(*(unsigned char **)AFXADDR_GET(csgo_pLocalPlayer) +AFXADDR_GET(csgo_C_BasePlayer_OFS_m_skybox3d_scale));
+
+		if(skyBoxScale)
+			return 1.0f / skyBoxScale;
+	}
+
+	return 1.0f;
 }

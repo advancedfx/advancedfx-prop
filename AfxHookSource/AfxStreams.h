@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-07-20 dominik.matrixstorm.com
+// 2015-07-27 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -160,6 +160,9 @@ public:
 	virtual void SetBlend(IAfxVRenderView * rv, float blend );
 	virtual void SetColorModulation(IAfxVRenderView * rv, float const* blend );
 
+	HideableAction ClientEffectTexturesAction_get(void);
+	void ClientEffectTexturesAction_set(HideableAction value);
+
 	MaskableAction WorldTexturesAction_get(void);
 	void WorldTexturesAction_set(MaskableAction value);
 
@@ -198,6 +201,12 @@ public:
 
 	MaskableAction StickerAction_get(void);
 	void StickerAction_set(MaskableAction value);
+
+	float DepthVal_get(void);
+	void DepthVal_set(float value);
+
+	float DepthValMax_get(void);
+	void DepthValMax_set(float value);
 	
 	bool DebugPrint_get(void);
 	void DebugPrint_set(bool value);
@@ -205,6 +214,7 @@ public:
 	void InvalidateCache(void);
 
 protected:
+	HideableAction m_ClientEffectTexturesAction;
 	MaskableAction m_WorldTexturesAction;
 	MaskableAction m_SkyBoxTexturesAction;
 	MaskableAction m_StaticPropTexturesAction;
@@ -218,6 +228,8 @@ protected:
 	HideableAction m_ShellParticleAction;
 	HideableAction m_OtherParticleAction;
 	MaskableAction m_StickerAction;
+	float m_DepthVal;
+	float m_DepthValMax;
 
 private:
 	class CAction
@@ -324,8 +336,12 @@ private:
 	: public CAction
 	{
 	public:
-		CActionDepth(IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem)
-		: m_DepthMaterial(freeMaster, matSystem->FindMaterial("afx/depth",NULL))
+		CActionDepth(CAfxBaseFxStream * parent, IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem)
+		: m_Parent(parent)
+		, m_DepthMaterial(freeMaster, matSystem->FindMaterial("afx/depth",NULL))
+		, m_DepthValRef("mat_debugdepthval")
+		, m_DepthValMaxRef("mat_debugdepthvalmax")
+		, m_InvisibleMaterial(freeMaster, matSystem->FindMaterial("afx/invisible",NULL))
 		{
 		}
 
@@ -338,8 +354,12 @@ private:
 		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 );
 
 	private:
+		CAfxBaseFxStream * m_Parent;
 		CAfxMaterial m_DepthMaterial;
 		unsigned long m_OldSrgbWriteEnable;
+		WrpConVarRef m_DepthValRef;
+		WrpConVarRef m_DepthValMaxRef;
+		CAfxMaterial m_InvisibleMaterial;
 	};
 
 	class CActionInvisible
@@ -442,6 +462,7 @@ class CAfxDepthStream
 public:
 	CAfxDepthStream(char const * streamName) : CAfxBaseFxStream(streamName)
 	{
+		m_ClientEffectTexturesAction = HA_NoDraw;
 		m_WorldTexturesAction =  MA_DrawDepth;
 		m_SkyBoxTexturesAction =  MA_DrawDepth;
 		m_StaticPropTexturesAction =  MA_DrawDepth;
@@ -468,6 +489,7 @@ class CAfxMatteWorldStream
 public:
 	CAfxMatteWorldStream(char const * streamName) : CAfxBaseFxStream(streamName)
 	{
+		m_ClientEffectTexturesAction = HA_Draw;
 		m_WorldTexturesAction = MA_Draw;
 		m_SkyBoxTexturesAction = MA_Draw;
 		m_StaticPropTexturesAction = MA_Draw;
@@ -494,6 +516,7 @@ class CAfxDepthWorldStream
 public:
 	CAfxDepthWorldStream(char const * streamName) : CAfxBaseFxStream(streamName)
 	{
+		m_ClientEffectTexturesAction = HA_NoDraw;
 		m_WorldTexturesAction = MA_DrawDepth;
 		m_SkyBoxTexturesAction = MA_DrawDepth;
 		m_StaticPropTexturesAction = MA_DrawDepth;
@@ -520,6 +543,7 @@ class CAfxMatteEntityStream
 public:
 	CAfxMatteEntityStream(char const * streamName) : CAfxBaseFxStream(streamName)
 	{
+		m_ClientEffectTexturesAction = HA_Draw;
 		m_WorldTexturesAction =  MA_Mask;
 		m_SkyBoxTexturesAction =  MA_Mask;
 		m_StaticPropTexturesAction =  MA_Mask;
@@ -546,6 +570,7 @@ class CAfxDepthEntityStream
 public:
 	CAfxDepthEntityStream(char const * streamName) : CAfxBaseFxStream(streamName)
 	{
+		m_ClientEffectTexturesAction = HA_NoDraw;
 		m_WorldTexturesAction =  MA_DrawDepth;
 		m_SkyBoxTexturesAction =  MA_DrawDepth;
 		m_StaticPropTexturesAction =  MA_DrawDepth;
@@ -678,6 +703,10 @@ private:
 	IAfxMeshDraw_2 * m_OnDraw_2;
 	IAfxMeshDrawModulated * m_OnDrawModulated;
 	CAfxFileTracker m_FileTracker;
+	WrpConVarRef * m_MatQueueModeRef;
+	int m_OldMatQueueMode;
+	WrpConVarRef * m_MatPostProcessEnableRef;
+	int m_OldMatPostProcessEnable;
 
 	void OnAfxBaseClientDll_Free(void);
 	bool Console_CheckStreamName(char const * value);
@@ -687,6 +716,11 @@ private:
 	char const * Console_FromHideableAction(CAfxBaseFxStream::HideableAction hideableAction);
 
 	bool CheckCanFeedStreams(void);
+
+	void BackUpMatVars();
+	void SetMatVarsForStreams();
+	void RestoreMatVars();
+	void EnsureMatVars();
 };
 
 extern CAfxStreams g_AfxStreams;

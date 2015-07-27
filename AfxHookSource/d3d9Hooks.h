@@ -12,3 +12,5 @@ IDirect3D9 * WINAPI new_Direct3DCreate9(UINT SDKVersion);
 /// <param name="enable">Can be TRUE or FALSE usually.</param>
 /// <returns>Previous value</returns>
 DWORD AfxD3D9SRGBWriteEnableFix(DWORD enable);
+
+HRESULT AfxD3D9SetVertexShaderConstantF(UINT StartRegister,CONST float* pConstantData,UINT Vector4fCount);

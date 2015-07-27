@@ -6,6 +6,19 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.1.0.0</version>
+<time>2015-07-27T09:07Z</time>
+<changes>
+<change type="added">
+Added mirv_streams officially (renamed from __mirv_streams). The system still has it's limitations, but is now in a state where it makes sense
+to offer it to more users. A few examples for this command will be added to the HLAE Manual hopefully.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.0.13.7</version>
 <time>2015-07-24T17:30Z</time>
 <changes>

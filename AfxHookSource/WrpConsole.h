@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2014-11-12 dominik.matrixstorm.com
+// 2015-07-27 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-10-02 dominik.matrixstorm.com
@@ -120,3 +120,24 @@ private:
    static void name(IWrpCommandArgs * args); \
    static WrpConCommand name##_command( #name, name, description, flags ); \
    static void name(IWrpCommandArgs * args)
+
+////////////////////////////////////////////////////////////////////////////////
+
+/// <remaks>Currently only supports CS:GO!</remarks>
+class WrpConVarRef
+{
+public:
+	WrpConVarRef(char const * pName);
+
+	float GetFloat(void) const;
+	int GetInt(void) const;
+
+	void SetValue(float value);
+
+	/// <remarks>This guarantees the int and float m_Value members to be set immediatelly. However Changecallback and string versions might still be triggered later.</remarks>
+	void SetValueFastHack(float value);
+
+private:
+	ConVar_007 * m_pConVar007;
+
+};

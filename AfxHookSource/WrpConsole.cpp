@@ -194,3 +194,53 @@ bool WrpConCommandsRegistrar_004::RegisterConCommandBase( ConCommandBase_004 *pV
 bool WrpConCommandsRegistrar_007::RegisterConCommandBase( ConCommandBase_007 *pVar ) {
 	return WrpConCommands::WrpConCommandsRegistrar_007_Register(pVar);
 }
+
+// WrpConVar ///////////////////////////////////////////////////////////////////
+
+WrpConVarRef::WrpConVarRef(char const * pName)
+: m_pConVar007(0)
+{
+	ICvar_007 * iCvar007 = WrpConCommands::GetVEngineCvar007();
+	if(iCvar007)
+	{
+		m_pConVar007 = iCvar007->FindVar(pName);
+	}
+
+	if(!m_pConVar007)
+	{
+		Tier0_Warning("AfxError: WrpConVarRef::WrpConVarRef(%s): Could not get ConVar.\n", pName);
+	}
+}
+
+float WrpConVarRef::GetFloat(void) const
+{
+	if(m_pConVar007)
+		return m_pConVar007->m_Value.m_fValue;
+
+	return 0;
+}
+
+int WrpConVarRef::GetInt(void) const
+{
+	if(m_pConVar007)
+		return m_pConVar007->m_Value.m_nValue;
+
+	return 0;
+}
+
+void WrpConVarRef::SetValue(float value)
+{
+	if(m_pConVar007)
+		m_pConVar007->SetValue(value);
+}
+
+void WrpConVarRef::SetValueFastHack(float value)
+{
+	if(m_pConVar007)
+	{
+		m_pConVar007->m_Value.m_fValue = value;
+		m_pConVar007->m_Value.m_nValue = (int)value;
+	}
+
+	SetValue(value);
+}

@@ -45,7 +45,7 @@ CON_COMMAND(__mirv_skyboxscale, "print skyboxscale in CS:GO")
 		Tier0_Msg("skyBoxScale: n/a\n");
 }
 
-CON_COMMAND(__mirv_streams, "Access to streams system.")
+CON_COMMAND(mirv_streams, "Access to streams system.")
 {
 	int argc = args->ArgC();
 

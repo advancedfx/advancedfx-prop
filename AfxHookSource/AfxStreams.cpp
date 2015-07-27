@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-07-20 dominik.matrixstorm.com
+// 2015-07-27 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -13,6 +13,7 @@
 #include "SourceInterfaces.h"
 #include "WrpVEngineClient.h"
 #include "d3d9Hooks.h"
+#include "csgo_CSkyBoxView.h"
 
 #include <shared/StringTools.h>
 
@@ -386,6 +387,7 @@ void CAfxDeveloperStream::DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecD
 
 CAfxBaseFxStream::CAfxBaseFxStream(char const * streamName)
 : CAfxStream(streamName)
+, m_ClientEffectTexturesAction(HA_Draw)
 , m_WorldTexturesAction(MA_Draw)
 , m_SkyBoxTexturesAction(MA_Draw)
 , m_StaticPropTexturesAction(MA_Draw)
@@ -399,6 +401,8 @@ CAfxBaseFxStream::CAfxBaseFxStream(char const * streamName)
 , m_ShellParticleAction(HA_Draw)
 , m_OtherParticleAction(HA_Draw)
 , m_StickerAction(MA_Draw)
+, m_DepthVal(1)
+, m_DepthValMax(1024)
 , m_CurrentAction(0)
 , m_DepthAction(0)
 , m_MatteAction(0)
@@ -431,7 +435,7 @@ void CAfxBaseFxStream::StreamAttach(IAfxStreams4Stream * streams)
 	CAfxStream::StreamAttach(streams);
 
 	if(!m_PassthroughAction) m_PassthroughAction = new CAction();
-	if(!m_DepthAction) m_DepthAction = new CActionDepth(streams->GetFreeMaster(), streams->GetMaterialSystem());
+	if(!m_DepthAction) m_DepthAction = new CActionDepth(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
 	if(!m_MatteAction) m_MatteAction = new CActionMatte(streams->GetFreeMaster(), streams->GetMaterialSystem());
 	if(!m_InvisibleAction) m_InvisibleAction = new CActionInvisible(streams->GetFreeMaster(), streams->GetMaterialSystem());
 	if(!m_NoDrawAction) m_NoDrawAction = new CActionNoDraw();
@@ -486,6 +490,9 @@ void CAfxBaseFxStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * materia
 		/*if(!strcmp("LightmappedGeneric", shaderName))
 			m_CurrentAction = GetAction(m_DecalTexturesAction);
 		else*/
+		if(!strcmp("ClientEffect textures", groupName))
+			m_CurrentAction = GetAction(m_ClientEffectTexturesAction);
+		else
 		if(!strcmp("Decal textures", groupName))
 			m_CurrentAction = GetAction(m_DecalTexturesAction);
 		else
@@ -617,6 +624,18 @@ void CAfxBaseFxStream::SetBlend(IAfxVRenderView * rv, float blend )
 void CAfxBaseFxStream::SetColorModulation(IAfxVRenderView * rv, float const* blend)
 {
 	m_CurrentAction->SetColorModulation(rv, blend);
+}
+
+CAfxBaseFxStream::HideableAction CAfxBaseFxStream::ClientEffectTexturesAction_get(void)
+{
+	return m_ClientEffectTexturesAction;
+}
+
+void CAfxBaseFxStream::ClientEffectTexturesAction_set(HideableAction value)
+{
+	InvalidateCache();
+
+	m_ClientEffectTexturesAction = value;
 }
 
 CAfxBaseFxStream::MaskableAction CAfxBaseFxStream::WorldTexturesAction_get(void)
@@ -763,6 +782,26 @@ void CAfxBaseFxStream::StickerAction_set(MaskableAction value)
 	m_StickerAction = value;
 }
 
+float CAfxBaseFxStream::DepthVal_get(void)
+{
+	return m_DepthVal;
+}
+
+void CAfxBaseFxStream::DepthVal_set(float value)
+{
+	m_DepthVal = value;
+}
+
+float CAfxBaseFxStream::DepthValMax_get(void)
+{
+	return m_DepthValMax;
+}
+
+void CAfxBaseFxStream::DepthValMax_set(float value)
+{
+	m_DepthValMax = value;
+}
+
 bool CAfxBaseFxStream::DebugPrint_get(void)
 {
 	return m_DebugPrint;
@@ -813,15 +852,46 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(HideableAction value)
 
 // CAfxBaseFxStream::CActionDepth //////////////////////////////////////////////
 
+bool g_bCActionDepth = false;
+
 void CAfxBaseFxStream::CActionDepth::AfxUnbind(IAfxMatRenderContext * ctx)
 {
+	// revert SRGBWriteEnable to old state:
 	AfxD3D9SRGBWriteEnableFix(m_OldSrgbWriteEnable);
-}
 
+	g_bCActionDepth = false;
+}
 
 void CAfxBaseFxStream::CActionDepth::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData)
 {
+	g_bCActionDepth = true;
+
+	// set-up debudepth material cvars accordingly:
+
+	float scale = g_bIn_csgo_CSkyBoxView_Draw ? csgo_CSkyBoxView_GetScale() : 1.0f;
+	float flDepthFactor = scale * m_Parent->m_DepthVal;
+	float flDepthFactorMax = scale * m_Parent->m_DepthValMax;
+	if ( flDepthFactor == 0 ) 
+	{ 
+		flDepthFactor = 1.0f; 
+	} 
+
+	m_DepthValRef.SetValueFastHack(flDepthFactor);
+	//if(flDepthFactor != m_DepthValRef.GetFloat()) Tier0_Msg("CAfxBaseFxStream::CActionDepth::Bind: Error with m_DepthValRef: Expected %f got %f.\n", flDepthFactor, m_DepthValRef.GetFloat());
+	m_DepthValMaxRef.SetValueFastHack(flDepthFactorMax);
+	//if(flDepthFactorMax != m_DepthValMaxRef.GetFloat()) Tier0_Msg("CAfxBaseFxStream::CActionDepth::Bind: Error with m_DepthValMaxRef: Expected %f got %f.\n", flDepthFactorMax, m_DepthValMaxRef.GetFloat());
+
+	// Bind our material:
+
 	ctx->GetParent()->Bind(m_DepthMaterial.GetMaterial(), proxyData);
+	
+	// fix-up shader constants, because those are updated quite randomly
+	// which would cause problems:
+
+	//float vecZFactor[4] = { (flDepthFactorMax - flDepthFactor), flDepthFactor, 1 ,1};
+	//AfxD3D9SetVertexShaderConstantF(48, vecZFactor, 1);
+
+	// Force SRGBWriteEnable to off (Engine doesn't do this, otherwise it would be random): 
 
 	m_OldSrgbWriteEnable = AfxD3D9SRGBWriteEnableFix(FALSE);
 }
@@ -841,6 +911,8 @@ CAfxStreams::CAfxStreams()
 , m_OnDraw(0)
 , m_OnDraw_2(0)
 , m_OnDrawModulated(0)
+, m_MatQueueModeRef(0)
+, m_MatPostProcessEnableRef(0)
 {
 }
 
@@ -853,6 +925,9 @@ CAfxStreams::~CAfxStreams()
 	}
 
 	delete m_OnAfxBaseClientDll_Free;
+
+	delete m_MatQueueModeRef;
+	delete m_MatPostProcessEnableRef;
 }
 
 
@@ -943,6 +1018,9 @@ void CAfxStreams::Console_Record_Start()
 	m_Recording = true;
 	m_Frame = 0;
 
+	BackUpMatVars();
+	SetMatVarsForStreams();
+
 	Tier0_Msg("done.\n");
 }
 
@@ -953,6 +1031,7 @@ void CAfxStreams::Console_Record_End()
 		Tier0_Msg("Finishing recording ... ");
 
 		m_FileTracker.WaitForFiles(0);
+		RestoreMatVars();
 
 		Tier0_Msg("done.\n");
 	}
@@ -1059,6 +1138,10 @@ void CAfxStreams::Console_PreviewStream(const char * streamName)
 {
 	if(StringIsEmpty(streamName))
 	{
+		if(m_PreviewStream)
+		{
+			if(!m_Recording) RestoreMatVars();
+		}
 		m_PreviewStream = 0;
 		return;
 	}
@@ -1069,6 +1152,8 @@ void CAfxStreams::Console_PreviewStream(const char * streamName)
 		{
 			CAfxStream * cur = *it;
 			m_PreviewStream = cur;
+			if(!m_Recording) BackUpMatVars();
+			SetMatVarsForStreams();
 			return;
 		}
 	}
@@ -1209,6 +1294,29 @@ void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * 
 				{
 					char const * cmd0 = args->ArgV(argcOffset +0);
 
+					if(!_stricmp(cmd0, "clientEffectTexturesAction"))
+					{
+						if(2 <= argc)
+						{
+							char const * cmd1 = args->ArgV(argcOffset +1);
+							CAfxBaseFxStream::HideableAction value;
+
+							if(Console_ToHideableAction(cmd1, value))
+							{
+								curBaseFx->ClientEffectTexturesAction_set(value);
+								return;
+							}
+						}
+
+						Tier0_Msg(
+							"%s clientEffectTexturesAction draw|noDraw - Set new action.\n"
+							"Current value: %s.\n"
+							, cmdPrefix
+							, Console_FromHideableAction(curBaseFx->ClientEffectTexturesAction_get())
+						);
+						return;
+					}
+					else
 					if(!_stricmp(cmd0, "worldTexturesAction"))
 					{
 						if(2 <= argc)
@@ -1508,6 +1616,42 @@ void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * 
 						return;
 					}
 					else
+					if(!_stricmp(cmd0, "depthVal"))
+					{
+						if(2 <= argc)
+						{
+							char const * cmd1 = args->ArgV(argcOffset +1);
+							curBaseFx->DepthVal_set((float)atof(cmd1));
+							return;
+						}
+
+						Tier0_Msg(
+							"%s depthVal <fValue> - Set new miniumum depth floating point value <fValue>.\n"
+							"Current value: %f.\n"
+							, cmdPrefix
+							, curBaseFx->DepthVal_get()
+						);
+						return;
+					}
+					else
+					if(!_stricmp(cmd0, "depthValMax"))
+					{
+						if(2 <= argc)
+						{
+							char const * cmd1 = args->ArgV(argcOffset +1);
+							curBaseFx->DepthValMax_set((float)atof(cmd1));
+							return;
+						}
+
+						Tier0_Msg(
+							"%s depthValMax <fValue> - Set new maximum depth floating point value <fValue>.\n"
+							"Current value: %f.\n"
+							, cmdPrefix
+							, curBaseFx->DepthValMax_get()
+						);
+						return;
+					}
+					else
 					if(!_stricmp(cmd0, "debugPrint"))
 					{
 						if(2 <= argc)
@@ -1550,6 +1694,7 @@ void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * 
 
 			if(curBaseFx)
 			{
+				Tier0_Msg("%s clientEffectTexturesAction [...]\n", cmdPrefix);
 				Tier0_Msg("%s worldTexturesAction [...]\n", cmdPrefix);
 				Tier0_Msg("%s skyBoxTexturesAction [...]\n", cmdPrefix);
 				Tier0_Msg("%s staticPropTexturesAction [...]\n", cmdPrefix);
@@ -1563,6 +1708,8 @@ void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * 
 				Tier0_Msg("%s shellParticleAction [...]\n", cmdPrefix);
 				Tier0_Msg("%s otherParticleAction [...]\n", cmdPrefix);
 				Tier0_Msg("%s stickerAction [...]\n", cmdPrefix);
+				Tier0_Msg("%s depthVal [...]\n", cmdPrefix);
+				Tier0_Msg("%s deptValMax [...]\n", cmdPrefix);
 				Tier0_Msg("%s debugPrint [...]\n", cmdPrefix);
 				Tier0_Msg("%s invalidateCache - invaldiates the material cache.\n", cmdPrefix);
 			}
@@ -1645,13 +1792,19 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 		if(!canFeed)
 			Tier0_Warning("Error: Cannot preview stream %s due to missing dependencies!\n", m_PreviewStream->GetStreamName());
 		else
+		{
+			SetMatVarsForStreams(); // keep them set in case a mofo resets them.
+
 			m_PreviewStream->StreamAttach(this);
+		}
 	}
 
 	cl->GetParent()->View_Render(rect);
 
 	if(m_PreviewStream && canFeed)
+	{
 		m_PreviewStream->StreamDetach(this);
+	}
 
 	if(m_Recording)
 	{
@@ -1684,6 +1837,8 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 
 				//
 				// Record the stream to a file:
+
+				SetMatVarsForStreams(); // keep them set in case a mofo resets them.
 
 				(*it)->StreamAttach(this);
 
@@ -1825,4 +1980,34 @@ bool CAfxStreams::CheckCanFeedStreams(void)
 		&& 0 != m_AfxBaseClientDll
 		&& 0 != m_CurrentContext
 	;
+}
+
+void CAfxStreams::BackUpMatVars()
+{
+	EnsureMatVars();
+
+	m_OldMatQueueMode = m_MatQueueModeRef->GetInt();
+	m_OldMatPostProcessEnable = m_MatPostProcessEnableRef->GetInt();
+}
+
+void CAfxStreams::SetMatVarsForStreams()
+{
+	EnsureMatVars();
+
+	m_MatQueueModeRef->SetValue(0.0f);
+	m_MatPostProcessEnableRef->SetValue(0.0f);
+}
+
+void CAfxStreams::RestoreMatVars()
+{
+	EnsureMatVars();
+
+	m_MatQueueModeRef->SetValue(m_OldMatQueueMode);
+	m_MatPostProcessEnableRef->SetValue(m_OldMatPostProcessEnable);
+}
+
+void CAfxStreams::EnsureMatVars()
+{
+	if(!m_MatQueueModeRef) m_MatQueueModeRef = new WrpConVarRef("mat_queue_mode");
+	if(!m_MatPostProcessEnableRef) m_MatPostProcessEnableRef = new WrpConVarRef("mat_postprocess_enable");
 }

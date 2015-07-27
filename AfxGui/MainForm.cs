@@ -288,5 +288,11 @@ namespace AfxGui
         {
             openContestLink();
         }
+
+        private void menuNewGuidToClipBoard_Click(object sender, EventArgs e)
+        {
+            Clipboard.SetText(Guid.NewGuid().ToString()); 
+        }
+
     }
 }

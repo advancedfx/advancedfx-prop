@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2009-10-02 by dominik.matrixstorm.com
+// 2015-07-27 by dominik.matrixstorm.com
 //
 // First changes:
 // 2009-09-30 by dominik.matrixstorm.com
@@ -1026,6 +1026,182 @@ inline ConCommandBase_007 * ICvar_007::Iterator::Get( void )
 {
 	return m_pIter->Get();
 }
+
+//-----------------------------------------------------------------------------
+// Abstract interface for ConVars
+//-----------------------------------------------------------------------------
+class IConVar_007 abstract
+{
+public:
+	// Value set
+	virtual void SetValue( const char *pValue ) = 0;
+	virtual void SetValue( float flValue ) = 0;
+	virtual void SetValue( int nValue ) = 0;
+	virtual void SetValue( Color value ) = 0;
+
+	// Return name of command
+	virtual const char *GetName( void ) const = 0;
+
+	// Return name of command (usually == GetName(), except in case of FCVAR_SS_ADDED vars
+	virtual const char *GetBaseName( void ) const = 0;
+
+	// Accessors.. not as efficient as using GetState()/GetInfo()
+	// if you call these methods multiple times on the same IConVar
+	virtual bool IsFlagSet( int nFlag ) const = 0;
+
+	virtual int GetSplitScreenPlayerSlot() const = 0;
+};
+
+template< class T, class I = int >
+/// <remarks>Warning, only required elements declared and defined!</remarks>
+class CUtlMemory_007
+{
+public:
+	//
+	// We don't need this
+};
+
+template< class T, class A = CUtlMemory_007<T> >
+/// <remarks>Warning, only required elements declared and defined!</remarks>
+class CUtlVector_007
+{
+	typedef A CAllocator;
+public:
+	typedef T ElemType_t;
+
+protected:
+	CAllocator m_Memory;
+	int m_Size;
+
+#ifndef _X360
+	// For easier access to the elements through the debugger
+	// it's in release builds so this can be used in libraries correctly
+	T *m_pElements;
+
+#else
+#endif
+};
+
+//-----------------------------------------------------------------------------
+// Called when a ConVar changes value
+// NOTE: For FCVAR_NEVER_AS_STRING ConVars, pOldValue == NULL
+//-----------------------------------------------------------------------------
+typedef void ( *FnChangeCallback_t_007 )( IConVar_007 *var, const char *pOldValue, float flOldValue );
+
+//-----------------------------------------------------------------------------
+// Purpose: A console variable
+//-----------------------------------------------------------------------------
+/// <remarks>Warning, only required elements declared and defined!</remarks>
+class ConVar_007 abstract : public ConCommandBase_007, public IConVar_007
+{
+friend class CCvar_007;
+friend class ConVarRef_007;
+friend class SplitScreenConVarRef_007;
+
+friend class WrpConVarRef;
+
+public:
+	typedef ConCommandBase_007 BaseClass;
+
+	/// <remarks>not implemented</remarks>
+	virtual						~ConVar_007( void ) = 0;
+
+	/// <remarks>not implemented</remarks>
+	virtual bool				IsFlagSet( int flag ) const = 0;
+
+	/// <remarks>not implemented</remarks>
+	virtual const char*			GetHelpText( void ) const = 0;
+
+	/// <remarks>not implemented</remarks>
+	virtual bool				IsRegistered( void ) const = 0;
+
+	/// <remarks>not implemented</remarks>
+	virtual const char			*GetName( void ) const = 0;
+
+	// Return name of command (usually == GetName(), except in case of FCVAR_SS_ADDED vars
+	/// <remarks>not implemented</remarks>
+	virtual const char			*GetBaseName( void ) const = 0;
+
+	/// <remarks>not implemented</remarks>
+	virtual int					GetSplitScreenPlayerSlot() const = 0;
+
+	/// <remarks>not implemented</remarks>
+	virtual void				AddFlags( int flags ) = 0;
+
+	/// <remarks>not implemented</remarks>
+	virtual int					GetFlags() const = 0;
+
+	/// <remarks>not implemented</remarks>
+	virtual	bool				IsCommand( void ) const = 0;
+
+	// These just call into the IConCommandBaseAccessor to check flags and set the var (which ends up calling InternalSetValue).
+	virtual void				SetValue( const char *value ) = 0;
+	virtual void				SetValue( float value ) = 0;
+	virtual void				SetValue( int value ) = 0;
+	virtual void				SetValue( Color value ) = 0;
+	
+	// Value
+	struct CVValue_t
+	{
+		char						*m_pszString;
+		int							m_StringLength;
+
+		// Values
+		float						m_fValue;
+		int							m_nValue;
+	};
+
+	FORCEINLINE_CVAR CVValue_t &GetRawValue()
+	{
+		return m_Value;
+	}
+	FORCEINLINE_CVAR const CVValue_t &GetRawValue() const
+	{
+		return m_Value;
+	}
+
+private:
+	// Called by CCvar when the value of a var is changing.
+	virtual void				InternalSetValue(const char *value) = 0;
+
+	// For CVARs marked FCVAR_NEVER_AS_STRING
+	virtual void				InternalSetFloatValue( float fNewValue ) = 0;
+	virtual void				InternalSetIntValue( int nValue ) = 0;
+	virtual void				InternalSetColorValue( Color value ) = 0;
+
+	virtual bool				ClampValue( float& value ) = 0;
+	virtual void				ChangeStringValue( const char *tempVal, float flOldValue ) = 0;
+
+	virtual void				Create( const char *pName, const char *pDefaultValue, int flags = 0,
+									const char *pHelpString = 0, bool bMin = false, float fMin = 0.0,
+									bool bMax = false, float fMax = false, FnChangeCallback_t_007 callback = 0 ) = 0;
+
+	// Used internally by OneTimeInit to initialize.
+	virtual void				Init() = 0;
+
+
+
+protected:
+
+	// This either points to "this" or it points to the original declaration of a ConVar.
+	// This allows ConVars to exist in separate modules, and they all use the first one to be declared.
+	// m_pParent->m_pParent must equal m_pParent (ie: m_pParent must be the root, or original, ConVar).
+	ConVar_007						*m_pParent;
+
+	// Static data
+	const char					*m_pszDefaultValue;
+	
+	CVValue_t					m_Value;
+
+	// Min/Max values
+	bool						m_bHasMin;
+	float						m_fMinVal;
+	bool						m_bHasMax;
+	float						m_fMaxVal;
+	
+	// Call this function when ConVar changes
+	CUtlVector_007<FnChangeCallback_t_007> m_fnChangeCallbacks;
+};
 
 // IVEngineClient_012 //////////////////////////////////////////////////////////
 
