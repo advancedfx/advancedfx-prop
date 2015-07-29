@@ -95,6 +95,10 @@ namespace AfxGui
                     break;
                 //case "-rememberChanges":
                 case "-foreceAlpha":
+                case "-forceAlpha":
+                    if (arg == "-foreceAlpha")
+                        MessageBox.Show("-foreceAlpha is deprecated, use -forceAlpha instead!", "Deprecated launch option!", MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1);
+
                     if (i + 1 < args.Length)
                     {
                         Boolean.TryParse(args[i + 1], out GlobalConfig.Instance.Settings.Launcher.ForceAlpha);

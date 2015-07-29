@@ -13,6 +13,7 @@
 
 #include "DemoPlayer/DemoPlayer.h"
 #include "hw/CL_Disconnect.h"
+#include "hw/Host_Init.h"
 #include "hw/Host_Frame.h"
 #include "hw/Mod_LeafPvs.h"
 #include "hw/R_DrawEntitiesOnList.h"
@@ -239,6 +240,8 @@ void HookHw(HMODULE hHw)
 		MessageBox(0,"One or more interceptions failed","MDT_ERROR",MB_OK|MB_ICONHAND);
 
 	Hook_CL_Disconnect();
+
+	Hook_Host_Init();
 
 	Hook_Host_Frame();
 

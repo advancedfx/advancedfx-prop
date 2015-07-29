@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookGoldSrc</name>
+<version>2.4.7.2</version>
+<time>2015-07-29T17:00Z</time>
+<changes>
+<change type="updated">
+Updated to register mirv_* commands earlier, so that you can already use them in the launch options / command line.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookGoldSrc</name>
 <version>2.4.7.1</version>
 <time>2015-07-26T18:10Z</time>
 <changes>

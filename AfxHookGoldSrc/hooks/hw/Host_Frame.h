@@ -5,7 +5,7 @@
 extern double * g_phost_frametime;
 
 // this is the time since the last function call
-// and can be much greater than *g_phost_frametime
+// and can be much greater than *g_phost_frametime:
 // extern float g_Host_Frame_time;
 
 extern bool g_Host_Frame_Called;

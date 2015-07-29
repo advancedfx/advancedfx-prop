@@ -1,6 +1,5 @@
 #include "stdafx.h"
 
-#include "HookGameLoaded.h"
 #include "OpenGl32Hooks.h"
 #include "user32Hooks.h"
 
@@ -262,8 +261,6 @@ void APIENTRY NewGlViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 #if MDT_DEBUG
 		MessageBox(0,"First NewGlViewport","MDT_DEBUG",MB_OK|MB_ICONINFORMATION);
 #endif
-
-		HookGameLoaded();
 
 		bFirstRun = false;
 	}

@@ -33,6 +33,8 @@ AFXADDR_DEF(DTOURSZ_S_TransferPaintBuffer)
 AFXADDR_DEF(GetSoundtime)
 AFXADDR_DEF(Host_Frame)
 AFXADDR_DEF(Host_Frame_DSZ)
+AFXADDR_DEF(Host_Init)
+AFXADDR_DEF(Host_Init_DSZ)
 AFXADDR_DEF(Mod_LeafPVS)
 AFXADDR_DEF(R_DrawEntitiesOnList)
 AFXADDR_DEF(R_DrawParticles)
@@ -114,6 +116,7 @@ AFXADDR_DEF(valve_TeamFortressViewport_UpdateSpecatorPanel_DSZ)
 // *[15] doc/notes_goldsrc/debug_sv_variables.txt
 // n[16] doc/notes_goldsrc/debug_CL_Disconnect.txt
 // n[17] doc/notes_goldsrc/debug_fov.txt
+// n[18] doc/notes_goldsrc/debug_Host_Init.txt
 
 void Addresses_InitHlExe(AfxAddr hlExe)
 {
@@ -135,6 +138,9 @@ void Addresses_InitHwDll(AfxAddr hwDll)
 	//
 	// General engine hooks:
 	//
+
+	AFXADDR_SET(Host_Init, hwDll +0x568F0); // *[18]
+	AFXADDR_SET(Host_Init_DSZ, 0x09); // *[18]
 	
 	AFXADDR_SET(Host_Frame, hwDll +0x561E0); // *[8]
 	AFXADDR_SET(Host_Frame_DSZ, 0x05); // *[8]

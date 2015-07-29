@@ -6,6 +6,21 @@
 
 <release>
 <name>HLAE</name>
+<version>2.5.0.1</version>
+<time>2015-07-29T17:02Z</time>
+<changes>
+<change type="updated">
+Included AfxHookGoldSrc 2.4.7.2 (2015-07-29T17:00Z).
+</change>
+<change type="fixed">
+Fixed command line option for -afxHookGoldSrc, renamed -foreceAlpha to -forceAlpha, this is a breaking change, -foreceAlpha is deprecated and will trigger a warning message box.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.5.0.0</version>
 <time>2015-07-27T09:10Z</time>
 <changes>
@@ -13,7 +28,7 @@
 Included AfxHookGoldSrc 2.4.7.1 (2015-07-26T18:10Z).
 </change>
 <change type="updated">
-Included AfxHookSource 0.0.13.7 (2015-07-24T17:30Z).
+Included AfxHookSource 0.1.0.0 (2015-07-27T09:07Z).
 </change>
 </changes>
 </release>

@@ -1,10 +1,9 @@
 #include "stdafx.h"
 
 #include "Host_Frame.h"
-
 #include <hl_addresses.h>
-
 #include "../../AfxGoldSrcComClient.h"
+#include "../HookGameLoaded.h"
 
 #include <shared/detours.h>
 

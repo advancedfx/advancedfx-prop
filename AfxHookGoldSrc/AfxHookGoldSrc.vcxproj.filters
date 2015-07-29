@@ -282,6 +282,9 @@
     <ClCompile Include="..\shared\binutils.cpp">
       <Filter>shared</Filter>
     </ClCompile>
+    <ClCompile Include="hooks\hw\Host_Init.cpp">
+      <Filter>AfxHookGoldSrc\hooks\hw</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -499,6 +502,9 @@
     </ClInclude>
     <ClInclude Include="..\shared\binutils.h">
       <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\hw\Host_Init.h">
+      <Filter>AfxHookGoldSrc\hooks\hw</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
