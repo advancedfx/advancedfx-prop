@@ -96,6 +96,9 @@
     <ClCompile Include="csgo_CSkyBoxView.cpp">
       <Filter>AfxHookSource</Filter>
     </ClCompile>
+    <ClCompile Include="CampathDrawer.cpp">
+      <Filter>AfxHookSource</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -186,6 +189,9 @@
       <Filter>AfxHookSource</Filter>
     </ClInclude>
     <ClInclude Include="csgo_CSkyBoxView.h">
+      <Filter>AfxHookSource</Filter>
+    </ClInclude>
+    <ClInclude Include="CampathDrawer.h">
       <Filter>AfxHookSource</Filter>
     </ClInclude>
   </ItemGroup>

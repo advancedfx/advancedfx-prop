@@ -2,6 +2,9 @@
 
 #include "d3d9Hooks.h"
 
+#include "SourceInterfaces.h"
+#include "CampathDrawer.h"
+
 #include <shared/detours.h>
 
 typedef struct __declspec(novtable) Interface_s abstract {} * Interface_t;
@@ -20,8 +23,7 @@ typedef void * (__stdcall Interface_s::*InterfaceFn_t) (void *);
 		} \
 	}
 
-
-extern bool g_bCActionDepth;
+extern bool g_bD3D9DebugPrint;
 
 IDirect3DDevice9 * g_OldDirect3DDevice9 = 0;
 
@@ -37,8 +39,8 @@ public:
 	{
 		ULONG result = g_OldDirect3DDevice9->AddRef();
 
-		// if(0 == g_NewDirect3DDevic9_RefCount)
-		//	g_MirvShader.BeginDevice(g_OldDirect3DDevice9);
+		if(0 == g_NewDirect3DDevic9_RefCount)
+			g_CampathDrawer.BeginDevice(g_OldDirect3DDevice9);
 
 		++g_NewDirect3DDevic9_RefCount;
 
@@ -49,8 +51,8 @@ public:
 	{
 		--g_NewDirect3DDevic9_RefCount;
 
-		// if(0 == g_NewDirect3DDevic9_RefCount)
-		//	g_MirvShader.EndDevice();
+		if(0 == g_NewDirect3DDevic9_RefCount)
+			g_CampathDrawer.EndDevice();
 
 		return g_OldDirect3DDevice9->Release();
 	}
@@ -102,16 +104,42 @@ public:
 
     STDMETHOD(EndScene)(THIS)
 	{
+		//g_CampathDrawer.OnEndScene();
+
+		g_bD3D9DebugPrint = false;
+
 		return g_OldDirect3DDevice9->EndScene();
 	}
 
-    IFACE_PASSTHROUGH(IDirect3DDevice9, Clear, g_OldDirect3DDevice9);
+    STDMETHOD(Clear)(THIS_ DWORD Count,CONST D3DRECT* pRects,DWORD Flags,D3DCOLOR Color,float Z,DWORD Stencil)
+	{
+		if(g_bD3D9DebugPrint)
+		{
+			Tier0_Msg("Clear: ");
+			Tier0_Msg("Flags=");
+			if(Flags & D3DCLEAR_STENCIL) Tier0_Msg("|D3DCLEAR_STENCIL");
+			if(Flags & D3DCLEAR_TARGET) Tier0_Msg("|D3DCLEAR_TARGET");
+			if(Flags & D3DCLEAR_ZBUFFER) Tier0_Msg("|D3DCLEAR_ZBUFFER");
+			Tier0_Msg(" Z=%f",Z);
+			Tier0_Msg("\n");
+		}
+
+		return g_OldDirect3DDevice9->Clear(Count, pRects, Flags, Color, Z, Stencil);
+	}
+
     IFACE_PASSTHROUGH(IDirect3DDevice9, SetTransform, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetTransform, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, MultiplyTransform, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, SetViewport, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetViewport, g_OldDirect3DDevice9);
-    IFACE_PASSTHROUGH(IDirect3DDevice9, SetMaterial, g_OldDirect3DDevice9);
+    
+	STDMETHOD(SetMaterial)(THIS_ CONST D3DMATERIAL9* pMaterial)
+	{
+		g_CampathDrawer.OnSetMaterial(pMaterial);
+
+		return g_OldDirect3DDevice9->SetMaterial(pMaterial);
+	}
+
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetMaterial, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, SetLight, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetLight, g_OldDirect3DDevice9);
@@ -122,9 +150,69 @@ public:
     
     STDMETHOD(SetRenderState)(THIS_ D3DRENDERSTATETYPE State,DWORD Value)
 	{
+		if(g_bD3D9DebugPrint)
+		{
+			Tier0_Msg("SetRenderState:");
+
+			switch(State)
+			{
+			case D3DRS_ZWRITEENABLE:
+				Tier0_Msg("D3DRS_ZWRITEENABLE: %s",
+					Value & TRUE  ? "TRUE" : "false"
+					);
+				break;
+			case D3DRS_ZFUNC:
+				Tier0_Msg("D3DRS_ZFUNC: ");
+				switch(Value)
+				{
+				case D3DCMP_NEVER:
+					Tier0_Msg("D3DCMP_NEVER");
+					break;
+				case D3DCMP_LESS:
+					Tier0_Msg("D3DCMP_LESS");
+					break;
+				case D3DCMP_EQUAL:
+					Tier0_Msg("D3DCMP_EQUAL");
+					break;
+				case D3DCMP_LESSEQUAL:
+					Tier0_Msg("D3DCMP_LESSEQUAL");
+					break;
+				case D3DCMP_GREATER:
+					Tier0_Msg("D3DCMP_GREATER");
+					break;
+				case D3DCMP_NOTEQUAL:
+					Tier0_Msg("D3DCMP_NOTEQUAL");
+					break;
+				case D3DCMP_GREATEREQUAL:
+					Tier0_Msg("D3DCMP_GREATEREQUAL");
+					break;
+				case D3DCMP_ALWAYS:
+					Tier0_Msg("D3DCMP_ALWAYS");
+					break;
+				default:
+					Tier0_Msg("other");
+				}
+				break;
+			case D3DRS_COLORWRITEENABLE:
+				Tier0_Msg("D3DRS_COLORWRITEENABLE: R:%s G:%s B:%s A:%s",
+					Value & D3DCOLORWRITEENABLE_RED ? "ON" : "off",
+					Value & D3DCOLORWRITEENABLE_GREEN ? "ON" : "off",
+					Value & D3DCOLORWRITEENABLE_BLUE ? "ON" : "off",
+					Value & D3DCOLORWRITEENABLE_ALPHA ? "ON" : "off"
+					);
+				break;
+			default:
+				Tier0_Msg("other");
+			}
+
+			Tier0_Msg("\n");
+
+		}
+
+		g_CampathDrawer.OnSetRenderState(State, Value);
+
 		return g_OldDirect3DDevice9->SetRenderState(State, Value);
 	}
-
 
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetRenderState, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, CreateStateBlock, g_OldDirect3DDevice9);
@@ -163,10 +251,6 @@ public:
     
     STDMETHOD(SetVertexShader)(THIS_ IDirect3DVertexShader9* pShader)
 	{
-		//HRESULT result;
-
-		// return g_MirvShader.OnSetVertexShader(pShader, result) ? result : g_OldDirect3DDevice9->SetVertexShader(pShader);
-
 		return g_OldDirect3DDevice9->SetVertexShader(pShader);
 	}
 
@@ -174,16 +258,28 @@ public:
 	
     STDMETHOD(SetVertexShaderConstantF)(THIS_ UINT StartRegister,CONST float* pConstantData,UINT Vector4fCount)
 	{
-		/*
-		int lo = StartRegister;
-		int hi = StartRegister+Vector4fCount;
-		bool inRange = lo <= 48 && 48 < hi;
-
-		if(g_bCActionDepth && inRange)
+		if(g_bD3D9DebugPrint)
 		{
-			
-			return D3D_OK;
-		}*/
+			int lo = StartRegister;
+			int hi = StartRegister+Vector4fCount;
+			bool inRange = lo <= 8 && 8 < hi || lo <= 9 && 9 < hi || lo <= 10 && 10 < hi || lo <= 11 && 11 < hi;
+
+			if(inRange)
+			{
+				int min = lo;
+				if(8>min) min = 8;
+
+				int maxC = hi;
+				if(12<maxC) maxC = 12;
+
+				Tier0_Msg("SetVertexShaderConstantF:\n");
+				for(int i=min; i<maxC; i++)
+				{
+					int idx = i - StartRegister;
+					Tier0_Msg("\t%i: %f %f %f %f\n", i, pConstantData[4*idx+0], pConstantData[4*idx+1], pConstantData[4*idx+2], pConstantData[4*idx+3]);
+				}
+			}
+		}
 
 		return g_OldDirect3DDevice9->SetVertexShaderConstantF(StartRegister, pConstantData, Vector4fCount);
 	}
@@ -214,10 +310,6 @@ public:
     
     STDMETHOD(SetPixelShader)(THIS_ IDirect3DPixelShader9* pShader)
 	{
-		//HRESULT result;
-
-		//return g_MirvShader.OnSetPixelShader(pShader, result) ? result : g_OldDirect3DDevice9->SetPixelShader(pShader);
-
 		return  g_OldDirect3DDevice9->SetPixelShader(pShader);
 	}
 

@@ -852,20 +852,14 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(HideableAction value)
 
 // CAfxBaseFxStream::CActionDepth //////////////////////////////////////////////
 
-bool g_bCActionDepth = false;
-
 void CAfxBaseFxStream::CActionDepth::AfxUnbind(IAfxMatRenderContext * ctx)
 {
 	// revert SRGBWriteEnable to old state:
 	AfxD3D9SRGBWriteEnableFix(m_OldSrgbWriteEnable);
-
-	g_bCActionDepth = false;
 }
 
 void CAfxBaseFxStream::CActionDepth::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData)
 {
-	g_bCActionDepth = true;
-
 	// set-up debudepth material cvars accordingly:
 
 	float scale = g_bIn_csgo_CSkyBoxView_Draw ? csgo_CSkyBoxView_GetScale() : 1.0f;

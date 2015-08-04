@@ -3,10 +3,10 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2009-10-01 by dominik.matrixstorm.com
+// 2015-08-03 dominik.matrixstorm.com
 //
 // First changes:
-// 2009-10-01 by dominik.matrixstorm.com
+// 2009-10-01 dominik.matrixstorm.com
 
 // Description:
 // Wrapper(s) for Source's IVEngineClient Interface
@@ -73,6 +73,16 @@ void WrpVEngineClient_012::Con_NPrintf( int pos, const char *fmt, ... ) {
 
 const char *  WrpVEngineClient_012::GetGameDirectory( void ) {
 	return m_VEngineClient_012->GetGameDirectory();
+}
+
+const VMatrix& WrpVEngineClient_012::WorldToScreenMatrix()
+{
+	return m_VEngineClient_012->WorldToScreenMatrix();
+}
+
+const VMatrix& WrpVEngineClient_012::WorldToViewMatrix()
+{
+	return m_VEngineClient_012->WorldToViewMatrix();
 }
 
 char const *  WrpVEngineClient_012::GetLevelName( void ) {
@@ -213,6 +223,17 @@ const char *  WrpVEngineClient_013::GetGameDirectory( void ) {
 	return m_VEngineClient_013->GetGameDirectory();
 }
 
+const VMatrix& WrpVEngineClient_013::WorldToScreenMatrix()
+{
+	return m_VEngineClient_013->WorldToScreenMatrix();
+}
+
+const VMatrix& WrpVEngineClient_013::WorldToViewMatrix()
+{
+	return m_VEngineClient_013->WorldToViewMatrix();
+}
+
+
 char const *  WrpVEngineClient_013::GetLevelName( void ) {
 	return m_VEngineClient_013->GetLevelName();
 }
@@ -255,7 +276,6 @@ bool WrpVEngineClient_013::IsLevelMainMenuBackground( void ) {
 void WrpVEngineClient_013::GetMainMenuBackgroundName( char *dest, int destlen ) {
 	return m_VEngineClient_013->GetMainMenuBackgroundName(dest, destlen);
 }
-
 
 bool WrpVEngineClient_013::IsInEditMode( void ) {
 	return m_VEngineClient_013->IsInEditMode();

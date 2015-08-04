@@ -1,0 +1,11 @@
+struct PS_INPUT
+{
+	float4 diffuse : COLOR;
+};
+
+float4 main( PS_INPUT i ) : COLOR
+{
+	float4 color = i.diffuse;
+	
+	return color;
+}

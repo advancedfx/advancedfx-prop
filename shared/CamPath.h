@@ -48,10 +48,19 @@ public:
 
 };
 
+class CamPath;
+
+class ICamPathChanged abstract
+{
+public:
+	virtual void CamPathChanged(CamPath * obj) = 0;
+};
+
 class CamPath
 {
 public:
 	CamPath();
+	CamPath(ICamPathChanged * onChanged);
 
 	bool Enable(bool enable);
 	bool IsEnabled();
@@ -85,10 +94,15 @@ public:
 	/// Setting duration for a path with less than 2 points will do nothing.</remarks>
 	void SetDuration(double t);
 
+	void OnChanged_set(ICamPathChanged * value);
+
 private:
 	bool m_Enabled;
+	ICamPathChanged * m_OnChanged;
 	CubicObjectSpline m_Spline;
 
+	void Changed();
 	void CopyCOS(CubicObjectSpline & dst, CubicObjectSpline & src);
+	bool DoEnable(bool enable);
 
 };

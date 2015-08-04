@@ -1,0 +1,92 @@
+const float4x4 cViewProj : register(c8);
+
+const float3 cScreenInfo : register(c48);
+
+struct VS_INPUT
+{
+	float3 xyz : POSITION;
+	float4 diffuse : COLOR;
+	float2 t0 : TEXCOORD0;
+	float3 t1 : TEXCOORD1;
+	float3 t2 : TEXCOORD2;
+};
+
+struct VS_OUTPUT
+{
+	float4 xyzw : POSITION;
+	float4 diffuse : COLOR;
+};
+
+float4 projectPos(float3 worldPos)
+{
+	float4 result =  mul(float4(worldPos, 1), cViewProj);
+	
+	if(0 != result.w)
+	{
+		result.x = result.x / result.w;
+		result.y = result.y / result.w;
+		result.z = result.z / result.w;
+		result.w = 1.0;
+	}
+	
+	return result;
+}
+
+float2 projectPos2d(float3 worldPos)
+{
+	float4 result =  mul(float4(worldPos, 1), cViewProj);
+	
+	if(0 != result.w)
+	{
+		result.x = result.x / result.w;
+		result.y = result.y / result.w;
+	}
+	
+	return float2(result.x, result.y);
+}
+
+float2 saveNormalize(float2 x)
+{
+	if(any(x)) x = normalize(x);
+	
+	return x;
+}
+
+float2 ortho(float2 x)
+{
+	if(x.x)
+		return normalize(float2(-x.y/x.x,1));
+	else
+	if(x.y)
+		return normalize(float2(1,-x.x/x.y));
+		
+	return float2(0,0);
+}
+
+// this is wrong and doesn't actually work, I suck at math, let's see if I can solve it.
+
+VS_OUTPUT main( const VS_INPUT i )
+{
+	VS_OUTPUT o;
+	
+	float4 projPos = projectPos(i.xyz);
+	float2 prevDir = saveNormalize(projectPos2d(i.xyz+i.t1));
+	float2 nextDir = saveNormalize(projectPos2d(i.xyz+i.t2));
+	float2 bisectrix = prevDir +nextDir;
+	
+	if(length(bisectrix)<0.001f)
+	{	
+		bisectrix = ortho(prevDir);
+	}
+	
+	bisectrix = bisectrix * cScreenInfo.z;
+
+	projPos.x += i.t0.x * cScreenInfo.x * bisectrix.x;
+	projPos.y += i.t0.x * cScreenInfo.y * bisectrix.y;
+	
+	o.xyzw = projPos;
+	o.diffuse = i.diffuse;
+
+	return o;
+}
+

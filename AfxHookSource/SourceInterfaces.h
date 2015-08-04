@@ -90,6 +90,22 @@ public:
 };
 
 
+// VMatrix /////////////////////////////////////////////////////////////////////
+
+class MdtMatrix;
+typedef MdtMatrix VMatrix;
+
+class MdtMatrix
+{
+public:
+	MdtMatrix();
+	MdtMatrix(const MdtMatrix & mdtMatrix);
+
+	// The matrix.
+	vec_t		m[4][4];
+};
+
+
 // Rendering related
 
 class CGlobalVarsBase;
@@ -1286,8 +1302,13 @@ public:
 	// Get the current game directory ( e.g., hl2, tf2, cstrike, hl1 )
 	virtual const char			*GetGameDirectory( void ) = 0;
 
-	virtual void _UNUSED_WorldToScreenMatrix(void)=0;
-	virtual void _UNUSED_WorldToViewMatrix(void)=0;
+	// Get access to the world to screen transformation matrix
+	virtual const VMatrix& 		WorldToScreenMatrix() = 0;
+	
+	// Get the matrix to move a point from world space into view space
+	// (translate and rotate so the camera is at the origin looking down X).
+	virtual const VMatrix& 		WorldToViewMatrix() = 0;
+
 	virtual void _UNUSED_GameLumpVersion(void)=0;
 	virtual void _UNUSED_GameLumpSize(void)=0;
 	virtual void _UNUSED_LoadGameLump(void)=0;
@@ -1463,8 +1484,13 @@ public:
 	// Get the current game directory ( e.g., hl2, tf2, cstrike, hl1 )
 	virtual const char			*GetGameDirectory( void ) = 0;
 
-	virtual void _UNUSED_WorldToScreenMatrix(void)=0;
-	virtual void _UNUSED_WorldToViewMatrix(void)=0;
+	// Get access to the world to screen transformation matrix
+	virtual const VMatrix& 		WorldToScreenMatrix() = 0;
+	
+	// Get the matrix to move a point from world space into view space
+	// (translate and rotate so the camera is at the origin looking down X).
+	virtual const VMatrix& 		WorldToViewMatrix() = 0;
+
 	virtual void _UNUSED_GameLumpVersion(void)=0;
 	virtual void _UNUSED_GameLumpSize(void)=0;
 	virtual void _UNUSED_LoadGameLump(void)=0;

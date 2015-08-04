@@ -3,10 +3,10 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2009-10-01 by dominik.matrixstorm.com
+// 2015-08-03 dominik.matrixstorm.com
 //
 // First changes:
-// 2009-10-01 by dominik.matrixstorm.com
+// 2009-10-01 dominik.matrixstorm.com
 
 // Description:
 // Wrapper(s) for Source's IVEngineClient Interface
@@ -31,6 +31,8 @@ public:
 	virtual bool IsDrawingLoadingImage( void ) abstract = 0;
 	virtual void Con_NPrintf( int pos, const char *fmt, ... ) abstract = 0;
 	virtual const char *  GetGameDirectory( void ) abstract = 0;
+	virtual const VMatrix& WorldToScreenMatrix() abstract = 0;
+	virtual const VMatrix& WorldToViewMatrix() abstract = 0;
 	virtual char const *  GetLevelName( void ) abstract = 0;
 	virtual void EngineStats_BeginFrame( void ) abstract = 0;
 	virtual void EngineStats_EndFrame( void ) abstract = 0;
@@ -73,6 +75,8 @@ public:
 	virtual bool IsDrawingLoadingImage( void );
 	virtual void Con_NPrintf( int pos, const char *fmt, ... );
 	virtual const char *  GetGameDirectory( void );
+	virtual const VMatrix& WorldToScreenMatrix();
+	virtual const VMatrix& WorldToViewMatrix();
 	virtual char const *  GetLevelName( void );
 	virtual void EngineStats_BeginFrame( void );
 	virtual void EngineStats_EndFrame( void );
@@ -117,6 +121,8 @@ public:
 	virtual bool IsDrawingLoadingImage( void );
 	virtual void Con_NPrintf( int pos, const char *fmt, ... );
 	virtual const char *  GetGameDirectory( void );
+	virtual const VMatrix& WorldToScreenMatrix();
+	virtual const VMatrix& WorldToViewMatrix();
 	virtual char const *  GetLevelName( void );
 	virtual void EngineStats_BeginFrame( void );
 	virtual void EngineStats_EndFrame( void );
@@ -140,4 +146,3 @@ public:
 private:
 	IVEngineClient_013 * m_VEngineClient_013;
 };
-

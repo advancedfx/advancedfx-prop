@@ -25,6 +25,7 @@
 #include <shared/hooks/gameOverlayRenderer.h>
 #include "AfxStreams.h"
 #include "addresses.h"
+#include "CampathDrawer.h"
 
 #include <malloc.h>
 #include <stdlib.h>
@@ -32,6 +33,13 @@
 #include <cctype>
 
 extern WrpVEngineClient * g_VEngineClient;
+
+bool g_bD3D9DebugPrint = false;
+
+CON_COMMAND(__mirv_test, "")
+{
+	g_bD3D9DebugPrint = true;
+}
 
 CON_COMMAND(__mirv_skyboxscale, "print skyboxscale in CS:GO")
 {
@@ -444,6 +452,42 @@ CON_COMMAND(mirv_campath,"easy camera paths")
 
 			return;
 		}
+		else if(!_stricmp("draw", subcmd))
+		{
+			if(3 <= argc)
+			{
+				char const * cmd2 = args->ArgV(2);
+
+				if(!_stricmp("enabled", cmd2))
+				{
+					if(4 <= argc)
+					{
+						char const * cmd3 = args->ArgV(3);
+
+						bool enabled = 0 != atoi(cmd3);
+
+						if(enabled)
+						{
+							Tier0_Msg("AFXINFO: Forcing mat_queue_mode 0\n");
+							g_VEngineClient->ExecuteClientCmd("mat_queue_mode 0");
+						}
+
+						g_CampathDrawer.Draw_set(enabled);
+						return;
+					}
+
+					Tier0_Msg(
+						"mirv_campath draw enabled 0|1 - enable (1) / disable (0) drawing.\n"
+						"Current value: %s\n",
+						g_CampathDrawer.Draw_get() ? "1 (enabled)" : "0 (disabled)"
+					);
+					return;
+				}
+			}
+
+			Tier0_Msg("mirv_campath draw enabled [...] - enable / disable drawing.\n");
+			return;
+		}
 		else if(!_stricmp("clear", subcmd) && 2 == argc)
 		{
 			g_Hook_VClient_RenderView.m_CamPath.Clear();
@@ -557,6 +601,7 @@ CON_COMMAND(mirv_campath,"easy camera paths")
 	Tier0_Msg(
 		"mirv_campath add - adds current demotime and view as keyframe\n"
 		"mirv_campath enable 0|1 - set whether the camera splines are active or not. Please note that currently at least 4 Points are required to make it active successfully!\n"
+		"mirv_campath draw [...] - controls drawing of the camera path.\n"
 		"mirv_campath clear - removes all keyframes\n"
 		"mirv_campath print - prints keyframes\n"
 		"mirv_campath remove <id> - removes a keyframe\n"

@@ -32,6 +32,8 @@
 #include "AfxStreams.h"
 #include "hlaeFolder.h"
 
+#include "CampathDrawer.h"
+
 #include <set>
 #include <map>
 #include <string>
@@ -155,7 +157,14 @@ public:
 	virtual void LevelShutdownPreEntityAllTools() { g_Engine_ClientEngineTools->LevelShutdownPreEntityAllTools(); }
 	virtual void LevelShutdownPostEntityAllTools() { g_Engine_ClientEngineTools->LevelShutdownPostEntityAllTools(); }
 	virtual void PreRenderAllTools() { g_Engine_ClientEngineTools->PreRenderAllTools(); }
-	virtual void PostRenderAllTools() { g_Engine_ClientEngineTools->PostRenderAllTools(); }
+	
+	virtual void PostRenderAllTools()
+	{
+		g_CampathDrawer.OnPostRenderAllTools();
+
+		g_Engine_ClientEngineTools->PostRenderAllTools();
+	}
+
 	virtual void PostToolMessage( HTOOLHANDLE hEntity, KeyValues *msg ) { g_Engine_ClientEngineTools->PostToolMessage(hEntity, msg); }
 	virtual void AdjustEngineViewport( int& x, int& y, int& width, int& height ) { g_Engine_ClientEngineTools->AdjustEngineViewport(x, y, width, height); }
 	
@@ -168,6 +177,8 @@ public:
 			angles.x, angles.y, angles.z,
 			fov
 		);
+
+		g_CampathDrawer.OnSetupEngineView();
 
 		return bRet;
 	}

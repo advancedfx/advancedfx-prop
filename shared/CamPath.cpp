@@ -70,15 +70,35 @@ bool CamPathIterator::operator != (CamPathIterator const &it) const
 
 
 CamPath::CamPath()
-: m_Enabled(false)
+: m_OnChanged(0)
+, m_Enabled(false)
 {
+	Changed();
 }
 
-bool CamPath::Enable(bool enable)
+CamPath::CamPath(ICamPathChanged * onChanged)
+: m_OnChanged(onChanged)
+, m_Enabled(false)
+{
+	Changed();
+}
+
+bool CamPath::DoEnable(bool enable)
 {
 	m_Enabled = enable && 4 <= GetSize();
 
 	return m_Enabled;
+}
+
+bool CamPath::Enable(bool enable)
+{
+	bool result = DoEnable(enable);
+
+
+	if(result != enable)
+		Changed();
+
+	return result;
 }
 
 bool CamPath::IsEnabled()
@@ -103,11 +123,20 @@ void CamPath::Add(double time, CamPathValue value)
 	val.Fov = value.Fov;
 
 	Add(time, val);
+
+	Changed();
 }
 
 void CamPath::Add(double time, COSValue value)
 {
 	m_Spline.Add(time, value);
+
+	Changed();
+}
+
+void CamPath::Changed()
+{
+	if(m_OnChanged) m_OnChanged->CamPathChanged(this);
 }
 
 
@@ -116,6 +145,8 @@ void CamPath::Remove(double time)
 	m_Spline.Remove(time);
 
 	m_Enabled = m_Enabled && 4 <= GetSize();
+
+	Changed();
 }
 
 void CamPath::Clear()
@@ -123,6 +154,8 @@ void CamPath::Clear()
 	m_Spline.Clear();
 
 	m_Enabled = m_Enabled && 4 <= GetSize();
+
+	Changed();
 }
 
 size_t CamPath::GetSize()
@@ -165,6 +198,11 @@ CamPathValue CamPath::Eval(double t)
 		angles.Roll,
 		val.Fov
 	);
+}
+
+void CamPath::OnChanged_set(ICamPathChanged * value)
+{
+	m_OnChanged = value;
 }
 
 char * double2xml(rapidxml::xml_document<> & doc, double value)
@@ -339,6 +377,8 @@ bool CamPath::Load(wchar_t const * fileName)
 
 	fclose(pFile);
 
+	Changed();
+
 	return bOk;
 }
 
@@ -359,7 +399,9 @@ void CamPath::SetStart(double t)
 
 	CopyCOS(m_Spline, tempSline);
 
-	Enable(m_Enabled);
+	DoEnable(m_Enabled);
+
+	Changed();
 }
 	
 void CamPath::SetDuration(double t)
@@ -393,7 +435,9 @@ void CamPath::SetDuration(double t)
 			m_Spline.Add(firstT+scale*(curT-firstT), curValue);
 	}
 
-	Enable(m_Enabled);
+	DoEnable(m_Enabled);
+
+	Changed();
 }
 
 void CamPath::CopyCOS(CubicObjectSpline & dst, CubicObjectSpline & src)
