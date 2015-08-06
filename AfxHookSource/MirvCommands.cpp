@@ -260,7 +260,7 @@ CON_COMMAND(mirv_streams, "Access to streams system.")
 			}
 
 			Tier0_Msg(
-				"mirv_streams preview <streamName> - Preivew the stream with name <streamName>, you can get the value from mirv_streams print. To end previewing enter \"\" (empty string) for <streamName>!\n"
+				"mirv_streams preview <streamName> - Preview the stream with name <streamName>, you can get the value from mirv_streams print. To end previewing enter \"\" (empty string) for <streamName>!\n"
 			);
 			return;
 		}
