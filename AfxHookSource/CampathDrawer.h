@@ -56,6 +56,7 @@ private:
 	IDirect3DVertexShader9 * m_VertexShader;
 	char * m_VsoFileName;
 	VMatrix m_WorldToScreenMatrix;
+	IDirect3DVertexBuffer9 * m_CrossesVertexBuffer;
 
 	void LoadPso(char const * fileName);
 	void LoadVso(char const * fileName);

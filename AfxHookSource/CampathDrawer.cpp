@@ -19,6 +19,10 @@
 #include <string>
 
 
+const float c_CampathCrossRadius = 36.0;
+const float c_CampathCrossPixelWidth = 10.0;
+
+
 CCampathDrawer g_CampathDrawer;
 
 extern WrpVEngineClient * g_VEngineClient;
@@ -38,6 +42,7 @@ bool GetShaderDirectory(std::string & outShaderDirectory)
 CCampathDrawer::CCampathDrawer()
 : m_Draw(false)
 , m_RebuildDrawing(true)
+, m_CrossesVertexBuffer(0)
 {
 	m_Device = 0;
 	m_PsoFileName = 0;
@@ -254,8 +259,8 @@ void CCampathDrawer::OnPostRenderAllTools()
 
 	RebuildDrawing();
 
-	if(g_Hook_VClient_RenderView.m_CamPath.GetSize()<1)
-		return;
+//	if(g_Hook_VClient_RenderView.m_CamPath.GetSize()<1)
+//		return;
 
 	// Save device state:
 
@@ -319,13 +324,37 @@ void CCampathDrawer::OnPostRenderAllTools()
 
 	int screenWidth, screenHeight;
 	g_VEngineClient->GetScreenSize(screenWidth, screenHeight);
-	FLOAT newCScreenInfo[4] = { 0 != screenWidth ? 1.0f / screenWidth : 0.0f, 0 != screenHeight ? 1.0f / screenHeight : 0.0f, 4.0f, 0.0f};
+	FLOAT newCScreenInfo[4] = { 0 != screenWidth ? 1.0f / screenWidth : 0.0f, 0 != screenHeight ? 1.0f / screenHeight : 0.0f, 10.0f, 0.0f};
 	m_Device->SetVertexShaderConstantF(48, newCScreenInfo, 1);
 
 	m_Device->SetPixelShader(m_PixelShader);
 
 	m_Device->SetFVF(CCampathDrawer_VertexFVF);
 
+	if(m_CrossesVertexBuffer)
+	{
+		// Draw crosses:
+
+		m_Device->SetStreamSource(0, m_CrossesVertexBuffer, 0, sizeof(Vertex));
+
+		int startVertex = 0;
+
+		for(size_t i=0; i<g_Hook_VClient_RenderView.m_CamPath.GetSize(); ++i)
+		{
+			// Draw x / forward line:
+			m_Device->DrawPrimitive(D3DPT_TRIANGLESTRIP, startVertex, 2);
+
+			// Draw y / left line:
+			m_Device->DrawPrimitive(D3DPT_TRIANGLESTRIP, startVertex+4, 2);
+
+			// Draw x / forward line:
+			m_Device->DrawPrimitive(D3DPT_TRIANGLESTRIP, startVertex+8, 2);
+
+			startVertex += 12;
+		}
+	}
+
+/*
 	CamPathValue cpv = g_Hook_VClient_RenderView.m_CamPath.GetBegin().GetValue();
 
 	struct {
@@ -333,112 +362,60 @@ void CCampathDrawer::OnPostRenderAllTools()
 		Vertex v2;
 		Vertex v3;
 		Vertex v4;
+		Vertex v5;
+		Vertex v6;
 	} vertexData = {
 		{
+			cpv.X, cpv.Y+10.0, cpv.Z-10.0,
+			D3DCOLOR_RGBA(255,0,0,255),
+			1.0f, 0.0f,
+			0.0f, 1.0f, 0.0f,
+			0.0f, -1.0f, 0.0f
+		},
+		{
+			cpv.X, cpv.Y+10.0, cpv.Z-10.0,
+			D3DCOLOR_RGBA(255,0,0,255),
+			-1.0f, 0.0f,
+			0.0f, 1.0f, 0.0f,
+			0.0f, -1.0f, 0.0f
+		},
+		{
 			cpv.X, cpv.Y, cpv.Z-10.0,
 			D3DCOLOR_RGBA(255,0,0,255),
-			1.0f, -1.0f,
-			0.0f, 0.0f, -1.0f,
+			1.0f, 0.0f,
+			0.0f, 1.0f, 0.0f,
 			0.0f, 0.0f, 1.0f
 		},
 		{
 			cpv.X, cpv.Y, cpv.Z-10.0,
 			D3DCOLOR_RGBA(255,0,0,255),
-			-1.0f, -1.0f,
+			-1.0f, 0.0f,
+			0.0f, 1.0f, 0.0f,
+			0.0f, 0.0f, 1.0f
+		},
+		{
+			cpv.X, cpv.Y, cpv.Z+10.0,
+			D3DCOLOR_RGBA(255,255,0,255),
+			1.0f, 0.0f,
 			0.0f, 0.0f, -1.0f,
 			0.0f, 0.0f, 1.0f
 		},
 		{
 			cpv.X, cpv.Y, cpv.Z+10.0,
 			D3DCOLOR_RGBA(255,255,0,255),
-			1.0f, 1.0f,
-			0.0f, 0.0f, -1.0f,
-			0.0f, 0.0f, 1.0f
-		},
-		{
-			cpv.X, cpv.Y, cpv.Z+10.0,
-			D3DCOLOR_RGBA(255,255,0,255),
-			-1.0f, 1.0f,
+			-1.0f, 0.0f,
 			0.0f, 0.0f, -1.0f,
 			0.0f, 0.0f, 1.0f
 		}
 	};
 
-/*
-	float x,y,z,w;
-
-	x = vertexData.v1.x * m_WorldToScreenMatrix.m[0][0] + vertexData.v1.y * m_WorldToScreenMatrix.m[0][1] + vertexData.v1.z * m_WorldToScreenMatrix.m[0][2] +m_WorldToScreenMatrix.m[0][3];
-	y = vertexData.v1.x * m_WorldToScreenMatrix.m[1][0] + vertexData.v1.y * m_WorldToScreenMatrix.m[1][1] + vertexData.v1.z * m_WorldToScreenMatrix.m[1][2] +m_WorldToScreenMatrix.m[1][3];
-	z = vertexData.v1.x * m_WorldToScreenMatrix.m[2][0] + vertexData.v1.y * m_WorldToScreenMatrix.m[2][1] + vertexData.v1.z * m_WorldToScreenMatrix.m[2][2] +m_WorldToScreenMatrix.m[2][3];
-	w = vertexData.v1.x * m_WorldToScreenMatrix.m[3][0] + vertexData.v1.y * m_WorldToScreenMatrix.m[3][1] + vertexData.v1.z * m_WorldToScreenMatrix.m[3][2] +m_WorldToScreenMatrix.m[3][3];
-	if(w)
-	{
-		x = x/w;
-		y = y/w;
-		z = z/w;
-		w = 1.0f;
-	}
-	vertexData.v1.x = x;
-	vertexData.v1.y = y;
-	vertexData.v1.z = z;
-	Tier0_Msg("CPV1: %f %f %f %f\n", x,y,z,w);
-
-	x = vertexData.v2.x * m_WorldToScreenMatrix.m[0][0] + vertexData.v2.y * m_WorldToScreenMatrix.m[0][1] + vertexData.v2.z * m_WorldToScreenMatrix.m[0][2] +m_WorldToScreenMatrix.m[0][3];
-	y = vertexData.v2.x * m_WorldToScreenMatrix.m[1][0] + vertexData.v2.y * m_WorldToScreenMatrix.m[1][1] + vertexData.v2.z * m_WorldToScreenMatrix.m[1][2] +m_WorldToScreenMatrix.m[1][3];
-	z = vertexData.v2.x * m_WorldToScreenMatrix.m[2][0] + vertexData.v2.y * m_WorldToScreenMatrix.m[2][1] + vertexData.v2.z * m_WorldToScreenMatrix.m[2][2] +m_WorldToScreenMatrix.m[2][3];
-	w = vertexData.v2.x * m_WorldToScreenMatrix.m[3][0] + vertexData.v2.y * m_WorldToScreenMatrix.m[3][1] + vertexData.v2.z * m_WorldToScreenMatrix.m[3][2] +m_WorldToScreenMatrix.m[3][3];
-	if(w)
-	{
-		x = x/w;
-		y = y/w;
-		z = z/w;
-		w = 1.0f;
-	}
-	vertexData.v2.x = x;
-	vertexData.v2.y = y;
-	vertexData.v2.z = z;
-	Tier0_Msg("CPV2: %f %f %f %f\n", x,y,z,w);
-
-	x = vertexData.v3.x * m_WorldToScreenMatrix.m[0][0] + vertexData.v3.y * m_WorldToScreenMatrix.m[0][1] + vertexData.v3.z * m_WorldToScreenMatrix.m[0][2] +m_WorldToScreenMatrix.m[0][3];
-	y = vertexData.v3.x * m_WorldToScreenMatrix.m[1][0] + vertexData.v3.y * m_WorldToScreenMatrix.m[1][1] + vertexData.v3.z * m_WorldToScreenMatrix.m[1][2] +m_WorldToScreenMatrix.m[1][3];
-	z = vertexData.v3.x * m_WorldToScreenMatrix.m[2][0] + vertexData.v3.y * m_WorldToScreenMatrix.m[2][1] + vertexData.v3.z * m_WorldToScreenMatrix.m[2][2] +m_WorldToScreenMatrix.m[2][3];
-	w = vertexData.v3.x * m_WorldToScreenMatrix.m[3][0] + vertexData.v3.y * m_WorldToScreenMatrix.m[3][1] + vertexData.v3.z * m_WorldToScreenMatrix.m[3][2] +m_WorldToScreenMatrix.m[3][3];
-	if(w)
-	{
-		x = x/w;
-		y = y/w;
-		z = z/w;
-		w = 1.0f;
-	}
-	vertexData.v3.x = x;
-	vertexData.v3.y = y;
-	vertexData.v3.z = z;
-	Tier0_Msg("CPV3: %f %f %f %f\n", x,y,z,w);
-
-	x = vertexData.v4.x * m_WorldToScreenMatrix.m[0][0] + vertexData.v4.y * m_WorldToScreenMatrix.m[0][1] + vertexData.v4.z * m_WorldToScreenMatrix.m[0][2] +m_WorldToScreenMatrix.m[0][3];
-	y = vertexData.v4.x * m_WorldToScreenMatrix.m[1][0] + vertexData.v4.y * m_WorldToScreenMatrix.m[1][1] + vertexData.v4.z * m_WorldToScreenMatrix.m[1][2] +m_WorldToScreenMatrix.m[1][3];
-	z = vertexData.v4.x * m_WorldToScreenMatrix.m[2][0] + vertexData.v4.y * m_WorldToScreenMatrix.m[2][1] + vertexData.v4.z * m_WorldToScreenMatrix.m[2][2] +m_WorldToScreenMatrix.m[2][3];
-	w = vertexData.v4.x * m_WorldToScreenMatrix.m[3][0] + vertexData.v4.y * m_WorldToScreenMatrix.m[3][1] + vertexData.v4.z * m_WorldToScreenMatrix.m[3][2] +m_WorldToScreenMatrix.m[3][3];
-	if(w)
-	{
-		x = x/w;
-		y = y/w;
-		z = z/w;
-		w = 1.0f;
-	}
-	vertexData.v4.x = x;
-	vertexData.v4.y = y;
-	vertexData.v4.z = z;
-	Tier0_Msg("CPV4: %f %f %f %f\n", x,y,z,w);
-*/
-
 	m_Device->DrawPrimitiveUP(
 		D3DPT_TRIANGLESTRIP,
-		2,
+		4,
 		&vertexData,
 		sizeof(Vertex)
 	);
-
+*/
 	// Restore device state:
 
 	m_Device->SetPixelShader(oldPixelShader);
@@ -490,20 +467,196 @@ void CCampathDrawer::OnSetupEngineView()
 
 void CCampathDrawer::RebuildDrawing()
 {
-	if(!m_RebuildDrawing || !m_Device)
+	if(!m_Device)
 		return;
 
-	UnloadDrawing();
+	Vertex * lockedCrossesVertexBufferData = 0;
+	size_t crossesCount = g_Hook_VClient_RenderView.m_CamPath.GetSize();
+
+	if(m_RebuildDrawing)
+	{
+		UnloadDrawing();
+
+		if(!SUCCEEDED(m_Device->CreateVertexBuffer(
+			crossesCount * 3 * 4 * sizeof(Vertex),
+			D3DUSAGE_WRITEONLY,
+			CCampathDrawer_VertexFVF,
+			D3DPOOL_DEFAULT,
+			&m_CrossesVertexBuffer,
+			NULL
+		)))
+		{
+			if(m_CrossesVertexBuffer) m_CrossesVertexBuffer->Release();
+			m_CrossesVertexBuffer = 0;
+		}
+
+		if(m_CrossesVertexBuffer)
+		{
+			if(!SUCCEEDED(m_CrossesVertexBuffer->Lock(0, crossesCount * 3 * 4 * sizeof(Vertex), (void **)&lockedCrossesVertexBufferData, 0)))
+				lockedCrossesVertexBufferData = 0;
+		}
+
+		if(lockedCrossesVertexBufferData)
+		{
+			Vertex * curBuf = lockedCrossesVertexBufferData;
+
+			CamPathIterator it = g_Hook_VClient_RenderView.m_CamPath.GetBegin();
+
+			for(size_t i = 0; i < crossesCount; i++)
+			{
+				// crosses.
+
+				CamPathValue cpv = it.GetValue();
+
+				// x / forward line:
+
+				curBuf[1].x = curBuf[0].x = (float)cpv.X -c_CampathCrossRadius;
+				curBuf[3].x = curBuf[2].x = (float)cpv.X +c_CampathCrossRadius;
+				curBuf[3].y = curBuf[2].y = curBuf[1].y = curBuf[0].y = (float)cpv.Y;
+				curBuf[3].z = curBuf[2].z = curBuf[1].z = curBuf[0].z = (float)cpv.Z;
+
+				curBuf[3].t1u = curBuf[2].t1u = curBuf[1].t1u = curBuf[0].t1u = -1.0;
+				curBuf[3].t1v = curBuf[2].t1v = curBuf[1].t1v = curBuf[0].t1v = 0.0;
+				curBuf[3].t1w = curBuf[2].t1w = curBuf[1].t1w = curBuf[0].t1w = 0.0;
+
+				curBuf[3].t2u = curBuf[2].t2u = curBuf[1].t2u = curBuf[0].t2u = 1.0;
+				curBuf[3].t2v = curBuf[2].t2v = curBuf[1].t2v = curBuf[0].t2v = 0.0;
+				curBuf[3].t2w = curBuf[2].t2w = curBuf[1].t2w = curBuf[0].t2w = 0.0;
+
+				curBuf[2].t0u = curBuf[0].t0u = 1.0;
+				curBuf[3].t0u = curBuf[1].t0u = -1.0;
+
+				curBuf[3].t0v = curBuf[2].t0v = curBuf[1].t0v = curBuf[0].t0v = 0.0f;
+
+				curBuf += 4;
+
+				// y / left line:
+
+				curBuf[3].x = curBuf[2].x = curBuf[1].x = curBuf[0].x = (float)cpv.X;
+				curBuf[1].y = curBuf[0].y = (float)cpv.Y -c_CampathCrossRadius;
+				curBuf[3].y = curBuf[2].y = (float)cpv.Y +c_CampathCrossRadius;
+				curBuf[3].z = curBuf[2].z = curBuf[1].z = curBuf[0].z = (float)cpv.Z;
+
+				curBuf[3].t1u = curBuf[2].t1u = curBuf[1].t1u = curBuf[0].t1u = 0.0;
+				curBuf[3].t1v = curBuf[2].t1v = curBuf[1].t1v = curBuf[0].t1v = -1.0;
+				curBuf[3].t1w = curBuf[2].t1w = curBuf[1].t1w = curBuf[0].t1w = 0.0;
+
+				curBuf[3].t2u = curBuf[2].t2u = curBuf[1].t2u = curBuf[0].t2u = 0.0;
+				curBuf[3].t2v = curBuf[2].t2v = curBuf[1].t2v = curBuf[0].t2v = 1.0;
+				curBuf[3].t2w = curBuf[2].t2w = curBuf[1].t2w = curBuf[0].t2w = 0.0;
+
+				curBuf[2].t0u = curBuf[0].t0u = 1.0;
+				curBuf[3].t0u = curBuf[1].t0u = -1.0;
+
+				curBuf[3].t0v = curBuf[2].t0v = curBuf[1].t0v = curBuf[0].t0v = 0.0f;
+
+				curBuf += 4;
+
+				// z / up line:
+
+				curBuf[3].x = curBuf[2].x = curBuf[1].x = curBuf[0].x = (float)cpv.X;
+				curBuf[3].y = curBuf[2].y = curBuf[1].y = curBuf[0].y = (float)cpv.Y;
+				curBuf[1].z = curBuf[0].z = (float)cpv.Z -c_CampathCrossRadius;
+				curBuf[3].z = curBuf[2].z = (float)cpv.Z +c_CampathCrossRadius;
+
+				curBuf[3].t1u = curBuf[2].t1u = curBuf[1].t1u = curBuf[0].t1u = 0.0;
+				curBuf[3].t1v = curBuf[2].t1v = curBuf[1].t1v = curBuf[0].t1v = 0.0;
+				curBuf[3].t1w = curBuf[2].t1w = curBuf[1].t1w = curBuf[0].t1w = -1.0;
+
+				curBuf[3].t2u = curBuf[2].t2u = curBuf[1].t2u = curBuf[0].t2u = 0.0;
+				curBuf[3].t2v = curBuf[2].t2v = curBuf[1].t2v = curBuf[0].t2v = 0.0;
+				curBuf[3].t2w = curBuf[2].t2w = curBuf[1].t2w = curBuf[0].t2w = 1.0;
+
+				curBuf[2].t0u = curBuf[0].t0u = 1.0;
+				curBuf[3].t0u = curBuf[1].t0u = -1.0;
+
+				curBuf[3].t0v = curBuf[2].t0v = curBuf[1].t0v = curBuf[0].t0v = 0.0f;
+
+				curBuf += 4;
+
+				// next:
+
+				++it;
+			}
+		}
+	}
+	else
+	if(m_CrossesVertexBuffer)
+	{
+		if(!SUCCEEDED(m_CrossesVertexBuffer->Lock(0, crossesCount * 3 * 4 * sizeof(Vertex), (void **)&lockedCrossesVertexBufferData, 0)))
+			lockedCrossesVertexBufferData = 0;
+	}
+
+	if(lockedCrossesVertexBufferData)
+	{
+		// update colouring:
+
+		Vertex * curBuf = lockedCrossesVertexBufferData;
+
+		CamPathIterator it = g_Hook_VClient_RenderView.m_CamPath.GetBegin();
+
+		double curTime = g_Hook_VClient_RenderView.GetCurTime();
+
+		for(size_t i = 0; i < crossesCount; i++)
+		{
+			// crosses.
+
+			CamPathValue cpv = it.GetValue();
+
+			double deltaTime = abs(curTime -it.GetTime());
+
+			DWORD colour;
+
+			if(deltaTime < 1.0)
+			{
+				// green to yellow:
+				double t = deltaTime -0.0;
+				colour = D3DCOLOR_RGBA((unsigned char)(255.0*t),255,0,255);
+			}
+			else
+			if(deltaTime < 2.0)
+			{
+				// yellow to red:
+				double t = deltaTime -1.0;
+				colour = D3DCOLOR_RGBA(255,(unsigned char)(255.0*(1.0-t)),0,255);
+			}
+			else
+			{
+				colour = D3DCOLOR_RGBA(255,0,0,255);
+			}
+
+			// x / forward line:
+
+			curBuf[3].diffuse = curBuf[2].diffuse = curBuf[1].diffuse = curBuf[0].diffuse = colour;
+
+			curBuf += 4;
+
+			// y / left line:
+
+			curBuf[3].diffuse = curBuf[2].diffuse = curBuf[1].diffuse = curBuf[0].diffuse = colour;
+
+			curBuf += 4;
+
+			// z / upward line:
+
+			curBuf[3].diffuse = curBuf[2].diffuse = curBuf[1].diffuse = curBuf[0].diffuse = colour;
+
+			curBuf += 4;
+
+			// next:
+
+			++it;
+		}
+
+		m_CrossesVertexBuffer->Unlock();
+	}
 
 	m_RebuildDrawing = false;
 }
 
 void CCampathDrawer::UnloadDrawing()
 {
-	if(!m_Device)
-		return;
-
-
+	if(m_CrossesVertexBuffer) { m_CrossesVertexBuffer->Release(); m_CrossesVertexBuffer = 0; }
 }
 
 void CCampathDrawer::UnloadShader()

@@ -4,11 +4,11 @@ const float3 cScreenInfo : register(c48);
 
 struct VS_INPUT
 {
-	float3 xyz : POSITION;
-	float4 diffuse : COLOR;
-	float2 t0 : TEXCOORD0;
-	float3 t1 : TEXCOORD1;
-	float3 t2 : TEXCOORD2;
+	float3 xyz : POSITION;	// current line point
+	float4 diffuse : COLOR;	// current vertex colour
+	float2 t0 : TEXCOORD0;	// t0.x - current vertex extrusion direction 1.0/-1.0, since there are two vertices per line point; t1.y - reserved
+	float3 t1 : TEXCOORD1;	// direction to previous line point (unit vector)
+	float3 t2 : TEXCOORD2;	// direction to next line point (unit vector)
 };
 
 struct VS_OUTPUT
@@ -52,15 +52,16 @@ float2 saveNormalize(float2 x)
 	return x;
 }
 
-float2 ortho(float2 x)
+/// <summary>Rotates 90 degrees counter clock wise.</summary>
+float2 rot90CCW(float2 x)
 {
-	if(x.x)
-		return normalize(float2(-x.y/x.x,1));
-	else
-	if(x.y)
-		return normalize(float2(1,-x.x/x.y));
-		
-	return float2(0,0);
+	return float2(-x.y,x.x);
+}
+
+/// <summary>Rotates 90 degrees clock wise.</summary>
+float2 rot90CW(float2 x)
+{
+	return float2(x.y,-x.x);
 }
 
 // this is wrong and doesn't actually work, I suck at math, let's see if I can solve it.
@@ -69,24 +70,49 @@ VS_OUTPUT main( const VS_INPUT i )
 {
 	VS_OUTPUT o;
 	
+	o.diffuse = i.diffuse;
+	
 	float4 projPos = projectPos(i.xyz);
-	float2 prevDir = saveNormalize(projectPos2d(i.xyz+i.t1));
-	float2 nextDir = saveNormalize(projectPos2d(i.xyz+i.t2));
-	float2 bisectrix = prevDir +nextDir;
+	float2 projPos2d = projPos.xy;
 	
-	if(length(bisectrix)<0.001f)
-	{	
-		bisectrix = ortho(prevDir);
+	float2 prev, next, miterPoint;
+	
+	if(0<=i.t0.x)
+	{
+		prev = saveNormalize(rot90CCW(projectPos2d(i.xyz+i.t1)-projPos2d));
+		next = saveNormalize(rot90CW(projectPos2d(i.xyz+i.t2)-projPos2d));
 	}
-	
-	bisectrix = bisectrix * cScreenInfo.z;
+	else
+	{
+		prev = saveNormalize(rot90CW(projectPos2d(i.xyz+i.t1)-projPos2d));
+		next = saveNormalize(rot90CCW(projectPos2d(i.xyz+i.t2)-projPos2d));
+	}
 
-	projPos.x += i.t0.x * cScreenInfo.x * bisectrix.x;
-	projPos.y += i.t0.x * cScreenInfo.y * bisectrix.y;
+	miterPoint = next + prev;
+	
+	float miterOnNextLength = length(dot(miterPoint,next));	
+	if(miterOnNextLength) miterPoint = miterPoint / miterOnNextLength;
+	
+	float bbxmin = next.x < prev.x ? next.x : prev.x;
+	float bbxmax = next.x > prev.x ? next.x : prev.x;
+	float bbymin = next.y < prev.y ? next.y : prev.y;
+	float bbymax = next.y > prev.y ? next.y : prev.y;
+	
+	if(miterPoint.x < bbxmin) miterPoint.x = bbxmin;
+	else if(miterPoint.x > bbxmax) miterPoint.x = bbxmax;
+
+	if(miterPoint.y < bbymin) miterPoint.y = bbymin;
+	else if(miterPoint.y > bbymax) miterPoint.y = bbymax;
+	
+	miterPoint = miterPoint * cScreenInfo.z;
+	miterPoint.x = miterPoint.x * cScreenInfo.x;
+	miterPoint.y = miterPoint.y * cScreenInfo.y;
+
+	projPos.x += miterPoint.x;
+	projPos.y += miterPoint.y;
 	
 	o.xyzw = projPos;
-	o.diffuse = i.diffuse;
-
+	
 	return o;
 }
 
