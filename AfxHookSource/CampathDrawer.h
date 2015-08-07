@@ -56,7 +56,7 @@ private:
 	IDirect3DVertexShader9 * m_VertexShader;
 	char * m_VsoFileName;
 	VMatrix m_WorldToScreenMatrix;
-	IDirect3DVertexBuffer9 * m_CrossesVertexBuffer;
+	IDirect3DVertexBuffer9 * m_LineTriangleListBuffer;
 
 	void LoadPso(char const * fileName);
 	void LoadVso(char const * fileName);
@@ -73,6 +73,9 @@ private:
 	void UnloadShader();
 	void UnloadPixelShader();
 	void UnloadVertexShader();
+
+	void BuildSingleLine(Vector3 from, Vector3 to, Vertex * pOutVertexData);
+	void BuildSingleLine(DWORD colorFrom, DWORD colorTo, Vertex * pOutVertexData);
 
 };
 

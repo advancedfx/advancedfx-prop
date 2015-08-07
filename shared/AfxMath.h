@@ -13,6 +13,55 @@
 namespace Afx {
 namespace Math {
 
+/// <summary>Make vectors from angles in degrees in right-hand-grip rule.</summary>
+void MakeVectors(
+	double rForward, double rLeft, double rUp,
+	double (& outForward)[3], double (& outRight)[3], double (& outUp)[3]
+);
+
+// Vector3 /////////////////////////////////////////////////////////////////////
+
+struct Vector3;
+
+Vector3 operator * (double value, Vector3 x);
+
+struct Vector3
+{
+public:
+	Vector3(double x, double y, double z);
+	Vector3(double value[3]);
+
+	Vector3(const Vector3 & v);
+
+	Vector3 operator + (const Vector3 & y) const;
+	
+	void operator += (const Vector3 & y);
+
+	Vector3 operator - (const Vector3 & y) const;
+
+	void operator -= (const Vector3 & y);
+
+	Vector3 operator * (double value) const;
+
+	Vector3 operator *= (double value);
+
+	Vector3 operator / (double value) const;
+
+	Vector3 operator /= (double value);
+
+	void ToArray(double (& outValue)[3]) const;
+
+	double Length() const;
+
+	Vector3 Normalize();
+
+public:
+	double X;
+	double Y;
+	double Z;
+
+};
+
 // QEulerAngles ////////////////////////////////////////////////////////////////
 
 /// <summary>

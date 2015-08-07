@@ -19,8 +19,10 @@
 #include <string>
 
 
-const float c_CampathCrossRadius = 36.0;
-const float c_CampathCrossPixelWidth = 10.0;
+const float c_CampathCrossRadius = 36.0f;
+const float c_CampathCrossPixelWidth = 8.0f;
+const float c_CameraRadius = c_CampathCrossRadius / 2.0f;
+const float c_CameraPixelWidth = 2.0f;
 
 
 CCampathDrawer g_CampathDrawer;
@@ -42,7 +44,7 @@ bool GetShaderDirectory(std::string & outShaderDirectory)
 CCampathDrawer::CCampathDrawer()
 : m_Draw(false)
 , m_RebuildDrawing(true)
-, m_CrossesVertexBuffer(0)
+, m_LineTriangleListBuffer(0)
 {
 	m_Device = 0;
 	m_PsoFileName = 0;
@@ -259,9 +261,6 @@ void CCampathDrawer::OnPostRenderAllTools()
 
 	RebuildDrawing();
 
-//	if(g_Hook_VClient_RenderView.m_CamPath.GetSize()<1)
-//		return;
-
 	// Save device state:
 
 	IDirect3DPixelShader9 * oldPixelShader = 0;
@@ -310,13 +309,45 @@ void CCampathDrawer::OnPostRenderAllTools()
 	DWORD oldZFunc;
 	m_Device->GetRenderState(D3DRS_ZFUNC, &oldZFunc);
 
+	DWORD oldAlphaTestEnable;
+	m_Device->GetRenderState(D3DRS_ALPHATESTENABLE, &oldAlphaTestEnable);
+
+	DWORD oldSeparateAlphaBlendEnable;
+	m_Device->GetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, &oldSeparateAlphaBlendEnable);
+
+	DWORD oldAlphaBlendEnable;
+	m_Device->GetRenderState(D3DRS_ALPHABLENDENABLE, &oldAlphaBlendEnable);
+
+	DWORD oldBlendOp;
+	m_Device->GetRenderState(D3DRS_BLENDOP, &oldBlendOp);
+
+	DWORD oldSrcBlend;
+	m_Device->GetRenderState(D3DRS_SRCBLEND, &oldSrcBlend);
+
+	DWORD oldDestBlend;
+	m_Device->GetRenderState(D3DRS_DESTBLEND, &oldDestBlend);
+
 	// Draw:
+
+	double curTime = g_Hook_VClient_RenderView.GetCurTime();
+	bool inCampath = 1 <= g_Hook_VClient_RenderView.m_CamPath.GetSize()
+		&&	g_Hook_VClient_RenderView.m_CamPath.GetLowerBound() <= curTime
+		&& curTime <= g_Hook_VClient_RenderView.m_CamPath.GetUpperBound();
+	bool campathCanEval = 4 <= g_Hook_VClient_RenderView.m_CamPath.GetSize();
+	bool campathEnabled = g_Hook_VClient_RenderView.m_CamPath.IsEnabled();
 
 	m_Device->SetRenderState(D3DRS_SRGBWRITEENABLE, FALSE);
 	m_Device->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_ALPHA|D3DCOLORWRITEENABLE_BLUE|D3DCOLORWRITEENABLE_GREEN|D3DCOLORWRITEENABLE_RED);
 	m_Device->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE);
-	m_Device->SetRenderState(D3DRS_ZWRITEENABLE, TRUE);
+	m_Device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
 	m_Device->SetRenderState(D3DRS_ZFUNC, D3DCMP_LESSEQUAL);
+	m_Device->SetRenderState(D3DRS_ALPHATESTENABLE, FALSE);
+	m_Device->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, FALSE);
+	m_Device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+	m_Device->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD);
+	m_Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+	m_Device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+
 
 	m_Device->SetVertexShader(m_VertexShader);
 	
@@ -324,22 +355,27 @@ void CCampathDrawer::OnPostRenderAllTools()
 
 	int screenWidth, screenHeight;
 	g_VEngineClient->GetScreenSize(screenWidth, screenHeight);
-	FLOAT newCScreenInfo[4] = { 0 != screenWidth ? 1.0f / screenWidth : 0.0f, 0 != screenHeight ? 1.0f / screenHeight : 0.0f, 10.0f, 0.0f};
-	m_Device->SetVertexShaderConstantF(48, newCScreenInfo, 1);
+	FLOAT newCScreenInfo[4] = { 0 != screenWidth ? 1.0f / screenWidth : 0.0f, 0 != screenHeight ? 1.0f / screenHeight : 0.0f, 0.0f, 0.0f};
 
 	m_Device->SetPixelShader(m_PixelShader);
 
 	m_Device->SetFVF(CCampathDrawer_VertexFVF);
 
-	if(m_CrossesVertexBuffer)
+	if(m_LineTriangleListBuffer)
 	{
-		// Draw crosses:
+		size_t crossesCount = g_Hook_VClient_RenderView.m_CamPath.GetSize();
+		size_t lineTriangleListBufferVertexCount = (crossesCount * 3 +(inCampath ? 9 : 0))* 4;
 
-		m_Device->SetStreamSource(0, m_CrossesVertexBuffer, 0, sizeof(Vertex));
+		m_Device->SetStreamSource(0, m_LineTriangleListBuffer, 0, sizeof(Vertex));
 
 		int startVertex = 0;
+		
+		// Draw crosses:
 
-		for(size_t i=0; i<g_Hook_VClient_RenderView.m_CamPath.GetSize(); ++i)
+		newCScreenInfo[2] = c_CampathCrossPixelWidth;
+		m_Device->SetVertexShaderConstantF(48, newCScreenInfo, 1);
+
+		for(size_t i=0; i<crossesCount; ++i)
 		{
 			// Draw x / forward line:
 			m_Device->DrawPrimitive(D3DPT_TRIANGLESTRIP, startVertex, 2);
@@ -352,70 +388,24 @@ void CCampathDrawer::OnPostRenderAllTools()
 
 			startVertex += 12;
 		}
+
+		if(inCampath && campathCanEval)
+		{
+			newCScreenInfo[2] = c_CameraPixelWidth;
+			m_Device->SetVertexShaderConstantF(48, newCScreenInfo, 1);
+
+			// Draw camera lines:
+
+			for(size_t i=0; i<9; ++i)
+			{
+				// Draw x / forward line:
+				m_Device->DrawPrimitive(D3DPT_TRIANGLESTRIP, startVertex, 2);
+
+				startVertex += 4;
+			}
+		}
 	}
 
-/*
-	CamPathValue cpv = g_Hook_VClient_RenderView.m_CamPath.GetBegin().GetValue();
-
-	struct {
-		Vertex v1;
-		Vertex v2;
-		Vertex v3;
-		Vertex v4;
-		Vertex v5;
-		Vertex v6;
-	} vertexData = {
-		{
-			cpv.X, cpv.Y+10.0, cpv.Z-10.0,
-			D3DCOLOR_RGBA(255,0,0,255),
-			1.0f, 0.0f,
-			0.0f, 1.0f, 0.0f,
-			0.0f, -1.0f, 0.0f
-		},
-		{
-			cpv.X, cpv.Y+10.0, cpv.Z-10.0,
-			D3DCOLOR_RGBA(255,0,0,255),
-			-1.0f, 0.0f,
-			0.0f, 1.0f, 0.0f,
-			0.0f, -1.0f, 0.0f
-		},
-		{
-			cpv.X, cpv.Y, cpv.Z-10.0,
-			D3DCOLOR_RGBA(255,0,0,255),
-			1.0f, 0.0f,
-			0.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, 1.0f
-		},
-		{
-			cpv.X, cpv.Y, cpv.Z-10.0,
-			D3DCOLOR_RGBA(255,0,0,255),
-			-1.0f, 0.0f,
-			0.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, 1.0f
-		},
-		{
-			cpv.X, cpv.Y, cpv.Z+10.0,
-			D3DCOLOR_RGBA(255,255,0,255),
-			1.0f, 0.0f,
-			0.0f, 0.0f, -1.0f,
-			0.0f, 0.0f, 1.0f
-		},
-		{
-			cpv.X, cpv.Y, cpv.Z+10.0,
-			D3DCOLOR_RGBA(255,255,0,255),
-			-1.0f, 0.0f,
-			0.0f, 0.0f, -1.0f,
-			0.0f, 0.0f, 1.0f
-		}
-	};
-
-	m_Device->DrawPrimitiveUP(
-		D3DPT_TRIANGLESTRIP,
-		4,
-		&vertexData,
-		sizeof(Vertex)
-	);
-*/
 	// Restore device state:
 
 	m_Device->SetPixelShader(oldPixelShader);
@@ -438,6 +428,12 @@ void CCampathDrawer::OnPostRenderAllTools()
 	m_Device->SetVertexShaderConstantF(8, oldCViewProj[0], 4);
 	m_Device->SetVertexShaderConstantF(48, oldCScreenInfo, 1);
 
+	m_Device->SetRenderState(D3DRS_DESTBLEND, oldDestBlend);
+	m_Device->SetRenderState(D3DRS_SRCBLEND, oldSrcBlend);
+	m_Device->SetRenderState(D3DRS_BLENDOP, oldBlendOp);
+	m_Device->SetRenderState(D3DRS_ALPHABLENDENABLE, oldAlphaBlendEnable);
+	m_Device->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, oldSeparateAlphaBlendEnable);
+	m_Device->SetRenderState(D3DRS_ALPHATESTENABLE, oldAlphaTestEnable);
 	m_Device->SetRenderState(D3DRS_ZFUNC, oldZFunc);
 	m_Device->SetRenderState(D3DRS_ZWRITEENABLE, oldZWriteEnable);
 	m_Device->SetRenderState(D3DRS_ZENABLE, oldZEnable);
@@ -465,40 +461,80 @@ void CCampathDrawer::OnSetupEngineView()
 	m_WorldToScreenMatrix = g_VEngineClient->WorldToScreenMatrix();
 }
 
+void CCampathDrawer::BuildSingleLine(Vector3 from, Vector3 to, Vertex * pOutVertexData)
+{
+	Vector3 normal = (to-from).Normalize();
+	
+	pOutVertexData[1].x = pOutVertexData[0].x = (float)from.X;
+	pOutVertexData[3].x = pOutVertexData[2].x = (float)to.X;
+	pOutVertexData[1].y = pOutVertexData[0].y = (float)from.Y;
+	pOutVertexData[3].y = pOutVertexData[2].y = (float)to.Y;
+	pOutVertexData[1].z = pOutVertexData[0].z = (float)from.Z;
+	pOutVertexData[3].z = pOutVertexData[2].z = (float)to.Z;
+
+	pOutVertexData[3].t1u = pOutVertexData[2].t1u = pOutVertexData[1].t1u = pOutVertexData[0].t1u = (float)-normal.X;
+	pOutVertexData[3].t1v = pOutVertexData[2].t1v = pOutVertexData[1].t1v = pOutVertexData[0].t1v = (float)-normal.Y;
+	pOutVertexData[3].t1w = pOutVertexData[2].t1w = pOutVertexData[1].t1w = pOutVertexData[0].t1w = (float)-normal.Z;
+
+	pOutVertexData[3].t2u = pOutVertexData[2].t2u = pOutVertexData[1].t2u = pOutVertexData[0].t2u = (float)normal.X;
+	pOutVertexData[3].t2v = pOutVertexData[2].t2v = pOutVertexData[1].t2v = pOutVertexData[0].t2v = (float)normal.Y;
+	pOutVertexData[3].t2w = pOutVertexData[2].t2w = pOutVertexData[1].t2w = pOutVertexData[0].t2w = (float)normal.Z;
+
+	pOutVertexData[2].t0u = pOutVertexData[0].t0u = 1.0f;
+	pOutVertexData[3].t0u = pOutVertexData[1].t0u = -1.0f;
+
+	pOutVertexData[3].t0v = pOutVertexData[2].t0v = pOutVertexData[1].t0v = pOutVertexData[0].t0v = 0.0f;
+
+}
+
+void CCampathDrawer::BuildSingleLine(DWORD colorFrom, DWORD colorTo, Vertex * pOutVertexData)
+{
+	pOutVertexData[1].diffuse = pOutVertexData[0].diffuse = colorFrom;
+	pOutVertexData[3].diffuse = pOutVertexData[2].diffuse = colorTo;
+}
+
 void CCampathDrawer::RebuildDrawing()
 {
 	if(!m_Device)
 		return;
 
-	Vertex * lockedCrossesVertexBufferData = 0;
+	double curTime = g_Hook_VClient_RenderView.GetCurTime();
+	bool inCampath = 1 <= g_Hook_VClient_RenderView.m_CamPath.GetSize()
+		&&	g_Hook_VClient_RenderView.m_CamPath.GetLowerBound() <= curTime
+		&& curTime <= g_Hook_VClient_RenderView.m_CamPath.GetUpperBound();
+	bool campathCanEval = 4 <= g_Hook_VClient_RenderView.m_CamPath.GetSize();
+	bool campathEnabled = g_Hook_VClient_RenderView.m_CamPath.IsEnabled();
+
+	Vertex * lockedLineTriangleListBuffer = 0;
 	size_t crossesCount = g_Hook_VClient_RenderView.m_CamPath.GetSize();
+	size_t lineTriangleListBufferVertexCount = (crossesCount * 3 +9)* 4;
 
 	if(m_RebuildDrawing)
 	{
 		UnloadDrawing();
 
 		if(!SUCCEEDED(m_Device->CreateVertexBuffer(
-			crossesCount * 3 * 4 * sizeof(Vertex),
+			lineTriangleListBufferVertexCount * sizeof(Vertex),
 			D3DUSAGE_WRITEONLY,
 			CCampathDrawer_VertexFVF,
 			D3DPOOL_DEFAULT,
-			&m_CrossesVertexBuffer,
+			&m_LineTriangleListBuffer,
 			NULL
 		)))
 		{
-			if(m_CrossesVertexBuffer) m_CrossesVertexBuffer->Release();
-			m_CrossesVertexBuffer = 0;
+			if(m_LineTriangleListBuffer) m_LineTriangleListBuffer->Release();
+			m_LineTriangleListBuffer = 0;
 		}
 
-		if(m_CrossesVertexBuffer)
+		if(m_LineTriangleListBuffer)
 		{
-			if(!SUCCEEDED(m_CrossesVertexBuffer->Lock(0, crossesCount * 3 * 4 * sizeof(Vertex), (void **)&lockedCrossesVertexBufferData, 0)))
-				lockedCrossesVertexBufferData = 0;
+			if(!SUCCEEDED(m_LineTriangleListBuffer->Lock(0, lineTriangleListBufferVertexCount * sizeof(Vertex), (void **)&lockedLineTriangleListBuffer, 0)))
+				lockedLineTriangleListBuffer = 0;
 		}
 
-		if(lockedCrossesVertexBufferData)
+		if(lockedLineTriangleListBuffer)
 		{
-			Vertex * curBuf = lockedCrossesVertexBufferData;
+			Vertex * curBuf = lockedLineTriangleListBuffer;
 
 			CamPathIterator it = g_Hook_VClient_RenderView.m_CamPath.GetBegin();
 
@@ -581,21 +617,19 @@ void CCampathDrawer::RebuildDrawing()
 		}
 	}
 	else
-	if(m_CrossesVertexBuffer)
+	if(m_LineTriangleListBuffer)
 	{
-		if(!SUCCEEDED(m_CrossesVertexBuffer->Lock(0, crossesCount * 3 * 4 * sizeof(Vertex), (void **)&lockedCrossesVertexBufferData, 0)))
-			lockedCrossesVertexBufferData = 0;
+		if(!SUCCEEDED(m_LineTriangleListBuffer->Lock(0, lineTriangleListBufferVertexCount * sizeof(Vertex), (void **)&lockedLineTriangleListBuffer, 0)))
+			lockedLineTriangleListBuffer = 0;
 	}
 
-	if(lockedCrossesVertexBufferData)
+	if(lockedLineTriangleListBuffer)
 	{
 		// update colouring:
 
-		Vertex * curBuf = lockedCrossesVertexBufferData;
+		Vertex * curBuf = lockedLineTriangleListBuffer;
 
 		CamPathIterator it = g_Hook_VClient_RenderView.m_CamPath.GetBegin();
-
-		double curTime = g_Hook_VClient_RenderView.GetCurTime();
 
 		for(size_t i = 0; i < crossesCount; i++)
 		{
@@ -610,19 +644,19 @@ void CCampathDrawer::RebuildDrawing()
 			if(deltaTime < 1.0)
 			{
 				// green to yellow:
-				double t = deltaTime -0.0;
-				colour = D3DCOLOR_RGBA((unsigned char)(255.0*t),255,0,255);
+				double t = (deltaTime -0.0)/1.0;
+				colour = D3DCOLOR_RGBA((unsigned char)(255.0*t),255,0,(unsigned char)(127*(1.0-t))+128);
 			}
 			else
 			if(deltaTime < 2.0)
 			{
 				// yellow to red:
-				double t = deltaTime -1.0;
-				colour = D3DCOLOR_RGBA(255,(unsigned char)(255.0*(1.0-t)),0,255);
+				double t = (deltaTime -1.0)/1.0;
+				colour = D3DCOLOR_RGBA(255,(unsigned char)(255.0*(1.0-t)),0,(unsigned char)(64*(1.0-t))+64);
 			}
 			else
 			{
-				colour = D3DCOLOR_RGBA(255,0,0,255);
+				colour = D3DCOLOR_RGBA(255,0,0,64);
 			}
 
 			// x / forward line:
@@ -648,7 +682,70 @@ void CCampathDrawer::RebuildDrawing()
 			++it;
 		}
 
-		m_CrossesVertexBuffer->Unlock();
+		if(inCampath && campathCanEval)
+		{
+			// camera.
+
+			DWORD colourCam = campathEnabled ? D3DCOLOR_RGBA(255, 0, 255, 128) : D3DCOLOR_RGBA(255, 255, 255, 128);
+			DWORD colourCamUp = campathEnabled ? D3DCOLOR_RGBA(0, 255, 0, 128) : D3DCOLOR_RGBA(0, 0, 0, 128);
+
+			CamPathValue cpv = g_Hook_VClient_RenderView.m_CamPath.Eval(curTime);
+
+			double forward[3], right[3], up[3];
+			MakeVectors(cpv.Roll, cpv.Pitch, cpv.Yaw, forward, right, up);
+
+			Vector3 vCp(cpv.X, cpv.Y, cpv.Z);
+			Vector3 vForward(forward);
+			Vector3 vUp(up);
+			Vector3 vRight(right);
+
+			Vector3 vLU = vCp +(double)c_CameraRadius * (vForward -vRight +vUp).Normalize();
+			Vector3 vRU = vCp +(double)c_CameraRadius * (vForward +vRight +vUp).Normalize();
+			Vector3 vLD = vCp +(double)c_CameraRadius * (vForward -vRight -vUp).Normalize();
+			Vector3 vRD = vCp +(double)c_CameraRadius * (vForward +vRight -vUp).Normalize();
+			Vector3 vMU = vLU +(vRU -vLU)/2;
+			Vector3 vMUU = vMU +(double)c_CameraRadius * vUp;
+
+			BuildSingleLine(vCp, vLD, curBuf);
+			BuildSingleLine(colourCam, colourCam, curBuf);
+			curBuf += 4;
+
+			BuildSingleLine(vCp, vRD, curBuf);
+			BuildSingleLine(colourCam, colourCam, curBuf);
+			curBuf += 4;
+
+			BuildSingleLine(vCp, vLU, curBuf);
+			BuildSingleLine(colourCam, colourCam, curBuf);
+			curBuf += 4;
+
+			BuildSingleLine(vCp, vRU, curBuf);
+			BuildSingleLine(colourCam, colourCam, curBuf);
+			curBuf += 4;
+
+			BuildSingleLine(vLD, vRD, curBuf);
+			BuildSingleLine(colourCam, colourCam, curBuf);
+			curBuf += 4;
+
+			BuildSingleLine(vRD, vRU, curBuf);
+			BuildSingleLine(colourCam, colourCam, curBuf);
+			curBuf += 4;
+
+			BuildSingleLine(vRU, vLU, curBuf);
+			BuildSingleLine(colourCam, colourCam, curBuf);
+			curBuf += 4;
+
+			BuildSingleLine(vLU, vLD, curBuf);
+			BuildSingleLine(colourCam, colourCam, curBuf);
+			curBuf += 4;
+
+			BuildSingleLine(vMU, vMUU, curBuf);
+			BuildSingleLine(colourCam, colourCamUp, curBuf);
+			curBuf += 4;
+		}
+
+		//
+
+		m_LineTriangleListBuffer->Unlock();
 	}
 
 	m_RebuildDrawing = false;
@@ -656,7 +753,7 @@ void CCampathDrawer::RebuildDrawing()
 
 void CCampathDrawer::UnloadDrawing()
 {
-	if(m_CrossesVertexBuffer) { m_CrossesVertexBuffer->Release(); m_CrossesVertexBuffer = 0; }
+	if(m_LineTriangleListBuffer) { m_LineTriangleListBuffer->Release(); m_LineTriangleListBuffer = 0; }
 }
 
 void CCampathDrawer::UnloadShader()

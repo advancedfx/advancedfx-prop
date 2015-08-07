@@ -75,13 +75,13 @@ public:
 	CamPathIterator GetEnd();
 	double GetDuration();
 
-	/// <remarks>Must not be called if IsEnabled is false!</remarks>
+	/// <remarks>Must not be called if GetSize is less than 1!</remarks>
 	double GetLowerBound();
 
-	/// <remarks>Must not be called if IsEnabled is false!</remarks>
+	/// <remarks>Must not be called if GetSize is less than 1!</remarks>
 	double GetUpperBound();
 
-	/// <remarks>Must not be called if IsEnabled is false!</remarks>
+	/// <remarks>Must not be called if GetSize is less than 4!</remarks>
 	CamPathValue Eval(double t);
 
 	bool Save(wchar_t const * fileName);

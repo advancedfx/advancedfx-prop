@@ -13,11 +13,40 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+
 namespace Afx {
 namespace Math {
 
+void MakeVectors(
+	double rForward, double rLeft, double rUp,
+	double (& outForward)[3], double (& outRight)[3], double (& outUp)[3]
+)
+{
+	double angle;
+	double sr, sp, sy, cr, cp, cy;
 
-////////////////////////////////////////////////////////////////////////////////
+	angle = rUp * (M_PI*2 / 360);
+	sy = sin(angle);
+	cy = cos(angle);
+	angle = rLeft * (M_PI*2 / 360);
+	sp = sin(angle);
+	cp = cos(angle);
+	angle = rForward * (M_PI*2 / 360);
+	sr = sin(angle);
+	cr = cos(angle);
+
+	outForward[0] = cp*cy;
+	outForward[1] = cp*sy;
+	outForward[2] = -sp;
+
+	outRight[0] = (-1*sr*sp*cy+-1*cr*-sy);
+	outRight[1] = (-1*sr*sp*sy+-1*cr*cy);
+	outRight[2] = -1*sr*cp;
+
+	outUp[0] = (cr*sp*cy+-sr*-sy);
+	outUp[1] = (cr*sp*sy+-sr*cy);
+	outUp[2] = cr*cp;
+}
 
 // Copyright (c) by NUMERICAL RECIPES IN C: THE ART OF SCIENTIFIC COMPUTING (ISBN 0-521-43108-5)
 void spline(double x[], double y[], int n, bool y1Natural, double yp1, bool ynNatural, double ypn, double y2[])
@@ -1494,6 +1523,103 @@ QREulerAngles Quaternion::ToQREulerAngles()
         zYaw,
         xRoll
     );
+}
+
+// Vector3 /////////////////////////////////////////////////////////////////////
+
+Vector3 operator * (double value, Vector3 x)
+{
+	return Vector3(value * x.X, value * x.Y, value * x.Z);
+}
+
+Vector3::Vector3(double x, double y, double z)
+: X(x)
+, Y(y)
+, Z(z)
+{
+}
+
+Vector3::Vector3(double value[3])
+: X(value[0])
+, Y(value[1])
+, Z(value[2])
+{
+}
+
+Vector3::Vector3(const Vector3 & v)
+: X(v.X)
+, Y(v.Y)
+, Z(v.Z)
+{
+}
+
+Vector3 Vector3::operator + (const Vector3 & y) const
+{
+	return Vector3(X +y.X, Y +y.Y, Z +y.Z);
+}
+	
+void Vector3::operator += (const Vector3 & y)
+{
+	X += y.X;
+	Y += y.Y;
+	Z += y.Z;
+}
+
+Vector3 Vector3::operator - (const Vector3 & y) const
+{
+	return Vector3(X -y.X, Y -y.Y, Z -y.Z);
+}
+
+void Vector3::operator -= (const Vector3 & y)
+{
+	X -= y.X;
+	Y -= y.Y;
+	Z -= y.Z;
+}
+
+Vector3 Vector3::operator * (double value) const
+{
+	return Vector3(X * value, Y * value, Z * value);
+}
+
+Vector3 Vector3::operator *= (double value)
+{
+	X *= value;
+	Y *= value;
+	Z *= value;
+}
+
+Vector3 Vector3::operator / (double value) const
+{
+	return Vector3(X / value, Y / value, Z / value);
+}
+
+Vector3 Vector3::operator /= (double value)
+{
+	X /= value;
+	Y /= value;
+	Z /= value;
+}
+
+void Vector3::ToArray(double (& outValue)[3]) const
+{
+	outValue[0] = X;
+	outValue[1] = Y;
+	outValue[2] = Z;
+}
+
+double Vector3::Length() const
+{
+	return sqrt(X*X + Y*Y + Z*Z);
+}
+
+Vector3 Vector3::Normalize()
+{
+	double length = Length();
+
+	if(length) *this = *this / length;
+
+	return *this;
 }
 
 } // namespace Afx {

@@ -324,38 +324,10 @@ void Filming::OnR_RenderView(float vieworg[3], float viewangles[3], float & fov)
 	else if(fov>179) fov = 179;
 
 	// >> begin calculate transform vectors
-	// we have to calculate our own transformation vectors from the angles and can not use pparams->forward etc., because in spectator mode they might be not present:
-	// (adapted from HL1SDK/multiplayer/pm_shared.c/AngleVectors) and modified for quake order of angles:
 
-	float *angles;
-	float forward[3],right[3],up[3];
+	double forward[3],right[3],up[3];
 
-	float		angle;
-	float		sr, sp, sy, cr, cp, cy;
-
-	angles = viewangles;
-
-	angle = angles[YAW] * ((float)M_PI*2 / 360);
-	sy = sin((float)angle);
-	cy = cos((float)angle);
-	angle = angles[PITCH] * ((float)M_PI*2 / 360);
-	sp = sin((float)angle);
-	cp = cos((float)angle);
-	angle = angles[ROLL] * ((float)M_PI*2 / 360);
-	sr = sin((float)angle);
-	cr = cos((float)angle);
-
-	forward[0] = cp*cy;
-	forward[1] = cp*sy;
-	forward[2] = -sp;
-
-	right[0] = (-1*sr*sp*cy+-1*cr*-sy);
-	right[1] = (-1*sr*sp*sy+-1*cr*cy);
-	right[2] = -1*sr*cp;
-
-	up[0] = (cr*sp*cy+-sr*-sy);
-	up[1] = (cr*sp*sy+-sr*cy);
-	up[2] = cr*cp;
+	MakeVectors(viewangles[ROLL], viewangles[PITCH], viewangles[YAW], forward, right, up);
 
 	// << end calculate transform vectors
 
@@ -370,7 +342,7 @@ void Filming::OnR_RenderView(float vieworg[3], float viewangles[3], float & fov)
 
 		for ( int i=0 ; i<3 ; i++ )
 		{
-			vieworg[i] += fDispForward*forward[i] + fDispRight*right[i] + fDispUp*up[i];
+			vieworg[i] += (float)(fDispForward*forward[i] + fDispRight*right[i] + fDispUp*up[i]);
 		}
 	}
 
@@ -419,7 +391,7 @@ void Filming::OnR_RenderView(float vieworg[3], float viewangles[3], float & fov)
 		// apply displacement:
 		for ( int i=0 ; i<3 ; i++ )
 		{
-			vieworg[i] += fDispRight*right[i];
+			vieworg[i] += (float)(fDispRight*right[i]);
 		}
 
 		// export:

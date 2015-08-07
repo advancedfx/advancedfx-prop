@@ -29,11 +29,6 @@
 #include "AfxHookSourceInput.h"
 
 
-#ifndef M_PI
-#define M_PI		3.14159265358979323846	// matches value in gcc v2 math.h
-#endif
-
-
 BvhExport * g_BvhExport = NULL;
 
 BvhImport g_BvhImport;
@@ -207,8 +202,6 @@ void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, fl
 		double dYaw = dT * g_AfxHookSourceInput.GetCamDYaw();
 		double dFov = dT * g_AfxHookSourceInput.GetCamDFov();
 		double forward[3], right[3], up[3];
-		double angle;
-		double sr, sp, sy, cr, cp, cy;
 
 		Rx = (float)(LastCameraAngles[0] +dPitch);
 		Ry = (float)(LastCameraAngles[1] +dYaw);
@@ -223,27 +216,7 @@ void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, fl
 			Fov = 90.0;
 		}
 
-		angle = Ry * (M_PI*2 / 360);
-		sy = sin(angle);
-		cy = cos(angle);
-		angle = Rx * (M_PI*2 / 360);
-		sp = sin(angle);
-		cp = cos(angle);
-		angle = Rz * (M_PI*2 / 360);
-		sr = sin(angle);
-		cr = cos(angle);
-
-		forward[0] = cp*cy;
-		forward[1] = cp*sy;
-		forward[2] = -sp;
-
-		right[0] = (-1*sr*sp*cy+-1*cr*-sy);
-		right[1] = (-1*sr*sp*sy+-1*cr*cy);
-		right[2] = -1*sr*cp;
-
-		up[0] = (cr*sp*cy+-sr*-sy);
-		up[1] = (cr*sp*sy+-sr*cy);
-		up[2] = cr*cp;
+		MakeVectors(Rz, Rx, Ry, forward, right, up);
 
 		Tx = (float)(LastCameraOrigin[0] + dForward*forward[0] -dLeft*right[0] +dUp*up[0]);
 		Ty = (float)(LastCameraOrigin[1] + dForward*forward[1] -dLeft*right[1] +dUp*up[1]);
