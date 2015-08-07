@@ -1996,8 +1996,8 @@ void CAfxStreams::RestoreMatVars()
 {
 	EnsureMatVars();
 
-	m_MatQueueModeRef->SetValue(m_OldMatQueueMode);
-	m_MatPostProcessEnableRef->SetValue(m_OldMatPostProcessEnable);
+	m_MatQueueModeRef->SetValue((float)m_OldMatQueueMode);
+	m_MatPostProcessEnableRef->SetValue((float)m_OldMatPostProcessEnable);
 }
 
 void CAfxStreams::EnsureMatVars()

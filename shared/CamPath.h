@@ -29,6 +29,27 @@ struct CamPathValue
 	CamPathValue(double x, double y, double z, double pitch, double yaw, double roll, double fov);
 };
 
+class CamPathValuePiggyBack
+{
+public:
+	CamPathValuePiggyBack()
+	: Selected(false)
+	{
+	}
+
+	CamPathValuePiggyBack(bool selected)
+	: Selected(selected)
+	{
+	}
+
+	CamPathValuePiggyBack(const CamPathValuePiggyBack * value)
+	: Selected(value->Selected)
+	{
+	}
+
+	bool Selected;
+};
+
 struct CamPathIterator
 {
 public:
@@ -39,6 +60,8 @@ public:
 	double GetTime();
 
 	CamPathValue GetValue();
+
+	bool IsSelected();
 
 	CamPathIterator& operator ++ ();
 
@@ -57,16 +80,22 @@ public:
 };
 
 class CamPath
+: public ICosObjectSplineValueRemoved
 {
 public:
 	CamPath();
 	CamPath(ICamPathChanged * onChanged);
+	
+	~CamPath();
 
 	bool Enable(bool enable);
 	bool IsEnabled();
 
-	void Add(double time, CamPathValue value);
-	void Add(double time, COSValue value);
+	void Add(double time, CamPathValue value, bool selected = false);
+
+	/// <remarks>value.pUser will be overwritten.</remarks>
+	void Add(double time, COSValue value, bool selected = false);
+	
 	void Remove(double time);
 	void Clear();
 
@@ -94,7 +123,33 @@ public:
 	/// Setting duration for a path with less than 2 points will do nothing.</remarks>
 	void SetDuration(double t);
 
+	size_t SelectAll();
+
+	void SelectNone();
+
+	size_t SelectInvert();
+
+	/// <summary>Adds a range of key frames to the selection.</param>
+	/// <param name="min">Index of first keyframe to add to selection.</param>
+	/// <param name="max">Index of last keyframe to add to selection.</param>
+	/// <returns>Number of selected keyframes.</returns>
+	size_t SelectAdd(size_t min, size_t max);
+
+	/// <summary>Adds a range of key frames to the selection.</param>
+	/// <param name="min">Lower bound to start adding selection at.</param>
+	/// <param name="count">Number of keyframes to select.</param>
+	/// <returns>Number of selected keyframes.</returns>
+	size_t SelectAdd(double min, size_t count);
+
+	/// <summary>Adds a range of key frames to the selection.</param>
+	/// <param name="min">Lower bound to start adding selection at.</param>
+	/// <param name="count">Upper bound to end adding selection at.</param>
+	/// <returns>Number of selected keyframes.</returns>
+	size_t SelectAdd(double min, double max);
+
 	void OnChanged_set(ICamPathChanged * value);
+
+	virtual void CosObjectSplineValueRemoved(CubicObjectSpline * cos, COSValue & value);
 
 private:
 	bool m_Enabled;
@@ -105,4 +160,6 @@ private:
 	void CopyCOS(CubicObjectSpline & dst, CubicObjectSpline & src);
 	bool DoEnable(bool enable);
 
+	bool GetSelected(const COSValue & value);
+	CamPathValuePiggyBack const * GetPiggy( const COSValue & value);
 };

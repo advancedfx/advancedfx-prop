@@ -138,11 +138,20 @@ struct COSValue
 	Vec3 T;
 	Quaternion R;
 	double Fov;
+	void * pUser;
 };
 
 typedef double TripArray[3];
 typedef double QuatArray[4];
 typedef std::map<double,COSValue> COSPoints;
+
+class CubicObjectSpline;
+
+class ICosObjectSplineValueRemoved abstract
+{
+public:
+	virtual void CosObjectSplineValueRemoved(CubicObjectSpline * cos, COSValue & value) abstract = 0;
+};
 
 // TODO: make thread safe.
 /// <remarks>Currently NOT threadsafe (TODO), because of use of temporary static global variables (slew3_*).</remarks>
@@ -160,14 +169,26 @@ public:
 	COSPoints::const_iterator GetEnd(void);
 	size_t GetSize();
 
+/*
+	COSPoints::const_iterator GetLowerBound(double t);
+	COSPoints::const_iterator GetUpperBound(double t);
+*/
+
 	/// <remarks>Must not be called if GetSize is less than 1!</remarks>
 	double GetLowerBound();
 
 	/// <remarks>Must not be called if GetSize is less than 1!</remarks>
 	double GetUpperBound();
 
-	/// <remarks>Must not be called if GetSize is less than 4!</remarks>
+	/// <remarks>
+	/// Must not be called if GetSize is less than 4!<br />
+	/// The returned pUser member is meaningless and should not be used.
+	/// </remarks>
 	COSValue Eval(double t);
+
+	bool SetUser(double t, void * value);
+
+	void OnValueRemoved_set(ICosObjectSplineValueRemoved * value);
 
 private:
 	struct Build_s
@@ -190,10 +211,12 @@ private:
 		Build_s() : T(0), X(0), X2(0), Y(0), Y2(0), Z(0), Z2(0), Q_y(0), Q_h(0),
 			Q_dtheta(0), Q_e(0), Q_w(0), Fov(0), Fov2(0) {}
 	} m_Build;
+	ICosObjectSplineValueRemoved * m_OnValueRemoved;
 	COSPoints m_Points;
 	bool m_Rebuild;
 
 	void Free();
+	void ValueRemoved(COSValue & value);
 };
 
 } // namespace Afx {

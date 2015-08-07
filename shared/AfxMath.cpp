@@ -1056,19 +1056,37 @@ CubicObjectSpline::CubicObjectSpline()
 
 CubicObjectSpline::~CubicObjectSpline()
 {
+	Clear();
 	Free();
 }
 
 void CubicObjectSpline::Add(double t, COSValue y)
 {
 	m_Rebuild = true;
-	m_Points[t] = y;
+
+	std::pair<COSPoints::iterator,bool> result = m_Points.insert(std::pair<double,COSValue>(t, y));
+
+	if(!result.second)
+	{
+		COSValue oldValue = result.first->second;
+		result.first->second = y;
+
+		ValueRemoved(oldValue);
+	}
 }
 
 void CubicObjectSpline::Clear(void)
 {
-	m_Rebuild = true;
-	m_Points.clear();
+	COSPoints::iterator it;
+	while(m_Points.end() != (it = m_Points.begin()))
+	{
+		m_Rebuild = true;
+
+		COSValue oldValue = it->second;
+		m_Points.erase(it);
+
+		ValueRemoved(oldValue);
+	}
 }
 
 COSValue CubicObjectSpline::Eval(double t)
@@ -1166,6 +1184,7 @@ COSValue CubicObjectSpline::Eval(double t)
 	result.R.Y = Q[1];
 	result.R.Z = Q[2];
 	result.Fov = fov;
+	result.pUser = 0;
 
 	return result;
 }
@@ -1212,6 +1231,18 @@ COSPoints::const_iterator CubicObjectSpline::GetEnd(void)
 	return m_Points.end();
 }
 
+/*
+COSPoints::const_iterator CubicObjectSpline::GetLowerBound(double t)
+{
+	return m_Points.lower_bound(t);
+}
+
+COSPoints::const_iterator CubicObjectSpline::GetUpperBound(double t)
+{
+	return m_Points.upper_bound(t);
+}
+*/
+
 double CubicObjectSpline::GetLowerBound()
 {
 	if(m_Points.size() < 1) throw "CubicObjectSpline::GetLowerBound: Size less than 1.";
@@ -1234,10 +1265,42 @@ size_t CubicObjectSpline::GetSize()
 	return m_Points.size();
 }
 
+void CubicObjectSpline::OnValueRemoved_set(ICosObjectSplineValueRemoved * value)
+{
+	m_OnValueRemoved = value;
+}
+
 void CubicObjectSpline::Remove(double t)
 {
-	m_Rebuild = true;
-	m_Points.erase(t);
+	COSPoints::iterator it = m_Points.find(t);
+
+	if(it!=m_Points.end())
+	{
+		COSValue oldValue = it->second;
+		m_Points.erase(it);
+		m_Rebuild = true;
+
+		ValueRemoved(oldValue);
+	}
+}
+
+bool CubicObjectSpline::SetUser(double t, void * value)
+{
+	COSPoints::iterator it = m_Points.find(t);
+
+	if(it != m_Points.end())
+	{
+		it->second.pUser = value;
+
+		return true;
+	}
+
+	return false;
+}
+
+void CubicObjectSpline::ValueRemoved(COSValue & value)
+{
+	if(m_OnValueRemoved) m_OnValueRemoved->CosObjectSplineValueRemoved(this, value);
 }
 
 

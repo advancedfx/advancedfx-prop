@@ -52,6 +52,11 @@ CamPathValue CamPathIterator::GetValue()
 	return result;
 }
 
+bool CamPathIterator::IsSelected()
+{
+	return ((CamPathValuePiggyBack *)(wrapped->second.pUser))->Selected;
+}
+
 CamPathIterator& CamPathIterator::operator ++ ()
 {
 	wrapped++;
@@ -73,6 +78,8 @@ CamPath::CamPath()
 : m_OnChanged(0)
 , m_Enabled(false)
 {
+	m_Spline.OnValueRemoved_set(this);
+
 	Changed();
 }
 
@@ -80,7 +87,15 @@ CamPath::CamPath(ICamPathChanged * onChanged)
 : m_OnChanged(onChanged)
 , m_Enabled(false)
 {
+	m_Spline.OnValueRemoved_set(this);
+
 	Changed();
+}
+
+CamPath::~CamPath()
+{
+	m_Spline.Clear();
+	m_Spline.OnValueRemoved_set(0);
 }
 
 bool CamPath::DoEnable(bool enable)
@@ -94,7 +109,6 @@ bool CamPath::Enable(bool enable)
 {
 	bool result = DoEnable(enable);
 
-
 	if(result != enable)
 		Changed();
 
@@ -106,7 +120,7 @@ bool CamPath::IsEnabled()
 	return m_Enabled;
 }
 
-void CamPath::Add(double time, CamPathValue value)
+void CamPath::Add(double time, CamPathValue value, bool selected)
 {
 	COSValue val;
 
@@ -122,13 +136,15 @@ void CamPath::Add(double time, CamPathValue value)
 
 	val.Fov = value.Fov;
 
-	Add(time, val);
+	Add(time, val, selected);
 
 	Changed();
 }
 
-void CamPath::Add(double time, COSValue value)
+void CamPath::Add(double time, COSValue value, bool selected)
 {
+	value.pUser = new CamPathValuePiggyBack(selected);
+
 	m_Spline.Add(time, value);
 
 	Changed();
@@ -151,7 +167,34 @@ void CamPath::Remove(double time)
 
 void CamPath::Clear()
 {
-	m_Spline.Clear();
+	bool selectAll = true;
+
+	// TODO: optimize this somehow, this can take up to log(N)*N, which is rather slow for such a shitty operation:
+
+	COSPoints::const_iterator last = m_Spline.GetEnd();
+	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd();)
+	{
+		if(GetSelected(it->second))
+		{
+			selectAll = false;
+			m_Spline.Remove(it->first);
+
+			if(last != m_Spline.GetEnd())
+			{
+				it = last;
+				last = m_Spline.GetEnd();
+			}
+			else
+				it = m_Spline.GetBegin();
+		}
+		else
+		{
+			last = it;
+			++it;
+		}
+	}
+
+	if(selectAll) m_Spline.Clear();
 
 	m_Enabled = m_Enabled && 4 <= GetSize();
 
@@ -176,6 +219,16 @@ CamPathIterator CamPath::GetEnd()
 double CamPath::GetLowerBound()
 {
 	return m_Spline.GetLowerBound();
+}
+
+bool CamPath::GetSelected(const COSValue & value)
+{
+	return GetPiggy(value)->Selected;
+}
+
+CamPathValuePiggyBack const * CamPath::GetPiggy( const COSValue & value)
+{
+	return (CamPathValuePiggyBack *)value.pUser;
 }
 
 double CamPath::GetUpperBound()
@@ -255,6 +308,10 @@ bool CamPath::Save(wchar_t const * fileName)
 		pt->append_attribute(doc.allocate_attribute("qx", double2xml(doc,it.wrapped->second.R.X)));
 		pt->append_attribute(doc.allocate_attribute("qy", double2xml(doc,it.wrapped->second.R.Y)));
 		pt->append_attribute(doc.allocate_attribute("qz", double2xml(doc,it.wrapped->second.R.Z)));
+
+		if(GetSelected(it.wrapped->second))
+			pt->append_attribute(doc.allocate_attribute("selected"));
+
 		pts->append_node(pt);
 	}
 
@@ -328,6 +385,7 @@ bool CamPath::Load(wchar_t const * fileName)
 					rapidxml::xml_attribute<> * qxA = cur_node->first_attribute("qx");
 					rapidxml::xml_attribute<> * qyA = cur_node->first_attribute("qy");
 					rapidxml::xml_attribute<> * qzA = cur_node->first_attribute("qz");
+					rapidxml::xml_attribute<> * selectedA = cur_node->first_attribute("selected");
 
 					double dT = atof(timeAttr->value());
 					double dX = xA ? atof(xA->value()) : 0.0;
@@ -348,7 +406,7 @@ bool CamPath::Load(wchar_t const * fileName)
 						r.Fov = dFov;
 
 						// Add point:
-						Add(dT, r);
+						Add(dT, r, 0 != selectedA);
 					}
 					else
 					{
@@ -360,8 +418,9 @@ bool CamPath::Load(wchar_t const * fileName)
 						Add(dT, CamPathValue(
 							dX, dY, dZ,
 							dRYpitch, dRZyaw, dRXroll,
-							dFov
-						));
+							dFov),
+							0 != selectedA
+						);
 					}
 				}
 			}
@@ -382,22 +441,150 @@ bool CamPath::Load(wchar_t const * fileName)
 	return bOk;
 }
 
+size_t CamPath::SelectAll()
+{
+	SelectNone();
+
+	size_t max = m_Spline.GetSize();
+	if(0 < max) --max;
+
+	return SelectAdd((size_t)0, max);
+}
+
+void CamPath::SelectNone()
+{
+	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	{
+		CamPathValuePiggyBack * newPig = new CamPathValuePiggyBack(GetPiggy(it->second));
+		newPig->Selected = false;
+
+		delete GetPiggy(it->second);
+
+		m_Spline.SetUser(it->first, newPig);
+	}
+}
+
+size_t CamPath::SelectInvert()
+{
+	size_t selected = 0;
+
+	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	{
+		CamPathValuePiggyBack * newPig = new CamPathValuePiggyBack(GetPiggy(it->second));
+		newPig->Selected = !newPig->Selected;
+
+		if(newPig->Selected) ++selected;
+
+		delete GetPiggy(it->second);
+
+		m_Spline.SetUser(it->first, newPig);
+	}
+
+	return selected;
+}
+
+size_t CamPath::SelectAdd(size_t min, size_t max)
+{
+	size_t i = 0;
+	size_t selected = 0;
+
+	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	{
+		CamPathValuePiggyBack * newPig = new CamPathValuePiggyBack(GetPiggy(it->second));
+		newPig->Selected = newPig->Selected || min <= i && i <= max;
+
+		if(newPig->Selected) ++selected;
+
+		delete GetPiggy(it->second);
+
+		m_Spline.SetUser(it->first, newPig);
+	}
+
+	return selected;
+}
+
+size_t CamPath::SelectAdd(double min, size_t count)
+{
+	size_t selected = 0;
+
+	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	{
+		CamPathValuePiggyBack * newPig = new CamPathValuePiggyBack(GetPiggy(it->second));
+		newPig->Selected = newPig->Selected || min <= it->first && selected < count;
+
+		if(newPig->Selected) ++selected;
+
+		delete GetPiggy(it->second);
+
+		m_Spline.SetUser(it->first, newPig);
+	}
+
+	return selected;
+}
+
+size_t CamPath::SelectAdd(double min, double max)
+{
+	size_t selected = 0;
+
+	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	{
+		CamPathValuePiggyBack * newPig = new CamPathValuePiggyBack(GetPiggy(it->second));
+		newPig->Selected = newPig->Selected || min <= it->first && it->first <= max;
+
+		if(newPig->Selected) ++selected;
+
+		delete GetPiggy(it->second);
+
+		m_Spline.SetUser(it->first, newPig);
+	}
+
+	return selected;
+}
+
 void CamPath::SetStart(double t)
 {
 	if(m_Spline.GetSize()<1) return;
 
-	CubicObjectSpline tempSline;
-	double deltaT = t -m_Spline.GetBegin()->first;
+	CubicObjectSpline tempSpline;
+	tempSpline.OnValueRemoved_set(this);
+
+	bool selectAll = true;
+	double first = 0;
+
+	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	{
+		if(GetSelected(it->second))
+		{
+			if(selectAll)
+			{
+				selectAll = false;
+				first = it->first;
+				break;
+			}
+		}
+	}
+
+	double deltaT = selectAll ? t -m_Spline.GetBegin()->first : t -first;
 
 	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
 	{
 		double curT = it->first;
 		COSValue curValue = it->second;
 
-		tempSline.Add(deltaT+curT, curValue);
+		curValue.pUser = new CamPathValuePiggyBack(GetPiggy(curValue));
+
+		if(selectAll || GetSelected(curValue))
+		{
+			tempSpline.Add(deltaT+curT, curValue);
+		}
+		else
+		{
+			tempSpline.Add(curT, curValue);
+		}
+
 	}
 
-	CopyCOS(m_Spline, tempSline);
+	CopyCOS(m_Spline, tempSpline);
 
 	DoEnable(m_Enabled);
 
@@ -408,11 +595,32 @@ void CamPath::SetDuration(double t)
 {
 	if(m_Spline.GetSize()<2) return;
 
-	CubicObjectSpline tempSline;
+	CubicObjectSpline tempSpline;
+	tempSpline.OnValueRemoved_set(this);
 
-	CopyCOS(tempSline, m_Spline);
+	CopyCOS(tempSpline, m_Spline);
 
-	double oldDuration = GetDuration();
+	bool selectAll = true;
+	double first = 0, last = 0;
+
+	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	{
+		if(GetSelected(it->second))
+		{
+			if(selectAll)
+			{
+				selectAll = false;
+				first = it->first;
+				last = first;
+			}
+			else
+			{
+				last = it->first;
+			}
+		}
+	}
+
+	double oldDuration = selectAll ? GetDuration() : last -first;
 
 	m_Spline.Clear();
 
@@ -420,19 +628,26 @@ void CamPath::SetDuration(double t)
 	bool isFirst = true;
 	double firstT = 0;
 
-	for(COSPoints::const_iterator it = tempSline.GetBegin(); it != tempSline.GetEnd(); ++it)
+	for(COSPoints::const_iterator it = tempSpline.GetBegin(); it != tempSpline.GetEnd(); ++it)
 	{
 		double curT = it->first;
 		COSValue curValue = it->second;
 
-		if(isFirst)
+		curValue.pUser = new CamPathValuePiggyBack(GetPiggy(curValue));
+
+		if(selectAll || GetSelected(curValue))
 		{
-			m_Spline.Add(curT, curValue);
-			firstT = curT;
-			isFirst = false;
+			if(isFirst)
+			{
+				m_Spline.Add(curT, curValue);
+				firstT = curT;
+				isFirst = false;
+			}
+			else
+				m_Spline.Add(firstT+scale*(curT-firstT), curValue);
 		}
 		else
-			m_Spline.Add(firstT+scale*(curT-firstT), curValue);
+			m_Spline.Add(curT, curValue);
 	}
 
 	DoEnable(m_Enabled);
@@ -446,7 +661,10 @@ void CamPath::CopyCOS(CubicObjectSpline & dst, CubicObjectSpline & src)
 
 	for(COSPoints::const_iterator it = src.GetBegin(); it != src.GetEnd(); ++it)
 	{
-		dst.Add(it->first, it->second);
+		COSValue val = it->second;
+		val.pUser = new CamPathValuePiggyBack(GetPiggy(it->second));
+
+		dst.Add(it->first, val);
 	}
 }
 
@@ -455,4 +673,9 @@ double CamPath::GetDuration()
 	if(m_Spline.GetSize()<2) return 0.0;
 
 	return (--m_Spline.GetEnd())->first - m_Spline.GetBegin()->first;
+}
+
+void CamPath::CosObjectSplineValueRemoved(CubicObjectSpline * cos, COSValue & value)
+{
+	delete GetPiggy(value);
 }

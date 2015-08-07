@@ -15,6 +15,9 @@
 #include "RenderView.h"
 #include "WrpVEngineClient.h"
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 #include <stdio.h>
 #include <string>
 
@@ -493,6 +496,8 @@ void CCampathDrawer::BuildSingleLine(DWORD colorFrom, DWORD colorTo, Vertex * pO
 	pOutVertexData[3].diffuse = pOutVertexData[2].diffuse = colorTo;
 }
 
+#define ValToUCCondInv(value,invert) ((invert) ? 0xFF -(unsigned char)(value) : (unsigned char)(value) )
+
 void CCampathDrawer::RebuildDrawing()
 {
 	if(!m_Device)
@@ -504,6 +509,8 @@ void CCampathDrawer::RebuildDrawing()
 		&& curTime <= g_Hook_VClient_RenderView.m_CamPath.GetUpperBound();
 	bool campathCanEval = 4 <= g_Hook_VClient_RenderView.m_CamPath.GetSize();
 	bool campathEnabled = g_Hook_VClient_RenderView.m_CamPath.IsEnabled();
+
+	bool cameraMightBeSelected = false;
 
 	Vertex * lockedLineTriangleListBuffer = 0;
 	size_t crossesCount = g_Hook_VClient_RenderView.m_CamPath.GetSize();
@@ -536,6 +543,7 @@ void CCampathDrawer::RebuildDrawing()
 		{
 			Vertex * curBuf = lockedLineTriangleListBuffer;
 
+			CamPathIterator last = g_Hook_VClient_RenderView.m_CamPath.GetEnd();
 			CamPathIterator it = g_Hook_VClient_RenderView.m_CamPath.GetBegin();
 
 			for(size_t i = 0; i < crossesCount; i++)
@@ -543,6 +551,11 @@ void CCampathDrawer::RebuildDrawing()
 				// crosses.
 
 				CamPathValue cpv = it.GetValue();
+
+				if(last != g_Hook_VClient_RenderView.m_CamPath.GetEnd())
+				{
+					cameraMightBeSelected = cameraMightBeSelected || last.GetTime() <= curTime && curTime <= it.GetTime();
+				}
 
 				// x / forward line:
 
@@ -639,24 +652,40 @@ void CCampathDrawer::RebuildDrawing()
 
 			double deltaTime = abs(curTime -it.GetTime());
 
+			bool selected = it.IsSelected();
+
 			DWORD colour;
 
+			// determine colour:
 			if(deltaTime < 1.0)
 			{
-				// green to yellow:
 				double t = (deltaTime -0.0)/1.0;
-				colour = D3DCOLOR_RGBA((unsigned char)(255.0*t),255,0,(unsigned char)(127*(1.0-t))+128);
+				colour = D3DCOLOR_RGBA(
+					ValToUCCondInv(255.0*t, selected),
+					ValToUCCondInv(255, selected),
+					ValToUCCondInv(0, selected),
+					(unsigned char)(127*(1.0-t))+128
+				);
 			}
 			else
 			if(deltaTime < 2.0)
 			{
-				// yellow to red:
 				double t = (deltaTime -1.0)/1.0;
-				colour = D3DCOLOR_RGBA(255,(unsigned char)(255.0*(1.0-t)),0,(unsigned char)(64*(1.0-t))+64);
+				colour = D3DCOLOR_RGBA(
+					ValToUCCondInv(255, selected),
+					ValToUCCondInv(255.0*(1.0-t), selected),
+					ValToUCCondInv(0, selected),
+					(unsigned char)(64*(1.0-t))+64
+				);
 			}
 			else
 			{
-				colour = D3DCOLOR_RGBA(255,0,0,64);
+				colour = D3DCOLOR_RGBA(
+					ValToUCCondInv(255, selected),
+					ValToUCCondInv(0, selected),
+					ValToUCCondInv(0, selected),
+					64
+				);
 			}
 
 			// x / forward line:
@@ -686,8 +715,28 @@ void CCampathDrawer::RebuildDrawing()
 		{
 			// camera.
 
-			DWORD colourCam = campathEnabled ? D3DCOLOR_RGBA(255, 0, 255, 128) : D3DCOLOR_RGBA(255, 255, 255, 128);
-			DWORD colourCamUp = campathEnabled ? D3DCOLOR_RGBA(0, 255, 0, 128) : D3DCOLOR_RGBA(0, 0, 0, 128);
+			DWORD colourCam = campathEnabled
+				? D3DCOLOR_RGBA(
+					ValToUCCondInv(255,cameraMightBeSelected),
+					ValToUCCondInv(0,cameraMightBeSelected),
+					ValToUCCondInv(255,cameraMightBeSelected),
+					128)
+				: D3DCOLOR_RGBA(
+					ValToUCCondInv(255,cameraMightBeSelected),
+					ValToUCCondInv(255,cameraMightBeSelected),
+					ValToUCCondInv(255,cameraMightBeSelected),
+					128);
+			DWORD colourCamUp = campathEnabled
+				? D3DCOLOR_RGBA(
+					ValToUCCondInv(0,cameraMightBeSelected),
+					ValToUCCondInv(255,cameraMightBeSelected),
+					ValToUCCondInv(0,cameraMightBeSelected),
+					128)
+				: D3DCOLOR_RGBA(
+					ValToUCCondInv(0,cameraMightBeSelected),
+					ValToUCCondInv(0,cameraMightBeSelected),
+					ValToUCCondInv(0,cameraMightBeSelected),
+					128);
 
 			CamPathValue cpv = g_Hook_VClient_RenderView.m_CamPath.Eval(curTime);
 
@@ -699,10 +748,20 @@ void CCampathDrawer::RebuildDrawing()
 			Vector3 vUp(up);
 			Vector3 vRight(right);
 
-			Vector3 vLU = vCp +(double)c_CameraRadius * (vForward -vRight +vUp).Normalize();
-			Vector3 vRU = vCp +(double)c_CameraRadius * (vForward +vRight +vUp).Normalize();
-			Vector3 vLD = vCp +(double)c_CameraRadius * (vForward -vRight -vUp).Normalize();
-			Vector3 vRD = vCp +(double)c_CameraRadius * (vForward +vRight -vUp).Normalize();
+			double a = sin(cpv.Fov * M_PI / 360.0) * c_CameraRadius;
+			double b = a;
+
+			int screenWidth, screenHeight;
+			g_VEngineClient->GetScreenSize(screenWidth, screenHeight);
+
+			double aspectRatio = screenWidth ? (double)screenHeight / (double)screenWidth : 1.0;
+
+			b *= aspectRatio;
+
+			Vector3 vLU = vCp +(double)c_CameraRadius * vForward -a * vRight +b * vUp;
+			Vector3 vRU = vCp +(double)c_CameraRadius * vForward +a * vRight +b * vUp;
+			Vector3 vLD = vCp +(double)c_CameraRadius * vForward -a * vRight -b * vUp;
+			Vector3 vRD = vCp +(double)c_CameraRadius * vForward +a * vRight -b * vUp;
 			Vector3 vMU = vLU +(vRU -vLU)/2;
 			Vector3 vMUU = vMU +(double)c_CameraRadius * vUp;
 

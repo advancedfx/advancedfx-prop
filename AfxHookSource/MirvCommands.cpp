@@ -406,7 +406,7 @@ CON_COMMAND(__mirv_exec, "client command execution: __mirv_exec <as you would ha
 	delete ttt;
 }
 
-CON_COMMAND(mirv_campath,"easy camera paths")
+CON_COMMAND(mirv_campath,"camera paths")
 {
 	if(!g_Hook_VClient_RenderView.IsInstalled())
 	{
@@ -496,7 +496,7 @@ CON_COMMAND(mirv_campath,"easy camera paths")
 		}
 		else if(!_stricmp("print", subcmd) && 2 == argc)
 		{
-			Tier0_Msg("passed id: time -> (x,y,z) fov (pitch,yaw,roll)\n");
+			Tier0_Msg("passed id: time -> (x,y,z) fov (pitch,yaw,roll) | selected?\n");
 
 			double curtime = g_Hook_VClient_RenderView.GetCurTime();
 			
@@ -509,6 +509,7 @@ CON_COMMAND(mirv_campath,"easy camera paths")
 
 				double time = it.GetTime();
 				CamPathValue val = it.GetValue();
+				bool selected = it.IsSelected();
 
 				vieworigin[0] = val.X;
 				vieworigin[1] = val.Y;
@@ -519,12 +520,13 @@ CON_COMMAND(mirv_campath,"easy camera paths")
 				fov = val.Fov;
 
 				Tier0_Msg(
-					"%s %i: %f -> (%f,%f,%f) %f (%f,%f,%f)\n",
+					"%s %i: %f -> (%f,%f,%f) %f (%f,%f,%f) | %s\n",
 					time <= curtime ? "Y" : "n",
 					i, time,
 					vieworigin[0],vieworigin[1],vieworigin[2],
 					fov,
-					viewangles[0],viewangles[1],viewangles[2]
+					viewangles[0],viewangles[1],viewangles[2],
+					selected ? "SELECTED" : "unselected"
 				);
 
 				i++;
@@ -596,19 +598,169 @@ CON_COMMAND(mirv_campath,"easy camera paths")
 				return;
 			}
 		}
+		else if(!_stricmp("select", subcmd))
+		{	
+			if(3 <= argc)
+			{
+				const char * cmd2 = args->ArgV(2);
+
+				if(!_stricmp(cmd2, "all"))
+				{
+					g_Hook_VClient_RenderView.m_CamPath.SelectAll();
+					return;
+				}
+				else
+				if(!_stricmp(cmd2, "none"))
+				{
+					g_Hook_VClient_RenderView.m_CamPath.SelectNone();
+					return;
+				}
+				else
+				if(!_stricmp(cmd2, "invert"))
+				{
+					g_Hook_VClient_RenderView.m_CamPath.SelectInvert();
+					return;
+				}
+				else
+				{
+					bool bOk = true;
+
+					int idx = 2;
+					bool add = false;
+					if(!_stricmp(cmd2, "add"))
+					{
+						add = true;
+						++idx;
+					}
+
+					bool isFromId = false;
+					int fromId = 0;
+					bool isFromCurrent = false;
+					double fromValue = 0.0;
+					if(idx < argc)
+					{
+						const char * fromArg = args->ArgV(idx);
+
+						if(StringBeginsWith(fromArg, "#"))
+						{
+							isFromId = true;
+							++fromArg;
+							fromId = atoi(fromArg);
+						}
+						else if(!_stricmp(fromArg, "current"))
+						{
+							fromValue = g_Hook_VClient_RenderView.GetCurTime();
+						}
+						else
+						{
+							fromValue = atof(fromArg);
+						}
+
+						++idx;
+					}
+					else
+						bOk = false;
+
+					bool isToId = false;
+					int toId = 0;
+					double toValue = 0.0;
+					if(idx < argc)
+					{
+						const char * fromArg = args->ArgV(idx);
+
+						if(StringBeginsWith(fromArg, "#"))
+						{
+							isToId = true;
+							++fromArg;
+							toId = atoi(fromArg);
+							++idx;
+						}
+						else if(!_stricmp(fromArg, "abs"))
+						{
+							++idx;
+
+							if(idx < argc)
+							{
+								toValue = atof(args->ArgV(idx));
+								++idx;
+							}
+							else
+								bOk = false;
+						}
+						else
+						{
+							toValue = fromValue;
+							toValue += atof(args->ArgV(idx));
+							++idx;
+						}
+					}
+					else
+						bOk = false;
+
+					bOk = bOk && idx == argc;
+
+					size_t selected = 0;
+
+					if(bOk)
+					{
+						if(isFromId && isToId)
+						{
+							if(!add) g_Hook_VClient_RenderView.m_CamPath.SelectNone();
+							selected = g_Hook_VClient_RenderView.m_CamPath.SelectAdd((size_t)fromId,(size_t)toId);
+						}
+						else
+						if(!isFromId && isToId)
+						{
+							if(!add) g_Hook_VClient_RenderView.m_CamPath.SelectNone();
+							selected = g_Hook_VClient_RenderView.m_CamPath.SelectAdd((double)fromValue,(size_t)toId);
+						}
+						else
+						if(!isFromId && !isToId)
+						{
+							if(!add) g_Hook_VClient_RenderView.m_CamPath.SelectNone();
+							selected = g_Hook_VClient_RenderView.m_CamPath.SelectAdd((double)fromValue,(double)toValue);
+						}
+						else bOk = false;
+					}
+
+					if(bOk)
+					{
+						Tier0_Msg("A total of %u keyframes is selected now.\n", selected);
+						if(selected < 1)
+							Tier0_Warning("WARNING: You have no keyframes selected, thus most operations like mirv_campath clear will think you mean all keyframes (i.e. clear all)!\n", selected);
+
+						return;
+					}
+				}
+
+			}
+
+			Tier0_Msg(
+				"mirv_campath select all - Select all points.\n"
+				"mirv_campath select none - Selects no points.\n"
+				"mirv_campath select invert - Invert selection.\n"
+				"mirv_campath select [add] #<idBegin> #<idEnd> - Select keyframes starting at id <idBegin> and ending at id <idEnd>. If add is given, then selection is added to the current one.\n"
+				"mirv_campath select [add] current|<dMin> #<count> - Select keyframes starting at current time or given floating point time <dMin> and up to <count> number of keyframes. If add is given, then selection is added to the current one.\n"
+				"mirv_campath select [add] current|<dMin> <dDelta> - Select keyframes starting at current time or given floating point time <dMin> for the amount of time give by <dDelta>. If add is given, then selection is added to the current one.\n"
+				"mirv_campath select [add] current|<dMin> abs <dMax> - Select keyframes starting at current time or given floating point time <dMin> up to <dMax>. If add is given, then selection is added to the current one.\n"
+			);
+			return;
+
+		}
 	}
 
 	Tier0_Msg(
 		"mirv_campath add - adds current demotime and view as keyframe\n"
 		"mirv_campath enable 0|1 - set whether the camera splines are active or not. Please note that currently at least 4 Points are required to make it active successfully!\n"
 		"mirv_campath draw [...] - controls drawing of the camera path.\n"
-		"mirv_campath clear - removes all keyframes\n"
+		"mirv_campath clear - removes all [or all selected] keyframes\n"
 		"mirv_campath print - prints keyframes\n"
 		"mirv_campath remove <id> - removes a keyframe\n"
 		"mirv_campath load <fileName> - loads the campath from the file (XML format)\n"
 		"mirv_campath save <fileName> - saves the campath to the file (XML format)\n"
-		"mirv_campath edit start - set current demotime as new start time for the path you created\n"
-		"mirv_campath edit duration <dValue> - set floating point value <dValue> as new duration for the path you created (in seconds). Please see remarks in HLAE manual.\n"
+		"mirv_campath edit start - set current demotime as new start time for the path [or selected keyframe]\n"
+		"mirv_campath edit duration <dValue> - set floating point value <dValue> as new duration for the path [or selected keyframe] (in seconds). Please see remarks in HLAE manual.\n"
+		"mirv_campath select [...] - keyframe selection.\n"
 	);
 	return;
 }
