@@ -330,6 +330,9 @@ void CCampathDrawer::OnPostRenderAllTools()
 	DWORD oldDestBlend;
 	m_Device->GetRenderState(D3DRS_DESTBLEND, &oldDestBlend);
 
+	DWORD oldCullMode;
+	m_Device->GetRenderState(D3DRS_CULLMODE, &oldCullMode);
+
 	// Draw:
 
 	double curTime = g_Hook_VClient_RenderView.GetCurTime();
@@ -350,7 +353,7 @@ void CCampathDrawer::OnPostRenderAllTools()
 	m_Device->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD);
 	m_Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
 	m_Device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-
+	m_Device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 
 	m_Device->SetVertexShader(m_VertexShader);
 	
@@ -431,6 +434,7 @@ void CCampathDrawer::OnPostRenderAllTools()
 	m_Device->SetVertexShaderConstantF(8, oldCViewProj[0], 4);
 	m_Device->SetVertexShaderConstantF(48, oldCScreenInfo, 1);
 
+	m_Device->SetRenderState(D3DRS_CULLMODE, oldCullMode);
 	m_Device->SetRenderState(D3DRS_DESTBLEND, oldDestBlend);
 	m_Device->SetRenderState(D3DRS_SRCBLEND, oldSrcBlend);
 	m_Device->SetRenderState(D3DRS_BLENDOP, oldBlendOp);

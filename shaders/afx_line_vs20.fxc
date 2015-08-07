@@ -64,7 +64,7 @@ float2 rot90CW(float2 x)
 	return float2(x.y,-x.x);
 }
 
-// this is wrong and doesn't actually work, I suck at math, let's see if I can solve it.
+// this somewhat does what it should, but only somewhat :-/
 
 VS_OUTPUT main( const VS_INPUT i )
 {
@@ -90,7 +90,7 @@ VS_OUTPUT main( const VS_INPUT i )
 
 	miterPoint = next + prev;
 	
-	float miterOnNextLength = length(dot(miterPoint,next));	
+	float miterOnNextLength = length(dot(miterPoint,next));
 	if(miterOnNextLength) miterPoint = miterPoint / miterOnNextLength;
 	
 	float bbxmin = next.x < prev.x ? next.x : prev.x;
