@@ -1595,6 +1595,10 @@ Vector3 operator * (double value, Vector3 x)
 	return Vector3(value * x.X, value * x.Y, value * x.Z);
 }
 
+Vector3::Vector3()
+{
+}
+
 Vector3::Vector3(double x, double y, double z)
 : X(x)
 , Y(y)

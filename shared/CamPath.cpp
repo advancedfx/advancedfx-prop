@@ -498,6 +498,8 @@ size_t CamPath::SelectAdd(size_t min, size_t max)
 		delete GetPiggy(it->second);
 
 		m_Spline.SetUser(it->first, newPig);
+
+		++i;
 	}
 
 	return selected;

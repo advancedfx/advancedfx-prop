@@ -28,6 +28,9 @@ Vector3 operator * (double value, Vector3 x);
 struct Vector3
 {
 public:
+	/// <remarks>Data is uninitalized for this constructor.</remarks>
+	Vector3();
+
 	Vector3(double x, double y, double z);
 	Vector3(double value[3]);
 
