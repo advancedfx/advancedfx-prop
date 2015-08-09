@@ -87,12 +87,11 @@ void CCampathDrawer::AutoPolyLineStart()
 
 void CCampathDrawer::AutoPolyLinePoint(Vector3 previous, Vector3 current, DWORD colorCurrent, Vector3 next)
 {
-	bool isFirst = 0 == m_VertexBufferVertexCount;
-	UINT vertexCount = isFirst ? 4 : 2;
-
 	// make sure we have enough space:
-	if(c_VertexBufferVertexCount < m_VertexBufferVertexCount+vertexCount)
+	if(c_VertexBufferVertexCount < m_VertexBufferVertexCount+2)
 		AutoPolyLineFlush();
+
+	bool isFirst = 0 == m_VertexBufferVertexCount;
 
 	if(!m_LockedVertexBuffer)
 	{
