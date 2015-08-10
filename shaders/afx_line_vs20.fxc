@@ -28,19 +28,14 @@ float4 projectPos(float3 worldPos)
 		result.z = result.z / result.w;
 		result.w = 1.0;
 	}
+	}
 	
 	return result;
 }
 
 float2 projectPos2d(float3 worldPos)
 {
-	float4 result =  mul(float4(worldPos, 1), cViewProj);
-	
-	if(0 != result.w)
-	{
-		result.x = result.x / result.w;
-		result.y = result.y / result.w;
-	}
+	float4 result =  projectPos(worldPos);
 	
 	return float2(result.x, result.y);
 }
@@ -93,10 +88,10 @@ VS_OUTPUT main( const VS_INPUT i )
 	float miterOnNextLength = length(dot(miterPoint,next));
 	if(miterOnNextLength) miterPoint = miterPoint / miterOnNextLength;
 	
-	float bbxmin = next.x < prev.x ? next.x : prev.x;
-	float bbxmax = next.x > prev.x ? next.x : prev.x;
-	float bbymin = next.y < prev.y ? next.y : prev.y;
-	float bbymax = next.y > prev.y ? next.y : prev.y;
+	float bbxmin = min(next.x, prev.x);
+	float bbxmax = max(next.x, prev.x);
+	float bbymin = min(next.y, prev.y);
+	float bbymax = max(next.y, prev.y);
 	
 	if(miterPoint.x < bbxmin) miterPoint.x = bbxmin;
 	else if(miterPoint.x > bbxmax) miterPoint.x = bbxmax;

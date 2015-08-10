@@ -651,6 +651,18 @@ CON_COMMAND(mirv_campath,"camera paths")
 						{
 							fromValue = g_Hook_VClient_RenderView.GetCurTime();
 						}
+						else if(StringBeginsWith(fromArg, "current+"))
+						{
+							fromValue = g_Hook_VClient_RenderView.GetCurTime();
+							fromArg += strlen("current+");
+							fromValue += atof(fromArg);
+						}
+						else if(StringBeginsWith(fromArg, "current-"))
+						{
+							fromValue = g_Hook_VClient_RenderView.GetCurTime();
+							fromArg += strlen("current-");
+							fromValue -= atof(fromArg);
+						}
 						else
 						{
 							fromValue = atof(fromArg);
@@ -666,33 +678,31 @@ CON_COMMAND(mirv_campath,"camera paths")
 					double toValue = 0.0;
 					if(idx < argc)
 					{
-						const char * fromArg = args->ArgV(idx);
+						const char * toArg = args->ArgV(idx);
 
-						if(StringBeginsWith(fromArg, "#"))
+						if(StringBeginsWith(toArg, "#"))
 						{
 							isToId = true;
-							++fromArg;
-							toId = atoi(fromArg);
-							++idx;
+							++toArg;
+							toId = atoi(toArg);
 						}
-						else if(!_stricmp(fromArg, "abs"))
+						else if(StringBeginsWith(toArg, "current+"))
 						{
-							++idx;
-
-							if(idx < argc)
-							{
-								toValue = atof(args->ArgV(idx));
-								++idx;
-							}
-							else
-								bOk = false;
+							toValue = g_Hook_VClient_RenderView.GetCurTime();
+							toArg += strlen("current+");
+							toValue += atof(toArg);
+						}
+						else if(StringBeginsWith(toArg, "current-"))
+						{
+							toValue = g_Hook_VClient_RenderView.GetCurTime();
+							toArg += strlen("current-");
+							toValue -= atof(toArg);
 						}
 						else
 						{
-							toValue = fromValue;
-							toValue += atof(args->ArgV(idx));
-							++idx;
+							toValue = atof(toArg);
 						}
+						++idx;
 					}
 					else
 						bOk = false;
@@ -740,9 +750,15 @@ CON_COMMAND(mirv_campath,"camera paths")
 				"mirv_campath select none - Selects no points.\n"
 				"mirv_campath select invert - Invert selection.\n"
 				"mirv_campath select [add] #<idBegin> #<idEnd> - Select keyframes starting at id <idBegin> and ending at id <idEnd>. If add is given, then selection is added to the current one.\n"
-				"mirv_campath select [add] current|<dMin> #<count> - Select keyframes starting at current time or given floating point time <dMin> and up to <count> number of keyframes. If add is given, then selection is added to the current one.\n"
-				"mirv_campath select [add] current|<dMin> <dDelta> - Select keyframes starting at current time or given floating point time <dMin> for the amount of time give by <dDelta>. If add is given, then selection is added to the current one.\n"
-				"mirv_campath select [add] current|<dMin> abs <dMax> - Select keyframes starting at current time or given floating point time <dMin> up to <dMax>. If add is given, then selection is added to the current one.\n"
+				"mirv_campath select [add] current[(+|-)<dOfsMin>]|<dMin> #<count> - Select keyframes starting at given time and up to <count> number of keyframes. If add is given, then selection is added to the current one.\n"
+				"mirv_campath select [add] current[(+|-)<dOfsMin>]|<dMin> current[(+|-)<dOfsMax>]|<dMax> - Select keyframes betwen given star time and given end time . If add is given, then selection is added to the current one.\n"
+				"Examples:\n"
+				"mirv_campath select current #2 - Select two keyframes starting from current time.\n"
+				"mirv_campath select add current #2 - Add two keyframes starting from current time to the current selection.\n"
+				"mirv_campath select 64.5 #2 - Select two keyframes starting from time 64.5 seconds.\n"
+				"mirv_campath select current-0.5 current+2.5 - Select keyframes between half a second earlier than now and 2.5 seconds later than now.\n"
+				"mirv_campath select 128.0 current - Select keyframes between time 128.0 seconds and current time.\n"
+				"mirv_campath select add 128.0 current+2.0 - Add keyframes between time 128.0 seconds and 2 seconds later than now to the current selection.\n"
 			);
 			return;
 

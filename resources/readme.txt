@@ -121,32 +121,37 @@ The HLAE Team:
 
 Current members:
   
-ripieces
+Dominik 'ripieces' Tugend
   Lead programmer.
   Since March 2007.
   http://dominik.matrixstorm.com/
   
-msthavoc
+Sebastian 'msthavoc' H.
   Programming of additional tools, testing, community relations, documentation and tutorials.
   Since August 2007.
   http://www.mst-gaming.de/
   
-Dec
+'Dec'
   Forum, IRC.
   Since March 2011.
   http://www.youtube.com/AMDECKARN
 
 Past members:
 
-MIRVIN_monkey
+Gavin 'Mirvin_Monkey' Bramhill
   Creator, former lead programmer, hosting.
   2004 - 2009.
   http://www.madabouthats.org/
 
-neomic
+Fabian 'neomic'
   Programmer (old wxWidgets GUI).
   August 2007 - August 2008.
   
-juggaknot
+'juGGaKNot'
   Forum, community relations, testing, tutorials.
   March 2008 - January 2010.
+
+Other contributors:
+ 
+Niklas 'nkoep' Koep
+  https://github.com/nkoep

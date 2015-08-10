@@ -558,7 +558,11 @@ void CCampathDrawer::OnPostRenderAllTools()
 			AutoPolyLineStart();
 
 			std::list<double>::iterator itPts = m_TrajectoryPoints.begin();
-	
+
+			CamPathIterator itKeysLast = g_Hook_VClient_RenderView.m_CamPath.GetBegin();
+			CamPathIterator itKeysNext = itKeysLast;
+			++itKeysNext;
+
 			bool hasLastPt = false;
 			bool hasNextPt = false;
 			bool hasCurPt = false;
@@ -593,6 +597,12 @@ void CCampathDrawer::OnPostRenderAllTools()
 					++itPts;
 				}
 
+				while(itKeysNext.GetTime() < curPtTime)
+				{
+					itKeysLast = itKeysNext;
+					++itKeysNext;
+				}
+
 				if(itPts != m_TrajectoryPoints.end())
 				{
 					hasNextPt = true;
@@ -618,7 +628,7 @@ void CCampathDrawer::OnPostRenderAllTools()
 				{
 					double deltaTime = abs(curTime -curPtTime);
 
-					bool selected = false; //lastKeySelected && nextKeySelected;
+					bool selected = itKeysLast.IsSelected() && itKeysNext.IsSelected();
 
 					DWORD colour;
 
