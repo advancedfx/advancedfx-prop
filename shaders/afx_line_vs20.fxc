@@ -28,7 +28,6 @@ float4 projectPos(float3 worldPos)
 		result.z = result.z / result.w;
 		result.w = 1.0;
 	}
-	}
 	
 	return result;
 }
