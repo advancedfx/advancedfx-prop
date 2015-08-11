@@ -2,11 +2,15 @@ const float4x4 cViewProj : register(c8);
 
 const float3 cScreenInfo : register(c48);
 
+const float3 cPlane0 : register(c49);
+
+const float3 cPlaneN : register(c50);
+
 struct VS_INPUT
 {
 	float3 xyz : POSITION;	// current line point
 	float4 diffuse : COLOR;	// current vertex colour
-	float2 t0 : TEXCOORD0;	// t0.x - current vertex extrusion direction 1.0/-1.0, since there are two vertices per line point; t1.y - reserved
+	float3 t0 : TEXCOORD0;	// t0.x - current vertex extrusion direction 1.0/-1.0, since there are two vertices per line point; t1.y - length/8192 to previous point, t2.z - length/8192 to next point
 	float3 t1 : TEXCOORD1;	// direction to previous line point (unit vector)
 	float3 t2 : TEXCOORD2;	// direction to next line point (unit vector)
 };
@@ -15,33 +19,27 @@ struct VS_OUTPUT
 {
 	float4 xyzw : POSITION;
 	float4 diffuse : COLOR;
+	float t0 : TEXCOORD0;
 };
 
-float4 projectPos(float3 worldPos)
+float4 projPos(float3 worldPos)
 {
-	float4 result =  mul(float4(worldPos, 1), cViewProj);
-	
-	if(0 != result.w)
-	{
-		result.x = result.x / result.w;
-		result.y = result.y / result.w;
-		result.z = result.z / result.w;
-		result.w = 1.0;
-	}
-	
-	return result;
+	return mul(float4(worldPos, 1), cViewProj);	
 }
 
-float2 projectPos2d(float3 worldPos)
+float2 get2d(float4 projPos)
 {
-	float4 result =  projectPos(worldPos);
-	
-	return float2(result.x, result.y);
+	return float2(projPos.x/projPos.w,projPos.y/projPos.w);
 }
 
 float2 saveNormalize(float2 x)
 {
-	if(any(x)) x = normalize(x);
+	float len = length(x);
+	
+	if(0.001 <= len)
+		x = normalize(x);
+	else
+		x = float2(0,0);
 	
 	return x;
 }
@@ -59,34 +57,122 @@ float2 rot90CW(float2 x)
 }
 
 // this somewhat does what it should, but only somewhat :-/
-
+//
+// Line clipping according to http://geomalgorithms.com/a05-_intersect-1.html .
+//
 VS_OUTPUT main( const VS_INPUT i )
 {
 	VS_OUTPUT o;
 	
 	o.diffuse = i.diffuse;
 	
-	float4 projPos = projectPos(i.xyz);
-	float2 projPos2d = projPos.xy;
+	// Clipping against view plane:
 	
-	float2 prev, next, miterPoint;
+	float3 cur3d = i.xyz;
+	float3 prev3d = i.xyz + 8192 * i.t0.y * i.t1;
+	float3 next3d = i.xyz + 8192 * i.t0.z * i.t2;
 	
-	if(0<=i.t0.x)
+	float3 vCP = prev3d -cur3d;
+	float3 vCN = next3d -cur3d;
+
+	float distCur = dot(cPlaneN, cur3d -cPlane0);
+	float dvCP = dot(cPlaneN, vCP);
+	float dvCN = dot(cPlaneN, vCN);
+	float dC = dot(cPlaneN, cPlane0 -cur3d);
+	
+	float sCP = dvCP ?
+		dC / dvCP // has intersection
+		: 0 // line parallel
+	;
+	
+	float sCN = dvCN ?
+		dC / dvCN // has intersection
+		: 0 // line parallel
+	;
+	
+	// check for non-trivial clippings:
+	bool ntClipCP = 0 < sCP && sCP < 1;
+	bool ntClipCN = 0 < sCN && sCN < 1;
+	
+	if( ntClipCP && ntClipCN )
 	{
-		prev = saveNormalize(rot90CCW(projectPos2d(i.xyz+i.t1)-projPos2d));
-		next = saveNormalize(rot90CW(projectPos2d(i.xyz+i.t2)-projPos2d));
+		o.diffuse.x = 1;
+		o.diffuse.y = 1;
+		o.diffuse.z = 1;
+		o.diffuse.w = 1;
+		
+		// currently not handled.
+	}
+	else
+	if( ntClipCP )
+	{
+		o.diffuse.y = 1;
+		
+		float3 intersectionCP = cur3d + sCP * vCP;
+		
+		if(distCur<0)
+		{
+			// P-|>-C-N
+			cur3d = intersectionCP; // move current point from behind camera to before(on) camera.
+			o.diffuse.x = 1;
+			next3d = cur3d;
+		}
+		else
+		{
+			// N-C-|>-P
+			prev3d = intersectionCP;
+		}
+	}
+	else
+	if( ntClipCN )
+	{
+		o.diffuse.z = 1;
+		
+		float3 intersectionCN = cur3d + sCN * vCN;
+		
+		if(distCur<0)
+		{
+			// N-|>-C-P
+			cur3d = intersectionCN; // move current point from behind camera to before(on) camera.
+			o.diffuse.x = 1;
+			prev3d = cur3d;
+		}
+		else
+		{
+			// P-C-|>-N
+			next3d = intersectionCN;
+		}
+	}
+	
+	//
+	
+	float4 curProj = projPos(cur3d);
+	float2 cur2d = get2d(curProj);
+	float2 prev2d = get2d(projPos(prev3d))-cur2d;
+	float2 next2d = get2d(projPos(next3d))-cur2d;
+	
+	float2 next, prev, miterPoint;
+	
+	if(0 <= i.t0.x)
+	{
+		prev = saveNormalize(rot90CCW(prev2d));
+		next = saveNormalize(rot90CW(next2d));
 	}
 	else
 	{
-		prev = saveNormalize(rot90CW(projectPos2d(i.xyz+i.t1)-projPos2d));
-		next = saveNormalize(rot90CCW(projectPos2d(i.xyz+i.t2)-projPos2d));
+		prev = saveNormalize(rot90CW(prev2d));
+		next = saveNormalize(rot90CCW(next2d));
 	}
-
-	miterPoint = next + prev;
+	
+	miterPoint = prev +next;
 	
 	float miterOnNextLength = length(dot(miterPoint,next));
 	if(miterOnNextLength) miterPoint = miterPoint / miterOnNextLength;
-	
+	else
+	{
+		float miterOnPrevLength = length(dot(miterPoint,prev));
+		if(miterOnPrevLength) miterPoint = miterPoint / miterOnPrevLength;
+	}
 	float bbxmin = min(next.x, prev.x);
 	float bbxmax = max(next.x, prev.x);
 	float bbymin = min(next.y, prev.y);
@@ -101,12 +187,15 @@ VS_OUTPUT main( const VS_INPUT i )
 	miterPoint = miterPoint * cScreenInfo.z;
 	miterPoint.x = miterPoint.x * cScreenInfo.x;
 	miterPoint.y = miterPoint.y * cScreenInfo.y;
-
-	projPos.x += miterPoint.x;
-	projPos.y += miterPoint.y;
 	
-	o.xyzw = projPos;
+	cur2d.x += miterPoint.x;
+	cur2d.y += miterPoint.y;
+	
+	o.xyzw.xy = cur2d;
+	o.xyzw.z = curProj.z / curProj.w;
+	o.xyzw.w = 1.0f;
+		
+	o.t0 = sign(curProj.z) * o.xyzw.z;
 	
 	return o;
 }
-

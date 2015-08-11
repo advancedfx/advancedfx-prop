@@ -13,7 +13,7 @@
 #include <d3d9.h>
 #include <list>
 
-#define CCampathDrawer_VertexFVF D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX0 | D3DFVF_TEXCOORDSIZE2(0) | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE3(1) | D3DFVF_TEX2 | D3DFVF_TEXCOORDSIZE3(2)
+#define CCampathDrawer_VertexFVF D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX0 | D3DFVF_TEXCOORDSIZE3(0) | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE3(1) | D3DFVF_TEX2 | D3DFVF_TEXCOORDSIZE3(2)
 
 class CCampathDrawer
 : public ICamPathChanged
@@ -40,7 +40,7 @@ private:
 	{
 		FLOAT x, y, z; // Position of current line point
 		DWORD diffuse; // Diffuse color of current line point
-		FLOAT t0u, t0v; // Extrusion direction from current line point (-1/1), reserved
+		FLOAT t0u, t0v, t0w; // Extrusion direction from current line point (-1/1), reserved
 		FLOAT t1u, t1v, t1w; // Unit vector pointing to previous line point
 		FLOAT t2u, t2v, t2w; // Unit vector pointing to next line point
 	};

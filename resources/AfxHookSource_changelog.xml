@@ -6,6 +6,21 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.0.0</version>
+<time>2015-08-11T15:12Z</time>
+<changes>
+<change type="added">
+Added mirv_campath draw. This _might_ work in other modifications than CS:GO too.
+</change>
+<change type="added">
+Added mirv_campath select.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.1.0.0</version>
 <time>2015-07-27T09:07Z</time>
 <changes>

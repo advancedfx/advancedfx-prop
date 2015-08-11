@@ -48,6 +48,84 @@ void MakeVectors(
 	outUp[2] = cr*cp;
 }
 
+bool LUdecomposition(const double matrix[4][4], unsigned char (&outP)[4], unsigned char (&outQ)[4], double (& outL)[4][4], double (& outU)[4][4])
+{
+	for(unsigned char i=0; i<4; i++)
+	{
+		outP[i] = i; outQ[i] = i;
+	}
+/*
+	// Pivotisation:
+	for(int i=0; i<4; i++)
+	{
+		unsigned char t = -1;
+		double maxVal = 0;
+		for(unsigned char p=i; p<4; p++)
+		{
+			double tabs = abs(matrix[outP[p]][outQ[i]]);
+			if(maxVal < tabs)
+			{
+				t = p;
+				maxVal = tabs;
+			}
+		}
+		if(-1 == t)
+			return false;
+
+		if(i<t)
+		{
+			unsigned char tmp = outP[i];
+			outP[i] = outP[t];
+			outP[t] = tmp;
+		}
+	}
+*/
+
+	for(unsigned char i=0; i<4; i++)
+	{
+		for(unsigned char k=0; k<4; k++)
+		{
+			outL[i][k] = i == k ? 1 : 0;
+			outU[i][k] = matrix[outP[i]][outQ[k]];
+		}
+	}
+
+	for(unsigned char i=0; i<4-1; i++)
+	{
+		for(unsigned char k=i+1; k<4; k++)
+		{
+			outL[k][i] = outU[k][i] / outU[i][i];
+			for(unsigned char j = i; j<4;j++)
+				outU[k][j] = outU[k][j] - outL[k][i] * outU[i][j];
+		}
+	}
+	return true;
+}
+
+void SolveWithLU(const double L[4][4], const double U[4][4], const unsigned char P[4], const unsigned char Q[4], const double b[4], double (& outX)[4])
+{
+	double y[4];
+
+	// solve L*y = b with forward subsitituion:
+	for(int i=0; i<4; i++)
+	{
+		double sum = 0;
+		for(int k=0;k<i;k++)
+			sum += L[i][k]*y[k];
+
+		y[i] = 1.0/L[i][i] * (b[P[i]] -sum);
+	}
+
+	for(int i=4-1; i>=0; i--)
+	{
+		double sum = 0;
+		for(int k=i+1;k<4;k++)
+			sum += U[i][k]*outX[Q[k]];
+		
+		outX[Q[i]] = 1.0/U[i][i] * (y[i] - sum);
+	}
+}
+
 // Copyright (c) by NUMERICAL RECIPES IN C: THE ART OF SCIENTIFIC COMPUTING (ISBN 0-521-43108-5)
 void spline(double x[], double y[], int n, bool y1Natural, double yp1, bool ynNatural, double ypn, double y2[])
 {
@@ -1649,7 +1727,7 @@ Vector3 Vector3::operator * (double value) const
 	return Vector3(X * value, Y * value, Z * value);
 }
 
-Vector3 Vector3::operator *= (double value)
+void Vector3::operator *= (double value)
 {
 	X *= value;
 	Y *= value;
@@ -1661,7 +1739,7 @@ Vector3 Vector3::operator / (double value) const
 	return Vector3(X / value, Y / value, Z / value);
 }
 
-Vector3 Vector3::operator /= (double value)
+void Vector3::operator /= (double value)
 {
 	X /= value;
 	Y /= value;

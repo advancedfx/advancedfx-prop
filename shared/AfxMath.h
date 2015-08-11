@@ -19,6 +19,10 @@ void MakeVectors(
 	double (& outForward)[3], double (& outRight)[3], double (& outUp)[3]
 );
 
+bool LUdecomposition(const double matrix[4][4], unsigned char (&outP)[4], unsigned char (&outQ)[4], double (& outL)[4][4], double (& outU)[4][4]);
+
+void SolveWithLU(const double L[4][4], const double U[4][4], const unsigned char P[4], const unsigned char Q[4], const double b[4], double (& outX)[4]);
+
 // Vector3 /////////////////////////////////////////////////////////////////////
 
 struct Vector3;
@@ -46,11 +50,11 @@ public:
 
 	Vector3 operator * (double value) const;
 
-	Vector3 operator *= (double value);
+	void operator *= (double value);
 
 	Vector3 operator / (double value) const;
 
-	Vector3 operator /= (double value);
+	void operator /= (double value);
 
 	void ToArray(double (& outValue)[3]) const;
 

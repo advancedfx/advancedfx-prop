@@ -198,6 +198,8 @@ void CCampathDrawer::BuildPolyLinePoint(Vector3 previous, Vector3 current, DWORD
 {
 	Vector3 toPrevious = (previous-current).Normalize();
 	Vector3 toNext = (next-current).Normalize();
+	double lengthPrevious = (previous-current).Length()/8192;
+	double lengthNext = (next-current).Length()/8192;
 	
 	pOutVertexData[1].x = pOutVertexData[0].x = (float)current.X;
 	pOutVertexData[1].y = pOutVertexData[0].y = (float)current.Y;
@@ -214,7 +216,8 @@ void CCampathDrawer::BuildPolyLinePoint(Vector3 previous, Vector3 current, DWORD
 	pOutVertexData[0].t0u = 1.0f;
 	pOutVertexData[1].t0u = -1.0f;
 
-	pOutVertexData[1].t0v = pOutVertexData[0].t0v = 0.0f;
+	pOutVertexData[1].t0v = pOutVertexData[0].t0v = (float)lengthPrevious;
+	pOutVertexData[1].t0w = pOutVertexData[0].t0w = (float)lengthNext;
 
 	pOutVertexData[1].diffuse = pOutVertexData[0].diffuse = currentColor;
 }
@@ -430,6 +433,12 @@ void CCampathDrawer::OnPostRenderAllTools()
 	FLOAT oldCScreenInfo[4];
 	m_Device->GetVertexShaderConstantF(48, oldCScreenInfo, 1);
 
+	FLOAT oldCPlane0[4];
+	m_Device->GetVertexShaderConstantF(49, oldCPlane0, 1);
+
+	FLOAT oldCPlaneN[4];
+	m_Device->GetVertexShaderConstantF(50, oldCPlaneN, 1);
+
 	DWORD oldSrgbWriteEnable;
 	m_Device->GetRenderState(D3DRS_SRGBWRITEENABLE, &oldSrgbWriteEnable);
 
@@ -492,6 +501,62 @@ void CCampathDrawer::OnPostRenderAllTools()
 		m_Device->SetVertexShader(m_VertexShader);
 	
 		m_Device->SetVertexShaderConstantF(8, m_WorldToScreenMatrix.m[0], 4);
+
+		// Provide view plane info for line clipping:
+		{
+			double plane0[4]={0,0,0,1};
+			double planeN[4]={1,0,0,1};
+
+			unsigned char P[4];
+			unsigned char Q[4];
+
+			double L[4][4];
+			double U[4][4];
+
+			double M[4][4] = {
+				m_WorldToScreenMatrix.m[0][0], m_WorldToScreenMatrix.m[0][1], m_WorldToScreenMatrix.m[0][2], 0,
+				m_WorldToScreenMatrix.m[1][0], m_WorldToScreenMatrix.m[1][1], m_WorldToScreenMatrix.m[1][2], 0,
+				m_WorldToScreenMatrix.m[2][0], m_WorldToScreenMatrix.m[2][1], m_WorldToScreenMatrix.m[2][2], 0,
+				m_WorldToScreenMatrix.m[3][0], m_WorldToScreenMatrix.m[3][1], m_WorldToScreenMatrix.m[3][2], -1,
+			};
+
+			double b0[4] = {
+				0 -m_WorldToScreenMatrix.m[0][3],
+				0 -m_WorldToScreenMatrix.m[1][3],
+				0 -m_WorldToScreenMatrix.m[2][3],
+				-m_WorldToScreenMatrix.m[3][3],
+			};
+
+			double bN[4] = {
+				0 -m_WorldToScreenMatrix.m[0][3],
+				0 -m_WorldToScreenMatrix.m[1][3],
+				1 -m_WorldToScreenMatrix.m[2][3],
+				-m_WorldToScreenMatrix.m[3][3],
+			};
+
+			if(!LUdecomposition(M, P, Q, L, U))
+			{
+				Tier0_Warning("AFXERROR in CCampathDrawer::OnPostRenderAllTools: LUdecomposition failed\n");
+			}
+			else
+			{
+				SolveWithLU(L, U, P, Q, b0, plane0);
+				SolveWithLU(L, U, P, Q, bN, planeN);
+			}
+
+			//Tier0_Msg("plane0=%f %f %f %f\n", plane0[0], plane0[1], plane0[2], plane0[3]);
+			//Tier0_Msg("planeN=%f %f %f %f\n", planeN[0], planeN[1], planeN[2], planeN[3]);
+
+			FLOAT vPlane0[4] = {(float)plane0[0], (float)plane0[1], (float)plane0[2], 0.0f};
+
+			Vector3 planeNormal(planeN[0] -plane0[0], planeN[1] -plane0[1], planeN[2] -plane0[2]);
+			planeNormal.Normalize();
+
+			FLOAT vPlaneN[4] = {(float)planeNormal.X, (float)planeNormal.Y, (float)planeNormal.Z, 0.0f};
+
+			m_Device->SetVertexShaderConstantF(49, vPlane0, 1);
+			m_Device->SetVertexShaderConstantF(50, vPlaneN, 1);
+		}
 
 		m_Device->SetPixelShader(m_PixelShader);
 
@@ -615,13 +680,13 @@ void CCampathDrawer::OnPostRenderAllTools()
 				{
 					// current point is last point.
 					hasNextPt = false;
-					nextPtValue = curPtValue +(curPtValue -lastPtValue);
+					nextPtValue = curPtValue;
 				}
 
 				if(!hasLastPt)
 				{
 					// current point is first point.
-					lastPtValue = curPtValue +(curPtValue -nextPtValue);
+					lastPtValue = curPtValue;
 				}
 
 				// emit current point:
@@ -678,6 +743,20 @@ void CCampathDrawer::OnPostRenderAllTools()
 			m_Device->SetVertexShaderConstantF(48, newCScreenInfo, 1);
 
 			CamPathIterator last = g_Hook_VClient_RenderView.m_CamPath.GetEnd();
+
+			/*if(0 < g_Hook_VClient_RenderView.m_CamPath.GetSize())
+			{
+				CamPathValue cpv = g_Hook_VClient_RenderView.m_CamPath.GetBegin().GetValue();
+
+				float x = cpv.X * m_WorldToScreenMatrix.m[0][0] + cpv.Y * m_WorldToScreenMatrix.m[0][1] + cpv.Z * m_WorldToScreenMatrix.m[0][2] +m_WorldToScreenMatrix.m[0][3];
+				float y = cpv.X * m_WorldToScreenMatrix.m[1][0] + cpv.Y * m_WorldToScreenMatrix.m[1][1] + cpv.Z * m_WorldToScreenMatrix.m[1][2] +m_WorldToScreenMatrix.m[1][3];
+				float z = cpv.X * m_WorldToScreenMatrix.m[2][0] + cpv.Y * m_WorldToScreenMatrix.m[2][1] + cpv.Z * m_WorldToScreenMatrix.m[2][2] +m_WorldToScreenMatrix.m[2][3];
+				float w = cpv.X * m_WorldToScreenMatrix.m[3][0] + cpv.Y * m_WorldToScreenMatrix.m[3][1] + cpv.Z * m_WorldToScreenMatrix.m[3][2] +m_WorldToScreenMatrix.m[3][3];
+
+				float iw = w ? 1/w : 0;
+
+				Tier0_Msg("pt: %f %f %f %f -> %f %f %f %f\n",x,y,z,w,x*iw,y*iw,z*iw,w*iw);
+			}*/
 		
 			for(CamPathIterator it = g_Hook_VClient_RenderView.m_CamPath.GetBegin(); it != g_Hook_VClient_RenderView.m_CamPath.GetEnd(); ++it)
 			{
@@ -857,6 +936,8 @@ void CCampathDrawer::OnPostRenderAllTools()
 
 	m_Device->SetVertexShaderConstantF(8, oldCViewProj[0], 4);
 	m_Device->SetVertexShaderConstantF(48, oldCScreenInfo, 1);
+	m_Device->SetVertexShaderConstantF(49, oldCPlane0, 1);
+	m_Device->SetVertexShaderConstantF(50, oldCPlaneN, 1);
 
 	m_Device->SetRenderState(D3DRS_CULLMODE, oldCullMode);
 	m_Device->SetRenderState(D3DRS_DESTBLEND, oldDestBlend);
@@ -895,6 +976,7 @@ void CCampathDrawer::OnSetupEngineView()
 void CCampathDrawer::BuildSingleLine(Vector3 from, Vector3 to, Vertex * pOutVertexData)
 {
 	Vector3 normal = (to-from).Normalize();
+	double length = (to-from).Length() / 8192;
 	
 	pOutVertexData[1].x = pOutVertexData[0].x = (float)from.X;
 	pOutVertexData[3].x = pOutVertexData[2].x = (float)to.X;
@@ -914,7 +996,10 @@ void CCampathDrawer::BuildSingleLine(Vector3 from, Vector3 to, Vertex * pOutVert
 	pOutVertexData[2].t0u = pOutVertexData[0].t0u = 1.0f;
 	pOutVertexData[3].t0u = pOutVertexData[1].t0u = -1.0f;
 
-	pOutVertexData[3].t0v = pOutVertexData[2].t0v = pOutVertexData[1].t0v = pOutVertexData[0].t0v = 0.0f;
+	pOutVertexData[1].t0v = pOutVertexData[0].t0v = 0.0f;
+	pOutVertexData[1].t0w = pOutVertexData[0].t0w = (float)length;
+	pOutVertexData[3].t0v = pOutVertexData[2].t0v = (float)length;
+	pOutVertexData[3].t0w = pOutVertexData[2].t0w = 0.0f;
 }
 
 void CCampathDrawer::BuildSingleLine(DWORD colorFrom, DWORD colorTo, Vertex * pOutVertexData)

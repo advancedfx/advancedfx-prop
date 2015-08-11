@@ -1703,7 +1703,7 @@ void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * 
 				Tier0_Msg("%s otherParticleAction [...]\n", cmdPrefix);
 				Tier0_Msg("%s stickerAction [...]\n", cmdPrefix);
 				Tier0_Msg("%s depthVal [...]\n", cmdPrefix);
-				Tier0_Msg("%s deptValMax [...]\n", cmdPrefix);
+				Tier0_Msg("%s depthValMax [...]\n", cmdPrefix);
 				Tier0_Msg("%s debugPrint [...]\n", cmdPrefix);
 				Tier0_Msg("%s invalidateCache - invaldiates the material cache.\n", cmdPrefix);
 			}
