@@ -15,6 +15,7 @@
 
 #define CCampathDrawer_VertexFVF D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX0 | D3DFVF_TEXCOORDSIZE3(0) | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE3(1) | D3DFVF_TEX2 | D3DFVF_TEXCOORDSIZE3(2)
 
+// TODO: most line vertices can be cached if the colouring is done through the vertex shader.
 class CCampathDrawer
 : public ICamPathChanged
 {

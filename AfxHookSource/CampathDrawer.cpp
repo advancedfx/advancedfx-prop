@@ -744,6 +744,30 @@ void CCampathDrawer::OnPostRenderAllTools()
 
 			CamPathIterator last = g_Hook_VClient_RenderView.m_CamPath.GetEnd();
 
+			/*
+			if(0 < g_Hook_VClient_RenderView.m_CamPath.GetSize())
+			{
+				// Test for not too unlikely hard case:
+				CamPathValue cpv = g_Hook_VClient_RenderView.m_CamPath.GetBegin().GetValue();
+				Vector3 current(cpv.X+76, cpv.Y+76, cpv.Z+76);
+				Vector3 previous(current.X+76, current.Y-1*4, current.Z);
+				Vector3 next(current.X+76, current.Y+1*4, current.Z);
+				Vector3 next2(current.X, current.Y+2*4, current.Z);
+				Vector3 next3(current.X+76, current.Y+3*4, current.Z);
+				Vector3 next4(current.X, current.Y+4*4, current.Z);
+				Vector3 next5(current.X+76, current.Y+5*4, current.Z);
+
+				AutoPolyLineStart();
+				AutoPolyLinePoint(previous, previous, D3DCOLOR_RGBA(255,0,0,255), current);
+				AutoPolyLinePoint(previous, current, D3DCOLOR_RGBA(255,0,0,255), next);
+				AutoPolyLinePoint(current, next, D3DCOLOR_RGBA(255,0,0,255), next2);
+				AutoPolyLinePoint(next, next2, D3DCOLOR_RGBA(255,0,0,255), next3);
+				AutoPolyLinePoint(next2, next3, D3DCOLOR_RGBA(255,0,0,255), next4);
+				AutoPolyLinePoint(next3, next4, D3DCOLOR_RGBA(255,0,0,255), next5);
+				AutoPolyLinePoint(next4, next5, D3DCOLOR_RGBA(255,0,0,255), next5);
+				AutoPolyLineFlush();
+			}
+			*/
 			/*if(0 < g_Hook_VClient_RenderView.m_CamPath.GetSize())
 			{
 				CamPathValue cpv = g_Hook_VClient_RenderView.m_CamPath.GetBegin().GetValue();

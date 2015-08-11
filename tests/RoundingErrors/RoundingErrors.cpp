@@ -29,7 +29,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 */
 
-	double Matrix[4][4] = { 1, 2, 3, 0, 1, 1, 1, 0, 3, 3, 1, 0, 0, 0, 0, 1};
+	double Matrix[4][4] = { 0, 2, 3, 0, 0, 0, 1, 0, 3, 3, 1, 0, 0, 0, 0, 1};
 
 	unsigned char p[4];
 	unsigned char q[4];

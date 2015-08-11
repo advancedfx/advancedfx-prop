@@ -56,7 +56,8 @@ float2 rot90CW(float2 x)
 	return float2(x.y,-x.x);
 }
 
-// this somewhat does what it should, but only somewhat :-/
+// This somewhat does what it should, but only somewhat :-/
+// TODO: fix miterPoint calculation (lines get to thin under steep angles).
 //
 // Line clipping according to http://geomalgorithms.com/a05-_intersect-1.html .
 //
@@ -101,7 +102,21 @@ VS_OUTPUT main( const VS_INPUT i )
 		o.diffuse.z = 1;
 		o.diffuse.w = 1;
 		
-		// currently not handled.
+		if(distCur < 0)
+		{
+			// P,N-|>-C
+			
+			float3 intersectionCP = cur3d + sCP * vCP;
+			float3 intersectionCN = cur3d + sCN * vCN;
+			
+			cur3d = intersectionCP +(intersectionCN -intersectionCP)/2;
+		}
+		else
+		{
+			// C-|>-P,N
+			
+			// do nothing other vertices will fix it in most cases.
+		}
 	}
 	else
 	if( ntClipCP )

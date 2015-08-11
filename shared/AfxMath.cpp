@@ -54,7 +54,7 @@ bool LUdecomposition(const double matrix[4][4], unsigned char (&outP)[4], unsign
 	{
 		outP[i] = i; outQ[i] = i;
 	}
-/*
+
 	// Pivotisation:
 	for(int i=0; i<4; i++)
 	{
@@ -79,7 +79,6 @@ bool LUdecomposition(const double matrix[4][4], unsigned char (&outP)[4], unsign
 			outP[t] = tmp;
 		}
 	}
-*/
 
 	for(unsigned char i=0; i<4; i++)
 	{
