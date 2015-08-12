@@ -156,10 +156,15 @@ public:
 	virtual void LevelInitPostEntityAllTools() { g_Engine_ClientEngineTools->LevelInitPostEntityAllTools(); }
 	virtual void LevelShutdownPreEntityAllTools() { g_Engine_ClientEngineTools->LevelShutdownPreEntityAllTools(); }
 	virtual void LevelShutdownPostEntityAllTools() { g_Engine_ClientEngineTools->LevelShutdownPostEntityAllTools(); }
-	virtual void PreRenderAllTools() { g_Engine_ClientEngineTools->PreRenderAllTools(); }
+	virtual void PreRenderAllTools()
+	{
+		//Tier0_Msg("ClientEngineTools::PreRenderAllTools\n");
+		g_Engine_ClientEngineTools->PreRenderAllTools();
+	}
 	
 	virtual void PostRenderAllTools()
 	{
+		//Tier0_Msg("ClientEngineTools::PostRenderAllTools\n");
 		g_CampathDrawer.OnPostRenderAllTools();
 
 		g_Engine_ClientEngineTools->PostRenderAllTools();
@@ -170,6 +175,7 @@ public:
 	
 	virtual bool SetupEngineView( Vector &origin, QAngle &angles, float &fov )
 	{
+		//Tier0_Msg("ClientEngineTools::SetupEngineView\n");
 		bool bRet = g_Engine_ClientEngineTools->SetupEngineView(origin, angles, fov);
 
 		g_Hook_VClient_RenderView.OnViewOverride(
@@ -184,8 +190,19 @@ public:
 	}
 	
 	virtual bool SetupAudioState( AudioState_t &audioState ) { return g_Engine_ClientEngineTools->SetupAudioState(audioState); }
-	virtual void VGui_PreRenderAllTools( int paintMode ) { g_Engine_ClientEngineTools->VGui_PreRenderAllTools(paintMode); }
-	virtual void VGui_PostRenderAllTools( int paintMode ) { g_Engine_ClientEngineTools->VGui_PostRenderAllTools(paintMode); }
+	
+	virtual void VGui_PreRenderAllTools( int paintMode )
+	{
+		//Tier0_Msg("ClientEngineTools::VGui_PreRenderAllTools\n");
+		g_Engine_ClientEngineTools->VGui_PreRenderAllTools(paintMode);
+	}
+	
+	virtual void VGui_PostRenderAllTools( int paintMode )
+	{
+		//Tier0_Msg("ClientEngineTools::VGui_PostRenderAllTools\n");
+		g_Engine_ClientEngineTools->VGui_PostRenderAllTools(paintMode);
+	}
+
 	virtual bool IsThirdPersonCamera() { return g_Engine_ClientEngineTools->IsThirdPersonCamera(); }
 	virtual bool InToolMode()  { return g_Engine_ClientEngineTools->InToolMode(); }
 } g_ClientEngineTools;

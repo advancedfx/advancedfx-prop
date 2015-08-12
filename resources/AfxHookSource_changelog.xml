@@ -6,6 +6,19 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.0.2</version>
+<time>2015-08-12T10:20Z</time>
+<changes>
+<change type="fixed">
+Bug in LU-decomposition pivotisation fixed causing bugs in line clipping.
+Other minor fixes.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.0.1</version>
 <time>2015-08-11T17:31Z</time>
 <changes>

@@ -58,9 +58,9 @@ bool LUdecomposition(const double matrix[4][4], unsigned char (&outP)[4], unsign
 	// Pivotisation:
 	for(int i=0; i<4; i++)
 	{
-		unsigned char t = -1;
+		int t = -1;
 		double maxVal = 0;
-		for(unsigned char p=i; p<4; p++)
+		for(unsigned char p=0; p<4; p++)
 		{
 			double tabs = abs(matrix[outP[p]][outQ[i]]);
 			if(maxVal < tabs)
@@ -69,7 +69,7 @@ bool LUdecomposition(const double matrix[4][4], unsigned char (&outP)[4], unsign
 				maxVal = tabs;
 			}
 		}
-		if(-1 == t)
+		if(t < 0)
 			return false;
 
 		if(i<t)

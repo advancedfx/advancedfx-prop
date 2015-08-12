@@ -62,6 +62,7 @@ private:
 	IDirect3DPixelShader9 * m_PixelShader;
 	bool m_PolyLineStarted;
 	char * m_PsoFileName;
+	bool m_SetupEngineViewCalled;
 	bool m_RebuildDrawing;
 	bool m_ReloadPixelShader;
 	bool m_ReloadVertexShader;

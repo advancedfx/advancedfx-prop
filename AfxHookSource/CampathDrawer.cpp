@@ -58,6 +58,7 @@ bool GetShaderDirectory(std::string & outShaderDirectory)
 CCampathDrawer::CCampathDrawer()
 : m_Draw(false)
 , m_RebuildDrawing(true)
+, m_SetupEngineViewCalled(false)
 , m_VertexBuffer(0)
 , m_VertexBufferVertexCount(0)
 , m_LockedVertexBuffer(0)
@@ -384,6 +385,13 @@ void CCampathDrawer::LoadVertexShader()
 
 void CCampathDrawer::OnPostRenderAllTools()
 {
+	//if(m_SetupEngineViewCalled)
+	//	return;
+	
+	// Actually we are often called twice per frame due to an engine bug, once after 3d skybox
+	// and once after world is drawn, maybe we will be even called more times,
+	// but we can not care about that for now.
+	
 	if(!m_Draw)
 		return;
 
@@ -544,8 +552,14 @@ void CCampathDrawer::OnPostRenderAllTools()
 				SolveWithLU(L, U, P, Q, bN, planeN);
 			}
 
-			//Tier0_Msg("plane0=%f %f %f %f\n", plane0[0], plane0[1], plane0[2], plane0[3]);
-			//Tier0_Msg("planeN=%f %f %f %f\n", planeN[0], planeN[1], planeN[2], planeN[3]);
+			/*
+			Tier0_Msg("CCampathDrawer::OnPostRenderAllTools: curTime = %f\n",curTime);
+			Tier0_Msg("M[0]=%f %f %f %f\nM[1]=%f %f %f %f\nM[2]=%f %f %f %f\nM[3]=%f %f %f %f\n", M[0][0],M[0][1],M[0][2],M[0][3], M[1][0],M[1][1],M[1][2],M[1][3], M[2][0],M[2][1],M[2][2],M[2][3], M[3][0],M[3][1],M[3][2],M[3][3]);
+			Tier0_Msg("b0[0]=%f %f %f %f\n", b0[0], b0[1], b0[2], b0[3]);
+			Tier0_Msg("bN[0]=%f %f %f %f\n", bN[0], bN[1], bN[2], bN[3]);
+			Tier0_Msg("plane0=%f %f %f %f\n", plane0[0], plane0[1], plane0[2], plane0[3]);
+			Tier0_Msg("planeN=%f %f %f %f\n", planeN[0], planeN[1], planeN[2], planeN[3]);
+			*/
 
 			FLOAT vPlane0[4] = {(float)plane0[0], (float)plane0[1], (float)plane0[2], 0.0f};
 
@@ -743,9 +757,8 @@ void CCampathDrawer::OnPostRenderAllTools()
 			m_Device->SetVertexShaderConstantF(48, newCScreenInfo, 1);
 
 			CamPathIterator last = g_Hook_VClient_RenderView.m_CamPath.GetEnd();
-
-			/*
-			if(0 < g_Hook_VClient_RenderView.m_CamPath.GetSize())
+			
+			/*if(0 < g_Hook_VClient_RenderView.m_CamPath.GetSize())
 			{
 				// Test for not too unlikely hard case:
 				CamPathValue cpv = g_Hook_VClient_RenderView.m_CamPath.GetBegin().GetValue();
@@ -766,8 +779,8 @@ void CCampathDrawer::OnPostRenderAllTools()
 				AutoPolyLinePoint(next3, next4, D3DCOLOR_RGBA(255,0,0,255), next5);
 				AutoPolyLinePoint(next4, next5, D3DCOLOR_RGBA(255,0,0,255), next5);
 				AutoPolyLineFlush();
-			}
-			*/
+			}*/
+			
 			/*if(0 < g_Hook_VClient_RenderView.m_CamPath.GetSize())
 			{
 				CamPathValue cpv = g_Hook_VClient_RenderView.m_CamPath.GetBegin().GetValue();
@@ -975,6 +988,8 @@ void CCampathDrawer::OnPostRenderAllTools()
 	m_Device->SetRenderState(D3DRS_ZENABLE, oldZEnable);
 	m_Device->SetRenderState(D3DRS_COLORWRITEENABLE, oldColorWriteEnable);
 	m_Device->SetRenderState(D3DRS_SRGBWRITEENABLE, oldSrgbWriteEnable);
+
+	m_SetupEngineViewCalled = false;
 }
 
 void CCampathDrawer::OnSetMaterial(CONST D3DMATERIAL9* pMaterial)
@@ -994,6 +1009,7 @@ void CCampathDrawer::OnSetRenderState(D3DRENDERSTATETYPE State, DWORD Value)
 
 void CCampathDrawer::OnSetupEngineView()
 {
+	m_SetupEngineViewCalled = true;
 	m_WorldToScreenMatrix = g_VEngineClient->WorldToScreenMatrix();
 }
 

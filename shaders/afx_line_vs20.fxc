@@ -97,17 +97,11 @@ VS_OUTPUT main( const VS_INPUT i )
 	
 	if( ntClipCP && ntClipCN )
 	{
-		o.diffuse.x = 1;
-		o.diffuse.y = 1;
-		o.diffuse.z = 1;
-		o.diffuse.w = 1;
-		
 		if(distCur < 0)
 		{
 			// P,N-|>-C
-			
-			float3 intersectionCP = cur3d + sCP * vCP;
-			float3 intersectionCN = cur3d + sCN * vCN;
+			float3 intersectionCP = cur3d + sCP * vCP +0.01*cPlaneN;
+			float3 intersectionCN = cur3d + sCN * vCN +0.01*cPlaneN;
 			
 			cur3d = intersectionCP +(intersectionCN -intersectionCP)/2;
 		}
@@ -121,15 +115,12 @@ VS_OUTPUT main( const VS_INPUT i )
 	else
 	if( ntClipCP )
 	{
-		o.diffuse.y = 1;
-		
-		float3 intersectionCP = cur3d + sCP * vCP;
+		float3 intersectionCP = cur3d + sCP * vCP +0.01*cPlaneN;
 		
 		if(distCur<0)
 		{
 			// P-|>-C-N
 			cur3d = intersectionCP; // move current point from behind camera to before(on) camera.
-			o.diffuse.x = 1;
 			next3d = cur3d;
 		}
 		else
@@ -141,15 +132,12 @@ VS_OUTPUT main( const VS_INPUT i )
 	else
 	if( ntClipCN )
 	{
-		o.diffuse.z = 1;
-		
-		float3 intersectionCN = cur3d + sCN * vCN;
+		float3 intersectionCN = cur3d + sCN * vCN +0.01*cPlaneN;
 		
 		if(distCur<0)
 		{
 			// N-|>-C-P
 			cur3d = intersectionCN; // move current point from behind camera to before(on) camera.
-			o.diffuse.x = 1;
 			prev3d = cur3d;
 		}
 		else
@@ -162,9 +150,11 @@ VS_OUTPUT main( const VS_INPUT i )
 	//
 	
 	float4 curProj = projPos(cur3d);
+	float4 prevProj = projPos(prev3d);
+	float4 nextProj = projPos(next3d);
 	float2 cur2d = get2d(curProj);
-	float2 prev2d = get2d(projPos(prev3d))-cur2d;
-	float2 next2d = get2d(projPos(next3d))-cur2d;
+	float2 prev2d = get2d(prevProj)-cur2d;
+	float2 next2d = get2d(nextProj)-cur2d;
 	
 	float2 next, prev, miterPoint;
 	
@@ -181,6 +171,7 @@ VS_OUTPUT main( const VS_INPUT i )
 	
 	miterPoint = prev +next;
 	
+	/*
 	float miterOnNextLength = length(dot(miterPoint,next));
 	if(miterOnNextLength) miterPoint = miterPoint / miterOnNextLength;
 	else
@@ -188,6 +179,8 @@ VS_OUTPUT main( const VS_INPUT i )
 		float miterOnPrevLength = length(dot(miterPoint,prev));
 		if(miterOnPrevLength) miterPoint = miterPoint / miterOnPrevLength;
 	}
+	*/
+	
 	float bbxmin = min(next.x, prev.x);
 	float bbxmax = max(next.x, prev.x);
 	float bbymin = min(next.y, prev.y);

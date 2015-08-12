@@ -243,6 +243,8 @@ void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, fl
 	LastCameraFov = Fov;
 
 	g_AfxHookSourceInput.Supply_MouseFrameEnd();
+
+	//Tier0_Msg("Hook_VClient_RenderView::OnViewOverride: curTime = %f, LastCameraOrigin=%f,%f,%f\n",curTime,LastCameraOrigin[0],LastCameraOrigin[1],LastCameraOrigin[2]);
 }
 
 
