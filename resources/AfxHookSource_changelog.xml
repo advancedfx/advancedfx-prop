@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.0.3</version>
+<time>2015-08-13T06:34Z</time>
+<changes>
+<change type="fixed">
+Fixed LU decomposition finally, might affect very rare cases of mirv_campath draw drawing.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.0.2</version>
 <time>2015-08-12T10:20Z</time>
 <changes>
