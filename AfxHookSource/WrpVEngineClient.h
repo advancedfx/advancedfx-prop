@@ -146,3 +146,49 @@ public:
 private:
 	IVEngineClient_013 * m_VEngineClient_013;
 };
+
+// WrpVEngineClient_013 ////////////////////////////////////////////////////////
+
+class WrpVEngineClient_013_csgo : public WrpVEngineClient
+{
+public:
+	WrpVEngineClient_013_csgo(IVEngineClient_013_csgo * iface);
+
+	virtual void GetScreenSize( int& width, int& height );
+	virtual void ServerCmd( const char *szCmdString, bool bReliable = true );
+	virtual void ClientCmd( const char *szCmdString );
+	virtual bool Con_IsVisible( void );
+	virtual float GetLastTimeStamp( void ); 
+	virtual void GetViewAngles( QAngle& va );
+	virtual void SetViewAngles( QAngle& va );
+	virtual int GetMaxClients( void );
+	virtual bool IsInGame( void );
+	virtual bool IsConnected( void );
+	virtual bool IsDrawingLoadingImage( void );
+	virtual void Con_NPrintf( int pos, const char *fmt, ... );
+	virtual const char *  GetGameDirectory( void );
+	virtual const VMatrix& WorldToScreenMatrix();
+	virtual const VMatrix& WorldToViewMatrix();
+	virtual char const *  GetLevelName( void );
+	virtual void EngineStats_BeginFrame( void );
+	virtual void EngineStats_EndFrame( void );
+	virtual bool IsPlayingDemo( void );
+	virtual bool IsRecordingDemo( void );
+	virtual bool IsPlayingTimeDemo( void );
+	virtual bool IsPaused( void );
+	virtual bool IsTakingScreenshot( void );
+	virtual bool IsHLTV( void );
+	virtual bool IsLevelMainMenuBackground( void );
+	virtual void GetMainMenuBackgroundName( char *dest, int destlen );
+	virtual bool IsInEditMode( void );
+	virtual float GetScreenAspectRatio();
+	virtual unsigned int GetEngineBuildNumber();
+	virtual const char * GetProductVersionString();
+	virtual bool IsHammerRunning( ) const;
+	virtual void ExecuteClientCmd( const char *szCmdString );
+	virtual int	GetAppID();
+	virtual void ClientCmd_Unrestricted( const char *szCmdString );
+
+private:
+	IVEngineClient_013_csgo * m_VEngineClient_013;
+};

@@ -25,10 +25,8 @@ typedef void * (__stdcall Interface_s::*InterfaceFn_t) (void *);
 
 extern bool g_bD3D9DebugPrint;
 
+ULONG g_NewDirect3DDevice9_RefCount = 1;
 IDirect3DDevice9 * g_OldDirect3DDevice9 = 0;
-
-ULONG g_NewDirect3DDevic9_RefCount = 0;
-
 struct NewDirect3DDevice9
 {
 public:
@@ -39,19 +37,16 @@ public:
 	{
 		ULONG result = g_OldDirect3DDevice9->AddRef();
 
-		if(0 == g_NewDirect3DDevic9_RefCount)
-			g_CampathDrawer.BeginDevice(g_OldDirect3DDevice9);
-
-		++g_NewDirect3DDevic9_RefCount;
+		++g_NewDirect3DDevice9_RefCount;
 
 		return result;
 	}
 
     STDMETHOD_(ULONG,Release)(THIS)
 	{
-		--g_NewDirect3DDevic9_RefCount;
+		--g_NewDirect3DDevice9_RefCount;
 
-		if(0 == g_NewDirect3DDevic9_RefCount)
+		if(0 == g_NewDirect3DDevice9_RefCount)
 			g_CampathDrawer.EndDevice();
 
 		return g_OldDirect3DDevice9->Release();
@@ -135,8 +130,6 @@ public:
     
 	STDMETHOD(SetMaterial)(THIS_ CONST D3DMATERIAL9* pMaterial)
 	{
-		g_CampathDrawer.OnSetMaterial(pMaterial);
-
 		return g_OldDirect3DDevice9->SetMaterial(pMaterial);
 	}
 
@@ -208,9 +201,6 @@ public:
 			Tier0_Msg("\n");
 
 		}
-
-		g_CampathDrawer.OnSetRenderState(State, Value);
-
 		return g_OldDirect3DDevice9->SetRenderState(State, Value);
 	}
 
@@ -343,6 +333,168 @@ public:
     IFACE_PASSTHROUGH(IDirect3DDevice9, CreateQuery, g_OldDirect3DDevice9);
 } g_NewDirect3DDevice9;
 
+ULONG g_NewDirect3DDevice9Ex_RefCount = 1;
+IDirect3DDevice9Ex * g_OldDirect3DDevice9Ex = 0;
+struct NewDirect3DDevice9Ex
+{
+public:
+    /*** IUnknown methods ***/
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, QueryInterface, g_OldDirect3DDevice9Ex);
+
+	STDMETHOD_(ULONG,AddRef)(THIS)
+	{
+		ULONG result = g_OldDirect3DDevice9Ex->AddRef();
+
+		++g_NewDirect3DDevice9Ex_RefCount;
+
+		return result;
+	}
+
+    STDMETHOD_(ULONG,Release)(THIS)
+	{
+		--g_NewDirect3DDevice9Ex_RefCount;
+
+		if(0 == g_NewDirect3DDevice9Ex_RefCount)
+			g_CampathDrawer.EndDevice();
+
+		return g_OldDirect3DDevice9Ex->Release();
+	}
+
+    /*** IDirect3DDevice9Ex methods ***/
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, TestCooperativeLevel, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetAvailableTextureMem, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, EvictManagedResources, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetDirect3D, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetDeviceCaps, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetDisplayMode, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetCreationParameters, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetCursorProperties, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetCursorPosition, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, ShowCursor, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, CreateAdditionalSwapChain, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetSwapChain, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetNumberOfSwapChains, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, Reset, g_OldDirect3DDevice9Ex);    
+	IFACE_PASSTHROUGH(IDirect3DDevice9Ex, Present, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetBackBuffer, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetRasterStatus, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetDialogBoxMode, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetGammaRamp, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetGammaRamp, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, CreateTexture, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, CreateVolumeTexture, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, CreateCubeTexture, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, CreateVertexBuffer, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, CreateIndexBuffer, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, CreateRenderTarget, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, CreateDepthStencilSurface, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, UpdateSurface, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, UpdateTexture, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetRenderTargetData, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetFrontBufferData, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, StretchRect, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, ColorFill, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, CreateOffscreenPlainSurface, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetRenderTarget, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetRenderTarget, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetDepthStencilSurface, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetDepthStencilSurface, g_OldDirect3DDevice9Ex);
+	IFACE_PASSTHROUGH(IDirect3DDevice9Ex, BeginScene, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, EndScene, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, Clear, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetTransform, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetTransform, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, MultiplyTransform, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetViewport, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetViewport, g_OldDirect3DDevice9Ex);
+	IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetMaterial, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetMaterial, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetLight, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetLight, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, LightEnable, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetLightEnable, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetClipPlane, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetClipPlane, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetRenderState, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetRenderState, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, CreateStateBlock, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, BeginStateBlock, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, EndStateBlock, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetClipStatus, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetClipStatus, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetTexture, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetTexture, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetTextureStageState, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetTextureStageState, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetSamplerState, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetSamplerState, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, ValidateDevice, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetPaletteEntries, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetPaletteEntries, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetCurrentTexturePalette, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetCurrentTexturePalette, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetScissorRect, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetScissorRect, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetSoftwareVertexProcessing, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetSoftwareVertexProcessing, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetNPatchMode, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetNPatchMode, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, DrawPrimitive, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, DrawIndexedPrimitive, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, DrawPrimitiveUP, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, DrawIndexedPrimitiveUP, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, ProcessVertices, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, CreateVertexDeclaration, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetVertexDeclaration, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetVertexDeclaration, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetFVF, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetFVF, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, CreateVertexShader, g_OldDirect3DDevice9Ex);  
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetVertexShader, g_OldDirect3DDevice9Ex);
+	IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetVertexShader, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetVertexShaderConstantF, g_OldDirect3DDevice9Ex);
+	IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetVertexShaderConstantF, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetVertexShaderConstantI, g_OldDirect3DDevice9Ex);
+	IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetVertexShaderConstantI, g_OldDirect3DDevice9Ex);
+	IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetVertexShaderConstantB, g_OldDirect3DDevice9Ex);
+	IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetVertexShaderConstantB, g_OldDirect3DDevice9Ex);
+	IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetStreamSource, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetStreamSource, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetStreamSourceFreq, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetStreamSourceFreq, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetIndices, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetIndices, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, CreatePixelShader, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetPixelShader, g_OldDirect3DDevice9Ex);
+	IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetPixelShader, g_OldDirect3DDevice9Ex);
+	IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetPixelShaderConstantF, g_OldDirect3DDevice9Ex);
+	IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetPixelShaderConstantF, g_OldDirect3DDevice9Ex);
+	IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetPixelShaderConstantI, g_OldDirect3DDevice9Ex);
+	IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetPixelShaderConstantI, g_OldDirect3DDevice9Ex);
+	IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetPixelShaderConstantB, g_OldDirect3DDevice9Ex);
+	IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetPixelShaderConstantB, g_OldDirect3DDevice9Ex);
+	IFACE_PASSTHROUGH(IDirect3DDevice9Ex, DrawRectPatch, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, DrawTriPatch, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, DeletePatch, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, CreateQuery, g_OldDirect3DDevice9Ex);
+
+    /*** IDirect3DDevice9Ex methods ***/
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetConvolutionMonoKernel, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, ComposeRects, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, PresentEx, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetGPUThreadPriority, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetGPUThreadPriority, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, WaitForVBlank, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, CheckResourceResidency, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, SetMaximumFrameLatency, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetMaximumFrameLatency, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, CheckDeviceState, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, CreateRenderTargetEx, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, CreateOffscreenPlainSurfaceEx, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, CreateDepthStencilSurfaceEx, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, ResetEx, g_OldDirect3DDevice9Ex);
+    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetDisplayModeEx, g_OldDirect3DDevice9Ex);
+} g_NewDirect3DDevice9Ex;
 
 IDirect3D9 * g_OldDirect3D9;
 struct NewDirect3D9
@@ -373,6 +525,9 @@ struct NewDirect3D9
 		if(ppReturnedDeviceInterface)
 		{
 			g_OldDirect3DDevice9 = *ppReturnedDeviceInterface;
+			
+			g_CampathDrawer.BeginDevice(g_OldDirect3DDevice9);
+
 			*ppReturnedDeviceInterface = reinterpret_cast<IDirect3DDevice9 *>(&g_NewDirect3DDevice9);
 		}
 		return hRet;
@@ -380,8 +535,67 @@ struct NewDirect3D9
 
 } g_NewDirect3D9;
 
+IDirect3D9Ex * g_OldDirect3D9Ex;
+struct NewDirect3D9Ex
+{
+    /*** IUnknown methods ***/
+	IFACE_PASSTHROUGH(IDirect3D9Ex, QueryInterface, g_OldDirect3D9Ex);
+	IFACE_PASSTHROUGH(IDirect3D9Ex, AddRef, g_OldDirect3D9Ex);
+	IFACE_PASSTHROUGH(IDirect3D9Ex, Release, g_OldDirect3D9Ex);
 
-Direct3DCreate9_t old_Direct3DCreate9;
+    /*** IDirect3D9 methods ***/
+	IFACE_PASSTHROUGH(IDirect3D9Ex, RegisterSoftwareDevice, g_OldDirect3D9Ex);
+	IFACE_PASSTHROUGH(IDirect3D9Ex, GetAdapterCount, g_OldDirect3D9Ex);
+	IFACE_PASSTHROUGH(IDirect3D9Ex, GetAdapterIdentifier, g_OldDirect3D9Ex);
+	IFACE_PASSTHROUGH(IDirect3D9Ex, GetAdapterModeCount, g_OldDirect3D9Ex);
+	IFACE_PASSTHROUGH(IDirect3D9Ex, EnumAdapterModes, g_OldDirect3D9Ex);
+	IFACE_PASSTHROUGH(IDirect3D9Ex, GetAdapterDisplayMode, g_OldDirect3D9Ex);
+	IFACE_PASSTHROUGH(IDirect3D9Ex, CheckDeviceType, g_OldDirect3D9Ex);
+	IFACE_PASSTHROUGH(IDirect3D9Ex, CheckDeviceFormat, g_OldDirect3D9Ex);
+	IFACE_PASSTHROUGH(IDirect3D9Ex, CheckDeviceMultiSampleType, g_OldDirect3D9Ex);
+	IFACE_PASSTHROUGH(IDirect3D9Ex, CheckDepthStencilMatch, g_OldDirect3D9Ex);
+	IFACE_PASSTHROUGH(IDirect3D9Ex, CheckDeviceFormatConversion, g_OldDirect3D9Ex);
+	IFACE_PASSTHROUGH(IDirect3D9Ex, GetDeviceCaps, g_OldDirect3D9Ex);
+	IFACE_PASSTHROUGH(IDirect3D9Ex, GetAdapterMonitor, g_OldDirect3D9Ex);
+
+    STDMETHOD(CreateDevice)(THIS_ UINT Adapter,D3DDEVTYPE DeviceType,HWND hFocusWindow,DWORD BehaviorFlags,D3DPRESENT_PARAMETERS* pPresentationParameters,IDirect3DDevice9** ppReturnedDeviceInterface)
+	{
+		HRESULT hRet = g_OldDirect3D9Ex->CreateDevice(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
+		if(ppReturnedDeviceInterface)
+		{
+			g_OldDirect3DDevice9 = *ppReturnedDeviceInterface;
+
+			g_CampathDrawer.BeginDevice(g_OldDirect3DDevice9);
+
+			*ppReturnedDeviceInterface = reinterpret_cast<IDirect3DDevice9 *>(&g_NewDirect3DDevice9);
+		}
+		return hRet;
+	}
+
+    /*** IDirect3D9Ex methods ***/
+    IFACE_PASSTHROUGH(IDirect3D9Ex, GetAdapterModeCountEx, g_OldDirect3D9Ex);
+    IFACE_PASSTHROUGH(IDirect3D9Ex, EnumAdapterModesEx, g_OldDirect3D9Ex);
+    IFACE_PASSTHROUGH(IDirect3D9Ex, GetAdapterDisplayModeEx, g_OldDirect3D9Ex);
+    
+	STDMETHOD(CreateDeviceEx)(THIS_ UINT Adapter,D3DDEVTYPE DeviceType,HWND hFocusWindow,DWORD BehaviorFlags,D3DPRESENT_PARAMETERS* pPresentationParameters,D3DDISPLAYMODEEX* pFullscreenDisplayMode,IDirect3DDevice9Ex** ppReturnedDeviceInterface)
+	{
+		HRESULT hRet = g_OldDirect3D9Ex->CreateDeviceEx(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, pFullscreenDisplayMode, ppReturnedDeviceInterface);
+		if(ppReturnedDeviceInterface)
+		{
+			g_OldDirect3DDevice9Ex = *ppReturnedDeviceInterface;
+
+			g_CampathDrawer.BeginDevice(g_OldDirect3DDevice9Ex);
+
+			*ppReturnedDeviceInterface = reinterpret_cast<IDirect3DDevice9Ex *>(&g_NewDirect3DDevice9Ex);
+		}
+		return hRet;
+	}
+    
+	IFACE_PASSTHROUGH(IDirect3D9Ex, GetAdapterLUID, g_OldDirect3D9Ex);
+} g_NewDirect3D9Ex;
+
+
+Direct3DCreate9_t old_Direct3DCreate9 = 0;
 IDirect3D9 * WINAPI new_Direct3DCreate9(UINT SDKVersion)
 {
 	if(D3D_SDK_VERSION == SDKVersion)
@@ -391,6 +605,21 @@ IDirect3D9 * WINAPI new_Direct3DCreate9(UINT SDKVersion)
 	}
 
 	return old_Direct3DCreate9(SDKVersion);
+}
+
+Direct3DCreate9Ex_t old_Direct3DCreate9Ex = 0;
+HRESULT WINAPI new_Direct3DCreate9Ex(UINT SDKVersion, IDirect3D9Ex** ppD3DDevice)
+{
+	if(D3D_SDK_VERSION == SDKVersion)
+	{
+		HRESULT hResult = old_Direct3DCreate9Ex(SDKVersion, &g_OldDirect3D9Ex);
+
+		if(ppD3DDevice) *ppD3DDevice = 0 != g_OldDirect3D9Ex ? reinterpret_cast<IDirect3D9Ex *>(&g_NewDirect3D9Ex) : 0;
+
+		return hResult;
+	}
+
+	return old_Direct3DCreate9Ex(SDKVersion, ppD3DDevice);
 }
 
 DWORD AfxD3D9SRGBWriteEnableFix(DWORD enable)
@@ -403,11 +632,4 @@ DWORD AfxD3D9SRGBWriteEnableFix(DWORD enable)
 	g_OldDirect3DDevice9->SetRenderState(D3DRS_SRGBWRITEENABLE, enable);
 
 	return oldValue;
-}
-
-HRESULT AfxD3D9SetVertexShaderConstantF(UINT StartRegister,CONST float* pConstantData,UINT Vector4fCount)
-{
-	if(!g_OldDirect3DDevice9) return S_FALSE;
-
-	return g_OldDirect3DDevice9->SetVertexShaderConstantF(StartRegister, pConstantData, Vector4fCount);
 }

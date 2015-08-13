@@ -161,6 +161,10 @@ void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, fl
 		{
 			CamPathValue val = m_CamPath.Eval( curTime );
 
+			//Tier0_Msg("================",curTime);
+			//Tier0_Msg("currenTime = %f",curTime);
+			//Tier0_Msg("vCp = %f %f %f\n", val.X, val.Y, val.Z);
+
 			Tx = (float)val.X;
 			Ty = (float)val.Y;
 			Tz = (float)val.Z;

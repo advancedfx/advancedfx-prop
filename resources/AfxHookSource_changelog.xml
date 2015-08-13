@@ -6,6 +6,24 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.1.0</version>
+<time>2015-08-13T15:17Z</time>
+<changes>
+<change type="added">
+Added mirv_campath draw support for CS:S (Counter-Strike Source) and similar Source SDK 2013 based games.
+Please let us know if it works in your mod too :-)
+</change>
+</changes>
+<comments>
+We noticed during mirv_campath draw development, that data exported by mirv_camexport might be off (not accurate enough).
+If you used the data in a 3D program and can check whether or not there is a problem when syncing it to game footage,
+please let us know!
+</comments>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.0.3</version>
 <time>2015-08-13T06:34Z</time>
 <changes>

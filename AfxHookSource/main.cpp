@@ -472,7 +472,14 @@ void MySetup(CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals)
 
 		g_AppSystemFactory = appSystemFactory;
 
-		if(iface = appSystemFactory(VENGINE_CLIENT_INTERFACE_VERSION_013, NULL)) {
+		if(isCsgo && (iface = appSystemFactory(VENGINE_CLIENT_INTERFACE_VERSION_013_CSGO, NULL)))
+		{
+			g_Info_VEngineClient = VENGINE_CLIENT_INTERFACE_VERSION_013_CSGO;
+			g_VEngineClient = new WrpVEngineClient_013_csgo((IVEngineClient_013_csgo *)iface);
+		}
+		else
+		if(iface = appSystemFactory(VENGINE_CLIENT_INTERFACE_VERSION_013, NULL))
+		{
 			g_Info_VEngineClient = VENGINE_CLIENT_INTERFACE_VERSION_013;
 			g_VEngineClient = new WrpVEngineClient_013((IVEngineClient_013 *)iface);
 		}
@@ -2471,8 +2478,6 @@ FARPROC WINAPI new_Engine_GetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 	}
 
 	return nResult;
-
-
 }
 
 WNDPROC g_NextWindProc;
@@ -2614,6 +2619,23 @@ BOOL WINAPI new_SetCursorPos(
 	return SetCursorPos(X,Y);
 }
 
+FARPROC WINAPI new_shaderapidx9_GetProcAddress(HMODULE hModule, LPCSTR lpProcName)
+{
+	FARPROC nResult;
+	nResult = GetProcAddress(hModule, lpProcName);
+
+	if (HIWORD(lpProcName))
+	{
+		if (
+			!lstrcmp(lpProcName, "Direct3DCreate9Ex")
+		) {
+			old_Direct3DCreate9Ex = (Direct3DCreate9Ex_t)nResult;
+			return (FARPROC) &new_Direct3DCreate9Ex;
+		}
+	}
+
+	return nResult;
+}
 
 HMODULE WINAPI new_LoadLibraryA(LPCSTR lpLibFileName);
 HMODULE WINAPI new_LoadLibraryExA(LPCSTR lpLibFileName, HANDLE hFile, DWORD dwFlags);
@@ -2738,6 +2760,8 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 	if(bFirstShaderapidx9 && StringEndsWith( lpLibFileName, "shaderapidx9.dll"))
 	{
 		bFirstShaderapidx9 = false;
+
+		InterceptDllCall(hModule, "kernel32.dll", "GetProcAddress", (DWORD) &new_shaderapidx9_GetProcAddress);
 
 		old_Direct3DCreate9 = (Direct3DCreate9_t)InterceptDllCall(hModule, "d3d9.dll", "Direct3DCreate9", (DWORD) &new_Direct3DCreate9);
 	}

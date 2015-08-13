@@ -30,8 +30,6 @@ public:
 	void EndDevice();
 
 	void OnPostRenderAllTools();
-	void OnSetMaterial(CONST D3DMATERIAL9* pMaterial);
-	void OnSetRenderState(D3DRENDERSTATETYPE State, DWORD Value);
 	void OnSetupEngineView();
 
 	virtual void CamPathChanged(CamPath * obj);
@@ -55,9 +53,7 @@ private:
 
 	IDirect3DDevice9 * m_Device;
 	bool m_Draw;
-	DWORD m_OldColorWriteEnable;
 	DWORD m_OldCurrentColor;
-	D3DMATERIAL9 m_OldMaterial;
 	Vector3 m_OldPreviousPolyLinePoint;
 	IDirect3DPixelShader9 * m_PixelShader;
 	bool m_PolyLineStarted;

@@ -308,3 +308,149 @@ int	WrpVEngineClient_013::GetAppID() {
 void WrpVEngineClient_013::ClientCmd_Unrestricted( const char *szCmdString ) {
 	m_VEngineClient_013->ClientCmd_Unrestricted(szCmdString);
 }
+
+// WrpVEngineClient_013_csgo ///////////////////////////////////////////////////////////
+
+WrpVEngineClient_013_csgo::WrpVEngineClient_013_csgo(IVEngineClient_013_csgo * iface) {
+	m_VEngineClient_013 = iface;
+}
+
+void WrpVEngineClient_013_csgo::GetScreenSize( int& width, int& height ) {
+	m_VEngineClient_013->GetScreenSize(width, height);
+}
+
+void WrpVEngineClient_013_csgo::ServerCmd( const char *szCmdString, bool bReliable) {
+	m_VEngineClient_013->ServerCmd(szCmdString, bReliable);
+}
+
+void WrpVEngineClient_013_csgo::ClientCmd( const char *szCmdString ) {
+	m_VEngineClient_013->ClientCmd(szCmdString);
+}
+
+bool WrpVEngineClient_013_csgo::Con_IsVisible( void ) {
+	return m_VEngineClient_013->Con_IsVisible();
+}
+
+float WrpVEngineClient_013_csgo::GetLastTimeStamp( void ) {
+	return m_VEngineClient_013->GetLastTimeStamp();
+}
+
+void WrpVEngineClient_013_csgo::GetViewAngles( QAngle& va ) {
+	m_VEngineClient_013->GetViewAngles(va);
+}
+
+void WrpVEngineClient_013_csgo::SetViewAngles( QAngle& va ) {
+	m_VEngineClient_013->SetViewAngles(va);
+}
+
+int WrpVEngineClient_013_csgo::GetMaxClients( void ) {
+	return m_VEngineClient_013->GetMaxClients();
+}
+
+bool WrpVEngineClient_013_csgo::IsInGame( void ) {
+	return m_VEngineClient_013->IsInGame();
+}
+
+bool WrpVEngineClient_013_csgo::IsConnected( void ) {
+	return m_VEngineClient_013->IsConnected();
+}
+
+bool WrpVEngineClient_013_csgo::IsDrawingLoadingImage( void ) {
+	return m_VEngineClient_013->IsDrawingLoadingImage();
+}
+
+void WrpVEngineClient_013_csgo::Con_NPrintf( int pos, const char *fmt, ... ) {
+	va_list argptr;
+	va_start(argptr, fmt);
+	m_VEngineClient_013->Con_NPrintf(pos, fmt, argptr);
+}
+
+const char *  WrpVEngineClient_013_csgo::GetGameDirectory( void ) {
+	return m_VEngineClient_013->GetGameDirectory();
+}
+
+const VMatrix& WrpVEngineClient_013_csgo::WorldToScreenMatrix()
+{
+	return m_VEngineClient_013->WorldToScreenMatrix();
+}
+
+const VMatrix& WrpVEngineClient_013_csgo::WorldToViewMatrix()
+{
+	return m_VEngineClient_013->WorldToViewMatrix();
+}
+
+
+char const *  WrpVEngineClient_013_csgo::GetLevelName( void ) {
+	return m_VEngineClient_013->GetLevelName();
+}
+
+void WrpVEngineClient_013_csgo::EngineStats_BeginFrame( void ) {
+	return m_VEngineClient_013->EngineStats_BeginFrame();
+}
+
+void WrpVEngineClient_013_csgo::EngineStats_EndFrame( void ) {
+	return m_VEngineClient_013->EngineStats_EndFrame();
+}
+
+bool WrpVEngineClient_013_csgo::IsPlayingDemo( void ) {
+	return m_VEngineClient_013->IsPlayingDemo();
+}
+
+bool WrpVEngineClient_013_csgo::IsRecordingDemo( void ) {
+	return m_VEngineClient_013->IsRecordingDemo();
+}
+
+bool WrpVEngineClient_013_csgo::IsPlayingTimeDemo( void ) {
+	return m_VEngineClient_013->IsPlayingTimeDemo();
+}
+
+bool WrpVEngineClient_013_csgo::IsPaused( void ) {
+	return m_VEngineClient_013->IsPaused();
+}
+
+bool WrpVEngineClient_013_csgo::IsTakingScreenshot( void ) {
+	return m_VEngineClient_013->IsTakingScreenshot();
+}
+bool WrpVEngineClient_013_csgo::IsHLTV( void ) {
+	return m_VEngineClient_013->IsHLTV();
+}
+
+bool WrpVEngineClient_013_csgo::IsLevelMainMenuBackground( void ) {
+	return m_VEngineClient_013->IsLevelMainMenuBackground();
+}
+
+void WrpVEngineClient_013_csgo::GetMainMenuBackgroundName( char *dest, int destlen ) {
+	return m_VEngineClient_013->GetMainMenuBackgroundName(dest, destlen);
+}
+
+bool WrpVEngineClient_013_csgo::IsInEditMode( void ) {
+	return m_VEngineClient_013->IsInEditMode();
+}
+
+float WrpVEngineClient_013_csgo::GetScreenAspectRatio() {
+	return m_VEngineClient_013->GetScreenAspectRatio();
+}
+
+unsigned int WrpVEngineClient_013_csgo::GetEngineBuildNumber() {
+	return m_VEngineClient_013->GetEngineBuildNumber();
+}
+
+const char * WrpVEngineClient_013_csgo::GetProductVersionString() {
+	return m_VEngineClient_013->GetProductVersionString();
+}
+
+bool WrpVEngineClient_013_csgo::IsHammerRunning( ) const {
+	return m_VEngineClient_013->IsHammerRunning();
+}
+
+void WrpVEngineClient_013_csgo::ExecuteClientCmd( const char *szCmdString ) {
+	m_VEngineClient_013->ExecuteClientCmd(szCmdString);
+}
+
+int	WrpVEngineClient_013_csgo::GetAppID() {
+	return m_VEngineClient_013->GetAppID();
+}
+
+void WrpVEngineClient_013_csgo::ClientCmd_Unrestricted( const char *szCmdString ) {
+	m_VEngineClient_013->ClientCmd_Unrestricted(szCmdString);
+}

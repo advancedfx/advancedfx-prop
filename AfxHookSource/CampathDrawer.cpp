@@ -402,7 +402,13 @@ void CCampathDrawer::OnPostRenderAllTools()
 		if(firstError)
 		{
 			firstError = false;
-			Tier0_Msg("AFXERROR: CCampathDrawer::OnEndScene: Missing required dependencies.\n");
+			Tier0_Msg(
+				"AFXERROR: CCampathDrawer::OnEndScene: Missing required dependencies:%s%s%s%s.\n",
+				!m_Device ? " m_Device" : "",
+				!m_VertexShader ? " m_VertexShader" : "",
+				!m_PixelShader ? " m_PixelShader" : "",
+				!g_VEngineClient ? " g_VEngineClient" : ""
+			);
 		}
 
 		return;
@@ -485,6 +491,8 @@ void CCampathDrawer::OnPostRenderAllTools()
 
 	// Draw:
 	{
+		//Vector3 vvForward, vvUp, vvRight, vvPos;
+
 		double curTime = g_Hook_VClient_RenderView.GetCurTime();
 		bool inCampath = 1 <= g_Hook_VClient_RenderView.m_CamPath.GetSize()
 			&&	g_Hook_VClient_RenderView.m_CamPath.GetLowerBound() <= curTime
@@ -514,6 +522,8 @@ void CCampathDrawer::OnPostRenderAllTools()
 		{
 			double plane0[4]={0,0,0,1};
 			double planeN[4]={1,0,0,1};
+			//double planeR[4]={0,-1,0,1};
+			//double planeU[4]={0,0,1,1};
 
 			unsigned char P[4];
 			unsigned char Q[4];
@@ -541,7 +551,21 @@ void CCampathDrawer::OnPostRenderAllTools()
 				1 -m_WorldToScreenMatrix.m[2][3],
 				-m_WorldToScreenMatrix.m[3][3],
 			};
+			/*
+			double bR[4] = {
+				1 -m_WorldToScreenMatrix.m[0][3],
+				0 -m_WorldToScreenMatrix.m[1][3],
+				0 -m_WorldToScreenMatrix.m[2][3],
+				-m_WorldToScreenMatrix.m[3][3],
+			};
 
+			double bU[4] = {
+				0 -m_WorldToScreenMatrix.m[0][3],
+				1 -m_WorldToScreenMatrix.m[1][3],
+				0 -m_WorldToScreenMatrix.m[2][3],
+				-m_WorldToScreenMatrix.m[3][3],
+			};
+			*/
 			if(!LUdecomposition(M, P, Q, L, U))
 			{
 				Tier0_Warning("AFXERROR in CCampathDrawer::OnPostRenderAllTools: LUdecomposition failed\n");
@@ -550,7 +574,20 @@ void CCampathDrawer::OnPostRenderAllTools()
 			{
 				SolveWithLU(L, U, P, Q, b0, plane0);
 				SolveWithLU(L, U, P, Q, bN, planeN);
+				
+				//SolveWithLU(L, U, P, Q, bR, planeR);
+				//SolveWithLU(L, U, P, Q, bU, planeU);
 			}
+
+			/*
+			vvPos = Vector3(plane0[0], plane0[1], plane0[2]);
+			vvForward = Vector3(planeN[0] -vvPos.X, planeN[1] -vvPos.Y, planeN[2]-vvPos.Z);
+			vvForward.Normalize();
+			vvRight = Vector3(planeR[0] -vvPos.X, planeR[1] -vvPos.Y, planeR[2]-vvPos.Z);
+			vvRight.Normalize();
+			vvUp = Vector3(planeU[0] -vvPos.X, planeU[1] -vvPos.Y, planeU[2]-vvPos.Z);
+			vvUp.Normalize();
+			*/
 
 			/*
 			Tier0_Msg("CCampathDrawer::OnPostRenderAllTools: curTime = %f\n",curTime);
@@ -913,6 +950,10 @@ void CCampathDrawer::OnPostRenderAllTools()
 			Vector3 vUp(up);
 			Vector3 vRight(right);
 
+			//Tier0_Msg("----------------",curTime);
+			//Tier0_Msg("currenTime = %f",curTime);
+			//Tier0_Msg("vCp = %f %f %f\n", vCp.X, vCp.Y, vCp.Z);
+
 			double a = sin(cpv.Fov * M_PI / 360.0) * c_CameraRadius;
 			double b = a;
 
@@ -949,6 +990,47 @@ void CCampathDrawer::OnPostRenderAllTools()
 			AutoSingleLine(vMU, colourCam, vMUU, colourCamUp);
 
 			AutoSingleLineFlush();
+
+			//
+			/*
+
+			colourCam = D3DCOLOR_RGBA(255, 0, 0, 255);
+			colourCamUp = D3DCOLOR_RGBA(255, 255, 0, 255);
+
+			vCp = vvPos;
+			vForward = vvForward;
+			vUp = vvUp;
+			vRight = vvRight;
+
+			//Tier0_Msg("vCp2 = %f %f %f\n", vCp.X, vCp.Y, vCp.Z);
+
+			vLU = vCp +(double)c_CameraRadius * vForward -a * vRight +b * vUp;
+			vRU = vCp +(double)c_CameraRadius * vForward +a * vRight +b * vUp;
+			vLD = vCp +(double)c_CameraRadius * vForward -a * vRight -b * vUp;
+			vRD = vCp +(double)c_CameraRadius * vForward +a * vRight -b * vUp;
+			vMU = vLU +(vRU -vLU)/2;
+			vMUU = vMU +(double)c_CameraRadius * vUp;
+
+			AutoSingleLine(vCp, colourCam, vLD, colourCam);
+
+			AutoSingleLine(vCp, colourCam, vRD, colourCam);
+
+			AutoSingleLine(vCp, colourCam, vLU, colourCam);
+
+			AutoSingleLine(vCp, colourCam, vRU, colourCam);
+
+			AutoSingleLine(vLD, colourCam, vRD, colourCam);
+
+			AutoSingleLine(vRD, colourCam, vRU, colourCam);
+
+			AutoSingleLine(vRU, colourCam, vLU, colourCam);
+
+			AutoSingleLine(vLU, colourCam, vLD, colourCam);
+
+			AutoSingleLine(vMU, colourCam, vMUU, colourCamUp);
+
+			AutoSingleLineFlush();
+			*/
 		}
 	}
 
@@ -990,21 +1072,6 @@ void CCampathDrawer::OnPostRenderAllTools()
 	m_Device->SetRenderState(D3DRS_SRGBWRITEENABLE, oldSrgbWriteEnable);
 
 	m_SetupEngineViewCalled = false;
-}
-
-void CCampathDrawer::OnSetMaterial(CONST D3DMATERIAL9* pMaterial)
-{
-	memcpy(&m_OldMaterial, pMaterial, sizeof(m_OldMaterial));
-}
-
-void CCampathDrawer::OnSetRenderState(D3DRENDERSTATETYPE State, DWORD Value)
-{
-	switch(State)
-	{
-	case D3DRS_COLORWRITEENABLE:
-		m_OldColorWriteEnable = Value;
-		break;
-	}
 }
 
 void CCampathDrawer::OnSetupEngineView()
