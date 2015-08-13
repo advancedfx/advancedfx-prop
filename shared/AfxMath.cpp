@@ -50,54 +50,71 @@ void MakeVectors(
 
 bool LUdecomposition(const double matrix[4][4], unsigned char (&outP)[4], unsigned char (&outQ)[4], double (& outL)[4][4], double (& outU)[4][4])
 {
-	for(unsigned char i=0; i<4; i++)
+	for(int i=0; i<4; ++i)
 	{
 		outP[i] = i; outQ[i] = i;
+
+		for(int j=0; j<4; ++j)
+		{
+			outU[i][j] = matrix[i][j];
+		}
 	}
 
-	// Pivotisation:
-	for(int i=0; i<4; i++)
+	for(int n=0; n<4-1; ++n)
 	{
 		int t = -1;
 		double maxVal = 0;
-		for(unsigned char p=0; p<4; p++)
+		for(int i=n; i<4; ++i)
 		{
-			double tabs = abs(matrix[outP[p]][outQ[i]]);
+			double tabs = abs(outU[i][n]);
 			if(maxVal < tabs)
 			{
-				t = p;
+				t = i;
 				maxVal = tabs;
 			}
 		}
+
 		if(t < 0)
 			return false;
 
-		if(i<t)
+		if(n!=t)
 		{
-			unsigned char tmp = outP[i];
-			outP[i] = outP[t];
+			double tmp = outP[n];
+			outP[n] = outP[t];
 			outP[t] = tmp;
+
+			for(int i=0; i<4; ++i)
+			{
+				tmp = outU[n][i];
+				outU[n][i] = outU[t][i];
+				outU[t][i] = tmp;
+			}
+		}
+
+		for(int i=n+1; i<4; ++i)
+		{
+			outU[i][n] = outU[i][n]/outU[n][n];
+			for(int j=n+1; j<4; ++j)
+			{
+				outU[i][j] = outU[i][j] -outU[i][n] * outU[n][j];
+			}
 		}
 	}
 
-	for(unsigned char i=0; i<4; i++)
+	for(int i=0; i<4; ++i)
 	{
-		for(unsigned char k=0; k<4; k++)
+		for(int j=0; j<i; ++j)
 		{
-			outL[i][k] = i == k ? 1 : 0;
-			outU[i][k] = matrix[outP[i]][outQ[k]];
+			outL[i][j] = outU[i][j];
+			outU[i][j] = 0;
+		}
+		outL[i][i] = 1;
+		for(int j=i+1; j<4; ++j)
+		{
+			outL[i][j] = 0;
 		}
 	}
 
-	for(unsigned char i=0; i<4-1; i++)
-	{
-		for(unsigned char k=i+1; k<4; k++)
-		{
-			outL[k][i] = outU[k][i] / outU[i][i];
-			for(unsigned char j = i; j<4;j++)
-				outU[k][j] = outU[k][j] - outL[k][i] * outU[i][j];
-		}
-	}
 	return true;
 }
 

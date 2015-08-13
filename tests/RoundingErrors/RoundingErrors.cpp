@@ -29,12 +29,23 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 */
 
+	/*
+	double Matrix[4][4] = {
+		1, 2, 3, 0,
+		1, 1, 1, 0,
+		3, 3, 1, 0,
+		0, 0, 0, 1
+	};
+	double b[4] = {1, 1, 1, 1};
+	*/
+
 	double Matrix[4][4] = {
 		0.569779, -0.487701, -0.000328, 0.000000,
 		0.034150, 0.039003, 1.332325, 0.000000,
 		0.649924, 0.759329, -0.038888, 0.000000,
 		0.649764, 0.759142, -0.038878, -1.000000
 	};
+	double b[4] = {867.811279, -234.318237, -1869.297119, -1876.835693};
 
 	unsigned char p[4];
 	unsigned char q[4];
@@ -51,11 +62,9 @@ int _tmain(int argc, _TCHAR* argv[])
 			cout << "L[" << i << "," << k << "]=" << L[i][k] << " R[,]=" << R[i][k] << std::endl;
 		};
 
-	double y[4] = {867.811279, -234.318237, -1869.297119, -1876.835693};
-
 	double x[4];
 
-	Afx::Math::SolveWithLU(L, R,p,q,y,x);
+	Afx::Math::SolveWithLU(L, R,p,q,b,x);
 	for(int k=0;k<4;k++)
 	{
 		cout << "x[" << k << "]=" << x[k] << std::endl;
