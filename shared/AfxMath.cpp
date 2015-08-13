@@ -79,15 +79,15 @@ bool LUdecomposition(const double matrix[4][4], unsigned char (&outP)[4], unsign
 
 		if(n!=t)
 		{
-			double tmp = outP[n];
+			unsigned char ucTmp = outP[n];
 			outP[n] = outP[t];
-			outP[t] = tmp;
+			outP[t] = ucTmp;
 
 			for(int i=0; i<4; ++i)
 			{
-				tmp = outU[n][i];
+				double dTmp = outU[n][i];
 				outU[n][i] = outU[t][i];
-				outU[t][i] = tmp;
+				outU[t][i] = dTmp;
 			}
 		}
 
