@@ -45,6 +45,7 @@ public:
 	void ImportEnd();
 
 	void Install(WrpGlobals * globals);
+	WrpGlobals * GetGlobals();
 
 	bool IsInstalled(void);
 

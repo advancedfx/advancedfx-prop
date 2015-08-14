@@ -142,6 +142,11 @@ void SolveWithLU(const double L[4][4], const double U[4][4], const unsigned char
 	}
 }
 
+int round(double x)
+{
+	return x < 0 ? (int)(x -0.5) : (int)(x +0.5);
+}
+
 // Copyright (c) by NUMERICAL RECIPES IN C: THE ART OF SCIENTIFIC COMPUTING (ISBN 0-521-43108-5)
 void spline(double x[], double y[], int n, bool y1Natural, double yp1, bool ynNatural, double ypn, double y2[])
 {

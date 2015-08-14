@@ -23,6 +23,8 @@ bool LUdecomposition(const double matrix[4][4], unsigned char (&outP)[4], unsign
 
 void SolveWithLU(const double L[4][4], const double U[4][4], const unsigned char P[4], const unsigned char Q[4], const double b[4], double (& outX)[4]);
 
+int round(double x);
+
 // Vector3 /////////////////////////////////////////////////////////////////////
 
 struct Vector3;

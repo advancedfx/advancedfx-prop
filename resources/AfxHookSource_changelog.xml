@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.2.0</version>
+<time>2015-08-14T17:28Z</time>
+<changes>
+<change type="added">
+Added displaying of approximate demo tick for each keyframe to mirv_campath print.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.1.0</version>
 <time>2015-08-13T15:17Z</time>
 <changes>

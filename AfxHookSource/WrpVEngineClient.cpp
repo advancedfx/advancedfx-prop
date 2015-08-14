@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-08-03 dominik.matrixstorm.com
+// 2015-08-14 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-10-01 dominik.matrixstorm.com
@@ -35,10 +35,6 @@ void WrpVEngineClient_012::ClientCmd( const char *szCmdString ) {
 
 bool WrpVEngineClient_012::Con_IsVisible( void ) {
 	return m_VEngineClient_012->Con_IsVisible();
-}
-
-float WrpVEngineClient_012::GetLastTimeStamp( void ) {
-	return m_VEngineClient_012->GetLastTimeStamp();
 }
 
 void WrpVEngineClient_012::GetViewAngles( QAngle& va ) {
@@ -152,16 +148,16 @@ void WrpVEngineClient_012::ExecuteClientCmd( const char *szCmdString ) {
 	m_VEngineClient_012->ExecuteClientCmd(szCmdString);
 }
 
-int	WrpVEngineClient_012::GetAppID() {
-	return m_VEngineClient_012->GetAppID();
-}
-
 void WrpVEngineClient_012::ClientCmd_Unrestricted( const char *szCmdString )
 {
 	// In 012 this is unrestricted:
 	ClientCmd(szCmdString);
 }
 
+WrpVEngineClientDemoInfoEx * WrpVEngineClient_012::GetDemoInfoEx(void)
+{
+	return 0;
+}
 
 // WrpVEngineClient_013 ///////////////////////////////////////////////////////////
 
@@ -183,10 +179,6 @@ void WrpVEngineClient_013::ClientCmd( const char *szCmdString ) {
 
 bool WrpVEngineClient_013::Con_IsVisible( void ) {
 	return m_VEngineClient_013->Con_IsVisible();
-}
-
-float WrpVEngineClient_013::GetLastTimeStamp( void ) {
-	return m_VEngineClient_013->GetLastTimeStamp();
 }
 
 void WrpVEngineClient_013::GetViewAngles( QAngle& va ) {
@@ -258,6 +250,31 @@ bool WrpVEngineClient_013::IsPlayingTimeDemo( void ) {
 	return m_VEngineClient_013->IsPlayingTimeDemo();
 }
 
+int WrpVEngineClient_013::GetDemoRecordingTick( void )
+{
+	return m_VEngineClient_013->GetDemoRecordingTick();
+}
+
+int	WrpVEngineClient_013::GetDemoPlaybackTick( void )
+{
+	return m_VEngineClient_013->GetDemoPlaybackTick();
+}
+
+int	WrpVEngineClient_013::GetDemoPlaybackStartTick( void )
+{
+	return m_VEngineClient_013->GetDemoPlaybackStartTick();
+}
+
+float WrpVEngineClient_013::GetDemoPlaybackTimeScale( void )
+{
+	return m_VEngineClient_013->GetDemoPlaybackTimeScale();
+}
+
+int WrpVEngineClient_013::GetDemoPlaybackTotalTicks( void )
+{
+	return m_VEngineClient_013->GetDemoPlaybackTotalTicks();
+}
+
 bool WrpVEngineClient_013::IsPaused( void ) {
 	return m_VEngineClient_013->IsPaused();
 }
@@ -301,12 +318,13 @@ void WrpVEngineClient_013::ExecuteClientCmd( const char *szCmdString ) {
 	m_VEngineClient_013->ExecuteClientCmd(szCmdString);
 }
 
-int	WrpVEngineClient_013::GetAppID() {
-	return m_VEngineClient_013->GetAppID();
-}
-
 void WrpVEngineClient_013::ClientCmd_Unrestricted( const char *szCmdString ) {
 	m_VEngineClient_013->ClientCmd_Unrestricted(szCmdString);
+}
+
+WrpVEngineClientDemoInfoEx * WrpVEngineClient_013::GetDemoInfoEx(void)
+{
+	return this;
 }
 
 // WrpVEngineClient_013_csgo ///////////////////////////////////////////////////////////
@@ -329,10 +347,6 @@ void WrpVEngineClient_013_csgo::ClientCmd( const char *szCmdString ) {
 
 bool WrpVEngineClient_013_csgo::Con_IsVisible( void ) {
 	return m_VEngineClient_013->Con_IsVisible();
-}
-
-float WrpVEngineClient_013_csgo::GetLastTimeStamp( void ) {
-	return m_VEngineClient_013->GetLastTimeStamp();
 }
 
 void WrpVEngineClient_013_csgo::GetViewAngles( QAngle& va ) {
@@ -404,6 +418,31 @@ bool WrpVEngineClient_013_csgo::IsPlayingTimeDemo( void ) {
 	return m_VEngineClient_013->IsPlayingTimeDemo();
 }
 
+int WrpVEngineClient_013_csgo::GetDemoRecordingTick( void )
+{
+	return m_VEngineClient_013->GetDemoRecordingTick();
+}
+
+int	WrpVEngineClient_013_csgo::GetDemoPlaybackTick( void )
+{
+	return m_VEngineClient_013->GetDemoPlaybackTick();
+}
+
+int	WrpVEngineClient_013_csgo::GetDemoPlaybackStartTick( void )
+{
+	return m_VEngineClient_013->GetDemoPlaybackStartTick();
+}
+
+float WrpVEngineClient_013_csgo::GetDemoPlaybackTimeScale( void )
+{
+	return m_VEngineClient_013->GetDemoPlaybackTimeScale();
+}
+
+int WrpVEngineClient_013_csgo::GetDemoPlaybackTotalTicks( void )
+{
+	return m_VEngineClient_013->GetDemoPlaybackTotalTicks();
+}
+
 bool WrpVEngineClient_013_csgo::IsPaused( void ) {
 	return m_VEngineClient_013->IsPaused();
 }
@@ -447,10 +486,11 @@ void WrpVEngineClient_013_csgo::ExecuteClientCmd( const char *szCmdString ) {
 	m_VEngineClient_013->ExecuteClientCmd(szCmdString);
 }
 
-int	WrpVEngineClient_013_csgo::GetAppID() {
-	return m_VEngineClient_013->GetAppID();
-}
-
 void WrpVEngineClient_013_csgo::ClientCmd_Unrestricted( const char *szCmdString ) {
 	m_VEngineClient_013->ClientCmd_Unrestricted(szCmdString);
+}
+
+WrpVEngineClientDemoInfoEx * WrpVEngineClient_013_csgo::GetDemoInfoEx(void)
+{
+	return this;
 }

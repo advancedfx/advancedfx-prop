@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-08-13 by dominik.matrixstorm.com
+// 2015-08-14 by dominik.matrixstorm.com
 //
 // First changes:
 // 2009-09-30 by dominik.matrixstorm.com
@@ -1670,11 +1670,7 @@ public:
 	virtual void _UNUSED_GetLocalPlayer(void)=0;
 	virtual void _UNUSED_LoadModel(void)=0;
 
-	// Get accurate, sub-frame clock ( profiling use )
-	virtual float				Time( void ) = 0; 
-
-	// Get the exact server timesstamp ( server time ) from the last message received from the server
-	virtual float				GetLastTimeStamp( void ) = 0; 
+	virtual float _UNKNOWN_014(void) = 0;
 
 	virtual void _UNUSED_GetSentence(void)=0;
 	virtual void _UNUSED_GetSentenceLength(void)=0;
@@ -1690,6 +1686,9 @@ public:
 
 	virtual void _UNUSED_Key_LookupBinding(void)=0;
 	virtual void _UNUSED_Key_BindingForKey(void)=0;
+
+	virtual void _UNKOWN_023(void) = 0;
+
 	virtual void _UNUSED_StartKeyTrapMode(void)=0;
 	virtual void _UNUSED_CheckDoneKeyTrapping(void)=0;
 
@@ -1739,6 +1738,8 @@ public:
 
 	virtual char const	*GetLevelName( void ) = 0;
 
+	virtual void _UNKOWN_053(void);
+
 	// New in source SDK 2013
 	virtual int GetLevelVersion( void ) = 0;
 
@@ -1748,15 +1749,18 @@ public:
 	// Tell engine stats gathering system that the rendering frame is beginning/ending
 	virtual void		EngineStats_BeginFrame( void ) = 0;
 	virtual void		EngineStats_EndFrame( void ) = 0;
+
+	virtual void _UNKOWN_058(void);
 	
 	virtual void _UNUSED_FireEvents(void)=0;
 	virtual void _UNUSED_GetLeavesArea(void)=0;
 	virtual void _UNUSED_DoesBoxTouchAreaFrustum(void)=0;
 	
-	// new in csgo:
-	virtual void _UNUSED_GetFrustumList(void) = 0;
+	virtual void _UNKOWN_062(void) = 0;
 
-	virtual void _UNUSED_SetAudioState(void)=0;
+	virtual void _UNKOWN_063(void) = 0;
+	virtual void _UNKOWN_064(void) = 0;
+
 	virtual void _UNUSED_SentenceGroupPick(void)=0;
 	virtual void _UNUSED_SentenceGroupPickSequential(void)=0;
 	virtual void _UNUSED_SentenceIndexFromName(void)=0;
@@ -1765,8 +1769,11 @@ public:
 	virtual void _UNUSED_SentenceGroupNameFromIndex(void)=0;
 	virtual void _UNUSED_SentenceLength(void)=0;
 	virtual void _UNUSED_ComputeLighting(void)=0;
-	virtual void _UNUSED_ActivateOccluder(void)=0;
-	virtual void _UNUSED_IsOccluded(void)=0;
+
+	virtual void _UNKOWN_073(void);
+	virtual void _UNKOWN_074(void);
+	virtual void _UNKOWN_075(void);
+
 	virtual void _UNUSED_SaveAllocMemory(void)=0;
 	virtual void _UNUSED_SaveFreeMemory(void)=0;
 	virtual void _UNUSED_GetNetChannelInfo(void)=0;
@@ -1774,6 +1781,7 @@ public:
 	virtual void _UNUSED_CheckPoint(void)=0;
 	virtual void _UNUSED_DrawPortals(void)=0;
 
+	// 82:
 	// Determine whether the client is playing back or recording a demo
 	virtual bool		IsPlayingDemo( void ) = 0;
 	virtual bool		IsRecordingDemo( void ) = 0;
@@ -1786,29 +1794,37 @@ public:
 	virtual float		GetDemoPlaybackTimeScale( void ) = 0;
 	virtual int			GetDemoPlaybackTotalTicks( void ) = 0;
 
+	// 90:
 	// Is the game paused?
 	virtual bool		IsPaused( void ) = 0;
 	// Is the game currently taking a screenshot?
 
-	// new in csgo:
+	// 091:
 	// What is the game timescale multiplied with the host_timescale?
 	virtual float GetTimescale( void ) const = 0;
 
+	// 092:
 	virtual bool		IsTakingScreenshot( void ) = 0;
+	
+	// 093:
 	// Is this a HLTV broadcast ?
 	virtual bool		IsHLTV( void ) = 0;
 	
-	// new in csgo:
-	// Is this a Replay demo?
-	virtual bool		IsReplay( void ) = 0;
-
+	// 094:
 	// is this level loaded as just the background to the main menu? (active, but unplayable)
 	virtual bool		IsLevelMainMenuBackground( void ) = 0;
+	
+	// 095:
 	// returns the name of the background level
 	virtual void		GetMainMenuBackgroundName( char *dest, int destlen ) = 0;
 
+	// 096:
 	virtual void _UNUSED_SetOcclusionParameters(void)=0;
+
+	// 097:
 	virtual void _UNUSED_GetUILanguage(void)=0;
+
+
 	virtual void _UNUSED_IsSkyboxVisibleFromPoint(void)=0;
 	virtual void _UNUSED_GetMapEntitiesString(void)=0;
 
@@ -1821,11 +1837,6 @@ public:
 	virtual void _UNUSED_REMOVED_SteamRefreshLogin(void)=0;
 	virtual void _UNUSED_REMOVED_SteamProcessCall(void)=0;
 
-	virtual void _UNUSED_WildGuess( void ) = 0;
-	virtual void _UNUSED_WildGuess2( void ) = 0;
-	virtual void _UNUSED_WildGuess3( void ) = 0;
-//	virtual void _UNUSED_WildGuess4( void ) = 0;
-
 	// allow other modules to know about engine versioning (one use is a proxy for network compatability)
 	virtual unsigned int	GetEngineBuildNumber() = 0; // engines build
 	virtual const char *	GetProductVersionString() = 0; // mods version number (steam.inf)
@@ -1834,43 +1845,41 @@ public:
 
 	virtual bool			IsHammerRunning( ) const = 0;
 
+	// 108:
 	// Inserts szCmdString into the command buffer as if it was typed by the client to his/her console.
 	// And then executes the command string immediately (vs ClientCmd() which executes in the next frame)
 	//
 	// Note: this is NOT checked against the FCVAR_CLIENTCMD_CAN_EXECUTE vars.
 	virtual void			ExecuteClientCmd( const char *szCmdString ) = 0;
 
-	virtual void _UNUSED_MapHasHDRLighting(void)=0;
 
-	virtual int	GetAppID() = 0;
+	virtual void _UNKOWN_109(void);
+	virtual void _UNKOWN_110(void);
+	virtual void _UNKOWN_111(void);
+	virtual void _UNKOWN_112(void);
+	virtual void _UNKOWN_113(void);
 
-	virtual void _UNUSED_GetLightForPointFast(void)=0;
-
+	// 114:
 	// This version does NOT check against FCVAR_CLIENTCMD_CAN_EXECUTE.
 	virtual void ClientCmd_Unrestricted( const char *szCmdString ) = 0;
+
+	//
+	// might be in-accurate:
 
 	virtual void _UNUSED_SetRestrictServerCommands(void)=0;
 	virtual void _UNUSED_SetRestrictClientCommands(void)=0;
 	virtual void _UNUSED_SetOverlayBindProxy(void)=0;
 	virtual void _UNUSED_CopyFrameBufferToMaterial(void)=0;
-	virtual void _UNUSED_ChangeTeam(void)=0;
 	virtual void _UNUSED_ReadConfiguration(void)=0;
 	virtual void _UNUSED_SetAchievementMgr(void)=0;
 	virtual void _UNUSED_GetAchievementMgr(void)=0;
 	virtual void _UNUSED_MapLoadFailed(void)=0;
 	virtual void _UNUSED_SetMapLoadFailed(void)=0;
 	virtual void _UNUSED_IsLowViolence(void)=0;
-	virtual void _UNUSED_GetMostRecentSaveGame(void)=0;
-	virtual void _UNUSED_SetMostRecentSaveGame(void)=0;
-	virtual void _UNUSED_StartXboxExitingProcess(void)=0;
-	virtual void _UNUSED_IsSaveInProgress(void)=0;
-	virtual void _UNUSED_OnStorageDeviceAttached(void)=0;
-	virtual void _UNUSED_OnStorageDeviceDetached(void)=0;
-	virtual void _UNUSED_ResetDemoInterpolation(void)=0;
-	virtual void _UNUSED_SetGamestatsData(void)=0;
-	virtual void _UNUSED_GetGamestatsData(void)=0;
 
-	// .... might be more in some games (i.e. source-sdk-2013)
+	//
+	// more we don't care about ...
+
 };
 
 // IBaseClientDLL_011 //////////////////////////////////////////////////////////

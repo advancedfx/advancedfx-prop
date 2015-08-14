@@ -34,6 +34,29 @@
 
 extern WrpVEngineClient * g_VEngineClient;
 
+CON_COMMAND(__mirv_test2, "")
+{
+	WrpVEngineClientDemoInfoEx * di = g_VEngineClient->GetDemoInfoEx();
+
+	if(di && g_Hook_VClient_RenderView.GetGlobals())
+	{
+		Tier0_Msg(
+			"GetDemoRecordingTick=%i\n"
+			"GetDemoPlaybackTick=%i\n"
+			"GetDemoPlaybackStartTick=%i\n"
+			"GetDemoPlaybackTimeScale=%f\n"
+			"GetDemoPlaybackTotalTicks=%i\n"
+			"gpGloblals->interval_per_tick=%f",
+			di->GetDemoRecordingTick(),
+			di->GetDemoPlaybackTick(),
+			di->GetDemoPlaybackStartTick(),
+			di->GetDemoPlaybackTimeScale(),
+			di->GetDemoPlaybackTotalTicks(),
+			g_Hook_VClient_RenderView.GetGlobals()->interval_per_tick_get()
+		);
+	}
+}
+
 bool g_bD3D9DebugPrint = false;
 
 CON_COMMAND(__mirv_test, "")
@@ -406,6 +429,77 @@ CON_COMMAND(__mirv_exec, "client command execution: __mirv_exec <as you would ha
 	delete ttt;
 }
 
+bool GetCurrentDemoTick(int &outTick)
+{
+	WrpVEngineClientDemoInfoEx * di = g_VEngineClient->GetDemoInfoEx();
+
+	if(di)
+	{
+		outTick = di->GetDemoPlaybackTick();
+		return true;
+	}
+
+	return false;
+}
+
+bool GetDemoTickFromTime(double curTime, double time, int &outTick)
+{
+	WrpVEngineClientDemoInfoEx * di = g_VEngineClient->GetDemoInfoEx();
+	WrpGlobals * gl = g_Hook_VClient_RenderView.GetGlobals();
+
+	if(di && gl)
+	{
+		int curTick = di->GetDemoPlaybackTick();
+
+		double tick_interval = gl->interval_per_tick_get();
+
+		double tick = curTick +(time -curTime)/tick_interval;
+
+		outTick = round(tick);
+
+		return true;
+	}
+
+	return false;
+}
+
+bool GetDemoTimeFromTime(double curTime, double time, double &outDemoTime)
+{
+	WrpVEngineClientDemoInfoEx * di = g_VEngineClient->GetDemoInfoEx();
+	WrpGlobals * gl = g_Hook_VClient_RenderView.GetGlobals();
+
+	if(di && gl)
+	{
+		int curTick = di->GetDemoPlaybackTick();
+
+		double tick_interval = gl->interval_per_tick_get();
+
+		double tick = curTick +(time -curTime)/tick_interval;
+
+		outDemoTime = tick * tick_interval;
+
+		return true;
+	}
+
+	return false;
+}
+
+bool GetDemoTimeFromTick(int tick, double &outDemoTime)
+{
+	WrpGlobals * gl = g_Hook_VClient_RenderView.GetGlobals();
+
+	if(gl)
+	{
+		double tick_interval = gl->interval_per_tick_get();
+
+		outDemoTime = tick * tick_interval;
+
+		return true;
+	}
+
+	return false;
+}
+
 CON_COMMAND(mirv_campath,"camera paths")
 {
 	if(!g_Hook_VClient_RenderView.IsInstalled())
@@ -496,7 +590,9 @@ CON_COMMAND(mirv_campath,"camera paths")
 		}
 		else if(!_stricmp("print", subcmd) && 2 == argc)
 		{
-			Tier0_Msg("passed id: time -> (x,y,z) fov (pitch,yaw,roll) | selected?\n");
+			std::string str;
+
+			Tier0_Msg("passed? selected? id: tick[approximate!], demoTime[approximate!], realTime -> (x,y,z) fov (pitch,yaw,roll)\n");
 
 			double curtime = g_Hook_VClient_RenderView.GetCurTime();
 			
@@ -520,18 +616,51 @@ CON_COMMAND(mirv_campath,"camera paths")
 				fov = val.Fov;
 
 				Tier0_Msg(
-					"%s %i: %f -> (%f,%f,%f) %f (%f,%f,%f) | %s\n",
+					"%s %s %i: ",
 					time <= curtime ? "Y" : "n",
-					i, time,
+					selected ? "Y" : "n",
+					i
+				);
+				
+				int myTick;
+				if(GetDemoTickFromTime(curtime, time, myTick))
+					Tier0_Msg("%i", myTick);
+				else
+					Tier0_Msg("n/a");
+
+				Tier0_Msg(", ");
+
+				double myDemoTime;
+				if(GetDemoTimeFromTime(curtime, time, myDemoTime))
+					Tier0_Msg("%f", myDemoTime);
+				else
+					Tier0_Msg("n/a");
+
+				Tier0_Msg(", %f -> (%f,%f,%f) %f (%f,%f,%f)\n",
+					time,
 					vieworigin[0],vieworigin[1],vieworigin[2],
 					fov,
-					viewangles[0],viewangles[1],viewangles[2],
-					selected ? "SELECTED" : "unselected"
+					viewangles[0],viewangles[1],viewangles[2]
 				);
 
 				i++;
 			}
-			Tier0_Msg("---- Current time: %f\n", curtime);
+			Tier0_Msg("---- Current tick: ");
+			int curTick;
+			bool hasCurTick;
+			if(hasCurTick = GetCurrentDemoTick(curTick))
+				Tier0_Msg("%i", curTick);
+			else
+				Tier0_Msg("n/a");
+			Tier0_Msg(", Current demoTime: ");
+			double curDemoTime;
+			if(hasCurTick && GetDemoTimeFromTick(curTick, curDemoTime))
+				Tier0_Msg("%f", curDemoTime);
+			else
+				Tier0_Msg("n/a");
+			Tier0_Msg(", Current realTime: %f\n", curtime);
+
+			Tier0_Msg("(All time values are in seconds.)\n");
 
 			return;
 		}

@@ -20,11 +20,13 @@ AFXADDR_DECL(csgo_CSkyboxView_Draw_DSZ)
 AFXADDR_DECL(csgo_CViewRender_Render)
 AFXADDR_DECL(csgo_CViewRender_Render_DSZ)
 AFXADDR_DECL(csgo_gpGlobals_OFS_curtime)
+AFXADDR_DECL(csgo_gpGlobals_OFS_interval_per_tick)
 AFXADDR_DECL(csgo_pLocalPlayer)
 AFXADDR_DECL(csgo_snd_mix_timescale_patch)
 AFXADDR_DECL(csgo_snd_mix_timescale_patch_DSZ)
 AFXADDR_DECL(cstrike_gpGlobals_OFS_absoluteframetime)
 AFXADDR_DECL(cstrike_gpGlobals_OFS_curtime)
+AFXADDR_DECL(cstrike_gpGlobals_OFS_interval_per_tick)
 
 void Addresses_InitEngineDll(AfxAddr engineDll, bool isCsgo);
 void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo);

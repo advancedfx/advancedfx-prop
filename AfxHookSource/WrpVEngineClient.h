@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-08-03 dominik.matrixstorm.com
+// 2015-08-14 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-10-01 dominik.matrixstorm.com
@@ -14,6 +14,19 @@
 #include "SourceInterfaces.h"
 
 
+// WrpVEngineClientDemoInfo ///////////////////////////////////////////////////
+
+class WrpVEngineClientDemoInfoEx abstract
+{
+public:
+	virtual int GetDemoRecordingTick( void ) abstract = 0; 
+	virtual int	GetDemoPlaybackTick( void ) abstract = 0; 
+	virtual int	GetDemoPlaybackStartTick( void ) abstract = 0; 
+	virtual float GetDemoPlaybackTimeScale( void ) abstract= 0; 
+	virtual int GetDemoPlaybackTotalTicks( void ) abstract = 0; 
+};
+
+
 // WrpVEngineClient ///////////////////////////////////////////////////////////
 
 class WrpVEngineClient abstract {
@@ -22,7 +35,6 @@ public:
 	virtual void ServerCmd( const char *szCmdString, bool bReliable = true ) abstract = 0;
 	virtual void ClientCmd( const char *szCmdString ) abstract = 0;
 	virtual bool Con_IsVisible( void ) abstract = 0;
-	virtual float GetLastTimeStamp( void ) abstract = 0; 
 	virtual void GetViewAngles( QAngle& va ) abstract = 0;
 	virtual void SetViewAngles( QAngle& va ) abstract = 0;
 	virtual int GetMaxClients( void ) abstract = 0;
@@ -50,8 +62,10 @@ public:
 	virtual const char * GetProductVersionString() abstract = 0;
 	virtual bool IsHammerRunning( ) const abstract = 0;
 	virtual void ExecuteClientCmd( const char *szCmdString ) abstract = 0;
-	virtual int	GetAppID() abstract = 0;
 	virtual void ClientCmd_Unrestricted( const char *szCmdString ) abstract = 0;
+
+	/// <returns>0 if not available WrpVEngineClientDemoInfoEx interface otherwise</returns>
+	virtual WrpVEngineClientDemoInfoEx * GetDemoInfoEx(void) abstract = 0;
 };
 
 
@@ -66,7 +80,6 @@ public:
 	virtual void ServerCmd( const char *szCmdString, bool bReliable = true );
 	virtual void ClientCmd( const char *szCmdString );
 	virtual bool Con_IsVisible( void );
-	virtual float GetLastTimeStamp( void ); 
 	virtual void GetViewAngles( QAngle& va );
 	virtual void SetViewAngles( QAngle& va );
 	virtual int GetMaxClients( void );
@@ -94,8 +107,9 @@ public:
 	virtual const char * GetProductVersionString();
 	virtual bool IsHammerRunning( ) const;
 	virtual void ExecuteClientCmd( const char *szCmdString );
-	virtual int	GetAppID();
 	virtual void ClientCmd_Unrestricted( const char *szCmdString );
+
+	virtual WrpVEngineClientDemoInfoEx * GetDemoInfoEx(void);
 
 private:
 	IVEngineClient_012 * m_VEngineClient_012;
@@ -103,7 +117,9 @@ private:
 
 // WrpVEngineClient_013 ////////////////////////////////////////////////////////
 
-class WrpVEngineClient_013 : public WrpVEngineClient
+class WrpVEngineClient_013
+: public WrpVEngineClient
+, public WrpVEngineClientDemoInfoEx
 {
 public:
 	WrpVEngineClient_013(IVEngineClient_013 * iface);
@@ -112,7 +128,6 @@ public:
 	virtual void ServerCmd( const char *szCmdString, bool bReliable = true );
 	virtual void ClientCmd( const char *szCmdString );
 	virtual bool Con_IsVisible( void );
-	virtual float GetLastTimeStamp( void ); 
 	virtual void GetViewAngles( QAngle& va );
 	virtual void SetViewAngles( QAngle& va );
 	virtual int GetMaxClients( void );
@@ -129,6 +144,13 @@ public:
 	virtual bool IsPlayingDemo( void );
 	virtual bool IsRecordingDemo( void );
 	virtual bool IsPlayingTimeDemo( void );
+
+	virtual int GetDemoRecordingTick( void ); 
+	virtual int	GetDemoPlaybackTick( void ); 
+	virtual int	GetDemoPlaybackStartTick( void ); 
+	virtual float GetDemoPlaybackTimeScale( void ); 
+	virtual int GetDemoPlaybackTotalTicks( void ); 
+
 	virtual bool IsPaused( void );
 	virtual bool IsTakingScreenshot( void );
 	virtual bool IsHLTV( void );
@@ -140,8 +162,9 @@ public:
 	virtual const char * GetProductVersionString();
 	virtual bool IsHammerRunning( ) const;
 	virtual void ExecuteClientCmd( const char *szCmdString );
-	virtual int	GetAppID();
 	virtual void ClientCmd_Unrestricted( const char *szCmdString );
+
+	virtual WrpVEngineClientDemoInfoEx * GetDemoInfoEx(void);
 
 private:
 	IVEngineClient_013 * m_VEngineClient_013;
@@ -149,7 +172,9 @@ private:
 
 // WrpVEngineClient_013 ////////////////////////////////////////////////////////
 
-class WrpVEngineClient_013_csgo : public WrpVEngineClient
+class WrpVEngineClient_013_csgo
+: public WrpVEngineClient
+, public WrpVEngineClientDemoInfoEx
 {
 public:
 	WrpVEngineClient_013_csgo(IVEngineClient_013_csgo * iface);
@@ -158,7 +183,6 @@ public:
 	virtual void ServerCmd( const char *szCmdString, bool bReliable = true );
 	virtual void ClientCmd( const char *szCmdString );
 	virtual bool Con_IsVisible( void );
-	virtual float GetLastTimeStamp( void ); 
 	virtual void GetViewAngles( QAngle& va );
 	virtual void SetViewAngles( QAngle& va );
 	virtual int GetMaxClients( void );
@@ -175,6 +199,13 @@ public:
 	virtual bool IsPlayingDemo( void );
 	virtual bool IsRecordingDemo( void );
 	virtual bool IsPlayingTimeDemo( void );
+
+	virtual int GetDemoRecordingTick( void ); 
+	virtual int	GetDemoPlaybackTick( void ); 
+	virtual int	GetDemoPlaybackStartTick( void ); 
+	virtual float GetDemoPlaybackTimeScale( void ); 
+	virtual int GetDemoPlaybackTotalTicks( void ); 
+
 	virtual bool IsPaused( void );
 	virtual bool IsTakingScreenshot( void );
 	virtual bool IsHLTV( void );
@@ -186,8 +217,9 @@ public:
 	virtual const char * GetProductVersionString();
 	virtual bool IsHammerRunning( ) const;
 	virtual void ExecuteClientCmd( const char *szCmdString );
-	virtual int	GetAppID();
 	virtual void ClientCmd_Unrestricted( const char *szCmdString );
+
+	virtual WrpVEngineClientDemoInfoEx * GetDemoInfoEx(void);
 
 private:
 	IVEngineClient_013_csgo * m_VEngineClient_013;

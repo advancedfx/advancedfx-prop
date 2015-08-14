@@ -59,6 +59,7 @@ void SetCvarFloat(void * pcvar, float value)
 // Hook_VClient_RenderView /////////////////////////////////////////////////////
 
 Hook_VClient_RenderView::Hook_VClient_RenderView()
+: m_Globals(0)
 {
 	m_Export = false;
 	m_FovOverride = false;
@@ -143,7 +144,10 @@ void Hook_VClient_RenderView::Install(WrpGlobals * globals)
 	m_IsInstalled = true;
 }
 
-
+WrpGlobals * Hook_VClient_RenderView::GetGlobals()
+{
+	return m_Globals;
+}
 
 bool Hook_VClient_RenderView::IsInstalled(void) {
 	return m_IsInstalled;
@@ -195,7 +199,7 @@ void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, fl
 
 	if(m_FovOverride) Fov = (float)m_FovValue;
 
-	if(g_AfxHookSourceInput.GetCameraControlMode())
+	if(g_AfxHookSourceInput.GetCameraControlMode() && m_Globals)
 	{
 		double dT = m_Globals->absoluteframetime_get();
 		double dForward = dT * g_AfxHookSourceInput.GetCamDForward();
