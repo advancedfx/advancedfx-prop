@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2014-11-03 dominik.matrixstorm.com
+// 2015-08-15 dominik.matrixstorm.com
 //
 // First changes:
 // 2014-11-03 dominik.matrixstorm.com
@@ -14,6 +14,9 @@
 #include "rapidxml/rapidxml_print.hpp"
 #include <iterator>
 #include <stdio.h>
+
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 CamPathValue::CamPathValue()
 : X(0.0), Y(0.0), Z(0.0), Pitch(0.0), Yaw(0.0), Roll(0.0), Fov(90.0)
@@ -656,6 +659,237 @@ void CamPath::SetDuration(double t)
 
 	Changed();
 }
+
+void CamPath::SetPosition(double x, double y, double z)
+{
+	if(m_Spline.GetSize()<1) return;
+
+	bool selectAll = true;
+
+	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	{
+		if(GetSelected(it->second))
+		{
+			if(selectAll)
+			{
+				selectAll = false;
+				break;
+			}
+		}
+	}
+
+	bool first = true;
+	COSValue firstValue;
+
+	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	{
+		double curT = it->first;
+		COSValue curValue = it->second;
+		curValue.pUser = new CamPathValuePiggyBack(GetPiggy(curValue));
+
+		if(selectAll || GetSelected(curValue))
+		{
+			if(first)
+			{
+				first = false;
+				firstValue = curValue;
+
+				curValue.T.X = x;
+				curValue.T.Y = y;
+				curValue.T.Z = z;
+			}
+			else
+			{
+				curValue.T.X = x +(-firstValue.T.X +curValue.T.X);
+				curValue.T.Y = y +(-firstValue.T.Y +curValue.T.Y);
+				curValue.T.Z = z +(-firstValue.T.Z +curValue.T.Z);
+			}
+
+			m_Spline.Add(curT, curValue);
+		}
+
+	}
+
+	DoEnable(m_Enabled);
+
+	Changed();
+}
+
+void CamPath::SetAngles(double yPitch, double zYaw, double xRoll)
+{
+	if(m_Spline.GetSize()<1) return;
+
+	bool selectAll = true;
+
+	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	{
+		if(GetSelected(it->second))
+		{
+			if(selectAll)
+			{
+				selectAll = false;
+				break;
+			}
+		}
+	}
+
+	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	{
+		double curT = it->first;
+		COSValue curValue = it->second;
+		curValue.pUser = new CamPathValuePiggyBack(GetPiggy(curValue));
+
+		if(selectAll || GetSelected(curValue))
+		{
+			curValue.R = Quaternion::FromQREulerAngles(QREulerAngles::FromQEulerAngles(QEulerAngles(yPitch, zYaw, xRoll)));
+
+			m_Spline.Add(curT, curValue);
+		}
+
+	}
+
+	DoEnable(m_Enabled);
+
+	Changed();
+}
+
+void CamPath::SetFov(double fov)
+{
+	if(m_Spline.GetSize()<1) return;
+
+	bool selectAll = true;
+
+	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	{
+		if(GetSelected(it->second))
+		{
+			if(selectAll)
+			{
+				selectAll = false;
+				break;
+			}
+		}
+	}
+
+	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	{
+		double curT = it->first;
+		COSValue curValue = it->second;
+		curValue.pUser = new CamPathValuePiggyBack(GetPiggy(curValue));
+
+		if(selectAll || GetSelected(curValue))
+		{
+			curValue.Fov = fov;
+
+			m_Spline.Add(curT, curValue);
+		}
+
+	}
+
+	DoEnable(m_Enabled);
+
+	Changed();
+}
+
+void CamPath::Rotate(double yPitch, double zYaw, double xRoll)
+{
+	zYaw = -zYaw;
+	
+	if(m_Spline.GetSize()<1) return;
+
+	bool selectAll = true;
+
+	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	{
+		if(GetSelected(it->second))
+		{
+			if(selectAll)
+			{
+				selectAll = false;
+				break;
+			}
+		}
+	}
+
+	// calcualte mid:
+
+	double minX = 0, maxX = 0, minY = 0, maxY = 0, minZ = 0, maxZ = 0;
+	bool first = true;
+
+	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	{
+		if(selectAll || GetSelected(it->second))
+		{
+			COSValue curValue = it->second;
+
+			if(first)
+			{
+				minX = curValue.T.X;
+				minY = curValue.T.Y;
+				minZ = curValue.T.Z;
+				maxX = curValue.T.X;
+				maxY = curValue.T.Y;
+				maxZ = curValue.T.Z;
+				first = false;
+			}
+			else
+			{
+				minX = std::min(minX, curValue.T.X);
+				minY = std::min(minY, curValue.T.Y);
+				minZ = std::min(minZ, curValue.T.Z);
+				maxX = std::max(maxX, curValue.T.X);
+				maxY = std::max(maxY, curValue.T.Y);
+				maxZ = std::max(maxZ, curValue.T.Z);
+			}
+		}
+	}
+
+	double x0 = (maxX +minX) / 2;
+	double y0 = (maxY +minY) / 2;
+	double z0 = (maxZ +minZ) / 2;
+
+	// rotate:
+
+	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	{
+		double curT = it->first;
+		COSValue curValue = it->second;
+		curValue.pUser = new CamPathValuePiggyBack(GetPiggy(curValue));
+
+		if(selectAll || GetSelected(curValue))
+		{
+			// translate into origin:
+			double x = curValue.T.X -x0;
+			double y = curValue.T.Y -y0;
+			double z = curValue.T.Z -z0;
+
+			// rotate:
+			double forward[3];
+			double right[3];
+			double up[3];
+			MakeVectors(xRoll, yPitch, zYaw, forward, right, up);
+
+
+			double rx = x*forward[0] +y*forward[1] +z*forward[2];
+			double ry = -x*right[0] -y*right[1] -z*right[2];
+			double rz = x*up[0] +y*up[1] +z*up[2];
+
+			// translate back:
+			curValue.T.X = rx +x0;
+			curValue.T.Y = ry +y0;
+			curValue.T.Z = rz +z0;
+
+			// update:
+			m_Spline.Add(curT, curValue);
+		}
+
+	}
+
+	DoEnable(m_Enabled);
+
+	Changed();
+}
+
 
 void CamPath::CopyCOS(CubicObjectSpline & dst, CubicObjectSpline & src)
 {

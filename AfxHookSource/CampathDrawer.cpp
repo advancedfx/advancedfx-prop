@@ -942,6 +942,10 @@ void CCampathDrawer::OnPostRenderAllTools()
 
 			CamPathValue cpv = g_Hook_VClient_RenderView.m_CamPath.Eval(curTime);
 
+			// limit to values as RenderView hook:
+			cpv.Fov = max(1,cpv.Fov);
+			cpv.Fov = min(179,cpv.Fov);
+
 			double forward[3], right[3], up[3];
 			MakeVectors(cpv.Roll, cpv.Pitch, cpv.Yaw, forward, right, up);
 

@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2014-11-06 dominik.matrixstorm.com
+// 2015-08-15 dominik.matrixstorm.com
 //
 // First changes:
 // 2014-11-03 dominik.matrixstorm.com
@@ -122,6 +122,14 @@ public:
 	/// <remarks>In the current implementation if points happen to fall on the same time value, then the last point's value will be used (no interpolation).
 	/// Setting duration for a path with less than 2 points will do nothing.</remarks>
 	void SetDuration(double t);
+
+	void SetPosition(double x, double y, double z);
+
+	void SetAngles(double yPitch, double zYaw, double xRoll);
+
+	void SetFov(double fov);
+
+	void Rotate(double yPitch, double zYaw, double xRoll);
 
 	size_t SelectAll();
 

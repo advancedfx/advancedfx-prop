@@ -3,6 +3,17 @@
 
 <changelog>
 
+<release>
+<name>AfxHookSource</name>
+<version>0.2.2.2</version>
+<time>2015-08-15T13:49Z</time>
+<changes>
+<change type="added">
+Added mirv_campath edit options for editing position, rotation and FOV of selected keyframes or even rotating all or selected keyframes.
+</change>
+</changes>
+</release>
+
 
 <release>
 <name>AfxHookSource</name>

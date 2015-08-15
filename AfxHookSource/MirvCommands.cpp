@@ -725,7 +725,7 @@ CON_COMMAND(mirv_campath,"camera paths")
 
 			return;
 		}
-		else if(!_stricmp("edit", subcmd) && 3 <= argc)
+		else if(!_stricmp("edit", subcmd))
 		{	
 			const char * arg2 = args->ArgV(2);
 			
@@ -748,6 +748,110 @@ CON_COMMAND(mirv_campath,"camera paths")
 
 				return;
 			}
+			else
+			if(!_stricmp(arg2, "position") && 4 <= argc)
+			{
+				char const * arg3 = args->ArgV(3);
+
+				if(!_stricmp("current", arg3))
+				{
+					g_Hook_VClient_RenderView.m_CamPath.SetPosition(
+						g_Hook_VClient_RenderView.LastCameraOrigin[0],
+						g_Hook_VClient_RenderView.LastCameraOrigin[1],
+						g_Hook_VClient_RenderView.LastCameraOrigin[2]
+					);
+
+					return;
+				}
+				else
+				if(6 <= argc)
+				{
+					char const * arg4 = args->ArgV(4);
+					char const * arg5 = args->ArgV(5);
+					g_Hook_VClient_RenderView.m_CamPath.SetPosition(
+						atof(arg3),
+						atof(arg4),
+						atof(arg5)
+					);
+
+					return;
+				}
+			}
+			else
+			if(!_stricmp(arg2, "angles") && 4 <= argc)
+			{
+				char const * arg3 = args->ArgV(3);
+
+				if(!_stricmp("current", arg3))
+				{
+					g_Hook_VClient_RenderView.m_CamPath.SetAngles(
+						g_Hook_VClient_RenderView.LastCameraAngles[0],
+						g_Hook_VClient_RenderView.LastCameraAngles[1],
+						g_Hook_VClient_RenderView.LastCameraAngles[2]
+					);
+
+					return;
+				}
+				else
+				if(6 <= argc)
+				{
+					char const * arg4 = args->ArgV(4);
+					char const * arg5 = args->ArgV(5);
+					g_Hook_VClient_RenderView.m_CamPath.SetAngles(
+						atof(arg3),
+						atof(arg4),
+						atof(arg5)
+					);
+
+					return;
+				}
+			}
+			else
+			if(!_stricmp(arg2, "fov") && 4 <= argc)
+			{
+				char const * arg3 = args->ArgV(3);
+
+				if(!_stricmp("current", arg3))
+				{
+					g_Hook_VClient_RenderView.m_CamPath.SetFov(
+						g_Hook_VClient_RenderView.LastCameraFov
+					);
+
+					return;
+				}
+				else
+				{
+					g_Hook_VClient_RenderView.m_CamPath.SetFov(
+						atof(arg3)
+					);
+
+					return;
+				}
+			}
+			else
+			if(!_stricmp(arg2, "rotate") && 6 <= argc)
+			{
+				char const * arg3 = args->ArgV(3);
+				char const * arg4 = args->ArgV(4);
+				char const * arg5 = args->ArgV(5);
+
+				g_Hook_VClient_RenderView.m_CamPath.Rotate(
+					atof(arg3),
+					atof(arg4),
+					atof(arg5)
+				);
+				return;
+			}
+
+			Tier0_Msg(
+				"mirv_campath edit start - Set current demotime as new start time for the path [or selected keyframes]\n"
+				"mirv_campath edit duration <dValue> - set floating point value <dValue> as new duration for the path [or selected keyframes] (in seconds). Please see remarks in HLAE manual.\n"
+				"mirv_campath edit position current|(<dX> <dY> <dZ>) - Edit position of the path [or selected keyframes]. The first keyframe is moved to the given position, the others are moved relative to the first one. Current uses the current camera position, otherwise you can give the exact position.\n"
+				"mirv_campath edit angles current|(<dPitchY> <dYawZ> <dRollX>) - Edit angles of the path [or selected keyframes]. All keyframes are assigned the same angles. Current uses the current camera angles, otherwise you can give the exact angles.\n"
+				"mirv_campath edit fov current|<dFov> - Similar to mirv_campath edit angles, except for field of view (fov).\n"
+				"mirv_campath edit rotate <dPitchY> <dYawZ> <dRollX>\n - Rotate path [or selected keyframes] around the middle of their bounding box by the given angles in degrees."
+			);
+			return;
 		}
 		else if(!_stricmp("select", subcmd))
 		{	
@@ -926,8 +1030,7 @@ CON_COMMAND(mirv_campath,"camera paths")
 		"mirv_campath remove <id> - removes a keyframe\n"
 		"mirv_campath load <fileName> - loads the campath from the file (XML format)\n"
 		"mirv_campath save <fileName> - saves the campath to the file (XML format)\n"
-		"mirv_campath edit start - set current demotime as new start time for the path [or selected keyframe]\n"
-		"mirv_campath edit duration <dValue> - set floating point value <dValue> as new duration for the path [or selected keyframe] (in seconds). Please see remarks in HLAE manual.\n"
+		"mirv_campath edit [...] - edit properties of the path [or selected keyframes]\n"
 		"mirv_campath select [...] - keyframe selection.\n"
 	);
 	return;
