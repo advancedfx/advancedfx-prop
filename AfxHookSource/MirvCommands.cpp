@@ -31,6 +31,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <cctype>
+#include <sstream>
+#include <iomanip>
 
 extern WrpVEngineClient * g_VEngineClient;
 
@@ -500,6 +502,30 @@ bool GetDemoTimeFromTick(int tick, double &outDemoTime)
 	return false;
 }
 
+void PrintTimeFormated(double time)
+{
+	int seconds = (int)time % 60;
+
+	time /= 60;
+	int minutes = (int)time % 60;
+
+	time /= 60;
+	int hours = (int)time;
+
+	std::ostringstream oss;
+
+	oss << std::setfill('0') << std::setw(2);
+
+	if(hours)
+	{
+		oss << hours << "h";
+	}
+
+	oss << minutes << "m" << seconds << "s";
+	
+	Tier0_Msg("%s", oss.str().c_str());
+}
+
 CON_COMMAND(mirv_campath,"camera paths")
 {
 	if(!g_Hook_VClient_RenderView.IsInstalled())
@@ -590,9 +616,7 @@ CON_COMMAND(mirv_campath,"camera paths")
 		}
 		else if(!_stricmp("print", subcmd) && 2 == argc)
 		{
-			std::string str;
-
-			Tier0_Msg("passed? selected? id: tick[approximate!], demoTime[approximate!], realTime -> (x,y,z) fov (pitch,yaw,roll)\n");
+			Tier0_Msg("passed? selected? id: tick[approximate!], demoTime[approximate!], gameTime -> (x,y,z) fov (pitch,yaw,roll)\n");
 
 			double curtime = g_Hook_VClient_RenderView.GetCurTime();
 			
@@ -632,7 +656,7 @@ CON_COMMAND(mirv_campath,"camera paths")
 
 				double myDemoTime;
 				if(GetDemoTimeFromTime(curtime, time, myDemoTime))
-					Tier0_Msg("%f", myDemoTime);
+					PrintTimeFormated(myDemoTime);
 				else
 					Tier0_Msg("n/a");
 
@@ -655,12 +679,10 @@ CON_COMMAND(mirv_campath,"camera paths")
 			Tier0_Msg(", Current demoTime: ");
 			double curDemoTime;
 			if(hasCurTick && GetDemoTimeFromTick(curTick, curDemoTime))
-				Tier0_Msg("%f", curDemoTime);
+				PrintTimeFormated(curDemoTime);
 			else
 				Tier0_Msg("n/a");
-			Tier0_Msg(", Current realTime: %f\n", curtime);
-
-			Tier0_Msg("(All time values are in seconds.)\n");
+			Tier0_Msg(", Current gameTime: %f\n", curtime);
 
 			return;
 		}
@@ -888,6 +910,7 @@ CON_COMMAND(mirv_campath,"camera paths")
 				"mirv_campath select current-0.5 current+2.5 - Select keyframes between half a second earlier than now and 2.5 seconds later than now.\n"
 				"mirv_campath select 128.0 current - Select keyframes between time 128.0 seconds and current time.\n"
 				"mirv_campath select add 128.0 current+2.0 - Add keyframes between time 128.0 seconds and 2 seconds later than now to the current selection.\n"
+				"Hint: All time values are in game time (in seconds).\n"
 			);
 			return;
 

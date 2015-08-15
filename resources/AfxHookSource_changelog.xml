@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.2.1</version>
+<time>2015-08-15T08:56Z</time>
+<changes>
+<change type="updated">
+Updated and clarified time codes for mirv_campath print and mirv_campath select.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.2.0</version>
 <time>2015-08-14T17:28Z</time>
 <changes>
