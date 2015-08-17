@@ -864,7 +864,7 @@ CON_COMMAND(mirv_campath,"camera paths")
 			Tier0_Msg(
 				"mirv_campath edit start - Set current demotime as new start time for the path [or selected keyframes]\n"
 				"mirv_campath edit duration <dValue> - set floating point value <dValue> as new duration for the path [or selected keyframes] (in seconds). Please see remarks in HLAE manual.\n"
-				"mirv_campath edit position current|(<dX> <dY> <dZ>) - Edit position of the path [or selected keyframes]. The first keyframe is moved to the given position, the others are moved relative to the first one. Current uses the current camera position, otherwise you can give the exact position.\n"
+				"mirv_campath edit position current|(<dX> <dY> <dZ>) - Edit position of the path [or selected keyframes]. The position is applied to the center of the bounding box (\"middle\") of the path [or selected keyframes], meaning the keyframes are moved releative to that. Current uses the current camera position, otherwise you can give the exact position.\n"
 				"mirv_campath edit angles current|(<dPitchY> <dYawZ> <dRollX>) - Edit angles of the path [or selected keyframes]. All keyframes are assigned the same angles. Current uses the current camera angles, otherwise you can give the exact angles.\n"
 				"mirv_campath edit fov current|<dFov> - Similar to mirv_campath edit angles, except for field of view (fov).\n"
 				"mirv_campath edit rotate <dPitchY> <dYawZ> <dRollX>\n - Rotate path [or selected keyframes] around the middle of their bounding box by the given angles in degrees.\n"

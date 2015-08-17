@@ -6,6 +6,19 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.2.4</version>
+<time>2015-08-17T13:08Z</time>
+<changes>
+<change type="fixed">
+Fixed help text of mirv_campath edit for mirv_campath edit position not being accurate.
+</change>
+</changes>
+</release>
+
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.2.3</version>
 <time>2015-08-17T12:46Z</time>
 <changes>
