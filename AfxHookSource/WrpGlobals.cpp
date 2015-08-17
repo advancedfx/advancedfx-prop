@@ -34,6 +34,12 @@ float WrpGlobalsCsGo::interval_per_tick_get(void)
 	return *(float *)((unsigned char *)m_pGlobals +AFXADDR_GET(csgo_gpGlobals_OFS_interval_per_tick));
 }
 
+float WrpGlobalsCsGo::interpolation_amount_get(void)
+{
+	return *(float *)((unsigned char *)m_pGlobals +AFXADDR_GET(csgo_gpGlobals_OFS_interpolation_amount));
+}
+
+
 
 // WrpGlobalsOther /////////////////////////////////////////////////////////////
 
@@ -55,4 +61,9 @@ float WrpGlobalsOther::curtime_get(void)
 float WrpGlobalsOther::interval_per_tick_get(void)
 {
 	return *(float *)((unsigned char *)m_pGlobals +AFXADDR_GET(cstrike_gpGlobals_OFS_interval_per_tick));
+}
+
+float WrpGlobalsOther::interpolation_amount_get(void)
+{
+	return *(float *)((unsigned char *)m_pGlobals +AFXADDR_GET(cstrike_gpGlobals_OFS_interpolation_amount));
 }

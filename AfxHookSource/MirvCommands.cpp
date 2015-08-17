@@ -36,6 +36,7 @@
 
 extern WrpVEngineClient * g_VEngineClient;
 
+
 CON_COMMAND(__mirv_test3, "")
 {
 	Tier0_Msg("CamPathValuePiggyBack::GetInstanceCount() == %i\n", CamPathValuePiggyBack::GetInstanceCount());
@@ -52,14 +53,28 @@ CON_COMMAND(__mirv_test2, "")
 			"GetDemoPlaybackTick=%i\n"
 			"GetDemoPlaybackStartTick=%i\n"
 			"GetDemoPlaybackTimeScale=%f\n"
-			"GetDemoPlaybackTotalTicks=%i\n"
-			"gpGloblals->interval_per_tick=%f",
+			"GetDemoPlaybackTotalTicks=%i\n",
 			di->GetDemoRecordingTick(),
 			di->GetDemoPlaybackTick(),
 			di->GetDemoPlaybackStartTick(),
 			di->GetDemoPlaybackTimeScale(),
-			di->GetDemoPlaybackTotalTicks(),
-			g_Hook_VClient_RenderView.GetGlobals()->interval_per_tick_get()
+			di->GetDemoPlaybackTotalTicks()
+		);
+
+		double curTime = g_Hook_VClient_RenderView.GetGlobals()->curtime_get();
+		int client_current_tick = di->GetDemoPlaybackTick();
+		double tick_interval = g_Hook_VClient_RenderView.GetGlobals()->interval_per_tick_get();
+		double interpolation_amount = g_Hook_VClient_RenderView.GetGlobals()->interpolation_amount_get();
+
+		double result = client_current_tick * tick_interval + interpolation_amount* tick_interval;
+
+		Tier0_Msg(
+			"curtime(%f) == client_current_tick(%i) * tick_interval(%f) +interpolation_amount(%f) * tick_interval == %f\n",
+			curTime,
+			client_current_tick,
+			tick_interval,
+			interpolation_amount,
+			result
 		);
 	}
 }
@@ -456,13 +471,19 @@ bool GetDemoTickFromTime(double curTime, double time, int &outTick)
 
 	if(di && gl)
 	{
-		int curTick = di->GetDemoPlaybackTick();
+		int client_current_tick = di->GetDemoPlaybackTick();
 
 		double tick_interval = gl->interval_per_tick_get();
 
-		double tick = curTick +(time -curTime)/tick_interval;
+		double interpolation_amount = gl->interpolation_amount_get();
 
-		outTick = round(tick);
+		double demoTime = (client_current_tick +interpolation_amount) * tick_interval;
+
+		double deltaTime = curTime -demoTime;
+
+		time -= deltaTime;
+
+		outTick = round(time / tick_interval);
 
 		return true;
 	}
@@ -477,29 +498,43 @@ bool GetDemoTimeFromTime(double curTime, double time, double &outDemoTime)
 
 	if(di && gl)
 	{
-		int curTick = di->GetDemoPlaybackTick();
+		int client_current_tick = di->GetDemoPlaybackTick();
 
 		double tick_interval = gl->interval_per_tick_get();
 
-		double tick = curTick +(time -curTime)/tick_interval;
+		double interpolation_amount = gl->interpolation_amount_get();
 
-		outDemoTime = tick * tick_interval;
+		double demoTime = (client_current_tick +interpolation_amount) * tick_interval;
+
+		double deltaTime = curTime -demoTime;
+
+		time -= deltaTime;
+
+		outDemoTime = time;
 
 		return true;
+
 	}
 
 	return false;
 }
 
-bool GetDemoTimeFromTick(int tick, double &outDemoTime)
+bool GetCurrentDemoTime(double &outDemoTime)
 {
+	WrpVEngineClientDemoInfoEx * di = g_VEngineClient->GetDemoInfoEx();
 	WrpGlobals * gl = g_Hook_VClient_RenderView.GetGlobals();
 
 	if(gl)
 	{
+		int client_current_tick = di->GetDemoPlaybackTick();
+
 		double tick_interval = gl->interval_per_tick_get();
 
-		outDemoTime = tick * tick_interval;
+		double interpolation_amount = gl->interpolation_amount_get();
+
+		double demoTime = (client_current_tick +interpolation_amount) * tick_interval;
+
+		outDemoTime = demoTime;
 
 		return true;
 	}
@@ -686,7 +721,7 @@ CON_COMMAND(mirv_campath,"camera paths")
 				Tier0_Msg("n/a");
 			Tier0_Msg(", Current demoTime: ");
 			double curDemoTime;
-			if(hasCurTick && GetDemoTimeFromTick(curTick, curDemoTime))
+			if(hasCurTick && GetCurrentDemoTime(curDemoTime))
 				PrintTimeFormated(curDemoTime);
 			else
 				Tier0_Msg("n/a");
@@ -864,7 +899,7 @@ CON_COMMAND(mirv_campath,"camera paths")
 			Tier0_Msg(
 				"mirv_campath edit start - Set current demotime as new start time for the path [or selected keyframes]\n"
 				"mirv_campath edit duration <dValue> - set floating point value <dValue> as new duration for the path [or selected keyframes] (in seconds). Please see remarks in HLAE manual.\n"
-				"mirv_campath edit position current|(<dX> <dY> <dZ>) - Edit position of the path [or selected keyframes]. The position is applied to the center of the bounding box (\"middle\") of the path [or selected keyframes], meaning the keyframes are moved releative to that. Current uses the current camera position, otherwise you can give the exact position.\n"
+				"mirv_campath edit position current|(<dX> <dY> <dZ>) - Edit position of the path [or selected keyframes]. The position is applied to the center of the bounding box (\"middle\") of all [or the selected] keyframes, meaning the keyframes are moved releative to that. Current uses the current camera position, otherwise you can give the exact position.\n"
 				"mirv_campath edit angles current|(<dPitchY> <dYawZ> <dRollX>) - Edit angles of the path [or selected keyframes]. All keyframes are assigned the same angles. Current uses the current camera angles, otherwise you can give the exact angles.\n"
 				"mirv_campath edit fov current|<dFov> - Similar to mirv_campath edit angles, except for field of view (fov).\n"
 				"mirv_campath edit rotate <dPitchY> <dYawZ> <dRollX>\n - Rotate path [or selected keyframes] around the middle of their bounding box by the given angles in degrees.\n"

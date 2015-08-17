@@ -6,7 +6,7 @@
 
 #include <shared/detours.h>
 
-typedef struct quakeparms_t;
+struct quakeparms_t;
 
 typedef void (*Host_Init_t)(quakeparms_t *parms);
 

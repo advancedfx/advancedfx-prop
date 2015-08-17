@@ -18,6 +18,14 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#ifdef min
+#undef min
+#endif
+
+#ifdef max
+#undef max
+#endif
+
 CamPathValue::CamPathValue()
 : X(0.0), Y(0.0), Z(0.0), Pitch(0.0), Yaw(0.0), Roll(0.0), Fov(90.0)
 {

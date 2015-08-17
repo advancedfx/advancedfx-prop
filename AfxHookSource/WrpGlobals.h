@@ -14,6 +14,7 @@ public:
 	virtual float absoluteframetime_get(void) abstract = 0;
 	virtual float curtime_get(void) abstract = 0;
 	virtual float interval_per_tick_get(void) abstract = 0;
+	virtual float interpolation_amount_get(void) abstract = 0;
 };
 
 class WrpGlobalsCsGo : public WrpGlobals
@@ -24,6 +25,7 @@ public:
 	virtual float absoluteframetime_get(void);
 	virtual float curtime_get(void);
 	virtual float interval_per_tick_get(void);
+	virtual float interpolation_amount_get(void);
 
 private:
 	void * m_pGlobals;
@@ -37,6 +39,7 @@ public:
 	virtual float absoluteframetime_get(void);
 	virtual float curtime_get(void);
 	virtual float interval_per_tick_get(void);
+	virtual float interpolation_amount_get(void);
 
 private:
 	void * m_pGlobals;
