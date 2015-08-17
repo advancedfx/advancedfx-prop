@@ -35,19 +35,32 @@ public:
 	CamPathValuePiggyBack()
 	: Selected(false)
 	{
+		++m_InstanceCount;
 	}
 
 	CamPathValuePiggyBack(bool selected)
 	: Selected(selected)
 	{
+		++m_InstanceCount;
 	}
 
 	CamPathValuePiggyBack(const CamPathValuePiggyBack * value)
 	: Selected(value->Selected)
 	{
+		++m_InstanceCount;
+	}
+
+	~CamPathValuePiggyBack()
+	{
+		--m_InstanceCount;
 	}
 
 	bool Selected;
+
+	static int GetInstanceCount() { return m_InstanceCount; }
+
+private:
+	static int m_InstanceCount;
 };
 
 struct CamPathIterator

@@ -3,6 +3,22 @@
 
 <changelog>
 
+
+<release>
+<name>AfxHookSource</name>
+<version>0.2.2.3</version>
+<time>2015-08-17T12:46Z</time>
+<changes>
+<change type="fixed">
+Fixed small memory / object leak in mirv_campath edit functions when a proper subset of points was selected.
+</change>
+<change type="updated">
+Updated mirv_campath edit position: If multiple keyframes are selected the movement now applies to the middle of their bounding box (which hopefully is more useful for users).
+</change>
+</changes>
+</release>
+
+
 <release>
 <name>AfxHookSource</name>
 <version>0.2.2.2</version>

@@ -36,6 +36,11 @@
 
 extern WrpVEngineClient * g_VEngineClient;
 
+CON_COMMAND(__mirv_test3, "")
+{
+	Tier0_Msg("CamPathValuePiggyBack::GetInstanceCount() == %i\n", CamPathValuePiggyBack::GetInstanceCount());
+}
+
 CON_COMMAND(__mirv_test2, "")
 {
 	WrpVEngineClientDemoInfoEx * di = g_VEngineClient->GetDemoInfoEx();
@@ -669,7 +674,10 @@ CON_COMMAND(mirv_campath,"camera paths")
 
 				i++;
 			}
-			Tier0_Msg("---- Current tick: ");
+			
+			Tier0_Msg("----\n");
+			
+			Tier0_Msg("Current tick: ");
 			int curTick;
 			bool hasCurTick;
 			if(hasCurTick = GetCurrentDemoTick(curTick))
@@ -683,6 +691,16 @@ CON_COMMAND(mirv_campath,"camera paths")
 			else
 				Tier0_Msg("n/a");
 			Tier0_Msg(", Current gameTime: %f\n", curtime);
+			
+			Tier0_Msg("Current (x,y,z) fov (pitch,yaw,roll): (%f,%f,%f), %f, (%f,%f,%f)\n",
+				g_Hook_VClient_RenderView.LastCameraOrigin[0],
+				g_Hook_VClient_RenderView.LastCameraOrigin[1],
+				g_Hook_VClient_RenderView.LastCameraOrigin[2],
+				g_Hook_VClient_RenderView.LastCameraFov,
+				g_Hook_VClient_RenderView.LastCameraAngles[0],
+				g_Hook_VClient_RenderView.LastCameraAngles[1],
+				g_Hook_VClient_RenderView.LastCameraAngles[2]
+			);
 
 			return;
 		}
@@ -849,7 +867,7 @@ CON_COMMAND(mirv_campath,"camera paths")
 				"mirv_campath edit position current|(<dX> <dY> <dZ>) - Edit position of the path [or selected keyframes]. The first keyframe is moved to the given position, the others are moved relative to the first one. Current uses the current camera position, otherwise you can give the exact position.\n"
 				"mirv_campath edit angles current|(<dPitchY> <dYawZ> <dRollX>) - Edit angles of the path [or selected keyframes]. All keyframes are assigned the same angles. Current uses the current camera angles, otherwise you can give the exact angles.\n"
 				"mirv_campath edit fov current|<dFov> - Similar to mirv_campath edit angles, except for field of view (fov).\n"
-				"mirv_campath edit rotate <dPitchY> <dYawZ> <dRollX>\n - Rotate path [or selected keyframes] around the middle of their bounding box by the given angles in degrees."
+				"mirv_campath edit rotate <dPitchY> <dYawZ> <dRollX>\n - Rotate path [or selected keyframes] around the middle of their bounding box by the given angles in degrees.\n"
 			);
 			return;
 		}
