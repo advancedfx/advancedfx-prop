@@ -137,6 +137,9 @@ public:
 	/// <remarks>This guarantees the int and float m_Value members to be set immediatelly. However Changecallback and string versions might still be triggered later.</remarks>
 	void SetValueFastHack(float value);
 
+	/// <summary>This sets the values directly, without calling callbacks, this might have unwanted side-effects!</summary>
+	void SetDirectHack(float value);
+
 private:
 	ConVar_007 * m_pConVar007;
 

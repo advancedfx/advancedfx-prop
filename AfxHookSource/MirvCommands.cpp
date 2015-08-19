@@ -1218,6 +1218,29 @@ CON_COMMAND(mirv_cvar_unhide_all,"(CS:GO only) removes hidden and development on
 	Tier0_Msg("Removed FCVAR_DEVELOPMENTONLY or FCVAR_HIDDEN from %i ConVars.\n", nUnhidden);
 }
 
+CON_COMMAND(mirv_cvar_hack, "")
+{
+	int argc = args->ArgC();
+
+	if(3 <= argc)
+	{
+		char const * cvarName = args->ArgV(1);
+		float cvarValue = atof(args->ArgV(2));
+
+		WrpConVarRef * cvar = new WrpConVarRef(cvarName);
+
+		cvar->SetDirectHack(cvarValue);
+
+		delete cvar;
+
+		return;
+	}
+
+	Tier0_Msg(
+		"mirv_cvar_hack <cvarName> <floatValue> - Force value directly, this will only work for true cvars (not cmds) and only for a subset of those, might have unwanted side effects - use with caution!\n"
+	);
+}
+
 CON_COMMAND(mirv_deathmsg, "controls death notification options")
 {
 	if(!csgo_CHudDeathNotice_Install())

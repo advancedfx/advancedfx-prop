@@ -244,3 +244,12 @@ void WrpConVarRef::SetValueFastHack(float value)
 
 	SetValue(value);
 }
+
+void WrpConVarRef::SetDirectHack(float value)
+{
+	if(m_pConVar007)
+	{
+		m_pConVar007->m_Value.m_fValue = value;
+		m_pConVar007->m_Value.m_nValue = (int)value;
+	}
+}
