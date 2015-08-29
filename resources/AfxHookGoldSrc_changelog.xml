@@ -6,6 +6,19 @@
 
 <release>
 <name>AfxHookGoldSrc</name>
+<version>2.4.8.0</version>
+<time>2015-08-29T10:32Z</time>
+<changes>
+<change type="fixed">
+Fixed bug in conversion between quaternion and quake engine view angles that could cause wrong campath camera view angles
+epsecially when the camera was rolled.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookGoldSrc</name>
 <version>2.4.7.2</version>
 <time>2015-07-29T17:00Z</time>
 <changes>

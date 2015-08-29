@@ -34,6 +34,8 @@ public:
 	bool ExportBegin(wchar_t const *fileName, double frameTime);
 	void ExportEnd();
 
+	bool GetFovOverride(double &outValue);
+
 	void FovOverride(double value);
 	void FovDefault();
 

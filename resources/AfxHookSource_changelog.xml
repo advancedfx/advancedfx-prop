@@ -6,11 +6,28 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.3.0</version>
+<time>2015-08-29T10:32Z</time>
+<changes>
+<change type="fixed">
+Fixed bug in conversion between quaternion and quake engine view angles that could cause wrong campath camera view angles
+epsecially when the camera was rolled.
+</change>
+<change type="fixed">
+Fixed mirv_campath edit rotate to update the view angles also, otherwise it's not useful.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.2.6</version>
 <time>2015-08-19T19:00Z</time>
 <changes>
 <change type="added">
-Added mirv_cvar_hack - allows forcing values for some cvars (not cmds) directly, use with caution!
+Added mirv_cvar_hack (for CS:GO only) - allows forcing values for some cvars (not cmds) directly, use with caution!
+Please note: currently there will be neither an error (if you do a typo) nor an success message.
 </change>
 </changes>
 </release>

@@ -1399,6 +1399,15 @@ CON_COMMAND(mirv_fov,"allows overriding FOV (Filed Of View) of the camera")
 		"mirv_fov f - Override fov with given floating point value (f).\n"
 		"mirv_fov default - Revert to the game's default behaviour.\n"
 	);
+	{
+		Tier0_Msg("Current value: ");
+
+		double fovValue;
+		if(!g_Hook_VClient_RenderView.GetFovOverride(fovValue))
+			Tier0_Msg("default\n");
+		else
+			Tier0_Msg("%f\n", fovValue);
+	}
 }
 
 CON_COMMAND(mirv_replace_name, "allows replacing player names")

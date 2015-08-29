@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-08-17 dominik.matrixstorm.com
+// 2015-08-29 dominik.matrixstorm.com
 //
 // First changes:
 // 2014-11-03 dominik.matrixstorm.com
@@ -823,8 +823,6 @@ void CamPath::SetFov(double fov)
 
 void CamPath::Rotate(double yPitch, double zYaw, double xRoll)
 {
-	zYaw = -zYaw;
-	
 	if(m_Spline.GetSize()<1) return;
 
 	bool selectAll = true;
@@ -878,6 +876,35 @@ void CamPath::Rotate(double yPitch, double zYaw, double xRoll)
 	double y0 = (maxY +minY) / 2;
 	double z0 = (maxZ +minZ) / 2;
 
+	// build rotation matrix:
+	double R[3][3];
+	{
+		double angle;
+		double sr, sp, sy, cr, cp, cy;
+
+		angle = zYaw * (M_PI*2 / 360);
+		sy = sin(angle);
+		cy = cos(angle);
+		angle = yPitch * (M_PI*2 / 360);
+		sp = sin(angle);
+		cp = cos(angle);
+		angle = xRoll * (M_PI*2 / 360);
+		sr = sin(angle);
+		cr = cos(angle);
+
+		// R = YAW * (PITCH * ROLL)
+		R[0][0] = cy*cp;
+		R[0][1] = cy*sp*sr -sy*cr;
+		R[0][2] = cy*sp*cr +sy*sr;
+		R[1][0] = sy*cp;
+		R[1][1] = sy*sp*sr +cy*cr;
+		R[1][2] = sy*sp*cr +cy*-sr;
+		R[2][0] = -sp;
+		R[2][1] = cp*sr;
+		R[2][2] = cp*cr;
+	}
+	Quaternion quatR = Quaternion::FromQREulerAngles(QREulerAngles::FromQEulerAngles(QEulerAngles(yPitch, zYaw, xRoll)));
+
 	// rotate:
 
 	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
@@ -887,26 +914,30 @@ void CamPath::Rotate(double yPitch, double zYaw, double xRoll)
 
 		if(selectAll || GetSelected(curValue))
 		{
-			// translate into origin:
-			double x = curValue.T.X -x0;
-			double y = curValue.T.Y -y0;
-			double z = curValue.T.Z -z0;
+			// update position:
+			{
+				// translate into origin:
+				double x = curValue.T.X -x0;
+				double y = curValue.T.Y -y0;
+				double z = curValue.T.Z -z0;
 
-			// rotate:
-			double forward[3];
-			double right[3];
-			double up[3];
-			MakeVectors(xRoll, yPitch, zYaw, forward, right, up);
+				// rotate:
+				double Rx = R[0][0]*x +R[0][1]*y +R[0][2]*z;
+				double Ry = R[1][0]*x +R[1][1]*y +R[1][2]*z;
+				double Rz = R[2][0]*x +R[2][1]*y +R[2][2]*z;
 
+				// translate back:
+				curValue.T.X = Rx +x0;
+				curValue.T.Y = Ry +y0;
+				curValue.T.Z = Rz +z0;
+			}
 
-			double rx = x*forward[0] +y*forward[1] +z*forward[2];
-			double ry = -x*right[0] -y*right[1] -z*right[2];
-			double rz = x*up[0] +y*up[1] +z*up[2];
+			// update rotation:
+			{
+				Quaternion quatQ =  curValue.R;
 
-			// translate back:
-			curValue.T.X = rx +x0;
-			curValue.T.Y = ry +y0;
-			curValue.T.Z = rz +z0;
+				curValue.R = quatR * quatQ;
+			}
 
 			// update:
 			curValue.pUser = new CamPathValuePiggyBack(GetPiggy(curValue));

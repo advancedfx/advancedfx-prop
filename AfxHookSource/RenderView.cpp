@@ -100,6 +100,14 @@ void Hook_VClient_RenderView::ExportEnd() {
 	m_Export = false;
 }
 
+
+bool Hook_VClient_RenderView::GetFovOverride(double &outValue)
+{
+	outValue = m_FovValue;
+
+	return m_FovOverride;
+}
+
 void Hook_VClient_RenderView::FovOverride(double value)
 {
 	m_FovValue = value;

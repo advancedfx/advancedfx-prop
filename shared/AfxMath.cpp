@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2014-11-02 dominik.matrixstorm.com
+// 2015-08-29 dominik.matrixstorm.com
 //
 // First changes:
 // 2014-11-02 dominik.matrixstorm.com
@@ -1478,44 +1478,19 @@ double DotProduct(Quaternion a, Quaternion b)
 
 Quaternion Quaternion::FromQREulerAngles(QREulerAngles a)
 {
-	// double pitchH = 0.5 * a.Pitch;
-	// Quaternion qPitchY(cos(pitchH), 0.0, sin(pitchH), 0.0);
-	// 
-	// double yawH = 0.5 * a.Yaw;
-	// Quaternion qYawZ(cos(yawH), 0.0, 0.0, sin(yawH));
-	// 
-	// double rollH = 0.5 * a.Roll;
-	// Quaternion qRollX(cos(rollH), sin(rollH), 0.0, 0.0);
-	// 
-	// return qYawZ * qPitchY * qRollX;
-	// 
-	// qPitch * qRollX =
-	// (cos(pitchH)*cos(rollH),
-	// cos(pitchH)*sin(rollH),
-	// sin(pitchH)*cos(rollH),
-	// sin(pitchH)*sin(rollH))
-	// qYawZ * qPitch * qRollX =
-	// (cos(yawH)*cos(pitchH)*cos(rollH) -sin(yawH)*sin(pitchH)*sin(rollH),
-	// cos(yawH)*cos(pitchH)*sin(rollH) -sin(yawH)*sin(pitchH)*cos(rollH),
-	// cos(yawH)*sin(pitchH)*cos(rollH) +sin(yawH)*cos(pitchH)*sin(rollH),
-	// cos(yawH)*sin(pitchH)*sin(rollH) +sin(yawH)*cos(pitchH)*cos(rollH))
+	// todo: this can be optimized (since many components are 0),
+	// but there was a bug in it, so let's do it inefficiently for now:
 
-	double xRollH = 0.5 * a.Roll;
-	double yPitchH = 0.5 * a.Pitch;
-	double zYawH = 0.5 * a.Yaw;
-	double sinXRollH = sin(xRollH);
-	double cosXRollH = cos(xRollH);
-	double sinYPitchH = sin(yPitchH);
-	double cosYPitchH = cos(yPitchH);
-	double sinZYawH = sin(zYawH);
-	double cosZYawH = cos(zYawH);
-
-	return Quaternion(
-		cosZYawH*cosYPitchH*cosXRollH -sinZYawH*sinYPitchH*sinXRollH,
-		cosZYawH*cosYPitchH*sinXRollH -sinZYawH*sinYPitchH*cosXRollH,
-		cosZYawH*sinYPitchH*cosXRollH +sinZYawH*cosYPitchH*sinXRollH,
-		cosZYawH*sinYPitchH*sinXRollH +sinZYawH*cosYPitchH*cosXRollH
-	);
+	double pitchH = 0.5 * a.Pitch;
+	Quaternion qPitchY(cos(pitchH), 0.0, sin(pitchH), 0.0);
+	 
+	double yawH = 0.5 * a.Yaw;
+	Quaternion qYawZ(cos(yawH), 0.0, 0.0, sin(yawH));
+	 
+	double rollH = 0.5 * a.Roll;
+	Quaternion qRollX(cos(rollH), sin(rollH), 0.0, 0.0);
+	 
+	return qYawZ * qPitchY * qRollX;
 }
 
 Quaternion::Quaternion()
@@ -1543,123 +1518,81 @@ QREulerAngles Quaternion::ToQREulerAngles()
 {
 	// TODO: There might still be a problem with singualrities in here!
 
-	double qNorm = Norm();
-	double qNormInv = 0.0 != qNorm ? 1.0/qNorm : 0.0;
-	Quaternion QUnit = qNormInv * (*this);	
+	// Quaternion to matrix conversion taken from:
+	// http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToMatrix/index.htm
 
-	double angle = 2.0 * acos(QUnit.W);
-    double norm = sqrt(QUnit.X * QUnit.X + QUnit.Y * QUnit.Y + QUnit.Z * QUnit.Z);
-	double invNorm = 0.0 != norm ? 1.0 / norm : 0.0;
-	double vector[3] = { invNorm*QUnit.X, invNorm*QUnit.Y, invNorm*QUnit.Z };
+	// Quaternion to euler conversion analog (but changed) to:
+	// http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToEuler/index.htm
 
-	// R = 
-	// |c_a +p*p(1 -c_a)   , p*q(1 -c_a) -r*s_a , p*r(1 -c_a) +q*s_a|
-	// |q*p(1 -c_a) +r*s_a , c_a +q*q(1 -c_a)   , q*r(1 -c_a) -p*s_a|
-	// |r*p(1 -c_a) -q*s_a , r*q(1 -c_a) +p*s_a , c_a +r*r(1 -c_a)  |
+	double sqw = W*W;
+	double sqx = X*X;
+	double sqy = Y*Y;
+	double sqz = Z*Z;
+
+	double ssq = sqx + sqy + sqz + sqw;
+	double invs = ssq ? 1 / ssq : 0;
+	double m00 = ( sqx - sqy - sqz + sqw)*invs;
+	//double m11 = (-sqx + sqy - sqz + sqw)*invs;
+	double m22 = (-sqx - sqy + sqz + sqw)*invs;
+    
+	double tmp1 = X*Y;
+	double tmp2 = Z*W;
+	double m10 = 2.0 * (tmp1 + tmp2)*invs;
+	//double m01 = 2.0 * (tmp1 - tmp2)*invs;
+    
+	tmp1 = X*Z;
+	tmp2 = Y*W;
+	double m20 = 2.0 * (tmp1 - tmp2)*invs;
+	//double m02 = 2.0 * (tmp1 + tmp2)*invs;
+
+	tmp1 = Y*Z;
+	tmp2 = X*W;
+	double m21 = 2.0 * (tmp1 + tmp2)*invs;
+	//double m12 = 2.0 * (tmp1 - tmp2)*invs;
 
 	// X =            Y =            Z =
-	// |1, 0  , 0   | |c_y , 0, s_y| |c_z, -s_z, 0|
-	// |0, c_x, -s_x| |0   , 1, 0  | |s_z, c_z , 0|
-	// |0, s_x, c_x | |-s_y, 0, c_y| |0  , 0   , 1|
+	// |1, 0 , 0  | |cp , 0, sp| |cy, -sy, 0|
+	// |0, cr, -sr| |0  , 1, 0 | |sy, cy , 0|
+	// |0, sr, cr | |-sp, 0, cp| |0 , 0  , 1|
 
-	// Z*Y =
-	// |c_z*c_y, -s_z, c_z*s_y|
-	// |s_z*c_y, c_z , s_z*s_y|
-	// |-s_y   , 0   , c_y    |
+	// Y*X =
+	// |cp , sp*sr, sp*cr|
+	// |0  , cr   , -sr  |
+	// |-sp, cp*sr, cp*cr|
 
-	// Z*Y*X =
-	// |c_z*c_y, -s_z*c_x+c_z*s_y*s_x, s_z*s_y +c_z*s_y*c_x |
-	// |s_z*c_y, c_z*c_x +s_z*s_y*s_x, -c_z*s_y +s_z*s_y*c_x|
-	// |-s_y   , c_y*s_x             , c_y*c_x              |
+	// Z*(Y*X) =
+	// |cy*cp, cy*sp*sr -sy*cr, cy*sp*cr +sy*sr |
+	// |sy*cp, sy*sp*sr +cy*cr, sy*sp*cr +cy*-sr|
+	// |-sp  , cp*sr          , cp*cr           |
 
-	// For comparison: Quake rotation matrix (derived rom Quake 1 Source\QW\client\mathlib.c\AngleVectors).
-	// |c_y*c_z, s_x*s_y*c_z -c_x*s_z, c_x*s_y*c_z +s_x*s_z|
-	// |c_y*s_z, s_x*s_y*s_z +c_x*c_z, c_x*s_y*s_z -s_x*c_z|
-	// |-s_y   , s_x*c_y             , c_x*c_y   
-	// where x=roll, y=pitch, z=yaw
-
-	// Z*Y*X = R
-	// 1) c_z*c_y = c_a +p*p(1 -c_a)
-	// 2) -s_z*c_x+c_z*s_y*s_x = p*q(1 -c_a) -r*s_a
-	// 3) s_z*s_y +c_z*s_y*c_x = p*r(1 -c_a) +q*s_a
-	// 4) s_z*c_y = q*p(1 -c_a) +r*s_a
-	// 5) c_z*c_x +s_z*s_y*s_x = c_a +q*q(1 -c_a)
-	// 6) -c_z*s_y +s_z*s_y*c_x = q*r(1 -c_a) -p*s_a
-	// 7) -s_y = r*p(1 -c_a) -q*s_a
-	// 8) c_y*s_x = r*q(1 -c_a) +p*s_a
-	// 9) c_y*c_x = c_a +r*r(1 -c_a)
+	// 1) cy*cp = m00
+	// 2) cy*sp*sr -sy*cr = m01
+	// 3) cy*sp*cr +sy*sr = m02
+	// 4) sy*cp = m10
+	// 5) sy*sp*sr +cy*cr = m11
+	// 6) sy*sp*cr +cy*-sr = m12
+	// 7) -sp = m20
+	// 8) cp*sr = m21
+	// 9) cp*cr = m22
 	//
-	// 7=> y = arcsin( -r*p(1 -c_a) +q*s_a)
+	// 7=> p = arcsin( -m20 )
 	//
-	// For c_z*c_y != 0:
-	// 4/1=> z = arctan2( q*p(1 -c_a) +r*s_a, c_a +p*p(1 -c_a) )
+	// 4/1=> y = arctan2( m10, m00 )
 	//
-	// For c_y*c_x != 0:
-	// 8/9=> x = arctan2( r*q(1 -c_a) +p*s_a, c_a +r*r(1 -c_a) )
-	//
-	// Case c_y=0,s_y=1:
-	// 1) 0 = c_a +p*p(1 -c_a)
-	// 2) -s_z*c_x+c_z*s_x = p*q(1 -c_a) -r*s_a
-	// 3) s_z +c_z*c_x = p*r(1 -c_a) +q*s_a
-	// 4) 0 = q*p(1 -c_a) +r*s_a
-	// 5) c_z*c_x +s_z*s_x = c_a +q*q(1 -c_a)
-	// 6) -c_z +s_z*c_x = q*r(1 -c_a) -p*s_a
-	// 7) -1 = r*p(1 -c_a) -q*s_a
-	// 8) 0 = r*q(1 -c_a) +p*s_a
-	// 9) 0 = c_a +r*r(1 -c_a)
-	// =>
-	// 2) s(z-x) = -p*r(1_a) +r*s_a
-	// 5) c(z-x) = c_a +q*q(1 -c_a)
-	// =>
-	// For c(z-x) != 0:
-	// 2/5=> z-x = arctan2(-p*r(1 -c_a) +r*s_a, c_a +q*q(1 -c_a))
-	//
-	// Case c_y=0,s_y=-1:
-	// 1) 0 = c_a +p*p(1 -c_a)
-	// 2) -s_z*c_x-c_z*s_x = p*q(1 -c_a) -r*s_a
-	// 3) -s_z -c_z*c_x = p*r(1 -c_a) +q*s_a
-	// 4) 0 = q*p(1 -c_a) +r*s_a
-	// 5) c_z*c_x -s_z*s_x = c_a +q*q(1 -c_a)
-	// 6) c_z -s_z*c_x = q*r(1 -c_a) -p*s_a
-	// 7) 1 = r*p(1 -c_a) -q*s_a
-	// 8) 0 = r*q(1 -c_a) +p*s_a
-	// 9) 0 = c_a +r*r(1 -c_a)
-	// =>
-	// 2) s(z+x) = -p*q(1 -c_a) +r*s_a
-	// 5) c(z+x) = c_a +q*q(1 -c_a)
-	// For c(z+x) != 0:
-	// 2/5=> z+x = arctan2(-p*r(1 -c_a) +r*s_a, c_a +q*q(1 -c_a))
+	// 8/9=> r = arctan2( m21, m22 )
 	
-	double cosA = cos(angle);
-	double sinA = sin(angle);
-	
-	double sinYPitch = -vector[2]*vector[0]*(1.0 -cosA) +vector[1]*sinA;
+	double sinYPitch = -m20;
 	double yPitch;
 	double zYaw;
 	double xRoll;
 
 	if(sinYPitch > 1.0 -EPS)
 	{
-		// south pole singularity:
+		// sout pole singularity:
 
 		yPitch = M_PI / 2.0;
 
-		// => sinYPitchH = cosYPitchH = about 0.7071
-		//
-		// W = 0.7071*(cosZYawH*cosXRollH -sinZYawH*sinXRollH)
-		// X = 0.7071*(cosZYawH*sinXRollH -sinZYawH*cosXRollH)
-		// Y = 0.7071*(cosZYawH*cosXRollH +sinZYawH*sinXRollH)
-		// Z = 0.7071*(cosZYawH*sinXRollH +sinZYawH*cosXRollH)
-		//
-		// W = 0.7071*cos(zYawH +xRollH)
-		// X = 0.7071*sin(xRollH -zYawH)
-		// Y = 0.7071*cos(zYawH -xRollH)
-		// Z = 0.7071*sin(xRollH +zYawH)
-		//
-		// Z/W = tan(xRollH +zYawH)
-		// xRollH +zYawH = atan2(Z,W)
-
-		xRoll = -2.0*atan2(QUnit.Z,QUnit.W);
+		xRoll = -2.0*atan2(Z*invs,W*invs);
 		zYaw = 0;
 	}
 	else
@@ -1668,7 +1601,7 @@ QREulerAngles Quaternion::ToQREulerAngles()
 		// north pole singularity:
 
 		yPitch = -M_PI / 2.0;
-		xRoll = 2.0*atan2(QUnit.Z,QUnit.W);
+		xRoll = 2.0*atan2(Z*invs,W*invs);
 		zYaw = 0;
 	}
 	else
@@ -1676,8 +1609,8 @@ QREulerAngles Quaternion::ToQREulerAngles()
 		// hopefully no singularity:
 
 		yPitch = asin( sinYPitch );
-		zYaw = atan2( vector[1]*vector[0]*(1.0 -cosA) +vector[2]*sinA, cosA +vector[0]*vector[0]*(1.0 -cosA) );
-		xRoll = atan2( vector[2]*vector[1]*(1.0 -cosA) +vector[0]*sinA, cosA +vector[2]*vector[2]*(1.0 -cosA) );
+		zYaw = atan2( m10, m00 );
+		xRoll = atan2( m21, m22 );
 	}
 
     return QREulerAngles(
