@@ -28,6 +28,7 @@ public:
 
 	void BeginDevice(IDirect3DDevice9 * device);
 	void EndDevice();
+	void Reset();
 
 	void OnPostRenderAllTools();
 	void OnSetupEngineView();

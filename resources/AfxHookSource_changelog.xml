@@ -6,6 +6,19 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.3.1</version>
+<time>2015-09-06T13:54Z</time>
+<changes>
+<change type="fixed">
+Fixed game visuals becoming inresponsive after graphic device was lost (i.e. due to alt-tabbing out of fullscreen) after mirv_campath draw had been enabled earlier.
+</change>
+</changes>
+</release>
+
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.3.0</version>
 <time>2015-08-29T10:32Z</time>
 <changes>

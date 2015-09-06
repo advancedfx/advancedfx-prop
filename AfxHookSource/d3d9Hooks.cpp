@@ -66,7 +66,14 @@ public:
     IFACE_PASSTHROUGH(IDirect3DDevice9, CreateAdditionalSwapChain, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetSwapChain, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetNumberOfSwapChains, g_OldDirect3DDevice9);
-    IFACE_PASSTHROUGH(IDirect3DDevice9, Reset, g_OldDirect3DDevice9);    
+    
+	STDMETHOD(Reset)(THIS_ D3DPRESENT_PARAMETERS* pPresentationParameters)
+	{
+		g_CampathDrawer.Reset();
+
+		return g_OldDirect3DDevice9->Reset(pPresentationParameters);
+	}
+
 	IFACE_PASSTHROUGH(IDirect3DDevice9, Present, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetBackBuffer, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetRasterStatus, g_OldDirect3DDevice9);
@@ -374,7 +381,14 @@ public:
     IFACE_PASSTHROUGH(IDirect3DDevice9Ex, CreateAdditionalSwapChain, g_OldDirect3DDevice9Ex);
     IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetSwapChain, g_OldDirect3DDevice9Ex);
     IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetNumberOfSwapChains, g_OldDirect3DDevice9Ex);
-    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, Reset, g_OldDirect3DDevice9Ex);    
+    
+	STDMETHOD(Reset)(THIS_ D3DPRESENT_PARAMETERS* pPresentationParameters)
+	{
+		g_CampathDrawer.Reset();
+
+		return g_OldDirect3DDevice9Ex->Reset(pPresentationParameters);
+	}
+
 	IFACE_PASSTHROUGH(IDirect3DDevice9Ex, Present, g_OldDirect3DDevice9Ex);
     IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetBackBuffer, g_OldDirect3DDevice9Ex);
     IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetRasterStatus, g_OldDirect3DDevice9Ex);
@@ -492,7 +506,14 @@ public:
     IFACE_PASSTHROUGH(IDirect3DDevice9Ex, CreateRenderTargetEx, g_OldDirect3DDevice9Ex);
     IFACE_PASSTHROUGH(IDirect3DDevice9Ex, CreateOffscreenPlainSurfaceEx, g_OldDirect3DDevice9Ex);
     IFACE_PASSTHROUGH(IDirect3DDevice9Ex, CreateDepthStencilSurfaceEx, g_OldDirect3DDevice9Ex);
-    IFACE_PASSTHROUGH(IDirect3DDevice9Ex, ResetEx, g_OldDirect3DDevice9Ex);
+    
+	STDMETHOD(ResetEx)(THIS_ D3DPRESENT_PARAMETERS* pPresentationParameters,D3DDISPLAYMODEEX *pFullscreenDisplayMode)
+	{
+		g_CampathDrawer.Reset();
+
+		return g_OldDirect3DDevice9Ex->ResetEx(pPresentationParameters, pFullscreenDisplayMode);
+	}
+
     IFACE_PASSTHROUGH(IDirect3DDevice9Ex, GetDisplayModeEx, g_OldDirect3DDevice9Ex);
 } g_NewDirect3DDevice9Ex;
 

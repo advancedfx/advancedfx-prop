@@ -1223,6 +1223,11 @@ void CCampathDrawer::RamerDouglasPeucker(TempPoint * start, TempPoint * end, dou
 	}
 }
 
+void CCampathDrawer::Reset()
+{
+	UnloadVertexBuffer();
+}
+
 double CCampathDrawer::ShortestDistanceToSegment(TempPoint * pt, TempPoint * start, TempPoint * end)
 {
 	double ESx = end->y.X - start->y.X;

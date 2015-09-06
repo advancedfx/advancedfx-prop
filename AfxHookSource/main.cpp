@@ -474,7 +474,7 @@ void MySetup(CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals)
 
 		if(isCsgo && (iface = appSystemFactory(VENGINE_CLIENT_INTERFACE_VERSION_013_CSGO, NULL)))
 		{
-			g_Info_VEngineClient = VENGINE_CLIENT_INTERFACE_VERSION_013_CSGO;
+			g_Info_VEngineClient = VENGINE_CLIENT_INTERFACE_VERSION_013_CSGO " (CS:GO)";
 			g_VEngineClient = new WrpVEngineClient_013_csgo((IVEngineClient_013_csgo *)iface);
 		}
 		else
