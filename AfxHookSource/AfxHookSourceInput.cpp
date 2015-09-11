@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-06-08 dominik.matrixstorm.com
+// 2015-09-11 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-08 dominik.matrixstorm.com
@@ -41,6 +41,7 @@ AfxHookSourceInput::AfxHookSourceInput()
 , m_CamRoll(0.0)
 , m_CamRollI(0.0)
 , m_CamSpeed(1.0)
+, m_Focus(true)
 , m_IgnoreKeyUp(false)
 , m_IgnoreNextKey(false)
 , m_MouseSens(1.0/10)
@@ -137,6 +138,9 @@ void AfxHookSourceInput::SetMouseSensitivity(double value)
 
 bool AfxHookSourceInput::Supply_CharEvent(WPARAM wParam, LPARAM lParam)
 {
+	if(!m_Focus)
+		return false;
+
 	if(GetConsoleOpen())
 		return false;
 
@@ -168,6 +172,9 @@ bool AfxHookSourceInput::Supply_CharEvent(WPARAM wParam, LPARAM lParam)
 
 bool AfxHookSourceInput::Supply_KeyEvent(KeyState keyState, WPARAM wParam, LPARAM lParam)
 {
+	if(!m_Focus)
+		return false;
+
 	if(GetConsoleOpen())
 	{
 		m_IgnoreKeyUp = KS_DOWN == keyState;
@@ -266,6 +273,9 @@ bool AfxHookSourceInput::Supply_KeyEvent(KeyState keyState, WPARAM wParam, LPARA
 
 bool AfxHookSourceInput::Supply_RawMouseMotion(int dX, int dY)
 {
+	if(!m_Focus)
+		return false;
+
 	if(GetConsoleOpen())
 		return false;
 
@@ -285,11 +295,11 @@ void AfxHookSourceInput::Supply_GetCursorPos(LPPOINT lpPoint)
 	if(!lpPoint)
 		return;
 
-	if(GetConsoleOpen())
-	{
-		GetCursorPos(lpPoint);
+	if(!m_Focus)
 		return;
-	}
+
+	if(GetConsoleOpen())
+		return;
 
 	if(m_CameraControlMode)
 	{
@@ -323,6 +333,9 @@ void AfxHookSourceInput::Supply_SetCursorPos(int x, int y)
 
 void AfxHookSourceInput::Supply_MouseFrameEnd(void)
 {
+	if(!m_Focus)
+		return;
+
 	if(GetConsoleOpen())
 		return;
 
@@ -343,6 +356,10 @@ void AfxHookSourceInput::Supply_MouseFrameEnd(void)
 	}
 }
 
+void AfxHookSourceInput::Supply_Focus(bool hasFocus)
+{
+	m_Focus = hasFocus;
+}
 
 bool AfxHookSourceInput::GetConsoleOpen(void)
 {

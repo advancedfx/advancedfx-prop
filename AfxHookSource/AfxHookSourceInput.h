@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-06-08 dominik.matrixstorm.com
+// 2015-09-11 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-08 dominik.matrixstorm.com
@@ -45,6 +45,7 @@ public:
 	void Supply_GetCursorPos(LPPOINT lpPoint);
 	void Supply_SetCursorPos(int x, int y);
 	void Supply_MouseFrameEnd(void);
+	void Supply_Focus(bool hasFocus);
 
 private:
 	static const double m_CamSpeedFacMove;
@@ -74,6 +75,7 @@ private:
 	double m_CamRollI;
 	double m_CamSpeed;
 	bool m_CameraControlMode;
+	bool m_Focus;
 	bool m_IgnoreKeyUp;
 	bool m_IgnoreNextKey;
 	LONG m_LastCursorX;

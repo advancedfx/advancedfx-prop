@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.3.2</version>
+<time>2015-09-11T15:03Z</time>
+<changes>
+<change type="fixed">
+Fixed mirv_input camera reacting even when input focus was lost (i.e. due to ALT+TAB).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.3.1</version>
 <time>2015-09-06T13:54Z</time>
 <changes>

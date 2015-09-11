@@ -36,28 +36,57 @@ Hint:
     Copy the contents of the created JS dist folder (js/src/build-release/dist
     to c:\Libraries\js
 
-08) Obtain the HLAE source code from http://advancedfx.org and extract it into a
+08) This step is currently not required!
+    Obtain freetype 2.6 from http://freetype.org/ and extract it into
+    C:\Libraries\freetype-2.6.
+    Then build the freetye project in
+    C:\Libraries\freetype-2.6\builds\windows\vc2010\freetype.sln in
+    Configuration=Release Multithreaded.
+
+09) This step is currently not required!
+    Obtain and install CMAKE from http://www.cmake.org/
+
+10) This step is currently not required!
+    Obtain the stable version of libRocket from
+    https://github.com/libRocket/libRocket/tree/stable and extract it into
+    C:\Libraries\libRocket
+
+11) This step is currently not required!
+    Build libRocket solutions using cmake:
+    Enter C:\Libraries\libRocket\Build directory and execute
+    cmake . -DFREETYPE_LIBRARY=C:\Libraries\freetype-2.6\objs\vc2010\Win32\freetype26MT.lib -DFREETYPE_INCLUDE_DIRS=C:\Libraries\freetype-2.6\include
+
+12) This step is currently not required!
+    Open the libRocket.sln created in step 11 and build RocketCore,
+    RocketControls and RockedDebugger in
+    Configuration=Release
+
+13) Obtain the HLAE source code from http://advancedfx.org and extract it into a
     folder you like.
 
-09) Open mdt.sln in the HLAE source code and Build (Configuration=Release):
+14) Open mdt.sln in the HLAE source code and Build (Configuration=Release):
     AfxHookGoldSrc, AfxHookSource, AfxCppCli
 
-10) AfxHook\recompile.bat, move AfxHook.dat into build\Release\bin\
+15) AfxHook\recompile.bat, move AfxHook.dat into build\Release\bin\
 
-11) Build AfxGui (Release), move and rename AfxGui.exe to
-   build\Release\bin\HLAE.exe
+16) Build AfxGui (Release), move and rename AfxGui.exe to
+    build\Release\bin\HLAE.exe
 
-12) Copy all files and folders from resources\ to build\Release\bin,
+17) Copy all files and folders from resources\ to build\Release\bin,
     you can use copy_resources_release.bat in order to do that.
 
-13) Copy msvcp100.dll, msvcr100.dll (CRT runtime, required by C++ and C++/CLI
+18) Copy msvcp100.dll, msvcr100.dll (CRT runtime, required by C++ and C++/CLI
     projects) from your system folders (on 64 bit systems in C:\Windows\SysWOW64
     on 32 bit systems in C:\Windows\system32) to build\Release\bin
     Make sure to select the correct folder as suggested above, so that you end
-	up with the 32 bit binaries.
+    up with the 32 bit binaries.
 
-14) This step is not required by default, only when you plan to build AfxHookGoldSrc with AFX_SCRIPT!
-   Copy mozjs-24.dll from C:\Libraries\js\bin to build\Release\bin
+19) This step is not required by default, only when you plan to build AfxHookGoldSrc with AFX_SCRIPT!
+    Copy mozjs-24.dll from C:\Libraries\js\bin to build\Release\bin
 
-15) Packaging the final .zip file is not trivial (selecting only the files required),
+20) This step is currently not required!
+    Copy RocketCore.dll, RocketControls.dll from
+    C:\Libraries\libRocket\Build\Release to build\Release\bin
+
+21) Packaging the final .zip file is not trivial (selecting only the files required),
     if you are using a default built, use the latest download as template :-)
