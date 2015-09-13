@@ -302,9 +302,7 @@ private:
 		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 )
 		{
 			ctx->GetParent()->Bind(m_MatteMaterial.GetMaterial(), proxyData);
-			float originalBlend = 1.0f;
-			m_ParentStream->m_Streams->GetBlend(originalBlend);
-			float color[4] = { 1.0f, 1.0f, 1.0f, originalBlend };
+			float color[3] = { 1.0f, 1.0f, 1.0f };
 			m_ParentStream->m_Streams->OverrideSetColorModulation(color);
 		}
 
@@ -373,14 +371,15 @@ private:
 		virtual void AfxUnbind(IAfxMatRenderContext * ctx)
 		{
 			m_ParentStream->m_Streams->EndOverrideSetColorModulation();
-
+			m_ParentStream->m_Streams->EndOverrideSetBlend();
 		}
 
 		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 )
 		{
 			ctx->GetParent()->Bind(m_InvisibleMaterial.GetMaterial(), proxyData);
 
-			float color[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
+			float color[3] = { 0.0f, 0.0f, 0.0f };
+			m_ParentStream->m_Streams->OverrideSetBlend(0.0f);
 			m_ParentStream->m_Streams->OverrideSetColorModulation(color);
 		}
 
