@@ -139,13 +139,19 @@ public:
 	virtual IAfxFreeMaster * GetFreeMaster(void) = 0;
 	virtual IAfxMatRenderContext * GetCurrentContext(void) = 0;
 
+	virtual void GetBlend(float &outBlend) = 0;
+	virtual void GetColorModulation(float (& outColor)[3]) = 0;
+
+	virtual void OverrideSetColorModulation(float const color[3]) = 0;
+	virtual void EndOverrideSetColorModulation() = 0;
+
+	virtual void OverrideSetBlend(float blend) = 0;
+	virtual void EndOverrideSetBlend() = 0;
+
 	virtual void OnBind_set(IAfxMatRenderContextBind * value) = 0;
 	virtual void OnDrawInstances_set(IAfxMatRenderContextDrawInstances * value) = 0;
 
 	virtual void OnDraw_set(IAfxMeshDraw * value) = 0;
 	virtual void OnDraw_2_set(IAfxMeshDraw_2 * value) = 0;
 	virtual void OnDrawModulated_set(IAfxMeshDrawModulated * value) = 0;
-
-	virtual void OnSetBlend_set(IAfxVRenderViewSetBlend * value) = 0;
-	virtual void OnSetColorModulation_set(IAfxVRenderViewSetColorModulation * value) = 0;
 };

@@ -2769,9 +2769,9 @@ public:
 	virtual void _UNKNOWN_095(void) = 0;
 	virtual void _UNKNOWN_096(void) = 0;
 	virtual void _UNKNOWN_097(void) = 0;
-	virtual void _UNKNOWN_098(void) = 0;
-	virtual void _UNKNOWN_099(void) = 0;
-	virtual void _UNKNOWN_100(void) = 0;
+	virtual void _UNKNOWN_098(void) = 0; // GetFlashlightMode
+	virtual void _UNKNOWN_099(void) = 0; // IsCullingEnabledForSinglePassFlashlight
+	virtual void _UNKNOWN_100(void) = 0; // EnableCullingForSinglePassFlashlight
 	virtual void _UNKNOWN_101(void) = 0;
 	virtual void _UNKNOWN_102(void) = 0;
 	virtual void _UNKNOWN_103(void) = 0;
@@ -3267,12 +3267,15 @@ public:
 	// 004:
 	virtual void SetBlend( float blend ) = 0;
 
-	virtual void _UNKOWN_005(void) = 0;
+	// 005
+	virtual float GetBlend( void ) = 0;
 
 	// 006:
 	virtual void SetColorModulation( float const* blend ) = 0;
 
-	virtual void _UNKOWN_007(void) = 0;
+	// 007:
+	virtual void GetColorModulation( float* blend ) = 0;
+
 	virtual void _UNKOWN_008(void) = 0;
 	virtual void _UNKOWN_009(void) = 0;
 	virtual void _UNKOWN_010(void) = 0;

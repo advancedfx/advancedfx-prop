@@ -111,6 +111,8 @@ private:
 	bool m_BlockDraw;
 };
 
+extern bool g_DebugEnabled;
+
 class CAfxBaseFxStream
 : public CAfxStream
 , public IAfxMatRenderContextBind
@@ -118,8 +120,6 @@ class CAfxBaseFxStream
 , public IAfxMeshDraw
 , public IAfxMeshDraw_2
 , public IAfxMeshDrawModulated
-, public IAfxVRenderViewSetBlend
-, public IAfxVRenderViewSetColorModulation
 {
 public:
 	enum MaskableAction {
@@ -156,9 +156,6 @@ public:
 	virtual void Draw(IAfxMesh * am, int firstIndex = -1, int numIndices = 0);
 	virtual void Draw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists);
 	virtual void DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 );
-
-	virtual void SetBlend(IAfxVRenderView * rv, float blend );
-	virtual void SetColorModulation(IAfxVRenderView * rv, float const* blend );
 
 	HideableAction ClientEffectTexturesAction_get(void);
 	void ClientEffectTexturesAction_set(HideableAction value);
@@ -238,10 +235,13 @@ private:
 	, public IAfxMeshDraw
 	, public IAfxMeshDraw_2
 	, public IAfxMeshDrawModulated
-	, public IAfxVRenderViewSetBlend
-	, public IAfxVRenderViewSetColorModulation
 	{
 	public:
+		CAction(CAfxBaseFxStream * parentStream)
+		{
+			m_ParentStream = parentStream;
+		}
+
 		virtual ~CAction()
 		{
 		}
@@ -270,20 +270,13 @@ private:
 			am->GetParent()->Draw(pLists, nLists);
 		}
 
-		virtual void SetBlend(IAfxVRenderView * rv, float blend )
-		{
-			rv->GetParent()->SetBlend(blend);
-		}
-
-		virtual void SetColorModulation(IAfxVRenderView * rv, float const* blend )
-		{
-			rv->GetParent()->SetColorModulation(blend);
-		}
-
 		virtual void DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 )
 		{
 			am->GetParent()->DrawModulated(vecDiffuseModulation, firstIndex, numIndices);
 		}
+
+	protected:
+		CAfxBaseFxStream * m_ParentStream;
 
 	};
 
@@ -291,8 +284,9 @@ private:
 	: public CAction
 	{
 	public:
-		CActionMatte(IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem)
-		: m_MatteMaterial(freeMaster, matSystem->FindMaterial("afx/greenmatte",NULL))
+		CActionMatte(CAfxBaseFxStream * parentStream, IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem)
+		: CAction(parentStream)
+		, m_MatteMaterial(freeMaster, matSystem->FindMaterial("afx/greenmatte",NULL))
 		{
 		}
 
@@ -300,9 +294,18 @@ private:
 		{
 		}
 
+		virtual void AfxUnbind(IAfxMatRenderContext * ctx)
+		{
+			m_ParentStream->m_Streams->EndOverrideSetColorModulation();
+		}
+
 		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 )
 		{
 			ctx->GetParent()->Bind(m_MatteMaterial.GetMaterial(), proxyData);
+			float originalBlend = 1.0f;
+			m_ParentStream->m_Streams->GetBlend(originalBlend);
+			float color[4] = { 1.0f, 1.0f, 1.0f, originalBlend };
+			m_ParentStream->m_Streams->OverrideSetColorModulation(color);
 		}
 
 		virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance )
@@ -322,12 +325,6 @@ private:
 			ctx->GetParent()->DrawInstances(nInstanceCount, pInstance);
 		}
 
-		virtual void SetColorModulation(IAfxVRenderView * rv, float const* blend )
-		{
-			float color[3] = { 1.0f, 1.0f, 1.0f };
-			rv->GetParent()->SetColorModulation(color);
-		}
-
 	private:
 		CAfxMaterial m_MatteMaterial;
 	};
@@ -336,12 +333,11 @@ private:
 	: public CAction
 	{
 	public:
-		CActionDepth(CAfxBaseFxStream * parent, IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem)
-		: m_Parent(parent)
+		CActionDepth(CAfxBaseFxStream * parentStream, IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem)
+		: CAction(parentStream)
 		, m_DepthMaterial(freeMaster, matSystem->FindMaterial("afx/depth",NULL))
 		, m_DepthValRef("mat_debugdepthval")
 		, m_DepthValMaxRef("mat_debugdepthvalmax")
-		, m_InvisibleMaterial(freeMaster, matSystem->FindMaterial("afx/invisible",NULL))
 		{
 		}
 
@@ -354,20 +350,19 @@ private:
 		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 );
 
 	private:
-		CAfxBaseFxStream * m_Parent;
 		CAfxMaterial m_DepthMaterial;
 		unsigned long m_OldSrgbWriteEnable;
 		WrpConVarRef m_DepthValRef;
 		WrpConVarRef m_DepthValMaxRef;
-		CAfxMaterial m_InvisibleMaterial;
 	};
 
 	class CActionInvisible
 	: public CAction
 	{
 	public:
-		CActionInvisible(IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem)
-		: m_InvisibleMaterial(freeMaster, matSystem->FindMaterial("afx/invisible",NULL))
+		CActionInvisible(CAfxBaseFxStream * parentStream, IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem)
+		: CAction(parentStream)
+		, m_InvisibleMaterial(freeMaster, matSystem->FindMaterial("afx/invisible",NULL))
 		{
 		}
 
@@ -375,9 +370,18 @@ private:
 		{
 		}
 
+		virtual void AfxUnbind(IAfxMatRenderContext * ctx)
+		{
+			m_ParentStream->m_Streams->EndOverrideSetColorModulation();
+
+		}
+
 		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 )
 		{
 			ctx->GetParent()->Bind(m_InvisibleMaterial.GetMaterial(), proxyData);
+
+			float color[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
+			m_ParentStream->m_Streams->OverrideSetColorModulation(color);
 		}
 
 		virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance )
@@ -397,12 +401,6 @@ private:
 			ctx->GetParent()->DrawInstances(nInstanceCount, pInstance);
 		}
 
-		virtual void SetColorModulation(IAfxVRenderView * rv, float const* blend )
-		{
-			float color[3] = { 0.0f, 0.0f, 0.0f };
-			rv->GetParent()->SetColorModulation(color);
-		}
-
 	private:
 		CAfxMaterial m_InvisibleMaterial;
 	};
@@ -411,7 +409,8 @@ private:
 	: public CAction
 	{
 	public:
-		CActionNoDraw()
+		CActionNoDraw(CAfxBaseFxStream * parentStream)
+		: CAction(parentStream)
 		{
 		}
 
@@ -608,6 +607,8 @@ class CAfxStreams
 : public IAfxStreams4Stream
 , public IAfxBaseClientDllLevelShutdown
 , public IAfxBaseClientDllView_Render
+, public IAfxVRenderViewSetBlend
+, public IAfxVRenderViewSetColorModulation
 {
 public:
 	CAfxStreams();
@@ -620,6 +621,8 @@ public:
 	void OnDraw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists);
 	void OnDrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 );
 
+	virtual void SetBlend(IAfxVRenderView * rv, float blend );
+	virtual void SetColorModulation(IAfxVRenderView * rv, float const* blend );
 
 	void Console_RecordName_set(const char * value);
 	const char * Console_RecordName_get();
@@ -637,12 +640,21 @@ public:
 	void Console_RemoveStream(const char * streamName);
 	void Console_EditStream(const char * streamName, IWrpCommandArgs * args, int argcOffset, char const * cmdPrefix);
 
-	/// <param name="index">stream index to preview or 0 if to preview nothing.</param>
+	/// <param name="index">stream name to preview or empty string if to preview nothing.</param>
 	void Console_PreviewStream(const char * streamName);
 
 	virtual IMaterialSystem_csgo * GetMaterialSystem(void);
 	virtual IAfxFreeMaster * GetFreeMaster(void);
 	virtual IAfxMatRenderContext * GetCurrentContext(void) ;
+
+	virtual void GetBlend(float &outBlend);
+	virtual void GetColorModulation(float (& outColor)[3]);
+
+	virtual void OverrideSetColorModulation(float const color[3]);
+	virtual void EndOverrideSetColorModulation();
+
+	virtual void OverrideSetBlend(float blend);
+	virtual void EndOverrideSetBlend();
 
 	virtual void OnBind_set(IAfxMatRenderContextBind * value);
 	virtual void OnDrawInstances_set(IAfxMatRenderContextDrawInstances * value);
@@ -650,10 +662,6 @@ public:
 	virtual void OnDraw_set(IAfxMeshDraw * value);
 	virtual void OnDraw_2_set(IAfxMeshDraw_2 * value);
 	virtual void OnDrawModulated_set(IAfxMeshDrawModulated * value);
-
-
-	virtual void OnSetBlend_set(IAfxVRenderViewSetBlend * value);
-	virtual void OnSetColorModulation_set(IAfxVRenderViewSetColorModulation * value);
 
 	virtual void LevelShutdown(IAfxBaseClientDll * cl);
 
@@ -707,6 +715,12 @@ private:
 	int m_OldMatQueueMode;
 	WrpConVarRef * m_MatPostProcessEnableRef;
 	int m_OldMatPostProcessEnable;
+	WrpConVarRef * m_MatDynamicTonemappingRef;
+	int m_OldMatDynamicTonemapping;
+	float m_OriginalColorModulation[4];
+	bool m_ColorModulationOverride;
+	bool m_BlendOverride;
+	float m_OverrideColor[4];
 
 	void OnAfxBaseClientDll_Free(void);
 	bool Console_CheckStreamName(char const * value);

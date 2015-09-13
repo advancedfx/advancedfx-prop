@@ -434,11 +434,11 @@ void CAfxBaseFxStream::StreamAttach(IAfxStreams4Stream * streams)
 {
 	CAfxStream::StreamAttach(streams);
 
-	if(!m_PassthroughAction) m_PassthroughAction = new CAction();
+	if(!m_PassthroughAction) m_PassthroughAction = new CAction(this);
 	if(!m_DepthAction) m_DepthAction = new CActionDepth(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
-	if(!m_MatteAction) m_MatteAction = new CActionMatte(streams->GetFreeMaster(), streams->GetMaterialSystem());
-	if(!m_InvisibleAction) m_InvisibleAction = new CActionInvisible(streams->GetFreeMaster(), streams->GetMaterialSystem());
-	if(!m_NoDrawAction) m_NoDrawAction = new CActionNoDraw();
+	if(!m_MatteAction) m_MatteAction = new CActionMatte(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
+	if(!m_InvisibleAction) m_InvisibleAction = new CActionInvisible(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
+	if(!m_NoDrawAction) m_NoDrawAction = new CActionNoDraw(this);
 
 	// Set a default action, just in case:
 	m_CurrentAction = m_PassthroughAction;
@@ -448,16 +448,16 @@ void CAfxBaseFxStream::StreamAttach(IAfxStreams4Stream * streams)
 	streams->OnDraw_set(this);
 	streams->OnDraw_2_set(this);
 	streams->OnDrawModulated_set(this);
-	streams->OnSetBlend_set(this);
-	streams->OnSetColorModulation_set(this);
 }
 
 void CAfxBaseFxStream::StreamDetach(IAfxStreams4Stream * streams)
 {
-	if(m_BoundAction) m_CurrentAction->AfxUnbind(streams->GetCurrentContext());
+	if(m_BoundAction)
+	{
+		m_CurrentAction->AfxUnbind(streams->GetCurrentContext());
+		m_BoundAction = false;
+	}
 
-	streams->OnSetColorModulation_set(0);
-	streams->OnSetBlend_set(0);
 	streams->OnDrawModulated_set(0);
 	streams->OnDraw_2_set(0);
 	streams->OnDraw_set(0);
@@ -469,7 +469,11 @@ void CAfxBaseFxStream::StreamDetach(IAfxStreams4Stream * streams)
 
 void CAfxBaseFxStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData )
 {
-	if(m_BoundAction) m_CurrentAction->AfxUnbind(ctx);
+	if(m_BoundAction)
+	{
+		m_CurrentAction->AfxUnbind(ctx);
+		m_BoundAction = false;
+	}
 
 	CAfxMaterialKey key(material);
 
@@ -614,16 +618,6 @@ void CAfxBaseFxStream::Draw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists)
 void CAfxBaseFxStream::DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex, int numIndices)
 {
 	m_CurrentAction->DrawModulated(am, vecDiffuseModulation, firstIndex, numIndices);
-}
-
-void CAfxBaseFxStream::SetBlend(IAfxVRenderView * rv, float blend )
-{
-	m_CurrentAction->SetBlend(rv, blend);
-}
-
-void CAfxBaseFxStream::SetColorModulation(IAfxVRenderView * rv, float const* blend)
-{
-	m_CurrentAction->SetColorModulation(rv, blend);
 }
 
 CAfxBaseFxStream::HideableAction CAfxBaseFxStream::ClientEffectTexturesAction_get(void)
@@ -863,8 +857,8 @@ void CAfxBaseFxStream::CActionDepth::Bind(IAfxMatRenderContext * ctx, IMaterial_
 	// set-up debudepth material cvars accordingly:
 
 	float scale = g_bIn_csgo_CSkyBoxView_Draw ? csgo_CSkyBoxView_GetScale() : 1.0f;
-	float flDepthFactor = scale * m_Parent->m_DepthVal;
-	float flDepthFactorMax = scale * m_Parent->m_DepthValMax;
+	float flDepthFactor = scale * m_ParentStream->m_DepthVal;
+	float flDepthFactorMax = scale * m_ParentStream->m_DepthValMax;
 	if ( flDepthFactor == 0 ) 
 	{ 
 		flDepthFactor = 1.0f; 
@@ -907,7 +901,18 @@ CAfxStreams::CAfxStreams()
 , m_OnDrawModulated(0)
 , m_MatQueueModeRef(0)
 , m_MatPostProcessEnableRef(0)
+, m_MatDynamicTonemappingRef(0)
+, m_ColorModulationOverride(false)
+, m_BlendOverride(false)
 {
+	m_OverrideColor[0] =
+	m_OverrideColor[1] =
+	m_OverrideColor[2] =
+	m_OverrideColor[3] =
+	m_OriginalColorModulation[0] =
+	m_OriginalColorModulation[1] =
+	m_OriginalColorModulation[2] =
+	m_OriginalColorModulation[3] = 1;
 }
 
 CAfxStreams::~CAfxStreams()
@@ -933,6 +938,9 @@ void CAfxStreams::OnMaterialSystem(IMaterialSystem_csgo * value)
 void CAfxStreams::OnAfxVRenderView(IAfxVRenderView * value)
 {
 	m_VRenderView = value;
+
+	if(m_VRenderView) m_VRenderView->OnSetBlend_set(this);
+	if(m_VRenderView) m_VRenderView->OnSetColorModulation_set(this);
 }
 
 void CAfxStreams::OnAfxBaseClientDll(IAfxBaseClientDll * value)
@@ -979,6 +987,111 @@ void CAfxStreams::OnDrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuse
 		m_OnDrawModulated->DrawModulated(am, vecDiffuseModulation, firstIndex, numIndices);
 	else
 		am->GetParent()->DrawModulated(vecDiffuseModulation, firstIndex, numIndices);
+}
+
+void CAfxStreams::SetBlend(IAfxVRenderView * rv, float blend )
+{
+	m_OriginalColorModulation[3] = blend;
+
+	if(!m_BlendOverride)
+	{
+		m_OverrideColor[3] = blend;
+	}
+
+	rv->GetParent()->SetBlend(blend);
+
+	if(m_ColorModulationOverride||m_BlendOverride) AfxD3D9SetModulationColorFix(m_OverrideColor);
+}
+
+void CAfxStreams::SetColorModulation(IAfxVRenderView * rv, float const* blend )
+{
+	if(blend)
+	{
+		m_OriginalColorModulation[0] = blend[0];
+		m_OriginalColorModulation[1] = blend[1];
+		m_OriginalColorModulation[2] = blend[2];
+
+		if(!m_ColorModulationOverride)
+		{
+			m_OverrideColor[0] = blend[0];
+			m_OverrideColor[1] = blend[1];
+			m_OverrideColor[2] = blend[2];
+		}
+	}
+
+	rv->GetParent()->SetColorModulation(blend);
+
+	if(m_ColorModulationOverride||m_BlendOverride) AfxD3D9SetModulationColorFix(m_OverrideColor);
+}
+
+void CAfxStreams::GetBlend(float &outBlend)
+{
+	if(!m_VRenderView)
+		outBlend = m_OriginalColorModulation[3];
+	else
+		outBlend = m_VRenderView->GetParent()->GetBlend();
+}
+
+void CAfxStreams::GetColorModulation(float (& outColor)[3])
+{
+	if(!m_VRenderView)
+	{
+		outColor[0] = m_OriginalColorModulation[0];
+		outColor[1] = m_OriginalColorModulation[1];
+		outColor[2] = m_OriginalColorModulation[2];
+	}
+	else
+	{
+		m_VRenderView->GetParent()->GetColorModulation(outColor);
+	}
+
+}
+
+void CAfxStreams::OverrideSetColorModulation(float const color[3])
+{
+	m_ColorModulationOverride = true;
+
+	m_OverrideColor[0] = color[0];
+	m_OverrideColor[1] = color[1];
+	m_OverrideColor[2] = color[2];
+
+	AfxD3D9SetModulationColorFix(m_OverrideColor);
+}
+
+void CAfxStreams::EndOverrideSetColorModulation()
+{
+	if(m_ColorModulationOverride)
+	{
+		m_OverrideColor[0] = m_OriginalColorModulation[0];
+		m_OverrideColor[1] = m_OriginalColorModulation[1];
+		m_OverrideColor[2] = m_OriginalColorModulation[2];
+
+		AfxD3D9SetModulationColorFix(m_OverrideColor);
+
+		m_ColorModulationOverride = false;
+	}
+}
+
+void CAfxStreams::OverrideSetBlend(float blend)
+{
+	m_BlendOverride = true;
+
+	m_OverrideColor[3] = blend;
+
+	AfxD3D9SetModulationColorFix(m_OverrideColor);
+
+}
+
+void CAfxStreams::EndOverrideSetBlend()
+{
+	if(m_BlendOverride)
+	{
+		m_OverrideColor[3] = m_OriginalColorModulation[3];
+
+		AfxD3D9SetModulationColorFix(m_OverrideColor);
+
+		m_BlendOverride = false;
+	}
 }
 
 void CAfxStreams::Console_RecordName_set(const char * value)
@@ -1756,17 +1869,6 @@ void CAfxStreams::OnDrawModulated_set(IAfxMeshDrawModulated * value)
 	m_OnDrawModulated = value;
 }
 
-void CAfxStreams::OnSetBlend_set(IAfxVRenderViewSetBlend * value)
-{
-	if(m_VRenderView) m_VRenderView->OnSetBlend_set(value);
-}
-
-
-void CAfxStreams::OnSetColorModulation_set(IAfxVRenderViewSetColorModulation * value)
-{
-	if(m_VRenderView) m_VRenderView->OnSetColorModulation_set(value);
-}
-
 void CAfxStreams::LevelShutdown(IAfxBaseClientDll * cl)
 {
 	for(std::list<CAfxStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
@@ -1982,6 +2084,7 @@ void CAfxStreams::BackUpMatVars()
 
 	m_OldMatQueueMode = m_MatQueueModeRef->GetInt();
 	m_OldMatPostProcessEnable = m_MatPostProcessEnableRef->GetInt();
+	m_OldMatDynamicTonemapping = m_MatDynamicTonemappingRef->GetInt();
 }
 
 void CAfxStreams::SetMatVarsForStreams()
@@ -1990,6 +2093,7 @@ void CAfxStreams::SetMatVarsForStreams()
 
 	m_MatQueueModeRef->SetValue(0.0f);
 	m_MatPostProcessEnableRef->SetValue(0.0f);
+	m_MatDynamicTonemappingRef->SetValue(0.0f);
 }
 
 void CAfxStreams::RestoreMatVars()
@@ -1998,10 +2102,12 @@ void CAfxStreams::RestoreMatVars()
 
 	m_MatQueueModeRef->SetValue((float)m_OldMatQueueMode);
 	m_MatPostProcessEnableRef->SetValue((float)m_OldMatPostProcessEnable);
+	m_MatDynamicTonemappingRef->SetValue((float)m_OldMatDynamicTonemapping);
 }
 
 void CAfxStreams::EnsureMatVars()
 {
 	if(!m_MatQueueModeRef) m_MatQueueModeRef = new WrpConVarRef("mat_queue_mode");
 	if(!m_MatPostProcessEnableRef) m_MatPostProcessEnableRef = new WrpConVarRef("mat_postprocess_enable");
+	if(!m_MatDynamicTonemappingRef) m_MatDynamicTonemappingRef = new WrpConVarRef("mat_dynamic_tonemapping");
 }

@@ -654,3 +654,11 @@ DWORD AfxD3D9SRGBWriteEnableFix(DWORD enable)
 
 	return oldValue;
 }
+
+
+void AfxD3D9SetModulationColorFix(float const color[4])
+{
+	if(!g_OldDirect3DDevice9) return;
+
+	g_OldDirect3DDevice9->SetVertexShaderConstantF(47, color, 1);
+}

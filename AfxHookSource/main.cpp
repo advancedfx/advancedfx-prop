@@ -273,8 +273,16 @@ public:
 		}
 	}
 
-	virtual void _UNKOWN_005(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 5) }
+	virtual float GetBlend( void )
+	{ 
+		// JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 5)
+
+		float blend;
+
+		g_AfxStreams.GetBlend(blend);
+
+		return blend;
+	}
 
 	// 006:
 	virtual void SetColorModulation( float const* blend )
@@ -289,8 +297,21 @@ public:
 		}
 	}
 
-	virtual void _UNKOWN_007(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 7) }
+	virtual void GetColorModulation( float* blend )
+	{
+		// JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 7)
+
+		float tblend[3];
+
+		g_AfxStreams.GetColorModulation(tblend);
+
+		if(blend)
+		{
+			blend[0] = tblend[0];
+			blend[1] = tblend[1];
+			blend[2] = tblend[2];
+		}
+	}
 
 	virtual void _UNKOWN_008(void)
 	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 8) }
@@ -991,8 +1012,6 @@ public:
 	{
 		Debug(3);
 
-		g_DebugEnabled = false;
-
 		m_Parent->EndRender();
 	}
 
@@ -1019,8 +1038,6 @@ public:
 	virtual void Bind( IMaterial_csgo * material, void *proxyData = 0 )
 	{
 		// JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 9)
-
-		//g_DebugEnabled = material && !_stricmp(material->GetName(),"particle/beam_smoke_01");			
 
 		Debug(9);
 

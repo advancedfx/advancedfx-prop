@@ -6,6 +6,21 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.3.3</version>
+<time>2015-09-13T18:18Z</time>
+<changes>
+<change type="fixed">
+Fixed mirv_streams screeen flashing due to histogram adapation. For now HLAE will force mat_dynamic_tonemapping 0 when using mirv_streams until there is more fine grained RenderView access. Thanks to suky for providing a demo and cfg with the problem.
+</change>
+<change type="fixed">
+Fixed mirv_streams models or other content flashing black due to color modulation render state (happened on de_cache a lot for example). Thanks to FGW for providing a demo with the problem.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.3.2</version>
 <time>2015-09-11T15:03Z</time>
 <changes>

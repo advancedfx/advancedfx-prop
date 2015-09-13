@@ -1225,7 +1225,7 @@ CON_COMMAND(mirv_cvar_hack, "")
 	if(3 <= argc)
 	{
 		char const * cvarName = args->ArgV(1);
-		float cvarValue = atof(args->ArgV(2));
+		float cvarValue = (float)atof(args->ArgV(2));
 
 		WrpConVarRef * cvar = new WrpConVarRef(cvarName);
 
