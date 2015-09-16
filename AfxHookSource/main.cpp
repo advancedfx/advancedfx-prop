@@ -689,11 +689,11 @@ bool g_DebugEnabled = false;
 #pragma warning(disable:4731) // frame pointer register 'ebp' modified by inline assembly code
 
 class CAfxMesh
-: public IMeshMgr_csgo
+: public IMeshEx_csgo
 , public IAfxMesh
 {
 public:
-	CAfxMesh(IMeshMgr_csgo * parent)
+	CAfxMesh(IMeshEx_csgo * parent)
 	: m_Parent(parent)
 	{
 	}
@@ -710,7 +710,7 @@ public:
 	//
 	// IAfxMesh:
 
-	virtual IMeshMgr_csgo * GetParent(void)
+	virtual IMeshEx_csgo * GetParent(void)
 	{
 		return m_Parent;
 	}
@@ -828,7 +828,7 @@ public:
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,29) }
 
 	//
-	// IMeshMgr_csgo:
+	// IMeshEx_csgo:
 
 	virtual void _UNKNOWN_030(void)
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,30) }
@@ -930,12 +930,12 @@ public:
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,12) }
 
 private:
-	IMeshMgr_csgo * m_Parent;
+	IMeshEx_csgo * m_Parent;
 };
 
 #pragma warning(pop)
 
-std::map<IMeshMgr_csgo *,CAfxMesh *> g_MeshMap_csgo;
+std::map<IMeshEx_csgo *,CAfxMesh *> g_MeshMap_csgo;
 
 #pragma warning(push)
 #pragma warning(disable:4731) // frame pointer register 'ebp' modified by inline assembly code
@@ -961,6 +961,28 @@ private:
 	}
 
 public:
+
+	IMeshEx_csgo * AfxWrapMesh(IMeshEx_csgo * mesh)
+	{
+		std::map<IMeshEx_csgo *, CAfxMesh *>::iterator it = g_MeshMap_csgo.find(mesh);
+
+		CAfxMesh * afxMesh;
+
+		if(it != g_MeshMap_csgo.end())
+		{
+			//Tier0_Msg("Found known IMesh 0x%08x.\n", (DWORD)iMesh);
+			afxMesh = it->second; // re-use
+		}
+		else
+		{
+			//Tier0_Msg("New IMesh 0x%08x.\n", (DWORD)iMesh);
+			afxMesh = new CAfxMesh(mesh);
+
+			g_MeshMap_csgo[mesh] = afxMesh; // track new mesh
+		}
+	
+		return afxMesh;
+	}
 
 	//
 	// IAfxMatRenderContext
@@ -1213,30 +1235,21 @@ public:
 	virtual void _UNKNOWN_061(void)
 	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 61) }
 
-	virtual IMeshMgr_csgo* GetDynamicMesh(bool buffered = true, IMesh_csgo* pVertexOverride = 0, IMesh_csgo* pIndexOverride = 0, IMaterial_csgo *pAutoBind = 0 )
+	virtual IMeshEx_csgo* GetDynamicMesh(bool buffered = true, IMesh_csgo* pVertexOverride = 0, IMesh_csgo* pIndexOverride = 0, IMaterial_csgo *pAutoBind = 0 )
 	{ //JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 62)
 
 		Debug(62);
 
-		IMeshMgr_csgo * iMesh = m_Parent->GetDynamicMesh(buffered, pVertexOverride, pIndexOverride, pAutoBind);
-
-		std::map<IMeshMgr_csgo *, CAfxMesh *>::iterator it = g_MeshMap_csgo.find(iMesh);
-		CAfxMesh * afxMesh;
-
-		if(it != g_MeshMap_csgo.end())
+		if(pAutoBind)
 		{
-			//Tier0_Msg("Found known IMesh 0x%08x.\n", (DWORD)iMesh);
-			afxMesh = it->second; // re-use
+			// do what the engine does internally anyway, so we can go through existing functions:
+			this->Bind(pAutoBind);
+			pAutoBind = 0;
 		}
-		else
-		{
-			//Tier0_Msg("New IMesh 0x%08x.\n", (DWORD)iMesh);
-			afxMesh = new CAfxMesh(iMesh);
 
-			g_MeshMap_csgo[iMesh] = afxMesh; // track new mesh
-		}
-	
-		return afxMesh;
+		IMeshEx_csgo * iMesh = m_Parent->GetDynamicMesh(buffered, pVertexOverride, pIndexOverride, pAutoBind);
+
+		return AfxWrapMesh(iMesh);
 	}
 
 	virtual void _UNKNOWN_063(void)
@@ -1551,8 +1564,28 @@ public:
 	virtual void _UNKNOWN_166(void)
 	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 166) }
 
-	virtual void _UNKNOWN_167(void)
-	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 167) }
+	virtual IMeshEx_csgo* GetDynamicMeshEx(
+		unsigned __int32 _unknown1,
+		bool buffered, 
+		unsigned __int32 _unknown2,
+		IMesh_csgo* pVertexOverride = 0,	
+		IMesh_csgo* pIndexOverride = 0, 
+		IMaterial_csgo *pAutoBind = 0 )
+	{ //JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 167)
+
+		Debug(167);
+
+		if(pAutoBind)
+		{
+			// do what the engine does internally anyway, so we can go through existing functions:
+			this->Bind(pAutoBind);
+			pAutoBind = 0;
+		}
+
+		IMeshEx_csgo * iMesh = m_Parent->GetDynamicMeshEx(_unknown1, buffered, _unknown2, pVertexOverride, pIndexOverride, pAutoBind);
+
+		return AfxWrapMesh(iMesh);
+	}
 
 	virtual void _UNKNOWN_168(void)
 	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 168) }
@@ -2857,7 +2890,7 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 				delete it->second;
 			}
 
-			for(std::map<IMeshMgr_csgo *, CAfxMesh *>::iterator it = g_MeshMap_csgo.begin(); it != g_MeshMap_csgo.end(); ++it)
+			for(std::map<IMeshEx_csgo *, CAfxMesh *>::iterator it = g_MeshMap_csgo.begin(); it != g_MeshMap_csgo.end(); ++it)
 			{
 				delete it->second;
 			}

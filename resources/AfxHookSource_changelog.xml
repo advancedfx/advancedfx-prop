@@ -6,6 +6,21 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.3.5</version>
+<time>2015-09-16T10:31Z</time>
+<changes>
+<change type="fixed">
+Fixed mirv_streams not handling auto bound materials in IMatRenderContext functions GetDynamicMesh and GetDynamicMeshEx.
+</change>
+</changes>
+<comments>
+No HLAE problems with the latest 15th September 2015 CS:GO Update were found so far.
+</comments>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.3.4</version>
 <time>2015-09-13T19:49Z</time>
 <changes>
@@ -22,7 +37,7 @@ Fixed a mistake in code that should not affect users.
 <time>2015-09-13T18:18Z</time>
 <changes>
 <change type="fixed">
-Fixed mirv_streams screeen flashing due to histogram adapation. For now HLAE will force mat_dynamic_tonemapping 0 when using mirv_streams until there is more fine grained RenderView access. Thanks to suky for providing a demo and cfg with the problem.
+Fixed mirv_streams screen flashing due to histogram adaption. For now HLAE will force mat_dynamic_tonemapping 0 when using mirv_streams until there is more fine grained RenderView access. Thanks to suky for providing a demo and cfg with the problem.
 </change>
 <change type="fixed">
 Fixed mirv_streams models or other content flashing black due to color modulation render state (happened on de_cache a lot for example). Thanks to FGW for providing a demo with the problem.

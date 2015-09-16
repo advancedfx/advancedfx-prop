@@ -2607,7 +2607,7 @@ public:
 	virtual void ReconstructFromCachedPerFrameMeshData( ICachedPerFrameMeshData_csgo *pData ) = 0;
 };
 
-class IMeshMgr_csgo abstract : public IMesh_csgo
+class IMeshEx_csgo abstract : public IMesh_csgo
 {
 public:
 	virtual void _UNKNOWN_030(void) = 0;
@@ -2727,8 +2727,7 @@ public:
 	virtual void _UNKNOWN_061(void) = 0;
 
 	// 062:
-	// Actually this returns IMesh_csgo, however Valve seems to internally cast this to a derived class (dunno, but that's the way it is).
-	virtual IMeshMgr_csgo* GetDynamicMesh( 
+	virtual IMeshEx_csgo* GetDynamicMesh( 
 		bool buffered = true, 
 		IMesh_csgo* pVertexOverride = 0,	
 		IMesh_csgo* pIndexOverride = 0, 
@@ -2836,10 +2835,19 @@ public:
 	virtual void _UNKNOWN_162(void) = 0;
 	virtual void _UNKNOWN_163(void) = 0;
 	virtual void _UNKNOWN_164(void) = 0;
-	virtual void _UNKNOWN_165(void) = 0;
-	virtual void _UNKNOWN_166(void) = 0;
-	virtual void _UNKNOWN_167(void) = 0;
-	virtual void _UNKNOWN_168(void) = 0;
+	virtual void _UNKNOWN_165(void) = 0; 
+	virtual void _UNKNOWN_166(void) = 0; // GetMorphAccumulatorTexCoord
+	
+	// 167:
+	virtual IMeshEx_csgo* GetDynamicMeshEx(
+		unsigned __int32 _unknown1,
+		bool buffered, 
+		unsigned __int32 _unknown2,
+		IMesh_csgo* pVertexOverride = 0,	
+		IMesh_csgo* pIndexOverride = 0, 
+		IMaterial_csgo *pAutoBind = 0 ) = 0;
+
+	virtual void _UNKNOWN_168(void) = 0; // FogMaxDensity
 	virtual void _UNKNOWN_169(void) = 0;
 	virtual void _UNKNOWN_170(void) = 0;
 	virtual void _UNKNOWN_171(void) = 0;
@@ -3227,10 +3235,10 @@ public:
 	virtual void _UNKOWN_108(void) = 0;
 	virtual void _UNKOWN_109(void) = 0;
 	virtual void _UNKOWN_110(void) = 0;
-	
+	virtual void _UNKOWN_111(void) = 0;
+
 	// and a few more to be save from updates:
 
-	virtual void _UNKOWN_111(void) = 0;
 	virtual void _UNKOWN_112(void) = 0;
 	virtual void _UNKOWN_113(void) = 0;
 	virtual void _UNKOWN_114(void) = 0;

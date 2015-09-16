@@ -110,7 +110,7 @@ public:
 class IAfxMesh abstract
 {
 public:
-	virtual IMeshMgr_csgo * GetParent(void) = 0;
+	virtual IMeshEx_csgo * GetParent(void) = 0;
 };
 
 class IAfxMeshDraw abstract
