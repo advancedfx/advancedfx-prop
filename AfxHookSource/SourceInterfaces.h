@@ -2222,7 +2222,7 @@ public:
 #define CLIENT_DLL_INTERFACE_VERSION_CSGO_016 "VClient016"
 #define CLIENT_DLL_INTERFACE_VERSION_CSGO_017 "VClient017"
 
-// IMaterial_csgo //////////////////////////////////////////////////////////////
+//	 //////////////////////////////////////////////////////////////
 
 class IMaterial_csgo abstract
 {
@@ -2281,7 +2281,12 @@ public:
 
 	virtual void _UNKNOWN_040(void) = 0;
 	virtual void _UNKNOWN_041(void) = 0;
-	virtual void _UNKNOWN_042(void) = 0;
+	
+	// 042:
+	// Returns true if this is the error material you get back from IMaterialSystem::FindMaterial if
+	// the material can't be found.
+	virtual bool IsErrorMaterial() const = 0;
+
 	virtual void _UNKNOWN_043(void) = 0;
 	virtual void _UNKNOWN_044(void) = 0;
 	virtual void _UNKNOWN_045(void) = 0;

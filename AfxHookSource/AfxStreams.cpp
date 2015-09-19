@@ -475,6 +475,7 @@ CAfxBaseFxStream::CAfxBaseFxStream(char const * streamName)
 , m_ShellParticleAction(HA_Draw)
 , m_OtherParticleAction(HA_Draw)
 , m_StickerAction(MA_Draw)
+, m_ErrorMaterialAction(HA_Draw)
 , m_DepthVal(1)
 , m_DepthValMax(1024)
 , m_CurrentAction(0)
@@ -483,6 +484,8 @@ CAfxBaseFxStream::CAfxBaseFxStream(char const * streamName)
 , m_PassthroughAction(0)
 , m_InvisibleAction(0)
 , m_NoDrawAction(0)
+, m_BlackAction(0)
+, m_WhiteAction(0)
 , m_BoundAction(false)
 , m_DebugPrint(false)
 {
@@ -513,6 +516,8 @@ void CAfxBaseFxStream::StreamAttach(IAfxStreams4Stream * streams)
 	if(!m_MatteAction) m_MatteAction = new CActionMatte(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
 	if(!m_InvisibleAction) m_InvisibleAction = new CActionInvisible(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
 	if(!m_NoDrawAction) m_NoDrawAction = new CActionNoDraw(this);
+	if(!m_BlackAction) m_BlackAction = new CActionBlack(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
+	if(!m_WhiteAction) m_WhiteAction = new CActionWhite(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
 
 	// Set a default action, just in case:
 	m_CurrentAction = m_PassthroughAction;
@@ -562,12 +567,13 @@ void CAfxBaseFxStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * materia
 		const char * groupName =  material->GetTextureGroupName();
 		const char * name = material->GetName();
 		const char * shaderName = material->GetShaderName();
+		bool isErrorMaterial = material->IsErrorMaterial();
 
-		if(m_DebugPrint) Tier0_Msg("Stream %s: Caching Material: %s|%s|%s -> ", GetStreamName(), groupName, name, shaderName);
+		if(m_DebugPrint) Tier0_Msg("Stream %s: Caching Material: %s|%s|%s%s -> ", GetStreamName(), groupName, name, shaderName, isErrorMaterial ? "|isErrorMaterial" : "");
 
-		/*if(!strcmp("LightmappedGeneric", shaderName))
-			m_CurrentAction = GetAction(m_DecalTexturesAction);
-		else*/
+		if(isErrorMaterial)
+			m_CurrentAction = GetAction(m_ErrorMaterialAction);
+		else
 		if(!strcmp("ClientEffect textures", groupName))
 			m_CurrentAction = GetAction(m_ClientEffectTexturesAction);
 		else
@@ -899,6 +905,13 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(MaskableAction value)
 	case MA_Invisible:
 		if(m_DebugPrint) Tier0_Msg("invisible");
 		return m_InvisibleAction;
+	case MA_Black:
+		if(m_DebugPrint) Tier0_Msg("black");
+		return m_BlackAction;
+	case MA_White:
+		if(m_DebugPrint) Tier0_Msg("white");
+		return m_WhiteAction;
+
 	};
 
 	if(m_DebugPrint) Tier0_Msg("draw");
@@ -917,6 +930,71 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(HideableAction value)
 	if(m_DebugPrint) Tier0_Msg("draw");
 	return m_PassthroughAction;
 }
+
+// CAfxBaseFxStream::CActionMatte //////////////////////////////////////////////
+
+void CAfxBaseFxStream::CActionMatte::AfxUnbind(IAfxMatRenderContext * ctx)
+{
+	// revert SRGBWriteEnable to old state:
+	AfxD3D9SRGBWriteEnableFix(m_OldSrgbWriteEnable);
+
+	m_ParentStream->m_Streams->EndOverrideSetColorModulation();
+}
+
+void CAfxBaseFxStream::CActionMatte::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData)
+{
+	ctx->GetParent()->Bind(m_MatteMaterial.GetMaterial(), proxyData);
+
+	float color[3] = { 1.0f, 1.0f, 1.0f };
+	m_ParentStream->m_Streams->OverrideSetColorModulation(color);
+
+	// Force SRGBWriteEnable to off (Engine doesn't do this, otherwise it would be random): 
+	m_OldSrgbWriteEnable = AfxD3D9SRGBWriteEnableFix(FALSE);
+}
+
+// CAfxBaseFxStream::CActionBlack //////////////////////////////////////////////
+
+
+void CAfxBaseFxStream::CActionBlack::AfxUnbind(IAfxMatRenderContext * ctx)
+{
+	// revert SRGBWriteEnable to old state:
+	AfxD3D9SRGBWriteEnableFix(m_OldSrgbWriteEnable);
+
+	m_ParentStream->m_Streams->EndOverrideSetColorModulation();
+}
+
+void CAfxBaseFxStream::CActionBlack::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData )
+{
+	ctx->GetParent()->Bind(m_Material.GetMaterial(), proxyData);
+
+	float color[3] = { 0.0f, 0.0f, 0.0f };
+	m_ParentStream->m_Streams->OverrideSetColorModulation(color);
+
+	// Force SRGBWriteEnable to off (Engine doesn't do this, otherwise it would be random): 
+	m_OldSrgbWriteEnable = AfxD3D9SRGBWriteEnableFix(FALSE);
+}
+
+// CAfxBaseFxStream::CActionWhite //////////////////////////////////////////////
+
+void CAfxBaseFxStream::CActionWhite::AfxUnbind(IAfxMatRenderContext * ctx)
+{
+	// revert SRGBWriteEnable to old state:
+	AfxD3D9SRGBWriteEnableFix(m_OldSrgbWriteEnable);
+
+	m_ParentStream->m_Streams->EndOverrideSetColorModulation();
+}
+
+void CAfxBaseFxStream::CActionWhite::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData )
+{
+	ctx->GetParent()->Bind(m_Material.GetMaterial(), proxyData);
+
+	float color[3] = { 1.0f, 1.0f, 1.0f };
+	m_ParentStream->m_Streams->OverrideSetColorModulation(color);
+
+	// Force SRGBWriteEnable to off (Engine doesn't do this, otherwise it would be random): 
+	m_OldSrgbWriteEnable = AfxD3D9SRGBWriteEnableFix(FALSE);
+}
+
 
 // CAfxBaseFxStream::CActionDepth //////////////////////////////////////////////
 
@@ -954,7 +1032,6 @@ void CAfxBaseFxStream::CActionDepth::Bind(IAfxMatRenderContext * ctx, IMaterial_
 	//AfxD3D9SetVertexShaderConstantF(48, vecZFactor, 1);
 
 	// Force SRGBWriteEnable to off (Engine doesn't do this, otherwise it would be random): 
-
 	m_OldSrgbWriteEnable = AfxD3D9SRGBWriteEnableFix(FALSE);
 }
 
@@ -1317,6 +1394,30 @@ void CAfxStreams::Console_AddDepthEntityStream(const char * streamName)
 	AddStream(new CAfxDepthEntityStream(streamName));
 }
 
+void CAfxStreams::Console_AddAlphaMatteStream(const char * streamName)
+{
+	if(!Console_CheckStreamName(streamName))
+		return;
+
+	AddStream(new CAfxAlphaMatteStream(streamName));
+}
+
+void CAfxStreams::Console_AddAlphaEntityStream(const char * streamName)
+{
+	if(!Console_CheckStreamName(streamName))
+		return;
+
+	AddStream(new CAfxAlphaEntityStream(streamName));
+}
+
+void CAfxStreams::Console_AddAlphaWorldStream(const char * streamName)
+{
+	if(!Console_CheckStreamName(streamName))
+		return;
+
+	AddStream(new CAfxAlphaWorldStream(streamName));
+}
+
 void CAfxStreams::Console_PrintStreams()
 {
 	Tier0_Msg("index: name -> recorded?\n");
@@ -1379,6 +1480,9 @@ void CAfxStreams::Console_PreviewStream(const char * streamName)
 	}
 	Tier0_Msg("Error: invalid streamName.\n");
 }
+
+#define CAFXBASEFXSTREAM_MASKABLEACTIONS "draw|drawDepth|mask|invisible|black|white"
+#define CAFXBASEFXSTREAM_HIDEABLEACTIONS "draw|noDraw"
 
 void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * args, int argcOffset, char const * cmdPrefix)
 {
@@ -1569,7 +1673,7 @@ void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * 
 						}
 
 						Tier0_Msg(
-							"%s clientEffectTexturesAction draw|noDraw - Set new action.\n"
+							"%s clientEffectTexturesAction " CAFXBASEFXSTREAM_HIDEABLEACTIONS " - Set new action.\n"
 							"Current value: %s.\n"
 							, cmdPrefix
 							, Console_FromHideableAction(curBaseFx->ClientEffectTexturesAction_get())
@@ -1592,7 +1696,7 @@ void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * 
 						}
 
 						Tier0_Msg(
-							"%s worldTexturesAction draw|drawDepth|mask|invisible - Set new action.\n"
+							"%s worldTexturesAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
 							"Current value: %s.\n"
 							, cmdPrefix
 							, Console_FromMaskableAction(curBaseFx->WorldTexturesAction_get())
@@ -1615,7 +1719,7 @@ void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * 
 						}
 
 						Tier0_Msg(
-							"%s skyBoxTexturesAction draw|drawDepth|mask|invisible - Set new action.\n"
+							"%s skyBoxTexturesAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
 							"Current value: %s.\n"
 							, cmdPrefix
 							, Console_FromMaskableAction(curBaseFx->SkyBoxTexturesAction_get())
@@ -1638,7 +1742,7 @@ void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * 
 						}
 
 						Tier0_Msg(
-							"%s staticPropTexturesAction draw|drawDepth|mask|invisible - Set new action.\n"
+							"%s staticPropTexturesAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
 							"Current value: %s.\n"
 							, cmdPrefix
 							, Console_FromMaskableAction(curBaseFx->StaticPropTexturesAction_get())
@@ -1661,7 +1765,7 @@ void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * 
 						}
 
 						Tier0_Msg(
-							"%s cableAction draw|noDraw - Set new action.\n"
+							"%s cableAction " CAFXBASEFXSTREAM_HIDEABLEACTIONS " - Set new action.\n"
 							"Current value: %s.\n"
 							, cmdPrefix
 							, Console_FromHideableAction(curBaseFx->CableAction_get())
@@ -1684,7 +1788,7 @@ void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * 
 						}
 
 						Tier0_Msg(
-							"%s playerModelsAction draw|drawDepth|mask|invisible - Set new action.\n"
+							"%s playerModelsAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
 							"Current value: %s.\n"
 							, cmdPrefix
 							, Console_FromMaskableAction(curBaseFx->PlayerModelsAction_get())
@@ -1707,7 +1811,7 @@ void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * 
 						}
 
 						Tier0_Msg(
-							"%s weaponModelsAction draw|drawDepth|mask|invisible - Set new action.\n"
+							"%s weaponModelsAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
 							"Current value: %s.\n"
 							, cmdPrefix
 							, Console_FromMaskableAction(curBaseFx->WeaponModelsAction_get())
@@ -1730,7 +1834,7 @@ void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * 
 						}
 
 						Tier0_Msg(
-							"%s shellModelsAction draw|drawDepth|mask|invisible - Set new action.\n"
+							"%s shellModelsAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
 							"Current value: %s.\n"
 							, cmdPrefix
 							, Console_FromMaskableAction(curBaseFx->ShellModelsAction_get())
@@ -1753,7 +1857,7 @@ void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * 
 						}
 
 						Tier0_Msg(
-							"%s otherModelsAction draw|drawDepth|mask|invisible - Set new action.\n"
+							"%s otherModelsAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
 							"Current value: %s.\n"
 							, cmdPrefix
 							, Console_FromMaskableAction(curBaseFx->OtherModelsAction_get())
@@ -1776,7 +1880,7 @@ void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * 
 						}
 
 						Tier0_Msg(
-							"%s decalTexturesAction draw|noDraw - Set new action.\n"
+							"%s decalTexturesAction " CAFXBASEFXSTREAM_HIDEABLEACTIONS " - Set new action.\n"
 							"Current value: %s.\n"
 							, cmdPrefix
 							, Console_FromHideableAction(curBaseFx->DecalTexturesAction_get())
@@ -1799,7 +1903,7 @@ void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * 
 						}
 
 						Tier0_Msg(
-							"%s effectsAction draw|noDraw - Set new action.\n"
+							"%s effectsAction " CAFXBASEFXSTREAM_HIDEABLEACTIONS " - Set new action.\n"
 							"Current value: %s.\n"
 							, cmdPrefix
 							, Console_FromHideableAction(curBaseFx->EffectsAction_get())
@@ -1822,7 +1926,7 @@ void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * 
 						}
 
 						Tier0_Msg(
-							"%s shellParticleAction draw|noDraw - Set new action.\n"
+							"%s shellParticleAction " CAFXBASEFXSTREAM_HIDEABLEACTIONS " - Set new action.\n"
 							"Current value: %s.\n"
 							, cmdPrefix
 							, Console_FromHideableAction(curBaseFx->ShellParticleAction_get())
@@ -1845,7 +1949,7 @@ void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * 
 						}
 
 						Tier0_Msg(
-							"%s otherParticleAction draw|noDraw - Set new action.\n"
+							"%s otherParticleAction " CAFXBASEFXSTREAM_HIDEABLEACTIONS " - Set new action.\n"
 							"Current value: %s.\n"
 							, cmdPrefix
 							, Console_FromHideableAction(curBaseFx->OtherParticleAction_get())
@@ -1868,7 +1972,7 @@ void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * 
 						}
 
 						Tier0_Msg(
-							"%s stickerAction draw|drawDepth|mask|invisible - Set new action.\n"
+							"%s stickerAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
 							"Current value: %s.\n"
 							, cmdPrefix
 							, Console_FromMaskableAction(curBaseFx->StickerAction_get())
@@ -2252,6 +2356,18 @@ bool CAfxStreams::Console_ToMaskableAction(char const * value, CAfxBaseFxStream:
 		maskableAction = CAfxBaseFxStream::MA_Invisible;
 		return true;
 	}
+	else
+	if(!_stricmp(value, "black"))
+	{
+		maskableAction = CAfxBaseFxStream::MA_Black;
+		return true;
+	}
+	else
+	if(!_stricmp(value, "white"))
+	{
+		maskableAction = CAfxBaseFxStream::MA_White;
+		return true;
+	}
 
 	return false;
 }
@@ -2285,6 +2401,10 @@ char const * CAfxStreams::Console_FromMaskableAction(CAfxBaseFxStream::MaskableA
 		return "mask";
 	case CAfxBaseFxStream::MA_Invisible:
 		return "invisible";
+	case CAfxBaseFxStream::MA_Black:
+		return "black";
+	case CAfxBaseFxStream::MA_White:
+		return "white";
 	}
 
 	return "[unknown]";

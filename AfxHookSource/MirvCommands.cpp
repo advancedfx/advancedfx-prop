@@ -247,6 +247,57 @@ CON_COMMAND(mirv_streams, "Access to streams system.")
 					);
 					return;
 				}				
+				else
+				if(!_stricmp(cmd2, "alphaMatte"))
+				{
+					if(4 <= argc)
+					{
+						char const * cmd3 = args->ArgV(3);
+
+						g_AfxStreams.Console_AddAlphaMatteStream(cmd3);
+
+						return;
+					}
+
+					Tier0_Msg(
+						"mirv_streams add alphaMatte <name> - Add a alpha matte stream with name <name>.\n"
+					);
+					return;
+				}				
+				else
+				if(!_stricmp(cmd2, "alphaEntity"))
+				{
+					if(4 <= argc)
+					{
+						char const * cmd3 = args->ArgV(3);
+
+						g_AfxStreams.Console_AddAlphaEntityStream(cmd3);
+
+						return;
+					}
+
+					Tier0_Msg(
+						"mirv_streams add alphaEntity <name> - Add a alpha entity stream with name <name>.\n"
+					);
+					return;
+				}				
+				else
+				if(!_stricmp(cmd2, "alphaWorld"))
+				{
+					if(4 <= argc)
+					{
+						char const * cmd3 = args->ArgV(3);
+
+						g_AfxStreams.Console_AddAlphaWorldStream(cmd3);
+
+						return;
+					}
+
+					Tier0_Msg(
+						"mirv_streams add alphaWorld <name> - Add a alpha world stream with name <name>.\n"
+					);
+					return;
+				}				
 			}
 
 			Tier0_Msg(
@@ -258,6 +309,9 @@ CON_COMMAND(mirv_streams, "Access to streams system.")
 				"mirv_streams add matteEntity [...] - Add a matte entity stream.\n"
 				"mirv_streams add depthEntity [...] - Add a depth entity stream. WILL NOT WORK PROPERLY ATM!\n"
 				"mirv_streams add developer [...] - Add a developer stream.\n"
+				"mirv_streams add alphaMatte [...] - Add a alpha matte stream.\n"
+				"mirv_streams add alphaEntity [...] - Add a alpha entity stream.\n"
+				"mirv_streams add alphaWorld [...] - Add a alpha world stream.\n"
 			);
 			return;
 		}

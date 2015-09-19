@@ -6,6 +6,24 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.4.1</version>
+<time>2015-09-19T15:18Z</time>
+<changes>
+<change type="updated">
+Updated mirv_streams: Now handles error material (some fences on de_overpass have that currently).
+</change>
+<change type="updated">
+Updated mirv_streams: Added alphaMatte, alphaEntity and alphaWorld streams (If you need alphaWorld depends on what you want to do.).
+</change>
+<change type="updated">
+Updated mirv_streams: Most actions force D3DRS_SRGBWRITEENABLE state as required, to avoid random color states caused by the engine i.e. when decals are drawn in-between (until now only drawDepth action had this).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.4.0</version>
 <time>2015-09-19T04:32Z</time>
 <changes>
