@@ -29,6 +29,7 @@ AFXADDR_DEF(csgo_gpGlobals_OFS_interpolation_amount)
 AFXADDR_DEF(csgo_gpGlobals_OFS_interval_per_tick)
 AFXADDR_DEF(csgo_snd_mix_timescale_patch)
 AFXADDR_DEF(csgo_snd_mix_timescale_patch_DSZ)
+AFXADDR_DEF(csgo_view)
 AFXADDR_DEF(cstrike_gpGlobals_OFS_absoluteframetime)
 AFXADDR_DEF(cstrike_gpGlobals_OFS_curtime)
 AFXADDR_DEF(cstrike_gpGlobals_OFS_interpolation_amount)
@@ -360,6 +361,52 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 				AFXADDR_SET(csgo_CSkyboxView_Draw, 0x0);
 			}
 		}
+
+		// csgo_view
+		{
+			DWORD addr = 0;
+			DWORD strAddr = 0;
+			{
+				ImageSectionsReader sections((HMODULE)clientDll);
+				if(!sections.Eof())
+				{
+					sections.Next(); // skip .text
+					if(!sections.Eof())
+					{
+						MemRange result = FindCString(sections.GetMemRange(), "CViewRender::SetUpView->OnRenderEnd");
+						if(!result.IsEmpty())
+						{
+							strAddr = result.Start;
+						}
+						else ErrorBox(MkErrStr(__FILE__,__LINE__));
+					}
+					else ErrorBox(MkErrStr(__FILE__,__LINE__));
+				}
+				else ErrorBox(MkErrStr(__FILE__,__LINE__));
+			}
+			if(strAddr)
+			{
+				ImageSectionsReader sections((HMODULE)clientDll);
+			
+				MemRange baseRange = sections.GetMemRange();
+				MemRange result = FindBytes(baseRange, (char const *)&strAddr, sizeof(strAddr));
+				if(!result.IsEmpty())
+				{
+					addr = result.Start;
+					addr += 0xb;
+					addr = *(DWORD *)addr;
+				}
+				else ErrorBox(MkErrStr(__FILE__,__LINE__));
+			}
+			if(addr)
+			{
+				AFXADDR_SET(csgo_view, addr);
+			}
+			else
+			{
+				AFXADDR_SET(csgo_view, 0x0);
+			}
+		}
 	}
 	else
 	{
@@ -368,6 +415,7 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 		AFXADDR_SET(csgo_CSkyboxView_Draw, 0x0);
 		AFXADDR_SET(csgo_CViewRender_Render, 0x0);
 		AFXADDR_SET(csgo_pLocalPlayer, 0x0);
+		AFXADDR_SET(csgo_view, 0x0);
 	}
 
 	AFXADDR_SET(csgo_C_BasePlayer_OFS_m_skybox3d_scale, 0x14a4);

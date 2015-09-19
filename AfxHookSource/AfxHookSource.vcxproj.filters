@@ -99,6 +99,15 @@
     <ClCompile Include="CampathDrawer.cpp">
       <Filter>AfxHookSource</Filter>
     </ClCompile>
+    <ClCompile Include="csgo_view.cpp">
+      <Filter>AfxHookSource</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\FileTools.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\RawOutput.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -193,6 +202,15 @@
     </ClInclude>
     <ClInclude Include="CampathDrawer.h">
       <Filter>AfxHookSource</Filter>
+    </ClInclude>
+    <ClInclude Include="csgo_view.h">
+      <Filter>AfxHookSource</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\FileTools.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\RawOutput.h">
+      <Filter>shared</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

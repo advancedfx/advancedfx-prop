@@ -10,6 +10,8 @@
 
 #include "SourceInterfaces.h"
 
+#include <string>
+
 class IAfxFreeable abstract
 {
 public:
@@ -138,6 +140,8 @@ public:
 	virtual IMaterialSystem_csgo * GetMaterialSystem(void) = 0;
 	virtual IAfxFreeMaster * GetFreeMaster(void) = 0;
 	virtual IAfxMatRenderContext * GetCurrentContext(void) = 0;
+
+	virtual std::wstring GetTakeDir(void) = 0;
 
 	virtual void GetBlend(float &outBlend) = 0;
 	virtual void GetColorModulation(float (& outColor)[3]) = 0;

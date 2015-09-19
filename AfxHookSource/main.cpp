@@ -1088,7 +1088,7 @@ public:
 	virtual void _UNKNOWN_012(void)
 	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 12) }
 
-	virtual void _UNKNOWN_013(void)
+	virtual void ReadPixels( int x, int y, int width, int height, unsigned char *data, ImageFormat_csgo dstFormat, unsigned __int32 _unknown7 = 0)
 	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 13) }
 
 	virtual void _UNKNOWN_014(void)
@@ -2093,7 +2093,7 @@ public:
 			if((IMatRenderContext_csgo *)wrapper != oldContext)
 			{
 				g_MaterialSystem_csgo->SetRenderContext(wrapper);
-				wrapper->Release(); // SetRenderContext calls AddRef
+				wrapper->Release(); // SetRenderContext calls AddRef on param
 			}
 
 			if(m_OnView_Render)
@@ -2104,6 +2104,8 @@ public:
 			{
 				m_Parent->View_Render( rect );
 			}
+
+			oldContext->Release(); // GetRenderContext calls AddRef on returned
 		}
 		else
 		{

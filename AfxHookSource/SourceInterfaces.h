@@ -2653,6 +2653,18 @@ struct MeshInstanceData_t_csgo
 	int _UNKNOWN_0x4c;
 };
 
+enum ImageFormat_csgo 
+{ 
+	IMAGE_FORMAT_UNKNOWN  = -1, 
+	IMAGE_FORMAT_RGBA8888 = 0,  
+	IMAGE_FORMAT_ABGR8888,  
+	IMAGE_FORMAT_RGB888,  
+	IMAGE_FORMAT_BGR888
+
+	// ...
+	// there are more we don't care about.
+};
+
 class IMatRenderContext_csgo abstract : public IRefCounted_csgo
 {
 public:
@@ -2676,7 +2688,11 @@ public:
 	virtual void _UNKNOWN_010(void) = 0;
 	virtual void _UNKNOWN_011(void) = 0;
 	virtual void _UNKNOWN_012(void) = 0;
-	virtual void _UNKNOWN_013(void) = 0;
+	
+	// 013:
+	// read to a unsigned char rgb image. 
+	virtual void ReadPixels( int x, int y, int width, int height, unsigned char *data, ImageFormat_csgo dstFormat, unsigned __int32 _unknown7 = 0) = 0; 
+
 	virtual void _UNKNOWN_014(void) = 0;
 	virtual void _UNKNOWN_015(void) = 0;
 	virtual void _UNKNOWN_016(void) = 0;
@@ -3087,6 +3103,25 @@ struct vrect_t_csgo
 	vrect_t_csgo			*pnext;
 };
 
+enum ClearFlags_t_csgo
+{ 
+	VIEW_CLEAR_COLOR = 0x1,
+	VIEW_CLEAR_DEPTH = 0x2,
+	VIEW_CLEAR_FULL_TARGET = 0x4,
+	VIEW_NO_DRAW = 0x8,
+	VIEW_CLEAR_OBEY_STENCIL = 0x10, // Draws a quad allowing stencil test to clear through portals
+	VIEW_CLEAR_STENCIL = 0x20,
+};
+
+// Used by RenderView 
+enum RenderViewInfo_t_csgo
+{ 
+	RENDERVIEW_UNSPECIFIED	 = 0,
+	RENDERVIEW_DRAWVIEWMODEL = (1<<0), 
+	RENDERVIEW_DRAWHUD		 = (1<<1),
+	RENDERVIEW_SUPPRESSMONITORRENDERING = (1<<2),
+};
+
 class IBaseClientDLL_csgo abstract
 {
 public:
@@ -3338,6 +3373,36 @@ public:
 	virtual void _UNKOWN_059(void) = 0;
 };
 
+// IViewRender_csgo ////////////////////////////////////////////////////////////
+
+class IViewRender_csgo abstract
+{
+public:
+	virtual void _UNKOWN_000(void) = 0;
+	virtual void _UNKOWN_001(void) = 0;
+	virtual void _UNKOWN_002(void) = 0;
+	virtual void _UNKOWN_003(void) = 0;
+	virtual void _UNKOWN_004(void) = 0;
+	virtual void _UNKOWN_005(void) = 0;
+	
+	// 006:
+	// Called to render just a particular setup ( for timerefresh and envmap creation )
+	// First argument is 3d view setup, second is for the HUD (in most cases these are ==, but in split screen the client .dll handles this differently)
+	virtual void RenderView( const CViewSetup_csgo &view, const CViewSetup_csgo &hudViewSetup, int nClearFlags, int whatToDraw ) = 0;
+
+	virtual void _UNKOWN_007(void) = 0;
+	virtual void _UNKOWN_008(void) = 0;
+	virtual void _UNKOWN_009(void) = 0;
+	virtual void _UNKOWN_010(void) = 0;
+	virtual void _UNKOWN_011(void) = 0;
+
+	virtual const CViewSetup_csgo *GetPlayerViewSetup( int nSlot = -1 ) const = 0;
+	virtual const CViewSetup_csgo *GetViewSetup( void ) const = 0;
+
+	// ...
+	// more we don't care about.
+};
+
 
 // IFileSystem_csgo ////////////////////////////////////////////////////////////
 
@@ -3407,6 +3472,31 @@ public:
 	// If there are currently no search paths with the specified path ID, then it will still
 	// remember it in case you add search paths with this path ID.
 	virtual void			MarkPathIDByRequestOnly( const char *pPathID, bool bRequestOnly ) = 0;
+
+	// ...
+	// more we don't care about.
+};
+
+// CViewSetup_csgo /////////////////////////////////////////////////////////////
+
+class CViewSetup_csgo
+{
+public:
+
+// shared by 2D & 3D views
+
+	// left side of view window
+	int			x;	 
+	int			m_nUnscaledX;
+	// top side of view window
+	int			y;
+	int			m_nUnscaledY;
+	// width of view window
+	int			width;
+	int			m_nUnscaledWidth;
+	// height of view window
+	int			height;
+	int			m_nUnscaledHeight;
 
 	// ...
 	// more we don't care about.

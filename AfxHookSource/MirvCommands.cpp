@@ -351,12 +351,31 @@ CON_COMMAND(mirv_streams, "Access to streams system.")
 					g_AfxStreams.Console_Record_End();
 					return;
 				}
+				else
+				if(!_stricmp(cmd2, "format"))
+				{
+					if(4 <= argc)
+					{
+						char const * cmd3 = args->ArgV(3);
+						g_AfxStreams.Console_RecordFormat_set(cmd3);
+						return;
+					}
+
+					Tier0_Msg(
+						"mirv_streams record format tga|bmp - Set record format to tga or bmp.\n"
+						"Current value: %s.\n",
+						g_AfxStreams.Console_RecordFormat_get()
+					);
+					return;
+				}
+
 			}
 
 			Tier0_Msg(
 				"mirv_streams record name [...] - Set/get record name.\n"
 				"mirv_streams record start - Begin recording.\n"
 				"mirv_streams record end - End reocrding.\n"
+				"mirv_streams record format [...] - Set/get file format.\n"
 			);
 			return;
 		}

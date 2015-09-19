@@ -43,8 +43,23 @@ public:
 
 	virtual TopStreamType GetTopStreamType(void) { return TST_CAfxStream; }
 
+	bool DrawHud_get(void);
+	void DrawHud_set(bool value);
+
+	bool DrawViewModel_get(void);
+	void DrawViewModel_set(bool value);
+
 	bool Record_get(void);
 	void Record_set(bool value);
+
+	/// <remarks>This is called regardless of Record value.</remarks>
+	void RecordStart();
+
+	/// <remarks>This is only called between RecordStart and RecordEnd and only if Record is true.</remarks>
+	bool CreateCapturePath(int frameNumber, bool isBmpAndNotTga, std::wstring &outPath);
+
+	/// <remarks>This is called regardless of Record value.</remarks>
+	void RecordEnd();
 
 	char const * GetStreamName(void);
 
@@ -59,7 +74,12 @@ protected:
 
 private:
 	std::string m_StreamName;
+	std::wstring m_CapturePath;
 	bool m_Record;
+	bool m_DrawViewModel;
+	bool m_DrawHud;
+	bool m_TriedCreatePath;
+	bool m_SucceededCreatePath;
 };
 
 class CAfxDeveloperStream
@@ -625,6 +645,8 @@ public:
 
 	void Console_RecordName_set(const char * value);
 	const char * Console_RecordName_get();
+	void Console_RecordFormat_set(const char * value);
+	const char * Console_RecordFormat_get();
 	void Console_Record_Start();
 	void Console_Record_End();
 	void Console_AddStream(const char * streamName);
@@ -645,6 +667,8 @@ public:
 	virtual IMaterialSystem_csgo * GetMaterialSystem(void);
 	virtual IAfxFreeMaster * GetFreeMaster(void);
 	virtual IAfxMatRenderContext * GetCurrentContext(void) ;
+
+	virtual std::wstring GetTakeDir(void);
 
 	virtual void GetBlend(float &outBlend);
 	virtual void GetColorModulation(float (& outColor)[3]);
@@ -720,6 +744,10 @@ private:
 	bool m_ColorModulationOverride;
 	bool m_BlendOverride;
 	float m_OverrideColor[4];
+	void * m_TempBuffer;
+	size_t m_TempBufferBytesAllocated;
+	std::wstring m_TakeDir;
+	bool m_FormatBmpAndNotTga;
 
 	void OnAfxBaseClientDll_Free(void);
 	bool Console_CheckStreamName(char const * value);
@@ -734,6 +762,8 @@ private:
 	void SetMatVarsForStreams();
 	void RestoreMatVars();
 	void EnsureMatVars();
+
+	void AddStream(CAfxStream * stream);
 };
 
 extern CAfxStreams g_AfxStreams;

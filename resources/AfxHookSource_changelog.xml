@@ -6,6 +6,30 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.4.0</version>
+<time>2015-09-19T04:32Z</time>
+<changes>
+<change type="updated">
+Updated mirv_streams record: The recorded stream FOV will now match the game FOV.
+</change>
+<change type="updated">
+Updated mirv_streams record name: is now a folder name, can be a full folder path (i.e. d:\myFoldeName). Default value is untitled_rec, which is a folder created where the csgo.exe is located.
+</change>
+<change type="updated">
+Updated mirv_streams record: Take sub-folders will be automatically created in the folder specified by mirv_streams record name. The streams will go into sub-folders of the take folder accordingly.
+</change>
+<change type="added">
+Added mirv_streams record format: Can be tga (default) or bmp.
+</change>
+<change type="added">
+Added mirv_streams edit options for all streams: drawHud (default is 0), drawViewmodel (default is 1).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.3.5</version>
 <time>2015-09-16T10:31Z</time>
 <changes>

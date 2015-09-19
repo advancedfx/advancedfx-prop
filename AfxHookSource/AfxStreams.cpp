@@ -14,8 +14,11 @@
 #include "WrpVEngineClient.h"
 #include "d3d9Hooks.h"
 #include "csgo_CSkyBoxView.h"
+#include "csgo_view.h"
 
 #include <shared/StringTools.h>
+#include <shared/FileTools.h>
+#include <shared/RawOutput.h>
 
 #include <Windows.h>
 
@@ -196,6 +199,8 @@ CAfxStream::CAfxStream(char const * streamName)
 : m_StreamName(streamName)
 , m_Streams(0)
 , m_Record(true)
+, m_DrawViewModel(true)
+, m_DrawHud(false)
 {
 }
 
@@ -203,6 +208,25 @@ CAfxStream::~CAfxStream()
 {
 }
 
+bool CAfxStream::DrawHud_get(void)
+{
+	return m_DrawHud;
+}
+
+void CAfxStream::DrawHud_set(bool value)
+{
+	m_DrawHud = value;
+}
+
+bool CAfxStream::DrawViewModel_get(void)
+{
+	return m_DrawViewModel;
+}
+
+void CAfxStream::DrawViewModel_set(bool value)
+{
+	m_DrawViewModel = value;
+}
 
 bool CAfxStream::Record_get(void)
 {
@@ -212,6 +236,56 @@ bool CAfxStream::Record_get(void)
 void CAfxStream::Record_set(bool value)
 {
 	m_Record = value;
+}
+
+void CAfxStream::RecordStart()
+{
+	m_TriedCreatePath = false;
+	m_SucceededCreatePath = false;
+}
+
+bool CAfxStream::CreateCapturePath(int frameNumber, bool isBmpAndNotTga, std::wstring &outPath)
+{
+	if(!m_TriedCreatePath)
+	{
+		m_TriedCreatePath = true;
+		std::wstring wideStreamName;
+		if(AnsiStringToWideString(GetStreamName(), wideStreamName))
+		{
+			m_CapturePath = m_Streams->GetTakeDir();
+			m_CapturePath.append(L"\\");
+			m_CapturePath.append(wideStreamName);
+
+			bool dirCreated = CreatePath(m_CapturePath.c_str(), m_CapturePath);
+			if(dirCreated)
+			{
+				m_SucceededCreatePath = true;
+			}
+			else
+			{
+				Tier0_Warning("ERROR: could not create \"%s\"\n", m_CapturePath.c_str());
+			}
+		}
+		else
+		{
+			Tier0_Warning("Error: Failed to convert stream name \"%s\" to a wide string.\n", GetStreamName());
+		}
+	}
+
+	if(!m_SucceededCreatePath)
+		return false;
+
+	std::wostringstream os;
+	os << m_CapturePath << L"\\" << std::setfill(L'0') << std::setw(5) << frameNumber << std::setw(0) << (isBmpAndNotTga ? L".bmp" : L".tga");
+
+	outPath = os.str();
+
+	return true;
+}
+
+void CAfxStream::RecordEnd()
+{
+
 }
 
 char const * CAfxStream::GetStreamName(void)
@@ -887,7 +961,7 @@ void CAfxBaseFxStream::CActionDepth::Bind(IAfxMatRenderContext * ctx, IMaterial_
 // CAfxStreams /////////////////////////////////////////////////////////////////
 
 CAfxStreams::CAfxStreams()
-: m_RecordName("untitled")
+: m_RecordName("untitled_rec")
 , m_OnAfxBaseClientDll_Free(0)
 , m_MaterialSystem(0)
 , m_VRenderView(0)
@@ -904,6 +978,9 @@ CAfxStreams::CAfxStreams()
 , m_MatDynamicTonemappingRef(0)
 , m_ColorModulationOverride(false)
 , m_BlendOverride(false)
+, m_TempBuffer(0)
+, m_TempBufferBytesAllocated(0)
+, m_FormatBmpAndNotTga(false)
 {
 	m_OverrideColor[0] =
 	m_OverrideColor[1] =
@@ -927,6 +1004,8 @@ CAfxStreams::~CAfxStreams()
 
 	delete m_MatQueueModeRef;
 	delete m_MatPostProcessEnableRef;
+
+	free(m_TempBuffer); m_TempBuffer = 0;
 }
 
 
@@ -1096,17 +1175,6 @@ void CAfxStreams::EndOverrideSetBlend()
 
 void CAfxStreams::Console_RecordName_set(const char * value)
 {
-	if(StringIsEmpty(value))
-	{
-		Tier0_Msg("Error: Record name can not be emty.\n");
-		return;
-	}
-	if(!StringIsAlNum(value))
-	{
-		Tier0_Msg("Error: Record name must be alphanumeric.\n");
-		return;
-	}
-
 	m_RecordName.assign(value);
 }
 
@@ -1115,20 +1183,54 @@ const char * CAfxStreams::Console_RecordName_get()
 	return m_RecordName.c_str();
 }
 
+void CAfxStreams::Console_RecordFormat_set(const char * value)
+{
+	if(!_stricmp(value, "bmp"))
+		m_FormatBmpAndNotTga = true;
+	else
+	if(!_stricmp(value, "tga"))
+		m_FormatBmpAndNotTga = false;
+	else
+		Tier0_Warning("Error: Invalid format %s\n.", value);
+}
+
+const char * CAfxStreams::Console_RecordFormat_get()
+{
+	return m_FormatBmpAndNotTga ? "bmp" : "tga";
+}
 
 void CAfxStreams::Console_Record_Start()
 {
 	Console_Record_End();
 
-	Tier0_Msg("Starting recording ...");
+	Tier0_Msg("Starting recording ... ");
+	
+	if(AnsiStringToWideString(m_RecordName.c_str(), m_TakeDir)
+		&& (m_TakeDir.append(L"\\take"), SuggestTakePath(m_TakeDir.c_str(), 4, m_TakeDir))
+		&& CreatePath(m_TakeDir.c_str(), m_TakeDir)
+	)
+	{
+		m_Recording = true;
+		m_Frame = 0;
 
-	m_Recording = true;
-	m_Frame = 0;
+		BackUpMatVars();
+		SetMatVarsForStreams();
 
-	BackUpMatVars();
-	SetMatVarsForStreams();
+		for(std::list<CAfxStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
+		{
+			(*it)->RecordStart();
+		}
 
-	Tier0_Msg("done.\n");
+		Tier0_Msg("done.\n");
+
+		std::string ansiTakeDir;
+		Tier0_Msg("Recording to \"%s\".\n", WideStringToAnsiString(m_TakeDir.c_str(), ansiTakeDir) ? ansiTakeDir.c_str() : "?");
+	}
+	else
+	{
+		Tier0_Msg("FAILED");
+		Tier0_Warning("Error: Failed to create directories for \"%s\".\n", m_RecordName.c_str());
+	}
 }
 
 void CAfxStreams::Console_Record_End()
@@ -1136,6 +1238,11 @@ void CAfxStreams::Console_Record_End()
 	if(m_Recording)
 	{
 		Tier0_Msg("Finishing recording ... ");
+
+		for(std::list<CAfxStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
+		{
+			(*it)->RecordEnd();
+		}
 
 		m_FileTracker.WaitForFiles(0);
 		RestoreMatVars();
@@ -1151,7 +1258,7 @@ void CAfxStreams::Console_AddStream(const char * streamName)
 	if(!Console_CheckStreamName(streamName))
 		return;
 
-	m_Streams.push_back(new CAfxStream(streamName));
+	AddStream(new CAfxStream(streamName));
 }
 
 void CAfxStreams::Console_AddBaseFxStream(const char * streamName)
@@ -1159,7 +1266,7 @@ void CAfxStreams::Console_AddBaseFxStream(const char * streamName)
 	if(!Console_CheckStreamName(streamName))
 		return;
 
-	m_Streams.push_back(new CAfxBaseFxStream(streamName));
+	AddStream(new CAfxBaseFxStream(streamName));
 }
 
 void CAfxStreams::Console_AddDeveloperStream(const char * streamName)
@@ -1167,7 +1274,7 @@ void CAfxStreams::Console_AddDeveloperStream(const char * streamName)
 	if(!Console_CheckStreamName(streamName))
 		return;
 
-	m_Streams.push_back(new CAfxDeveloperStream(streamName));
+	AddStream(new CAfxDeveloperStream(streamName));
 }
 
 void CAfxStreams::Console_AddDepthStream(const char * streamName)
@@ -1175,7 +1282,7 @@ void CAfxStreams::Console_AddDepthStream(const char * streamName)
 	if(!Console_CheckStreamName(streamName))
 		return;
 
-	m_Streams.push_back(new CAfxDepthStream(streamName));
+	AddStream(new CAfxDepthStream(streamName));
 }
 
 void CAfxStreams::Console_AddMatteWorldStream(const char * streamName)
@@ -1183,7 +1290,7 @@ void CAfxStreams::Console_AddMatteWorldStream(const char * streamName)
 	if(!Console_CheckStreamName(streamName))
 		return;
 
-	m_Streams.push_back(new CAfxMatteWorldStream(streamName));
+	AddStream(new CAfxMatteWorldStream(streamName));
 }
 
 void CAfxStreams::Console_AddDepthWorldStream(const char * streamName)
@@ -1191,7 +1298,7 @@ void CAfxStreams::Console_AddDepthWorldStream(const char * streamName)
 	if(!Console_CheckStreamName(streamName))
 		return;
 
-	m_Streams.push_back(new CAfxDepthWorldStream(streamName));
+	AddStream(new CAfxDepthWorldStream(streamName));
 }
 
 void CAfxStreams::Console_AddMatteEntityStream(const char * streamName)
@@ -1199,7 +1306,7 @@ void CAfxStreams::Console_AddMatteEntityStream(const char * streamName)
 	if(!Console_CheckStreamName(streamName))
 		return;
 
-	m_Streams.push_back(new CAfxMatteEntityStream(streamName));
+	AddStream(new CAfxMatteEntityStream(streamName));
 }
 
 void CAfxStreams::Console_AddDepthEntityStream(const char * streamName)
@@ -1207,7 +1314,7 @@ void CAfxStreams::Console_AddDepthEntityStream(const char * streamName)
 	if(!Console_CheckStreamName(streamName))
 		return;
 
-	m_Streams.push_back(new CAfxDepthEntityStream(streamName));
+	AddStream(new CAfxDepthEntityStream(streamName));
 }
 
 void CAfxStreams::Console_PrintStreams()
@@ -1232,9 +1339,15 @@ void CAfxStreams::Console_RemoveStream(const char * streamName)
 		if(!_stricmp(streamName, (*it)->GetStreamName()))
 		{
 			CAfxStream * cur = *it;
-			m_Streams.erase(it);
+
+			if(m_Recording) cur->RecordEnd();
 
 			if(m_PreviewStream == cur) m_PreviewStream = 0;
+
+			m_Streams.erase(it);
+
+			delete cur;
+
 			return;
 		}
 	}
@@ -1301,6 +1414,46 @@ void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * 
 							"Current value: %s.\n"
 							, cmdPrefix
 							, cur->Record_get() ? "1" : "0"
+						);
+						return;
+					}
+
+					if(!_stricmp(cmd0, "drawHud"))
+					{
+						if(2 <= argc)
+						{
+							char const * cmd1 = args->ArgV(argcOffset +1);
+
+							cur->DrawHud_set(atoi(cmd1) != 0 ? true : false);
+
+							return;
+						}
+
+						Tier0_Msg(
+							"%s drawHud 0|1 - Whether to draw HUD for this stream - 0 = don't draw, 1 = draw.\n"
+							"Current value: %s.\n"
+							, cmdPrefix
+							, cur->DrawHud_get() ? "1" : "0"
+						);
+						return;
+					}
+
+					if(!_stricmp(cmd0, "drawViewModel"))
+					{
+						if(2 <= argc)
+						{
+							char const * cmd1 = args->ArgV(argcOffset +1);
+
+							cur->DrawViewModel_set(atoi(cmd1) != 0 ? true : false);
+
+							return;
+						}
+
+						Tier0_Msg(
+							"%s drawViewModel 0|1 - Whether to draw view model (in-eye weapon) for this stream - 0 = don't draw, 1 = draw.\n"
+							"Current value: %s.\n"
+							, cmdPrefix
+							, cur->DrawViewModel_get() ? "1" : "0"
 						);
 						return;
 					}
@@ -1789,6 +1942,8 @@ void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * 
 			if(cur)
 			{
 				Tier0_Msg("%s record [...] - Controlls whether or not this stream is recorded with mirv_streams record.\n", cmdPrefix);
+				Tier0_Msg("%s drawHud [...] - Controlls whether or not HUD is drawn for this stream.\n", cmdPrefix);
+				Tier0_Msg("%s drawViewModel [...] - Controlls whether or not view model (in-eye weapon) is drawn for this stream.\n", cmdPrefix);
 			}
 			
 			if(curDeveloper)
@@ -1842,6 +1997,11 @@ IAfxFreeMaster * CAfxStreams::GetFreeMaster(void)
 IAfxMatRenderContext * CAfxStreams::GetCurrentContext(void)
 {
 	return m_CurrentContext;
+}
+
+std::wstring CAfxStreams::GetTakeDir(void)
+{
+	return m_TakeDir;
 }
 
 void CAfxStreams::OnBind_set(IAfxMatRenderContextBind * value)
@@ -1914,33 +2074,108 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 			{
 				if(!(*it)->Record_get()) continue;
 
-				std::ostringstream oss;
+				//std::ostringstream oss;
 	
-				oss << m_RecordName << "_"
-					<< (*it)->GetStreamName() << "_"
-					<< std::setfill('0') << std::setw(5) << m_Frame
-					<< ".tga"
-				;
+				//oss << m_RecordName << "_"
+				//	<< (*it)->GetStreamName() << "_"
+				//	<< std::setfill('0') << std::setw(5) << m_Frame
+				//	<< ".tga"
+				//;
 
-				std::string filePath(g_VEngineClient->GetGameDirectory());
-				filePath.append("\\");
-				filePath.append(oss.str());
+				//std::string filePath(g_VEngineClient->GetGameDirectory());
+				//filePath.append("\\");
+				//filePath.append(oss.str());
 
 				//
 				// Delete file if it already exists, so tracking (waiting for it) works:
 
-				DeleteFileA(filePath.c_str()); // Todo: Use wide character version maybe, otherwise I hope MAX_PATH will do.
+				//DeleteFileA(filePath.c_str()); // Todo: Use wide character version maybe, otherwise I hope MAX_PATH will do.
 
 				//
 				// Record the stream to a file:
+
+				m_MaterialSystem->SwapBuffers();
 
 				SetMatVarsForStreams(); // keep them set in case a mofo resets them.
 
 				(*it)->StreamAttach(this);
 
-				m_MaterialSystem->SwapBuffers();
+				//cl->GetParent()->WriteSaveGameScreenshotOfSize(oss.str().c_str(), rect->width, rect->height);
 
-				cl->GetParent()->WriteSaveGameScreenshotOfSize(oss.str().c_str(), rect->width, rect->height);
+				IViewRender_csgo * view = GetView_csgo();
+
+				const CViewSetup_csgo * viewSetup = view->GetViewSetup();
+
+				int whatToDraw = RENDERVIEW_UNSPECIFIED;
+
+				if((*it)->DrawHud_get()) whatToDraw |= RENDERVIEW_DRAWHUD;
+				if((*it)->DrawViewModel_get()) whatToDraw |= RENDERVIEW_DRAWVIEWMODEL;
+
+				view->RenderView(*viewSetup, *viewSetup, VIEW_CLEAR_STENCIL|VIEW_CLEAR_DEPTH|VIEW_CLEAR_COLOR, whatToDraw);
+
+				int imagePitch = viewSetup->m_nUnscaledWidth * 3;
+				size_t imageBytes = imagePitch * viewSetup->m_nUnscaledHeight;
+
+				if( !m_TempBuffer || m_TempBufferBytesAllocated < imageBytes)
+				{
+					m_TempBuffer = realloc(m_TempBuffer, imageBytes);
+					if(m_TempBuffer) m_TempBufferBytesAllocated = imageBytes;
+				}
+
+				if(m_TempBuffer)
+				{
+					cx->GetParent()->ReadPixels(
+						viewSetup->m_nUnscaledX, viewSetup->m_nUnscaledY,
+						viewSetup->m_nUnscaledWidth, viewSetup->m_nUnscaledHeight,
+						(unsigned char*)m_TempBuffer,
+						IMAGE_FORMAT_RGB888
+					);
+
+					// (back) transform to MDT native format:
+					{
+						int lastLine = viewSetup->m_nUnscaledHeight >> 1;
+						if(viewSetup->m_nUnscaledHeight & 0x1) ++lastLine;
+
+						for(int y=0;y<lastLine;++y)
+						{
+							int srcLine = y;
+							int dstLine = viewSetup->m_nUnscaledHeight -1 -y;
+
+							for(int x=0;x<viewSetup->m_nUnscaledWidth;++x)
+							{
+								unsigned char r = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +0];
+								unsigned char g = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +1];
+								unsigned char b = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +2];
+								((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +0] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +2];
+								((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +1] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +1];
+								((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +2] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +0];
+								((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +0] = b;
+								((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +1] = g;
+								((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +2] = r;
+							}
+						}
+					}
+
+					// Write to disk:
+					{
+						std::wstring path;
+						if((*it)->CreateCapturePath(m_Frame, m_FormatBmpAndNotTga, path))
+						{
+							bool success = m_FormatBmpAndNotTga
+								? WriteRawBitmap((unsigned char*)m_TempBuffer, path.c_str(), viewSetup->m_nUnscaledWidth, viewSetup->m_nUnscaledHeight, 24, imagePitch)
+								: WriteRawTarga((unsigned char*)m_TempBuffer, path.c_str(), viewSetup->m_nUnscaledWidth, viewSetup->m_nUnscaledHeight, 24, false, imagePitch)
+							;
+							if(!success)
+							{
+								Tier0_Warning("Failed writing image #%i for stream %s\n.", m_Frame, (*it)->GetStreamName());
+							}
+						}
+					}
+				}
+				else
+				{
+					Tier0_Warning("CAfxStreams::View_Render: Failed to realoc m_TempBuffer.\n");
+				}
 
 				(*it)->StreamDetach(this);
 
@@ -1948,7 +2183,7 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 				// Make sure to wait for files to be written (and thus memory to be freed), otherwise we
 				// will run out of memory on most systems:
 
-				m_FileTracker.TrackFile(filePath.c_str());
+				//m_FileTracker.TrackFile(filePath.c_str());
 
 				m_FileTracker.WaitForFiles(2);
 			}
@@ -2071,7 +2306,8 @@ char const * CAfxStreams::Console_FromHideableAction(CAfxBaseFxStream::HideableA
 
 bool CAfxStreams::CheckCanFeedStreams(void)
 {
-	return 0 != m_MaterialSystem
+	return 0 != GetView_csgo()
+		&& 0 != m_MaterialSystem
 		&& 0 != m_VRenderView
 		&& 0 != m_AfxBaseClientDll
 		&& 0 != m_CurrentContext
@@ -2110,4 +2346,11 @@ void CAfxStreams::EnsureMatVars()
 	if(!m_MatQueueModeRef) m_MatQueueModeRef = new WrpConVarRef("mat_queue_mode");
 	if(!m_MatPostProcessEnableRef) m_MatPostProcessEnableRef = new WrpConVarRef("mat_postprocess_enable");
 	if(!m_MatDynamicTonemappingRef) m_MatDynamicTonemappingRef = new WrpConVarRef("mat_dynamic_tonemapping");
+}
+
+void CAfxStreams::AddStream(CAfxStream * stream)
+{
+	m_Streams.push_back(stream);
+
+	if(m_Recording) stream->RecordStart();
 }

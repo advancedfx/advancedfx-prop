@@ -82,7 +82,9 @@
     <ClCompile Include="..\shared\bvhimport.cpp" />
     <ClCompile Include="..\shared\CamPath.cpp" />
     <ClCompile Include="..\shared\detours.cpp" />
+    <ClCompile Include="..\shared\FileTools.cpp" />
     <ClCompile Include="..\shared\hooks\gameOverlayRenderer.cpp" />
+    <ClCompile Include="..\shared\RawOutput.cpp" />
     <ClCompile Include="..\shared\vcpp\AfxAddr.cpp" />
     <ClCompile Include="addresses.cpp" />
     <ClCompile Include="AfxClasses.cpp" />
@@ -93,6 +95,7 @@
     <ClCompile Include="csgo_CSkyBoxView.cpp" />
     <ClCompile Include="csgo_GetPlayerName.cpp" />
     <ClCompile Include="csgo_SndMixTimeScalePatch.cpp" />
+    <ClCompile Include="csgo_view.cpp" />
     <ClCompile Include="d3d9Hooks.cpp" />
     <ClCompile Include="hlaeFolder.cpp" />
     <ClCompile Include="main.cpp" />
@@ -111,11 +114,13 @@
     <ClInclude Include="..\shared\bvhimport.h" />
     <ClInclude Include="..\shared\CamPath.h" />
     <ClInclude Include="..\shared\detours.h" />
+    <ClInclude Include="..\shared\FileTools.h" />
     <ClInclude Include="..\shared\hooks\gameOverlayRenderer.h" />
     <ClInclude Include="..\shared\rapidxml\rapidxml.hpp" />
     <ClInclude Include="..\shared\rapidxml\rapidxml_iterators.hpp" />
     <ClInclude Include="..\shared\rapidxml\rapidxml_print.hpp" />
     <ClInclude Include="..\shared\rapidxml\rapidxml_utils.hpp" />
+    <ClInclude Include="..\shared\RawOutput.h" />
     <ClInclude Include="..\shared\vcpp\AfxAddr.h" />
     <ClInclude Include="addresses.h" />
     <ClInclude Include="AfxClasses.h" />
@@ -127,6 +132,7 @@
     <ClInclude Include="csgo_CSkyBoxView.h" />
     <ClInclude Include="csgo_GetPlayerName.h" />
     <ClInclude Include="csgo_SndMixTimeScalePatch.h" />
+    <ClInclude Include="csgo_view.h" />
     <ClInclude Include="d3d9Hooks.h" />
     <ClInclude Include="hlaeFolder.h" />
     <ClInclude Include="RenderView.h" />
