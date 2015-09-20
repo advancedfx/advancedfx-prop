@@ -154,7 +154,7 @@ bool WriteRawTarga(
 {
 	unsigned char ucBppCeilDiv8 =  (ucBpp & 0x07) ? (ucBpp >> 3)+1 : (ucBpp >> 3);
 	unsigned char ucGray = (bGrayScale ? 3 : 2);
-	unsigned char szTgaheader[12] = { 0, 0, ucGray, 0, 0, 0, 0, 24, 0, 0, 0, 0 };
+	unsigned char szTgaheader[12] = { 0, 0, ucGray, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 	unsigned char szHeader[6] = { (unsigned char)(usWidth & 0xFF), (unsigned char)(usWidth >> 8), (unsigned char)(usHeight & 0xFF), (unsigned char)(usHeight >> 8), ucBpp, 0 };
 	FILE *pFile;
 
