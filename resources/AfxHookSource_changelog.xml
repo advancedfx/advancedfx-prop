@@ -6,6 +6,21 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.4.3</version>
+<time>2015-09-20T10:36Z</time>
+<changes>
+<change type="fixed">
+Fixed mirv_streams: Fixed D3DRS_SRGBWRITEENABLE state forcing (now forces the state both through IShaderShadow and manually, because the engine doesn't always update the state but still tracks it internally and updates it sometimes).
+</change>
+<change type="fixed">
+Fixed mirv_streams: Adjusted m_SkyBox3d.scale offset address according to CS:GO update, important for proper 3D skybox scaling in depth dump.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.4.2</version>
 <time>2015-09-20T09:02Z</time>
 <changes>

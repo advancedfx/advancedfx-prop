@@ -982,6 +982,7 @@ void CAfxBaseFxStream::CActionWhite::Bind(IAfxMatRenderContext * ctx, IMaterial_
 
 void CAfxBaseFxStream::CActionDepth::AfxUnbind(IAfxMatRenderContext * ctx)
 {
+	AfxD3D9SRGBWriteEnableFix(m_OldSrgbWriteEnable);
 }
 
 void CAfxBaseFxStream::CActionDepth::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData)
@@ -1012,7 +1013,12 @@ void CAfxBaseFxStream::CActionDepth::Bind(IAfxMatRenderContext * ctx, IMaterial_
 	//AfxD3D9SetVertexShaderConstantF(48, vecZFactor, 1);
 
 	// Force SRGBWriteEnable to off (Engine doesn't do this, otherwise it would be random):
+
+	// Force the engines internal state, so it can re-enable it properly:
 	m_ParentStream->m_Streams->GetShaderShadow()->EnableSRGBWrite(false);
+
+	// We still need to force it manually, because the engine somehow doesn't pass it through if it's disabled:
+	m_OldSrgbWriteEnable = AfxD3D9SRGBWriteEnableFix(FALSE);
 }
 
 // CAfxStreams /////////////////////////////////////////////////////////////////
