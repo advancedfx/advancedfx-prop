@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.4.6</version>
+<time>2015-09-20T20:09Z</time>
+<changes>
+<change type="updated">
+Updated mirv_streams: matteEntity stream clientEffectTexturesAction now defaults to noDraw in order to avoid problems with keying due to glow textures.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.4.5</version>
 <time>2015-09-20T16:47Z</time>
 <changes>

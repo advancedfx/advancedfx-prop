@@ -645,7 +645,7 @@ class CAfxMatteEntityStream
 public:
 	CAfxMatteEntityStream(char const * streamName) : CAfxBaseFxStream(streamName)
 	{
-		m_ClientEffectTexturesAction = HA_Draw;
+		m_ClientEffectTexturesAction = HA_NoDraw;
 		m_WorldTexturesAction =  MA_Mask;
 		m_SkyBoxTexturesAction =  MA_Mask;
 		m_StaticPropTexturesAction =  MA_Mask;
