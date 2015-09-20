@@ -343,6 +343,7 @@ private:
 
 	private:
 		CAfxMaterial m_MatteMaterial;
+		unsigned long m_OldSrgbWriteEnable;
 	};
 
 	class CActionBlack
@@ -382,6 +383,7 @@ private:
 
 	private:
 		CAfxMaterial m_Material;
+		unsigned long m_OldSrgbWriteEnable;
 	};
 
 	class CActionWhite
@@ -421,6 +423,7 @@ private:
 
 	private:
 		CAfxMaterial m_Material;
+		unsigned long m_OldSrgbWriteEnable;
 	};
 
 	class CActionDepth

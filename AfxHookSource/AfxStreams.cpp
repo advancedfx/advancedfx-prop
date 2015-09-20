@@ -935,6 +935,8 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(HideableAction value)
 
 void CAfxBaseFxStream::CActionMatte::AfxUnbind(IAfxMatRenderContext * ctx)
 {
+	AfxD3D9SRGBWriteEnableFix(m_OldSrgbWriteEnable);
+
 	m_ParentStream->m_Streams->EndOverrideSetColorModulation();
 }
 
@@ -944,6 +946,14 @@ void CAfxBaseFxStream::CActionMatte::Bind(IAfxMatRenderContext * ctx, IMaterial_
 
 	float color[3] = { 1.0f, 1.0f, 1.0f };
 	m_ParentStream->m_Streams->OverrideSetColorModulation(color);
+
+	// Force SRGBWriteEnable to off (Engine doesn't do this, otherwise it would be random):
+
+	// Force the engines internal state, so it can re-enable it properly:
+	m_ParentStream->m_Streams->GetShaderShadow()->EnableSRGBWrite(false);
+
+	// We still need to force it manually, because the engine somehow doesn't pass it through if it's disabled:
+	m_OldSrgbWriteEnable = AfxD3D9SRGBWriteEnableFix(FALSE);
 }
 
 // CAfxBaseFxStream::CActionBlack //////////////////////////////////////////////
@@ -951,6 +961,8 @@ void CAfxBaseFxStream::CActionMatte::Bind(IAfxMatRenderContext * ctx, IMaterial_
 
 void CAfxBaseFxStream::CActionBlack::AfxUnbind(IAfxMatRenderContext * ctx)
 {
+	AfxD3D9SRGBWriteEnableFix(m_OldSrgbWriteEnable);
+
 	m_ParentStream->m_Streams->EndOverrideSetColorModulation();
 }
 
@@ -960,12 +972,23 @@ void CAfxBaseFxStream::CActionBlack::Bind(IAfxMatRenderContext * ctx, IMaterial_
 
 	float color[3] = { 0.0f, 0.0f, 0.0f };
 	m_ParentStream->m_Streams->OverrideSetColorModulation(color);
+
+
+	// Force SRGBWriteEnable to off (Engine doesn't do this, otherwise it would be random):
+
+	// Force the engines internal state, so it can re-enable it properly:
+	m_ParentStream->m_Streams->GetShaderShadow()->EnableSRGBWrite(false);
+
+	// We still need to force it manually, because the engine somehow doesn't pass it through if it's disabled:
+	m_OldSrgbWriteEnable = AfxD3D9SRGBWriteEnableFix(FALSE);
 }
 
 // CAfxBaseFxStream::CActionWhite //////////////////////////////////////////////
 
 void CAfxBaseFxStream::CActionWhite::AfxUnbind(IAfxMatRenderContext * ctx)
 {
+	AfxD3D9SRGBWriteEnableFix(m_OldSrgbWriteEnable);
+
 	m_ParentStream->m_Streams->EndOverrideSetColorModulation();
 }
 
@@ -975,6 +998,14 @@ void CAfxBaseFxStream::CActionWhite::Bind(IAfxMatRenderContext * ctx, IMaterial_
 
 	float color[3] = { 1.0f, 1.0f, 1.0f };
 	m_ParentStream->m_Streams->OverrideSetColorModulation(color);
+
+	// Force SRGBWriteEnable to off (Engine doesn't do this, otherwise it would be random):
+
+	// Force the engines internal state, so it can re-enable it properly:
+	m_ParentStream->m_Streams->GetShaderShadow()->EnableSRGBWrite(false);
+
+	// We still need to force it manually, because the engine somehow doesn't pass it through if it's disabled:
+	m_OldSrgbWriteEnable = AfxD3D9SRGBWriteEnableFix(FALSE);
 }
 
 

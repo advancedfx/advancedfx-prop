@@ -6,6 +6,23 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.4.4</version>
+<time>2015-09-20T13:06Z</time>
+<changes>
+<change type="fixed">
+Fixed mirv_streams: Fixed D3DRS_SRGBWRITEENABLE FALSE state forcing, it's now on again on all stream actions that relay on it (depth, matte, black, white), since we can't relay on the engine at all to do it properly.
+</change>
+</changes>
+<comments>
+Okay, hopefully this is the last fix of that type, at least for today :(
+Sorry.
+Happy testing, loool :D
+</comments>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.4.3</version>
 <time>2015-09-20T10:36Z</time>
 <changes>
