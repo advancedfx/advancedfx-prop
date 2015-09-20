@@ -935,9 +935,6 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(HideableAction value)
 
 void CAfxBaseFxStream::CActionMatte::AfxUnbind(IAfxMatRenderContext * ctx)
 {
-	// revert SRGBWriteEnable to old state:
-	AfxD3D9SRGBWriteEnableFix(m_OldSrgbWriteEnable);
-
 	m_ParentStream->m_Streams->EndOverrideSetColorModulation();
 }
 
@@ -947,9 +944,6 @@ void CAfxBaseFxStream::CActionMatte::Bind(IAfxMatRenderContext * ctx, IMaterial_
 
 	float color[3] = { 1.0f, 1.0f, 1.0f };
 	m_ParentStream->m_Streams->OverrideSetColorModulation(color);
-
-	// Force SRGBWriteEnable to off (Engine doesn't do this, otherwise it would be random): 
-	m_OldSrgbWriteEnable = AfxD3D9SRGBWriteEnableFix(FALSE);
 }
 
 // CAfxBaseFxStream::CActionBlack //////////////////////////////////////////////
@@ -957,9 +951,6 @@ void CAfxBaseFxStream::CActionMatte::Bind(IAfxMatRenderContext * ctx, IMaterial_
 
 void CAfxBaseFxStream::CActionBlack::AfxUnbind(IAfxMatRenderContext * ctx)
 {
-	// revert SRGBWriteEnable to old state:
-	AfxD3D9SRGBWriteEnableFix(m_OldSrgbWriteEnable);
-
 	m_ParentStream->m_Streams->EndOverrideSetColorModulation();
 }
 
@@ -969,18 +960,12 @@ void CAfxBaseFxStream::CActionBlack::Bind(IAfxMatRenderContext * ctx, IMaterial_
 
 	float color[3] = { 0.0f, 0.0f, 0.0f };
 	m_ParentStream->m_Streams->OverrideSetColorModulation(color);
-
-	// Force SRGBWriteEnable to off (Engine doesn't do this, otherwise it would be random): 
-	m_OldSrgbWriteEnable = AfxD3D9SRGBWriteEnableFix(FALSE);
 }
 
 // CAfxBaseFxStream::CActionWhite //////////////////////////////////////////////
 
 void CAfxBaseFxStream::CActionWhite::AfxUnbind(IAfxMatRenderContext * ctx)
 {
-	// revert SRGBWriteEnable to old state:
-	AfxD3D9SRGBWriteEnableFix(m_OldSrgbWriteEnable);
-
 	m_ParentStream->m_Streams->EndOverrideSetColorModulation();
 }
 
@@ -990,9 +975,6 @@ void CAfxBaseFxStream::CActionWhite::Bind(IAfxMatRenderContext * ctx, IMaterial_
 
 	float color[3] = { 1.0f, 1.0f, 1.0f };
 	m_ParentStream->m_Streams->OverrideSetColorModulation(color);
-
-	// Force SRGBWriteEnable to off (Engine doesn't do this, otherwise it would be random): 
-	m_OldSrgbWriteEnable = AfxD3D9SRGBWriteEnableFix(FALSE);
 }
 
 
@@ -1000,8 +982,6 @@ void CAfxBaseFxStream::CActionWhite::Bind(IAfxMatRenderContext * ctx, IMaterial_
 
 void CAfxBaseFxStream::CActionDepth::AfxUnbind(IAfxMatRenderContext * ctx)
 {
-	// revert SRGBWriteEnable to old state:
-	AfxD3D9SRGBWriteEnableFix(m_OldSrgbWriteEnable);
 }
 
 void CAfxBaseFxStream::CActionDepth::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData)
@@ -1031,8 +1011,8 @@ void CAfxBaseFxStream::CActionDepth::Bind(IAfxMatRenderContext * ctx, IMaterial_
 	//float vecZFactor[4] = { (flDepthFactorMax - flDepthFactor), flDepthFactor, 1 ,1};
 	//AfxD3D9SetVertexShaderConstantF(48, vecZFactor, 1);
 
-	// Force SRGBWriteEnable to off (Engine doesn't do this, otherwise it would be random): 
-	m_OldSrgbWriteEnable = AfxD3D9SRGBWriteEnableFix(FALSE);
+	// Force SRGBWriteEnable to off (Engine doesn't do this, otherwise it would be random):
+	m_ParentStream->m_Streams->GetShaderShadow()->EnableSRGBWrite(false);
 }
 
 // CAfxStreams /////////////////////////////////////////////////////////////////
@@ -1043,6 +1023,7 @@ CAfxStreams::CAfxStreams()
 , m_MaterialSystem(0)
 , m_VRenderView(0)
 , m_AfxBaseClientDll(0)
+, m_ShaderShadow(0)
 , m_CurrentContext(0)
 , m_PreviewStream(0)
 , m_Recording(false)
@@ -1119,6 +1100,11 @@ void CAfxStreams::OnAfxBaseClientDll_Free(void)
 		m_AfxBaseClientDll->OnLevelShutdown_set(0);
 		m_AfxBaseClientDll = 0;
 	}
+}
+
+void CAfxStreams::OnShaderShadow(IShaderShadow_csgo * value)
+{
+	m_ShaderShadow = value;
 }
 
 void CAfxStreams::OnDraw(IAfxMesh * am, int firstIndex, int numIndices)
@@ -2103,6 +2089,11 @@ IAfxMatRenderContext * CAfxStreams::GetCurrentContext(void)
 	return m_CurrentContext;
 }
 
+IShaderShadow_csgo * CAfxStreams::GetShaderShadow(void)
+{
+	return m_ShaderShadow;
+}
+
 std::wstring CAfxStreams::GetTakeDir(void)
 {
 	return m_TakeDir;
@@ -2430,6 +2421,7 @@ bool CAfxStreams::CheckCanFeedStreams(void)
 		&& 0 != m_MaterialSystem
 		&& 0 != m_VRenderView
 		&& 0 != m_AfxBaseClientDll
+		&& 0 != m_ShaderShadow
 		&& 0 != m_CurrentContext
 	;
 }

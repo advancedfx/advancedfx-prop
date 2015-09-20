@@ -6,6 +6,21 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.4.2</version>
+<time>2015-09-20T09:02Z</time>
+<changes>
+<change type="fixed">
+Fixed mirv_streams: Fixed D3DRS_SRGBWRITEENABLE state forcing (now goes through IShaderShadow API and only for DebugDepth shader, so that shader state should get maintained by engine more properly), no more random colours and brightness hopefully.
+</change>
+</changes>
+<comments>
+Oh boy was AfxHookSource 0.2.4.1 bugged, sorry for releasing it :/
+</comments>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.4.1</version>
 <time>2015-09-19T15:18Z</time>
 <changes>

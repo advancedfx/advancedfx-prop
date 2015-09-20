@@ -3506,3 +3506,38 @@ public:
 	// ...
 	// more we don't care about.
 };
+
+// IShaderShadow_csgo //////////////////////////////////////////////////////////
+
+#define SHADERSHADOW_INTERFACE_VERSION_CSGO "ShaderShadow010"
+
+class IShaderShadow_csgo
+{
+public:
+	virtual void _UNKOWN_000(void) = 0;
+	virtual void _UNKOWN_001(void) = 0;
+	virtual void _UNKOWN_002(void) = 0; // EnableDepthWrites
+	virtual void _UNKOWN_003(void) = 0;
+	virtual void _UNKOWN_004(void) = 0;
+	virtual void _UNKOWN_005(void) = 0;
+	virtual void _UNKOWN_006(void) = 0; // EnableAlphaWrites
+	virtual void _UNKOWN_007(void) = 0;
+	virtual void _UNKOWN_008(void) = 0;
+	virtual void _UNKOWN_009(void) = 0;
+	virtual void _UNKOWN_010(void) = 0;
+	virtual void _UNKOWN_011(void) = 0;
+	virtual void _UNKOWN_012(void) = 0;
+	virtual void _UNKOWN_013(void) = 0;
+	virtual void _UNKOWN_014(void) = 0;
+	virtual void _UNKOWN_015(void) = 0;
+	virtual void _UNKOWN_016(void) = 0; // VertexShaderVertexFormat
+	virtual void _UNKOWN_017(void) = 0; // SetVertexShader
+	virtual void _UNKOWN_018(void) = 0; // SetPixelShader
+
+	// 019:
+	// Convert from linear to gamma color space on writes to frame buffer.
+	virtual void EnableSRGBWrite( bool bEnable ) = 0;
+
+	virtual void _UNKOWN_020(void) = 0; // EnableSRGBRead, but unimplemented.
+	virtual void _UNKOWN_021(void) = 0; // EnableTexture
+};

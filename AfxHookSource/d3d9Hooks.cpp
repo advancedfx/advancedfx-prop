@@ -208,6 +208,7 @@ public:
 			Tier0_Msg("\n");
 
 		}
+
 		return g_OldDirect3DDevice9->SetRenderState(State, Value);
 	}
 
@@ -643,6 +644,7 @@ HRESULT WINAPI new_Direct3DCreate9Ex(UINT SDKVersion, IDirect3D9Ex** ppD3DDevice
 	return old_Direct3DCreate9Ex(SDKVersion, ppD3DDevice);
 }
 
+/*
 DWORD AfxD3D9SRGBWriteEnableFix(DWORD enable)
 {
 	if(!g_OldDirect3DDevice9) return FALSE;
@@ -654,7 +656,7 @@ DWORD AfxD3D9SRGBWriteEnableFix(DWORD enable)
 
 	return oldValue;
 }
-
+*/
 
 void AfxD3D9SetModulationColorFix(float const color[4])
 {

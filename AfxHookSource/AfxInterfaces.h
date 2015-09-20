@@ -140,6 +140,7 @@ public:
 	virtual IMaterialSystem_csgo * GetMaterialSystem(void) = 0;
 	virtual IAfxFreeMaster * GetFreeMaster(void) = 0;
 	virtual IAfxMatRenderContext * GetCurrentContext(void) = 0;
+	virtual IShaderShadow_csgo * GetShaderShadow(void) = 0;
 
 	virtual std::wstring GetTakeDir(void) = 0;
 

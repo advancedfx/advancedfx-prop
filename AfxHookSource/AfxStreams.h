@@ -806,6 +806,8 @@ public:
 	void OnMaterialSystem(IMaterialSystem_csgo * value);
 	void OnAfxVRenderView(IAfxVRenderView * value);
 	void OnAfxBaseClientDll(IAfxBaseClientDll * value);
+	void OnShaderShadow(IShaderShadow_csgo * value);
+
 	void OnDraw(IAfxMesh * am, int firstIndex = -1, int numIndices = 0);
 	void OnDraw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists);
 	void OnDrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 );
@@ -839,7 +841,8 @@ public:
 
 	virtual IMaterialSystem_csgo * GetMaterialSystem(void);
 	virtual IAfxFreeMaster * GetFreeMaster(void);
-	virtual IAfxMatRenderContext * GetCurrentContext(void) ;
+	virtual IAfxMatRenderContext * GetCurrentContext(void);
+	virtual IShaderShadow_csgo * GetShaderShadow(void);
 
 	virtual std::wstring GetTakeDir(void);
 
@@ -898,6 +901,7 @@ private:
 	IMaterialSystem_csgo * m_MaterialSystem;
 	IAfxVRenderView * m_VRenderView;
 	IAfxBaseClientDll * m_AfxBaseClientDll;
+	IShaderShadow_csgo * m_ShaderShadow;
 	IAfxMatRenderContext * m_CurrentContext;
 	std::list<CAfxStream *> m_Streams;
 	CAfxStream * m_PreviewStream;

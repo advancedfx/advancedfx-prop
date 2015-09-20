@@ -568,6 +568,14 @@ void MySetup(CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals)
 			else {
 				ErrorBox("Could not get a supported VFileSystem interface.");
 			}
+
+			if(iface = appSystemFactory(SHADERSHADOW_INTERFACE_VERSION_CSGO, NULL))
+			{
+				g_AfxStreams.OnShaderShadow((IShaderShadow_csgo *)iface);
+			}
+			else {
+				ErrorBox("Could not get a supported ShaderShadow interface.");
+			}
 		}
 		
 		g_Hook_VClient_RenderView.Install(pGlobals);
