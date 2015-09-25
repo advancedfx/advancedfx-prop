@@ -201,11 +201,22 @@ CAfxStream::CAfxStream(char const * streamName)
 , m_Record(true)
 , m_DrawViewModel(true)
 , m_DrawHud(false)
+, m_CaptureType(CT_RGB)
 {
 }
 
 CAfxStream::~CAfxStream()
 {
+}
+
+CAfxStream::CaptureType CAfxStream::CaptureType_get(void)
+{
+	return m_CaptureType;
+}
+
+void CAfxStream::CaptureType_set(CaptureType value)
+{
+	m_CaptureType = value;
 }
 
 bool CAfxStream::DrawHud_get(void)
@@ -1076,6 +1087,7 @@ CAfxStreams::CAfxStreams()
 , m_TempBuffer(0)
 , m_TempBufferBytesAllocated(0)
 , m_FormatBmpAndNotTga(false)
+, m_RgbaRenderTarget(0)
 {
 	m_OverrideColor[0] =
 	m_OverrideColor[1] =
@@ -1107,6 +1119,8 @@ CAfxStreams::~CAfxStreams()
 void CAfxStreams::OnMaterialSystem(IMaterialSystem_csgo * value)
 {
 	m_MaterialSystem = value;
+
+	CreateRenderTargets(value);
 }
 
 void CAfxStreams::OnAfxVRenderView(IAfxVRenderView * value)
@@ -1131,6 +1145,12 @@ void CAfxStreams::OnAfxBaseClientDll(IAfxBaseClientDll * value)
 
 void CAfxStreams::OnAfxBaseClientDll_Free(void)
 {
+	if(m_RgbaRenderTarget)
+	{
+		m_RgbaRenderTarget->DecrementReferenceCount();
+		m_RgbaRenderTarget = 0;
+	}
+
 	if(m_AfxBaseClientDll)
 	{
 		m_AfxBaseClientDll->OnView_Render_set(0);
@@ -1544,7 +1564,7 @@ void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * 
 						);
 						return;
 					}
-
+					else
 					if(!_stricmp(cmd0, "drawHud"))
 					{
 						if(2 <= argc)
@@ -1564,7 +1584,7 @@ void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * 
 						);
 						return;
 					}
-
+					else
 					if(!_stricmp(cmd0, "drawViewModel"))
 					{
 						if(2 <= argc)
@@ -1584,6 +1604,38 @@ void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * 
 						);
 						return;
 					}
+					/*else
+					if(!_stricmp(cmd0, "captureType"))
+					{
+						if(2 <= argc)
+						{
+							char const * cmd1 = args->ArgV(argcOffset +1);
+
+							if(!_stricmp(cmd1,"rgb"))
+							{
+								cur->CaptureType_set(CAfxStream::CT_RGB);
+							}
+							else
+							if(!_stricmp(cmd1,"rgba"))
+							{
+								cur->CaptureType_set(CAfxStream::CT_RGBA);
+							}
+							else
+							{
+								Tier0_Warning("Unknown captureType.\n");
+							}
+
+							return;
+						}
+
+						Tier0_Msg(
+							"%s captureType rgb|rba - Capture type.\n"
+							"Current value: %s.\n"
+							, cmdPrefix
+							, cur->CaptureType_get() == CAfxStream::CT_RGBA ? "rgba" : (cur->CaptureType_get() == CAfxStream::CT_RGB ? "rbg" : "[unknown]")
+						);
+						return;
+					}*/
 				}
 			}
 
@@ -2071,6 +2123,7 @@ void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * 
 				Tier0_Msg("%s record [...] - Controlls whether or not this stream is recorded with mirv_streams record.\n", cmdPrefix);
 				Tier0_Msg("%s drawHud [...] - Controlls whether or not HUD is drawn for this stream.\n", cmdPrefix);
 				Tier0_Msg("%s drawViewModel [...] - Controlls whether or not view model (in-eye weapon) is drawn for this stream.\n", cmdPrefix);
+				//Tier0_Msg("%s captureType [...] - Controlls capture format and operations.\n", cmdPrefix);
 			}
 			
 			if(curDeveloper)
@@ -2169,6 +2222,103 @@ void CAfxStreams::LevelShutdown(IAfxBaseClientDll * cl)
 	}
 }
 
+extern bool g_bD3D9DebugPrint;
+
+void CAfxStreams::DebugDump()
+{
+	bool isRgba = true;
+
+	int width = 1280;
+	int height = 720;
+
+	int imagePitch = width * (isRgba ? 4 : 3);
+	size_t imageBytes = imagePitch * height;
+
+	if( !m_TempBuffer || m_TempBufferBytesAllocated < imageBytes)
+	{
+		m_TempBuffer = realloc(m_TempBuffer, imageBytes);
+		if(m_TempBuffer) m_TempBufferBytesAllocated = imageBytes;
+	}
+
+	if(m_TempBuffer)
+	{
+		m_CurrentContext->GetParent()->ReadPixels(
+			0, 0,
+			width, height,
+			(unsigned char*)m_TempBuffer,
+			isRgba ? IMAGE_FORMAT_RGBA8888 : IMAGE_FORMAT_RGB888
+		);
+
+		// (back) transform to MDT native format:
+		{
+			int lastLine = height >> 1;
+			if(height & 0x1) ++lastLine;
+
+			for(int y=0;y<lastLine;++y)
+			{
+				int srcLine = y;
+				int dstLine = height -1 -y;
+
+				if(isRgba)
+				{
+					for(int x=0;x<width;++x)
+					{
+						unsigned char r = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +0];
+						unsigned char g = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +1];
+						unsigned char b = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +2];
+						unsigned char a = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +3];
+									
+						((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +0] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +2];
+						((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +1] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +1];
+						((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +2] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +0];
+						((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +3] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +3];
+
+						((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +0] = b;
+						((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +1] = g;
+						((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +2] = r;
+						((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +3] = a;
+					}
+				}
+				else
+				{
+					for(int x=0;x<width;++x)
+					{
+						unsigned char r = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +0];
+						unsigned char g = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +1];
+						unsigned char b = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +2];
+									
+						((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +0] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +2];
+						((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +1] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +1];
+						((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +2] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +0];
+									
+						((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +0] = b;
+						((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +1] = g;
+						((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +2] = r;
+					}
+				}
+			}
+		}
+
+		// Write to disk:
+		{
+			std::wstring path = L"debug.tga";
+				bool success = m_FormatBmpAndNotTga && !isRgba
+					? WriteRawBitmap((unsigned char*)m_TempBuffer, path.c_str(), width, height, 24, imagePitch)
+					: WriteRawTarga((unsigned char*)m_TempBuffer, path.c_str(), width, height, isRgba ? 32 : 24, false, imagePitch, isRgba ? 8 : 0)
+				;
+				if(!success)
+				{
+					Tier0_Warning("Failed writing image #%i for DebugDump\n.", m_Frame);
+				}
+		}
+	}
+	else
+	{
+		Tier0_Warning("CAfxStreams::View_Render: Failed to realloc m_TempBuffer.\n");
+	}
+
+}
+
 void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx, vrect_t_csgo *rect)
 {
 	m_CurrentContext = cx;
@@ -2184,6 +2334,9 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 			SetMatVarsForStreams(); // keep them set in case a mofo resets them.
 
 			m_PreviewStream->StreamAttach(this);
+
+			cx->GetParent()->ClearColor4ub(0,0,0,0);
+			cx->GetParent()->ClearBuffers(true,false,false);
 		}
 	}
 
@@ -2234,6 +2387,21 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 
 				//cl->GetParent()->WriteSaveGameScreenshotOfSize(oss.str().c_str(), rect->width, rect->height);
 
+				bool isRgba = (*it)->CaptureType_get() == CAfxStream::CT_RGBA;
+
+				if(isRgba)
+				{
+					if(m_RgbaRenderTarget)
+					{
+						g_bD3D9DebugPrint = true;
+						cx->GetParent()->PushRenderTargetAndViewport(m_RgbaRenderTarget);
+					}
+					else
+					{
+						Tier0_Warning("CAfxStreams::View_Render: Cannot capture rgba properly!\n");
+					}
+				}
+
 				IViewRender_csgo * view = GetView_csgo();
 
 				const CViewSetup_csgo * viewSetup = view->GetViewSetup();
@@ -2243,9 +2411,12 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 				if((*it)->DrawHud_get()) whatToDraw |= RENDERVIEW_DRAWHUD;
 				if((*it)->DrawViewModel_get()) whatToDraw |= RENDERVIEW_DRAWVIEWMODEL;
 
-				view->RenderView(*viewSetup, *viewSetup, VIEW_CLEAR_STENCIL|VIEW_CLEAR_DEPTH|VIEW_CLEAR_COLOR, whatToDraw);
+				cx->GetParent()->ClearColor4ub(0,0,0,0);
+				cx->GetParent()->ClearBuffers(true,false,false);
 
-				int imagePitch = viewSetup->m_nUnscaledWidth * 3;
+				view->RenderView(*viewSetup, *viewSetup, VIEW_CLEAR_STENCIL|VIEW_CLEAR_DEPTH, whatToDraw);
+
+				int imagePitch = viewSetup->m_nUnscaledWidth * (isRgba ? 4 : 3);
 				size_t imageBytes = imagePitch * viewSetup->m_nUnscaledHeight;
 
 				if( !m_TempBuffer || m_TempBufferBytesAllocated < imageBytes)
@@ -2260,7 +2431,7 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 						viewSetup->m_nUnscaledX, viewSetup->m_nUnscaledY,
 						viewSetup->m_nUnscaledWidth, viewSetup->m_nUnscaledHeight,
 						(unsigned char*)m_TempBuffer,
-						IMAGE_FORMAT_RGB888
+						isRgba ? IMAGE_FORMAT_RGBA8888 : IMAGE_FORMAT_RGB888
 					);
 
 					// (back) transform to MDT native format:
@@ -2273,17 +2444,42 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 							int srcLine = y;
 							int dstLine = viewSetup->m_nUnscaledHeight -1 -y;
 
-							for(int x=0;x<viewSetup->m_nUnscaledWidth;++x)
+							if(isRgba)
 							{
-								unsigned char r = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +0];
-								unsigned char g = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +1];
-								unsigned char b = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +2];
-								((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +0] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +2];
-								((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +1] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +1];
-								((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +2] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +0];
-								((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +0] = b;
-								((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +1] = g;
-								((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +2] = r;
+								for(int x=0;x<viewSetup->m_nUnscaledWidth;++x)
+								{
+									unsigned char r = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +0];
+									unsigned char g = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +1];
+									unsigned char b = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +2];
+									unsigned char a = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +3];
+									
+									((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +0] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +2];
+									((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +1] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +1];
+									((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +2] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +0];
+									((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +3] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +3];
+
+									((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +0] = b;
+									((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +1] = g;
+									((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +2] = r;
+									((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +3] = a;
+								}
+							}
+							else
+							{
+								for(int x=0;x<viewSetup->m_nUnscaledWidth;++x)
+								{
+									unsigned char r = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +0];
+									unsigned char g = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +1];
+									unsigned char b = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +2];
+									
+									((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +0] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +2];
+									((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +1] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +1];
+									((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +2] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +0];
+									
+									((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +0] = b;
+									((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +1] = g;
+									((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +2] = r;
+								}
 							}
 						}
 					}
@@ -2293,9 +2489,9 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 						std::wstring path;
 						if((*it)->CreateCapturePath(m_Frame, m_FormatBmpAndNotTga, path))
 						{
-							bool success = m_FormatBmpAndNotTga
+							bool success = m_FormatBmpAndNotTga && !isRgba
 								? WriteRawBitmap((unsigned char*)m_TempBuffer, path.c_str(), viewSetup->m_nUnscaledWidth, viewSetup->m_nUnscaledHeight, 24, imagePitch)
-								: WriteRawTarga((unsigned char*)m_TempBuffer, path.c_str(), viewSetup->m_nUnscaledWidth, viewSetup->m_nUnscaledHeight, 24, false, imagePitch)
+								: WriteRawTarga((unsigned char*)m_TempBuffer, path.c_str(), viewSetup->m_nUnscaledWidth, viewSetup->m_nUnscaledHeight, isRgba ? 32 : 24, false, imagePitch, isRgba ? 8 : 0)
 							;
 							if(!success)
 							{
@@ -2306,7 +2502,17 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 				}
 				else
 				{
-					Tier0_Warning("CAfxStreams::View_Render: Failed to realoc m_TempBuffer.\n");
+					Tier0_Warning("CAfxStreams::View_Render: Failed to realloc m_TempBuffer.\n");
+				}
+
+				if(isRgba)
+				{
+					if(m_RgbaRenderTarget)
+					{
+						cx->GetParent()->PopRenderTargetAndViewport();
+
+						g_bD3D9DebugPrint = false;
+					}
 				}
 
 				(*it)->StreamDetach(this);
@@ -2502,4 +2708,22 @@ void CAfxStreams::AddStream(CAfxStream * stream)
 	m_Streams.push_back(stream);
 
 	if(m_Recording) stream->RecordStart();
+}
+
+void CAfxStreams::CreateRenderTargets(IMaterialSystem_csgo * materialSystem)
+{
+	materialSystem->BeginRenderTargetAllocation();
+
+	m_RgbaRenderTarget = materialSystem->CreateRenderTargetTexture(0,0,RT_SIZE_FULL_FRAME_BUFFER,IMAGE_FORMAT_RGBA8888);
+
+	if(m_RgbaRenderTarget)
+	{
+		m_RgbaRenderTarget->IncrementReferenceCount();
+	}
+	else
+	{
+		Tier0_Warning("AFXERROR: CAfxStreams::CreateRenderTargets no m_RgbaRenderTarget (affects rgba captures)!\n");
+	}
+
+	materialSystem->EndRenderTargetAllocation();
 }

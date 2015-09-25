@@ -117,11 +117,12 @@ public:
 	{
 		if(g_bD3D9DebugPrint)
 		{
-			Tier0_Msg("Clear: ");
-			Tier0_Msg("Flags=");
+			Tier0_Msg("Clear:");
+			Tier0_Msg(" Flags=");
 			if(Flags & D3DCLEAR_STENCIL) Tier0_Msg("|D3DCLEAR_STENCIL");
 			if(Flags & D3DCLEAR_TARGET) Tier0_Msg("|D3DCLEAR_TARGET");
 			if(Flags & D3DCLEAR_ZBUFFER) Tier0_Msg("|D3DCLEAR_ZBUFFER");
+			Tier0_Msg(" Color=0x%08x", Color);
 			Tier0_Msg(" Z=%f",Z);
 			Tier0_Msg("\n");
 		}

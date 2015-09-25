@@ -1093,7 +1093,7 @@ public:
 	virtual void _UNKNOWN_011(void)
 	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 11) }
 
-	virtual void _UNKNOWN_012(void)
+	virtual void ClearBuffers( bool bClearColor, bool bClearDepth, bool bClearStencil = false )
 	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 12) }
 
 	virtual void ReadPixels( int x, int y, int width, int height, unsigned char *data, ImageFormat_csgo dstFormat, unsigned __int32 _unknown7 = 0)
@@ -1308,7 +1308,7 @@ public:
 	virtual void _UNKNOWN_078(void)
 	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 78) }
 
-	virtual void _UNKNOWN_079(void)
+	virtual void ClearColor4ub( unsigned char r, unsigned char g, unsigned char b, unsigned char a )
 	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 79) }
 
 	virtual void _UNKNOWN_080(void)
@@ -1416,19 +1416,19 @@ public:
 	virtual void _UNKNOWN_114(void)
 	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 114) }
 
-	virtual void _UNKNOWN_115(void)
-	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 115) }
-
-	virtual void _UNKNOWN_116(void)
-	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 116) }
-
-	virtual void _UNKNOWN_117(void)
-	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 117) }
-
-	virtual void _UNKNOWN_118(void)
+	virtual void PushRenderTargetAndViewport( )
 	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 118) }
 
-	virtual void _UNKNOWN_119(void)
+	virtual void PushRenderTargetAndViewport( ITexture_csgo *pTexture )
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 117) }
+
+	virtual void PushRenderTargetAndViewport( ITexture_csgo *pTexture, int nViewX, int nViewY, int nViewW, int nViewH )
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 116) }
+
+	virtual void PushRenderTargetAndViewport( ITexture_csgo *pTexture, ITexture_csgo *pDepthTexture, int nViewX, int nViewY, int nViewW, int nViewH )
+	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 115) }
+
+	virtual void PopRenderTargetAndViewport( void )
 	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 119) }
 
 	virtual void _UNKNOWN_120(void)

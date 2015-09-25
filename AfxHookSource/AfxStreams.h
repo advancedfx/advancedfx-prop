@@ -33,6 +33,12 @@ public:
 		TST_CAfxBaseFxStream
 	};
 
+	enum CaptureType
+	{
+		CT_RGB,
+		CT_RGBA
+	};
+
 	CAfxStream(char const * streamName);
 
 	virtual ~CAfxStream();
@@ -42,6 +48,9 @@ public:
 	virtual CAfxBaseFxStream * AsAfxBaseFxStream(void) { return 0; }
 
 	virtual TopStreamType GetTopStreamType(void) { return TST_CAfxStream; }
+
+	CaptureType CaptureType_get(void);
+	void CaptureType_set(CaptureType value);
 
 	bool DrawHud_get(void);
 	void DrawHud_set(bool value);
@@ -71,6 +80,8 @@ public:
 protected:
 	/// <summary>This member is only valid between StreamAttach and StreamDeatach.</summary>
 	IAfxStreams4Stream * m_Streams;
+
+	CaptureType m_CaptureType;
 
 private:
 	std::string m_StreamName;
@@ -729,21 +740,24 @@ class CAfxAlphaEntityStream
 public:
 	CAfxAlphaEntityStream(char const * streamName) : CAfxBaseFxStream(streamName)
 	{
+		//m_CaptureType = CT_RGBA;
+
 		m_ClientEffectTexturesAction = HA_Draw;
-		m_WorldTexturesAction =  MA_Draw;
-		m_SkyBoxTexturesAction =  MA_Draw;
-		m_StaticPropTexturesAction =  MA_Draw;
-		m_CableAction =  HA_Draw;
+		m_WorldTexturesAction =  MA_Invisible;
+		m_SkyBoxTexturesAction =  MA_Invisible;
+		m_StaticPropTexturesAction =  MA_Invisible;
+		m_CableAction =  HA_NoDraw;
 		m_PlayerModelsAction =  MA_Draw;
 		m_WeaponModelsAction =  MA_Draw;
 		m_ShellModelsAction =  MA_Draw;
-		m_OtherModelsAction =  MA_Draw;
-		m_DecalTexturesAction =  HA_Draw;
-		m_EffectsAction =  HA_Draw;
-		m_ShellParticleAction =  HA_Draw;
-		m_OtherParticleAction =  HA_Draw;
+		m_OtherModelsAction =  MA_Invisible;
+		m_DecalTexturesAction =  HA_NoDraw;
+		m_EffectsAction =  HA_NoDraw;
+		m_ShellParticleAction =  HA_NoDraw;
+		m_OtherParticleAction =  HA_NoDraw;
 		m_StickerAction =  MA_Draw;
-		m_ErrorMaterialAction = HA_Draw;
+		m_ErrorMaterialAction = HA_NoDraw;
+
 	}
 
 	virtual ~CAfxAlphaEntityStream() {}
@@ -839,6 +853,8 @@ public:
 	/// <param name="index">stream name to preview or empty string if to preview nothing.</param>
 	void Console_PreviewStream(const char * streamName);
 
+	virtual void DebugDump();
+
 	virtual IMaterialSystem_csgo * GetMaterialSystem(void);
 	virtual IAfxFreeMaster * GetFreeMaster(void);
 	virtual IAfxMatRenderContext * GetCurrentContext(void);
@@ -925,6 +941,7 @@ private:
 	size_t m_TempBufferBytesAllocated;
 	std::wstring m_TakeDir;
 	bool m_FormatBmpAndNotTga;
+	ITexture_csgo * m_RgbaRenderTarget;
 
 	void OnAfxBaseClientDll_Free(void);
 	bool Console_CheckStreamName(char const * value);
@@ -941,6 +958,8 @@ private:
 	void EnsureMatVars();
 
 	void AddStream(CAfxStream * stream);
+
+	void CreateRenderTargets(IMaterialSystem_csgo * materialSystem);
 };
 
 extern CAfxStreams g_AfxStreams;

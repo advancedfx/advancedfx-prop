@@ -17,10 +17,6 @@ extern WrpVEngineClient * g_VEngineClient;
 
 AfxHookSourceInput g_AfxHookSourceInput;
 
-const double AfxHookSourceInput::m_CamSpeedFacMove = 320.0;
-const double AfxHookSourceInput::m_CamSpeedFacRotate = 180.0;
-const double AfxHookSourceInput::m_CamSpeedFacZoom = 10.0;
-
 AfxHookSourceInput::AfxHookSourceInput()
 : m_CameraControlMode(false)
 , m_CamResetView(false)
@@ -46,6 +42,22 @@ AfxHookSourceInput::AfxHookSourceInput()
 , m_IgnoreNextKey(false)
 , m_MouseSens(1.0/10)
 , m_KeyboardSens(1.0)
+, m_KeyboardForwardSpeed(320.0)
+, m_KeyboardBackwardSpeed(320.0)
+, m_KeyboardLeftSpeed(320.0)
+, m_KeyboardRightSpeed(320.0)
+, m_KeyboardUpSpeed(320.0)
+, m_KeyboardDownSpeed(320.0)
+, m_KeyboardPitchPositiveSpeed(180.0)
+, m_KeyboardPitchNegativeSpeed(180.0)
+, m_KeyboardYawPositiveSpeed(180.0)
+, m_KeyboardYawNegativeSpeed(180.0)
+, m_KeyboardRollPositiveSpeed(180.0)
+, m_KeyboardRollNegativeSpeed(180.0)
+, m_KeyboardFovPositiveSpeed(10.0)
+, m_KeyboardFovNegativeSpeed(10.0)
+, m_MouseYawSpeed(180.0)
+, m_MousePitchSpeed(180.0)
 , m_FirstGetCursorPos(true)
 , m_LastCursorX(0)
 , m_LastCursorY(0)
@@ -73,37 +85,37 @@ bool AfxHookSourceInput::GetCamResetView(void)
 
 double AfxHookSourceInput::GetCamDForward(void)
 {
-	return m_CamSpeed * m_CamSpeedFacMove * (m_CamForward -m_CamForwardI);
+	return m_CamSpeed * (m_CamForward -m_CamForwardI);
 }
 
 double AfxHookSourceInput::GetCamDLeft(void)
 {
-	return m_CamSpeed * m_CamSpeedFacMove * (m_CamLeft -m_CamLeftI);
+	return m_CamSpeed * (m_CamLeft -m_CamLeftI);
 }
 
 double AfxHookSourceInput::GetCamDUp(void)
 {
-	return m_CamSpeed * m_CamSpeedFacMove * (m_CamUp -m_CamUpI);
+	return m_CamSpeed * (m_CamUp -m_CamUpI);
 }
 
 double AfxHookSourceInput::GetCamDPitch(void)
 {
-	return m_CamSpeed * m_CamSpeedFacRotate * (m_CamPitch -m_CamPitchI +m_CamPitchM);
+	return m_CamSpeed * (m_CamPitch -m_CamPitchI +m_CamPitchM);
 }
 
 double AfxHookSourceInput::GetCamDYaw(void)
 {
-	return m_CamSpeed * m_CamSpeedFacRotate * (m_CamYaw -m_CamYawI +m_CamYawM);
+	return m_CamSpeed * (m_CamYaw -m_CamYawI +m_CamYawM);
 }
 
 double AfxHookSourceInput::GetCamDRoll(void)
 {
-	return m_CamSpeed * m_CamSpeedFacRotate * (m_CamRoll -m_CamRollI);
+	return m_CamSpeed * (m_CamRoll -m_CamRollI);
 }
 
 double AfxHookSourceInput::GetCamDFov(void)
 {
-	return m_CamSpeed * m_CamSpeedFacZoom * (m_CamFov -m_CamFovI);
+	return m_CamSpeed * (m_CamFov -m_CamFovI);
 }
 
 bool AfxHookSourceInput::GetCameraControlMode(void)
@@ -135,6 +147,165 @@ void AfxHookSourceInput::SetMouseSensitivity(double value)
 {
 	m_MouseSens = value;
 }
+
+double AfxHookSourceInput::KeyboardForwardSpeed_get(void)
+{
+	return m_KeyboardForwardSpeed;
+}
+
+void AfxHookSourceInput::KeyboardForwardSpeed_set(double value)
+{
+	m_KeyboardForwardSpeed = value;
+}
+	
+double AfxHookSourceInput::KeyboardBackwardSpeed_get(void)
+{
+	return m_KeyboardBackwardSpeed;
+}
+
+void AfxHookSourceInput::KeyboardBackwardSpeed_set(double value)
+{
+	m_KeyboardBackwardSpeed = value;
+}
+	
+double AfxHookSourceInput::KeyboardLeftSpeed_get(void)
+{
+	return m_KeyboardLeftSpeed;
+}
+
+void AfxHookSourceInput::KeyboardLeftSpeed_set(double value)
+{
+	m_KeyboardLeftSpeed = value;
+}
+	
+double AfxHookSourceInput::KeyboardRightSpeed_get(void)
+{
+	return m_KeyboardRightSpeed;
+}
+
+void AfxHookSourceInput::KeyboardRightSpeed_set(double value)
+{
+	m_KeyboardRightSpeed = value;
+}
+	
+double AfxHookSourceInput::KeyboardUpSpeed_get(void)
+{
+	return m_KeyboardUpSpeed;
+}
+
+void AfxHookSourceInput::KeyboardUpSpeed_set(double value)
+{
+	m_KeyboardUpSpeed = value;
+}
+	
+double AfxHookSourceInput::KeyboardDownSpeed_get(void)
+{
+	return m_KeyboardDownSpeed;
+}
+
+void AfxHookSourceInput::KeyboardDownSpeed_set(double value)
+{
+	m_KeyboardDownSpeed = value;
+}
+	
+double AfxHookSourceInput::KeyboardPitchPositiveSpeed_get(void)
+{
+	return m_KeyboardPitchPositiveSpeed;
+}
+void AfxHookSourceInput::KeyboardPitchPositiveSpeed_set(double value)
+{
+	m_KeyboardPitchPositiveSpeed = value;
+}
+	
+double AfxHookSourceInput::KeyboardPitchNegativeSpeed_get(void)
+{
+	return m_KeyboardPitchNegativeSpeed;
+}
+
+void AfxHookSourceInput::KeyboardPitchNegativeSpeed_set(double value)
+{
+	m_KeyboardPitchNegativeSpeed = value;
+}
+	
+double AfxHookSourceInput::KeyboardYawPositiveSpeed_get(void)
+{
+	return m_KeyboardYawPositiveSpeed;
+}
+
+void AfxHookSourceInput::KeyboardYawPositiveSpeed_set(double value)
+{
+	m_KeyboardYawPositiveSpeed = value;
+}
+	
+double AfxHookSourceInput::KeyboardYawNegativeSpeed_get(void)
+{
+	return m_KeyboardYawNegativeSpeed;
+}
+
+void AfxHookSourceInput::KeyboardYawNegativeSpeed_set(double value)
+{
+	m_KeyboardYawNegativeSpeed = value;
+}
+	
+double AfxHookSourceInput::KeyboardRollPositiveSpeed_get(void)
+{
+	return m_KeyboardRollPositiveSpeed;
+}
+
+void AfxHookSourceInput::KeyboardRollPositiveSpeed_set(double value)
+{
+	m_KeyboardRollPositiveSpeed = value;
+}
+	
+double AfxHookSourceInput::KeyboardRollNegativeSpeed_get(void)
+{
+	return m_KeyboardRollNegativeSpeed;
+}
+
+void AfxHookSourceInput::KeyboardRollNegativeSpeed_set(double value)
+{
+	m_KeyboardRollNegativeSpeed = value;
+}
+	
+double AfxHookSourceInput::KeyboardFovPositiveSpeed_get(void)
+{
+	return m_KeyboardFovPositiveSpeed;
+}
+void AfxHookSourceInput::KeyboardFovPositiveSpeed_set(double value)
+{
+	m_KeyboardFovPositiveSpeed = value;
+}
+	
+double AfxHookSourceInput::KeyboardFovNegativeSpeed_get(void)
+{
+	return m_KeyboardFovNegativeSpeed;
+}
+
+void AfxHookSourceInput::KeyboardFovNegativeSpeed_set(double value)
+{
+	m_KeyboardFovNegativeSpeed = value;
+}
+	
+double AfxHookSourceInput::MouseYawSpeed_get(void)
+{
+	return m_MouseYawSpeed;
+}
+
+void AfxHookSourceInput::MouseYawSpeed_set(double value)
+{
+	m_MouseYawSpeed = value;
+}
+	
+double AfxHookSourceInput::MousePitchSpeed_get(void)
+{
+	return m_MousePitchSpeed;
+}
+
+void AfxHookSourceInput::MousePitchSpeed_set(double value)
+{
+	m_MousePitchSpeed = value;
+}
+
 
 bool AfxHookSourceInput::Supply_CharEvent(WPARAM wParam, LPARAM lParam)
 {
@@ -215,55 +386,55 @@ bool AfxHookSourceInput::Supply_KeyEvent(KeyState keyState, WPARAM wParam, LPARA
 			return true;
 		case 0x57: // W key
 		case VK_NUMPAD8:
-			m_CamForward = KS_DOWN == keyState ? m_KeyboardSens : 0.0;
+			m_CamForward = KS_DOWN == keyState ? m_KeyboardSens * m_KeyboardForwardSpeed : 0.0;
 			return true;
 		case 0x53: // S key
 		case VK_NUMPAD2:
-			m_CamForwardI = KS_DOWN == keyState ? m_KeyboardSens : 0.0;
+			m_CamForwardI = KS_DOWN == keyState ? m_KeyboardSens * m_KeyboardBackwardSpeed : 0.0;
 			return true;
 		case 0x41: // A key
 		case VK_NUMPAD4:
-			m_CamLeft = KS_DOWN == keyState ? m_KeyboardSens : 0.0;
+			m_CamLeft = KS_DOWN == keyState ? m_KeyboardSens * m_KeyboardLeftSpeed : 0.0;
 			return true;
 		case 0x44: // D key
 		case VK_NUMPAD6:
-			m_CamLeftI = KS_DOWN == keyState ? m_KeyboardSens : 0.0;
+			m_CamLeftI = KS_DOWN == keyState ? m_KeyboardSens * m_KeyboardRightSpeed : 0.0;
 			return true;
 		case 0x52: // R key
 		case VK_NUMPAD9:
-			m_CamUp = KS_DOWN == keyState ? m_KeyboardSens : 0.0;
+			m_CamUp = KS_DOWN == keyState ? m_KeyboardSens * m_KeyboardUpSpeed : 0.0;
 			return true;
 		case 0x46: // F key
 		case VK_NUMPAD3:
-			m_CamUpI = KS_DOWN == keyState ? m_KeyboardSens : 0.0;
+			m_CamUpI = KS_DOWN == keyState ? m_KeyboardSens * m_KeyboardDownSpeed : 0.0;
 			return true;
 		case VK_NUMPAD1:
 		case VK_NEXT:
-			m_CamFov = KS_DOWN == keyState ? m_KeyboardSens : 0.0;
+			m_CamFov = KS_DOWN == keyState ? m_KeyboardSens * m_KeyboardFovPositiveSpeed : 0.0;
 			return true;
 		case VK_NUMPAD7:
 		case VK_PRIOR:
-			m_CamFovI = KS_DOWN == keyState ? m_KeyboardSens : 0.0;
+			m_CamFovI = KS_DOWN == keyState ? m_KeyboardSens * m_KeyboardFovNegativeSpeed : 0.0;
 			return true;
 		case 0x58: // X key
 		case VK_DECIMAL:
-			m_CamRoll = KS_DOWN == keyState ? m_KeyboardSens : 0.0;
+			m_CamRoll = KS_DOWN == keyState ? m_KeyboardSens * m_KeyboardRollPositiveSpeed : 0.0;
 			return true;
 		case 0x5A: // Z key
 		case VK_NUMPAD0:
-			m_CamRollI = KS_DOWN == keyState ? m_KeyboardSens : 0.0;
+			m_CamRollI = KS_DOWN == keyState ? m_KeyboardSens * m_KeyboardRollNegativeSpeed : 0.0;
 			return true;
 		case VK_DOWN:
-			m_CamPitch = KS_DOWN == keyState ? m_KeyboardSens : 0.0;
+			m_CamPitch = KS_DOWN == keyState ? m_KeyboardSens * m_KeyboardPitchPositiveSpeed : 0.0;
 			return true;
 		case VK_UP:
-			m_CamPitchI = KS_DOWN == keyState ? m_KeyboardSens : 0.0;
+			m_CamPitchI = KS_DOWN == keyState ? m_KeyboardSens * m_KeyboardPitchNegativeSpeed : 0.0;
 			return true;
 		case VK_LEFT:
-			m_CamYaw = KS_DOWN == keyState ? m_KeyboardSens : 0.0;
+			m_CamYaw = KS_DOWN == keyState ? m_KeyboardSens * m_KeyboardYawPositiveSpeed : 0.0;
 			return true;
 		case VK_RIGHT:
-			m_CamYawI = KS_DOWN == keyState ? m_KeyboardSens : 0.0;
+			m_CamYawI = KS_DOWN == keyState ? m_KeyboardSens * m_KeyboardYawNegativeSpeed : 0.0;
 			return true;
 		}
 	}
@@ -281,8 +452,8 @@ bool AfxHookSourceInput::Supply_RawMouseMotion(int dX, int dY)
 
 	if(m_CameraControlMode)
 	{
-		m_CamYawM += -m_MouseSens * dX;
-		m_CamPitchM += m_MouseSens * dY;
+		m_CamYawM += m_MouseSens * m_MouseYawSpeed * -dX;
+		m_CamPitchM += m_MouseSens * m_MousePitchSpeed * dY;
 
 		return true;
 	}
@@ -316,8 +487,8 @@ void AfxHookSourceInput::Supply_GetCursorPos(LPPOINT lpPoint)
 		LONG dX = lpPoint->x -m_LastCursorX;
 		LONG dY = lpPoint->y -m_LastCursorY;
 
-		m_CamYawM += -m_MouseSens * dX;
-		m_CamPitchM += m_MouseSens * dY;
+		m_CamYawM += m_MouseSens * m_MouseYawSpeed * -dX;
+		m_CamPitchM += m_MouseSens * m_MousePitchSpeed * dY;
 
 		// pretend we didn't move from last SetCursorPos call:
 		lpPoint->x = m_LastCursorX;

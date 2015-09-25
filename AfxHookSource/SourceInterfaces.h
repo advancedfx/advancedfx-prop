@@ -2320,8 +2320,29 @@ typedef uint64 VertexFormat_t_csgo;
 
 typedef void MeshBoneRemap_t_csgo;
 typedef void matrix3x4_t_csgo;
-typedef void ITexture_csgo;
 typedef void MaterialLightingState_t_csgo;
+
+class ITexture_csgo
+{
+public:
+	virtual void _UNKNOWN_000(void) = 0;
+	virtual void _UNKNOWN_001(void) = 0;
+	virtual void _UNKNOWN_002(void) = 0;
+	virtual void _UNKNOWN_003(void) = 0;
+	virtual void _UNKNOWN_004(void) = 0;
+	virtual void _UNKNOWN_005(void) = 0;
+	virtual void _UNKNOWN_006(void) = 0;
+	virtual void _UNKNOWN_007(void) = 0;
+	virtual void _UNKNOWN_008(void) = 0;
+	virtual void _UNKNOWN_009(void) = 0;
+
+	// Methods associated with reference count
+	virtual void IncrementReferenceCount( void ) = 0;
+	virtual void DecrementReferenceCount( void ) = 0;
+
+	// ...
+	// more we don't care about;
+};
 
 enum MaterialPrimitiveType_t_csgo 
 { 
@@ -2692,7 +2713,9 @@ public:
 
 	virtual void _UNKNOWN_010(void) = 0;
 	virtual void _UNKNOWN_011(void) = 0;
-	virtual void _UNKNOWN_012(void) = 0;
+	
+	// 012:
+	virtual void ClearBuffers( bool bClearColor, bool bClearDepth, bool bClearStencil = false ) = 0;
 	
 	// 013:
 	// read to a unsigned char rgb image. 
@@ -2770,7 +2793,10 @@ public:
 	virtual void _UNKNOWN_076(void) = 0; // PushSelectionName
 	virtual void _UNKNOWN_077(void) = 0; // PopSelectionName
 	virtual void _UNKNOWN_078(void) = 0; // ClearColor3ub
-	virtual void _UNKNOWN_079(void) = 0; // ClearColor4ub
+	
+	// 079:
+	virtual void ClearColor4ub( unsigned char r, unsigned char g, unsigned char b, unsigned char a ) = 0;
+
 	virtual void _UNKNOWN_080(void) = 0; // OverrideDepthEnable
 	virtual void _UNKNOWN_081(void) = 0;
 	virtual void _UNKNOWN_082(void) = 0;
@@ -2804,15 +2830,31 @@ public:
 	virtual void _UNKNOWN_110(void) = 0;
 	virtual void _UNKNOWN_111(void) = 0;
 	virtual void _UNKNOWN_112(void) = 0;
-	virtual void _UNKNOWN_113(void) = 0;
+	virtual void _UNKNOWN_113(void) = 0; // DrawScreenSpaceRectangle
 	virtual void _UNKNOWN_114(void) = 0;
-	virtual void _UNKNOWN_115(void) = 0;
-	virtual void _UNKNOWN_116(void) = 0;
-	virtual void _UNKNOWN_117(void) = 0;
-	virtual void _UNKNOWN_118(void) = 0;
-	virtual void _UNKNOWN_119(void) = 0;
-	virtual void _UNKNOWN_120(void) = 0;
-	virtual void _UNKNOWN_121(void) = 0;
+	
+	// 118:
+	// This version will push the current rendertarget + current viewport onto the stack
+	virtual void PushRenderTargetAndViewport( ) = 0;
+
+	// 117:
+	// This version will push a new rendertarget + a maximal viewport for that rendertarget onto the stack
+	virtual void PushRenderTargetAndViewport( ITexture_csgo *pTexture ) = 0;
+
+	// 116:
+	// This version will push a new rendertarget + a specified viewport onto the stack
+	virtual void PushRenderTargetAndViewport( ITexture_csgo *pTexture, int nViewX, int nViewY, int nViewW, int nViewH ) = 0;
+
+	// 115:
+	// This version will push a new rendertarget + a specified viewport onto the stack
+	virtual void PushRenderTargetAndViewport( ITexture_csgo *pTexture, ITexture_csgo *pDepthTexture, int nViewX, int nViewY, int nViewW, int nViewH ) = 0;
+
+	// 119:
+	// This will pop a rendertarget + viewport
+	virtual void PopRenderTargetAndViewport( void ) = 0;
+
+	virtual void _UNKNOWN_120(void) = 0; // BindLightmapTexture
+	virtual void _UNKNOWN_121(void) = 0; // CopyRenderTargetToTextureEx
 	virtual void _UNKNOWN_122(void) = 0;
 	virtual void _UNKNOWN_123(void) = 0;
 	virtual void _UNKNOWN_124(void) = 0;
@@ -2820,9 +2862,9 @@ public:
 	virtual void _UNKNOWN_126(void) = 0;
 	virtual void _UNKNOWN_127(void) = 0;
 	virtual void _UNKNOWN_128(void) = 0;
-	virtual void _UNKNOWN_129(void) = 0;
-	virtual void _UNKNOWN_130(void) = 0;
-	virtual void _UNKNOWN_131(void) = 0;
+	virtual void _UNKNOWN_129(void) = 0; 
+	virtual void _UNKNOWN_130(void) = 0; // PushCustomClipPlane
+	virtual void _UNKNOWN_131(void) = 0; // PopCustomClipPlane
 	virtual void _UNKNOWN_132(void) = 0; // GetMaxToRender
 	virtual void _UNKNOWN_133(void) = 0; // GetMaxVerticesToRender
 	virtual void _UNKNOWN_134(void) = 0; // GetMaxIndicesToRender
@@ -2966,6 +3008,28 @@ public:
 
 typedef void * MaterialLock_t_csgo;
 
+// NOTE: All size modes will force the render target to be smaller than or equal to
+// the size of the framebuffer.
+enum RenderTargetSizeMode_t_csgo
+{
+	RT_SIZE_NO_CHANGE=0,			// Only allowed for render targets that don't want a depth buffer
+	// (because if they have a depth buffer, the render target must be less than or equal to the size of the framebuffer).
+	RT_SIZE_DEFAULT=1,				// Don't play with the specified width and height other than making sure it fits in the framebuffer.
+	RT_SIZE_PICMIP=2,				// Apply picmip to the render target's width and height.
+	RT_SIZE_HDR=3,					// frame_buffer_width / 4
+	RT_SIZE_FULL_FRAME_BUFFER=4,	// Same size as frame buffer, or next lower power of 2 if we can't do that.
+	RT_SIZE_OFFSCREEN=5,			// Target of specified size, don't mess with dimensions
+	RT_SIZE_FULL_FRAME_BUFFER_ROUNDED_UP=6 // Same size as the frame buffer, rounded up if necessary for systems that can't do non-power of two textures.
+};
+
+enum MaterialRenderTargetDepth_t_csgo
+{
+	MATERIAL_RT_DEPTH_SHARED   = 0x0,
+	MATERIAL_RT_DEPTH_SEPARATE = 0x1,
+	MATERIAL_RT_DEPTH_NONE     = 0x2,
+	MATERIAL_RT_DEPTH_ONLY	   = 0x3,
+};
+
 class IMaterialSystem_csgo abstract : public IAppSystem_csgo
 {
 public:
@@ -3051,18 +3115,37 @@ public:
 	// 084:
 	virtual IMaterial_csgo * FindMaterial( char const* pMaterialName, const char *pTextureGroupName, bool complain = true, const char *pComplainPrefix = 0 ) = 0;
 	
-	virtual void _UNKNOWN_085(void) = 0;
-	virtual void _UNKNOWN_086(void) = 0;
-	virtual void _UNKNOWN_087(void) = 0;
-	virtual void _UNKNOWN_088(void) = 0;
-	virtual void _UNKNOWN_089(void) = 0;
-	virtual void _UNKNOWN_090(void) = 0;
-	virtual void _UNKNOWN_091(void) = 0;
-	virtual void _UNKNOWN_092(void) = 0;
-	virtual void _UNKNOWN_093(void) = 0;
-	virtual void _UNKNOWN_094(void) = 0;
-	virtual void _UNKNOWN_095(void) = 0;
-	virtual void _UNKNOWN_096(void) = 0;
+	virtual void _UNKNOWN_085(void) = 0; // ?
+	virtual void _UNKNOWN_086(void) = 0; // FirstMaterial
+	virtual void _UNKNOWN_087(void) = 0; // NextMaterial
+	virtual void _UNKNOWN_088(void) = 0; // InvalidMaterial
+	virtual void _UNKNOWN_089(void) = 0; // GetMaterial
+	virtual void _UNKNOWN_090(void) = 0; // GetNumMaterials
+	virtual void _UNKNOWN_091(void) = 0; // FindTexture
+	virtual void _UNKNOWN_092(void) = 0; // IsTextureLoaded
+	virtual void _UNKNOWN_093(void) = 0; // CreateProceduralTexture
+
+	//
+	// Render targets
+	//
+
+	// 094:
+	virtual void BeginRenderTargetAllocation() = 0;
+
+	// 095:
+	virtual void EndRenderTargetAllocation() = 0; // Simulate an Alt-Tab in here, which causes a release/restore of all resources
+
+	// 096:
+	// Creates a render target
+	// If depth == true, a depth buffer is also allocated. If not, then
+	// the screen's depth buffer is used.
+	// Creates a texture for use as a render target
+	virtual ITexture_csgo *	CreateRenderTargetTexture( int w, 
+		int h, 
+		RenderTargetSizeMode_t_csgo sizeMode,	// Controls how size is generated (and regenerated on video mode change).
+		ImageFormat_csgo	format, 
+		MaterialRenderTargetDepth_t_csgo depth = MATERIAL_RT_DEPTH_SHARED ) = 0;
+
 	virtual void _UNKNOWN_097(void) = 0;
 	virtual void _UNKNOWN_098(void) = 0;
 	virtual void _UNKNOWN_099(void) = 0;

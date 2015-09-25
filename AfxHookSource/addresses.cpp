@@ -418,7 +418,7 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 		AFXADDR_SET(csgo_view, 0x0);
 	}
 
-	AFXADDR_SET(csgo_C_BasePlayer_OFS_m_skybox3d_scale, 0x14b8);
+	AFXADDR_SET(csgo_C_BasePlayer_OFS_m_skybox3d_scale, 0x149c);
 	AFXADDR_SET(csgo_CUnknown_GetPlayerName_DSZ, 0x0b);
 	AFXADDR_SET(csgo_CHudDeathNotice_FireGameEvent_DSZ, 0x0b);
 	AFXADDR_SET(csgo_CSkyboxView_Draw_DSZ, 0x0d);

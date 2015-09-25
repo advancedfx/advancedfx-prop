@@ -1586,6 +1586,198 @@ CON_COMMAND(mirv_input, "Input mode configuration.")
 					Tier0_Msg("Value: %f", g_AfxHookSourceInput.GetKeyboardSensitivty());
 					return;
 				}
+				else
+				if(0 == _stricmp("kForwardSpeed", arg2))
+				{
+					if(4 <= argc)
+					{
+						double value = atof(args->ArgV(3));
+						g_AfxHookSourceInput.KeyboardForwardSpeed_set(value);
+						return;
+					}
+					Tier0_Msg("Value: %f", g_AfxHookSourceInput.KeyboardForwardSpeed_get());
+					return;
+				}
+				else
+				if(0 == _stricmp("kBackwardSpeed", arg2))
+				{
+					if(4 <= argc)
+					{
+						double value = atof(args->ArgV(3));
+						g_AfxHookSourceInput.KeyboardBackwardSpeed_set(value);
+						return;
+					}
+					Tier0_Msg("Value: %f", g_AfxHookSourceInput.KeyboardBackwardSpeed_get());
+					return;
+				}
+				else
+				if(0 == _stricmp("kLeftSpeed", arg2))
+				{
+					if(4 <= argc)
+					{
+						double value = atof(args->ArgV(3));
+						g_AfxHookSourceInput.KeyboardLeftSpeed_set(value);
+						return;
+					}
+					Tier0_Msg("Value: %f", g_AfxHookSourceInput.KeyboardLeftSpeed_get());
+					return;
+				}
+				else
+				if(0 == _stricmp("kRightSpeed", arg2))
+				{
+					if(4 <= argc)
+					{
+						double value = atof(args->ArgV(3));
+						g_AfxHookSourceInput.KeyboardRightSpeed_set(value);
+						return;
+					}
+					Tier0_Msg("Value: %f", g_AfxHookSourceInput.KeyboardRightSpeed_get());
+					return;
+				}
+				else
+				if(0 == _stricmp("kUpSpeed", arg2))
+				{
+					if(4 <= argc)
+					{
+						double value = atof(args->ArgV(3));
+						g_AfxHookSourceInput.KeyboardUpSpeed_set(value);
+						return;
+					}
+					Tier0_Msg("Value: %f", g_AfxHookSourceInput.KeyboardUpSpeed_get());
+					return;
+				}
+				else
+				if(0 == _stricmp("kDownSpeed", arg2))
+				{
+					if(4 <= argc)
+					{
+						double value = atof(args->ArgV(3));
+						g_AfxHookSourceInput.KeyboardDownSpeed_set(value);
+						return;
+					}
+					Tier0_Msg("Value: %f", g_AfxHookSourceInput.KeyboardDownSpeed_get());
+					return;
+				}
+				else
+				if(0 == _stricmp("kPitchPositiveSpeed", arg2))
+				{
+					if(4 <= argc)
+					{
+						double value = atof(args->ArgV(3));
+						g_AfxHookSourceInput.KeyboardPitchPositiveSpeed_set(value);
+						return;
+					}
+					Tier0_Msg("Value: %f", g_AfxHookSourceInput.KeyboardPitchPositiveSpeed_get());
+					return;
+				}
+				else
+				if(0 == _stricmp("kPitchNegativeSpeed", arg2))
+				{
+					if(4 <= argc)
+					{
+						double value = atof(args->ArgV(3));
+						g_AfxHookSourceInput.KeyboardPitchNegativeSpeed_set(value);
+						return;
+					}
+					Tier0_Msg("Value: %f", g_AfxHookSourceInput.KeyboardPitchNegativeSpeed_get());
+					return;
+				}
+				else
+				if(0 == _stricmp("kYawPositiveSpeed", arg2))
+				{
+					if(4 <= argc)
+					{
+						double value = atof(args->ArgV(3));
+						g_AfxHookSourceInput.KeyboardYawPositiveSpeed_set(value);
+						return;
+					}
+					Tier0_Msg("Value: %f", g_AfxHookSourceInput.KeyboardYawPositiveSpeed_get());
+					return;
+				}
+				else
+				if(0 == _stricmp("kYawNegativeSpeed", arg2))
+				{
+					if(4 <= argc)
+					{
+						double value = atof(args->ArgV(3));
+						g_AfxHookSourceInput.KeyboardYawNegativeSpeed_set(value);
+						return;
+					}
+					Tier0_Msg("Value: %f", g_AfxHookSourceInput.KeyboardYawNegativeSpeed_get());
+					return;
+				}
+				else
+				if(0 == _stricmp("kRollPositiveSpeed", arg2))
+				{
+					if(4 <= argc)
+					{
+						double value = atof(args->ArgV(3));
+						g_AfxHookSourceInput.KeyboardRollPositiveSpeed_set(value);
+						return;
+					}
+					Tier0_Msg("Value: %f", g_AfxHookSourceInput.KeyboardRollPositiveSpeed_get());
+					return;
+				}
+				else
+				if(0 == _stricmp("kRollNegativeSpeed", arg2))
+				{
+					if(4 <= argc)
+					{
+						double value = atof(args->ArgV(3));
+						g_AfxHookSourceInput.KeyboardRollNegativeSpeed_set(value);
+						return;
+					}
+					Tier0_Msg("Value: %f", g_AfxHookSourceInput.KeyboardRollNegativeSpeed_get());
+					return;
+				}
+				else
+				if(0 == _stricmp("kFovPositiveSpeed", arg2))
+				{
+					if(4 <= argc)
+					{
+						double value = atof(args->ArgV(3));
+						g_AfxHookSourceInput.KeyboardFovPositiveSpeed_set(value);
+						return;
+					}
+					Tier0_Msg("Value: %f", g_AfxHookSourceInput.KeyboardFovPositiveSpeed_get());
+					return;
+				}
+				else
+				if(0 == _stricmp("kFovNegativeSpeed", arg2))
+				{
+					if(4 <= argc)
+					{
+						double value = atof(args->ArgV(3));
+						g_AfxHookSourceInput.KeyboardFovNegativeSpeed_set(value);
+						return;
+					}
+					Tier0_Msg("Value: %f", g_AfxHookSourceInput.KeyboardFovNegativeSpeed_get());
+					return;
+				}
+				else
+				if(0 == _stricmp("mYawSpeed", arg2))
+				{
+					if(4 <= argc)
+					{
+						double value = atof(args->ArgV(3));
+						g_AfxHookSourceInput.MouseYawSpeed_set(value);
+						return;
+					}
+					Tier0_Msg("Value: %f", g_AfxHookSourceInput.MouseYawSpeed_get());
+					return;
+				}
+				else
+				if(0 == _stricmp("mPitchSpeed", arg2))
+				{
+					if(4 <= argc)
+					{
+						double value = atof(args->ArgV(3));
+						g_AfxHookSourceInput.MousePitchSpeed_set(value);
+						return;
+					}
+					Tier0_Msg("Value: %f", g_AfxHookSourceInput.MousePitchSpeed_get());
+					return;
+				}
 			}
 
 			Tier0_Msg(
@@ -1594,6 +1786,38 @@ CON_COMMAND(mirv_input, "Input mode configuration.")
 				"mirv_input cfg msens <dValue> - Set mouse sensitiviy.\n"
 				"mirv_input cfg ksens - Get keyboard sensitivity.\n"
 				"mirv_input cfg ksens <dValue> - Set keyboard sensitivity.\n"
+				"mirv_input cfg kForwardSpeed - Get value.\n"
+				"mirv_input cfg kForwardSpeed <dValue> - Set value.\n"
+				"mirv_input cfg kBackwardSpeed - Get value.\n"
+				"mirv_input cfg kBackwardSpeed <dValue> - Set value.\n"
+				"mirv_input cfg kLeftSpeed - Get value.\n"
+				"mirv_input cfg kLeftSpeed <dValue> - Set value.\n"
+				"mirv_input cfg kRightSpeed - Get value.\n"
+				"mirv_input cfg kRightSpeed <dValue> - Set value.\n"
+				"mirv_input cfg kUpSpeed - Get value.\n"
+				"mirv_input cfg kUpSpeed <dValue> - Set value.\n"
+				"mirv_input cfg kDownSpeed - Get value.\n"
+				"mirv_input cfg kDownSpeed <dValue> - Set value.\n"
+				"mirv_input cfg kPitchPositiveSpeed - Get value.\n"
+				"mirv_input cfg kPitchPositiveSpeed <dValue> - Set value.\n"
+				"mirv_input cfg kPitchNegativeSpeed - Get value.\n"
+				"mirv_input cfg kPitchNegativeSpeed <dValue> - Set value.\n"
+				"mirv_input cfg kYawPositiveSpeed - Get value.\n"
+				"mirv_input cfg kYawPositiveSpeed <dValue> - Set value.\n"
+				"mirv_input cfg kYawNegativeSpeed - Get value.\n"
+				"mirv_input cfg kYawNegativeSpeed <dValue> - Set value.\n"
+				"mirv_input cfg kRollPositiveSpeed - Get value.\n"
+				"mirv_input cfg kRollPositiveSpeed <dValue> - Set value.\n"
+				"mirv_input cfg kRollNegativeSpeed - Get value.\n"
+				"mirv_input cfg kRollNegativeSpeed <dValue> - Set value.\n"
+				"mirv_input cfg kFovPositiveSpeed - Get value.\n"
+				"mirv_input cfg kFovPositiveSpeed <dValue> - Set value.\n"
+				"mirv_input cfg kFovNegativeSpeed - Get value.\n"
+				"mirv_input cfg kFovNegativeSpeed <dValue> - Set value.\n"
+				"mirv_input cfg mYawSpeed - Get value.\n"
+				"mirv_input cfg mYawSpeed <dValue> - Set value.\n"
+				"mirv_input cfg mPitchSpeed - Get value.\n"
+				"mirv_input cfg mPitchSpeed <dValue> - Set value.\n"
 			);
 			return;
 		}

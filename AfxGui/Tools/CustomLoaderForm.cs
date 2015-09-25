@@ -20,6 +20,8 @@ namespace AfxGui.Tools
         internal CustomLoaderForm()
         {
             InitializeComponent();
+
+            this.openFileDialog.InitialDirectory = AfxGui.Program.BaseDir;
         }
         
         internal String HookDll
