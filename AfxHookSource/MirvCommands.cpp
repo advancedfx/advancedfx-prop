@@ -248,6 +248,23 @@ CON_COMMAND(mirv_streams, "Access to streams system.")
 					return;
 				}				
 				else
+				if(!_stricmp(cmd2, "alphaMatteEntity"))
+				{
+					if(4 <= argc)
+					{
+						char const * cmd3 = args->ArgV(3);
+
+						g_AfxStreams.Console_AddAlphaMatteEntityStream(cmd3);
+
+						return;
+					}
+
+					Tier0_Msg(
+						"mirv_streams add alphaMatteEntity <name> - Add a alpha matte entity stream with name <name>.\n"
+					);
+					return;
+				}				
+				else
 				if(!_stricmp(cmd2, "alphaMatte"))
 				{
 					if(4 <= argc)
@@ -309,9 +326,10 @@ CON_COMMAND(mirv_streams, "Access to streams system.")
 				"mirv_streams add matteEntity [...] - Add a matte entity stream.\n"
 				"mirv_streams add depthEntity [...] - Add a depth entity stream. WILL NOT WORK PROPERLY ATM!\n"
 				"mirv_streams add developer [...] - Add a developer stream.\n"
-				"mirv_streams add alphaMatte [...] - Add a alpha matte stream.\n"
-				"mirv_streams add alphaEntity [...] - Add a alpha entity stream.\n"
+				"mirv_streams add alphaMatteEntity [...] - Add a entity stream with alpha matte combined into a single stream.\n"
 				"mirv_streams add alphaWorld [...] - Add a alpha world stream.\n"
+				"mirv_streams add alphaMatte [...] - Add a alpha matte stream (alpha channel of alphaMatteEntity).\n"
+				"mirv_streams add alphaEntity [...] - Add a alpha entity stream (color channel of alphaMatteEntity).\n"
 			);
 			return;
 		}
@@ -321,8 +339,11 @@ CON_COMMAND(mirv_streams, "Access to streams system.")
 			if(3 <= argc)
 			{
 				char const * cmd2 = args->ArgV(2);
+
+				std::string prefix("mirv_streams edit ");
+				prefix.append(cmd2);
 				
-				g_AfxStreams.Console_EditStream(cmd2, args, 3, "mirv_streams edit <streamName>");
+				g_AfxStreams.Console_EditStream(cmd2, args, 3, prefix.c_str());
 				return;
 			}
 
@@ -442,11 +463,6 @@ CON_COMMAND(mirv_streams, "Access to streams system.")
 		"mirv_streams preview [...] - Preview a stream.\n"
 		"mirv_streams print - Print current streams.\n"
 		"mirv_streams record [...] - Recording control.\n"
-		"\n"
-		">>> BEGIN IMPORTANT NOTICES >>>\n"
-		"1) This feature is in TESTING STAGE, meaning it will have lots of bugs and will not be officially documented yet and is SUBJECT TO CHANGE! However we are ready for feedback in the appropriate forum thread.\n"
-		"2) While the preview shows the viewmodel (in-eye weapon) and HUD, the recorded files won't have these!\n"
-		"<<< END IMPORTANT NOTICES <<<\n"
 	);
 	return;
 }

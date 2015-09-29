@@ -18,45 +18,70 @@
 #include <queue>
 #include <map>
 
-class CAfxDeveloperStream;
-class CAfxBaseFxStream;
-class CAfxMatteWorldStream;
-class CAfxMatteEntityStream;
+class CAfxRecordStream;
+class CAfxRenderViewStream;
 
 class CAfxStream
 {
 public:
-	enum TopStreamType
-	{
-		TST_CAfxStream,
-		TST_CAfxDeveloperStream,
-		TST_CAfxBaseFxStream
-	};
-
-	enum CaptureType
-	{
-		CT_RGB,
-		CT_RGBA
-	};
-
-	CAfxStream(char const * streamName);
+	CAfxStream();
 
 	virtual ~CAfxStream();
 
 	virtual CAfxStream * AsAfxStream(void) { return this; }
+	virtual CAfxRecordStream * AsAfxRecordStream(void) { return 0; }
+	virtual CAfxRenderViewStream * AsAfxRenderViewStream(void) { return 0; }
+
+	virtual void LevelShutdown(IAfxStreams4Stream * streams);
+};
+
+class CAfxDeveloperStream;
+class CAfxBaseFxStream;
+
+class CAfxRenderViewStream
+: public CAfxStream
+{
+public:
+	CAfxRenderViewStream();
+
+	virtual CAfxRenderViewStream * AsAfxRenderViewStream(void) { return this; }
+
 	virtual CAfxDeveloperStream * AsAfxDeveloperStream(void) { return 0; }
 	virtual CAfxBaseFxStream * AsAfxBaseFxStream(void) { return 0; }
 
-	virtual TopStreamType GetTopStreamType(void) { return TST_CAfxStream; }
-
-	CaptureType CaptureType_get(void);
-	void CaptureType_set(CaptureType value);
+	virtual void StreamAttach(IAfxStreams4Stream * streams);
+	virtual void StreamDetach(IAfxStreams4Stream * streams);
 
 	bool DrawHud_get(void);
 	void DrawHud_set(bool value);
 
 	bool DrawViewModel_get(void);
 	void DrawViewModel_set(bool value);
+
+protected:
+	/// <summary>This member is only valid between StreamAttach and StreamDetach.</summary>
+	IAfxStreams4Stream * m_Streams;
+
+private:
+	bool m_DrawViewModel;
+	bool m_DrawHud;
+};
+
+class CAfxSingleStream;
+class CAfxTwinStream;
+
+class CAfxRecordStream
+: public CAfxStream
+{
+public:
+	CAfxRecordStream(char const * streamName);
+
+	virtual CAfxRecordStream * AsAfxRecordStream(void) { return this; }
+
+	virtual CAfxSingleStream * AsAfxSingleStream(void) { return 0; }
+	virtual CAfxTwinStream * AsAfxTwinStream(void) { return 0; }
+
+	char const * StreamName_get(void);
 
 	bool Record_get(void);
 	void Record_set(bool value);
@@ -65,36 +90,71 @@ public:
 	void RecordStart();
 
 	/// <remarks>This is only called between RecordStart and RecordEnd and only if Record is true.</remarks>
-	bool CreateCapturePath(int frameNumber, bool isBmpAndNotTga, std::wstring &outPath);
+	bool CreateCapturePath(const std::wstring & takeDir, int frameNumber, bool isBmpAndNotTga, std::wstring &outPath);
 
 	/// <remarks>This is called regardless of Record value.</remarks>
 	void RecordEnd();
-
-	char const * GetStreamName(void);
-
-	virtual void LevelShutdown(IAfxStreams4Stream * streams);
-
-	virtual void StreamAttach(IAfxStreams4Stream * streams);
-	virtual void StreamDetach(IAfxStreams4Stream * streams);
-
-protected:
-	/// <summary>This member is only valid between StreamAttach and StreamDeatach.</summary>
-	IAfxStreams4Stream * m_Streams;
-
-	CaptureType m_CaptureType;
 
 private:
 	std::string m_StreamName;
 	std::wstring m_CapturePath;
 	bool m_Record;
-	bool m_DrawViewModel;
-	bool m_DrawHud;
 	bool m_TriedCreatePath;
 	bool m_SucceededCreatePath;
 };
 
+class CAfxSingleStream
+:  public CAfxRecordStream
+{
+public:
+	CAfxSingleStream(char const * streamName, CAfxRenderViewStream * stream);
+
+	virtual ~CAfxSingleStream();
+
+	virtual CAfxSingleStream * AsAfxSingleStream(void) { return this; }
+
+	virtual void LevelShutdown(IAfxStreams4Stream * streams);
+
+	CAfxRenderViewStream * Stream_get(void);
+
+private:
+	CAfxRenderViewStream * m_Stream;
+
+};
+
+class CAfxTwinStream
+: public CAfxRecordStream
+{
+public:
+	enum StreamCombineType
+	{
+		SCT_ARedAsAlphaBColor,
+		SCT_AColorBRedAsAlpha
+	};
+
+	/// <remarks>Takes owenership of given streams and deletes them when this stream is deleted!.</remarks>
+	CAfxTwinStream(char const * streamName, CAfxRenderViewStream * streamA, CAfxRenderViewStream * streamB, StreamCombineType streamCombineType);
+
+	virtual ~CAfxTwinStream();
+
+	virtual CAfxTwinStream * AsAfxTwinStream(void) { return this; }
+
+	virtual void LevelShutdown(IAfxStreams4Stream * streams);
+
+	CAfxRenderViewStream * StreamA_get();
+	CAfxRenderViewStream * StreamB_get();
+
+	StreamCombineType StreamCombineType_get(void);
+	void StreamCombineType_set(StreamCombineType value);
+
+private:
+	CAfxRenderViewStream * m_StreamA;
+	CAfxRenderViewStream * m_StreamB;
+	StreamCombineType m_StreamCombineType;
+};
+
 class CAfxDeveloperStream
-: public CAfxStream
+: public CAfxRenderViewStream
 , public IAfxMatRenderContextBind
 , public IAfxMatRenderContextDrawInstances
 , public IAfxMeshDraw
@@ -102,12 +162,10 @@ class CAfxDeveloperStream
 , public IAfxMeshDrawModulated
 {
 public:
-	CAfxDeveloperStream(char const * streamName);
+	CAfxDeveloperStream();
 	virtual ~CAfxDeveloperStream();
 
 	virtual CAfxDeveloperStream * AsAfxDeveloperStream(void) { return this; }
-
-	virtual TopStreamType GetTopStreamType(void) { return TST_CAfxDeveloperStream; }
 
 	void MatchName_set(char const * value);
 	char const * MatchName_get(void);
@@ -145,7 +203,7 @@ private:
 extern bool g_DebugEnabled;
 
 class CAfxBaseFxStream
-: public CAfxStream
+: public CAfxRenderViewStream
 , public IAfxMatRenderContextBind
 , public IAfxMatRenderContextDrawInstances
 , public IAfxMeshDraw
@@ -170,13 +228,11 @@ public:
 		HA_NoDraw
 	};
 
-	CAfxBaseFxStream(char const * streamName);
+	CAfxBaseFxStream();
 
 	virtual ~CAfxBaseFxStream();
 
 	virtual CAfxBaseFxStream * AsAfxBaseFxStream(void) { return this; }
-
-	virtual TopStreamType GetTopStreamType(void) { return TST_CAfxBaseFxStream; }
 
 	virtual void LevelShutdown(IAfxStreams4Stream * streams);
 
@@ -570,7 +626,7 @@ class CAfxDepthStream
 : public CAfxBaseFxStream
 {
 public:
-	CAfxDepthStream(char const * streamName) : CAfxBaseFxStream(streamName)
+	CAfxDepthStream() : CAfxBaseFxStream()
 	{
 		m_ClientEffectTexturesAction = HA_NoDraw;
 		m_WorldTexturesAction =  MA_DrawDepth;
@@ -598,7 +654,7 @@ class CAfxMatteWorldStream
 : public CAfxBaseFxStream
 {
 public:
-	CAfxMatteWorldStream(char const * streamName) : CAfxBaseFxStream(streamName)
+	CAfxMatteWorldStream() : CAfxBaseFxStream()
 	{
 		m_ClientEffectTexturesAction = HA_Draw;
 		m_WorldTexturesAction = MA_Draw;
@@ -626,7 +682,7 @@ class CAfxDepthWorldStream
 : public CAfxBaseFxStream
 {
 public:
-	CAfxDepthWorldStream(char const * streamName) : CAfxBaseFxStream(streamName)
+	CAfxDepthWorldStream() : CAfxBaseFxStream()
 	{
 		m_ClientEffectTexturesAction = HA_NoDraw;
 		m_WorldTexturesAction = MA_DrawDepth;
@@ -654,7 +710,7 @@ class CAfxMatteEntityStream
 : public CAfxBaseFxStream
 {
 public:
-	CAfxMatteEntityStream(char const * streamName) : CAfxBaseFxStream(streamName)
+	CAfxMatteEntityStream() : CAfxBaseFxStream()
 	{
 		m_ClientEffectTexturesAction = HA_NoDraw;
 		m_WorldTexturesAction =  MA_Mask;
@@ -682,7 +738,7 @@ class CAfxDepthEntityStream
 : public CAfxBaseFxStream
 {
 public:
-	CAfxDepthEntityStream(char const * streamName) : CAfxBaseFxStream(streamName)
+	CAfxDepthEntityStream() : CAfxBaseFxStream()
 	{
 		m_ClientEffectTexturesAction = HA_NoDraw;
 		m_WorldTexturesAction =  MA_DrawDepth;
@@ -710,7 +766,7 @@ class CAfxAlphaMatteStream
 : public CAfxBaseFxStream
 {
 public:
-	CAfxAlphaMatteStream(char const * streamName) : CAfxBaseFxStream(streamName)
+	CAfxAlphaMatteStream() : CAfxBaseFxStream()
 	{
 		m_ClientEffectTexturesAction = HA_NoDraw;
 		m_WorldTexturesAction =  MA_Black;
@@ -738,10 +794,8 @@ class CAfxAlphaEntityStream
 : public CAfxBaseFxStream
 {
 public:
-	CAfxAlphaEntityStream(char const * streamName) : CAfxBaseFxStream(streamName)
+	CAfxAlphaEntityStream() : CAfxBaseFxStream()
 	{
-		//m_CaptureType = CT_RGBA;
-
 		m_ClientEffectTexturesAction = HA_Draw;
 		m_WorldTexturesAction =  MA_Invisible;
 		m_SkyBoxTexturesAction =  MA_Invisible;
@@ -769,7 +823,7 @@ class CAfxAlphaWorldStream
 : public CAfxBaseFxStream
 {
 public:
-	CAfxAlphaWorldStream(char const * streamName) : CAfxBaseFxStream(streamName)
+	CAfxAlphaWorldStream() : CAfxBaseFxStream()
 	{
 		m_ClientEffectTexturesAction = HA_Draw;
 		m_WorldTexturesAction =  MA_Draw;
@@ -846,6 +900,7 @@ public:
 	void Console_AddAlphaMatteStream(const char * streamName);
 	void Console_AddAlphaEntityStream(const char * streamName);
 	void Console_AddAlphaWorldStream(const char * streamName);
+	void Console_AddAlphaMatteEntityStream(const char * streamName);
 	void Console_PrintStreams();
 	void Console_RemoveStream(const char * streamName);
 	void Console_EditStream(const char * streamName, IWrpCommandArgs * args, int argcOffset, char const * cmdPrefix);
@@ -912,6 +967,32 @@ private:
 
 	};
 
+	class CImageBuffer
+	{
+	public:
+		enum ImageBufferPixelFormat
+		{
+			IBPF_BGR,
+			IBPF_BGRA
+		};
+
+		void * Buffer;
+
+		ImageBufferPixelFormat PixelFormat;
+		int Width;
+		int Height;
+		size_t ImagePitch;
+		size_t ImageBytes;
+
+		CImageBuffer();
+		~CImageBuffer();
+
+		bool AutoRealloc(ImageBufferPixelFormat pixelFormat, int width, int height);
+
+	private:
+		size_t m_BufferBytesAllocated;
+	};
+
 	std::string m_RecordName;
 	CFreeDelegate * m_OnAfxBaseClientDll_Free;
 	IMaterialSystem_csgo * m_MaterialSystem;
@@ -919,14 +1000,13 @@ private:
 	IAfxBaseClientDll * m_AfxBaseClientDll;
 	IShaderShadow_csgo * m_ShaderShadow;
 	IAfxMatRenderContext * m_CurrentContext;
-	std::list<CAfxStream *> m_Streams;
-	CAfxStream * m_PreviewStream;
+	std::list<CAfxRecordStream *> m_Streams;
+	CAfxRecordStream * m_PreviewStream;
 	bool m_Recording;
 	int m_Frame;
 	IAfxMeshDraw * m_OnDraw;
 	IAfxMeshDraw_2 * m_OnDraw_2;
 	IAfxMeshDrawModulated * m_OnDrawModulated;
-	CAfxFileTracker m_FileTracker;
 	WrpConVarRef * m_MatQueueModeRef;
 	int m_OldMatQueueMode;
 	WrpConVarRef * m_MatPostProcessEnableRef;
@@ -937,18 +1017,26 @@ private:
 	bool m_ColorModulationOverride;
 	bool m_BlendOverride;
 	float m_OverrideColor[4];
-	void * m_TempBuffer;
-	size_t m_TempBufferBytesAllocated;
+	CImageBuffer m_BufferA;
+	CImageBuffer m_BufferB;
 	std::wstring m_TakeDir;
 	bool m_FormatBmpAndNotTga;
 	ITexture_csgo * m_RgbaRenderTarget;
 
 	void OnAfxBaseClientDll_Free(void);
+
+	void Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args, int argcOffset, char const * cmdPrefix);
+
 	bool Console_CheckStreamName(char const * value);
+
 	bool Console_ToMaskableAction(char const * value, CAfxBaseFxStream::MaskableAction & maskableAction);
-	bool Console_ToHideableAction(char const * value, CAfxBaseFxStream::HideableAction & hideableAction);
 	char const * Console_FromMaskableAction(CAfxBaseFxStream::MaskableAction maskableAction);
+
+	bool Console_ToHideableAction(char const * value, CAfxBaseFxStream::HideableAction & hideableAction);
 	char const * Console_FromHideableAction(CAfxBaseFxStream::HideableAction hideableAction);
+
+	bool Console_ToStreamCombineType(char const * value, CAfxTwinStream::StreamCombineType & streamCombineType);
+	char const * Console_FromStreamCombineType(CAfxTwinStream::StreamCombineType streamCombineType);
 
 	bool CheckCanFeedStreams(void);
 
@@ -957,9 +1045,13 @@ private:
 	void RestoreMatVars();
 	void EnsureMatVars();
 
-	void AddStream(CAfxStream * stream);
+	void AddStream(CAfxRecordStream * stream);
 
 	void CreateRenderTargets(IMaterialSystem_csgo * materialSystem);
+
+	bool CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuffer & buffer, IAfxMatRenderContext * cx);
+
+	bool WriteBufferToFile(const CImageBuffer & buffer, const std::wstring & path);
 };
 
 extern CAfxStreams g_AfxStreams;

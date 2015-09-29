@@ -5,6 +5,21 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.5.0</version>
+<time>2015-09-29T06:32</time>
+<changes>
+<change type="updated">
+Updated mirv_streams record to give you less epileptic seizures (images are rendered off-screen now).
+</change>
+<change type="added">
+Added alphaMatteEntity twin stream to mirv_streams, basically an entity stream with alpha channel (dumped in TGA format only).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.4.7</version>
 <time>2015-09-25T12:55Z</time>
 <changes>
@@ -12,7 +27,7 @@
 Adjusted AfxHookSource to 24th September 2015 CS:GO update (Affected depth stream skybox elements scaling, due to changes in CBasePlayer object.).
 </change>
 <change type="added">
-Added several options for fine tuning mirv_input beahviour to mirv_input cfg.
+Added several options for fine tuning mirv_input behaviour to mirv_input cfg.
 </change>
 </changes>
 </release>

@@ -195,13 +195,7 @@ void CAfxFileTracker::WaitForFiles(unsigned int maxUnfinishedFiles)
 
 // CAfxStream //////////////////////////////////////////////////////////////////
 
-CAfxStream::CAfxStream(char const * streamName)
-: m_StreamName(streamName)
-, m_Streams(0)
-, m_Record(true)
-, m_DrawViewModel(true)
-, m_DrawHud(false)
-, m_CaptureType(CT_RGB)
+CAfxStream::CAfxStream()
 {
 }
 
@@ -209,61 +203,84 @@ CAfxStream::~CAfxStream()
 {
 }
 
-CAfxStream::CaptureType CAfxStream::CaptureType_get(void)
+void CAfxStream::LevelShutdown(IAfxStreams4Stream * streams)
 {
-	return m_CaptureType;
 }
 
-void CAfxStream::CaptureType_set(CaptureType value)
+// CAfxRenderViewStream ////////////////////////////////////////////////////////
+
+CAfxRenderViewStream::CAfxRenderViewStream()
+: CAfxStream()
+, m_Streams(0)
+, m_DrawViewModel(true)
+, m_DrawHud(false)
 {
-	m_CaptureType = value;
 }
 
-bool CAfxStream::DrawHud_get(void)
+void CAfxRenderViewStream::StreamAttach(IAfxStreams4Stream * streams)
+{
+	m_Streams = streams;
+}
+
+void CAfxRenderViewStream::StreamDetach(IAfxStreams4Stream * streams)
+{
+	m_Streams = 0;
+}
+
+bool CAfxRenderViewStream::DrawHud_get(void)
 {
 	return m_DrawHud;
 }
 
-void CAfxStream::DrawHud_set(bool value)
+void CAfxRenderViewStream::DrawHud_set(bool value)
 {
 	m_DrawHud = value;
 }
 
-bool CAfxStream::DrawViewModel_get(void)
+bool CAfxRenderViewStream::DrawViewModel_get(void)
 {
 	return m_DrawViewModel;
 }
 
-void CAfxStream::DrawViewModel_set(bool value)
+void CAfxRenderViewStream::DrawViewModel_set(bool value)
 {
 	m_DrawViewModel = value;
 }
 
-bool CAfxStream::Record_get(void)
+// CAfxRecordStream ////////////////////////////////////////////////////////////
+
+CAfxRecordStream::CAfxRecordStream(char const * streamName)
+: CAfxStream()
+, m_StreamName(streamName)
+, m_Record(true)
+{
+}
+
+bool CAfxRecordStream::Record_get(void)
 {
 	return m_Record;
 }
 
-void CAfxStream::Record_set(bool value)
+void CAfxRecordStream::Record_set(bool value)
 {
 	m_Record = value;
 }
 
-void CAfxStream::RecordStart()
+void CAfxRecordStream::RecordStart()
 {
 	m_TriedCreatePath = false;
 	m_SucceededCreatePath = false;
 }
 
-bool CAfxStream::CreateCapturePath(int frameNumber, bool isBmpAndNotTga, std::wstring &outPath)
+bool CAfxRecordStream::CreateCapturePath(const std::wstring & takeDir, int frameNumber, bool isBmpAndNotTga, std::wstring &outPath)
 {
 	if(!m_TriedCreatePath)
 	{
 		m_TriedCreatePath = true;
 		std::wstring wideStreamName;
-		if(AnsiStringToWideString(GetStreamName(), wideStreamName))
+		if(AnsiStringToWideString(m_StreamName.c_str(), wideStreamName))
 		{
-			m_CapturePath = m_Streams->GetTakeDir();
+			m_CapturePath = takeDir;
 			m_CapturePath.append(L"\\");
 			m_CapturePath.append(wideStreamName);
 
@@ -279,7 +296,7 @@ bool CAfxStream::CreateCapturePath(int frameNumber, bool isBmpAndNotTga, std::ws
 		}
 		else
 		{
-			Tier0_Warning("Error: Failed to convert stream name \"%s\" to a wide string.\n", GetStreamName());
+			Tier0_Warning("Error: Failed to convert stream name \"%s\" to a wide string.\n", m_StreamName.c_str());
 		}
 	}
 
@@ -294,34 +311,86 @@ bool CAfxStream::CreateCapturePath(int frameNumber, bool isBmpAndNotTga, std::ws
 	return true;
 }
 
-void CAfxStream::RecordEnd()
+void CAfxRecordStream::RecordEnd()
 {
 
 }
 
-char const * CAfxStream::GetStreamName(void)
+char const * CAfxRecordStream::StreamName_get(void)
 {
 	return m_StreamName.c_str();
 }
 
-void CAfxStream::LevelShutdown(IAfxStreams4Stream * streams)
+// CAfxSingleStream ////////////////////////////////////////////////////////////
+
+CAfxSingleStream::CAfxSingleStream(char const * streamName, CAfxRenderViewStream * stream)
+: CAfxRecordStream(streamName)
+, m_Stream(stream)
 {
 }
 
-void CAfxStream::StreamAttach(IAfxStreams4Stream * streams)
+CAfxSingleStream::~CAfxSingleStream()
 {
-	m_Streams = streams;
+	delete m_Stream;
 }
 
-void CAfxStream::StreamDetach(IAfxStreams4Stream * streams)
+CAfxRenderViewStream * CAfxSingleStream::Stream_get(void)
 {
-	m_Streams = 0;
+	return m_Stream;
 }
+
+void CAfxSingleStream::LevelShutdown(IAfxStreams4Stream * streams)
+{
+	m_Stream->LevelShutdown(streams);
+}
+
+// CAfxTwinStream //////////////////////////////////////////////////////////////
+
+CAfxTwinStream::CAfxTwinStream(char const * streamName, CAfxRenderViewStream * streamA, CAfxRenderViewStream * streamB, StreamCombineType streamCombineType)
+: CAfxRecordStream(streamName)
+, m_StreamA(streamA)
+, m_StreamB(streamB)
+, m_StreamCombineType(streamCombineType)
+{
+}
+
+CAfxTwinStream::~CAfxTwinStream()
+{
+	delete m_StreamA;
+	delete m_StreamB;
+}
+
+void CAfxTwinStream::LevelShutdown(IAfxStreams4Stream * streams)
+{
+	m_StreamA->LevelShutdown(streams);
+	m_StreamB->LevelShutdown(streams);
+}
+
+CAfxRenderViewStream * CAfxTwinStream::StreamA_get()
+{
+	return m_StreamA;
+}
+
+CAfxRenderViewStream * CAfxTwinStream::StreamB_get()
+{
+	return m_StreamB;
+}
+
+CAfxTwinStream::StreamCombineType CAfxTwinStream::StreamCombineType_get(void)
+{
+	return m_StreamCombineType;
+}
+
+void CAfxTwinStream::StreamCombineType_set(StreamCombineType value)
+{
+	m_StreamCombineType = value;
+}
+
 
 // CAfxDeveloperStream /////////////////////////////////////////////////////////
 
-CAfxDeveloperStream::CAfxDeveloperStream(char const * streamName)
-: CAfxStream(streamName)
+CAfxDeveloperStream::CAfxDeveloperStream()
+: CAfxRenderViewStream()
 , m_ReplaceUpdate(false)
 , m_Replace (false)
 , m_ReplaceMaterial(0)
@@ -378,7 +447,7 @@ bool CAfxDeveloperStream::BlockDraw_get(void)
 
 void CAfxDeveloperStream::StreamAttach(IAfxStreams4Stream * streams)
 {
-	CAfxStream::StreamAttach(streams);
+	CAfxRenderViewStream::StreamAttach(streams);
 
 	if(m_ReplaceUpdate)
 	{
@@ -410,7 +479,7 @@ void CAfxDeveloperStream::StreamDetach(IAfxStreams4Stream * streams)
 	streams->OnDraw_set(0);
 	streams->OnBind_set(0);
 
-	CAfxStream::StreamDetach(streams);
+	CAfxRenderViewStream::StreamDetach(streams);
 }
 
 void CAfxDeveloperStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData)
@@ -470,8 +539,8 @@ void CAfxDeveloperStream::DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecD
 
 // CAfxBaseFxStream ////////////////////////////////////////////////////////////
 
-CAfxBaseFxStream::CAfxBaseFxStream(char const * streamName)
-: CAfxStream(streamName)
+CAfxBaseFxStream::CAfxBaseFxStream()
+: CAfxRenderViewStream()
 , m_ClientEffectTexturesAction(HA_Draw)
 , m_WorldTexturesAction(MA_Draw)
 , m_SkyBoxTexturesAction(MA_Draw)
@@ -520,7 +589,7 @@ void CAfxBaseFxStream::LevelShutdown(IAfxStreams4Stream * streams)
 
 void CAfxBaseFxStream::StreamAttach(IAfxStreams4Stream * streams)
 {
-	CAfxStream::StreamAttach(streams);
+	CAfxRenderViewStream::StreamAttach(streams);
 
 	if(!m_PassthroughAction) m_PassthroughAction = new CAction(this);
 	if(!m_DepthAction) m_DepthAction = new CActionDepth(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
@@ -554,7 +623,7 @@ void CAfxBaseFxStream::StreamDetach(IAfxStreams4Stream * streams)
 	streams->OnDrawInstances_set(0);
 	streams->OnBind_set(0);
 
-	CAfxStream::StreamDetach(streams);
+	CAfxRenderViewStream::StreamDetach(streams);
 }
 
 void CAfxBaseFxStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData )
@@ -580,7 +649,7 @@ void CAfxBaseFxStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * materia
 		const char * shaderName = material->GetShaderName();
 		bool isErrorMaterial = material->IsErrorMaterial();
 
-		if(m_DebugPrint) Tier0_Msg("Stream %s: Caching Material: %s|%s|%s%s -> ", GetStreamName(), groupName, name, shaderName, isErrorMaterial ? "|isErrorMaterial" : "");
+		if(m_DebugPrint) Tier0_Msg("Stream: Caching Material: %s|%s|%s%s -> ", groupName, name, shaderName, isErrorMaterial ? "|isErrorMaterial" : "");
 
 		if(isErrorMaterial)
 			m_CurrentAction = GetAction(m_ErrorMaterialAction);
@@ -899,7 +968,7 @@ void CAfxBaseFxStream::DebugPrint_set(bool value)
 
 void CAfxBaseFxStream::InvalidateCache(void)
 {
-	if(m_DebugPrint) Tier0_Msg("Stream %s: Invalidating material cache.\n", GetStreamName());
+	if(m_DebugPrint) Tier0_Msg("Stream: Invalidating material cache.\n");
 	m_Map.clear();
 }
 
@@ -1084,8 +1153,6 @@ CAfxStreams::CAfxStreams()
 , m_MatDynamicTonemappingRef(0)
 , m_ColorModulationOverride(false)
 , m_BlendOverride(false)
-, m_TempBuffer(0)
-, m_TempBufferBytesAllocated(0)
 , m_FormatBmpAndNotTga(false)
 , m_RgbaRenderTarget(0)
 {
@@ -1111,8 +1178,6 @@ CAfxStreams::~CAfxStreams()
 
 	delete m_MatQueueModeRef;
 	delete m_MatPostProcessEnableRef;
-
-	free(m_TempBuffer); m_TempBuffer = 0;
 }
 
 
@@ -1336,7 +1401,7 @@ void CAfxStreams::Console_Record_Start()
 		BackUpMatVars();
 		SetMatVarsForStreams();
 
-		for(std::list<CAfxStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
+		for(std::list<CAfxRecordStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
 		{
 			(*it)->RecordStart();
 		}
@@ -1359,12 +1424,11 @@ void CAfxStreams::Console_Record_End()
 	{
 		Tier0_Msg("Finishing recording ... ");
 
-		for(std::list<CAfxStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
+		for(std::list<CAfxRecordStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
 		{
 			(*it)->RecordEnd();
 		}
 
-		m_FileTracker.WaitForFiles(0);
 		RestoreMatVars();
 
 		Tier0_Msg("done.\n");
@@ -1378,7 +1442,7 @@ void CAfxStreams::Console_AddStream(const char * streamName)
 	if(!Console_CheckStreamName(streamName))
 		return;
 
-	AddStream(new CAfxStream(streamName));
+	AddStream(new CAfxSingleStream(streamName, new CAfxRenderViewStream()));
 }
 
 void CAfxStreams::Console_AddBaseFxStream(const char * streamName)
@@ -1386,7 +1450,7 @@ void CAfxStreams::Console_AddBaseFxStream(const char * streamName)
 	if(!Console_CheckStreamName(streamName))
 		return;
 
-	AddStream(new CAfxBaseFxStream(streamName));
+	AddStream(new CAfxSingleStream(streamName, new CAfxBaseFxStream()));
 }
 
 void CAfxStreams::Console_AddDeveloperStream(const char * streamName)
@@ -1394,7 +1458,7 @@ void CAfxStreams::Console_AddDeveloperStream(const char * streamName)
 	if(!Console_CheckStreamName(streamName))
 		return;
 
-	AddStream(new CAfxDeveloperStream(streamName));
+	AddStream(new CAfxSingleStream(streamName, new CAfxDeveloperStream()));
 }
 
 void CAfxStreams::Console_AddDepthStream(const char * streamName)
@@ -1402,7 +1466,7 @@ void CAfxStreams::Console_AddDepthStream(const char * streamName)
 	if(!Console_CheckStreamName(streamName))
 		return;
 
-	AddStream(new CAfxDepthStream(streamName));
+	AddStream(new CAfxSingleStream(streamName, new CAfxDepthStream()));
 }
 
 void CAfxStreams::Console_AddMatteWorldStream(const char * streamName)
@@ -1410,7 +1474,7 @@ void CAfxStreams::Console_AddMatteWorldStream(const char * streamName)
 	if(!Console_CheckStreamName(streamName))
 		return;
 
-	AddStream(new CAfxMatteWorldStream(streamName));
+	AddStream(new CAfxSingleStream(streamName, new CAfxMatteWorldStream()));
 }
 
 void CAfxStreams::Console_AddDepthWorldStream(const char * streamName)
@@ -1418,7 +1482,7 @@ void CAfxStreams::Console_AddDepthWorldStream(const char * streamName)
 	if(!Console_CheckStreamName(streamName))
 		return;
 
-	AddStream(new CAfxDepthWorldStream(streamName));
+	AddStream(new CAfxSingleStream(streamName, new CAfxDepthWorldStream()));
 }
 
 void CAfxStreams::Console_AddMatteEntityStream(const char * streamName)
@@ -1426,7 +1490,7 @@ void CAfxStreams::Console_AddMatteEntityStream(const char * streamName)
 	if(!Console_CheckStreamName(streamName))
 		return;
 
-	AddStream(new CAfxMatteEntityStream(streamName));
+	AddStream(new CAfxSingleStream(streamName, new CAfxMatteEntityStream()));
 }
 
 void CAfxStreams::Console_AddDepthEntityStream(const char * streamName)
@@ -1434,7 +1498,7 @@ void CAfxStreams::Console_AddDepthEntityStream(const char * streamName)
 	if(!Console_CheckStreamName(streamName))
 		return;
 
-	AddStream(new CAfxDepthEntityStream(streamName));
+	AddStream(new CAfxSingleStream(streamName, new CAfxDepthEntityStream()));
 }
 
 void CAfxStreams::Console_AddAlphaMatteStream(const char * streamName)
@@ -1442,7 +1506,7 @@ void CAfxStreams::Console_AddAlphaMatteStream(const char * streamName)
 	if(!Console_CheckStreamName(streamName))
 		return;
 
-	AddStream(new CAfxAlphaMatteStream(streamName));
+	AddStream(new CAfxSingleStream(streamName, new CAfxAlphaMatteStream()));
 }
 
 void CAfxStreams::Console_AddAlphaEntityStream(const char * streamName)
@@ -1450,7 +1514,7 @@ void CAfxStreams::Console_AddAlphaEntityStream(const char * streamName)
 	if(!Console_CheckStreamName(streamName))
 		return;
 
-	AddStream(new CAfxAlphaEntityStream(streamName));
+	AddStream(new CAfxSingleStream(streamName, new CAfxAlphaEntityStream()));
 }
 
 void CAfxStreams::Console_AddAlphaWorldStream(const char * streamName)
@@ -1458,16 +1522,24 @@ void CAfxStreams::Console_AddAlphaWorldStream(const char * streamName)
 	if(!Console_CheckStreamName(streamName))
 		return;
 
-	AddStream(new CAfxAlphaWorldStream(streamName));
+	AddStream(new CAfxSingleStream(streamName, new CAfxAlphaWorldStream()));
+}
+
+void CAfxStreams::Console_AddAlphaMatteEntityStream(const char * streamName)
+{
+	if(!Console_CheckStreamName(streamName))
+		return;
+
+	AddStream(new CAfxTwinStream(streamName, new CAfxAlphaMatteStream(), new CAfxAlphaEntityStream(), CAfxTwinStream::SCT_ARedAsAlphaBColor));
 }
 
 void CAfxStreams::Console_PrintStreams()
 {
 	Tier0_Msg("index: name -> recorded?\n");
 	int index = 0;
-	for(std::list<CAfxStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
+	for(std::list<CAfxRecordStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
 	{
-		Tier0_Msg("%i: %s -> %s\n", index, (*it)->GetStreamName(), (*it)->Record_get() ? "RECORD ON (1)" : "record off (0)");
+		Tier0_Msg("%i: %s -> %s\n", index, (*it)->StreamName_get(), (*it)->Record_get() ? "RECORD ON (1)" : "record off (0)");
 		++index;
 	}
 	Tier0_Msg(
@@ -1478,11 +1550,11 @@ void CAfxStreams::Console_PrintStreams()
 
 void CAfxStreams::Console_RemoveStream(const char * streamName)
 {
-	for(std::list<CAfxStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
+	for(std::list<CAfxRecordStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
 	{
-		if(!_stricmp(streamName, (*it)->GetStreamName()))
+		if(!_stricmp(streamName, (*it)->StreamName_get()))
 		{
-			CAfxStream * cur = *it;
+			CAfxRecordStream * cur = *it;
 
 			if(m_Recording) cur->RecordEnd();
 
@@ -1510,11 +1582,17 @@ void CAfxStreams::Console_PreviewStream(const char * streamName)
 		return;
 	}
 
-	for(std::list<CAfxStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
+	for(std::list<CAfxRecordStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
 	{
-		if(!_stricmp(streamName, (*it)->GetStreamName()))
+		if(!_stricmp(streamName, (*it)->StreamName_get()))
 		{
-			CAfxStream * cur = *it;
+			if(!(*it)->AsAfxSingleStream())
+			{
+				Tier0_Msg("Error: Only simple (single) streams can be previewed.\n");
+				return;
+			}
+
+			CAfxRecordStream * cur = *it;
 			m_PreviewStream = cur;
 			if(!m_Recording) BackUpMatVars();
 			SetMatVarsForStreams();
@@ -1526,641 +1604,727 @@ void CAfxStreams::Console_PreviewStream(const char * streamName)
 
 #define CAFXBASEFXSTREAM_MASKABLEACTIONS "draw|drawDepth|mask|invisible|black|white"
 #define CAFXBASEFXSTREAM_HIDEABLEACTIONS "draw|noDraw"
+#define CAFXBASEFXSTREAM_STREAMCOMBINETYPES "aRedAsAlphaBColor|aColorBRedAsAlpha"
 
 void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * args, int argcOffset, char const * cmdPrefix)
 {
-	for(std::list<CAfxStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
+	for(std::list<CAfxRecordStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
 	{
-		if(!_stricmp(streamName, (*it)->GetStreamName()))
+		if(!_stricmp(streamName, (*it)->StreamName_get()))
 		{
-			CAfxStream * cur = *it;
-			CAfxBaseFxStream * curBaseFx = cur->AsAfxBaseFxStream();
-			CAfxDeveloperStream * curDeveloper = cur->AsAfxDeveloperStream();
-
-			int argc = args->ArgC() -argcOffset;
-
-			if(cur)
-			{
-				if(1 <= argc)
-				{
-					char const * cmd0 = args->ArgV(argcOffset +0);
-
-					if(!_stricmp(cmd0, "record"))
-					{
-						if(2 <= argc)
-						{
-							char const * cmd1 = args->ArgV(argcOffset +1);
-
-							cur->Record_set(atoi(cmd1) != 0 ? true : false);
-
-							return;
-						}
-
-						Tier0_Msg(
-							"%s record 0|1 - Whether to record this stream with mirv_streams record - 0 = record off, 1 = RECORD ON.\n"
-							"Current value: %s.\n"
-							, cmdPrefix
-							, cur->Record_get() ? "1" : "0"
-						);
-						return;
-					}
-					else
-					if(!_stricmp(cmd0, "drawHud"))
-					{
-						if(2 <= argc)
-						{
-							char const * cmd1 = args->ArgV(argcOffset +1);
-
-							cur->DrawHud_set(atoi(cmd1) != 0 ? true : false);
-
-							return;
-						}
-
-						Tier0_Msg(
-							"%s drawHud 0|1 - Whether to draw HUD for this stream - 0 = don't draw, 1 = draw.\n"
-							"Current value: %s.\n"
-							, cmdPrefix
-							, cur->DrawHud_get() ? "1" : "0"
-						);
-						return;
-					}
-					else
-					if(!_stricmp(cmd0, "drawViewModel"))
-					{
-						if(2 <= argc)
-						{
-							char const * cmd1 = args->ArgV(argcOffset +1);
-
-							cur->DrawViewModel_set(atoi(cmd1) != 0 ? true : false);
-
-							return;
-						}
-
-						Tier0_Msg(
-							"%s drawViewModel 0|1 - Whether to draw view model (in-eye weapon) for this stream - 0 = don't draw, 1 = draw.\n"
-							"Current value: %s.\n"
-							, cmdPrefix
-							, cur->DrawViewModel_get() ? "1" : "0"
-						);
-						return;
-					}
-					/*else
-					if(!_stricmp(cmd0, "captureType"))
-					{
-						if(2 <= argc)
-						{
-							char const * cmd1 = args->ArgV(argcOffset +1);
-
-							if(!_stricmp(cmd1,"rgb"))
-							{
-								cur->CaptureType_set(CAfxStream::CT_RGB);
-							}
-							else
-							if(!_stricmp(cmd1,"rgba"))
-							{
-								cur->CaptureType_set(CAfxStream::CT_RGBA);
-							}
-							else
-							{
-								Tier0_Warning("Unknown captureType.\n");
-							}
-
-							return;
-						}
-
-						Tier0_Msg(
-							"%s captureType rgb|rba - Capture type.\n"
-							"Current value: %s.\n"
-							, cmdPrefix
-							, cur->CaptureType_get() == CAfxStream::CT_RGBA ? "rgba" : (cur->CaptureType_get() == CAfxStream::CT_RGB ? "rbg" : "[unknown]")
-						);
-						return;
-					}*/
-				}
-			}
-
-			if(curDeveloper)
-			{
-				if(1 <= argc)
-				{
-					char const * cmd0 = args->ArgV(argcOffset +0);
-
-					if(!_stricmp(cmd0, "matchTextureGroupName"))
-					{
-						if(2 <= argc)
-						{
-							char const * cmd1 = args->ArgV(argcOffset +1);
-
-							curDeveloper->MatchTextureGroupName_set(cmd1);
-
-							return;
-						}
-
-						Tier0_Msg(
-							"%s matchTextureGroupName <name> - Set new texture group name to match.\n"
-							"Current value: %s.\n"
-							, cmdPrefix
-							, curDeveloper->MatchTextureGroupName_get()
-						);
-						return;
-					}
-					else
-					if(!_stricmp(cmd0, "matchName"))
-					{
-						if(2 <= argc)
-						{
-							char const * cmd1 = args->ArgV(argcOffset +1);
-
-							curDeveloper->MatchName_set(cmd1);
-
-							return;
-						}
-
-						Tier0_Msg(
-							"%s matchName <name> - Set new name to match.\n"
-							"Current value: %s.\n"
-							, cmdPrefix
-							, curDeveloper->MatchName_get()
-						);
-						return;
-					}
-					else
-					if(!_stricmp(cmd0, "replaceName"))
-					{
-						if(2 <= argc)
-						{
-							char const * cmd1 = args->ArgV(argcOffset +1);
-
-							curDeveloper->ReplaceName_set(cmd1);
-
-							return;
-						}
-
-						Tier0_Msg(
-							"%s replaceName <name> - Set the name of the replacement material, set an empty string(\"\") to replace nothing.\n"
-							"Current value: %s.\n"
-							, cmdPrefix
-							, curDeveloper->ReplaceName_get()
-						);
-						return;
-					}
-					else
-					if(!_stricmp(cmd0, "blockDraw"))
-					{
-						if(2 <= argc)
-						{
-							char const * cmd1 = args->ArgV(argcOffset +1);
-
-							curDeveloper->BlockDraw_set(0 != atoi(cmd1));
-
-							return;
-						}
-
-						Tier0_Msg(
-							"%s blockDraw 0|1 - Whether to block drawing when replaceMaterial is active.\n"
-							"Current value: %i.\n"
-							, cmdPrefix
-							, curDeveloper->BlockDraw_get() ? 1L : 0L
-						);
-						return;
-					}
-				}
-			}
-
-			if(curBaseFx)
-			{
-				if(1 <= argc)
-				{
-					char const * cmd0 = args->ArgV(argcOffset +0);
-
-					if(!_stricmp(cmd0, "clientEffectTexturesAction"))
-					{
-						if(2 <= argc)
-						{
-							char const * cmd1 = args->ArgV(argcOffset +1);
-							CAfxBaseFxStream::HideableAction value;
-
-							if(Console_ToHideableAction(cmd1, value))
-							{
-								curBaseFx->ClientEffectTexturesAction_set(value);
-								return;
-							}
-						}
-
-						Tier0_Msg(
-							"%s clientEffectTexturesAction " CAFXBASEFXSTREAM_HIDEABLEACTIONS " - Set new action.\n"
-							"Current value: %s.\n"
-							, cmdPrefix
-							, Console_FromHideableAction(curBaseFx->ClientEffectTexturesAction_get())
-						);
-						return;
-					}
-					else
-					if(!_stricmp(cmd0, "worldTexturesAction"))
-					{
-						if(2 <= argc)
-						{
-							char const * cmd1 = args->ArgV(argcOffset +1);
-							CAfxBaseFxStream::MaskableAction value;
-
-							if(Console_ToMaskableAction(cmd1, value))
-							{
-								curBaseFx->WorldTexturesAction_set(value);
-								return;
-							}
-						}
-
-						Tier0_Msg(
-							"%s worldTexturesAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
-							"Current value: %s.\n"
-							, cmdPrefix
-							, Console_FromMaskableAction(curBaseFx->WorldTexturesAction_get())
-						);
-						return;
-					}
-					else
-					if(!_stricmp(cmd0, "skyBoxTexturesAction"))
-					{
-						if(2 <= argc)
-						{
-							char const * cmd1 = args->ArgV(argcOffset +1);
-							CAfxBaseFxStream::MaskableAction value;
-
-							if(Console_ToMaskableAction(cmd1, value))
-							{
-								curBaseFx->SkyBoxTexturesAction_set(value);
-								return;
-							}
-						}
-
-						Tier0_Msg(
-							"%s skyBoxTexturesAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
-							"Current value: %s.\n"
-							, cmdPrefix
-							, Console_FromMaskableAction(curBaseFx->SkyBoxTexturesAction_get())
-						);
-						return;
-					}
-					else
-					if(!_stricmp(cmd0, "staticPropTexturesAction"))
-					{
-						if(2 <= argc)
-						{
-							char const * cmd1 = args->ArgV(argcOffset +1);
-							CAfxBaseFxStream::MaskableAction value;
-
-							if(Console_ToMaskableAction(cmd1, value))
-							{
-								curBaseFx->StaticPropTexturesAction_set(value);
-								return;
-							}
-						}
-
-						Tier0_Msg(
-							"%s staticPropTexturesAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
-							"Current value: %s.\n"
-							, cmdPrefix
-							, Console_FromMaskableAction(curBaseFx->StaticPropTexturesAction_get())
-						);
-						return;
-					}
-					else
-					if(!_stricmp(cmd0, "cableAction"))
-					{
-						if(2 <= argc)
-						{
-							char const * cmd1 = args->ArgV(argcOffset +1);
-							CAfxBaseFxStream::HideableAction value;
-
-							if(Console_ToHideableAction(cmd1, value))
-							{
-								curBaseFx->CableAction_set(value);
-								return;
-							}
-						}
-
-						Tier0_Msg(
-							"%s cableAction " CAFXBASEFXSTREAM_HIDEABLEACTIONS " - Set new action.\n"
-							"Current value: %s.\n"
-							, cmdPrefix
-							, Console_FromHideableAction(curBaseFx->CableAction_get())
-						);
-						return;
-					}
-					else
-					if(!_stricmp(cmd0, "playerModelsAction"))
-					{
-						if(2 <= argc)
-						{
-							char const * cmd1 = args->ArgV(argcOffset +1);
-							CAfxBaseFxStream::MaskableAction value;
-
-							if(Console_ToMaskableAction(cmd1, value))
-							{
-								curBaseFx->PlayerModelsAction_set(value);
-								return;
-							}
-						}
-
-						Tier0_Msg(
-							"%s playerModelsAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
-							"Current value: %s.\n"
-							, cmdPrefix
-							, Console_FromMaskableAction(curBaseFx->PlayerModelsAction_get())
-						);
-						return;
-					}
-					else
-					if(!_stricmp(cmd0, "weaponModelsAction"))
-					{
-						if(2 <= argc)
-						{
-							char const * cmd1 = args->ArgV(argcOffset +1);
-							CAfxBaseFxStream::MaskableAction value;
-
-							if(Console_ToMaskableAction(cmd1, value))
-							{
-								curBaseFx->WeaponModelsAction_set(value);
-								return;
-							}
-						}
-
-						Tier0_Msg(
-							"%s weaponModelsAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
-							"Current value: %s.\n"
-							, cmdPrefix
-							, Console_FromMaskableAction(curBaseFx->WeaponModelsAction_get())
-						);
-						return;
-					}
-					else
-					if(!_stricmp(cmd0, "shellModelsAction"))
-					{
-						if(2 <= argc)
-						{
-							char const * cmd1 = args->ArgV(argcOffset +1);
-							CAfxBaseFxStream::MaskableAction value;
-
-							if(Console_ToMaskableAction(cmd1, value))
-							{
-								curBaseFx->ShellModelsAction_set(value);
-								return;
-							}
-						}
-
-						Tier0_Msg(
-							"%s shellModelsAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
-							"Current value: %s.\n"
-							, cmdPrefix
-							, Console_FromMaskableAction(curBaseFx->ShellModelsAction_get())
-						);
-						return;
-					}
-					else
-					if(!_stricmp(cmd0, "otherModelsAction"))
-					{
-						if(2 <= argc)
-						{
-							char const * cmd1 = args->ArgV(argcOffset +1);
-							CAfxBaseFxStream::MaskableAction value;
-
-							if(Console_ToMaskableAction(cmd1, value))
-							{
-								curBaseFx->OtherModelsAction_set(value);
-								return;
-							}
-						}
-
-						Tier0_Msg(
-							"%s otherModelsAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
-							"Current value: %s.\n"
-							, cmdPrefix
-							, Console_FromMaskableAction(curBaseFx->OtherModelsAction_get())
-						);
-						return;
-					}
-					else
-					if(!_stricmp(cmd0, "decalTexturesAction"))
-					{
-						if(2 <= argc)
-						{
-							char const * cmd1 = args->ArgV(argcOffset +1);
-							CAfxBaseFxStream::HideableAction value;
-
-							if(Console_ToHideableAction(cmd1, value))
-							{
-								curBaseFx->DecalTexturesAction_set(value);
-								return;
-							}
-						}
-
-						Tier0_Msg(
-							"%s decalTexturesAction " CAFXBASEFXSTREAM_HIDEABLEACTIONS " - Set new action.\n"
-							"Current value: %s.\n"
-							, cmdPrefix
-							, Console_FromHideableAction(curBaseFx->DecalTexturesAction_get())
-						);
-						return;
-					}
-					else
-					if(!_stricmp(cmd0, "effectsAction"))
-					{
-						if(2 <= argc)
-						{
-							char const * cmd1 = args->ArgV(argcOffset +1);
-							CAfxBaseFxStream::HideableAction value;
-
-							if(Console_ToHideableAction(cmd1, value))
-							{
-								curBaseFx->EffectsAction_set(value);
-								return;
-							}
-						}
-
-						Tier0_Msg(
-							"%s effectsAction " CAFXBASEFXSTREAM_HIDEABLEACTIONS " - Set new action.\n"
-							"Current value: %s.\n"
-							, cmdPrefix
-							, Console_FromHideableAction(curBaseFx->EffectsAction_get())
-						);
-						return;
-					}
-					else
-					if(!_stricmp(cmd0, "shellParticleAction"))
-					{
-						if(2 <= argc)
-						{
-							char const * cmd1 = args->ArgV(argcOffset +1);
-							CAfxBaseFxStream::HideableAction value;
-
-							if(Console_ToHideableAction(cmd1, value))
-							{
-								curBaseFx->ShellParticleAction_set(value);
-								return;
-							}
-						}
-
-						Tier0_Msg(
-							"%s shellParticleAction " CAFXBASEFXSTREAM_HIDEABLEACTIONS " - Set new action.\n"
-							"Current value: %s.\n"
-							, cmdPrefix
-							, Console_FromHideableAction(curBaseFx->ShellParticleAction_get())
-						);
-						return;
-					}
-					else
-					if(!_stricmp(cmd0, "otherParticleAction"))
-					{
-						if(2 <= argc)
-						{
-							char const * cmd1 = args->ArgV(argcOffset +1);
-							CAfxBaseFxStream::HideableAction value;
-
-							if(Console_ToHideableAction(cmd1, value))
-							{
-								curBaseFx->OtherParticleAction_set(value);
-								return;
-							}
-						}
-
-						Tier0_Msg(
-							"%s otherParticleAction " CAFXBASEFXSTREAM_HIDEABLEACTIONS " - Set new action.\n"
-							"Current value: %s.\n"
-							, cmdPrefix
-							, Console_FromHideableAction(curBaseFx->OtherParticleAction_get())
-						);
-						return;
-					}
-					else
-					if(!_stricmp(cmd0, "stickerAction"))
-					{
-						if(2 <= argc)
-						{
-							char const * cmd1 = args->ArgV(argcOffset +1);
-							CAfxBaseFxStream::MaskableAction value;
-
-							if(Console_ToMaskableAction(cmd1, value))
-							{
-								curBaseFx->StickerAction_set(value);
-								return;
-							}
-						}
-
-						Tier0_Msg(
-							"%s stickerAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
-							"Current value: %s.\n"
-							, cmdPrefix
-							, Console_FromMaskableAction(curBaseFx->StickerAction_get())
-						);
-						return;
-					}
-					else
-					if(!_stricmp(cmd0, "depthVal"))
-					{
-						if(2 <= argc)
-						{
-							char const * cmd1 = args->ArgV(argcOffset +1);
-							curBaseFx->DepthVal_set((float)atof(cmd1));
-							return;
-						}
-
-						Tier0_Msg(
-							"%s depthVal <fValue> - Set new miniumum depth floating point value <fValue>.\n"
-							"Current value: %f.\n"
-							, cmdPrefix
-							, curBaseFx->DepthVal_get()
-						);
-						return;
-					}
-					else
-					if(!_stricmp(cmd0, "depthValMax"))
-					{
-						if(2 <= argc)
-						{
-							char const * cmd1 = args->ArgV(argcOffset +1);
-							curBaseFx->DepthValMax_set((float)atof(cmd1));
-							return;
-						}
-
-						Tier0_Msg(
-							"%s depthValMax <fValue> - Set new maximum depth floating point value <fValue>.\n"
-							"Current value: %f.\n"
-							, cmdPrefix
-							, curBaseFx->DepthValMax_get()
-						);
-						return;
-					}
-					else
-					if(!_stricmp(cmd0, "debugPrint"))
-					{
-						if(2 <= argc)
-						{
-							char const * cmd1 = args->ArgV(argcOffset +1);
-
-							curBaseFx->DebugPrint_set(0 != atoi(cmd1) ? true : false);
-							return;
-						}
-
-						Tier0_Msg(
-							"%s debugPrint 0|1 - Disable / enable debug console output.\n"
-							"Current value: %s.\n"
-							, cmdPrefix
-							, curBaseFx->DebugPrint_get() ? "1" : "0"
-						);
-						return;
-					}
-					else
-					if(!_stricmp(cmd0, "invalidateCache"))
-					{
-						curBaseFx->InvalidateCache();
-						return;
-					}
-				}
-			}
-
-			if(cur)
-			{
-				Tier0_Msg("%s record [...] - Controlls whether or not this stream is recorded with mirv_streams record.\n", cmdPrefix);
-				Tier0_Msg("%s drawHud [...] - Controlls whether or not HUD is drawn for this stream.\n", cmdPrefix);
-				Tier0_Msg("%s drawViewModel [...] - Controlls whether or not view model (in-eye weapon) is drawn for this stream.\n", cmdPrefix);
-				//Tier0_Msg("%s captureType [...] - Controlls capture format and operations.\n", cmdPrefix);
-			}
-			
-			if(curDeveloper)
-			{
-				Tier0_Msg("%s matchTextureGroupName [...]\n", cmdPrefix);
-				Tier0_Msg("%s matchName [...]\n", cmdPrefix);
-				Tier0_Msg("%s replaceName [...]\n", cmdPrefix);
-				Tier0_Msg("%s blockDraw [...]\n", cmdPrefix);
-			}
-
-			if(curBaseFx)
-			{
-				Tier0_Msg("%s clientEffectTexturesAction [...]\n", cmdPrefix);
-				Tier0_Msg("%s worldTexturesAction [...]\n", cmdPrefix);
-				Tier0_Msg("%s skyBoxTexturesAction [...]\n", cmdPrefix);
-				Tier0_Msg("%s staticPropTexturesAction [...]\n", cmdPrefix);
-				Tier0_Msg("%s cableAction [...]\n", cmdPrefix);
-				Tier0_Msg("%s playerModelsAction [...]\n", cmdPrefix);
-				Tier0_Msg("%s weaponModelsAction [...]\n", cmdPrefix);
-				Tier0_Msg("%s shellModelsAction [...]\n", cmdPrefix);
-				Tier0_Msg("%s otherModelsAction [...]\n", cmdPrefix);
-				Tier0_Msg("%s decalTexturesAction [...]\n", cmdPrefix);
-				Tier0_Msg("%s effectsAction [...]\n", cmdPrefix);
-				Tier0_Msg("%s shellParticleAction [...]\n", cmdPrefix);
-				Tier0_Msg("%s otherParticleAction [...]\n", cmdPrefix);
-				Tier0_Msg("%s stickerAction [...]\n", cmdPrefix);
-				Tier0_Msg("%s depthVal [...]\n", cmdPrefix);
-				Tier0_Msg("%s depthValMax [...]\n", cmdPrefix);
-				Tier0_Msg("%s debugPrint [...]\n", cmdPrefix);
-				Tier0_Msg("%s invalidateCache - invaldiates the material cache.\n", cmdPrefix);
-			}
-
-			Tier0_Msg("No further options for this stream.\n");
+			Console_EditStream((*it), args, argcOffset, cmdPrefix);
 			return;
 		}
 	}
 	Tier0_Msg("Error: invalid streamName.\n");
+}
+
+void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args, int argcOffset, char const * cmdPrefix)
+{
+	CAfxStream * cur = stream;
+
+	CAfxRecordStream * curRecord = 0;
+	CAfxSingleStream * curSingle = 0;
+	CAfxTwinStream * curTwin = 0;
+	CAfxRenderViewStream * curRenderView = 0;
+	CAfxDeveloperStream * curDeveloper = 0;
+	CAfxBaseFxStream * curBaseFx = 0;
+	
+	if(cur)
+	{
+		curRecord = cur->AsAfxRecordStream();
+	
+		if(curRecord)
+		{
+			CAfxSingleStream * curSingle = curRecord->AsAfxSingleStream();
+			CAfxTwinStream * curTwin = curRecord->AsAfxTwinStream();
+
+			if(curSingle)
+			{
+				curRenderView = curSingle->Stream_get();
+			}
+		}
+		else
+		{
+			curRenderView = cur->AsAfxRenderViewStream();
+		}
+	}
+
+	if(curRenderView)
+	{
+		curDeveloper = curRenderView->AsAfxDeveloperStream();
+		curBaseFx = curRenderView->AsAfxBaseFxStream();
+	}
+
+	int argc = args->ArgC() -argcOffset;
+
+	if(cur)
+	{
+	}
+
+	if(curSingle)
+	{
+	}
+
+	if(curTwin)
+	{
+		if(1 <= argc)
+		{
+			char const * cmd0 = args->ArgV(argcOffset +0);
+
+			if(!_stricmp(cmd0, "streamA"))
+			{
+				std::string newPrefix(cmdPrefix);
+				newPrefix.append(" streamA");
+				Console_EditStream(curTwin->StreamA_get(), args, argcOffset+1, newPrefix.c_str());
+				return;
+			}
+			else
+			if(!_stricmp(cmd0, "streamB"))
+			{
+				std::string newPrefix(cmdPrefix);
+				newPrefix.append(" streamB");
+				Console_EditStream(curTwin->StreamB_get(), args, argcOffset+1, newPrefix.c_str());
+				return;
+			}
+			else
+			if(!_stricmp(cmd0, "streamCombineType"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+					CAfxTwinStream::StreamCombineType value;
+
+					if(Console_ToStreamCombineType(cmd1, value))
+					{
+						curTwin->StreamCombineType_set(value);
+						return;
+					}
+				}
+
+				Tier0_Msg(
+					"%s streamCombineType " CAFXBASEFXSTREAM_STREAMCOMBINETYPES " - Set new combine type.\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, Console_FromStreamCombineType(curTwin->StreamCombineType_get())
+				);
+				return;
+			}
+		}
+	}
+
+	if(curRecord)
+	{
+		if(1 <= argc)
+		{
+			char const * cmd0 = args->ArgV(argcOffset +0);
+
+			if(!_stricmp(cmd0, "record"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+
+					curRecord->Record_set(atoi(cmd1) != 0 ? true : false);
+
+					return;
+				}
+
+				Tier0_Msg(
+					"%s record 0|1 - Whether to record this stream with mirv_streams record - 0 = record off, 1 = RECORD ON.\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, curRecord->Record_get() ? "1" : "0"
+				);
+				return;
+			}
+		}
+	}
+
+	if(curRenderView)
+	{
+		if(1 <= argc)
+		{
+			char const * cmd0 = args->ArgV(argcOffset +0);
+
+			if(!_stricmp(cmd0, "drawHud"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+
+					curRenderView->DrawHud_set(atoi(cmd1) != 0 ? true : false);
+
+					return;
+				}
+
+				Tier0_Msg(
+					"%s drawHud 0|1 - Whether to draw HUD for this stream - 0 = don't draw, 1 = draw.\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, curRenderView->DrawHud_get() ? "1" : "0"
+				);
+				return;
+			}
+			else
+			if(!_stricmp(cmd0, "drawViewModel"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+
+					curRenderView->DrawViewModel_set(atoi(cmd1) != 0 ? true : false);
+
+					return;
+				}
+
+				Tier0_Msg(
+					"%s drawViewModel 0|1 - Whether to draw view model (in-eye weapon) for this stream - 0 = don't draw, 1 = draw.\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, curRenderView->DrawViewModel_get() ? "1" : "0"
+				);
+				return;
+			}
+		}
+	}
+
+	if(curDeveloper)
+	{
+		if(1 <= argc)
+		{
+			char const * cmd0 = args->ArgV(argcOffset +0);
+
+			if(!_stricmp(cmd0, "matchTextureGroupName"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+
+					curDeveloper->MatchTextureGroupName_set(cmd1);
+
+					return;
+				}
+
+				Tier0_Msg(
+					"%s matchTextureGroupName <name> - Set new texture group name to match.\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, curDeveloper->MatchTextureGroupName_get()
+				);
+				return;
+			}
+			else
+			if(!_stricmp(cmd0, "matchName"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+
+					curDeveloper->MatchName_set(cmd1);
+
+					return;
+				}
+
+				Tier0_Msg(
+					"%s matchName <name> - Set new name to match.\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, curDeveloper->MatchName_get()
+				);
+				return;
+			}
+			else
+			if(!_stricmp(cmd0, "replaceName"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+
+					curDeveloper->ReplaceName_set(cmd1);
+
+					return;
+				}
+
+				Tier0_Msg(
+					"%s replaceName <name> - Set the name of the replacement material, set an empty string(\"\") to replace nothing.\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, curDeveloper->ReplaceName_get()
+				);
+				return;
+			}
+			else
+			if(!_stricmp(cmd0, "blockDraw"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+
+					curDeveloper->BlockDraw_set(0 != atoi(cmd1));
+
+					return;
+				}
+
+				Tier0_Msg(
+					"%s blockDraw 0|1 - Whether to block drawing when replaceMaterial is active.\n"
+					"Current value: %i.\n"
+					, cmdPrefix
+					, curDeveloper->BlockDraw_get() ? 1L : 0L
+				);
+				return;
+			}
+		}
+	}
+
+	if(curBaseFx)
+	{
+		if(1 <= argc)
+		{
+			char const * cmd0 = args->ArgV(argcOffset +0);
+
+			if(!_stricmp(cmd0, "clientEffectTexturesAction"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+					CAfxBaseFxStream::HideableAction value;
+
+					if(Console_ToHideableAction(cmd1, value))
+					{
+						curBaseFx->ClientEffectTexturesAction_set(value);
+						return;
+					}
+				}
+
+				Tier0_Msg(
+					"%s clientEffectTexturesAction " CAFXBASEFXSTREAM_HIDEABLEACTIONS " - Set new action.\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, Console_FromHideableAction(curBaseFx->ClientEffectTexturesAction_get())
+				);
+				return;
+			}
+			else
+			if(!_stricmp(cmd0, "worldTexturesAction"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+					CAfxBaseFxStream::MaskableAction value;
+
+					if(Console_ToMaskableAction(cmd1, value))
+					{
+						curBaseFx->WorldTexturesAction_set(value);
+						return;
+					}
+				}
+
+				Tier0_Msg(
+					"%s worldTexturesAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, Console_FromMaskableAction(curBaseFx->WorldTexturesAction_get())
+				);
+				return;
+			}
+			else
+			if(!_stricmp(cmd0, "skyBoxTexturesAction"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+					CAfxBaseFxStream::MaskableAction value;
+
+					if(Console_ToMaskableAction(cmd1, value))
+					{
+						curBaseFx->SkyBoxTexturesAction_set(value);
+						return;
+					}
+				}
+
+				Tier0_Msg(
+					"%s skyBoxTexturesAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, Console_FromMaskableAction(curBaseFx->SkyBoxTexturesAction_get())
+				);
+				return;
+			}
+			else
+			if(!_stricmp(cmd0, "staticPropTexturesAction"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+					CAfxBaseFxStream::MaskableAction value;
+
+					if(Console_ToMaskableAction(cmd1, value))
+					{
+						curBaseFx->StaticPropTexturesAction_set(value);
+						return;
+					}
+				}
+
+				Tier0_Msg(
+					"%s staticPropTexturesAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, Console_FromMaskableAction(curBaseFx->StaticPropTexturesAction_get())
+				);
+				return;
+			}
+			else
+			if(!_stricmp(cmd0, "cableAction"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+					CAfxBaseFxStream::HideableAction value;
+
+					if(Console_ToHideableAction(cmd1, value))
+					{
+						curBaseFx->CableAction_set(value);
+						return;
+					}
+				}
+
+				Tier0_Msg(
+					"%s cableAction " CAFXBASEFXSTREAM_HIDEABLEACTIONS " - Set new action.\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, Console_FromHideableAction(curBaseFx->CableAction_get())
+				);
+				return;
+			}
+			else
+			if(!_stricmp(cmd0, "playerModelsAction"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+					CAfxBaseFxStream::MaskableAction value;
+
+					if(Console_ToMaskableAction(cmd1, value))
+					{
+						curBaseFx->PlayerModelsAction_set(value);
+						return;
+					}
+				}
+
+				Tier0_Msg(
+					"%s playerModelsAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, Console_FromMaskableAction(curBaseFx->PlayerModelsAction_get())
+				);
+				return;
+			}
+			else
+			if(!_stricmp(cmd0, "weaponModelsAction"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+					CAfxBaseFxStream::MaskableAction value;
+
+					if(Console_ToMaskableAction(cmd1, value))
+					{
+						curBaseFx->WeaponModelsAction_set(value);
+						return;
+					}
+				}
+
+				Tier0_Msg(
+					"%s weaponModelsAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, Console_FromMaskableAction(curBaseFx->WeaponModelsAction_get())
+				);
+				return;
+			}
+			else
+			if(!_stricmp(cmd0, "shellModelsAction"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+					CAfxBaseFxStream::MaskableAction value;
+
+					if(Console_ToMaskableAction(cmd1, value))
+					{
+						curBaseFx->ShellModelsAction_set(value);
+						return;
+					}
+				}
+
+				Tier0_Msg(
+					"%s shellModelsAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, Console_FromMaskableAction(curBaseFx->ShellModelsAction_get())
+				);
+				return;
+			}
+			else
+			if(!_stricmp(cmd0, "otherModelsAction"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+					CAfxBaseFxStream::MaskableAction value;
+
+					if(Console_ToMaskableAction(cmd1, value))
+					{
+						curBaseFx->OtherModelsAction_set(value);
+						return;
+					}
+				}
+
+				Tier0_Msg(
+					"%s otherModelsAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, Console_FromMaskableAction(curBaseFx->OtherModelsAction_get())
+				);
+				return;
+			}
+			else
+			if(!_stricmp(cmd0, "decalTexturesAction"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+					CAfxBaseFxStream::HideableAction value;
+
+					if(Console_ToHideableAction(cmd1, value))
+					{
+						curBaseFx->DecalTexturesAction_set(value);
+						return;
+					}
+				}
+
+				Tier0_Msg(
+					"%s decalTexturesAction " CAFXBASEFXSTREAM_HIDEABLEACTIONS " - Set new action.\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, Console_FromHideableAction(curBaseFx->DecalTexturesAction_get())
+				);
+				return;
+			}
+			else
+			if(!_stricmp(cmd0, "effectsAction"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+					CAfxBaseFxStream::HideableAction value;
+
+					if(Console_ToHideableAction(cmd1, value))
+					{
+						curBaseFx->EffectsAction_set(value);
+						return;
+					}
+				}
+
+				Tier0_Msg(
+					"%s effectsAction " CAFXBASEFXSTREAM_HIDEABLEACTIONS " - Set new action.\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, Console_FromHideableAction(curBaseFx->EffectsAction_get())
+				);
+				return;
+			}
+			else
+			if(!_stricmp(cmd0, "shellParticleAction"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+					CAfxBaseFxStream::HideableAction value;
+
+					if(Console_ToHideableAction(cmd1, value))
+					{
+						curBaseFx->ShellParticleAction_set(value);
+						return;
+					}
+				}
+
+				Tier0_Msg(
+					"%s shellParticleAction " CAFXBASEFXSTREAM_HIDEABLEACTIONS " - Set new action.\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, Console_FromHideableAction(curBaseFx->ShellParticleAction_get())
+				);
+				return;
+			}
+			else
+			if(!_stricmp(cmd0, "otherParticleAction"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+					CAfxBaseFxStream::HideableAction value;
+
+					if(Console_ToHideableAction(cmd1, value))
+					{
+						curBaseFx->OtherParticleAction_set(value);
+						return;
+					}
+				}
+
+				Tier0_Msg(
+					"%s otherParticleAction " CAFXBASEFXSTREAM_HIDEABLEACTIONS " - Set new action.\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, Console_FromHideableAction(curBaseFx->OtherParticleAction_get())
+				);
+				return;
+			}
+			else
+			if(!_stricmp(cmd0, "stickerAction"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+					CAfxBaseFxStream::MaskableAction value;
+
+					if(Console_ToMaskableAction(cmd1, value))
+					{
+						curBaseFx->StickerAction_set(value);
+						return;
+					}
+				}
+
+				Tier0_Msg(
+					"%s stickerAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, Console_FromMaskableAction(curBaseFx->StickerAction_get())
+				);
+				return;
+			}
+			else
+			if(!_stricmp(cmd0, "depthVal"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+					curBaseFx->DepthVal_set((float)atof(cmd1));
+					return;
+				}
+
+				Tier0_Msg(
+					"%s depthVal <fValue> - Set new miniumum depth floating point value <fValue>.\n"
+					"Current value: %f.\n"
+					, cmdPrefix
+					, curBaseFx->DepthVal_get()
+				);
+				return;
+			}
+			else
+			if(!_stricmp(cmd0, "depthValMax"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+					curBaseFx->DepthValMax_set((float)atof(cmd1));
+					return;
+				}
+
+				Tier0_Msg(
+					"%s depthValMax <fValue> - Set new maximum depth floating point value <fValue>.\n"
+					"Current value: %f.\n"
+					, cmdPrefix
+					, curBaseFx->DepthValMax_get()
+				);
+				return;
+			}
+			else
+			if(!_stricmp(cmd0, "debugPrint"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+
+					curBaseFx->DebugPrint_set(0 != atoi(cmd1) ? true : false);
+					return;
+				}
+
+				Tier0_Msg(
+					"%s debugPrint 0|1 - Disable / enable debug console output.\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, curBaseFx->DebugPrint_get() ? "1" : "0"
+				);
+				return;
+			}
+			else
+			if(!_stricmp(cmd0, "invalidateCache"))
+			{
+				curBaseFx->InvalidateCache();
+				return;
+			}
+		}
+	}
+
+	if(cur)
+	{
+	}
+
+	if(curRecord)
+	{
+		Tier0_Msg("%s record [...] - Controlls whether or not this stream is recorded with mirv_streams record.\n", cmdPrefix);
+	}
+
+	if(curSingle)
+	{
+	}
+
+	if(curTwin)
+	{
+		Tier0_Msg("%s streamA [...] - Edit sub stream A.\n", cmdPrefix);
+		Tier0_Msg("%s streamB [...] - Edit sub stream B.\n", cmdPrefix);
+		Tier0_Msg("%s streamCombineType [...] - Controlls how streams are combined.\n", cmdPrefix);
+	}
+
+	if(curRenderView)
+	{
+		Tier0_Msg("%s drawHud [...] - Controlls whether or not HUD is drawn for this stream.\n", cmdPrefix);
+		Tier0_Msg("%s drawViewModel [...] - Controlls whether or not view model (in-eye weapon) is drawn for this stream.\n", cmdPrefix);
+	}
+			
+	if(curDeveloper)
+	{
+		Tier0_Msg("%s matchTextureGroupName [...]\n", cmdPrefix);
+		Tier0_Msg("%s matchName [...]\n", cmdPrefix);
+		Tier0_Msg("%s replaceName [...]\n", cmdPrefix);
+		Tier0_Msg("%s blockDraw [...]\n", cmdPrefix);
+	}
+
+	if(curBaseFx)
+	{
+		Tier0_Msg("%s clientEffectTexturesAction [...]\n", cmdPrefix);
+		Tier0_Msg("%s worldTexturesAction [...]\n", cmdPrefix);
+		Tier0_Msg("%s skyBoxTexturesAction [...]\n", cmdPrefix);
+		Tier0_Msg("%s staticPropTexturesAction [...]\n", cmdPrefix);
+		Tier0_Msg("%s cableAction [...]\n", cmdPrefix);
+		Tier0_Msg("%s playerModelsAction [...]\n", cmdPrefix);
+		Tier0_Msg("%s weaponModelsAction [...]\n", cmdPrefix);
+		Tier0_Msg("%s shellModelsAction [...]\n", cmdPrefix);
+		Tier0_Msg("%s otherModelsAction [...]\n", cmdPrefix);
+		Tier0_Msg("%s decalTexturesAction [...]\n", cmdPrefix);
+		Tier0_Msg("%s effectsAction [...]\n", cmdPrefix);
+		Tier0_Msg("%s shellParticleAction [...]\n", cmdPrefix);
+		Tier0_Msg("%s otherParticleAction [...]\n", cmdPrefix);
+		Tier0_Msg("%s stickerAction [...]\n", cmdPrefix);
+		Tier0_Msg("%s depthVal [...]\n", cmdPrefix);
+		Tier0_Msg("%s depthValMax [...]\n", cmdPrefix);
+		Tier0_Msg("%s debugPrint [...]\n", cmdPrefix);
+		Tier0_Msg("%s invalidateCache - invaldiates the material cache.\n", cmdPrefix);
+	}
+
+	Tier0_Msg("No further options for this stream.\n");
 }
 
 IMaterialSystem_csgo * CAfxStreams::GetMaterialSystem(void)
@@ -2216,7 +2380,7 @@ void CAfxStreams::OnDrawModulated_set(IAfxMeshDrawModulated * value)
 
 void CAfxStreams::LevelShutdown(IAfxBaseClientDll * cl)
 {
-	for(std::list<CAfxStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
+	for(std::list<CAfxRecordStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
 	{
 		(*it)->LevelShutdown(this);
 	}
@@ -2231,21 +2395,12 @@ void CAfxStreams::DebugDump()
 	int width = 1280;
 	int height = 720;
 
-	int imagePitch = width * (isRgba ? 4 : 3);
-	size_t imageBytes = imagePitch * height;
-
-	if( !m_TempBuffer || m_TempBufferBytesAllocated < imageBytes)
-	{
-		m_TempBuffer = realloc(m_TempBuffer, imageBytes);
-		if(m_TempBuffer) m_TempBufferBytesAllocated = imageBytes;
-	}
-
-	if(m_TempBuffer)
+	if(m_BufferA.AutoRealloc(isRgba ? m_BufferA.IBPF_BGRA : m_BufferA.IBPF_BGR, width, height))
 	{
 		m_CurrentContext->GetParent()->ReadPixels(
 			0, 0,
 			width, height,
-			(unsigned char*)m_TempBuffer,
+			(unsigned char*)m_BufferA.Buffer,
 			isRgba ? IMAGE_FORMAT_RGBA8888 : IMAGE_FORMAT_RGB888
 		);
 
@@ -2263,37 +2418,37 @@ void CAfxStreams::DebugDump()
 				{
 					for(int x=0;x<width;++x)
 					{
-						unsigned char r = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +0];
-						unsigned char g = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +1];
-						unsigned char b = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +2];
-						unsigned char a = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +3];
+						unsigned char r = ((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +4*x +0];
+						unsigned char g = ((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +4*x +1];
+						unsigned char b = ((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +4*x +2];
+						unsigned char a = ((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +4*x +3];
 									
-						((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +0] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +2];
-						((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +1] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +1];
-						((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +2] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +0];
-						((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +3] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +3];
+						((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +4*x +0] = ((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +4*x +2];
+						((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +4*x +1] = ((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +4*x +1];
+						((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +4*x +2] = ((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +4*x +0];
+						((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +4*x +3] = ((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +4*x +3];
 
-						((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +0] = b;
-						((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +1] = g;
-						((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +2] = r;
-						((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +3] = a;
+						((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +4*x +0] = b;
+						((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +4*x +1] = g;
+						((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +4*x +2] = r;
+						((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +4*x +3] = a;
 					}
 				}
 				else
 				{
 					for(int x=0;x<width;++x)
 					{
-						unsigned char r = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +0];
-						unsigned char g = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +1];
-						unsigned char b = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +2];
+						unsigned char r = ((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +3*x +0];
+						unsigned char g = ((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +3*x +1];
+						unsigned char b = ((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +3*x +2];
 									
-						((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +0] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +2];
-						((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +1] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +1];
-						((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +2] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +0];
+						((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +3*x +0] = ((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +3*x +2];
+						((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +3*x +1] = ((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +3*x +1];
+						((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +3*x +2] = ((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +3*x +0];
 									
-						((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +0] = b;
-						((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +1] = g;
-						((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +2] = r;
+						((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +3*x +0] = b;
+						((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +3*x +1] = g;
+						((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +3*x +2] = r;
 					}
 				}
 			}
@@ -2302,19 +2457,15 @@ void CAfxStreams::DebugDump()
 		// Write to disk:
 		{
 			std::wstring path = L"debug.tga";
-				bool success = m_FormatBmpAndNotTga && !isRgba
-					? WriteRawBitmap((unsigned char*)m_TempBuffer, path.c_str(), width, height, 24, imagePitch)
-					: WriteRawTarga((unsigned char*)m_TempBuffer, path.c_str(), width, height, isRgba ? 32 : 24, false, imagePitch, isRgba ? 8 : 0)
-				;
-				if(!success)
-				{
-					Tier0_Warning("Failed writing image #%i for DebugDump\n.", m_Frame);
-				}
+			if(!WriteBufferToFile(m_BufferA, path))
+			{
+				Tier0_Warning("CAfxStreams::DebugDump:Failed writing image for frame #%i\n.", m_Frame);
+			}
 		}
 	}
 	else
 	{
-		Tier0_Warning("CAfxStreams::View_Render: Failed to realloc m_TempBuffer.\n");
+		Tier0_Warning("CAfxStreams::DebugDump: Failed to realloc m_BufferA.\n");
 	}
 
 }
@@ -2325,15 +2476,25 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 
 	bool canFeed = CheckCanFeedStreams();
 
+	CAfxRenderViewStream * previewStream = 0;
 	if(m_PreviewStream)
 	{
+		if(CAfxSingleStream * singleStream = m_PreviewStream->AsAfxSingleStream())
+		{
+			previewStream = singleStream->Stream_get();
+		}
+
+	}
+
+	if(previewStream)
+	{
 		if(!canFeed)
-			Tier0_Warning("Error: Cannot preview stream %s due to missing dependencies!\n", m_PreviewStream->GetStreamName());
+			Tier0_Warning("Error: Cannot preview stream %s due to missing dependencies!\n", m_PreviewStream->StreamName_get());
 		else
 		{
 			SetMatVarsForStreams(); // keep them set in case a mofo resets them.
 
-			m_PreviewStream->StreamAttach(this);
+			previewStream->StreamAttach(this);
 
 			cx->GetParent()->ClearColor4ub(0,0,0,0);
 			cx->GetParent()->ClearBuffers(true,false,false);
@@ -2342,9 +2503,9 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 
 	cl->GetParent()->View_Render(rect);
 
-	if(m_PreviewStream && canFeed)
+	if(previewStream && canFeed)
 	{
-		m_PreviewStream->StreamDetach(this);
+		previewStream->StreamDetach(this);
 	}
 
 	if(m_Recording)
@@ -2355,175 +2516,103 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 		}
 		else
 		{
-			for(std::list<CAfxStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
+			for(std::list<CAfxRecordStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
 			{
 				if(!(*it)->Record_get()) continue;
 
-				//std::ostringstream oss;
-	
-				//oss << m_RecordName << "_"
-				//	<< (*it)->GetStreamName() << "_"
-				//	<< std::setfill('0') << std::setw(5) << m_Frame
-				//	<< ".tga"
-				//;
-
-				//std::string filePath(g_VEngineClient->GetGameDirectory());
-				//filePath.append("\\");
-				//filePath.append(oss.str());
-
 				//
-				// Delete file if it already exists, so tracking (waiting for it) works:
+				// Record the stream:
 
-				//DeleteFileA(filePath.c_str()); // Todo: Use wide character version maybe, otherwise I hope MAX_PATH will do.
+				CAfxRenderViewStream * streamA = 0;
+				CAfxRenderViewStream * streamB = 0;
+				bool streamAOk = false;
+				bool streamBOk = false;
 
-				//
-				// Record the stream to a file:
+				CAfxSingleStream * curSingle = (*it)->AsAfxSingleStream();
+				CAfxTwinStream * curTwin = (*it)->AsAfxTwinStream();
 
-				m_MaterialSystem->SwapBuffers();
-
-				SetMatVarsForStreams(); // keep them set in case a mofo resets them.
-
-				(*it)->StreamAttach(this);
-
-				//cl->GetParent()->WriteSaveGameScreenshotOfSize(oss.str().c_str(), rect->width, rect->height);
-
-				bool isRgba = (*it)->CaptureType_get() == CAfxStream::CT_RGBA;
-
-				if(isRgba)
+				if(curSingle)
 				{
-					if(m_RgbaRenderTarget)
+					streamA = curSingle->Stream_get();
+				}
+				else
+				if(curTwin)
+				{
+					CAfxTwinStream::StreamCombineType streamCombineType = curTwin->StreamCombineType_get();
+
+					if(CAfxTwinStream::SCT_ARedAsAlphaBColor == streamCombineType)
 					{
-						g_bD3D9DebugPrint = true;
-						cx->GetParent()->PushRenderTargetAndViewport(m_RgbaRenderTarget);
+						streamA = curTwin->StreamB_get();
+						streamB = curTwin->StreamA_get();
+					}
+					else
+					if(CAfxTwinStream::SCT_AColorBRedAsAlpha == streamCombineType)
+					{
+						streamA = curTwin->StreamA_get();
+						streamB = curTwin->StreamB_get();
+					}
+				}
+
+				if(streamA)
+				{
+					streamAOk = CaptureStreamToBuffer(streamA, m_BufferA, cx);
+				}
+
+				if(streamB)
+				{
+					streamBOk = CaptureStreamToBuffer(streamB, m_BufferB, cx);
+				}
+
+				if(streamA && streamB)
+				{
+					streamAOk = streamAOk && streamBOk
+						&& m_BufferA.Width == m_BufferB.Width
+						&& m_BufferA.Height == m_BufferB.Height
+						&& m_BufferA.PixelFormat == m_BufferA.IBPF_BGR
+						&& m_BufferA.PixelFormat == m_BufferB.PixelFormat
+						&& m_BufferA.ImagePitch == m_BufferB.ImagePitch
+						&& m_BufferA.AutoRealloc(m_BufferA.IBPF_BGRA, m_BufferA.Width, m_BufferA.Height)
+					;
+
+					if(streamAOk)
+					{
+						// interleave B as alpha into A:
+
+						for(int y = m_BufferA.Height-1;y>=0;--y)
+						{
+							for(int x=m_BufferA.Width-1;x>=0;--x)
+							{
+								unsigned char b = ((unsigned char *)m_BufferA.Buffer)[y*m_BufferB.ImagePitch+x*3+0];
+								unsigned char g = ((unsigned char *)m_BufferA.Buffer)[y*m_BufferB.ImagePitch+x*3+1];
+								unsigned char r = ((unsigned char *)m_BufferA.Buffer)[y*m_BufferB.ImagePitch+x*3+2];
+								unsigned char a = ((unsigned char *)m_BufferB.Buffer)[y*m_BufferB.ImagePitch+x*3+0];
+
+								((unsigned char *)m_BufferA.Buffer)[y*m_BufferA.ImagePitch+x*4+0] = b;
+								((unsigned char *)m_BufferA.Buffer)[y*m_BufferA.ImagePitch+x*4+1] = g;
+								((unsigned char *)m_BufferA.Buffer)[y*m_BufferA.ImagePitch+x*4+2] = r;
+								((unsigned char *)m_BufferA.Buffer)[y*m_BufferA.ImagePitch+x*4+3] = a;
+							}
+						}
 					}
 					else
 					{
-						Tier0_Warning("CAfxStreams::View_Render: Cannot capture rgba properly!\n");
+						Tier0_Warning("CAfxStreams::View_Render: Combining streams failed.\n");
 					}
 				}
 
-				IViewRender_csgo * view = GetView_csgo();
-
-				const CViewSetup_csgo * viewSetup = view->GetViewSetup();
-
-				int whatToDraw = RENDERVIEW_UNSPECIFIED;
-
-				if((*it)->DrawHud_get()) whatToDraw |= RENDERVIEW_DRAWHUD;
-				if((*it)->DrawViewModel_get()) whatToDraw |= RENDERVIEW_DRAWVIEWMODEL;
-
-				cx->GetParent()->ClearColor4ub(0,0,0,0);
-				cx->GetParent()->ClearBuffers(true,false,false);
-
-				view->RenderView(*viewSetup, *viewSetup, VIEW_CLEAR_STENCIL|VIEW_CLEAR_DEPTH, whatToDraw);
-
-				int imagePitch = viewSetup->m_nUnscaledWidth * (isRgba ? 4 : 3);
-				size_t imageBytes = imagePitch * viewSetup->m_nUnscaledHeight;
-
-				if( !m_TempBuffer || m_TempBufferBytesAllocated < imageBytes)
+				// Write to disk:
+				if(streamAOk)
 				{
-					m_TempBuffer = realloc(m_TempBuffer, imageBytes);
-					if(m_TempBuffer) m_TempBufferBytesAllocated = imageBytes;
-				}
-
-				if(m_TempBuffer)
-				{
-					cx->GetParent()->ReadPixels(
-						viewSetup->m_nUnscaledX, viewSetup->m_nUnscaledY,
-						viewSetup->m_nUnscaledWidth, viewSetup->m_nUnscaledHeight,
-						(unsigned char*)m_TempBuffer,
-						isRgba ? IMAGE_FORMAT_RGBA8888 : IMAGE_FORMAT_RGB888
-					);
-
-					// (back) transform to MDT native format:
+					std::wstring path;
+					if((*it)->CreateCapturePath(m_TakeDir, m_Frame, m_FormatBmpAndNotTga, path))
 					{
-						int lastLine = viewSetup->m_nUnscaledHeight >> 1;
-						if(viewSetup->m_nUnscaledHeight & 0x1) ++lastLine;
-
-						for(int y=0;y<lastLine;++y)
+						if(!WriteBufferToFile(m_BufferA, path))
 						{
-							int srcLine = y;
-							int dstLine = viewSetup->m_nUnscaledHeight -1 -y;
-
-							if(isRgba)
-							{
-								for(int x=0;x<viewSetup->m_nUnscaledWidth;++x)
-								{
-									unsigned char r = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +0];
-									unsigned char g = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +1];
-									unsigned char b = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +2];
-									unsigned char a = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +3];
-									
-									((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +0] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +2];
-									((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +1] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +1];
-									((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +2] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +0];
-									((unsigned char *)m_TempBuffer)[dstLine*imagePitch +4*x +3] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +3];
-
-									((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +0] = b;
-									((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +1] = g;
-									((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +2] = r;
-									((unsigned char *)m_TempBuffer)[srcLine*imagePitch +4*x +3] = a;
-								}
-							}
-							else
-							{
-								for(int x=0;x<viewSetup->m_nUnscaledWidth;++x)
-								{
-									unsigned char r = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +0];
-									unsigned char g = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +1];
-									unsigned char b = ((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +2];
-									
-									((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +0] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +2];
-									((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +1] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +1];
-									((unsigned char *)m_TempBuffer)[dstLine*imagePitch +3*x +2] = ((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +0];
-									
-									((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +0] = b;
-									((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +1] = g;
-									((unsigned char *)m_TempBuffer)[srcLine*imagePitch +3*x +2] = r;
-								}
-							}
-						}
-					}
-
-					// Write to disk:
-					{
-						std::wstring path;
-						if((*it)->CreateCapturePath(m_Frame, m_FormatBmpAndNotTga, path))
-						{
-							bool success = m_FormatBmpAndNotTga && !isRgba
-								? WriteRawBitmap((unsigned char*)m_TempBuffer, path.c_str(), viewSetup->m_nUnscaledWidth, viewSetup->m_nUnscaledHeight, 24, imagePitch)
-								: WriteRawTarga((unsigned char*)m_TempBuffer, path.c_str(), viewSetup->m_nUnscaledWidth, viewSetup->m_nUnscaledHeight, isRgba ? 32 : 24, false, imagePitch, isRgba ? 8 : 0)
-							;
-							if(!success)
-							{
-								Tier0_Warning("Failed writing image #%i for stream %s\n.", m_Frame, (*it)->GetStreamName());
-							}
+							Tier0_Warning("Failed writing image #%i for stream %s\n.", m_Frame, (*it)->StreamName_get());
 						}
 					}
 				}
-				else
-				{
-					Tier0_Warning("CAfxStreams::View_Render: Failed to realloc m_TempBuffer.\n");
-				}
 
-				if(isRgba)
-				{
-					if(m_RgbaRenderTarget)
-					{
-						cx->GetParent()->PopRenderTargetAndViewport();
-
-						g_bD3D9DebugPrint = false;
-					}
-				}
-
-				(*it)->StreamDetach(this);
-
-				//
-				// Make sure to wait for files to be written (and thus memory to be freed), otherwise we
-				// will run out of memory on most systems:
-
-				//m_FileTracker.TrackFile(filePath.c_str());
-
-				m_FileTracker.WaitForFiles(2);
 			}
 
 		}
@@ -2532,6 +2621,97 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 	}
 
 	m_CurrentContext = 0;
+}
+
+bool CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuffer & buffer, IAfxMatRenderContext * cx)
+{
+	bool bOk = false;
+
+	SetMatVarsForStreams(); // keep them set in case a mofo resets them.
+
+	stream->StreamAttach(this);
+
+	if(m_RgbaRenderTarget)
+	{
+		cx->GetParent()->PushRenderTargetAndViewport(m_RgbaRenderTarget);
+
+		IViewRender_csgo * view = GetView_csgo();
+
+		const CViewSetup_csgo * viewSetup = view->GetViewSetup();
+
+		int whatToDraw = RENDERVIEW_UNSPECIFIED;
+
+		if(stream->DrawHud_get()) whatToDraw |= RENDERVIEW_DRAWHUD;
+		if(stream->DrawViewModel_get()) whatToDraw |= RENDERVIEW_DRAWVIEWMODEL;
+
+		cx->GetParent()->ClearColor4ub(0,0,0,0);
+		cx->GetParent()->ClearBuffers(true,false,false);
+
+		view->RenderView(*viewSetup, *viewSetup, VIEW_CLEAR_STENCIL|VIEW_CLEAR_DEPTH, whatToDraw);
+
+		if(buffer.AutoRealloc(CImageBuffer::IBPF_BGR, viewSetup->m_nUnscaledWidth, viewSetup->m_nUnscaledHeight))
+		{
+			cx->GetParent()->ReadPixels(
+				viewSetup->m_nUnscaledX, viewSetup->m_nUnscaledY,
+				buffer.Width, buffer.Height,
+				(unsigned char*)buffer.Buffer,
+				IMAGE_FORMAT_RGB888
+			);
+
+			// (back) transform to MDT native format:
+			{
+				int lastLine = buffer.Height >> 1;
+				if(buffer.Height & 0x1) ++lastLine;
+
+				for(int y=0;y<lastLine;++y)
+				{
+					int srcLine = y;
+					int dstLine = buffer.Height -1 -y;
+
+					for(int x=0;x<buffer.Width;++x)
+					{
+						unsigned char r = ((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +3*x +0];
+						unsigned char g = ((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +3*x +1];
+						unsigned char b = ((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +3*x +2];
+									
+						((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +3*x +0] = ((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +3*x +2];
+						((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +3*x +1] = ((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +3*x +1];
+						((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +3*x +2] = ((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +3*x +0];
+									
+						((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +3*x +0] = b;
+						((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +3*x +1] = g;
+						((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +3*x +2] = r;
+					}
+				}
+			}
+
+			bOk = true;
+		}
+		else
+		{
+			Tier0_Warning("CAfxStreams::CaptureStreamToBuffer: Failed to realloc buffer.\n");
+		}
+
+		cx->GetParent()->PopRenderTargetAndViewport();
+	}
+	else
+	{
+		Tier0_Warning("CAfxStreams::CaptureStreamToBuffer: Missing render target!\n");
+	}
+
+	stream->StreamDetach(this);
+
+	return bOk;
+}
+
+bool CAfxStreams::WriteBufferToFile(const CImageBuffer & buffer, const std::wstring & path)
+{
+	bool isBgra = buffer.IBPF_BGRA == buffer.PixelFormat;
+
+	return m_FormatBmpAndNotTga && !isBgra
+		? WriteRawBitmap((unsigned char*)buffer.Buffer, path.c_str(), buffer.Width, buffer.Height, 24, buffer.ImagePitch)
+		: WriteRawTarga((unsigned char*)buffer.Buffer, path.c_str(), buffer.Width, buffer.Height, isBgra ? 32 : 24, false, buffer.ImagePitch, isBgra ? 8 : 0)
+	;
 }
 
 bool CAfxStreams::Console_CheckStreamName(char const * value)
@@ -2550,9 +2730,9 @@ bool CAfxStreams::Console_CheckStreamName(char const * value)
 	// Check if name is unique:
 	{
 		int index = 0;
-		for(std::list<CAfxStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
+		for(std::list<CAfxRecordStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
 		{
-			if(!_stricmp((*it)->GetStreamName(), value))
+			if(!_stricmp((*it)->StreamName_get(), value))
 			{
 				Tier0_Msg("Error: Stream name must be unique, \"%s\" is already in use by stream with index %i.\n", value, index);
 				return false;
@@ -2657,6 +2837,37 @@ char const * CAfxStreams::Console_FromHideableAction(CAfxBaseFxStream::HideableA
 	return "[unknown]";
 }
 
+bool CAfxStreams::Console_ToStreamCombineType(char const * value, CAfxTwinStream::StreamCombineType & streamCombineType)
+{
+	if(!_stricmp(value, "aRedAsAlphaBColor"))
+	{
+		streamCombineType = CAfxTwinStream::SCT_ARedAsAlphaBColor;
+		return true;
+	}
+	else
+	if(!_stricmp(value, "aColorBRedAsAlpha"))
+	{
+		streamCombineType = CAfxTwinStream::SCT_AColorBRedAsAlpha;
+		return true;
+	}
+
+	return false;
+}
+
+char const * CAfxStreams::Console_FromStreamCombineType(CAfxTwinStream::StreamCombineType streamCombineType)
+{
+	switch(streamCombineType)
+	{
+	case CAfxTwinStream::SCT_ARedAsAlphaBColor:
+		return "aRedAsAlphaBColor";
+	case CAfxTwinStream::SCT_AColorBRedAsAlpha:
+		return "aColorBRedAsAlpha";
+	}
+
+	return "[unkown]";
+}
+
+
 
 bool CAfxStreams::CheckCanFeedStreams(void)
 {
@@ -2703,7 +2914,7 @@ void CAfxStreams::EnsureMatVars()
 	if(!m_MatDynamicTonemappingRef) m_MatDynamicTonemappingRef = new WrpConVarRef("mat_dynamic_tonemapping");
 }
 
-void CAfxStreams::AddStream(CAfxStream * stream)
+void CAfxStreams::AddStream(CAfxRecordStream * stream)
 {
 	m_Streams.push_back(stream);
 
@@ -2726,4 +2937,55 @@ void CAfxStreams::CreateRenderTargets(IMaterialSystem_csgo * materialSystem)
 	}
 
 	materialSystem->EndRenderTargetAllocation();
+}
+
+// CAfxStreams::CImageBuffer ///////////////////////////////////////////////////
+
+CAfxStreams::CImageBuffer::CImageBuffer()
+: Buffer(0)
+, m_BufferBytesAllocated(0)
+{
+}
+
+CAfxStreams::CImageBuffer::~CImageBuffer()
+{
+	free(Buffer);
+}
+
+bool CAfxStreams::CImageBuffer::AutoRealloc(ImageBufferPixelFormat pixelFormat, int width, int height)
+{
+	size_t pitch = width;
+
+	switch(pixelFormat)
+	{
+	case IBPF_BGR:
+		pitch *= 3;
+		break;
+	case IBPF_BGRA:
+		pitch *= 4;
+		break;
+	default:
+		Tier0_Warning("CAfxStreams::CImageBuffer::AutoRealloc: Unsupported pixelFormat\n");
+		return false;
+	}
+
+	size_t imageBytes = pitch * height;
+
+	if( !Buffer || m_BufferBytesAllocated < imageBytes)
+	{
+		Buffer = realloc(Buffer, imageBytes);
+		if(Buffer)
+		{
+			m_BufferBytesAllocated = imageBytes;
+		}
+	}
+
+	m_BufferBytesAllocated = imageBytes;
+	PixelFormat = pixelFormat;
+	Width = width;
+	Height = height;
+	ImagePitch = pitch;
+	ImageBytes = imageBytes;
+
+	return 0 != Buffer;
 }
