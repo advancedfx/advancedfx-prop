@@ -797,20 +797,20 @@ public:
 	CAfxAlphaEntityStream() : CAfxBaseFxStream()
 	{
 		m_ClientEffectTexturesAction = HA_Draw;
-		m_WorldTexturesAction =  MA_Invisible;
-		m_SkyBoxTexturesAction =  MA_Invisible;
-		m_StaticPropTexturesAction =  MA_Invisible;
-		m_CableAction =  HA_NoDraw;
+		m_WorldTexturesAction =  MA_Draw;
+		m_SkyBoxTexturesAction =  MA_Draw;
+		m_StaticPropTexturesAction =  MA_Draw;
+		m_CableAction =  HA_Draw;
 		m_PlayerModelsAction =  MA_Draw;
 		m_WeaponModelsAction =  MA_Draw;
 		m_ShellModelsAction =  MA_Draw;
-		m_OtherModelsAction =  MA_Invisible;
-		m_DecalTexturesAction =  HA_NoDraw;
-		m_EffectsAction =  HA_NoDraw;
-		m_ShellParticleAction =  HA_NoDraw;
-		m_OtherParticleAction =  HA_NoDraw;
+		m_OtherModelsAction =  MA_Draw;
+		m_DecalTexturesAction =  HA_Draw;
+		m_EffectsAction =  HA_Draw;
+		m_ShellParticleAction =  HA_Draw;
+		m_OtherParticleAction =  HA_Draw;
 		m_StickerAction =  MA_Draw;
-		m_ErrorMaterialAction = HA_NoDraw;
+		m_ErrorMaterialAction = HA_Draw;
 
 	}
 

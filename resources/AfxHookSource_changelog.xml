@@ -3,6 +3,22 @@
 
 <changelog>
 
+
+<release>
+<name>AfxHookSource</name>
+<version>0.2.5.1</version>
+<time>2015-09-29T14:19</time>
+<changes>
+<change type="updated">
+Updated mirv_streams: alphaMatte and alphaEntity defaults (and thus alphaMatteEntity defaults) changed.
+</change>
+<change type="fixed">
+Fixed mirv_streams edit not working properly in AfxHookSource 0.2.5.0.
+</change>
+</changes>
+</release>
+
+
 <release>
 <name>AfxHookSource</name>
 <version>0.2.5.0</version>

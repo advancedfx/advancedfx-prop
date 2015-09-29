@@ -1636,8 +1636,8 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 	
 		if(curRecord)
 		{
-			CAfxSingleStream * curSingle = curRecord->AsAfxSingleStream();
-			CAfxTwinStream * curTwin = curRecord->AsAfxTwinStream();
+			curSingle = curRecord->AsAfxSingleStream();
+			curTwin = curRecord->AsAfxTwinStream();
 
 			if(curSingle)
 			{
