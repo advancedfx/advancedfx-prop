@@ -108,6 +108,9 @@
     <ClCompile Include="..\shared\RawOutput.cpp">
       <Filter>shared</Filter>
     </ClCompile>
+    <ClCompile Include="csgo_S_StartSound.cpp">
+      <Filter>AfxHookSource</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -211,6 +214,9 @@
     </ClInclude>
     <ClInclude Include="..\shared\RawOutput.h">
       <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="csgo_S_StartSound.h">
+      <Filter>AfxHookSource</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

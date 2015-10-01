@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2014-10-21 by dominik.matrixstorm.com
+// 2015-10-01 dominik.matrixstorm.com
 //
 // First changes:
 // 2010-09-27 dominik.matrixstorm.com
@@ -19,6 +19,7 @@ AFXADDR_DECL(csgo_CSkyboxView_Draw)
 AFXADDR_DECL(csgo_CSkyboxView_Draw_DSZ)
 AFXADDR_DECL(csgo_CViewRender_Render)
 AFXADDR_DECL(csgo_CViewRender_Render_DSZ)
+AFXADDR_DECL(csgo_S_StartSound_StringConversion)
 AFXADDR_DECL(csgo_gpGlobals_OFS_curtime)
 AFXADDR_DECL(csgo_gpGlobals_OFS_interpolation_amount)
 AFXADDR_DECL(csgo_gpGlobals_OFS_interval_per_tick)

@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2014-10-21 by dominik.matrixstorm.com
+// 2015-10-01 dominik.matrixstorm.com
 //
 // First changes:
 // 2010-09-27 dominik.matrixstorm.com
@@ -23,6 +23,7 @@ AFXADDR_DEF(csgo_CSkyboxView_Draw)
 AFXADDR_DEF(csgo_CSkyboxView_Draw_DSZ)
 AFXADDR_DEF(csgo_CViewRender_Render)
 AFXADDR_DEF(csgo_CViewRender_Render_DSZ)
+AFXADDR_DEF(csgo_S_StartSound_StringConversion)
 AFXADDR_DEF(csgo_pLocalPlayer)
 AFXADDR_DEF(csgo_gpGlobals_OFS_curtime)
 AFXADDR_DEF(csgo_gpGlobals_OFS_interpolation_amount)
@@ -105,10 +106,67 @@ void Addresses_InitEngineDll(AfxAddr engineDll, bool isCsgo)
 				AFXADDR_SET(csgo_snd_mix_timescale_patch, 0x0);
 			}
 		}
+
+		// csgo_S_StartSound_StringConversion:
+		{
+			DWORD addr = 0;
+			DWORD strAddr = 0;
+			{
+				ImageSectionsReader sections((HMODULE)engineDll);
+				if(!sections.Eof())
+				{
+					sections.Next(); // skip .text
+					if(!sections.Eof())
+					{
+						MemRange result = FindCString(sections.GetMemRange(), "Starting sound '%s' while system disabled.\n");
+						if(!result.IsEmpty())
+						{
+							strAddr = result.Start;
+						}
+						else ErrorBox(MkErrStr(__FILE__,__LINE__));
+					}
+					else ErrorBox(MkErrStr(__FILE__,__LINE__));
+				}
+				else ErrorBox(MkErrStr(__FILE__,__LINE__));
+			}
+			if(strAddr)
+			{
+				ImageSectionsReader sections((HMODULE)engineDll);
+			
+				MemRange baseRange = sections.GetMemRange();
+				MemRange result = FindBytes(baseRange, (char const *)&strAddr, sizeof(strAddr));
+				if(!result.IsEmpty())
+				{
+					addr = result.Start -0x1d;
+
+					// check for pattern to see if it is the right address:
+					unsigned char pattern[14] = { 0x8B, 0x01, 0x8D, 0x54, 0x24, 0x78, 0x68, 0x04, 0x01, 0x00, 0x00, 0x52, 0xFF, 0x10 };
+
+					DWORD patternSize = sizeof(pattern)/sizeof(pattern[0]);
+					MemRange patternRange(addr, addr+patternSize);
+					MemRange result = FindBytes(patternRange, (char *)pattern, patternSize);
+					if(result.Start != patternRange.Start || result.End != patternRange.End)
+					{
+						addr = 0;
+						ErrorBox(MkErrStr(__FILE__,__LINE__));
+					}
+				}
+				else ErrorBox(MkErrStr(__FILE__,__LINE__));
+			}
+			if(addr)
+			{
+				AFXADDR_SET(csgo_S_StartSound_StringConversion, addr);
+			}
+			else
+			{
+				AFXADDR_SET(csgo_S_StartSound_StringConversion, 0x0);
+			}
+		}
 	}
 	else
 	{
 		AFXADDR_SET(csgo_snd_mix_timescale_patch, 0x0);
+		AFXADDR_SET(csgo_S_StartSound_StringConversion, 0x0);
 	}
 	AFXADDR_SET(csgo_snd_mix_timescale_patch_DSZ, 0x09);
 }

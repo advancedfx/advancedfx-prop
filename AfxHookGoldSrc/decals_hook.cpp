@@ -33,78 +33,7 @@ bool IsFilterEntryMatched( decal_filter_entry_s *pentry, const char * sz_Target 
 {
 	const char * sz_Mask = pentry->sz_Mask;
 
-	std::list<std::string> maskWords;
-	bool leadingWildCard = false;
-	bool trailingWildCard = false;
-
-	{
-		bool firstMatch = true;
-		bool lastWasWildCard = false;
-		std::string curWord;
-		bool hasWord = false;
-
-		for(const char * curMask = sz_Mask; *curMask; curMask++)
-		{
-			if('\\' == *curMask)
-			{
-				curMask++;
-
-				if('*' == *curMask)
-				{
-					if(firstMatch)
-					{
-						firstMatch = false;
-						leadingWildCard = true;
-					}
-
-					if(hasWord)
-					{
-						maskWords.push_back(curWord);
-						hasWord = false;
-					}
-
-					lastWasWildCard = true;
-
-					continue;
-				}
-			}
-
-			firstMatch = false;
-			lastWasWildCard = false;
-			if(!hasWord) curWord.assign("");
-			hasWord = true;
-			curWord.push_back(*curMask);
-		}
-
-		if(hasWord) maskWords.push_back(curWord);
-		trailingWildCard = lastWasWildCard;
-	}
-
-	if(0 == maskWords.size())
-		return 0 == strlen(sz_Target) || leadingWildCard && trailingWildCard;
-
-	int idx = 0;
-
-	for(std::list<std::string>::iterator it = maskWords.begin(); it != maskWords.end(); it++)
-	{
-		const char * matchPos = strstr(sz_Target, it->c_str());
-		
-		if(!matchPos)
-			return false;
-
-		if(0 == idx && !leadingWildCard && 0 < matchPos - sz_Target)
-			return false;
-
-		if(idx + 1 == maskWords.size() && !trailingWildCard)
-		{
-			return StringEndsWith(sz_Target, it->c_str());
-		}
-
-		idx++;
-		sz_Target = matchPos +strlen(it->c_str()); // words don't overlap
-	}
-
-	return true;
+	return StringWildCard1Matched(sz_Mask, sz_Target);
 }
 
 REGISTER_DEBUGCMD_FUNC(test_filtermask)

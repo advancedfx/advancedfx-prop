@@ -26,6 +26,7 @@
 #include "AfxStreams.h"
 #include "addresses.h"
 #include "CampathDrawer.h"
+#include "csgo_S_StartSound.h"
 
 #include <malloc.h>
 #include <stdlib.h>
@@ -1910,5 +1911,79 @@ CON_COMMAND(mirv_gameoverlay, "GameOverlayRenderer control.")
 	Tier0_Msg(
 		"Usage:\n"
 		"mirv_gameoverlay enable 0|1 - Disable/Enable the GameOverlay (will only do s.th. useful when it was enabled initally).\n"
+	);
+}
+
+CON_COMMAND(mirv_snd_filter, "Sound control (i.e. blocking sounds).")
+{
+	if(!csgo_S_StartSound_Install())
+	{
+		Tier0_Warning("Error: Hook not installed.\n");
+		return;
+	}
+
+	int argc = args->ArgC();
+
+	if(2 <= argc)
+	{
+		char const * arg1 = args->ArgV(1);
+
+		if(0 == _stricmp("block", arg1))
+		{
+			if(3 <= argc)
+			{
+				const char * arg2 = args->ArgV(2);
+
+				csgo_S_StartSound_Block_Add(arg2);
+				return;
+			}
+		}
+		else
+		if(0 == _stricmp("print", arg1))
+		{
+			csgo_S_StartSound_Block_Print();
+			return;
+		}
+		else
+		if(0 == _stricmp("remove", arg1))
+		{
+			if(3 <= argc)
+			{
+				const char * arg2 = args->ArgV(2);
+
+				csgo_S_StartSound_Block_Remove(atoi(arg2));
+				return;
+			}
+		}
+		else
+		if(0 == _stricmp("clear", arg1))
+		{
+			csgo_S_StartSound_Block_Clear();
+			return;
+		}
+		else
+		if(0 == _stricmp("debug", arg1))
+		{
+			if(3 <= argc)
+			{
+				const char * arg2 = args->ArgV(2);
+
+				g_csgo_S_StartSound_Debug = 0 != atoi(arg2);
+				return;
+			}
+			
+			Tier0_Msg("Current value: %s\n", g_csgo_S_StartSound_Debug ? "1" : "0");
+			return;
+		}
+	}
+
+	Tier0_Msg(
+		"Usage:\n"
+		"mirv_snd_filter block <mask> - Blocks given <mask> string (for format see bellow).\n"
+		"mirv_snd_filter print - Prints current blocks.\n"
+		"mirv_snd_filter remove <index> - Removes the block with index <index> (You can get that from the print sub-command).\n"
+		"mirv_snd_filter clear - Clears all blocks.\n"
+		"mirv_snd_filter debug 0|1 - Print sounds played into console.\n"
+		"<mask> - string to match, where \\* = wildcard and \\\\ = \\\n"
 	);
 }

@@ -6,8 +6,20 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.6.0</version>
+<time>2015-10-01T14:15Z</time>
+<changes>
+<change type="added">
+Add mirv_snd_filter.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.5.1</version>
-<time>2015-09-29T14:19</time>
+<time>2015-09-29T14:19Z</time>
 <changes>
 <change type="updated">
 Updated mirv_streams: alphaMatte and alphaEntity defaults (and thus alphaMatteEntity defaults) changed.
@@ -22,7 +34,7 @@ Fixed mirv_streams edit not working properly in AfxHookSource 0.2.5.0.
 <release>
 <name>AfxHookSource</name>
 <version>0.2.5.0</version>
-<time>2015-09-29T06:32</time>
+<time>2015-09-29T06:32Z</time>
 <changes>
 <change type="updated">
 Updated mirv_streams record to give you less epileptic seizures (images are rendered off-screen now).
