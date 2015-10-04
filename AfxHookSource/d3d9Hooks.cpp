@@ -29,7 +29,29 @@ ULONG g_NewDirect3DDevice9_RefCount = 1;
 IDirect3DDevice9 * g_OldDirect3DDevice9 = 0;
 struct NewDirect3DDevice9
 {
+private:
+	bool m_Override_D3DRS_ZWRITEENABLE;
+	DWORD m_D3DRS_ZWRITEENABLE;
+
 public:
+	NewDirect3DDevice9()
+	: m_Override_D3DRS_ZWRITEENABLE(false)
+	, m_D3DRS_ZWRITEENABLE(TRUE)
+	{
+	}
+
+	void OverrideBegin_D3DRS_ZWRITEENABLE(DWORD value)
+	{
+		m_Override_D3DRS_ZWRITEENABLE = true;
+		g_OldDirect3DDevice9->SetRenderState(D3DRS_ZWRITEENABLE, value);
+	}
+
+	void OverrideEnd_D3DRS_ZWRITEENABLE(void)
+	{
+		g_OldDirect3DDevice9->SetRenderState(D3DRS_ZWRITEENABLE, m_D3DRS_ZWRITEENABLE);
+		m_Override_D3DRS_ZWRITEENABLE = false;
+	}
+
     /*** IUnknown methods ***/
     IFACE_PASSTHROUGH(IDirect3DDevice9, QueryInterface, g_OldDirect3DDevice9);
 
@@ -208,6 +230,15 @@ public:
 
 			Tier0_Msg("\n");
 
+		}
+
+		switch(State)
+		{
+		case D3DRS_ZWRITEENABLE:
+			m_D3DRS_ZWRITEENABLE = Value;
+			if(m_Override_D3DRS_ZWRITEENABLE)
+				return D3D_OK;
+			break;
 		}
 
 		return g_OldDirect3DDevice9->SetRenderState(State, Value);
@@ -662,4 +693,18 @@ void AfxD3D9SetModulationColorFix(float const color[4])
 	if(!g_OldDirect3DDevice9) return;
 
 	g_OldDirect3DDevice9->SetVertexShaderConstantF(47, color, 1);
+}
+
+void AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE(DWORD value)
+{
+	if(!g_OldDirect3DDevice9) return;
+
+	g_NewDirect3DDevice9.OverrideBegin_D3DRS_ZWRITEENABLE(value);
+}
+
+void AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE(void)
+{
+	if(!g_OldDirect3DDevice9) return;
+
+	g_NewDirect3DDevice9.OverrideEnd_D3DRS_ZWRITEENABLE();
 }

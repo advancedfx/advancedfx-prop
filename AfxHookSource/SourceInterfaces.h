@@ -3623,4 +3623,7 @@ public:
 
 	virtual void _UNKOWN_020(void) = 0; // EnableSRGBRead, but unimplemented.
 	virtual void _UNKOWN_021(void) = 0; // EnableTexture
+
+	// ...
+	// more we don't care about.
 };

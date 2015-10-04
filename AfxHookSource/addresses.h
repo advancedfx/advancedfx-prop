@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-10-01 dominik.matrixstorm.com
+// 2015-10-04 dominik.matrixstorm.com
 //
 // First changes:
 // 2010-09-27 dominik.matrixstorm.com
@@ -15,6 +15,8 @@ AFXADDR_DECL(csgo_CUnknown_GetPlayerName)
 AFXADDR_DECL(csgo_CUnknown_GetPlayerName_DSZ)
 AFXADDR_DECL(csgo_CHudDeathNotice_FireGameEvent)
 AFXADDR_DECL(csgo_CHudDeathNotice_FireGameEvent_DSZ)
+AFXADDR_DECL(csgo_CHudDeathNotice_UnkAddDeathNotice)
+AFXADDR_DECL(csgo_CHudDeathNotice_UnkAddDeathNotice_DSZ)
 AFXADDR_DECL(csgo_CSkyboxView_Draw)
 AFXADDR_DECL(csgo_CSkyboxView_Draw_DSZ)
 AFXADDR_DECL(csgo_CViewRender_Render)

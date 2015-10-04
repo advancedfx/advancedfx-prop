@@ -19,3 +19,9 @@ DWORD AfxD3D9SRGBWriteEnableFix(DWORD enable);
 
 /// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
 void AfxD3D9SetModulationColorFix(float const color[4]);
+
+/// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
+void AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE(DWORD value);
+
+/// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
+void AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE(void);

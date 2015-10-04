@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2014-10-28 dominik.matrixstorm.com
+// 2015-10-04 dominik.matrixstorm.com
 //
 // First changes:
 // 2014-10-28 dominik.matrixstorm.com
@@ -49,6 +49,11 @@ MemRange FindBytes(MemRange memRange, char const * pattern, DWORD patternSize)
 MemRange FindCString(MemRange memRange, char const * pattern)
 {
 	return FindBytes(memRange, pattern, strlen(pattern)+1);
+}
+
+MemRange FindWCString(MemRange memRange, wchar_t const * pattern)
+{
+	return FindBytes(memRange, (char const *)pattern, sizeof(wchar_t)*(wcslen(pattern)+1));
 }
 
 // ImageSectionsReader /////////////////////////////////////////////////////////

@@ -1088,6 +1088,26 @@ void CAfxBaseFxStream::CActionWhite::Bind(IAfxMatRenderContext * ctx, IMaterial_
 	m_OldSrgbWriteEnable = AfxD3D9SRGBWriteEnableFix(FALSE);
 }
 
+// CAfxBaseFxStream::CActionInvisible //////////////////////////////////////////
+
+void CAfxBaseFxStream::CActionInvisible::AfxUnbind(IAfxMatRenderContext * ctx)
+{
+	//AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE();
+
+	m_ParentStream->m_Streams->EndOverrideSetColorModulation();
+	m_ParentStream->m_Streams->EndOverrideSetBlend();
+}
+
+void CAfxBaseFxStream::CActionInvisible::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData )
+{
+	ctx->GetParent()->Bind(m_InvisibleMaterial.GetMaterial(), proxyData);
+
+	float color[3] = { 0.0f, 0.0f, 0.0f };
+	m_ParentStream->m_Streams->OverrideSetBlend(0.0f);
+	m_ParentStream->m_Streams->OverrideSetColorModulation(color);
+
+	//AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE(FALSE);
+}
 
 // CAfxBaseFxStream::CActionDepth //////////////////////////////////////////////
 

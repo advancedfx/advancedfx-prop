@@ -534,20 +534,9 @@ private:
 		{
 		}
 
-		virtual void AfxUnbind(IAfxMatRenderContext * ctx)
-		{
-			m_ParentStream->m_Streams->EndOverrideSetColorModulation();
-			m_ParentStream->m_Streams->EndOverrideSetBlend();
-		}
+		virtual void AfxUnbind(IAfxMatRenderContext * ctx);
 
-		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 )
-		{
-			ctx->GetParent()->Bind(m_InvisibleMaterial.GetMaterial(), proxyData);
-
-			float color[3] = { 0.0f, 0.0f, 0.0f };
-			m_ParentStream->m_Streams->OverrideSetBlend(0.0f);
-			m_ParentStream->m_Streams->OverrideSetColorModulation(color);
-		}
+		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 );
 
 		virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance )
 		{

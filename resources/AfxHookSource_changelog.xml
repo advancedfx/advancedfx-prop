@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.6.1</version>
+<time>2015-10-04T19:17Z</time>
+<changes>
+<change type="added">
+Add mirv_deathmsg highLightId - allows to disable frag highlighting or to set for which player id to highlight.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.6.0</version>
 <time>2015-10-01T14:15Z</time>
 <changes>

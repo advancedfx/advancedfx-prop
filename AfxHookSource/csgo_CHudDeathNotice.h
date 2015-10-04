@@ -3,11 +3,12 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2014-10-21 dominik.matrixstorm.com
+// 2015-10-04 dominik.matrixstorm.com
 //
 // First changes:
 // 2014-10-21 dominik.matrixstorm.com
 
+extern int csgo_CHudDeathNotice_HighLightId;
 extern int csgo_debug_CHudDeathNotice_FireGameEvent;
 
 extern float csgo_CHudDeathNotice_nScrollInTime;

@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-10-01 dominik.matrixstorm.com
+// 2015-10-04 dominik.matrixstorm.com
 //
 // First changes:
 // 2010-09-27 dominik.matrixstorm.com
@@ -19,6 +19,8 @@ AFXADDR_DEF(csgo_CUnknown_GetPlayerName)
 AFXADDR_DEF(csgo_CUnknown_GetPlayerName_DSZ)
 AFXADDR_DEF(csgo_CHudDeathNotice_FireGameEvent)
 AFXADDR_DEF(csgo_CHudDeathNotice_FireGameEvent_DSZ)
+AFXADDR_DEF(csgo_CHudDeathNotice_UnkAddDeathNotice)
+AFXADDR_DEF(csgo_CHudDeathNotice_UnkAddDeathNotice_DSZ)
 AFXADDR_DEF(csgo_CSkyboxView_Draw)
 AFXADDR_DEF(csgo_CSkyboxView_Draw_DSZ)
 AFXADDR_DEF(csgo_CViewRender_Render)
@@ -231,7 +233,6 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 			}
 		}
 
-
 		// csgo_CHudDeathNotice_FireGameEvent:
 		{
 			DWORD vat = 0;
@@ -280,6 +281,48 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 			{
 				AFXADDR_SET(csgo_CHudDeathNotice_FireGameEvent, 0x0);
 			}
+		}
+
+		// csgo_CHudDeathNotice_UnkAddDeathNotice:
+		//
+		// This function is called at the end of csgo_CHudDeathNotice_FireGameEvent,
+		// however we search for the string near the call instead to be more stable
+		// against updates.
+		{
+			DWORD addr = 0;
+			DWORD strAddr = 0;
+			{
+				ImageSectionsReader sections((HMODULE)clientDll);
+				if(!sections.Eof())
+				{
+					sections.Next(); // skip .text
+					if(!sections.Eof())
+					{
+						MemRange result = FindWCString(sections.GetMemRange(), L"%s%s%s%s%s%s%s%s");
+						if(!result.IsEmpty())
+						{
+							strAddr = result.Start;
+						}
+						else ErrorBox(MkErrStr(__FILE__,__LINE__));
+					}
+					else ErrorBox(MkErrStr(__FILE__,__LINE__));
+				}
+				else ErrorBox(MkErrStr(__FILE__,__LINE__));
+			}
+			if(strAddr)
+			{
+				ImageSectionsReader sections((HMODULE)clientDll);
+			
+				MemRange baseRange = sections.GetMemRange();
+				MemRange result = FindBytes(baseRange, (char const *)&strAddr, sizeof(strAddr));
+				if(!result.IsEmpty())
+				{
+					addr = (DWORD)((char const *)result.Start +0x2c);
+					addr = addr +4 + *(DWORD *)addr;
+				}
+				else ErrorBox(MkErrStr(__FILE__,__LINE__));
+			}
+			AFXADDR_SET(csgo_CHudDeathNotice_UnkAddDeathNotice, addr);
 		}
 
 		// csgo_CViewRender_Render:
@@ -470,6 +513,7 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 	{
 		AFXADDR_SET(csgo_CUnknown_GetPlayerName, 0x0);
 		AFXADDR_SET(csgo_CHudDeathNotice_FireGameEvent, 0x0);
+		AFXADDR_SET(csgo_CHudDeathNotice_UnkAddDeathNotice, 0x0);
 		AFXADDR_SET(csgo_CSkyboxView_Draw, 0x0);
 		AFXADDR_SET(csgo_CViewRender_Render, 0x0);
 		AFXADDR_SET(csgo_pLocalPlayer, 0x0);
@@ -479,6 +523,7 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 	AFXADDR_SET(csgo_C_BasePlayer_OFS_m_skybox3d_scale, 0x149c);
 	AFXADDR_SET(csgo_CUnknown_GetPlayerName_DSZ, 0x0b);
 	AFXADDR_SET(csgo_CHudDeathNotice_FireGameEvent_DSZ, 0x0b);
+	AFXADDR_SET(csgo_CHudDeathNotice_UnkAddDeathNotice_DSZ, 0x09);
 	AFXADDR_SET(csgo_CSkyboxView_Draw_DSZ, 0x0d);
 	AFXADDR_SET(csgo_gpGlobals_OFS_curtime, 4*4);
 	AFXADDR_SET(csgo_gpGlobals_OFS_interpolation_amount, 9*4);

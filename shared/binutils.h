@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2014-10-28 dominik.matrixstorm.com
+// 2015-10-04 dominik.matrixstorm.com
 //
 // First changes:
 // 2014-10-28 dominik.matrixstorm.com
@@ -54,6 +54,8 @@ private:
 MemRange FindBytes(MemRange memRange, char const * pattern, DWORD patternSize);
 
 MemRange FindCString(MemRange memRange, char const * pattern);
+
+MemRange FindWCString(MemRange memRange, wchar_t const * pattern);
 
 } // namespace Afx {
 } // namespace BinUtils {

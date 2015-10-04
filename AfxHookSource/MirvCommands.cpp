@@ -1344,6 +1344,7 @@ CON_COMMAND(mirv_deathmsg, "controls death notification options")
 	if(2 <= argc)
 	{
 		char const * arg1 = args->ArgV(1);
+
 		if(0 == _stricmp("debug", arg1))
 		{
 			if(3 <= argc)
@@ -1403,6 +1404,22 @@ CON_COMMAND(mirv_deathmsg, "controls death notification options")
 			return;
 		}
 		else
+		if(0 == _stricmp("highLightId", arg1))
+		{
+			if(3 <= argc)
+			{
+				csgo_CHudDeathNotice_HighLightId = atoi(args->ArgV(2));
+				return;
+			}
+			Tier0_Msg(
+				"Usage:\n"
+				"mirv_deathmsg highLightId -1|0|<id> - -1 is default behaviour, 0 is never highlight, otherwise <id> is the ID (you can get it from mirv_deathmsg debug) of the player you want to highlight.\n"
+				"Current setting: %i\n",
+				csgo_CHudDeathNotice_HighLightId
+			);
+			return;
+		}
+		else
 		if(0 == _stricmp("cfg", arg1))
 		{
 			if(4 <= argc)
@@ -1452,9 +1469,10 @@ CON_COMMAND(mirv_deathmsg, "controls death notification options")
 	}
 	Tier0_Msg(
 		"Usage:\n"
-		"mirv_deathmsg block\n"
-		"mirv_deathmsg cfg\n"
-		"mirv_deathmsg debug\n"
+		"mirv_deathmsg block [...] - block specific death messages.\n"
+		"mirv_deathmsg highLightId [...] - control the highlighting border.\n"
+		"mirv_deathmsg cfg [...] - configure death message properties, i.e. noticeLifeTime.\n"
+		"mirv_deathmsg debug [...] - enable debug message in cosnole (allows finding player IDs).\n"
 	);
 }
 
@@ -1849,7 +1867,7 @@ CON_COMMAND(mirv_input, "Input mode configuration.")
 		Tier0_Msg(
 			"Usage:\n"
 			"mirv_input camera - Enable camera input mode, see HLAE manual for keys etc.\n"
-			"mirv_input cfg - Control input mode configuration.\n"
+			"mirv_input cfg [...] - Control input mode configuration.\n"
 			"mirv_input end - End input mode(s).\n"
 		);
 

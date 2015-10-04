@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2014-10-21 dominik.matrixstorm.com
+// 2015-10-04 dominik.matrixstorm.com
 //
 // First changes:
 // 2014-10-21 dominik.matrixstorm.com
@@ -78,6 +78,9 @@ float org_CHudDeathNotice_nFadeOutTime;
 float org_CHudDeathNotice_nNoticeLifeTime;
 float org_CHudDeathNotice_nLocalPlayerLifeTimeMod;
 
+int csgo_CHudDeathNotice_HighLightId = -1;
+bool csgo_CHudDeathNotice_HighLightId_matched;
+
 void __stdcall touring_csgo_CHudDeathNotice_FireGameEvent(DWORD *this_ptr, csgo_IGameEvent * event)
 {
 	static bool firstRun = true;
@@ -99,6 +102,11 @@ void __stdcall touring_csgo_CHudDeathNotice_FireGameEvent(DWORD *this_ptr, csgo_
 	int uidVictim = event->GetInt("userid");
 	int uidAssister = event->GetInt("assister");
 	bool blocked = false;
+
+	csgo_CHudDeathNotice_HighLightId_matched = csgo_CHudDeathNotice_HighLightId == uidAttacker
+		|| csgo_CHudDeathNotice_HighLightId == uidVictim
+		|| csgo_CHudDeathNotice_HighLightId == uidAssister
+	;
 
 	if(0 < csgo_debug_CHudDeathNotice_FireGameEvent)
 	{
@@ -169,6 +177,17 @@ void __stdcall touring_csgo_CHudDeathNotice_FireGameEvent(DWORD *this_ptr, csgo_
 	if(!blocked) detoured_csgo_CHudDeathNotice_FireGameEvent(this_ptr, event);
 }
 
+typedef void (__stdcall *csgo_CHudDeathNotice_UnkAddDeathNotice_t)(DWORD *this_ptr, void * arg0, void * arg1, bool bUnkRedBorder);
+
+csgo_CHudDeathNotice_UnkAddDeathNotice_t detoured_csgo_CHudDeathNotice_UnkAddDeathNotice;
+
+void __stdcall touring_csgo_CHudDeathNotice_UnkAddDeathNotice(DWORD *this_ptr, void * arg0, void * arg1, bool bUnkRedBorder)
+{
+	detoured_csgo_CHudDeathNotice_UnkAddDeathNotice(this_ptr, arg0, arg1,
+		0 < csgo_CHudDeathNotice_HighLightId ? csgo_CHudDeathNotice_HighLightId_matched : (0 == csgo_CHudDeathNotice_HighLightId ? false : bUnkRedBorder)
+	);
+}
+
 bool csgo_CHudDeathNotice_Install(void)
 {
 	static bool firstResult = false;
@@ -176,9 +195,10 @@ bool csgo_CHudDeathNotice_Install(void)
 	if(!firstRun) return firstResult;
 	firstRun = false;
 
-	if(AFXADDR_GET(csgo_CHudDeathNotice_FireGameEvent))
+	if(AFXADDR_GET(csgo_CHudDeathNotice_FireGameEvent) && AFXADDR_GET(csgo_CHudDeathNotice_UnkAddDeathNotice))
 	{
 		detoured_csgo_CHudDeathNotice_FireGameEvent = (csgo_CHudDeathNotice_FireGameEvent_t)DetourClassFunc((BYTE *)AFXADDR_GET(csgo_CHudDeathNotice_FireGameEvent), (BYTE *)touring_csgo_CHudDeathNotice_FireGameEvent, (int)AFXADDR_GET(csgo_CHudDeathNotice_FireGameEvent_DSZ));
+		detoured_csgo_CHudDeathNotice_UnkAddDeathNotice = (csgo_CHudDeathNotice_UnkAddDeathNotice_t)DetourClassFunc((BYTE *)AFXADDR_GET(csgo_CHudDeathNotice_UnkAddDeathNotice), (BYTE *)touring_csgo_CHudDeathNotice_UnkAddDeathNotice, (int)AFXADDR_GET(csgo_CHudDeathNotice_UnkAddDeathNotice_DSZ));
 
 		firstResult = true;
 	}
