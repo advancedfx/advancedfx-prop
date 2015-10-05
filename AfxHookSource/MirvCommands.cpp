@@ -27,6 +27,7 @@
 #include "addresses.h"
 #include "CampathDrawer.h"
 #include "csgo_S_StartSound.h"
+#include "d3d9Hooks.h"
 
 #include <malloc.h>
 #include <stdlib.h>
@@ -36,6 +37,23 @@
 #include <iomanip>
 
 extern WrpVEngineClient * g_VEngineClient;
+
+
+CON_COMMAND(__mirv_test4, "")
+{
+	if(2 <= args->ArgC())
+	{
+		if(0 != atoi(args->ArgV(1)))
+		{
+			AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE(FALSE);
+		}
+		else
+		{
+			AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE();
+		}
+	}
+}
+
 
 
 CON_COMMAND(__mirv_test3, "")

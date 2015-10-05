@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.6.2</version>
+<time>2015-10-05T18:41Z</time>
+<changes>
+<change type="added">
+Added attachCommands and detachCommands properties to mirv_streams stream properties (allows executing commands when the stream is attached / detached), use at your own risk!
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.6.1</version>
 <time>2015-10-04T19:17Z</time>
 <changes>

@@ -52,6 +52,12 @@ public:
 	virtual void StreamAttach(IAfxStreams4Stream * streams);
 	virtual void StreamDetach(IAfxStreams4Stream * streams);
 
+	char const * AttachCommands_get(void);
+	void AttachCommands_set(char const * value);
+
+	char const * DetachCommands_get(void);
+	void DetachCommands_set(char const * value);
+
 	bool DrawHud_get(void);
 	void DrawHud_set(bool value);
 
@@ -65,6 +71,8 @@ protected:
 private:
 	bool m_DrawViewModel;
 	bool m_DrawHud;
+	std::string m_AttachCommands;
+	std::string m_DetachCommands;
 };
 
 class CAfxSingleStream;

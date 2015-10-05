@@ -227,6 +227,26 @@ void CAfxRenderViewStream::StreamDetach(IAfxStreams4Stream * streams)
 	m_Streams = 0;
 }
 
+char const * CAfxRenderViewStream::AttachCommands_get(void)
+{
+	return m_AttachCommands.c_str();
+}
+
+void CAfxRenderViewStream::AttachCommands_set(char const * value)
+{
+	m_AttachCommands.assign(value);
+}
+
+char const * CAfxRenderViewStream::DetachCommands_get(void)
+{
+	return m_DetachCommands.c_str();
+}
+
+void CAfxRenderViewStream::DetachCommands_set(char const * value)
+{
+	m_DetachCommands.assign(value);
+}
+
 bool CAfxRenderViewStream::DrawHud_get(void)
 {
 	return m_DrawHud;
@@ -1767,6 +1787,62 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 		{
 			char const * cmd0 = args->ArgV(argcOffset +0);
 
+			if(!_stricmp(cmd0, "attachCommands"))
+			{
+				if(2 <= argc)
+				{
+					std::string value;
+
+					for(int i=argcOffset +1; i < args->ArgC(); ++i)
+					{
+						if(argcOffset +1 < i)
+						{
+							value.append(" ");
+						}
+						value.append(args->ArgV(i));
+					}
+					
+					curRenderView->AttachCommands_set(value.c_str());
+					return;
+				}
+
+				Tier0_Msg(
+					"%s attachCommands <commandString1> [<commandString2>] ... [<commandStringN>] - Set command strings to be executed when stream is attached.\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, curRenderView->AttachCommands_get()
+				);
+				return;
+			}
+			else
+			if(!_stricmp(cmd0, "detachCommands"))
+			{
+				if(2 <= argc)
+				{
+					std::string value;
+
+					for(int i=argcOffset +1; i < args->ArgC(); ++i)
+					{
+						if(argcOffset +1 < i)
+						{
+							value.append(" ");
+						}
+						value.append(args->ArgV(i));
+					}
+					
+					curRenderView->DetachCommands_set(value.c_str());
+					return;
+				}
+
+				Tier0_Msg(
+					"%s detachCommands <commandString1> [<commandString2>] ... [<commandStringN>] - Set command strings to be executed when stream is detached.\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, curRenderView->DetachCommands_get()
+				);
+				return;
+			}
+			else
 			if(!_stricmp(cmd0, "drawHud"))
 			{
 				if(2 <= argc)
@@ -2310,6 +2386,8 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 
 	if(curRenderView)
 	{
+		Tier0_Msg("%s attachCommands [...] - Commands to be executed when stream is attached. WARNING. Use at your own risk, game may crash!\n", cmdPrefix);
+		Tier0_Msg("%s detachCommands [...] - Commands to be executed when stream is detached. WARNING. Use at your own risk, game may crash!\n", cmdPrefix);
 		Tier0_Msg("%s drawHud [...] - Controlls whether or not HUD is drawn for this stream.\n", cmdPrefix);
 		Tier0_Msg("%s drawViewModel [...] - Controlls whether or not view model (in-eye weapon) is drawn for this stream.\n", cmdPrefix);
 	}
@@ -2516,6 +2594,8 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 
 			previewStream->StreamAttach(this);
 
+			if(0 < strlen(previewStream->AttachCommands_get())) g_VEngineClient->ExecuteClientCmd(previewStream->AttachCommands_get());
+
 			cx->GetParent()->ClearColor4ub(0,0,0,0);
 			cx->GetParent()->ClearBuffers(true,false,false);
 		}
@@ -2525,6 +2605,9 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 
 	if(previewStream && canFeed)
 	{
+
+		if(0 < strlen(previewStream->DetachCommands_get())) g_VEngineClient->ExecuteClientCmd(previewStream->DetachCommands_get());
+
 		previewStream->StreamDetach(this);
 	}
 
@@ -2651,6 +2734,8 @@ bool CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuf
 
 	stream->StreamAttach(this);
 
+	if(0 < strlen(stream->AttachCommands_get())) g_VEngineClient->ExecuteClientCmd(stream->AttachCommands_get());
+
 	if(m_RgbaRenderTarget)
 	{
 		cx->GetParent()->PushRenderTargetAndViewport(m_RgbaRenderTarget);
@@ -2718,6 +2803,8 @@ bool CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuf
 	{
 		Tier0_Warning("CAfxStreams::CaptureStreamToBuffer: Missing render target!\n");
 	}
+
+	if(0 < strlen(stream->DetachCommands_get())) g_VEngineClient->ExecuteClientCmd(stream->DetachCommands_get());
 
 	stream->StreamDetach(this);
 
