@@ -1194,7 +1194,7 @@ CAfxStreams::CAfxStreams()
 , m_ColorModulationOverride(false)
 , m_BlendOverride(false)
 , m_FormatBmpAndNotTga(false)
-, m_RgbaRenderTarget(0)
+//, m_RgbaRenderTarget(0)
 {
 	m_OverrideColor[0] =
 	m_OverrideColor[1] =
@@ -1250,11 +1250,11 @@ void CAfxStreams::OnAfxBaseClientDll(IAfxBaseClientDll * value)
 
 void CAfxStreams::OnAfxBaseClientDll_Free(void)
 {
-	if(m_RgbaRenderTarget)
-	{
-		m_RgbaRenderTarget->DecrementReferenceCount();
-		m_RgbaRenderTarget = 0;
-	}
+	//if(m_RgbaRenderTarget)
+	//{
+	//	m_RgbaRenderTarget->DecrementReferenceCount();
+	//	m_RgbaRenderTarget = 0;
+	//}
 
 	if(m_AfxBaseClientDll)
 	{
@@ -2732,13 +2732,15 @@ bool CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuf
 
 	SetMatVarsForStreams(); // keep them set in case a mofo resets them.
 
+	m_MaterialSystem->SwapBuffers();
+
 	stream->StreamAttach(this);
 
 	if(0 < strlen(stream->AttachCommands_get())) g_VEngineClient->ExecuteClientCmd(stream->AttachCommands_get());
 
-	if(m_RgbaRenderTarget)
-	{
-		cx->GetParent()->PushRenderTargetAndViewport(m_RgbaRenderTarget);
+	//if(m_RgbaRenderTarget)
+	//{
+		//cx->GetParent()->PushRenderTargetAndViewport(m_RgbaRenderTarget);
 
 		IViewRender_csgo * view = GetView_csgo();
 
@@ -2797,12 +2799,12 @@ bool CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuf
 			Tier0_Warning("CAfxStreams::CaptureStreamToBuffer: Failed to realloc buffer.\n");
 		}
 
-		cx->GetParent()->PopRenderTargetAndViewport();
-	}
-	else
-	{
-		Tier0_Warning("CAfxStreams::CaptureStreamToBuffer: Missing render target!\n");
-	}
+		//cx->GetParent()->PopRenderTargetAndViewport();
+	//}
+	//else
+	//{
+	//	Tier0_Warning("CAfxStreams::CaptureStreamToBuffer: Missing render target!\n");
+	//}
 
 	if(0 < strlen(stream->DetachCommands_get())) g_VEngineClient->ExecuteClientCmd(stream->DetachCommands_get());
 
@@ -3030,7 +3032,7 @@ void CAfxStreams::AddStream(CAfxRecordStream * stream)
 
 void CAfxStreams::CreateRenderTargets(IMaterialSystem_csgo * materialSystem)
 {
-	materialSystem->BeginRenderTargetAllocation();
+/*	materialSystem->BeginRenderTargetAllocation();
 
 	m_RgbaRenderTarget = materialSystem->CreateRenderTargetTexture(0,0,RT_SIZE_FULL_FRAME_BUFFER,IMAGE_FORMAT_RGBA8888);
 
@@ -3044,6 +3046,7 @@ void CAfxStreams::CreateRenderTargets(IMaterialSystem_csgo * materialSystem)
 	}
 
 	materialSystem->EndRenderTargetAllocation();
+*/
 }
 
 // CAfxStreams::CImageBuffer ///////////////////////////////////////////////////

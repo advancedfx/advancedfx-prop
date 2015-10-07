@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.6.3</version>
+<time>2015-10-07T12:30Z</time>
+<changes>
+<change type="fixed">
+Fixed mirv_streams: Epileptic seizures are back, because off-screen rendering doesn't work well for streams that want the HUD to be drawn (drawHud 1), because the ScaleformUI doesn't obey the render target.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.6.2</version>
 <time>2015-10-05T18:41Z</time>
 <changes>

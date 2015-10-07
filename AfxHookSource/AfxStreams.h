@@ -1018,7 +1018,7 @@ private:
 	CImageBuffer m_BufferB;
 	std::wstring m_TakeDir;
 	bool m_FormatBmpAndNotTga;
-	ITexture_csgo * m_RgbaRenderTarget;
+	//ITexture_csgo * m_RgbaRenderTarget;
 
 	void OnAfxBaseClientDll_Free(void);
 
