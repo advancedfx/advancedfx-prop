@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-07-27 dominik.matrixstorm.com
+// 2015-10-11 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -42,6 +42,12 @@ class CAfxRenderViewStream
 : public CAfxStream
 {
 public:
+	enum StreamRenderType
+	{
+		SRT_RenderView,
+		SRT_Depth
+	};
+
 	CAfxRenderViewStream();
 
 	virtual CAfxRenderViewStream * AsAfxRenderViewStream(void) { return this; }
@@ -64,9 +70,14 @@ public:
 	bool DrawViewModel_get(void);
 	void DrawViewModel_set(bool value);
 
+	StreamRenderType StreamRenderType_get(void);
+	void StreamRenderType_set(StreamRenderType value);
+
 protected:
 	/// <summary>This member is only valid between StreamAttach and StreamDetach.</summary>
 	IAfxStreams4Stream * m_Streams;
+
+	StreamRenderType m_StreamRenderType;
 
 private:
 	bool m_DrawViewModel;
@@ -226,14 +237,16 @@ public:
 		MA_Mask,
 		MA_Invisible,
 		MA_Black,
-		MA_White
+		MA_White,
+		MA_DebugDump
 	};
 
 	enum HideableAction
 	{
 		HA_NotSet,
 		HA_Draw,
-		HA_NoDraw
+		HA_NoDraw,
+		HA_DebugDump
 	};
 
 	CAfxBaseFxStream();
@@ -379,6 +392,21 @@ private:
 	protected:
 		CAfxBaseFxStream * m_ParentStream;
 
+	};
+
+	class CActionDebugDump
+	: public CAction
+	{
+	public:
+		CActionDebugDump(CAfxBaseFxStream * parentStream)
+		: CAction(parentStream)
+		{
+		}
+
+		virtual void AfxUnbind(IAfxMatRenderContext * ctx)
+		{
+			m_ParentStream->m_Streams->DebugDump();
+		}
 	};
 
 	class CActionMatte
@@ -610,6 +638,7 @@ private:
 	CAction * m_NoDrawAction;
 	CAction * m_BlackAction;
 	CAction * m_WhiteAction;
+	CAction * m_DebugDumpAction;
 	bool m_BoundAction;
 	bool m_DebugPrint;
 
@@ -970,7 +999,8 @@ private:
 		enum ImageBufferPixelFormat
 		{
 			IBPF_BGR,
-			IBPF_BGRA
+			IBPF_BGRA,
+			IBPF_A
 		};
 
 		void * Buffer;
@@ -1019,6 +1049,9 @@ private:
 	std::wstring m_TakeDir;
 	bool m_FormatBmpAndNotTga;
 	//ITexture_csgo * m_RgbaRenderTarget;
+	//ITexture_csgo * m_RenderTargetDummy;
+	//ITexture_csgo * m_RenderTargetDepth;
+	//CAfxMaterial * m_ShowzMaterial;
 
 	void OnAfxBaseClientDll_Free(void);
 
@@ -1034,6 +1067,9 @@ private:
 
 	bool Console_ToStreamCombineType(char const * value, CAfxTwinStream::StreamCombineType & streamCombineType);
 	char const * Console_FromStreamCombineType(CAfxTwinStream::StreamCombineType streamCombineType);
+
+	bool Console_ToStreamRenderType(char const * value, CAfxRenderViewStream::StreamRenderType & streamRenderType);
+	char const * Console_FromStreamRenderType(CAfxRenderViewStream::StreamRenderType streamRenderType);
 
 	bool CheckCanFeedStreams(void);
 

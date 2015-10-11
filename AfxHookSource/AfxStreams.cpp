@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-07-27 dominik.matrixstorm.com
+// 2015-10-11 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -214,6 +214,7 @@ CAfxRenderViewStream::CAfxRenderViewStream()
 , m_Streams(0)
 , m_DrawViewModel(true)
 , m_DrawHud(false)
+, m_StreamRenderType(SRT_RenderView)
 {
 }
 
@@ -265,6 +266,16 @@ bool CAfxRenderViewStream::DrawViewModel_get(void)
 void CAfxRenderViewStream::DrawViewModel_set(bool value)
 {
 	m_DrawViewModel = value;
+}
+
+CAfxRenderViewStream::StreamRenderType CAfxRenderViewStream::StreamRenderType_get(void)
+{
+	return m_StreamRenderType;
+}
+
+void CAfxRenderViewStream::StreamRenderType_set(StreamRenderType value)
+{
+	m_StreamRenderType = value;
 }
 
 // CAfxRecordStream ////////////////////////////////////////////////////////////
@@ -586,6 +597,7 @@ CAfxBaseFxStream::CAfxBaseFxStream()
 , m_NoDrawAction(0)
 , m_BlackAction(0)
 , m_WhiteAction(0)
+, m_DebugDumpAction(0)
 , m_BoundAction(false)
 , m_DebugPrint(false)
 {
@@ -593,6 +605,9 @@ CAfxBaseFxStream::CAfxBaseFxStream()
 
 CAfxBaseFxStream::~CAfxBaseFxStream()
 {
+	delete m_DebugDumpAction;
+	delete m_WhiteAction;
+	delete m_BlackAction;
 	delete m_NoDrawAction;
 	delete m_InvisibleAction;
 	delete m_MatteAction;
@@ -618,6 +633,7 @@ void CAfxBaseFxStream::StreamAttach(IAfxStreams4Stream * streams)
 	if(!m_NoDrawAction) m_NoDrawAction = new CActionNoDraw(this);
 	if(!m_BlackAction) m_BlackAction = new CActionBlack(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
 	if(!m_WhiteAction) m_WhiteAction = new CActionWhite(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
+	if(!m_DebugDumpAction) m_DebugDumpAction = new CActionDebugDump(this);
 
 	// Set a default action, just in case:
 	m_CurrentAction = m_PassthroughAction;
@@ -1011,7 +1027,9 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(MaskableAction value)
 	case MA_White:
 		if(m_DebugPrint) Tier0_Msg("white");
 		return m_WhiteAction;
-
+	case MA_DebugDump:
+		if(m_DebugPrint) Tier0_Msg("debugDump");
+		return m_DebugDumpAction;
 	};
 
 	if(m_DebugPrint) Tier0_Msg("draw");
@@ -1025,6 +1043,9 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(HideableAction value)
 	case HA_NoDraw:
 		if(m_DebugPrint) Tier0_Msg("noDraw");
 		return m_NoDrawAction;
+	case HA_DebugDump:
+		if(m_DebugPrint) Tier0_Msg("debugDump");
+		return m_DebugDumpAction;
 	};
 
 	if(m_DebugPrint) Tier0_Msg("draw");
@@ -1195,6 +1216,8 @@ CAfxStreams::CAfxStreams()
 , m_BlendOverride(false)
 , m_FormatBmpAndNotTga(false)
 //, m_RgbaRenderTarget(0)
+//, m_RenderTargetDummy(0)
+//, m_RenderTargetDepth(0)
 {
 	m_OverrideColor[0] =
 	m_OverrideColor[1] =
@@ -1250,11 +1273,23 @@ void CAfxStreams::OnAfxBaseClientDll(IAfxBaseClientDll * value)
 
 void CAfxStreams::OnAfxBaseClientDll_Free(void)
 {
-	//if(m_RgbaRenderTarget)
-	//{
-	//	m_RgbaRenderTarget->DecrementReferenceCount();
-	//	m_RgbaRenderTarget = 0;
-	//}
+	/*
+	if(m_RenderTargetDepth)
+	{
+		m_RenderTargetDepth->DecrementReferenceCount();
+		m_RenderTargetDepth = 0;
+	}
+	if(m_RenderTargetDummy)
+	{
+		m_RenderTargetDummy->DecrementReferenceCount();
+		m_RenderTargetDummy = 0;
+	}
+	if(m_RgbaRenderTarget)
+	{
+		m_RgbaRenderTarget->DecrementReferenceCount();
+		m_RgbaRenderTarget = 0;
+	}
+	*/
 
 	if(m_AfxBaseClientDll)
 	{
@@ -1642,9 +1677,14 @@ void CAfxStreams::Console_PreviewStream(const char * streamName)
 	Tier0_Msg("Error: invalid streamName.\n");
 }
 
+// debugDump action is not displayed, because we don't want users to use it:
 #define CAFXBASEFXSTREAM_MASKABLEACTIONS "draw|drawDepth|mask|invisible|black|white"
+
+// debugDump action is not displayed, because we don't want users to use it:
 #define CAFXBASEFXSTREAM_HIDEABLEACTIONS "draw|noDraw"
+
 #define CAFXBASEFXSTREAM_STREAMCOMBINETYPES "aRedAsAlphaBColor|aColorBRedAsAlpha"
+#define CAFXBASEFXSTREAM_STREAMRENDERTYPES "renderView|depth"
 
 void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * args, int argcOffset, char const * cmdPrefix)
 {
@@ -1879,6 +1919,29 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					"Current value: %s.\n"
 					, cmdPrefix
 					, curRenderView->DrawViewModel_get() ? "1" : "0"
+				);
+				return;
+			}
+			else
+			if(!_stricmp(cmd0, "renderType"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+					CAfxRenderViewStream::StreamRenderType value;
+
+					if(Console_ToStreamRenderType(cmd1, value))
+					{
+						curRenderView->StreamRenderType_set(value);
+						return;
+					}
+				}
+
+				Tier0_Msg(
+					"%s renderType " CAFXBASEFXSTREAM_STREAMRENDERTYPES " - Set new render type.\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, Console_FromStreamRenderType(curRenderView->StreamRenderType_get())
 				);
 				return;
 			}
@@ -2390,6 +2453,8 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 		Tier0_Msg("%s detachCommands [...] - Commands to be executed when stream is detached. WARNING. Use at your own risk, game may crash!\n", cmdPrefix);
 		Tier0_Msg("%s drawHud [...] - Controlls whether or not HUD is drawn for this stream.\n", cmdPrefix);
 		Tier0_Msg("%s drawViewModel [...] - Controlls whether or not view model (in-eye weapon) is drawn for this stream.\n", cmdPrefix);
+		// renderType options is not displayed, because we don't want users to use it.
+		// Tier0_Msg("%s renderType [...] - Stream render type.\n", cmdPrefix);
 	}
 			
 	if(curDeveloper)
@@ -2581,7 +2646,6 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 		{
 			previewStream = singleStream->Stream_get();
 		}
-
 	}
 
 	if(previewStream)
@@ -2605,7 +2669,6 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 
 	if(previewStream && canFeed)
 	{
-
 		if(0 < strlen(previewStream->DetachCommands_get())) g_VEngineClient->ExecuteClientCmd(previewStream->DetachCommands_get());
 
 		previewStream->StreamDetach(this);
@@ -2738,24 +2801,28 @@ bool CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuf
 
 	if(0 < strlen(stream->AttachCommands_get())) g_VEngineClient->ExecuteClientCmd(stream->AttachCommands_get());
 
-	//if(m_RgbaRenderTarget)
-	//{
-		//cx->GetParent()->PushRenderTargetAndViewport(m_RgbaRenderTarget);
+	IViewRender_csgo * view = GetView_csgo();
 
-		IViewRender_csgo * view = GetView_csgo();
+	const CViewSetup_csgo * viewSetup = view->GetViewSetup();
 
-		const CViewSetup_csgo * viewSetup = view->GetViewSetup();
+	int whatToDraw = RENDERVIEW_UNSPECIFIED;
 
-		int whatToDraw = RENDERVIEW_UNSPECIFIED;
+	if(stream->DrawHud_get()) whatToDraw |= RENDERVIEW_DRAWHUD;
+	if(stream->DrawViewModel_get()) whatToDraw |= RENDERVIEW_DRAWVIEWMODEL;
 
-		if(stream->DrawHud_get()) whatToDraw |= RENDERVIEW_DRAWHUD;
-		if(stream->DrawViewModel_get()) whatToDraw |= RENDERVIEW_DRAWVIEWMODEL;
+	//if(stream->SRT_Depth == stream->StreamRenderType_get())
+	//	cx->GetParent()->PushRenderTargetAndViewport(m_RgbaRenderTarget);
 
-		cx->GetParent()->ClearColor4ub(0,0,0,0);
-		cx->GetParent()->ClearBuffers(true,false,false);
+	cx->GetParent()->ClearColor4ub(0,0,0,0);
+	cx->GetParent()->ClearBuffers(true,false,false);
 
+	if(stream->SRT_Depth == stream->StreamRenderType_get())
+		; // do nothing for now, just in case // view->UpdateShadowDepthTexture(0,0,*viewSetup);
+	else
 		view->RenderView(*viewSetup, *viewSetup, VIEW_CLEAR_STENCIL|VIEW_CLEAR_DEPTH, whatToDraw);
 
+	if(stream->SRT_RenderView == stream->StreamRenderType_get())
+	{
 		if(buffer.AutoRealloc(CImageBuffer::IBPF_BGR, viewSetup->m_nUnscaledWidth, viewSetup->m_nUnscaledHeight))
 		{
 			cx->GetParent()->ReadPixels(
@@ -2798,13 +2865,49 @@ bool CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuf
 		{
 			Tier0_Warning("CAfxStreams::CaptureStreamToBuffer: Failed to realloc buffer.\n");
 		}
+	}
+	else if(stream->SRT_Depth == stream->StreamRenderType_get())
+	{
+		if(buffer.AutoRealloc(CImageBuffer::IBPF_A, viewSetup->m_nUnscaledWidth, viewSetup->m_nUnscaledHeight))
+		{
+			cx->GetParent()->ReadPixels(
+				viewSetup->m_nUnscaledX, viewSetup->m_nUnscaledY,
+				buffer.Width, buffer.Height,
+				(unsigned char*)buffer.Buffer,
+				IMAGE_FORMAT_A8
+			);
 
-		//cx->GetParent()->PopRenderTargetAndViewport();
-	//}
-	//else
-	//{
-	//	Tier0_Warning("CAfxStreams::CaptureStreamToBuffer: Missing render target!\n");
-	//}
+			// (back) transform to MDT native format:
+			{
+				int lastLine = buffer.Height >> 1;
+				if(buffer.Height & 0x1) ++lastLine;
+
+				for(int y=0;y<lastLine;++y)
+				{
+					int srcLine = y;
+					int dstLine = buffer.Height -1 -y;
+
+					for(int x=0;x<buffer.Width;++x)
+					{
+						unsigned char a = ((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +1*x +0];
+									
+						((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +1*x +0] = ((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +1*x +0];
+									
+						((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +1*x +0] = a;
+					}
+				}
+			}
+
+			bOk = true;
+		}
+		else
+		{
+			Tier0_Warning("CAfxStreams::CaptureStreamToBuffer: Failed to realloc buffer.\n");
+		}
+	}
+
+	//if(stream->SRT_Depth == stream->StreamRenderType_get())
+	//	cx->GetParent()->PopRenderTargetAndViewport();
 
 	if(0 < strlen(stream->DetachCommands_get())) g_VEngineClient->ExecuteClientCmd(stream->DetachCommands_get());
 
@@ -2815,6 +2918,14 @@ bool CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuf
 
 bool CAfxStreams::WriteBufferToFile(const CImageBuffer & buffer, const std::wstring & path)
 {
+	if(buffer.IBPF_A == buffer.PixelFormat)
+	{
+		return m_FormatBmpAndNotTga
+			? WriteRawBitmap((unsigned char*)buffer.Buffer, path.c_str(), buffer.Width, buffer.Height, 8, buffer.ImagePitch)
+			: WriteRawTarga((unsigned char*)buffer.Buffer, path.c_str(), buffer.Width, buffer.Height, 8, true, buffer.ImagePitch, 0)
+		;
+	}
+
 	bool isBgra = buffer.IBPF_BGRA == buffer.PixelFormat;
 
 	return m_FormatBmpAndNotTga && !isBgra
@@ -2891,6 +3002,12 @@ bool CAfxStreams::Console_ToMaskableAction(char const * value, CAfxBaseFxStream:
 		maskableAction = CAfxBaseFxStream::MA_White;
 		return true;
 	}
+	else
+	if(!_stricmp(value, "debugDump"))
+	{
+		maskableAction = CAfxBaseFxStream::MA_DebugDump;
+		return true;
+	}
 
 	return false;
 }
@@ -2906,6 +3023,12 @@ bool CAfxStreams::Console_ToHideableAction(char const * value, CAfxBaseFxStream:
 	if(!_stricmp(value, "noDraw"))
 	{
 		hideableAction = CAfxBaseFxStream::HA_NoDraw;
+		return true;
+	}
+	else
+	if(!_stricmp(value, "debugDump"))
+	{
+		hideableAction = CAfxBaseFxStream::HA_DebugDump;
 		return true;
 	}
 
@@ -2928,6 +3051,8 @@ char const * CAfxStreams::Console_FromMaskableAction(CAfxBaseFxStream::MaskableA
 		return "black";
 	case CAfxBaseFxStream::MA_White:
 		return "white";
+	case CAfxBaseFxStream::MA_DebugDump:
+		return "debugDump";
 	}
 
 	return "[unknown]";
@@ -2941,6 +3066,8 @@ char const * CAfxStreams::Console_FromHideableAction(CAfxBaseFxStream::HideableA
 		return "draw";
 	case CAfxBaseFxStream::HA_NoDraw:
 		return "noDraw";
+	case CAfxBaseFxStream::HA_DebugDump:
+		return "debugDump";
 	}
 
 	return "[unknown]";
@@ -2976,7 +3103,36 @@ char const * CAfxStreams::Console_FromStreamCombineType(CAfxTwinStream::StreamCo
 	return "[unkown]";
 }
 
+bool CAfxStreams::Console_ToStreamRenderType(char const * value, CAfxRenderViewStream::StreamRenderType & streamRenderType)
+{
+	if(!_stricmp(value, "renderView"))
+	{
+		streamRenderType = CAfxRenderViewStream::SRT_RenderView;
+		return true;
+	}
+	else
+	if(!_stricmp(value, "depth"))
+	{
+		streamRenderType = CAfxRenderViewStream::SRT_Depth;
+		return true;
+	}
 
+	return false;
+}
+
+char const * CAfxStreams::Console_FromStreamRenderType(CAfxRenderViewStream::StreamRenderType streamRenderType)
+{
+	switch(streamRenderType)
+	{
+	case CAfxRenderViewStream::SRT_RenderView:
+		return "renderView";
+	case CAfxRenderViewStream::SRT_Depth:
+		return "depth";
+	}
+
+	return "[unkown]";
+
+}
 
 bool CAfxStreams::CheckCanFeedStreams(void)
 {
@@ -3032,10 +3188,10 @@ void CAfxStreams::AddStream(CAfxRecordStream * stream)
 
 void CAfxStreams::CreateRenderTargets(IMaterialSystem_csgo * materialSystem)
 {
-/*	materialSystem->BeginRenderTargetAllocation();
+	//materialSystem->BeginRenderTargetAllocation();
 
+/*
 	m_RgbaRenderTarget = materialSystem->CreateRenderTargetTexture(0,0,RT_SIZE_FULL_FRAME_BUFFER,IMAGE_FORMAT_RGBA8888);
-
 	if(m_RgbaRenderTarget)
 	{
 		m_RgbaRenderTarget->IncrementReferenceCount();
@@ -3044,9 +3200,32 @@ void CAfxStreams::CreateRenderTargets(IMaterialSystem_csgo * materialSystem)
 	{
 		Tier0_Warning("AFXERROR: CAfxStreams::CreateRenderTargets no m_RgbaRenderTarget (affects rgba captures)!\n");
 	}
-
-	materialSystem->EndRenderTargetAllocation();
 */
+
+/*	
+	m_RenderTargetDummy = materialSystem->CreateRenderTargetTexture(0,0,RT_SIZE_FULL_FRAME_BUFFER,IMAGE_FORMAT_NULL);
+	if(m_RenderTargetDummy)
+	{
+		m_RenderTargetDummy->IncrementReferenceCount();
+	}
+	else
+	{
+		Tier0_Warning("AFXERROR: CAfxStreams::CreateRenderTargets no m_RenderTargetDummy (affects depth captures)!\n");
+	}
+
+	m_RenderTargetDepth = materialSystem->CreateRenderTargetTexture(0,0,RT_SIZE_FULL_FRAME_BUFFER,IMAGE_FORMAT_A8,MATERIAL_RT_DEPTH_NONE);
+	if(m_RenderTargetDepth)
+	{
+		m_RenderTargetDepth->IncrementReferenceCount();
+	}
+	else
+	{
+		Tier0_Warning("AFXERROR: CAfxStreams::CreateRenderTargets no m_RenderTargetDepth (affects depth captures)!\n");
+	}
+*/
+
+	//materialSystem->EndRenderTargetAllocation();
+
 }
 
 // CAfxStreams::CImageBuffer ///////////////////////////////////////////////////
@@ -3073,6 +3252,9 @@ bool CAfxStreams::CImageBuffer::AutoRealloc(ImageBufferPixelFormat pixelFormat, 
 		break;
 	case IBPF_BGRA:
 		pitch *= 4;
+		break;
+	case IBPF_A:
+		pitch *= 1;
 		break;
 	default:
 		Tier0_Warning("CAfxStreams::CImageBuffer::AutoRealloc: Unsupported pixelFormat\n");

@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.6.4</version>
+<time>2015-10-11T18:35Z</time>
+<changes>
+<change type="added">
+Added options to mirv_campath edit start: You can now give an absolute value or an delta value, enter mirv_campath edit into console for further help.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.6.3</version>
 <time>2015-10-07T12:30Z</time>
 <changes>

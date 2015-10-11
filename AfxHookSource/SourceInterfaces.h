@@ -2681,11 +2681,42 @@ struct MeshInstanceData_t_csgo
 
 enum ImageFormat_csgo 
 { 
-	IMAGE_FORMAT_UNKNOWN  = -1, 
-	IMAGE_FORMAT_RGBA8888 = 0,  
-	IMAGE_FORMAT_ABGR8888,  
-	IMAGE_FORMAT_RGB888,  
-	IMAGE_FORMAT_BGR888
+	IMAGE_FORMAT_UNKNOWN  = -1,
+	IMAGE_FORMAT_RGBA8888 = 0, 
+	IMAGE_FORMAT_ABGR8888, 
+	IMAGE_FORMAT_RGB888, 
+	IMAGE_FORMAT_BGR888,
+	IMAGE_FORMAT_RGB565, 
+	IMAGE_FORMAT_I8,
+	IMAGE_FORMAT_IA88,
+	IMAGE_FORMAT_P8,
+	IMAGE_FORMAT_A8,
+	IMAGE_FORMAT_RGB888_BLUESCREEN,
+	IMAGE_FORMAT_BGR888_BLUESCREEN,
+	IMAGE_FORMAT_ARGB8888,
+	IMAGE_FORMAT_BGRA8888,
+	IMAGE_FORMAT_DXT1,
+	IMAGE_FORMAT_DXT3,
+	IMAGE_FORMAT_DXT5,
+	IMAGE_FORMAT_BGRX8888,
+	IMAGE_FORMAT_BGR565,
+	IMAGE_FORMAT_BGRX5551,
+	IMAGE_FORMAT_BGRA4444,
+	IMAGE_FORMAT_DXT1_ONEBITALPHA,
+	IMAGE_FORMAT_BGRA5551,
+	IMAGE_FORMAT_UV88,
+	IMAGE_FORMAT_UVWQ8888,
+	IMAGE_FORMAT_RGBA16161616F,
+	IMAGE_FORMAT_RGBA16161616,
+	IMAGE_FORMAT_UVLX8888,
+	IMAGE_FORMAT_R32F,			// Single-channel 32-bit floating point
+	IMAGE_FORMAT_RGB323232F,	// NOTE: D3D9 does not have this format
+	IMAGE_FORMAT_RGBA32323232F,
+	IMAGE_FORMAT_RG1616F,
+	IMAGE_FORMAT_RG3232F,
+	IMAGE_FORMAT_RGBX8888,
+
+	IMAGE_FORMAT_NULL			// Dummy format which takes no video memory
 
 	// ...
 	// there are more we don't care about.
@@ -2830,7 +2861,25 @@ public:
 	virtual void _UNKNOWN_110(void) = 0;
 	virtual void _UNKNOWN_111(void) = 0;
 	virtual void _UNKNOWN_112(void) = 0;
-	virtual void _UNKNOWN_113(void) = 0; // DrawScreenSpaceRectangle
+
+	// 113:
+	// This function performs a texture map from one texture map to the render destination, doing
+	// all the necessary pixel/texel coordinate fix ups. fractional values can be used for the
+	// src_texture coordinates to get linear sampling - integer values should produce 1:1 mappings
+	// for non-scaled operations.
+	virtual void DrawScreenSpaceRectangle( 
+		IMaterial_csgo *pMaterial,
+		int destx, int desty,
+		int width, int height,
+		float src_texture_x0, float src_texture_y0,			// which texel you want to appear at
+		// destx/y
+		float src_texture_x1, float src_texture_y1,			// which texel you want to appear at
+		// destx+width-1, desty+height-1
+		int src_texture_width, int src_texture_height,		// needed for fixup
+		void *pClientRenderable = 0,
+		int nXDice = 1,
+		int nYDice = 1 )=0;
+
 	virtual void _UNKNOWN_114(void) = 0;
 	
 	// 118:
@@ -3484,8 +3533,31 @@ public:
 	virtual void _UNKOWN_010(void) = 0;
 	virtual void _UNKOWN_011(void) = 0;
 
+	// 012:
 	virtual const CViewSetup_csgo *GetPlayerViewSetup( int nSlot = -1 ) const = 0;
+
+	// 013:
 	virtual const CViewSetup_csgo *GetViewSetup( void ) const = 0;
+
+	virtual void _UNKOWN_014(void) = 0; // DisableVis 
+	virtual void _UNKOWN_015(void) = 0;
+	virtual void _UNKOWN_016(void) = 0;
+	virtual void _UNKOWN_017(void) = 0;
+	virtual void _UNKOWN_018(void) = 0;
+	virtual void _UNKOWN_019(void) = 0;
+	virtual void _UNKOWN_020(void) = 0;
+	virtual void _UNKOWN_021(void) = 0;
+	virtual void _UNKOWN_022(void) = 0;
+	virtual void _UNKOWN_023(void) = 0;
+	virtual void _UNKOWN_024(void) = 0;
+	virtual void _UNKOWN_025(void) = 0;
+	virtual void _UNKOWN_026(void) = 0;
+	virtual void _UNKOWN_027(void) = 0;
+	virtual void _UNKOWN_028(void) = 0;
+	virtual void _UNKOWN_029(void) = 0;
+
+	// 030:
+	virtual bool UpdateShadowDepthTexture( ITexture_csgo *pRenderTarget, ITexture_csgo *pDepthTexture, const CViewSetup_csgo &shadowView, unsigned char _unkArg4 = 1, unsigned char _unkArg5 = 0 ) = 0;
 
 	// ...
 	// more we don't care about.

@@ -1410,7 +1410,16 @@ public:
 	virtual void _UNKNOWN_112(void)
 	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 112) }
 
-	virtual void _UNKNOWN_113(void)
+	virtual void DrawScreenSpaceRectangle(
+		IMaterial_csgo *pMaterial,
+		int destx, int desty,
+		int width, int height,
+		float src_texture_x0, float src_texture_y0,	
+		float src_texture_x1, float src_texture_y1,
+		int src_texture_width, int src_texture_height,
+		void *pClientRenderable = NULL,
+		int nXDice = 1,
+		int nYDice = 1 )
 	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 113) }
 
 	virtual void _UNKNOWN_114(void)

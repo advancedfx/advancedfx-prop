@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2010-05-24 by dominik.matrixstorm.com
+// 2015-10-11 by dominik.matrixstorm.com
 //
 // First changes:
 // 2009-09-30 by dominik.matrixstorm.com
@@ -888,124 +888,176 @@ CON_COMMAND(mirv_campath,"camera paths")
 		}
 		else if(!_stricmp("edit", subcmd))
 		{	
-			const char * arg2 = args->ArgV(2);
+			if(3 <= argc)
+			{
+				const char * arg2 = args->ArgV(2);
 			
-			if(!_stricmp("start", arg2))
-			{
-				g_Hook_VClient_RenderView.m_CamPath.SetStart(
-					g_Hook_VClient_RenderView.GetCurTime()
-				);
-
-				return;
-			}
-			else
-			if(!_stricmp("duration", arg2) && 4 <= argc)
-			{
-				double duration = atof(args->ArgV(3));
-
-				g_Hook_VClient_RenderView.m_CamPath.SetDuration(
-					duration
-				);
-
-				return;
-			}
-			else
-			if(!_stricmp(arg2, "position") && 4 <= argc)
-			{
-				char const * arg3 = args->ArgV(3);
-
-				if(!_stricmp("current", arg3))
+				if(!_stricmp("start", arg2))
 				{
-					g_Hook_VClient_RenderView.m_CamPath.SetPosition(
-						g_Hook_VClient_RenderView.LastCameraOrigin[0],
-						g_Hook_VClient_RenderView.LastCameraOrigin[1],
-						g_Hook_VClient_RenderView.LastCameraOrigin[2]
+					if(3 == argc)
+					{
+						g_Hook_VClient_RenderView.m_CamPath.SetStart(
+							g_Hook_VClient_RenderView.GetCurTime()
+						);
+
+						return;
+					}
+					else
+					if(3 < argc)
+					{
+						const char * arg3 = args->ArgV(3);
+
+						if(!_stricmp("abs",arg3) && 5 <= argc)
+						{
+							char const * arg4 = args->ArgV(4);
+
+							g_Hook_VClient_RenderView.m_CamPath.SetStart(
+								atof(arg4)
+							);
+
+							return;
+						}
+						else
+						if(StringBeginsWith(arg3, "delta") && 4 == argc)
+						{
+							if(StringBeginsWith(arg3, "delta+"))
+							{
+								arg3 += strlen("delta+");
+
+								if(1 <= g_Hook_VClient_RenderView.m_CamPath.GetSize())
+									g_Hook_VClient_RenderView.m_CamPath.SetStart(
+										g_Hook_VClient_RenderView.m_CamPath.GetLowerBound() + atof(arg3)
+									);
+
+								return;
+							}
+							else
+							if(StringBeginsWith(arg3, "delta-"))
+							{
+								arg3 += strlen("delta-");
+
+								if(1 <= g_Hook_VClient_RenderView.m_CamPath.GetSize())
+									g_Hook_VClient_RenderView.m_CamPath.SetStart(
+										g_Hook_VClient_RenderView.m_CamPath.GetLowerBound() - atof(arg3)
+									);
+
+								return;
+							}
+						}
+					}
+
+				}
+				else
+				if(!_stricmp("duration", arg2) && 4 <= argc)
+				{
+					double duration = atof(args->ArgV(3));
+
+					g_Hook_VClient_RenderView.m_CamPath.SetDuration(
+						duration
 					);
 
 					return;
 				}
 				else
-				if(6 <= argc)
+				if(!_stricmp(arg2, "position") && 4 <= argc)
 				{
+					char const * arg3 = args->ArgV(3);
+
+					if(!_stricmp("current", arg3))
+					{
+						g_Hook_VClient_RenderView.m_CamPath.SetPosition(
+							g_Hook_VClient_RenderView.LastCameraOrigin[0],
+							g_Hook_VClient_RenderView.LastCameraOrigin[1],
+							g_Hook_VClient_RenderView.LastCameraOrigin[2]
+						);
+
+						return;
+					}
+					else
+					if(6 <= argc)
+					{
+						char const * arg4 = args->ArgV(4);
+						char const * arg5 = args->ArgV(5);
+						g_Hook_VClient_RenderView.m_CamPath.SetPosition(
+							atof(arg3),
+							atof(arg4),
+							atof(arg5)
+						);
+
+						return;
+					}
+				}
+				else
+				if(!_stricmp(arg2, "angles") && 4 <= argc)
+				{
+					char const * arg3 = args->ArgV(3);
+
+					if(!_stricmp("current", arg3))
+					{
+						g_Hook_VClient_RenderView.m_CamPath.SetAngles(
+							g_Hook_VClient_RenderView.LastCameraAngles[0],
+							g_Hook_VClient_RenderView.LastCameraAngles[1],
+							g_Hook_VClient_RenderView.LastCameraAngles[2]
+						);
+
+						return;
+					}
+					else
+					if(6 <= argc)
+					{
+						char const * arg4 = args->ArgV(4);
+						char const * arg5 = args->ArgV(5);
+						g_Hook_VClient_RenderView.m_CamPath.SetAngles(
+							atof(arg3),
+							atof(arg4),
+							atof(arg5)
+						);
+
+						return;
+					}
+				}
+				else
+				if(!_stricmp(arg2, "fov") && 4 <= argc)
+				{
+					char const * arg3 = args->ArgV(3);
+
+					if(!_stricmp("current", arg3))
+					{
+						g_Hook_VClient_RenderView.m_CamPath.SetFov(
+							g_Hook_VClient_RenderView.LastCameraFov
+						);
+
+						return;
+					}
+					else
+					{
+						g_Hook_VClient_RenderView.m_CamPath.SetFov(
+							atof(arg3)
+						);
+
+						return;
+					}
+				}
+				else
+				if(!_stricmp(arg2, "rotate") && 6 <= argc)
+				{
+					char const * arg3 = args->ArgV(3);
 					char const * arg4 = args->ArgV(4);
 					char const * arg5 = args->ArgV(5);
-					g_Hook_VClient_RenderView.m_CamPath.SetPosition(
+
+					g_Hook_VClient_RenderView.m_CamPath.Rotate(
 						atof(arg3),
 						atof(arg4),
 						atof(arg5)
 					);
-
 					return;
 				}
-			}
-			else
-			if(!_stricmp(arg2, "angles") && 4 <= argc)
-			{
-				char const * arg3 = args->ArgV(3);
-
-				if(!_stricmp("current", arg3))
-				{
-					g_Hook_VClient_RenderView.m_CamPath.SetAngles(
-						g_Hook_VClient_RenderView.LastCameraAngles[0],
-						g_Hook_VClient_RenderView.LastCameraAngles[1],
-						g_Hook_VClient_RenderView.LastCameraAngles[2]
-					);
-
-					return;
-				}
-				else
-				if(6 <= argc)
-				{
-					char const * arg4 = args->ArgV(4);
-					char const * arg5 = args->ArgV(5);
-					g_Hook_VClient_RenderView.m_CamPath.SetAngles(
-						atof(arg3),
-						atof(arg4),
-						atof(arg5)
-					);
-
-					return;
-				}
-			}
-			else
-			if(!_stricmp(arg2, "fov") && 4 <= argc)
-			{
-				char const * arg3 = args->ArgV(3);
-
-				if(!_stricmp("current", arg3))
-				{
-					g_Hook_VClient_RenderView.m_CamPath.SetFov(
-						g_Hook_VClient_RenderView.LastCameraFov
-					);
-
-					return;
-				}
-				else
-				{
-					g_Hook_VClient_RenderView.m_CamPath.SetFov(
-						atof(arg3)
-					);
-
-					return;
-				}
-			}
-			else
-			if(!_stricmp(arg2, "rotate") && 6 <= argc)
-			{
-				char const * arg3 = args->ArgV(3);
-				char const * arg4 = args->ArgV(4);
-				char const * arg5 = args->ArgV(5);
-
-				g_Hook_VClient_RenderView.m_CamPath.Rotate(
-					atof(arg3),
-					atof(arg4),
-					atof(arg5)
-				);
-				return;
 			}
 
 			Tier0_Msg(
-				"mirv_campath edit start - Set current demotime as new start time for the path [or selected keyframes]\n"
+				"mirv_campath edit start - Sets current demotime as new start time for the path [or selected keyframes].\n"
+				"mirv_campath edit start abs <dValue> - Sets an given floating point value as new start time for the path [or selected keyframes].\n"
+				"mirv_campath edit start delta(+|-)<dValue> - Offsets the path [or selected keyframes] by the given <dValue> delta value (Example: \"mirv_campah edit start delta-1.5\" moves the path [or selected keyframes] 1.5 seconds back in time).\n"
 				"mirv_campath edit duration <dValue> - set floating point value <dValue> as new duration for the path [or selected keyframes] (in seconds). Please see remarks in HLAE manual.\n"
 				"mirv_campath edit position current|(<dX> <dY> <dZ>) - Edit position of the path [or selected keyframes]. The position is applied to the center of the bounding box (\"middle\") of all [or the selected] keyframes, meaning the keyframes are moved releative to that. Current uses the current camera position, otherwise you can give the exact position.\n"
 				"mirv_campath edit angles current|(<dPitchY> <dYawZ> <dRollX>) - Edit angles of the path [or selected keyframes]. All keyframes are assigned the same angles. Current uses the current camera angles, otherwise you can give the exact angles.\n"

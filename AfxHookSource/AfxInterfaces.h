@@ -137,7 +137,7 @@ public:
 class IAfxStreams4Stream abstract
 {
 public:
-//	virtual void DebugDump() = 0;
+	virtual void DebugDump() = 0;
 
 	virtual IMaterialSystem_csgo * GetMaterialSystem(void) = 0;
 	virtual IAfxFreeMaster * GetFreeMaster(void) = 0;
