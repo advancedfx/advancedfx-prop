@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.6.5</version>
+<time>2015-10-12T19:50Z</time>
+<changes>
+<change type="fixed">
+Fixed mirv_streams: Now forces motion blur off, in order to avoid problems with it  (The motion blur is not good anyway, you should add it in post production, if you want any.).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.6.4</version>
 <time>2015-10-11T18:35Z</time>
 <changes>

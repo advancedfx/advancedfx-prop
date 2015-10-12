@@ -1212,6 +1212,7 @@ CAfxStreams::CAfxStreams()
 , m_MatQueueModeRef(0)
 , m_MatPostProcessEnableRef(0)
 , m_MatDynamicTonemappingRef(0)
+, m_MatMotionBlurEnabledRef(0)
 , m_ColorModulationOverride(false)
 , m_BlendOverride(false)
 , m_FormatBmpAndNotTga(false)
@@ -3152,6 +3153,7 @@ void CAfxStreams::BackUpMatVars()
 	m_OldMatQueueMode = m_MatQueueModeRef->GetInt();
 	m_OldMatPostProcessEnable = m_MatPostProcessEnableRef->GetInt();
 	m_OldMatDynamicTonemapping = m_MatDynamicTonemappingRef->GetInt();
+	m_OldMatMotionBlurEnabled = m_MatMotionBlurEnabledRef->GetInt();
 }
 
 void CAfxStreams::SetMatVarsForStreams()
@@ -3161,6 +3163,7 @@ void CAfxStreams::SetMatVarsForStreams()
 	m_MatQueueModeRef->SetValue(0.0f);
 	m_MatPostProcessEnableRef->SetValue(0.0f);
 	m_MatDynamicTonemappingRef->SetValue(0.0f);
+	m_MatMotionBlurEnabledRef->SetValue(0.0f);
 }
 
 void CAfxStreams::RestoreMatVars()
@@ -3170,6 +3173,7 @@ void CAfxStreams::RestoreMatVars()
 	m_MatQueueModeRef->SetValue((float)m_OldMatQueueMode);
 	m_MatPostProcessEnableRef->SetValue((float)m_OldMatPostProcessEnable);
 	m_MatDynamicTonemappingRef->SetValue((float)m_OldMatDynamicTonemapping);
+	m_MatMotionBlurEnabledRef->SetValue((float)m_OldMatMotionBlurEnabled);
 }
 
 void CAfxStreams::EnsureMatVars()
@@ -3177,6 +3181,7 @@ void CAfxStreams::EnsureMatVars()
 	if(!m_MatQueueModeRef) m_MatQueueModeRef = new WrpConVarRef("mat_queue_mode");
 	if(!m_MatPostProcessEnableRef) m_MatPostProcessEnableRef = new WrpConVarRef("mat_postprocess_enable");
 	if(!m_MatDynamicTonemappingRef) m_MatDynamicTonemappingRef = new WrpConVarRef("mat_dynamic_tonemapping");
+	if(!m_MatMotionBlurEnabledRef) m_MatMotionBlurEnabledRef = new WrpConVarRef("mat_motion_blur_enabled");
 }
 
 void CAfxStreams::AddStream(CAfxRecordStream * stream)

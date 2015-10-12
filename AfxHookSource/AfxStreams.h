@@ -1040,6 +1040,8 @@ private:
 	int m_OldMatPostProcessEnable;
 	WrpConVarRef * m_MatDynamicTonemappingRef;
 	int m_OldMatDynamicTonemapping;
+	WrpConVarRef * m_MatMotionBlurEnabledRef;
+	int m_OldMatMotionBlurEnabled;
 	float m_OriginalColorModulation[4];
 	bool m_ColorModulationOverride;
 	bool m_BlendOverride;
