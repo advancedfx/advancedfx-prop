@@ -21,6 +21,8 @@ AFXADDR_DEF(csgo_CHudDeathNotice_FireGameEvent)
 AFXADDR_DEF(csgo_CHudDeathNotice_FireGameEvent_DSZ)
 AFXADDR_DEF(csgo_CHudDeathNotice_UnkAddDeathNotice)
 AFXADDR_DEF(csgo_CHudDeathNotice_UnkAddDeathNotice_DSZ)
+AFXADDR_DEF(csgo_CScaleformSlotInitControllerClientImpl_UnkCheckSwf)
+AFXADDR_DEF(csgo_CScaleformSlotInitControllerClientImpl_UnkCheckSwf_DSZ)
 AFXADDR_DEF(csgo_CSkyboxView_Draw)
 AFXADDR_DEF(csgo_CSkyboxView_Draw_DSZ)
 AFXADDR_DEF(csgo_CViewRender_Render)
@@ -508,12 +510,58 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 				AFXADDR_SET(csgo_view, 0x0);
 			}
 		}
+
+		// csgo_CScaleformSlotInitControllerClientImpl_UnkCheckSwf
+		{
+			DWORD addr = 0;
+			DWORD strAddr = 0;
+			{
+				ImageSectionsReader sections((HMODULE)clientDll);
+				if(!sections.Eof())
+				{
+					sections.Next(); // skip .text
+					if(!sections.Eof())
+					{
+						MemRange result = FindCString(sections.GetMemRange(), "resource/flash/");
+						if(!result.IsEmpty())
+						{
+							strAddr = result.Start;
+						}
+						else ErrorBox(MkErrStr(__FILE__,__LINE__));
+					}
+					else ErrorBox(MkErrStr(__FILE__,__LINE__));
+				}
+				else ErrorBox(MkErrStr(__FILE__,__LINE__));
+			}
+			if(strAddr)
+			{
+				ImageSectionsReader sections((HMODULE)clientDll);
+			
+				MemRange baseRange = sections.GetMemRange();
+				MemRange result = FindBytes(baseRange, (char const *)&strAddr, sizeof(strAddr));
+				if(!result.IsEmpty())
+				{
+					addr = result.Start;
+					addr -= 0x10;
+				}
+				else ErrorBox(MkErrStr(__FILE__,__LINE__));
+			}
+			if(addr)
+			{
+				AFXADDR_SET(csgo_CScaleformSlotInitControllerClientImpl_UnkCheckSwf, addr);
+			}
+			else
+			{
+				AFXADDR_SET(csgo_CScaleformSlotInitControllerClientImpl_UnkCheckSwf, 0x0);
+			}
+		}
 	}
 	else
 	{
 		AFXADDR_SET(csgo_CUnknown_GetPlayerName, 0x0);
 		AFXADDR_SET(csgo_CHudDeathNotice_FireGameEvent, 0x0);
 		AFXADDR_SET(csgo_CHudDeathNotice_UnkAddDeathNotice, 0x0);
+		AFXADDR_SET(csgo_CScaleformSlotInitControllerClientImpl_UnkCheckSwf, 0x0);
 		AFXADDR_SET(csgo_CSkyboxView_Draw, 0x0);
 		AFXADDR_SET(csgo_CViewRender_Render, 0x0);
 		AFXADDR_SET(csgo_pLocalPlayer, 0x0);
@@ -524,6 +572,7 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 	AFXADDR_SET(csgo_CUnknown_GetPlayerName_DSZ, 0x0b);
 	AFXADDR_SET(csgo_CHudDeathNotice_FireGameEvent_DSZ, 0x0b);
 	AFXADDR_SET(csgo_CHudDeathNotice_UnkAddDeathNotice_DSZ, 0x09);
+	AFXADDR_SET(csgo_CScaleformSlotInitControllerClientImpl_UnkCheckSwf_DSZ,0x0c);
 	AFXADDR_SET(csgo_CSkyboxView_Draw_DSZ, 0x0d);
 	AFXADDR_SET(csgo_gpGlobals_OFS_curtime, 4*4);
 	AFXADDR_SET(csgo_gpGlobals_OFS_interpolation_amount, 9*4);

@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.6.6</version>
+<time>2015-10-13T18:02Z</time>
+<changes>
+<change type="added">
+Added feature that overrides the ScaleformUI SWF file checksum checks, so you should be able to use custom HUDs / heavily customize your HUD. I am currently trying to contact someone that does custom HUDs in order to work out, if a special movie maker HUD can be made, but I am not in contact yet, let's see.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.6.5</version>
 <time>2015-10-12T19:50Z</time>
 <changes>

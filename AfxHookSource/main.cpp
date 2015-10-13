@@ -31,8 +31,8 @@
 #include "AfxClasses.h"
 #include "AfxStreams.h"
 #include "hlaeFolder.h"
-
 #include "CampathDrawer.h"
+#include "csgo_ScaleForm_Hooks.h"
 
 #include <set>
 #include <map>
@@ -2853,6 +2853,7 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 		// Install early hooks:
 
 		csgo_CSkyBoxView_Draw_Install();
+		csgo_ScaleForm_Hooks_Init();
 	}
 }
 
