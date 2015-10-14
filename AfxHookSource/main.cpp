@@ -2727,6 +2727,7 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 	static bool bFirstfilesystem_stdio = true;
 	static bool bFirstShaderapidx9 = true;
 	static bool bFirstMaterialsystem = true;
+	static bool bFirstScaleformui = true;
 
 	if(!hModule || !lpLibFileName)
 		return;
@@ -2853,7 +2854,19 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 		// Install early hooks:
 
 		csgo_CSkyBoxView_Draw_Install();
-		csgo_ScaleForm_Hooks_Init();
+		//csgo_ScaleForm_ClientHooks_Init();
+	}
+	else
+	if(bFirstScaleformui && StringEndsWith( lpLibFileName, "scaleformui.dll"))
+	{
+		bFirstScaleformui = false;
+
+		Addresses_InitScaleformuiDll((AfxAddr)hModule, isCsgo);
+
+		//
+		// Install early hooks:
+
+		csgo_ScaleFormDll_Hooks_Init();
 	}
 }
 

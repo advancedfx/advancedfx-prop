@@ -1887,6 +1887,7 @@ CON_COMMAND(mirv_input, "Input mode configuration.")
 
 			Tier0_Msg(
 				"Usage:\n"
+				"mirv_input cfg msens <dValue> - Set mouse sensitiviy.\n"
 				"mirv_input cfg msens - Get mouse sensitiviy.\n"
 				"mirv_input cfg msens <dValue> - Set mouse sensitiviy.\n"
 				"mirv_input cfg ksens - Get keyboard sensitivity.\n"
@@ -1932,15 +1933,83 @@ CON_COMMAND(mirv_input, "Input mode configuration.")
 			g_AfxHookSourceInput.SetCameraControlMode(false);
 			return;
 		}
+		else
+		if(0 == _stricmp("position", arg1))
+		{
+			if(5 == argc)
+			{
+				char const * arg2 = args->ArgV(2);
+				char const * arg3 = args->ArgV(3);
+				char const * arg4 = args->ArgV(4);
+	
+				g_Hook_VClient_RenderView.LastCameraOrigin[0] = atof(arg2);
+				g_Hook_VClient_RenderView.LastCameraOrigin[1] = atof(arg3);
+				g_Hook_VClient_RenderView.LastCameraOrigin[2] = atof(arg4);
+				return;
+			}
+
+			Tier0_Msg(
+				"mirv_input positon <x> <y> <z> - Set new position (only useful in camera input mode).\n"
+				"Current value: %f %f %f\n"
+				, g_Hook_VClient_RenderView.LastCameraOrigin[0]
+				, g_Hook_VClient_RenderView.LastCameraOrigin[1]
+				, g_Hook_VClient_RenderView.LastCameraOrigin[2]
+			);
+			return;
+		}
+		else
+		if(0 == _stricmp("angles", arg1))
+		{
+			if(5 == argc)
+			{
+				char const * arg2 = args->ArgV(2);
+				char const * arg3 = args->ArgV(3);
+				char const * arg4 = args->ArgV(4);
+	
+				g_Hook_VClient_RenderView.LastCameraAngles[0] = atof(arg2);
+				g_Hook_VClient_RenderView.LastCameraAngles[1] = atof(arg3);
+				g_Hook_VClient_RenderView.LastCameraAngles[2] = atof(arg4);
+				return;
+			}
+
+			Tier0_Msg(
+				"mirv_input angles <yPitch> <xRoll> <zYaw> - Set new angles (only useful in camera input mode).\n"
+				"Current value: %f %f %f\n"
+				, g_Hook_VClient_RenderView.LastCameraAngles[0]
+				, g_Hook_VClient_RenderView.LastCameraAngles[1]
+				, g_Hook_VClient_RenderView.LastCameraAngles[2]
+			);
+			return;
+		}
+		else
+		if(0 == _stricmp("fov", arg1))
+		{
+			if(3 == argc)
+			{
+				char const * arg2 = args->ArgV(2);
+	
+				g_Hook_VClient_RenderView.LastCameraFov = atof(arg2);
+				return;
+			}
+
+			Tier0_Msg(
+				"mirv_input fov <fov> - Set new fov (only useful in camera input mode).\n"
+				"Current value: %f\n"
+				, g_Hook_VClient_RenderView.LastCameraFov
+			);
+			return;
+		}
 	}
 
-		Tier0_Msg(
-			"Usage:\n"
-			"mirv_input camera - Enable camera input mode, see HLAE manual for keys etc.\n"
-			"mirv_input cfg [...] - Control input mode configuration.\n"
-			"mirv_input end - End input mode(s).\n"
-		);
-
+	Tier0_Msg(
+		"Usage:\n"
+		"mirv_input camera - Enable camera input mode, see HLAE manual for keys etc.\n"
+		"mirv_input cfg [...] - Control input mode configuration.\n"
+		"mirv_input end - End input mode(s).\n"
+		"mirv_input positon [...]\n"
+		"mirv_input angles [...]\n"
+		"mirv_input fov [...]\n"
+	);
 }
 
 CON_COMMAND(mirv_snd_timescale, "(CS:GO only) allows to override host_timescale value for sound system.")

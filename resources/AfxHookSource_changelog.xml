@@ -6,6 +6,23 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.6.7</version>
+<time>2015-10-14T10:58Z</time>
+<changes>
+<change type="added">
+Added properties position, angles and fov to mirv_input, that can be used to set position / view angles / fov directly when in mirv_input camera mode.
+</change>
+<change type="updated">
+Updated ScaleformUI override features. Will be documented in HLAE Manual as soon as appropiate - we are in contact with spddl.de regarding a special movie maker GUI :-)
+(HLAE will automatically redirect requests from the game's folder csgo\resource\flash to a sub-folder path relative to HLAE.exe
+called resources\AfxHookSource\assets\csgo\resource\afxFlash, but only if the file requested exists in the folder structure requested.)
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.6.6</version>
 <time>2015-10-13T18:02Z</time>
 <changes>
