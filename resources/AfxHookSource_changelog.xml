@@ -6,6 +6,17 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.6.8</version>
+<time>2015-10-21T07:42Z</time>
+<changes>
+<change type="fixed">
+Fixed mirv_streams: Adjusted m_SkyBox3d.scale offset address according to 20th Oct 2015 CS:GO update, important for proper 3D skybox scaling in depth dump.
+</change></changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.6.7</version>
 <time>2015-10-14T10:58Z</time>
 <changes>

@@ -572,6 +572,7 @@ void CAfxDeveloperStream::DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecD
 
 CAfxBaseFxStream::CAfxBaseFxStream()
 : CAfxRenderViewStream()
+, m_GenericShaderAction(SA_NoChange)
 , m_ClientEffectTexturesAction(HA_Draw)
 , m_WorldTexturesAction(MA_Draw)
 , m_SkyBoxTexturesAction(MA_Draw)
@@ -590,6 +591,7 @@ CAfxBaseFxStream::CAfxBaseFxStream()
 , m_DepthVal(1)
 , m_DepthValMax(1024)
 , m_CurrentAction(0)
+, m_GenericDepthAction(0)
 , m_DepthAction(0)
 , m_MatteAction(0)
 , m_PassthroughAction(0)
@@ -612,6 +614,7 @@ CAfxBaseFxStream::~CAfxBaseFxStream()
 	delete m_InvisibleAction;
 	delete m_MatteAction;
 	delete m_DepthAction;
+	delete m_GenericDepthAction;
 	delete m_PassthroughAction;
 }
 
@@ -627,6 +630,7 @@ void CAfxBaseFxStream::StreamAttach(IAfxStreams4Stream * streams)
 	CAfxRenderViewStream::StreamAttach(streams);
 
 	if(!m_PassthroughAction) m_PassthroughAction = new CAction(this);
+	if(!m_GenericDepthAction) m_GenericDepthAction = new CActionGenericDepth(this);
 	if(!m_DepthAction) m_DepthAction = new CActionDepth(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
 	if(!m_MatteAction) m_MatteAction = new CActionMatte(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
 	if(!m_InvisibleAction) m_InvisibleAction = new CActionInvisible(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
@@ -689,6 +693,9 @@ void CAfxBaseFxStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * materia
 
 		if(isErrorMaterial)
 			m_CurrentAction = GetAction(m_ErrorMaterialAction);
+		else
+		if(m_GenericShaderAction == SA_GenericDepth && (!strcmp("UnlitGeneric", shaderName) || !strcmp("VertexLitGeneric", shaderName)))
+			m_CurrentAction = m_GenericDepthAction;
 		else
 		if(!strcmp("ClientEffect textures", groupName))
 			m_CurrentAction = GetAction(m_ClientEffectTexturesAction);
@@ -814,6 +821,16 @@ void CAfxBaseFxStream::Draw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists)
 void CAfxBaseFxStream::DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex, int numIndices)
 {
 	m_CurrentAction->DrawModulated(am, vecDiffuseModulation, firstIndex, numIndices);
+}
+
+CAfxBaseFxStream::ShaderAction CAfxBaseFxStream::GenericShaderAction_get(void)
+{
+	return m_GenericShaderAction;
+}
+
+void CAfxBaseFxStream::GenericShaderAction_set(ShaderAction value)
+{
+	m_GenericShaderAction = value;
 }
 
 CAfxBaseFxStream::HideableAction CAfxBaseFxStream::ClientEffectTexturesAction_get(void)
@@ -1050,6 +1067,40 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(HideableAction value)
 
 	if(m_DebugPrint) Tier0_Msg("draw");
 	return m_PassthroughAction;
+}
+
+// CAfxBaseFxStream::CActionGenericDepth ///////////////////////////////////////
+
+CAfxBaseFxStream::CActionGenericDepth::CActionGenericDepth(CAfxBaseFxStream * parentStream)
+: CAction(parentStream)
+{
+}
+
+CAfxBaseFxStream::CActionGenericDepth::~CActionGenericDepth()
+{
+}
+
+void CAfxBaseFxStream::CActionGenericDepth::AfxUnbind(IAfxMatRenderContext * ctx)
+{
+	AfxD3D9_OverrideEnd_ps_c29_w();
+	AfxD3D9_OverrideEnd_ps_c12_y();
+
+	// alpha -> color
+	// TODO ...
+}
+
+void CAfxBaseFxStream::CActionGenericDepth::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData )
+{
+	ctx->GetParent()->Bind(material, proxyData);
+
+	// initate alpha
+	// TODO ...
+
+	// g_fWriteDepthToAlpha
+	AfxD3D9_OverrideBegin_ps_c12_y(1.0f);
+
+	// OO_DESTALPHA_DEPTH_RANGE (g_LinearFogColor.w)
+	AfxD3D9_OverrideBegin_ps_c29_w(2048.0f);
 }
 
 // CAfxBaseFxStream::CActionMatte //////////////////////////////////////////////

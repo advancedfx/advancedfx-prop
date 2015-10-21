@@ -249,6 +249,13 @@ public:
 		HA_DebugDump
 	};
 
+	enum ShaderAction
+	{
+		SA_NotSet,
+		SA_NoChange,
+		SA_GenericDepth
+	};
+
 	CAfxBaseFxStream();
 
 	virtual ~CAfxBaseFxStream();
@@ -266,6 +273,9 @@ public:
 	virtual void Draw(IAfxMesh * am, int firstIndex = -1, int numIndices = 0);
 	virtual void Draw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists);
 	virtual void DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 );
+
+	ShaderAction GenericShaderAction_get(void);
+	void GenericShaderAction_set(ShaderAction value);
 
 	HideableAction ClientEffectTexturesAction_get(void);
 	void ClientEffectTexturesAction_set(HideableAction value);
@@ -324,6 +334,7 @@ public:
 	void InvalidateCache(void);
 
 protected:
+	ShaderAction m_GenericShaderAction;
 	HideableAction m_ClientEffectTexturesAction;
 	MaskableAction m_WorldTexturesAction;
 	MaskableAction m_SkyBoxTexturesAction;
@@ -529,6 +540,21 @@ private:
 		unsigned long m_OldSrgbWriteEnable;
 	};
 
+	class CActionGenericDepth
+	: public CAction
+	{
+	public:
+		CActionGenericDepth(CAfxBaseFxStream * parentStream);
+
+		virtual ~CActionGenericDepth();
+
+		virtual void AfxUnbind(IAfxMatRenderContext * ctx);
+
+		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 );
+
+	private:
+	};
+
 	class CActionDepth
 	: public CAction
 	{
@@ -631,6 +657,7 @@ private:
 	};
 
 	CAction * m_CurrentAction;
+	CAction * m_GenericDepthAction;
 	CAction * m_DepthAction;
 	CAction * m_MatteAction;
 	CAction * m_PassthroughAction;
@@ -873,6 +900,35 @@ public:
 protected:
 };
 
+class CAfxTestDepthStream
+: public CAfxBaseFxStream
+{
+public:
+	CAfxTestDepthStream() : CAfxBaseFxStream()
+	{
+		m_GenericShaderAction = SA_GenericDepth;
+		m_ClientEffectTexturesAction = HA_NoDraw;
+		m_WorldTexturesAction =  MA_Invisible;
+		m_SkyBoxTexturesAction =  MA_Invisible;
+		m_StaticPropTexturesAction =  MA_Invisible;
+		m_CableAction =  HA_NoDraw;
+		m_PlayerModelsAction =  MA_Invisible;
+		m_WeaponModelsAction =  MA_Invisible;
+		m_ShellModelsAction =  MA_Invisible;
+		m_OtherModelsAction =  MA_Invisible;
+		m_DecalTexturesAction =  HA_NoDraw;
+		m_EffectsAction =  HA_NoDraw;
+		m_ShellParticleAction =  HA_NoDraw;
+		m_OtherParticleAction =  HA_NoDraw;
+		m_StickerAction =  MA_Invisible;
+		m_ErrorMaterialAction = HA_NoDraw;
+	}
+
+	virtual ~CAfxTestDepthStream() {}
+
+protected:
+};
+
 class CAfxFileTracker
 {
 public:
@@ -884,7 +940,6 @@ private:
 	std::queue<std::string> m_FilePaths;
 
 };
-
 
 class CAfxStreams
 : public IAfxStreams4Stream

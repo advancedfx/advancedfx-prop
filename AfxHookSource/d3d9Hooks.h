@@ -25,3 +25,15 @@ void AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE(DWORD value);
 
 /// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
 void AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE(void);
+
+/// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
+void AfxD3D9_OverrideBegin_ps_c12_y(float value);
+
+/// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
+void AfxD3D9_OverrideEnd_ps_c12_y(void);
+
+/// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
+void AfxD3D9_OverrideBegin_ps_c29_w(float value);
+
+/// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
+void AfxD3D9_OverrideEnd_ps_c29_w(void);

@@ -1887,7 +1887,6 @@ CON_COMMAND(mirv_input, "Input mode configuration.")
 
 			Tier0_Msg(
 				"Usage:\n"
-				"mirv_input cfg msens <dValue> - Set mouse sensitiviy.\n"
 				"mirv_input cfg msens - Get mouse sensitiviy.\n"
 				"mirv_input cfg msens <dValue> - Set mouse sensitiviy.\n"
 				"mirv_input cfg ksens - Get keyboard sensitivity.\n"
