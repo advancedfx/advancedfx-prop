@@ -79,7 +79,11 @@ float org_CHudDeathNotice_nNoticeLifeTime;
 float org_CHudDeathNotice_nLocalPlayerLifeTimeMod;
 
 int csgo_CHudDeathNotice_HighLightId = -1;
-bool csgo_CHudDeathNotice_HighLightId_matched;
+bool csgo_CHudDeathNotice_HighLightAssists = true;
+
+bool csgo_CHudDeathNotice_HighLightId_matchedVictim;
+bool csgo_CHudDeathNotice_HighLightId_matchedAssister;
+bool csgo_CHudDeathNotice_HighLightId_matchedAttacker;
 
 void __stdcall touring_csgo_CHudDeathNotice_FireGameEvent(DWORD *this_ptr, csgo_IGameEvent * event)
 {
@@ -103,10 +107,9 @@ void __stdcall touring_csgo_CHudDeathNotice_FireGameEvent(DWORD *this_ptr, csgo_
 	int uidAssister = event->GetInt("assister");
 	bool blocked = false;
 
-	csgo_CHudDeathNotice_HighLightId_matched = csgo_CHudDeathNotice_HighLightId == uidAttacker
-		|| csgo_CHudDeathNotice_HighLightId == uidVictim
-		|| csgo_CHudDeathNotice_HighLightId == uidAssister
-	;
+	csgo_CHudDeathNotice_HighLightId_matchedAttacker = csgo_CHudDeathNotice_HighLightId == uidAttacker;
+	csgo_CHudDeathNotice_HighLightId_matchedVictim = csgo_CHudDeathNotice_HighLightId == uidVictim;
+	csgo_CHudDeathNotice_HighLightId_matchedAssister = csgo_CHudDeathNotice_HighLightId == uidAssister;
 
 	if(0 < csgo_debug_CHudDeathNotice_FireGameEvent)
 	{
@@ -177,15 +180,27 @@ void __stdcall touring_csgo_CHudDeathNotice_FireGameEvent(DWORD *this_ptr, csgo_
 	if(!blocked) detoured_csgo_CHudDeathNotice_FireGameEvent(this_ptr, event);
 }
 
-typedef void (__stdcall *csgo_CHudDeathNotice_UnkAddDeathNotice_t)(DWORD *this_ptr, void * arg0, void * arg1, bool bUnkRedBorder);
+typedef void (__stdcall *csgo_CHudDeathNotice_UnkAddDeathNotice_t)(DWORD *this_ptr, void * arg0, bool bIsVictim, bool bIsKiller);
 
 csgo_CHudDeathNotice_UnkAddDeathNotice_t detoured_csgo_CHudDeathNotice_UnkAddDeathNotice;
 
-void __stdcall touring_csgo_CHudDeathNotice_UnkAddDeathNotice(DWORD *this_ptr, void * arg0, void * arg1, bool bUnkRedBorder)
+void __stdcall touring_csgo_CHudDeathNotice_UnkAddDeathNotice(DWORD *this_ptr, void * arg0, bool bIsVictim, bool bIsKiller)
 {
-	detoured_csgo_CHudDeathNotice_UnkAddDeathNotice(this_ptr, arg0, arg1,
-		0 < csgo_CHudDeathNotice_HighLightId ? csgo_CHudDeathNotice_HighLightId_matched : (0 == csgo_CHudDeathNotice_HighLightId ? false : bUnkRedBorder)
-	);
+	if(0 < csgo_CHudDeathNotice_HighLightId)
+	{
+		detoured_csgo_CHudDeathNotice_UnkAddDeathNotice(this_ptr, arg0,
+			csgo_CHudDeathNotice_HighLightId_matchedVictim,
+			!csgo_CHudDeathNotice_HighLightId_matchedVictim && (csgo_CHudDeathNotice_HighLightId_matchedAttacker || csgo_CHudDeathNotice_HighLightAssists && csgo_CHudDeathNotice_HighLightId_matchedAssister));
+		return;
+	}
+	else
+	if(0 == csgo_CHudDeathNotice_HighLightId)
+	{
+		detoured_csgo_CHudDeathNotice_UnkAddDeathNotice(this_ptr, arg0, false, false);
+		return;
+	}
+
+	detoured_csgo_CHudDeathNotice_UnkAddDeathNotice(this_ptr, arg0, bIsVictim, bIsKiller);
 }
 
 bool csgo_CHudDeathNotice_Install(void)

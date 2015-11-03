@@ -6,12 +6,34 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.6.9</version>
+<time>2015-11-03T17:31Z</time>
+<changes>
+<change type="updated">
+Updated mirv_deathmsg highLightId: now works more POV demo alike: if the highlighted player dies the background is red.
+</change>
+<change type="added">
+Added mirv_deathmsg highLightAssister: Whether or not to highlight kill assists for highLightId.
+</change>
+</changes>
+<comments>
+Just so you know spddl released v1.0.0 of MMHud (the MovieMaker Hud to be used with HLAE).<br />
+You can get it from here: http://mmhud.spddl.de/<br />
+He is waiting for feedback, you should contact him here:
+https://twitter.com/spddlde or http://www.spddl.de
+</comments>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.6.8</version>
 <time>2015-10-21T07:42Z</time>
 <changes>
 <change type="fixed">
 Fixed mirv_streams: Adjusted m_SkyBox3d.scale offset address according to 20th Oct 2015 CS:GO update, important for proper 3D skybox scaling in depth dump.
-</change></changes>
+</change>
+</changes>
 </release>
 
 

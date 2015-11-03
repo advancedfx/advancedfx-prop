@@ -1490,6 +1490,22 @@ CON_COMMAND(mirv_deathmsg, "controls death notification options")
 			return;
 		}
 		else
+		if(0 == _stricmp("highLightAssists", arg1))
+		{
+			if(3 <= argc)
+			{
+				csgo_CHudDeathNotice_HighLightAssists = 0 != atoi(args->ArgV(2));
+				return;
+			}
+			Tier0_Msg(
+				"Usage:\n"
+				"mirv_deathmsg highLightAssists 0|1 - 0 is don't highlight asissts, 1 is highlight assists.\n"
+				"Current setting: %s\n",
+				csgo_CHudDeathNotice_HighLightAssists ? "1" : "0"
+			);
+			return;
+		}
+		else
 		if(0 == _stricmp("cfg", arg1))
 		{
 			if(4 <= argc)
@@ -1540,9 +1556,10 @@ CON_COMMAND(mirv_deathmsg, "controls death notification options")
 	Tier0_Msg(
 		"Usage:\n"
 		"mirv_deathmsg block [...] - block specific death messages.\n"
-		"mirv_deathmsg highLightId [...] - control the highlighting border.\n"
 		"mirv_deathmsg cfg [...] - configure death message properties, i.e. noticeLifeTime.\n"
 		"mirv_deathmsg debug [...] - enable debug message in cosnole (allows finding player IDs).\n"
+		"mirv_deathmsg highLightId [...] - control highlighting.\n"
+		"mirv_deathmsg highLightAssists [...] - Whether to highlight assists for highLightId.\n"
 	);
 }
 
