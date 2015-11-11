@@ -211,7 +211,7 @@ void Addresses_InitScaleformuiDll(AfxAddr scaleformuiDll, bool isCsgo)
 				MemRange result = FindBytes(baseRange, (char const *)&strAddr, sizeof(strAddr));
 				if(!result.IsEmpty())
 				{
-					addr = result.Start -0x24;
+					addr = result.Start -0x26;
 
 					// check for pattern to see if it is the right address:
 					unsigned char pattern[3] = { 0x55, 0x8B, 0xEC };
@@ -627,9 +627,93 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 			}
 		}
 		*/
+
+		// csgo_C_BasePlayer_OFS_m_skybox3d_scale
+		{
+			// this basically uses the RecvProp* functions in c_baseplayer.cpp to get the offsets of the fields.
+
+			DWORD strAddr_m_Local = 0;
+			DWORD strAddr_m_skybox3d_scale = 0;
+			DWORD ofs_m_Local_m_skybox3d_scale = 0;
+			{
+				ImageSectionsReader sections((HMODULE)clientDll);
+				if(!sections.Eof())
+				{
+					sections.Next(); // skip .text
+					if(!sections.Eof())
+					{
+						{
+							MemRange result = FindCString(sections.GetMemRange(), "m_Local");
+							if(!result.IsEmpty())
+							{
+								strAddr_m_Local = result.Start;
+							}
+							else ErrorBox(MkErrStr(__FILE__,__LINE__));
+						}
+						{
+							MemRange result = FindCString(sections.GetMemRange(), "m_skybox3d.scale");
+							if(!result.IsEmpty())
+							{
+								strAddr_m_skybox3d_scale = result.Start;
+							}
+							else ErrorBox(MkErrStr(__FILE__,__LINE__));
+						}
+					}
+					else ErrorBox(MkErrStr(__FILE__,__LINE__));
+				}
+				else ErrorBox(MkErrStr(__FILE__,__LINE__));
+			}
+
+			if(strAddr_m_Local && strAddr_m_skybox3d_scale)
+			{
+				bool has_m_Local = false;
+				bool has_m_skybox3d_scale = false;
+
+				DWORD ofs_m_Local = 0;
+				DWORD ofs_m_skybox3d_scale = 0;
+				DWORD addr = 0;
+
+				{
+					ImageSectionsReader sections((HMODULE)clientDll);
+			
+					MemRange baseRange = sections.GetMemRange();
+					MemRange result = FindBytes(baseRange, (char const *)&strAddr_m_Local, sizeof(strAddr_m_Local));
+					if(!result.IsEmpty())
+					{
+						addr = result.Start;
+						addr += 4+2+4;
+						addr = *(DWORD *)addr;
+						ofs_m_Local = addr;
+						has_m_Local = true;
+					}
+					else ErrorBox(MkErrStr(__FILE__,__LINE__));				
+				}
+				{
+					ImageSectionsReader sections((HMODULE)clientDll);
+			
+					MemRange baseRange = sections.GetMemRange();
+					MemRange result = FindBytes(baseRange, (char const *)&strAddr_m_skybox3d_scale, sizeof(strAddr_m_skybox3d_scale));
+					if(!result.IsEmpty())
+					{
+						addr = result.Start;
+						addr += 4+2+4;
+						addr = *(DWORD *)addr;
+						ofs_m_skybox3d_scale = addr;
+						has_m_skybox3d_scale = true;
+					}
+					else ErrorBox(MkErrStr(__FILE__,__LINE__));				
+				}
+
+				if(has_m_Local && has_m_skybox3d_scale)
+					ofs_m_Local_m_skybox3d_scale = ofs_m_Local + ofs_m_skybox3d_scale;
+			}
+
+			AFXADDR_SET(csgo_C_BasePlayer_OFS_m_skybox3d_scale, ofs_m_Local_m_skybox3d_scale);
+		}
 	}
 	else
 	{
+		AFXADDR_SET(csgo_C_BasePlayer_OFS_m_skybox3d_scale, (AfxAddr)-1);
 		AFXADDR_SET(csgo_CUnknown_GetPlayerName, 0x0);
 		AFXADDR_SET(csgo_CHudDeathNotice_FireGameEvent, 0x0);
 		AFXADDR_SET(csgo_CHudDeathNotice_UnkAddDeathNotice, 0x0);
@@ -640,7 +724,6 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 		AFXADDR_SET(csgo_view, 0x0);
 	}
 
-	AFXADDR_SET(csgo_C_BasePlayer_OFS_m_skybox3d_scale, 0x14a4);
 	AFXADDR_SET(csgo_CUnknown_GetPlayerName_DSZ, 0x0b);
 	AFXADDR_SET(csgo_CHudDeathNotice_FireGameEvent_DSZ, 0x0b);
 	AFXADDR_SET(csgo_CHudDeathNotice_UnkAddDeathNotice_DSZ, 0x09);

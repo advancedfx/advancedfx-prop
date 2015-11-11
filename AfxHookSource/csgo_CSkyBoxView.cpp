@@ -48,12 +48,13 @@ bool csgo_CSkyBoxView_Draw_Install(void)
 
 float csgo_CSkyBoxView_GetScale(void)
 {
-	if(AFXADDR_GET(csgo_pLocalPlayer) && 0 != *(unsigned char **)AFXADDR_GET(csgo_pLocalPlayer))
+	if(AFXADDR_GET(csgo_pLocalPlayer)
+		&& AFXADDR_GET(csgo_C_BasePlayer_OFS_m_skybox3d_scale) != (AfxAddr)-1
+		&& 0 != *(unsigned char **)AFXADDR_GET(csgo_pLocalPlayer))
 	{
 		int skyBoxScale = *(int *)(*(unsigned char **)AFXADDR_GET(csgo_pLocalPlayer) +AFXADDR_GET(csgo_C_BasePlayer_OFS_m_skybox3d_scale));
 
-		if(skyBoxScale)
-			return 1.0f / skyBoxScale;
+		return skyBoxScale ? 1.0f / skyBoxScale : 0.0f;
 	}
 
 	return 1.0f;
