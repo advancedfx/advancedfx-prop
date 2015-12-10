@@ -12,7 +12,6 @@
 
 #include "SourceInterfaces.h"
 #include "WrpVEngineClient.h"
-#include "d3d9Hooks.h"
 #include "csgo_CSkyBoxView.h"
 #include "csgo_view.h"
 
@@ -588,6 +587,7 @@ CAfxBaseFxStream::CAfxBaseFxStream()
 , m_OtherParticleAction(HA_Draw)
 , m_StickerAction(MA_Draw)
 , m_ErrorMaterialAction(HA_Draw)
+, m_TestAction(false)
 , m_DepthVal(1)
 , m_DepthValMax(1024)
 , m_CurrentAction(0)
@@ -600,6 +600,7 @@ CAfxBaseFxStream::CAfxBaseFxStream()
 , m_BlackAction(0)
 , m_WhiteAction(0)
 , m_DebugDumpAction(0)
+, m_AfxDetphTestAction(0)
 , m_BoundAction(false)
 , m_DebugPrint(false)
 {
@@ -607,6 +608,7 @@ CAfxBaseFxStream::CAfxBaseFxStream()
 
 CAfxBaseFxStream::~CAfxBaseFxStream()
 {
+	delete m_AfxDetphTestAction;
 	delete m_DebugDumpAction;
 	delete m_WhiteAction;
 	delete m_BlackAction;
@@ -638,6 +640,7 @@ void CAfxBaseFxStream::StreamAttach(IAfxStreams4Stream * streams)
 	if(!m_BlackAction) m_BlackAction = new CActionBlack(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
 	if(!m_WhiteAction) m_WhiteAction = new CActionWhite(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
 	if(!m_DebugDumpAction) m_DebugDumpAction = new CActionDebugDump(this);
+	if(!m_AfxDetphTestAction) m_AfxDetphTestAction = new CActionNoDraw(this); // new CActionAfxDepthTest(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
 
 	// Set a default action, just in case:
 	m_CurrentAction = m_PassthroughAction;
@@ -692,7 +695,13 @@ void CAfxBaseFxStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * materia
 		if(m_DebugPrint) Tier0_Msg("Stream: Caching Material: %s|%s|%s%s -> ", groupName, name, shaderName, isErrorMaterial ? "|isErrorMaterial" : "");
 
 		if(isErrorMaterial)
+		{
+			if(m_DebugPrint) Tier0_Msg("testAction");
 			m_CurrentAction = GetAction(m_ErrorMaterialAction);
+		}
+		else
+		if(m_TestAction && !strcmp("StaticProp textures", groupName) && !strcmp("models/props_foliage/mall_trees_branches02", name))
+			m_CurrentAction = m_AfxDetphTestAction;
 		else
 		if(m_GenericShaderAction == SA_GenericDepth && (!strcmp("UnlitGeneric", shaderName) || !strcmp("VertexLitGeneric", shaderName)))
 			m_CurrentAction = m_GenericDepthAction;
@@ -989,6 +998,17 @@ void CAfxBaseFxStream::StickerAction_set(MaskableAction value)
 	m_StickerAction = value;
 }
 
+bool CAfxBaseFxStream::TestAction_get(void)
+{
+	return m_TestAction;
+}
+
+void CAfxBaseFxStream::TestAction_set(bool value)
+{
+	InvalidateCache();
+	m_TestAction = value;
+}
+
 float CAfxBaseFxStream::DepthVal_get(void)
 {
 	return m_DepthVal;
@@ -1243,6 +1263,167 @@ void CAfxBaseFxStream::CActionDepth::Bind(IAfxMatRenderContext * ctx, IMaterial_
 	// We still need to force it manually, because the engine somehow doesn't pass it through if it's disabled:
 	m_OldSrgbWriteEnable = AfxD3D9SRGBWriteEnableFix(FALSE);
 }
+
+// CAfxBaseFxStream::CActionAfxDepthTest ///////////////////////////////////////
+
+CAfxBaseFxStream::CActionAfxDepthTest::CActionAfxDepthTest(CAfxBaseFxStream * parentStream, IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem)
+: CAction(parentStream)
+, m_DepthMaterial(freeMaster, matSystem->FindMaterial("afx/test2",NULL))
+, m_VertexShaderFileName("(invalid)")
+, m_PixelShaderFileName("(invalid)")
+, m_StaticVshIndex(-1)
+, m_VshIndex(-1)
+, m_StaticPshIndex(-1)
+, m_PshIndex(-1)
+, m_AfxVertexShader(0)
+, m_AfxPixelShader(0)
+{
+}
+
+CAfxBaseFxStream::CActionAfxDepthTest::~CActionAfxDepthTest()
+{
+	if(m_AfxVertexShader)
+	{
+		m_AfxVertexShader->Release();
+		m_AfxVertexShader = 0;
+	}
+	if(m_AfxPixelShader)
+	{
+		m_AfxPixelShader->Release();
+		m_AfxPixelShader = 0;
+	}
+}
+
+void CAfxBaseFxStream::CActionAfxDepthTest::AfxUnbind(IAfxMatRenderContext * ctx)
+{
+	AfxD3D9_Override_SetPixelShader(0);
+//	AfxD3D9_Override_SetVertexShader(0);
+
+	AfxD3D9SRGBWriteEnableFix(m_OldSrgbWriteEnable);
+	
+//	csgo_DepthWrite_Unhook();
+}
+
+void CAfxBaseFxStream::CActionAfxDepthTest::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData)
+{
+//	csgo_DepthWrite_Hook(this);
+	
+	// depth factors:
+
+	float scale = g_bIn_csgo_CSkyBoxView_Draw ? csgo_CSkyBoxView_GetScale() : 1.0f;
+	float flDepthFactor = scale * m_ParentStream->m_DepthVal;
+	float flDepthFactorMax = scale * m_ParentStream->m_DepthValMax;
+	if ( flDepthFactor == 0 ) 
+	{ 
+		flDepthFactor = 1.0f; 
+	} 
+
+	// Override Shaders:
+
+//	AfxD3D9_Override_SetVertexShader(this);
+	AfxD3D9_Override_SetPixelShader(this);
+
+	// Bind our material:
+
+	ctx->GetParent()->Bind(m_DepthMaterial.GetMaterial(), proxyData);
+	
+	//
+	// Force SRGBWriteEnable to off (Engine doesn't do this, otherwise it would be random):
+
+	// Force the engines internal state, so it can re-enable it properly:
+	m_ParentStream->m_Streams->GetShaderShadow()->EnableSRGBWrite(false);
+
+	// We still need to force it manually, because the engine somehow doesn't pass it through if it's disabled:
+	m_OldSrgbWriteEnable = AfxD3D9SRGBWriteEnableFix(FALSE);
+}
+
+void CAfxBaseFxStream::CActionAfxDepthTest::SetVertexShader(const char* pFileName, int nStaticVshIndex)
+{
+	Tier0_Msg("CAfxBaseFxStream::CActionAfxDepthTest::SetVertexShader(%s, %i)\n", pFileName, nStaticVshIndex);
+	m_VertexShaderFileName.assign(pFileName);
+	m_StaticVshIndex = nStaticVshIndex;
+}
+
+void CAfxBaseFxStream::CActionAfxDepthTest::SetPixelShader(const char* pFileName, int nStaticPshIndex)
+{
+	Tier0_Msg("CAfxBaseFxStream::CActionAfxDepthTest::SetPixelShader(%s, %i)\n", pFileName, nStaticPshIndex);
+	m_PixelShaderFileName.assign(pFileName);
+	m_StaticPshIndex = nStaticPshIndex;
+}
+
+void CAfxBaseFxStream::CActionAfxDepthTest::SetVertexShaderIndex(int vshIndex)
+{
+	//Tier0_Msg("CAfxBaseFxStream::CActionAfxDepthTest::SetVertexShaderIndex(%i)\n", vshIndex);
+	m_VshIndex = vshIndex;
+}
+
+void CAfxBaseFxStream::CActionAfxDepthTest::SetPixelShaderIndex(int pshIndex)
+{
+	//Tier0_Msg("CAfxBaseFxStream::CActionAfxDepthTest::SetPixelShaderIndex(%i)\n", pshIndex);
+	m_PshIndex = pshIndex;
+}
+
+bool CAfxBaseFxStream::CActionAfxDepthTest::EnableColorWrites(bool bEnable)
+{
+	return true;
+}
+
+bool CAfxBaseFxStream::CActionAfxDepthTest::EnableAlphaWrites(bool bEnable)
+{
+	return true;
+}
+
+IDirect3DVertexShader9 * CAfxBaseFxStream::CActionAfxDepthTest::GetDirect3DVertexShader9(void)
+{
+/*
+	if(m_AfxVertexShader)
+	{
+		m_AfxVertexShader->Release();
+		m_AfxVertexShader = 0;
+	}
+
+	if(0 == m_VertexShaderFileName.compare("depthwrite_vs30"))
+	{
+		std::ostringstream os;
+		os << "depthwrite_vs30_" << (m_StaticVshIndex / 4) << "_" << m_VshIndex << "_0.fxo";
+
+		m_AfxVertexShader = g_AfxShaders.GetVertexShader(os.str().c_str());
+
+		if(!m_AfxVertexShader->GetVertexShader())
+			Tier0_Warning("CAfxBaseFxStream::CActionAfxDepthTest::GetDirect3DVertexShader9: Shader %s is null\n", os.str().c_str());
+	}
+
+	return m_AfxVertexShader ? m_AfxVertexShader->GetVertexShader() : 0;
+*/
+	return 0;
+}
+
+IDirect3DPixelShader9 * CAfxBaseFxStream::CActionAfxDepthTest::GetDirect3DPixelShader9(void)
+{
+/*
+	if(m_AfxPixelShader)
+	{
+		m_AfxPixelShader->Release();
+		m_AfxPixelShader = 0;
+	}
+	if(0 == m_PixelShaderFileName.compare("depthwrite_ps30"))
+	{
+		std::ostringstream os;
+		os << "depthwrite_ps30_" << (m_StaticPshIndex / 2) << "_" << m_PshIndex << "_0.fxo";
+
+		m_AfxPixelShader = g_AfxShaders.GetPixelShader(os.str().c_str());
+
+		if(!m_AfxPixelShader->GetPixelShader())
+			Tier0_Warning("CAfxBaseFxStream::CActionAfxDepthTest::GetDirect3DPixelShader9: Shader %s is null\n", os.str().c_str());
+	}
+*/
+
+	if(!m_AfxPixelShader)
+		m_AfxPixelShader = g_AfxShaders.GetPixelShader("afx_depthbuilder_0_0_0.fxo");
+
+	return m_AfxPixelShader ? m_AfxPixelShader->GetPixelShader() : 0;
+}
+
 
 // CAfxStreams /////////////////////////////////////////////////////////////////
 
@@ -2476,6 +2657,25 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				curBaseFx->InvalidateCache();
 				return;
 			}
+			else
+			if(!_stricmp(cmd0, "testAction"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+
+					curBaseFx->TestAction_set(0 != atoi(cmd1) ? true : false);
+					return;
+				}
+
+				Tier0_Msg(
+					"%s testAction 0|1 - Disable / enable action for devloper testing purposes.\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, curBaseFx->TestAction_get() ? "1" : "0"
+				);
+				return;
+			}
 		}
 	}
 
@@ -2537,6 +2737,8 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 		Tier0_Msg("%s depthValMax [...]\n", cmdPrefix);
 		Tier0_Msg("%s debugPrint [...]\n", cmdPrefix);
 		Tier0_Msg("%s invalidateCache - invaldiates the material cache.\n", cmdPrefix);
+		// testAction options is not displayed, because we don't want users to use it.
+		// Tier0_Msg("%s testAction [...]\n", cmdPrefix);
 	}
 
 	Tier0_Msg("No further options for this stream.\n");

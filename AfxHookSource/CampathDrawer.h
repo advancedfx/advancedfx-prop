@@ -9,6 +9,7 @@
 // 2010-04-22 dominik.matrixstorm.com
 
 #include "SourceInterfaces.h"
+#include "AfxShaders.h"
 #include <shared/CamPath.h>
 #include <d3d9.h>
 #include <list>
@@ -56,33 +57,16 @@ private:
 	bool m_Draw;
 	DWORD m_OldCurrentColor;
 	Vector3 m_OldPreviousPolyLinePoint;
-	IDirect3DPixelShader9 * m_PixelShader;
+	IAfxPixelShader * m_PixelShader;
 	bool m_PolyLineStarted;
-	char * m_PsoFileName;
 	bool m_SetupEngineViewCalled;
 	bool m_RebuildDrawing;
-	bool m_ReloadPixelShader;
-	bool m_ReloadVertexShader;
-	IDirect3DVertexShader9 * m_VertexShader;
-	char * m_VsoFileName;
+	IAfxVertexShader * m_VertexShader;
 	VMatrix m_WorldToScreenMatrix;
 	IDirect3DVertexBuffer9 * m_VertexBuffer;
 	UINT m_VertexBufferVertexCount; // c_VertexBufferVertexCount
 	Vertex * m_LockedVertexBuffer;
 	std::list<double> m_TrajectoryPoints;
-
-	void LoadPso(char const * fileName);
-	void LoadVso(char const * fileName);
-
-	DWORD * LoadShaderFileInMemory(char const * fileName);
-
-	void LoadShader();
-	void LoadPixelShader();
-	void LoadVertexShader();
-
-	void UnloadShader();
-	void UnloadPixelShader();
-	void UnloadVertexShader();
 
 	void BuildPolyLinePoint(Vector3 previous, Vector3 current, DWORD currentColor, Vector3 next, Vertex * pOutVertexData);
 

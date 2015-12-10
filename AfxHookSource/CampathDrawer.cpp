@@ -11,7 +11,6 @@
 #include "CampathDrawer.h"
 
 #include "SourceInterfaces.h"
-#include "hlaeFolder.h"
 #include "RenderView.h"
 #include "WrpVEngineClient.h"
 
@@ -44,15 +43,6 @@ CCampathDrawer g_CampathDrawer;
 extern WrpVEngineClient * g_VEngineClient;
 
 
-bool GetShaderDirectory(std::string & outShaderDirectory)
-{
-	outShaderDirectory.assign(GetHlaeFolder());
-
-	outShaderDirectory.append("resources\\AfxHookSource\\shaders\\");
-
-	return true;
-}
-
 // CCampathDrawer //////////////////////////////////////////////////////////////
 
 CCampathDrawer::CCampathDrawer()
@@ -64,21 +54,14 @@ CCampathDrawer::CCampathDrawer()
 , m_LockedVertexBuffer(0)
 {
 	m_Device = 0;
-	m_PsoFileName = 0;
-	m_VsoFileName = 0;
-	m_ReloadPixelShader = false;
-	m_ReloadVertexShader = false;
 	m_PixelShader = 0;
 	m_VertexShader = 0;
-
-	LoadVso("afx_line_vs20.fxo");
-	LoadPso("afx_line_ps20.fxo");
 }
 
 CCampathDrawer::~CCampathDrawer()
 {
-	free(m_PsoFileName);
-	free(m_VsoFileName);
+	if(m_PixelShader) m_PixelShader->Release();
+	if(m_VertexShader) m_VertexShader->Release();
 }
 
 void CCampathDrawer::AutoPolyLineStart()
@@ -188,8 +171,6 @@ void CCampathDrawer::BeginDevice(IDirect3DDevice9 * device)
 
 	m_Device = device;
 
-	LoadShader();
-
 	g_Hook_VClient_RenderView.m_CamPath.OnChanged_set(this);
 
 	m_RebuildDrawing = true;
@@ -247,138 +228,8 @@ void CCampathDrawer::EndDevice()
 
 	UnloadVertexBuffer();
 
-	UnloadShader();
-
 	m_Device->Release();
 	m_Device = 0;
-}
-
-void CCampathDrawer::LoadPso(char const * fileName)
-{
-	if(m_PsoFileName) free(m_PsoFileName);
-	m_PsoFileName = 0;
-
-	if(fileName)
-	{
-		size_t size = 1 +strlen(fileName);
-
-		m_PsoFileName = (char *)malloc(size);
-
-		if(m_PsoFileName)
-			strcpy_s(m_PsoFileName, size, fileName);
-
-		m_ReloadPixelShader = true;
-	}
-}
-
-void CCampathDrawer::LoadVso(char const * fileName)
-{
-	if(m_VsoFileName) free(m_VsoFileName);
-	m_VsoFileName = 0;
-
-	if(fileName)
-	{
-		size_t size = 1 +strlen(fileName);
-
-		m_VsoFileName = (char *)malloc(size);
-
-		if(m_VsoFileName)
-			strcpy_s(m_VsoFileName, size, fileName);
-
-		m_ReloadVertexShader = true;
-	}
-}
-
-DWORD * CCampathDrawer::LoadShaderFileInMemory(char const * fileName)
-{
-	if(!fileName)
-		return 0;
-
-	std::string shaderDir;
-
-	if(!GetShaderDirectory(shaderDir))
-		return 0;
-
-	shaderDir.append(fileName);
-
-	FILE * file = 0;
-	bool bOk = 0 == fopen_s(&file, shaderDir.c_str(), "rb");
-	DWORD * so = 0;
-	size_t size = 0;
-
-	bOk = bOk 
-		&& 0 != file
-		&& 0 == fseek(file, 0, SEEK_END)
-	;
-
-	if(bOk)
-	{
-		size = ftell(file);
-
-		so = (DWORD *)malloc(
-			(size & 0x3) == 0 ? size : size +(4-(size & 0x3))
-		);
-		fseek(file, 0, SEEK_SET);
-		bOk = 0 != so;
-	}
-
-	if(bOk)
-	{
-		bOk = size == fread(so, 1, size, file);
-	}
-
-	if(file) fclose(file);
-
-	if(bOk)
-		return so;
-	
-	if(so) free(so);
-	
-	return 0;
-}
-
-void CCampathDrawer::LoadShader()
-{
-	LoadVertexShader();
-	LoadPixelShader();
-}
-
-void CCampathDrawer::LoadPixelShader()
-{
-	UnloadPixelShader();
-
-	if(!m_Device || !m_PsoFileName)
-		return;
-
-	DWORD * so = LoadShaderFileInMemory(m_PsoFileName);
-
-	if(so && SUCCEEDED(m_Device->CreatePixelShader(so, &m_PixelShader)))
-		m_PixelShader->AddRef();
-	else
-		m_PixelShader = 0;
-
-	if(so) free(so);
-
-	m_ReloadPixelShader = false;
-}
-
-void CCampathDrawer::LoadVertexShader()
-{
-	UnloadVertexShader();
-
-	if(!m_Device || !m_VsoFileName)
-		return;
-
-	DWORD * so = LoadShaderFileInMemory(m_VsoFileName);
-
-	if(so && SUCCEEDED(m_Device->CreateVertexShader(so, &m_VertexShader)))
-		m_VertexShader->AddRef();
-	else
-		m_VertexShader = 0;
-
-	if(so) free(so);
-
-	m_ReloadVertexShader = false;
 }
 
 #define ValToUCCondInv(value,invert) ((invert) ? 0xFF -(unsigned char)(value) : (unsigned char)(value) )
@@ -395,7 +246,19 @@ void CCampathDrawer::OnPostRenderAllTools()
 	if(!m_Draw)
 		return;
 
-	if(!(m_Device && m_VertexShader && m_PixelShader && g_VEngineClient))
+	if(!m_VertexShader)
+	{
+		m_VertexShader = g_AfxShaders.GetVertexShader("afx_line_vs20.fxo");
+	}
+	IDirect3DVertexShader9 * vertexShader = m_VertexShader->GetVertexShader();
+
+	if(!m_PixelShader)
+	{
+		m_PixelShader = g_AfxShaders.GetPixelShader("afx_line_ps20.fxo");
+	}
+	IDirect3DPixelShader9 * pixelShader = m_PixelShader->GetPixelShader();
+
+	if(!(m_Device && vertexShader && m_PixelShader && g_VEngineClient))
 	{
 		static bool firstError = true;
 
@@ -405,8 +268,8 @@ void CCampathDrawer::OnPostRenderAllTools()
 			Tier0_Msg(
 				"AFXERROR: CCampathDrawer::OnEndScene: Missing required dependencies:%s%s%s%s.\n",
 				!m_Device ? " m_Device" : "",
-				!m_VertexShader ? " m_VertexShader" : "",
-				!m_PixelShader ? " m_PixelShader" : "",
+				!vertexShader ? " vertexShader" : "",
+				!pixelShader ? " pixelShader" : "",
 				!g_VEngineClient ? " g_VEngineClient" : ""
 			);
 		}
@@ -514,7 +377,7 @@ void CCampathDrawer::OnPostRenderAllTools()
 		m_Device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
 		m_Device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 
-		m_Device->SetVertexShader(m_VertexShader);
+		m_Device->SetVertexShader(vertexShader);
 	
 		m_Device->SetVertexShaderConstantF(8, m_WorldToScreenMatrix.m[0], 4);
 
@@ -609,7 +472,7 @@ void CCampathDrawer::OnPostRenderAllTools()
 			m_Device->SetVertexShaderConstantF(50, vPlaneN, 1);
 		}
 
-		m_Device->SetPixelShader(m_PixelShader);
+		m_Device->SetPixelShader(pixelShader);
 
 		m_Device->SetFVF(CCampathDrawer_VertexFVF);
 
@@ -1172,30 +1035,6 @@ void CCampathDrawer::UnlockVertexBuffer()
 void CCampathDrawer::UnloadVertexBuffer()
 {
 	if(m_VertexBuffer) { m_VertexBuffer->Release(); m_VertexBuffer = 0; }
-}
-
-void CCampathDrawer::UnloadShader()
-{
-	UnloadPixelShader();
-	UnloadVertexShader();
-}
-
-void CCampathDrawer::UnloadPixelShader()
-{
-	if(!m_PixelShader)
-		return;
-
-	m_PixelShader->Release();
-	m_PixelShader = 0;
-}
-
-void CCampathDrawer::UnloadVertexShader()
-{
-	if(!m_VertexShader)
-		return;
-
-	m_VertexShader->Release();
-	m_VertexShader = 0;
 }
 
 void CCampathDrawer::RamerDouglasPeucker(TempPoint * start, TempPoint * end, double epsilon)

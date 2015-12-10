@@ -189,6 +189,9 @@ class SimplePerlExpression
 
     private Expression<Func<SimplePerlExpression, bool>> Lambda(Expression expr)
     {
+        if (expr.Type == _int)
+            expr = Expression.Convert(expr, _bool, _methodIntToBool);
+
         return Expression.Lambda<Func<SimplePerlExpression, bool>>(expr, _param);
     }
 

@@ -12,6 +12,9 @@
 #include "AfxInterfaces.h"
 #include "AfxClasses.h"
 #include "WrpConsole.h"
+#include "csgo_Stdshader_dx9_Hooks.h"
+#include "d3d9Hooks.h"
+#include "AfxShaders.h"
 
 #include <string>
 #include <list>
@@ -322,6 +325,9 @@ public:
 	MaskableAction ErrorMaterialAction_get(void);
 	void ErrorMaterialAction_set(MaskableAction value);
 
+	bool TestAction_get(void);
+	void TestAction_set(bool value);
+
 	float DepthVal_get(void);
 	void DepthVal_set(float value);
 
@@ -350,6 +356,7 @@ protected:
 	HideableAction m_OtherParticleAction;
 	MaskableAction m_StickerAction;
 	HideableAction m_ErrorMaterialAction;
+	bool m_TestAction;
 	float m_DepthVal;
 	float m_DepthValMax;
 
@@ -555,6 +562,55 @@ private:
 	private:
 	};
 
+	class CActionAfxDepthTest
+	: public CAction
+	, public IOnDrawElements_Hook
+	, public IAfxGetDirect3DVertexShader9
+	, public IAfxGetDirect3DPixelShader9
+	{
+	public:
+		CActionAfxDepthTest(CAfxBaseFxStream * parentStream, IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem);
+
+		virtual ~CActionAfxDepthTest();
+
+		virtual void AfxUnbind(IAfxMatRenderContext * ctx);
+
+		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 );
+
+		//
+		// IOnDrawElements_Hook:
+
+		virtual	void SetVertexShader(const char* pFileName, int nStaticVshIndex );
+		virtual	void SetPixelShader(const char* pFileName, int nStaticPshIndex = 0 );
+		virtual void SetVertexShaderIndex(int vshIndex = -1 );
+		virtual void SetPixelShaderIndex(int pshIndex = 0 );
+		virtual bool EnableColorWrites(bool bEnable);
+		virtual bool EnableAlphaWrites(bool bEnable);
+
+		//
+		// IAfxGetDirect3DVertexShader9:
+
+		virtual IDirect3DVertexShader9 * GetDirect3DVertexShader9(void);
+
+		//
+		// IAfxGetDirect3DPixelShader9:
+	
+		virtual IDirect3DPixelShader9 * GetDirect3DPixelShader9(void);
+
+	private:
+		CAfxMaterial m_DepthMaterial;
+		unsigned long m_OldSrgbWriteEnable;
+		std::string m_VertexShaderFileName;
+		std::string m_PixelShaderFileName;
+		int m_StaticVshIndex;
+		int m_VshIndex;
+		int m_StaticPshIndex;
+		int m_PshIndex;
+		IAfxVertexShader * m_AfxVertexShader;
+		IAfxPixelShader * m_AfxPixelShader;
+
+	};
+
 	class CActionDepth
 	: public CAction
 	{
@@ -666,6 +722,7 @@ private:
 	CAction * m_BlackAction;
 	CAction * m_WhiteAction;
 	CAction * m_DebugDumpAction;
+	CAction * m_AfxDetphTestAction;
 	bool m_BoundAction;
 	bool m_DebugPrint;
 

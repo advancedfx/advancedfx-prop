@@ -6,11 +6,24 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.7.0</version>
+<time>2015-12-10T05:24Z</time>
+<changes>
+<change type="updated">
+Updated AfxHookSource: Adjusted to 9th Dec 2015 CS:GO update (affects mirv_deathmsg).
+</change>
+</changes>
+</release>
+
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.6.10</version>
 <time>2015-11-11T16:45Z</time>
 <changes>
 <change type="updated">
-Updated AfxHookSource: Adjusted address according to 10th Nov 2015 CS:GO update. Also improved detection of m_skybox3d.scale to be more stable against CS:GO updates.
+Updated AfxHookSource: Adjusted addresses according to 10th Nov 2015 CS:GO update. Also improved detection of m_skybox3d.scale to be more stable against CS:GO updates.
 </change>
 </changes>
 </release>

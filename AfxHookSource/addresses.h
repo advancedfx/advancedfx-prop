@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-10-04 dominik.matrixstorm.com
+// 2015-12-06 dominik.matrixstorm.com
 //
 // First changes:
 // 2010-09-27 dominik.matrixstorm.com
@@ -23,6 +23,8 @@ AFXADDR_DECL(csgo_CSkyboxView_Draw)
 AFXADDR_DECL(csgo_CSkyboxView_Draw_DSZ)
 AFXADDR_DECL(csgo_CViewRender_Render)
 AFXADDR_DECL(csgo_CViewRender_Render_DSZ)
+AFXADDR_DECL(csgo_DepthWrite_CShader_OnDrawElements)
+AFXADDR_DECL(csgo_DepthWrite_CShader_OnDrawElements_DSZ)
 AFXADDR_DECL(csgo_S_StartSound_StringConversion)
 AFXADDR_DECL(csgo_Scaleformui_CUnkown_Loader)
 AFXADDR_DECL(csgo_Scaleformui_CUnkown_Loader_DSZ)
@@ -41,3 +43,4 @@ AFXADDR_DECL(cstrike_gpGlobals_OFS_interval_per_tick)
 void Addresses_InitEngineDll(AfxAddr engineDll, bool isCsgo);
 void Addresses_InitScaleformuiDll(AfxAddr scaleformuiDll, bool isCsgo);
 void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo);
+void Addresses_InitStdshader_dx9Dll(AfxAddr stdshader_dx9Dll, bool isCsgo);

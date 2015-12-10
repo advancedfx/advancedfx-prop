@@ -4,6 +4,7 @@
 
 #include "SourceInterfaces.h"
 #include "CampathDrawer.h"
+#include "AfxShaders.h"
 
 #include <shared/detours.h>
 
@@ -41,13 +42,42 @@ private:
 	bool m_Override_ps_c29_w;
 	float m_OverrideValue_ps_c29_w;
 
+	IDirect3DVertexShader9 * m_Original_VertexShader;
+	IAfxGetDirect3DVertexShader9 * m_Override_VertexShader;
+	IDirect3DPixelShader9 * m_Original_PixelShader;
+	IAfxGetDirect3DPixelShader9 * m_Override_PixelShader;
+
 public:
 	NewDirect3DDevice9()
 	: m_Override_D3DRS_ZWRITEENABLE(false)
 	, m_D3DRS_ZWRITEENABLE(TRUE)
 	, m_Override_ps_c12_y(false)
 	, m_Override_ps_c29_w(false)
+	, m_Original_VertexShader(0)
+	, m_Override_VertexShader(0)
+	, m_Original_PixelShader(0)
+	, m_Override_PixelShader(0)
 	{
+	}
+
+	void Override_SetVertexShader(IAfxGetDirect3DVertexShader9 * override_VertexShader)
+	{
+		m_Override_VertexShader = override_VertexShader;
+		
+		if(override_VertexShader)
+			g_OldDirect3DDevice9->SetVertexShader(override_VertexShader->GetDirect3DVertexShader9());
+		else
+			g_OldDirect3DDevice9->SetVertexShader(m_Original_VertexShader);
+	}
+
+	void Override_SetPixelShader(IAfxGetDirect3DPixelShader9 * override_PixelShader)
+	{
+		m_Override_PixelShader = override_PixelShader;
+
+		if(override_PixelShader)
+			g_OldDirect3DDevice9->SetPixelShader(override_PixelShader->GetDirect3DPixelShader9());
+		else
+			g_OldDirect3DDevice9->SetPixelShader(m_Original_PixelShader);
 	}
 
 	void OverrideBegin_ps_c12_y(float value)
@@ -109,7 +139,22 @@ public:
 		--g_NewDirect3DDevice9_RefCount;
 
 		if(0 == g_NewDirect3DDevice9_RefCount)
+		{
 			g_CampathDrawer.EndDevice();
+			g_AfxShaders.EndDevice();
+
+			if(m_Original_VertexShader)
+			{
+				m_Original_VertexShader->Release();
+				m_Original_VertexShader = 0;
+			}
+
+			if(m_Original_PixelShader)
+			{
+				m_Original_PixelShader->Release();
+				m_Original_PixelShader = 0;
+			}
+		}
 
 		return g_OldDirect3DDevice9->Release();
 	}
@@ -321,7 +366,11 @@ public:
     
     STDMETHOD(SetVertexShader)(THIS_ IDirect3DVertexShader9* pShader)
 	{
-		return g_OldDirect3DDevice9->SetVertexShader(pShader);
+		if(m_Original_VertexShader) m_Original_VertexShader->Release();
+		m_Original_VertexShader = pShader;
+		if(pShader) pShader->AddRef();
+
+		return g_OldDirect3DDevice9->SetVertexShader(m_Override_VertexShader ? m_Override_VertexShader->GetDirect3DVertexShader9() : pShader);
 	}
 
 	IFACE_PASSTHROUGH(IDirect3DDevice9, GetVertexShader, g_OldDirect3DDevice9);
@@ -380,7 +429,11 @@ public:
     
     STDMETHOD(SetPixelShader)(THIS_ IDirect3DPixelShader9* pShader)
 	{
-		return  g_OldDirect3DDevice9->SetPixelShader(pShader);
+		if(m_Original_PixelShader) m_Original_PixelShader->Release();
+		m_Original_PixelShader = pShader;
+		if(pShader) pShader->AddRef();
+
+		return g_OldDirect3DDevice9->SetPixelShader(m_Override_PixelShader ? m_Override_PixelShader->GetDirect3DPixelShader9() : pShader);
 	}
 
     
@@ -459,7 +512,10 @@ public:
 		--g_NewDirect3DDevice9Ex_RefCount;
 
 		if(0 == g_NewDirect3DDevice9Ex_RefCount)
+		{
 			g_CampathDrawer.EndDevice();
+			g_AfxShaders.EndDevice();
+		}
 
 		return g_OldDirect3DDevice9Ex->Release();
 	}
@@ -644,6 +700,7 @@ struct NewDirect3D9
 		{
 			g_OldDirect3DDevice9 = *ppReturnedDeviceInterface;
 			
+			g_AfxShaders.BeginDevice(g_OldDirect3DDevice9);
 			g_CampathDrawer.BeginDevice(g_OldDirect3DDevice9);
 
 			*ppReturnedDeviceInterface = reinterpret_cast<IDirect3DDevice9 *>(&g_NewDirect3DDevice9);
@@ -683,6 +740,7 @@ struct NewDirect3D9Ex
 		{
 			g_OldDirect3DDevice9 = *ppReturnedDeviceInterface;
 
+			g_AfxShaders.BeginDevice(g_OldDirect3DDevice9);
 			g_CampathDrawer.BeginDevice(g_OldDirect3DDevice9);
 
 			*ppReturnedDeviceInterface = reinterpret_cast<IDirect3DDevice9 *>(&g_NewDirect3DDevice9);
@@ -702,6 +760,7 @@ struct NewDirect3D9Ex
 		{
 			g_OldDirect3DDevice9Ex = *ppReturnedDeviceInterface;
 
+			g_AfxShaders.BeginDevice(g_OldDirect3DDevice9Ex);
 			g_CampathDrawer.BeginDevice(g_OldDirect3DDevice9Ex);
 
 			*ppReturnedDeviceInterface = reinterpret_cast<IDirect3DDevice9Ex *>(&g_NewDirect3DDevice9Ex);
@@ -799,4 +858,18 @@ void AfxD3D9_OverrideEnd_ps_c29_w(void)
 	if(!g_OldDirect3DDevice9) return;
 
 	g_NewDirect3DDevice9.OverrideEnd_ps_c29_w();
+}
+
+void AfxD3D9_Override_SetVertexShader(IAfxGetDirect3DVertexShader9 * replacer)
+{
+	if(!g_OldDirect3DDevice9) return;
+
+	g_NewDirect3DDevice9.Override_SetVertexShader(replacer);
+}
+
+void AfxD3D9_Override_SetPixelShader(IAfxGetDirect3DPixelShader9 * replacer)
+{
+	if(!g_OldDirect3DDevice9) return;
+
+	g_NewDirect3DDevice9.Override_SetPixelShader(replacer);
 }
