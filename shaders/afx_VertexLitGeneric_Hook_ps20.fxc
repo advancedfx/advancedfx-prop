@@ -1,0 +1,71 @@
+// AFX: "AFXALPHATEST" "0..1"
+// AFX: "AFXMODE" "0..4"
+// AFX: "AFXSHADERTYPE" "0..2"
+
+// AFXMODE:
+// 0 - 8 bit depth
+// 1 - 24  bit depth
+// 2 - green screen
+// 3 - draw blackish
+// 4 - draw whitish
+
+// AFXSHADERTYPE:
+// 0 - normal
+// 1 - phong
+// 2 - bump // currently not accurate (bump not applied)!
+
+const float4 g_AfxConstants0 : register( c0 );
+
+sampler BaseTextureSampler	: register( s0 );
+
+#define g_cClipPlaneSubtractValue g_AfxConstants0.x
+#define g_cClipPlaneMulValue g_AfxConstants0.y
+#define g_AlphaThreshold g_AfxConstants0.z
+
+#if 0 == AFXSHADERTYPE 
+	#define i_DepthComponent worldPos_projPosZ.w
+#elif 1 == AFXSHADERTYPE
+	#define i_DepthComponent projPos_fWrinkleWeight.z
+#elif 2 == AFXSHADERTYPE
+	#define i_DepthComponent worldPos_projPosZ.z
+#endif
+
+struct PS_INPUT
+{
+	float4 vProjPos		: POSITION;
+	float2 vTexCoord0	: TEXCOORD0;
+	float4 vColor		: COLOR0;
+
+#if 0 == AFXSHADERTYPE
+	float4 worldPos_projPosZ : TEXCOORD7;
+#elif 1 == AFXSHADERTYPE
+	float4 projPos_fWrinkleWeight : TEXCOORD5;
+#elif 2 == AFXSHADERTYPE
+	float4 worldPos_projPosZ : TEXCOORD6;
+#endif
+};
+
+float4 main( PS_INPUT i ) : COLOR
+{
+	//relevant data is in the alpha channel, modulate vertex alpha by texture alpha
+	float returnAlpha = tex2D( BaseTextureSampler, i.vTexCoord0 ).a * i.vColor.a;
+
+#if AFXALPHATEST
+	clip( returnAlpha - g_AlphaThreshold );
+#endif
+
+#if 0 == AFXMODE
+	float dist = (i.i_DepthComponent -g_cClipPlaneSubtractValue) * g_cClipPlaneMulValue;
+	return float4( dist, dist, dist, 1.0 );
+#elif 1 == AFXMODE
+	float dist = (i.i_DepthComponent -g_cClipPlaneSubtractValue) * g_cClipPlaneMulValue;
+	dist = saturate(dist);
+	return float4( 1.0  > dist ? frac(dist*65536) : 1.0, 1.0  > dist ? frac(dist*256) : 1.0, dist, 1.0 );
+#elif 2 == AFXMODE
+	return float4( 0, 1, 0, returnAlpha );
+#elif 3 == AFXMODE
+	return float4( 0, 0, 0, returnAlpha );
+#elif 4 == AFXMODE
+	return float4( 1, 1, 1, returnAlpha );
+#endif
+}

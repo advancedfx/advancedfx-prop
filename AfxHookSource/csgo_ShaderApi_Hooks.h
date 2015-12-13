@@ -6,7 +6,15 @@
 // 2015-12-06 dominik.matrixstorm.com
 //
 // First changes:
-// 2015-12-06 dominik.matrixstorm.com
+// 2015-12-13 dominik.matrixstorm.com
+
+// WARNING:
+//
+// This code SHOULD NOT BE USED and is only left here for future redesign:
+//
+// This code was designed for a single threaded apartment (STA), however
+// actually runs in a multi threaded apartment (MTA) and thus is
+// not working properly.
 
 #include "SourceInterfaces.h"
 
@@ -56,6 +64,12 @@ public:
 	virtual void SetPixelShaderIndex(IAfxShaderDynamicAPI * caller, int pshIndex = 0 ) = 0;
 };
 
+class IAfxShaderDynamicAPIExecuteCommandBuffer abstract
+{
+public:
+	virtual void ExecuteCommandBuffer(IAfxShaderDynamicAPI * caller, uint8 *pCmdBuffer ) = 0;
+};
+
 /// <remarks>
 /// Can only wrap one parent at a time. Currently not implemented for multiple parents!<br />
 /// Also asumes that the wrapper needs to be valid in the current scope only!
@@ -71,4 +85,7 @@ IShaderShadow_csgo * Wrap_IShaderShadow_csgo(IShaderShadow_csgo * parent,
 /// Can only wrap one parent at a time. Currently not implemented for multiple parents!<br />
 /// Also asumes that the wrapper needs to be valid in the current scope only!
 /// </remarks>
-IShaderDynamicAPI_csgo * Wrap_IShaderDynamicAPI_csgo(IShaderDynamicAPI_csgo * parent, IAfxShaderDynamicAPISetVertexShaderIndex * onSetVertexShaderIndex, IAfxShaderDynamicAPISetPixelShaderIndex * onSetPixelShaderIndex);
+IShaderDynamicAPI_csgo * Wrap_IShaderDynamicAPI_csgo(IShaderDynamicAPI_csgo * parent,
+	IAfxShaderDynamicAPISetVertexShaderIndex * onSetVertexShaderIndex,
+	IAfxShaderDynamicAPISetPixelShaderIndex * onSetPixelShaderIndex,
+	IAfxShaderDynamicAPIExecuteCommandBuffer * onExecuteCommandBuffer);

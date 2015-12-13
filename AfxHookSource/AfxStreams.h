@@ -12,7 +12,6 @@
 #include "AfxInterfaces.h"
 #include "AfxClasses.h"
 #include "WrpConsole.h"
-#include "csgo_Stdshader_dx9_Hooks.h"
 #include "d3d9Hooks.h"
 #include "AfxShaders.h"
 
@@ -223,6 +222,8 @@ private:
 };
 
 extern bool g_DebugEnabled;
+
+#define CActionAfxVertexLitGenericHook_NUMCOMBOS 30
 
 class CAfxBaseFxStream
 : public CAfxRenderViewStream
@@ -562,53 +563,42 @@ private:
 	private:
 	};
 
-	class CActionAfxDepthTest
+	class CActionAfxVertexLitGenericHook
 	: public CAction
-	, public IOnDrawElements_Hook
-	, public IAfxGetDirect3DVertexShader9
-	, public IAfxGetDirect3DPixelShader9
 	{
 	public:
-		CActionAfxDepthTest(CAfxBaseFxStream * parentStream, IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem);
+		enum AFXALPHATEST
+		{
+			AAT_No = 0,
+			AAT_Yes = 1
+		};
 
-		virtual ~CActionAfxDepthTest();
+		enum AFXMODE {
+			AM_Depth8 = 0,
+			AM_Depth24 = 1,
+			AM_GreenScreen = 2,
+			AM_DrawBlack = 3,
+			AM_DrawWhite = 4,
+		};
+
+		enum AFXSHADERTYPE {
+			AST_Normal = 0,
+			AST_Phong = 1,
+			AST_Bump = 2
+		};
+
+		static int GetCombo(AFXALPHATEST afxAlphaTest, AFXMODE afxMode, AFXSHADERTYPE afxShaderType);
+
+		CActionAfxVertexLitGenericHook(CAfxBaseFxStream * parentStream, int combo);
+
+		virtual ~CActionAfxVertexLitGenericHook();
 
 		virtual void AfxUnbind(IAfxMatRenderContext * ctx);
 
 		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 );
 
-		//
-		// IOnDrawElements_Hook:
-
-		virtual	void SetVertexShader(const char* pFileName, int nStaticVshIndex );
-		virtual	void SetPixelShader(const char* pFileName, int nStaticPshIndex = 0 );
-		virtual void SetVertexShaderIndex(int vshIndex = -1 );
-		virtual void SetPixelShaderIndex(int pshIndex = 0 );
-		virtual bool EnableColorWrites(bool bEnable);
-		virtual bool EnableAlphaWrites(bool bEnable);
-
-		//
-		// IAfxGetDirect3DVertexShader9:
-
-		virtual IDirect3DVertexShader9 * GetDirect3DVertexShader9(void);
-
-		//
-		// IAfxGetDirect3DPixelShader9:
-	
-		virtual IDirect3DPixelShader9 * GetDirect3DPixelShader9(void);
-
 	private:
-		CAfxMaterial m_DepthMaterial;
-		unsigned long m_OldSrgbWriteEnable;
-		std::string m_VertexShaderFileName;
-		std::string m_PixelShaderFileName;
-		int m_StaticVshIndex;
-		int m_VshIndex;
-		int m_StaticPshIndex;
-		int m_PshIndex;
-		IAfxVertexShader * m_AfxVertexShader;
 		IAfxPixelShader * m_AfxPixelShader;
-
 	};
 
 	class CActionDepth
@@ -722,7 +712,8 @@ private:
 	CAction * m_BlackAction;
 	CAction * m_WhiteAction;
 	CAction * m_DebugDumpAction;
-	CAction * m_AfxDetphTestAction;
+	CAction * m_AfxVertexLitGenericHookActions[CActionAfxVertexLitGenericHook_NUMCOMBOS];
+	bool m_ActionsInitialized;
 	bool m_BoundAction;
 	bool m_DebugPrint;
 

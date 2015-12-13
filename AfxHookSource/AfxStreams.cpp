@@ -600,15 +600,23 @@ CAfxBaseFxStream::CAfxBaseFxStream()
 , m_BlackAction(0)
 , m_WhiteAction(0)
 , m_DebugDumpAction(0)
-, m_AfxDetphTestAction(0)
+, m_ActionsInitialized(false)
 , m_BoundAction(false)
 , m_DebugPrint(false)
 {
+	for(int i=0; i<CActionAfxVertexLitGenericHook_NUMCOMBOS; ++i)
+	{
+		m_AfxVertexLitGenericHookActions[i] = 0;
+	}
 }
 
 CAfxBaseFxStream::~CAfxBaseFxStream()
 {
-	delete m_AfxDetphTestAction;
+	for(int i=0; i<CActionAfxVertexLitGenericHook_NUMCOMBOS; ++i)
+	{
+		delete m_AfxVertexLitGenericHookActions[i];
+	}
+
 	delete m_DebugDumpAction;
 	delete m_WhiteAction;
 	delete m_BlackAction;
@@ -631,16 +639,25 @@ void CAfxBaseFxStream::StreamAttach(IAfxStreams4Stream * streams)
 {
 	CAfxRenderViewStream::StreamAttach(streams);
 
-	if(!m_PassthroughAction) m_PassthroughAction = new CAction(this);
-	if(!m_GenericDepthAction) m_GenericDepthAction = new CActionGenericDepth(this);
-	if(!m_DepthAction) m_DepthAction = new CActionDepth(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
-	if(!m_MatteAction) m_MatteAction = new CActionMatte(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
-	if(!m_InvisibleAction) m_InvisibleAction = new CActionInvisible(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
-	if(!m_NoDrawAction) m_NoDrawAction = new CActionNoDraw(this);
-	if(!m_BlackAction) m_BlackAction = new CActionBlack(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
-	if(!m_WhiteAction) m_WhiteAction = new CActionWhite(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
-	if(!m_DebugDumpAction) m_DebugDumpAction = new CActionDebugDump(this);
-	if(!m_AfxDetphTestAction) m_AfxDetphTestAction = new CActionNoDraw(this); // new CActionAfxDepthTest(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
+	if(!m_ActionsInitialized)
+	{
+		m_PassthroughAction = new CAction(this);
+		m_GenericDepthAction = new CActionGenericDepth(this);
+		m_DepthAction = new CActionDepth(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
+		m_MatteAction = new CActionMatte(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
+		m_InvisibleAction = new CActionInvisible(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
+		m_NoDrawAction = new CActionNoDraw(this);
+		m_BlackAction = new CActionBlack(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
+		m_WhiteAction = new CActionWhite(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
+		m_DebugDumpAction = new CActionDebugDump(this);
+
+		for(int i=0; i<CActionAfxVertexLitGenericHook_NUMCOMBOS; ++i)
+		{
+			m_AfxVertexLitGenericHookActions[i] = new CActionAfxVertexLitGenericHook(this, i);
+		}
+
+		m_ActionsInitialized = true;
+	}
 
 	// Set a default action, just in case:
 	m_CurrentAction = m_PassthroughAction;
@@ -700,8 +717,44 @@ void CAfxBaseFxStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * materia
 			m_CurrentAction = GetAction(m_ErrorMaterialAction);
 		}
 		else
-		if(m_TestAction && !strcmp("StaticProp textures", groupName) && !strcmp("models/props_foliage/mall_trees_branches02", name))
-			m_CurrentAction = m_AfxDetphTestAction;
+		if(m_TestAction && !strcmp("VertexLitGeneric", shaderName))// && !strcmp("StaticProp textures", groupName) && !strcmp("models/props_foliage/mall_trees_branches02", name))
+		{
+			int numVars = material->ShaderParamCount();
+			IMaterialVar_csgo ** orgParams = material->GetShaderParams();
+
+			bool isPhong = false;
+			bool isBump = false;
+
+			{
+				IMaterialVar_csgo ** params = orgParams;
+
+				//Tier0_Msg("---- Params ----\n");
+
+				for(int i=0; i<numVars; ++i)
+				{
+					//Tier0_Msg("Param: %s -> %s (%s,isTexture: %s)\n",params[0]->GetName(), params[0]->GetStringValue(), params[0]->IsDefined() ? "defined" : "UNDEFINED", params[0]->IsTexture() ? "Y" : "N");
+					
+					if(params[0]->IsDefined() && !strcmp(params[0]->GetName(),"$bumpmap") && params[0]->IsTexture())
+					{
+						isBump = true;
+					}
+
+					if(params[0]->IsDefined() && !strcmp(params[0]->GetName(),"$phong") && params[0]->GetIntValue())
+					{
+						isPhong = true;
+					}
+		
+					++params;
+				}
+			}
+
+			m_CurrentAction = m_AfxVertexLitGenericHookActions[ CActionAfxVertexLitGenericHook::GetCombo(
+				(orgParams[FLAGS]->GetIntValue() & MATERIAL_VAR_ALPHATEST) ? CActionAfxVertexLitGenericHook::AAT_Yes : CActionAfxVertexLitGenericHook::AAT_No,
+				CActionAfxVertexLitGenericHook::AM_Depth24,
+				isPhong ? CActionAfxVertexLitGenericHook::AST_Phong : (isBump ? CActionAfxVertexLitGenericHook::AST_Bump : CActionAfxVertexLitGenericHook::AST_Normal)
+				) ];
+
+		}
 		else
 		if(m_GenericShaderAction == SA_GenericDepth && (!strcmp("UnlitGeneric", shaderName) || !strcmp("VertexLitGeneric", shaderName)))
 			m_CurrentAction = m_GenericDepthAction;
@@ -1266,27 +1319,26 @@ void CAfxBaseFxStream::CActionDepth::Bind(IAfxMatRenderContext * ctx, IMaterial_
 
 // CAfxBaseFxStream::CActionAfxDepthTest ///////////////////////////////////////
 
-CAfxBaseFxStream::CActionAfxDepthTest::CActionAfxDepthTest(CAfxBaseFxStream * parentStream, IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem)
-: CAction(parentStream)
-, m_DepthMaterial(freeMaster, matSystem->FindMaterial("afx/test2",NULL))
-, m_VertexShaderFileName("(invalid)")
-, m_PixelShaderFileName("(invalid)")
-, m_StaticVshIndex(-1)
-, m_VshIndex(-1)
-, m_StaticPshIndex(-1)
-, m_PshIndex(-1)
-, m_AfxVertexShader(0)
-, m_AfxPixelShader(0)
+int CAfxBaseFxStream::CActionAfxVertexLitGenericHook::GetCombo(AFXALPHATEST afxAlphaTest, AFXMODE afxMode, AFXSHADERTYPE afxShaderType)
 {
+	return (int)afxShaderType * 5 * 2 +(int)afxMode * 2 + (int)afxAlphaTest;
 }
 
-CAfxBaseFxStream::CActionAfxDepthTest::~CActionAfxDepthTest()
+CAfxBaseFxStream::CActionAfxVertexLitGenericHook::CActionAfxVertexLitGenericHook(CAfxBaseFxStream * parentStream, int combo)
+: CAction(parentStream)
+, m_AfxPixelShader(0)
 {
-	if(m_AfxVertexShader)
-	{
-		m_AfxVertexShader->Release();
-		m_AfxVertexShader = 0;
-	}
+	std::ostringstream os;
+	os << "afx_VertexLitGeneric_Hook_ps20_0_0_" << combo << ".fxo";
+
+	m_AfxPixelShader = g_AfxShaders.GetPixelShader(os.str().c_str());
+
+	if(!m_AfxPixelShader->GetPixelShader())
+		Tier0_Warning("AFXERROR: CAfxBaseFxStream::CActionAfxVertexLitGenericHook::CActionAfxVertexLitGenericHook: Shader %s is null.\n", os.str().c_str());
+}
+
+CAfxBaseFxStream::CActionAfxVertexLitGenericHook::~CActionAfxVertexLitGenericHook()
+{
 	if(m_AfxPixelShader)
 	{
 		m_AfxPixelShader->Release();
@@ -1294,136 +1346,64 @@ CAfxBaseFxStream::CActionAfxDepthTest::~CActionAfxDepthTest()
 	}
 }
 
-void CAfxBaseFxStream::CActionAfxDepthTest::AfxUnbind(IAfxMatRenderContext * ctx)
+void CAfxBaseFxStream::CActionAfxVertexLitGenericHook::AfxUnbind(IAfxMatRenderContext * ctx)
 {
-	AfxD3D9_Override_SetPixelShader(0);
-//	AfxD3D9_Override_SetVertexShader(0);
+	AfxD3D9_OverrideEnd_ps_c0();
 
-	AfxD3D9SRGBWriteEnableFix(m_OldSrgbWriteEnable);
-	
-//	csgo_DepthWrite_Unhook();
+	AfxD3D9OverrideEnd_D3DRS_SRGBWRITEENABLE();
+
+	AfxD3D9_Override_SetPixelShader(0);
 }
 
-void CAfxBaseFxStream::CActionAfxDepthTest::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData)
+void CAfxBaseFxStream::CActionAfxVertexLitGenericHook::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData)
 {
-//	csgo_DepthWrite_Hook(this);
-	
 	// depth factors:
 
 	float scale = g_bIn_csgo_CSkyBoxView_Draw ? csgo_CSkyBoxView_GetScale() : 1.0f;
 	float flDepthFactor = scale * m_ParentStream->m_DepthVal;
 	float flDepthFactorMax = scale * m_ParentStream->m_DepthValMax;
-	if ( flDepthFactor == 0 ) 
-	{ 
-		flDepthFactor = 1.0f; 
-	} 
 
-	// Override Shaders:
+	// Override shader(s):
 
-//	AfxD3D9_Override_SetVertexShader(this);
-	AfxD3D9_Override_SetPixelShader(this);
+	AfxD3D9_Override_SetPixelShader(m_AfxPixelShader->GetPixelShader());
 
-	// Bind our material:
+	// Bind normal material:
 
-	ctx->GetParent()->Bind(m_DepthMaterial.GetMaterial(), proxyData);
+	ctx->GetParent()->Bind(material, proxyData);
 	
 	//
-	// Force SRGBWriteEnable to off (Engine doesn't do this, otherwise it would be random):
+	// Force SRGBWriteEnable to off:
 
-	// Force the engines internal state, so it can re-enable it properly:
-	m_ParentStream->m_Streams->GetShaderShadow()->EnableSRGBWrite(false);
+	AfxD3D9OverrideBegin_D3DRS_SRGBWRITEENABLE(FALSE);
 
-	// We still need to force it manually, because the engine somehow doesn't pass it through if it's disabled:
-	m_OldSrgbWriteEnable = AfxD3D9SRGBWriteEnableFix(FALSE);
-}
+	//
+	// Fill in AFX shader variables:
 
-void CAfxBaseFxStream::CActionAfxDepthTest::SetVertexShader(const char* pFileName, int nStaticVshIndex)
-{
-	Tier0_Msg("CAfxBaseFxStream::CActionAfxDepthTest::SetVertexShader(%s, %i)\n", pFileName, nStaticVshIndex);
-	m_VertexShaderFileName.assign(pFileName);
-	m_StaticVshIndex = nStaticVshIndex;
-}
+	// this is slow, but that's the way we do it for now:
 
-void CAfxBaseFxStream::CActionAfxDepthTest::SetPixelShader(const char* pFileName, int nStaticPshIndex)
-{
-	Tier0_Msg("CAfxBaseFxStream::CActionAfxDepthTest::SetPixelShader(%s, %i)\n", pFileName, nStaticPshIndex);
-	m_PixelShaderFileName.assign(pFileName);
-	m_StaticPshIndex = nStaticPshIndex;
-}
+	float alphaTestReference = 0.5f;
 
-void CAfxBaseFxStream::CActionAfxDepthTest::SetVertexShaderIndex(int vshIndex)
-{
-	//Tier0_Msg("CAfxBaseFxStream::CActionAfxDepthTest::SetVertexShaderIndex(%i)\n", vshIndex);
-	m_VshIndex = vshIndex;
-}
+	int numVars = material->ShaderParamCount();
+	IMaterialVar_csgo **params = material->GetShaderParams();
 
-void CAfxBaseFxStream::CActionAfxDepthTest::SetPixelShaderIndex(int pshIndex)
-{
-	//Tier0_Msg("CAfxBaseFxStream::CActionAfxDepthTest::SetPixelShaderIndex(%i)\n", pshIndex);
-	m_PshIndex = pshIndex;
-}
-
-bool CAfxBaseFxStream::CActionAfxDepthTest::EnableColorWrites(bool bEnable)
-{
-	return true;
-}
-
-bool CAfxBaseFxStream::CActionAfxDepthTest::EnableAlphaWrites(bool bEnable)
-{
-	return true;
-}
-
-IDirect3DVertexShader9 * CAfxBaseFxStream::CActionAfxDepthTest::GetDirect3DVertexShader9(void)
-{
-/*
-	if(m_AfxVertexShader)
+	for(int i=0; i<numVars; ++i)
 	{
-		m_AfxVertexShader->Release();
-		m_AfxVertexShader = 0;
+		if(params[0]->IsDefined() && !strcmp(params[0]->GetName(),"$alphatestreference"))
+		{
+			alphaTestReference = params[0]->GetFloatValue();
+			break;
+		}
+		
+		++params;
 	}
 
-	if(0 == m_VertexShaderFileName.compare("depthwrite_vs30"))
-	{
-		std::ostringstream os;
-		os << "depthwrite_vs30_" << (m_StaticVshIndex / 4) << "_" << m_VshIndex << "_0.fxo";
+	float mulFac = flDepthFactorMax -flDepthFactor;
+	mulFac = !mulFac ? 0.0f : 1.0f / mulFac;
 
-		m_AfxVertexShader = g_AfxShaders.GetVertexShader(os.str().c_str());
+	float overFac[4] = { flDepthFactor, mulFac, alphaTestReference, 0.0f };
 
-		if(!m_AfxVertexShader->GetVertexShader())
-			Tier0_Warning("CAfxBaseFxStream::CActionAfxDepthTest::GetDirect3DVertexShader9: Shader %s is null\n", os.str().c_str());
-	}
-
-	return m_AfxVertexShader ? m_AfxVertexShader->GetVertexShader() : 0;
-*/
-	return 0;
+	AfxD3D9_OverrideBegin_ps_c0(overFac);
 }
-
-IDirect3DPixelShader9 * CAfxBaseFxStream::CActionAfxDepthTest::GetDirect3DPixelShader9(void)
-{
-/*
-	if(m_AfxPixelShader)
-	{
-		m_AfxPixelShader->Release();
-		m_AfxPixelShader = 0;
-	}
-	if(0 == m_PixelShaderFileName.compare("depthwrite_ps30"))
-	{
-		std::ostringstream os;
-		os << "depthwrite_ps30_" << (m_StaticPshIndex / 2) << "_" << m_PshIndex << "_0.fxo";
-
-		m_AfxPixelShader = g_AfxShaders.GetPixelShader(os.str().c_str());
-
-		if(!m_AfxPixelShader->GetPixelShader())
-			Tier0_Warning("CAfxBaseFxStream::CActionAfxDepthTest::GetDirect3DPixelShader9: Shader %s is null\n", os.str().c_str());
-	}
-*/
-
-	if(!m_AfxPixelShader)
-		m_AfxPixelShader = g_AfxShaders.GetPixelShader("afx_depthbuilder_0_0_0.fxo");
-
-	return m_AfxPixelShader ? m_AfxPixelShader->GetPixelShader() : 0;
-}
-
 
 // CAfxStreams /////////////////////////////////////////////////////////////////
 

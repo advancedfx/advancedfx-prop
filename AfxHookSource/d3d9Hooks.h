@@ -21,10 +21,22 @@ DWORD AfxD3D9SRGBWriteEnableFix(DWORD enable);
 void AfxD3D9SetModulationColorFix(float const color[4]);
 
 /// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
+void AfxD3D9OverrideBegin_D3DRS_SRGBWRITEENABLE(DWORD value);
+
+/// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
+void AfxD3D9OverrideEnd_D3DRS_SRGBWRITEENABLE(void);
+
+/// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
 void AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE(DWORD value);
 
 /// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
 void AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE(void);
+
+/// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
+void AfxD3D9_OverrideBegin_ps_c0(float values[4]);
+
+/// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
+void AfxD3D9_OverrideEnd_ps_c0(void);
 
 /// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
 void AfxD3D9_OverrideBegin_ps_c12_y(float value);
@@ -39,22 +51,10 @@ void AfxD3D9_OverrideBegin_ps_c29_w(float value);
 void AfxD3D9_OverrideEnd_ps_c29_w(void);
 
 
-class IAfxGetDirect3DVertexShader9 abstract
-{
-public:
-	virtual IDirect3DVertexShader9 * GetDirect3DVertexShader9(void) = 0;
-};
+/// <param name="replacer">set 0 to end override</param>
+/// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
+void AfxD3D9_Override_SetVertexShader(IDirect3DVertexShader9 * replacer);
 
 /// <param name="replacer">set 0 to end override</param>
 /// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
-void AfxD3D9_Override_SetVertexShader(IAfxGetDirect3DVertexShader9 * replacer);
-
-class IAfxGetDirect3DPixelShader9 abstract
-{
-public:
-	virtual IDirect3DPixelShader9 * GetDirect3DPixelShader9(void) = 0;
-};
-
-/// <param name="replacer">set 0 to end override</param>
-/// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
-void AfxD3D9_Override_SetPixelShader(IAfxGetDirect3DPixelShader9 * replacer);
+void AfxD3D9_Override_SetPixelShader(IDirect3DPixelShader9 * replacer);

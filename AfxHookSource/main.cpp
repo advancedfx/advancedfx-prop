@@ -33,7 +33,6 @@
 #include "hlaeFolder.h"
 #include "CampathDrawer.h"
 #include "csgo_ScaleForm_Hooks.h"
-#include "csgo_Stdshader_dx9_Hooks.h"
 #include "asmClassTools.h"
 
 #include <set>
@@ -2656,7 +2655,7 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 	static bool bFirstShaderapidx9 = true;
 	static bool bFirstMaterialsystem = true;
 	static bool bFirstScaleformui = true;
-	static bool bFirstStdshader_dx9 = true;
+	//static bool bFirstStdshader_dx9 = true;
 
 	if(!hModule || !lpLibFileName)
 		return;
@@ -2797,6 +2796,7 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 
 		csgo_ScaleFormDll_Hooks_Init();
 	}
+/*
 	else
 	if(bFirstStdshader_dx9 && StringEndsWith( lpLibFileName, "stdshader_dx9.dll"))
 	{
@@ -2809,6 +2809,7 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 
 		csgo_Stdshader_dx9_Hooks_Init();
 	}
+*/
 }
 
 

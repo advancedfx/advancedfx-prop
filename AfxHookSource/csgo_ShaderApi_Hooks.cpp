@@ -3,10 +3,18 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-12-06 dominik.matrixstorm.com
+// 2015-12-13 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-12-06 dominik.matrixstorm.com
+
+// WARNING:
+//
+// This code SHOULD NOT BE USED and is only left here for future redesign:
+//
+// This code was designed for a single threaded apartment (STA), however
+// actually runs in a multi threaded apartment (MTA) and thus is
+// not working properly.
 
 #include "csgo_ShaderApi_Hooks.h"
 
@@ -199,12 +207,14 @@ private:
 	IShaderDynamicAPI_csgo * m_Parent;
 	IAfxShaderDynamicAPISetVertexShaderIndex * m_OnSetVertexShaderIndex;
 	IAfxShaderDynamicAPISetPixelShaderIndex * m_OnSetPixelShaderIndex;
+	IAfxShaderDynamicAPIExecuteCommandBuffer * m_OnExecuteCommandBuffer;
 
 public:
 	CAfxShaderDynamicAPI(IShaderDynamicAPI_csgo * parent)
 	: m_Parent(parent)
 	, m_OnSetVertexShaderIndex(0)
 	, m_OnSetPixelShaderIndex(0)
+	, m_OnExecuteCommandBuffer(0)
 	{
 	}
 
@@ -218,9 +228,14 @@ public:
 		m_OnSetVertexShaderIndex = value;
 	}
 
-	void OnSetPixelShaderIndex_Set(IAfxShaderDynamicAPISetPixelShaderIndex * value)
+	void OnSetPixelShaderIndex_set(IAfxShaderDynamicAPISetPixelShaderIndex * value)
 	{
 		m_OnSetPixelShaderIndex = value;
+	}
+
+	void OnExecuteCommandBuffer_set(IAfxShaderDynamicAPIExecuteCommandBuffer * value)
+	{
+		m_OnExecuteCommandBuffer = value;
 	}
 
 	//
@@ -295,6 +310,7 @@ public:
 	virtual void SetPixelShaderIndex( int pshIndex = 0 )
 	{
 		// JMP_CLASSMEMBERIFACE_FN(CAfxShaderDynamicAPI, m_Parent, 20)
+		//Tier0_Msg("CAfxShaderDynamicAPI::SetPixelShaderIndex(%i)\n", pshIndex);
 	
 		if(m_OnSetPixelShaderIndex) m_OnSetPixelShaderIndex->SetPixelShaderIndex(this, pshIndex);
 
@@ -412,8 +428,14 @@ public:
 	virtual void _UNKOWN_057(void)
 	{ JMP_CLASSMEMBERIFACE_FN(CAfxShaderDynamicAPI, m_Parent, 57) }
 
-	virtual void _UNKOWN_058(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxShaderDynamicAPI, m_Parent, 58) }
+	virtual void ExecuteCommandBuffer( uint8 *pCmdBuffer )
+	{
+		// JMP_CLASSMEMBERIFACE_FN(CAfxShaderDynamicAPI, m_Parent, 58)
+	
+		if(m_OnExecuteCommandBuffer) m_OnExecuteCommandBuffer->ExecuteCommandBuffer(this, pCmdBuffer);
+
+		m_Parent->ExecuteCommandBuffer(pCmdBuffer);
+	}
 
 	virtual void _UNKOWN_059(void)
 	{ JMP_CLASSMEMBERIFACE_FN(CAfxShaderDynamicAPI, m_Parent, 59) }
@@ -699,13 +721,17 @@ IShaderShadow_csgo * Wrap_IShaderShadow_csgo(IShaderShadow_csgo * parent,
 	return &g_AfxShaderShadow;
 }
 
-IShaderDynamicAPI_csgo * Wrap_IShaderDynamicAPI_csgo(IShaderDynamicAPI_csgo * parent, IAfxShaderDynamicAPISetVertexShaderIndex * onSetVertexShaderIndex, IAfxShaderDynamicAPISetPixelShaderIndex * onSetPixelShaderIndex)
+IShaderDynamicAPI_csgo * Wrap_IShaderDynamicAPI_csgo(IShaderDynamicAPI_csgo * parent,
+	IAfxShaderDynamicAPISetVertexShaderIndex * onSetVertexShaderIndex,
+	IAfxShaderDynamicAPISetPixelShaderIndex * onSetPixelShaderIndex,
+	IAfxShaderDynamicAPIExecuteCommandBuffer * onExecuteCommandBuffer)
 {
 	if(!parent) return 0;
 
 	g_AfxShaderDynamicAPI.SetParent(parent);
 	g_AfxShaderDynamicAPI.OnSetVertexShaderIndex_set(onSetVertexShaderIndex);
-	g_AfxShaderDynamicAPI.OnSetPixelShaderIndex_Set(onSetPixelShaderIndex);
+	g_AfxShaderDynamicAPI.OnSetPixelShaderIndex_set(onSetPixelShaderIndex);
+	g_AfxShaderDynamicAPI.OnExecuteCommandBuffer_set(onExecuteCommandBuffer);
 
 	return &g_AfxShaderDynamicAPI;
 }

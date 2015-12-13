@@ -2222,7 +2222,9 @@ public:
 #define CLIENT_DLL_INTERFACE_VERSION_CSGO_016 "VClient016"
 #define CLIENT_DLL_INTERFACE_VERSION_CSGO_017 "VClient017"
 
-//	 //////////////////////////////////////////////////////////////
+// IMaterial_csgo //////////////////////////////////////////////////////////////
+
+class IMaterialVar_csgo;
 
 class IMaterial_csgo abstract
 {
@@ -2279,8 +2281,12 @@ public:
 	virtual void _UNKNOWN_038(void) = 0;
 	virtual void _UNKNOWN_039(void) = 0;
 
-	virtual void _UNKNOWN_040(void) = 0;
-	virtual void _UNKNOWN_041(void) = 0;
+	// 040:
+	virtual int ShaderParamCount() const = 0;
+
+	// 041:
+	virtual IMaterialVar_csgo **GetShaderParams( void ) = 0;
+
 	
 	// 042:
 	// Returns true if this is the error material you get back from IMaterialSystem::FindMaterial if
@@ -3788,7 +3794,10 @@ public:
 	virtual void _UNKOWN_055(void) = 0;
 	virtual void _UNKOWN_056(void) = 0;
 	virtual void _UNKOWN_057(void) = 0;
-	virtual void _UNKOWN_058(void) = 0;
+
+	// 058:
+	virtual void ExecuteCommandBuffer( uint8 *pCmdBuffer ) = 0;
+
 	virtual void _UNKOWN_059(void) = 0;
 	virtual void _UNKOWN_060(void) = 0;
 	virtual void _UNKOWN_061(void) = 0;
@@ -3881,17 +3890,124 @@ public:
 
 // IMaterialVar_csgo ///////////////////////////////////////////////////////////
 
+enum MaterialVarSym_t_csgo
+{
+};
+
+enum ShaderMaterialVars_t_csgo
+{
+	FLAGS = 0,
+	FLAGS_DEFINED,	// mask indicating if the flag was specified
+	FLAGS2,
+	FLAGS_DEFINED2,
+	COLOR,
+	ALPHA,
+	BASETEXTURE,
+	FRAME,
+	BASETEXTURETRANSFORM,
+	FLASHLIGHTTEXTURE,
+	FLASHLIGHTTEXTUREFRAME,
+	COLOR2,
+	SRGBTINT,
+
+	NUM_SHADER_MATERIAL_VARS
+};
+
+enum MaterialVarFlags_t_csgo
+{
+	MATERIAL_VAR_DEBUG					  = (1 << 0),
+	MATERIAL_VAR_NO_DEBUG_OVERRIDE		  = (1 << 1),
+	MATERIAL_VAR_NO_DRAW				  = (1 << 2),
+	MATERIAL_VAR_USE_IN_FILLRATE_MODE	  = (1 << 3),
+
+	MATERIAL_VAR_VERTEXCOLOR			  = (1 << 4),
+	MATERIAL_VAR_VERTEXALPHA			  = (1 << 5),
+	MATERIAL_VAR_SELFILLUM				  = (1 << 6),
+	MATERIAL_VAR_ADDITIVE				  = (1 << 7),
+	MATERIAL_VAR_ALPHATEST				  = (1 << 8),
+//	MATERIAL_VAR_UNUSED					  = (1 << 9),
+	MATERIAL_VAR_ZNEARER				  = (1 << 10),
+	MATERIAL_VAR_MODEL					  = (1 << 11),
+	MATERIAL_VAR_FLAT					  = (1 << 12),
+	MATERIAL_VAR_NOCULL					  = (1 << 13),
+	MATERIAL_VAR_NOFOG					  = (1 << 14),
+	MATERIAL_VAR_IGNOREZ				  = (1 << 15),
+	MATERIAL_VAR_DECAL					  = (1 << 16),
+	MATERIAL_VAR_ENVMAPSPHERE			  = (1 << 17), // OBSOLETE
+//	MATERIAL_VAR_UNUSED					  = (1 << 18),
+	MATERIAL_VAR_ENVMAPCAMERASPACE	      = (1 << 19), // OBSOLETE
+	MATERIAL_VAR_BASEALPHAENVMAPMASK	  = (1 << 20),
+	MATERIAL_VAR_TRANSLUCENT              = (1 << 21),
+	MATERIAL_VAR_NORMALMAPALPHAENVMAPMASK = (1 << 22),
+	MATERIAL_VAR_NEEDS_SOFTWARE_SKINNING  = (1 << 23), // OBSOLETE
+	MATERIAL_VAR_OPAQUETEXTURE			  = (1 << 24),
+	MATERIAL_VAR_ENVMAPMODE				  = (1 << 25), // OBSOLETE
+	MATERIAL_VAR_SUPPRESS_DECALS		  = (1 << 26),
+	MATERIAL_VAR_HALFLAMBERT			  = (1 << 27),
+	MATERIAL_VAR_WIREFRAME                = (1 << 28),
+	MATERIAL_VAR_ALLOWALPHATOCOVERAGE     = (1 << 29),
+	MATERIAL_VAR_ALPHA_MODIFIED_BY_PROXY  = (1 << 30),
+	MATERIAL_VAR_VERTEXFOG				  = (1 << 31),
+
+	// NOTE: Only add flags here that either should be read from
+	// .vmts or can be set directly from client code. Other, internal
+	// flags should to into the flag enum in IMaterialInternal.h
+};
+
+enum MaterialVarType_t_csgo 
+{ 
+	MATERIAL_VAR_TYPE_FLOAT = 0,
+	MATERIAL_VAR_TYPE_STRING,
+	MATERIAL_VAR_TYPE_VECTOR,
+	MATERIAL_VAR_TYPE_TEXTURE,
+	MATERIAL_VAR_TYPE_INT,
+	MATERIAL_VAR_TYPE_FOURCC,
+	MATERIAL_VAR_TYPE_UNDEFINED,
+	MATERIAL_VAR_TYPE_MATRIX,
+	MATERIAL_VAR_TYPE_MATERIAL,
+};
+
 class IMaterialVar_csgo
 {
+protected:
+	// base data and accessors
+	char* m_pStringVal;
+	int m_intVal;
+	Vector4D_csgo m_VecVal;
+
+	// member data. total = 4 bytes
+	uint8 m_Type : 4;
+
+	//
+	// more we don't carea about atm.
+
 public:
-	virtual void _UNKOWN_000(void) = 0;
+	//
+	// Virtuals:
+
+	// 000:
+	virtual ITexture_csgo *GetTextureValue( void ) = 0;
+
 	virtual void _UNKOWN_001(void) = 0;
-	virtual void _UNKOWN_002(void) = 0;
-	virtual void _UNKOWN_003(void) = 0;
-	virtual void _UNKOWN_004(void) = 0;
-	virtual void _UNKOWN_005(void) = 0;
-	virtual void _UNKOWN_006(void) = 0;
-	virtual void _UNKOWN_007(void) = 0;
+
+	// 002:
+	virtual char const *	GetName( void ) const = 0;
+
+	// 003:
+	virtual MaterialVarSym_t_csgo	GetNameAsSymbol() const = 0;
+
+	// 004:
+	virtual void			SetFloatValue( float val ) = 0;
+	
+	// 005:
+	virtual void			SetIntValue( int val ) = 0;
+	
+	// 006:
+	virtual void			SetStringValue( char const *val ) = 0;
+
+	// 007:
+	virtual char const *	GetStringValue( void ) const = 0;
+
 	virtual void _UNKOWN_008(void) = 0;
 	virtual void _UNKOWN_009(void) = 0;
 	virtual void _UNKOWN_010(void) = 0;
@@ -3900,19 +4016,144 @@ public:
 	virtual void _UNKOWN_013(void) = 0;
 	virtual void _UNKOWN_014(void) = 0;
 	virtual void _UNKOWN_015(void) = 0;
-	virtual void _UNKOWN_016(void) = 0; 
-	virtual void _UNKOWN_017(void) = 0; 
-	virtual void _UNKOWN_018(void) = 0;
-	virtual void _UNKOWN_019(void) = 0;
+
+	// 016:
+	virtual IMaterial_csgo * GetMaterialValue( void ) = 0;
+	
+	// 017:
+	virtual void SetMaterialValue( IMaterial_csgo * ) = 0;
+
+	// 018:
+	virtual bool IsDefined() const = 0;
+
+	// 019:
+	virtual void SetUndefined() = 0;
+
 	virtual void _UNKOWN_020(void) = 0;
 	virtual void _UNKOWN_021(void) = 0;
 	virtual void _UNKOWN_022(void) = 0;
 	virtual void _UNKOWN_023(void) = 0;
 	virtual void _UNKOWN_024(void) = 0;
 	
-	// 024:
+	// 025:
 	virtual IMaterial_csgo * GetOwningMaterial() = 0;
+
+	virtual void _UNKOWN_026(void) = 0; // SetVecComponentValue
+
+protected:
+
+	// 027:
+	virtual int				GetIntValueInternal( void ) const = 0;
+
+	// 028:
+	virtual float			GetFloatValueInternal( void ) const = 0;
+
+	// 030:
+	virtual float const*	GetVecValueInternal( ) const = 0;
+
+	// 029:
+	virtual void			GetVecValueInternal( float *val, int numcomps ) const = 0;
+
+	// 030:
+	virtual int				VectorSizeInternal() const = 0;
 
 	//
 	// more we don't carea about atm.
+
+public:
+	FORCEINLINE MaterialVarType_t_csgo GetType( void ) const
+	{
+		return ( MaterialVarType_t_csgo )m_Type;
+	}
+
+	FORCEINLINE bool IsTexture() const
+	{
+		return m_Type == MATERIAL_VAR_TYPE_TEXTURE;
+	}
+
+#ifndef FAST_MATERIALVAR_ACCESS
+	FORCEINLINE int GetIntValue( void ) const
+	{
+		return GetIntValueInternal();
+	}
+
+	FORCEINLINE float GetFloatValue( void ) const
+	{
+		return GetFloatValueInternal();
+	}
+
+	FORCEINLINE float const* GetVecValue( ) const
+	{
+		return GetVecValueInternal();
+	}
+
+	FORCEINLINE void GetVecValue( float *val, int numcomps ) const 
+	{
+		return GetVecValueInternal( val, numcomps );
+	}
+
+	FORCEINLINE int VectorSize() const
+	{
+		return VectorSizeInternal();
+	}
+#endif
+
+};
+
+// CBasePerMaterialContextData_csgo ////////////////////////////////////////////
+
+class CBasePerMaterialContextData_csgo								
+{
+public:
+	uint32 m_nVarChangeID;
+	bool m_bMaterialVarsChanged;							// set by mat system when material vars change. shader should rehtink and then clear the var
+
+	FORCEINLINE CBasePerMaterialContextData_csgo( void )
+	{
+		m_bMaterialVarsChanged = true;
+		m_nVarChangeID = 0xffffffff;
+	}
+
+	// virtual destructor so that derived classes can have their own data to be cleaned up on
+	// delete of material
+	virtual ~CBasePerMaterialContextData_csgo( void )
+	{
+	}
+};
+
+// CommandBufferCommand_t_csgo /////////////////////////////////////////////////
+
+enum CommandBufferCommand_t_csgo
+{
+	// flow control commands.
+	CBCMD_END = 0,									// end of stream
+	CBCMD_JUMP,										// int cmd, void *adr. jump to another
+													// stream. Can be used to implement
+													// non-sequentially allocated storage
+	CBCMD_JSR,										// int cmd, void *adr. subroutine call to another stream.
+
+	// constant setting commands
+	CBCMD_SET_PIXEL_SHADER_FLOAT_CONST,				// int cmd,int first_reg, int nregs, float values[nregs*4]
+
+
+	CBCMD_SET_VERTEX_SHADER_FLOAT_CONST,			// int cmd,int first_reg, int nregs, float values[nregs*4]
+	CBCMD_SET_VERTEX_SHADER_FLOAT_CONST_REF,		// int cmd,int first_reg, int nregs, &float values[nregs*4]
+	CBCMD_SETPIXELSHADERFOGPARAMS,					// int cmd, int regdest
+	CBCMD_STORE_EYE_POS_IN_PSCONST,					// int cmd, int regdest
+	CBCMD_SET_DEPTH_FEATHERING_CONST,				// int cmd, int constant register, float blend scale
+
+	// texture binding
+	CBCMD_BIND_STANDARD_TEXTURE,					// cmd, sampler, texture id
+	CBCMD_BIND_SHADERAPI_TEXTURE_HANDLE,			// cmd, sampler, texture handle
+
+	// shaders
+	CBCMD_SET_PSHINDEX,								// cmd, idx
+	CBCMD_SET_VSHINDEX,								// cmd, idx
+
+	CBCMD_SET_VERTEX_SHADER_FLASHLIGHT_STATE,		// cmd, int first_reg (for worldToTexture matrix)
+	CBCMD_SET_PIXEL_SHADER_FLASHLIGHT_STATE,		// cmd, int color reg, int atten reg, int origin reg, sampler (for flashlight texture)
+
+	CBCMD_SET_PIXEL_SHADER_UBERLIGHT_STATE,			// cmd
+
+	CBCMD_SET_VERTEX_SHADER_NEARZFARZ_STATE,		// cmd
 };

@@ -27,8 +27,8 @@ AFXADDR_DEF(csgo_CSkyboxView_Draw)
 AFXADDR_DEF(csgo_CSkyboxView_Draw_DSZ)
 AFXADDR_DEF(csgo_CViewRender_Render)
 AFXADDR_DEF(csgo_CViewRender_Render_DSZ)
-AFXADDR_DEF(csgo_DepthWrite_CShader_OnDrawElements)
-AFXADDR_DEF(csgo_DepthWrite_CShader_OnDrawElements_DSZ)
+//AFXADDR_DEF(csgo_VertexLitGeneric_CShader_OnDrawElements)
+//AFXADDR_DEF(csgo_VertexLitGeneric_CShader_OnDrawElements_DSZ)
 AFXADDR_DEF(csgo_S_StartSound_StringConversion)
 AFXADDR_DEF(csgo_Scaleformui_CUnkown_Loader)
 AFXADDR_DEF(csgo_Scaleformui_CUnkown_Loader_DSZ)
@@ -745,6 +745,7 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 	AFXADDR_SET(cstrike_gpGlobals_OFS_interval_per_tick, 7*4);
 }
 
+/*
 void Addresses_InitStdshader_dx9Dll(AfxAddr stdshader_dx9Dll, bool isCsgo)
 {
 	if(isCsgo)
@@ -764,7 +765,7 @@ void Addresses_InitStdshader_dx9Dll(AfxAddr stdshader_dx9Dll, bool isCsgo)
 						sections.Next(); // skip first .data
 						if(!sections.Eof())
 						{
-							MemRange result = FindCString(sections.GetMemRange(), ".?AVCShader@DepthWrite@@");
+							MemRange result = FindCString(sections.GetMemRange(), ".?AVCShader@VertexLitGeneric@@");
 							if(!result.IsEmpty())
 							{
 								DWORD tmpAddr = result.Start;
@@ -817,18 +818,19 @@ void Addresses_InitStdshader_dx9Dll(AfxAddr stdshader_dx9Dll, bool isCsgo)
 			}
 			if(addr)
 			{
-				AFXADDR_SET(csgo_DepthWrite_CShader_OnDrawElements, addr);
+				AFXADDR_SET(csgo_VertexLitGeneric_CShader_OnDrawElements, addr);
 			}
 			else
 			{
-				AFXADDR_SET(csgo_DepthWrite_CShader_OnDrawElements, 0x0);
+				AFXADDR_SET(csgo_VertexLitGeneric_CShader_OnDrawElements, 0x0);
 			}
 		}
 	}
 	else
 	{
-		AFXADDR_SET(csgo_DepthWrite_CShader_OnDrawElements, 0x0);
+		AFXADDR_SET(csgo_VertexLitGeneric_CShader_OnDrawElements, 0x0);
 	}
 
-	AFXADDR_SET(csgo_DepthWrite_CShader_OnDrawElements_DSZ, 0x9);
+	AFXADDR_SET(csgo_VertexLitGeneric_CShader_OnDrawElements_DSZ, 0xC);
 }
+*/

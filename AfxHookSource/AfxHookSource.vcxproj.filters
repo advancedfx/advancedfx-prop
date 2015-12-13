@@ -117,12 +117,6 @@
     <ClCompile Include="AfxShaders.cpp">
       <Filter>AfxHookSource</Filter>
     </ClCompile>
-    <ClCompile Include="csgo_Stdshader_dx9_Hooks.cpp">
-      <Filter>AfxHookSource</Filter>
-    </ClCompile>
-    <ClCompile Include="csgo_ShaderApi_Hooks.cpp">
-      <Filter>AfxHookSource</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -234,12 +228,6 @@
       <Filter>AfxHookSource</Filter>
     </ClInclude>
     <ClInclude Include="AfxShaders.h">
-      <Filter>AfxHookSource</Filter>
-    </ClInclude>
-    <ClInclude Include="csgo_Stdshader_dx9_Hooks.h">
-      <Filter>AfxHookSource</Filter>
-    </ClInclude>
-    <ClInclude Include="csgo_ShaderApi_Hooks.h">
       <Filter>AfxHookSource</Filter>
     </ClInclude>
     <ClInclude Include="asmClassTools.h">
