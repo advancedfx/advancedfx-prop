@@ -589,7 +589,7 @@ private:
 
 		static int GetCombo(AFXALPHATEST afxAlphaTest, AFXMODE afxMode, AFXSHADERTYPE afxShaderType);
 
-		CActionAfxVertexLitGenericHook(CAfxBaseFxStream * parentStream, int combo);
+		CActionAfxVertexLitGenericHook(CAfxBaseFxStream * parentStream, IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem, int combo);
 
 		virtual ~CActionAfxVertexLitGenericHook();
 
@@ -599,6 +599,7 @@ private:
 
 	private:
 		IAfxPixelShader * m_AfxPixelShader;
+		//CAfxMaterial m_Material;
 	};
 
 	class CActionDepth

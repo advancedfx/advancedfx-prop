@@ -27,7 +27,7 @@ sampler BaseTextureSampler	: register( s0 );
 #elif 1 == AFXSHADERTYPE
 	#define i_DepthComponent projPos_fWrinkleWeight.z
 #elif 2 == AFXSHADERTYPE
-	#define i_DepthComponent worldPos_projPosZ.z
+	#define i_DepthComponent worldPos_projPosZ.w
 #endif
 
 struct PS_INPUT
@@ -60,7 +60,19 @@ float4 main( PS_INPUT i ) : COLOR
 #elif 1 == AFXMODE
 	float dist = (i.i_DepthComponent -g_cClipPlaneSubtractValue) * g_cClipPlaneMulValue;
 	dist = saturate(dist);
-	return float4( 1.0  > dist ? frac(dist*65536) : 1.0, 1.0  > dist ? frac(dist*256) : 1.0, dist, 1.0 );
+	float3 color;
+	if(1.0 <= dist)
+		color = float3(1.0f, 1.0f, 1.0f);
+	else
+	{
+		color = float3(63536, 256, 1);
+		color *= dist;
+		color = frac(color);
+		color *= 256;
+		color = floor(color);
+		color /= 256;
+	}
+	return float4(color, 1.0);
 #elif 2 == AFXMODE
 	return float4( 0, 1, 0, returnAlpha );
 #elif 3 == AFXMODE

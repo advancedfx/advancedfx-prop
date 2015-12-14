@@ -653,7 +653,7 @@ void CAfxBaseFxStream::StreamAttach(IAfxStreams4Stream * streams)
 
 		for(int i=0; i<CActionAfxVertexLitGenericHook_NUMCOMBOS; ++i)
 		{
-			m_AfxVertexLitGenericHookActions[i] = new CActionAfxVertexLitGenericHook(this, i);
+			m_AfxVertexLitGenericHookActions[i] = new CActionAfxVertexLitGenericHook(this, streams->GetFreeMaster(), streams->GetMaterialSystem(), i);
 		}
 
 		m_ActionsInitialized = true;
@@ -713,14 +713,17 @@ void CAfxBaseFxStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * materia
 
 		if(isErrorMaterial)
 		{
-			if(m_DebugPrint) Tier0_Msg("testAction");
 			m_CurrentAction = GetAction(m_ErrorMaterialAction);
 		}
 		else
-		if(m_TestAction && !strcmp("VertexLitGeneric", shaderName))// && !strcmp("StaticProp textures", groupName) && !strcmp("models/props_foliage/mall_trees_branches02", name))
+		if(m_TestAction && !strcmp("VertexLitGeneric", shaderName))// && !strcmp("StaticProp textures", groupName) && !strcmp("models/props_vehicles/hmmwv_glass", name))
 		{
 			int numVars = material->ShaderParamCount();
 			IMaterialVar_csgo ** orgParams = material->GetShaderParams();
+
+			int flags = orgParams[FLAGS]->GetIntValue();
+			bool isAlphatest = flags & MATERIAL_VAR_ALPHATEST;
+			bool isTranslucent = flags & MATERIAL_VAR_TRANSLUCENT;
 
 			bool isPhong = false;
 			bool isBump = false;
@@ -733,25 +736,32 @@ void CAfxBaseFxStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * materia
 				for(int i=0; i<numVars; ++i)
 				{
 					//Tier0_Msg("Param: %s -> %s (%s,isTexture: %s)\n",params[0]->GetName(), params[0]->GetStringValue(), params[0]->IsDefined() ? "defined" : "UNDEFINED", params[0]->IsTexture() ? "Y" : "N");
-					
-					if(params[0]->IsDefined() && !strcmp(params[0]->GetName(),"$bumpmap") && params[0]->IsTexture())
+
+					if(params[0]->IsDefined())
 					{
-						isBump = true;
+						char const * varName = params[0]->GetName();
+
+						if(!strcmp(varName,"$bumpmap"))
+						{
+							if(params[0]->IsTexture())
+								isBump = true;
+						}
+						else
+						if(!strcmp(varName,"$phong"))
+						{
+							if(params[0]->GetIntValue())
+								isPhong = true;
+						}
 					}
 
-					if(params[0]->IsDefined() && !strcmp(params[0]->GetName(),"$phong") && params[0]->GetIntValue())
-					{
-						isPhong = true;
-					}
-		
 					++params;
 				}
 			}
 
 			m_CurrentAction = m_AfxVertexLitGenericHookActions[ CActionAfxVertexLitGenericHook::GetCombo(
-				(orgParams[FLAGS]->GetIntValue() & MATERIAL_VAR_ALPHATEST) ? CActionAfxVertexLitGenericHook::AAT_Yes : CActionAfxVertexLitGenericHook::AAT_No,
+				isAlphatest ? CActionAfxVertexLitGenericHook::AAT_Yes : CActionAfxVertexLitGenericHook::AAT_No,
 				CActionAfxVertexLitGenericHook::AM_Depth24,
-				isPhong ? CActionAfxVertexLitGenericHook::AST_Phong : (isBump ? CActionAfxVertexLitGenericHook::AST_Bump : CActionAfxVertexLitGenericHook::AST_Normal)
+				isPhong && !isTranslucent ? CActionAfxVertexLitGenericHook::AST_Phong : (isBump ? CActionAfxVertexLitGenericHook::AST_Bump : CActionAfxVertexLitGenericHook::AST_Normal)
 				) ];
 
 		}
@@ -1324,9 +1334,10 @@ int CAfxBaseFxStream::CActionAfxVertexLitGenericHook::GetCombo(AFXALPHATEST afxA
 	return (int)afxShaderType * 5 * 2 +(int)afxMode * 2 + (int)afxAlphaTest;
 }
 
-CAfxBaseFxStream::CActionAfxVertexLitGenericHook::CActionAfxVertexLitGenericHook(CAfxBaseFxStream * parentStream, int combo)
+CAfxBaseFxStream::CActionAfxVertexLitGenericHook::CActionAfxVertexLitGenericHook(CAfxBaseFxStream * parentStream, IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem, int combo)
 : CAction(parentStream)
 , m_AfxPixelShader(0)
+//, m_Material(freeMaster, matSystem->FindMaterial("afx/test",NULL))
 {
 	std::ostringstream os;
 	os << "afx_VertexLitGeneric_Hook_ps20_0_0_" << combo << ".fxo";
@@ -1381,14 +1392,14 @@ void CAfxBaseFxStream::CActionAfxVertexLitGenericHook::Bind(IAfxMatRenderContext
 
 	// this is slow, but that's the way we do it for now:
 
-	float alphaTestReference = 0.5f;
+	float alphaTestReference = 0.7f;
 
 	int numVars = material->ShaderParamCount();
 	IMaterialVar_csgo **params = material->GetShaderParams();
 
 	for(int i=0; i<numVars; ++i)
 	{
-		if(params[0]->IsDefined() && !strcmp(params[0]->GetName(),"$alphatestreference"))
+		if(params[0]->IsDefined() && !strcmp(params[0]->GetName(),"$alphatestreference") && 0.0 < params[0]->GetFloatValue())
 		{
 			alphaTestReference = params[0]->GetFloatValue();
 			break;
