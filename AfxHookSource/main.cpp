@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2014-04-30 by dominik.matrixstorm.com
+// 2015-12-18 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-09-29 by dominik.matrixstorm.com
@@ -34,6 +34,7 @@
 #include "CampathDrawer.h"
 #include "csgo_ScaleForm_Hooks.h"
 #include "asmClassTools.h"
+#include "csgo_Stdshader_dx9_Hooks.h"
 
 #include <set>
 #include <map>
@@ -1943,6 +1944,8 @@ public:
 
 		if(m_OnLevelShutdown) m_OnLevelShutdown->LevelShutdown(this);
 
+		csgo_Stdshader_dx9_Hooks_OnLevelShutdown();
+
 		m_Parent->LevelShutdown();
 	}
 
@@ -2655,7 +2658,7 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 	static bool bFirstShaderapidx9 = true;
 	static bool bFirstMaterialsystem = true;
 	static bool bFirstScaleformui = true;
-	//static bool bFirstStdshader_dx9 = true;
+	static bool bFirstStdshader_dx9 = true;
 
 	if(!hModule || !lpLibFileName)
 		return;
@@ -2796,7 +2799,6 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 
 		csgo_ScaleFormDll_Hooks_Init();
 	}
-/*
 	else
 	if(bFirstStdshader_dx9 && StringEndsWith( lpLibFileName, "stdshader_dx9.dll"))
 	{
@@ -2809,7 +2811,6 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 
 		csgo_Stdshader_dx9_Hooks_Init();
 	}
-*/
 }
 
 
@@ -2838,7 +2839,7 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 	{ 
 		case DLL_PROCESS_ATTACH:
 		{
-#if 0
+#if 1
 			MessageBox(0,"DLL_PROCESS_ATTACH","MDT_DEBUG",MB_OK);
 #endif
 

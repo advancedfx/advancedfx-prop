@@ -79,3 +79,15 @@
 	__asm mov eax, [ecx +4*ofs] \
 	__asm mov eax, [eax +4*index] \
 	__asm jmp eax
+
+#define JMP_CLASSMEMBERIFACE_OFSEX_FN(classType,classMemberIface,sourceOfsBytes,targetOfsBytes,index) \
+	__asm mov eax, this \
+	__asm sub eax, sourceOfsBytes \
+	__asm mov eax, [eax]classType.classMemberIface \
+	__asm pop ecx \
+	__asm mov esp, ebp \
+	__asm pop ebp \
+	__asm mov ecx, eax \
+	__asm mov eax, [ecx +targetOfsBytes] \
+	__asm mov eax, [eax +4*index] \
+	__asm jmp eax

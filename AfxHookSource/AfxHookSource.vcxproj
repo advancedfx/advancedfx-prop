@@ -97,6 +97,7 @@
     <ClCompile Include="csgo_GetPlayerName.cpp" />
     <ClCompile Include="csgo_ScaleForm_Hooks.cpp" />
     <ClCompile Include="csgo_SndMixTimeScalePatch.cpp" />
+    <ClCompile Include="csgo_Stdshader_dx9_Hooks.cpp" />
     <ClCompile Include="csgo_S_StartSound.cpp" />
     <ClCompile Include="csgo_view.cpp" />
     <ClCompile Include="d3d9Hooks.cpp" />
@@ -138,6 +139,7 @@
     <ClInclude Include="csgo_GetPlayerName.h" />
     <ClInclude Include="csgo_ScaleForm_Hooks.h" />
     <ClInclude Include="csgo_SndMixTimeScalePatch.h" />
+    <ClInclude Include="csgo_Stdshader_dx9_Hooks.h" />
     <ClInclude Include="csgo_S_StartSound.h" />
     <ClInclude Include="csgo_view.h" />
     <ClInclude Include="d3d9Hooks.h" />

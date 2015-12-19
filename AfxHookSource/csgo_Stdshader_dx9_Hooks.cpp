@@ -3,44 +3,212 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-12-13 dominik.matrixstorm.com
+// 2015-12-18 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-12-06 dominik.matrixstorm.com
 
-// WARNING:
+// Please note we handle the following problems and issues here:
 //
-// This code SHOULD NOT BE USED and is only left here for future redesign:
+// - Calls of touring_csgo_VertexLitGeneric_CShader_OnDrawElements can happen on different threads
+// - The CBasePerMaterialContextData used in touring_csgo_VertexLitGeneric_CShader_OnDrawElements
+//   will not last till the final Set...ShaderIndex calls, because it get's
+//   deleted between SHADOW_STATE and DYNAMIC SHADE.
+// - As side note, Valve inits the SHADOW_STATE of materials twice per context
+//   (of course not with the same CBasePerMaterialContextData :|
 //
-// This code was designed for a single threaded apartment (STA), however
-// actually runs in a multi threaded apartment (MTA) and thus is
-// not working properly.
+// The following issues are not handled here:
+// - Calls to g_AfxStreams.OnSet...Shader still go through, since we
+//   need to decide if we are on the View_Render thread, but that
+//   problem has to be addressed in that class instead.
+//   (The streams system is live in mat_queue_mode 0 only, so that
+//   the right calls should happen on that thread.)
+
 
 #include "csgo_Stdshader_dx9_Hooks.h"
 
 #include "SourceInterfaces.h"
 #include "addresses.h"
 #include <shared/detours.h>
-#include "csgo_ShaderApi_Hooks.h"
+#include "asmClassTools.h"
+#include "AfxStreams.h"
 
 #include <string>
 #include <map>
 
-class CAfxBasePerMaterialContextDataPiggyBack_csgo
-: public CBasePerMaterialContextData_csgo
+class CAfxStdShaderHook
 {
 public:
-	int m_StaticVshIndex;
-	int m_StaticPshIndex;
-	std::string m_VertexShaderName;
-	std::string m_PixelShaderName;
+	CAfxStdShaderHook()
+	: m_Lock(0)
+	{
+	}
 
+	void OnSetVertexShader(IMaterial_csgo * owningMaterial, const char* pFileName, int nStaticVshIndex )
+	{
+		Lock();
+
+		std::map<IMaterial_csgo *, Data>::iterator it = m_Map.find(owningMaterial);
+
+		if(it != m_Map.end())
+		{
+			it->second.m_VertexShaderName.assign(pFileName);
+			it->second.m_StaticVshIndex = nStaticVshIndex;
+		}
+		else
+		{
+			owningMaterial->IncrementReferenceCount();
+			m_Map[owningMaterial] = Data(pFileName, nStaticVshIndex, "(invalid)", -1);
+		}
+
+		Unlock();
+	}
+
+	void OnSetPixelShader(IMaterial_csgo * owningMaterial, const char* pFileName, int nStaticPshIndex)
+	{
+		Lock();
+
+		std::map<IMaterial_csgo *, Data>::iterator it = m_Map.find(owningMaterial);
+
+		if(it != m_Map.end())
+		{
+			it->second.m_PixelShaderName.assign(pFileName);
+			it->second.m_StaticPshIndex = nStaticPshIndex;
+		}
+		else
+		{
+			owningMaterial->IncrementReferenceCount();
+			m_Map[owningMaterial] = Data("(invalid)", -1, pFileName, nStaticPshIndex);
+		}
+
+		Unlock();
+	}
+
+	void OnSetVertexShaderIndex(IMaterial_csgo * owningMaterial, int vshIndex)
+	{
+		Lock();
+		
+		std::map<IMaterial_csgo *, Data>::iterator it = m_Map.find(owningMaterial);
+
+		if(it != m_Map.end())
+		{
+			g_AfxStreams.OnSetVertexShader(
+				it->second.m_VertexShaderName.c_str(),
+				it->second.m_StaticVshIndex,
+				vshIndex
+			);
+		}
+		else
+		{
+			// not much point in doing anything here.
+			// Tier0_Warning("AFXERROR: CAfxStdShaderHook::OnSetVertexShaderIndex unkown owningMaterial %s. (Do not panic please, this is somewhat expected!)\n", owningMaterial ? owningMaterial->GetName() : "[unknown]");
+			// We ignore these for now, the error message would help no one.
+			//
+			// The following materials go through here: Pretty much every
+			// material on LevelShutDown is going throug here for no apparent
+			// reason.
+			// Materials that last longer than the level will go through here
+			// too, because we kick them out of the list
+			// on LevelShutDown too, but we are not interested in those anyway.
+		}
+
+		Unlock();
+	}
+
+	void OnSetPixelShaderIndex(IMaterial_csgo * owningMaterial, int pshIndex)
+	{
+		Lock();
+		
+		std::map<IMaterial_csgo *, Data>::iterator it = m_Map.find(owningMaterial);
+
+		if(it != m_Map.end())
+		{
+			g_AfxStreams.OnSetPixelShader(
+				it->second.m_PixelShaderName.c_str(),
+				it->second.m_StaticPshIndex,
+				pshIndex
+			);
+		}
+		else
+		{
+			// not much point in doing anything here.
+			// Tier0_Warning("AFXERROR: CAfxStdShaderHook::OnSetPixelShaderIndex unkown owningMaterial %s. (Do not panic please, this is somewhat expected!)\n", owningMaterial ? owningMaterial->GetName() : "[unknown]");
+			// We ignore these for now, the error message would help no one.
+			//
+			// The following materials go through here: Pretty much every
+			// material on LevelShutDown is going throug here for no apparent
+			// reason.
+			// Materials that last longer than the level will go through here
+			// too, because we kick them out of the list
+			// on LevelShutDown too, but we are not interested in those anyway.
+		}
+
+		Unlock();
+	}
+
+
+	void OnLevelShutDown()
+	{
+		Lock();
+
+		for(std::map<IMaterial_csgo *, Data>::iterator it = m_Map.begin(); it != m_Map.end(); ++it)
+		{
+			it->first->DecrementReferenceCount();
+		}
+		m_Map.clear();
+
+		Unlock();
+	}
+
+private:
+	struct Data
+	{
+		int m_StaticVshIndex;
+		int m_StaticPshIndex;
+		std::string m_VertexShaderName;
+		std::string m_PixelShaderName;
+
+		Data()
+		{
+		}
+
+		Data(char const * vertexShaderName, int staticVshIndex, char const * pixelShaderName, int staticPshIndex)
+		: m_StaticVshIndex(staticVshIndex)
+		, m_StaticPshIndex(staticPshIndex)
+		, m_VertexShaderName(vertexShaderName)
+		, m_PixelShaderName(pixelShaderName)
+		{
+		}
+	};
+
+	LONG m_Lock;
+	std::map<IMaterial_csgo *, Data> m_Map;
+
+	void Lock()
+	{
+		while(0 != InterlockedExchange(&m_Lock, 1))
+		{
+		}
+	}
+
+	void Unlock()
+	{
+		InterlockedExchange(&m_Lock, 0);
+	}
+
+} g_AfxStdShaderHook;
+
+class CAfxBasePerMaterialContextDataPiggyBack_csgo
+: public CBasePerMaterialContextData_csgo
+, public IShaderShadow_csgo
+, public IShaderDynamicAPI_csgo
+{
+public:
 	CAfxBasePerMaterialContextDataPiggyBack_csgo( void )
 	: m_PiggyBack(0)
-	, m_StaticVshIndex(-1)
-	, m_StaticPshIndex(-1)
-	, m_VertexShaderName("(invalid)")
-	, m_PixelShaderName("(invalid)")
+	, m_OwningMaterial(0)
+	, m_ParentShaderShadow(0)
+	, m_ParentShaderDynamicAPI(0)
 	{
 		m_bMaterialVarsChanged = true;
 		m_nVarChangeID = 0xffffffff;
@@ -75,115 +243,623 @@ public:
 		}
 	}
 
-private:
-	CBasePerMaterialContextData_csgo * m_PiggyBack;
-};
-
-
-typedef void (__stdcall *csgo_CShader_OnDrawElements_t)(DWORD *this_ptr, IMaterialVar_csgo **params, IShaderShadow_csgo* pShaderShadow, IShaderDynamicAPI_csgo* pShaderAPI, VertexCompressionType_t_csgo vertexCompression, CBasePerMaterialContextData_csgo **pContextDataPtr);
-
-csgo_CShader_OnDrawElements_t detoured_csgo_VertexLitGeneric_CShader_OnDrawElements;
-
-class CStdshader_dx9_OnDrawElements_Hook
-: public IAfxShaderShadowSetVertexShader
-, public IAfxShaderShadowSetPixelShader
-, public IAfxShaderDynamicAPISetVertexShaderIndex
-, public IAfxShaderDynamicAPISetPixelShaderIndex
-, public IAfxShaderShadowEnableColorWrites
-, public IAfxShaderShadowEnableAlphaWrites
-, public IAfxShaderDynamicAPIExecuteCommandBuffer
-{
-public:
-	CStdshader_dx9_OnDrawElements_Hook()
-	: m_Hook(0)
-	, m_PiggyBack(0)
+	void SetParentApis(	IShaderShadow_csgo * parentShaderShadow, IShaderDynamicAPI_csgo * parentShaderDynamicAPI)
 	{
+		m_ParentShaderShadow = parentShaderShadow;
+		m_ParentShaderDynamicAPI = parentShaderDynamicAPI;
 	}
 
-	void Hook(IOnDrawElements_Hook * hook)
+	void SetOwningMaterial(IMaterial_csgo * owningMaterial)
 	{
-		//Tier0_Msg("CStdshader_dx9_DepthWrite_Hook::Hook(0x%08x);\n", hook);
-		
-		m_Hook = hook;
+		m_OwningMaterial = owningMaterial;
 	}
 
-	void SetPiggyBack(CAfxBasePerMaterialContextDataPiggyBack_csgo * piggyBack)
+#pragma warning(push)
+#pragma warning(disable:4731) // frame pointer register 'ebp' modified by inline assembly code
+
+	//
+	// IShaderShadow_csgo:
+
+	virtual void IShaderShadow_csgo::_UNKOWN_000(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 0) }
+
+	virtual void IShaderShadow_csgo::_UNKOWN_001(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 1) }
+
+	virtual void IShaderShadow_csgo::_UNKOWN_002(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 2) }
+
+	virtual void IShaderShadow_csgo::_UNKOWN_003(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 3) }
+
+	virtual void IShaderShadow_csgo::_UNKOWN_004(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 4) }
+
+	virtual void IShaderShadow_csgo::EnableColorWrites( bool bEnable )
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 5) }
+
+	virtual void IShaderShadow_csgo::EnableAlphaWrites( bool bEnable )
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 6) }
+
+	virtual void IShaderShadow_csgo::_UNKOWN_007(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 7) }
+
+	virtual void IShaderShadow_csgo::_UNKOWN_008(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 8) }
+
+	virtual void IShaderShadow_csgo::_UNKOWN_009(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 9) }
+
+	virtual void IShaderShadow_csgo::_UNKOWN_010(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 10) }
+
+	virtual void IShaderShadow_csgo::_UNKOWN_011(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 11) }
+
+	virtual void IShaderShadow_csgo::_UNKOWN_012(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 12) }
+
+	virtual void IShaderShadow_csgo::_UNKOWN_013(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 13) }
+
+	virtual void IShaderShadow_csgo::_UNKOWN_014(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 14) }
+
+	virtual void IShaderShadow_csgo::_UNKOWN_015(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 15) }
+
+	virtual void IShaderShadow_csgo::_UNKOWN_016(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 16) }
+
+	virtual void IShaderShadow_csgo::SetVertexShader( const char* pFileName, int nStaticVshIndex )
 	{
-		m_PiggyBack = piggyBack;
+		//JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 17)
+
+		//Tier0_Msg("IShaderShadow_csgo::SetVertexShader(%s,%i);\n", pFileName, nStaticVshIndex);
+	
+		g_AfxStdShaderHook.OnSetVertexShader(m_OwningMaterial, pFileName, nStaticVshIndex);
+
+		m_ParentShaderShadow->SetVertexShader(pFileName, nStaticVshIndex);
 	}
 
-	virtual	void SetVertexShader(IAfxShaderShadow * caller, const char* pFileName, int nStaticVshIndex )
+	virtual	void IShaderShadow_csgo::SetPixelShader( const char* pFileName, int nStaticPshIndex = 0 )
 	{
-		//Tier0_Msg("CStdshader_dx9_DepthWrite_Hook::SetVertexShader(...,%s,%i);\n", pFileName, nStaticVshIndex);
+		// JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 18)
 
-		if(m_PiggyBack)
-		{
-			m_PiggyBack->m_VertexShaderName.assign(pFileName);
-			m_PiggyBack->m_StaticVshIndex = nStaticVshIndex;
-		}
+		g_AfxStdShaderHook.OnSetPixelShader(m_OwningMaterial, pFileName, nStaticPshIndex);
+
+		m_ParentShaderShadow->SetPixelShader(pFileName, nStaticPshIndex);
 	}
 
-	virtual	void SetPixelShader(IAfxShaderShadow * caller, const char* pFileName, int nStaticPshIndex = 0 )
+	virtual void IShaderShadow_csgo::EnableSRGBWrite( bool bEnable )
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 19) }
+
+	virtual void IShaderShadow_csgo::_UNKOWN_020(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 20) }
+
+	virtual void IShaderShadow_csgo::_UNKOWN_021(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 21) }
+
+	virtual void IShaderShadow_csgo::_UNKOWN_022(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 22) }
+
+	virtual void IShaderShadow_csgo::_UNKOWN_023(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 23) }
+
+	virtual void IShaderShadow_csgo::_UNKOWN_024(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 24) }
+
+	virtual void IShaderShadow_csgo::_UNKOWN_025(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 25) }
+
+	virtual void IShaderShadow_csgo::_UNKOWN_026(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 26) }
+
+	virtual void IShaderShadow_csgo::_UNKOWN_027(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 27) }
+
+	virtual void IShaderShadow_csgo::_UNKOWN_028(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 28) }
+
+	virtual void IShaderShadow_csgo::_UNKOWN_029(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 29) }
+
+	virtual void IShaderShadow_csgo::_UNKOWN_030(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 30) }
+
+	virtual void IShaderShadow_csgo::_UNKOWN_031(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 31) }
+
+	virtual void IShaderShadow_csgo::_UNKOWN_032(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 32) }
+
+	virtual void IShaderShadow_csgo::_UNKOWN_033(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 33) }
+
+	//
+	// IShaderDynamicAPI_csgo:
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_000(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 0) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_001(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 1) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_002(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 2) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_003(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 3) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_004(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 4) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_005(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 5) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_006(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 6) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_007(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 7) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_008(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 8) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_009(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 9) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_010(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 10) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_011(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 11) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_012(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 12) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_013(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 13) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_014(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 14) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_015(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 15) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_016(void) 
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 16) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_017(void) 
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 17) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_018(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 18) }
+
+	virtual void IShaderDynamicAPI_csgo::SetVertexShaderIndex( int vshIndex = -1 )
 	{
-		//Tier0_Msg("CStdshader_dx9_DepthWrite_Hook::SetPixelShader(...,%s,%i);\n", pFileName, nStaticPshIndex);
-
-		if(m_PiggyBack)
-		{
-			m_PiggyBack->m_PixelShaderName.assign(pFileName);
-			m_PiggyBack->m_StaticPshIndex = nStaticPshIndex;
-		}
-	}
-
-	virtual void SetVertexShaderIndex(IAfxShaderDynamicAPI * caller, int vshIndex = -1 )
-	{
-		//Tier0_Msg("CStdshader_dx9_DepthWrite_Hook::SetVertexShaderIndex(...,%i);\n", vshIndex);
-
+		// JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 19)
+	
 		DoSetVertexShaderIndex(vshIndex);
+
+		m_ParentShaderDynamicAPI->SetVertexShaderIndex(vshIndex);
 	}
 
-	virtual void SetPixelShaderIndex(IAfxShaderDynamicAPI * caller, int pshIndex = 0 )
+	virtual void IShaderDynamicAPI_csgo::SetPixelShaderIndex( int pshIndex = 0 )
 	{
-		//Tier0_Msg("CStdshader_dx9_DepthWrite_Hook::SetPixelShaderIndex(...,%i): m_Hook=0x%08,m_PiggyBack=0x%08;\n", pshIndex, m_Hook, m_PiggyBack);
+		// JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 20)
+		//Tier0_Msg("CAfxShaderDynamicAPI::SetPixelShaderIndex(%i)\n", pshIndex);
 
 		DoSetPixelShaderIndex(pshIndex);
+
+		m_ParentShaderDynamicAPI->SetPixelShaderIndex(pshIndex);
 	}
 
-	virtual bool EnableColorWrites(IAfxShaderShadow * caller,  bool bEnable )
-	{
-		return bEnable;
-	}
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_021(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 21) }
 
-	virtual bool EnableAlphaWrites(IAfxShaderShadow * caller,  bool bEnable )
-	{
-		return bEnable;
-	}
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_022(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 22) }
 
-	virtual void ExecuteCommandBuffer(IAfxShaderDynamicAPI * caller, uint8 *pCmdBuffer )
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_023(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 23) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_024(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 24) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_025(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 25) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_026(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 26) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_027(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 27) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_028(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 28) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_029(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 29) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_030(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 30) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_031(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 31) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_032(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 32) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_033(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 33) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_034(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 34) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_035(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 35) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_036(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 36) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_037(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 37) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_038(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 38) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_039(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 39) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_040(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 40) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_041(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 41) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_042(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 42) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_043(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 43) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_044(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 44) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_045(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 45) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_046(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 46) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_047(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 47) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_048(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 48) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_049(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 49) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_050(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 50) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_051(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 51) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_052(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 52) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_053(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 53) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_054(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 54) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_055(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 55) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_056(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 56) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_057(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 57) }
+
+	virtual void IShaderDynamicAPI_csgo::ExecuteCommandBuffer( uint8 *pCmdBuffer )
 	{
+		// JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 58)
+
 		DoExecuteCommandBuffer(pCmdBuffer);
+
+		m_ParentShaderDynamicAPI->ExecuteCommandBuffer(pCmdBuffer);
 	}
 
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_059(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 59) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_060(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 60) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_061(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 61) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_062(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 62) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_063(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 63) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_064(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 64) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_065(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 65) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_066(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 66) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_067(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 67) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_068(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 68) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_069(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 69) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_070(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 70) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_071(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 71) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_072(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 72) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_073(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 73) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_074(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 74) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_075(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 75) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_076(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 76) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_077(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 77) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_078(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 78) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_079(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 79) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_080(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 80) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_081(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 81) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_082(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 82) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_083(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 83) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_084(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 84) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_085(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 85) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_086(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 86) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_087(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 87) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_088(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 88) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_089(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 89) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_090(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 90) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_091(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 91) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_092(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 92) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_093(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 93) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_094(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 94) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_095(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 95) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_096(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 96) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_097(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 97) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_098(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 98) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_099(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 99) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_100(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 100) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_101(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 101) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_102(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 102) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_103(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 103) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_104(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 104) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_105(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 105) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_106(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 106) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_107(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 107) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_108(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 108) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_109(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 109) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_110(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 110) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_111(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 111) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_112(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 112) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_113(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 113) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_114(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 114) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_115(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 115) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_116(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 116) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_117(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 117) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_118(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 118) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_119(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 119) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_120(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 120) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_121(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 121) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_122(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 122) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_123(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 123) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_124(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 124) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_125(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 125) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_126(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 126) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_127(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 127) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_128(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 128) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_129(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 129) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_130(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 130) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_131(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 131) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_132(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 132) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_133(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 133) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_134(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 134) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_135(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 135) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_136(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 136) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_137(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 137) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_138(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 138) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_139(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 139) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_140(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 140) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_141(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 141) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_142(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 142) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_143(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 143) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_144(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 144) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_145(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 145) }
+
+	virtual void IShaderDynamicAPI_csgo::_UNKOWN_146(void)
+	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 146) }
+
+#pragma warning(pop)
 
 private:
-	IOnDrawElements_Hook * m_Hook;
-	CAfxBasePerMaterialContextDataPiggyBack_csgo * m_PiggyBack;
+	CBasePerMaterialContextData_csgo * m_PiggyBack;
+	IMaterial_csgo * m_OwningMaterial;
+	IShaderShadow_csgo * m_ParentShaderShadow;
+	IShaderDynamicAPI_csgo * m_ParentShaderDynamicAPI;
 
 	void DoSetVertexShaderIndex(int vshIndex = -1 )
 	{
-		if(m_Hook && m_PiggyBack)
-			m_Hook->SetVertexShader( m_PiggyBack->m_VertexShaderName.c_str(), m_PiggyBack->m_StaticVshIndex, vshIndex);
+		g_AfxStdShaderHook.OnSetVertexShaderIndex(m_OwningMaterial, vshIndex);
 	}
 
 	void DoSetPixelShaderIndex(int pshIndex = 0 )
 	{
-		if(m_Hook && m_PiggyBack)
-			m_Hook->SetPixelShader( m_PiggyBack->m_PixelShaderName.c_str(), m_PiggyBack->m_StaticPshIndex, pshIndex);
+		g_AfxStdShaderHook.OnSetPixelShaderIndex(m_OwningMaterial, pshIndex);
 	}
-
 
 	void DoExecuteCommandBuffer(uint8 *pCmdBuffer)
 	{
-		if(!(m_Hook && m_PiggyBack && pCmdBuffer))
+		if(!pCmdBuffer)
 			// In that case we can't do anything useful anyway.
 			return;
 
@@ -327,26 +1003,36 @@ private:
 			}
 		}
 	}
+};
 
-} g_Stdshader_dx9_Hook;
 
+typedef void (__stdcall *csgo_CShader_OnDrawElements_t)(DWORD *this_ptr, IMaterialVar_csgo **params, IShaderShadow_csgo* pShaderShadow, IShaderDynamicAPI_csgo* pShaderAPI, VertexCompressionType_t_csgo vertexCompression, CBasePerMaterialContextData_csgo **pContextDataPtr);
+
+csgo_CShader_OnDrawElements_t detoured_csgo_VertexLitGeneric_CShader_OnDrawElements;
+
+// Keep in mind this function can run on multiple threads simultaneously!
+//
 void __stdcall touring_csgo_VertexLitGeneric_CShader_OnDrawElements(DWORD *this_ptr, IMaterialVar_csgo **params, IShaderShadow_csgo* pShaderShadow, IShaderDynamicAPI_csgo* pShaderAPI, VertexCompressionType_t_csgo vertexCompression, CBasePerMaterialContextData_csgo **pContextDataPtr)
 {
-	//Tier0_Msg("touring_csgo_VertexLitGeneric_CShader_OnDrawElements(0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x):%s (0x%08x)\n",this_ptr, params, pShaderShadow, pShaderAPI, vertexCompression, pContextDataPtr, params[0]->GetOwningMaterial()->GetName(), params[0]->GetOwningMaterial());
+	//Tier0_Msg("touring_csgo_VertexLitGeneric_CShader_OnDrawElements(0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x):%s (0x%08x) threadId=%i\n",this_ptr, params, pShaderShadow, pShaderAPI, vertexCompression, *pContextDataPtr, params[0]->GetOwningMaterial()->GetName(), params[0]->GetOwningMaterial(), GetCurrentThreadId());
 
 	CAfxBasePerMaterialContextDataPiggyBack_csgo * pContextData = reinterpret_cast< CAfxBasePerMaterialContextDataPiggyBack_csgo *> ( *pContextDataPtr );
 
-	if(!pContextData) pContextData = new CAfxBasePerMaterialContextDataPiggyBack_csgo();
-
-	g_Stdshader_dx9_Hook.SetPiggyBack(pContextData);
+	if(!pContextData)
+	{
+		pContextData = new CAfxBasePerMaterialContextDataPiggyBack_csgo();
+	}
 
 	CBasePerMaterialContextData_csgo * payLoad = pContextData->PreUpdatePiggy();
+
+	pContextData->SetParentApis(pShaderShadow, pShaderAPI);
+	pContextData->SetOwningMaterial(params[0]->GetOwningMaterial());
 
 	detoured_csgo_VertexLitGeneric_CShader_OnDrawElements(
 		this_ptr,
 		params,
-		Wrap_IShaderShadow_csgo(pShaderShadow, &g_Stdshader_dx9_Hook, &g_Stdshader_dx9_Hook, &g_Stdshader_dx9_Hook, &g_Stdshader_dx9_Hook),
-		Wrap_IShaderDynamicAPI_csgo(pShaderAPI, &g_Stdshader_dx9_Hook, &g_Stdshader_dx9_Hook, &g_Stdshader_dx9_Hook),
+		pShaderShadow ? pContextData : 0,
+		pShaderAPI ? pContextData : 0,
 		vertexCompression,
 		&payLoad
 	);
@@ -354,11 +1040,6 @@ void __stdcall touring_csgo_VertexLitGeneric_CShader_OnDrawElements(DWORD *this_
 	pContextData->PostUpdatePiggy(payLoad);
 
 	*pContextDataPtr = pContextData;
-}
-
-void csgo_StdShader_OnDrawElements_Hook(IOnDrawElements_Hook * hook)
-{
-	g_Stdshader_dx9_Hook.Hook(hook);
 }
 
 bool csgo_Stdshader_dx9_Hooks_Init(void)
@@ -376,4 +1057,9 @@ bool csgo_Stdshader_dx9_Hooks_Init(void)
 	}
 
 	return firstResult;
+}
+
+void csgo_Stdshader_dx9_Hooks_OnLevelShutdown(void)
+{
+	g_AfxStdShaderHook.OnLevelShutDown();
 }

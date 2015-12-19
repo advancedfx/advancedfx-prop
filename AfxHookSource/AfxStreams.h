@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-10-11 dominik.matrixstorm.com
+// 2015-12-18 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -1010,6 +1010,12 @@ public:
 	void OnDraw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists);
 	void OnDrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 );
 
+	/// <remarks>This function can be called from several threads simutaneously.</remarks>
+	void OnSetVertexShader(const char* pFileName, int nStaticVshIndex, int vshIndex = -1);
+
+	/// <remarks>This function can be called from several threads simutaneously.</remarks>
+	void OnSetPixelShader(const char* pFileName, int nStaticPshIndex = 0, int pshIndex = 0);
+
 	virtual void SetBlend(IAfxVRenderView * rv, float blend );
 	virtual void SetColorModulation(IAfxVRenderView * rv, float const* blend );
 
@@ -1158,6 +1164,11 @@ private:
 	//ITexture_csgo * m_RenderTargetDummy;
 	//ITexture_csgo * m_RenderTargetDepth;
 	//CAfxMaterial * m_ShowzMaterial;
+	DWORD m_Current_View_Render_ThreadId;
+
+	void SetCurrent_View_Render_ThreadId(DWORD id);
+
+	DWORD GetCurrent_View_Render_ThreadId();
 
 	void OnAfxBaseClientDll_Free(void);
 

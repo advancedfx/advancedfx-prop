@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-10-11 dominik.matrixstorm.com
+// 2015-12-18 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -722,8 +722,8 @@ void CAfxBaseFxStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * materia
 			IMaterialVar_csgo ** orgParams = material->GetShaderParams();
 
 			int flags = orgParams[FLAGS]->GetIntValue();
-			bool isAlphatest = flags & MATERIAL_VAR_ALPHATEST;
-			bool isTranslucent = flags & MATERIAL_VAR_TRANSLUCENT;
+			bool isAlphatest = 0 != (flags & MATERIAL_VAR_ALPHATEST);
+			bool isTranslucent = 0 != (flags & MATERIAL_VAR_TRANSLUCENT);
 
 			bool isPhong = false;
 			bool isBump = false;
@@ -1439,6 +1439,7 @@ CAfxStreams::CAfxStreams()
 , m_ColorModulationOverride(false)
 , m_BlendOverride(false)
 , m_FormatBmpAndNotTga(false)
+, m_Current_View_Render_ThreadId(0)
 //, m_RgbaRenderTarget(0)
 //, m_RenderTargetDummy(0)
 //, m_RenderTargetDepth(0)
@@ -1482,6 +1483,17 @@ void CAfxStreams::OnAfxVRenderView(IAfxVRenderView * value)
 	if(m_VRenderView) m_VRenderView->OnSetBlend_set(this);
 	if(m_VRenderView) m_VRenderView->OnSetColorModulation_set(this);
 }
+
+void CAfxStreams::SetCurrent_View_Render_ThreadId(DWORD id)
+{
+	InterlockedExchange(&m_Current_View_Render_ThreadId, id);
+}
+
+DWORD CAfxStreams::GetCurrent_View_Render_ThreadId()
+{
+	return InterlockedCompareExchange(&m_Current_View_Render_ThreadId, -1, -1);
+}
+
 
 void CAfxStreams::OnAfxBaseClientDll(IAfxBaseClientDll * value)
 {
@@ -1550,6 +1562,28 @@ void CAfxStreams::OnDrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuse
 		m_OnDrawModulated->DrawModulated(am, vecDiffuseModulation, firstIndex, numIndices);
 	else
 		am->GetParent()->DrawModulated(vecDiffuseModulation, firstIndex, numIndices);
+}
+
+void CAfxStreams::OnSetVertexShader(const char* pFileName, int nStaticVshIndex, int vshIndex)
+{
+	if(!(m_Recording || m_PreviewStream) || GetCurrent_View_Render_ThreadId() != GetCurrentThreadId())
+		// If streams system is live, then the thread should be the View_Render thread,
+		// because we run in mat_queue_mode 0,
+		// so we quit if it's from a different thread.
+		return;
+	
+	Tier0_Msg("CAfxStreams::OnSetVertexShader(%s,%i,%i);\n", pFileName, nStaticVshIndex, vshIndex);
+}
+
+void CAfxStreams::OnSetPixelShader(const char* pFileName, int nStaticPshIndex, int pshIndex)
+{
+	if(!(m_Recording || m_PreviewStream) || GetCurrent_View_Render_ThreadId() != GetCurrentThreadId())
+		// If streams system is live, then the thread should be the View_Render thread,
+		// because we run in mat_queue_mode 0,
+		// so we quit if it's from a different thread.
+		return;
+
+	Tier0_Msg("CAfxStreams::OnSetPixelShader(%s,%i,%i);\n", pFileName, nStaticPshIndex, pshIndex);
 }
 
 void CAfxStreams::SetBlend(IAfxVRenderView * rv, float blend )
@@ -2880,6 +2914,7 @@ void CAfxStreams::DebugDump()
 
 void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx, vrect_t_csgo *rect)
 {
+	SetCurrent_View_Render_ThreadId(GetCurrentThreadId());
 	m_CurrentContext = cx;
 
 	bool canFeed = CheckCanFeedStreams();
@@ -3032,6 +3067,7 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 	}
 
 	m_CurrentContext = 0;
+	SetCurrent_View_Render_ThreadId(0);
 }
 
 bool CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuffer & buffer, IAfxMatRenderContext * cx)
