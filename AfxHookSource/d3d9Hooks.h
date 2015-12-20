@@ -11,12 +11,6 @@ extern Direct3DCreate9Ex_t old_Direct3DCreate9Ex;
 IDirect3D9 * WINAPI new_Direct3DCreate9(UINT SDKVersion);
 HRESULT WINAPI new_Direct3DCreate9Ex(UINT SDKVersion, IDirect3D9Ex** ppD3DDevice);
 
-/// <summary>Sets the D3DRS_SRGBWRITEENABLE state on the device.</summary>
-/// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
-/// <param name="enable">Can be TRUE or FALSE usually.</param>
-/// <returns>Previous value</returns>
-DWORD AfxD3D9SRGBWriteEnableFix(DWORD enable);
-
 /// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
 void AfxD3D9SetModulationColorFix(float const color[4]);
 

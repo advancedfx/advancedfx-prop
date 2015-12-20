@@ -256,8 +256,7 @@ public:
 	enum ShaderAction
 	{
 		SA_NotSet,
-		SA_NoChange,
-		SA_GenericDepth
+		SA_NoChange
 	};
 
 	CAfxBaseFxStream();
@@ -277,9 +276,6 @@ public:
 	virtual void Draw(IAfxMesh * am, int firstIndex = -1, int numIndices = 0);
 	virtual void Draw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists);
 	virtual void DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 );
-
-	ShaderAction GenericShaderAction_get(void);
-	void GenericShaderAction_set(ShaderAction value);
 
 	HideableAction ClientEffectTexturesAction_get(void);
 	void ClientEffectTexturesAction_set(HideableAction value);
@@ -301,6 +297,9 @@ public:
 
 	MaskableAction WeaponModelsAction_get(void);
 	void WeaponModelsAction_set(MaskableAction value);
+
+	MaskableAction StattrackAction_get(void);
+	void StattrackAction_set(MaskableAction value);
 
 	MaskableAction ShellModelsAction_get(void);
 	void ShellModelsAction_set(MaskableAction value);
@@ -341,7 +340,6 @@ public:
 	void InvalidateCache(void);
 
 protected:
-	ShaderAction m_GenericShaderAction;
 	HideableAction m_ClientEffectTexturesAction;
 	MaskableAction m_WorldTexturesAction;
 	MaskableAction m_SkyBoxTexturesAction;
@@ -349,6 +347,7 @@ protected:
 	HideableAction m_CableAction;
 	MaskableAction m_PlayerModelsAction;
 	MaskableAction m_WeaponModelsAction;
+	MaskableAction m_StattrackAction;
 	MaskableAction m_ShellModelsAction;
 	MaskableAction m_OtherModelsAction;
 	HideableAction m_DecalTexturesAction;
@@ -548,21 +547,6 @@ private:
 		unsigned long m_OldSrgbWriteEnable;
 	};
 
-	class CActionGenericDepth
-	: public CAction
-	{
-	public:
-		CActionGenericDepth(CAfxBaseFxStream * parentStream);
-
-		virtual ~CActionGenericDepth();
-
-		virtual void AfxUnbind(IAfxMatRenderContext * ctx);
-
-		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 );
-
-	private:
-	};
-
 	class CActionAfxVertexLitGenericHook
 	: public CAction
 	{
@@ -704,7 +688,6 @@ private:
 	};
 
 	CAction * m_CurrentAction;
-	CAction * m_GenericDepthAction;
 	CAction * m_DepthAction;
 	CAction * m_MatteAction;
 	CAction * m_PassthroughAction;
@@ -737,6 +720,7 @@ public:
 		m_CableAction =  HA_NoDraw;
 		m_PlayerModelsAction =  MA_DrawDepth;
 		m_WeaponModelsAction =  MA_DrawDepth;
+		m_StattrackAction = MA_DrawDepth;
 		m_ShellModelsAction =  MA_DrawDepth;
 		m_OtherModelsAction =  MA_DrawDepth;
 		m_DecalTexturesAction =  HA_NoDraw;
@@ -765,6 +749,7 @@ public:
 		m_CableAction =  HA_Draw;
 		m_PlayerModelsAction = MA_Invisible;
 		m_WeaponModelsAction = MA_Invisible;
+		m_StattrackAction = MA_Invisible;
 		m_ShellModelsAction = MA_Invisible;
 		m_OtherModelsAction = MA_Draw;
 		m_DecalTexturesAction = HA_Draw;
@@ -793,6 +778,7 @@ public:
 		m_CableAction =  HA_NoDraw;
 		m_PlayerModelsAction = MA_Invisible;
 		m_WeaponModelsAction = MA_Invisible;
+		m_StattrackAction = MA_Invisible;
 		m_ShellModelsAction = MA_Invisible;
 		m_OtherModelsAction = MA_DrawDepth;
 		m_DecalTexturesAction = HA_NoDraw;
@@ -821,6 +807,7 @@ public:
 		m_CableAction =  HA_NoDraw;
 		m_PlayerModelsAction =  MA_Draw;
 		m_WeaponModelsAction =  MA_Draw;
+		m_StattrackAction = MA_Draw;
 		m_ShellModelsAction =  MA_Draw;
 		m_OtherModelsAction =  MA_Mask;
 		m_DecalTexturesAction =  HA_NoDraw;
@@ -849,6 +836,7 @@ public:
 		m_CableAction =  HA_NoDraw;
 		m_PlayerModelsAction =  MA_DrawDepth;
 		m_WeaponModelsAction =  MA_DrawDepth;
+		m_StattrackAction = MA_DrawDepth;
 		m_ShellModelsAction =  MA_DrawDepth;
 		m_OtherModelsAction =  MA_DrawDepth;
 		m_DecalTexturesAction =  HA_NoDraw;
@@ -877,6 +865,7 @@ public:
 		m_CableAction =  HA_NoDraw;
 		m_PlayerModelsAction =  MA_White;
 		m_WeaponModelsAction =  MA_White;
+		m_StattrackAction = MA_White;
 		m_ShellModelsAction =  MA_White;
 		m_OtherModelsAction =  MA_Black;
 		m_DecalTexturesAction =  HA_NoDraw;
@@ -905,6 +894,7 @@ public:
 		m_CableAction =  HA_Draw;
 		m_PlayerModelsAction =  MA_Draw;
 		m_WeaponModelsAction =  MA_Draw;
+		m_StattrackAction = MA_Draw;
 		m_ShellModelsAction =  MA_Draw;
 		m_OtherModelsAction =  MA_Draw;
 		m_DecalTexturesAction =  HA_Draw;
@@ -934,6 +924,7 @@ public:
 		m_CableAction =  HA_Draw;
 		m_PlayerModelsAction =  MA_Invisible;
 		m_WeaponModelsAction =  MA_Invisible;
+		m_StattrackAction = MA_Invisible;
 		m_ShellModelsAction =  MA_Invisible;
 		m_OtherModelsAction =  MA_Draw;
 		m_DecalTexturesAction =  HA_Draw;
@@ -945,35 +936,6 @@ public:
 	}
 
 	virtual ~CAfxAlphaWorldStream() {}
-
-protected:
-};
-
-class CAfxTestDepthStream
-: public CAfxBaseFxStream
-{
-public:
-	CAfxTestDepthStream() : CAfxBaseFxStream()
-	{
-		m_GenericShaderAction = SA_GenericDepth;
-		m_ClientEffectTexturesAction = HA_NoDraw;
-		m_WorldTexturesAction =  MA_Invisible;
-		m_SkyBoxTexturesAction =  MA_Invisible;
-		m_StaticPropTexturesAction =  MA_Invisible;
-		m_CableAction =  HA_NoDraw;
-		m_PlayerModelsAction =  MA_Invisible;
-		m_WeaponModelsAction =  MA_Invisible;
-		m_ShellModelsAction =  MA_Invisible;
-		m_OtherModelsAction =  MA_Invisible;
-		m_DecalTexturesAction =  HA_NoDraw;
-		m_EffectsAction =  HA_NoDraw;
-		m_ShellParticleAction =  HA_NoDraw;
-		m_OtherParticleAction =  HA_NoDraw;
-		m_StickerAction =  MA_Invisible;
-		m_ErrorMaterialAction = HA_NoDraw;
-	}
-
-	virtual ~CAfxTestDepthStream() {}
 
 protected:
 };

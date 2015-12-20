@@ -571,7 +571,6 @@ void CAfxDeveloperStream::DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecD
 
 CAfxBaseFxStream::CAfxBaseFxStream()
 : CAfxRenderViewStream()
-, m_GenericShaderAction(SA_NoChange)
 , m_ClientEffectTexturesAction(HA_Draw)
 , m_WorldTexturesAction(MA_Draw)
 , m_SkyBoxTexturesAction(MA_Draw)
@@ -579,6 +578,7 @@ CAfxBaseFxStream::CAfxBaseFxStream()
 , m_CableAction(HA_Draw)
 , m_PlayerModelsAction(MA_Draw)
 , m_WeaponModelsAction(MA_Draw)
+, m_StattrackAction(MA_Draw)
 , m_ShellModelsAction(MA_Draw)
 , m_OtherModelsAction(MA_Draw)
 , m_DecalTexturesAction(HA_Draw)
@@ -591,7 +591,6 @@ CAfxBaseFxStream::CAfxBaseFxStream()
 , m_DepthVal(1)
 , m_DepthValMax(1024)
 , m_CurrentAction(0)
-, m_GenericDepthAction(0)
 , m_DepthAction(0)
 , m_MatteAction(0)
 , m_PassthroughAction(0)
@@ -624,7 +623,6 @@ CAfxBaseFxStream::~CAfxBaseFxStream()
 	delete m_InvisibleAction;
 	delete m_MatteAction;
 	delete m_DepthAction;
-	delete m_GenericDepthAction;
 	delete m_PassthroughAction;
 }
 
@@ -642,7 +640,6 @@ void CAfxBaseFxStream::StreamAttach(IAfxStreams4Stream * streams)
 	if(!m_ActionsInitialized)
 	{
 		m_PassthroughAction = new CAction(this);
-		m_GenericDepthAction = new CActionGenericDepth(this);
 		m_DepthAction = new CActionDepth(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
 		m_MatteAction = new CActionMatte(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
 		m_InvisibleAction = new CActionInvisible(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
@@ -766,9 +763,6 @@ void CAfxBaseFxStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * materia
 
 		}
 		else
-		if(m_GenericShaderAction == SA_GenericDepth && (!strcmp("UnlitGeneric", shaderName) || !strcmp("VertexLitGeneric", shaderName)))
-			m_CurrentAction = m_GenericDepthAction;
-		else
 		if(!strcmp("ClientEffect textures", groupName))
 			m_CurrentAction = GetAction(m_ClientEffectTexturesAction);
 		else
@@ -797,7 +791,12 @@ void CAfxBaseFxStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * materia
 				m_CurrentAction = GetAction(m_PlayerModelsAction);
 			else
 			if(StringBeginsWith(name, "models/weapons/"))
-				m_CurrentAction = GetAction(m_WeaponModelsAction);
+			{
+				if(StringBeginsWith(name, "models/weapons/stattrack/"))
+					m_CurrentAction = GetAction(m_StattrackAction);
+				else
+					m_CurrentAction = GetAction(m_WeaponModelsAction);
+			}
 			else
 			if(StringBeginsWith(name, "models/shells/"))
 				m_CurrentAction = GetAction(m_ShellModelsAction);
@@ -895,16 +894,6 @@ void CAfxBaseFxStream::DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiff
 	m_CurrentAction->DrawModulated(am, vecDiffuseModulation, firstIndex, numIndices);
 }
 
-CAfxBaseFxStream::ShaderAction CAfxBaseFxStream::GenericShaderAction_get(void)
-{
-	return m_GenericShaderAction;
-}
-
-void CAfxBaseFxStream::GenericShaderAction_set(ShaderAction value)
-{
-	m_GenericShaderAction = value;
-}
-
 CAfxBaseFxStream::HideableAction CAfxBaseFxStream::ClientEffectTexturesAction_get(void)
 {
 	return m_ClientEffectTexturesAction;
@@ -981,6 +970,17 @@ void CAfxBaseFxStream::WeaponModelsAction_set(MaskableAction value)
 {
 	InvalidateCache();
 	m_WeaponModelsAction = value;
+}
+
+CAfxBaseFxStream::MaskableAction CAfxBaseFxStream::StattrackAction_get(void)
+{
+	return m_StattrackAction;
+}
+
+void CAfxBaseFxStream::StattrackAction_set(MaskableAction value)
+{
+	InvalidateCache();
+	m_StattrackAction = value;
 }
 
 CAfxBaseFxStream::MaskableAction CAfxBaseFxStream::ShellModelsAction_get(void)
@@ -1152,45 +1152,11 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(HideableAction value)
 	return m_PassthroughAction;
 }
 
-// CAfxBaseFxStream::CActionGenericDepth ///////////////////////////////////////
-
-CAfxBaseFxStream::CActionGenericDepth::CActionGenericDepth(CAfxBaseFxStream * parentStream)
-: CAction(parentStream)
-{
-}
-
-CAfxBaseFxStream::CActionGenericDepth::~CActionGenericDepth()
-{
-}
-
-void CAfxBaseFxStream::CActionGenericDepth::AfxUnbind(IAfxMatRenderContext * ctx)
-{
-	AfxD3D9_OverrideEnd_ps_c29_w();
-	AfxD3D9_OverrideEnd_ps_c12_y();
-
-	// alpha -> color
-	// TODO ...
-}
-
-void CAfxBaseFxStream::CActionGenericDepth::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData )
-{
-	ctx->GetParent()->Bind(material, proxyData);
-
-	// initate alpha
-	// TODO ...
-
-	// g_fWriteDepthToAlpha
-	AfxD3D9_OverrideBegin_ps_c12_y(1.0f);
-
-	// OO_DESTALPHA_DEPTH_RANGE (g_LinearFogColor.w)
-	AfxD3D9_OverrideBegin_ps_c29_w(2048.0f);
-}
-
 // CAfxBaseFxStream::CActionMatte //////////////////////////////////////////////
 
 void CAfxBaseFxStream::CActionMatte::AfxUnbind(IAfxMatRenderContext * ctx)
 {
-	AfxD3D9SRGBWriteEnableFix(m_OldSrgbWriteEnable);
+	AfxD3D9OverrideEnd_D3DRS_SRGBWRITEENABLE();
 
 	m_ParentStream->m_Streams->EndOverrideSetColorModulation();
 }
@@ -1202,13 +1168,7 @@ void CAfxBaseFxStream::CActionMatte::Bind(IAfxMatRenderContext * ctx, IMaterial_
 	float color[3] = { 1.0f, 1.0f, 1.0f };
 	m_ParentStream->m_Streams->OverrideSetColorModulation(color);
 
-	// Force SRGBWriteEnable to off (Engine doesn't do this, otherwise it would be random):
-
-	// Force the engines internal state, so it can re-enable it properly:
-	m_ParentStream->m_Streams->GetShaderShadow()->EnableSRGBWrite(false);
-
-	// We still need to force it manually, because the engine somehow doesn't pass it through if it's disabled:
-	m_OldSrgbWriteEnable = AfxD3D9SRGBWriteEnableFix(FALSE);
+	AfxD3D9OverrideBegin_D3DRS_SRGBWRITEENABLE(FALSE);
 }
 
 // CAfxBaseFxStream::CActionBlack //////////////////////////////////////////////
@@ -1216,7 +1176,7 @@ void CAfxBaseFxStream::CActionMatte::Bind(IAfxMatRenderContext * ctx, IMaterial_
 
 void CAfxBaseFxStream::CActionBlack::AfxUnbind(IAfxMatRenderContext * ctx)
 {
-	AfxD3D9SRGBWriteEnableFix(m_OldSrgbWriteEnable);
+	AfxD3D9OverrideEnd_D3DRS_SRGBWRITEENABLE();
 
 	m_ParentStream->m_Streams->EndOverrideSetColorModulation();
 }
@@ -1228,21 +1188,14 @@ void CAfxBaseFxStream::CActionBlack::Bind(IAfxMatRenderContext * ctx, IMaterial_
 	float color[3] = { 0.0f, 0.0f, 0.0f };
 	m_ParentStream->m_Streams->OverrideSetColorModulation(color);
 
-
-	// Force SRGBWriteEnable to off (Engine doesn't do this, otherwise it would be random):
-
-	// Force the engines internal state, so it can re-enable it properly:
-	m_ParentStream->m_Streams->GetShaderShadow()->EnableSRGBWrite(false);
-
-	// We still need to force it manually, because the engine somehow doesn't pass it through if it's disabled:
-	m_OldSrgbWriteEnable = AfxD3D9SRGBWriteEnableFix(FALSE);
+	AfxD3D9OverrideBegin_D3DRS_SRGBWRITEENABLE(FALSE);
 }
 
 // CAfxBaseFxStream::CActionWhite //////////////////////////////////////////////
 
 void CAfxBaseFxStream::CActionWhite::AfxUnbind(IAfxMatRenderContext * ctx)
 {
-	AfxD3D9SRGBWriteEnableFix(m_OldSrgbWriteEnable);
+	AfxD3D9OverrideEnd_D3DRS_SRGBWRITEENABLE();
 
 	m_ParentStream->m_Streams->EndOverrideSetColorModulation();
 }
@@ -1254,13 +1207,7 @@ void CAfxBaseFxStream::CActionWhite::Bind(IAfxMatRenderContext * ctx, IMaterial_
 	float color[3] = { 1.0f, 1.0f, 1.0f };
 	m_ParentStream->m_Streams->OverrideSetColorModulation(color);
 
-	// Force SRGBWriteEnable to off (Engine doesn't do this, otherwise it would be random):
-
-	// Force the engines internal state, so it can re-enable it properly:
-	m_ParentStream->m_Streams->GetShaderShadow()->EnableSRGBWrite(false);
-
-	// We still need to force it manually, because the engine somehow doesn't pass it through if it's disabled:
-	m_OldSrgbWriteEnable = AfxD3D9SRGBWriteEnableFix(FALSE);
+	AfxD3D9OverrideBegin_D3DRS_SRGBWRITEENABLE(FALSE);
 }
 
 // CAfxBaseFxStream::CActionInvisible //////////////////////////////////////////
@@ -1288,7 +1235,7 @@ void CAfxBaseFxStream::CActionInvisible::Bind(IAfxMatRenderContext * ctx, IMater
 
 void CAfxBaseFxStream::CActionDepth::AfxUnbind(IAfxMatRenderContext * ctx)
 {
-	AfxD3D9SRGBWriteEnableFix(m_OldSrgbWriteEnable);
+	AfxD3D9OverrideEnd_D3DRS_SRGBWRITEENABLE();
 }
 
 void CAfxBaseFxStream::CActionDepth::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData)
@@ -1318,13 +1265,7 @@ void CAfxBaseFxStream::CActionDepth::Bind(IAfxMatRenderContext * ctx, IMaterial_
 	//float vecZFactor[4] = { (flDepthFactorMax - flDepthFactor), flDepthFactor, 1 ,1};
 	//AfxD3D9SetVertexShaderConstantF(48, vecZFactor, 1);
 
-	// Force SRGBWriteEnable to off (Engine doesn't do this, otherwise it would be random):
-
-	// Force the engines internal state, so it can re-enable it properly:
-	m_ParentStream->m_Streams->GetShaderShadow()->EnableSRGBWrite(false);
-
-	// We still need to force it manually, because the engine somehow doesn't pass it through if it's disabled:
-	m_OldSrgbWriteEnable = AfxD3D9SRGBWriteEnableFix(FALSE);
+	AfxD3D9OverrideBegin_D3DRS_SRGBWRITEENABLE(FALSE);
 }
 
 // CAfxBaseFxStream::CActionAfxDepthTest ///////////////////////////////////////
@@ -1572,7 +1513,7 @@ void CAfxStreams::OnSetVertexShader(const char* pFileName, int nStaticVshIndex, 
 		// so we quit if it's from a different thread.
 		return;
 	
-	Tier0_Msg("CAfxStreams::OnSetVertexShader(%s,%i,%i);\n", pFileName, nStaticVshIndex, vshIndex);
+	//Tier0_Msg("CAfxStreams::OnSetVertexShader(%s,%i,%i);\n", pFileName, nStaticVshIndex, vshIndex);
 }
 
 void CAfxStreams::OnSetPixelShader(const char* pFileName, int nStaticPshIndex, int pshIndex)
@@ -1583,7 +1524,7 @@ void CAfxStreams::OnSetPixelShader(const char* pFileName, int nStaticPshIndex, i
 		// so we quit if it's from a different thread.
 		return;
 
-	Tier0_Msg("CAfxStreams::OnSetPixelShader(%s,%i,%i);\n", pFileName, nStaticPshIndex, pshIndex);
+	//Tier0_Msg("CAfxStreams::OnSetPixelShader(%s,%i,%i);\n", pFileName, nStaticPshIndex, pshIndex);
 }
 
 void CAfxStreams::SetBlend(IAfxVRenderView * rv, float blend )
@@ -2461,6 +2402,29 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				return;
 			}
 			else
+			if(!_stricmp(cmd0, "stattrackAction"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+					CAfxBaseFxStream::MaskableAction value;
+
+					if(Console_ToMaskableAction(cmd1, value))
+					{
+						curBaseFx->StattrackAction_set(value);
+						return;
+					}
+				}
+
+				Tier0_Msg(
+					"%s stattrackAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, Console_FromMaskableAction(curBaseFx->StattrackAction_get())
+				);
+				return;
+			}
+			else
 			if(!_stricmp(cmd0, "shellModelsAction"))
 			{
 				if(2 <= argc)
@@ -2751,6 +2715,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 		Tier0_Msg("%s cableAction [...]\n", cmdPrefix);
 		Tier0_Msg("%s playerModelsAction [...]\n", cmdPrefix);
 		Tier0_Msg("%s weaponModelsAction [...]\n", cmdPrefix);
+		Tier0_Msg("%s stattrackAction [...]\n", cmdPrefix);
 		Tier0_Msg("%s shellModelsAction [...]\n", cmdPrefix);
 		Tier0_Msg("%s otherModelsAction [...]\n", cmdPrefix);
 		Tier0_Msg("%s decalTexturesAction [...]\n", cmdPrefix);

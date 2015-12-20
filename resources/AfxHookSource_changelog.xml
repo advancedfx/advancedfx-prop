@@ -6,6 +6,23 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.7.1</version>
+<time>2015-12-20T16:42Z</time>
+<changes>
+<change type="fixed">
+Fixed and re-added forcing of D3DRS_SRGBWRITEENABLE state for mirv_streams actions that require it (should fix i.e. wrong console colour).
+</change>
+<change type="added">
+Added mirv_streams action stattrackAction for baseFx based streams (which most stream types except normal currently are).
+Allows to fine tune the streams behaviour for the Stattrack weapon module and i.e. allows to make it invisible
+( mirv_streams edit streamNameHere stattrackAction invisible ).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.7.0</version>
 <time>2015-12-10T05:24Z</time>
 <changes>
