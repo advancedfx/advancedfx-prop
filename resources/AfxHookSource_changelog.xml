@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.7.2</version>
+<time>2015-12-21T03:10Z</time>
+<changes>
+<change type="fixed">
+Fixed mirv_streams console warning / error spam about missing afx_* shaders that were not used anyway (unless you had set the hidden testAction to 1).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.7.1</version>
 <time>2015-12-20T16:42Z</time>
 <changes>

@@ -603,19 +603,10 @@ CAfxBaseFxStream::CAfxBaseFxStream()
 , m_BoundAction(false)
 , m_DebugPrint(false)
 {
-	for(int i=0; i<CActionAfxVertexLitGenericHook_NUMCOMBOS; ++i)
-	{
-		m_AfxVertexLitGenericHookActions[i] = 0;
-	}
 }
 
 CAfxBaseFxStream::~CAfxBaseFxStream()
 {
-	for(int i=0; i<CActionAfxVertexLitGenericHook_NUMCOMBOS; ++i)
-	{
-		delete m_AfxVertexLitGenericHookActions[i];
-	}
-
 	delete m_DebugDumpAction;
 	delete m_WhiteAction;
 	delete m_BlackAction;
@@ -647,11 +638,6 @@ void CAfxBaseFxStream::StreamAttach(IAfxStreams4Stream * streams)
 		m_BlackAction = new CActionBlack(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
 		m_WhiteAction = new CActionWhite(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
 		m_DebugDumpAction = new CActionDebugDump(this);
-
-		for(int i=0; i<CActionAfxVertexLitGenericHook_NUMCOMBOS; ++i)
-		{
-			m_AfxVertexLitGenericHookActions[i] = new CActionAfxVertexLitGenericHook(this, streams->GetFreeMaster(), streams->GetMaterialSystem(), i);
-		}
 
 		m_ActionsInitialized = true;
 	}
@@ -755,11 +741,11 @@ void CAfxBaseFxStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * materia
 				}
 			}
 
-			m_CurrentAction = m_AfxVertexLitGenericHookActions[ CActionAfxVertexLitGenericHook::GetCombo(
+			m_CurrentAction = m_PassthroughAction; /* m_AfxVertexLitGenericHookActions[ CActionAfxVertexLitGenericHook::GetCombo(
 				isAlphatest ? CActionAfxVertexLitGenericHook::AAT_Yes : CActionAfxVertexLitGenericHook::AAT_No,
 				CActionAfxVertexLitGenericHook::AM_Depth24,
 				isPhong && !isTranslucent ? CActionAfxVertexLitGenericHook::AST_Phong : (isBump ? CActionAfxVertexLitGenericHook::AST_Bump : CActionAfxVertexLitGenericHook::AST_Normal)
-				) ];
+				) ];*/
 
 		}
 		else

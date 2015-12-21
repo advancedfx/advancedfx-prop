@@ -696,7 +696,6 @@ private:
 	CAction * m_BlackAction;
 	CAction * m_WhiteAction;
 	CAction * m_DebugDumpAction;
-	CAction * m_AfxVertexLitGenericHookActions[CActionAfxVertexLitGenericHook_NUMCOMBOS];
 	bool m_ActionsInitialized;
 	bool m_BoundAction;
 	bool m_DebugPrint;
