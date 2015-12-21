@@ -38,7 +38,6 @@
             this.groupBoxOutput = new System.Windows.Forms.GroupBox();
             this.textBoxOutputPrefix = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
-            this.label5 = new System.Windows.Forms.Label();
             this.buttonOutputFolder = new System.Windows.Forms.Button();
             this.textBoxOutputFolder = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
@@ -62,7 +61,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBoxCompileOptions.Controls.Add(this.comboBoxProfile);
             this.groupBoxCompileOptions.Controls.Add(this.label2);
-            this.groupBoxCompileOptions.Location = new System.Drawing.Point(6, 180);
+            this.groupBoxCompileOptions.Location = new System.Drawing.Point(6, 147);
             this.groupBoxCompileOptions.Name = "groupBoxCompileOptions";
             this.groupBoxCompileOptions.Size = new System.Drawing.Size(572, 53);
             this.groupBoxCompileOptions.TabIndex = 0;
@@ -138,13 +137,12 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBoxOutput.Controls.Add(this.textBoxOutputPrefix);
             this.groupBoxOutput.Controls.Add(this.label6);
-            this.groupBoxOutput.Controls.Add(this.label5);
             this.groupBoxOutput.Controls.Add(this.buttonOutputFolder);
             this.groupBoxOutput.Controls.Add(this.textBoxOutputFolder);
             this.groupBoxOutput.Controls.Add(this.label4);
             this.groupBoxOutput.Location = new System.Drawing.Point(6, 64);
             this.groupBoxOutput.Name = "groupBoxOutput";
-            this.groupBoxOutput.Size = new System.Drawing.Size(572, 110);
+            this.groupBoxOutput.Size = new System.Drawing.Size(572, 77);
             this.groupBoxOutput.TabIndex = 2;
             this.groupBoxOutput.TabStop = false;
             this.groupBoxOutput.Text = " Output ";
@@ -166,18 +164,6 @@
             this.label6.Size = new System.Drawing.Size(33, 13);
             this.label6.TabIndex = 5;
             this.label6.Text = "Prefix";
-            // 
-            // label5
-            // 
-            this.label5.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.label5.Location = new System.Drawing.Point(8, 72);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(558, 27);
-            this.label5.TabIndex = 4;
-            this.label5.Text = "Files will be build in that directory as PREFIX_VALVESTATICCOMBO_VALVEDYNAMICCOMB" +
-    "O_AFXCOMBO.fxo files.";
             // 
             // buttonOutputFolder
             // 
@@ -212,9 +198,9 @@
             // 
             this.buttonCompile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonCompile.Location = new System.Drawing.Point(6, 239);
+            this.buttonCompile.Location = new System.Drawing.Point(6, 206);
             this.buttonCompile.Name = "buttonCompile";
-            this.buttonCompile.Size = new System.Drawing.Size(572, 31);
+            this.buttonCompile.Size = new System.Drawing.Size(572, 64);
             this.buttonCompile.TabIndex = 3;
             this.buttonCompile.Text = "COMPILE";
             this.buttonCompile.UseVisualStyleBackColor = true;
@@ -314,7 +300,6 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox textBoxOutputPrefix;
         private System.Windows.Forms.Label label6;
-        private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Button buttonCompile;
         private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.FolderBrowserDialog folderBrowserDialogOutput;

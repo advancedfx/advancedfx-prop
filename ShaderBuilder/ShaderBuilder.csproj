@@ -51,11 +51,11 @@
   <ItemGroup>
     <Reference Include="SharpDX, Version=2.6.3.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Libraries\ShaprDX\Bin\DirectX11-net40\SharpDX.dll</HintPath>
+      <HintPath>..\..\ShaprDX\Bin\DirectX11-net40\SharpDX.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.D3DCompiler, Version=2.6.3.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Libraries\ShaprDX\Bin\DirectX11-net40\SharpDX.D3DCompiler.dll</HintPath>
+      <HintPath>..\..\ShaprDX\Bin\DirectX11-net40\SharpDX.D3DCompiler.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

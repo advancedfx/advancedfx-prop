@@ -86,6 +86,8 @@ namespace ShaderBuilder
 
         private void buttonCompile_Click(object sender, EventArgs e)
         {
+            statusStrip1.ForeColor = System.Drawing.SystemColors.ControlText;
+            statusStrip1.BackColor = System.Drawing.SystemColors.Control;
             progressBar1.Value = progressBar1.Minimum;
             m_LogForm.Clear();
 
@@ -107,8 +109,13 @@ namespace ShaderBuilder
             {
                 m_LogForm.AddText("Compile failed!");
                 m_LogForm.ShowDialog(this);
+                statusStrip1.ForeColor = Color.White;
+                statusStrip1.BackColor = Color.Maroon;
                 return;
             }
+
+            statusStrip1.ForeColor = Color.White;
+            statusStrip1.BackColor = Color.DarkGreen;
         }
     }
 }
