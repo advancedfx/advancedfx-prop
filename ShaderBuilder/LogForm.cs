@@ -23,7 +23,7 @@ namespace ShaderBuilder
 
         internal void AddText(string text)
         {
-            label1.Text = label1.Text + "\n" + text;
+            label1.Text = label1.Text + text + "\n";
         }
 
         private void buttonToClip_Click(object sender, EventArgs e)

@@ -29,14 +29,8 @@
         private void InitializeComponent()
         {
             this.groupBoxCompileOptions = new System.Windows.Forms.GroupBox();
-            this.label7 = new System.Windows.Forms.Label();
-            this.buttonTemp = new System.Windows.Forms.Button();
-            this.textBoxTemp = new System.Windows.Forms.TextBox();
             this.comboBoxProfile = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();
-            this.buttonFxcExe = new System.Windows.Forms.Button();
-            this.textBoxFxcExe = new System.Windows.Forms.TextBox();
-            this.label1 = new System.Windows.Forms.Label();
             this.groupBoxInput = new System.Windows.Forms.GroupBox();
             this.buttonInputFxc = new System.Windows.Forms.Button();
             this.textBoxInputFxc = new System.Windows.Forms.TextBox();
@@ -54,58 +48,26 @@
             this.openFileDialogFxcExe = new System.Windows.Forms.OpenFileDialog();
             this.openFileDialogInput = new System.Windows.Forms.OpenFileDialog();
             this.folderBrowserDialogTemp = new System.Windows.Forms.FolderBrowserDialog();
+            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+            this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.groupBoxCompileOptions.SuspendLayout();
             this.groupBoxInput.SuspendLayout();
             this.groupBoxOutput.SuspendLayout();
+            this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // groupBoxCompileOptions
             // 
             this.groupBoxCompileOptions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBoxCompileOptions.Controls.Add(this.label7);
-            this.groupBoxCompileOptions.Controls.Add(this.buttonTemp);
-            this.groupBoxCompileOptions.Controls.Add(this.textBoxTemp);
             this.groupBoxCompileOptions.Controls.Add(this.comboBoxProfile);
             this.groupBoxCompileOptions.Controls.Add(this.label2);
-            this.groupBoxCompileOptions.Controls.Add(this.buttonFxcExe);
-            this.groupBoxCompileOptions.Controls.Add(this.textBoxFxcExe);
-            this.groupBoxCompileOptions.Controls.Add(this.label1);
             this.groupBoxCompileOptions.Location = new System.Drawing.Point(6, 180);
             this.groupBoxCompileOptions.Name = "groupBoxCompileOptions";
-            this.groupBoxCompileOptions.Size = new System.Drawing.Size(572, 109);
+            this.groupBoxCompileOptions.Size = new System.Drawing.Size(572, 53);
             this.groupBoxCompileOptions.TabIndex = 0;
             this.groupBoxCompileOptions.TabStop = false;
             this.groupBoxCompileOptions.Text = " Compile Options ";
-            // 
-            // label7
-            // 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(8, 74);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(66, 13);
-            this.label7.TabIndex = 7;
-            this.label7.Text = "TEMP folder";
-            // 
-            // buttonTemp
-            // 
-            this.buttonTemp.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonTemp.Location = new System.Drawing.Point(476, 69);
-            this.buttonTemp.Name = "buttonTemp";
-            this.buttonTemp.Size = new System.Drawing.Size(90, 23);
-            this.buttonTemp.TabIndex = 6;
-            this.buttonTemp.Text = "browse";
-            this.buttonTemp.UseVisualStyleBackColor = true;
-            this.buttonTemp.Click += new System.EventHandler(this.buttonTemp_Click);
-            // 
-            // textBoxTemp
-            // 
-            this.textBoxTemp.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxTemp.Location = new System.Drawing.Point(93, 71);
-            this.textBoxTemp.Name = "textBoxTemp";
-            this.textBoxTemp.Size = new System.Drawing.Size(377, 20);
-            this.textBoxTemp.TabIndex = 5;
             // 
             // comboBoxProfile
             // 
@@ -113,7 +75,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.comboBoxProfile.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxProfile.FormattingEnabled = true;
-            this.comboBoxProfile.Location = new System.Drawing.Point(93, 44);
+            this.comboBoxProfile.Location = new System.Drawing.Point(93, 19);
             this.comboBoxProfile.Name = "comboBoxProfile";
             this.comboBoxProfile.Size = new System.Drawing.Size(377, 21);
             this.comboBoxProfile.TabIndex = 4;
@@ -121,40 +83,11 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(8, 47);
+            this.label2.Location = new System.Drawing.Point(8, 22);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(36, 13);
             this.label2.TabIndex = 3;
             this.label2.Text = "Profile";
-            // 
-            // buttonFxcExe
-            // 
-            this.buttonFxcExe.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonFxcExe.Location = new System.Drawing.Point(476, 15);
-            this.buttonFxcExe.Name = "buttonFxcExe";
-            this.buttonFxcExe.Size = new System.Drawing.Size(90, 23);
-            this.buttonFxcExe.TabIndex = 2;
-            this.buttonFxcExe.Text = "browse";
-            this.buttonFxcExe.UseVisualStyleBackColor = true;
-            this.buttonFxcExe.Click += new System.EventHandler(this.buttonFxcExe_Click);
-            // 
-            // textBoxFxcExe
-            // 
-            this.textBoxFxcExe.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxFxcExe.Location = new System.Drawing.Point(93, 17);
-            this.textBoxFxcExe.Name = "textBoxFxcExe";
-            this.textBoxFxcExe.Size = new System.Drawing.Size(377, 20);
-            this.textBoxFxcExe.TabIndex = 1;
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(7, 20);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(41, 13);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "fxc.exe";
             // 
             // groupBoxInput
             // 
@@ -277,12 +210,11 @@
             // 
             // buttonCompile
             // 
-            this.buttonCompile.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            this.buttonCompile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonCompile.Location = new System.Drawing.Point(7, 295);
+            this.buttonCompile.Location = new System.Drawing.Point(6, 239);
             this.buttonCompile.Name = "buttonCompile";
-            this.buttonCompile.Size = new System.Drawing.Size(571, 31);
+            this.buttonCompile.Size = new System.Drawing.Size(572, 31);
             this.buttonCompile.TabIndex = 3;
             this.buttonCompile.Text = "COMPILE";
             this.buttonCompile.UseVisualStyleBackColor = true;
@@ -290,12 +222,13 @@
             // 
             // progressBar1
             // 
-            this.progressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            this.progressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.progressBar1.Location = new System.Drawing.Point(7, 332);
+            this.progressBar1.Location = new System.Drawing.Point(6, 276);
             this.progressBar1.Maximum = 10000;
             this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(571, 23);
+            this.progressBar1.Size = new System.Drawing.Size(572, 57);
             this.progressBar1.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
             this.progressBar1.TabIndex = 4;
             // 
@@ -319,11 +252,29 @@
             // 
             this.folderBrowserDialogTemp.Description = "Select temporary folder ...";
             // 
+            // statusStrip1
+            // 
+            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripStatusLabel1});
+            this.statusStrip1.Location = new System.Drawing.Point(3, 336);
+            this.statusStrip1.Name = "statusStrip1";
+            this.statusStrip1.Size = new System.Drawing.Size(578, 22);
+            this.statusStrip1.SizingGrip = false;
+            this.statusStrip1.TabIndex = 5;
+            // 
+            // toolStripStatusLabel1
+            // 
+            this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(563, 17);
+            this.toolStripStatusLabel1.Spring = true;
+            this.toolStripStatusLabel1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(584, 361);
+            this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.progressBar1);
             this.Controls.Add(this.buttonCompile);
             this.Controls.Add(this.groupBoxOutput);
@@ -341,7 +292,10 @@
             this.groupBoxInput.PerformLayout();
             this.groupBoxOutput.ResumeLayout(false);
             this.groupBoxOutput.PerformLayout();
+            this.statusStrip1.ResumeLayout(false);
+            this.statusStrip1.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -350,9 +304,6 @@
         private System.Windows.Forms.GroupBox groupBoxCompileOptions;
         private System.Windows.Forms.ComboBox comboBoxProfile;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Button buttonFxcExe;
-        private System.Windows.Forms.TextBox textBoxFxcExe;
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.GroupBox groupBoxInput;
         private System.Windows.Forms.Button buttonInputFxc;
         private System.Windows.Forms.TextBox textBoxInputFxc;
@@ -369,10 +320,9 @@
         private System.Windows.Forms.FolderBrowserDialog folderBrowserDialogOutput;
         private System.Windows.Forms.OpenFileDialog openFileDialogFxcExe;
         private System.Windows.Forms.OpenFileDialog openFileDialogInput;
-        private System.Windows.Forms.Label label7;
-        private System.Windows.Forms.Button buttonTemp;
-        private System.Windows.Forms.TextBox textBoxTemp;
         private System.Windows.Forms.FolderBrowserDialog folderBrowserDialogTemp;
+        private System.Windows.Forms.StatusStrip statusStrip1;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
     }
 }
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace ShaderBuilder {
 
@@ -20,17 +21,25 @@ class FxcCompile
         ps_3_0
     }
 
-    public delegate void ErrorDelegate(FxcCompile o, string error);
+    public delegate void MessageDelegate(FxcCompile o, string message);
 
     public delegate void ProgressDelegate(FxcCompile o, double relativeValue);
 
-    public ErrorDelegate Error;
+    public MessageDelegate Error;
+
+    public MessageDelegate Status;
 
     public ProgressDelegate Progress;
 
-    public bool Compile(string filePath, string outputPrefix, string fxcExe, Profile profile, string tempFolder)
+    public FxcCompile()
+    {
+        InitProgressSections();
+    }
+
+    public bool Compile(string filePath, string outputPrefix, Profile profile)
     {
         DoProgress(0, 0);
+        DoStatus("Started compilation ...");
 
         m_Profile = profile;
 
@@ -52,16 +61,25 @@ class FxcCompile
             return false;
         }
 
-        if (!CompileCombos(outputPrefix,fxcExe,tempFolder))
+        if (!CompileCombos())
             return false;
 
+        if (!WriteCompileResults(outputPrefix))
+            return false;
+
+        DoStatus("Finished compilation successfully.");
         return true;
     }
 
     //
     // Private members:
 
-    private const int m_ProgressSections = 3;
+    private double[] m_ProgressSectionWeights = new double[4] {
+        0.05, // ReadInputFile
+        0.05, // FilterComobos
+        0.5, // CompileCombos
+        0.4  // WriteCompileResults
+    };
 
     private struct Combo
     {
@@ -93,6 +111,120 @@ class FxcCompile
         XBOX
     }
 
+    private class CompileThreadClass
+        : SharpDX.D3DCompiler.Include
+    {
+        public CompileThreadClass(
+            FxcCompile fxcCompile,
+            string shaderSource,
+            string profile,
+            SharpDX.Direct3D.ShaderMacro[] defines,
+            int comboId
+            )
+        {
+            m_FxcCompile = fxcCompile;
+            m_ShaderSource = shaderSource;
+            m_Profile = profile;
+            m_Defines = defines;
+            m_ComboId = comboId;
+
+            Interlocked.Increment(ref fxcCompile.m_OutstandingCompiles);
+        }
+
+        public void DoCompile()
+        {
+            SharpDX.D3DCompiler.CompilationResult result = null;
+            string exception = null;
+
+            try
+            {
+                result = SharpDX.D3DCompiler.ShaderBytecode.Compile(
+                     m_ShaderSource,
+                     "main",
+                     m_Profile,
+                     SharpDX.D3DCompiler.ShaderFlags.OptimizationLevel3,
+                     SharpDX.D3DCompiler.EffectFlags.None,
+                     m_Defines,
+                     this,
+                     "shaderCombo_" + m_ComboId
+                 );
+            }
+            catch (SharpDX.SharpDXException e)
+            {
+                exception = e.ToString();
+                result = null;
+            }
+
+            if (null == result || result.HasErrors)
+            {
+                string compileErrors =
+                    "shaderCombo_"+m_ComboId+": "
+                    +"message: " + (null == result ? "[none]" : result.Message)
+                    + ", exception: " + (null == exception ? "[none]" : exception)
+                    + ", defines:"
+                ;
+
+                foreach (SharpDX.Direct3D.ShaderMacro define in m_Defines)
+                {
+                    compileErrors += " /D" + define.Name.ToString() + "=" + define.Definition.ToString();
+                }
+
+                lock (m_FxcCompile.m_CompileErrors)
+                {
+                    m_FxcCompile.m_CompileErrors.AddLast(
+                        compileErrors
+                    );
+                }
+
+                result = null;
+            }
+
+            lock (m_FxcCompile.m_CompilationResults)
+            {
+                m_FxcCompile.m_CompilationResults[m_ComboId] = result;
+            }
+
+            Interlocked.Decrement(ref m_FxcCompile.m_OutstandingCompiles);
+        }
+
+        private FxcCompile m_FxcCompile;
+        private string m_ShaderSource;
+        private string m_Profile;
+        private SharpDX.Direct3D.ShaderMacro[] m_Defines;
+        private int m_ComboId;
+
+        public void Close(System.IO.Stream stream)
+        {
+            throw new NotImplementedException();
+        }
+
+        public System.IO.Stream Open(SharpDX.D3DCompiler.IncludeType type, string fileName, System.IO.Stream parentStream)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IDisposable Shadow
+        {
+            get
+            {
+                return m_Shadow;
+            }
+            set
+            {
+                m_Shadow = value;
+            }
+        }
+
+        public void Dispose()
+        {
+            m_Shadow.Dispose();
+        }
+
+        private IDisposable m_Shadow;
+    };
+
+    private double[] m_ProgressSectionStarts;
+
     private Profile m_Profile;
 
     private Platform m_Platform = Platform.PC;
@@ -109,23 +241,70 @@ class FxcCompile
 
     private string m_PerlSkipCode;
 
-    SimplePerlExpression m_Expression;
+    private SimplePerlExpression m_Expression;
 
-    decimal m_NumCombos;
-    decimal m_NumAfxCombos;
-    decimal m_NumDynamicCombos;
+    private decimal m_NumCombos;
+    private decimal m_NumAfxCombos;
+    private decimal m_NumDynamicCombos;
+
+    private SortedDictionary<int, SharpDX.D3DCompiler.CompilationResult> m_CompilationResults = new SortedDictionary<int, SharpDX.D3DCompiler.CompilationResult>();
+
+    private int m_OutstandingCompiles;
+
+    private LinkedList<string> m_CompileErrors = new LinkedList<string>();
+
+    int m_LastProgress;
+    int m_LastStatus;
+
+    private void InitProgressSections()
+    {
+        double totalSize = 0.0;
+
+        foreach (double val in m_ProgressSectionWeights)
+        {
+            totalSize += val;
+        }
+
+        m_ProgressSectionStarts = new double[m_ProgressSectionWeights.Length];
+
+        double size = 0.0;
+
+        for (int i = 0; i < m_ProgressSectionWeights.Length; ++i)
+        {
+            m_ProgressSectionStarts[i] = size;
+            size += (m_ProgressSectionWeights[i] = (0.0 != totalSize ? m_ProgressSectionWeights[i] / totalSize : 0.0));
+        }
+    }
 
     private void DoError(string description)
     {
         if (null != Error) Error(this, description);
+        DoStatus("Error occured!");
     }
 
-    private void DoProgress(int section, double subProgress)
+    private void DoStatus(string description, bool reliable = true)
     {
+        int cur = System.Environment.TickCount;
+        if (!reliable && 100 > Math.Abs(cur -m_LastStatus))
+            return;
+
+        m_LastStatus = cur;
+
+        if (null != Status) Status(this, description);
+    }
+
+    private void DoProgress(int section, double subProgress, bool reliable = true)
+    {
+        int cur = System.Environment.TickCount;
+        if (!reliable && 100 > Math.Abs(cur - m_LastProgress))
+            return;
+
+        m_LastProgress = cur;
+
         if (null == Progress)
             return;
 
-        double value = section / (double)m_ProgressSections + subProgress / m_ProgressSections;
+        double value = m_ProgressSectionStarts[section] + subProgress * m_ProgressSectionWeights[section];
         Progress(this, value);
     }
 
@@ -156,77 +335,70 @@ class FxcCompile
         }
     }
 
-    private void DefineCombos(decimal num, out string fxcDefines, out string shaderIdent)
+    private void DefineCombos(int num)
     {
-        decimal num2 = num;
-
-        fxcDefines = "";
-
         foreach (Combo combo in m_AfxCombos)
         {
-            decimal d = num % (combo.Max - combo.Min + 1) + combo.Min;
+            int d = num % (combo.Max - combo.Min + 1) + combo.Min;
             m_Expression.DefineVariable(combo.Name, (int)d);
-            fxcDefines += "/D" + combo.Name + "=" + d + " ";
             num = num / (combo.Max - combo.Min + 1);
-            num = decimal.Floor(num);
         }
 
         foreach (Combo combo in m_DynamicCombos)
         {
-            decimal d = num % (combo.Max - combo.Min + 1) + combo.Min;
+            int d = num % (combo.Max - combo.Min + 1) + combo.Min;
             m_Expression.DefineVariable(combo.Name, (int)d);
-            fxcDefines += "/D" + combo.Name + "=" + d + " ";
             num = num / (combo.Max - combo.Min + 1);
-            num = decimal.Floor(num);
         }
 
         foreach (Combo combo in m_StaticCombos)
         {
-            decimal d = num % (combo.Max - combo.Min + 1) + combo.Min;
+            int d = num % (combo.Max - combo.Min + 1) + combo.Min;
             m_Expression.DefineVariable(combo.Name, (int)d);
-            fxcDefines += "/D" + combo.Name + "=" + d + " ";
             num = num / (combo.Max - combo.Min + 1);
-            num = decimal.Floor(num);
         }
-
-        decimal afxCombo = num2 % m_NumAfxCombos;
-        num2 /= m_NumAfxCombos;
-        num2 = decimal.Floor(num2);
-        decimal dynamicCombo = num2 % m_NumDynamicCombos;
-        num2 /= m_NumDynamicCombos;
-        num2 = decimal.Floor(num2);
-        decimal staticCombo = num2;
-
-        shaderIdent = "" + staticCombo + "_" + dynamicCombo + "_" + afxCombo + "";
-
-        fxcDefines += "/DSHADER_MODEL_" + m_Profile.ToString().ToUpper() + "=1 ";
     }
 
-    private bool WriteSourceFile(string tempFolder, out string sourceFilePath)
+    private SharpDX.Direct3D.ShaderMacro[] MakeMacros(int num)
     {
-        sourceFilePath = tempFolder+"\\afxTempShaderSource.fxc";
-        System.IO.StreamWriter sw = null;
+        SharpDX.Direct3D.ShaderMacro[] macros = new SharpDX.Direct3D.ShaderMacro[m_AfxCombos.Count + m_DynamicCombos.Count + m_StaticCombos.Count + 1];
 
-        try
+        int idx = 0;
+
+        foreach (Combo combo in m_AfxCombos)
         {
-            sw = new System.IO.StreamWriter(sourceFilePath);
-
-            foreach(string line in m_Source)
-            {
-                sw.WriteLine(line);
-            }
-
-            sw.Close();
-        }
-        catch(System.IO.IOException e)
-        {
-            DoError("Error writing temp file \"" + sourceFilePath + "\": " + e);
-            if (null != sw) sw.Close();
-
-            return false;
+            int d = num % (combo.Max - combo.Min + 1) + combo.Min;
+            macros[idx++] = new SharpDX.Direct3D.ShaderMacro(combo.Name, d);
+            num = num / (combo.Max - combo.Min + 1);
         }
 
-        return true;
+        foreach (Combo combo in m_DynamicCombos)
+        {
+            int d = num % (combo.Max - combo.Min + 1) + combo.Min;
+            macros[idx++] = new SharpDX.Direct3D.ShaderMacro(combo.Name, d);
+            num = num / (combo.Max - combo.Min + 1);
+        }
+
+        foreach (Combo combo in m_StaticCombos)
+        {
+            int d = num % (combo.Max - combo.Min + 1) + combo.Min;
+            macros[idx++] = new SharpDX.Direct3D.ShaderMacro(combo.Name, d);
+            num = num / (combo.Max - combo.Min + 1);
+        }
+
+        macros[idx++] = new SharpDX.Direct3D.ShaderMacro("SHADER_MODEL_" + m_Profile.ToString().ToUpper(), 1);
+
+        return macros;
+    }
+
+    private void WriteSourceString(out string outString)
+    {
+        outString = "";
+
+        foreach (string line in m_Source)
+        {
+            outString += line + System.Environment.NewLine;
+        }
     }
 
     private static string EscapeCmdArgument(string arg)
@@ -235,9 +407,17 @@ class FxcCompile
 
     }
 
-    private bool CompileCombos(string outputPrefix, string fxcExe, string tempFolder)
+    private static void CompileThreadProc(object stateInfo)
+    {
+        CompileThreadClass ctc = (CompileThreadClass)stateInfo;
+
+        ctc.DoCompile();
+    }
+
+    private bool CompileCombos()
     {
         DoProgress(2, 0);
+        DoStatus("Compiling combos ...");
 
         CalcNumCombos();
 
@@ -247,55 +427,141 @@ class FxcCompile
             return false;
         }
 
-        string sourceFilePath;
+        string sourceString;
+        string profileString = m_Profile.ToString();
 
-        if(!WriteSourceFile(tempFolder, out sourceFilePath))
-            return false;
+        WriteSourceString(out sourceString);
 
-        for (decimal i = 0; i < m_NumCombos; ++i)
+        int numCombos = (int)m_NumCombos;
+
+        for (int i = 0; i < numCombos; ++i)
         {
-            DoProgress(2, (double)i / (double)m_NumCombos);
+            DoProgress(2, (double)i / (double)m_NumCombos, false);
 
-            string fxcDefines;
-            string shaderIdent;
-
-            DefineCombos(i, out fxcDefines, out shaderIdent);
+            DefineCombos(i);
 
             bool skip = m_Expression.Eval();
 
             if (!skip)
             {
-                string outFile = outputPrefix + "_" + shaderIdent + ".fxo";
-                string args = "/T " + EscapeCmdArgument(m_Profile.ToString()) + " /Fo " + EscapeCmdArgument(outFile) + " " + fxcDefines + " " + EscapeCmdArgument(sourceFilePath);
-
-                System.Diagnostics.ProcessStartInfo psi = new System.Diagnostics.ProcessStartInfo(fxcExe, args);
-
-                try
+                lock (m_CompileErrors)
                 {
-                    System.Diagnostics.Process pr = System.Diagnostics.Process.Start(psi);
-                    pr.WaitForExit();
-                    if (0 != pr.ExitCode)
-                    {
-                        DoError(EscapeCmdArgument(psi.FileName) + " " + psi.Arguments + " failed with ExitCode: " + pr.ExitCode);
-                        return false;
-                    }
+                    // abort as we learn about past compile errors:
+                    if (0 < m_CompileErrors.Count)
+                        break;
                 }
-                catch (System.IO.IOException e)
+
+                DoStatus("Queueing combo " + (i + 1) + "/" + m_NumCombos + " for compilation ...", false);
+
+                CompileThreadClass ctc = new CompileThreadClass(
+                    this,
+                    sourceString,
+                    profileString,
+                    MakeMacros(0),
+                    i
+                    );
+
+                if (!ThreadPool.QueueUserWorkItem(
+                    CompileThreadProc,
+                    ctc
+                ))
                 {
-                    DoError(EscapeCmdArgument(psi.FileName) + " " + psi.Arguments + " failed with IOException: " + e.ToString());
+                    DoError("Failed to queue on ThreadPool for shaderCombo_" + i);
                     return false;
                 }
-                catch (System.ComponentModel.Win32Exception e)
-                {
-                    DoError(EscapeCmdArgument(psi.FileName) + " " + psi.Arguments + " failed with Win32Exception: " + e.ToString());
-                    return false;
-                }
-
             }
+        }
+
+
+        DoStatus("Waiting for combo compailation to finish ...");
+
+        while (0 != Interlocked.CompareExchange(ref m_OutstandingCompiles, 0, 0))
+        {
+            DoProgress(2, (double)(m_NumCombos - 1) / (double)m_NumCombos);
+            Thread.Sleep(100);
+        }
+
+        if (0 < m_CompileErrors.Count)
+        {
+            DoError("Found compile errors:");
+
+            foreach (string val in m_CompileErrors)
+                DoError(val);
+
+            return false;
         }
 
         DoProgress(2, 1);
 
+        return true;
+    }
+
+    private bool WriteCompileResults(string outputPrefix)
+    {
+        DoProgress(3, 0);
+        DoStatus("Starting to write results ...");
+
+        // One could think about finding duplicate shaders here,
+        // but we can skip this step, because the compiler is
+        // not deterministic (probably due to timestamp or s.th.
+        // like that).
+
+        DoStatus("Writing .acs shader file ...");
+
+        System.IO.BinaryWriter bw = null;
+
+        try
+        {
+            System.IO.Stream fs = new System.IO.FileStream(outputPrefix + ".acs", System.IO.FileMode.Create);
+            bw = new System.IO.BinaryWriter(fs);
+
+            int acsHeaderSize =
+                4 * 1 // version
+                + 4 * 1 // index size
+                + 4 * 2 * m_CompilationResults.Count // indices
+                ;
+
+            bw.Write((int)0); // Version.
+
+            DoStatus("Writing .acs index tree ...");
+            {
+
+                bw.Write((int)(m_CompilationResults.Count)); // Index size
+
+                int curOfs = acsHeaderSize;
+
+                foreach (var kv in m_CompilationResults)
+                {
+                    bw.Write((int)kv.Key);
+                    bw.Write((int)curOfs);
+
+                    curOfs += kv.Value.Bytecode.Data.Length;
+                }
+            }
+
+            DoStatus("Writing .acs shaders ...");
+            {
+                int i = 0;
+
+                DoProgress(2, (double)i / (double)m_CompilationResults.Count, false);
+
+                foreach (var v in m_CompilationResults.Values)
+                {
+                    bw.Write(v.Bytecode.Data);
+                }
+            }
+
+            bw.Close();
+        }
+        catch (System.IO.IOException e)
+        {
+            DoError("Error writing .acs shader file: "+e.ToString());
+            if (null != bw) bw.Close();
+
+            return false;
+        }
+
+        DoProgress(3, 1);
         return true;
     }
 
@@ -479,6 +745,9 @@ class FxcCompile
 
     private bool ReadInputFile(String filePath)
     {
+        DoProgress(0, 0);
+        DoStatus("Processing input files(s) ...");
+
         System.IO.StreamReader sr = null;
 
         Regex includeRegEx = new Regex(
@@ -529,6 +798,8 @@ class FxcCompile
 
             return false;
         }
+
+        DoProgress(1, 1);
 
         return true;
     }

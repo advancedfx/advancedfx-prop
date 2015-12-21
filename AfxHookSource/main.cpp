@@ -35,6 +35,7 @@
 #include "csgo_ScaleForm_Hooks.h"
 #include "asmClassTools.h"
 #include "csgo_Stdshader_dx9_Hooks.h"
+#include "AfxShaders.h"
 
 #include <set>
 #include <map>
@@ -1945,6 +1946,8 @@ public:
 		if(m_OnLevelShutdown) m_OnLevelShutdown->LevelShutdown(this);
 
 		csgo_Stdshader_dx9_Hooks_OnLevelShutdown();
+
+		g_AfxShaders.ReleaseUnusedShaders();
 
 		m_Parent->LevelShutdown();
 	}
