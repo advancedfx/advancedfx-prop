@@ -374,7 +374,7 @@
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "LauncherForm";
-            this.Text = "Launch ...";
+            this.Text = "Launch GoldSrc ...";
             this.groupBoxGame.ResumeLayout(false);
             this.groupBoxGame.PerformLayout();
             this.groupBoxCmdOpts.ResumeLayout(false);

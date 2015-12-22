@@ -247,7 +247,7 @@ class FxcCompile
 
         public void Dispose()
         {
-            m_Shadow.Dispose();
+            if(null != m_Shadow) m_Shadow.Dispose();
         }
 
         private IDisposable m_Shadow;

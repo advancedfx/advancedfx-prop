@@ -39,6 +39,7 @@
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.labelDll = new System.Windows.Forms.Label();
             this.textDll = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // buttonSelectProgram
@@ -133,13 +134,27 @@
             this.textDll.Size = new System.Drawing.Size(262, 20);
             this.textDll.TabIndex = 11;
             // 
+            // label1
+            // 
+            this.label1.BackColor = System.Drawing.Color.Maroon;
+            this.label1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.label1.ForeColor = System.Drawing.Color.White;
+            this.label1.Location = new System.Drawing.Point(12, 155);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(445, 55);
+            this.label1.TabIndex = 20;
+            this.label1.Text = "Dear CS:GO users, while you can still use this, please note that a CS:GO specifc " +
+    "dialog has been added to the File menu entry!";
+            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
             // CustomLoaderForm
             // 
             this.AcceptButton = this.buttonOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.buttonAbort;
-            this.ClientSize = new System.Drawing.Size(469, 151);
+            this.ClientSize = new System.Drawing.Size(469, 219);
+            this.Controls.Add(this.label1);
             this.Controls.Add(this.buttonSelectProgram);
             this.Controls.Add(this.buttonSelectHook);
             this.Controls.Add(this.buttonAbort);
@@ -173,5 +188,6 @@
         private System.Windows.Forms.OpenFileDialog openFileDialog;
         private System.Windows.Forms.Label labelDll;
         private System.Windows.Forms.TextBox textDll;
+        private System.Windows.Forms.Label label1;
     }
 }

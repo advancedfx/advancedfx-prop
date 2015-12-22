@@ -31,22 +31,15 @@ public class CfgLauncher
     public Boolean RememberChanges;
     public Byte RenderMode;
 
+    public CfgLauncher()
+    {
+        ThisDefault();
+    }
+
     internal void Default()
-	{
-		GamePath = "please select";
-		Modification ="cstrike";
-		CustomCmdLine = "+toggleconsole";
-		GfxForce = true;
-		GfxWidth = 800;
-		GfxHeight = 600;
-		GfxBpp = 32;
-		RememberChanges = true;
-		ForceAlpha = false;
-		OptimizeDesktopRes = false;
-		OptimizeVisibilty = true;
-		FullScreen = false;
-		RenderMode = 0;		
-	}
+    {
+        ThisDefault();
+    }
 
     internal void CopyFrom(CfgLauncher from)
     {
@@ -96,6 +89,23 @@ public class CfgLauncher
 
         return s;
     }
+
+    private void ThisDefault()
+    {
+        GamePath = "please select";
+        Modification = "cstrike";
+        CustomCmdLine = "+toggleconsole";
+        GfxForce = true;
+        GfxWidth = 800;
+        GfxHeight = 600;
+        GfxBpp = 32;
+        RememberChanges = true;
+        ForceAlpha = false;
+        OptimizeDesktopRes = false;
+        OptimizeVisibilty = true;
+        FullScreen = false;
+        RenderMode = 0;
+    }
 }
 
 
@@ -105,7 +115,17 @@ public class CfgCustomLoader
     public String HookDllPath;
     public String ProgramPath;
 
+    public CfgCustomLoader()
+    {
+        ThisDefault();
+    }
+
     internal void Default()
+    {
+        ThisDefault();
+    }
+
+    private void ThisDefault()
 	{
 		HookDllPath = "";
 		ProgramPath = "";
@@ -118,15 +138,64 @@ public class CfgDemoTools
 {
     public String OutputFolder;
 
+    public CfgDemoTools()
+    {
+        ThisDefault();
+    }
+
     internal void Default()
     {
+        ThisDefault();
+    }
+
+    private void ThisDefault()
+    {
         OutputFolder = "";
+    }
+}
+
+public class CfgLauncherCsgo
+{
+    public String CsgoExe;
+    public Boolean MmcfgEnabled;
+    public String Mmmcfg;
+    public Boolean GfxEnabled;
+    public UInt16 GfxWidth;
+    public UInt16 GfxHeight;
+    public Boolean GfxFull;
+    public Boolean AvoidVac;
+    public String CustomLaunchOptions;
+    public Boolean RememberChanges;
+
+    public CfgLauncherCsgo()
+    {
+        ThisDefault();
+    }
+
+    internal void Default()
+    {
+        ThisDefault();
+    }
+
+    private void ThisDefault()
+    {
+        CsgoExe = "please select";
+        MmcfgEnabled = false;
+        Mmmcfg = "";
+        GfxEnabled = false;
+        GfxWidth = 1280;
+        GfxHeight = 720;
+        GfxFull = false;
+        AvoidVac = true;
+        CustomLaunchOptions = "-console";
+        RememberChanges = true;
     }
 }
 
 
 public class CfgSettings
 {
+    public CfgLauncherCsgo LauncherCsgo;
     public CfgLauncher Launcher;
     public CfgCustomLoader CustomLoader;
     public CfgDemoTools DemoTools;
@@ -135,19 +204,28 @@ public class CfgSettings
 
 	public CfgSettings()
 	{
+        LauncherCsgo = new CfgLauncherCsgo();
 		Launcher = new CfgLauncher();
 		CustomLoader = new CfgCustomLoader();
 		DemoTools = new CfgDemoTools();
+
+        ThisDefault();
 	}
 
     internal void Default()
 	{
+        LauncherCsgo.Default();
 		Launcher.Default();
 		CustomLoader.Default();
 		DemoTools.Default();
 
+        ThisDefault();
+    }
+
+    private void ThisDefault()
+    {
         UpdateCheck = 0;
-	}
+    }
 
 }
 
@@ -166,7 +244,7 @@ public class Config
 
         m_CfgPath = "hlaeconfig.xml";
 
-        Default();
+        ThisDefault();
 	}
 
     //
@@ -227,8 +305,7 @@ public class Config
     internal void Default()
     {
         Settings.Default();
-
-        Version = "unknown";
+        ThisDefault();
     }
 
     //
@@ -250,6 +327,11 @@ public class Config
     // Private members:
 
 	String m_CfgPath;
+
+    private void ThisDefault()
+    {
+        Version = "unknown";
+    }
 
 	bool WriteToFile( String filePath )
 	{

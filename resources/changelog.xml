@@ -6,6 +6,18 @@
 
 <release>
 <name>HLAE</name>
+<version>2.6.8.0</version>
+<time>2015-12-22T21:36Z</time>
+<changes>
+<change type="added">
+Added specific launcher dialog for CS:GO in File menu! This allows to set a movie making config parent folder. The launcher will also be exposed to the HLAE command line options, which will be documented in the HLAE manual.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.6.7.2</version>
 <time>2015-12-21T03:10Z</time>
 <changes>

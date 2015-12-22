@@ -3,11 +3,11 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2010-05-26 by dominik.matrixstorm.com
+// 2015-12-22 dominik.matrixstorm.com
 //
 // First changes:
-// 2007 by dominik.matrixstorm.com
-// 2007 by Gavin Bramhill
+// 2007 dominik.matrixstorm.com
+// 2007 Gavin Bramhill
 
 // Comment:
 //
@@ -93,7 +93,7 @@ public:
 
 	bool Inject(
 		LPCTSTR programPath, LPCTSTR programDirectory, LPTSTR programOptions,
-		LPCTSTR dllDirectory, LPCTSTR dllFileName
+		LPCTSTR dllDirectory, LPCTSTR dllFileName, LPVOID environment
 	)
 	{
 		PROCESS_INFORMATION processInfo;
@@ -116,8 +116,11 @@ public:
 				CREATE_SUSPENDED
 				//DEBUG_ONLY_THIS_PROCESS|
 				//DEBUG_PROCESS				// we want to catch debug event's (sadly also of childs)
+#ifdef _UNICODE
+				|CREATE_UNICODE_ENVIRONMENT
+#endif
 				,
-			NULL,
+			environment,
 			programDirectory,
 			&startupInfo,
 			&processInfo
@@ -301,7 +304,7 @@ using namespace System;
 using namespace System::Runtime::InteropServices;
 
 
-bool CustomLoader(System::String ^ strHookPath, System::String ^ strProgramPath, System::String ^ strCmdLine)
+bool CustomLoader(System::String ^ strHookPath, System::String ^ strProgramPath, System::String ^ strCmdLine, System::String ^ strEnvironment)
 {
 	System::String ^ strDllDirectory = System::IO::Path::GetDirectoryName( strHookPath );
 	System::String ^ strProgramDirectory = System::IO::Path::GetDirectoryName( strProgramPath );
@@ -318,6 +321,7 @@ bool CustomLoader(System::String ^ strHookPath, System::String ^ strProgramPath,
 	LPTSTR programOptions = 0;
 	LPCTSTR programPath = 0;
 	LPCTSTR imageFileName = 0;
+	LPVOID environment = 0;
 
 #ifdef _UNICODE
 	dllDirectory = (LPCTSTR)(int)Marshal::StringToHGlobalUni( strDllDirectory );
@@ -326,6 +330,7 @@ bool CustomLoader(System::String ^ strHookPath, System::String ^ strProgramPath,
 	programOptions = (LPTSTR)(int)Marshal::StringToHGlobalUni( strOptsB->ToString() );
 	programPath = (LPCTSTR)(int)Marshal::StringToHGlobalUni( strProgramPath );
 	imageFileName = (LPCTSTR)(int)Marshal::StringToHGlobalUni( strImageFileName );
+	environment = (LPVOID)(int)Marshal::StringToHGlobalUni( strEnvironment );
 #else
 	dllDirectory = (LPCTSTR)(int)Marshal::StringToHGlobalAnsi( strDllDirectory );
 	dllFileName = (LPCTSTR)(int)Marshal::StringToHGlobalAnsi( strHookPath );
@@ -333,15 +338,17 @@ bool CustomLoader(System::String ^ strHookPath, System::String ^ strProgramPath,
 	programOptions = (LPTSTR)(int)Marshal::StringToHGlobalAnsi( strOptsB->ToString() );
 	programPath = (LPCTSTR)(int)Marshal::StringToHGlobalAnsi( strProgramPath );
 	imageFileName = (LPCTSTR)(int)Marshal::StringToHGlobalAnsi( strImageFileName );
+	environment = (LPVOID)(int)Marshal::StringToHGlobalAnsi( strEnvironment );
 #endif
 
 	AfxHook afxHook(imageFileName);
 
 	bool bOk = afxHook.Inject(
 		programPath, programDirectory, programOptions,
-		dllDirectory, dllFileName
+		dllDirectory, dllFileName, environment
 	);
 
+	Marshal::FreeHGlobal( (System::IntPtr)(int)environment );
 	Marshal::FreeHGlobal( (System::IntPtr)(int)imageFileName );	
 	Marshal::FreeHGlobal( (System::IntPtr)(int)programPath );
 	Marshal::FreeHGlobal( (System::IntPtr)(int)programOptions );

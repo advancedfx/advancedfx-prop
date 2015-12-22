@@ -178,6 +178,86 @@ namespace AfxGui
             GlobalConfig.Instance.BackUp();
         }
 
+        static void ProcessArgsCsgoLauncher(string[] args)
+        {
+            for (int i = 0; i < args.Length; i++)
+            {
+                string arg = args[i];
+                switch (arg)
+                {
+                    case "-autoStart":
+                        Globals.AutoStartCsgo = true;
+                        break;
+                    case "-csgoExe":
+                        if (i + 1 < args.Length)
+                        {
+                            GlobalConfig.Instance.Settings.LauncherCsgo.CsgoExe = args[i + 1];
+                            i++;
+                        }
+                        break;
+                    case "-mmcfgEnabled":
+                        if (i + 1 < args.Length)
+                        {
+                            Boolean.TryParse(args[i + 1], out GlobalConfig.Instance.Settings.LauncherCsgo.MmcfgEnabled);
+                            i++;
+                        }
+                        break;
+                    case "-mmcfg":
+                        if (i + 1 < args.Length)
+                        {
+                            GlobalConfig.Instance.Settings.LauncherCsgo.Mmmcfg = args[i + 1];
+                            i++;
+                        }
+                        break;
+                    case "-gfxEnabled":
+                        if (i + 1 < args.Length)
+                        {
+                            Boolean.TryParse(args[i + 1], out GlobalConfig.Instance.Settings.LauncherCsgo.GfxEnabled);
+                            i++;
+                        }
+                        break;
+                    case "-gfxWidth":
+                        if (i + 1 < args.Length)
+                        {
+                            UInt16.TryParse(args[i + 1], out GlobalConfig.Instance.Settings.LauncherCsgo.GfxWidth);
+                            i++;
+                        }
+                        break;
+                    case "-gfxHeight":
+                        if (i + 1 < args.Length)
+                        {
+                            UInt16.TryParse(args[i + 1], out GlobalConfig.Instance.Settings.LauncherCsgo.GfxHeight);
+                            i++;
+                        }
+                        break;
+                    case "-gfxFull":
+                        if (i + 1 < args.Length)
+                        {
+                            Boolean.TryParse(args[i + 1], out GlobalConfig.Instance.Settings.LauncherCsgo.GfxFull);
+                            i++;
+                        }
+                        break;
+                    case "-avoidVac":
+                        if (i + 1 < args.Length)
+                        {
+                            Boolean.TryParse(args[i + 1], out GlobalConfig.Instance.Settings.LauncherCsgo.AvoidVac);
+                            i++;
+                        }
+                        break;
+                    case "-customLaunchOptions":
+                        if (i + 1 < args.Length)
+                        {
+                            GlobalConfig.Instance.Settings.LauncherCsgo.CustomLaunchOptions = args[i + 1];
+                            i++;
+                        }
+                        break;
+                }
+            }
+
+            // backup potential config changes:
+            GlobalConfig.Instance.BackUp();
+        }
+
         static void ProcessCommandLine()
         {
             string [] argv = new string[0];
@@ -206,6 +286,10 @@ namespace AfxGui
             else if (Array.Exists<string>(argv, p => p == "-customLoader"))
             {
                 ProcessArgsCustomLoader(argv);
+            }
+            else if (Array.Exists<string>(argv, p => p == "-csgoLauncher"))
+            {
+                ProcessArgsCsgoLauncher(argv);
             }
         }
 

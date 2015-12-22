@@ -149,6 +149,12 @@ namespace AfxGui
                 m_HlaeRemoting = new hlae.remoting.HlaeRemoting(this);
             }
 
+            // start-up CS:GO if requested (i.e. by command line)
+            if (Globals.AutoStartCsgo)
+            {
+                LaunchCsgo.Launch(GlobalConfig.Instance.Settings.LauncherCsgo);
+            }
+
             // start-up AfxHookGoldSrc if requested (i.e. by command line)
             if (Globals.AutoStartAfxHookGoldSrc)
             {
@@ -292,6 +298,11 @@ namespace AfxGui
         private void menuNewGuidToClipBoard_Click(object sender, EventArgs e)
         {
             Clipboard.SetText(Guid.NewGuid().ToString()); 
+        }
+
+        private void menuLaunchCSGO_Click(object sender, EventArgs e)
+        {
+            LaunchCsgo.RunLauncherDialog(this);
         }
 
     }
