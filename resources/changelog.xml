@@ -6,6 +6,18 @@
 
 <release>
 <name>HLAE</name>
+<version>2.6.8.1</version>
+<time>2015-12-23T07:49Z</time>
+<changes>
+<change type="fixed">
+Fixed specific launcher dialog for CS:GO in File menu not working! Sorry about this.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.6.8.0</version>
 <time>2015-12-22T21:36Z</time>
 <changes>

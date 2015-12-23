@@ -74,7 +74,7 @@ namespace AfxGui
             return AfxCppCli.AfxHook.LauchAndHook(
                 programPath,
                 cmdLine,
-                System.Windows.Forms.Application.StartupPath + "\\AfxHookGoldSrc.dll",
+                System.Windows.Forms.Application.StartupPath + "\\AfxHookSource.dll",
                 environment
                 );
         }
