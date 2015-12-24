@@ -112,6 +112,7 @@
     <ClCompile Include="..\shared\StringTools.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\shaders\build\afxHook_vertexlit_and_unlit_generic_ps30.h" />
     <ClInclude Include="..\shared\AfxMath.h" />
     <ClInclude Include="..\shared\binutils.h" />
     <ClInclude Include="..\shared\bvhexport.h" />

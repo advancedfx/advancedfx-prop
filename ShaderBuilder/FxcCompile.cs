@@ -446,7 +446,7 @@ class FxcCompile
                     sw.WriteLine("\t\t" + (first ? "" : ", ") + combo.Name + "_e a_" + combo.Name);
                     first = false;
                 }
-                sw.WriteLine("\t\t);");
+                sw.WriteLine("\t\t)");
 
                 sw.WriteLine("\t{");
 
@@ -473,7 +473,7 @@ class FxcCompile
                 sw.WriteLine("\t}");
             }
 
-            sw.WriteLine("}");
+            sw.WriteLine("};");
 
             sw.Close();
         }
@@ -941,7 +941,7 @@ class FxcCompile
         System.IO.StreamReader sr = null;
 
         Regex includeRegEx = new Regex(
-            @"(?i)\#include\s" + "\"" + @"(.*)" + "\""
+            @"(?i)^\s*\#include\s" + "\"" + @"(.*)" + "\""
         );
 
         try
