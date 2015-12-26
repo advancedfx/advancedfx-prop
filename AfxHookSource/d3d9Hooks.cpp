@@ -56,7 +56,9 @@ private:
 
 public:
 	NewDirect3DDevice9()
-	: m_Override_D3DRS_ZWRITEENABLE(false)
+	: m_Override_D3DRS_SRGBWRITEENABLE(false)
+	, m_D3DRS_SRGBWRITEENABLE(FALSE)
+	, m_Override_D3DRS_ZWRITEENABLE(false)
 	, m_D3DRS_ZWRITEENABLE(TRUE)
 	, m_Override_ps_c0(false)
 	, m_Override_ps_c12_y(false)
@@ -371,7 +373,32 @@ public:
 		return g_OldDirect3DDevice9->SetRenderState(State, Value);
 	}
 
-    IFACE_PASSTHROUGH(IDirect3DDevice9, GetRenderState, g_OldDirect3DDevice9);
+    STDMETHOD(GetRenderState)(THIS_ D3DRENDERSTATETYPE State,DWORD* pValue)
+	{
+		if(pValue)
+		{
+			switch(State)
+			{
+			case D3DRS_SRGBWRITEENABLE:
+				if(m_Override_D3DRS_SRGBWRITEENABLE)
+				{
+					*pValue = m_D3DRS_SRGBWRITEENABLE;
+					return D3D_OK;
+				}
+				break;
+			case D3DRS_ZWRITEENABLE:
+				if(m_Override_D3DRS_ZWRITEENABLE)
+				{
+					*pValue = m_D3DRS_ZWRITEENABLE;
+					return D3D_OK;
+				}
+				break;
+			}
+		}
+			
+		return g_OldDirect3DDevice9->GetRenderState(State, pValue);
+	}
+
     IFACE_PASSTHROUGH(IDirect3DDevice9, CreateStateBlock, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, BeginStateBlock, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, EndStateBlock, g_OldDirect3DDevice9);
@@ -415,7 +442,16 @@ public:
 		return !m_Override_VertexShader ? g_OldDirect3DDevice9->SetVertexShader(pShader) : D3D_OK;
 	}
 
-	IFACE_PASSTHROUGH(IDirect3DDevice9, GetVertexShader, g_OldDirect3DDevice9);
+    STDMETHOD(GetVertexShader)(THIS_ IDirect3DVertexShader9** ppShader)
+	{
+		if(m_Override_VertexShader && ppShader)
+		{
+			*ppShader = m_Original_VertexShader;
+			return D3D_OK;
+		}
+
+		return g_OldDirect3DDevice9->GetVertexShader(ppShader);
+	}
 	
     STDMETHOD(SetVertexShaderConstantF)(THIS_ UINT StartRegister,CONST float* pConstantData,UINT Vector4fCount)
 	{
@@ -478,7 +514,16 @@ public:
 		return !m_Override_PixelShader ? g_OldDirect3DDevice9->SetPixelShader(pShader) : D3D_OK;
 	}
     
-	IFACE_PASSTHROUGH(IDirect3DDevice9, GetPixelShader, g_OldDirect3DDevice9);
+    STDMETHOD(GetPixelShader)(THIS_ IDirect3DPixelShader9** ppShader)
+	{
+		if(m_Override_PixelShader && ppShader)
+		{
+			*ppShader = m_Original_PixelShader;
+			return D3D_OK;
+		}
+
+		return g_OldDirect3DDevice9->GetPixelShader(ppShader);
+	}
 	
     STDMETHOD(SetPixelShaderConstantF)(THIS_ UINT StartRegister,CONST float* pConstantData,UINT Vector4fCount)
 	{
@@ -519,7 +564,39 @@ public:
 		return result;
 	}
 
-	IFACE_PASSTHROUGH(IDirect3DDevice9, GetPixelShaderConstantF, g_OldDirect3DDevice9);
+    STDMETHOD(GetPixelShaderConstantF)(THIS_ UINT StartRegister,float* pConstantData,UINT Vector4fCount)
+	{
+		HRESULT result = g_OldDirect3DDevice9->GetPixelShaderConstantF(StartRegister, pConstantData, Vector4fCount);
+
+		if(pConstantData)
+		{
+			if(StartRegister <= 0 && 0 < StartRegister+Vector4fCount)
+			{
+				pConstantData[4*(0 -StartRegister)+0] = m_OriginalValue_ps_c0[0];
+				pConstantData[4*(0 -StartRegister)+1] = m_OriginalValue_ps_c0[1];
+				pConstantData[4*(0 -StartRegister)+2] = m_OriginalValue_ps_c0[2];
+				pConstantData[4*(0 -StartRegister)+3] = m_OriginalValue_ps_c0[3];
+			}
+
+			if(StartRegister <= 12 && 12 < StartRegister+Vector4fCount)
+			{
+				pConstantData[4*(12 -StartRegister)+0] = m_OriginalValue_ps_c12[0];
+				pConstantData[4*(12 -StartRegister)+1] = m_OriginalValue_ps_c12[1];
+				pConstantData[4*(12 -StartRegister)+2] = m_OriginalValue_ps_c12[2];
+				pConstantData[4*(12 -StartRegister)+3] = m_OriginalValue_ps_c12[3];
+			}
+
+			if(StartRegister <= 29 && 29 < StartRegister+Vector4fCount)
+			{
+				pConstantData[4*(29 -StartRegister)+0] = m_OriginalValue_ps_c29[0];
+				pConstantData[4*(29 -StartRegister)+1] = m_OriginalValue_ps_c29[1];
+				pConstantData[4*(29 -StartRegister)+2] = m_OriginalValue_ps_c29[2];
+				pConstantData[4*(29 -StartRegister)+3] = m_OriginalValue_ps_c29[3];
+			}
+		}
+		
+		return result;
+	}
 
     STDMETHOD(SetPixelShaderConstantI)(THIS_ UINT StartRegister,CONST int* pConstantData,UINT Vector4iCount)
 	{

@@ -464,7 +464,6 @@ private:
 
 	private:
 		CAfxMaterial m_MatteMaterial;
-		unsigned long m_OldSrgbWriteEnable;
 	};
 
 	class CActionBlack
@@ -504,7 +503,6 @@ private:
 
 	private:
 		CAfxMaterial m_Material;
-		unsigned long m_OldSrgbWriteEnable;
 	};
 
 	class CActionWhite
@@ -544,7 +542,6 @@ private:
 
 	private:
 		CAfxMaterial m_Material;
-		unsigned long m_OldSrgbWriteEnable;
 	};
 
 	class CActionAfxVertexLitGenericHook
@@ -608,7 +605,6 @@ private:
 
 	private:
 		CAfxMaterial m_DepthMaterial;
-		unsigned long m_OldSrgbWriteEnable;
 		WrpConVarRef m_DepthValRef;
 		WrpConVarRef m_DepthValMaxRef;
 	};
