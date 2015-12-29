@@ -41,6 +41,10 @@ private:
 	bool m_Override_ps_c0;
 	float m_OverrideValue_ps_c0[4];
 
+	float m_OriginalValue_ps_c5[4];
+	bool m_Override_ps_c5;
+	float m_OverrideValue_ps_c5[4];
+
 	float m_OriginalValue_ps_c12[4];
 	bool m_Override_ps_c12_y;
 	float m_OverrideValue_ps_c12_y;
@@ -61,6 +65,7 @@ public:
 	, m_Override_D3DRS_ZWRITEENABLE(false)
 	, m_D3DRS_ZWRITEENABLE(TRUE)
 	, m_Override_ps_c0(false)
+	, m_Override_ps_c5(false)
 	, m_Override_ps_c12_y(false)
 	, m_Override_ps_c29_w(false)
 	, m_Original_VertexShader(0)
@@ -82,24 +87,32 @@ public:
 		m_Override_D3DRS_SRGBWRITEENABLE = false;
 	}
 
-	void Override_SetVertexShader(IDirect3DVertexShader9 * override_VertexShader)
+	void OverrideBegin_SetVertexShader(IDirect3DVertexShader9 * override_VertexShader)
 	{
-		m_Override_VertexShader = 0 != override_VertexShader;
+		m_Override_VertexShader = true;
 		
-		if(override_VertexShader)
-			g_OldDirect3DDevice9->SetVertexShader(override_VertexShader);
-		else
-			g_OldDirect3DDevice9->SetVertexShader(m_Original_VertexShader);
+		g_OldDirect3DDevice9->SetVertexShader(override_VertexShader);
 	}
 
-	void Override_SetPixelShader(IDirect3DPixelShader9 * override_PixelShader)
+	void OverrideEnd_SetVertexShader()
 	{
-		m_Override_PixelShader = 0 != override_PixelShader;
+		m_Override_VertexShader = false;
+		
+		g_OldDirect3DDevice9->SetVertexShader(m_Original_VertexShader);
+	}
 
-		if(override_PixelShader)
-			g_OldDirect3DDevice9->SetPixelShader(override_PixelShader);
-		else
-			g_OldDirect3DDevice9->SetPixelShader(m_Original_PixelShader);
+	void OverrideBegin_SetPixelShader(IDirect3DPixelShader9 * override_PixelShader)
+	{
+		m_Override_PixelShader = true;
+
+		g_OldDirect3DDevice9->SetPixelShader(override_PixelShader);
+	}
+
+	void OverrideEnd_SetPixelShader()
+	{
+		m_Override_PixelShader = false;
+
+		g_OldDirect3DDevice9->SetPixelShader(m_Original_PixelShader);
 	}
 
 	void OverrideBegin_ps_c0(float values[4])
@@ -117,6 +130,23 @@ public:
 	{
 		m_Override_ps_c0 = false;
 		g_OldDirect3DDevice9->SetPixelShaderConstantF(0, m_OriginalValue_ps_c0, 1);
+	}
+
+	void OverrideBegin_ps_c5(float values[4])
+	{
+		m_Override_ps_c5 = true;
+		m_OverrideValue_ps_c5[0] = values[0];
+		m_OverrideValue_ps_c5[1] = values[1];
+		m_OverrideValue_ps_c5[2] = values[2];
+		m_OverrideValue_ps_c5[3] = values[3];
+
+		g_OldDirect3DDevice9->SetPixelShaderConstantF(5, m_OverrideValue_ps_c5, 1);
+	}
+
+	void OverrideEnd_ps_c5(void)
+	{
+		m_Override_ps_c5 = false;
+		g_OldDirect3DDevice9->SetPixelShaderConstantF(5, m_OriginalValue_ps_c5, 1);
 	}
 
 	void OverrideBegin_ps_c12_y(float value)
@@ -539,6 +569,16 @@ public:
 			g_OldDirect3DDevice9->SetPixelShaderConstantF(0, m_Override_ps_c0 ? m_OverrideValue_ps_c0 : m_OriginalValue_ps_c0, 1);
 		}
 
+		if(StartRegister <= 5 && 5 < StartRegister+Vector4fCount)
+		{
+			m_OriginalValue_ps_c5[0] = pConstantData[4*(5 -StartRegister)+0];
+			m_OriginalValue_ps_c5[1] = pConstantData[4*(5 -StartRegister)+1];
+			m_OriginalValue_ps_c5[2] = pConstantData[4*(5 -StartRegister)+2];
+			m_OriginalValue_ps_c5[3] = pConstantData[4*(5 -StartRegister)+3];
+
+			g_OldDirect3DDevice9->SetPixelShaderConstantF(5, m_Override_ps_c5 ? m_OverrideValue_ps_c5 : m_OriginalValue_ps_c5, 1);
+		}
+
 		if(StartRegister <= 12 && 12 < StartRegister+Vector4fCount)
 		{
 			m_OriginalValue_ps_c12[0] = pConstantData[4*(12 -StartRegister)+0];
@@ -576,6 +616,14 @@ public:
 				pConstantData[4*(0 -StartRegister)+1] = m_OriginalValue_ps_c0[1];
 				pConstantData[4*(0 -StartRegister)+2] = m_OriginalValue_ps_c0[2];
 				pConstantData[4*(0 -StartRegister)+3] = m_OriginalValue_ps_c0[3];
+			}
+
+			if(StartRegister <= 5 && 5 < StartRegister+Vector4fCount)
+			{
+				pConstantData[4*(5 -StartRegister)+0] = m_OriginalValue_ps_c5[0];
+				pConstantData[4*(5 -StartRegister)+1] = m_OriginalValue_ps_c5[1];
+				pConstantData[4*(5 -StartRegister)+2] = m_OriginalValue_ps_c5[2];
+				pConstantData[4*(5 -StartRegister)+3] = m_OriginalValue_ps_c5[3];
 			}
 
 			if(StartRegister <= 12 && 12 < StartRegister+Vector4fCount)
@@ -977,6 +1025,20 @@ void AfxD3D9_OverrideEnd_ps_c0(void)
 	g_NewDirect3DDevice9.OverrideEnd_ps_c0();
 }
 
+void AfxD3D9_OverrideBegin_ps_c5(float values[4])
+{
+	if(!g_OldDirect3DDevice9) return;
+
+	g_NewDirect3DDevice9.OverrideBegin_ps_c5(values);
+}
+
+void AfxD3D9_OverrideEnd_ps_c5(void)
+{
+	if(!g_OldDirect3DDevice9) return;
+
+	g_NewDirect3DDevice9.OverrideEnd_ps_c5();
+}
+
 void AfxD3D9_OverrideBegin_ps_c12_y(float value)
 {
 	if(!g_OldDirect3DDevice9) return;
@@ -1005,16 +1067,30 @@ void AfxD3D9_OverrideEnd_ps_c29_w(void)
 	g_NewDirect3DDevice9.OverrideEnd_ps_c29_w();
 }
 
-void AfxD3D9_Override_SetVertexShader(IDirect3DVertexShader9 * replacer)
+void AfxD3D9_OverrideBegin_SetVertexShader(IDirect3DVertexShader9 * overrideShader)
 {
 	if(!g_OldDirect3DDevice9) return;
 
-	g_NewDirect3DDevice9.Override_SetVertexShader(replacer);
+	g_NewDirect3DDevice9.OverrideBegin_SetVertexShader(overrideShader);
 }
 
-void AfxD3D9_Override_SetPixelShader(IDirect3DPixelShader9 * replacer)
+void AfxD3D9_OverrideEnd_SetVertexShader()
 {
 	if(!g_OldDirect3DDevice9) return;
 
-	g_NewDirect3DDevice9.Override_SetPixelShader(replacer);
+	g_NewDirect3DDevice9.OverrideEnd_SetVertexShader();
+}
+
+void AfxD3D9_OverrideBegin_SetPixelShader(IDirect3DPixelShader9 * overrideShader)
+{
+	if(!g_OldDirect3DDevice9) return;
+
+	g_NewDirect3DDevice9.OverrideBegin_SetPixelShader(overrideShader);
+}
+
+void AfxD3D9_OverrideEnd_SetPixelShader()
+{
+	if(!g_OldDirect3DDevice9) return;
+
+	g_NewDirect3DDevice9.OverrideEnd_SetPixelShader();
 }

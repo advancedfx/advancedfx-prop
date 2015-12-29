@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-12-02 dominik.matrixstorm.com
+// 2015-12-29 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-12-02 dominik.matrixstorm.com
@@ -11,6 +11,7 @@
 #include "AfxShaders.h"
 
 #include "hlaeFolder.h"
+//#include "SourceInterfaces.h"
 
 #include <string>
 
@@ -85,7 +86,7 @@ int FindAcsIndex(FILE * file, size_t indexOfs, int lowIndex, int hiIndex, int co
 
 	int value;
 
-	if(sizeof(value) != fread(&value,sizeof(value),1,file))
+	if(1 != fread(&value,sizeof(value),1,file))
 		return -1;
 
 	if(value == combo)
@@ -93,9 +94,9 @@ int FindAcsIndex(FILE * file, size_t indexOfs, int lowIndex, int hiIndex, int co
 		return testIndex;
 	}
 
-	return value < combo
-		? FindAcsIndex(file, indexOfs, lowIndex, testIndex, combo)
-		:  FindAcsIndex(file, indexOfs, testIndex, hiIndex, combo)
+	return combo < value
+		? FindAcsIndex(file, indexOfs, lowIndex, testIndex-1, combo)
+		:  FindAcsIndex(file, indexOfs, testIndex+1, hiIndex, combo)
 	;
 }
 
@@ -104,7 +105,7 @@ bool GetAcsComboOffsetAndSize(FILE * file, int index, int indexSize, size_t & ou
 {
 	int comboOfs;
 
-	if(sizeof(comboOfs) != fread(&comboOfs,sizeof(comboOfs),1,file))
+	if(1 != fread(&comboOfs,sizeof(comboOfs),1,file))
 		return false;
 
 	if(index+1 < indexSize)
@@ -114,7 +115,7 @@ bool GetAcsComboOffsetAndSize(FILE * file, int index, int indexSize, size_t & ou
 
 		int nextComboOfs;
 
-		if(sizeof(nextComboOfs) != fread(&nextComboOfs,sizeof(nextComboOfs),1,file))
+		if(1 != fread(&nextComboOfs,sizeof(nextComboOfs),1,file))
 			return false;
 
 		outComboOffset = comboOfs;
@@ -160,16 +161,18 @@ DWORD * LoadFromAcsShaderFileInMemory(char const * fileName, int combo)
 
 	bOk = bOk 
 		&& 0 != file
-		&& sizeof(version) == fread(&version,sizeof(version),1,file)
+		&& 1 == fread(&version,sizeof(version),1,file)
 		&& 0 == version
+		&& 1 == fread(&indexSize,sizeof(indexSize),1,file)
 		&& (indexOfs = ftell(file), true)
-		&& sizeof(indexSize) == fread(&indexSize,sizeof(indexSize),1,file)
 		&& -1 != (index = FindAcsIndex(file,indexOfs,0,indexSize-1,combo))
-		&& GetAcsComboOffsetAndSize(file, index, indexSize, comboSize, comboOfs)
+		&& GetAcsComboOffsetAndSize(file, index, indexSize, comboOfs, comboSize)
 	;
 
 	if(bOk)
 	{
+		//Tier0_Msg("Combo %i is at 0x%08x and has size 0x%08x!\n",combo,comboOfs,comboSize);
+
 		so = (DWORD *)malloc(
 			(comboSize & 0x3) == 0 ? comboSize : comboSize +(4-(size & 0x3))
 		);

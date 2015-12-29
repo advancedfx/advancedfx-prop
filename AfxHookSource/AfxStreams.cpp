@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-12-18 dominik.matrixstorm.com
+// 2015-12-29 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -599,7 +599,7 @@ CAfxBaseFxStream::CAfxBaseFxStream()
 , m_BlackAction(0)
 , m_WhiteAction(0)
 , m_DebugDumpAction(0)
-, m_ActionsInitialized(false)
+, m_StandardActionsInitialized(false)
 , m_BoundAction(false)
 , m_DebugPrint(false)
 {
@@ -607,6 +607,8 @@ CAfxBaseFxStream::CAfxBaseFxStream()
 
 CAfxBaseFxStream::~CAfxBaseFxStream()
 {
+	InvalidateVertexLitGenericHookActions();
+
 	delete m_DebugDumpAction;
 	delete m_WhiteAction;
 	delete m_BlackAction;
@@ -619,7 +621,8 @@ CAfxBaseFxStream::~CAfxBaseFxStream()
 
 void CAfxBaseFxStream::LevelShutdown(IAfxStreams4Stream * streams)
 {
-	InvalidateCache();
+	InvalidateMap();
+	InvalidateVertexLitGenericHookActions();
 
 	CAfxStream::LevelShutdown(streams);
 }
@@ -628,7 +631,7 @@ void CAfxBaseFxStream::StreamAttach(IAfxStreams4Stream * streams)
 {
 	CAfxRenderViewStream::StreamAttach(streams);
 
-	if(!m_ActionsInitialized)
+	if(!m_StandardActionsInitialized)
 	{
 		m_PassthroughAction = new CAction(this);
 		m_DepthAction = new CActionDepth(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
@@ -639,7 +642,7 @@ void CAfxBaseFxStream::StreamAttach(IAfxStreams4Stream * streams)
 		m_WhiteAction = new CActionWhite(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
 		m_DebugDumpAction = new CActionDebugDump(this);
 
-		m_ActionsInitialized = true;
+		m_StandardActionsInitialized = true;
 	}
 
 	// Set a default action, just in case:
@@ -650,6 +653,8 @@ void CAfxBaseFxStream::StreamAttach(IAfxStreams4Stream * streams)
 	streams->OnDraw_set(this);
 	streams->OnDraw_2_set(this);
 	streams->OnDrawModulated_set(this);
+	streams->OnSetVertexShader_set(this);
+	streams->OnSetPixelShader_set(this);
 }
 
 void CAfxBaseFxStream::StreamDetach(IAfxStreams4Stream * streams)
@@ -660,6 +665,8 @@ void CAfxBaseFxStream::StreamDetach(IAfxStreams4Stream * streams)
 		m_BoundAction = false;
 	}
 
+	streams->OnSetPixelShader_set(0);
+	streams->OnSetVertexShader_set(0);
 	streams->OnDrawModulated_set(0);
 	streams->OnDraw_2_set(0);
 	streams->OnDraw_set(0);
@@ -708,6 +715,7 @@ void CAfxBaseFxStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * materia
 			bool isAlphatest = 0 != (flags & MATERIAL_VAR_ALPHATEST);
 			bool isTranslucent = 0 != (flags & MATERIAL_VAR_TRANSLUCENT);
 
+			float alphaTestReference = 0.7f;
 			bool isPhong = false;
 			bool isBump = false;
 
@@ -735,13 +743,31 @@ void CAfxBaseFxStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * materia
 							if(params[0]->GetIntValue())
 								isPhong = true;
 						}
+						else
+						if(!strcmp(params[0]->GetName(),"$alphatestreference") && 0.0 < params[0]->GetFloatValue())
+						{
+							alphaTestReference = params[0]->GetFloatValue();
+							break;
+						}
 					}
 
 					++params;
 				}
 			}
 
-			m_CurrentAction = m_PassthroughAction; /* m_AfxVertexLitGenericHookActions[ CActionAfxVertexLitGenericHook::GetCombo(
+			if(!isPhong && !isBump)
+			{
+				CActionAfxVertexLitGenericHookKey key(
+					isAlphatest ? ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::AFXMODE_1 : ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::AFXMODE_0,
+					alphaTestReference);
+
+				m_CurrentAction = GetVertexLitGenericHookAction(key);
+			}
+			else
+				m_CurrentAction = m_PassthroughAction;
+			
+			
+			/* m_AfxVertexLitGenericHookActions[ CActionAfxVertexLitGenericHook::GetCombo(
 				isAlphatest ? CActionAfxVertexLitGenericHook::AAT_Yes : CActionAfxVertexLitGenericHook::AAT_No,
 				CActionAfxVertexLitGenericHook::AM_Depth24,
 				isPhong && !isTranslucent ? CActionAfxVertexLitGenericHook::AST_Phong : (isBump ? CActionAfxVertexLitGenericHook::AST_Bump : CActionAfxVertexLitGenericHook::AST_Normal)
@@ -880,6 +906,16 @@ void CAfxBaseFxStream::DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiff
 	m_CurrentAction->DrawModulated(am, vecDiffuseModulation, firstIndex, numIndices);
 }
 
+void CAfxBaseFxStream::SetVertexShader(const char* pFileName, int nStaticVshIndex, int vshIndex)
+{
+	m_CurrentAction->SetVertexShader(pFileName, nStaticVshIndex, vshIndex);
+}
+
+void CAfxBaseFxStream::SetPixelShader(const char* pFileName, int nStaticPshIndex, int pshIndex)
+{
+	m_CurrentAction->SetPixelShader(pFileName, nStaticPshIndex, pshIndex);
+}
+
 CAfxBaseFxStream::HideableAction CAfxBaseFxStream::ClientEffectTexturesAction_get(void)
 {
 	return m_ClientEffectTexturesAction;
@@ -887,7 +923,7 @@ CAfxBaseFxStream::HideableAction CAfxBaseFxStream::ClientEffectTexturesAction_ge
 
 void CAfxBaseFxStream::ClientEffectTexturesAction_set(HideableAction value)
 {
-	InvalidateCache();
+	InvalidateMap();
 
 	m_ClientEffectTexturesAction = value;
 }
@@ -899,7 +935,7 @@ CAfxBaseFxStream::MaskableAction CAfxBaseFxStream::WorldTexturesAction_get(void)
 
 void CAfxBaseFxStream::WorldTexturesAction_set(MaskableAction value)
 {
-	InvalidateCache();
+	InvalidateMap();
 	m_WorldTexturesAction = value;
 }
 
@@ -910,7 +946,7 @@ CAfxBaseFxStream::MaskableAction CAfxBaseFxStream::SkyBoxTexturesAction_get(void
 
 void CAfxBaseFxStream::SkyBoxTexturesAction_set(MaskableAction value)
 {
-	InvalidateCache();
+	InvalidateMap();
 	m_SkyBoxTexturesAction = value;
 }
 
@@ -921,7 +957,7 @@ CAfxBaseFxStream::MaskableAction CAfxBaseFxStream::StaticPropTexturesAction_get(
 
 void CAfxBaseFxStream::StaticPropTexturesAction_set(MaskableAction value)
 {
-	InvalidateCache();
+	InvalidateMap();
 	m_StaticPropTexturesAction = value;
 }
 
@@ -932,7 +968,7 @@ CAfxBaseFxStream::HideableAction CAfxBaseFxStream::CableAction_get(void)
 
 void CAfxBaseFxStream::CableAction_set(HideableAction value)
 {
-	InvalidateCache();
+	InvalidateMap();
 	m_CableAction = value;
 }
 
@@ -943,7 +979,7 @@ CAfxBaseFxStream::MaskableAction CAfxBaseFxStream::PlayerModelsAction_get(void)
 
 void CAfxBaseFxStream::PlayerModelsAction_set(MaskableAction value)
 {
-	InvalidateCache();
+	InvalidateMap();
 	m_PlayerModelsAction = value;
 }
 
@@ -954,7 +990,7 @@ CAfxBaseFxStream::MaskableAction CAfxBaseFxStream::WeaponModelsAction_get(void)
 
 void CAfxBaseFxStream::WeaponModelsAction_set(MaskableAction value)
 {
-	InvalidateCache();
+	InvalidateMap();
 	m_WeaponModelsAction = value;
 }
 
@@ -965,7 +1001,7 @@ CAfxBaseFxStream::MaskableAction CAfxBaseFxStream::StattrackAction_get(void)
 
 void CAfxBaseFxStream::StattrackAction_set(MaskableAction value)
 {
-	InvalidateCache();
+	InvalidateMap();
 	m_StattrackAction = value;
 }
 
@@ -976,7 +1012,7 @@ CAfxBaseFxStream::MaskableAction CAfxBaseFxStream::ShellModelsAction_get(void)
 
 void CAfxBaseFxStream::ShellModelsAction_set(MaskableAction value)
 {
-	InvalidateCache();
+	InvalidateMap();
 	m_ShellModelsAction = value;
 }
 
@@ -987,7 +1023,7 @@ CAfxBaseFxStream::MaskableAction CAfxBaseFxStream::OtherModelsAction_get(void)
 
 void CAfxBaseFxStream::OtherModelsAction_set(MaskableAction value)
 {
-	InvalidateCache();
+	InvalidateMap();
 	m_OtherModelsAction = value;
 }
 
@@ -999,7 +1035,7 @@ CAfxBaseFxStream::HideableAction CAfxBaseFxStream::DecalTexturesAction_get(void)
 
 void CAfxBaseFxStream::DecalTexturesAction_set(HideableAction value)
 {
-	InvalidateCache();
+	InvalidateMap();
 	m_DecalTexturesAction = value;
 }
 
@@ -1010,7 +1046,7 @@ CAfxBaseFxStream::HideableAction CAfxBaseFxStream::EffectsAction_get(void)
 
 void CAfxBaseFxStream::EffectsAction_set(HideableAction value)
 {
-	InvalidateCache();
+	InvalidateMap();
 	m_EffectsAction = value;
 }
 
@@ -1021,7 +1057,7 @@ CAfxBaseFxStream::HideableAction CAfxBaseFxStream::ShellParticleAction_get(void)
 
 void CAfxBaseFxStream::ShellParticleAction_set(HideableAction value)
 {
-	InvalidateCache();
+	InvalidateMap();
 	m_ShellParticleAction = value;
 }
 
@@ -1032,7 +1068,7 @@ CAfxBaseFxStream::HideableAction CAfxBaseFxStream::OtherParticleAction_get(void)
 
 void CAfxBaseFxStream::OtherParticleAction_set(HideableAction value)
 {
-	InvalidateCache();
+	InvalidateMap();
 	m_OtherParticleAction = value;
 }
 
@@ -1043,7 +1079,7 @@ CAfxBaseFxStream::MaskableAction CAfxBaseFxStream::StickerAction_get(void)
 
 void CAfxBaseFxStream::StickerAction_set(MaskableAction value)
 {
-	InvalidateCache();
+	InvalidateMap();
 	m_StickerAction = value;
 }
 
@@ -1054,7 +1090,7 @@ bool CAfxBaseFxStream::TestAction_get(void)
 
 void CAfxBaseFxStream::TestAction_set(bool value)
 {
-	InvalidateCache();
+	InvalidateMap();
 	m_TestAction = value;
 }
 
@@ -1088,7 +1124,7 @@ void CAfxBaseFxStream::DebugPrint_set(bool value)
 	m_DebugPrint = value;
 }
 
-void CAfxBaseFxStream::InvalidateCache(void)
+void CAfxBaseFxStream::InvalidateMap(void)
 {
 	if(m_DebugPrint) Tier0_Msg("Stream: Invalidating material cache.\n");
 	m_Map.clear();
@@ -1136,6 +1172,29 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(HideableAction value)
 
 	if(m_DebugPrint) Tier0_Msg("draw");
 	return m_PassthroughAction;
+}
+
+CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetVertexLitGenericHookAction(CActionAfxVertexLitGenericHookKey & key)
+{
+	std::map<CActionAfxVertexLitGenericHookKey, CActionAfxVertexLitGenericHook *>::iterator it = m_VertexLitGenericHookActions.find(key);
+
+	if(it != m_VertexLitGenericHookActions.end())
+	{
+		return it->second;
+	}
+
+	return m_VertexLitGenericHookActions[key] = new CActionAfxVertexLitGenericHook(this, key);
+}
+
+void CAfxBaseFxStream::InvalidateVertexLitGenericHookActions()
+{
+	for(std::map<CActionAfxVertexLitGenericHookKey, CActionAfxVertexLitGenericHook *>::iterator it = m_VertexLitGenericHookActions.begin();
+		it != m_VertexLitGenericHookActions.end();
+		++it)
+	{
+		delete it->second;
+	}
+	m_VertexLitGenericHookActions.clear();
 }
 
 // CAfxBaseFxStream::CActionMatte //////////////////////////////////////////////
@@ -1254,43 +1313,27 @@ void CAfxBaseFxStream::CActionDepth::Bind(IAfxMatRenderContext * ctx, IMaterial_
 	AfxD3D9OverrideBegin_D3DRS_SRGBWRITEENABLE(FALSE);
 }
 
-// CAfxBaseFxStream::CActionAfxDepthTest ///////////////////////////////////////
+// CAfxBaseFxStream::CActionAfxVertexLitGenericHook ////////////////////////////
 
-int CAfxBaseFxStream::CActionAfxVertexLitGenericHook::GetCombo(AFXALPHATEST afxAlphaTest, AFXMODE afxMode, AFXSHADERTYPE afxShaderType)
-{
-	return (int)afxShaderType * 5 * 2 +(int)afxMode * 2 + (int)afxAlphaTest;
-}
+csgo_Stdshader_dx9_Combos_vertexlit_and_unlit_generic_ps30 CAfxBaseFxStream::CActionAfxVertexLitGenericHook::m_Combos;
 
-CAfxBaseFxStream::CActionAfxVertexLitGenericHook::CActionAfxVertexLitGenericHook(CAfxBaseFxStream * parentStream, IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem, int combo)
+CAfxBaseFxStream::CActionAfxVertexLitGenericHook::CActionAfxVertexLitGenericHook(CAfxBaseFxStream * parentStream, CActionAfxVertexLitGenericHookKey & key)
 : CAction(parentStream)
-, m_AfxPixelShader(0)
-//, m_Material(freeMaster, matSystem->FindMaterial("afx/test",NULL))
+, m_Key(key)
 {
-	std::ostringstream os;
-	os << "afx_VertexLitGeneric_Hook_ps20_0_0_" << combo << ".fxo";
-
-	m_AfxPixelShader = g_AfxShaders.GetPixelShader(os.str().c_str());
-
-	if(!m_AfxPixelShader->GetPixelShader())
-		Tier0_Warning("AFXERROR: CAfxBaseFxStream::CActionAfxVertexLitGenericHook::CActionAfxVertexLitGenericHook: Shader %s is null.\n", os.str().c_str());
 }
 
 CAfxBaseFxStream::CActionAfxVertexLitGenericHook::~CActionAfxVertexLitGenericHook()
 {
-	if(m_AfxPixelShader)
-	{
-		m_AfxPixelShader->Release();
-		m_AfxPixelShader = 0;
-	}
 }
 
 void CAfxBaseFxStream::CActionAfxVertexLitGenericHook::AfxUnbind(IAfxMatRenderContext * ctx)
 {
-	AfxD3D9_OverrideEnd_ps_c0();
+	AfxD3D9_OverrideEnd_ps_c5();
 
 	AfxD3D9OverrideEnd_D3DRS_SRGBWRITEENABLE();
 
-	AfxD3D9_Override_SetPixelShader(0);
+	AfxD3D9_OverrideEnd_SetPixelShader();
 }
 
 void CAfxBaseFxStream::CActionAfxVertexLitGenericHook::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData)
@@ -1301,10 +1344,6 @@ void CAfxBaseFxStream::CActionAfxVertexLitGenericHook::Bind(IAfxMatRenderContext
 	float flDepthFactor = scale * m_ParentStream->m_DepthVal;
 	float flDepthFactorMax = scale * m_ParentStream->m_DepthValMax;
 
-	// Override shader(s):
-
-	AfxD3D9_Override_SetPixelShader(m_AfxPixelShader->GetPixelShader());
-
 	// Bind normal material:
 
 	ctx->GetParent()->Bind(material, proxyData);
@@ -1314,33 +1353,61 @@ void CAfxBaseFxStream::CActionAfxVertexLitGenericHook::Bind(IAfxMatRenderContext
 
 	AfxD3D9OverrideBegin_D3DRS_SRGBWRITEENABLE(FALSE);
 
-	//
-	// Fill in AFX shader variables:
-
-	// this is slow, but that's the way we do it for now:
-
-	float alphaTestReference = 0.7f;
-
-	int numVars = material->ShaderParamCount();
-	IMaterialVar_csgo **params = material->GetShaderParams();
-
-	for(int i=0; i<numVars; ++i)
-	{
-		if(params[0]->IsDefined() && !strcmp(params[0]->GetName(),"$alphatestreference") && 0.0 < params[0]->GetFloatValue())
-		{
-			alphaTestReference = params[0]->GetFloatValue();
-			break;
-		}
-		
-		++params;
-	}
+	// Fill in g_AfxConstants in shader:
 
 	float mulFac = flDepthFactorMax -flDepthFactor;
 	mulFac = !mulFac ? 0.0f : 1.0f / mulFac;
 
-	float overFac[4] = { flDepthFactor, mulFac, alphaTestReference, 0.0f };
+	float overFac[4] = { flDepthFactor, mulFac, m_Key.AlphaTestReference, 0.0f };
 
-	AfxD3D9_OverrideBegin_ps_c0(overFac);
+	AfxD3D9_OverrideBegin_ps_c5(overFac);
+}
+
+void CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader(const char* pFileName, int nStaticPshIndex, int pshIndex)
+{
+	if(!strcmp(pFileName,"vertexlit_and_unlit_generic_ps30"))
+	{
+		m_Combos.CalcCombos(nStaticPshIndex, pshIndex);
+
+		if(0 < m_Combos.m_LIGHTNING_PREVIEW)
+		{
+			//AfxD3D9_OverrideBegin_SetPixelShader(0);
+			return;
+		}
+
+		int combo = ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::GetCombo(
+			m_Key.AFXMODE,
+			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::DETAILTEXTURE_e)m_Combos.m_DETAILTEXTURE,
+			!m_Combos.m_BASEALPHAENVMAPMASK && !m_Combos.m_SELFILLUM ? ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::NOT_BASEALPHAENVMAPMASK_AND_NOT_SELFILLUM_1 : ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::NOT_BASEALPHAENVMAPMASK_AND_NOT_SELFILLUM_0,
+			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::FLASHLIGHT_e)m_Combos.m_FLASHLIGHT,
+			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::DETAIL_BLEND_MODE_e)m_Combos.m_DETAIL_BLEND_MODE,
+			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::DESATURATEWITHBASEALPHA_e)m_Combos.m_DESATURATEWITHBASEALPHA,
+			ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::NOT_LIGHTING_PREVIEW_ONLY_0
+		);
+/*
+		Tier0_Msg("%i,%i,%i,%i,%i,%i -> %i\n",
+			m_Key.AFXMODE,
+			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::DETAILTEXTURE_e)m_Combos.m_DETAILTEXTURE,
+			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::FLASHLIGHT_e)m_Combos.m_FLASHLIGHT,
+			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::DETAIL_BLEND_MODE_e)m_Combos.m_DETAIL_BLEND_MODE,
+			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::DESATURATEWITHBASEALPHA_e)m_Combos.m_DESATURATEWITHBASEALPHA,
+			ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::NOT_LIGHTING_PREVIEW_ONLY_0,
+			combo
+			);
+*/
+		IAfxPixelShader * afxPixelShader = g_AfxShaders.GetAcsPixelShader("afxHook_vertexlit_and_unlit_generic_ps30.acs", combo);
+
+		if(!afxPixelShader->GetPixelShader())
+			Tier0_Warning("AFXERROR: CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader: Shader for combo %i is null.\n", combo);
+
+		// Override shader(s):
+		AfxD3D9_OverrideBegin_SetPixelShader(afxPixelShader->GetPixelShader());
+
+		afxPixelShader->Release();
+	}
+	else
+		Tier0_Warning("AFXERROR: CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader: No replacement defined for %s.\n", pFileName);
+
 }
 
 // CAfxStreams /////////////////////////////////////////////////////////////////
@@ -1359,6 +1426,8 @@ CAfxStreams::CAfxStreams()
 , m_OnDraw(0)
 , m_OnDraw_2(0)
 , m_OnDrawModulated(0)
+, m_OnSetVertexShader(0)
+, m_OnSetPixelShader(0)
 , m_MatQueueModeRef(0)
 , m_MatPostProcessEnableRef(0)
 , m_MatDynamicTonemappingRef(0)
@@ -1500,6 +1569,9 @@ void CAfxStreams::OnSetVertexShader(const char* pFileName, int nStaticVshIndex, 
 		return;
 	
 	//Tier0_Msg("CAfxStreams::OnSetVertexShader(%s,%i,%i);\n", pFileName, nStaticVshIndex, vshIndex);
+	
+	if(m_OnSetVertexShader)
+		m_OnSetVertexShader->SetVertexShader(pFileName, nStaticVshIndex, vshIndex);
 }
 
 void CAfxStreams::OnSetPixelShader(const char* pFileName, int nStaticPshIndex, int pshIndex)
@@ -1511,6 +1583,9 @@ void CAfxStreams::OnSetPixelShader(const char* pFileName, int nStaticPshIndex, i
 		return;
 
 	//Tier0_Msg("CAfxStreams::OnSetPixelShader(%s,%i,%i);\n", pFileName, nStaticPshIndex, pshIndex);
+	
+	if(m_OnSetPixelShader)
+		m_OnSetPixelShader->SetPixelShader(pFileName, nStaticPshIndex, pshIndex);
 }
 
 void CAfxStreams::SetBlend(IAfxVRenderView * rv, float blend )
@@ -2627,9 +2702,9 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				return;
 			}
 			else
-			if(!_stricmp(cmd0, "invalidateCache"))
+			if(!_stricmp(cmd0, "invalidateMap"))
 			{
-				curBaseFx->InvalidateCache();
+				curBaseFx->InvalidateMap();
 				return;
 			}
 			else
@@ -2712,7 +2787,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 		Tier0_Msg("%s depthVal [...]\n", cmdPrefix);
 		Tier0_Msg("%s depthValMax [...]\n", cmdPrefix);
 		Tier0_Msg("%s debugPrint [...]\n", cmdPrefix);
-		Tier0_Msg("%s invalidateCache - invaldiates the material cache.\n", cmdPrefix);
+		Tier0_Msg("%s invalidateMap - invaldiates the material map.\n", cmdPrefix);
 		// testAction options is not displayed, because we don't want users to use it.
 		// Tier0_Msg("%s testAction [...]\n", cmdPrefix);
 	}
@@ -2769,6 +2844,16 @@ void CAfxStreams::OnDraw_2_set(IAfxMeshDraw_2 * value)
 void CAfxStreams::OnDrawModulated_set(IAfxMeshDrawModulated * value)
 {
 	m_OnDrawModulated = value;
+}
+
+void CAfxStreams::OnSetVertexShader_set(IAfxSetVertexShader * value)
+{
+	m_OnSetVertexShader = value;
+}
+
+void CAfxStreams::OnSetPixelShader_set(IAfxSetPixelShader * value)
+{
+	m_OnSetPixelShader = value;
 }
 
 void CAfxStreams::LevelShutdown(IAfxBaseClientDll * cl)

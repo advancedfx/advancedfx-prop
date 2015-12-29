@@ -33,6 +33,12 @@ void AfxD3D9_OverrideBegin_ps_c0(float values[4]);
 void AfxD3D9_OverrideEnd_ps_c0(void);
 
 /// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
+void AfxD3D9_OverrideBegin_ps_c5(float values[4]);
+
+/// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
+void AfxD3D9_OverrideEnd_ps_c5(void);
+
+/// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
 void AfxD3D9_OverrideBegin_ps_c12_y(float value);
 
 /// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
@@ -44,11 +50,14 @@ void AfxD3D9_OverrideBegin_ps_c29_w(float value);
 /// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
 void AfxD3D9_OverrideEnd_ps_c29_w(void);
 
-
-/// <param name="replacer">set 0 to end override</param>
 /// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
-void AfxD3D9_Override_SetVertexShader(IDirect3DVertexShader9 * replacer);
+void AfxD3D9_OverrideBegin_SetVertexShader(IDirect3DVertexShader9 * overrideShader);
 
-/// <param name="replacer">set 0 to end override</param>
 /// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
-void AfxD3D9_Override_SetPixelShader(IDirect3DPixelShader9 * replacer);
+void AfxD3D9_OverrideEnd_SetVertexShader();
+
+/// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
+void AfxD3D9_OverrideBegin_SetPixelShader(IDirect3DPixelShader9 * overrideShader);
+
+/// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
+void AfxD3D9_OverrideEnd_SetPixelShader();

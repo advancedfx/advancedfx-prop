@@ -133,6 +133,19 @@ public:
 	virtual void DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 ) = 0;
 };
 
+class IAfxSetVertexShader abstract
+{
+public:
+	virtual void SetVertexShader(const char* pFileName, int nStaticVshIndex, int vshIndex = -1) = 0;
+};
+
+class IAfxSetPixelShader abstract
+{
+public:
+	virtual void SetPixelShader(const char* pFileName, int nStaticPshIndex = 0, int pshIndex = 0) = 0;
+};
+
+
 
 class IAfxStreams4Stream abstract
 {
@@ -161,4 +174,7 @@ public:
 	virtual void OnDraw_set(IAfxMeshDraw * value) = 0;
 	virtual void OnDraw_2_set(IAfxMeshDraw_2 * value) = 0;
 	virtual void OnDrawModulated_set(IAfxMeshDrawModulated * value) = 0;
+
+	virtual void OnSetVertexShader_set(IAfxSetVertexShader * value) = 0;
+	virtual void OnSetPixelShader_set(IAfxSetPixelShader * value) = 0;
 };

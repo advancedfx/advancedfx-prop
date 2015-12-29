@@ -639,7 +639,7 @@ class FxcCompile
                     this,
                     sourceString,
                     profileString,
-                    MakeMacros(0),
+                    MakeMacros(i),
                     i
                     );
 
@@ -665,10 +665,8 @@ class FxcCompile
 
         if (0 < m_CompileErrors.Count)
         {
-            DoError("Found compile errors:");
-
-            foreach (string val in m_CompileErrors)
-                DoError(val);
+            DoError("Found compile errors, limiting to one error:");
+            DoError(m_CompileErrors.First.Value);
 
             return false;
         }

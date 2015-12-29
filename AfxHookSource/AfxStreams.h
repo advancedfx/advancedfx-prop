@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-12-18 dominik.matrixstorm.com
+// 2015-12-29 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -14,6 +14,9 @@
 #include "WrpConsole.h"
 #include "d3d9Hooks.h"
 #include "AfxShaders.h"
+#include "csgo_Stdshader_dx9_Hooks.h"
+
+#include <shaders/build/afxHook_vertexlit_and_unlit_generic_ps30.h>
 
 #include <string>
 #include <list>
@@ -223,8 +226,6 @@ private:
 
 extern bool g_DebugEnabled;
 
-#define CActionAfxVertexLitGenericHook_NUMCOMBOS 30
-
 class CAfxBaseFxStream
 : public CAfxRenderViewStream
 , public IAfxMatRenderContextBind
@@ -232,6 +233,8 @@ class CAfxBaseFxStream
 , public IAfxMeshDraw
 , public IAfxMeshDraw_2
 , public IAfxMeshDrawModulated
+, public IAfxSetVertexShader
+, public IAfxSetPixelShader
 {
 public:
 	enum MaskableAction {
@@ -276,6 +279,9 @@ public:
 	virtual void Draw(IAfxMesh * am, int firstIndex = -1, int numIndices = 0);
 	virtual void Draw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists);
 	virtual void DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 );
+
+	virtual void SetVertexShader(const char* pFileName, int nStaticVshIndex, int vshIndex = -1);
+	virtual void SetPixelShader(const char* pFileName, int nStaticPshIndex = 0, int pshIndex = 0);
 
 	HideableAction ClientEffectTexturesAction_get(void);
 	void ClientEffectTexturesAction_set(HideableAction value);
@@ -337,7 +343,7 @@ public:
 	bool DebugPrint_get(void);
 	void DebugPrint_set(bool value);
 
-	void InvalidateCache(void);
+	void InvalidateMap(void);
 
 protected:
 	HideableAction m_ClientEffectTexturesAction;
@@ -405,6 +411,14 @@ private:
 		virtual void DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 )
 		{
 			am->GetParent()->DrawModulated(vecDiffuseModulation, firstIndex, numIndices);
+		}
+
+		virtual void SetVertexShader(const char* pFileName, int nStaticVshIndex, int vshIndex = -1)
+		{
+		}
+
+		virtual void SetPixelShader(const char* pFileName, int nStaticPshIndex = 0, int pshIndex = 0)
+		{
 		}
 
 	protected:
@@ -544,33 +558,45 @@ private:
 		CAfxMaterial m_Material;
 	};
 
+
+	class CActionAfxVertexLitGenericHookKey
+	{
+	public:
+		ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::AFXMODE_e AFXMODE;
+		float AlphaTestReference;
+
+		CActionAfxVertexLitGenericHookKey()
+		{
+		}
+
+		CActionAfxVertexLitGenericHookKey(
+			ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::AFXMODE_e a_AFXMODE,
+			float a_AlphaTestReference)
+		: AFXMODE(a_AFXMODE)
+		, AlphaTestReference(a_AlphaTestReference)
+		{
+		}
+
+		CActionAfxVertexLitGenericHookKey(const CActionAfxVertexLitGenericHookKey & x)
+		: AFXMODE(x.AFXMODE)
+		, AlphaTestReference(x.AlphaTestReference)
+		{
+		}
+		
+		bool operator < (const CActionAfxVertexLitGenericHookKey & y) const
+		{
+			if(this->AFXMODE < y.AFXMODE)
+				return true;
+
+			return this->AFXMODE == y.AFXMODE && this->AlphaTestReference < y.AlphaTestReference;
+		}
+	};
+
 	class CActionAfxVertexLitGenericHook
 	: public CAction
 	{
 	public:
-		enum AFXALPHATEST
-		{
-			AAT_No = 0,
-			AAT_Yes = 1
-		};
-
-		enum AFXMODE {
-			AM_Depth8 = 0,
-			AM_Depth24 = 1,
-			AM_GreenScreen = 2,
-			AM_DrawBlack = 3,
-			AM_DrawWhite = 4,
-		};
-
-		enum AFXSHADERTYPE {
-			AST_Normal = 0,
-			AST_Phong = 1,
-			AST_Bump = 2
-		};
-
-		static int GetCombo(AFXALPHATEST afxAlphaTest, AFXMODE afxMode, AFXSHADERTYPE afxShaderType);
-
-		CActionAfxVertexLitGenericHook(CAfxBaseFxStream * parentStream, IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem, int combo);
+		CActionAfxVertexLitGenericHook(CAfxBaseFxStream * parentStream, CActionAfxVertexLitGenericHookKey & key);
 
 		virtual ~CActionAfxVertexLitGenericHook();
 
@@ -578,9 +604,12 @@ private:
 
 		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 );
 
+		virtual void SetPixelShader(const char* pFileName, int nStaticPshIndex = 0, int pshIndex = 0);
+
+
 	private:
-		IAfxPixelShader * m_AfxPixelShader;
-		//CAfxMaterial m_Material;
+		static csgo_Stdshader_dx9_Combos_vertexlit_and_unlit_generic_ps30 m_Combos;
+		CActionAfxVertexLitGenericHookKey m_Key;
 	};
 
 	class CActionDepth
@@ -692,14 +721,18 @@ private:
 	CAction * m_BlackAction;
 	CAction * m_WhiteAction;
 	CAction * m_DebugDumpAction;
-	bool m_ActionsInitialized;
+	bool m_StandardActionsInitialized;
 	bool m_BoundAction;
 	bool m_DebugPrint;
-
 	std::map<CAfxMaterialKey, CAction *> m_Map;
+	std::map<CActionAfxVertexLitGenericHookKey, CActionAfxVertexLitGenericHook *> m_VertexLitGenericHookActions;
 
 	CAction * GetAction(MaskableAction value);
 	CAction * GetAction(HideableAction value);
+
+	CAction * GetVertexLitGenericHookAction(CActionAfxVertexLitGenericHookKey & key);
+	
+	void InvalidateVertexLitGenericHookActions();
 };
 
 class CAfxDepthStream
@@ -1026,6 +1059,9 @@ public:
 	virtual void OnDraw_2_set(IAfxMeshDraw_2 * value);
 	virtual void OnDrawModulated_set(IAfxMeshDrawModulated * value);
 
+	virtual void OnSetVertexShader_set(IAfxSetVertexShader * value);
+	virtual void OnSetPixelShader_set(IAfxSetPixelShader * value);
+
 	virtual void LevelShutdown(IAfxBaseClientDll * cl);
 
 	virtual void View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx, vrect_t_csgo *rect);
@@ -1101,6 +1137,9 @@ private:
 	IAfxMeshDraw * m_OnDraw;
 	IAfxMeshDraw_2 * m_OnDraw_2;
 	IAfxMeshDrawModulated * m_OnDrawModulated;
+	IAfxSetVertexShader * m_OnSetVertexShader;
+	IAfxSetPixelShader * m_OnSetPixelShader;
+
 	WrpConVarRef * m_MatQueueModeRef;
 	int m_OldMatQueueMode;
 	WrpConVarRef * m_MatPostProcessEnableRef;

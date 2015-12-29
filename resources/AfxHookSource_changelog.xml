@@ -12,7 +12,7 @@
 <change type="fixed">
 Fixed render state problems once and for all hopefully (i.e. with D3DRS_SRGBWRITEENABLE state causing i.e. black console):
 The render state or vertex / pixel shader constants overrides should now be properly transparent to the game (meaning the Get* actions
-will feed the game with it's own original values).
+will feed the game with its own original values).
 </change>
 </changes>
 </release>
