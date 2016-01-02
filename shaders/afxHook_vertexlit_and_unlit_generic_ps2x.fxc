@@ -1,18 +1,16 @@
 // Copyright (c) Valve Corporation, All rights reserved.
 // Modified by advancedfx.org.
 
-// AFX: "AFXMODE" "0..6"
+// AFX: "AFXMODE" "0..4"
 
 // AFXMODE:
-// 0 - 8 bit depth
-// 1 - 8 bit depth, alphatested
-// 2 - 24 bit depth
-// 3 - 24 bit depth, alphatested
-// 4 - green matte
-// 5 - alpha matte, draw blackish
-// 6 - alpha matte, draw whitish
+// 0 - 8 bit depth, solid and alphaclipped
+// 1 - 24 bit depth, solid and alphaclipped
+// 2 - green matte, solid and alphaclipped
+// 3 - alpha matte, draw blackish
+// 4 - alpha matte, draw whitish
 
-#if AFXMODE == 1 || AFXMODE == 3
+#if AFXMODE == 0 || AFXMODE == 1 || AFXMODE == 2
 #define AFXALPHATEST 1
 #else
 #define AFXALPHATEST 0
@@ -334,10 +332,10 @@ float4 Afx_FinalOutput(float alpha, float zValue)
 	clip( alpha - g_cAfx_AlphaThreshold );
 #endif
 
-#if 0 == AFXMODE || 1 == AFXMODE
+#if 0 == AFXMODE
 	float dist = (zValue -g_cAfx_ClipPlaneSubtractValue) * g_cAfx_ClipPlaneMulValue;
 	return float4( dist, dist, dist, 1.0 );
-#elif 2 == AFXMODE || 3 == AFXMODE
+#elif 1 == AFXMODE
 	float dist = (zValue -g_cAfx_ClipPlaneSubtractValue) * g_cAfx_ClipPlaneMulValue;
 	dist = saturate(dist);
 	float3 color;
@@ -353,11 +351,11 @@ float4 Afx_FinalOutput(float alpha, float zValue)
 		color /= 256;
 	}
 	return float4(color, 1.0);
-#elif 4 == AFXMODE
-	return float4( 0, 1, 0, alpha );
-#elif 5 == AFXMODE
+#elif 2 == AFXMODE
+	return float4( 0, 1, 0, 1.0 );
+#elif 3 == AFXMODE
 	return float4( 0, 0, 0, alpha );
-#elif 6 == AFXMODE
+#elif 4 == AFXMODE
 	return float4( 1, 1, 1, alpha );
 #endif
 }

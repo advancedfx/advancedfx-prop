@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-12-29 dominik.matrixstorm.com
+// 2016-01-02 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -237,29 +237,17 @@ class CAfxBaseFxStream
 , public IAfxSetPixelShader
 {
 public:
-	enum MaskableAction {
-		MA_NotSet,
-		MA_Draw,
-		MA_DrawDepth,
-		MA_Mask,
-		MA_Invisible,
-		MA_Black,
-		MA_White,
-		MA_DebugDump
-	};
-
-	enum HideableAction
-	{
-		HA_NotSet,
-		HA_Draw,
-		HA_NoDraw,
-		HA_DebugDump
-	};
-
-	enum ShaderAction
-	{
-		SA_NotSet,
-		SA_NoChange
+	enum AfxAction {
+		AA_NotSet,
+		AA_Draw,
+		AA_NoDraw,
+		AA_Invisible,
+		AA_DrawDepth,
+		AA_DrawDepth24,
+		AA_GreenScreen,
+		AA_Black,
+		AA_White,
+		AA_DebugDump
 	};
 
 	CAfxBaseFxStream();
@@ -283,53 +271,53 @@ public:
 	virtual void SetVertexShader(const char* pFileName, int nStaticVshIndex, int vshIndex = -1);
 	virtual void SetPixelShader(const char* pFileName, int nStaticPshIndex = 0, int pshIndex = 0);
 
-	HideableAction ClientEffectTexturesAction_get(void);
-	void ClientEffectTexturesAction_set(HideableAction value);
+	AfxAction ClientEffectTexturesAction_get(void);
+	void ClientEffectTexturesAction_set(AfxAction value);
 
-	MaskableAction WorldTexturesAction_get(void);
-	void WorldTexturesAction_set(MaskableAction value);
+	AfxAction WorldTexturesAction_get(void);
+	void WorldTexturesAction_set(AfxAction value);
 
-	MaskableAction SkyBoxTexturesAction_get(void);
-	void SkyBoxTexturesAction_set(MaskableAction value);
+	AfxAction SkyBoxTexturesAction_get(void);
+	void SkyBoxTexturesAction_set(AfxAction value);
 
-	MaskableAction StaticPropTexturesAction_get(void);
-	void StaticPropTexturesAction_set(MaskableAction value);
+	AfxAction StaticPropTexturesAction_get(void);
+	void StaticPropTexturesAction_set(AfxAction value);
 
-	HideableAction CableAction_get(void);
-	void CableAction_set(HideableAction value);
+	AfxAction CableAction_get(void);
+	void CableAction_set(AfxAction value);
 
-	MaskableAction PlayerModelsAction_get(void);
-	void PlayerModelsAction_set(MaskableAction value);
+	AfxAction PlayerModelsAction_get(void);
+	void PlayerModelsAction_set(AfxAction value);
 
-	MaskableAction WeaponModelsAction_get(void);
-	void WeaponModelsAction_set(MaskableAction value);
+	AfxAction WeaponModelsAction_get(void);
+	void WeaponModelsAction_set(AfxAction value);
 
-	MaskableAction StattrackAction_get(void);
-	void StattrackAction_set(MaskableAction value);
+	AfxAction StattrackAction_get(void);
+	void StattrackAction_set(AfxAction value);
 
-	MaskableAction ShellModelsAction_get(void);
-	void ShellModelsAction_set(MaskableAction value);
+	AfxAction ShellModelsAction_get(void);
+	void ShellModelsAction_set(AfxAction value);
 
-	MaskableAction OtherModelsAction_get(void);
-	void OtherModelsAction_set(MaskableAction value);
+	AfxAction OtherModelsAction_get(void);
+	void OtherModelsAction_set(AfxAction value);
 
-	HideableAction DecalTexturesAction_get(void);
-	void DecalTexturesAction_set(HideableAction value);
+	AfxAction DecalTexturesAction_get(void);
+	void DecalTexturesAction_set(AfxAction value);
 
-	HideableAction EffectsAction_get(void);
-	void EffectsAction_set(HideableAction value);
+	AfxAction EffectsAction_get(void);
+	void EffectsAction_set(AfxAction value);
 
-	HideableAction ShellParticleAction_get(void);
-	void ShellParticleAction_set(HideableAction value);
+	AfxAction ShellParticleAction_get(void);
+	void ShellParticleAction_set(AfxAction value);
 
-	HideableAction OtherParticleAction_get(void);
-	void OtherParticleAction_set(HideableAction value);
+	AfxAction OtherParticleAction_get(void);
+	void OtherParticleAction_set(AfxAction value);
 
-	MaskableAction StickerAction_get(void);
-	void StickerAction_set(MaskableAction value);
+	AfxAction StickerAction_get(void);
+	void StickerAction_set(AfxAction value);
 
-	MaskableAction ErrorMaterialAction_get(void);
-	void ErrorMaterialAction_set(MaskableAction value);
+	AfxAction ErrorMaterialAction_get(void);
+	void ErrorMaterialAction_set(AfxAction value);
 
 	bool TestAction_get(void);
 	void TestAction_set(bool value);
@@ -346,22 +334,22 @@ public:
 	void InvalidateMap(void);
 
 protected:
-	HideableAction m_ClientEffectTexturesAction;
-	MaskableAction m_WorldTexturesAction;
-	MaskableAction m_SkyBoxTexturesAction;
-	MaskableAction m_StaticPropTexturesAction;
-	HideableAction m_CableAction;
-	MaskableAction m_PlayerModelsAction;
-	MaskableAction m_WeaponModelsAction;
-	MaskableAction m_StattrackAction;
-	MaskableAction m_ShellModelsAction;
-	MaskableAction m_OtherModelsAction;
-	HideableAction m_DecalTexturesAction;
-	HideableAction m_EffectsAction;
-	HideableAction m_ShellParticleAction;
-	HideableAction m_OtherParticleAction;
-	MaskableAction m_StickerAction;
-	HideableAction m_ErrorMaterialAction;
+	AfxAction m_ClientEffectTexturesAction;
+	AfxAction m_WorldTexturesAction;
+	AfxAction m_SkyBoxTexturesAction;
+	AfxAction m_StaticPropTexturesAction;
+	AfxAction m_CableAction;
+	AfxAction m_PlayerModelsAction;
+	AfxAction m_WeaponModelsAction;
+	AfxAction m_StattrackAction;
+	AfxAction m_ShellModelsAction;
+	AfxAction m_OtherModelsAction;
+	AfxAction m_DecalTexturesAction;
+	AfxAction m_EffectsAction;
+	AfxAction m_ShellParticleAction;
+	AfxAction m_OtherParticleAction;
+	AfxAction m_StickerAction;
+	AfxAction m_ErrorMaterialAction;
 	bool m_TestAction;
 	float m_DepthVal;
 	float m_DepthValMax;
@@ -380,8 +368,16 @@ private:
 			m_ParentStream = parentStream;
 		}
 
-		virtual ~CAction()
+		void AddRef(void)
 		{
+			++m_RefCount;
+		}
+
+		void Release(void)
+		{
+			--m_RefCount;
+			if(0 == m_RefCount)
+				delete this;
 		}
 
 		virtual void AfxUnbind(IAfxMatRenderContext * ctx)
@@ -424,6 +420,12 @@ private:
 	protected:
 		CAfxBaseFxStream * m_ParentStream;
 
+		virtual ~CAction()
+		{
+		}
+
+	private:
+		int m_RefCount;
 	};
 
 	class CActionDebugDump
@@ -448,10 +450,6 @@ private:
 		CActionMatte(CAfxBaseFxStream * parentStream, IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem)
 		: CAction(parentStream)
 		, m_MatteMaterial(freeMaster, matSystem->FindMaterial("afx/greenmatte",NULL))
-		{
-		}
-
-		virtual ~CActionMatte()
 		{
 		}
 
@@ -490,10 +488,6 @@ private:
 		{
 		}
 
-		virtual ~CActionBlack()
-		{
-		}
-
 		virtual void AfxUnbind(IAfxMatRenderContext * ctx);
 
 		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 );
@@ -526,10 +520,6 @@ private:
 		CActionWhite(CAfxBaseFxStream * parentStream, IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem)
 		: CAction(parentStream)
 		, m_Material(freeMaster, matSystem->FindMaterial("afx/white",NULL))
-		{
-		}
-
-		virtual ~CActionWhite()
 		{
 		}
 
@@ -598,18 +588,27 @@ private:
 	public:
 		CActionAfxVertexLitGenericHook(CAfxBaseFxStream * parentStream, CActionAfxVertexLitGenericHookKey & key);
 
-		virtual ~CActionAfxVertexLitGenericHook();
-
 		virtual void AfxUnbind(IAfxMatRenderContext * ctx);
 
 		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 );
 
 		virtual void SetPixelShader(const char* pFileName, int nStaticPshIndex = 0, int pshIndex = 0);
 
-
 	private:
 		static csgo_Stdshader_dx9_Combos_vertexlit_and_unlit_generic_ps30 m_Combos;
 		CActionAfxVertexLitGenericHookKey m_Key;
+	};
+
+	class CActionUnlitGenericFallback
+	: public CActionAfxVertexLitGenericHook
+	{
+	public:
+		CActionUnlitGenericFallback(CAfxBaseFxStream * parentStream, CActionAfxVertexLitGenericHookKey & key, IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem, char const * unlitGenericFallbackMaterialName);
+
+		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 );
+
+	private:
+		CAfxMaterial m_Material;
 	};
 
 	class CActionDepth
@@ -621,10 +620,6 @@ private:
 		, m_DepthMaterial(freeMaster, matSystem->FindMaterial("afx/depth",NULL))
 		, m_DepthValRef("mat_debugdepthval")
 		, m_DepthValMaxRef("mat_debugdepthvalmax")
-		{
-		}
-
-		virtual ~CActionDepth()
 		{
 		}
 
@@ -645,10 +640,6 @@ private:
 		CActionInvisible(CAfxBaseFxStream * parentStream, IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem)
 		: CAction(parentStream)
 		, m_InvisibleMaterial(freeMaster, matSystem->FindMaterial("afx/invisible",NULL))
-		{
-		}
-
-		virtual ~CActionInvisible()
 		{
 		}
 
@@ -686,10 +677,6 @@ private:
 		{
 		}
 
-		virtual ~CActionNoDraw()
-		{
-		}
-
 		virtual void Draw(IAfxMesh * am, int firstIndex = -1, int numIndices = 0)
 		{
 			am->GetParent()->MarkAsDrawn();
@@ -714,6 +701,7 @@ private:
 
 	CAction * m_CurrentAction;
 	CAction * m_DepthAction;
+	CAction * m_Depth24Action;
 	CAction * m_MatteAction;
 	CAction * m_PassthroughAction;
 	CAction * m_InvisibleAction;
@@ -727,8 +715,8 @@ private:
 	std::map<CAfxMaterialKey, CAction *> m_Map;
 	std::map<CActionAfxVertexLitGenericHookKey, CActionAfxVertexLitGenericHook *> m_VertexLitGenericHookActions;
 
-	CAction * GetAction(MaskableAction value);
-	CAction * GetAction(HideableAction value);
+	CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * material);
+	CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * material, AfxAction action, bool safeMode);
 
 	CAction * GetVertexLitGenericHookAction(CActionAfxVertexLitGenericHookKey & key);
 	
@@ -741,22 +729,22 @@ class CAfxDepthStream
 public:
 	CAfxDepthStream() : CAfxBaseFxStream()
 	{
-		m_ClientEffectTexturesAction = HA_NoDraw;
-		m_WorldTexturesAction =  MA_DrawDepth;
-		m_SkyBoxTexturesAction =  MA_DrawDepth;
-		m_StaticPropTexturesAction =  MA_DrawDepth;
-		m_CableAction =  HA_NoDraw;
-		m_PlayerModelsAction =  MA_DrawDepth;
-		m_WeaponModelsAction =  MA_DrawDepth;
-		m_StattrackAction = MA_DrawDepth;
-		m_ShellModelsAction =  MA_DrawDepth;
-		m_OtherModelsAction =  MA_DrawDepth;
-		m_DecalTexturesAction =  HA_NoDraw;
-		m_EffectsAction =  HA_NoDraw;
-		m_ShellParticleAction =  HA_NoDraw;
-		m_OtherParticleAction =  HA_NoDraw;
-		m_StickerAction =  MA_Invisible;
-		m_ErrorMaterialAction = HA_NoDraw;
+		m_ClientEffectTexturesAction = AA_DrawDepth;
+		m_WorldTexturesAction =  AA_DrawDepth;
+		m_SkyBoxTexturesAction =  AA_DrawDepth;
+		m_StaticPropTexturesAction =  AA_DrawDepth;
+		m_CableAction =  AA_DrawDepth;
+		m_PlayerModelsAction =  AA_DrawDepth;
+		m_WeaponModelsAction =  AA_DrawDepth;
+		m_StattrackAction = AA_DrawDepth;
+		m_ShellModelsAction =  AA_DrawDepth;
+		m_OtherModelsAction =  AA_DrawDepth;
+		m_DecalTexturesAction =  AA_DrawDepth;
+		m_EffectsAction =  AA_DrawDepth;
+		m_ShellParticleAction =  AA_DrawDepth;
+		m_OtherParticleAction =  AA_DrawDepth;
+		m_StickerAction =  AA_DrawDepth;
+		m_ErrorMaterialAction = AA_DrawDepth;
 	}
 
 	virtual ~CAfxDepthStream() {}
@@ -770,22 +758,22 @@ class CAfxMatteWorldStream
 public:
 	CAfxMatteWorldStream() : CAfxBaseFxStream()
 	{
-		m_ClientEffectTexturesAction = HA_Draw;
-		m_WorldTexturesAction = MA_Draw;
-		m_SkyBoxTexturesAction = MA_Draw;
-		m_StaticPropTexturesAction = MA_Draw;
-		m_CableAction =  HA_Draw;
-		m_PlayerModelsAction = MA_Invisible;
-		m_WeaponModelsAction = MA_Invisible;
-		m_StattrackAction = MA_Invisible;
-		m_ShellModelsAction = MA_Invisible;
-		m_OtherModelsAction = MA_Draw;
-		m_DecalTexturesAction = HA_Draw;
-		m_EffectsAction = HA_Draw;
-		m_ShellParticleAction = HA_NoDraw;
-		m_OtherParticleAction = HA_Draw;
-		m_StickerAction = MA_Invisible;
-		m_ErrorMaterialAction = HA_Draw;
+		m_ClientEffectTexturesAction = AA_Draw;
+		m_WorldTexturesAction = AA_Draw;
+		m_SkyBoxTexturesAction = AA_Draw;
+		m_StaticPropTexturesAction = AA_Draw;
+		m_CableAction =  AA_Draw;
+		m_PlayerModelsAction = AA_Invisible;
+		m_WeaponModelsAction = AA_Invisible;
+		m_StattrackAction = AA_Invisible;
+		m_ShellModelsAction = AA_Invisible;
+		m_OtherModelsAction = AA_Draw;
+		m_DecalTexturesAction = AA_Draw;
+		m_EffectsAction = AA_Draw;
+		m_ShellParticleAction = AA_Invisible;
+		m_OtherParticleAction = AA_Draw;
+		m_StickerAction = AA_Invisible;
+		m_ErrorMaterialAction = AA_Draw;
 	}
 
 	virtual ~CAfxMatteWorldStream() {}
@@ -799,22 +787,22 @@ class CAfxDepthWorldStream
 public:
 	CAfxDepthWorldStream() : CAfxBaseFxStream()
 	{
-		m_ClientEffectTexturesAction = HA_NoDraw;
-		m_WorldTexturesAction = MA_DrawDepth;
-		m_SkyBoxTexturesAction = MA_DrawDepth;
-		m_StaticPropTexturesAction = MA_DrawDepth;
-		m_CableAction =  HA_NoDraw;
-		m_PlayerModelsAction = MA_Invisible;
-		m_WeaponModelsAction = MA_Invisible;
-		m_StattrackAction = MA_Invisible;
-		m_ShellModelsAction = MA_Invisible;
-		m_OtherModelsAction = MA_DrawDepth;
-		m_DecalTexturesAction = HA_NoDraw;
-		m_EffectsAction = HA_NoDraw;
-		m_ShellParticleAction = HA_NoDraw;
-		m_OtherParticleAction = HA_NoDraw;
-		m_StickerAction = MA_Invisible;
-		m_ErrorMaterialAction = HA_NoDraw;
+		m_ClientEffectTexturesAction = AA_DrawDepth;
+		m_WorldTexturesAction = AA_DrawDepth;
+		m_SkyBoxTexturesAction = AA_DrawDepth;
+		m_StaticPropTexturesAction = AA_DrawDepth;
+		m_CableAction = AA_DrawDepth;
+		m_PlayerModelsAction = AA_Invisible;
+		m_WeaponModelsAction = AA_Invisible;
+		m_StattrackAction = AA_Invisible;
+		m_ShellModelsAction = AA_Invisible;
+		m_OtherModelsAction = AA_DrawDepth;
+		m_DecalTexturesAction = AA_DrawDepth;
+		m_EffectsAction = AA_DrawDepth;
+		m_ShellParticleAction = AA_Invisible;
+		m_OtherParticleAction = AA_DrawDepth;
+		m_StickerAction = AA_Invisible;
+		m_ErrorMaterialAction = AA_DrawDepth;
 	}
 
 	virtual ~CAfxDepthWorldStream() {}
@@ -828,22 +816,22 @@ class CAfxMatteEntityStream
 public:
 	CAfxMatteEntityStream() : CAfxBaseFxStream()
 	{
-		m_ClientEffectTexturesAction = HA_NoDraw;
-		m_WorldTexturesAction =  MA_Mask;
-		m_SkyBoxTexturesAction =  MA_Mask;
-		m_StaticPropTexturesAction =  MA_Mask;
-		m_CableAction =  HA_NoDraw;
-		m_PlayerModelsAction =  MA_Draw;
-		m_WeaponModelsAction =  MA_Draw;
-		m_StattrackAction = MA_Draw;
-		m_ShellModelsAction =  MA_Draw;
-		m_OtherModelsAction =  MA_Mask;
-		m_DecalTexturesAction =  HA_NoDraw;
-		m_EffectsAction =  HA_NoDraw;
-		m_ShellParticleAction =  HA_Draw;
-		m_OtherParticleAction =  HA_NoDraw;
-		m_StickerAction =  MA_Draw;
-		m_ErrorMaterialAction = HA_NoDraw;
+		m_ClientEffectTexturesAction = AA_GreenScreen;
+		m_WorldTexturesAction = AA_GreenScreen;
+		m_SkyBoxTexturesAction = AA_GreenScreen;
+		m_StaticPropTexturesAction = AA_GreenScreen;
+		m_CableAction = AA_GreenScreen;
+		m_PlayerModelsAction = AA_Draw;
+		m_WeaponModelsAction = AA_Draw;
+		m_StattrackAction = AA_Draw;
+		m_ShellModelsAction = AA_Draw;
+		m_OtherModelsAction = AA_GreenScreen;
+		m_DecalTexturesAction = AA_GreenScreen;
+		m_EffectsAction = AA_GreenScreen;
+		m_ShellParticleAction = AA_Draw;
+		m_OtherParticleAction = AA_GreenScreen;
+		m_StickerAction = AA_Draw;
+		m_ErrorMaterialAction = AA_GreenScreen;
 	}
 
 	virtual ~CAfxMatteEntityStream() {}
@@ -857,22 +845,22 @@ class CAfxDepthEntityStream
 public:
 	CAfxDepthEntityStream() : CAfxBaseFxStream()
 	{
-		m_ClientEffectTexturesAction = HA_NoDraw;
-		m_WorldTexturesAction =  MA_DrawDepth;
-		m_SkyBoxTexturesAction =  MA_DrawDepth;
-		m_StaticPropTexturesAction =  MA_DrawDepth;
-		m_CableAction =  HA_NoDraw;
-		m_PlayerModelsAction =  MA_DrawDepth;
-		m_WeaponModelsAction =  MA_DrawDepth;
-		m_StattrackAction = MA_DrawDepth;
-		m_ShellModelsAction =  MA_DrawDepth;
-		m_OtherModelsAction =  MA_DrawDepth;
-		m_DecalTexturesAction =  HA_NoDraw;
-		m_EffectsAction =  HA_NoDraw;
-		m_ShellParticleAction =  HA_NoDraw;
-		m_OtherParticleAction =  HA_NoDraw;
-		m_StickerAction =  MA_Invisible;
-		m_ErrorMaterialAction = HA_NoDraw;
+		m_ClientEffectTexturesAction = AA_DrawDepth;
+		m_WorldTexturesAction =  AA_DrawDepth;
+		m_SkyBoxTexturesAction =  AA_DrawDepth;
+		m_StaticPropTexturesAction =  AA_DrawDepth;
+		m_CableAction =  AA_DrawDepth;
+		m_PlayerModelsAction =  AA_DrawDepth;
+		m_WeaponModelsAction =  AA_DrawDepth;
+		m_StattrackAction = AA_DrawDepth;
+		m_ShellModelsAction =  AA_DrawDepth;
+		m_OtherModelsAction =  AA_DrawDepth;
+		m_DecalTexturesAction =  AA_DrawDepth;
+		m_EffectsAction =  AA_DrawDepth;
+		m_ShellParticleAction =  AA_DrawDepth;
+		m_OtherParticleAction =  AA_DrawDepth;
+		m_StickerAction =  AA_DrawDepth;
+		m_ErrorMaterialAction = AA_DrawDepth;
 	}
 
 	virtual ~CAfxDepthEntityStream() {}
@@ -886,22 +874,22 @@ class CAfxAlphaMatteStream
 public:
 	CAfxAlphaMatteStream() : CAfxBaseFxStream()
 	{
-		m_ClientEffectTexturesAction = HA_NoDraw;
-		m_WorldTexturesAction =  MA_Black;
-		m_SkyBoxTexturesAction =  MA_Black;
-		m_StaticPropTexturesAction =  MA_Black;
-		m_CableAction =  HA_NoDraw;
-		m_PlayerModelsAction =  MA_White;
-		m_WeaponModelsAction =  MA_White;
-		m_StattrackAction = MA_White;
-		m_ShellModelsAction =  MA_White;
-		m_OtherModelsAction =  MA_Black;
-		m_DecalTexturesAction =  HA_NoDraw;
-		m_EffectsAction =  HA_NoDraw;
-		m_ShellParticleAction =  HA_NoDraw;
-		m_OtherParticleAction =  HA_NoDraw;
-		m_StickerAction =  MA_Invisible;
-		m_ErrorMaterialAction = HA_NoDraw;
+		m_ClientEffectTexturesAction = AA_Black;
+		m_WorldTexturesAction = AA_Black;
+		m_SkyBoxTexturesAction = AA_Black;
+		m_StaticPropTexturesAction = AA_Black;
+		m_CableAction = AA_Black;
+		m_PlayerModelsAction = AA_White;
+		m_WeaponModelsAction = AA_White;
+		m_StattrackAction = AA_White;
+		m_ShellModelsAction = AA_White;
+		m_OtherModelsAction = AA_Black;
+		m_DecalTexturesAction = AA_Black;
+		m_EffectsAction = AA_Black;
+		m_ShellParticleAction = AA_White;
+		m_OtherParticleAction = AA_Black;
+		m_StickerAction = AA_White;
+		m_ErrorMaterialAction = AA_Black;
 	}
 
 	virtual ~CAfxAlphaMatteStream() {}
@@ -915,23 +903,22 @@ class CAfxAlphaEntityStream
 public:
 	CAfxAlphaEntityStream() : CAfxBaseFxStream()
 	{
-		m_ClientEffectTexturesAction = HA_Draw;
-		m_WorldTexturesAction =  MA_Draw;
-		m_SkyBoxTexturesAction =  MA_Draw;
-		m_StaticPropTexturesAction =  MA_Draw;
-		m_CableAction =  HA_Draw;
-		m_PlayerModelsAction =  MA_Draw;
-		m_WeaponModelsAction =  MA_Draw;
-		m_StattrackAction = MA_Draw;
-		m_ShellModelsAction =  MA_Draw;
-		m_OtherModelsAction =  MA_Draw;
-		m_DecalTexturesAction =  HA_Draw;
-		m_EffectsAction =  HA_Draw;
-		m_ShellParticleAction =  HA_Draw;
-		m_OtherParticleAction =  HA_Draw;
-		m_StickerAction =  MA_Draw;
-		m_ErrorMaterialAction = HA_Draw;
-
+		m_ClientEffectTexturesAction = AA_Draw;
+		m_WorldTexturesAction =  AA_Draw;
+		m_SkyBoxTexturesAction =  AA_Draw;
+		m_StaticPropTexturesAction =  AA_Draw;
+		m_CableAction =  AA_Draw;
+		m_PlayerModelsAction =  AA_Draw;
+		m_WeaponModelsAction =  AA_Draw;
+		m_StattrackAction = AA_Draw;
+		m_ShellModelsAction =  AA_Draw;
+		m_OtherModelsAction =  AA_Draw;
+		m_DecalTexturesAction =  AA_Draw;
+		m_EffectsAction =  AA_Draw;
+		m_ShellParticleAction =  AA_Draw;
+		m_OtherParticleAction =  AA_Draw;
+		m_StickerAction =  AA_Draw;
+		m_ErrorMaterialAction = AA_Draw;
 	}
 
 	virtual ~CAfxAlphaEntityStream() {}
@@ -945,22 +932,22 @@ class CAfxAlphaWorldStream
 public:
 	CAfxAlphaWorldStream() : CAfxBaseFxStream()
 	{
-		m_ClientEffectTexturesAction = HA_Draw;
-		m_WorldTexturesAction =  MA_Draw;
-		m_SkyBoxTexturesAction =  MA_Draw;
-		m_StaticPropTexturesAction =  MA_Draw;
-		m_CableAction =  HA_Draw;
-		m_PlayerModelsAction =  MA_Invisible;
-		m_WeaponModelsAction =  MA_Invisible;
-		m_StattrackAction = MA_Invisible;
-		m_ShellModelsAction =  MA_Invisible;
-		m_OtherModelsAction =  MA_Draw;
-		m_DecalTexturesAction =  HA_Draw;
-		m_EffectsAction =  HA_Draw;
-		m_ShellParticleAction =  HA_Draw;
-		m_OtherParticleAction =  HA_Draw;
-		m_StickerAction =  MA_Invisible;
-		m_ErrorMaterialAction = HA_Draw;
+		m_ClientEffectTexturesAction = AA_Draw;
+		m_WorldTexturesAction = AA_Draw;
+		m_SkyBoxTexturesAction = AA_Draw;
+		m_StaticPropTexturesAction = AA_Draw;
+		m_CableAction = AA_Draw;
+		m_PlayerModelsAction = AA_Invisible;
+		m_WeaponModelsAction = AA_Invisible;
+		m_StattrackAction = AA_Invisible;
+		m_ShellModelsAction =  AA_Invisible;
+		m_OtherModelsAction =  AA_Draw;
+		m_DecalTexturesAction = AA_Draw;
+		m_EffectsAction = AA_Draw;
+		m_ShellParticleAction = AA_Invisible;
+		m_OtherParticleAction = AA_Draw;
+		m_StickerAction = AA_Invisible;
+		m_ErrorMaterialAction = AA_Draw;
 	}
 
 	virtual ~CAfxAlphaWorldStream() {}
@@ -1172,11 +1159,8 @@ private:
 
 	bool Console_CheckStreamName(char const * value);
 
-	bool Console_ToMaskableAction(char const * value, CAfxBaseFxStream::MaskableAction & maskableAction);
-	char const * Console_FromMaskableAction(CAfxBaseFxStream::MaskableAction maskableAction);
-
-	bool Console_ToHideableAction(char const * value, CAfxBaseFxStream::HideableAction & hideableAction);
-	char const * Console_FromHideableAction(CAfxBaseFxStream::HideableAction hideableAction);
+	bool Console_ToAfxAction(char const * value, CAfxBaseFxStream::AfxAction & action);
+	char const * Console_FromAfxAction(CAfxBaseFxStream::AfxAction action);
 
 	bool Console_ToStreamCombineType(char const * value, CAfxTwinStream::StreamCombineType & streamCombineType);
 	char const * Console_FromStreamCombineType(CAfxTwinStream::StreamCombineType streamCombineType);

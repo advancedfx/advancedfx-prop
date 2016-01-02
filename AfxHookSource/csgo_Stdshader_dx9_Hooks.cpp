@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-12-18 dominik.matrixstorm.com
+// 2016-01-02 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-12-06 dominik.matrixstorm.com
@@ -1005,8 +1005,42 @@ private:
 	}
 };
 
-
 typedef void (__stdcall *csgo_CShader_OnDrawElements_t)(DWORD *this_ptr, IMaterialVar_csgo **params, IShaderShadow_csgo* pShaderShadow, IShaderDynamicAPI_csgo* pShaderAPI, VertexCompressionType_t_csgo vertexCompression, CBasePerMaterialContextData_csgo **pContextDataPtr);
+
+csgo_CShader_OnDrawElements_t detoured_csgo_UnlitGeneric_CShader_OnDrawElements;
+
+// Keep in mind this function can run on multiple threads simultaneously!
+//
+void __stdcall touring_csgo_UnlitGeneric_CShader_OnDrawElements(DWORD *this_ptr, IMaterialVar_csgo **params, IShaderShadow_csgo* pShaderShadow, IShaderDynamicAPI_csgo* pShaderAPI, VertexCompressionType_t_csgo vertexCompression, CBasePerMaterialContextData_csgo **pContextDataPtr)
+{
+	//Tier0_Msg("touring_csgo_UnlitGeneric_CShader_OnDrawElements(0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x):%s (0x%08x) threadId=%i\n",this_ptr, params, pShaderShadow, pShaderAPI, vertexCompression, *pContextDataPtr, params[0]->GetOwningMaterial()->GetName(), params[0]->GetOwningMaterial(), GetCurrentThreadId());
+
+	CAfxBasePerMaterialContextDataPiggyBack_csgo * pContextData = reinterpret_cast< CAfxBasePerMaterialContextDataPiggyBack_csgo *> ( *pContextDataPtr );
+
+	if(!pContextData)
+	{
+		pContextData = new CAfxBasePerMaterialContextDataPiggyBack_csgo();
+	}
+
+	CBasePerMaterialContextData_csgo * payLoad = pContextData->PreUpdatePiggy();
+
+	pContextData->SetParentApis(pShaderShadow, pShaderAPI);
+	pContextData->SetOwningMaterial(params[0]->GetOwningMaterial());
+
+	detoured_csgo_UnlitGeneric_CShader_OnDrawElements(
+		this_ptr,
+		params,
+		pShaderShadow ? pContextData : 0,
+		pShaderAPI ? pContextData : 0,
+		vertexCompression,
+		&payLoad
+	);
+
+	pContextData->PostUpdatePiggy(payLoad);
+
+	*pContextDataPtr = pContextData;
+}
+
 
 csgo_CShader_OnDrawElements_t detoured_csgo_VertexLitGeneric_CShader_OnDrawElements;
 
@@ -1047,14 +1081,21 @@ bool csgo_Stdshader_dx9_Hooks_Init(void)
 	static bool firstResult = false;
 	static bool firstRun = true;
 	if(!firstRun) return firstResult;
-	firstRun = false;
+	firstRun = true;
+
+	if(AFXADDR_GET(csgo_UnlitGeneric_CShader_OnDrawElements))
+	{
+		detoured_csgo_UnlitGeneric_CShader_OnDrawElements = (csgo_CShader_OnDrawElements_t)DetourClassFunc((BYTE *)AFXADDR_GET(csgo_UnlitGeneric_CShader_OnDrawElements), (BYTE *)touring_csgo_UnlitGeneric_CShader_OnDrawElements, (int)AFXADDR_GET(csgo_UnlitGeneric_CShader_OnDrawElements_DSZ));
+	}
+	else
+		firstResult = false;
 
 	if(AFXADDR_GET(csgo_VertexLitGeneric_CShader_OnDrawElements))
 	{
 		detoured_csgo_VertexLitGeneric_CShader_OnDrawElements = (csgo_CShader_OnDrawElements_t)DetourClassFunc((BYTE *)AFXADDR_GET(csgo_VertexLitGeneric_CShader_OnDrawElements), (BYTE *)touring_csgo_VertexLitGeneric_CShader_OnDrawElements, (int)AFXADDR_GET(csgo_VertexLitGeneric_CShader_OnDrawElements_DSZ));
-
-		firstResult = true;
 	}
+	else
+		firstResult = false;
 
 	return firstResult;
 }

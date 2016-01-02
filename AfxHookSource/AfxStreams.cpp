@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-12-29 dominik.matrixstorm.com
+// 2016-01-02 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -571,27 +571,28 @@ void CAfxDeveloperStream::DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecD
 
 CAfxBaseFxStream::CAfxBaseFxStream()
 : CAfxRenderViewStream()
-, m_ClientEffectTexturesAction(HA_Draw)
-, m_WorldTexturesAction(MA_Draw)
-, m_SkyBoxTexturesAction(MA_Draw)
-, m_StaticPropTexturesAction(MA_Draw)
-, m_CableAction(HA_Draw)
-, m_PlayerModelsAction(MA_Draw)
-, m_WeaponModelsAction(MA_Draw)
-, m_StattrackAction(MA_Draw)
-, m_ShellModelsAction(MA_Draw)
-, m_OtherModelsAction(MA_Draw)
-, m_DecalTexturesAction(HA_Draw)
-, m_EffectsAction(HA_Draw)
-, m_ShellParticleAction(HA_Draw)
-, m_OtherParticleAction(HA_Draw)
-, m_StickerAction(MA_Draw)
-, m_ErrorMaterialAction(HA_Draw)
+, m_ClientEffectTexturesAction(AA_Draw)
+, m_WorldTexturesAction(AA_Draw)
+, m_SkyBoxTexturesAction(AA_Draw)
+, m_StaticPropTexturesAction(AA_Draw)
+, m_CableAction(AA_Draw)
+, m_PlayerModelsAction(AA_Draw)
+, m_WeaponModelsAction(AA_Draw)
+, m_StattrackAction(AA_Draw)
+, m_ShellModelsAction(AA_Draw)
+, m_OtherModelsAction(AA_Draw)
+, m_DecalTexturesAction(AA_Draw)
+, m_EffectsAction(AA_Draw)
+, m_ShellParticleAction(AA_Draw)
+, m_OtherParticleAction(AA_Draw)
+, m_StickerAction(AA_Draw)
+, m_ErrorMaterialAction(AA_Draw)
 , m_TestAction(false)
 , m_DepthVal(1)
 , m_DepthValMax(1024)
 , m_CurrentAction(0)
 , m_DepthAction(0)
+, m_Depth24Action(0)
 , m_MatteAction(0)
 , m_PassthroughAction(0)
 , m_InvisibleAction(0)
@@ -607,16 +608,18 @@ CAfxBaseFxStream::CAfxBaseFxStream()
 
 CAfxBaseFxStream::~CAfxBaseFxStream()
 {
+	InvalidateMap();
 	InvalidateVertexLitGenericHookActions();
 
-	delete m_DebugDumpAction;
-	delete m_WhiteAction;
-	delete m_BlackAction;
-	delete m_NoDrawAction;
-	delete m_InvisibleAction;
-	delete m_MatteAction;
-	delete m_DepthAction;
-	delete m_PassthroughAction;
+	if(m_WhiteAction) m_WhiteAction->Release();
+	if(m_BlackAction) m_BlackAction->Release();
+	if(m_MatteAction) m_MatteAction->Release();
+	if(m_Depth24Action) m_Depth24Action->Release();
+	if(m_DepthAction) m_DepthAction->Release();
+	if(m_DebugDumpAction) m_DebugDumpAction->Release();
+	if(m_NoDrawAction) m_NoDrawAction->Release();
+	if(m_InvisibleAction) m_InvisibleAction->Release();
+	if(m_PassthroughAction) m_PassthroughAction->Release();
 }
 
 void CAfxBaseFxStream::LevelShutdown(IAfxStreams4Stream * streams)
@@ -634,13 +637,56 @@ void CAfxBaseFxStream::StreamAttach(IAfxStreams4Stream * streams)
 	if(!m_StandardActionsInitialized)
 	{
 		m_PassthroughAction = new CAction(this);
-		m_DepthAction = new CActionDepth(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
-		m_MatteAction = new CActionMatte(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
+		m_PassthroughAction->AddRef();
+		
 		m_InvisibleAction = new CActionInvisible(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
+		m_InvisibleAction->AddRef();
+
 		m_NoDrawAction = new CActionNoDraw(this);
-		m_BlackAction = new CActionBlack(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
-		m_WhiteAction = new CActionWhite(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
+		m_NoDrawAction->AddRef();
+
 		m_DebugDumpAction = new CActionDebugDump(this);
+		m_DebugDumpAction->AddRef();
+
+		m_DepthAction = new CActionUnlitGenericFallback(
+			this
+			, CActionAfxVertexLitGenericHookKey(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::AFXMODE_0, 0.7f)
+			, streams->GetFreeMaster(), streams->GetMaterialSystem()
+			, "afx/white"
+			);
+		m_DepthAction->AddRef();
+
+		m_Depth24Action = new CActionUnlitGenericFallback(
+			this
+			, CActionAfxVertexLitGenericHookKey(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::AFXMODE_1, 0.7f)
+			, streams->GetFreeMaster(), streams->GetMaterialSystem()
+			, "afx/white"
+			);
+		m_Depth24Action->AddRef();
+
+		m_MatteAction = new CActionUnlitGenericFallback(
+			this
+			, CActionAfxVertexLitGenericHookKey(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::AFXMODE_2, 0.7f)
+			, streams->GetFreeMaster(), streams->GetMaterialSystem()
+			, "afx/white"
+			);
+		m_MatteAction->AddRef();
+		
+		m_BlackAction = new CActionUnlitGenericFallback(
+			this
+			, CActionAfxVertexLitGenericHookKey(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::AFXMODE_3, 0.7f)
+			, streams->GetFreeMaster(), streams->GetMaterialSystem()
+			, "afx/white"
+			);
+		m_BlackAction->AddRef();
+
+		m_WhiteAction = new CActionUnlitGenericFallback(
+			this
+			, CActionAfxVertexLitGenericHookKey(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::AFXMODE_4, 0.7f)
+			, streams->GetFreeMaster(), streams->GetMaterialSystem()
+			, "afx/white"
+			);
+		m_WhiteAction->AddRef();
 
 		m_StandardActionsInitialized = true;
 	}
@@ -694,187 +740,8 @@ void CAfxBaseFxStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * materia
 	{
 		// determine current action and cache it.
 
-		const char * groupName =  material->GetTextureGroupName();
-		const char * name = material->GetName();
-		const char * shaderName = material->GetShaderName();
-		bool isErrorMaterial = material->IsErrorMaterial();
-
-		if(m_DebugPrint) Tier0_Msg("Stream: Caching Material: %s|%s|%s%s -> ", groupName, name, shaderName, isErrorMaterial ? "|isErrorMaterial" : "");
-
-		if(isErrorMaterial)
-		{
-			m_CurrentAction = GetAction(m_ErrorMaterialAction);
-		}
-		else
-		if(m_TestAction && !strcmp("VertexLitGeneric", shaderName))// && !strcmp("StaticProp textures", groupName) && !strcmp("models/props_vehicles/hmmwv_glass", name))
-		{
-			int numVars = material->ShaderParamCount();
-			IMaterialVar_csgo ** orgParams = material->GetShaderParams();
-
-			int flags = orgParams[FLAGS]->GetIntValue();
-			bool isAlphatest = 0 != (flags & MATERIAL_VAR_ALPHATEST);
-			bool isTranslucent = 0 != (flags & MATERIAL_VAR_TRANSLUCENT);
-
-			float alphaTestReference = 0.7f;
-			bool isPhong = false;
-			bool isBump = false;
-
-			{
-				IMaterialVar_csgo ** params = orgParams;
-
-				//Tier0_Msg("---- Params ----\n");
-
-				for(int i=0; i<numVars; ++i)
-				{
-					//Tier0_Msg("Param: %s -> %s (%s,isTexture: %s)\n",params[0]->GetName(), params[0]->GetStringValue(), params[0]->IsDefined() ? "defined" : "UNDEFINED", params[0]->IsTexture() ? "Y" : "N");
-
-					if(params[0]->IsDefined())
-					{
-						char const * varName = params[0]->GetName();
-
-						if(!strcmp(varName,"$bumpmap"))
-						{
-							if(params[0]->IsTexture())
-								isBump = true;
-						}
-						else
-						if(!strcmp(varName,"$phong"))
-						{
-							if(params[0]->GetIntValue())
-								isPhong = true;
-						}
-						else
-						if(!strcmp(params[0]->GetName(),"$alphatestreference") && 0.0 < params[0]->GetFloatValue())
-						{
-							alphaTestReference = params[0]->GetFloatValue();
-							break;
-						}
-					}
-
-					++params;
-				}
-			}
-
-			if(!isPhong && !isBump)
-			{
-				CActionAfxVertexLitGenericHookKey key(
-					isAlphatest ? ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::AFXMODE_1 : ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::AFXMODE_0,
-					alphaTestReference);
-
-				m_CurrentAction = GetVertexLitGenericHookAction(key);
-			}
-			else
-				m_CurrentAction = m_PassthroughAction;
-			
-			
-			/* m_AfxVertexLitGenericHookActions[ CActionAfxVertexLitGenericHook::GetCombo(
-				isAlphatest ? CActionAfxVertexLitGenericHook::AAT_Yes : CActionAfxVertexLitGenericHook::AAT_No,
-				CActionAfxVertexLitGenericHook::AM_Depth24,
-				isPhong && !isTranslucent ? CActionAfxVertexLitGenericHook::AST_Phong : (isBump ? CActionAfxVertexLitGenericHook::AST_Bump : CActionAfxVertexLitGenericHook::AST_Normal)
-				) ];*/
-
-		}
-		else
-		if(!strcmp("ClientEffect textures", groupName))
-			m_CurrentAction = GetAction(m_ClientEffectTexturesAction);
-		else
-		if(!strcmp("Decal textures", groupName))
-			m_CurrentAction = GetAction(m_DecalTexturesAction);
-		else
-		if(!strcmp("World textures", groupName))
-		{
-			m_CurrentAction = GetAction(m_WorldTexturesAction);
-		}
-		else
-		if(!strcmp("SkyBox textures", groupName))
-			m_CurrentAction = GetAction(m_SkyBoxTexturesAction);
-		else
-		if(!strcmp("StaticProp textures", groupName))
-		{
-			if(StringBeginsWith(name, "models/weapons/"))
-				m_CurrentAction = GetAction(m_WeaponModelsAction);
-			else
-				m_CurrentAction = GetAction(m_StaticPropTexturesAction);
-		}
-		else
-		if(!strcmp("Model textures", groupName))
-		{
-			if(StringBeginsWith(name, "models/player/"))
-				m_CurrentAction = GetAction(m_PlayerModelsAction);
-			else
-			if(StringBeginsWith(name, "models/weapons/"))
-			{
-				if(StringBeginsWith(name, "models/weapons/stattrack/"))
-					m_CurrentAction = GetAction(m_StattrackAction);
-				else
-					m_CurrentAction = GetAction(m_WeaponModelsAction);
-			}
-			else
-			if(StringBeginsWith(name, "models/shells/"))
-				m_CurrentAction = GetAction(m_ShellModelsAction);
-			else
-				m_CurrentAction = GetAction(m_OtherModelsAction);
-		}
-		else
-		if(!strcmp("Other textures", groupName))
-		{
-			if(StringBeginsWith(name, "cable/"))
-				m_CurrentAction = GetAction(m_CableAction);
-			else
-			if(StringBeginsWith(name, "cs_custom_material_"))
-				m_CurrentAction = GetAction(m_WeaponModelsAction);
-			else
-			if(StringBeginsWith(name, "effects/"))
-				m_CurrentAction = GetAction(m_EffectsAction);
-			else
-			if(StringBeginsWith(name, "particle/"))
-			{
-				if(StringBeginsWith(name, "particle/shells/"))
-					m_CurrentAction = GetAction(m_ShellParticleAction);
-				else
-					m_CurrentAction = GetAction(m_OtherParticleAction);
-			}
-			else
-			if(StringBeginsWith(name, "sticker_"))
-					m_CurrentAction = GetAction(m_StickerAction);
-			else
-			{
-				if(m_DebugPrint) Tier0_Msg("draw (unhandled)");
-				m_CurrentAction = m_PassthroughAction;
-			}
-		}
-		else
-		if(!strcmp("Particle textures", groupName))
-		{
-			if(StringBeginsWith(name, "particle/shells/"))
-				m_CurrentAction = GetAction(m_ShellParticleAction);
-			else
-				m_CurrentAction = GetAction(m_OtherParticleAction);
-		}
-		else
-		if(!strcmp("Precached", groupName))
-		{
-			if(StringBeginsWith(name, "effects/"))
-				m_CurrentAction = GetAction(m_EffectsAction);
-			else
-			if(StringBeginsWith(name, "particle/"))
-			{
-				if(StringBeginsWith(name, "particle/shells/"))
-					m_CurrentAction = GetAction(m_ShellParticleAction);
-				else
-					m_CurrentAction = GetAction(m_OtherParticleAction);
-			}
-			else
-			{
-				if(m_DebugPrint) Tier0_Msg("draw (unhandled)");
-				m_CurrentAction = m_PassthroughAction;
-			}
-		}
-		else
-		{
-			if(m_DebugPrint) Tier0_Msg("draw (unhandled)");
-			m_CurrentAction = m_PassthroughAction;
-		}
+		m_CurrentAction = GetAction(material);
+		m_CurrentAction->AddRef();
 
 		m_Map[key] = m_CurrentAction;
 
@@ -884,6 +751,339 @@ void CAfxBaseFxStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * materia
 	m_CurrentAction->Bind(ctx, material, proxyData);
 
 	m_BoundAction = true;
+}
+
+CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * material)
+{
+	const char * groupName =  material->GetTextureGroupName();
+	const char * name = material->GetName();
+	const char * shaderName = material->GetShaderName();
+	bool isErrorMaterial = material->IsErrorMaterial();
+
+	if(m_DebugPrint)
+		Tier0_Msg("Stream: GetAction: %s|%s|%s%s -> ", groupName, name, shaderName, isErrorMaterial ? "|isErrorMaterial" : "");
+
+	if(isErrorMaterial)
+		return GetAction(material, m_ErrorMaterialAction, true);
+	else
+	if(!strcmp("ClientEffect textures", groupName))
+		return GetAction(material, m_ClientEffectTexturesAction, true);
+	else
+	if(!strcmp("Decal textures", groupName))
+		return GetAction(material, m_DecalTexturesAction, true);
+	else
+	if(!strcmp("World textures", groupName))
+	{
+		return GetAction(material, m_WorldTexturesAction, false);
+	}
+	else
+	if(!strcmp("SkyBox textures", groupName))
+		return GetAction(material, m_SkyBoxTexturesAction, false);
+	else
+	if(!strcmp("StaticProp textures", groupName))
+	{
+		if(StringBeginsWith(name, "models/weapons/"))
+			return GetAction(material, m_WeaponModelsAction, false);
+		else
+			return GetAction(material, m_StaticPropTexturesAction, false);
+	}
+	else
+	if(!strcmp("Model textures", groupName))
+	{
+		if(StringBeginsWith(name, "models/player/"))
+			return GetAction(material, m_PlayerModelsAction, false);
+		else
+		if(StringBeginsWith(name, "models/weapons/"))
+		{
+			if(StringBeginsWith(name, "models/weapons/stattrack/"))
+				return GetAction(material, m_StattrackAction, false);
+			else
+				return GetAction(material, m_WeaponModelsAction, false);
+		}
+		else
+		if(StringBeginsWith(name, "models/shells/"))
+			return GetAction(material, m_ShellModelsAction, false);
+		else
+			return GetAction(material, m_OtherModelsAction, false);
+	}
+	else
+	if(!strcmp("Other textures", groupName))
+	{
+		if(StringBeginsWith(name, "cable/"))
+			return GetAction(material, m_CableAction, true);
+		else
+		if(StringBeginsWith(name, "cs_custom_material_"))
+			return GetAction(material, m_WeaponModelsAction, false);
+		else
+		if(StringBeginsWith(name, "effects/"))
+			return GetAction(material, m_EffectsAction, true);
+		else
+		if(StringBeginsWith(name, "particle/"))
+		{
+			if(StringBeginsWith(name, "particle/shells/"))
+				return GetAction(material, m_ShellParticleAction, true);
+			else
+				return GetAction(material, m_OtherParticleAction, true);
+		}
+		else
+		if(StringBeginsWith(name, "sticker_"))
+				return GetAction(material, m_StickerAction, false);
+		else
+		{
+			if(m_DebugPrint) Tier0_Msg("(unhandled)");
+			return m_PassthroughAction;
+		}
+	}
+	else
+	if(!strcmp("Particle textures", groupName))
+	{
+		if(StringBeginsWith(name, "particle/shells/"))
+			return GetAction(material, m_ShellParticleAction, true);
+		else
+			return GetAction(material, m_OtherParticleAction, true);
+	}
+	else
+	if(!strcmp("Precached", groupName))
+	{
+		if(StringBeginsWith(name, "effects/"))
+			return GetAction(material, m_EffectsAction, true);
+		else
+		if(StringBeginsWith(name, "particle/"))
+		{
+			if(StringBeginsWith(name, "particle/shells/"))
+				return GetAction(material, m_ShellParticleAction, true);
+			else
+				return GetAction(material, m_OtherParticleAction, true);
+		}
+		else
+		{
+			if(m_DebugPrint) Tier0_Msg("(unhandled)");
+			return m_PassthroughAction;
+		}
+	}
+
+	if(m_DebugPrint) Tier0_Msg("(unhandled)");
+	return m_PassthroughAction;
+}
+
+CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * material, AfxAction action, bool safeMode)
+{
+	const char * shaderName = material->GetShaderName();
+
+	int numVars = material->ShaderParamCount();
+	IMaterialVar_csgo ** orgParams = material->GetShaderParams();
+
+	int flags = orgParams[FLAGS]->GetIntValue();
+	bool isAlphatest = 0 != (flags & MATERIAL_VAR_ALPHATEST);
+	bool isTranslucent = 0 != (flags & MATERIAL_VAR_TRANSLUCENT);
+	bool isAdditive = 0 != (flags & MATERIAL_VAR_ADDITIVE);
+
+	float alphaTestReference = 0.7f;
+	bool isPhong = false;
+	bool isBump = false;
+
+	{
+		IMaterialVar_csgo ** params = orgParams;
+
+		//Tier0_Msg("---- Params ----\n");
+
+		for(int i=0; i<numVars; ++i)
+		{
+			//Tier0_Msg("Param: %s -> %s (%s,isTexture: %s)\n",params[0]->GetName(), params[0]->GetStringValue(), params[0]->IsDefined() ? "defined" : "UNDEFINED", params[0]->IsTexture() ? "Y" : "N");
+
+			if(params[0]->IsDefined())
+			{
+				char const * varName = params[0]->GetName();
+
+				if(!strcmp(varName,"$bumpmap"))
+				{
+					if(params[0]->IsTexture())
+						isBump = true;
+				}
+				else
+				if(!strcmp(varName,"$phong"))
+				{
+					if(params[0]->GetIntValue())
+						isPhong = true;
+				}
+				else
+				if(!strcmp(params[0]->GetName(),"$alphatestreference") && 0.0 < params[0]->GetFloatValue())
+				{
+					alphaTestReference = params[0]->GetFloatValue();
+					break;
+				}
+			}
+
+			++params;
+		}
+	}
+
+	if(!isAdditive && (!strcmp(shaderName, "VertexLitGeneric") || !strcmp(shaderName, "UnlitGeneric")))
+	{
+		if(!isPhong && !isBump)
+		{
+			switch(action)
+			{
+			case AA_DrawDepth:
+				{
+					if(m_DebugPrint) Tier0_Msg("drawDepth (VertexLitGeneric/UnlitGeneric hook)");
+
+					CActionAfxVertexLitGenericHookKey key(
+						ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::AFXMODE_0,
+						alphaTestReference);
+
+					return GetVertexLitGenericHookAction(key);
+				}
+			case AA_DrawDepth24:
+				{
+					if(m_DebugPrint) Tier0_Msg("drawDepth24 (VertexLitGeneric/UnlitGeneric hook)");
+
+					CActionAfxVertexLitGenericHookKey key(
+						ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::AFXMODE_1,
+						alphaTestReference);
+
+					return GetVertexLitGenericHookAction(key);
+				}
+			case AA_GreenScreen:
+				{
+					if(m_DebugPrint) Tier0_Msg("mask (VertexLitGeneric/UnlitGeneric hook)");
+
+					CActionAfxVertexLitGenericHookKey key(
+						ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::AFXMODE_2,
+						alphaTestReference);
+
+					return GetVertexLitGenericHookAction(key);
+				}
+			case AA_Black:
+				{
+					if(m_DebugPrint) Tier0_Msg("black (VertexLitGeneric/UnlitGeneric hook)");
+
+					CActionAfxVertexLitGenericHookKey key(
+						ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::AFXMODE_3,
+						alphaTestReference);
+
+					return GetVertexLitGenericHookAction(key);
+				}
+			case AA_White:
+				{
+					if(m_DebugPrint) Tier0_Msg("white (VertexLitGeneric/UnlitGeneric hook)");
+
+					CActionAfxVertexLitGenericHookKey key(
+						ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::AFXMODE_4,
+						alphaTestReference);
+
+					return GetVertexLitGenericHookAction(key);
+				}
+			}
+		}
+	}
+
+	switch(action)
+	{
+	case AA_Draw:
+		if(m_DebugPrint) Tier0_Msg("draw");
+		return m_PassthroughAction;
+	case AA_NoDraw:
+		if(m_DebugPrint) Tier0_Msg("noDraw");
+		return m_NoDrawAction;
+	case AA_Invisible:
+		if(safeMode)
+		{
+			if(m_DebugPrint) Tier0_Msg("invisible -> noDraw");
+			return m_NoDrawAction;
+		}
+		else
+		{
+			if(m_DebugPrint) Tier0_Msg("invisible");
+			return m_InvisibleAction;
+		}
+	case AA_DrawDepth:
+		if(safeMode)
+		{
+			if(m_DebugPrint) Tier0_Msg("drawDepth -> noDraw");
+			return m_NoDrawAction;
+		}
+		else if(isAdditive)
+		{
+			if(m_DebugPrint) Tier0_Msg("drawDepth -> invisbile");
+			return m_InvisibleAction;
+		}
+		else
+		{
+			if(m_DebugPrint) Tier0_Msg("drawDepth");
+			return m_DepthAction;
+		}
+	case AA_DrawDepth24:
+		if(safeMode)
+		{
+			if(m_DebugPrint) Tier0_Msg("drawDepth24 -> noDraw");
+			return m_NoDrawAction;
+		}
+		else if(isAdditive)
+		{
+			if(m_DebugPrint) Tier0_Msg("drawDepth24 -> invisbile");
+			return m_InvisibleAction;
+		}
+		else
+		{
+			if(m_DebugPrint) Tier0_Msg("drawDepth24");
+			return m_Depth24Action;
+		}
+	case AA_GreenScreen:
+		if(safeMode)
+		{
+			if(m_DebugPrint) Tier0_Msg("mask -> noDraw");
+			return m_NoDrawAction;
+		}
+		else if(isAdditive)
+		{
+			if(m_DebugPrint) Tier0_Msg("drawDepth -> invisbile");
+			return m_InvisibleAction;
+		}
+		else
+		{
+			if(m_DebugPrint) Tier0_Msg("mask");
+			return m_MatteAction;
+		}
+	case AA_Black:
+		if(safeMode)
+		{
+			if(m_DebugPrint) Tier0_Msg("black -> noDraw");
+			return m_NoDrawAction;
+		}
+		else if(isAdditive)
+		{
+			if(m_DebugPrint) Tier0_Msg("drawDepth -> invisbile");
+			return m_InvisibleAction;
+		}
+		else
+		{
+			if(m_DebugPrint) Tier0_Msg("black");
+			return m_BlackAction;
+		}
+	case AA_White:
+		if(safeMode)
+		{
+			if(m_DebugPrint) Tier0_Msg("white -> noDraw");
+			return m_NoDrawAction;
+		}
+		else if(isAdditive)
+		{
+			if(m_DebugPrint) Tier0_Msg("drawDepth -> invisbile");
+			return m_InvisibleAction;
+		}
+		else
+		{
+			if(m_DebugPrint) Tier0_Msg("white");
+			return m_WhiteAction;
+		}
+	case AA_DebugDump:
+		if(m_DebugPrint) Tier0_Msg("debugDump");
+		return m_DebugDumpAction;
+	};
+
+	if(m_DebugPrint) Tier0_Msg("draw");
+	return m_PassthroughAction;
 }
 
 void CAfxBaseFxStream::DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance )
@@ -916,168 +1116,168 @@ void CAfxBaseFxStream::SetPixelShader(const char* pFileName, int nStaticPshIndex
 	m_CurrentAction->SetPixelShader(pFileName, nStaticPshIndex, pshIndex);
 }
 
-CAfxBaseFxStream::HideableAction CAfxBaseFxStream::ClientEffectTexturesAction_get(void)
+CAfxBaseFxStream::AfxAction CAfxBaseFxStream::ClientEffectTexturesAction_get(void)
 {
 	return m_ClientEffectTexturesAction;
 }
 
-void CAfxBaseFxStream::ClientEffectTexturesAction_set(HideableAction value)
+void CAfxBaseFxStream::ClientEffectTexturesAction_set(AfxAction value)
 {
 	InvalidateMap();
 
 	m_ClientEffectTexturesAction = value;
 }
 
-CAfxBaseFxStream::MaskableAction CAfxBaseFxStream::WorldTexturesAction_get(void)
+CAfxBaseFxStream::AfxAction CAfxBaseFxStream::WorldTexturesAction_get(void)
 {
 	return m_WorldTexturesAction;
 }
 
-void CAfxBaseFxStream::WorldTexturesAction_set(MaskableAction value)
+void CAfxBaseFxStream::WorldTexturesAction_set(AfxAction value)
 {
 	InvalidateMap();
 	m_WorldTexturesAction = value;
 }
 
-CAfxBaseFxStream::MaskableAction CAfxBaseFxStream::SkyBoxTexturesAction_get(void)
+CAfxBaseFxStream::AfxAction CAfxBaseFxStream::SkyBoxTexturesAction_get(void)
 {
 	return m_SkyBoxTexturesAction;
 }
 
-void CAfxBaseFxStream::SkyBoxTexturesAction_set(MaskableAction value)
+void CAfxBaseFxStream::SkyBoxTexturesAction_set(AfxAction value)
 {
 	InvalidateMap();
 	m_SkyBoxTexturesAction = value;
 }
 
-CAfxBaseFxStream::MaskableAction CAfxBaseFxStream::StaticPropTexturesAction_get(void)
+CAfxBaseFxStream::AfxAction CAfxBaseFxStream::StaticPropTexturesAction_get(void)
 {
 	return m_StaticPropTexturesAction;
 }
 
-void CAfxBaseFxStream::StaticPropTexturesAction_set(MaskableAction value)
+void CAfxBaseFxStream::StaticPropTexturesAction_set(AfxAction value)
 {
 	InvalidateMap();
 	m_StaticPropTexturesAction = value;
 }
 
-CAfxBaseFxStream::HideableAction CAfxBaseFxStream::CableAction_get(void)
+CAfxBaseFxStream::AfxAction CAfxBaseFxStream::CableAction_get(void)
 {
 	return m_CableAction;
 }
 
-void CAfxBaseFxStream::CableAction_set(HideableAction value)
+void CAfxBaseFxStream::CableAction_set(AfxAction value)
 {
 	InvalidateMap();
 	m_CableAction = value;
 }
 
-CAfxBaseFxStream::MaskableAction CAfxBaseFxStream::PlayerModelsAction_get(void)
+CAfxBaseFxStream::AfxAction CAfxBaseFxStream::PlayerModelsAction_get(void)
 {
 	return m_PlayerModelsAction;
 }
 
-void CAfxBaseFxStream::PlayerModelsAction_set(MaskableAction value)
+void CAfxBaseFxStream::PlayerModelsAction_set(AfxAction value)
 {
 	InvalidateMap();
 	m_PlayerModelsAction = value;
 }
 
-CAfxBaseFxStream::MaskableAction CAfxBaseFxStream::WeaponModelsAction_get(void)
+CAfxBaseFxStream::AfxAction CAfxBaseFxStream::WeaponModelsAction_get(void)
 {
 	return m_WeaponModelsAction;
 }
 
-void CAfxBaseFxStream::WeaponModelsAction_set(MaskableAction value)
+void CAfxBaseFxStream::WeaponModelsAction_set(AfxAction value)
 {
 	InvalidateMap();
 	m_WeaponModelsAction = value;
 }
 
-CAfxBaseFxStream::MaskableAction CAfxBaseFxStream::StattrackAction_get(void)
+CAfxBaseFxStream::AfxAction CAfxBaseFxStream::StattrackAction_get(void)
 {
 	return m_StattrackAction;
 }
 
-void CAfxBaseFxStream::StattrackAction_set(MaskableAction value)
+void CAfxBaseFxStream::StattrackAction_set(AfxAction value)
 {
 	InvalidateMap();
 	m_StattrackAction = value;
 }
 
-CAfxBaseFxStream::MaskableAction CAfxBaseFxStream::ShellModelsAction_get(void)
+CAfxBaseFxStream::AfxAction CAfxBaseFxStream::ShellModelsAction_get(void)
 {
 	return m_ShellModelsAction;
 }
 
-void CAfxBaseFxStream::ShellModelsAction_set(MaskableAction value)
+void CAfxBaseFxStream::ShellModelsAction_set(AfxAction value)
 {
 	InvalidateMap();
 	m_ShellModelsAction = value;
 }
 
-CAfxBaseFxStream::MaskableAction CAfxBaseFxStream::OtherModelsAction_get(void)
+CAfxBaseFxStream::AfxAction CAfxBaseFxStream::OtherModelsAction_get(void)
 {
 	return m_OtherModelsAction;
 }
 
-void CAfxBaseFxStream::OtherModelsAction_set(MaskableAction value)
+void CAfxBaseFxStream::OtherModelsAction_set(AfxAction value)
 {
 	InvalidateMap();
 	m_OtherModelsAction = value;
 }
 
-CAfxBaseFxStream::HideableAction CAfxBaseFxStream::DecalTexturesAction_get(void)
+CAfxBaseFxStream::AfxAction CAfxBaseFxStream::DecalTexturesAction_get(void)
 {
 	return m_DecalTexturesAction;
 }
 
 
-void CAfxBaseFxStream::DecalTexturesAction_set(HideableAction value)
+void CAfxBaseFxStream::DecalTexturesAction_set(AfxAction value)
 {
 	InvalidateMap();
 	m_DecalTexturesAction = value;
 }
 
-CAfxBaseFxStream::HideableAction CAfxBaseFxStream::EffectsAction_get(void)
+CAfxBaseFxStream::AfxAction CAfxBaseFxStream::EffectsAction_get(void)
 {
 	return m_EffectsAction;
 }
 
-void CAfxBaseFxStream::EffectsAction_set(HideableAction value)
+void CAfxBaseFxStream::EffectsAction_set(AfxAction value)
 {
 	InvalidateMap();
 	m_EffectsAction = value;
 }
 
-CAfxBaseFxStream::HideableAction CAfxBaseFxStream::ShellParticleAction_get(void)
+CAfxBaseFxStream::AfxAction CAfxBaseFxStream::ShellParticleAction_get(void)
 {
 	return m_ShellParticleAction;
 }
 
-void CAfxBaseFxStream::ShellParticleAction_set(HideableAction value)
+void CAfxBaseFxStream::ShellParticleAction_set(AfxAction value)
 {
 	InvalidateMap();
 	m_ShellParticleAction = value;
 }
 
-CAfxBaseFxStream::HideableAction CAfxBaseFxStream::OtherParticleAction_get(void)
+CAfxBaseFxStream::AfxAction CAfxBaseFxStream::OtherParticleAction_get(void)
 {
 	return m_OtherParticleAction;
 }
 
-void CAfxBaseFxStream::OtherParticleAction_set(HideableAction value)
+void CAfxBaseFxStream::OtherParticleAction_set(AfxAction value)
 {
 	InvalidateMap();
 	m_OtherParticleAction = value;
 }
 
-CAfxBaseFxStream::MaskableAction CAfxBaseFxStream::StickerAction_get(void)
+CAfxBaseFxStream::AfxAction CAfxBaseFxStream::StickerAction_get(void)
 {
 	return m_StickerAction;
 }
 
-void CAfxBaseFxStream::StickerAction_set(MaskableAction value)
+void CAfxBaseFxStream::StickerAction_set(AfxAction value)
 {
 	InvalidateMap();
 	m_StickerAction = value;
@@ -1127,51 +1327,12 @@ void CAfxBaseFxStream::DebugPrint_set(bool value)
 void CAfxBaseFxStream::InvalidateMap(void)
 {
 	if(m_DebugPrint) Tier0_Msg("Stream: Invalidating material cache.\n");
+	
+	for(std::map<CAfxMaterialKey, CAction *>::iterator it = m_Map.begin(); it != m_Map.end(); ++it)
+	{
+		it->second->Release();
+	}
 	m_Map.clear();
-}
-
-CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(MaskableAction value)
-{
-	switch(value)
-	{
-	case MA_DrawDepth:
-		if(m_DebugPrint) Tier0_Msg("drawDepth");
-		return m_DepthAction;
-	case MA_Mask:
-		if(m_DebugPrint) Tier0_Msg("mask");
-		return m_MatteAction;
-	case MA_Invisible:
-		if(m_DebugPrint) Tier0_Msg("invisible");
-		return m_InvisibleAction;
-	case MA_Black:
-		if(m_DebugPrint) Tier0_Msg("black");
-		return m_BlackAction;
-	case MA_White:
-		if(m_DebugPrint) Tier0_Msg("white");
-		return m_WhiteAction;
-	case MA_DebugDump:
-		if(m_DebugPrint) Tier0_Msg("debugDump");
-		return m_DebugDumpAction;
-	};
-
-	if(m_DebugPrint) Tier0_Msg("draw");
-	return m_PassthroughAction;
-}
-
-CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(HideableAction value)
-{
-	switch(value)
-	{
-	case HA_NoDraw:
-		if(m_DebugPrint) Tier0_Msg("noDraw");
-		return m_NoDrawAction;
-	case HA_DebugDump:
-		if(m_DebugPrint) Tier0_Msg("debugDump");
-		return m_DebugDumpAction;
-	};
-
-	if(m_DebugPrint) Tier0_Msg("draw");
-	return m_PassthroughAction;
 }
 
 CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetVertexLitGenericHookAction(CActionAfxVertexLitGenericHookKey & key)
@@ -1183,7 +1344,12 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetVertexLitGenericHookAction(CAct
 		return it->second;
 	}
 
-	return m_VertexLitGenericHookActions[key] = new CActionAfxVertexLitGenericHook(this, key);
+	CActionAfxVertexLitGenericHook * action = new CActionAfxVertexLitGenericHook(this, key);
+
+	action->AddRef();
+	m_VertexLitGenericHookActions[key] = action;
+
+	return action;
 }
 
 void CAfxBaseFxStream::InvalidateVertexLitGenericHookActions()
@@ -1192,7 +1358,7 @@ void CAfxBaseFxStream::InvalidateVertexLitGenericHookActions()
 		it != m_VertexLitGenericHookActions.end();
 		++it)
 	{
-		delete it->second;
+		it->second->Release();
 	}
 	m_VertexLitGenericHookActions.clear();
 }
@@ -1323,10 +1489,6 @@ CAfxBaseFxStream::CActionAfxVertexLitGenericHook::CActionAfxVertexLitGenericHook
 {
 }
 
-CAfxBaseFxStream::CActionAfxVertexLitGenericHook::~CActionAfxVertexLitGenericHook()
-{
-}
-
 void CAfxBaseFxStream::CActionAfxVertexLitGenericHook::AfxUnbind(IAfxMatRenderContext * ctx)
 {
 	AfxD3D9_OverrideEnd_ps_c5();
@@ -1408,6 +1570,19 @@ void CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader(const char
 	else
 		Tier0_Warning("AFXERROR: CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader: No replacement defined for %s.\n", pFileName);
 
+}
+
+// CAfxBaseFxStream::CActionUnlitGenericFallback ///////////////////////////////
+
+CAfxBaseFxStream::CActionUnlitGenericFallback::CActionUnlitGenericFallback(CAfxBaseFxStream * parentStream, CActionAfxVertexLitGenericHookKey & key, IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem, char const * unlitGenericFallbackMaterialName)
+: CActionAfxVertexLitGenericHook(parentStream, key)
+, m_Material(freeMaster, matSystem->FindMaterial(unlitGenericFallbackMaterialName,NULL))
+{
+}
+
+void CAfxBaseFxStream::CActionUnlitGenericFallback::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData)
+{
+	CActionAfxVertexLitGenericHook::Bind(ctx, m_Material.GetMaterial(), proxyData);
 }
 
 // CAfxStreams /////////////////////////////////////////////////////////////////
@@ -1938,10 +2113,7 @@ void CAfxStreams::Console_PreviewStream(const char * streamName)
 }
 
 // debugDump action is not displayed, because we don't want users to use it:
-#define CAFXBASEFXSTREAM_MASKABLEACTIONS "draw|drawDepth|mask|invisible|black|white"
-
-// debugDump action is not displayed, because we don't want users to use it:
-#define CAFXBASEFXSTREAM_HIDEABLEACTIONS "draw|noDraw"
+#define CAFXBASEFXSTREAM_AFXACTIONS "draw|noDraw|invisible|drawDepth|drawDepth24|mask|black|white"
 
 #define CAFXBASEFXSTREAM_STREAMCOMBINETYPES "aRedAsAlphaBColor|aColorBRedAsAlpha"
 #define CAFXBASEFXSTREAM_STREAMRENDERTYPES "renderView|depth"
@@ -2307,9 +2479,9 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				if(2 <= argc)
 				{
 					char const * cmd1 = args->ArgV(argcOffset +1);
-					CAfxBaseFxStream::HideableAction value;
+					CAfxBaseFxStream::AfxAction value;
 
-					if(Console_ToHideableAction(cmd1, value))
+					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->ClientEffectTexturesAction_set(value);
 						return;
@@ -2317,10 +2489,10 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				}
 
 				Tier0_Msg(
-					"%s clientEffectTexturesAction " CAFXBASEFXSTREAM_HIDEABLEACTIONS " - Set new action.\n"
+					"%s clientEffectTexturesAction " CAFXBASEFXSTREAM_AFXACTIONS " - Set new action.\n"
 					"Current value: %s.\n"
 					, cmdPrefix
-					, Console_FromHideableAction(curBaseFx->ClientEffectTexturesAction_get())
+					, Console_FromAfxAction(curBaseFx->ClientEffectTexturesAction_get())
 				);
 				return;
 			}
@@ -2330,9 +2502,9 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				if(2 <= argc)
 				{
 					char const * cmd1 = args->ArgV(argcOffset +1);
-					CAfxBaseFxStream::MaskableAction value;
+					CAfxBaseFxStream::AfxAction value;
 
-					if(Console_ToMaskableAction(cmd1, value))
+					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->WorldTexturesAction_set(value);
 						return;
@@ -2340,10 +2512,10 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				}
 
 				Tier0_Msg(
-					"%s worldTexturesAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
+					"%s worldTexturesAction " CAFXBASEFXSTREAM_AFXACTIONS " - Set new action.\n"
 					"Current value: %s.\n"
 					, cmdPrefix
-					, Console_FromMaskableAction(curBaseFx->WorldTexturesAction_get())
+					, Console_FromAfxAction(curBaseFx->WorldTexturesAction_get())
 				);
 				return;
 			}
@@ -2353,9 +2525,9 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				if(2 <= argc)
 				{
 					char const * cmd1 = args->ArgV(argcOffset +1);
-					CAfxBaseFxStream::MaskableAction value;
+					CAfxBaseFxStream::AfxAction value;
 
-					if(Console_ToMaskableAction(cmd1, value))
+					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->SkyBoxTexturesAction_set(value);
 						return;
@@ -2363,10 +2535,10 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				}
 
 				Tier0_Msg(
-					"%s skyBoxTexturesAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
+					"%s skyBoxTexturesAction " CAFXBASEFXSTREAM_AFXACTIONS " - Set new action.\n"
 					"Current value: %s.\n"
 					, cmdPrefix
-					, Console_FromMaskableAction(curBaseFx->SkyBoxTexturesAction_get())
+					, Console_FromAfxAction(curBaseFx->SkyBoxTexturesAction_get())
 				);
 				return;
 			}
@@ -2376,9 +2548,9 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				if(2 <= argc)
 				{
 					char const * cmd1 = args->ArgV(argcOffset +1);
-					CAfxBaseFxStream::MaskableAction value;
+					CAfxBaseFxStream::AfxAction value;
 
-					if(Console_ToMaskableAction(cmd1, value))
+					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->StaticPropTexturesAction_set(value);
 						return;
@@ -2386,10 +2558,10 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				}
 
 				Tier0_Msg(
-					"%s staticPropTexturesAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
+					"%s staticPropTexturesAction " CAFXBASEFXSTREAM_AFXACTIONS " - Set new action.\n"
 					"Current value: %s.\n"
 					, cmdPrefix
-					, Console_FromMaskableAction(curBaseFx->StaticPropTexturesAction_get())
+					, Console_FromAfxAction(curBaseFx->StaticPropTexturesAction_get())
 				);
 				return;
 			}
@@ -2399,9 +2571,9 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				if(2 <= argc)
 				{
 					char const * cmd1 = args->ArgV(argcOffset +1);
-					CAfxBaseFxStream::HideableAction value;
+					CAfxBaseFxStream::AfxAction value;
 
-					if(Console_ToHideableAction(cmd1, value))
+					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->CableAction_set(value);
 						return;
@@ -2409,10 +2581,10 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				}
 
 				Tier0_Msg(
-					"%s cableAction " CAFXBASEFXSTREAM_HIDEABLEACTIONS " - Set new action.\n"
+					"%s cableAction " CAFXBASEFXSTREAM_AFXACTIONS " - Set new action.\n"
 					"Current value: %s.\n"
 					, cmdPrefix
-					, Console_FromHideableAction(curBaseFx->CableAction_get())
+					, Console_FromAfxAction(curBaseFx->CableAction_get())
 				);
 				return;
 			}
@@ -2422,9 +2594,9 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				if(2 <= argc)
 				{
 					char const * cmd1 = args->ArgV(argcOffset +1);
-					CAfxBaseFxStream::MaskableAction value;
+					CAfxBaseFxStream::AfxAction value;
 
-					if(Console_ToMaskableAction(cmd1, value))
+					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->PlayerModelsAction_set(value);
 						return;
@@ -2432,10 +2604,10 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				}
 
 				Tier0_Msg(
-					"%s playerModelsAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
+					"%s playerModelsAction " CAFXBASEFXSTREAM_AFXACTIONS " - Set new action.\n"
 					"Current value: %s.\n"
 					, cmdPrefix
-					, Console_FromMaskableAction(curBaseFx->PlayerModelsAction_get())
+					, Console_FromAfxAction(curBaseFx->PlayerModelsAction_get())
 				);
 				return;
 			}
@@ -2445,9 +2617,9 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				if(2 <= argc)
 				{
 					char const * cmd1 = args->ArgV(argcOffset +1);
-					CAfxBaseFxStream::MaskableAction value;
+					CAfxBaseFxStream::AfxAction value;
 
-					if(Console_ToMaskableAction(cmd1, value))
+					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->WeaponModelsAction_set(value);
 						return;
@@ -2455,10 +2627,10 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				}
 
 				Tier0_Msg(
-					"%s weaponModelsAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
+					"%s weaponModelsAction " CAFXBASEFXSTREAM_AFXACTIONS " - Set new action.\n"
 					"Current value: %s.\n"
 					, cmdPrefix
-					, Console_FromMaskableAction(curBaseFx->WeaponModelsAction_get())
+					, Console_FromAfxAction(curBaseFx->WeaponModelsAction_get())
 				);
 				return;
 			}
@@ -2468,9 +2640,9 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				if(2 <= argc)
 				{
 					char const * cmd1 = args->ArgV(argcOffset +1);
-					CAfxBaseFxStream::MaskableAction value;
+					CAfxBaseFxStream::AfxAction value;
 
-					if(Console_ToMaskableAction(cmd1, value))
+					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->StattrackAction_set(value);
 						return;
@@ -2478,10 +2650,10 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				}
 
 				Tier0_Msg(
-					"%s stattrackAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
+					"%s stattrackAction " CAFXBASEFXSTREAM_AFXACTIONS " - Set new action.\n"
 					"Current value: %s.\n"
 					, cmdPrefix
-					, Console_FromMaskableAction(curBaseFx->StattrackAction_get())
+					, Console_FromAfxAction(curBaseFx->StattrackAction_get())
 				);
 				return;
 			}
@@ -2491,9 +2663,9 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				if(2 <= argc)
 				{
 					char const * cmd1 = args->ArgV(argcOffset +1);
-					CAfxBaseFxStream::MaskableAction value;
+					CAfxBaseFxStream::AfxAction value;
 
-					if(Console_ToMaskableAction(cmd1, value))
+					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->ShellModelsAction_set(value);
 						return;
@@ -2501,10 +2673,10 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				}
 
 				Tier0_Msg(
-					"%s shellModelsAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
+					"%s shellModelsAction " CAFXBASEFXSTREAM_AFXACTIONS " - Set new action.\n"
 					"Current value: %s.\n"
 					, cmdPrefix
-					, Console_FromMaskableAction(curBaseFx->ShellModelsAction_get())
+					, Console_FromAfxAction(curBaseFx->ShellModelsAction_get())
 				);
 				return;
 			}
@@ -2514,9 +2686,9 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				if(2 <= argc)
 				{
 					char const * cmd1 = args->ArgV(argcOffset +1);
-					CAfxBaseFxStream::MaskableAction value;
+					CAfxBaseFxStream::AfxAction value;
 
-					if(Console_ToMaskableAction(cmd1, value))
+					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->OtherModelsAction_set(value);
 						return;
@@ -2524,10 +2696,10 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				}
 
 				Tier0_Msg(
-					"%s otherModelsAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
+					"%s otherModelsAction " CAFXBASEFXSTREAM_AFXACTIONS " - Set new action.\n"
 					"Current value: %s.\n"
 					, cmdPrefix
-					, Console_FromMaskableAction(curBaseFx->OtherModelsAction_get())
+					, Console_FromAfxAction(curBaseFx->OtherModelsAction_get())
 				);
 				return;
 			}
@@ -2537,9 +2709,9 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				if(2 <= argc)
 				{
 					char const * cmd1 = args->ArgV(argcOffset +1);
-					CAfxBaseFxStream::HideableAction value;
+					CAfxBaseFxStream::AfxAction value;
 
-					if(Console_ToHideableAction(cmd1, value))
+					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->DecalTexturesAction_set(value);
 						return;
@@ -2547,10 +2719,10 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				}
 
 				Tier0_Msg(
-					"%s decalTexturesAction " CAFXBASEFXSTREAM_HIDEABLEACTIONS " - Set new action.\n"
+					"%s decalTexturesAction " CAFXBASEFXSTREAM_AFXACTIONS " - Set new action.\n"
 					"Current value: %s.\n"
 					, cmdPrefix
-					, Console_FromHideableAction(curBaseFx->DecalTexturesAction_get())
+					, Console_FromAfxAction(curBaseFx->DecalTexturesAction_get())
 				);
 				return;
 			}
@@ -2560,9 +2732,9 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				if(2 <= argc)
 				{
 					char const * cmd1 = args->ArgV(argcOffset +1);
-					CAfxBaseFxStream::HideableAction value;
+					CAfxBaseFxStream::AfxAction value;
 
-					if(Console_ToHideableAction(cmd1, value))
+					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->EffectsAction_set(value);
 						return;
@@ -2570,10 +2742,10 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				}
 
 				Tier0_Msg(
-					"%s effectsAction " CAFXBASEFXSTREAM_HIDEABLEACTIONS " - Set new action.\n"
+					"%s effectsAction " CAFXBASEFXSTREAM_AFXACTIONS " - Set new action.\n"
 					"Current value: %s.\n"
 					, cmdPrefix
-					, Console_FromHideableAction(curBaseFx->EffectsAction_get())
+					, Console_FromAfxAction(curBaseFx->EffectsAction_get())
 				);
 				return;
 			}
@@ -2583,9 +2755,9 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				if(2 <= argc)
 				{
 					char const * cmd1 = args->ArgV(argcOffset +1);
-					CAfxBaseFxStream::HideableAction value;
+					CAfxBaseFxStream::AfxAction value;
 
-					if(Console_ToHideableAction(cmd1, value))
+					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->ShellParticleAction_set(value);
 						return;
@@ -2593,10 +2765,10 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				}
 
 				Tier0_Msg(
-					"%s shellParticleAction " CAFXBASEFXSTREAM_HIDEABLEACTIONS " - Set new action.\n"
+					"%s shellParticleAction " CAFXBASEFXSTREAM_AFXACTIONS " - Set new action.\n"
 					"Current value: %s.\n"
 					, cmdPrefix
-					, Console_FromHideableAction(curBaseFx->ShellParticleAction_get())
+					, Console_FromAfxAction(curBaseFx->ShellParticleAction_get())
 				);
 				return;
 			}
@@ -2606,9 +2778,9 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				if(2 <= argc)
 				{
 					char const * cmd1 = args->ArgV(argcOffset +1);
-					CAfxBaseFxStream::HideableAction value;
+					CAfxBaseFxStream::AfxAction value;
 
-					if(Console_ToHideableAction(cmd1, value))
+					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->OtherParticleAction_set(value);
 						return;
@@ -2616,10 +2788,10 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				}
 
 				Tier0_Msg(
-					"%s otherParticleAction " CAFXBASEFXSTREAM_HIDEABLEACTIONS " - Set new action.\n"
+					"%s otherParticleAction " CAFXBASEFXSTREAM_AFXACTIONS " - Set new action.\n"
 					"Current value: %s.\n"
 					, cmdPrefix
-					, Console_FromHideableAction(curBaseFx->OtherParticleAction_get())
+					, Console_FromAfxAction(curBaseFx->OtherParticleAction_get())
 				);
 				return;
 			}
@@ -2629,9 +2801,9 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				if(2 <= argc)
 				{
 					char const * cmd1 = args->ArgV(argcOffset +1);
-					CAfxBaseFxStream::MaskableAction value;
+					CAfxBaseFxStream::AfxAction value;
 
-					if(Console_ToMaskableAction(cmd1, value))
+					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->StickerAction_set(value);
 						return;
@@ -2639,10 +2811,10 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				}
 
 				Tier0_Msg(
-					"%s stickerAction " CAFXBASEFXSTREAM_MASKABLEACTIONS " - Set new action.\n"
+					"%s stickerAction " CAFXBASEFXSTREAM_AFXACTIONS " - Set new action.\n"
 					"Current value: %s.\n"
 					, cmdPrefix
-					, Console_FromMaskableAction(curBaseFx->StickerAction_get())
+					, Console_FromAfxAction(curBaseFx->StickerAction_get())
 				);
 				return;
 			}
@@ -3282,108 +3454,86 @@ bool CAfxStreams::Console_CheckStreamName(char const * value)
 	return true;
 }
 
-bool CAfxStreams::Console_ToMaskableAction(char const * value, CAfxBaseFxStream::MaskableAction & maskableAction)
+bool CAfxStreams::Console_ToAfxAction(char const * value, CAfxBaseFxStream::AfxAction & action)
 {
 	if(!_stricmp(value, "draw"))
 	{
-		maskableAction = CAfxBaseFxStream::MA_Draw;
-		return true;
-	}
-	else
-	if(!_stricmp(value, "drawDepth"))
-	{
-		maskableAction = CAfxBaseFxStream::MA_DrawDepth;
-		return true;
-	}
-	else
-	if(!_stricmp(value, "mask"))
-	{
-		maskableAction = CAfxBaseFxStream::MA_Mask;
-		return true;
-	}
-	else
-	if(!_stricmp(value, "invisible"))
-	{
-		maskableAction = CAfxBaseFxStream::MA_Invisible;
-		return true;
-	}
-	else
-	if(!_stricmp(value, "black"))
-	{
-		maskableAction = CAfxBaseFxStream::MA_Black;
-		return true;
-	}
-	else
-	if(!_stricmp(value, "white"))
-	{
-		maskableAction = CAfxBaseFxStream::MA_White;
-		return true;
-	}
-	else
-	if(!_stricmp(value, "debugDump"))
-	{
-		maskableAction = CAfxBaseFxStream::MA_DebugDump;
-		return true;
-	}
-
-	return false;
-}
-
-bool CAfxStreams::Console_ToHideableAction(char const * value, CAfxBaseFxStream::HideableAction & hideableAction)
-{
-	if(!_stricmp(value, "draw"))
-	{
-		hideableAction = CAfxBaseFxStream::HA_Draw;
+		action = CAfxBaseFxStream::AA_Draw;
 		return true;
 	}
 	else
 	if(!_stricmp(value, "noDraw"))
 	{
-		hideableAction = CAfxBaseFxStream::HA_NoDraw;
+		action = CAfxBaseFxStream::AA_NoDraw;
+		return true;
+	}
+	else
+	if(!_stricmp(value, "invisible"))
+	{
+		action = CAfxBaseFxStream::AA_Invisible;
+		return true;
+	}
+	else
+	if(!_stricmp(value, "drawDepth"))
+	{
+		action = CAfxBaseFxStream::AA_DrawDepth;
+		return true;
+	}
+	else
+	if(!_stricmp(value, "drawDepth24"))
+	{
+		action = CAfxBaseFxStream::AA_DrawDepth24;
+		return true;
+	}
+	else
+	if(!_stricmp(value, "mask"))
+	{
+		action = CAfxBaseFxStream::AA_GreenScreen;
+		return true;
+	}
+	else
+	if(!_stricmp(value, "black"))
+	{
+		action = CAfxBaseFxStream::AA_Black;
+		return true;
+	}
+	else
+	if(!_stricmp(value, "white"))
+	{
+		action = CAfxBaseFxStream::AA_White;
 		return true;
 	}
 	else
 	if(!_stricmp(value, "debugDump"))
 	{
-		hideableAction = CAfxBaseFxStream::HA_DebugDump;
+		action = CAfxBaseFxStream::AA_DebugDump;
 		return true;
 	}
 
 	return false;
 }
 
-char const * CAfxStreams::Console_FromMaskableAction(CAfxBaseFxStream::MaskableAction maskableAction)
+char const * CAfxStreams::Console_FromAfxAction(CAfxBaseFxStream::AfxAction action)
 {
-	switch(maskableAction)
+	switch(action)
 	{
-	case CAfxBaseFxStream::MA_Draw:
+	case CAfxBaseFxStream::AA_Draw:
 		return "draw";
-	case CAfxBaseFxStream::MA_DrawDepth:
-		return "drawDepth";
-	case CAfxBaseFxStream::MA_Mask:
-		return "mask";
-	case CAfxBaseFxStream::MA_Invisible:
-		return "invisible";
-	case CAfxBaseFxStream::MA_Black:
-		return "black";
-	case CAfxBaseFxStream::MA_White:
-		return "white";
-	case CAfxBaseFxStream::MA_DebugDump:
-		return "debugDump";
-	}
-
-	return "[unknown]";
-}
-
-char const * CAfxStreams::Console_FromHideableAction(CAfxBaseFxStream::HideableAction hideableAction)
-{
-	switch(hideableAction)
-	{
-	case CAfxBaseFxStream::HA_Draw:
-		return "draw";
-	case CAfxBaseFxStream::HA_NoDraw:
+	case CAfxBaseFxStream::AA_NoDraw:
 		return "noDraw";
-	case CAfxBaseFxStream::HA_DebugDump:
+	case CAfxBaseFxStream::AA_Invisible:
+		return "invisible";
+	case CAfxBaseFxStream::AA_DrawDepth:
+		return "drawDepth";
+	case CAfxBaseFxStream::AA_DrawDepth24:
+		return "drawDepth24";
+	case CAfxBaseFxStream::AA_GreenScreen:
+		return "mask";
+	case CAfxBaseFxStream::AA_Black:
+		return "black";
+	case CAfxBaseFxStream::AA_White:
+		return "white";
+	case CAfxBaseFxStream::AA_DebugDump:
 		return "debugDump";
 	}
 

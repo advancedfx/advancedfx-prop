@@ -559,46 +559,49 @@ public:
 	{
 		HRESULT result = g_OldDirect3DDevice9->SetPixelShaderConstantF(StartRegister, pConstantData, Vector4fCount);
 
-		if(StartRegister <= 0 && 0 < StartRegister+Vector4fCount)
+		if(pConstantData)
 		{
-			m_OriginalValue_ps_c0[0] = pConstantData[4*(0 -StartRegister)+0];
-			m_OriginalValue_ps_c0[1] = pConstantData[4*(0 -StartRegister)+1];
-			m_OriginalValue_ps_c0[2] = pConstantData[4*(0 -StartRegister)+2];
-			m_OriginalValue_ps_c0[3] = pConstantData[4*(0 -StartRegister)+3];
+			if(StartRegister <= 0 && 0 < StartRegister+Vector4fCount)
+			{
+				m_OriginalValue_ps_c0[0] = pConstantData[4*(0 -StartRegister)+0];
+				m_OriginalValue_ps_c0[1] = pConstantData[4*(0 -StartRegister)+1];
+				m_OriginalValue_ps_c0[2] = pConstantData[4*(0 -StartRegister)+2];
+				m_OriginalValue_ps_c0[3] = pConstantData[4*(0 -StartRegister)+3];
 
-			g_OldDirect3DDevice9->SetPixelShaderConstantF(0, m_Override_ps_c0 ? m_OverrideValue_ps_c0 : m_OriginalValue_ps_c0, 1);
-		}
+				g_OldDirect3DDevice9->SetPixelShaderConstantF(0, m_Override_ps_c0 ? m_OverrideValue_ps_c0 : m_OriginalValue_ps_c0, 1);
+			}
 
-		if(StartRegister <= 5 && 5 < StartRegister+Vector4fCount)
-		{
-			m_OriginalValue_ps_c5[0] = pConstantData[4*(5 -StartRegister)+0];
-			m_OriginalValue_ps_c5[1] = pConstantData[4*(5 -StartRegister)+1];
-			m_OriginalValue_ps_c5[2] = pConstantData[4*(5 -StartRegister)+2];
-			m_OriginalValue_ps_c5[3] = pConstantData[4*(5 -StartRegister)+3];
+			if(StartRegister <= 5 && 5 < StartRegister+Vector4fCount)
+			{
+				m_OriginalValue_ps_c5[0] = pConstantData[4*(5 -StartRegister)+0];
+				m_OriginalValue_ps_c5[1] = pConstantData[4*(5 -StartRegister)+1];
+				m_OriginalValue_ps_c5[2] = pConstantData[4*(5 -StartRegister)+2];
+				m_OriginalValue_ps_c5[3] = pConstantData[4*(5 -StartRegister)+3];
 
-			g_OldDirect3DDevice9->SetPixelShaderConstantF(5, m_Override_ps_c5 ? m_OverrideValue_ps_c5 : m_OriginalValue_ps_c5, 1);
-		}
+				g_OldDirect3DDevice9->SetPixelShaderConstantF(5, m_Override_ps_c5 ? m_OverrideValue_ps_c5 : m_OriginalValue_ps_c5, 1);
+			}
 
-		if(StartRegister <= 12 && 12 < StartRegister+Vector4fCount)
-		{
-			m_OriginalValue_ps_c12[0] = pConstantData[4*(12 -StartRegister)+0];
-			m_OriginalValue_ps_c12[1] = pConstantData[4*(12 -StartRegister)+1];
-			m_OriginalValue_ps_c12[2] = pConstantData[4*(12 -StartRegister)+2];
-			m_OriginalValue_ps_c12[3] = pConstantData[4*(12 -StartRegister)+3];
+			if(StartRegister <= 12 && 12 < StartRegister+Vector4fCount)
+			{
+				m_OriginalValue_ps_c12[0] = pConstantData[4*(12 -StartRegister)+0];
+				m_OriginalValue_ps_c12[1] = pConstantData[4*(12 -StartRegister)+1];
+				m_OriginalValue_ps_c12[2] = pConstantData[4*(12 -StartRegister)+2];
+				m_OriginalValue_ps_c12[3] = pConstantData[4*(12 -StartRegister)+3];
 
-			float tmp[4] = { m_OriginalValue_ps_c12[0], m_Override_ps_c12_y ? m_OverrideValue_ps_c12_y : m_OriginalValue_ps_c12[1], m_OriginalValue_ps_c12[2], m_OriginalValue_ps_c12[3] };
-			g_OldDirect3DDevice9->SetPixelShaderConstantF(12, tmp, 1);
-		}
+				float tmp[4] = { m_OriginalValue_ps_c12[0], m_Override_ps_c12_y ? m_OverrideValue_ps_c12_y : m_OriginalValue_ps_c12[1], m_OriginalValue_ps_c12[2], m_OriginalValue_ps_c12[3] };
+				g_OldDirect3DDevice9->SetPixelShaderConstantF(12, tmp, 1);
+			}
 
-		if(StartRegister <= 29 && 29 < StartRegister+Vector4fCount)
-		{
-			m_OriginalValue_ps_c29[0] = pConstantData[4*(29 -StartRegister)+0];
-			m_OriginalValue_ps_c29[1] = pConstantData[4*(29 -StartRegister)+1];
-			m_OriginalValue_ps_c29[2] = pConstantData[4*(29 -StartRegister)+2];
-			m_OriginalValue_ps_c29[3] = pConstantData[4*(29 -StartRegister)+3];
+			if(StartRegister <= 29 && 29 < StartRegister+Vector4fCount)
+			{
+				m_OriginalValue_ps_c29[0] = pConstantData[4*(29 -StartRegister)+0];
+				m_OriginalValue_ps_c29[1] = pConstantData[4*(29 -StartRegister)+1];
+				m_OriginalValue_ps_c29[2] = pConstantData[4*(29 -StartRegister)+2];
+				m_OriginalValue_ps_c29[3] = pConstantData[4*(29 -StartRegister)+3];
 
-			float tmp[4] = { m_OriginalValue_ps_c29[0], m_OriginalValue_ps_c29[1], m_OriginalValue_ps_c29[2], m_Override_ps_c29_w ? m_OverrideValue_ps_c29_w :  m_OriginalValue_ps_c29[3] };
-			g_OldDirect3DDevice9->SetPixelShaderConstantF(29, tmp, 1);
+				float tmp[4] = { m_OriginalValue_ps_c29[0], m_OriginalValue_ps_c29[1], m_OriginalValue_ps_c29[2], m_Override_ps_c29_w ? m_OverrideValue_ps_c29_w :  m_OriginalValue_ps_c29[3] };
+				g_OldDirect3DDevice9->SetPixelShaderConstantF(29, tmp, 1);
+			}
 		}
 
 		return result;
