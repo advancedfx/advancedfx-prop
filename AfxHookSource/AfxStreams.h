@@ -15,7 +15,8 @@
 #include "d3d9Hooks.h"
 #include "AfxShaders.h"
 #include "csgo_Stdshader_dx9_Hooks.h"
-
+#include <shaders/build/afxHook_vertexlit_and_unlit_generic_ps20.h>
+#include <shaders/build/afxHook_vertexlit_and_unlit_generic_ps20b.h>
 #include <shaders/build/afxHook_vertexlit_and_unlit_generic_ps30.h>
 
 #include <string>
@@ -595,7 +596,9 @@ private:
 		virtual void SetPixelShader(const char* pFileName, int nStaticPshIndex = 0, int pshIndex = 0);
 
 	private:
-		static csgo_Stdshader_dx9_Combos_vertexlit_and_unlit_generic_ps30 m_Combos;
+		static csgo_Stdshader_dx9_Combos_vertexlit_and_unlit_generic_ps20 m_Combos_ps20;
+		static csgo_Stdshader_dx9_Combos_vertexlit_and_unlit_generic_ps20b m_Combos_ps20b;
+		static csgo_Stdshader_dx9_Combos_vertexlit_and_unlit_generic_ps30 m_Combos_ps30;
 		CActionAfxVertexLitGenericHookKey m_Key;
 	};
 

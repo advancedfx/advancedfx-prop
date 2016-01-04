@@ -64,29 +64,43 @@ Hint:
 13) Obtain the HLAE source code from http://advancedfx.org and extract it into a
     folder you like.
 
-14) Open mdt.sln in the HLAE source code and Build (Configuration=Release):
+14) Obtain the SharpDX SDK 2.6.3 from
+    https://github.com/sharpdx/SharpDX/releases/tag/2.6.3
+    and extract it into a folder named "SharpDX" in the same folder where the
+    HLAE source code folder is located.
+
+15) Compile and run the ShaderBuilder project (requires the SharpDX SDK) and
+    compile the following Shaders to the "shaders\build" folder:
+    - shaders\afxHook_vertexlit_and_unlit_generic_ps2x.fxc:
+      - to afxHook_vertexlit_and_unlit_generic_ps20 (profile ps_2_0)
+      - to afxHook_vertexlit_and_unlit_generic_ps20b (profile ps_2_b)
+      - to afxHook_vertexlit_and_unlit_generic_ps30 (profile ps_3_0)
+    The .h and .acs files build this way are required by the AfxHookSource
+    project.
+
+16) Open mdt.sln in the HLAE source code and Build (Configuration=Release):
     AfxHookGoldSrc, AfxHookSource, AfxCppCli
 
-15) AfxHook\recompile.bat, move AfxHook.dat into build\Release\bin\
+17) AfxHook\recompile.bat, move AfxHook.dat into build\Release\bin\
 
-16) Build AfxGui (Release), move and rename AfxGui.exe to
+18) Build AfxGui (Release), move and rename AfxGui.exe to
     build\Release\bin\HLAE.exe
 
-17) Copy all files and folders from resources\ to build\Release\bin,
-    you can use copy_resources_release.bat in order to do that.
+19) Use copy_resources_release.bat to copy required files and folders to the
+    "build\Release\bin" folder.
 
-18) Copy msvcp100.dll, msvcr100.dll (CRT runtime, required by C++ and C++/CLI
+20) Copy msvcp100.dll, msvcr100.dll (CRT runtime, required by C++ and C++/CLI
     projects) from your system folders (on 64 bit systems in C:\Windows\SysWOW64
     on 32 bit systems in C:\Windows\system32) to build\Release\bin
     Make sure to select the correct folder as suggested above, so that you end
     up with the 32 bit binaries.
 
-19) This step is not required by default, only when you plan to build AfxHookGoldSrc with AFX_SCRIPT!
+21) This step is not required by default, only when you plan to build AfxHookGoldSrc with AFX_SCRIPT!
     Copy mozjs-24.dll from C:\Libraries\js\bin to build\Release\bin
 
-20) This step is currently not required!
+22) This step is currently not required!
     Copy RocketCore.dll, RocketControls.dll from
     C:\Libraries\libRocket\Build\Release to build\Release\bin
 
-21) Packaging the final .zip file is not trivial (selecting only the files required),
+23) Packaging the final .zip file is not trivial (selecting only the files required),
     if you are using a default built, use the latest download as template :-)

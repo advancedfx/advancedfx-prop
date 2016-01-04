@@ -16,7 +16,9 @@
 #define AFXALPHATEST 0
 #endif
 
-//// STATIC: "SFM"						"0..1"
+//// STATIC: "SFM"						"0..0" [ps20]
+//// STATIC: "SFM"						"0..0" [ps20b]
+//// STATIC: "SFM"						"0..1" [ps30]
 //// Don't care about SFM.
 #define SFM 0
 
@@ -82,7 +84,7 @@
 //// STATIC: "DISTANCEALPHAFROMDETAIL"    "0..0"
 #define DISTANCEALPHAFROMDETAIL 0
 
-//// STATIC: "FLASHLIGHTDEPTHFILTERMODE"	"0..2"	[ps20b] [PC]
+//// STATIC: "FLASHLIGHTDEPTHFILTERMODE"	"0..3"	[ps20b] [PC]
 //// STATIC: "FLASHLIGHTDEPTHFILTERMODE"	"0..2"	[ps30]  [PC]
 //// STATIC: "FLASHLIGHTDEPTHFILTERMODE"	"0..0"	[ps20b] [XBOX]
 //// Don't care about FLASHLIGHTDEPTHFILTERMODE.
@@ -107,11 +109,19 @@
 //// Don't care about ENVMAPFRESNEL.
 #define ENVMAPFRESNEL 0
 
-//// STATIC: "CASCADED_SHADOW_MAPPING"	"0..1"
+//// STATIC: "SRGB_INPUT_ADAPTER" "0..1" [ps20b]
+//// Don't care about SRGB_INPUT_ADAPTER.
+#define SRGB_INPUT_ADAPTER 0
+
+//// STATIC: "CASCADED_SHADOW_MAPPING"	"0..0" [ps20]
+//// STATIC: "CASCADED_SHADOW_MAPPING"	"0..1" [ps20b]
+//// STATIC: "CASCADED_SHADOW_MAPPING"	"0..1" [ps30]
 //// Don't care about CASCADED_SHADOW_MAPPING.
 #define CASCADED_SHADOW_MAPPING 0
 
-//// STATIC: "CSM_MODE"					"0..3"
+//// STATIC: "CSM_MODE"					"0..0" [ps20]
+//// STATIC: "CSM_MODE"					"0..0" [ps20b]
+//// STATIC: "CSM_MODE"					"0..3" [ps30]
 //// Don't care about CSM_MODE.
 #define CSM_MODE 0
 
@@ -120,7 +130,7 @@
 //// Don't care about FLASHLIGHTSHADOWS.
 #define FLASHLIGHTSHADOWS 0
 
-//// DYNAMIC: "WRITEWATERFOGTODESTALPHA"	"0..1"
+//// DYNAMIC: "WRITEWATERFOGTODESTALPHA"	"0..1"	
 //// Don't care about WRITEWATERFOGTODESTALPHA.
 #define WRITEWATERFOGTODESTALPHA 0
 
@@ -128,7 +138,9 @@
 //// Don't care about UBERLIGHT.
 #define UBERLIGHT 0
 
-//// DYNAMIC: "CASCADE_SIZE"				"0..0"
+//// DYNAMIC: "CASCADE_SIZE"				"0..0" [ps20]
+//// DYNAMIC: "CASCADE_SIZE"				"0..1" [ps20b]
+//// DYNAMIC: "CASCADE_SIZE"				"0..0" [ps30]
 //// Don't care about CASCADE_SIZE.
 #define CASCADE_SIZE 0
 

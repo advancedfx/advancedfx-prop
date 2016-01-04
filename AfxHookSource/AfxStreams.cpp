@@ -1481,7 +1481,9 @@ void CAfxBaseFxStream::CActionDepth::Bind(IAfxMatRenderContext * ctx, IMaterial_
 
 // CAfxBaseFxStream::CActionAfxVertexLitGenericHook ////////////////////////////
 
-csgo_Stdshader_dx9_Combos_vertexlit_and_unlit_generic_ps30 CAfxBaseFxStream::CActionAfxVertexLitGenericHook::m_Combos;
+csgo_Stdshader_dx9_Combos_vertexlit_and_unlit_generic_ps20 CAfxBaseFxStream::CActionAfxVertexLitGenericHook::m_Combos_ps20;
+csgo_Stdshader_dx9_Combos_vertexlit_and_unlit_generic_ps20b CAfxBaseFxStream::CActionAfxVertexLitGenericHook::m_Combos_ps20b;
+csgo_Stdshader_dx9_Combos_vertexlit_and_unlit_generic_ps30 CAfxBaseFxStream::CActionAfxVertexLitGenericHook::m_Combos_ps30;
 
 CAfxBaseFxStream::CActionAfxVertexLitGenericHook::CActionAfxVertexLitGenericHook(CAfxBaseFxStream * parentStream, CActionAfxVertexLitGenericHookKey & key)
 : CAction(parentStream)
@@ -1527,23 +1529,100 @@ void CAfxBaseFxStream::CActionAfxVertexLitGenericHook::Bind(IAfxMatRenderContext
 
 void CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader(const char* pFileName, int nStaticPshIndex, int pshIndex)
 {
+	if(!strcmp(pFileName,"vertexlit_and_unlit_generic_ps20"))
+	{
+		static bool firstPass = true;
+		if(firstPass)
+		{
+			firstPass = false;
+			Tier0_Warning("AFXWARNING: You are using an untested code path in CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader for %s.\n", pFileName);
+		}
+
+		m_Combos_ps20.CalcCombos(nStaticPshIndex, pshIndex);
+
+		if(0 < m_Combos_ps20.m_LIGHTNING_PREVIEW)
+		{
+			return;
+		}
+
+		int combo = ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps20::GetCombo(
+			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps20::AFXMODE_e)m_Key.AFXMODE,
+			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps20::DETAILTEXTURE_e)m_Combos_ps20.m_DETAILTEXTURE,
+			!m_Combos_ps20.m_BASEALPHAENVMAPMASK && !m_Combos_ps20.m_SELFILLUM ? ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps20::NOT_BASEALPHAENVMAPMASK_AND_NOT_SELFILLUM_1 : ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps20::NOT_BASEALPHAENVMAPMASK_AND_NOT_SELFILLUM_0,
+			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps20::FLASHLIGHT_e)m_Combos_ps20.m_FLASHLIGHT,
+			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps20::DETAIL_BLEND_MODE_e)m_Combos_ps20.m_DETAIL_BLEND_MODE,
+			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps20::DESATURATEWITHBASEALPHA_e)m_Combos_ps20.m_DESATURATEWITHBASEALPHA,
+			ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps20::NOT_LIGHTING_PREVIEW_ONLY_0
+		);
+
+		IAfxPixelShader * afxPixelShader = g_AfxShaders.GetAcsPixelShader("afxHook_vertexlit_and_unlit_generic_ps20.acs", combo);
+
+		if(!afxPixelShader->GetPixelShader())
+			Tier0_Warning("AFXERROR: CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader: Replacement Shader combo %i for %s is null.\n", combo, pFileName);
+		else
+		{
+			// Override shader:
+			AfxD3D9_OverrideBegin_SetPixelShader(afxPixelShader->GetPixelShader());
+		}
+
+		afxPixelShader->Release();
+	}
+	else
+	if(!strcmp(pFileName,"vertexlit_and_unlit_generic_ps20b"))
+	{
+		static bool firstPass = true;
+		if(firstPass)
+		{
+			firstPass = false;
+			Tier0_Warning("AFXWARNING: You are using an untested code path in CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader for %s.\n", pFileName);
+		}
+
+		m_Combos_ps20b.CalcCombos(nStaticPshIndex, pshIndex);
+
+		if(0 < m_Combos_ps20b.m_LIGHTNING_PREVIEW)
+		{
+			return;
+		}
+
+		int combo = ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps20b::GetCombo(
+			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps20b::AFXMODE_e)m_Key.AFXMODE,
+			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps20b::DETAILTEXTURE_e)m_Combos_ps20b.m_DETAILTEXTURE,
+			!m_Combos_ps20b.m_BASEALPHAENVMAPMASK && !m_Combos_ps20b.m_SELFILLUM ? ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps20b::NOT_BASEALPHAENVMAPMASK_AND_NOT_SELFILLUM_1 : ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps20b::NOT_BASEALPHAENVMAPMASK_AND_NOT_SELFILLUM_0,
+			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps20b::FLASHLIGHT_e)m_Combos_ps20b.m_FLASHLIGHT,
+			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps20b::DETAIL_BLEND_MODE_e)m_Combos_ps20b.m_DETAIL_BLEND_MODE,
+			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps20b::DESATURATEWITHBASEALPHA_e)m_Combos_ps20b.m_DESATURATEWITHBASEALPHA,
+			ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps20b::NOT_LIGHTING_PREVIEW_ONLY_0
+		);
+
+		IAfxPixelShader * afxPixelShader = g_AfxShaders.GetAcsPixelShader("afxHook_vertexlit_and_unlit_generic_ps20b.acs", combo);
+
+		if(!afxPixelShader->GetPixelShader())
+			Tier0_Warning("AFXERROR: CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader: Replacement Shader combo %i for %s is null.\n", combo, pFileName);
+		else
+		{
+			// Override shader:
+			AfxD3D9_OverrideBegin_SetPixelShader(afxPixelShader->GetPixelShader());
+		}
+
+		afxPixelShader->Release();
+	}
+	else
 	if(!strcmp(pFileName,"vertexlit_and_unlit_generic_ps30"))
 	{
-		m_Combos.CalcCombos(nStaticPshIndex, pshIndex);
+		m_Combos_ps30.CalcCombos(nStaticPshIndex, pshIndex);
 
-		if(0 < m_Combos.m_LIGHTNING_PREVIEW)
+		if(0 < m_Combos_ps30.m_LIGHTNING_PREVIEW)
 		{
-			//AfxD3D9_OverrideBegin_SetPixelShader(0);
 			return;
 		}
 
 		int combo = ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::GetCombo(
 			m_Key.AFXMODE,
-			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::DETAILTEXTURE_e)m_Combos.m_DETAILTEXTURE,
-			!m_Combos.m_BASEALPHAENVMAPMASK && !m_Combos.m_SELFILLUM ? ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::NOT_BASEALPHAENVMAPMASK_AND_NOT_SELFILLUM_1 : ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::NOT_BASEALPHAENVMAPMASK_AND_NOT_SELFILLUM_0,
-			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::FLASHLIGHT_e)m_Combos.m_FLASHLIGHT,
-			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::DETAIL_BLEND_MODE_e)m_Combos.m_DETAIL_BLEND_MODE,
-			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::DESATURATEWITHBASEALPHA_e)m_Combos.m_DESATURATEWITHBASEALPHA,
+			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::DETAILTEXTURE_e)m_Combos_ps30.m_DETAILTEXTURE,
+			!m_Combos_ps30.m_BASEALPHAENVMAPMASK && !m_Combos_ps30.m_SELFILLUM ? ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::NOT_BASEALPHAENVMAPMASK_AND_NOT_SELFILLUM_1 : ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::NOT_BASEALPHAENVMAPMASK_AND_NOT_SELFILLUM_0,
+			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::FLASHLIGHT_e)m_Combos_ps30.m_FLASHLIGHT,
+			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::DETAIL_BLEND_MODE_e)m_Combos_ps30.m_DETAIL_BLEND_MODE,
+			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::DESATURATEWITHBASEALPHA_e)m_Combos_ps30.m_DESATURATEWITHBASEALPHA,
 			ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::NOT_LIGHTING_PREVIEW_ONLY_0
 		);
 /*
@@ -1560,10 +1639,12 @@ void CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader(const char
 		IAfxPixelShader * afxPixelShader = g_AfxShaders.GetAcsPixelShader("afxHook_vertexlit_and_unlit_generic_ps30.acs", combo);
 
 		if(!afxPixelShader->GetPixelShader())
-			Tier0_Warning("AFXERROR: CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader: Shader for combo %i is null.\n", combo);
-
-		// Override shader(s):
-		AfxD3D9_OverrideBegin_SetPixelShader(afxPixelShader->GetPixelShader());
+			Tier0_Warning("AFXERROR: CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader: Replacement Shader combo %i for %s is null.\n", combo, pFileName);
+		else
+		{
+			// Override shader:
+			AfxD3D9_OverrideBegin_SetPixelShader(afxPixelShader->GetPixelShader());
+		}
 
 		afxPixelShader->Release();
 	}

@@ -674,6 +674,139 @@ void PrintTimeFormated(double time)
 	Tier0_Msg("%s", oss.str().c_str());
 }
 
+CON_COMMAND(mirv_skip, "for skipping trhough demos (uses demo_gototick)")
+{
+	int argc = args->ArgC();
+
+	if(2 <= argc)
+	{
+		char const * arg1 = args->ArgV(1);
+
+		if(!_stricmp(arg1, "tick"))
+		{
+			int curTick;
+			if(!GetCurrentDemoTick(curTick))
+			{
+				Tier0_Warning("Error: GetCurrentDemoTick failed!\n");
+				return;
+			}
+
+			if(3 <= argc)
+			{
+				char const * arg2 = args->ArgV(2);
+
+				if(!_stricmp(arg2, "to") && 4 <= argc)
+				{
+					int targetTick = atof(args->ArgV(3));
+
+					std::ostringstream oss;
+
+					oss << "demo_gototick " << targetTick;
+
+					g_VEngineClient->ExecuteClientCmd(oss.str().c_str());
+					
+					return;
+				}
+
+				if(3 <= argc)
+				{
+					int deltaTicks = atoi(arg2);
+					int targetTick = curTick + deltaTicks;
+
+					std::ostringstream oss;
+
+					oss << "demo_gototick " << targetTick;
+
+					g_VEngineClient->ExecuteClientCmd(oss.str().c_str());
+
+					return;
+				}
+			}
+
+			Tier0_Msg(
+				"mirv_skip tick <iValue> - skip approximately integer value <iValue> ticks (negative values skip back).\n"
+				"mirv_skip tick to <iValue> - go approximately to demo tick <iValue>\n"
+				"Current demo tick: %i\n",
+				curTick
+			);
+			return;
+		}
+		else
+		if(!_stricmp(arg1, "time"))
+		{
+			double curTime;
+			if(!GetCurrentDemoTime(curTime))
+			{
+				Tier0_Warning("Error: GetCurrentDemoTime failed!\n");
+				return;
+			}
+
+			if(3 <= argc)
+			{
+				char const * arg2 = args->ArgV(2);
+
+				if(!_stricmp(arg2, "to") && 4 <= argc)
+				{
+					double targetTime = atof(args->ArgV(3));
+					int targetTick;
+
+					if(!GetDemoTickFromTime(curTime, targetTime, targetTick))
+					{
+						Tier0_Warning("Error: GetDemoTickFromTime failed!\n");
+						return;
+					}
+
+					std::ostringstream oss;
+
+					oss << "demo_gototick " << targetTick;
+
+					g_VEngineClient->ExecuteClientCmd(oss.str().c_str());
+					
+					return;
+				}
+
+				if(3 <= argc)
+				{
+					double deltaTime = atof(arg2);
+					double targetTime = curTime+deltaTime;
+					int targetTick;
+
+					if(!GetDemoTickFromTime(curTime, targetTime, targetTick))
+					{
+						Tier0_Warning("Error: GetDemoTickFromTime failed!\n");
+						return;
+					}
+
+					std::ostringstream oss;
+
+					oss << "demo_gototick " << targetTick;
+
+					g_VEngineClient->ExecuteClientCmd(oss.str().c_str());
+					
+					return;
+				}
+			}
+
+			Tier0_Msg(
+				"mirv_skip time <dValue> - skip approximately time <dValue> seconds (negative values skip back).\n"
+				"mirv_skip time to <dValue> - go approximately to demo time <dValue> seconds\n"
+				"Current demo time in seconds: %f (",
+				curTime
+			);
+			PrintTimeFormated(curTime);
+			Tier0_Msg(")\n");
+
+			return;
+		}
+	}
+
+	Tier0_Msg(
+		"mirv_skip tick [...] - skip demo ticks\n"
+		"mirv_skip time [...] - skip demo time\n"
+	);
+	return;
+}
+
 CON_COMMAND(mirv_campath,"camera paths")
 {
 	if(!g_Hook_VClient_RenderView.IsInstalled())

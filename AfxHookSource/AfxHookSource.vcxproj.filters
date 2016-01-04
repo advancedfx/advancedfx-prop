@@ -248,5 +248,11 @@
     <ClInclude Include="..\shaders\build\afxHook_vertexlit_and_unlit_generic_ps30.h">
       <Filter>shaders\build</Filter>
     </ClInclude>
+    <ClInclude Include="..\shaders\build\afxHook_vertexlit_and_unlit_generic_ps20b.h">
+      <Filter>shaders\build</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shaders\build\afxHook_vertexlit_and_unlit_generic_ps20.h">
+      <Filter>shaders\build</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
