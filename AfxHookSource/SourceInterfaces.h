@@ -3,10 +3,10 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-08-14 by dominik.matrixstorm.com
+// 2015-06-01 dominik.matrixstorm.com
 //
 // First changes:
-// 2009-09-30 by dominik.matrixstorm.com
+// 2009-09-30 dominik.matrixstorm.com
 
 // Based on Source engine SDK:
 // Copyright (c) 1996-2005, Valve Corporation, All rights reserved
@@ -3668,6 +3668,23 @@ public:
 	// more we don't care about.
 };
 
+////////////////////////////////////////////////////////////////////////////////
+
+enum ShaderBlendFactor_t_csgo
+{
+	SHADER_BLEND_ZERO,
+	SHADER_BLEND_ONE,
+	SHADER_BLEND_DST_COLOR,
+	SHADER_BLEND_ONE_MINUS_DST_COLOR,
+	SHADER_BLEND_SRC_ALPHA,
+	SHADER_BLEND_ONE_MINUS_SRC_ALPHA,
+	SHADER_BLEND_DST_ALPHA,
+	SHADER_BLEND_ONE_MINUS_DST_ALPHA,
+	SHADER_BLEND_SRC_ALPHA_SATURATE,
+	SHADER_BLEND_SRC_COLOR,
+	SHADER_BLEND_ONE_MINUS_SRC_COLOR
+};
+
 // IShaderShadow_csgo //////////////////////////////////////////////////////////
 
 #define SHADERSHADOW_INTERFACE_VERSION_CSGO "ShaderShadow010"
@@ -3677,7 +3694,10 @@ class IShaderShadow_csgo
 public:
 	virtual void _UNKOWN_000(void) = 0;
 	virtual void _UNKOWN_001(void) = 0;
-	virtual void _UNKOWN_002(void) = 0; // EnableDepthWrites
+	
+	// 002:
+	virtual void EnableDepthWrites( bool bEnable ) = 0;
+	
 	virtual void _UNKOWN_003(void) = 0;
 	virtual void _UNKOWN_004(void) = 0;
 
@@ -3687,9 +3707,14 @@ public:
 	// 006:
 	virtual void EnableAlphaWrites( bool bEnable ) = 0;
 
-	virtual void _UNKOWN_007(void) = 0;
+	// 007:
+	virtual void EnableBlending( bool bEnable ) = 0;
+
 	virtual void _UNKOWN_008(void) = 0;
-	virtual void _UNKOWN_009(void) = 0;
+	
+	// 009:
+	virtual void BlendFunc( ShaderBlendFactor_t_csgo srcFactor, ShaderBlendFactor_t_csgo dstFactor ) = 0;
+
 	virtual void _UNKOWN_010(void) = 0;
 	virtual void _UNKOWN_011(void) = 0;
 	virtual void _UNKOWN_012(void) = 0;

@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-01-02 dominik.matrixstorm.com
+// 2016-01-06 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -1106,14 +1106,14 @@ void CAfxBaseFxStream::DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiff
 	m_CurrentAction->DrawModulated(am, vecDiffuseModulation, firstIndex, numIndices);
 }
 
-void CAfxBaseFxStream::SetVertexShader(const char* pFileName, int nStaticVshIndex, int vshIndex)
+void CAfxBaseFxStream::SetVertexShader(CAfx_csgo_ShaderState & state)
 {
-	m_CurrentAction->SetVertexShader(pFileName, nStaticVshIndex, vshIndex);
+	m_CurrentAction->SetVertexShader(state);
 }
 
-void CAfxBaseFxStream::SetPixelShader(const char* pFileName, int nStaticPshIndex, int pshIndex)
+void CAfxBaseFxStream::SetPixelShader(CAfx_csgo_ShaderState & state)
 {
-	m_CurrentAction->SetPixelShader(pFileName, nStaticPshIndex, pshIndex);
+	m_CurrentAction->SetPixelShader(state);
 }
 
 CAfxBaseFxStream::AfxAction CAfxBaseFxStream::ClientEffectTexturesAction_get(void)
@@ -1498,10 +1498,14 @@ void CAfxBaseFxStream::CActionAfxVertexLitGenericHook::AfxUnbind(IAfxMatRenderCo
 	AfxD3D9OverrideEnd_D3DRS_SRGBWRITEENABLE();
 
 	AfxD3D9_OverrideEnd_SetPixelShader();
+
+	Tier0_Msg("CAfxBaseFxStream::CActionAfxVertexLitGenericHook::AfxUnbind\n");
 }
 
 void CAfxBaseFxStream::CActionAfxVertexLitGenericHook::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData)
 {
+	Tier0_Msg("CAfxBaseFxStream::CActionAfxVertexLitGenericHook::Bind\n");
+
 	// depth factors:
 
 	float scale = g_bIn_csgo_CSkyBoxView_Draw ? csgo_CSkyBoxView_GetScale() : 1.0f;
@@ -1527,21 +1531,24 @@ void CAfxBaseFxStream::CActionAfxVertexLitGenericHook::Bind(IAfxMatRenderContext
 	AfxD3D9_OverrideBegin_ps_c5(overFac);
 }
 
-void CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader(const char* pFileName, int nStaticPshIndex, int pshIndex)
+void CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader(CAfx_csgo_ShaderState & state)
 {
-	if(!strcmp(pFileName,"vertexlit_and_unlit_generic_ps20"))
+	char const * shaderName = state.Static.SetPixelShader.pFileName.c_str();
+
+	if(!strcmp(shaderName,"vertexlit_and_unlit_generic_ps20"))
 	{
 		static bool firstPass = true;
 		if(firstPass)
 		{
 			firstPass = false;
-			Tier0_Warning("AFXWARNING: You are using an untested code path in CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader for %s.\n", pFileName);
+			Tier0_Warning("AFXWARNING: You are using an untested code path in CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader for %s.\n", shaderName);
 		}
 
-		m_Combos_ps20.CalcCombos(nStaticPshIndex, pshIndex);
+		m_Combos_ps20.CalcCombos(state.Static.SetPixelShader.nStaticPshIndex, state.Dynamic.SetPixelShaderIndex.pshIndex);
 
 		if(0 < m_Combos_ps20.m_LIGHTNING_PREVIEW)
 		{
+			Tier0_Warning("AFXERROR: CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader: 0 < m_LIGHTNING_PREVIEW not supported for %s.\n", shaderName);
 			return;
 		}
 
@@ -1558,7 +1565,7 @@ void CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader(const char
 		IAfxPixelShader * afxPixelShader = g_AfxShaders.GetAcsPixelShader("afxHook_vertexlit_and_unlit_generic_ps20.acs", combo);
 
 		if(!afxPixelShader->GetPixelShader())
-			Tier0_Warning("AFXERROR: CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader: Replacement Shader combo %i for %s is null.\n", combo, pFileName);
+			Tier0_Warning("AFXERROR: CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader: Replacement Shader combo %i for %s is null.\n", combo, shaderName);
 		else
 		{
 			// Override shader:
@@ -1568,19 +1575,20 @@ void CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader(const char
 		afxPixelShader->Release();
 	}
 	else
-	if(!strcmp(pFileName,"vertexlit_and_unlit_generic_ps20b"))
+	if(!strcmp(shaderName,"vertexlit_and_unlit_generic_ps20b"))
 	{
 		static bool firstPass = true;
 		if(firstPass)
 		{
 			firstPass = false;
-			Tier0_Warning("AFXWARNING: You are using an untested code path in CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader for %s.\n", pFileName);
+			Tier0_Warning("AFXWARNING: You are using an untested code path in CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader for %s.\n", shaderName);
 		}
 
-		m_Combos_ps20b.CalcCombos(nStaticPshIndex, pshIndex);
+		m_Combos_ps20b.CalcCombos(state.Static.SetPixelShader.nStaticPshIndex, state.Dynamic.SetPixelShaderIndex.pshIndex);
 
 		if(0 < m_Combos_ps20b.m_LIGHTNING_PREVIEW)
 		{
+			Tier0_Warning("AFXERROR: CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader: 0 < m_LIGHTNING_PREVIEW not supported for %s.\n", shaderName);
 			return;
 		}
 
@@ -1597,7 +1605,7 @@ void CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader(const char
 		IAfxPixelShader * afxPixelShader = g_AfxShaders.GetAcsPixelShader("afxHook_vertexlit_and_unlit_generic_ps20b.acs", combo);
 
 		if(!afxPixelShader->GetPixelShader())
-			Tier0_Warning("AFXERROR: CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader: Replacement Shader combo %i for %s is null.\n", combo, pFileName);
+			Tier0_Warning("AFXERROR: CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader: Replacement Shader combo %i for %s is null.\n", combo, shaderName);
 		else
 		{
 			// Override shader:
@@ -1607,12 +1615,13 @@ void CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader(const char
 		afxPixelShader->Release();
 	}
 	else
-	if(!strcmp(pFileName,"vertexlit_and_unlit_generic_ps30"))
+	if(!strcmp(shaderName,"vertexlit_and_unlit_generic_ps30"))
 	{
-		m_Combos_ps30.CalcCombos(nStaticPshIndex, pshIndex);
+		m_Combos_ps30.CalcCombos(state.Static.SetPixelShader.nStaticPshIndex, state.Dynamic.SetPixelShaderIndex.pshIndex);
 
 		if(0 < m_Combos_ps30.m_LIGHTNING_PREVIEW)
 		{
+			Tier0_Warning("AFXERROR: CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader: 0 < m_LIGHTNING_PREVIEW not supported for %s.\n", shaderName);
 			return;
 		}
 
@@ -1625,21 +1634,26 @@ void CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader(const char
 			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::DESATURATEWITHBASEALPHA_e)m_Combos_ps30.m_DESATURATEWITHBASEALPHA,
 			ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::NOT_LIGHTING_PREVIEW_ONLY_0
 		);
-/*
-		Tier0_Msg("%i,%i,%i,%i,%i,%i -> %i\n",
+
+		/*
+		Tier0_Msg("%s %i %i - %i - %i %i %i %i %i %i -> %i\n",
+			shaderName,
+			state.Static.SetPixelShader.nStaticPshIndex, state.Dynamic.SetPixelShaderIndex.pshIndex,
 			m_Key.AFXMODE,
-			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::DETAILTEXTURE_e)m_Combos.m_DETAILTEXTURE,
-			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::FLASHLIGHT_e)m_Combos.m_FLASHLIGHT,
-			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::DETAIL_BLEND_MODE_e)m_Combos.m_DETAIL_BLEND_MODE,
-			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::DESATURATEWITHBASEALPHA_e)m_Combos.m_DESATURATEWITHBASEALPHA,
+			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::DETAILTEXTURE_e)m_Combos_ps30.m_DETAILTEXTURE,
+			!m_Combos_ps30.m_BASEALPHAENVMAPMASK && !m_Combos_ps30.m_SELFILLUM ? ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::NOT_BASEALPHAENVMAPMASK_AND_NOT_SELFILLUM_1 : ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::NOT_BASEALPHAENVMAPMASK_AND_NOT_SELFILLUM_0,
+			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::FLASHLIGHT_e)m_Combos_ps30.m_FLASHLIGHT,
+			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::DETAIL_BLEND_MODE_e)m_Combos_ps30.m_DETAIL_BLEND_MODE,
+			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::DESATURATEWITHBASEALPHA_e)m_Combos_ps30.m_DESATURATEWITHBASEALPHA,
 			ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::NOT_LIGHTING_PREVIEW_ONLY_0,
 			combo
 			);
-*/
+		*/
+
 		IAfxPixelShader * afxPixelShader = g_AfxShaders.GetAcsPixelShader("afxHook_vertexlit_and_unlit_generic_ps30.acs", combo);
 
 		if(!afxPixelShader->GetPixelShader())
-			Tier0_Warning("AFXERROR: CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader: Replacement Shader combo %i for %s is null.\n", combo, pFileName);
+			Tier0_Warning("AFXERROR: CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader: Replacement Shader combo %i for %s is null.\n", combo, shaderName);
 		else
 		{
 			// Override shader:
@@ -1649,7 +1663,7 @@ void CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader(const char
 		afxPixelShader->Release();
 	}
 	else
-		Tier0_Warning("AFXERROR: CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader: No replacement defined for %s.\n", pFileName);
+		Tier0_Warning("AFXERROR: CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader: No replacement defined for %s.\n", shaderName);
 
 }
 
@@ -1816,32 +1830,28 @@ void CAfxStreams::OnDrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuse
 		am->GetParent()->DrawModulated(vecDiffuseModulation, firstIndex, numIndices);
 }
 
-void CAfxStreams::OnSetVertexShader(const char* pFileName, int nStaticVshIndex, int vshIndex)
+void CAfxStreams::OnSetVertexShader(CAfx_csgo_ShaderState & state)
 {
 	if(!(m_Recording || m_PreviewStream) || GetCurrent_View_Render_ThreadId() != GetCurrentThreadId())
 		// If streams system is live, then the thread should be the View_Render thread,
 		// because we run in mat_queue_mode 0,
 		// so we quit if it's from a different thread.
 		return;
-	
-	//Tier0_Msg("CAfxStreams::OnSetVertexShader(%s,%i,%i);\n", pFileName, nStaticVshIndex, vshIndex);
 	
 	if(m_OnSetVertexShader)
-		m_OnSetVertexShader->SetVertexShader(pFileName, nStaticVshIndex, vshIndex);
+		m_OnSetVertexShader->SetVertexShader(state);
 }
 
-void CAfxStreams::OnSetPixelShader(const char* pFileName, int nStaticPshIndex, int pshIndex)
+void CAfxStreams::OnSetPixelShader(CAfx_csgo_ShaderState & state)
 {
 	if(!(m_Recording || m_PreviewStream) || GetCurrent_View_Render_ThreadId() != GetCurrentThreadId())
 		// If streams system is live, then the thread should be the View_Render thread,
 		// because we run in mat_queue_mode 0,
 		// so we quit if it's from a different thread.
 		return;
-
-	//Tier0_Msg("CAfxStreams::OnSetPixelShader(%s,%i,%i);\n", pFileName, nStaticPshIndex, pshIndex);
 	
 	if(m_OnSetPixelShader)
-		m_OnSetPixelShader->SetPixelShader(pFileName, nStaticPshIndex, pshIndex);
+		m_OnSetPixelShader->SetPixelShader(state);
 }
 
 void CAfxStreams::SetBlend(IAfxVRenderView * rv, float blend )

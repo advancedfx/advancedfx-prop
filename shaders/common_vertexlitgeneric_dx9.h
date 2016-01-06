@@ -1,3 +1,7 @@
+// Copyright (c) Valve Corporation, All rights reserved.
+// File taken from Valve's Alien Swarm SDK.
+// Modified by advancedfx.org.
+
 #ifndef COMMON_VERTEXLITGENERIC_DX9_H_
 #define COMMON_VERTEXLITGENERIC_DX9_H_
 

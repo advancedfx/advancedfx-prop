@@ -29,6 +29,8 @@
 #include "csgo_S_StartSound.h"
 #include "d3d9Hooks.h"
 
+#include "csgo_Stdshader_dx9_Hooks.h"
+
 #include <malloc.h>
 #include <stdlib.h>
 #include <string.h>
@@ -43,14 +45,22 @@ CON_COMMAND(__mirv_test4, "")
 {
 	if(2 <= args->ArgC())
 	{
-		if(0 != atoi(args->ArgV(1)))
-		{
-			AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE(FALSE);
-		}
-		else
-		{
-			AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE();
-		}
+		int combo = atoi(args->ArgV(1));
+
+		static csgo_Stdshader_dx9_Combos_vertexlit_and_unlit_generic_ps30 m_Combos_ps30;
+
+		m_Combos_ps30.CalcCombos(combo);
+
+		Tier0_Msg("%i %i %i %i %i %i -> %i\n",
+			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::DETAILTEXTURE_e)m_Combos_ps30.m_DETAILTEXTURE,
+			!m_Combos_ps30.m_BASEALPHAENVMAPMASK && !m_Combos_ps30.m_SELFILLUM ? ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::NOT_BASEALPHAENVMAPMASK_AND_NOT_SELFILLUM_1 : ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::NOT_BASEALPHAENVMAPMASK_AND_NOT_SELFILLUM_0,
+			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::FLASHLIGHT_e)m_Combos_ps30.m_FLASHLIGHT,
+			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::DETAIL_BLEND_MODE_e)m_Combos_ps30.m_DETAIL_BLEND_MODE,
+			(ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::DESATURATEWITHBASEALPHA_e)m_Combos_ps30.m_DESATURATEWITHBASEALPHA,
+			ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::NOT_LIGHTING_PREVIEW_ONLY_0,
+			combo
+			);
+
 	}
 }
 

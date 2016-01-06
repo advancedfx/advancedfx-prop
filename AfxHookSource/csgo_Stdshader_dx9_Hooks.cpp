@@ -3,27 +3,25 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-01-02 dominik.matrixstorm.com
+// 2016-01-06 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-12-06 dominik.matrixstorm.com
 
 // Please note we handle the following problems and issues here:
 //
-// - Calls of touring_csgo_VertexLitGeneric_CShader_OnDrawElements can happen on different threads
+// - Calls of touring_csgo_*_CShader_OnDrawElements can happen on different threads
 // - The CBasePerMaterialContextData used in touring_csgo_VertexLitGeneric_CShader_OnDrawElements
-//   will not last till the final Set...ShaderIndex calls, because it get's
+//   will not last till the final Set*ShaderIndex calls, because it get's
 //   deleted between SHADOW_STATE and DYNAMIC SHADE.
-// - As side note, Valve inits the SHADOW_STATE of materials twice per context
-//   (of course not with the same CBasePerMaterialContextData :|
 //
 // The following issues are not handled here:
-// - Calls to g_AfxStreams.OnSet...Shader still go through, since we
-//   need to decide if we are on the View_Render thread, but that
-//   problem has to be addressed in that class instead.
-//   (The streams system is live in mat_queue_mode 0 only, so that
-//   the right calls should happen on that thread.)
-
+// - Calls to g_AfxStreams.OnSet*Shader can happen from different
+//   threads, however we ensure that it's only one thread at a time.
+//   When the streams system is live, then the calls should happen
+//   from the current View_Render thread only, because we are in
+//   mat_queue_mode 0 then, however, it's up to the g_AfxStreams
+//   class to check and ensure that.
 
 #include "csgo_Stdshader_dx9_Hooks.h"
 
@@ -32,9 +30,12 @@
 #include <shared/detours.h>
 #include "asmClassTools.h"
 #include "AfxStreams.h"
+#include <shared/StringTools.h>
 
 #include <string>
 #include <map>
+
+typedef void * CAfxStdShaderHookKey;
 
 class CAfxStdShaderHook
 {
@@ -44,103 +45,112 @@ public:
 	{
 	}
 
-	void OnSetVertexShader(IMaterial_csgo * owningMaterial, const char* pFileName, int nStaticVshIndex )
+	//
+	// OnStatic_*
+	//
+
+	void OnStatic_EnableDepthWrites(CAfxStdShaderHookKey key, bool bEnable)
 	{
 		Lock();
 
-		std::map<IMaterial_csgo *, Data>::iterator it = m_Map.find(owningMaterial);
+		CAfx_csgo_ShaderState & state = FindOrCreate(key);
 
-		if(it != m_Map.end())
-		{
-			it->second.m_VertexShaderName.assign(pFileName);
-			it->second.m_StaticVshIndex = nStaticVshIndex;
-		}
-		else
-		{
-			owningMaterial->IncrementReferenceCount();
-			m_Map[owningMaterial] = Data(pFileName, nStaticVshIndex, "(invalid)", -1);
-		}
+		state.Static.EnableDepthWrites.bEnable = bEnable;
 
 		Unlock();
 	}
 
-	void OnSetPixelShader(IMaterial_csgo * owningMaterial, const char* pFileName, int nStaticPshIndex)
+	void OnStatic_EnableBlending(CAfxStdShaderHookKey key, bool bEnable)
 	{
 		Lock();
 
-		std::map<IMaterial_csgo *, Data>::iterator it = m_Map.find(owningMaterial);
+		CAfx_csgo_ShaderState & state = FindOrCreate(key);
 
-		if(it != m_Map.end())
-		{
-			it->second.m_PixelShaderName.assign(pFileName);
-			it->second.m_StaticPshIndex = nStaticPshIndex;
-		}
-		else
-		{
-			owningMaterial->IncrementReferenceCount();
-			m_Map[owningMaterial] = Data("(invalid)", -1, pFileName, nStaticPshIndex);
-		}
+		state.Static.EnableBlending.bEnable = bEnable;
 
 		Unlock();
 	}
 
-	void OnSetVertexShaderIndex(IMaterial_csgo * owningMaterial, int vshIndex)
+	void OnStatic_BlendFunc(CAfxStdShaderHookKey key, ShaderBlendFactor_t_csgo srcFactor, ShaderBlendFactor_t_csgo dstFactor)
+	{
+		Lock();
+
+		CAfx_csgo_ShaderState & state = FindOrCreate(key);
+
+		state.Static.BlendFunc.srcFactor = srcFactor;
+		state.Static.BlendFunc.dstFactor = dstFactor;
+
+		Unlock();
+	}
+
+	void OnStatic_SetVertexShader(CAfxStdShaderHookKey key, const char* pFileName, int nStaticVshIndex )
+	{
+		Lock();
+
+		//Tier0_Msg("OnStatic_SetVertexShader %s %i\n", pFileName, nStaticVshIndex);
+
+		CAfx_csgo_ShaderState & state = FindOrCreate(key);
+
+		state.Static.SetVertexShader.pFileName.assign(pFileName);
+		state.Static.SetVertexShader.nStaticVshIndex = nStaticVshIndex;
+
+		Unlock();
+	}
+
+	void OnStatic_SetPixelShader(CAfxStdShaderHookKey key, const char* pFileName, int nStaticPshIndex)
+	{
+		Lock();
+
+		//Tier0_Msg("OnStatic_SetPixelShader %s %i\n", pFileName, nStaticPshIndex);
+
+		CAfx_csgo_ShaderState & state = FindOrCreate(key);
+
+		state.Static.SetPixelShader.pFileName.assign(pFileName);
+		state.Static.SetPixelShader.nStaticPshIndex = nStaticPshIndex;
+
+		Unlock();
+	}
+
+	//
+	// OnDynamic_*
+	//
+	// It can happen that the case is hit, that there is no mapping
+	// in the map for the material:
+	// The following materials go through here: Pretty much every
+	// material on LevelShutDown is going throug here for no apparent
+	// reason.
+	// Materials that last longer than the level will go through here
+	// too, because we kick them out of the list
+	// on LevelShutDown too, but we are not interested in those anyway.
+	//
+
+	void OnDynamic_SetVertexShaderIndex(CAfxStdShaderHookKey key, int vshIndex)
 	{
 		Lock();
 		
-		std::map<IMaterial_csgo *, Data>::iterator it = m_Map.find(owningMaterial);
+		if(CAfx_csgo_ShaderState * pState = Find(key))
+		{
+			CAfx_csgo_ShaderState & state = *pState;
 
-		if(it != m_Map.end())
-		{
-			g_AfxStreams.OnSetVertexShader(
-				it->second.m_VertexShaderName.c_str(),
-				it->second.m_StaticVshIndex,
-				vshIndex
-			);
-		}
-		else
-		{
-			// not much point in doing anything here.
-			// Tier0_Warning("AFXERROR: CAfxStdShaderHook::OnSetVertexShaderIndex unkown owningMaterial %s. (Do not panic please, this is somewhat expected!)\n", owningMaterial ? owningMaterial->GetName() : "[unknown]");
-			// We ignore these for now, the error message would help no one.
-			//
-			// The following materials go through here: Pretty much every
-			// material on LevelShutDown is going throug here for no apparent
-			// reason.
-			// Materials that last longer than the level will go through here
-			// too, because we kick them out of the list
-			// on LevelShutDown too, but we are not interested in those anyway.
+			state.Dynamic.SetVertexShaderIndex.vshIndex = vshIndex;
+
+			g_AfxStreams.OnSetVertexShader(state);
 		}
 
 		Unlock();
 	}
 
-	void OnSetPixelShaderIndex(IMaterial_csgo * owningMaterial, int pshIndex)
+	void OnDynamic_SetPixelShaderIndex(CAfxStdShaderHookKey key, int pshIndex)
 	{
 		Lock();
 		
-		std::map<IMaterial_csgo *, Data>::iterator it = m_Map.find(owningMaterial);
+		if(CAfx_csgo_ShaderState * pState = Find(key))
+		{
+			CAfx_csgo_ShaderState & state = *pState;
 
-		if(it != m_Map.end())
-		{
-			g_AfxStreams.OnSetPixelShader(
-				it->second.m_PixelShaderName.c_str(),
-				it->second.m_StaticPshIndex,
-				pshIndex
-			);
-		}
-		else
-		{
-			// not much point in doing anything here.
-			// Tier0_Warning("AFXERROR: CAfxStdShaderHook::OnSetPixelShaderIndex unkown owningMaterial %s. (Do not panic please, this is somewhat expected!)\n", owningMaterial ? owningMaterial->GetName() : "[unknown]");
-			// We ignore these for now, the error message would help no one.
-			//
-			// The following materials go through here: Pretty much every
-			// material on LevelShutDown is going throug here for no apparent
-			// reason.
-			// Materials that last longer than the level will go through here
-			// too, because we kick them out of the list
-			// on LevelShutDown too, but we are not interested in those anyway.
+			state.Dynamic.SetPixelShaderIndex.pshIndex = pshIndex;
+
+			g_AfxStreams.OnSetPixelShader(state);
 		}
 
 		Unlock();
@@ -151,38 +161,18 @@ public:
 	{
 		Lock();
 
-		for(std::map<IMaterial_csgo *, Data>::iterator it = m_Map.begin(); it != m_Map.end(); ++it)
-		{
-			it->first->DecrementReferenceCount();
-		}
+		//for(std::map<CAfxStdShaderHookKey, CAfx_csgo_ShaderState>::iterator it = m_Map.begin(); it != m_Map.end(); ++it)
+		//{
+		//	it->first->DecrementReferenceCount();
+		//}
 		m_Map.clear();
 
 		Unlock();
 	}
 
 private:
-	struct Data
-	{
-		int m_StaticVshIndex;
-		int m_StaticPshIndex;
-		std::string m_VertexShaderName;
-		std::string m_PixelShaderName;
-
-		Data()
-		{
-		}
-
-		Data(char const * vertexShaderName, int staticVshIndex, char const * pixelShaderName, int staticPshIndex)
-		: m_StaticVshIndex(staticVshIndex)
-		, m_StaticPshIndex(staticPshIndex)
-		, m_VertexShaderName(vertexShaderName)
-		, m_PixelShaderName(pixelShaderName)
-		{
-		}
-	};
-
 	LONG m_Lock;
-	std::map<IMaterial_csgo *, Data> m_Map;
+	std::map<CAfxStdShaderHookKey, CAfx_csgo_ShaderState> m_Map;
 
 	void Lock()
 	{
@@ -196,6 +186,31 @@ private:
 		InterlockedExchange(&m_Lock, 0);
 	}
 
+	CAfx_csgo_ShaderState & FindOrCreate(CAfxStdShaderHookKey key)
+	{
+		std::map<CAfxStdShaderHookKey, CAfx_csgo_ShaderState>::iterator it = m_Map.find(key);
+
+		if(it != m_Map.end())
+		{
+			return it->second;
+		}
+
+		//key->IncrementReferenceCount();
+		return m_Map[key];
+	}
+
+	CAfx_csgo_ShaderState * Find(CAfxStdShaderHookKey key)
+	{
+		std::map<CAfxStdShaderHookKey, CAfx_csgo_ShaderState>::iterator it = m_Map.find(key);
+
+		if(it != m_Map.end())
+		{
+			return &(it->second);
+		}
+
+		return 0;
+	}
+
 } g_AfxStdShaderHook;
 
 class CAfxBasePerMaterialContextDataPiggyBack_csgo
@@ -206,7 +221,7 @@ class CAfxBasePerMaterialContextDataPiggyBack_csgo
 public:
 	CAfxBasePerMaterialContextDataPiggyBack_csgo( void )
 	: m_PiggyBack(0)
-	, m_OwningMaterial(0)
+	, m_Key(0)
 	, m_ParentShaderShadow(0)
 	, m_ParentShaderDynamicAPI(0)
 	{
@@ -249,9 +264,9 @@ public:
 		m_ParentShaderDynamicAPI = parentShaderDynamicAPI;
 	}
 
-	void SetOwningMaterial(IMaterial_csgo * owningMaterial)
+	void SetKey(CAfxStdShaderHookKey key)
 	{
-		m_OwningMaterial = owningMaterial;
+		m_Key = key;
 	}
 
 #pragma warning(push)
@@ -266,8 +281,14 @@ public:
 	virtual void IShaderShadow_csgo::_UNKOWN_001(void)
 	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 1) }
 
-	virtual void IShaderShadow_csgo::_UNKOWN_002(void)
-	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 2) }
+	virtual void IShaderShadow_csgo::EnableDepthWrites( bool bEnable )
+	{
+		//JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 2)
+
+		g_AfxStdShaderHook.OnStatic_EnableDepthWrites(m_Key, bEnable);
+
+		m_ParentShaderShadow->EnableDepthWrites(bEnable);
+	}
 
 	virtual void IShaderShadow_csgo::_UNKOWN_003(void)
 	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 3) }
@@ -281,14 +302,26 @@ public:
 	virtual void IShaderShadow_csgo::EnableAlphaWrites( bool bEnable )
 	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 6) }
 
-	virtual void IShaderShadow_csgo::_UNKOWN_007(void)
-	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 7) }
+	virtual void IShaderShadow_csgo::EnableBlending( bool bEnable )
+	{
+		//JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 7)
+	
+		g_AfxStdShaderHook.OnStatic_EnableBlending(m_Key, bEnable);
+
+		m_ParentShaderShadow->EnableBlending(bEnable);
+	}
 
 	virtual void IShaderShadow_csgo::_UNKOWN_008(void)
 	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 8) }
 
-	virtual void IShaderShadow_csgo::_UNKOWN_009(void)
-	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 9) }
+	virtual void IShaderShadow_csgo::BlendFunc( ShaderBlendFactor_t_csgo srcFactor, ShaderBlendFactor_t_csgo dstFactor )
+	{
+		//JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 9)
+	
+		g_AfxStdShaderHook.OnStatic_BlendFunc(m_Key, srcFactor, dstFactor);
+
+		m_ParentShaderShadow->BlendFunc(srcFactor, dstFactor);
+	}
 
 	virtual void IShaderShadow_csgo::_UNKOWN_010(void)
 	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 10) }
@@ -315,9 +348,7 @@ public:
 	{
 		//JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 17)
 
-		//Tier0_Msg("IShaderShadow_csgo::SetVertexShader(%s,%i);\n", pFileName, nStaticVshIndex);
-	
-		g_AfxStdShaderHook.OnSetVertexShader(m_OwningMaterial, pFileName, nStaticVshIndex);
+		g_AfxStdShaderHook.OnStatic_SetVertexShader(m_Key, pFileName, nStaticVshIndex);
 
 		m_ParentShaderShadow->SetVertexShader(pFileName, nStaticVshIndex);
 	}
@@ -326,7 +357,7 @@ public:
 	{
 		// JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 18)
 
-		g_AfxStdShaderHook.OnSetPixelShader(m_OwningMaterial, pFileName, nStaticPshIndex);
+		g_AfxStdShaderHook.OnStatic_SetPixelShader(m_Key, pFileName, nStaticPshIndex);
 
 		m_ParentShaderShadow->SetPixelShader(pFileName, nStaticPshIndex);
 	}
@@ -843,18 +874,19 @@ public:
 
 private:
 	CBasePerMaterialContextData_csgo * m_PiggyBack;
-	IMaterial_csgo * m_OwningMaterial;
+	CAfxStdShaderHookKey m_Key;
 	IShaderShadow_csgo * m_ParentShaderShadow;
 	IShaderDynamicAPI_csgo * m_ParentShaderDynamicAPI;
+	CAfx_csgo_ShaderState m_State;
 
 	void DoSetVertexShaderIndex(int vshIndex = -1 )
 	{
-		g_AfxStdShaderHook.OnSetVertexShaderIndex(m_OwningMaterial, vshIndex);
+		g_AfxStdShaderHook.OnDynamic_SetVertexShaderIndex(m_Key, vshIndex);
 	}
 
 	void DoSetPixelShaderIndex(int pshIndex = 0 )
 	{
-		g_AfxStdShaderHook.OnSetPixelShaderIndex(m_OwningMaterial, pshIndex);
+		g_AfxStdShaderHook.OnDynamic_SetPixelShaderIndex(m_Key, pshIndex);
 	}
 
 	void DoExecuteCommandBuffer(uint8 *pCmdBuffer)
@@ -1013,7 +1045,7 @@ csgo_CShader_OnDrawElements_t detoured_csgo_UnlitGeneric_CShader_OnDrawElements;
 //
 void __stdcall touring_csgo_UnlitGeneric_CShader_OnDrawElements(DWORD *this_ptr, IMaterialVar_csgo **params, IShaderShadow_csgo* pShaderShadow, IShaderDynamicAPI_csgo* pShaderAPI, VertexCompressionType_t_csgo vertexCompression, CBasePerMaterialContextData_csgo **pContextDataPtr)
 {
-	//Tier0_Msg("touring_csgo_UnlitGeneric_CShader_OnDrawElements(0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x):%s (0x%08x) threadId=%i\n",this_ptr, params, pShaderShadow, pShaderAPI, vertexCompression, *pContextDataPtr, params[0]->GetOwningMaterial()->GetName(), params[0]->GetOwningMaterial(), GetCurrentThreadId());
+	//if(pShaderShadow) Tier0_Msg("touring_csgo_UnlitGeneric_CShader_OnDrawElements(0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x (* = 0x%08x)):%s (0x%08x) threadId=%i\n",this_ptr, params, pShaderShadow, pShaderAPI, vertexCompression, pContextDataPtr, *pContextDataPtr, params[0]->GetOwningMaterial()->GetName(), params[0]->GetOwningMaterial(), GetCurrentThreadId());
 
 	CAfxBasePerMaterialContextDataPiggyBack_csgo * pContextData = reinterpret_cast< CAfxBasePerMaterialContextDataPiggyBack_csgo *> ( *pContextDataPtr );
 
@@ -1025,7 +1057,7 @@ void __stdcall touring_csgo_UnlitGeneric_CShader_OnDrawElements(DWORD *this_ptr,
 	CBasePerMaterialContextData_csgo * payLoad = pContextData->PreUpdatePiggy();
 
 	pContextData->SetParentApis(pShaderShadow, pShaderAPI);
-	pContextData->SetOwningMaterial(params[0]->GetOwningMaterial());
+	pContextData->SetKey(pContextDataPtr);
 
 	detoured_csgo_UnlitGeneric_CShader_OnDrawElements(
 		this_ptr,
@@ -1048,7 +1080,7 @@ csgo_CShader_OnDrawElements_t detoured_csgo_VertexLitGeneric_CShader_OnDrawEleme
 //
 void __stdcall touring_csgo_VertexLitGeneric_CShader_OnDrawElements(DWORD *this_ptr, IMaterialVar_csgo **params, IShaderShadow_csgo* pShaderShadow, IShaderDynamicAPI_csgo* pShaderAPI, VertexCompressionType_t_csgo vertexCompression, CBasePerMaterialContextData_csgo **pContextDataPtr)
 {
-	//Tier0_Msg("touring_csgo_VertexLitGeneric_CShader_OnDrawElements(0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x):%s (0x%08x) threadId=%i\n",this_ptr, params, pShaderShadow, pShaderAPI, vertexCompression, *pContextDataPtr, params[0]->GetOwningMaterial()->GetName(), params[0]->GetOwningMaterial(), GetCurrentThreadId());
+	//if(pShaderShadow) Tier0_Msg("touring_csgo_VertexLitGeneric_CShader_OnDrawElements(0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x (* = 0x%08x)):%s (0x%08x) threadId=%i\n",this_ptr, params, pShaderShadow, pShaderAPI, vertexCompression, pContextDataPtr, *pContextDataPtr, params[0]->GetOwningMaterial()->GetName(), params[0]->GetOwningMaterial(), GetCurrentThreadId());
 
 	CAfxBasePerMaterialContextDataPiggyBack_csgo * pContextData = reinterpret_cast< CAfxBasePerMaterialContextDataPiggyBack_csgo *> ( *pContextDataPtr );
 
@@ -1060,7 +1092,7 @@ void __stdcall touring_csgo_VertexLitGeneric_CShader_OnDrawElements(DWORD *this_
 	CBasePerMaterialContextData_csgo * payLoad = pContextData->PreUpdatePiggy();
 
 	pContextData->SetParentApis(pShaderShadow, pShaderAPI);
-	pContextData->SetOwningMaterial(params[0]->GetOwningMaterial());
+	pContextData->SetKey(pContextDataPtr);
 
 	detoured_csgo_VertexLitGeneric_CShader_OnDrawElements(
 		this_ptr,
@@ -1072,7 +1104,7 @@ void __stdcall touring_csgo_VertexLitGeneric_CShader_OnDrawElements(DWORD *this_
 	);
 
 	pContextData->PostUpdatePiggy(payLoad);
-
+	
 	*pContextDataPtr = pContextData;
 }
 

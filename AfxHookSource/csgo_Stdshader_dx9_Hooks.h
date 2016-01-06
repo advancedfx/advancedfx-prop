@@ -3,14 +3,112 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-01-04 dominik.matrixstorm.com
+// 2016-01-06 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-12-06 dominik.matrixstorm.com
 
+#include "SourceInterfaces.h"
+
+#include <string>
+
 bool csgo_Stdshader_dx9_Hooks_Init(void);
 
 void csgo_Stdshader_dx9_Hooks_OnLevelShutdown(void);
+
+struct CAfx_csgo_ShaderState
+{
+public:
+	struct CStatic {
+		struct CEnableDepthWrites
+		{
+			bool bEnable;
+
+			CEnableDepthWrites()
+			: bEnable(true)
+			{
+			}
+		} EnableDepthWrites;
+
+		struct CEnableBlending
+		{
+			bool bEnable;
+
+			CEnableBlending()
+			: bEnable(false)
+			{
+			}
+		} EnableBlending;
+
+		struct CBlendFunc
+		{
+			ShaderBlendFactor_t_csgo srcFactor;
+			ShaderBlendFactor_t_csgo dstFactor;
+
+			CBlendFunc()
+			: srcFactor(SHADER_BLEND_ONE)
+			, dstFactor(SHADER_BLEND_ZERO)
+			{
+			}
+		} BlendFunc;
+
+		struct CSetVertexShader
+		{
+			int nStaticVshIndex;
+			std::string pFileName;
+
+			CSetVertexShader()
+			: nStaticVshIndex(0)
+			, pFileName("")
+			{
+			}
+		} SetVertexShader;
+
+		struct CSetPixelShader
+		{
+			int nStaticPshIndex;
+			std::string pFileName;
+
+			CSetPixelShader()
+			: nStaticPshIndex(0)
+			, pFileName("")
+			{
+			}
+		} SetPixelShader;
+
+		CStatic()
+		{
+		}
+	} Static;
+
+	struct CDynamic
+	{
+		struct CSetVertexShaderIndex
+		{
+			int vshIndex;
+
+			CSetVertexShaderIndex()
+			: vshIndex(0)
+			{
+			}
+
+		} SetVertexShaderIndex;
+
+		struct CSetPixelShaderIndex
+		{
+			int pshIndex;
+
+			CSetPixelShaderIndex()
+			: pshIndex(0)
+			{
+			}
+		} SetPixelShaderIndex;
+
+		CDynamic()
+		{
+		}
+	} Dynamic;
+};
 
 class csgo_Stdshader_dx9_Combos_vertexlit_and_unlit_generic_ps20
 {
@@ -445,4 +543,112 @@ public:
 	int m_CASCADED_SHADOW_MAPPING; // 0..1
 	int m_CSM_MODE; // 0..3
 	int m_UNKNOWN_STATIC_64; // 0..1 (maybe DOPIXELFOG 0..1)
+};
+
+class csgo_Stdshader_dx9_Combos_spritecard_ps20
+{
+public:
+	/// <returns>Remainder, should be 0, otherwise indicates error</retruns>
+	int CalcCombos(int staticIndex, int dynamicIndex)
+	{
+		return CalcCombos(staticIndex +dynamicIndex);
+	}
+
+	/// <returns>Remainder, should be 0, otherwise indicates error</retruns>
+	int CalcCombos(int index)
+	{
+		// DYNAMIC COMBOS:
+
+		// STATIC COMBOS:
+		
+		m_DUALSEQUENCE = index % 2;
+		index = index / 2;
+
+		m_SEQUENCE_BLEND_MODE = index % 3;
+		index = index / 3;
+
+		m_ADDBASETEXTURE2 = index % 2;
+		index = index / 2;
+
+		m_MAXLUMFRAMEBLEND1 = index % 2;
+		index = index / 2;
+
+		m_MAXLUMFRAMEBLEND2 = index % 2;
+		index = index / 2;
+
+		m_EXTRACTGREENALPHA = index % 2;
+		index = index / 2;
+
+		m_COLORRAMP = index % 2;
+		index = index / 2;
+
+		m_ANIMBLEND = index % 2;
+		index = index / 2;
+
+		m_ADDSELF = index % 2;
+		index = index / 2;
+
+		m_MOD2X = index % 2;
+		index = index / 2;
+
+		m_DEPTHBLEND = index % 1;
+		index = index / 1;
+
+		m_INVERSEDEPTHBLEND = index % 1;
+		index = index / 1;
+
+		m_SHADER_SRGB_READ = index % 1;
+		index = index / 1;
+
+		m_COLOR_LERP_PS = index % 2;
+		index = index / 2;
+
+		m_PACKED_INTERPOLATOR = index % 2;
+		index = index / 2;
+
+		m_DISTANCEALPHA = index % 2;
+		index = index / 2;
+
+		m_SOFTEDGES = index % 2;
+		index = index / 2;
+
+		m_OUTLINE = index % 2;
+		index = index / 2;
+
+		m_MULOUTPUTBYALPHA = index % 2;
+		index = index / 2;
+
+		// index should be 0 now.
+		return index;
+	}
+
+	// DYNAMIC COMBOS:
+
+	// STATIC COMBOS:
+	int m_DUALSEQUENCE; // 0..1
+	int m_SEQUENCE_BLEND_MODE; // 0..2
+	int m_ADDBASETEXTURE2; // 0..1
+	int m_MAXLUMFRAMEBLEND1; // 0..1
+	int m_MAXLUMFRAMEBLEND2; // 0..1
+	int m_EXTRACTGREENALPHA; // 0..1
+	int m_COLORRAMP; // 0..1
+	int m_ANIMBLEND; // 0..1
+	int m_ADDSELF; // 0..1
+	int m_MOD2X; // 0..1
+	int m_DEPTHBLEND; // 0..0
+	int m_INVERSEDEPTHBLEND; // 0..0
+	int m_SHADER_SRGB_READ; // 0..0
+	int m_COLOR_LERP_PS; // 0..1
+	int m_PACKED_INTERPOLATOR; // 0..1
+	int m_DISTANCEALPHA; // 0..1
+	int m_SOFTEDGES; // 0..1
+	int m_OUTLINE; // 0..1
+	int m_MULOUTPUTBYALPHA; // 0..1
+};
+
+class csgo_Stdshader_dx9_Combos_spritecard_ps20b
+: public csgo_Stdshader_dx9_Combos_spritecard_ps20
+{
+public:
+	// Is the same like csgo_Stdshader_dx9_Combos_spritecard_ps20b.
 };

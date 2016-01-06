@@ -3,12 +3,13 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-06-26 dominik.matrixstorm.com
+// 2016-01-06 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
 
 #include "SourceInterfaces.h"
+#include "csgo_Stdshader_dx9_Hooks.h"
 
 #include <string>
 
@@ -136,16 +137,14 @@ public:
 class IAfxSetVertexShader abstract
 {
 public:
-	virtual void SetVertexShader(const char* pFileName, int nStaticVshIndex, int vshIndex = -1) = 0;
+	virtual void SetVertexShader(CAfx_csgo_ShaderState & state) = 0;
 };
 
 class IAfxSetPixelShader abstract
 {
 public:
-	virtual void SetPixelShader(const char* pFileName, int nStaticPshIndex = 0, int pshIndex = 0) = 0;
+	virtual void SetPixelShader(CAfx_csgo_ShaderState & state) = 0;
 };
-
-
 
 class IAfxStreams4Stream abstract
 {

@@ -1,3 +1,7 @@
+// Copyright (c) Valve Corporation, All rights reserved.
+// File taken from Valve's Alien Swarm SDK.
+// Modified by advancedfx.org.
+
 //========== Copyright (c) Valve Corporation, All rights reserved. ==========//
 //
 // Purpose: 
