@@ -2,7 +2,10 @@
 // File taken from Valve's Alien Swarm SDK.
 // Modified by advancedfx.org.
 
+#define AFXDETPH 1
+
 // AFX: "AFXMODE" "0..4"
+// AFX: "AFXORGBLENDMODE" "0..3"
 
 // AFXMODE:
 // 0 - 8 bit depth, solid and alphaclipped
@@ -10,6 +13,12 @@
 // 2 - green matte, solid and alphaclipped
 // 3 - alpha matte, draw blackish
 // 4 - alpha matte, draw whitish
+
+// AFXORGBLENDMODE:
+// 0 - EnableAlphaBlending( SHADER_BLEND_DST_COLOR, SHADER_BLEND_SRC_COLOR ); // mod2x
+// 1 - EnableAlphaBlending( SHADER_BLEND_ONE, SHADER_BLEND_ONE_MINUS_SRC_ALPHA );
+// 2 - EnableAlphaBlending( SHADER_BLEND_SRC_ALPHA, SHADER_BLEND_ONE );
+// 3 - EnableAlphaBlending( SHADER_BLEND_SRC_ALPHA, SHADER_BLEND_ONE_MINUS_SRC_ALPHA );
 
 // STATIC: "DUALSEQUENCE"			"0..1"
 // STATIC: "SEQUENCE_BLEND_MODE"	"0..2"
@@ -26,9 +35,8 @@
 // STATIC: "EXTRACTGREENALPHA"		"0..1"
 //// We have to care about this for sure, because it influences result alpha.
 
-//// STATIC: "COLORRAMP"				"0..1"
-//// Don't care, because it doesn't influence the result alpha.
-#define COLORRAMP 0
+// STATIC: "COLORRAMP"				"0..1"
+//// We have to care about this for sure, because it influences result alpha.
 
 // STATIC: "ANIMBLEND"				"0..1"
 //// We have to care about this for sure, because it influences result alpha.
@@ -54,9 +62,8 @@
 //// Don't care.
 #define SHADER_SRGB_READ 0
 
-//// STATIC: "COLOR_LERP_PS"			"0..1"
-//// Don't care, because it doesn't influence the result alpha.
-#define COLOR_LERP_PS 0
+// STATIC: "COLOR_LERP_PS"			"0..1"
+//// We have to care about this for sure, because it influences result alpha.
 
 // STATIC: "PACKED_INTERPOLATOR"	"0..1"
 //// We have to care about this for sure, because it influences result alpha.
@@ -70,9 +77,8 @@
 // STATIC: "OUTLINE"                "0..1"
 //// We have to care about this for sure, because it influences result alpha.
 
-//// STATIC: "MULOUTPUTBYALPHA" "0..1"
-//// This is new, I am not sure what it does, let's pray it doesn't mess with the result alpha.
-#define MULOUTPUTBYALPHA 0
+// STATIC: "MULOUTPUTBYALPHA" "0..1"
+//// This is new, I am not sure what it does.
 
 
 // SKIP: ( $DISTANCEALPHA == 0 ) && ( $SOFTEDGES || $OUTLINE )
@@ -103,6 +109,13 @@ float3 g_EyePos							: register( c4 );
 float3 g_vColor0						: register( c5 );
 float3 g_vColor1						: register( c6 );
 
+const float4 g_AfxConstants : register( c31 );
+
+#define g_cAfx_ClipPlaneSubtractValue g_AfxConstants.x
+#define g_cAfx_ClipPlaneMulValue g_AfxConstants.y
+#define g_cAfx_AlphaThreshold g_AfxConstants.z
+
+
 // VS_OUTPUT in a common file.
 #define PIXELSHADER
 #include "common_spritecard_fxc.h"
@@ -132,6 +145,61 @@ float4 g_vecEdgeControl : register( c9 );
 #define EDGESOFTNESS_END ( g_vecEdgeControl.y )
 #endif
 
+
+float4 Afx_FinalOutput(float4 o, float zValue)
+{
+#if MULOUTPUTBYALPHA
+	o.rgb *= o.a;
+#endif
+
+#if 0 == AFXORGBLENDMODE
+	// this mode needs to be revisited eventually.
+	o.rgb -= 0.5;
+	o.rgb = abs(o.rgb);
+	float alpha = mul(float3(0.299,0.587,0.114),o.rgb);
+#elif 1 == AFXORGBLENDMODE
+	// this mode needs to be revisited eventually.
+	o.rgb -= o.a*0.5;
+	o.rgb = abs(o.rgb);
+	float alpha = mul(float3(0.299,0.587,0.114),o.rgb);
+#elif 2 == AFXORGBLENDMODE
+	o.rgb *= o.a;
+	o.rgb = abs(o.rgb);
+	float alpha = mul(float3(0.299,0.587,0.114),o.rgb);
+#elif 3 == AFXORGBLENDMODE
+	float alpha = o.a;
+#endif
+
+#if 0 == AFXMODE
+	clip( alpha - g_cAfx_AlphaThreshold );
+	float dist = (zValue -g_cAfx_ClipPlaneSubtractValue) * g_cAfx_ClipPlaneMulValue;
+	return float4( dist, dist, dist, 1.0 );
+#elif 1 == AFXMODE
+	clip( alpha - g_cAfx_AlphaThreshold );
+	float dist = (zValue -g_cAfx_ClipPlaneSubtractValue) * g_cAfx_ClipPlaneMulValue;
+	dist = saturate(dist);
+	float3 color;
+	if(1.0 <= dist)
+		color = float3(1.0f, 1.0f, 1.0f);
+	else
+	{
+		color = float3(63536, 256, 1);
+		color *= dist;
+		color = frac(color);
+		color *= 256;
+		color = floor(color);
+		color /= 256;
+	}
+	return float4(color, 1.0);
+#elif 2 == AFXMODE
+	clip( alpha - g_cAfx_AlphaThreshold );
+	return float4( 0, 1, 0, 1.0 );
+#elif 3 == AFXMODE
+	return float4( 0, 0, 0, alpha );
+#elif 4 == AFXMODE
+	return float4( 1, 1, 1, alpha );
+#endif
+}
 
 float4 main( PS_INPUT i ) : COLOR
 {
@@ -336,11 +404,13 @@ float4 main( PS_INPUT i ) : COLOR
 		result.rgb = lerp( ( float3 )g_flMod2xIdentity, result.rgb, result.a );
 
 		// Don't tonemap scale since we are multiplying by what is already in the framebuffer.
-		return FinalOutput( result, 0, PIXEL_FOG_TYPE_NONE, TONEMAP_SCALE_NONE );
+		//return FinalOutput( result, 0, PIXEL_FOG_TYPE_NONE, TONEMAP_SCALE_NONE );
+		return Afx_FinalOutput(FinalOutput( result, 0, PIXEL_FOG_TYPE_NONE, TONEMAP_SCALE_NONE ), i.vScreenPos.z);
 	}
 	#else
 	{
-		return FinalOutput( result, 0, PIXEL_FOG_TYPE_NONE, TONEMAP_SCALE_LINEAR );
+		//return FinalOutput( result, 0, PIXEL_FOG_TYPE_NONE, TONEMAP_SCALE_LINEAR );
+		return Afx_FinalOutput(FinalOutput( result, 0, PIXEL_FOG_TYPE_NONE, TONEMAP_SCALE_LINEAR ), i.vScreenPos.z);
 	}
 	#endif
 }

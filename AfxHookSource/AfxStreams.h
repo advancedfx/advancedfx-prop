@@ -15,6 +15,8 @@
 #include "d3d9Hooks.h"
 #include "AfxShaders.h"
 #include "csgo_Stdshader_dx9_Hooks.h"
+#include <shaders/build/afxHook_spritecard_ps20.h>
+#include <shaders/build/afxHook_spritecard_ps20b.h>
 #include <shaders/build/afxHook_vertexlit_and_unlit_generic_ps20.h>
 #include <shaders/build/afxHook_vertexlit_and_unlit_generic_ps20b.h>
 #include <shaders/build/afxHook_vertexlit_and_unlit_generic_ps30.h>
@@ -180,7 +182,7 @@ private:
 
 class CAfxDeveloperStream
 : public CAfxRenderViewStream
-, public IAfxMatRenderContextBind
+, public IAfxMatRenderContextMaterialHook
 , public IAfxMatRenderContextDrawInstances
 , public IAfxMeshDraw
 , public IAfxMeshDraw_2
@@ -207,7 +209,7 @@ public:
 	virtual void StreamAttach(IAfxStreams4Stream * streams);
 	virtual void StreamDetach(IAfxStreams4Stream * streams);
 
-	virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 );
+	virtual IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material);
 	virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance );
 
 	virtual void Draw(IAfxMesh * am, int firstIndex = -1, int numIndices = 0);
@@ -229,7 +231,7 @@ extern bool g_DebugEnabled;
 
 class CAfxBaseFxStream
 : public CAfxRenderViewStream
-, public IAfxMatRenderContextBind
+, public IAfxMatRenderContextMaterialHook
 , public IAfxMatRenderContextDrawInstances
 , public IAfxMeshDraw
 , public IAfxMeshDraw_2
@@ -262,7 +264,7 @@ public:
 	virtual void StreamAttach(IAfxStreams4Stream * streams);
 	virtual void StreamDetach(IAfxStreams4Stream * streams);
 
-	virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 );
+	virtual IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material);
 	virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance );
 
 	virtual void Draw(IAfxMesh * am, int firstIndex = -1, int numIndices = 0);
@@ -357,7 +359,7 @@ protected:
 
 private:
 	class CAction
-	: public IAfxMatRenderContextBind
+	: public IAfxMatRenderContextMaterialHook
 	, public IAfxMatRenderContextDrawInstances
 	, public IAfxMeshDraw
 	, public IAfxMeshDraw_2
@@ -385,9 +387,9 @@ private:
 		{
 		}
 
-		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 )
+		virtual IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material)
 		{
-			ctx->GetParent()->Bind(material, proxyData);
+			return material;
 		}
 
 		virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance )
@@ -444,112 +446,6 @@ private:
 		}
 	};
 
-	class CActionMatte
-	: public CAction
-	{
-	public:
-		CActionMatte(CAfxBaseFxStream * parentStream, IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem)
-		: CAction(parentStream)
-		, m_MatteMaterial(freeMaster, matSystem->FindMaterial("afx/greenmatte",NULL))
-		{
-		}
-
-		virtual void AfxUnbind(IAfxMatRenderContext * ctx);
-
-		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 );
-
-		virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance )
-		{
-			MeshInstanceData_t_csgo * first = const_cast<MeshInstanceData_t_csgo *>(pInstance);
-
-			for(int i = 0; i < nInstanceCount; ++i)
-			{
-				first->m_DiffuseModulation.x = 0.0;
-				first->m_DiffuseModulation.y = 1.0;
-				first->m_DiffuseModulation.z = 0.0;
-				first->m_DiffuseModulation.w = 1.0;
-
-				++first;
-			}
-
-			ctx->GetParent()->DrawInstances(nInstanceCount, pInstance);
-		}
-
-	private:
-		CAfxMaterial m_MatteMaterial;
-	};
-
-	class CActionBlack
-	: public CAction
-	{
-	public:
-		CActionBlack(CAfxBaseFxStream * parentStream, IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem)
-		: CAction(parentStream)
-		, m_Material(freeMaster, matSystem->FindMaterial("afx/black",NULL))
-		{
-		}
-
-		virtual void AfxUnbind(IAfxMatRenderContext * ctx);
-
-		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 );
-
-		virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance )
-		{
-			MeshInstanceData_t_csgo * first = const_cast<MeshInstanceData_t_csgo *>(pInstance);
-
-			for(int i = 0; i < nInstanceCount; ++i)
-			{
-				first->m_DiffuseModulation.x = 0.0;
-				first->m_DiffuseModulation.y = 0.0;
-				first->m_DiffuseModulation.z = 0.0;
-				//first->m_DiffuseModulation.w = 1.0;
-
-				++first;
-			}
-
-			ctx->GetParent()->DrawInstances(nInstanceCount, pInstance);
-		}
-
-	private:
-		CAfxMaterial m_Material;
-	};
-
-	class CActionWhite
-	: public CAction
-	{
-	public:
-		CActionWhite(CAfxBaseFxStream * parentStream, IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem)
-		: CAction(parentStream)
-		, m_Material(freeMaster, matSystem->FindMaterial("afx/white",NULL))
-		{
-		}
-
-		virtual void AfxUnbind(IAfxMatRenderContext * ctx);
-
-		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 );
-
-		virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance )
-		{
-			MeshInstanceData_t_csgo * first = const_cast<MeshInstanceData_t_csgo *>(pInstance);
-
-			for(int i = 0; i < nInstanceCount; ++i)
-			{
-				first->m_DiffuseModulation.x = 1.0;
-				first->m_DiffuseModulation.y = 1.0;
-				first->m_DiffuseModulation.z = 1.0;
-				//first->m_DiffuseModulation.w = 1.0;
-
-				++first;
-			}
-
-			ctx->GetParent()->DrawInstances(nInstanceCount, pInstance);
-		}
-
-	private:
-		CAfxMaterial m_Material;
-	};
-
-
 	class CActionAfxVertexLitGenericHookKey
 	{
 	public:
@@ -591,7 +487,7 @@ private:
 
 		virtual void AfxUnbind(IAfxMatRenderContext * ctx);
 
-		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 );
+		virtual IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material);
 
 		virtual void SetPixelShader(CAfx_csgo_ShaderState & state);
 
@@ -608,32 +504,10 @@ private:
 	public:
 		CActionUnlitGenericFallback(CAfxBaseFxStream * parentStream, CActionAfxVertexLitGenericHookKey & key, IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem, char const * unlitGenericFallbackMaterialName);
 
-		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 );
+		virtual IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material);
 
 	private:
 		CAfxMaterial m_Material;
-	};
-
-	class CActionDepth
-	: public CAction
-	{
-	public:
-		CActionDepth(CAfxBaseFxStream * parentStream, IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem)
-		: CAction(parentStream)
-		, m_DepthMaterial(freeMaster, matSystem->FindMaterial("afx/depth",NULL))
-		, m_DepthValRef("mat_debugdepthval")
-		, m_DepthValMaxRef("mat_debugdepthvalmax")
-		{
-		}
-
-		virtual void AfxUnbind(IAfxMatRenderContext * ctx);
-
-		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 );
-
-	private:
-		CAfxMaterial m_DepthMaterial;
-		WrpConVarRef m_DepthValRef;
-		WrpConVarRef m_DepthValMaxRef;
 	};
 
 	class CActionInvisible
@@ -648,7 +522,7 @@ private:
 
 		virtual void AfxUnbind(IAfxMatRenderContext * ctx);
 
-		virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 );
+		virtual IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material);
 
 		virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance )
 		{
@@ -702,6 +576,57 @@ private:
 
 	};
 
+	class CActionAfxSpritecardHookKey
+	{
+	public:
+		ShaderCombo_afxHook_spritecard_ps20b::AFXMODE_e AFXMODE;
+		float AlphaTestReference;
+
+		CActionAfxSpritecardHookKey()
+		{
+		}
+
+		CActionAfxSpritecardHookKey(
+			ShaderCombo_afxHook_spritecard_ps20b::AFXMODE_e a_AFXMODE,
+			float a_AlphaTestReference)
+		: AFXMODE(a_AFXMODE)
+		, AlphaTestReference(a_AlphaTestReference)
+		{
+		}
+
+		CActionAfxSpritecardHookKey(const CActionAfxSpritecardHookKey & x)
+		: AFXMODE(x.AFXMODE)
+		, AlphaTestReference(x.AlphaTestReference)
+		{
+		}
+		
+		bool operator < (const CActionAfxSpritecardHookKey & y) const
+		{
+			if(this->AFXMODE < y.AFXMODE)
+				return true;
+
+			return this->AFXMODE == y.AFXMODE && this->AlphaTestReference < y.AlphaTestReference;
+		}
+	};
+
+	class CActionAfxSpritecardHook
+	: public CAction
+	{
+	public:
+		CActionAfxSpritecardHook(CAfxBaseFxStream * parentStream, CActionAfxSpritecardHookKey & key);
+
+		virtual void AfxUnbind(IAfxMatRenderContext * ctx);
+
+		virtual IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material);
+
+		virtual void SetPixelShader(CAfx_csgo_ShaderState & state);
+
+	private:
+		static csgo_Stdshader_dx9_Combos_spritecard_ps20 m_Combos_ps20;
+		static csgo_Stdshader_dx9_Combos_spritecard_ps20b m_Combos_ps20b;
+		CActionAfxSpritecardHookKey m_Key;
+	};
+
 	CAction * m_CurrentAction;
 	CAction * m_DepthAction;
 	CAction * m_Depth24Action;
@@ -716,13 +641,16 @@ private:
 	bool m_BoundAction;
 	bool m_DebugPrint;
 	std::map<CAfxMaterialKey, CAction *> m_Map;
+	std::map<CActionAfxSpritecardHookKey, CActionAfxSpritecardHook *> m_SpritecardHookActions;
 	std::map<CActionAfxVertexLitGenericHookKey, CActionAfxVertexLitGenericHook *> m_VertexLitGenericHookActions;
 
 	CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * material);
 	CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * material, AfxAction action, bool safeMode);
 
+	CAction * GetSpritecardHookAction(CActionAfxSpritecardHookKey & key);
 	CAction * GetVertexLitGenericHookAction(CActionAfxVertexLitGenericHookKey & key);
 	
+	void InvalidateSpritecardHookActions();
 	void InvalidateVertexLitGenericHookActions();
 };
 
@@ -1042,7 +970,7 @@ public:
 	virtual void OverrideSetBlend(float blend);
 	virtual void EndOverrideSetBlend();
 
-	virtual void OnBind_set(IAfxMatRenderContextBind * value);
+	virtual void OnMaterialHook_set(IAfxMatRenderContextMaterialHook * value);
 	virtual void OnDrawInstances_set(IAfxMatRenderContextDrawInstances * value);
 
 	virtual void OnDraw_set(IAfxMeshDraw * value);

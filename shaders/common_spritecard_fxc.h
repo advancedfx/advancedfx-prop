@@ -63,7 +63,7 @@ struct VS_OUTPUT
     float4 vecOutlineTint : TEXCOORD4;
 #endif
 
-#if DEPTHBLEND
+#if DEPTHBLEND || AFXDETPH
 	#if defined( REVERSE_DEPTH_ON_X360 )
 		float4 vScreenPos_ReverseZ		: TEXCOORD5;
 	#else

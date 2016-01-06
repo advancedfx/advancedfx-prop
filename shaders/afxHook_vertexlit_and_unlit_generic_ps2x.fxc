@@ -11,12 +11,6 @@
 // 3 - alpha matte, draw blackish
 // 4 - alpha matte, draw whitish
 
-#if AFXMODE == 0 || AFXMODE == 1 || AFXMODE == 2
-#define AFXALPHATEST 1
-#else
-#define AFXALPHATEST 0
-#endif
-
 //// STATIC: "SFM"						"0..0" [ps20]
 //// STATIC: "SFM"						"0..0" [ps20b]
 //// STATIC: "SFM"						"0..1" [ps30]
@@ -341,14 +335,12 @@ struct PS_INPUT
 
 float4 Afx_FinalOutput(float alpha, float zValue)
 {
-#if AFXALPHATEST
-	clip( alpha - g_cAfx_AlphaThreshold );
-#endif
-
 #if 0 == AFXMODE
+	clip( alpha - g_cAfx_AlphaThreshold );
 	float dist = (zValue -g_cAfx_ClipPlaneSubtractValue) * g_cAfx_ClipPlaneMulValue;
 	return float4( dist, dist, dist, 1.0 );
 #elif 1 == AFXMODE
+	clip( alpha - g_cAfx_AlphaThreshold );
 	float dist = (zValue -g_cAfx_ClipPlaneSubtractValue) * g_cAfx_ClipPlaneMulValue;
 	dist = saturate(dist);
 	float3 color;
@@ -365,6 +357,7 @@ float4 Afx_FinalOutput(float alpha, float zValue)
 	}
 	return float4(color, 1.0);
 #elif 2 == AFXMODE
+	clip( alpha - g_cAfx_AlphaThreshold );
 	return float4( 0, 1, 0, 1.0 );
 #elif 3 == AFXMODE
 	return float4( 0, 0, 0, alpha );

@@ -58,10 +58,11 @@ public:
 
 class IAfxMatRenderContext;
 
-class IAfxMatRenderContextBind abstract
+class IAfxMatRenderContextMaterialHook abstract
 {
 public:
-	virtual void Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData = 0 ) = 0;
+	/// <returns>Return the material you want to use (instead).</returns>
+	virtual IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material) = 0;
 };
 
 class IAfxMatRenderContextDrawInstances abstract
@@ -74,7 +75,7 @@ class IAfxMatRenderContext abstract
 public:
 	virtual IMatRenderContext_csgo * GetParent() = 0;
 
-	virtual void OnBind_set(IAfxMatRenderContextBind * value) = 0;
+	virtual void OnMaterialHook_set(IAfxMatRenderContextMaterialHook * value) = 0;
 	virtual void OnDrawInstances_set(IAfxMatRenderContextDrawInstances * value) = 0;
 };
 
@@ -167,7 +168,7 @@ public:
 	virtual void OverrideSetBlend(float blend) = 0;
 	virtual void EndOverrideSetBlend() = 0;
 
-	virtual void OnBind_set(IAfxMatRenderContextBind * value) = 0;
+	virtual void OnMaterialHook_set(IAfxMatRenderContextMaterialHook * value) = 0;
 	virtual void OnDrawInstances_set(IAfxMatRenderContextDrawInstances * value) = 0;
 
 	virtual void OnDraw_set(IAfxMeshDraw * value) = 0;

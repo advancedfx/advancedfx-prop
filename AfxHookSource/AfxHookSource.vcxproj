@@ -112,6 +112,8 @@
     <ClCompile Include="..\shared\StringTools.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\shaders\build\afxHook_spritecard_ps20.h" />
+    <ClInclude Include="..\shaders\build\afxHook_spritecard_ps20b.h" />
     <ClInclude Include="..\shaders\build\afxHook_vertexlit_and_unlit_generic_ps20.h" />
     <ClInclude Include="..\shaders\build\afxHook_vertexlit_and_unlit_generic_ps20b.h" />
     <ClInclude Include="..\shaders\build\afxHook_vertexlit_and_unlit_generic_ps30.h" />

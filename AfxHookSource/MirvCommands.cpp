@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-10-11 by dominik.matrixstorm.com
+// 2016-01-06 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-09-30 by dominik.matrixstorm.com
@@ -494,46 +494,6 @@ CON_COMMAND(mirv_streams, "Access to streams system.")
 		"mirv_streams record [...] - Recording control.\n"
 	);
 	return;
-}
-
-void ClearMaterialInfoSet();
-void PrintMaterialInfoSetToFile(void);
-extern bool g_CollectMaterialInfo;
-
-CON_COMMAND(__mirv_materialinfo, "")
-{
-	int argc = args->ArgC();
-
-	if(2 <= argc)
-	{
-		char const * cmd1 = args->ArgV(1);
-
-		if(!_stricmp(cmd1, "collect") && 3 <= argc)
-		{
-			g_CollectMaterialInfo = atoi(args->ArgV(2)) != 0 ? true : false;
-			return;
-		}
-		else
-		if(!_stricmp(cmd1, "clear"))
-		{
-			ClearMaterialInfoSet();
-			return;
-		}
-		else
-		if(!_stricmp(cmd1, "write"))
-		{
-			PrintMaterialInfoSetToFile();
-			return;
-		}
-	}		
-
-	Tier0_Msg(
-		"__mirv_materialinfo collect 0|1 - Enable / disable collecting material info.\n"
-		"__mirv_materialinfo clear - Clear the collected set.\n"
-		"__mirv_materialinfo write - Write collected data to afx_material_info.txt in csgo.exe folder.\n"
-	);
-	return;
-
 }
 
 CON_COMMAND(__mirv_exec, "client command execution: __mirv_exec <as you would have typed here>") {

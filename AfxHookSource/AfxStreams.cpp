@@ -493,7 +493,7 @@ void CAfxDeveloperStream::StreamAttach(IAfxStreams4Stream * streams)
 
 	if(m_Replace)
 	{
-		streams->OnBind_set(this);
+		streams->OnMaterialHook_set(this);
 		streams->OnDraw_set(this);
 		streams->OnDraw_2_set(this);
 		streams->OnDrawModulated_set(this);
@@ -507,15 +507,13 @@ void CAfxDeveloperStream::StreamDetach(IAfxStreams4Stream * streams)
 	streams->OnDrawModulated_set(0);
 	streams->OnDraw_2_set(0);
 	streams->OnDraw_set(0);
-	streams->OnBind_set(0);
+	streams->OnMaterialHook_set(0);
 
 	CAfxRenderViewStream::StreamDetach(streams);
 }
 
-void CAfxDeveloperStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData)
+IMaterial_csgo * CAfxDeveloperStream::MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material)
 {
-	//Tier0_Msg("CAfxDeveloperStream::Bind\n");
-
 	bool replace =
 		m_Replace
 		&& !strcmp(material->GetTextureGroupName(), m_MatchTextureGroupName.c_str())
@@ -524,9 +522,7 @@ void CAfxDeveloperStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * mate
 
 	m_ReplaceMaterialActive = replace;
 
-	//if(replace)	Tier0_Msg("Replaced %s|%s with %s\n", material->GetTextureGroupName(), material->GetName(), m_ReplaceName.c_str());
-
-	ctx->GetParent()->Bind(replace ? m_ReplaceMaterial->GetMaterial() : material, proxyData);
+	return replace ? m_ReplaceMaterial->GetMaterial() : material;
 }
 
 void CAfxDeveloperStream::DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance )
@@ -609,6 +605,7 @@ CAfxBaseFxStream::CAfxBaseFxStream()
 CAfxBaseFxStream::~CAfxBaseFxStream()
 {
 	InvalidateMap();
+	InvalidateSpritecardHookActions();
 	InvalidateVertexLitGenericHookActions();
 
 	if(m_WhiteAction) m_WhiteAction->Release();
@@ -625,6 +622,7 @@ CAfxBaseFxStream::~CAfxBaseFxStream()
 void CAfxBaseFxStream::LevelShutdown(IAfxStreams4Stream * streams)
 {
 	InvalidateMap();
+	InvalidateSpritecardHookActions();
 	InvalidateVertexLitGenericHookActions();
 
 	CAfxStream::LevelShutdown(streams);
@@ -694,7 +692,7 @@ void CAfxBaseFxStream::StreamAttach(IAfxStreams4Stream * streams)
 	// Set a default action, just in case:
 	m_CurrentAction = m_PassthroughAction;
 
-	streams->OnBind_set(this);
+	streams->OnMaterialHook_set(this);
 	streams->OnDrawInstances_set(this);
 	streams->OnDraw_set(this);
 	streams->OnDraw_2_set(this);
@@ -717,12 +715,12 @@ void CAfxBaseFxStream::StreamDetach(IAfxStreams4Stream * streams)
 	streams->OnDraw_2_set(0);
 	streams->OnDraw_set(0);
 	streams->OnDrawInstances_set(0);
-	streams->OnBind_set(0);
+	streams->OnMaterialHook_set(0);
 
 	CAfxRenderViewStream::StreamDetach(streams);
 }
 
-void CAfxBaseFxStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData )
+IMaterial_csgo * CAfxBaseFxStream::MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material)
 {
 	if(m_BoundAction)
 	{
@@ -748,9 +746,9 @@ void CAfxBaseFxStream::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * materia
 		if(m_DebugPrint) Tier0_Msg("\n");
 	}
 
-	m_CurrentAction->Bind(ctx, material, proxyData);
-
 	m_BoundAction = true;
+
+	return m_CurrentAction->MaterialHook(ctx, material);
 }
 
 CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * material)
@@ -918,6 +916,63 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * materia
 		}
 	}
 
+	if(!strcmp(shaderName, "Spritecard"))
+	{
+			switch(action)
+			{
+			case AA_DrawDepth:
+				{
+					if(m_DebugPrint) Tier0_Msg("drawDepth (Spritecard hook)");
+
+					CActionAfxSpritecardHookKey key(
+						ShaderCombo_afxHook_spritecard_ps20b::AFXMODE_0,
+						alphaTestReference);
+
+					return GetSpritecardHookAction(key);
+				}
+			case AA_DrawDepth24:
+				{
+					if(m_DebugPrint) Tier0_Msg("drawDepth24 (Spritecardc hook)");
+
+					CActionAfxSpritecardHookKey key(
+						ShaderCombo_afxHook_spritecard_ps20b::AFXMODE_1,
+						alphaTestReference);
+
+					return GetSpritecardHookAction(key);
+				}
+			case AA_GreenScreen:
+				{
+					if(m_DebugPrint) Tier0_Msg("mask (Spritecard hook)");
+
+					CActionAfxSpritecardHookKey key(
+						ShaderCombo_afxHook_spritecard_ps20b::AFXMODE_2,
+						alphaTestReference);
+
+					return GetSpritecardHookAction(key);
+				}
+			case AA_Black:
+				{
+					if(m_DebugPrint) Tier0_Msg("black (Spritecard hook)");
+
+					CActionAfxSpritecardHookKey key(
+						ShaderCombo_afxHook_spritecard_ps20b::AFXMODE_3,
+						alphaTestReference);
+
+					return GetSpritecardHookAction(key);
+				}
+			case AA_White:
+				{
+					if(m_DebugPrint) Tier0_Msg("white (Spritecard hook)");
+
+					CActionAfxSpritecardHookKey key(
+						ShaderCombo_afxHook_spritecard_ps20b::AFXMODE_4,
+						alphaTestReference);
+
+					return GetSpritecardHookAction(key);
+				}
+			}
+	}
+	else
 	if(!isAdditive && (!strcmp(shaderName, "VertexLitGeneric") || !strcmp(shaderName, "UnlitGeneric")))
 	{
 		if(!isPhong && !isBump)
@@ -1335,6 +1390,23 @@ void CAfxBaseFxStream::InvalidateMap(void)
 	m_Map.clear();
 }
 
+CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetSpritecardHookAction(CActionAfxSpritecardHookKey & key)
+{
+	std::map<CActionAfxSpritecardHookKey, CActionAfxSpritecardHook *>::iterator it = m_SpritecardHookActions.find(key);
+
+	if(it != m_SpritecardHookActions.end())
+	{
+		return it->second;
+	}
+
+	CActionAfxSpritecardHook * action = new CActionAfxSpritecardHook(this, key);
+
+	action->AddRef();
+	m_SpritecardHookActions[key] = action;
+
+	return action;
+}
+
 CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetVertexLitGenericHookAction(CActionAfxVertexLitGenericHookKey & key)
 {
 	std::map<CActionAfxVertexLitGenericHookKey, CActionAfxVertexLitGenericHook *>::iterator it = m_VertexLitGenericHookActions.find(key);
@@ -1352,6 +1424,17 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetVertexLitGenericHookAction(CAct
 	return action;
 }
 
+void CAfxBaseFxStream::InvalidateSpritecardHookActions()
+{
+	for(std::map<CActionAfxSpritecardHookKey, CActionAfxSpritecardHook *>::iterator it = m_SpritecardHookActions.begin();
+		it != m_SpritecardHookActions.end();
+		++it)
+	{
+		it->second->Release();
+	}
+	m_SpritecardHookActions.clear();
+}
+
 void CAfxBaseFxStream::InvalidateVertexLitGenericHookActions()
 {
 	for(std::map<CActionAfxVertexLitGenericHookKey, CActionAfxVertexLitGenericHook *>::iterator it = m_VertexLitGenericHookActions.begin();
@@ -1361,64 +1444,6 @@ void CAfxBaseFxStream::InvalidateVertexLitGenericHookActions()
 		it->second->Release();
 	}
 	m_VertexLitGenericHookActions.clear();
-}
-
-// CAfxBaseFxStream::CActionMatte //////////////////////////////////////////////
-
-void CAfxBaseFxStream::CActionMatte::AfxUnbind(IAfxMatRenderContext * ctx)
-{
-	AfxD3D9OverrideEnd_D3DRS_SRGBWRITEENABLE();
-
-	m_ParentStream->m_Streams->EndOverrideSetColorModulation();
-}
-
-void CAfxBaseFxStream::CActionMatte::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData)
-{
-	ctx->GetParent()->Bind(m_MatteMaterial.GetMaterial(), proxyData);
-
-	float color[3] = { 1.0f, 1.0f, 1.0f };
-	m_ParentStream->m_Streams->OverrideSetColorModulation(color);
-
-	AfxD3D9OverrideBegin_D3DRS_SRGBWRITEENABLE(FALSE);
-}
-
-// CAfxBaseFxStream::CActionBlack //////////////////////////////////////////////
-
-
-void CAfxBaseFxStream::CActionBlack::AfxUnbind(IAfxMatRenderContext * ctx)
-{
-	AfxD3D9OverrideEnd_D3DRS_SRGBWRITEENABLE();
-
-	m_ParentStream->m_Streams->EndOverrideSetColorModulation();
-}
-
-void CAfxBaseFxStream::CActionBlack::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData )
-{
-	ctx->GetParent()->Bind(m_Material.GetMaterial(), proxyData);
-
-	float color[3] = { 0.0f, 0.0f, 0.0f };
-	m_ParentStream->m_Streams->OverrideSetColorModulation(color);
-
-	AfxD3D9OverrideBegin_D3DRS_SRGBWRITEENABLE(FALSE);
-}
-
-// CAfxBaseFxStream::CActionWhite //////////////////////////////////////////////
-
-void CAfxBaseFxStream::CActionWhite::AfxUnbind(IAfxMatRenderContext * ctx)
-{
-	AfxD3D9OverrideEnd_D3DRS_SRGBWRITEENABLE();
-
-	m_ParentStream->m_Streams->EndOverrideSetColorModulation();
-}
-
-void CAfxBaseFxStream::CActionWhite::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData )
-{
-	ctx->GetParent()->Bind(m_Material.GetMaterial(), proxyData);
-
-	float color[3] = { 1.0f, 1.0f, 1.0f };
-	m_ParentStream->m_Streams->OverrideSetColorModulation(color);
-
-	AfxD3D9OverrideBegin_D3DRS_SRGBWRITEENABLE(FALSE);
 }
 
 // CAfxBaseFxStream::CActionInvisible //////////////////////////////////////////
@@ -1431,52 +1456,15 @@ void CAfxBaseFxStream::CActionInvisible::AfxUnbind(IAfxMatRenderContext * ctx)
 	m_ParentStream->m_Streams->EndOverrideSetBlend();
 }
 
-void CAfxBaseFxStream::CActionInvisible::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData )
+IMaterial_csgo * CAfxBaseFxStream::CActionInvisible::MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material)
 {
-	ctx->GetParent()->Bind(m_InvisibleMaterial.GetMaterial(), proxyData);
-
 	float color[3] = { 0.0f, 0.0f, 0.0f };
 	m_ParentStream->m_Streams->OverrideSetBlend(0.0f);
 	m_ParentStream->m_Streams->OverrideSetColorModulation(color);
 
 	//AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE(FALSE);
-}
 
-// CAfxBaseFxStream::CActionDepth //////////////////////////////////////////////
-
-void CAfxBaseFxStream::CActionDepth::AfxUnbind(IAfxMatRenderContext * ctx)
-{
-	AfxD3D9OverrideEnd_D3DRS_SRGBWRITEENABLE();
-}
-
-void CAfxBaseFxStream::CActionDepth::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData)
-{
-	// set-up debudepth material cvars accordingly:
-
-	float scale = g_bIn_csgo_CSkyBoxView_Draw ? csgo_CSkyBoxView_GetScale() : 1.0f;
-	float flDepthFactor = scale * m_ParentStream->m_DepthVal;
-	float flDepthFactorMax = scale * m_ParentStream->m_DepthValMax;
-	if ( flDepthFactor == 0 ) 
-	{ 
-		flDepthFactor = 1.0f; 
-	} 
-
-	m_DepthValRef.SetValueFastHack(flDepthFactor);
-	//if(flDepthFactor != m_DepthValRef.GetFloat()) Tier0_Msg("CAfxBaseFxStream::CActionDepth::Bind: Error with m_DepthValRef: Expected %f got %f.\n", flDepthFactor, m_DepthValRef.GetFloat());
-	m_DepthValMaxRef.SetValueFastHack(flDepthFactorMax);
-	//if(flDepthFactorMax != m_DepthValMaxRef.GetFloat()) Tier0_Msg("CAfxBaseFxStream::CActionDepth::Bind: Error with m_DepthValMaxRef: Expected %f got %f.\n", flDepthFactorMax, m_DepthValMaxRef.GetFloat());
-
-	// Bind our material:
-
-	ctx->GetParent()->Bind(m_DepthMaterial.GetMaterial(), proxyData);
-	
-	// fix-up shader constants, because those are updated quite randomly
-	// which would cause problems:
-
-	//float vecZFactor[4] = { (flDepthFactorMax - flDepthFactor), flDepthFactor, 1 ,1};
-	//AfxD3D9SetVertexShaderConstantF(48, vecZFactor, 1);
-
-	AfxD3D9OverrideBegin_D3DRS_SRGBWRITEENABLE(FALSE);
+	return m_InvisibleMaterial.GetMaterial();
 }
 
 // CAfxBaseFxStream::CActionAfxVertexLitGenericHook ////////////////////////////
@@ -1498,24 +1486,16 @@ void CAfxBaseFxStream::CActionAfxVertexLitGenericHook::AfxUnbind(IAfxMatRenderCo
 	AfxD3D9OverrideEnd_D3DRS_SRGBWRITEENABLE();
 
 	AfxD3D9_OverrideEnd_SetPixelShader();
-
-	Tier0_Msg("CAfxBaseFxStream::CActionAfxVertexLitGenericHook::AfxUnbind\n");
 }
 
-void CAfxBaseFxStream::CActionAfxVertexLitGenericHook::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData)
+IMaterial_csgo * CAfxBaseFxStream::CActionAfxVertexLitGenericHook::MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material)
 {
-	Tier0_Msg("CAfxBaseFxStream::CActionAfxVertexLitGenericHook::Bind\n");
-
 	// depth factors:
 
 	float scale = g_bIn_csgo_CSkyBoxView_Draw ? csgo_CSkyBoxView_GetScale() : 1.0f;
 	float flDepthFactor = scale * m_ParentStream->m_DepthVal;
 	float flDepthFactorMax = scale * m_ParentStream->m_DepthValMax;
 
-	// Bind normal material:
-
-	ctx->GetParent()->Bind(material, proxyData);
-	
 	//
 	// Force SRGBWriteEnable to off:
 
@@ -1529,6 +1509,9 @@ void CAfxBaseFxStream::CActionAfxVertexLitGenericHook::Bind(IAfxMatRenderContext
 	float overFac[4] = { flDepthFactor, mulFac, m_Key.AlphaTestReference, 0.0f };
 
 	AfxD3D9_OverrideBegin_ps_c5(overFac);
+
+	// Bind normal material:
+	return material;
 }
 
 void CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader(CAfx_csgo_ShaderState & state)
@@ -1667,6 +1650,211 @@ void CAfxBaseFxStream::CActionAfxVertexLitGenericHook::SetPixelShader(CAfx_csgo_
 
 }
 
+// CAfxBaseFxStream::CActionAfxSpritecardHook ////////////////////////////
+
+csgo_Stdshader_dx9_Combos_spritecard_ps20 CAfxBaseFxStream::CActionAfxSpritecardHook::m_Combos_ps20;
+csgo_Stdshader_dx9_Combos_spritecard_ps20b CAfxBaseFxStream::CActionAfxSpritecardHook::m_Combos_ps20b;
+
+CAfxBaseFxStream::CActionAfxSpritecardHook::CActionAfxSpritecardHook(CAfxBaseFxStream * parentStream, CActionAfxSpritecardHookKey & key)
+: CAction(parentStream)
+, m_Key(key)
+{
+}
+
+void CAfxBaseFxStream::CActionAfxSpritecardHook::AfxUnbind(IAfxMatRenderContext * ctx)
+{
+	AfxD3D9_OverrideEnd_ps_c31();
+
+	AfxD3D9OverrideEnd_D3DRS_SRGBWRITEENABLE();
+	AfxD3D9OverrideEnd_D3DRS_DESTBLEND();
+	AfxD3D9OverrideEnd_D3DRS_SRCBLEND();
+
+	AfxD3D9_OverrideEnd_SetPixelShader();
+}
+
+IMaterial_csgo * CAfxBaseFxStream::CActionAfxSpritecardHook::MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material)
+{
+	// depth factors:
+
+	float scale = g_bIn_csgo_CSkyBoxView_Draw ? csgo_CSkyBoxView_GetScale() : 1.0f;
+	float flDepthFactor = scale * m_ParentStream->m_DepthVal;
+	float flDepthFactorMax = scale * m_ParentStream->m_DepthValMax;
+
+	// Force wanted state:
+
+	AfxD3D9OverrideBegin_D3DRS_SRCBLEND(D3DBLEND_SRCALPHA);
+	AfxD3D9OverrideBegin_D3DRS_DESTBLEND(D3DBLEND_INVSRCALPHA);
+	AfxD3D9OverrideBegin_D3DRS_SRGBWRITEENABLE(FALSE);
+
+	// Fill in g_AfxConstants in shader:
+
+	float mulFac = flDepthFactorMax -flDepthFactor;
+	mulFac = !mulFac ? 0.0f : 1.0f / mulFac;
+
+	float overFac[4] = { flDepthFactor, mulFac, m_Key.AlphaTestReference, 0.0f };
+
+	AfxD3D9_OverrideBegin_ps_c31(overFac);
+
+	// Bind normal material:
+	return material;
+}
+
+void CAfxBaseFxStream::CActionAfxSpritecardHook::SetPixelShader(CAfx_csgo_ShaderState & state)
+{
+	char const * shaderName = state.Static.SetPixelShader.pFileName.c_str();
+
+	if(!strcmp(shaderName,"spritecard_ps20"))
+	{
+		static bool firstPass = true;
+		if(firstPass)
+		{
+			firstPass = false;
+			Tier0_Warning("AFXWARNING: You are using an untested code path in CAfxBaseFxStream::CActionAfxSpritecardHook::SetPixelShader for %s.\n", shaderName);
+		}
+
+		Tier0_Warning("AFXERRROR: not implemented!\n");
+
+		return;
+	}
+	else
+	if(!strcmp(shaderName,"spritecard_ps20b"))
+	{
+		ShaderCombo_afxHook_spritecard_ps20b::AFXORGBLENDMODE_e afxOrgBlendMode;
+
+		if(state.Static.EnableBlending.bEnable)
+		{
+			if(SHADER_BLEND_DST_COLOR == state.Static.BlendFunc.srcFactor
+				&& SHADER_BLEND_SRC_COLOR == state.Static.BlendFunc.dstFactor)
+			{
+				// Spritecard.cpp: if ( bMod2X )
+				//
+				// Calculations do not obey clamping!
+				// delta = luma(abs(n.rgba = o.rgba*(f.r,f.g,f.b,f.a) + f.rgba*(o.r,o.g,o.b,o.a) [-f.rgba]))
+				// = luma(abs(((2*o.r-1)*f.r,(2*o.g-1)*f.g,(2*o.b-1)*f.b,(2*o.a-1)*f.a)))
+				// assume: f.rgba = (0.5,0.5,0.5,0.5)
+				// => delta = 0.299*abs(o.r -0.5) +0.587*abs(o.g -0.5) +0.114*abs(o.b -0.5)
+
+				afxOrgBlendMode = ShaderCombo_afxHook_spritecard_ps20b::AFXORGBLENDMODE_0;
+			}
+			else
+			if(SHADER_BLEND_ONE == state.Static.BlendFunc.srcFactor
+				&& SHADER_BLEND_ONE_MINUS_SRC_ALPHA == state.Static.BlendFunc.dstFactor)
+			{
+				// Spritecard.cpp: else if ( bAdditive2ndTexture || bAddOverBlend || bAddSelf )
+				//
+				// Calculations do not obey clamping!
+				// delta = luma(abs(o.rgba*(1,1,1,1) + f.rgba*(1-o.a,1-o.a,1-o.a,1-o.a) [-f.rgba]))
+				// = luma(abs((o.r-o.a*f.r,...)))
+				// assume: f.rgba = (0.5,0.5,0.5,0.5)
+				// => delta = 0.299*abs(o.r -o.a*0.5) +0.587*abs(o.g -o.a*0.5) +0.114*abs(o.b -o.a*0.5)
+
+				afxOrgBlendMode = ShaderCombo_afxHook_spritecard_ps20b::AFXORGBLENDMODE_1;
+			}
+			else
+			if(SHADER_BLEND_SRC_ALPHA == state.Static.BlendFunc.srcFactor
+				&& SHADER_BLEND_ONE == state.Static.BlendFunc.dstFactor)
+			{
+				// Spritecard.cpp: else if ( IS_FLAG_SET(MATERIAL_VAR_ADDITIVE)
+				//
+				// Calculations do not obey clamping!
+				// delta = luma(abs(o.rgba*(i.a,i.a,i.a,i.a) + f.rgba*(1,1,1,1) [-f.rgba]))
+
+				afxOrgBlendMode = ShaderCombo_afxHook_spritecard_ps20b::AFXORGBLENDMODE_2;
+			}
+			else
+			if(SHADER_BLEND_SRC_ALPHA == state.Static.BlendFunc.srcFactor
+				&& SHADER_BLEND_ONE_MINUS_SRC_ALPHA == state.Static.BlendFunc.dstFactor)
+			{
+				// Spritecard.cpp: else
+				//
+				// Calculations do not obey clamping!
+				// delta = luma(abs(o.rgba*(o.a,o.a,o.a,o.a) + f.rgba*(1-o.a,1-o.a,1-o.a,1-o.a) [-f.rgba]))
+				// = luma(abs(((o.r-f.r)*o.a,(o.g-f.g)*o.a,(o.b-f.b)*o.a,(o.a-f.a)*o.a)))
+				// = 0.299*abs((o.r-f.r)*o.a) +0.587*abs((o.g-f.g)*o.a) +0.114*abs((o.b-f.b)*o.a)
+				// assume: f.rgba = (0.5,0.5,0.5,0.5)
+				//
+				// well actually we'll just take o.a!
+
+				afxOrgBlendMode = ShaderCombo_afxHook_spritecard_ps20b::AFXORGBLENDMODE_3;
+			}
+			else
+			{
+				Tier0_Warning("AFXERROR: CAfxBaseFxStream::CActionAfxSpritecardHook::SetPixelShader: current blend mode not supported for %s.\n", shaderName);
+				return;
+			}
+		}
+		else
+		{
+			Tier0_Warning("AFXERROR: CAfxBaseFxStream::CActionAfxSpritecardHook::SetPixelShader: non-blending mode not supported for %s.\n", shaderName);
+			return;
+		}
+
+		int remainder = m_Combos_ps20b.CalcCombos(state.Static.SetPixelShader.nStaticPshIndex, state.Dynamic.SetPixelShaderIndex.pshIndex);
+
+		int combo = ShaderCombo_afxHook_spritecard_ps20b::GetCombo(
+			(ShaderCombo_afxHook_spritecard_ps20b::AFXMODE_e)m_Key.AFXMODE,
+			afxOrgBlendMode,
+			(ShaderCombo_afxHook_spritecard_ps20b::DUALSEQUENCE_e)m_Combos_ps20b.m_DUALSEQUENCE,
+			(ShaderCombo_afxHook_spritecard_ps20b::SEQUENCE_BLEND_MODE_e)m_Combos_ps20b.m_SEQUENCE_BLEND_MODE,
+			(ShaderCombo_afxHook_spritecard_ps20b::ADDBASETEXTURE2_e)m_Combos_ps20b.m_ADDBASETEXTURE2,
+			(ShaderCombo_afxHook_spritecard_ps20b::MAXLUMFRAMEBLEND1_e)m_Combos_ps20b.m_MAXLUMFRAMEBLEND1,
+			(ShaderCombo_afxHook_spritecard_ps20b::MAXLUMFRAMEBLEND2_e)m_Combos_ps20b.m_MAXLUMFRAMEBLEND2,
+			(ShaderCombo_afxHook_spritecard_ps20b::EXTRACTGREENALPHA_e)m_Combos_ps20b.m_EXTRACTGREENALPHA,
+			(ShaderCombo_afxHook_spritecard_ps20b::COLORRAMP_e)m_Combos_ps20b.m_COLORRAMP,
+			(ShaderCombo_afxHook_spritecard_ps20b::ANIMBLEND_e)m_Combos_ps20b.m_ANIMBLEND,
+			(ShaderCombo_afxHook_spritecard_ps20b::ADDSELF_e)m_Combos_ps20b.m_ADDSELF,
+			(ShaderCombo_afxHook_spritecard_ps20b::MOD2X_e)m_Combos_ps20b.m_MOD2X,
+			(ShaderCombo_afxHook_spritecard_ps20b::COLOR_LERP_PS_e)m_Combos_ps20b.m_COLOR_LERP_PS,
+			(ShaderCombo_afxHook_spritecard_ps20b::PACKED_INTERPOLATOR_e)m_Combos_ps20b.m_PACKED_INTERPOLATOR,
+			(ShaderCombo_afxHook_spritecard_ps20b::DISTANCEALPHA_e)m_Combos_ps20b.m_DISTANCEALPHA,
+			(ShaderCombo_afxHook_spritecard_ps20b::SOFTEDGES_e)m_Combos_ps20b.m_SOFTEDGES,
+			(ShaderCombo_afxHook_spritecard_ps20b::OUTLINE_e)m_Combos_ps20b.m_OUTLINE,
+			(ShaderCombo_afxHook_spritecard_ps20b::MULOUTPUTBYALPHA_e)m_Combos_ps20b.m_MULOUTPUTBYALPHA
+		);
+
+		/*
+		Tier0_Msg(
+			"%i -> %i %i | %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i (%i)\n",
+			combo,
+			(ShaderCombo_afxHook_spritecard_ps20b::AFXMODE_e)m_Key.AFXMODE,
+			afxOrgBlendMode,
+			(ShaderCombo_afxHook_spritecard_ps20b::DUALSEQUENCE_e)m_Combos_ps20b.m_DUALSEQUENCE,
+			(ShaderCombo_afxHook_spritecard_ps20b::SEQUENCE_BLEND_MODE_e)m_Combos_ps20b.m_SEQUENCE_BLEND_MODE,
+			(ShaderCombo_afxHook_spritecard_ps20b::ADDBASETEXTURE2_e)m_Combos_ps20b.m_ADDBASETEXTURE2,
+			(ShaderCombo_afxHook_spritecard_ps20b::MAXLUMFRAMEBLEND1_e)m_Combos_ps20b.m_MAXLUMFRAMEBLEND1,
+			(ShaderCombo_afxHook_spritecard_ps20b::MAXLUMFRAMEBLEND2_e)m_Combos_ps20b.m_MAXLUMFRAMEBLEND2,
+			(ShaderCombo_afxHook_spritecard_ps20b::EXTRACTGREENALPHA_e)m_Combos_ps20b.m_EXTRACTGREENALPHA,
+			(ShaderCombo_afxHook_spritecard_ps20b::COLORRAMP_e)m_Combos_ps20b.m_COLORRAMP,
+			(ShaderCombo_afxHook_spritecard_ps20b::ANIMBLEND_e)m_Combos_ps20b.m_ANIMBLEND,
+			(ShaderCombo_afxHook_spritecard_ps20b::ADDSELF_e)m_Combos_ps20b.m_ADDSELF,
+			(ShaderCombo_afxHook_spritecard_ps20b::MOD2X_e)m_Combos_ps20b.m_MOD2X,
+			(ShaderCombo_afxHook_spritecard_ps20b::COLOR_LERP_PS_e)m_Combos_ps20b.m_COLOR_LERP_PS,
+			(ShaderCombo_afxHook_spritecard_ps20b::PACKED_INTERPOLATOR_e)m_Combos_ps20b.m_PACKED_INTERPOLATOR,
+			(ShaderCombo_afxHook_spritecard_ps20b::DISTANCEALPHA_e)m_Combos_ps20b.m_DISTANCEALPHA,
+			(ShaderCombo_afxHook_spritecard_ps20b::SOFTEDGES_e)m_Combos_ps20b.m_SOFTEDGES,
+			(ShaderCombo_afxHook_spritecard_ps20b::OUTLINE_e)m_Combos_ps20b.m_OUTLINE,
+			(ShaderCombo_afxHook_spritecard_ps20b::MULOUTPUTBYALPHA_e)m_Combos_ps20b.m_MULOUTPUTBYALPHA,
+			remainder
+			);
+		*/
+
+		IAfxPixelShader * afxPixelShader = g_AfxShaders.GetAcsPixelShader("afxHook_spritecard_ps20b.acs", combo);
+
+		if(!afxPixelShader->GetPixelShader())
+			Tier0_Warning("AFXERROR: CAfxBaseFxStream::CActionAfxSpritecardHook::SetPixelShader: Replacement Shader combo %i for %s is null.\n", combo, shaderName);
+		else
+		{
+			// Override shader:
+			AfxD3D9_OverrideBegin_SetPixelShader(afxPixelShader->GetPixelShader());
+		}
+
+		afxPixelShader->Release();
+	}
+	else
+		Tier0_Warning("AFXERROR: CAfxBaseFxStream::CActionAfxSpritecardHook::SetPixelShader: No replacement defined for %s.\n", shaderName);
+
+}
+
 // CAfxBaseFxStream::CActionUnlitGenericFallback ///////////////////////////////
 
 CAfxBaseFxStream::CActionUnlitGenericFallback::CActionUnlitGenericFallback(CAfxBaseFxStream * parentStream, CActionAfxVertexLitGenericHookKey & key, IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem, char const * unlitGenericFallbackMaterialName)
@@ -1675,9 +1863,9 @@ CAfxBaseFxStream::CActionUnlitGenericFallback::CActionUnlitGenericFallback(CAfxB
 {
 }
 
-void CAfxBaseFxStream::CActionUnlitGenericFallback::Bind(IAfxMatRenderContext * ctx, IMaterial_csgo * material, void *proxyData)
+IMaterial_csgo * CAfxBaseFxStream::CActionUnlitGenericFallback::MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material)
 {
-	CActionAfxVertexLitGenericHook::Bind(ctx, m_Material.GetMaterial(), proxyData);
+	return CActionAfxVertexLitGenericHook::MaterialHook(ctx, m_Material.GetMaterial());
 }
 
 // CAfxStreams /////////////////////////////////////////////////////////////////
@@ -3084,9 +3272,9 @@ std::wstring CAfxStreams::GetTakeDir(void)
 	return m_TakeDir;
 }
 
-void CAfxStreams::OnBind_set(IAfxMatRenderContextBind * value)
+void CAfxStreams::OnMaterialHook_set(IAfxMatRenderContextMaterialHook * value)
 {
-	if(m_CurrentContext) m_CurrentContext->OnBind_set(value);
+	if(m_CurrentContext) m_CurrentContext->OnMaterialHook_set(value);
 }
 
 void CAfxStreams::OnDrawInstances_set(IAfxMatRenderContextDrawInstances * value)

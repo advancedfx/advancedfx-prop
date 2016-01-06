@@ -3,10 +3,10 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-12-18 dominik.matrixstorm.com
+// 2016-01-06 dominik.matrixstorm.com
 //
 // First changes:
-// 2009-09-29 by dominik.matrixstorm.com
+// 2009-09-29 dominik.matrixstorm.com
 
 
 // TODO:
@@ -594,31 +594,6 @@ void * HookInterfaceFn(void * iface, int idx, void * fn)
 	return ret;
 }
 
-bool g_CollectMaterialInfo = false;
-
-std::set<CAfxMaterialKey> g_MaterialInfoSet_csgo;
-
-void ClearMaterialInfoSet()
-{
-	g_MaterialInfoSet_csgo.clear();
-};
-
-void PrintMaterialInfoSetToFile(void)
-{
-	FILE *f1=NULL;
-
-	f1=fopen("afx_material_info.txt","wb");
-
-	if(!f1) return;
-
-	for(std::set<CAfxMaterialKey>::iterator it = g_MaterialInfoSet_csgo.begin(); it != g_MaterialInfoSet_csgo.end(); ++it)
-	{
-		fprintf(f1,"%s|%s\n", it->GetMaterial()->GetTextureGroupName(), it->GetMaterial()->GetName());
-	}
-
-	fclose(f1);
-}
-
 bool g_DebugEnabled = false;
 
 
@@ -884,7 +859,7 @@ class CAfxMatRenderContext
 public:
 	CAfxMatRenderContext(IMatRenderContext_csgo * parent)
 	: m_Parent(parent)
-	, m_OnBind(0)
+	, m_OnMaterialHook(0)
 	, m_OnDrawInstances(0)
 	{
 	}
@@ -929,9 +904,9 @@ public:
 		return m_Parent;
 	}
 
-	virtual void OnBind_set(IAfxMatRenderContextBind * value)
+	virtual void OnMaterialHook_set(IAfxMatRenderContextMaterialHook * value)
 	{
-		m_OnBind = value;
+		m_OnMaterialHook = value;
 	}
 
 	virtual void OnDrawInstances_set(IAfxMatRenderContextDrawInstances * value)
@@ -1000,20 +975,7 @@ public:
 
 		Debug(9);
 
-		if(g_CollectMaterialInfo)
-		{
-			CAfxMaterialKey key(material);
-			g_MaterialInfoSet_csgo.insert(key);
-		}
-
-		if(m_OnBind)
-		{
-			m_OnBind->Bind(this, material, proxyData);
-		}
-		else
-		{
-			m_Parent->Bind(material, proxyData);
-		}
+		m_Parent->Bind(DoOnMaterialHook(material), proxyData);
 	}
 
 	virtual void _UNKNOWN_010(void)
@@ -1177,14 +1139,8 @@ public:
 
 		Debug(62);
 
-		if(pAutoBind)
-		{
-			// do what the engine does internally anyway, so we can go through existing functions:
-			this->Bind(pAutoBind);
-			pAutoBind = 0;
-		}
-
-		IMeshEx_csgo * iMesh = m_Parent->GetDynamicMesh(buffered, pVertexOverride, pIndexOverride, pAutoBind);
+		IMeshEx_csgo * iMesh = m_Parent->GetDynamicMesh(buffered, pVertexOverride, pIndexOverride,
+			DoOnMaterialHook(pAutoBind));
 
 		return AfxWrapMesh(iMesh);
 	}
@@ -1243,8 +1199,16 @@ public:
 	virtual void _UNKNOWN_080(void)
 	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 80) }
 
-	virtual void _UNKNOWN_081(void)
-	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 81) }
+	virtual void DrawScreenSpaceQuad(IMaterial_csgo * pMaterial)
+	{
+		//JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 81)
+	
+		Debug(81);
+
+		m_Parent->DrawScreenSpaceQuad(
+			DoOnMaterialHook(pMaterial)
+		);
+	}
 
 	virtual void _UNKNOWN_082(void)
 	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 82) }
@@ -1349,7 +1313,22 @@ public:
 		void *pClientRenderable = NULL,
 		int nXDice = 1,
 		int nYDice = 1 )
-	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 113) }
+	{
+		//JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 113)
+	
+		Debug(113);
+
+		m_Parent->DrawScreenSpaceRectangle(
+			DoOnMaterialHook(pMaterial),
+			destx, desty,
+			width, height,
+			src_texture_x0, src_texture_y0,
+			src_texture_x1, src_texture_y1,
+			src_texture_width, src_texture_height,
+			pClientRenderable,
+			nXDice,
+			nYDice);
+	}
 
 	virtual void _UNKNOWN_114(void)
 	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 114) }
@@ -1521,14 +1500,8 @@ public:
 
 		Debug(167);
 
-		if(pAutoBind)
-		{
-			// do what the engine does internally anyway, so we can go through existing functions:
-			this->Bind(pAutoBind);
-			pAutoBind = 0;
-		}
-
-		IMeshEx_csgo * iMesh = m_Parent->GetDynamicMeshEx(_unknown1, buffered, _unknown2, pVertexOverride, pIndexOverride, pAutoBind);
+		IMeshEx_csgo * iMesh = m_Parent->GetDynamicMeshEx(_unknown1, buffered, _unknown2, pVertexOverride, pIndexOverride,
+			DoOnMaterialHook(pAutoBind));
 
 		return AfxWrapMesh(iMesh);
 	}
@@ -1810,8 +1783,16 @@ public:
 
 private:
 	IMatRenderContext_csgo * m_Parent;
-	IAfxMatRenderContextBind * m_OnBind;
+	IAfxMatRenderContextMaterialHook * m_OnMaterialHook;
 	IAfxMatRenderContextDrawInstances * m_OnDrawInstances;
+
+	IMaterial_csgo * DoOnMaterialHook(IMaterial_csgo * value)
+	{
+		if(m_OnMaterialHook && value)
+			return m_OnMaterialHook->MaterialHook(this, value);
+
+		return value;
+	}
 };
 
 #pragma warning(pop)
@@ -1927,8 +1908,6 @@ public:
 		if(m_OnShutdown) m_OnShutdown->Shutdown(this);
 
 		m_FreeMaster.AfxFree();
-
-		g_MaterialInfoSet_csgo.clear();
 
 		m_Parent->Shutdown();
 	}

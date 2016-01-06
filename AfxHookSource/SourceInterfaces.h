@@ -2835,7 +2835,10 @@ public:
 	virtual void ClearColor4ub( unsigned char r, unsigned char g, unsigned char b, unsigned char a ) = 0;
 
 	virtual void _UNKNOWN_080(void) = 0; // OverrideDepthEnable
-	virtual void _UNKNOWN_081(void) = 0;
+	
+	// 081:
+	virtual void DrawScreenSpaceQuad(IMaterial_csgo * pMaterial) = 0;
+
 	virtual void _UNKNOWN_082(void) = 0;
 	virtual void _UNKNOWN_083(void) = 0;
 	virtual void _UNKNOWN_084(void) = 0;
