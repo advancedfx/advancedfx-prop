@@ -290,6 +290,56 @@ void CAfxPixelShader::EndDevice()
 	m_PixelShader = 0;
 }
 
+// CAfxAcsVertexShader ////////////////////////////////////////////////////////////
+
+CAfxAcsVertexShader::CAfxAcsVertexShader()
+: m_VertexShader(0)
+{
+}
+
+CAfxAcsVertexShader::~CAfxAcsVertexShader()
+{
+	if(m_VertexShader) m_VertexShader->Release();
+}
+
+void CAfxAcsVertexShader::AddRef()
+{
+	CAfxShader::AddRef();
+}
+
+void CAfxAcsVertexShader::Release()
+{
+	CAfxShader::Release();
+}
+
+
+IDirect3DVertexShader9 * CAfxAcsVertexShader::GetVertexShader()
+{
+	return m_VertexShader;
+}
+
+void CAfxAcsVertexShader::BeginDevice(IDirect3DDevice9 * device, char const * name, int combo)
+{
+	DWORD * so = LoadFromAcsShaderFileInMemory(name, combo);
+
+	if(so && SUCCEEDED(device->CreateVertexShader(so, &m_VertexShader)))
+		m_VertexShader->AddRef();
+	else
+		m_VertexShader = 0;
+
+	if(so) free(so);
+}
+
+void CAfxAcsVertexShader::EndDevice()
+{
+	if(!m_VertexShader)
+		return;
+
+	m_VertexShader->Release();
+	m_VertexShader = 0;
+}
+
+
 // CAfxAcsPixelShader ////////////////////////////////////////////////////////////
 
 CAfxAcsPixelShader::CAfxAcsPixelShader()
@@ -383,6 +433,11 @@ CAfxShaders::~CAfxShaders()
 		it->second->Release();
 	}
 
+	for(std::map<CAcsShaderKey,CAfxAcsVertexShader *>::iterator it = m_AcsVertexShaders.begin(); it != m_AcsVertexShaders.end(); ++it)
+	{
+		it->second->Release();
+	}
+
 	for(std::map<std::string,CAfxPixelShader *>::iterator it = m_PixelShaders.begin(); it != m_PixelShaders.end(); ++it)
 	{
 		it->second->Release();
@@ -434,6 +489,26 @@ IAfxPixelShader * CAfxShaders::GetPixelShader(char const * name)
 	return m_PixelShaders[sName] = shader;
 }
 
+IAfxVertexShader * CAfxShaders::GetAcsVertexShader(char const * name, int combo)
+{
+	CAcsShaderKey key(name, combo);
+
+	std::map<CAcsShaderKey,CAfxAcsVertexShader *>::iterator it = m_AcsVertexShaders.find(key);
+	if(it!=m_AcsVertexShaders.end())
+	{
+		it->second->AddRef(); // for call
+		return it->second;
+	}
+
+	CAfxAcsVertexShader * shader = new CAfxAcsVertexShader();
+	shader->AddRef(); // for list
+	shader->AddRef(); // for call
+
+	if(m_Device) shader->BeginDevice(m_Device, key.Name.c_str(), key.Combo);
+
+	return m_AcsVertexShaders[key] = shader;
+}
+
 IAfxPixelShader * CAfxShaders::GetAcsPixelShader(char const * name, int combo)
 {
 	CAcsShaderKey key(name, combo);
@@ -470,6 +545,11 @@ void CAfxShaders::BeginDevice(IDirect3DDevice9 * device)
 		it->second->BeginDevice(device, it->first.Name.c_str(), it->first.Combo);
 	}
 
+	for(std::map<CAcsShaderKey,CAfxAcsVertexShader *>::iterator it = m_AcsVertexShaders.begin(); it != m_AcsVertexShaders.end(); ++it)
+	{
+		it->second->BeginDevice(device, it->first.Name.c_str(), it->first.Combo);
+	}
+
 	for(std::map<std::string,CAfxPixelShader *>::iterator it = m_PixelShaders.begin(); it != m_PixelShaders.end(); ++it)
 	{
 		it->second->BeginDevice(device, it->first.c_str());
@@ -487,6 +567,11 @@ void CAfxShaders::EndDevice()
 		return;
 
 	for(std::map<CAcsShaderKey,CAfxAcsPixelShader *>::iterator it = m_AcsPixelShaders.begin(); it != m_AcsPixelShaders.end(); ++it)
+	{
+		it->second->EndDevice();
+	}
+
+	for(std::map<CAcsShaderKey,CAfxAcsVertexShader *>::iterator it = m_AcsVertexShaders.begin(); it != m_AcsVertexShaders.end(); ++it)
 	{
 		it->second->EndDevice();
 	}
@@ -515,6 +600,21 @@ void CAfxShaders::ReleaseUnusedShaders()
 			++it;
 			er->second->Release();
 			m_AcsPixelShaders.erase(er);
+		}
+		else
+		{
+			++it;
+		}
+	}
+
+	for(std::map<CAcsShaderKey,CAfxAcsVertexShader *>::iterator it = m_AcsVertexShaders.begin(); it != m_AcsVertexShaders.end();)
+	{
+		if(1 == it->second->GetRefCount())
+		{
+			std::map<CAcsShaderKey,CAfxAcsVertexShader *>::iterator er = it;
+			++it;
+			er->second->Release();
+			m_AcsVertexShaders.erase(er);
 		}
 		else
 		{

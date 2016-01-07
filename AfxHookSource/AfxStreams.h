@@ -15,6 +15,8 @@
 #include "d3d9Hooks.h"
 #include "AfxShaders.h"
 #include "csgo_Stdshader_dx9_Hooks.h"
+#include <shaders/build/afxHook_splinecard_vs20.h>
+#include <shaders/build/afxHook_spritecard_vs20.h>
 #include <shaders/build/afxHook_spritecard_ps20.h>
 #include <shaders/build/afxHook_spritecard_ps20b.h>
 #include <shaders/build/afxHook_vertexlit_and_unlit_generic_ps20.h>
@@ -619,9 +621,12 @@ private:
 
 		virtual IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material);
 
+		virtual void SetVertexShader(CAfx_csgo_ShaderState & state);
 		virtual void SetPixelShader(CAfx_csgo_ShaderState & state);
 
 	private:
+		static csgo_Stdshader_dx9_Combos_splinecard_vs20 m_Combos_splinecard_vs20;
+		static csgo_Stdshader_dx9_Combos_spritecard_vs20 m_Combos_spritecard_vs20;
 		static csgo_Stdshader_dx9_Combos_spritecard_ps20 m_Combos_ps20;
 		static csgo_Stdshader_dx9_Combos_spritecard_ps20b m_Combos_ps20b;
 		CActionAfxSpritecardHookKey m_Key;

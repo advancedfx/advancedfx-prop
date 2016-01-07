@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-01-06 dominik.matrixstorm.com
+// 2016-01-07 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-12-06 dominik.matrixstorm.com
@@ -651,4 +651,130 @@ class csgo_Stdshader_dx9_Combos_spritecard_ps20b
 {
 public:
 	// Is the same like csgo_Stdshader_dx9_Combos_spritecard_ps20b.
+};
+
+class csgo_Stdshader_dx9_Combos_splinecard_vs20
+{
+public:
+	/// <returns>Remainder, should be 0, otherwise indicates error</retruns>
+	int CalcCombos(int staticIndex, int dynamicIndex)
+	{
+		return CalcCombos(staticIndex +dynamicIndex);
+	}
+
+	/// <returns>Remainder, should be 0, otherwise indicates error</retruns>
+	int CalcCombos(int index)
+	{
+		// DYNAMIC COMBOS:
+
+		m_Orientation = index % 4;
+		index = index / 4;
+
+		// STATIC COMBOS:
+
+		m_ADDBASETEXTURE2 = index % 1;
+		index = index / 1;
+
+		m_EXTRACTGREENALPHA = index % 1;
+		index = index / 1;
+
+		m_DUALSEQUENCE = index % 1;
+		index = index / 1;
+
+		m_DEPTHBLEND = index % 1;
+		index = index / 1;
+
+		m_PACKED_INTERPOLATOR = index % 1;
+		index = index / 1;
+
+		m_ANIMBLEND_OR_MAXLUMFRAMEBLEND1 = index % 2;
+		index = index / 2;
+
+		// index should be 0 now.
+		return index;
+	}
+
+	// DYNAMIC COMBOS:
+	int m_Orientation; // 0..3
+
+	// STATIC COMBOS:
+	int m_ADDBASETEXTURE2; // 0..0
+	int m_EXTRACTGREENALPHA; // 0..0
+	int m_DUALSEQUENCE; // 0..0
+	int m_DEPTHBLEND; // 0..0
+	int m_PACKED_INTERPOLATOR; // 0..0
+	int m_ANIMBLEND_OR_MAXLUMFRAMEBLEND1; // 0..1
+};
+
+class csgo_Stdshader_dx9_Combos_spritecard_vs20
+{
+public:
+	/// <returns>Remainder, should be 0, otherwise indicates error</retruns>
+	int CalcCombos(int staticIndex, int dynamicIndex)
+	{
+		return CalcCombos(staticIndex +dynamicIndex);
+	}
+
+	/// <returns>Remainder, should be 0, otherwise indicates error</retruns>
+	int CalcCombos(int index)
+	{
+		// DYNAMIC COMBOS:
+
+		m_Orientation = index % 5;
+		index = index / 5;
+
+		// STATIC COMBOS:
+
+		m_ZOOM_ANIMATE_SEQ2 = index % 2;
+		index = index / 2;
+
+		m_DUALSEQUENCE = index % 2;
+		index = index / 2;
+
+		m_ADDBASETEXTURE2 = index % 2;
+		index = index / 2;
+
+		m_EXTRACTGREENALPHA = index % 2;
+		index = index / 2;
+
+		m_DEPTHBLEND = index % 1;
+		index = index / 1;
+
+		m_ANIMBLEND_OR_MAXLUMFRAMEBLEND1 = index % 2;
+		index = index / 2;
+
+		m_CROP = index % 2;
+		index = index / 2;
+		
+		m_PACKED_INTERPOLATOR = index % 2;
+		index = index / 2;
+
+		m_SPRITECARDVERTEXFOG = index % 2;
+		index = index / 2;
+
+		m_HARDWAREFOGBLEND = index % 2;
+		index = index / 2;
+
+		m_PERPARTICLEOUTLINE = index % 2;
+		index = index / 2;
+
+		// index should be 0 now.
+		return index;
+	}
+
+	// DYNAMIC COMBOS:
+	int m_Orientation; // 0..4
+
+	// STATIC COMBOS:
+	int m_ZOOM_ANIMATE_SEQ2; // 0..1
+	int m_DUALSEQUENCE; // 0..1
+	int m_ADDBASETEXTURE2; // 0..1
+	int m_EXTRACTGREENALPHA; // 0..1
+	int m_DEPTHBLEND; // 0..0
+	int m_ANIMBLEND_OR_MAXLUMFRAMEBLEND1; // 0..1
+	int m_CROP; // 0..1
+	int m_PACKED_INTERPOLATOR; // 0..1
+	int m_SPRITECARDVERTEXFOG; // 0..1
+	int m_HARDWAREFOGBLEND; // 0..1
+	int m_PERPARTICLEOUTLINE; // 0..1
 };

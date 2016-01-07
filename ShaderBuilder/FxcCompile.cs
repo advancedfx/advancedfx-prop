@@ -654,12 +654,12 @@ class FxcCompile
             }
         }
 
+        int remainingCompiles = 0;
 
-        DoStatus("Waiting for combo compailation to finish ...");
-
-        while (0 != Interlocked.CompareExchange(ref m_OutstandingCompiles, 0, 0))
+        while (0 != (remainingCompiles = Interlocked.CompareExchange(ref m_OutstandingCompiles, 0, 0)))
         {
             DoProgress(2, (double)(m_NumCombos - 1) / (double)m_NumCombos);
+            DoStatus("Waiting for combo compilation to finish (" + remainingCompiles + " remaining) ...");
             Thread.Sleep(100);
         }
 

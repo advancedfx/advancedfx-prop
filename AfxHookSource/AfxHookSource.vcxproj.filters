@@ -260,5 +260,11 @@
     <ClInclude Include="..\shaders\build\afxHook_spritecard_ps20b.h">
       <Filter>shaders\build</Filter>
     </ClInclude>
+    <ClInclude Include="..\shaders\build\afxHook_spritecard_vs20.h">
+      <Filter>shaders\build</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shaders\build\afxHook_splinecard_vs20.h">
+      <Filter>shaders\build</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

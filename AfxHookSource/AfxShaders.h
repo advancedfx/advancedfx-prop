@@ -95,6 +95,29 @@ private:
 
 };
 
+class CAfxAcsVertexShader
+: public CAfxShader
+, public IAfxVertexShader
+{
+public:
+	CAfxAcsVertexShader();
+
+	virtual void AddRef();
+	virtual void Release();
+
+	virtual IDirect3DVertexShader9 * GetVertexShader();
+
+	void BeginDevice(IDirect3DDevice9 * device, char const * name, int combo);
+	void EndDevice();
+
+protected:
+	virtual ~CAfxAcsVertexShader();
+
+private:
+	IDirect3DVertexShader9 * m_VertexShader;
+
+};
+
 class CAfxAcsPixelShader
 : public CAfxShader
 , public IAfxPixelShader
@@ -118,7 +141,6 @@ private:
 
 };
 
-
 class CAfxShaders
 {
 public:
@@ -129,6 +151,7 @@ public:
 	
 	IAfxPixelShader * GetPixelShader(char const * name);
 
+	IAfxVertexShader * GetAcsVertexShader(char const * name, int combo);
 	IAfxPixelShader * GetAcsPixelShader(char const * name, int combo);
 
 	void BeginDevice(IDirect3DDevice9 * device);
@@ -154,6 +177,7 @@ private:
 	IDirect3DDevice9 * m_Device;
 	std::map<std::string,CAfxVertexShader *> m_VertexShaders;
 	std::map<std::string,CAfxPixelShader *> m_PixelShaders;
+	std::map<CAcsShaderKey,CAfxAcsVertexShader *> m_AcsVertexShaders;
 	std::map<CAcsShaderKey,CAfxAcsPixelShader *> m_AcsPixelShaders;
 };
 
