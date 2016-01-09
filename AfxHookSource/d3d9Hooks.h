@@ -79,3 +79,5 @@ void AfxD3D9_OverrideBegin_SetPixelShader(IDirect3DPixelShader9 * overrideShader
 
 /// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
 void AfxD3D9_OverrideEnd_SetPixelShader();
+
+extern bool g_bD3D9DumpVertexShader;

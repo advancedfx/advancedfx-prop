@@ -25,6 +25,7 @@ typedef void * (__stdcall Interface_s::*InterfaceFn_t) (void *);
 	}
 
 extern bool g_bD3D9DebugPrint;
+bool g_bD3D9DumpVertexShader = 0;
 
 ULONG g_NewDirect3DDevice9_RefCount = 1;
 IDirect3DDevice9 * g_OldDirect3DDevice9 = 0;
@@ -531,6 +532,32 @@ public:
     
     STDMETHOD(SetVertexShader)(THIS_ IDirect3DVertexShader9* pShader)
 	{
+		if(g_bD3D9DumpVertexShader)
+		{
+			g_bD3D9DumpVertexShader = false;
+
+			if(pShader)
+			{
+				UINT size;
+				if(D3D_OK == pShader->GetFunction(0, &size))
+				{
+					void * pData = malloc(size);
+
+					if(pData && D3D_OK == pShader->GetFunction(pData,&size))
+					{
+						FILE * f1 = fopen("AfxShaderDump.fxo","wb");
+						if(f1)
+						{
+							fwrite(pData,size,1,f1);
+							fclose(f1);
+						}
+					}
+
+					free(pData);
+				}
+			}
+		}
+		
 		if(m_Original_VertexShader) m_Original_VertexShader->Release();
 		m_Original_VertexShader = pShader;
 		if(pShader) pShader->AddRef();
