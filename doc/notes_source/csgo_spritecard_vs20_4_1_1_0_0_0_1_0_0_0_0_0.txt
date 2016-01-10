@@ -53,7 +53,7 @@
           dcl_texcoord7 v8
 
 	float3 worldPos;
-	r4 = worldPos = mul4x3( v.vPos, cModel[0] );
+	r4.xyz = worldPos = mul4x3( v.vPos, cModel[0] );
 	
    0:     dp4 r4.x, v1, c58
    1:     dp4 r4.y, v1, c59
@@ -188,7 +188,7 @@ Where
 	r5.w = rad;
   37:     min r5.w, r0.w, r2.w
   
-///// //// //// ////
+//// //// //// //// //// //// //// ////
   
 	r3.w = rad * 0.5;
   38:     mul r3.w, r5.w, c0.w
@@ -199,28 +199,29 @@ Where
 	r2.w = 1/(rad * 0.5)
   40:     rcp r2.w, r3.w
   
-	r0.w = -0.5 * rad  +l / (rad * 0.5)
+	r0.w = (-0.5 * rad  +l) / (rad * 0.5)
   41:     mul r0.w, r0.w, r2.w
   
-	r0.w = max(r0.w,0.0)
+	r0.w = max((-0.5 * rad  +l) / (rad * 0.5),0.0)
   42:     max r0.w, r0.w, c0.x
   
-	r2.w = min(max(r0.w,0.0),1.0)
+	r2.w = min(max((-0.5 * rad  +l) / (rad * 0.5),0.0),1.0)
   43:     min r2.w, r0.w, c0.y
   
-	r0.w = min(max(r0.w,0.0),1.0) * -2 +3
+	r0.w = min(max((-0.5 * rad  +l) / (rad * 0.5),0.0),1.0) * -2 +3
   44:     mad r0.w, r2.w, c4.x, c4.y
   
-	r2.w = [min(max(r0.w,0.0),1.0)]^2
+	r2.w = [min(max((-0.5 * rad  +l) / (rad * 0.5),0.0),1.0)]^2
   45:     mul r2.w, r2.w, r2.w
   
 	r4.w = rad * 0.5 < l ? 1.0 : 0.0
   46:     slt r4.w, r3.w, r6.w
   
-	r0.w = (min(max(r0.w,0.0),1.0) * -2 +3) * [min(max(r0.w,0.0),1.0)]^2
+	r0.w = (min(max((-0.5 * rad  +l) / (rad * 0.5),0.0),1.0) * -2 +3) * [min(max((-0.5 * rad  +l) / (rad * 0.5),0.0),1.0)]^2
+	r0.w = smoothstep(0.5 * rad, rad, l);
   47:     mul r0.w, r0.w, r2.w
 
-	r0 = tint * ( (min(max(r0.w,0.0),1.0) * -2 +3) * [min(max(r0.w,0.0),1.0)]^2 -1)
+	r0 = tint * ( smoothstep(0.5 * rad, rad, l) -1)
   48:     mad r0, r1, r0.w, -r1
   
 	r2.xy = (YAW/(2*PI) +0.5,ROTATION/(2*PI) +0.5)
@@ -239,6 +240,7 @@ Where
   53:     mad r6.xy, r2, c1.x, c1.y
   
 	r0 *= r2.w
+	r0 = l < 2 * rad ? [tint * (smoothstep(0.5 * rad, rad, l) -1)] : 0.0;
   54:     mul r0, r0, r2.w
   
 	float2 sc;
@@ -285,23 +287,49 @@ Where
   
 	r6.xyw = float3(sc_yaw.y,sc_yaw.x,r2.z=tint_beforescaling.b)) * floa3(right.x,right.y,right.y);
   81:     mul r6.xyw, r2.xyzy, r3.yzzy
-  
-  //TODO: continue here.
-  
+
+	r2.w = rad * (ix.y * sc.y -tint.b*ix.x)
   82:     mul r2.w, r5.w, r2.w
+  
+	r2.y = right.y * sc_yaw.y -l
   83:     mad r2.y, r3.z, r2.x, -r6.w
+  
+	r2.x = sc_yaw.x * right.y +sc_yaw.y * right.x
   84:     add r2.x, r6.y, r6.x
+  
+	r6.xyz = float3(v2p.y*right.z,v2p.z*right.x,v2p.x*right.y);
   85:     mul r6.xyz, r5, r3
+  
+	r2.z = right.z;
   86:     mov r2.z, r3.x
+  
+	r5.xyz = right * v2p -float3(v2p.y*right.z,v2p.z*right.x,v2p.x*right.y);
   87:     mad r5.xyz, r3.zxyw, r5.yzxw, -r6
+  
+	r3.xyz = rad*y1 * float3(sc_yaw.x * right.y +sc_yaw.y * right.x, right.y * sc_yaw.y -l, right.z) +worldPos
   88:     mad r3.xyz, r3.w, r2, r4
+  
+	r2.xyz = normalize(r5.xyz);
   89:     nrm r2.xyz, r5
+  
+	oD0 = (rad * 0.5 < l ? 1.0 : 0.0) * [l < 2 * rad ? [tint * (smoothstep(0.5 * rad, rad, l) -1)] : 0.0] +tint
+	oD0 = rad * 0.5 < l && l < 2 * rad ? tint * smoothstep(0.5 * rad, rad, l) : tint;
   92:     mad oD0, r4.w, r0, r1
+  
+	r1.xyz = (rad * (ix.y * sc.y -tint.b*ix.x)) * r2.xyz +rad*y1 * float3(sc_yaw.x * right.y +sc_yaw.y * right.x, right.y * sc_yaw.y -l, right.z) +worldPos
   93:     mad r1.xyz, r2.w, r2, r3
+  
+	r0.xyz = worldPos
+		+(l > rad/2
+			? (rad * (ix.y * sc.y -tint.b*ix.x)) * r2.xyz +rad*y1 * float3(sc_yaw.x * right.y +sc_yaw.y * right.x, right.y * sc_yaw.y -l, right.z)
+			: 0.0
+		);
   94:     lrp r0.xyz, r4.w, r1, r4
+  
+	r0.w = 1.0;
   95:     mov r0.w, c0.y
   
-///// //// //// ////
+//// //// //// //// //// //// //// ////
   
   96:     dp4 oPos.x, r0, c8
   97:     dp4 oPos.y, r0, c9
