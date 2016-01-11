@@ -38,9 +38,6 @@
 
 // SKIP: !$DUALSEQUENCE && $ZOOM_ANIMATE_SEQ2
 
-// ATTENTION: WE CURRENTLY CANNOT SUPPORT ORIENTATION == 4, because we don't really know what to do!
-// SKIP: $ORIENTATION == 4
-
 #include "common_vs_fxc.h"
 
 // Don't want to have extra combos, so define these two to be the same base on a single combo.  Bilch.
@@ -337,13 +334,15 @@ VS_OUTPUT main( CONST_PC VS_INPUT v
 	projPos  = mul( float4( viewPos, 1.0f ), cProj );
 #endif
 	
-#if ( ( ORIENTATION == 1 ) || ( ORIENTATION == 3 ) )
+#if ( ( ORIENTATION == 1 ) || ( ORIENTATION == 3 ) || ( ORIENTATION == 4 ) )
 	// Z-aligned case
 	if (l > rad/2)
 	{
 		float3 up = float3(0,0,1);
 		float3 right = normalize(cross(up, v2p));
-		#if ( ORIENTATION == 3 )
+		#if (ORIENTATION == 4)
+			up = normalize(cross(right,v2p)); // THIS SEEMS TO BE THE ONLY REALLY NEW THING for ORIENTATION==4
+		#elif ( ORIENTATION == 3 )
 		{
 			float3 vNormal = v.vecNormal.xyz;
 			float3 vTrialVector = float3( 0, 0, 1 );

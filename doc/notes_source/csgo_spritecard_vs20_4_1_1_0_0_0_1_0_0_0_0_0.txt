@@ -94,6 +94,7 @@
   17:     max r4.w, r0.x, v4.z
   18:     rcp r2.w, r1.w
 
+BEGIN [1]
 	r1.w = START_FADE_SIZE_FACTOR * -l +rad
   19:     mad r1.w, c56.z, -r6.w, r4.w
   20:     mad r1.w, r1.w, -r2.w, c0.y
@@ -113,7 +114,7 @@
 	r5.w = max((l -START_FAR_FADE) *FAR_FADE_FACTOR,0.0);
   25:     max r5.w, r2.w, c0.x
   
-	r2 = END_FADE_SIZE_FACTOR*l < rad ? float4(0.0,0.0,0.0,0.0) : r1
+	r2 = END_FADE_SIZE_FACTOR*l < rad ? float4(0.0,0.0,0.0,0.0) : tint * (START_FADE_SIZE_FACTOR * -l +rad)
   26:     mad r2, r0.y, -r1, r1
   
 	r5.w = min(1.0,max((l -START_FAR_FADE) *FAR_FADE_FACTOR,0.0))
@@ -150,8 +151,9 @@
   
 	r2.w =  tint.a < ONE_OVER_255 ? 0.0 : (0.0 >= tscale ? 0.0 : ((START_FADE_SIZE_FACTOR*l < rad  && END_FADE_SIZE_FACTOR*l < rad) ? 0.0 : rad))
   36:     mad r2.w, r2.w, -r3.w, r3.w
+END [1]
   
-Above code sums up to:
+Code block [1] sums up to:
 	// now, perform fade out
 	if ( rad > START_FADE_SIZE_FACTOR * l )
 	{
@@ -189,6 +191,8 @@ Where
   37:     min r5.w, r0.w, r2.w
   
 //// //// //// //// //// //// //// ////
+
+BEGIN [2]
   
 	r3.w = rad * 0.5;
   38:     mul r3.w, r5.w, c0.w
@@ -245,14 +249,16 @@ Where
   
 	float2 sc;
 	sincos( ROTATION, sc.y, sc.x );
-	r3.x = sc.y;
-	r3.y =  sc.x;
+	r3.x = sc.x;
+	r3.y = sc.y;
+	r3.z = undefined
   55:     sincos r3.xy, r6.y, c5, c6
 
 	float2 sc_yaw;
 	sincos( YAW, sc_yaw.y, sc_yaw.x );
-	r2.x = sc_yaw.y;
-	r2.y = sc_yaw.x
+	r2.x = sc_yaw.x;
+	r2.y = sc_yaw.y;
+	r2.z = undefined
   63:     sincos r2.xy, r6.x, c5, c6
   
 	r6.xyz = float3(0,v2p.z,0);
@@ -265,15 +271,17 @@ Where
   r6.xyz = float3(0,-v2p.y,v2p.x)
   73:     mad r6.xyz, r5, c0.xxyw, -r6
   
-  r7.xyw = float3(sc.y,sc.x,tint.b) * float3(ix.x,ix.y,ix.x);
+  r7.xyw = float3(sc.x,sc.y,sc.y) * float3(ix.x,ix.y,ix.x);
   74:     mul r7.xyw, r3.xyzy, r8.xyzx
   
-  r2.w = ix.y * sc.y -tint.b*ix.x
+  r2.w = ix.y * sc.x -sc.y * ix.x
+  float y1 = sc.x * ix.y - sc.y * ix.x;
+  r2.w = y1
   75:     mad r2.w, r8.y, r3.x, -r7.w
 
-	r3.w = sc.x*ix.y +sc.y*ix.x;
-	float y1 = sc.x * ix.y - sc.y * ix.x;
-	r3.w = y1;
+	r3.w = sc.y*ix.y +sc.x*ix.x;
+	float x1 = dot( ix, sc );
+	r3.w = x1;
   76:     add r3.w, r7.y, r7.x
   
 	r3 = normalize(r6);
@@ -282,19 +290,19 @@ Where
 	r3.xyz = right.zxy;
   77:     nrm r3.xyz, r6
   
-	r3.w = rad * y1;
+	r3.w = rad * x1;
   80:     mul r3.w, r5.w, r3.w
   
-	r6.xyw = float3(sc_yaw.y,sc_yaw.x,r2.z=tint_beforescaling.b)) * floa3(right.x,right.y,right.y);
+	r6.xyw = float3(sc_yaw.x,sc_yaw.y,sc_yaw.y) * float3(right.x,right.y,right.x);
   81:     mul r6.xyw, r2.xyzy, r3.yzzy
 
-	r2.w = rad * (ix.y * sc.y -tint.b*ix.x)
+	r2.w = rad * y1
   82:     mul r2.w, r5.w, r2.w
   
-	r2.y = right.y * sc_yaw.y -l
+	r2.y = right.y * sc_yaw.x -sc_yaw.y * right.x
   83:     mad r2.y, r3.z, r2.x, -r6.w
   
-	r2.x = sc_yaw.x * right.y +sc_yaw.y * right.x
+	r2.x = sc_yaw.y * right.y +sc_yaw.x * right.x
   84:     add r2.x, r6.y, r6.x
   
 	r6.xyz = float3(v2p.y*right.z,v2p.z*right.x,v2p.x*right.y);
@@ -302,48 +310,95 @@ Where
   
 	r2.z = right.z;
   86:     mov r2.z, r3.x
-  
-	r5.xyz = right * v2p -float3(v2p.y*right.z,v2p.z*right.x,v2p.x*right.y);
+
+	r5.xyz = float3(right.y,right.z,right.x) * float3(v2p.z,v2p.x,v2p.y) -float3(v2p.y*right.z,v2p.z*right.x,v2p.x*right.y);
+	r5.xyz = cross(right,v2p);
   87:     mad r5.xyz, r3.zxyw, r5.yzxw, -r6
   
-	r3.xyz = rad*y1 * float3(sc_yaw.x * right.y +sc_yaw.y * right.x, right.y * sc_yaw.y -l, right.z) +worldPos
+	r3.xyz = rad * x1 * float3(sc_yaw.y * right.y +sc_yaw.x * right.x, right.y * sc_yaw.x -sc_yaw.y * right.x, right.z) +worldPos
   88:     mad r3.xyz, r3.w, r2, r4
   
-	r2.xyz = normalize(r5.xyz);
+	r2.xyz = normalize(cross(right,v2p));
   89:     nrm r2.xyz, r5
   
 	oD0 = (rad * 0.5 < l ? 1.0 : 0.0) * [l < 2 * rad ? [tint * (smoothstep(0.5 * rad, rad, l) -1)] : 0.0] +tint
 	oD0 = rad * 0.5 < l && l < 2 * rad ? tint * smoothstep(0.5 * rad, rad, l) : tint;
   92:     mad oD0, r4.w, r0, r1
   
-	r1.xyz = (rad * (ix.y * sc.y -tint.b*ix.x)) * r2.xyz +rad*y1 * float3(sc_yaw.x * right.y +sc_yaw.y * right.x, right.y * sc_yaw.y -l, right.z) +worldPos
+	r1.xyz = rad * y1 * normalize(cross(right,v2p)) +rad * x1 * float3(sc_yaw.y * right.y +sc_yaw.x * right.x, right.y * sc_yaw.x -sc_yaw.y * right.x, right.z) +worldPos;
   93:     mad r1.xyz, r2.w, r2, r3
   
 	r0.xyz = worldPos
-		+(l > rad/2
-			? (rad * (ix.y * sc.y -tint.b*ix.x)) * r2.xyz +rad*y1 * float3(sc_yaw.x * right.y +sc_yaw.y * right.x, right.y * sc_yaw.y -l, right.z)
+		+(rad * 0.5 < l
+			? rad * y1 * normalize(cross(right,v2p)) +rad * x1 * float3(sc_yaw.y * right.y +sc_yaw.x * right.x, right.y * sc_yaw.x -sc_yaw.y * right.x, right.z)
 			: 0.0
 		);
+	)
   94:     lrp r0.xyz, r4.w, r1, r4
+END [2]
   
-	r0.w = 1.0;
+Code block [2] sums up to:
+
+	// Z-aligned case
+	if (l > rad/2)
+	{
+		float3 up = float3(0,0,1);
+		float3 right = normalize(cross(up, v2p));
+		
+		up = normalize(cross(right,v2p)); // THIS SEEMS TO BE THE ONLY REALLY NEW THING for ORIENTATION==4
+		
+		float tmpx = right.x * sc_yaw.x + right.y * sc_yaw.y;
+		right.y = right.y * sc_yaw.x - right.x * sc_yaw.y;
+		right.x = tmpx;
+
+		worldPos += ( x1 * rad ) * right;
+		worldPos += ( y1 * rad ) * up;
+		
+		if (l < rad*2 )
+		{
+			tint *= smoothstep(rad/2,rad,l);
+		}
+Where
+	r0.xyz = worldPos;
+	oD0 = tint;
+.
+
+  
+	r0 = float4(worldPos, 1.0f);
+	oPos = projPos  = mul( float4(worldPos, 1.0f), cViewProj );
+	r2.xy = float2(vTexCoord0.x -vTexCoord0.z,vTexCoord0.y -vTexCoord0.w)
   95:     mov r0.w, c0.y
-  
-//// //// //// //// //// //// //// ////
-  
   96:     dp4 oPos.x, r0, c8
   97:     dp4 oPos.y, r0, c9
   98:     dp4 oPos.z, r0, c10
   99:     add r2.xy, -v2.zwzw, v2
  100:     dp4 oPos.w, r0, c11
+ 
+	r1.xy = vCornerID.xy
  101:     mov r1.xy, v5
+ 
+	oT0.xy = vCornerID.xy * float2(vTexCoord0.x -vTexCoord0.z,vTexCoord0.y -vTexCoord0.w) +float2(vTexCoord0.z,vTexCoord0.w)
+	= float2(vCornerID.x * TexCoord0.x +vCornerID.x *(1-vTexCoord0.z),vCornerID.y * TexCoord0.y +vCornerID.y *(1-vTexCoord0.w))
+	oT0.xy = o.texCoord0_1.xy = lerp( v.vTexCoord0.zw, v.vTexCoord0.xy, v.vCornerID.xy );
  102:     mad oT0.xy, r1, r2, v2.zwzw
+
+	r0.xy = vCornerID.xy -0.5
+	r1.w = ...
+	oT0.zw = o.texCoord0_1.wz = lerp( v.vTexCoord1.zw, v.vTexCoord1.xy, v.vCornerID.xy );
+	
+////
+
+Ok I'll stop here, that seems to be the standard shit bellow :D
+
+////
 
  103:     add r0.zw, -v3.xywz, v3.xyyx
  104:     add r0.xy, v5, c4.z
  105:     lrp r1.w, v8.x, c55.y, c55.x
+ 
  106:     add r0.xy, r0, r0
  107:     mad oT0.zw, r1.xyyx, r0, v3.xywz
+ 
  108:     mul r1.xy, r1.w, r0
  109:     mad r1.xy, r1, c0.w, c0.w
  110:     mov r2.x, c1.w
