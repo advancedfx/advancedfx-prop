@@ -25,7 +25,8 @@ typedef void * (__stdcall Interface_s::*InterfaceFn_t) (void *);
 	}
 
 extern bool g_bD3D9DebugPrint;
-bool g_bD3D9DumpVertexShader = 0;
+bool g_bD3D9DumpVertexShader = false;
+bool g_bD3D9DumpPixelShader = false;
 
 ULONG g_NewDirect3DDevice9_RefCount = 1;
 IDirect3DDevice9 * g_OldDirect3DDevice9 = 0;
@@ -545,7 +546,7 @@ public:
 
 					if(pData && D3D_OK == pShader->GetFunction(pData,&size))
 					{
-						FILE * f1 = fopen("AfxShaderDump.fxo","wb");
+						FILE * f1 = fopen("AfxVertexShaderDump.fxo","wb");
 						if(f1)
 						{
 							fwrite(pData,size,1,f1);
@@ -630,6 +631,32 @@ public:
     
     STDMETHOD(SetPixelShader)(THIS_ IDirect3DPixelShader9* pShader)
 	{
+		if(g_bD3D9DumpPixelShader)
+		{
+			g_bD3D9DumpPixelShader = false;
+
+			if(pShader)
+			{
+				UINT size;
+				if(D3D_OK == pShader->GetFunction(0, &size))
+				{
+					void * pData = malloc(size);
+
+					if(pData && D3D_OK == pShader->GetFunction(pData,&size))
+					{
+						FILE * f1 = fopen("AfxPixelShaderDump.fxo","wb");
+						if(f1)
+						{
+							fwrite(pData,size,1,f1);
+							fclose(f1);
+						}
+					}
+
+					free(pData);
+				}
+			}
+		}
+
 		if(m_Original_PixelShader) m_Original_PixelShader->Release();
 		m_Original_PixelShader = pShader;
 		if(pShader) pShader->AddRef();

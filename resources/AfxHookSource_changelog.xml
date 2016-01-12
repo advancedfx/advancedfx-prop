@@ -6,13 +6,23 @@
 
 <release>
 <name>AfxHookSource</name>
-<version>0.X.X.X</version>
-<time>2016-XX-XXTXX:XXZ</time>
+<version>0.2.8.0</version>
+<time>2016-01-12T13:53Z</time>
 <changes>
 <change type="added">
 Added mirv_skip, allows to skip approximate demo ticks / demo time (front-end to demo_gototick command).
 </change>
+<change type="added">
+Updated the mirv_streams system: It's far more accurate in many cases now, because it comes with
+replacement shaders for SplineRope, SpriteCard, VertexLitGeneric (only non-bumped and non-phong shaders atm)
+and UnlitGeneric (only non-bumped and non-phong shaders atm) and also uses UnlitGeneric as fallback material shader now.
+Please note that the installation size increased heavily due to the shaders (196MB increase).
+</change>
 </changes>
+<comments>
+Please note: advancedfx.org recommends using alphaMatteEntity (or alphaMatte + alphaEntity) stream above matteEntity stream, since those are far superior!<br />
+TODO: Add OpenEXR support for supporting the new depth24 action (24 bit depth streams export).
+</comments>
 </release>
 
 

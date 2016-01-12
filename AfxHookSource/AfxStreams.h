@@ -15,6 +15,8 @@
 #include "d3d9Hooks.h"
 #include "AfxShaders.h"
 #include "csgo_Stdshader_dx9_Hooks.h"
+#include <shaders/build/afxHook_splinerope_ps20.h>
+#include <shaders/build/afxHook_splinerope_ps20b.h>
 #include <shaders/build/afxHook_splinecard_vs20.h>
 #include <shaders/build/afxHook_spritecard_vs20.h>
 #include <shaders/build/afxHook_spritecard_ps20.h>
@@ -632,6 +634,59 @@ private:
 		CActionAfxSpritecardHookKey m_Key;
 	};
 
+	class CActionAfxSplineRopeHookKey
+	{
+	public:
+		ShaderCombo_afxHook_splinerope_ps20b::AFXMODE_e AFXMODE;
+		float AlphaTestReference;
+
+		CActionAfxSplineRopeHookKey()
+		{
+		}
+
+		CActionAfxSplineRopeHookKey(
+			ShaderCombo_afxHook_splinerope_ps20b::AFXMODE_e a_AFXMODE,
+			float a_AlphaTestReference)
+		: AFXMODE(a_AFXMODE)
+		, AlphaTestReference(a_AlphaTestReference)
+		{
+		}
+
+		CActionAfxSplineRopeHookKey(const CActionAfxSplineRopeHookKey & x)
+		: AFXMODE(x.AFXMODE)
+		, AlphaTestReference(x.AlphaTestReference)
+		{
+		}
+		
+		bool operator < (const CActionAfxSplineRopeHookKey & y) const
+		{
+			if(this->AFXMODE < y.AFXMODE)
+				return true;
+
+			return this->AFXMODE == y.AFXMODE && this->AlphaTestReference < y.AlphaTestReference;
+		}
+	};
+
+	class CActionAfxSplineRopeHook
+	: public CAction
+	{
+	public:
+		CActionAfxSplineRopeHook(CAfxBaseFxStream * parentStream, CActionAfxSplineRopeHookKey & key);
+
+		virtual void AfxUnbind(IAfxMatRenderContext * ctx);
+
+		virtual IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material);
+
+		virtual void SetPixelShader(CAfx_csgo_ShaderState & state);
+
+	private:
+		static csgo_Stdshader_dx9_Combos_splinerope_ps20 m_Combos_ps20;
+		static csgo_Stdshader_dx9_Combos_splinerope_ps20b m_Combos_ps20b;
+		CActionAfxSplineRopeHookKey m_Key;
+		//CAfxMaterial m_Material;
+	};
+
+
 	CAction * m_CurrentAction;
 	CAction * m_DepthAction;
 	CAction * m_Depth24Action;
@@ -646,15 +701,18 @@ private:
 	bool m_BoundAction;
 	bool m_DebugPrint;
 	std::map<CAfxMaterialKey, CAction *> m_Map;
+	std::map<CActionAfxSplineRopeHookKey, CActionAfxSplineRopeHook *> m_SplineRopeHookActions;
 	std::map<CActionAfxSpritecardHookKey, CActionAfxSpritecardHook *> m_SpritecardHookActions;
 	std::map<CActionAfxVertexLitGenericHookKey, CActionAfxVertexLitGenericHook *> m_VertexLitGenericHookActions;
 
 	CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * material);
 	CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * material, AfxAction action, bool safeMode);
 
+	CAction * GetSplineRopeHookAction(CActionAfxSplineRopeHookKey & key);
 	CAction * GetSpritecardHookAction(CActionAfxSpritecardHookKey & key);
 	CAction * GetVertexLitGenericHookAction(CActionAfxVertexLitGenericHookKey & key);
 	
+	void InvalidateSplineRopeHookActions();
 	void InvalidateSpritecardHookActions();
 	void InvalidateVertexLitGenericHookActions();
 };

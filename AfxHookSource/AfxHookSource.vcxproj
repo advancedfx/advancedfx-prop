@@ -113,6 +113,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shaders\build\afxHook_splinecard_vs20.h" />
+    <ClInclude Include="..\shaders\build\afxHook_splinerope_ps20.h" />
+    <ClInclude Include="..\shaders\build\afxHook_splinerope_ps20b.h" />
     <ClInclude Include="..\shaders\build\afxHook_spritecard_ps20.h" />
     <ClInclude Include="..\shaders\build\afxHook_spritecard_ps20b.h" />
     <ClInclude Include="..\shaders\build\afxHook_spritecard_vs20.h" />

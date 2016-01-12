@@ -778,3 +778,93 @@ public:
 	int m_HARDWAREFOGBLEND; // 0..1
 	int m_PERPARTICLEOUTLINE; // 0..1
 };
+
+class csgo_Stdshader_dx9_Combos_splinerope_ps20b
+{
+public:
+	/// <returns>Remainder, should be 0, otherwise indicates error</retruns>
+	int CalcCombos(int staticIndex, int dynamicIndex)
+	{
+		return CalcCombos(staticIndex +dynamicIndex);
+	}
+
+	/// <returns>Remainder, should be 0, otherwise indicates error</retruns>
+	int CalcCombos(int index)
+	{
+		// DYNAMIC COMBOS:
+
+		m_WRITE_DEPTH_TO_DESTALPHA = index % 2;
+		index = index / 2;
+
+		m_PIXELFOGTYPE = index % 2;
+		index = index / 2;
+
+		// STATIC COMBOS:
+
+		m_SHADER_SRGB_READ = index % 1;
+		index = index / 1;
+
+		m_SHADOWDEPTH = index % 2;
+		index = index / 2;
+
+		m_ALPHATESTREF = index % 2;
+		index = index / 2;
+		
+		// index should be 0 now.
+		return index;
+	}
+
+	// DYNAMIC COMBOS:
+	int m_WRITE_DEPTH_TO_DESTALPHA; // 0..1
+	int m_PIXELFOGTYPE; // 0..1
+
+	// STATIC COMBOS:
+	int m_SHADER_SRGB_READ; // 0..0
+	int m_SHADOWDEPTH; // 0..1
+	int m_ALPHATESTREF; // 0..1
+};
+
+class csgo_Stdshader_dx9_Combos_splinerope_ps20
+{
+public:
+	/// <returns>Remainder, should be 0, otherwise indicates error</retruns>
+	int CalcCombos(int staticIndex, int dynamicIndex)
+	{
+		return CalcCombos(staticIndex +dynamicIndex);
+	}
+
+	/// <returns>Remainder, should be 0, otherwise indicates error</retruns>
+	int CalcCombos(int index)
+	{
+		// DYNAMIC COMBOS:
+
+		m_WRITE_DEPTH_TO_DESTALPHA = index % 1;
+		index = index / 1;
+
+		m_PIXELFOGTYPE = index % 2;
+		index = index / 2;
+
+		// STATIC COMBOS:
+
+		m_SHADER_SRGB_READ = index % 1;
+		index = index / 1;
+
+		m_SHADOWDEPTH = index % 2;
+		index = index / 2;
+
+		m_ALPHATESTREF = index % 2;
+		index = index / 2;
+		
+		// index should be 0 now.
+		return index;
+	}
+
+	// DYNAMIC COMBOS:
+	int m_WRITE_DEPTH_TO_DESTALPHA; // 0..0
+	int m_PIXELFOGTYPE; // 0..1
+
+	// STATIC COMBOS:
+	int m_SHADER_SRGB_READ; // 0..0
+	int m_SHADOWDEPTH; // 0..1
+	int m_ALPHATESTREF; // 0..1
+};

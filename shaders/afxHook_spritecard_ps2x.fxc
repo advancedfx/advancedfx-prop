@@ -8,8 +8,8 @@
 // AFX: "AFXORGBLENDMODE" "0..3"
 
 // AFXMODE:
-// 0 - 8 bit depth, solid and alphaclipped
-// 1 - 24 bit depth, solid and alphaclipped
+// 0 - 8 bit depth
+// 1 - 24 bit depth
 // 2 - green matte, solid and alphaclipped
 // 3 - alpha matte, draw blackish
 // 4 - alpha matte, draw whitish
@@ -217,11 +217,9 @@ float4 Afx_FinalOutput(float4 o, float zValue)
 #endif
 
 #if 0 == AFXMODE
-	clip( alpha - g_cAfx_AlphaThreshold );
 	float dist = (zValue -g_cAfx_ClipPlaneSubtractValue) * g_cAfx_ClipPlaneMulValue;
-	return float4( dist, dist, dist, 1.0 );
+	return float4( dist, dist, dist, alpha );
 #elif 1 == AFXMODE
-	clip( alpha - g_cAfx_AlphaThreshold );
 	float dist = (zValue -g_cAfx_ClipPlaneSubtractValue) * g_cAfx_ClipPlaneMulValue;
 	dist = saturate(dist);
 	float3 color;
@@ -236,7 +234,7 @@ float4 Afx_FinalOutput(float4 o, float zValue)
 		color = floor(color);
 		color /= 256;
 	}
-	return float4(color, 1.0);
+	return float4(color, alpha);
 #elif 2 == AFXMODE
 	clip( alpha - g_cAfx_AlphaThreshold );
 	return float4( 0, 1, 0, 1.0 );

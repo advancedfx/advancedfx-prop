@@ -605,6 +605,7 @@ CAfxBaseFxStream::CAfxBaseFxStream()
 CAfxBaseFxStream::~CAfxBaseFxStream()
 {
 	InvalidateMap();
+	InvalidateSplineRopeHookActions();
 	InvalidateSpritecardHookActions();
 	InvalidateVertexLitGenericHookActions();
 
@@ -622,6 +623,7 @@ CAfxBaseFxStream::~CAfxBaseFxStream()
 void CAfxBaseFxStream::LevelShutdown(IAfxStreams4Stream * streams)
 {
 	InvalidateMap();
+	InvalidateSplineRopeHookActions();
 	InvalidateSpritecardHookActions();
 	InvalidateVertexLitGenericHookActions();
 
@@ -918,6 +920,63 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * materia
 		}
 	}
 
+	if(!isAdditive && !strcmp(shaderName, "SplineRope"))
+	{
+		switch(action)
+		{
+		case AA_DrawDepth:
+			{
+				if(m_DebugPrint) Tier0_Msg("drawDepth (SplineRope hook)");
+
+				CActionAfxSplineRopeHookKey key(
+					ShaderCombo_afxHook_splinerope_ps20b::AFXMODE_0,
+					alphaTestReference);
+
+				return GetSplineRopeHookAction(key);
+			}
+		case AA_DrawDepth24:
+			{
+				if(m_DebugPrint) Tier0_Msg("drawDepth24 (SplineRope hook)");
+
+				CActionAfxSplineRopeHookKey key(
+					ShaderCombo_afxHook_splinerope_ps20b::AFXMODE_1,
+					alphaTestReference);
+
+				return GetSplineRopeHookAction(key);
+			}
+		case AA_GreenScreen:
+			{
+				if(m_DebugPrint) Tier0_Msg("mask (SplineRope hook)");
+
+				CActionAfxSplineRopeHookKey key(
+					ShaderCombo_afxHook_splinerope_ps20b::AFXMODE_2,
+					alphaTestReference);
+
+				return GetSplineRopeHookAction(key);
+			}
+		case AA_Black:
+			{
+				if(m_DebugPrint) Tier0_Msg("black (SplineRope hook)");
+
+				CActionAfxSplineRopeHookKey key(
+					ShaderCombo_afxHook_splinerope_ps20b::AFXMODE_3,
+					alphaTestReference);
+
+				return GetSplineRopeHookAction(key);
+			}
+		case AA_White:
+			{
+				if(m_DebugPrint) Tier0_Msg("white (SplineRope hook)");
+
+				CActionAfxSplineRopeHookKey key(
+					ShaderCombo_afxHook_splinerope_ps20b::AFXMODE_4,
+					alphaTestReference);
+
+				return GetSplineRopeHookAction(key);
+			}
+		}
+	}
+	else
 	if(!strcmp(shaderName, "Spritecard"))
 	{
 			switch(action)
@@ -928,18 +987,18 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * materia
 
 					CActionAfxSpritecardHookKey key(
 						ShaderCombo_afxHook_spritecard_ps20b::AFXMODE_0,
-						alphaTestReferenceDefined ? alphaTestReference : 0.3f // go easy on them ;)
+						alphaTestReference
 						);
 
 					return GetSpritecardHookAction(key);
 				}
 			case AA_DrawDepth24:
 				{
-					if(m_DebugPrint) Tier0_Msg("drawDepth24 (Spritecardc hook)");
+					if(m_DebugPrint) Tier0_Msg("drawDepth24 (Spritecard hook)");
 
 					CActionAfxSpritecardHookKey key(
 						ShaderCombo_afxHook_spritecard_ps20b::AFXMODE_1,
-						alphaTestReferenceDefined ? alphaTestReference : 0.3f // go easy on them ;)
+						alphaTestReference
 						);
 
 					return GetSpritecardHookAction(key);
@@ -950,7 +1009,7 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * materia
 
 					CActionAfxSpritecardHookKey key(
 						ShaderCombo_afxHook_spritecard_ps20b::AFXMODE_2,
-						alphaTestReferenceDefined ? alphaTestReference : 0.3f // go easy on them ;)
+						alphaTestReference
 						);
 
 					return GetSpritecardHookAction(key);
@@ -961,7 +1020,7 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * materia
 
 					CActionAfxSpritecardHookKey key(
 						ShaderCombo_afxHook_spritecard_ps20b::AFXMODE_3,
-						alphaTestReferenceDefined ? alphaTestReference : 0.3f // go easy on them ;)
+						alphaTestReference
 						);
 
 					return GetSpritecardHookAction(key);
@@ -972,7 +1031,7 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * materia
 
 					CActionAfxSpritecardHookKey key(
 						ShaderCombo_afxHook_spritecard_ps20b::AFXMODE_4,
-						alphaTestReferenceDefined ? alphaTestReference : 0.3f // go easy on them ;)
+						alphaTestReference
 						);
 
 					return GetSpritecardHookAction(key);
@@ -1397,6 +1456,23 @@ void CAfxBaseFxStream::InvalidateMap(void)
 	m_Map.clear();
 }
 
+CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetSplineRopeHookAction(CActionAfxSplineRopeHookKey & key)
+{
+	std::map<CActionAfxSplineRopeHookKey, CActionAfxSplineRopeHook *>::iterator it = m_SplineRopeHookActions.find(key);
+
+	if(it != m_SplineRopeHookActions.end())
+	{
+		return it->second;
+	}
+
+	CActionAfxSplineRopeHook * action = new CActionAfxSplineRopeHook(this, key);
+
+	action->AddRef();
+	m_SplineRopeHookActions[key] = action;
+
+	return action;
+}
+
 CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetSpritecardHookAction(CActionAfxSpritecardHookKey & key)
 {
 	std::map<CActionAfxSpritecardHookKey, CActionAfxSpritecardHook *>::iterator it = m_SpritecardHookActions.find(key);
@@ -1430,6 +1506,18 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetVertexLitGenericHookAction(CAct
 
 	return action;
 }
+
+void CAfxBaseFxStream::InvalidateSplineRopeHookActions()
+{
+	for(std::map<CActionAfxSplineRopeHookKey, CActionAfxSplineRopeHook *>::iterator it = m_SplineRopeHookActions.begin();
+		it != m_SplineRopeHookActions.end();
+		++it)
+	{
+		it->second->Release();
+	}
+	m_SplineRopeHookActions.clear();
+}
+
 
 void CAfxBaseFxStream::InvalidateSpritecardHookActions()
 {
@@ -1989,6 +2077,147 @@ IMaterial_csgo * CAfxBaseFxStream::CActionUnlitGenericFallback::MaterialHook(IAf
 	return CActionAfxVertexLitGenericHook::MaterialHook(ctx, m_Material.GetMaterial());
 }
 
+// CAfxBaseFxStream::CActionAfxSplineRopeHook //////////////////////////////////
+
+csgo_Stdshader_dx9_Combos_splinerope_ps20 CAfxBaseFxStream::CActionAfxSplineRopeHook::m_Combos_ps20;
+csgo_Stdshader_dx9_Combos_splinerope_ps20b CAfxBaseFxStream::CActionAfxSplineRopeHook::m_Combos_ps20b;
+
+CAfxBaseFxStream::CActionAfxSplineRopeHook::CActionAfxSplineRopeHook(CAfxBaseFxStream * parentStream, CActionAfxSplineRopeHookKey & key)
+: CAction(parentStream)
+, m_Key(key)
+//, m_Material(parentStream->m_Streams->GetFreeMaster(), parentStream->m_Streams->GetMaterialSystem()->FindMaterial("afx/cable", NULL))
+{
+}
+
+void CAfxBaseFxStream::CActionAfxSplineRopeHook::AfxUnbind(IAfxMatRenderContext * ctx)
+{
+	AfxD3D9_OverrideEnd_ps_c31();
+
+	AfxD3D9OverrideEnd_D3DRS_SRGBWRITEENABLE();
+
+	AfxD3D9_OverrideEnd_SetPixelShader();
+}
+
+IMaterial_csgo * CAfxBaseFxStream::CActionAfxSplineRopeHook::MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material)
+{
+	// depth factors:
+
+	float scale = g_bIn_csgo_CSkyBoxView_Draw ? csgo_CSkyBoxView_GetScale() : 1.0f;
+	float flDepthFactor = scale * m_ParentStream->m_DepthVal;
+	float flDepthFactorMax = scale * m_ParentStream->m_DepthValMax;
+
+	//
+	// Force SRGBWriteEnable to off:
+
+	AfxD3D9OverrideBegin_D3DRS_SRGBWRITEENABLE(FALSE);
+
+	// Fill in g_AfxConstants in shader:
+
+	float mulFac = flDepthFactorMax -flDepthFactor;
+	mulFac = !mulFac ? 0.0f : 1.0f / mulFac;
+
+	float overFac[4] = { flDepthFactor, mulFac, m_Key.AlphaTestReference, 0.0f };
+
+	AfxD3D9_OverrideBegin_ps_c31(overFac);
+
+	// Bind normal material:
+	return material;
+	//return m_Material.GetMaterial();
+}
+
+void CAfxBaseFxStream::CActionAfxSplineRopeHook::SetPixelShader(CAfx_csgo_ShaderState & state)
+{
+	char const * shaderName = state.Static.SetPixelShader.pFileName.c_str();
+
+	if(!strcmp(shaderName,"splinerope_ps20"))
+	{
+		static bool firstPass = true;
+		if(firstPass)
+		{
+			firstPass = false;
+			Tier0_Warning("AFXWARNING: You are using an untested code path in CAfxBaseFxStream::CActionAfxSplineRopeHook::SetPixelShader for %s.\n", shaderName);
+		}
+
+		m_Combos_ps20.CalcCombos(state.Static.SetPixelShader.nStaticPshIndex, state.Dynamic.SetPixelShaderIndex.pshIndex);
+
+		if(0 < m_Combos_ps20.m_SHADOWDEPTH)
+		{
+			Tier0_Warning("AFXERROR: CAfxBaseFxStream::CActionAfxSplineRopeHook::SetPixelShader: 0 < m_SHADOWDEPTH not supported for %s.\n", shaderName);
+			return;
+		}
+
+		int combo = ShaderCombo_afxHook_splinerope_ps20::GetCombo(
+			(ShaderCombo_afxHook_splinerope_ps20::AFXMODE_e)m_Key.AFXMODE,
+			(ShaderCombo_afxHook_splinerope_ps20::SHADER_SRGB_READ_e)m_Combos_ps20.m_SHADER_SRGB_READ,
+			(ShaderCombo_afxHook_splinerope_ps20::ALPHATESTREF_e)m_Combos_ps20.m_ALPHATESTREF
+		);
+
+		IAfxPixelShader * afxPixelShader = g_AfxShaders.GetAcsPixelShader("afxHook_splinerope_ps20.acs", combo);
+
+		if(!afxPixelShader->GetPixelShader())
+			Tier0_Warning("AFXERROR: CAfxBaseFxStream::CActionAfxSplineRopeHook::SetPixelShader: Replacement Shader combo %i for %s is null.\n", combo, shaderName);
+		else
+		{
+			// Override shader:
+			AfxD3D9_OverrideBegin_SetPixelShader(afxPixelShader->GetPixelShader());
+		}
+
+		afxPixelShader->Release();
+	}
+	else
+	if(!strcmp(shaderName,"splinerope_ps20b"))
+	{
+		m_Combos_ps20b.CalcCombos(state.Static.SetPixelShader.nStaticPshIndex, state.Dynamic.SetPixelShaderIndex.pshIndex);
+
+		/*
+		static bool firstPass = true;
+		if(firstPass)
+		{
+			firstPass = false;
+			
+			Tier0_Warning("Requesting dump of shader %s %i_%i_%i_%i_%i.\n", shaderName,
+				m_Combos_ps20b.m_WRITE_DEPTH_TO_DESTALPHA,
+				m_Combos_ps20b.m_PIXELFOGTYPE,
+				m_Combos_ps20b.m_SHADER_SRGB_READ,
+				m_Combos_ps20b.m_SHADOWDEPTH,
+				m_Combos_ps20b.m_ALPHATESTREF
+				);
+			
+			g_bD3D9DumpPixelShader = true;
+		}
+
+		return;
+		*/
+
+		if(0 < m_Combos_ps20b.m_SHADOWDEPTH)
+		{
+			Tier0_Warning("AFXERROR: CAfxBaseFxStream::CActionAfxSplineRopeHook::SetPixelShader: 0 < m_SHADOWDEPTH not supported for %s.\n", shaderName);
+			return;
+		}
+
+		int combo = ShaderCombo_afxHook_splinerope_ps20b::GetCombo(
+			(ShaderCombo_afxHook_splinerope_ps20b::AFXMODE_e)m_Key.AFXMODE,
+			(ShaderCombo_afxHook_splinerope_ps20b::SHADER_SRGB_READ_e)m_Combos_ps20b.m_SHADER_SRGB_READ,
+			(ShaderCombo_afxHook_splinerope_ps20b::ALPHATESTREF_e)m_Combos_ps20b.m_ALPHATESTREF
+		);
+
+		IAfxPixelShader * afxPixelShader = g_AfxShaders.GetAcsPixelShader("afxHook_splinerope_ps20b.acs", combo);
+
+		if(!afxPixelShader->GetPixelShader())
+			Tier0_Warning("AFXERROR: CAfxBaseFxStream::CActionAfxSplineRopeHook::SetPixelShader: Replacement Shader combo %i for %s is null.\n", combo, shaderName);
+		else
+		{
+			// Override shader:
+			AfxD3D9_OverrideBegin_SetPixelShader(afxPixelShader->GetPixelShader());
+		}
+
+		afxPixelShader->Release();
+	}
+	else
+		Tier0_Warning("AFXERROR: CAfxBaseFxStream::CActionAfxSplineRopeHook::SetPixelShader: No replacement defined for %s.\n", shaderName);
+
+}
+
 // CAfxStreams /////////////////////////////////////////////////////////////////
 
 CAfxStreams::CAfxStreams()
@@ -2401,6 +2630,8 @@ void CAfxStreams::Console_AddMatteEntityStream(const char * streamName)
 		return;
 
 	AddStream(new CAfxSingleStream(streamName, new CAfxMatteEntityStream()));
+
+	Tier0_Warning("Your matteEntity stream has been added, however please note that the alphaMatte + alphaEntity streams (combined in alphaMatteEntity stream) are far superior, because they can handle transparency far better.\n");
 }
 
 void CAfxStreams::Console_AddDepthEntityStream(const char * streamName)

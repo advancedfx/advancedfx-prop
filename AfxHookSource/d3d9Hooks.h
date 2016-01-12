@@ -81,3 +81,4 @@ void AfxD3D9_OverrideBegin_SetPixelShader(IDirect3DPixelShader9 * overrideShader
 void AfxD3D9_OverrideEnd_SetPixelShader();
 
 extern bool g_bD3D9DumpVertexShader;
+extern bool g_bD3D9DumpPixelShader;
