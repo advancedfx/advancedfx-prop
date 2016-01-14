@@ -27,14 +27,9 @@ AFXADDR_DEF(csgo_CSkyboxView_Draw)
 AFXADDR_DEF(csgo_CSkyboxView_Draw_DSZ)
 AFXADDR_DEF(csgo_CViewRender_Render)
 AFXADDR_DEF(csgo_CViewRender_Render_DSZ)
-//AFXADDR_DEF(csgo_Spritecard_CShader_OnDrawElements)
-//AFXADDR_DEF(csgo_Spritecard_CShader_OnDrawElements_DSZ)
-//AFXADDR_DEF(csgo_UnlitGeneric_CShader_OnDrawElements)
-//AFXADDR_DEF(csgo_UnlitGeneric_CShader_OnDrawElements_DSZ)
-//AFXADDR_DEF(csgo_VertexLitGeneric_CShader_OnDrawElements)
-//AFXADDR_DEF(csgo_VertexLitGeneric_CShader_OnDrawElements_DSZ)
-AFXADDR_DEF(csgo_stdshader_dx9_CBaseShader_DrawElements)
-AFXADDR_DEF(csgo_stdshader_dx9_CBaseShader_DrawElements_DSZ)
+AFXADDR_DEF(csgo_Spritecard_CShader_vtable)
+AFXADDR_DEF(csgo_UnlitGeneric_CShader_vtable)
+AFXADDR_DEF(csgo_VertexLitGeneric_CShader_vtable)
 AFXADDR_DEF(csgo_S_StartSound_StringConversion)
 AFXADDR_DEF(csgo_Scaleformui_CUnkown_Loader)
 AFXADDR_DEF(csgo_Scaleformui_CUnkown_Loader_DSZ)
@@ -755,8 +750,7 @@ void Addresses_InitStdshader_dx9Dll(AfxAddr stdshader_dx9Dll, bool isCsgo)
 {
 	if(isCsgo)
 	{
-		/*
-		// csgo_Spritecard_CShader_OnDrawElements:
+		// csgo_Spritecard_CShader_vtable:
 		{
 			DWORD addr = 0;
 			{
@@ -787,23 +781,9 @@ void Addresses_InitStdshader_dx9Dll(AfxAddr stdshader_dx9Dll, bool isCsgo)
 									if(!result.IsEmpty())
 									{
 										DWORD tmpAddr = result.Start;
-										tmpAddr += (1+17)*4;
-
-										tmpAddr = *(DWORD *)tmpAddr;
+										tmpAddr += (1)*4;
 
 										addr = tmpAddr;
-
-										// check for pattern to see if it is the right address:
-										unsigned char pattern[3] = { 0x55, 0x8B, 0xEC };
-
-										DWORD patternSize = sizeof(pattern)/sizeof(pattern[0]);
-										MemRange patternRange(addr, addr+patternSize);
-										MemRange result = FindBytes(patternRange, (char *)pattern, patternSize);
-										if(result.Start != patternRange.Start || result.End != patternRange.End)
-										{
-											addr = 0;
-											ErrorBox(MkErrStr(__FILE__,__LINE__));
-										}
 									}
 									else ErrorBox(MkErrStr(__FILE__,__LINE__));
 								}
@@ -817,17 +797,10 @@ void Addresses_InitStdshader_dx9Dll(AfxAddr stdshader_dx9Dll, bool isCsgo)
 				}
 				else ErrorBox(MkErrStr(__FILE__,__LINE__));
 			}
-			if(addr)
-			{
-				AFXADDR_SET(csgo_Spritecard_CShader_OnDrawElements, addr);
-			}
-			else
-			{
-				AFXADDR_SET(csgo_Spritecard_CShader_OnDrawElements, 0x0);
-			}
+			AFXADDR_SET(csgo_Spritecard_CShader_vtable, addr);
 		}
 
-		// csgo_UnlitGeneric_CShader_OnDrawElements:
+		// csgo_UnlitGeneric_CShader_vtable:
 		{
 			DWORD addr = 0;
 			{
@@ -858,23 +831,9 @@ void Addresses_InitStdshader_dx9Dll(AfxAddr stdshader_dx9Dll, bool isCsgo)
 									if(!result.IsEmpty())
 									{
 										DWORD tmpAddr = result.Start;
-										tmpAddr += (1+17)*4;
-
-										tmpAddr = *(DWORD *)tmpAddr;
+										tmpAddr += (1)*4;
 
 										addr = tmpAddr;
-
-										// check for pattern to see if it is the right address:
-										unsigned char pattern[3] = { 0x55, 0x8B, 0xEC };
-
-										DWORD patternSize = sizeof(pattern)/sizeof(pattern[0]);
-										MemRange patternRange(addr, addr+patternSize);
-										MemRange result = FindBytes(patternRange, (char *)pattern, patternSize);
-										if(result.Start != patternRange.Start || result.End != patternRange.End)
-										{
-											addr = 0;
-											ErrorBox(MkErrStr(__FILE__,__LINE__));
-										}
 									}
 									else ErrorBox(MkErrStr(__FILE__,__LINE__));
 								}
@@ -888,17 +847,10 @@ void Addresses_InitStdshader_dx9Dll(AfxAddr stdshader_dx9Dll, bool isCsgo)
 				}
 				else ErrorBox(MkErrStr(__FILE__,__LINE__));
 			}
-			if(addr)
-			{
-				AFXADDR_SET(csgo_UnlitGeneric_CShader_OnDrawElements, addr);
-			}
-			else
-			{
-				AFXADDR_SET(csgo_UnlitGeneric_CShader_OnDrawElements, 0x0);
-			}
+			AFXADDR_SET(csgo_UnlitGeneric_CShader_vtable, addr);
 		}
 
-		// csgo_VertexLitGeneric_CShader_OnDrawElements:
+		// csgo_VertexLitGeneric_CShader_vtable:
 		{
 			DWORD addr = 0;
 			{
@@ -932,23 +884,9 @@ void Addresses_InitStdshader_dx9Dll(AfxAddr stdshader_dx9Dll, bool isCsgo)
 										if(!result.IsEmpty())
 										{
 											DWORD tmpAddr = result.Start;
-											tmpAddr += (1+17)*4;
-
-											tmpAddr = *(DWORD *)tmpAddr;
+											tmpAddr += (1)*4;
 
 											addr = tmpAddr;
-
-											// check for pattern to see if it is the right address:
-											unsigned char pattern[3] = { 0x55, 0x8B, 0xEC };
-
-											DWORD patternSize = sizeof(pattern)/sizeof(pattern[0]);
-											MemRange patternRange(addr, addr+patternSize);
-											MemRange result = FindBytes(patternRange, (char *)pattern, patternSize);
-											if(result.Start != patternRange.Start || result.End != patternRange.End)
-											{
-												addr = 0;
-												ErrorBox(MkErrStr(__FILE__,__LINE__));
-											}
 										}
 										else ErrorBox(MkErrStr(__FILE__,__LINE__));
 									}
@@ -964,98 +902,13 @@ void Addresses_InitStdshader_dx9Dll(AfxAddr stdshader_dx9Dll, bool isCsgo)
 				}
 				else ErrorBox(MkErrStr(__FILE__,__LINE__));
 			}
-			if(addr)
-			{
-				AFXADDR_SET(csgo_VertexLitGeneric_CShader_OnDrawElements, addr);
-			}
-			else
-			{
-				AFXADDR_SET(csgo_VertexLitGeneric_CShader_OnDrawElements, 0x0);
-			}
-		}
-		*/
-		
-		// csgo_stdshader_dx9_CBaseShader_DrawElements:
-		{
-			DWORD addr = 0;
-			{
-				ImageSectionsReader sections((HMODULE)stdshader_dx9Dll);
-				if(!sections.Eof())
-				{
-					sections.Next(); // skip .text
-					if(!sections.Eof())
-					{
-						MemRange firstDataRange = sections.GetMemRange();
-
-						sections.Next(); // skip first .data
-						if(!sections.Eof())
-						{
-							MemRange result = FindCString(sections.GetMemRange(), ".?AVCShader@UnlitGeneric@@");
-							if(!result.IsEmpty())
-							{
-								DWORD tmpAddr = result.Start;
-								tmpAddr -= 0x8;
-
-								result = FindBytes(firstDataRange, (char const *)&tmpAddr, sizeof(tmpAddr));
-								if(!result.IsEmpty())
-								{
-									DWORD tmpAddr = result.Start;
-									tmpAddr -= 0xC;
-
-									result = FindBytes(firstDataRange, (char const *)&tmpAddr, sizeof(tmpAddr));
-									if(!result.IsEmpty())
-									{
-										DWORD tmpAddr = result.Start;
-										tmpAddr += (1+6)*4;
-
-										tmpAddr = *(DWORD *)tmpAddr;
-
-										addr = tmpAddr;
-
-										// check for pattern to see if it is the right address:
-										unsigned char pattern[3] = { 0x55, 0x8B, 0xEC };
-
-										DWORD patternSize = sizeof(pattern)/sizeof(pattern[0]);
-										MemRange patternRange(addr, addr+patternSize);
-										MemRange result = FindBytes(patternRange, (char *)pattern, patternSize);
-										if(result.Start != patternRange.Start || result.End != patternRange.End)
-										{
-											addr = 0;
-											ErrorBox(MkErrStr(__FILE__,__LINE__));
-										}
-									}
-									else ErrorBox(MkErrStr(__FILE__,__LINE__));
-								}
-								else ErrorBox(MkErrStr(__FILE__,__LINE__));
-							}
-							else ErrorBox(MkErrStr(__FILE__,__LINE__));
-						}
-						else ErrorBox(MkErrStr(__FILE__,__LINE__));
-					}
-					else ErrorBox(MkErrStr(__FILE__,__LINE__));
-				}
-				else ErrorBox(MkErrStr(__FILE__,__LINE__));
-			}
-			if(addr)
-			{
-				AFXADDR_SET(csgo_stdshader_dx9_CBaseShader_DrawElements, addr);
-			}
-			else
-			{
-				AFXADDR_SET(csgo_stdshader_dx9_CBaseShader_DrawElements, 0x0);
-			}
+			AFXADDR_SET(csgo_VertexLitGeneric_CShader_vtable, addr);
 		}
 	}
 	else
 	{
-		//AFXADDR_SET(csgo_Spritecard_CShader_OnDrawElements, 0x0);
-		//AFXADDR_SET(csgo_UnlitGeneric_CShader_OnDrawElements, 0x0);
-		//AFXADDR_SET(csgo_VertexLitGeneric_CShader_OnDrawElements, 0x0);
-		AFXADDR_SET(csgo_stdshader_dx9_CBaseShader_DrawElements, 0x0);
+		AFXADDR_SET(csgo_Spritecard_CShader_vtable, 0x0);
+		AFXADDR_SET(csgo_UnlitGeneric_CShader_vtable, 0x0);
+		AFXADDR_SET(csgo_VertexLitGeneric_CShader_vtable, 0x0);
 	}
-
-	//AFXADDR_SET(csgo_Spritecard_CShader_OnDrawElements_DSZ, 0xC);
-	//AFXADDR_SET(csgo_UnlitGeneric_CShader_OnDrawElements_DSZ, 0xC);
-	//AFXADDR_SET(csgo_VertexLitGeneric_CShader_OnDrawElements_DSZ, 0xC);
-	AFXADDR_SET(csgo_stdshader_dx9_CBaseShader_DrawElements_DSZ, 0x8);
 }

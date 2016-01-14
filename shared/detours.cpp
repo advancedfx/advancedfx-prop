@@ -412,6 +412,41 @@ void *DetourVoidClassFunc(BYTE *src, const BYTE *dst, const int len)
 	return jmp;
 }
 
+void * DetourIfacePtr(DWORD * ptr, void const * hook)
+{
+	MdtMemBlockInfos mbis;
+	DWORD orgAddr;
+
+	MdtMemAccessBegin(ptr, sizeof(DWORD), &mbis);
+
+	orgAddr = *ptr;
+
+	BYTE *jmpTarget = (BYTE*)MdtAllocExecuteableMemory(JMP32_SZ+POPREG_SZ+POPREG_SZ+POPREG_SZ);
+
+	// padding code that jumps to target:
+	jmpTarget[0] = POP_EAX;						// pop eax
+	jmpTarget[1] = POP_ECX;						// pop ecx
+	jmpTarget[2] = PUSH_EAX;						// push eax
+	jmpTarget[3] = JMP;						// jmp
+	*(DWORD*)(jmpTarget+4) = (orgAddr - (DWORD)(jmpTarget+3)) - JMP32_SZ;
+
+	BYTE * jmpHook = (BYTE*)MdtAllocExecuteableMemory(JMP32_SZ+POPREG_SZ+POPREG_SZ+POPREG_SZ);
+
+	// padding code that jumps to our hook:
+	jmpHook[0] = POP_EAX;						// pop eax;
+	jmpHook[1] = PUSH_ECX;						// push ecx
+	jmpHook[2] = PUSH_EAX;						// push eax
+	jmpHook[3] = JMP;							// jmp
+	*(DWORD*)(jmpHook+4) = (DWORD)((BYTE *)hook - (jmpHook+3)) - JMP32_SZ;
+
+	// update iface ptr:
+	*ptr = (DWORD)jmpHook;
+
+	MdtMemAccessEnd(&mbis);
+
+	return jmpTarget;
+}
+
 
 void Asm32ReplaceWithJmp(void * replaceAt, size_t countBytes, void * jmpTo)
 {

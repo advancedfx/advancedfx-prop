@@ -4185,3 +4185,60 @@ enum CommandBufferCommand_t_csgo
 
 	CBCMD_SET_VERTEX_SHADER_NEARZFARZ_STATE,		// cmd
 };
+
+// CBaseShader_csgo ////////////////////////////////////////////////////////////
+
+struct ShaderParamInfo_t_csgo;
+class IShaderInit_csgo;
+class CBasePerInstanceContextData_csgo;
+
+class IBaseShader_csgo abstract
+{
+	// Returns the shader name
+	virtual char const* GetName( ) const = 0;
+
+	// returns the shader fallbacks
+	virtual char const* GetFallbackShader( IMaterialVar_csgo** params ) const = 0;
+
+	// Shader parameters
+	virtual int GetParamCount( ) const = 0;
+	virtual const ShaderParamInfo_t_csgo & GetParamInfo( int paramIndex ) const = 0;
+
+	virtual void InitShaderParams( IMaterialVar_csgo** ppParams, const char *pMaterialName ) = 0;
+
+	virtual void InitShaderInstance( IMaterialVar_csgo ** ppParams, IShaderInit_csgo *pShaderInit, const char *pMaterialName, const char *pTextureGroupName ) = 0;
+
+	virtual void DrawElements( IMaterialVar_csgo **params, int nModulationFlags, IShaderShadow_csgo* pShaderShadow, IShaderDynamicAPI_csgo* pShaderAPI,
+								VertexCompressionType_t_csgo vertexCompression, CBasePerMaterialContextData_csgo **pContext, CBasePerInstanceContextData_csgo** pInstanceDataPtr ) = 0;
+
+	virtual void _Unknown_007_SomewhatDrawElements(
+		unsigned __int32 * unkDataPtr1,
+		unsigned __int32 * unkDataPtr2,
+		void * unkClass1, // related to VertexBuffer
+		IShaderDynamicAPI_csgo* pShaderAPI,
+		unsigned __int32 unkData2,
+		CBasePerMaterialContextData_csgo **pContext,
+		unsigned __int32 unkData3
+		) = 0;
+
+	virtual int ComputeModulationFlags( IMaterialVar_csgo** params, IShaderDynamicAPI_csgo* pShaderAPI ) = 0;
+
+	virtual bool NeedsPowerOfTwoFrameBufferTexture( IMaterialVar_csgo **params, bool bCheckSpecificToThisFrame = true ) const;
+
+	virtual bool NeedsFullFrameBufferTexture( IMaterialVar_csgo	 **params, bool bCheckSpecificToThisFrame = true ) const;
+
+	virtual bool IsTranslucent( IMaterialVar_csgo **params ) const;
+
+	virtual int GetFlags() const = 0;
+
+	virtual void _Unknown_013_SetTexturGroupName( const char *pTextureGroupName );
+
+	virtual void _Unknown_014_SetModulationFlags( int nModulationFlags );
+	
+	virtual void OnInitShaderParams( IMaterialVar_csgo** ppParams, const char *pMaterialName ) {}
+	
+	virtual void OnInitShaderInstance( IMaterialVar_csgo** ppParams, IShaderInit_csgo *pShaderInit, const char *pMaterialName ) = 0;
+	
+	virtual void OnDrawElements( IMaterialVar_csgo **params, IShaderShadow_csgo* pShaderShadow, IShaderDynamicAPI_csgo* pShaderAPI, VertexCompressionType_t_csgo vertexCompression, CBasePerMaterialContextData_csgo **pContextDataPtr ) = 0;
+
+};

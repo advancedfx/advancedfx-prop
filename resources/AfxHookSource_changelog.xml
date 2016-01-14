@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.8.1</version>
+<time>2016-01-15T14:44Z</time>
+<changes>
+<change type="fixed">
+Fixed problems with AfxHookSource 0.2.8.0.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.8.0</version>
 <time>2016-01-12T13:53Z</time>
 <changes>
@@ -20,7 +32,7 @@ Please note that the installation size increased heavily due to the shaders (196
 </change>
 </changes>
 <comments>
-Please note: advancedfx.org recommends using alphaMatteEntity (or alphaMatte + alphaEntity) stream above matteEntity stream, since those are far superior!<br />
+Please note: advancedfx.org recommends using alphaWorld and alphaMatteEntity (alphaMatte + alphaEntity) stream above matteWorld and matteEntity stream, since those are far superior!<br />
 TODO: Add OpenEXR support for supporting the new depth24 action (24 bit depth streams export).
 </comments>
 </release>
