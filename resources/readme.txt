@@ -90,12 +90,17 @@ RapidXml
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
   IN THE SOFTWARE.
   
+SharpDX
+  For the SharpDX SDK
+  http://sharpdx.org/
+  (Used by HLAE developers to build the AfxHookSource shaders.)
+  
 Style-Productions
   For hosting the forum.
   http://www.style-productions.net/
   
 Valve
-  For HLSDK.
+  For various SDKs.
   http://www.valvesoftware.com/
   
 id Software
@@ -130,6 +135,7 @@ qspline CC0
   Thanks to James McEnnan for putting essential parts of qspline under the CC0
   license.
   http://qspline.sourceforge.net/
+  http://sourceforge.net/projects/qspline-cc0
 
 And everyone that feels he/she/it should have been mentioned here.
 

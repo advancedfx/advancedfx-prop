@@ -56,6 +56,12 @@ enum DeathMsgBlockMode
 	DMBM_ANY
 };
 
+enum DeathMsgBlockAction
+{
+	DMBA_BLOCK,
+	DMBA_MODTIME
+};
+
 struct DeathMsgBlockEntry
 {
 	int attackerId;
@@ -64,6 +70,7 @@ struct DeathMsgBlockEntry
 	DeathMsgBlockMode victimMode;
 	int assisterId;
 	DeathMsgBlockMode assisterMode;
+	float modTime;
 };
 
 std::list<DeathMsgBlockEntry> deathMessageBlock;
@@ -84,6 +91,9 @@ bool csgo_CHudDeathNotice_HighLightAssists = true;
 bool csgo_CHudDeathNotice_HighLightId_matchedVictim;
 bool csgo_CHudDeathNotice_HighLightId_matchedAssister;
 bool csgo_CHudDeathNotice_HighLightId_matchedAttacker;
+
+bool csgo_CHudDeathNotice_ModTime_set;
+float csgo_CHudDeathNotice_ModTime;
 
 void __stdcall touring_csgo_CHudDeathNotice_FireGameEvent(DWORD *this_ptr, csgo_IGameEvent * event)
 {
@@ -123,6 +133,8 @@ void __stdcall touring_csgo_CHudDeathNotice_FireGameEvent(DWORD *this_ptr, csgo_
 				org_CHudDeathNotice_nLocalPlayerLifeTimeMod
 			);
 	}
+
+	csgo_CHudDeathNotice_ModTime_set = false;
 
 	for(std::list<DeathMsgBlockEntry>::iterator it = deathMessageBlock.begin(); it != deathMessageBlock.end(); it++)
 	{
@@ -173,8 +185,14 @@ void __stdcall touring_csgo_CHudDeathNotice_FireGameEvent(DWORD *this_ptr, csgo_
 			break;
 		}
 
-		blocked = attackerBlocked && victimBlocked && assisterBlocked;
-		if(blocked) break;
+		bool matched = attackerBlocked && victimBlocked && assisterBlocked;
+		if(matched)
+		{
+			csgo_CHudDeathNotice_ModTime_set = 0 <= e.modTime;
+			csgo_CHudDeathNotice_ModTime = e.modTime;
+			blocked = !csgo_CHudDeathNotice_ModTime_set;
+			if(blocked) break;
+		}
 	}
 
 	if(!blocked) detoured_csgo_CHudDeathNotice_FireGameEvent(this_ptr, event);
@@ -203,6 +221,21 @@ void __stdcall touring_csgo_CHudDeathNotice_UnkAddDeathNotice(DWORD *this_ptr, v
 	detoured_csgo_CHudDeathNotice_UnkAddDeathNotice(this_ptr, arg0, bIsVictim, bIsKiller);
 }
 
+void * detoured_csgo_CHudDeathNotice_UnkAddDeathNotice_AddMovie_AfterModTime;
+
+void __declspec(naked) touring_csgo_CHudDeathNotice_UnkAddDeathNotice_AddMovie_AfterModTime(void)
+{
+	__asm cmp csgo_CHudDeathNotice_ModTime_set, 0
+	__asm jnz __modTimeSet
+	__asm jmp __continue
+	
+	__asm __modTimeSet:
+	__asm movss xmm0, [csgo_CHudDeathNotice_ModTime]
+
+	__asm __continue:
+	__asm jmp detoured_csgo_CHudDeathNotice_UnkAddDeathNotice_AddMovie_AfterModTime
+}
+
 bool csgo_CHudDeathNotice_Install(void)
 {
 	static bool firstResult = false;
@@ -210,10 +243,11 @@ bool csgo_CHudDeathNotice_Install(void)
 	if(!firstRun) return firstResult;
 	firstRun = false;
 
-	if(AFXADDR_GET(csgo_CHudDeathNotice_FireGameEvent) && AFXADDR_GET(csgo_CHudDeathNotice_UnkAddDeathNotice))
+	if(AFXADDR_GET(csgo_CHudDeathNotice_FireGameEvent) && AFXADDR_GET(csgo_CHudDeathNotice_UnkAddDeathNotice) && AFXADDR_GET(csgo_CHudDeathNotice_UnkAddDeathNotice_AddMovie_AfterModTime))
 	{
 		detoured_csgo_CHudDeathNotice_FireGameEvent = (csgo_CHudDeathNotice_FireGameEvent_t)DetourClassFunc((BYTE *)AFXADDR_GET(csgo_CHudDeathNotice_FireGameEvent), (BYTE *)touring_csgo_CHudDeathNotice_FireGameEvent, (int)AFXADDR_GET(csgo_CHudDeathNotice_FireGameEvent_DSZ));
 		detoured_csgo_CHudDeathNotice_UnkAddDeathNotice = (csgo_CHudDeathNotice_UnkAddDeathNotice_t)DetourClassFunc((BYTE *)AFXADDR_GET(csgo_CHudDeathNotice_UnkAddDeathNotice), (BYTE *)touring_csgo_CHudDeathNotice_UnkAddDeathNotice, (int)AFXADDR_GET(csgo_CHudDeathNotice_UnkAddDeathNotice_DSZ));
+		detoured_csgo_CHudDeathNotice_UnkAddDeathNotice_AddMovie_AfterModTime = (void *)DetourApply((BYTE *)AFXADDR_GET(csgo_CHudDeathNotice_UnkAddDeathNotice_AddMovie_AfterModTime), (BYTE *)touring_csgo_CHudDeathNotice_UnkAddDeathNotice_AddMovie_AfterModTime, 0x10);
 
 		firstResult = true;
 	}
@@ -221,7 +255,7 @@ bool csgo_CHudDeathNotice_Install(void)
 	return firstResult;
 }
 
-void csgo_CHudDeathNotice_Block(char const * uidAttacker, char const * uidVictim, char const * uidAssister)
+void csgo_CHudDeathNotice_Block(char const * uidAttacker, char const * uidVictim, char const * uidAssister, float modTime)
 {
 	char const * acmd;
 	int attackerId = -1;
@@ -249,7 +283,8 @@ void csgo_CHudDeathNotice_Block(char const * uidAttacker, char const * uidVictim
 		victimId,
 		anyVictim ? DMBM_ANY : (notVictim ? DMBM_EXCEPT : DMBM_EQUAL),
 		assisterId,
-		anyAssister ? DMBM_ANY : (notAssister ? DMBM_EXCEPT : DMBM_EQUAL)
+		anyAssister ? DMBM_ANY : (notAssister ? DMBM_EXCEPT : DMBM_EQUAL),
+		modTime
 	};
 
 	deathMessageBlock.push_back(entry);
@@ -257,7 +292,7 @@ void csgo_CHudDeathNotice_Block(char const * uidAttacker, char const * uidVictim
 
 void csgo_CHudDeathNotice_Block_List(void)
 {
-	Tier0_Msg("uidAttacker,uidVictim,uidAssister:\n");
+	Tier0_Msg("uidAttacker,uidVictim,uidAssister,modTime(<0 means block):\n");
 	for(std::list<DeathMsgBlockEntry>::iterator it = deathMessageBlock.begin(); it != deathMessageBlock.end(); it++)
 	{
 		DeathMsgBlockEntry e = *it;
@@ -294,7 +329,7 @@ void csgo_CHudDeathNotice_Block_List(void)
 			}
 			Tier0_Msg("%i", e.assisterId);
 		}
-		Tier0_Msg("\n");
+		Tier0_Msg(",%f\n", e.modTime);
 	}
 }
 

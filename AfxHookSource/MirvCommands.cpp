@@ -1542,7 +1542,7 @@ CON_COMMAND(mirv_deathmsg, "controls death notification options")
 				char const * uidVictim = args->ArgV(3);
 				char const * uidAssister = 5 <= argc ? args->ArgV(4) : "*";
 
-				csgo_CHudDeathNotice_Block(uidAttacker, uidVictim, uidAssister);
+				csgo_CHudDeathNotice_Block(uidAttacker, uidVictim, uidAssister, -1);
 
 				return;
 			}
@@ -1572,6 +1572,52 @@ CON_COMMAND(mirv_deathmsg, "controls death notification options")
 				"\tRemarks: * to match any uid, use !x to match any uid apart from x.\n"
 				"mirv_deathmsg block list - list current blocks\n"
 				"mirv_deathmsg block clear - clear current blocks\n"
+				"(Use mirv_deathmsg debug 1 to get the uids.)\n"
+			);
+			return;
+		}
+		else
+		if(0 == _stricmp("modTime", arg1))
+		{
+			if(5 <= argc)
+			{
+				char const * uidAttacker = args->ArgV(2);
+				char const * uidVictim = args->ArgV(3);
+				char const * uidAssister = 6 <= argc ? args->ArgV(4) : "*";
+				float modTime = (float)atof(
+					6 <= argc ? args->ArgV(5) : args->ArgV(4)
+					);
+
+				csgo_CHudDeathNotice_Block(uidAttacker, uidVictim, uidAssister, modTime);
+
+				return;
+			}
+			else
+			if(3 <= argc)
+			{
+				char const * arg2 = args->ArgV(2);
+
+				if(0 == _stricmp("list", arg2))
+				{
+					csgo_CHudDeathNotice_Block_List();
+					return;
+				}
+				else
+				if(0 == _stricmp("clear", arg2))
+				{
+					csgo_CHudDeathNotice_Block_Clear();
+					return;
+				}
+				
+			}
+			Tier0_Msg(
+				"Usage:\n"
+				"mirv_deathmsg modTime <uidAttacker> <uidVictim> <modTime> - use <modTime> multiplier for matche ids\n"
+				"\tRemarks: * to match any uid, use !x to match any uid apart from x.\n"
+				"mirv_deathmsg modTime <uidAttacker> <uidVictim> <uidAssister> <modTime> - use <modTime> multiplier for matche ids\n"
+				"\tRemarks: * to match any uid, use !x to match any uid apart from x.\n"
+				"mirv_deathmsg modTime list - list current modifiers\n"
+				"mirv_deathmsg modTime clear - clear current modifiers\n"
 				"(Use mirv_deathmsg debug 1 to get the uids.)\n"
 			);
 			return;
@@ -1663,6 +1709,7 @@ CON_COMMAND(mirv_deathmsg, "controls death notification options")
 		"mirv_deathmsg debug [...] - enable debug message in cosnole (allows finding player IDs).\n"
 		"mirv_deathmsg highLightId [...] - control highlighting.\n"
 		"mirv_deathmsg highLightAssists [...] - Whether to highlight assists for highLightId.\n"
+		"mirv_deathmsg modTime [...] - allows to set a display time multiplier for a message.\n"
 	);
 }
 

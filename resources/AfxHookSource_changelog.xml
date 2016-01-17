@@ -6,6 +6,22 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.9.0</version>
+<time>2016-01-17T19:22Z</time>
+<changes>
+<change type="added">
+Added mirv_deathmsg modTime - allows to set a multiplier value for displaytime of a deathmessage, it is smilar to mirv_deathmsg block, except
+that it takes an additional argument (floating point value) for the multiplier
+(a negative multiplier value will make it behave like mirv_deathmsg block).
+The resulting display time for a matched notification is [mirv_deathmsg cfg noticeLifeTime] * [multiplier value].
+</change>
+</changes>
+</release>
+
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.8.1</version>
 <time>2016-01-15T14:44Z</time>
 <changes>

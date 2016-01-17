@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookGoldSrc</name>
+<version>2.4.9.0</version>
+<time>2016-01-17T16:38Z</time>
+<changes>
+<change type="added">
+Added mirv_fx_viewmodel_lightmap, does the same like mirv_fx_lightmap but for the viewmodel (in-eye weapon model).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookGoldSrc</name>
 <version>2.4.8.1</version>
 <time>2015-09-20T16:47Z</time>
 <changes>

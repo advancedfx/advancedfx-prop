@@ -19,6 +19,7 @@ extern float csgo_CHudDeathNotice_nLocalPlayerLifeTimeMod;
 
 bool csgo_CHudDeathNotice_Install(void);
 
-void csgo_CHudDeathNotice_Block(char const * uidAttacker, char const * uidVictim, char const * uidAssister);
+/// <param name="modTime">Negative value means to block, otherwise means time modifier override.</param>
+void csgo_CHudDeathNotice_Block(char const * uidAttacker, char const * uidVictim, char const * uidAssister, float modTime);
 void csgo_CHudDeathNotice_Block_List(void);
 void csgo_CHudDeathNotice_Block_Clear(void);

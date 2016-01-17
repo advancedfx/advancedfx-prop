@@ -59,6 +59,7 @@ REGISTER_CVAR(crop_height, "-1", 0);
 REGISTER_CVAR(crop_yofs, "-1", 0);
 REGISTER_CVAR(depth_streams, "3", 0);
 REGISTER_CVAR(fx_lightmap, "0", 0);
+REGISTER_CVAR(fx_viewmodel_lightmap, "0", 0);
 REGISTER_CVAR(fx_wh_enable, "0", 0);
 REGISTER_CVAR(fx_wh_alpha, "0.5", 0);
 REGISTER_CVAR(fx_wh_additive, "1", 0);
@@ -1707,6 +1708,14 @@ void Filming::setWhTintColor(float r, float g, float b)
 
 void Filming::DoWorldFx2(GLenum mode)
 {
+	if(g_In_R_DrawViewModel && fx_viewmodel_lightmap->value)
+	{
+		if (fx_viewmodel_lightmap->value==2.0f)
+			glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_REPLACE);
+		else
+			glBindTexture(GL_TEXTURE_2D,0);
+	}
+
 	// only if enabled and world and not in entity matte
 	if ( fx_lightmap->value==0.0f || mode != GL_POLYGON || m_iMatteStage == Filming::MS_ENTITY )
 		return;
