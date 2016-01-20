@@ -667,7 +667,7 @@ CON_COMMAND(mirv_skip, "for skipping trhough demos (uses demo_gototick)")
 
 				if(!_stricmp(arg2, "to") && 4 <= argc)
 				{
-					int targetTick = atof(args->ArgV(3));
+					int targetTick = atoi(args->ArgV(3));
 
 					std::ostringstream oss;
 

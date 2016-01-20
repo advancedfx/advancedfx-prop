@@ -1055,6 +1055,109 @@ typedef void (__stdcall *csgo_stdshader_dx9_CBaseShader_SomewhatDrawElements_t)(
 	unsigned __int32 unkData3
 	);
 
+csgo_stdshader_dx9_CBaseShader_DrawElements_t detoured_csgo_SplineRope_CShader_DrawElements;
+
+// Keep in mind this function can run on multiple threads simultaneously!
+//
+void __stdcall touring_csgo_SplineRope_CShader_DrawElements(
+	DWORD *this_ptr,
+	IMaterialVar_csgo **ppParams, int nModulationFlags,
+	IShaderShadow_csgo* pShaderShadow, IShaderDynamicAPI_csgo* pShaderAPI,
+	VertexCompressionType_t_csgo vertexCompression,
+	CBasePerMaterialContextData_csgo **pContextDataPtr, CBasePerInstanceContextData_csgo** pInstanceDataPtr)
+{
+	//if(pShaderShadow) Tier0_Msg("touring_csgo_SplineRope_CShader_OnDrawElements(0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x (* = 0x%08x)):%s (0x%08x) threadId=%i\n",this_ptr, ppParams, pShaderShadow, pShaderAPI, vertexCompression, pContextDataPtr, *pContextDataPtr, ppParams[0]->GetOwningMaterial()->GetName(), ppParams[0]->GetOwningMaterial(), GetCurrentThreadId());
+
+	CAfxBasePerMaterialContextDataPiggyBack_csgo * pContextData = reinterpret_cast< CAfxBasePerMaterialContextDataPiggyBack_csgo *> ( *pContextDataPtr );
+
+	if(!pContextData)
+	{
+		pContextData = new CAfxBasePerMaterialContextDataPiggyBack_csgo();
+	}
+
+	CBasePerMaterialContextData_csgo * payLoad = pContextData->PreUpdatePiggy();
+
+	pContextData->SetParentApis(pShaderShadow, pShaderAPI);
+	pContextData->SetKey(pContextDataPtr);
+
+	detoured_csgo_SplineRope_CShader_DrawElements(
+		this_ptr,
+		ppParams,
+		nModulationFlags,
+		pShaderShadow ? pContextData : 0,
+		pShaderAPI ? pContextData : 0,
+		vertexCompression,
+		&payLoad,
+		pInstanceDataPtr
+	);
+
+	pContextData->PostUpdatePiggy(payLoad);
+
+	*pContextDataPtr = pContextData;
+}
+
+csgo_stdshader_dx9_CBaseShader_SomewhatDrawElements_t detoured_csgo_SplineRope_CShader_SomewhatDrawElements;
+
+// Keep in mind this function can run on multiple threads simultaneously!
+//
+void __stdcall touring_csgo_SplineRope_CShader_SomewhatDrawElements(
+	DWORD *this_ptr,
+	unsigned __int32 * unkDataPtr1,
+	unsigned __int32 * unkDataPtr2,
+	void * unkClass1, // related to VertexBuffer
+	IShaderDynamicAPI_csgo* pShaderAPI,
+	unsigned __int32 unkData2,
+	CBasePerMaterialContextData_csgo **pContext,
+	unsigned __int32 unkData3
+	)
+{
+	//if(pShaderShadow) Tier0_Msg("touring_csgo_SplineRope_CShader_OnSomewhatDrawElements(0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x (* = 0x%08x)):%s (0x%08x) threadId=%i\n",this_ptr, ppParams, pShaderShadow, pShaderAPI, vertexCompression, pContextDataPtr, *pContextDataPtr, ppParams[0]->GetOwningMaterial()->GetName(), ppParams[0]->GetOwningMaterial(), GetCurrentThreadId());
+
+	if(!pContext)
+	{
+		// Apparently this can happen i.e. in the SplineRope shaders, not much we can do for now,
+		// better safe and sorry than violated.
+
+		detoured_csgo_SplineRope_CShader_SomewhatDrawElements(
+			this_ptr,
+			unkDataPtr1,
+			unkDataPtr2,
+			unkClass1,
+			pShaderAPI,
+			unkData2,
+			pContext,
+			unkData3);
+		return;
+	}
+
+	CAfxBasePerMaterialContextDataPiggyBack_csgo * pContextData = reinterpret_cast< CAfxBasePerMaterialContextDataPiggyBack_csgo *> ( *pContext );
+
+	if(!pContextData)
+	{
+		pContextData = new CAfxBasePerMaterialContextDataPiggyBack_csgo();
+	}
+
+	CBasePerMaterialContextData_csgo * payLoad = pContextData->PreUpdatePiggy();
+
+	pContextData->SetParentApis(0, pShaderAPI);
+	pContextData->SetKey(pContext);
+
+	detoured_csgo_SplineRope_CShader_SomewhatDrawElements(
+		this_ptr,
+		unkDataPtr1,
+		unkDataPtr2,
+		unkClass1,
+		pShaderAPI ? pContextData : 0,
+		unkData2,
+		&payLoad,
+		unkData3
+	);
+
+	pContextData->PostUpdatePiggy(payLoad);
+
+	*pContext = pContextData;
+}
+
 csgo_stdshader_dx9_CBaseShader_DrawElements_t detoured_csgo_Spritecard_CShader_DrawElements;
 
 // Keep in mind this function can run on multiple threads simultaneously!
@@ -1112,6 +1215,23 @@ void __stdcall touring_csgo_Spritecard_CShader_SomewhatDrawElements(
 	)
 {
 	//if(pShaderShadow) Tier0_Msg("touring_csgo_Spritecard_CShader_OnSomewhatDrawElements(0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x (* = 0x%08x)):%s (0x%08x) threadId=%i\n",this_ptr, ppParams, pShaderShadow, pShaderAPI, vertexCompression, pContextDataPtr, *pContextDataPtr, ppParams[0]->GetOwningMaterial()->GetName(), ppParams[0]->GetOwningMaterial(), GetCurrentThreadId());
+
+	if(!pContext)
+	{
+		// Apparently this can happen i.e. in the SplineRope shaders, not much we can do for now,
+		// better safe and sorry than violated.
+
+		detoured_csgo_Spritecard_CShader_SomewhatDrawElements(
+			this_ptr,
+			unkDataPtr1,
+			unkDataPtr2,
+			unkClass1,
+			pShaderAPI,
+			unkData2,
+			pContext,
+			unkData3);
+		return;
+	}
 
 	CAfxBasePerMaterialContextDataPiggyBack_csgo * pContextData = reinterpret_cast< CAfxBasePerMaterialContextDataPiggyBack_csgo *> ( *pContext );
 
@@ -1199,6 +1319,23 @@ void __stdcall touring_csgo_VertexLitGeneric_CShader_SomewhatDrawElements(
 {
 	//if(pShaderShadow) Tier0_Msg("touring_csgo_Spritecard_CShader_OnSomewhatDrawElements(0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x (* = 0x%08x)):%s (0x%08x) threadId=%i\n",this_ptr, ppParams, pShaderShadow, pShaderAPI, vertexCompression, pContextDataPtr, *pContextDataPtr, ppParams[0]->GetOwningMaterial()->GetName(), ppParams[0]->GetOwningMaterial(), GetCurrentThreadId());
 
+	if(!pContext)
+	{
+		// Apparently this can happen i.e. in the SplineRope shaders, not much we can do for now,
+		// better safe and sorry than violated.
+
+		detoured_csgo_VertexLitGeneric_CShader_SomewhatDrawElements(
+			this_ptr,
+			unkDataPtr1,
+			unkDataPtr2,
+			unkClass1,
+			pShaderAPI,
+			unkData2,
+			pContext,
+			unkData3);
+		return;
+	}
+
 	CAfxBasePerMaterialContextDataPiggyBack_csgo * pContextData = reinterpret_cast< CAfxBasePerMaterialContextDataPiggyBack_csgo *> ( *pContext );
 
 	if(!pContextData)
@@ -1285,6 +1422,23 @@ void __stdcall touring_csgo_UnlitGeneric_CShader_SomewhatDrawElements(
 {
 	//if(pShaderShadow) Tier0_Msg("touring_csgo_Spritecard_CShader_OnSomewhatDrawElements(0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x (* = 0x%08x)):%s (0x%08x) threadId=%i\n",this_ptr, ppParams, pShaderShadow, pShaderAPI, vertexCompression, pContextDataPtr, *pContextDataPtr, ppParams[0]->GetOwningMaterial()->GetName(), ppParams[0]->GetOwningMaterial(), GetCurrentThreadId());
 
+	if(!pContext)
+	{
+		// Apparently this can happen i.e. in the SplineRope shaders, not much we can do for now,
+		// better safe and sorry than violated.
+
+		detoured_csgo_UnlitGeneric_CShader_SomewhatDrawElements(
+			this_ptr,
+			unkDataPtr1,
+			unkDataPtr2,
+			unkClass1,
+			pShaderAPI,
+			unkData2,
+			pContext,
+			unkData3);
+		return;
+	}
+
 	CAfxBasePerMaterialContextDataPiggyBack_csgo * pContextData = reinterpret_cast< CAfxBasePerMaterialContextDataPiggyBack_csgo *> ( *pContext );
 
 	if(!pContextData)
@@ -1319,6 +1473,14 @@ bool csgo_Stdshader_dx9_Hooks_Init(void)
 	static bool firstRun = true;
 	if(!firstRun) return firstResult;
 	firstRun = true;
+
+	if(AFXADDR_GET(csgo_SplineRope_CShader_vtable))
+	{
+		detoured_csgo_SplineRope_CShader_DrawElements = (csgo_stdshader_dx9_CBaseShader_DrawElements_t)DetourIfacePtr((DWORD *)(AFXADDR_GET(csgo_SplineRope_CShader_vtable)+4*6), touring_csgo_SplineRope_CShader_DrawElements);
+		detoured_csgo_SplineRope_CShader_SomewhatDrawElements = (csgo_stdshader_dx9_CBaseShader_SomewhatDrawElements_t)DetourIfacePtr((DWORD *)(AFXADDR_GET(csgo_SplineRope_CShader_vtable)+4*7), touring_csgo_SplineRope_CShader_SomewhatDrawElements);
+	}
+	else
+		firstResult = false;
 
 	if(AFXADDR_GET(csgo_Spritecard_CShader_vtable))
 	{

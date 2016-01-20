@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-01-06 dominik.matrixstorm.com
+// 2016-01-20 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -18,6 +18,7 @@
 #include <shared/StringTools.h>
 #include <shared/FileTools.h>
 #include <shared/RawOutput.h>
+#include <shared/OpenExrOutput.h>
 
 #include <Windows.h>
 
@@ -213,7 +214,7 @@ CAfxRenderViewStream::CAfxRenderViewStream()
 , m_Streams(0)
 , m_DrawViewModel(true)
 , m_DrawHud(false)
-, m_StreamRenderType(SRT_RenderView)
+, m_StreamCaptureType(SCT_Normal)
 {
 }
 
@@ -267,14 +268,14 @@ void CAfxRenderViewStream::DrawViewModel_set(bool value)
 	m_DrawViewModel = value;
 }
 
-CAfxRenderViewStream::StreamRenderType CAfxRenderViewStream::StreamRenderType_get(void)
+CAfxRenderViewStream::StreamCaptureType CAfxRenderViewStream::StreamCaptureType_get(void)
 {
-	return m_StreamRenderType;
+	return m_StreamCaptureType;
 }
 
-void CAfxRenderViewStream::StreamRenderType_set(StreamRenderType value)
+void CAfxRenderViewStream::StreamCaptureType_set(StreamCaptureType value)
 {
-	m_StreamRenderType = value;
+	m_StreamCaptureType = value;
 }
 
 // CAfxRecordStream ////////////////////////////////////////////////////////////
@@ -302,7 +303,7 @@ void CAfxRecordStream::RecordStart()
 	m_SucceededCreatePath = false;
 }
 
-bool CAfxRecordStream::CreateCapturePath(const std::wstring & takeDir, int frameNumber, bool isBmpAndNotTga, std::wstring &outPath)
+bool CAfxRecordStream::CreateCapturePath(const std::wstring & takeDir, int frameNumber, wchar_t const * fileExtension, std::wstring &outPath)
 {
 	if(!m_TriedCreatePath)
 	{
@@ -334,7 +335,7 @@ bool CAfxRecordStream::CreateCapturePath(const std::wstring & takeDir, int frame
 		return false;
 
 	std::wostringstream os;
-	os << m_CapturePath << L"\\" << std::setfill(L'0') << std::setw(5) << frameNumber << std::setw(0) << (isBmpAndNotTga ? L".bmp" : L".tga");
+	os << m_CapturePath << L"\\" << std::setfill(L'0') << std::setw(5) << frameNumber << std::setw(0) << fileExtension;
 
 	outPath = os.str();
 
@@ -701,6 +702,7 @@ void CAfxBaseFxStream::StreamAttach(IAfxStreams4Stream * streams)
 	streams->OnDrawModulated_set(this);
 	streams->OnSetVertexShader_set(this);
 	streams->OnSetPixelShader_set(this);
+	streams->OnDrawingHud_set(this);
 }
 
 void CAfxBaseFxStream::StreamDetach(IAfxStreams4Stream * streams)
@@ -711,6 +713,7 @@ void CAfxBaseFxStream::StreamDetach(IAfxStreams4Stream * streams)
 		m_BoundAction = false;
 	}
 
+	streams->OnDrawingHud_set(0);
 	streams->OnSetPixelShader_set(0);
 	streams->OnSetVertexShader_set(0);
 	streams->OnDrawModulated_set(0);
@@ -751,6 +754,18 @@ IMaterial_csgo * CAfxBaseFxStream::MaterialHook(IAfxMatRenderContext * ctx, IMat
 	m_BoundAction = true;
 
 	return m_CurrentAction->MaterialHook(ctx, material);
+}
+
+void CAfxBaseFxStream::DrawingHud(void)
+{
+	if(m_BoundAction)
+	{
+		m_CurrentAction->AfxUnbind(m_Streams->GetCurrentContext());
+		m_BoundAction = false;
+	}
+
+	m_BoundAction = true;
+	m_CurrentAction = m_PassthroughAction;
 }
 
 CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * material)
@@ -1456,6 +1471,36 @@ void CAfxBaseFxStream::InvalidateMap(void)
 	m_Map.clear();
 }
 
+void CAfxBaseFxStream::ConvertStreamDepth(bool to24, bool depth24ZIP)
+{
+	ConvertDepthActions(to24);
+
+	m_StreamCaptureType =
+		to24 ? (depth24ZIP ? SCT_Depth24ZIP : SCT_Depth24) : SCT_Normal;
+}
+
+void CAfxBaseFxStream::ConvertDepthActions(bool to24)
+{
+	InvalidateMap();
+
+	ConvertDepthAction(m_ClientEffectTexturesAction, to24);
+	ConvertDepthAction(m_WorldTexturesAction, to24);
+	ConvertDepthAction(m_SkyBoxTexturesAction, to24);
+	ConvertDepthAction(m_StaticPropTexturesAction, to24);
+	ConvertDepthAction(m_CableAction, to24);
+	ConvertDepthAction(m_PlayerModelsAction, to24);
+	ConvertDepthAction(m_WeaponModelsAction, to24);
+	ConvertDepthAction(m_StattrackAction, to24);
+	ConvertDepthAction(m_ShellModelsAction, to24);
+	ConvertDepthAction(m_OtherModelsAction, to24);
+	ConvertDepthAction(m_DecalTexturesAction, to24);
+	ConvertDepthAction(m_EffectsAction, to24);
+	ConvertDepthAction(m_ShellParticleAction, to24);
+	ConvertDepthAction(m_OtherParticleAction, to24);
+	ConvertDepthAction(m_StickerAction, to24);
+	ConvertDepthAction(m_ErrorMaterialAction, to24);
+}
+
 CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetSplineRopeHookAction(CActionAfxSplineRopeHookKey & key)
 {
 	std::map<CActionAfxSplineRopeHookKey, CActionAfxSplineRopeHook *>::iterator it = m_SplineRopeHookActions.find(key);
@@ -1539,6 +1584,18 @@ void CAfxBaseFxStream::InvalidateVertexLitGenericHookActions()
 		it->second->Release();
 	}
 	m_VertexLitGenericHookActions.clear();
+}
+
+void CAfxBaseFxStream::ConvertDepthAction(AfxAction & action, bool to24)
+{
+	if(to24)
+	{
+		if(action == AA_DrawDepth) action = AA_DrawDepth24;
+	}
+	else
+	{
+		if(action == AA_DrawDepth24) action = AA_DrawDepth;
+	}
 }
 
 // CAfxBaseFxStream::CActionInvisible //////////////////////////////////////////
@@ -2236,6 +2293,7 @@ CAfxStreams::CAfxStreams()
 , m_OnDrawModulated(0)
 , m_OnSetVertexShader(0)
 , m_OnSetPixelShader(0)
+, m_OnDrawingHud(0)
 , m_MatQueueModeRef(0)
 , m_MatPostProcessEnableRef(0)
 , m_MatDynamicTonemappingRef(0)
@@ -2390,6 +2448,12 @@ void CAfxStreams::OnSetPixelShader(CAfx_csgo_ShaderState & state)
 	
 	if(m_OnSetPixelShader)
 		m_OnSetPixelShader->SetPixelShader(state);
+}
+
+void CAfxStreams::OnDrawingHud(void)
+{
+	if(m_OnDrawingHud)
+		m_OnDrawingHud->DrawingHud();
 }
 
 void CAfxStreams::SetBlend(IAfxVRenderView * rv, float blend )
@@ -2747,7 +2811,7 @@ void CAfxStreams::Console_PreviewStream(const char * streamName)
 #define CAFXBASEFXSTREAM_AFXACTIONS "draw|noDraw|invisible|drawDepth|drawDepth24|mask|black|white"
 
 #define CAFXBASEFXSTREAM_STREAMCOMBINETYPES "aRedAsAlphaBColor|aColorBRedAsAlpha"
-#define CAFXBASEFXSTREAM_STREAMRENDERTYPES "renderView|depth"
+#define CAFXBASEFXSTREAM_STREAMCAPTURETYPES "normal|depth24|depth24ZIP"
 
 void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * args, int argcOffset, char const * cmdPrefix)
 {
@@ -2986,25 +3050,25 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				return;
 			}
 			else
-			if(!_stricmp(cmd0, "renderType"))
+			if(!_stricmp(cmd0, "captureType"))
 			{
 				if(2 <= argc)
 				{
 					char const * cmd1 = args->ArgV(argcOffset +1);
-					CAfxRenderViewStream::StreamRenderType value;
+					CAfxRenderViewStream::StreamCaptureType value;
 
-					if(Console_ToStreamRenderType(cmd1, value))
+					if(Console_ToStreamCaptureType(cmd1, value))
 					{
-						curRenderView->StreamRenderType_set(value);
+						curRenderView->StreamCaptureType_set(value);
 						return;
 					}
 				}
 
 				Tier0_Msg(
-					"%s renderType " CAFXBASEFXSTREAM_STREAMRENDERTYPES " - Set new render type.\n"
+					"%s captureType " CAFXBASEFXSTREAM_STREAMCAPTURETYPES " - Set new render type.\n"
 					"Current value: %s.\n"
 					, cmdPrefix
-					, Console_FromStreamRenderType(curRenderView->StreamRenderType_get())
+					, Console_FromStreamCaptureType(curRenderView->StreamCaptureType_get())
 				);
 				return;
 			}
@@ -3529,6 +3593,42 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				);
 				return;
 			}
+			else
+			if(!_stricmp(cmd0, "man"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+
+					if(!_stricmp(cmd1, "toDepth"))
+					{
+						curBaseFx->ConvertStreamDepth(false, false);
+						return;
+					}
+					else
+					if(!_stricmp(cmd1, "toDepth24"))
+					{
+						curBaseFx->ConvertStreamDepth(true, false);
+						return;
+					}
+					else
+					if(!_stricmp(cmd1, "toDepth24ZIP"))
+					{
+						curBaseFx->ConvertStreamDepth(true, true);
+						return;
+					}
+				}
+
+				Tier0_Msg(
+					"%s man toDepth - Convert drawDepth24 actions to drawDepth and set captureType normal.\n"
+					"%s man toDepth24 - Convert drawDepth actions to drawDepth24 and set captureType depth24.\n"
+					"%s man toDepth24ZIP - Convert drawDepth actions to drawDepth24 and set captureType depth24ZIP (might be slower than depth24).\n"
+					, cmdPrefix
+					, cmdPrefix
+					, cmdPrefix
+				);
+				return;
+			}
 		}
 	}
 
@@ -3558,8 +3658,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 		Tier0_Msg("%s detachCommands [...] - Commands to be executed when stream is detached. WARNING. Use at your own risk, game may crash!\n", cmdPrefix);
 		Tier0_Msg("%s drawHud [...] - Controlls whether or not HUD is drawn for this stream.\n", cmdPrefix);
 		Tier0_Msg("%s drawViewModel [...] - Controlls whether or not view model (in-eye weapon) is drawn for this stream.\n", cmdPrefix);
-		// renderType options is not displayed, because we don't want users to use it.
-		// Tier0_Msg("%s renderType [...] - Stream render type.\n", cmdPrefix);
+		Tier0_Msg("%s captureType [...] - Stream capture type.\n", cmdPrefix);
 	}
 			
 	if(curDeveloper)
@@ -3591,6 +3690,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 		Tier0_Msg("%s depthValMax [...]\n", cmdPrefix);
 		Tier0_Msg("%s debugPrint [...]\n", cmdPrefix);
 		Tier0_Msg("%s invalidateMap - invaldiates the material map.\n", cmdPrefix);
+		Tier0_Msg("%s man [...] - Manipulate stream more easily (i.e. depth to depth24).\n", cmdPrefix);
 		// testAction options is not displayed, because we don't want users to use it.
 		// Tier0_Msg("%s testAction [...]\n", cmdPrefix);
 	}
@@ -3657,6 +3757,11 @@ void CAfxStreams::OnSetVertexShader_set(IAfxSetVertexShader * value)
 void CAfxStreams::OnSetPixelShader_set(IAfxSetPixelShader * value)
 {
 	m_OnSetPixelShader = value;
+}
+
+void CAfxStreams::OnDrawingHud_set(IAfxDrawingHud * value)
+{
+	m_OnDrawingHud = value;
 }
 
 void CAfxStreams::LevelShutdown(IAfxBaseClientDll * cl)
@@ -3738,7 +3843,7 @@ void CAfxStreams::DebugDump()
 		// Write to disk:
 		{
 			std::wstring path = L"debug.tga";
-			if(!WriteBufferToFile(m_BufferA, path))
+			if(!WriteBufferToFile(m_BufferA, path, false))
 			{
 				Tier0_Warning("CAfxStreams::DebugDump:Failed writing image for frame #%i\n.", m_Frame);
 			}
@@ -3888,10 +3993,15 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 				// Write to disk:
 				if(streamAOk)
 				{
+					CAfxRenderViewStream::StreamCaptureType captureType = streamA->StreamCaptureType_get();
 					std::wstring path;
-					if((*it)->CreateCapturePath(m_TakeDir, m_Frame, m_FormatBmpAndNotTga, path))
+					if((*it)->CreateCapturePath(
+						m_TakeDir,
+						m_Frame,
+						(captureType == CAfxRenderViewStream::SCT_Depth24 || captureType == CAfxRenderViewStream::SCT_Depth24ZIP) ? L".exr" : (m_FormatBmpAndNotTga ? L".bmp" : L".tga"),
+						path))
 					{
-						if(!WriteBufferToFile(m_BufferA, path))
+						if(!WriteBufferToFile(m_BufferA, path, captureType == CAfxRenderViewStream::SCT_Depth24ZIP))
 						{
 							Tier0_Warning("Failed writing image #%i for stream %s\n.", m_Frame, (*it)->StreamName_get());
 						}
@@ -3930,104 +4040,106 @@ bool CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuf
 	if(stream->DrawHud_get()) whatToDraw |= RENDERVIEW_DRAWHUD;
 	if(stream->DrawViewModel_get()) whatToDraw |= RENDERVIEW_DRAWVIEWMODEL;
 
-	//if(stream->SRT_Depth == stream->StreamRenderType_get())
-	//	cx->GetParent()->PushRenderTargetAndViewport(m_RgbaRenderTarget);
-
 	cx->GetParent()->ClearColor4ub(0,0,0,0);
 	cx->GetParent()->ClearBuffers(true,false,false);
 
-	if(stream->SRT_Depth == stream->StreamRenderType_get())
-		; // do nothing for now, just in case // view->UpdateShadowDepthTexture(0,0,*viewSetup);
+	view->RenderView(*viewSetup, *viewSetup, VIEW_CLEAR_STENCIL|VIEW_CLEAR_DEPTH, whatToDraw);
+
+	if(buffer.AutoRealloc(CImageBuffer::IBPF_BGR, viewSetup->m_nUnscaledWidth, viewSetup->m_nUnscaledHeight))
+	{
+		cx->GetParent()->ReadPixels(
+			viewSetup->m_nUnscaledX, viewSetup->m_nUnscaledY,
+			buffer.Width, buffer.Height,
+			(unsigned char*)buffer.Buffer,
+			IMAGE_FORMAT_RGB888
+		);
+
+		CAfxRenderViewStream::StreamCaptureType captureType = stream->StreamCaptureType_get();
+
+		if(CAfxRenderViewStream::SCT_Depth24 == captureType || CAfxRenderViewStream::SCT_Depth24ZIP == captureType)
+		{
+			float depthScale = 1.0f;
+			float depthOfs = 0.0f;
+
+			if(CAfxBaseFxStream * baseFx = stream->AsAfxBaseFxStream())
+			{
+				depthScale = baseFx->DepthValMax_get() - baseFx->DepthVal_get();
+				depthOfs = baseFx->DepthVal_get();
+			}
+
+			int oldImagePitch = buffer.ImagePitch;
+
+			// make the 24bit RGB into a float buffer:
+			if(buffer.AutoRealloc(CImageBuffer::IBPF_ZFloat, buffer.Width, buffer.Height))
+			{
+				for(int y=buffer.Height-1; y >= 0; --y)
+				{
+					for(int x=buffer.Width-1; x >= 0; --x)
+					{
+						unsigned char r = ((unsigned char *)buffer.Buffer)[y*oldImagePitch +3*x +0];
+						unsigned char g = ((unsigned char *)buffer.Buffer)[y*oldImagePitch +3*x +1];
+						unsigned char b = ((unsigned char *)buffer.Buffer)[y*oldImagePitch +3*x +2];
+
+						float depth;
+
+						if(255 == r && 255 == g && 255 == b)
+						{
+							// change rounding direction for max-value.
+							depth = 1;
+						}
+						else
+						{
+							depth = b/256.0f +g/65536.0f +r/16777216.0f;
+						}
+
+						depth *= depthScale;
+						depth += depthOfs;
+
+						*(float *)((unsigned char *)buffer.Buffer +y*buffer.ImagePitch +x*sizeof(float))
+							= depth;
+					}
+				}
+			}
+			else
+			{
+				Tier0_Warning("CAfxStreams::CaptureStreamToBuffer: Failed to realloc buffer.\n");
+			}
+		}
+		else
+		{
+			// (back) transform to MDT native format:
+
+			int lastLine = buffer.Height >> 1;
+			if(buffer.Height & 0x1) ++lastLine;
+
+			for(int y=0;y<lastLine;++y)
+			{
+				int srcLine = y;
+				int dstLine = buffer.Height -1 -y;
+
+				for(int x=0;x<buffer.Width;++x)
+				{
+					unsigned char r = ((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +3*x +0];
+					unsigned char g = ((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +3*x +1];
+					unsigned char b = ((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +3*x +2];
+									
+					((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +3*x +0] = ((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +3*x +2];
+					((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +3*x +1] = ((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +3*x +1];
+					((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +3*x +2] = ((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +3*x +0];
+									
+					((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +3*x +0] = b;
+					((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +3*x +1] = g;
+					((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +3*x +2] = r;
+				}
+			}
+		}
+
+		bOk = true;
+	}
 	else
-		view->RenderView(*viewSetup, *viewSetup, VIEW_CLEAR_STENCIL|VIEW_CLEAR_DEPTH, whatToDraw);
-
-	if(stream->SRT_RenderView == stream->StreamRenderType_get())
 	{
-		if(buffer.AutoRealloc(CImageBuffer::IBPF_BGR, viewSetup->m_nUnscaledWidth, viewSetup->m_nUnscaledHeight))
-		{
-			cx->GetParent()->ReadPixels(
-				viewSetup->m_nUnscaledX, viewSetup->m_nUnscaledY,
-				buffer.Width, buffer.Height,
-				(unsigned char*)buffer.Buffer,
-				IMAGE_FORMAT_RGB888
-			);
-
-			// (back) transform to MDT native format:
-			{
-				int lastLine = buffer.Height >> 1;
-				if(buffer.Height & 0x1) ++lastLine;
-
-				for(int y=0;y<lastLine;++y)
-				{
-					int srcLine = y;
-					int dstLine = buffer.Height -1 -y;
-
-					for(int x=0;x<buffer.Width;++x)
-					{
-						unsigned char r = ((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +3*x +0];
-						unsigned char g = ((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +3*x +1];
-						unsigned char b = ((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +3*x +2];
-									
-						((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +3*x +0] = ((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +3*x +2];
-						((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +3*x +1] = ((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +3*x +1];
-						((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +3*x +2] = ((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +3*x +0];
-									
-						((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +3*x +0] = b;
-						((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +3*x +1] = g;
-						((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +3*x +2] = r;
-					}
-				}
-			}
-
-			bOk = true;
-		}
-		else
-		{
-			Tier0_Warning("CAfxStreams::CaptureStreamToBuffer: Failed to realloc buffer.\n");
-		}
+		Tier0_Warning("CAfxStreams::CaptureStreamToBuffer: Failed to realloc buffer.\n");
 	}
-	else if(stream->SRT_Depth == stream->StreamRenderType_get())
-	{
-		if(buffer.AutoRealloc(CImageBuffer::IBPF_A, viewSetup->m_nUnscaledWidth, viewSetup->m_nUnscaledHeight))
-		{
-			cx->GetParent()->ReadPixels(
-				viewSetup->m_nUnscaledX, viewSetup->m_nUnscaledY,
-				buffer.Width, buffer.Height,
-				(unsigned char*)buffer.Buffer,
-				IMAGE_FORMAT_A8
-			);
-
-			// (back) transform to MDT native format:
-			{
-				int lastLine = buffer.Height >> 1;
-				if(buffer.Height & 0x1) ++lastLine;
-
-				for(int y=0;y<lastLine;++y)
-				{
-					int srcLine = y;
-					int dstLine = buffer.Height -1 -y;
-
-					for(int x=0;x<buffer.Width;++x)
-					{
-						unsigned char a = ((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +1*x +0];
-									
-						((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +1*x +0] = ((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +1*x +0];
-									
-						((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +1*x +0] = a;
-					}
-				}
-			}
-
-			bOk = true;
-		}
-		else
-		{
-			Tier0_Warning("CAfxStreams::CaptureStreamToBuffer: Failed to realloc buffer.\n");
-		}
-	}
-
-	//if(stream->SRT_Depth == stream->StreamRenderType_get())
-	//	cx->GetParent()->PopRenderTargetAndViewport();
 
 	if(0 < strlen(stream->DetachCommands_get())) g_VEngineClient->ExecuteClientCmd(stream->DetachCommands_get());
 
@@ -4036,8 +4148,21 @@ bool CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuf
 	return bOk;
 }
 
-bool CAfxStreams::WriteBufferToFile(const CImageBuffer & buffer, const std::wstring & path)
+bool CAfxStreams::WriteBufferToFile(const CImageBuffer & buffer, const std::wstring & path, bool ifDepth24Zip)
 {
+	if(buffer.IBPF_ZFloat == buffer.PixelFormat)
+	{
+		return WriteFloatZOpenExr(
+			path.c_str(),
+			(unsigned char*)buffer.Buffer,
+			buffer.Width,
+			buffer.Height,
+			sizeof(float),
+			buffer.ImagePitch,
+			ifDepth24Zip ? WFZOEC_Zip : WFZOEC_None
+			);
+	}
+
 	if(buffer.IBPF_A == buffer.PixelFormat)
 	{
 		return m_FormatBmpAndNotTga
@@ -4201,31 +4326,39 @@ char const * CAfxStreams::Console_FromStreamCombineType(CAfxTwinStream::StreamCo
 	return "[unkown]";
 }
 
-bool CAfxStreams::Console_ToStreamRenderType(char const * value, CAfxRenderViewStream::StreamRenderType & streamRenderType)
+bool CAfxStreams::Console_ToStreamCaptureType(char const * value, CAfxRenderViewStream::StreamCaptureType & StreamCaptureType)
 {
-	if(!_stricmp(value, "renderView"))
+	if(!_stricmp(value, "normal"))
 	{
-		streamRenderType = CAfxRenderViewStream::SRT_RenderView;
+		StreamCaptureType = CAfxRenderViewStream::SCT_Normal;
 		return true;
 	}
 	else
-	if(!_stricmp(value, "depth"))
+	if(!_stricmp(value, "depth24"))
 	{
-		streamRenderType = CAfxRenderViewStream::SRT_Depth;
+		StreamCaptureType = CAfxRenderViewStream::SCT_Depth24;
+		return true;
+	}
+	else
+	if(!_stricmp(value, "depth24ZIP"))
+	{
+		StreamCaptureType = CAfxRenderViewStream::SCT_Depth24ZIP;
 		return true;
 	}
 
 	return false;
 }
 
-char const * CAfxStreams::Console_FromStreamRenderType(CAfxRenderViewStream::StreamRenderType streamRenderType)
+char const * CAfxStreams::Console_FromStreamCaptureType(CAfxRenderViewStream::StreamCaptureType StreamCaptureType)
 {
-	switch(streamRenderType)
+	switch(StreamCaptureType)
 	{
-	case CAfxRenderViewStream::SRT_RenderView:
-		return "renderView";
-	case CAfxRenderViewStream::SRT_Depth:
-		return "depth";
+	case CAfxRenderViewStream::SCT_Normal:
+		return "nomral";
+	case CAfxRenderViewStream::SCT_Depth24:
+		return "depth24";
+	case CAfxRenderViewStream::SCT_Depth24ZIP:
+		return "depth24ZIP";
 	}
 
 	return "[unkown]";
@@ -4350,13 +4483,16 @@ bool CAfxStreams::CImageBuffer::AutoRealloc(ImageBufferPixelFormat pixelFormat, 
 	switch(pixelFormat)
 	{
 	case IBPF_BGR:
-		pitch *= 3;
+		pitch *= 3 * sizeof(char);
 		break;
 	case IBPF_BGRA:
-		pitch *= 4;
+		pitch *= 4 * sizeof(char);
 		break;
 	case IBPF_A:
-		pitch *= 1;
+		pitch *= 1 * sizeof(char);
+		break;
+	case IBPF_ZFloat:
+		pitch *= 1 * sizeof(float);
 		break;
 	default:
 		Tier0_Warning("CAfxStreams::CImageBuffer::AutoRealloc: Unsupported pixelFormat\n");

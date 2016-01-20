@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-01-06 dominik.matrixstorm.com
+// 2016-01-20 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -54,10 +54,11 @@ class CAfxRenderViewStream
 : public CAfxStream
 {
 public:
-	enum StreamRenderType
+	enum StreamCaptureType
 	{
-		SRT_RenderView,
-		SRT_Depth
+		SCT_Normal,
+		SCT_Depth24,
+		SCT_Depth24ZIP
 	};
 
 	CAfxRenderViewStream();
@@ -82,14 +83,14 @@ public:
 	bool DrawViewModel_get(void);
 	void DrawViewModel_set(bool value);
 
-	StreamRenderType StreamRenderType_get(void);
-	void StreamRenderType_set(StreamRenderType value);
+	StreamCaptureType StreamCaptureType_get(void);
+	void StreamCaptureType_set(StreamCaptureType value);
 
 protected:
 	/// <summary>This member is only valid between StreamAttach and StreamDetach.</summary>
 	IAfxStreams4Stream * m_Streams;
 
-	StreamRenderType m_StreamRenderType;
+	StreamCaptureType m_StreamCaptureType;
 
 private:
 	bool m_DrawViewModel;
@@ -121,7 +122,7 @@ public:
 	void RecordStart();
 
 	/// <remarks>This is only called between RecordStart and RecordEnd and only if Record is true.</remarks>
-	bool CreateCapturePath(const std::wstring & takeDir, int frameNumber, bool isBmpAndNotTga, std::wstring &outPath);
+	bool CreateCapturePath(const std::wstring & takeDir, int frameNumber, wchar_t const * fileExtension, std::wstring &outPath);
 
 	/// <remarks>This is called regardless of Record value.</remarks>
 	void RecordEnd();
@@ -242,6 +243,7 @@ class CAfxBaseFxStream
 , public IAfxMeshDrawModulated
 , public IAfxSetVertexShader
 , public IAfxSetPixelShader
+, public IAfxDrawingHud
 {
 public:
 	enum AfxAction {
@@ -277,6 +279,8 @@ public:
 
 	virtual void SetVertexShader(CAfx_csgo_ShaderState & state);
 	virtual void SetPixelShader(CAfx_csgo_ShaderState & state);
+
+	virtual void DrawingHud(void);
 
 	AfxAction ClientEffectTexturesAction_get(void);
 	void ClientEffectTexturesAction_set(AfxAction value);
@@ -339,6 +343,13 @@ public:
 	void DebugPrint_set(bool value);
 
 	void InvalidateMap(void);
+
+	/// <pram name="to24">false: depth24 to depth; true: depth to depth24</param>
+	/// <pram name="depth24ZIP">if not to24, then set SCT_Normal otherwise: false: set capturetype SCT_Depth24; true: set capturetype SCT_Depth24ZIP</param>
+	void ConvertStreamDepth(bool to24, bool depth24ZIP);
+
+	/// <pram name="to24">false: depth24 to depth; true: depth to depth24</param>
+	void ConvertDepthActions(bool to24);
 
 protected:
 	AfxAction m_ClientEffectTexturesAction;
@@ -715,6 +726,8 @@ private:
 	void InvalidateSplineRopeHookActions();
 	void InvalidateSpritecardHookActions();
 	void InvalidateVertexLitGenericHookActions();
+
+	void ConvertDepthAction(AfxAction & action, bool to24);
 };
 
 class CAfxDepthStream
@@ -987,6 +1000,8 @@ public:
 	/// <remarks>This function can be called from diffrent threads, but only one thread at a time.</remarks>
 	void OnSetPixelShader(CAfx_csgo_ShaderState & state);
 
+	void OnDrawingHud(void);
+
 	virtual void SetBlend(IAfxVRenderView * rv, float blend );
 	virtual void SetColorModulation(IAfxVRenderView * rv, float const* blend );
 
@@ -1043,6 +1058,8 @@ public:
 	virtual void OnSetVertexShader_set(IAfxSetVertexShader * value);
 	virtual void OnSetPixelShader_set(IAfxSetPixelShader * value);
 
+	virtual void OnDrawingHud_set(IAfxDrawingHud * value);
+
 	virtual void LevelShutdown(IAfxBaseClientDll * cl);
 
 	virtual void View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx, vrect_t_csgo *rect);
@@ -1084,7 +1101,8 @@ private:
 		{
 			IBPF_BGR,
 			IBPF_BGRA,
-			IBPF_A
+			IBPF_A,
+			IBPF_ZFloat
 		};
 
 		void * Buffer;
@@ -1120,6 +1138,7 @@ private:
 	IAfxMeshDrawModulated * m_OnDrawModulated;
 	IAfxSetVertexShader * m_OnSetVertexShader;
 	IAfxSetPixelShader * m_OnSetPixelShader;
+	IAfxDrawingHud * m_OnDrawingHud;
 
 	WrpConVarRef * m_MatQueueModeRef;
 	int m_OldMatQueueMode;
@@ -1159,8 +1178,8 @@ private:
 	bool Console_ToStreamCombineType(char const * value, CAfxTwinStream::StreamCombineType & streamCombineType);
 	char const * Console_FromStreamCombineType(CAfxTwinStream::StreamCombineType streamCombineType);
 
-	bool Console_ToStreamRenderType(char const * value, CAfxRenderViewStream::StreamRenderType & streamRenderType);
-	char const * Console_FromStreamRenderType(CAfxRenderViewStream::StreamRenderType streamRenderType);
+	bool Console_ToStreamCaptureType(char const * value, CAfxRenderViewStream::StreamCaptureType & StreamCaptureType);
+	char const * Console_FromStreamCaptureType(CAfxRenderViewStream::StreamCaptureType StreamCaptureType);
 
 	bool CheckCanFeedStreams(void);
 
@@ -1175,7 +1194,7 @@ private:
 
 	bool CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuffer & buffer, IAfxMatRenderContext * cx);
 
-	bool WriteBufferToFile(const CImageBuffer & buffer, const std::wstring & path);
+	bool WriteBufferToFile(const CImageBuffer & buffer, const std::wstring & path, bool ifDepth24Zip);
 };
 
 extern CAfxStreams g_AfxStreams;

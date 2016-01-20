@@ -147,6 +147,12 @@ public:
 	virtual void SetPixelShader(CAfx_csgo_ShaderState & state) = 0;
 };
 
+class IAfxDrawingHud abstract
+{
+public:
+	virtual void DrawingHud(void) = 0;
+};
+
 class IAfxStreams4Stream abstract
 {
 public:
@@ -177,4 +183,6 @@ public:
 
 	virtual void OnSetVertexShader_set(IAfxSetVertexShader * value) = 0;
 	virtual void OnSetPixelShader_set(IAfxSetPixelShader * value) = 0;
+
+	virtual void OnDrawingHud_set(IAfxDrawingHud * value) = 0;
 };

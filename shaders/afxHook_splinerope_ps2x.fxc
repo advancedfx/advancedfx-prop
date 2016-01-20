@@ -76,7 +76,7 @@ float4 Afx_FinalOutput(float alpha, float zValue)
 	return float4(color, alpha);
 #elif 2 == AFXMODE
 #if !ALPHATESTREF
-	clip( alpha - g_cAfx_AlphaThreshold );
+	// apparently this is not a good idea for now: clip( alpha - g_cAfx_AlphaThreshold );
 #endif
 	return float4( 0, 1, 0, 1.0 );
 #elif 3 == AFXMODE

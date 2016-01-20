@@ -26,8 +26,10 @@ AFXADDR_DEF(csgo_CHudDeathNotice_UnkAddDeathNotice_AddMovie_AfterModTime)
 //AFXADDR_DEF(csgo_CScaleformSlotInitControllerClientImpl_UnkCheckSwf_DSZ)
 AFXADDR_DEF(csgo_CSkyboxView_Draw)
 AFXADDR_DEF(csgo_CSkyboxView_Draw_DSZ)
-AFXADDR_DEF(csgo_CViewRender_Render)
-AFXADDR_DEF(csgo_CViewRender_Render_DSZ)
+//AFXADDR_DEF(csgo_CViewRender_Render)
+//AFXADDR_DEF(csgo_CViewRender_Render_DSZ)
+AFXADDR_DEF(csgo_CViewRender_RenderView_AfterVGui_DrawHud)
+AFXADDR_DEF(csgo_SplineRope_CShader_vtable)
 AFXADDR_DEF(csgo_Spritecard_CShader_vtable)
 AFXADDR_DEF(csgo_UnlitGeneric_CShader_vtable)
 AFXADDR_DEF(csgo_VertexLitGeneric_CShader_vtable)
@@ -459,9 +461,7 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 			AFXADDR_SET(csgo_CHudDeathNotice_UnkAddDeathNotice_AddMovie_AfterModTime, addr);
 		}
 
-
 		// csgo_CViewRender_Render:
-		AFXADDR_SET(csgo_CViewRender_Render, 0x0);
 		/*
 		{
 			DWORD addr = 0;
@@ -506,6 +506,54 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 			}
 		}
 		*/
+
+		// csgo_CViewRender_RenderView_AfterVGui_DrawHud:
+		{
+			DWORD addr = 0;
+			DWORD strAddr = 0;
+			{
+				ImageSectionsReader sections((HMODULE)clientDll);
+				if(!sections.Eof())
+				{
+					sections.Next(); // skip .text
+					if(!sections.Eof())
+					{
+						MemRange result = FindCString(sections.GetMemRange(), "VGui_DrawHud");
+						if(!result.IsEmpty())
+						{
+							strAddr = result.Start;
+						}
+						else ErrorBox(MkErrStr(__FILE__,__LINE__));
+					}
+					else ErrorBox(MkErrStr(__FILE__,__LINE__));
+				}
+				else ErrorBox(MkErrStr(__FILE__,__LINE__));
+			}
+			if(strAddr)
+			{
+				ImageSectionsReader sections((HMODULE)clientDll);
+			
+				MemRange baseRange = sections.GetMemRange();
+				MemRange result = FindBytes(baseRange, (char const *)&strAddr, sizeof(strAddr));
+				if(!result.IsEmpty())
+				{
+					DWORD targetAddr = result.Start +0x0a;
+
+					// check for pattern nearby to see if it is the right address:
+					unsigned char pattern[5] = { 0x6a, 0x04, 0x6a, 0x00, 0x68};
+
+					DWORD patternSize = sizeof(pattern)/sizeof(pattern[0]);
+					MemRange patternRange(result.Start -0x0C, result.Start -0x0C +patternSize);
+					MemRange result = FindBytes(patternRange, (char *)pattern, patternSize);
+					if(result.Start != patternRange.Start || result.End != patternRange.End)
+						ErrorBox(MkErrStr(__FILE__,__LINE__));
+					else
+						addr = targetAddr;
+				}
+				else ErrorBox(MkErrStr(__FILE__,__LINE__));
+			}
+			AFXADDR_SET(csgo_CViewRender_RenderView_AfterVGui_DrawHud, addr);
+		}
 
 		// csgo_pLocalPlayer:
 		{
@@ -783,7 +831,8 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 		AFXADDR_SET(csgo_CHudDeathNotice_UnkAddDeathNotice_AddMovie_AfterModTime, 0x0);
 		//AFXADDR_SET(csgo_CScaleformSlotInitControllerClientImpl_UnkCheckSwf, 0x0);
 		AFXADDR_SET(csgo_CSkyboxView_Draw, 0x0);
-		AFXADDR_SET(csgo_CViewRender_Render, 0x0);
+		//AFXADDR_SET(csgo_CViewRender_Render, 0x0);
+		AFXADDR_SET(csgo_CViewRender_RenderView_AfterVGui_DrawHud, 0x0);
 		AFXADDR_SET(csgo_pLocalPlayer, 0x0);
 		AFXADDR_SET(csgo_view, 0x0);
 	}
@@ -807,6 +856,56 @@ void Addresses_InitStdshader_dx9Dll(AfxAddr stdshader_dx9Dll, bool isCsgo)
 {
 	if(isCsgo)
 	{
+		// csgo_SplineRope_CShader_vtable:
+		{
+			DWORD addr = 0;
+			{
+				ImageSectionsReader sections((HMODULE)stdshader_dx9Dll);
+				if(!sections.Eof())
+				{
+					sections.Next(); // skip .text
+					if(!sections.Eof())
+					{
+						MemRange firstDataRange = sections.GetMemRange();
+
+						sections.Next(); // skip first .data
+						if(!sections.Eof())
+						{
+							MemRange result = FindCString(sections.GetMemRange(), ".?AVCShader@SplineRope@@");
+							if(!result.IsEmpty())
+							{
+								DWORD tmpAddr = result.Start;
+								tmpAddr -= 0x8;
+
+								result = FindBytes(firstDataRange, (char const *)&tmpAddr, sizeof(tmpAddr));
+								if(!result.IsEmpty())
+								{
+									DWORD tmpAddr = result.Start;
+									tmpAddr -= 0xC;
+
+									result = FindBytes(firstDataRange, (char const *)&tmpAddr, sizeof(tmpAddr));
+									if(!result.IsEmpty())
+									{
+										DWORD tmpAddr = result.Start;
+										tmpAddr += (1)*4;
+
+										addr = tmpAddr;
+									}
+									else ErrorBox(MkErrStr(__FILE__,__LINE__));
+								}
+								else ErrorBox(MkErrStr(__FILE__,__LINE__));
+							}
+							else ErrorBox(MkErrStr(__FILE__,__LINE__));
+						}
+						else ErrorBox(MkErrStr(__FILE__,__LINE__));
+					}
+					else ErrorBox(MkErrStr(__FILE__,__LINE__));
+				}
+				else ErrorBox(MkErrStr(__FILE__,__LINE__));
+			}
+			AFXADDR_SET(csgo_SplineRope_CShader_vtable, addr);
+		}
+
 		// csgo_Spritecard_CShader_vtable:
 		{
 			DWORD addr = 0;

@@ -126,6 +126,12 @@
     <ClCompile Include="csgo_Stdshader_dx9_Hooks.cpp">
       <Filter>AfxHookSource</Filter>
     </ClCompile>
+    <ClCompile Include="csgo_CViewRender.cpp">
+      <Filter>AfxHookSource</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\OpenExrOutput.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -271,6 +277,12 @@
     </ClInclude>
     <ClInclude Include="..\shaders\build\afxHook_splinerope_ps20b.h">
       <Filter>shaders\build</Filter>
+    </ClInclude>
+    <ClInclude Include="csgo_CViewRender.h">
+      <Filter>AfxHookSource</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\OpenExrOutput.h">
+      <Filter>shared</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

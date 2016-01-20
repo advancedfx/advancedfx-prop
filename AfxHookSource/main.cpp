@@ -36,6 +36,7 @@
 #include "asmClassTools.h"
 #include "csgo_Stdshader_dx9_Hooks.h"
 #include "AfxShaders.h"
+#include "csgo_CViewRender.h"
 
 #include <set>
 #include <map>
@@ -2767,7 +2768,7 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 		// Install early hooks:
 
 		csgo_CSkyBoxView_Draw_Install();
-		//csgo_ScaleForm_ClientHooks_Init();
+		csgo_CViewRender_Install();
 	}
 	else
 	if(bFirstScaleformui && StringEndsWith( lpLibFileName, "scaleformui.dll"))
