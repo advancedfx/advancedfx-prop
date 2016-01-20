@@ -84,10 +84,6 @@ Hint:
     to "C:\Libraries\openexr-2.2.0\IlmImf\Release"!
     Then build the Solution.
     After that build the INSTALL project in the solution.
-    If you want to use the .exe files in "C:\<HLAESRC>\openexr-build\bin",
-    then you need to copy all DLL files from
-    "C:\<HLAESRC>\ilmbase-build\lib", "C:\source\openexr-build\lib" and
-    "C:\Libraries\zlib-1.2.8" there.
 
 [X] Build zlib using nmake:
     Open the Visual Studio Command Prompt (2010) and enter the
@@ -105,6 +101,10 @@ Hint:
 [X] Open the C:\Libraries\openexr-2.2.0\openexr.sln created in the previous step
     Select the Release configuration and then build the Solution.
     After that build the INSTALL project in the solution.
+    If you want to use the .exe files in "C:\<HLAESRC>\openexr-build\bin",
+    then you need to copy all DLL files from
+    "C:\<HLAESRC>\ilmbase-build\lib", "C:\source\openexr-build\lib" and
+    "C:\Libraries\zlib-1.2.8" there.
 
 [X] Obtain the SharpDX SDK 2.6.3 from
     https://github.com/sharpdx/SharpDX/releases/tag/2.6.3
@@ -152,7 +152,7 @@ Hint:
 
 [X] Copy all DLL files from
     "C:\<HLAESRC>\ilmbase-build\lib",
-	"C:\source\openexr-build\lib" (except "IlmImfUtil-2_2.dll") and
+    "C:\source\openexr-build\lib" (except "IlmImfUtil-2_2.dll") and
     "C:\Libraries\zlib-1.2.8"
     to "C:\<HLAESRC>\advancedfx\build\Release\bin"
 

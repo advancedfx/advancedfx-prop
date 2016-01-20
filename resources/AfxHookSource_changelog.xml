@@ -13,7 +13,7 @@
 Added depth24 (OpenEXR) support to mirv_streams, example commands to add a depth24 stream:<br />
 mirv_streams add depth mydepth24<br />
 mirv_streams edit mydepth24 depthValMax 8192.0<br />
-mirv_streams edit mydepth24 toDepth24<br />
+mirv_streams edit mydepth24 mod toDepth24<br />
 If you want to have the OpenEXR files with ZIP compression (probably slower) use toDepth24ZIP instead of toDepth24.
 </change>
 <change type="fixed">
