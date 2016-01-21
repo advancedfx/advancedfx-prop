@@ -32,7 +32,6 @@ public:
 	void Reset();
 
 	void OnPostRenderAllTools();
-	void OnSetupEngineView();
 
 	virtual void CamPathChanged(CamPath * obj);
 
@@ -59,7 +58,6 @@ private:
 	Vector3 m_OldPreviousPolyLinePoint;
 	IAfxPixelShader * m_PixelShader;
 	bool m_PolyLineStarted;
-	bool m_SetupEngineViewCalled;
 	bool m_RebuildDrawing;
 	IAfxVertexShader * m_VertexShader;
 	VMatrix m_WorldToScreenMatrix;

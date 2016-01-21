@@ -48,7 +48,6 @@ extern WrpVEngineClient * g_VEngineClient;
 CCampathDrawer::CCampathDrawer()
 : m_Draw(false)
 , m_RebuildDrawing(true)
-, m_SetupEngineViewCalled(false)
 , m_VertexBuffer(0)
 , m_VertexBufferVertexCount(0)
 , m_LockedVertexBuffer(0)
@@ -236,10 +235,7 @@ void CCampathDrawer::EndDevice()
 
 void CCampathDrawer::OnPostRenderAllTools()
 {
-	//if(m_SetupEngineViewCalled)
-	//	return;
-	
-	// Actually we are often called twice per frame due to an engine bug, once after 3d skybox
+	// Actually we are often called twice per frame due to an engine bug(?), once after 3d skybox
 	// and once after world is drawn, maybe we will be even called more times,
 	// but we can not care about that for now.
 	
@@ -378,7 +374,9 @@ void CCampathDrawer::OnPostRenderAllTools()
 		m_Device->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 
 		m_Device->SetVertexShader(vertexShader);
-	
+
+		m_WorldToScreenMatrix = g_VEngineClient->WorldToScreenMatrix();
+			
 		m_Device->SetVertexShaderConstantF(8, m_WorldToScreenMatrix.m[0], 4);
 
 		// Provide view plane info for line clipping:
@@ -937,14 +935,6 @@ void CCampathDrawer::OnPostRenderAllTools()
 	m_Device->SetRenderState(D3DRS_ZENABLE, oldZEnable);
 	m_Device->SetRenderState(D3DRS_COLORWRITEENABLE, oldColorWriteEnable);
 	m_Device->SetRenderState(D3DRS_SRGBWRITEENABLE, oldSrgbWriteEnable);
-
-	m_SetupEngineViewCalled = false;
-}
-
-void CCampathDrawer::OnSetupEngineView()
-{
-	m_SetupEngineViewCalled = true;
-	m_WorldToScreenMatrix = g_VEngineClient->WorldToScreenMatrix();
 }
 
 void CCampathDrawer::BuildSingleLine(Vector3 from, Vector3 to, Vertex * pOutVertexData)

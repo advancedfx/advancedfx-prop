@@ -114,8 +114,6 @@ public:
 			fov
 		);
 
-		g_CampathDrawer.OnSetupEngineView();
-
 		return bRet;
 	}
 	
