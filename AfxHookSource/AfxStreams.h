@@ -303,8 +303,8 @@ public:
 	AfxAction WeaponModelsAction_get(void);
 	void WeaponModelsAction_set(AfxAction value);
 
-	AfxAction StattrackAction_get(void);
-	void StattrackAction_set(AfxAction value);
+	AfxAction StatTrakAction_get(void);
+	void StatTrakAction_set(AfxAction value);
 
 	AfxAction ShellModelsAction_get(void);
 	void ShellModelsAction_set(AfxAction value);
@@ -359,7 +359,7 @@ protected:
 	AfxAction m_CableAction;
 	AfxAction m_PlayerModelsAction;
 	AfxAction m_WeaponModelsAction;
-	AfxAction m_StattrackAction;
+	AfxAction m_StatTrakAction;
 	AfxAction m_ShellModelsAction;
 	AfxAction m_OtherModelsAction;
 	AfxAction m_DecalTexturesAction;
@@ -743,7 +743,7 @@ public:
 		m_CableAction =  AA_DrawDepth;
 		m_PlayerModelsAction =  AA_DrawDepth;
 		m_WeaponModelsAction =  AA_DrawDepth;
-		m_StattrackAction = AA_DrawDepth;
+		m_StatTrakAction = AA_DrawDepth;
 		m_ShellModelsAction =  AA_DrawDepth;
 		m_OtherModelsAction =  AA_DrawDepth;
 		m_DecalTexturesAction =  AA_DrawDepth;
@@ -772,7 +772,7 @@ public:
 		m_CableAction =  AA_Draw;
 		m_PlayerModelsAction = AA_Invisible;
 		m_WeaponModelsAction = AA_Invisible;
-		m_StattrackAction = AA_Invisible;
+		m_StatTrakAction = AA_Invisible;
 		m_ShellModelsAction = AA_Invisible;
 		m_OtherModelsAction = AA_Draw;
 		m_DecalTexturesAction = AA_Draw;
@@ -801,7 +801,7 @@ public:
 		m_CableAction = AA_DrawDepth;
 		m_PlayerModelsAction = AA_Invisible;
 		m_WeaponModelsAction = AA_Invisible;
-		m_StattrackAction = AA_Invisible;
+		m_StatTrakAction = AA_Invisible;
 		m_ShellModelsAction = AA_Invisible;
 		m_OtherModelsAction = AA_DrawDepth;
 		m_DecalTexturesAction = AA_DrawDepth;
@@ -830,7 +830,7 @@ public:
 		m_CableAction = AA_GreenScreen;
 		m_PlayerModelsAction = AA_Draw;
 		m_WeaponModelsAction = AA_Draw;
-		m_StattrackAction = AA_Draw;
+		m_StatTrakAction = AA_Draw;
 		m_ShellModelsAction = AA_Draw;
 		m_OtherModelsAction = AA_GreenScreen;
 		m_DecalTexturesAction = AA_GreenScreen;
@@ -859,7 +859,7 @@ public:
 		m_CableAction =  AA_DrawDepth;
 		m_PlayerModelsAction =  AA_DrawDepth;
 		m_WeaponModelsAction =  AA_DrawDepth;
-		m_StattrackAction = AA_DrawDepth;
+		m_StatTrakAction = AA_DrawDepth;
 		m_ShellModelsAction =  AA_DrawDepth;
 		m_OtherModelsAction =  AA_DrawDepth;
 		m_DecalTexturesAction =  AA_DrawDepth;
@@ -888,7 +888,7 @@ public:
 		m_CableAction = AA_Black;
 		m_PlayerModelsAction = AA_White;
 		m_WeaponModelsAction = AA_White;
-		m_StattrackAction = AA_White;
+		m_StatTrakAction = AA_White;
 		m_ShellModelsAction = AA_White;
 		m_OtherModelsAction = AA_Black;
 		m_DecalTexturesAction = AA_Black;
@@ -917,7 +917,7 @@ public:
 		m_CableAction =  AA_Draw;
 		m_PlayerModelsAction =  AA_Draw;
 		m_WeaponModelsAction =  AA_Draw;
-		m_StattrackAction = AA_Draw;
+		m_StatTrakAction = AA_Draw;
 		m_ShellModelsAction =  AA_Draw;
 		m_OtherModelsAction =  AA_Draw;
 		m_DecalTexturesAction =  AA_Draw;
@@ -946,7 +946,7 @@ public:
 		m_CableAction = AA_Draw;
 		m_PlayerModelsAction = AA_Invisible;
 		m_WeaponModelsAction = AA_Invisible;
-		m_StattrackAction = AA_Invisible;
+		m_StatTrakAction = AA_Invisible;
 		m_ShellModelsAction =  AA_Invisible;
 		m_OtherModelsAction =  AA_Draw;
 		m_DecalTexturesAction = AA_Draw;

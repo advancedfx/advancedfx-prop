@@ -92,12 +92,13 @@ class FxcCompile
     //
     // Private members:
 
-    private double[] m_ProgressSectionWeights = new double[5] {
+    private double[] m_ProgressSectionWeights = new double[6] {
         0.05, // ReadInputFile
         0.05, // FilterComobos
-        0.5, // CompileCombos
-        0.15, // WriteCompileResults.Indices
-        0.25 // WriteCompileResults.Shaders
+        0.4, // CompileCombos queue combos
+        0.2, // CompileCombos wait finish
+        0.1, // WriteCompileResults.Indices
+        0.2 // WriteCompileResults.Shaders
     };
 
     private struct Combo
@@ -163,55 +164,60 @@ class FxcCompile
 
         public void DoCompile()
         {
-            SharpDX.D3DCompiler.CompilationResult result = null;
-            string exception = null;
-
-            try
+            if (!m_FxcCompile.m_CompileError) // don't compile more stuff if we already have a known error
             {
-                result = SharpDX.D3DCompiler.ShaderBytecode.Compile(
-                     m_ShaderSource,
-                     "main",
-                     m_Profile,
-                     SharpDX.D3DCompiler.ShaderFlags.OptimizationLevel3,
-                     SharpDX.D3DCompiler.EffectFlags.None,
-                     m_Defines,
-                     this,
-                     "shaderCombo_" + m_ComboId
-                 );
-            }
-            catch (SharpDX.SharpDXException e)
-            {
-                exception = e.ToString();
-                result = null;
-            }
+                SharpDX.D3DCompiler.CompilationResult result = null;
+                string exception = null;
 
-            if (null == result || result.HasErrors)
-            {
-                string compileErrors =
-                    "shaderCombo_"+m_ComboId+": "
-                    +"message: " + (null == result ? "[none]" : result.Message)
-                    + ", exception: " + (null == exception ? "[none]" : exception)
-                    + ", defines:"
-                ;
-
-                foreach (SharpDX.Direct3D.ShaderMacro define in m_Defines)
+                try
                 {
-                    compileErrors += " /D" + define.Name.ToString() + "=" + define.Definition.ToString();
+                    result = SharpDX.D3DCompiler.ShaderBytecode.Compile(
+                         m_ShaderSource,
+                         "main",
+                         m_Profile,
+                         SharpDX.D3DCompiler.ShaderFlags.OptimizationLevel3,
+                         SharpDX.D3DCompiler.EffectFlags.None,
+                         m_Defines,
+                         this,
+                         "shaderCombo_" + m_ComboId
+                     );
+                }
+                catch (SharpDX.SharpDXException e)
+                {
+                    exception = e.ToString();
+                    result = null;
                 }
 
-                lock (m_FxcCompile.m_CompileErrors)
+                if (null == result || result.HasErrors)
                 {
-                    m_FxcCompile.m_CompileErrors.AddLast(
-                        compileErrors
-                    );
+                    m_FxcCompile.m_CompileError = true;
+
+                    string compileErrors =
+                        "shaderCombo_" + m_ComboId + ": "
+                        + "message: " + (null == result ? "[none]" : result.Message)
+                        + ", exception: " + (null == exception ? "[none]" : exception)
+                        + ", defines:"
+                    ;
+
+                    foreach (SharpDX.Direct3D.ShaderMacro define in m_Defines)
+                    {
+                        compileErrors += " /D" + define.Name.ToString() + "=" + define.Definition.ToString();
+                    }
+
+                    lock (m_FxcCompile.m_CompileErrors)
+                    {
+                        m_FxcCompile.m_CompileErrors.AddLast(
+                            compileErrors
+                        );
+                    }
+
+                    result = null;
                 }
 
-                result = null;
-            }
-
-            lock (m_FxcCompile.m_CompilationResults)
-            {
-                m_FxcCompile.m_CompilationResults[m_ComboId] = result;
+                lock (m_FxcCompile.m_CompilationResults)
+                {
+                    m_FxcCompile.m_CompilationResults[m_ComboId] = result;
+                }
             }
 
             Interlocked.Decrement(ref m_FxcCompile.m_OutstandingCompiles);
@@ -280,7 +286,7 @@ class FxcCompile
     private SortedDictionary<int, SharpDX.D3DCompiler.CompilationResult> m_CompilationResults = new SortedDictionary<int, SharpDX.D3DCompiler.CompilationResult>();
 
     private int m_OutstandingCompiles;
-
+    private bool m_CompileError;
     private LinkedList<string> m_CompileErrors = new LinkedList<string>();
 
     int m_LastProgress;
@@ -600,6 +606,8 @@ class FxcCompile
         DoStatus("Compiling combos ...");
 
         m_CompilationResults.Clear();
+        m_CompileError = false;
+        m_CompileErrors.Clear();
 
         CalcNumCombos();
 
@@ -615,6 +623,7 @@ class FxcCompile
         WriteSourceString(out sourceString);
 
         int numCombos = (int)m_NumCombos;
+        int queuedComobos = 0;
 
         for (int i = 0; i < numCombos; ++i)
         {
@@ -626,12 +635,9 @@ class FxcCompile
 
             if (!skip)
             {
-                lock (m_CompileErrors)
-                {
-                    // abort as we learn about past compile errors:
-                    if (0 < m_CompileErrors.Count)
-                        break;
-                }
+                // abort as we learn about past compile errors:
+                if (m_CompileError)
+                    break;
 
                 DoStatus("Queueing combo " + (i + 1) + "/" + m_NumCombos + " for compilation ...", false);
 
@@ -651,6 +657,8 @@ class FxcCompile
                     DoError("Failed to queue on ThreadPool for shaderCombo_" + i);
                     return false;
                 }
+
+                ++queuedComobos;
             }
         }
 
@@ -658,7 +666,7 @@ class FxcCompile
 
         while (0 != (remainingCompiles = Interlocked.CompareExchange(ref m_OutstandingCompiles, 0, 0)))
         {
-            DoProgress(2, (double)(m_NumCombos - 1) / (double)m_NumCombos);
+            DoProgress(3, (double)(queuedComobos - remainingCompiles) / (double)queuedComobos);
             DoStatus("Waiting for combo compilation to finish (" + remainingCompiles + " remaining) ...");
             Thread.Sleep(100);
         }
@@ -671,14 +679,14 @@ class FxcCompile
             return false;
         }
 
-        DoProgress(2, 1);
+        DoProgress(3, 1);
 
         return true;
     }
 
     private bool WriteCompileResults(string outputPrefix)
     {
-        DoProgress(3, 0);
+        DoProgress(4, 0);
         DoStatus("Starting to write results ...");
 
         // One could think about finding duplicate shaders here,
@@ -713,7 +721,7 @@ class FxcCompile
 
                 foreach (var kv in m_CompilationResults)
                 {
-                    DoProgress(3, (double)i / (double)m_CompilationResults.Count, false);
+                    DoProgress(4, (double)i / (double)m_CompilationResults.Count, false);
 
                     bw.Write((int)kv.Key);
                     bw.Write((int)curOfs);
@@ -723,14 +731,14 @@ class FxcCompile
                 }
             }
 
-            DoProgress(4, 0);
+            DoProgress(5, 0);
             DoStatus("Writing .acs shaders ...");
             {
                 int i = 0;
 
                 foreach (var v in m_CompilationResults.Values)
                 {
-                    DoProgress(3, (double)i / (double)m_CompilationResults.Count, false);
+                    DoProgress(5, (double)i / (double)m_CompilationResults.Count, false);
                     
                     bw.Write(v.Bytecode.Data);
                     
@@ -748,7 +756,7 @@ class FxcCompile
             return false;
         }
 
-        DoProgress(4, 1);
+        DoProgress(5, 1);
         return true;
     }
 

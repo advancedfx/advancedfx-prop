@@ -6,13 +6,24 @@
 
 <release>
 <name>AfxHookSource</name>
-<version>X.X.X.X</version>
-<time>2016-01-21T17:05Z</time>
+<version>0.2.11.0</version>
+<time>2016-01-28T18:33Z</time>
 <changes>
+<change type="fixed">
+Fixed huge OpenEXR / depth24 export inaccuracies due to a wrong formular causing huge problems in precision dependant post processing.
+Please also read the comments at the end of this changelog entry.
+</change>
 <change type="fixed">
 Fixed the on-screen drawing of the campath (mirv_campath draw) being off by one frame (hardly noticeable).
 </change>
+<change type="fixed">
+Renamed mirv_streams stattrackAction to statTrakAction (old spelling will still be accepted).
+</change>
 </changes>
+<comments>
+Please note: It is highly recommended to turn off in-game Anti Aliasing when using depth24 / OpenEXR support, because several anti aliasing methods used are not neutral to the colour hue.<br />
+Also please note, while the export is named depth24, the actual accuracy is 23 bits maximum. Depending on your garphic card and drivers the accuracy can be moch lower, however with modern cards and drivers you should be close to the 23 bit maximum accuracy.
+</comments>
 </release>
 
 

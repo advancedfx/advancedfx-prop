@@ -575,7 +575,7 @@ CAfxBaseFxStream::CAfxBaseFxStream()
 , m_CableAction(AA_Draw)
 , m_PlayerModelsAction(AA_Draw)
 , m_WeaponModelsAction(AA_Draw)
-, m_StattrackAction(AA_Draw)
+, m_StatTrakAction(AA_Draw)
 , m_ShellModelsAction(AA_Draw)
 , m_OtherModelsAction(AA_Draw)
 , m_DecalTexturesAction(AA_Draw)
@@ -811,7 +811,7 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * materia
 		if(StringBeginsWith(name, "models/weapons/"))
 		{
 			if(StringBeginsWith(name, "models/weapons/stattrack/"))
-				return GetAction(material, m_StattrackAction, false);
+				return GetAction(material, m_StatTrakAction, false);
 			else
 				return GetAction(material, m_WeaponModelsAction, false);
 		}
@@ -1330,15 +1330,15 @@ void CAfxBaseFxStream::WeaponModelsAction_set(AfxAction value)
 	m_WeaponModelsAction = value;
 }
 
-CAfxBaseFxStream::AfxAction CAfxBaseFxStream::StattrackAction_get(void)
+CAfxBaseFxStream::AfxAction CAfxBaseFxStream::StatTrakAction_get(void)
 {
-	return m_StattrackAction;
+	return m_StatTrakAction;
 }
 
-void CAfxBaseFxStream::StattrackAction_set(AfxAction value)
+void CAfxBaseFxStream::StatTrakAction_set(AfxAction value)
 {
 	InvalidateMap();
-	m_StattrackAction = value;
+	m_StatTrakAction = value;
 }
 
 CAfxBaseFxStream::AfxAction CAfxBaseFxStream::ShellModelsAction_get(void)
@@ -1490,7 +1490,7 @@ void CAfxBaseFxStream::ConvertDepthActions(bool to24)
 	ConvertDepthAction(m_CableAction, to24);
 	ConvertDepthAction(m_PlayerModelsAction, to24);
 	ConvertDepthAction(m_WeaponModelsAction, to24);
-	ConvertDepthAction(m_StattrackAction, to24);
+	ConvertDepthAction(m_StatTrakAction, to24);
 	ConvertDepthAction(m_ShellModelsAction, to24);
 	ConvertDepthAction(m_OtherModelsAction, to24);
 	ConvertDepthAction(m_DecalTexturesAction, to24);
@@ -3330,7 +3330,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				return;
 			}
 			else
-			if(!_stricmp(cmd0, "stattrackAction"))
+			if(!_stricmp(cmd0, "statTrakAction")||!_stricmp(cmd0, "stattrackAction"))
 			{
 				if(2 <= argc)
 				{
@@ -3339,16 +3339,16 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 
 					if(Console_ToAfxAction(cmd1, value))
 					{
-						curBaseFx->StattrackAction_set(value);
+						curBaseFx->StatTrakAction_set(value);
 						return;
 					}
 				}
 
 				Tier0_Msg(
-					"%s stattrackAction " CAFXBASEFXSTREAM_AFXACTIONS " - Set new action.\n"
+					"%s statTrakAction " CAFXBASEFXSTREAM_AFXACTIONS " - Set new action.\n"
 					"Current value: %s.\n"
 					, cmdPrefix
-					, Console_FromAfxAction(curBaseFx->StattrackAction_get())
+					, Console_FromAfxAction(curBaseFx->StatTrakAction_get())
 				);
 				return;
 			}
@@ -3657,7 +3657,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 		Tier0_Msg("%s attachCommands [...] - Commands to be executed when stream is attached. WARNING. Use at your own risk, game may crash!\n", cmdPrefix);
 		Tier0_Msg("%s detachCommands [...] - Commands to be executed when stream is detached. WARNING. Use at your own risk, game may crash!\n", cmdPrefix);
 		Tier0_Msg("%s drawHud [...] - Controlls whether or not HUD is drawn for this stream.\n", cmdPrefix);
-		Tier0_Msg("%s drawViewModel [...] - Controlls whether or not view model (in-eye weapon) is drawn for this stream.\n", cmdPrefix);
+		Tier0_Msg("%s drawViewModel [...] - Controls whether or not view model (in-eye weapon) is drawn for this stream.\n", cmdPrefix);
 		Tier0_Msg("%s captureType [...] - Stream capture type.\n", cmdPrefix);
 	}
 			
@@ -3678,7 +3678,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 		Tier0_Msg("%s cableAction [...]\n", cmdPrefix);
 		Tier0_Msg("%s playerModelsAction [...]\n", cmdPrefix);
 		Tier0_Msg("%s weaponModelsAction [...]\n", cmdPrefix);
-		Tier0_Msg("%s stattrackAction [...]\n", cmdPrefix);
+		Tier0_Msg("%s statTrakAction [...]\n", cmdPrefix);
 		Tier0_Msg("%s shellModelsAction [...]\n", cmdPrefix);
 		Tier0_Msg("%s otherModelsAction [...]\n", cmdPrefix);
 		Tier0_Msg("%s decalTexturesAction [...]\n", cmdPrefix);
@@ -4082,15 +4082,7 @@ bool CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuf
 
 						float depth;
 
-						if(255 == r && 255 == g && 255 == b)
-						{
-							// change rounding direction for max-value.
-							depth = 1;
-						}
-						else
-						{
-							depth = b/256.0f +g/65536.0f +r/16777216.0f;
-						}
+						depth = (1.0f/16777215.0f)*r +(256.0f/16777215.0f)*g +(65536.0f/16777215.0f)*b;
 
 						depth *= depthScale;
 						depth += depthOfs;

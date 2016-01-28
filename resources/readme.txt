@@ -2,7 +2,7 @@ Dear Half-Life Advanced Effects (HLAE) user,
 
 
 You can retrieve the latest HLAE, infos, report bugs and post suggestions here:
-http://advancedfx.org/
+http://www.advancedfx.org/
 
 
 Epilepsy warning:
@@ -179,6 +179,31 @@ qspline CC0
   license.
   http://qspline.sourceforge.net/
   http://sourceforge.net/projects/qspline-cc0
+  
+zLib
+  For zLib.
+  http://zlib.net/
+  
+  (C) 1995-2013 Jean-loup Gailly and Mark Adler
+
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
+
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
+
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
+
+  Jean-loup Gailly        Mark Adler
+  jloup@gzip.org          madler@alumni.caltech.edu
 
 And everyone that feels he/she/it should have been mentioned here.
 

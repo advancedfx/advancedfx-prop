@@ -61,18 +61,12 @@ float4 Afx_FinalOutput(float alpha, float zValue)
 #elif 1 == AFXMODE
 	float dist = (zValue -g_cAfx_ClipPlaneSubtractValue) * g_cAfx_ClipPlaneMulValue;
 	dist = saturate(dist);
-	float3 color;
-	if(1.0 <= dist)
-		color = float3(1.0f, 1.0f, 1.0f);
-	else
-	{
-		color = float3(63536, 256, 1);
-		color *= dist;
-		color = frac(color);
-		color *= 256;
-		color = floor(color);
-		color /= 256;
-	}
+	const float maxint24 = 256*256*256-1;
+	float3 color = dist * float3(maxint24/(256),maxint24/(256*256),maxint24/(256*256*256));
+	color = frac(color);
+	color.b -= color.g/256.0;
+	color.g -= color.r/256.0;
+	color *= 256/255.0;
 	return float4(color, alpha);
 #elif 2 == AFXMODE
 #if !ALPHATESTREF
