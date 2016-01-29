@@ -6,6 +6,19 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.12.0</version>
+<time>2016-01-29T10:05Z</time>
+<changes>
+<change type="updated">
+Updated depth24 action: disables MSAA for primitives drawn with this action, because the MSAA often causes artifacts with the colour coded depth24 information.
+Thus it is not neccessary to disable anti aliasing (AA) in the whole game anymore.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.11.0</version>
 <time>2016-01-28T18:33Z</time>
 <changes>
@@ -22,7 +35,7 @@ Renamed mirv_streams stattrackAction to statTrakAction (old spelling will still 
 </changes>
 <comments>
 Please note: It is highly recommended to turn off in-game Anti Aliasing when using depth24 / OpenEXR support, because several anti aliasing methods used are not neutral to the colour hue.<br />
-Also please note, while the export is named depth24, the actual accuracy is 23 bits maximum. Depending on your garphic card and drivers the accuracy can be moch lower, however with modern cards and drivers you should be close to the 23 bit maximum accuracy.
+Also please note, while the export is named depth24, the actual accuracy is 23 bits maximum. Depending on your garphic card and drivers the accuracy can be much lower, however with modern cards and drivers you should be close to the 23 bit maximum accuracy.
 </comments>
 </release>
 

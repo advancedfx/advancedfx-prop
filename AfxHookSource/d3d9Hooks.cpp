@@ -45,6 +45,9 @@ private:
 	bool m_Override_D3DRS_ZWRITEENABLE;
 	DWORD m_D3DRS_ZWRITEENABLE;
 
+	bool m_Override_D3DRS_MULTISAMPLEANTIALIAS;
+	DWORD m_D3DRS_MULTISAMPLEANTIALIAS;
+
 	float m_OriginalValue_ps_c0[4];
 	bool m_Override_ps_c0;
 	float m_OverrideValue_ps_c0[4];
@@ -80,6 +83,7 @@ public:
 	, m_D3DRS_SRGBWRITEENABLE(FALSE)
 	, m_Override_D3DRS_ZWRITEENABLE(false)
 	, m_D3DRS_ZWRITEENABLE(TRUE)
+	, m_D3DRS_MULTISAMPLEANTIALIAS(TRUE)
 	, m_Override_ps_c0(false)
 	, m_Override_ps_c5(false)
 	, m_Override_ps_c12_y(false)
@@ -247,6 +251,18 @@ public:
 	{
 		g_OldDirect3DDevice9->SetRenderState(D3DRS_ZWRITEENABLE, m_D3DRS_ZWRITEENABLE);
 		m_Override_D3DRS_ZWRITEENABLE = false;
+	}
+
+	void OverrideBegin_D3DRS_MULTISAMPLEANTIALIAS(DWORD value)
+	{
+		m_Override_D3DRS_MULTISAMPLEANTIALIAS = true;
+		g_OldDirect3DDevice9->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, value);
+	}
+
+	void OverrideEnd_D3DRS_MULTISAMPLEANTIALIAS(void)
+	{
+		g_OldDirect3DDevice9->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, m_D3DRS_MULTISAMPLEANTIALIAS);
+		m_Override_D3DRS_MULTISAMPLEANTIALIAS = false;
 	}
 
     /*** IUnknown methods ***/
@@ -464,6 +480,11 @@ public:
 		case D3DRS_ZWRITEENABLE:
 			m_D3DRS_ZWRITEENABLE = Value;
 			if(m_Override_D3DRS_ZWRITEENABLE)
+				return D3D_OK;
+			break;
+		case D3DRS_MULTISAMPLEANTIALIAS:
+			m_D3DRS_MULTISAMPLEANTIALIAS = Value;
+			if(m_Override_D3DRS_MULTISAMPLEANTIALIAS)
 				return D3D_OK;
 			break;
 		}
@@ -1166,7 +1187,6 @@ void AfxD3D9OverrideEnd_D3DRS_SRGBWRITEENABLE(void)
 	g_NewDirect3DDevice9.OverrideEnd_D3DRS_SRGBWRITEENABLE();
 }
 
-
 void AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE(DWORD value)
 {
 	if(!g_OldDirect3DDevice9) return;
@@ -1179,6 +1199,20 @@ void AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE(void)
 	if(!g_OldDirect3DDevice9) return;
 
 	g_NewDirect3DDevice9.OverrideEnd_D3DRS_ZWRITEENABLE();
+}
+
+void AfxD3D9OverrideBegin_D3DRS_MULTISAMPLEANTIALIAS(DWORD value)
+{
+	if(!g_OldDirect3DDevice9) return;
+
+	g_NewDirect3DDevice9.OverrideBegin_D3DRS_MULTISAMPLEANTIALIAS(value);
+}
+
+void AfxD3D9OverrideEnd_D3DRS_MULTISAMPLEANTIALIAS(void)
+{
+	if(!g_OldDirect3DDevice9) return;
+
+	g_NewDirect3DDevice9.OverrideEnd_D3DRS_MULTISAMPLEANTIALIAS();
 }
 
 void AfxD3D9_OverrideBegin_ps_c0(float values[4])

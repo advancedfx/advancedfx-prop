@@ -1637,6 +1637,8 @@ void CAfxBaseFxStream::CActionAfxVertexLitGenericHook::AfxUnbind(IAfxMatRenderCo
 
 	AfxD3D9OverrideEnd_D3DRS_SRGBWRITEENABLE();
 
+	AfxD3D9OverrideEnd_D3DRS_MULTISAMPLEANTIALIAS();
+
 	AfxD3D9_OverrideEnd_SetPixelShader();
 }
 
@@ -1648,9 +1650,11 @@ IMaterial_csgo * CAfxBaseFxStream::CActionAfxVertexLitGenericHook::MaterialHook(
 	float flDepthFactor = scale * m_ParentStream->m_DepthVal;
 	float flDepthFactorMax = scale * m_ParentStream->m_DepthValMax;
 
-	//
-	// Force SRGBWriteEnable to off:
+	// Foce multisampling off for depth24:
+	if(m_Key.AFXMODE == ShaderCombo_afxHook_vertexlit_and_unlit_generic_ps30::AFXMODE_1)
+		AfxD3D9OverrideBegin_D3DRS_MULTISAMPLEANTIALIAS(FALSE);
 
+	// Force SRGBWriteEnable to off:
 	AfxD3D9OverrideBegin_D3DRS_SRGBWRITEENABLE(FALSE);
 
 	// Fill in g_AfxConstants in shader:
@@ -1822,6 +1826,8 @@ void CAfxBaseFxStream::CActionAfxSpritecardHook::AfxUnbind(IAfxMatRenderContext 
 	AfxD3D9OverrideEnd_D3DRS_SRGBWRITEENABLE();
 	AfxD3D9OverrideEnd_D3DRS_DESTBLEND();
 	AfxD3D9OverrideEnd_D3DRS_SRCBLEND();
+	
+	AfxD3D9OverrideEnd_D3DRS_MULTISAMPLEANTIALIAS();
 
 	AfxD3D9_OverrideEnd_SetPixelShader();
 	AfxD3D9_OverrideEnd_SetVertexShader();
@@ -1836,6 +1842,10 @@ IMaterial_csgo * CAfxBaseFxStream::CActionAfxSpritecardHook::MaterialHook(IAfxMa
 	float flDepthFactorMax = scale * m_ParentStream->m_DepthValMax;
 
 	// Force wanted state:
+
+	// Foce multisampling off for depth24:
+	if(m_Key.AFXMODE == ShaderCombo_afxHook_spritecard_ps20b::AFXMODE_1)
+		AfxD3D9OverrideBegin_D3DRS_MULTISAMPLEANTIALIAS(FALSE);
 
 	AfxD3D9OverrideBegin_D3DRS_SRCBLEND(D3DBLEND_SRCALPHA);
 	AfxD3D9OverrideBegin_D3DRS_DESTBLEND(D3DBLEND_INVSRCALPHA);
@@ -2151,6 +2161,8 @@ void CAfxBaseFxStream::CActionAfxSplineRopeHook::AfxUnbind(IAfxMatRenderContext 
 	AfxD3D9_OverrideEnd_ps_c31();
 
 	AfxD3D9OverrideEnd_D3DRS_SRGBWRITEENABLE();
+	
+	AfxD3D9OverrideEnd_D3DRS_MULTISAMPLEANTIALIAS();
 
 	AfxD3D9_OverrideEnd_SetPixelShader();
 }
@@ -2163,9 +2175,11 @@ IMaterial_csgo * CAfxBaseFxStream::CActionAfxSplineRopeHook::MaterialHook(IAfxMa
 	float flDepthFactor = scale * m_ParentStream->m_DepthVal;
 	float flDepthFactorMax = scale * m_ParentStream->m_DepthValMax;
 
-	//
-	// Force SRGBWriteEnable to off:
+	// Foce multisampling off for depth24:
+	if(m_Key.AFXMODE == ShaderCombo_afxHook_splinerope_ps20b::AFXMODE_1)
+		AfxD3D9OverrideBegin_D3DRS_MULTISAMPLEANTIALIAS(FALSE);
 
+	// Force SRGBWriteEnable to off:
 	AfxD3D9OverrideBegin_D3DRS_SRGBWRITEENABLE(FALSE);
 
 	// Fill in g_AfxConstants in shader:
