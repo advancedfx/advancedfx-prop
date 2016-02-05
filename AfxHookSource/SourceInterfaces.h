@@ -2722,10 +2722,44 @@ enum ImageFormat_csgo
 	IMAGE_FORMAT_RG3232F,
 	IMAGE_FORMAT_RGBX8888,
 
-	IMAGE_FORMAT_NULL			// Dummy format which takes no video memory
+	IMAGE_FORMAT_NULL,			// Dummy format which takes no video memory
 
-	// ...
-	// there are more we don't care about.
+	// Compressed normal map formats
+	IMAGE_FORMAT_ATI2N,			// One-surface ATI2N / DXN format
+	IMAGE_FORMAT_ATI1N,			// Two-surface ATI1N format
+
+	IMAGE_FORMAT_RGBA1010102,	// 10 bit-per component render targets
+	IMAGE_FORMAT_BGRA1010102,
+	IMAGE_FORMAT_R16F,			// 16 bit FP format
+
+	// Depth-stencil texture formats
+	IMAGE_FORMAT_D16,
+	IMAGE_FORMAT_D15S1,
+	IMAGE_FORMAT_D32,
+	IMAGE_FORMAT_D24S8,
+	IMAGE_FORMAT_LINEAR_D24S8,
+	IMAGE_FORMAT_D24X8,
+	IMAGE_FORMAT_D24X4S4,
+	IMAGE_FORMAT_D24FS8,
+	IMAGE_FORMAT_D16_SHADOW,	// Specific formats for shadow mapping
+	IMAGE_FORMAT_D24X8_SHADOW,	// Specific formats for shadow mapping
+
+	// supporting these specific formats as non-tiled for procedural cpu access (360-specific)
+	IMAGE_FORMAT_LINEAR_BGRX8888,
+	IMAGE_FORMAT_LINEAR_RGBA8888,
+	IMAGE_FORMAT_LINEAR_ABGR8888,
+	IMAGE_FORMAT_LINEAR_ARGB8888,
+	IMAGE_FORMAT_LINEAR_BGRA8888,
+	IMAGE_FORMAT_LINEAR_RGB888,
+	IMAGE_FORMAT_LINEAR_BGR888,
+	IMAGE_FORMAT_LINEAR_BGRX5551,
+	IMAGE_FORMAT_LINEAR_I8,
+	IMAGE_FORMAT_LINEAR_RGBA16161616,
+
+	IMAGE_FORMAT_LE_BGRX8888,
+	IMAGE_FORMAT_LE_BGRA8888,
+
+	NUM_IMAGE_FORMATS
 };
 
 class IMatRenderContext_csgo abstract : public IRefCounted_csgo

@@ -58,7 +58,9 @@ public:
 	{
 		SCT_Normal,
 		SCT_Depth24,
-		SCT_Depth24ZIP
+		SCT_Depth24ZIP,
+		SCT_DepthF,
+		SCT_DepthFZIP
 	};
 
 	CAfxRenderViewStream();
@@ -1157,8 +1159,7 @@ private:
 	std::wstring m_TakeDir;
 	bool m_FormatBmpAndNotTga;
 	//ITexture_csgo * m_RgbaRenderTarget;
-	//ITexture_csgo * m_RenderTargetDummy;
-	//ITexture_csgo * m_RenderTargetDepth;
+	ITexture_csgo * m_RenderTargetDepthF;
 	//CAfxMaterial * m_ShowzMaterial;
 	DWORD m_Current_View_Render_ThreadId;
 
@@ -1194,7 +1195,7 @@ private:
 
 	bool CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuffer & buffer, IAfxMatRenderContext * cx);
 
-	bool WriteBufferToFile(const CImageBuffer & buffer, const std::wstring & path, bool ifDepth24Zip);
+	bool WriteBufferToFile(const CImageBuffer & buffer, const std::wstring & path, bool ifZip);
 };
 
 extern CAfxStreams g_AfxStreams;

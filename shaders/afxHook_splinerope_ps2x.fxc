@@ -5,8 +5,8 @@
 // AFX: "AFXMODE" "0..4"
 
 // AFXMODE:
-// 0 - 8 bit depth
-// 1 - 24 bit depth
+// 0 - gray depth
+// 1 - rgb-encoded depth, solid and alphaclipped
 // 2 - green matte, solid and alphaclipped
 // 3 - alpha matte, draw blackish
 // 4 - alpha matte, draw whitish
@@ -59,6 +59,9 @@ float4 Afx_FinalOutput(float alpha, float zValue)
 	float dist = (zValue -g_cAfx_ClipPlaneSubtractValue) * g_cAfx_ClipPlaneMulValue;
 	return float4( dist, dist, dist, alpha );
 #elif 1 == AFXMODE
+#if !ALPHATESTREF
+	// apparently this is not a good idea for now: clip( alpha - g_cAfx_AlphaThreshold );
+#endif
 	float dist = (zValue -g_cAfx_ClipPlaneSubtractValue) * g_cAfx_ClipPlaneMulValue;
 	dist = saturate(dist);
 	const float maxint24 = 256*256*256-1;
@@ -67,7 +70,7 @@ float4 Afx_FinalOutput(float alpha, float zValue)
 	color.b -= color.g/256.0;
 	color.g -= color.r/256.0;
 	color *= 256/255.0;
-	return float4(color, alpha);
+	return float4(color, 1.0);
 #elif 2 == AFXMODE
 #if !ALPHATESTREF
 	// apparently this is not a good idea for now: clip( alpha - g_cAfx_AlphaThreshold );

@@ -6,12 +6,22 @@
 
 <release>
 <name>AfxHookSource</name>
-<version>0.2.12.0</version>
-<time>2016-01-29T10:05Z</time>
+<version>0.2.14.0</version>
+<time>2016-02-05T17:41Z</time>
 <changes>
+<change type="added">
+Added depthF and depthFZIP capture types to mirv_streams: Those are the preferred capture types for OpenEXR / high precision depth captures now.
+However they might require a quite recent graphic card in order to work.<br />
+Example:<br />
+mirv_streams add depth myDepthF<br />
+mirv_streams edit myDepth depthValMax 8192<br />
+mirv_streams edit myDetph captureType depthF
+</change>
+<change type="fixed">
+Fixed depth24 action: No alpha blending anymore, that would lead to inaccurate results, (binary) alpha testing instead.
+</change>
 <change type="updated">
-Updated depth24 action: disables MSAA for primitives drawn with this action, because the MSAA often causes artifacts with the colour coded depth24 information.
-Thus it is not neccessary to disable anti aliasing (AA) in the whole game anymore.
+Updated mirv_streams: Reduced potential for epileptic seizures upon recording. (Only main game view should be shown now and it might jump between two succeeding frames a bit.)
 </change>
 </changes>
 </release>

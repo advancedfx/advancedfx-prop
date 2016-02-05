@@ -28,6 +28,9 @@ extern bool g_bD3D9DebugPrint;
 bool g_bD3D9DumpVertexShader = false;
 bool g_bD3D9DumpPixelShader = false;
 
+UINT g_Adapter = D3DADAPTER_DEFAULT;
+D3DFORMAT g_AdapterFormat = D3DFMT_R8G8B8;
+
 ULONG g_NewDirect3DDevice9_RefCount = 1;
 IDirect3DDevice9 * g_OldDirect3DDevice9 = 0;
 struct NewDirect3DDevice9
@@ -47,6 +50,9 @@ private:
 
 	bool m_Override_D3DRS_MULTISAMPLEANTIALIAS;
 	DWORD m_D3DRS_MULTISAMPLEANTIALIAS;
+
+	bool m_Override_D3DRS_ANTIALIASEDLINEENABLE;
+	DWORD m_D3DRS_ANTIALIASEDLINEENABLE;
 
 	float m_OriginalValue_ps_c0[4];
 	bool m_Override_ps_c0;
@@ -265,6 +271,18 @@ public:
 		m_Override_D3DRS_MULTISAMPLEANTIALIAS = false;
 	}
 
+	void OverrideBegin_D3DRS_ANTIALIASEDLINEENABLE(DWORD value)
+	{
+		m_Override_D3DRS_ANTIALIASEDLINEENABLE = true;
+		g_OldDirect3DDevice9->SetRenderState(D3DRS_ANTIALIASEDLINEENABLE, value);
+	}
+
+	void OverrideEnd_D3DRS_ANTIALIASEDLINEENABLE(void)
+	{
+		g_OldDirect3DDevice9->SetRenderState(D3DRS_ANTIALIASEDLINEENABLE, m_D3DRS_ANTIALIASEDLINEENABLE);
+		m_Override_D3DRS_ANTIALIASEDLINEENABLE = false;
+	}
+
     /*** IUnknown methods ***/
     IFACE_PASSTHROUGH(IDirect3DDevice9, QueryInterface, g_OldDirect3DDevice9);
 
@@ -403,7 +421,7 @@ public:
 	{
 		if(g_bD3D9DebugPrint)
 		{
-			Tier0_Msg("SetRenderState:");
+			Tier0_Msg("SetRenderState: ");
 
 			switch(State)
 			{
@@ -452,8 +470,23 @@ public:
 					Value & D3DCOLORWRITEENABLE_ALPHA ? "ON" : "off"
 					);
 				break;
+			case D3DRS_MULTISAMPLEANTIALIAS:
+				Tier0_Msg("D3DRS_MULTISAMPLEANTIALIAS: %s",Value & TRUE  ? "TRUE" : "false");
+				break;
+			case D3DRS_ANTIALIASEDLINEENABLE:
+				Tier0_Msg("D3DRS_ANTIALIASEDLINEENABLE: %s",Value & TRUE  ? "TRUE" : "false");
+				break;
+			case D3DRS_POINTSIZE:
+				Tier0_Msg("D3DRS_POINTSIZE: %f",*(float *)&Value);
+				break;
+			case D3DRS_POINTSIZE_MIN:
+				Tier0_Msg("D3DRS_POINTSIZE_MIN: %f",*(float *)&Value);
+				break;
+			case D3DRS_POINTSIZE_MAX:
+				Tier0_Msg("D3DRS_POINTSIZE_MAX: %f",*(float *)&Value);
+				break;
 			default:
-				Tier0_Msg("other");
+				Tier0_Msg("other: %i: %i",State,Value);
 			}
 
 			Tier0_Msg("\n");
@@ -485,6 +518,11 @@ public:
 		case D3DRS_MULTISAMPLEANTIALIAS:
 			m_D3DRS_MULTISAMPLEANTIALIAS = Value;
 			if(m_Override_D3DRS_MULTISAMPLEANTIALIAS)
+				return D3D_OK;
+			break;
+		case D3DRS_ANTIALIASEDLINEENABLE:
+			m_D3DRS_ANTIALIASEDLINEENABLE = Value;
+			if(m_Override_D3DRS_ANTIALIASEDLINEENABLE)
 				return D3D_OK;
 			break;
 		}
@@ -1035,6 +1073,14 @@ struct NewDirect3D9
     STDMETHOD(CreateDevice)(THIS_ UINT Adapter,D3DDEVTYPE DeviceType,HWND hFocusWindow,DWORD BehaviorFlags,D3DPRESENT_PARAMETERS* pPresentationParameters,IDirect3DDevice9** ppReturnedDeviceInterface)
 	{
 		HRESULT hRet = g_OldDirect3D9->CreateDevice(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
+
+		g_Adapter = Adapter;
+
+		if(pPresentationParameters)
+		{
+			g_AdapterFormat = pPresentationParameters->BackBufferFormat;
+		}
+
 		if(ppReturnedDeviceInterface)
 		{
 			g_OldDirect3DDevice9 = *ppReturnedDeviceInterface;
@@ -1044,6 +1090,7 @@ struct NewDirect3D9
 
 			*ppReturnedDeviceInterface = reinterpret_cast<IDirect3DDevice9 *>(&g_NewDirect3DDevice9);
 		}
+
 		return hRet;
 	}
 
@@ -1075,6 +1122,9 @@ struct NewDirect3D9Ex
     STDMETHOD(CreateDevice)(THIS_ UINT Adapter,D3DDEVTYPE DeviceType,HWND hFocusWindow,DWORD BehaviorFlags,D3DPRESENT_PARAMETERS* pPresentationParameters,IDirect3DDevice9** ppReturnedDeviceInterface)
 	{
 		HRESULT hRet = g_OldDirect3D9Ex->CreateDevice(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
+
+		g_Adapter = Adapter;
+
 		if(ppReturnedDeviceInterface)
 		{
 			g_OldDirect3DDevice9 = *ppReturnedDeviceInterface;
@@ -1084,6 +1134,7 @@ struct NewDirect3D9Ex
 
 			*ppReturnedDeviceInterface = reinterpret_cast<IDirect3DDevice9 *>(&g_NewDirect3DDevice9);
 		}
+		
 		return hRet;
 	}
 
@@ -1095,6 +1146,14 @@ struct NewDirect3D9Ex
 	STDMETHOD(CreateDeviceEx)(THIS_ UINT Adapter,D3DDEVTYPE DeviceType,HWND hFocusWindow,DWORD BehaviorFlags,D3DPRESENT_PARAMETERS* pPresentationParameters,D3DDISPLAYMODEEX* pFullscreenDisplayMode,IDirect3DDevice9Ex** ppReturnedDeviceInterface)
 	{
 		HRESULT hRet = g_OldDirect3D9Ex->CreateDeviceEx(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, pFullscreenDisplayMode, ppReturnedDeviceInterface);
+
+		g_Adapter = Adapter;
+
+		if(pPresentationParameters)
+		{
+			g_AdapterFormat = pPresentationParameters->BackBufferFormat;
+		}
+
 		if(ppReturnedDeviceInterface)
 		{
 			g_OldDirect3DDevice9Ex = *ppReturnedDeviceInterface;
@@ -1104,6 +1163,7 @@ struct NewDirect3D9Ex
 
 			*ppReturnedDeviceInterface = reinterpret_cast<IDirect3DDevice9Ex *>(&g_NewDirect3DDevice9Ex);
 		}
+
 		return hRet;
 	}
     
@@ -1136,6 +1196,24 @@ HRESULT WINAPI new_Direct3DCreate9Ex(UINT SDKVersion, IDirect3D9Ex** ppD3DDevice
 	}
 
 	return old_Direct3DCreate9Ex(SDKVersion, ppD3DDevice);
+}
+
+bool AfxD3D9_Check_Supports_R32F_With_Blending(void)
+{
+	if(g_OldDirect3D9 && g_OldDirect3DDevice9)
+	{
+		if(D3D_OK == g_OldDirect3D9->CheckDeviceFormat(
+			g_Adapter,
+			D3DDEVTYPE_HAL,
+			D3DFMT_R8G8B8,
+			D3DUSAGE_RENDERTARGET | D3DUSAGE_QUERY_POSTPIXELSHADER_BLENDING,
+			D3DRTYPE_SURFACE,
+			D3DFMT_R32F
+		))
+			return true;
+	}
+
+	return false;
 }
 
 void AfxD3D9SetModulationColorFix(float const color[4])
@@ -1213,6 +1291,20 @@ void AfxD3D9OverrideEnd_D3DRS_MULTISAMPLEANTIALIAS(void)
 	if(!g_OldDirect3DDevice9) return;
 
 	g_NewDirect3DDevice9.OverrideEnd_D3DRS_MULTISAMPLEANTIALIAS();
+}
+
+void AfxD3D9OverrideBegin_D3DRS_ANTIALIASEDLINEENABLE(DWORD value)
+{
+	if(!g_OldDirect3DDevice9) return;
+
+	g_NewDirect3DDevice9.OverrideBegin_D3DRS_ANTIALIASEDLINEENABLE(value);
+}
+
+void AfxD3D9OverrideEnd_D3DRS_ANTIALIASEDLINEENABLE(void)
+{
+	if(!g_OldDirect3DDevice9) return;
+
+	g_NewDirect3DDevice9.OverrideEnd_D3DRS_ANTIALIASEDLINEENABLE();
 }
 
 void AfxD3D9_OverrideBegin_ps_c0(float values[4])
