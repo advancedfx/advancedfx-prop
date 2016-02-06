@@ -3,6 +3,34 @@
 
 <changelog>
 
+<release>
+<name>AfxHookSource</name>
+<version>0.2.15.0</version>
+<time>2016-02-06T03:50Z</time>
+<changes>
+<change type="added">
+Added writeZAction in mirv_streams, this allows to properly remove level walls from drawing and blocking the view.
+Basically you add a alphaMatte and an alphaEntity stream and set for each stream
+the writeZAction to noDraw (this removes the clip planes from i.e. the level walls) and i.e. the
+worldTexturesAction, staticPropTexturesAction, otherModelsAction, cableAction, clientEffectTexturesAction,
+decalTexturesAction, effectsAction, otherParticleAction, errorMaterialAction, weaponModelsAction
+to noDraw and set the r_novis console variable to 1 (to disable the visbility checks). Also on de_dust2 you might
+need to use a sepcial depth stream in order to mask what I call the castle in the sky, which is basically a far
+away version of de_dust2 (doesn't happen on other maps usually, you can use the fact that's it further away than 16384 inches)).
+We'll try to make a tutorial and link it here: LINK TBA
+</change>
+<change type="added">
+Exposed errorMaterialAction in mirv_streams.
+</change>
+<change type="updated">
+Updated mirv_streams noDraw action to be more aggressive, it should work on all materials now.
+</change>
+<change type="removed">
+Removed mirv_streams invisible action. It's still accepted as valid input, but will be mapped to noDraw instantly.
+</change>
+</changes>
+</release>
+
 
 <release>
 <name>AfxHookSource</name>
@@ -14,8 +42,8 @@ Added depthF and depthFZIP capture types to mirv_streams: Those are the preferre
 However they might require a quite recent graphic card in order to work.<br />
 Example:<br />
 mirv_streams add depth myDepthF<br />
-mirv_streams edit myDepth depthValMax 8192<br />
-mirv_streams edit myDetph captureType depthF
+mirv_streams edit myDepthF depthValMax 8192<br />
+mirv_streams edit myDepthF captureType depthF
 </change>
 <change type="fixed">
 Fixed depth24 action: No alpha blending anymore, that would lead to inaccurate results, (binary) alpha testing instead.

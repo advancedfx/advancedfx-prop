@@ -48,11 +48,8 @@ private:
 	bool m_Override_D3DRS_ZWRITEENABLE;
 	DWORD m_D3DRS_ZWRITEENABLE;
 
-	bool m_Override_D3DRS_MULTISAMPLEANTIALIAS;
-	DWORD m_D3DRS_MULTISAMPLEANTIALIAS;
-
-	bool m_Override_D3DRS_ANTIALIASEDLINEENABLE;
-	DWORD m_D3DRS_ANTIALIASEDLINEENABLE;
+	bool m_Override_D3DRS_ALPHABLENDENABLE;
+	DWORD m_D3DRS_ALPHABLENDENABLE;
 
 	float m_OriginalValue_ps_c0[4];
 	bool m_Override_ps_c0;
@@ -89,7 +86,7 @@ public:
 	, m_D3DRS_SRGBWRITEENABLE(FALSE)
 	, m_Override_D3DRS_ZWRITEENABLE(false)
 	, m_D3DRS_ZWRITEENABLE(TRUE)
-	, m_D3DRS_MULTISAMPLEANTIALIAS(TRUE)
+	, m_D3DRS_ALPHABLENDENABLE(FALSE)
 	, m_Override_ps_c0(false)
 	, m_Override_ps_c5(false)
 	, m_Override_ps_c12_y(false)
@@ -259,28 +256,16 @@ public:
 		m_Override_D3DRS_ZWRITEENABLE = false;
 	}
 
-	void OverrideBegin_D3DRS_MULTISAMPLEANTIALIAS(DWORD value)
+	void OverrideBegin_D3DRS_ALPHABLENDENABLE(DWORD value)
 	{
-		m_Override_D3DRS_MULTISAMPLEANTIALIAS = true;
-		g_OldDirect3DDevice9->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, value);
+		m_Override_D3DRS_ALPHABLENDENABLE = true;
+		g_OldDirect3DDevice9->SetRenderState(D3DRS_ALPHABLENDENABLE, value);
 	}
 
-	void OverrideEnd_D3DRS_MULTISAMPLEANTIALIAS(void)
+	void OverrideEnd_D3DRS_ALPHABLENDENABLE(void)
 	{
-		g_OldDirect3DDevice9->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, m_D3DRS_MULTISAMPLEANTIALIAS);
-		m_Override_D3DRS_MULTISAMPLEANTIALIAS = false;
-	}
-
-	void OverrideBegin_D3DRS_ANTIALIASEDLINEENABLE(DWORD value)
-	{
-		m_Override_D3DRS_ANTIALIASEDLINEENABLE = true;
-		g_OldDirect3DDevice9->SetRenderState(D3DRS_ANTIALIASEDLINEENABLE, value);
-	}
-
-	void OverrideEnd_D3DRS_ANTIALIASEDLINEENABLE(void)
-	{
-		g_OldDirect3DDevice9->SetRenderState(D3DRS_ANTIALIASEDLINEENABLE, m_D3DRS_ANTIALIASEDLINEENABLE);
-		m_Override_D3DRS_ANTIALIASEDLINEENABLE = false;
+		g_OldDirect3DDevice9->SetRenderState(D3DRS_ALPHABLENDENABLE, m_D3DRS_ALPHABLENDENABLE);
+		m_Override_D3DRS_ALPHABLENDENABLE = false;
 	}
 
     /*** IUnknown methods ***/
@@ -515,14 +500,9 @@ public:
 			if(m_Override_D3DRS_ZWRITEENABLE)
 				return D3D_OK;
 			break;
-		case D3DRS_MULTISAMPLEANTIALIAS:
-			m_D3DRS_MULTISAMPLEANTIALIAS = Value;
-			if(m_Override_D3DRS_MULTISAMPLEANTIALIAS)
-				return D3D_OK;
-			break;
-		case D3DRS_ANTIALIASEDLINEENABLE:
-			m_D3DRS_ANTIALIASEDLINEENABLE = Value;
-			if(m_Override_D3DRS_ANTIALIASEDLINEENABLE)
+		case D3DRS_ALPHABLENDENABLE:
+			m_D3DRS_ALPHABLENDENABLE = Value;
+			if(m_Override_D3DRS_ALPHABLENDENABLE)
 				return D3D_OK;
 			break;
 		}
@@ -536,6 +516,20 @@ public:
 		{
 			switch(State)
 			{
+			case D3DRS_SRCBLEND:
+				if(m_Override_D3DRS_SRCBLEND)
+				{
+					*pValue = m_D3DRS_SRCBLEND;
+					return D3D_OK;
+				}
+				break;
+			case D3DRS_DESTBLEND:
+				if(m_Override_D3DRS_DESTBLEND)
+				{
+					*pValue = m_D3DRS_DESTBLEND;
+					return D3D_OK;
+				}
+				break;
 			case D3DRS_SRGBWRITEENABLE:
 				if(m_Override_D3DRS_SRGBWRITEENABLE)
 				{
@@ -547,6 +541,13 @@ public:
 				if(m_Override_D3DRS_ZWRITEENABLE)
 				{
 					*pValue = m_D3DRS_ZWRITEENABLE;
+					return D3D_OK;
+				}
+				break;
+			case D3DRS_ALPHABLENDENABLE:
+				if(m_Override_D3DRS_ALPHABLENDENABLE)
+				{
+					*pValue = m_D3DRS_ALPHABLENDENABLE;
 					return D3D_OK;
 				}
 				break;
@@ -1279,32 +1280,18 @@ void AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE(void)
 	g_NewDirect3DDevice9.OverrideEnd_D3DRS_ZWRITEENABLE();
 }
 
-void AfxD3D9OverrideBegin_D3DRS_MULTISAMPLEANTIALIAS(DWORD value)
+void AfxD3D9OverrideBegin_D3DRS_ALPHABLENDENABLE(DWORD value)
 {
 	if(!g_OldDirect3DDevice9) return;
 
-	g_NewDirect3DDevice9.OverrideBegin_D3DRS_MULTISAMPLEANTIALIAS(value);
+	g_NewDirect3DDevice9.OverrideBegin_D3DRS_ALPHABLENDENABLE(value);
 }
 
-void AfxD3D9OverrideEnd_D3DRS_MULTISAMPLEANTIALIAS(void)
+void AfxD3D9OverrideEnd_D3DRS_ALPHABLENDENABLE(void)
 {
 	if(!g_OldDirect3DDevice9) return;
 
-	g_NewDirect3DDevice9.OverrideEnd_D3DRS_MULTISAMPLEANTIALIAS();
-}
-
-void AfxD3D9OverrideBegin_D3DRS_ANTIALIASEDLINEENABLE(DWORD value)
-{
-	if(!g_OldDirect3DDevice9) return;
-
-	g_NewDirect3DDevice9.OverrideBegin_D3DRS_ANTIALIASEDLINEENABLE(value);
-}
-
-void AfxD3D9OverrideEnd_D3DRS_ANTIALIASEDLINEENABLE(void)
-{
-	if(!g_OldDirect3DDevice9) return;
-
-	g_NewDirect3DDevice9.OverrideEnd_D3DRS_ANTIALIASEDLINEENABLE();
+	g_NewDirect3DDevice9.OverrideEnd_D3DRS_ALPHABLENDENABLE();
 }
 
 void AfxD3D9_OverrideBegin_ps_c0(float values[4])

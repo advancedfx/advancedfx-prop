@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-01-20 dominik.matrixstorm.com
+// 2016-02-06 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -584,6 +584,7 @@ CAfxBaseFxStream::CAfxBaseFxStream()
 , m_OtherParticleAction(AA_Draw)
 , m_StickerAction(AA_Draw)
 , m_ErrorMaterialAction(AA_Draw)
+, m_WriteZAction(AA_Draw)
 , m_TestAction(false)
 , m_DepthVal(1)
 , m_DepthValMax(1024)
@@ -592,7 +593,6 @@ CAfxBaseFxStream::CAfxBaseFxStream()
 , m_Depth24Action(0)
 , m_MatteAction(0)
 , m_PassthroughAction(0)
-, m_InvisibleAction(0)
 , m_NoDrawAction(0)
 , m_BlackAction(0)
 , m_WhiteAction(0)
@@ -617,7 +617,6 @@ CAfxBaseFxStream::~CAfxBaseFxStream()
 	if(m_DepthAction) m_DepthAction->Release();
 	if(m_DebugDumpAction) m_DebugDumpAction->Release();
 	if(m_NoDrawAction) m_NoDrawAction->Release();
-	if(m_InvisibleAction) m_InvisibleAction->Release();
 	if(m_PassthroughAction) m_PassthroughAction->Release();
 }
 
@@ -640,9 +639,6 @@ void CAfxBaseFxStream::StreamAttach(IAfxStreams4Stream * streams)
 		m_PassthroughAction = new CAction(this);
 		m_PassthroughAction->AddRef();
 		
-		m_InvisibleAction = new CActionInvisible(this, streams->GetFreeMaster(), streams->GetMaterialSystem());
-		m_InvisibleAction->AddRef();
-
 		m_NoDrawAction = new CActionNoDraw(this);
 		m_NoDrawAction->AddRef();
 
@@ -829,6 +825,9 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * materia
 		else
 		if(StringBeginsWith(name, "cs_custom_material_"))
 			return GetAction(material, m_WeaponModelsAction, false);
+		else
+		if(!strcmp(name, "engine/writez"))
+			return GetAction(material, m_WriteZAction, true);
 		else
 		if(StringBeginsWith(name, "effects/"))
 			return GetAction(material, m_EffectsAction, true);
@@ -1122,27 +1121,11 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * materia
 	case AA_NoDraw:
 		if(m_DebugPrint) Tier0_Msg("noDraw");
 		return m_NoDrawAction;
-	case AA_Invisible:
-		if(safeMode)
-		{
-			if(m_DebugPrint) Tier0_Msg("invisible -> noDraw");
-			return m_NoDrawAction;
-		}
-		else
-		{
-			if(m_DebugPrint) Tier0_Msg("invisible");
-			return m_InvisibleAction;
-		}
 	case AA_DrawDepth:
-		if(safeMode)
+		if(safeMode || isAdditive)
 		{
 			if(m_DebugPrint) Tier0_Msg("drawDepth -> noDraw");
 			return m_NoDrawAction;
-		}
-		else if(isAdditive)
-		{
-			if(m_DebugPrint) Tier0_Msg("drawDepth -> invisbile");
-			return m_InvisibleAction;
 		}
 		else
 		{
@@ -1150,15 +1133,10 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * materia
 			return m_DepthAction;
 		}
 	case AA_DrawDepth24:
-		if(safeMode)
+		if(safeMode || isAdditive)
 		{
 			if(m_DebugPrint) Tier0_Msg("drawDepth24 -> noDraw");
 			return m_NoDrawAction;
-		}
-		else if(isAdditive)
-		{
-			if(m_DebugPrint) Tier0_Msg("drawDepth24 -> invisbile");
-			return m_InvisibleAction;
 		}
 		else
 		{
@@ -1166,15 +1144,10 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * materia
 			return m_Depth24Action;
 		}
 	case AA_GreenScreen:
-		if(safeMode)
+		if(safeMode || isAdditive)
 		{
 			if(m_DebugPrint) Tier0_Msg("mask -> noDraw");
 			return m_NoDrawAction;
-		}
-		else if(isAdditive)
-		{
-			if(m_DebugPrint) Tier0_Msg("drawDepth -> invisbile");
-			return m_InvisibleAction;
 		}
 		else
 		{
@@ -1182,15 +1155,10 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * materia
 			return m_MatteAction;
 		}
 	case AA_Black:
-		if(safeMode)
+		if(safeMode || isAdditive)
 		{
 			if(m_DebugPrint) Tier0_Msg("black -> noDraw");
 			return m_NoDrawAction;
-		}
-		else if(isAdditive)
-		{
-			if(m_DebugPrint) Tier0_Msg("drawDepth -> invisbile");
-			return m_InvisibleAction;
 		}
 		else
 		{
@@ -1198,15 +1166,10 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * materia
 			return m_BlackAction;
 		}
 	case AA_White:
-		if(safeMode)
+		if(safeMode || isAdditive)
 		{
 			if(m_DebugPrint) Tier0_Msg("white -> noDraw");
 			return m_NoDrawAction;
-		}
-		else if(isAdditive)
-		{
-			if(m_DebugPrint) Tier0_Msg("drawDepth -> invisbile");
-			return m_InvisibleAction;
 		}
 		else
 		{
@@ -1419,6 +1382,28 @@ void CAfxBaseFxStream::StickerAction_set(AfxAction value)
 	m_StickerAction = value;
 }
 
+CAfxBaseFxStream::AfxAction CAfxBaseFxStream::ErrorMaterialAction_get(void)
+{
+	return m_ErrorMaterialAction;
+}
+
+void CAfxBaseFxStream::ErrorMaterialAction_set(AfxAction value)
+{
+	InvalidateMap();
+	m_ErrorMaterialAction = value; 
+}
+
+CAfxBaseFxStream::AfxAction CAfxBaseFxStream::WriteZAction_get(void)
+{
+	return m_WriteZAction;
+}
+
+void CAfxBaseFxStream::WriteZAction_set(AfxAction value)
+{
+	InvalidateMap();
+	m_WriteZAction = value; 
+}
+
 bool CAfxBaseFxStream::TestAction_get(void)
 {
 	return m_TestAction;
@@ -1499,6 +1484,7 @@ void CAfxBaseFxStream::ConvertDepthActions(bool to24)
 	ConvertDepthAction(m_OtherParticleAction, to24);
 	ConvertDepthAction(m_StickerAction, to24);
 	ConvertDepthAction(m_ErrorMaterialAction, to24);
+	ConvertDepthAction(m_WriteZAction, to24);
 }
 
 CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetSplineRopeHookAction(CActionAfxSplineRopeHookKey & key)
@@ -1617,6 +1603,24 @@ IMaterial_csgo * CAfxBaseFxStream::CActionInvisible::MaterialHook(IAfxMatRenderC
 	//AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE(FALSE);
 
 	return m_InvisibleMaterial.GetMaterial();
+}
+
+void CAfxBaseFxStream::CActionNoDraw::AfxUnbind(IAfxMatRenderContext * ctx)
+{
+	AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE();
+	AfxD3D9OverrideEnd_D3DRS_DESTBLEND();
+	AfxD3D9OverrideEnd_D3DRS_SRCBLEND();
+	AfxD3D9OverrideEnd_D3DRS_ALPHABLENDENABLE();
+}
+
+IMaterial_csgo * CAfxBaseFxStream::CActionNoDraw::MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material)
+{
+	AfxD3D9OverrideBegin_D3DRS_ALPHABLENDENABLE(TRUE);
+	AfxD3D9OverrideBegin_D3DRS_SRCBLEND(D3DBLEND_ZERO);
+	AfxD3D9OverrideBegin_D3DRS_DESTBLEND(D3DBLEND_ONE);
+	AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE(FALSE);
+
+	return material;
 }
 
 // CAfxBaseFxStream::CActionAfxVertexLitGenericHook ////////////////////////////
@@ -3529,6 +3533,52 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				return;
 			}
 			else
+			if(!_stricmp(cmd0, "errorMaterialAction"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+					CAfxBaseFxStream::AfxAction value;
+
+					if(Console_ToAfxAction(cmd1, value))
+					{
+						curBaseFx->ErrorMaterialAction_set(value);
+						return;
+					}
+				}
+
+				Tier0_Msg(
+					"%s errorMaterialAction " CAFXBASEFXSTREAM_AFXACTIONS " - Set new action.\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, Console_FromAfxAction(curBaseFx->ErrorMaterialAction_get())
+				);
+				return;
+			}
+			else
+			if(!_stricmp(cmd0, "writeZAction"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+					CAfxBaseFxStream::AfxAction value;
+
+					if(Console_ToAfxAction(cmd1, value))
+					{
+						curBaseFx->WriteZAction_set(value);
+						return;
+					}
+				}
+
+				Tier0_Msg(
+					"%s writeZAction " CAFXBASEFXSTREAM_AFXACTIONS " - Set new action.\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, Console_FromAfxAction(curBaseFx->WriteZAction_get())
+				);
+				return;
+			}
+			else
 			if(!_stricmp(cmd0, "depthVal"))
 			{
 				if(2 <= argc)
@@ -3701,6 +3751,8 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 		Tier0_Msg("%s shellParticleAction [...]\n", cmdPrefix);
 		Tier0_Msg("%s otherParticleAction [...]\n", cmdPrefix);
 		Tier0_Msg("%s stickerAction [...]\n", cmdPrefix);
+		Tier0_Msg("%s errorMaterialAction [...]\n", cmdPrefix);
+		Tier0_Msg("%s writeZAction [...]\n", cmdPrefix);
 		Tier0_Msg("%s depthVal [...]\n", cmdPrefix);
 		Tier0_Msg("%s depthValMax [...]\n", cmdPrefix);
 		Tier0_Msg("%s debugPrint [...]\n", cmdPrefix);
@@ -4303,7 +4355,7 @@ bool CAfxStreams::Console_ToAfxAction(char const * value, CAfxBaseFxStream::AfxA
 	else
 	if(!_stricmp(value, "invisible"))
 	{
-		action = CAfxBaseFxStream::AA_Invisible;
+		action = CAfxBaseFxStream::AA_NoDraw;
 		return true;
 	}
 	else
@@ -4354,8 +4406,6 @@ char const * CAfxStreams::Console_FromAfxAction(CAfxBaseFxStream::AfxAction acti
 		return "draw";
 	case CAfxBaseFxStream::AA_NoDraw:
 		return "noDraw";
-	case CAfxBaseFxStream::AA_Invisible:
-		return "invisible";
 	case CAfxBaseFxStream::AA_DrawDepth:
 		return "drawDepth";
 	case CAfxBaseFxStream::AA_DrawDepth24:

@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-01-20 dominik.matrixstorm.com
+// 2016-02-06 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -252,7 +252,6 @@ public:
 		AA_NotSet,
 		AA_Draw,
 		AA_NoDraw,
-		AA_Invisible,
 		AA_DrawDepth,
 		AA_DrawDepth24,
 		AA_GreenScreen,
@@ -332,6 +331,9 @@ public:
 	AfxAction ErrorMaterialAction_get(void);
 	void ErrorMaterialAction_set(AfxAction value);
 
+	AfxAction WriteZAction_get(void);
+	void WriteZAction_set(AfxAction value);
+
 	bool TestAction_get(void);
 	void TestAction_set(bool value);
 
@@ -370,6 +372,7 @@ protected:
 	AfxAction m_OtherParticleAction;
 	AfxAction m_StickerAction;
 	AfxAction m_ErrorMaterialAction;
+	AfxAction m_WriteZAction;
 	bool m_TestAction;
 	float m_DepthVal;
 	float m_DepthValMax;
@@ -571,6 +574,10 @@ private:
 		{
 		}
 
+		virtual void AfxUnbind(IAfxMatRenderContext * ctx);
+
+		virtual IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material);
+
 		virtual void Draw(IAfxMesh * am, int firstIndex = -1, int numIndices = 0)
 		{
 			am->GetParent()->MarkAsDrawn();
@@ -705,7 +712,6 @@ private:
 	CAction * m_Depth24Action;
 	CAction * m_MatteAction;
 	CAction * m_PassthroughAction;
-	CAction * m_InvisibleAction;
 	CAction * m_NoDrawAction;
 	CAction * m_BlackAction;
 	CAction * m_WhiteAction;
@@ -754,6 +760,7 @@ public:
 		m_OtherParticleAction =  AA_DrawDepth;
 		m_StickerAction =  AA_DrawDepth;
 		m_ErrorMaterialAction = AA_DrawDepth;
+		m_WriteZAction = AA_Draw;
 	}
 
 	virtual ~CAfxDepthStream() {}
@@ -772,17 +779,18 @@ public:
 		m_SkyBoxTexturesAction = AA_Draw;
 		m_StaticPropTexturesAction = AA_Draw;
 		m_CableAction =  AA_Draw;
-		m_PlayerModelsAction = AA_Invisible;
-		m_WeaponModelsAction = AA_Invisible;
-		m_StatTrakAction = AA_Invisible;
-		m_ShellModelsAction = AA_Invisible;
+		m_PlayerModelsAction = AA_NoDraw;
+		m_WeaponModelsAction = AA_NoDraw;
+		m_StatTrakAction = AA_NoDraw;
+		m_ShellModelsAction = AA_NoDraw;
 		m_OtherModelsAction = AA_Draw;
 		m_DecalTexturesAction = AA_Draw;
 		m_EffectsAction = AA_Draw;
-		m_ShellParticleAction = AA_Invisible;
+		m_ShellParticleAction = AA_NoDraw;
 		m_OtherParticleAction = AA_Draw;
-		m_StickerAction = AA_Invisible;
+		m_StickerAction = AA_NoDraw;
 		m_ErrorMaterialAction = AA_Draw;
+		m_WriteZAction = AA_Draw;
 	}
 
 	virtual ~CAfxMatteWorldStream() {}
@@ -801,17 +809,18 @@ public:
 		m_SkyBoxTexturesAction = AA_DrawDepth;
 		m_StaticPropTexturesAction = AA_DrawDepth;
 		m_CableAction = AA_DrawDepth;
-		m_PlayerModelsAction = AA_Invisible;
-		m_WeaponModelsAction = AA_Invisible;
-		m_StatTrakAction = AA_Invisible;
-		m_ShellModelsAction = AA_Invisible;
+		m_PlayerModelsAction = AA_NoDraw;
+		m_WeaponModelsAction = AA_NoDraw;
+		m_StatTrakAction = AA_NoDraw;
+		m_ShellModelsAction = AA_NoDraw;
 		m_OtherModelsAction = AA_DrawDepth;
 		m_DecalTexturesAction = AA_DrawDepth;
 		m_EffectsAction = AA_DrawDepth;
-		m_ShellParticleAction = AA_Invisible;
+		m_ShellParticleAction = AA_NoDraw;
 		m_OtherParticleAction = AA_DrawDepth;
-		m_StickerAction = AA_Invisible;
+		m_StickerAction = AA_NoDraw;
 		m_ErrorMaterialAction = AA_DrawDepth;
+		m_WriteZAction = AA_Draw;
 	}
 
 	virtual ~CAfxDepthWorldStream() {}
@@ -841,6 +850,7 @@ public:
 		m_OtherParticleAction = AA_GreenScreen;
 		m_StickerAction = AA_Draw;
 		m_ErrorMaterialAction = AA_GreenScreen;
+		m_WriteZAction = AA_Draw;
 	}
 
 	virtual ~CAfxMatteEntityStream() {}
@@ -870,6 +880,7 @@ public:
 		m_OtherParticleAction =  AA_DrawDepth;
 		m_StickerAction =  AA_DrawDepth;
 		m_ErrorMaterialAction = AA_DrawDepth;
+		m_WriteZAction = AA_Draw;
 	}
 
 	virtual ~CAfxDepthEntityStream() {}
@@ -899,6 +910,7 @@ public:
 		m_OtherParticleAction = AA_Black;
 		m_StickerAction = AA_White;
 		m_ErrorMaterialAction = AA_Black;
+		m_WriteZAction = AA_Draw;
 	}
 
 	virtual ~CAfxAlphaMatteStream() {}
@@ -928,6 +940,7 @@ public:
 		m_OtherParticleAction =  AA_Draw;
 		m_StickerAction =  AA_Draw;
 		m_ErrorMaterialAction = AA_Draw;
+		m_WriteZAction = AA_Draw;
 	}
 
 	virtual ~CAfxAlphaEntityStream() {}
@@ -946,17 +959,18 @@ public:
 		m_SkyBoxTexturesAction = AA_Draw;
 		m_StaticPropTexturesAction = AA_Draw;
 		m_CableAction = AA_Draw;
-		m_PlayerModelsAction = AA_Invisible;
-		m_WeaponModelsAction = AA_Invisible;
-		m_StatTrakAction = AA_Invisible;
-		m_ShellModelsAction =  AA_Invisible;
+		m_PlayerModelsAction = AA_NoDraw;
+		m_WeaponModelsAction = AA_NoDraw;
+		m_StatTrakAction = AA_NoDraw;
+		m_ShellModelsAction =  AA_NoDraw;
 		m_OtherModelsAction =  AA_Draw;
 		m_DecalTexturesAction = AA_Draw;
 		m_EffectsAction = AA_Draw;
-		m_ShellParticleAction = AA_Invisible;
+		m_ShellParticleAction = AA_NoDraw;
 		m_OtherParticleAction = AA_Draw;
-		m_StickerAction = AA_Invisible;
+		m_StickerAction = AA_NoDraw;
 		m_ErrorMaterialAction = AA_Draw;
+		m_WriteZAction = AA_Draw;
 	}
 
 	virtual ~CAfxAlphaWorldStream() {}
