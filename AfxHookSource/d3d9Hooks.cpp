@@ -76,6 +76,8 @@ private:
 	IDirect3DPixelShader9 * m_Original_PixelShader;
 	bool m_Override_PixelShader;
 
+	bool m_Block_Present;
+
 public:
 	NewDirect3DDevice9()
 	: m_Override_D3DRS_SRGBWRITEENABLE(false)
@@ -96,6 +98,7 @@ public:
 	, m_Override_VertexShader(false)
 	, m_Original_PixelShader(0)
 	, m_Override_PixelShader(false)
+	, m_Block_Present(false)
 	{
 	}
 
@@ -268,6 +271,11 @@ public:
 		m_Override_D3DRS_ALPHABLENDENABLE = false;
 	}
 
+	void Block_Present(bool block)
+	{
+		m_Block_Present = block;
+	}
+
     /*** IUnknown methods ***/
     IFACE_PASSTHROUGH(IDirect3DDevice9, QueryInterface, g_OldDirect3DDevice9);
 
@@ -327,7 +335,13 @@ public:
 		return g_OldDirect3DDevice9->Reset(pPresentationParameters);
 	}
 
-	IFACE_PASSTHROUGH(IDirect3DDevice9, Present, g_OldDirect3DDevice9);
+    STDMETHOD(Present)(THIS_ CONST RECT* pSourceRect,CONST RECT* pDestRect,HWND hDestWindowOverride,CONST RGNDATA* pDirtyRegion)
+	{
+		if(m_Block_Present) return D3D_OK;
+		
+		return g_OldDirect3DDevice9->Present(pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
+	}
+
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetBackBuffer, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetRasterStatus, g_OldDirect3DDevice9);
     IFACE_PASSTHROUGH(IDirect3DDevice9, SetDialogBoxMode, g_OldDirect3DDevice9);
@@ -1390,4 +1404,11 @@ void AfxD3D9_OverrideEnd_SetPixelShader()
 	if(!g_OldDirect3DDevice9) return;
 
 	g_NewDirect3DDevice9.OverrideEnd_SetPixelShader();
+}
+
+void AfxD3D9_Block_Present(bool block)
+{
+	if(!g_OldDirect3DDevice9) return;
+
+	g_NewDirect3DDevice9.Block_Present(block);
 }

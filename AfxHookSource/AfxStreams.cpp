@@ -2647,6 +2647,8 @@ void CAfxStreams::Console_Record_End()
 		RestoreMatVars();
 
 		Tier0_Msg("done.\n");
+
+		AfxD3D9_Block_Present(false);
 	}
 
 	m_Recording = false;
@@ -3925,6 +3927,8 @@ void CAfxStreams::DebugDump()
 
 void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx, vrect_t_csgo *rect)
 {
+	AfxD3D9_Block_Present(false);
+
 	SetCurrent_View_Render_ThreadId(GetCurrentThreadId());
 	m_CurrentContext = cx;
 
@@ -3974,6 +3978,7 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 		else
 		{
 			m_MaterialSystem->SwapBuffers();
+			AfxD3D9_Block_Present(true);
 
 			for(std::list<CAfxRecordStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
 			{
@@ -4078,8 +4083,6 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 				}
 
 			}
-
-			m_MaterialSystem->SwapBuffers();
 		}
 
 		++m_Frame;

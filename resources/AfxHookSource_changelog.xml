@@ -5,6 +5,17 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.16.0</version>
+<time>2016-02-06T09:00Z</time>
+<changes>
+<change type="updated">
+Updated mirv_streams: Reduced potential for epileptic seizures upon recording again. (Now only main game view should be shown now, really.)
+</change>
+</changes>
+</release>
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.15.0</version>
 <time>2016-02-06T03:50Z</time>
 <changes>
@@ -15,9 +26,9 @@ the writeZAction to noDraw (this removes the clip planes from i.e. the level wal
 worldTexturesAction, staticPropTexturesAction, otherModelsAction, cableAction, clientEffectTexturesAction,
 decalTexturesAction, effectsAction, otherParticleAction, errorMaterialAction, weaponModelsAction
 to noDraw and set the r_novis console variable to 1 (to disable the visbility checks). Also on de_dust2 you might
-need to use a sepcial depth stream in order to mask what I call the castle in the sky, which is basically a far
+need to use a special depth stream in order to mask what I call the castle in the sky, which is basically a far
 away version of de_dust2 (doesn't happen on other maps usually, you can use the fact that's it further away than 16384 inches)).
-We'll try to make a tutorial and link it here: LINK TBA
+We'll try to make a tutorial and link it here: TUTORIAL INK TBA
 </change>
 <change type="added">
 Exposed errorMaterialAction in mirv_streams.
