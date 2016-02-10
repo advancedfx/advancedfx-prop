@@ -331,8 +331,19 @@ public:
 	AfxAction ErrorMaterialAction_get(void);
 	void ErrorMaterialAction_set(AfxAction value);
 
+	AfxAction OtherAction_get(void);
+	void OtherAction_set(AfxAction value);
+
 	AfxAction WriteZAction_get(void);
 	void WriteZAction_set(AfxAction value);
+
+	AfxAction DevAction_get(void);
+
+	AfxAction OtherEngineAction_get(void);
+
+	AfxAction OtherSpecialAction_get(void);
+
+	AfxAction VguiAction_get(void);
 
 	bool TestAction_get(void);
 	void TestAction_set(bool value);
@@ -372,7 +383,12 @@ protected:
 	AfxAction m_OtherParticleAction;
 	AfxAction m_StickerAction;
 	AfxAction m_ErrorMaterialAction;
+	AfxAction m_OtherAction;
 	AfxAction m_WriteZAction;
+	AfxAction m_DevAction;
+	AfxAction m_OtherEngineAction;
+	AfxAction m_OtherSpecialAction;
+	AfxAction m_VguiAction;
 	bool m_TestAction;
 	float m_DepthVal;
 	float m_DepthValMax;
@@ -760,7 +776,7 @@ public:
 		m_OtherParticleAction =  AA_DrawDepth;
 		m_StickerAction =  AA_DrawDepth;
 		m_ErrorMaterialAction = AA_DrawDepth;
-		m_WriteZAction = AA_Draw;
+		m_OtherAction = AA_DrawDepth;
 	}
 
 	virtual ~CAfxDepthStream() {}
@@ -790,7 +806,7 @@ public:
 		m_OtherParticleAction = AA_Draw;
 		m_StickerAction = AA_NoDraw;
 		m_ErrorMaterialAction = AA_Draw;
-		m_WriteZAction = AA_Draw;
+		m_OtherAction = AA_Draw;
 	}
 
 	virtual ~CAfxMatteWorldStream() {}
@@ -820,7 +836,7 @@ public:
 		m_OtherParticleAction = AA_DrawDepth;
 		m_StickerAction = AA_NoDraw;
 		m_ErrorMaterialAction = AA_DrawDepth;
-		m_WriteZAction = AA_Draw;
+		m_OtherAction = AA_DrawDepth;
 	}
 
 	virtual ~CAfxDepthWorldStream() {}
@@ -850,7 +866,7 @@ public:
 		m_OtherParticleAction = AA_GreenScreen;
 		m_StickerAction = AA_Draw;
 		m_ErrorMaterialAction = AA_GreenScreen;
-		m_WriteZAction = AA_Draw;
+		m_OtherAction = AA_GreenScreen;
 	}
 
 	virtual ~CAfxMatteEntityStream() {}
@@ -880,7 +896,7 @@ public:
 		m_OtherParticleAction =  AA_DrawDepth;
 		m_StickerAction =  AA_DrawDepth;
 		m_ErrorMaterialAction = AA_DrawDepth;
-		m_WriteZAction = AA_Draw;
+		m_OtherAction = AA_DrawDepth;
 	}
 
 	virtual ~CAfxDepthEntityStream() {}
@@ -910,7 +926,7 @@ public:
 		m_OtherParticleAction = AA_Black;
 		m_StickerAction = AA_White;
 		m_ErrorMaterialAction = AA_Black;
-		m_WriteZAction = AA_Draw;
+		m_OtherAction = AA_Black;
 	}
 
 	virtual ~CAfxAlphaMatteStream() {}
@@ -941,6 +957,7 @@ public:
 		m_StickerAction =  AA_Draw;
 		m_ErrorMaterialAction = AA_Draw;
 		m_WriteZAction = AA_Draw;
+		m_OtherAction = AA_Draw;
 	}
 
 	virtual ~CAfxAlphaEntityStream() {}
@@ -970,7 +987,7 @@ public:
 		m_OtherParticleAction = AA_Draw;
 		m_StickerAction = AA_NoDraw;
 		m_ErrorMaterialAction = AA_Draw;
-		m_WriteZAction = AA_Draw;
+		m_OtherAction = AA_Draw;
 	}
 
 	virtual ~CAfxAlphaWorldStream() {}

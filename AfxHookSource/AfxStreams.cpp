@@ -584,7 +584,12 @@ CAfxBaseFxStream::CAfxBaseFxStream()
 , m_OtherParticleAction(AA_Draw)
 , m_StickerAction(AA_Draw)
 , m_ErrorMaterialAction(AA_Draw)
+, m_OtherAction(AA_Draw)
 , m_WriteZAction(AA_Draw)
+, m_DevAction(AA_Draw)
+, m_OtherEngineAction(AA_Draw)
+, m_OtherSpecialAction(AA_Draw)
+, m_VguiAction(AA_Draw)
 , m_TestAction(false)
 , m_DepthVal(1)
 , m_DepthValMax(1024)
@@ -784,9 +789,7 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * materia
 		return GetAction(material, m_DecalTexturesAction, true);
 	else
 	if(!strcmp("World textures", groupName))
-	{
 		return GetAction(material, m_WorldTexturesAction, false);
-	}
 	else
 	if(!strcmp("SkyBox textures", groupName))
 		return GetAction(material, m_SkyBoxTexturesAction, false);
@@ -818,19 +821,31 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * materia
 			return GetAction(material, m_OtherModelsAction, false);
 	}
 	else
-	if(!strcmp("Other textures", groupName))
+	if(!strcmp("Other textures", groupName)
+		||!strcmp("Precached", groupName))
 	{
+		if(StringBeginsWith(name, "__"))
+			return GetAction(material, m_OtherSpecialAction, true);
+		else
 		if(StringBeginsWith(name, "cable/"))
 			return GetAction(material, m_CableAction, true);
 		else
 		if(StringBeginsWith(name, "cs_custom_material_"))
 			return GetAction(material, m_WeaponModelsAction, false);
 		else
-		if(!strcmp(name, "engine/writez"))
-			return GetAction(material, m_WriteZAction, true);
+		if(StringBeginsWith(name, "engine/"))
+		{
+			if(!strcmp(name, "engine/writez"))
+				return GetAction(material, m_WriteZAction, true);
+			else
+				return GetAction(material, m_OtherEngineAction, true);
+		}
 		else
 		if(StringBeginsWith(name, "effects/"))
 			return GetAction(material, m_EffectsAction, true);
+		else
+		if(StringBeginsWith(name, "dev/"))
+			return GetAction(material, m_DevAction, true);
 		else
 		if(StringBeginsWith(name, "particle/"))
 		{
@@ -841,12 +856,12 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * materia
 		}
 		else
 		if(StringBeginsWith(name, "sticker_"))
-				return GetAction(material, m_StickerAction, false);
+			return GetAction(material, m_StickerAction, false);
 		else
-		{
-			if(m_DebugPrint) Tier0_Msg("(unhandled)");
-			return m_PassthroughAction;
-		}
+		if(StringBeginsWith(name, "vgui"))
+			return GetAction(material, m_VguiAction, true);
+		else
+			return GetAction(material, m_OtherAction, false);
 	}
 	else
 	if(!strcmp("Particle textures", groupName))
@@ -857,24 +872,8 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * materia
 			return GetAction(material, m_OtherParticleAction, true);
 	}
 	else
-	if(!strcmp("Precached", groupName))
-	{
-		if(StringBeginsWith(name, "effects/"))
-			return GetAction(material, m_EffectsAction, true);
-		else
-		if(StringBeginsWith(name, "particle/"))
-		{
-			if(StringBeginsWith(name, "particle/shells/"))
-				return GetAction(material, m_ShellParticleAction, true);
-			else
-				return GetAction(material, m_OtherParticleAction, true);
-		}
-		else
-		{
-			if(m_DebugPrint) Tier0_Msg("(unhandled)");
-			return m_PassthroughAction;
-		}
-	}
+	if(!strcmp(groupName, "VGUI textures"))
+		return GetAction(material, m_VguiAction, true);
 
 	if(m_DebugPrint) Tier0_Msg("(unhandled)");
 	return m_PassthroughAction;
@@ -1393,6 +1392,17 @@ void CAfxBaseFxStream::ErrorMaterialAction_set(AfxAction value)
 	m_ErrorMaterialAction = value; 
 }
 
+CAfxBaseFxStream::AfxAction CAfxBaseFxStream::OtherAction_get(void)
+{
+	return m_OtherAction;
+}
+
+void CAfxBaseFxStream::OtherAction_set(AfxAction value)
+{
+	InvalidateMap();
+	m_OtherAction = value; 
+}
+
 CAfxBaseFxStream::AfxAction CAfxBaseFxStream::WriteZAction_get(void)
 {
 	return m_WriteZAction;
@@ -1402,6 +1412,26 @@ void CAfxBaseFxStream::WriteZAction_set(AfxAction value)
 {
 	InvalidateMap();
 	m_WriteZAction = value; 
+}
+
+CAfxBaseFxStream::AfxAction CAfxBaseFxStream::DevAction_get(void)
+{
+	return m_DevAction;
+}
+
+CAfxBaseFxStream::AfxAction CAfxBaseFxStream::OtherEngineAction_get(void)
+{
+	return m_OtherEngineAction;
+}
+
+CAfxBaseFxStream::AfxAction CAfxBaseFxStream::OtherSpecialAction_get(void)
+{
+	return m_OtherSpecialAction;
+}
+
+CAfxBaseFxStream::AfxAction CAfxBaseFxStream::VguiAction_get(void)
+{
+	return m_VguiAction;
 }
 
 bool CAfxBaseFxStream::TestAction_get(void)
@@ -3558,6 +3588,29 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				return;
 			}
 			else
+			if(!_stricmp(cmd0, "otherAction"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+					CAfxBaseFxStream::AfxAction value;
+
+					if(Console_ToAfxAction(cmd1, value))
+					{
+						curBaseFx->OtherAction_set(value);
+						return;
+					}
+				}
+
+				Tier0_Msg(
+					"%s otherAction " CAFXBASEFXSTREAM_AFXACTIONS " - Set new action.\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, Console_FromAfxAction(curBaseFx->OtherAction_get())
+				);
+				return;
+			}
+			else
 			if(!_stricmp(cmd0, "writeZAction"))
 			{
 				if(2 <= argc)
@@ -3577,6 +3630,50 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					"Current value: %s.\n"
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->WriteZAction_get())
+				);
+				return;
+			}
+			else
+			if(!_stricmp(cmd0, "devAction"))
+			{
+				Tier0_Msg(
+					"%s devAction\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, Console_FromAfxAction(curBaseFx->DevAction_get())
+				);
+				return;
+			}
+			else
+			if(!_stricmp(cmd0, "otherEngineAction"))
+			{
+				Tier0_Msg(
+					"%s otherEngineAction\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, Console_FromAfxAction(curBaseFx->OtherEngineAction_get())
+				);
+				return;
+			}
+			else
+			if(!_stricmp(cmd0, "otherSpecialAction"))
+			{
+				Tier0_Msg(
+					"%s otherSpecialAction\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, Console_FromAfxAction(curBaseFx->OtherSpecialAction_get())
+				);
+				return;
+			}
+			else
+			if(!_stricmp(cmd0, "vguiAction"))
+			{
+				Tier0_Msg(
+					"%s vguiAction\n"
+					"Current value: %s.\n"
+					, cmdPrefix
+					, Console_FromAfxAction(curBaseFx->VguiAction_get())
 				);
 				return;
 			}
@@ -3754,7 +3851,12 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 		Tier0_Msg("%s otherParticleAction [...]\n", cmdPrefix);
 		Tier0_Msg("%s stickerAction [...]\n", cmdPrefix);
 		Tier0_Msg("%s errorMaterialAction [...]\n", cmdPrefix);
+		Tier0_Msg("%s otherAction [...]\n", cmdPrefix);
 		Tier0_Msg("%s writeZAction [...]\n", cmdPrefix);
+		Tier0_Msg("%s devAction [...] - Readonly.\n", cmdPrefix);
+		Tier0_Msg("%s otherEngineAction [...] - Readonly.\n", cmdPrefix);
+		Tier0_Msg("%s otherSpecialAction [...] - Readonly.\n", cmdPrefix);
+		Tier0_Msg("%s vguiAction [...] - Readonly.\n", cmdPrefix);
 		Tier0_Msg("%s depthVal [...]\n", cmdPrefix);
 		Tier0_Msg("%s depthValMax [...]\n", cmdPrefix);
 		Tier0_Msg("%s debugPrint [...]\n", cmdPrefix);

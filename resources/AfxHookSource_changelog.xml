@@ -5,6 +5,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>0.2.xx.xx</version>
+<time>2016-02-xxTxx:xxZ</time>
+<changes>
+<change type="added">
+Added otherAction to mirv_streams, this will hoepfully improve handling of unknown materials on custom maps for the various stream templates.
+(Also added a few readonly actions that are of no real use but used internally.)
+</change>
+</changes>
+</release>
+
+<release>
+<name>AfxHookSource</name>
 <version>0.2.16.0</version>
 <time>2016-02-06T09:00Z</time>
 <changes>
