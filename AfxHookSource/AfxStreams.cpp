@@ -2109,6 +2109,12 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::CActionStandardResolve::ResolveAct
 			}
 		}
 	}
+	else
+	if(!strcmp(shaderName, "Sprite_DX9"))
+	{
+		// cant really handle that shader atm, so use fallback:
+		return SafeSubResolveAction(m_FallBackAction, material);
+	}
 
 	// Std fallback:
 

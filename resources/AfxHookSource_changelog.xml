@@ -5,6 +5,17 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>1.0.0.1</version>
+<time>2016-02-13T21:15Z</time>
+<changes>
+<change type="fixed">
+Fixed mirv_streams actions like mask/drawDepth/white/... having problems with Sprite_DX9 shader (those actions will fallback to noDraw action for this shader now, should mostly affect light glows etc. only).
+</change>
+</changes>
+</release>
+
+<release>
+<name>AfxHookSource</name>
 <version>1.0.0.0</version>
 <time>2016-02-13T13:21Z</time>
 <changes>
