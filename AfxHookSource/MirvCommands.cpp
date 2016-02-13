@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-01-06 dominik.matrixstorm.com
+// 2016-01-13 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-09-30 by dominik.matrixstorm.com
@@ -483,6 +483,61 @@ CON_COMMAND(mirv_streams, "Access to streams system.")
 			);
 			return;
 		}
+		else
+		if(!_stricmp(cmd1, "actions"))
+		{
+			if(3 <= argc)
+			{
+				char const * cmd2 = args->ArgV(2);
+
+				if(!_stricmp(cmd2, "add"))
+				{
+					if(4 <= argc)
+					{
+						char const * cmd3 = args->ArgV(3);
+						
+						if(!_stricmp(cmd3, "replace"))
+						{
+							if(6<=argc)
+							{
+								char const * actionName = args->ArgV(4);
+								char const * materialName = args->ArgV(5);
+
+								CAfxBaseFxStream::Console_AddReplaceAction(actionName, materialName);
+								return;
+							}
+						}
+					}
+
+					Tier0_Msg(
+						"mirv_streams actions add replace <actionName> <materialName> - Replace with material <materialName> if possible.\n"
+					);
+					return;
+				}
+				else
+				if(!_stricmp(cmd2, "print"))
+				{
+					CAfxBaseFxStream::Console_ListActions();
+					return;
+				}
+				else
+				if(!_stricmp(cmd2, "remove"))
+				{
+					if(4 <= argc)
+					{
+						char const * cmd3 = args->ArgV(3);
+						CAfxBaseFxStream::RemoveAction(CAfxBaseFxStream::CActionKey(cmd3));
+						return;
+					}
+				}
+			}
+			Tier0_Msg(
+				"mirv_streams actions add [...] - Add an action.\n"
+				"mirv_streams actions print - Print available actions.\n"
+				"mirv_streams actions remove <actionName> - Remove an action named <actionName>.\n"
+			);
+			return;
+		}
 	}
 
 	Tier0_Msg(
@@ -492,6 +547,7 @@ CON_COMMAND(mirv_streams, "Access to streams system.")
 		"mirv_streams preview [...] - Preview a stream.\n"
 		"mirv_streams print - Print current streams.\n"
 		"mirv_streams record [...] - Recording control.\n"
+		"mirv_streams actions [...] - Actions control (for baseFx based streams).\n"
 	);
 	return;
 }
@@ -1727,12 +1783,76 @@ CON_COMMAND(mirv_fov,"allows overriding FOV (Filed Of View) of the camera")
 	{
 		char const * arg1 = args->ArgV(1);
 
-		if(0 == _stricmp("default", arg1))
+		if(!_stricmp(arg1,"default"))
 		{
 			g_Hook_VClient_RenderView.FovDefault();
 			return;
 		}
 		else
+		if(!_stricmp(arg1,"handleZoom"))
+		{
+			if(3 <= argc)
+			{
+				const char * arg2 = args->ArgV(2);
+
+				if(!_stricmp(arg2, "enabled"))
+				{
+					if(4 <= argc)
+					{
+						const char * arg3 = args->ArgV(3);
+
+						g_Hook_VClient_RenderView.handleZoomEnabled = 0 != atoi(arg3);
+						return;
+					}
+
+					Tier0_Msg(
+						"Usage:\n"
+						"mirv_fov handleZoom enabled 0|1 - Enable (1), disable (0).\n"
+						"Current value: %s\n",
+						g_Hook_VClient_RenderView.handleZoomEnabled ? "1" : "0"
+					);
+					return;
+				}
+				else
+				if(!_stricmp(arg2, "minUnzoomedFov"))
+				{
+					if(4 <= argc)
+					{
+						const char * arg3 = args->ArgV(3);
+
+						if(!_stricmp(arg3, "current"))
+						{
+							g_Hook_VClient_RenderView.handleZoomMinUnzoomedFov = g_Hook_VClient_RenderView.LastCameraFov;
+							return;
+						}
+						else
+						if(StringIsEmpty(arg3) || !StringIsAlphas(arg3))
+						{
+							g_Hook_VClient_RenderView.handleZoomMinUnzoomedFov = atof(arg3);
+							return;
+						}
+					}
+
+					Tier0_Msg(
+						"Usage:\n"
+						"mirv_fov handleZoom minUnzoomedFov current - Set current fov as threshold.\n"
+						"mirv_fov handleZoom minUnzoomedFov <f> - Set floating point value <f> as threshold.\n"
+						"Current value: %f\n",
+						g_Hook_VClient_RenderView.handleZoomMinUnzoomedFov
+					);
+					return;
+				}
+			}
+
+			Tier0_Msg(
+				"Usage:\n"
+				"mirv_fov handleZoom enabled [...] - Whether to enable zoom handling (if enabled mirv_fov is only active if it's not bellow minUnzoomedFov (not zoomed)).\n"
+				"mirv_fov handleZoom minUnzoomedFov [...] - Zoom detection threshold.\n"
+			);
+			return;
+		}
+		else
+		if(StringIsEmpty(arg1) || !StringIsAlphas(arg1))
 		{
 			g_Hook_VClient_RenderView.FovOverride(atof(arg1));
 			return;
@@ -1741,15 +1861,16 @@ CON_COMMAND(mirv_fov,"allows overriding FOV (Filed Of View) of the camera")
 
 	Tier0_Msg(
 		"Usage:\n"
-		"mirv_fov f - Override fov with given floating point value (f).\n"
+		"mirv_fov <f> - Override fov with given floating point value <f>.\n"
 		"mirv_fov default - Revert to the game's default behaviour.\n"
+		"mirv_fov handleZoom [...] - Handle zooming (i.e. AWP in CS:GO).\n"
 	);
 	{
 		Tier0_Msg("Current value: ");
 
 		double fovValue;
 		if(!g_Hook_VClient_RenderView.GetFovOverride(fovValue))
-			Tier0_Msg("default\n");
+			Tier0_Msg("default (currently: %f)\n", g_Hook_VClient_RenderView.LastCameraFov);
 		else
 			Tier0_Msg("%f\n", fovValue);
 	}

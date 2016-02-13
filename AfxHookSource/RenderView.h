@@ -28,6 +28,9 @@ public:
 	double LastCameraAngles[3];
 	double LastCameraFov;
 
+	bool handleZoomEnabled;
+	double handleZoomMinUnzoomedFov;
+
 	Hook_VClient_RenderView();
 	~Hook_VClient_RenderView();
 

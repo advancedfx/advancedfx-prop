@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-02-06 dominik.matrixstorm.com
+// 2016-02-13 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -236,6 +236,7 @@ private:
 
 extern bool g_DebugEnabled;
 
+
 class CAfxBaseFxStream
 : public CAfxRenderViewStream
 , public IAfxMatRenderContextMaterialHook
@@ -248,152 +249,29 @@ class CAfxBaseFxStream
 , public IAfxDrawingHud
 {
 public:
-	enum AfxAction {
-		AA_NotSet,
-		AA_Draw,
-		AA_NoDraw,
-		AA_DrawDepth,
-		AA_DrawDepth24,
-		AA_GreenScreen,
-		AA_Black,
-		AA_White,
-		AA_DebugDump
+	class CActionKey
+	{
+	public:
+		std::string m_Name;
+
+		CActionKey(char const * name)
+		: m_Name(name)
+		{
+		}
+
+		CActionKey(const CActionKey & x)
+		: m_Name(x.m_Name)
+		{
+		}
+		
+		bool operator < (const CActionKey & y) const
+		{
+			return m_Name.compare(y.m_Name) < 0;
+		}
+
+	private:
 	};
 
-	CAfxBaseFxStream();
-
-	virtual ~CAfxBaseFxStream();
-
-	virtual CAfxBaseFxStream * AsAfxBaseFxStream(void) { return this; }
-
-	virtual void LevelShutdown(IAfxStreams4Stream * streams);
-
-	virtual void StreamAttach(IAfxStreams4Stream * streams);
-	virtual void StreamDetach(IAfxStreams4Stream * streams);
-
-	virtual IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material);
-	virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance );
-
-	virtual void Draw(IAfxMesh * am, int firstIndex = -1, int numIndices = 0);
-	virtual void Draw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists);
-	virtual void DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 );
-
-	virtual void SetVertexShader(CAfx_csgo_ShaderState & state);
-	virtual void SetPixelShader(CAfx_csgo_ShaderState & state);
-
-	virtual void DrawingHud(void);
-
-	AfxAction ClientEffectTexturesAction_get(void);
-	void ClientEffectTexturesAction_set(AfxAction value);
-
-	AfxAction WorldTexturesAction_get(void);
-	void WorldTexturesAction_set(AfxAction value);
-
-	AfxAction SkyBoxTexturesAction_get(void);
-	void SkyBoxTexturesAction_set(AfxAction value);
-
-	AfxAction StaticPropTexturesAction_get(void);
-	void StaticPropTexturesAction_set(AfxAction value);
-
-	AfxAction CableAction_get(void);
-	void CableAction_set(AfxAction value);
-
-	AfxAction PlayerModelsAction_get(void);
-	void PlayerModelsAction_set(AfxAction value);
-
-	AfxAction WeaponModelsAction_get(void);
-	void WeaponModelsAction_set(AfxAction value);
-
-	AfxAction StatTrakAction_get(void);
-	void StatTrakAction_set(AfxAction value);
-
-	AfxAction ShellModelsAction_get(void);
-	void ShellModelsAction_set(AfxAction value);
-
-	AfxAction OtherModelsAction_get(void);
-	void OtherModelsAction_set(AfxAction value);
-
-	AfxAction DecalTexturesAction_get(void);
-	void DecalTexturesAction_set(AfxAction value);
-
-	AfxAction EffectsAction_get(void);
-	void EffectsAction_set(AfxAction value);
-
-	AfxAction ShellParticleAction_get(void);
-	void ShellParticleAction_set(AfxAction value);
-
-	AfxAction OtherParticleAction_get(void);
-	void OtherParticleAction_set(AfxAction value);
-
-	AfxAction StickerAction_get(void);
-	void StickerAction_set(AfxAction value);
-
-	AfxAction ErrorMaterialAction_get(void);
-	void ErrorMaterialAction_set(AfxAction value);
-
-	AfxAction OtherAction_get(void);
-	void OtherAction_set(AfxAction value);
-
-	AfxAction WriteZAction_get(void);
-	void WriteZAction_set(AfxAction value);
-
-	AfxAction DevAction_get(void);
-
-	AfxAction OtherEngineAction_get(void);
-
-	AfxAction OtherSpecialAction_get(void);
-
-	AfxAction VguiAction_get(void);
-
-	bool TestAction_get(void);
-	void TestAction_set(bool value);
-
-	float DepthVal_get(void);
-	void DepthVal_set(float value);
-
-	float DepthValMax_get(void);
-	void DepthValMax_set(float value);
-	
-	bool DebugPrint_get(void);
-	void DebugPrint_set(bool value);
-
-	void InvalidateMap(void);
-
-	/// <pram name="to24">false: depth24 to depth; true: depth to depth24</param>
-	/// <pram name="depth24ZIP">if not to24, then set SCT_Normal otherwise: false: set capturetype SCT_Depth24; true: set capturetype SCT_Depth24ZIP</param>
-	void ConvertStreamDepth(bool to24, bool depth24ZIP);
-
-	/// <pram name="to24">false: depth24 to depth; true: depth to depth24</param>
-	void ConvertDepthActions(bool to24);
-
-protected:
-	AfxAction m_ClientEffectTexturesAction;
-	AfxAction m_WorldTexturesAction;
-	AfxAction m_SkyBoxTexturesAction;
-	AfxAction m_StaticPropTexturesAction;
-	AfxAction m_CableAction;
-	AfxAction m_PlayerModelsAction;
-	AfxAction m_WeaponModelsAction;
-	AfxAction m_StatTrakAction;
-	AfxAction m_ShellModelsAction;
-	AfxAction m_OtherModelsAction;
-	AfxAction m_DecalTexturesAction;
-	AfxAction m_EffectsAction;
-	AfxAction m_ShellParticleAction;
-	AfxAction m_OtherParticleAction;
-	AfxAction m_StickerAction;
-	AfxAction m_ErrorMaterialAction;
-	AfxAction m_OtherAction;
-	AfxAction m_WriteZAction;
-	AfxAction m_DevAction;
-	AfxAction m_OtherEngineAction;
-	AfxAction m_OtherSpecialAction;
-	AfxAction m_VguiAction;
-	bool m_TestAction;
-	float m_DepthVal;
-	float m_DepthValMax;
-
-private:
 	class CAction
 	: public IAfxMatRenderContextMaterialHook
 	, public IAfxMatRenderContextDrawInstances
@@ -402,9 +280,11 @@ private:
 	, public IAfxMeshDrawModulated
 	{
 	public:
-		CAction(CAfxBaseFxStream * parentStream)
+		CAction()
+		: m_RefCount(0)
+		, m_IsStockAction(false)
+		, m_Key("(unnamed)")
 		{
-			m_ParentStream = parentStream;
 		}
 
 		void AddRef(void)
@@ -417,6 +297,40 @@ private:
 			--m_RefCount;
 			if(0 == m_RefCount)
 				delete this;
+		}
+
+		int GetRefCount(void)
+		{
+			return m_RefCount;
+		}
+
+		bool IsStockAction_get(void)
+		{
+			return m_IsStockAction;
+		}
+
+		void IsStockAction_set(bool value)
+		{
+			m_IsStockAction = value;
+		}
+		
+		CActionKey const & Key_get(void)
+		{
+			return m_Key;
+		}
+
+		void Key_set(CActionKey const & value)
+		{
+			m_Key = value;
+		}
+
+		virtual CAction * ResolveAction(IMaterial_csgo * material)
+		{
+			return this;
+		}
+
+		virtual void LevelShutdown(IAfxStreams4Stream * streams)
+		{
 		}
 
 		virtual void AfxUnbind(IAfxMatRenderContext * ctx)
@@ -457,28 +371,244 @@ private:
 		}
 
 	protected:
-		CAfxBaseFxStream * m_ParentStream;
+		bool m_IsStockAction;
+		CActionKey m_Key;
 
 		virtual ~CAction()
 		{
+		}
+
+		virtual CAction * SafeSubResolveAction(CAction * action, IMaterial_csgo * material)
+		{
+			if(action)
+				return action->ResolveAction(material);
+			
+			return action;
 		}
 
 	private:
 		int m_RefCount;
 	};
 
+	static void Console_ListActions(void)
+	{
+		m_Shared.Console_ListActions();
+	}
+
+	static void Console_AddReplaceAction(char const * actionName, char const * materialName)
+	{
+		m_Shared.Console_AddReplaceAction(actionName, materialName);
+	}
+
+	static CAction * GetAction(CActionKey const & key)
+	{
+		return m_Shared.GetAction(key);
+	}
+
+	static bool RemoveAction(CActionKey const & key)
+	{
+		return m_Shared.RemoveAction(key);
+	}
+
+	CAfxBaseFxStream();
+
+	virtual ~CAfxBaseFxStream();
+
+	void Console_ActionFilter_Add(const char * expression, CAction * action);
+	void Console_ActionFilter_Print(void);
+	void Console_ActionFilter_Remove(int id);
+	void Console_ActionFilter_Move(int id, int moveBeforeId);
+
+	virtual CAfxBaseFxStream * AsAfxBaseFxStream(void) { return this; }
+
+	virtual void LevelShutdown(IAfxStreams4Stream * streams);
+
+	virtual void StreamAttach(IAfxStreams4Stream * streams);
+	virtual void StreamDetach(IAfxStreams4Stream * streams);
+
+	virtual IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material);
+	virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance );
+
+	virtual void Draw(IAfxMesh * am, int firstIndex = -1, int numIndices = 0);
+	virtual void Draw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists);
+	virtual void DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 );
+
+	virtual void SetVertexShader(CAfx_csgo_ShaderState & state);
+	virtual void SetPixelShader(CAfx_csgo_ShaderState & state);
+
+	virtual void DrawingHud(void);
+
+	CAction * ClientEffectTexturesAction_get(void);
+	void ClientEffectTexturesAction_set(CAction * value);
+
+	CAction * WorldTexturesAction_get(void);
+	void WorldTexturesAction_set(CAction * value);
+
+	CAction * SkyBoxTexturesAction_get(void);
+	void SkyBoxTexturesAction_set(CAction * value);
+
+	CAction * StaticPropTexturesAction_get(void);
+	void StaticPropTexturesAction_set(CAction * value);
+
+	CAction * CableAction_get(void);
+	void CableAction_set(CAction * value);
+
+	CAction * PlayerModelsAction_get(void);
+	void PlayerModelsAction_set(CAction * value);
+
+	CAction * WeaponModelsAction_get(void);
+	void WeaponModelsAction_set(CAction * value);
+
+	CAction * StatTrakAction_get(void);
+	void StatTrakAction_set(CAction * value);
+
+	CAction * ShellModelsAction_get(void);
+	void ShellModelsAction_set(CAction * value);
+
+	CAction * OtherModelsAction_get(void);
+	void OtherModelsAction_set(CAction * value);
+
+	CAction * DecalTexturesAction_get(void);
+	void DecalTexturesAction_set(CAction * value);
+
+	CAction * EffectsAction_get(void);
+	void EffectsAction_set(CAction * value);
+
+	CAction * ShellParticleAction_get(void);
+	void ShellParticleAction_set(CAction * value);
+
+	CAction * OtherParticleAction_get(void);
+	void OtherParticleAction_set(CAction * value);
+
+	CAction * StickerAction_get(void);
+	void StickerAction_set(CAction * value);
+
+	CAction * ErrorMaterialAction_get(void);
+	void ErrorMaterialAction_set(CAction * value);
+
+	CAction * OtherAction_get(void);
+	void OtherAction_set(CAction * value);
+
+	CAction * WriteZAction_get(void);
+	void WriteZAction_set(CAction * value);
+
+	CAction * DevAction_get(void);
+
+	CAction * OtherEngineAction_get(void);
+
+	CAction * OtherSpecialAction_get(void);
+
+	CAction * VguiAction_get(void);
+
+	bool TestAction_get(void);
+	void TestAction_set(bool value);
+
+	float DepthVal_get(void);
+	void DepthVal_set(float value);
+
+	float DepthValMax_get(void);
+	void DepthValMax_set(float value);
+	
+	bool DebugPrint_get(void);
+	void DebugPrint_set(bool value);
+
+	void InvalidateMap(void);
+
+	/// <pram name="to24">false: depth24 to depth; true: depth to depth24</param>
+	/// <pram name="depth24ZIP">if not to24, then set SCT_Normal otherwise: false: set capturetype SCT_Depth24; true: set capturetype SCT_Depth24ZIP</param>
+	void ConvertStreamDepth(bool to24, bool depth24ZIP);
+
+	/// <pram name="to24">false: depth24 to depth; true: depth to depth24</param>
+	void ConvertDepthActions(bool to24);
+
+protected:
+	class CShared
+	{
+	public:
+		CShared();
+		~CShared();
+
+		void AddRef();
+		void Release();
+
+		void Console_ListActions(void);
+		void Console_AddReplaceAction(char const * actionName, char const * materialName);
+		CAction * GetAction(CActionKey const & key);
+		bool RemoveAction(CActionKey const & key);
+
+		void LevelShutdown(IAfxStreams4Stream * streams);
+
+		CAfxBaseFxStream * m_ActiveBaseFxStream;
+
+		CAction * DrawAction_get(void);
+		CAction * NoDrawAction_get(void);
+		CAction * DepthAction_get(void);
+		CAction * Depth24Action_get(void);
+		CAction * MaskAction_get(void);
+		CAction * WhiteAction_get(void);
+		CAction * BlackAction_get(void);
+	
+	private:
+		int m_RefCount;
+		int m_ShutDownLevel;
+		std::map<CActionKey, CAction *> m_Actions;
+		CAction * m_DrawAction;
+		CAction * m_NoDrawAction;
+		CAction * m_DebugDumpAction;
+		CAction * m_DepthAction;
+		CAction * m_Depth24Action;
+		CAction * m_MaskAction;
+		CAction * m_WhiteAction;
+		CAction * m_BlackAction;
+
+		void CreateStdAction(CAction * & stdTarget, CActionKey const & key, CAction * action);
+		void CreateAction(CActionKey const & key, CAction * action, bool isStockAction = false);
+		bool Console_CheckActionKey(CActionKey & key);
+	};
+
+	static CShared m_Shared;
+
+	CAction * m_ClientEffectTexturesAction;
+	CAction * m_WorldTexturesAction;
+	CAction * m_SkyBoxTexturesAction;
+	CAction * m_StaticPropTexturesAction;
+	CAction * m_CableAction;
+	CAction * m_PlayerModelsAction;
+	CAction * m_WeaponModelsAction;
+	CAction * m_StatTrakAction;
+	CAction * m_ShellModelsAction;
+	CAction * m_OtherModelsAction;
+	CAction * m_DecalTexturesAction;
+	CAction * m_EffectsAction;
+	CAction * m_ShellParticleAction;
+	CAction * m_OtherParticleAction;
+	CAction * m_StickerAction;
+	CAction * m_ErrorMaterialAction;
+	CAction * m_OtherAction;
+	CAction * m_WriteZAction;
+	CAction * m_DevAction;
+	CAction * m_OtherEngineAction;
+	CAction * m_OtherSpecialAction;
+	CAction * m_VguiAction;
+	bool m_TestAction;
+	float m_DepthVal;
+	float m_DepthValMax;
+
+	void SetActionAndInvalidateMap(CAction * & target, CAction * src);
+	void SetAction(CAction * & target, CAction * src);
+
+private:
 	class CActionDebugDump
 	: public CAction
 	{
 	public:
-		CActionDebugDump(CAfxBaseFxStream * parentStream)
-		: CAction(parentStream)
+		CActionDebugDump()
 		{
 		}
 
 		virtual void AfxUnbind(IAfxMatRenderContext * ctx)
 		{
-			m_ParentStream->m_Streams->DebugDump();
+			CAfxBaseFxStream::m_Shared.m_ActiveBaseFxStream->m_Streams->DebugDump();
 		}
 	};
 
@@ -519,7 +649,18 @@ private:
 	: public CAction
 	{
 	public:
-		CActionAfxVertexLitGenericHook(CAfxBaseFxStream * parentStream, CActionAfxVertexLitGenericHookKey & key);
+		CActionAfxVertexLitGenericHook(CActionAfxVertexLitGenericHookKey & key);
+
+		virtual bool CheckIsCompatible(IMaterial_csgo * material)
+		{
+			if(!material)
+				return false;
+
+			char const * shaderName = material->GetShaderName();
+
+			return !strcmp(shaderName, "VertexLitGernic")
+				|| !strcmp(shaderName, "UnlitGeneric");
+		}
 
 		virtual void AfxUnbind(IAfxMatRenderContext * ctx);
 
@@ -538,55 +679,24 @@ private:
 	: public CActionAfxVertexLitGenericHook
 	{
 	public:
-		CActionUnlitGenericFallback(CAfxBaseFxStream * parentStream, CActionAfxVertexLitGenericHookKey & key, IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem, char const * unlitGenericFallbackMaterialName);
+		CActionUnlitGenericFallback(CActionAfxVertexLitGenericHookKey & key, char const * unlitGenericFallbackMaterialName);
 
 		virtual IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material);
 
-	private:
-		CAfxMaterial m_Material;
-	};
-
-	class CActionInvisible
-	: public CAction
-	{
-	public:
-		CActionInvisible(CAfxBaseFxStream * parentStream, IAfxFreeMaster * freeMaster, IMaterialSystem_csgo * matSystem)
-		: CAction(parentStream)
-		, m_InvisibleMaterial(freeMaster, matSystem->FindMaterial("afx/invisible",NULL))
-		{
-		}
-
-		virtual void AfxUnbind(IAfxMatRenderContext * ctx);
-
-		virtual IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material);
-
-		virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance )
-		{
-			MeshInstanceData_t_csgo * first = const_cast<MeshInstanceData_t_csgo *>(pInstance);
-
-			for(int i = 0; i < nInstanceCount; ++i)
-			{
-				first->m_DiffuseModulation.x = 0.0;
-				first->m_DiffuseModulation.y = 0.0;
-				first->m_DiffuseModulation.z = 0.0;
-				first->m_DiffuseModulation.w = 0.0;
-
-				++first;
-			}
-
-			ctx->GetParent()->DrawInstances(nInstanceCount, pInstance);
-		}
+	protected:
+		virtual ~CActionUnlitGenericFallback();
 
 	private:
-		CAfxMaterial m_InvisibleMaterial;
+		CAfxMaterial * m_Material;
+		std::string m_MaterialName;
 	};
 
 	class CActionNoDraw
 	: public CAction
 	{
 	public:
-		CActionNoDraw(CAfxBaseFxStream * parentStream)
-		: CAction(parentStream)
+		CActionNoDraw()
+		: CAction()
 		{
 		}
 
@@ -613,7 +723,21 @@ private:
 		{
 			return;
 		}
+	};
 
+	class CActionDraw
+	: public CAction
+	{
+	public:
+		CActionDraw()
+		: CAction()
+		{
+		}
+
+		virtual bool CheckIsCompatible(IMaterial_csgo * material)
+		{
+			return true;
+		}
 	};
 
 	class CActionAfxSpritecardHookKey
@@ -653,7 +777,7 @@ private:
 	: public CAction
 	{
 	public:
-		CActionAfxSpritecardHook(CAfxBaseFxStream * parentStream, CActionAfxSpritecardHookKey & key);
+		CActionAfxSpritecardHook(CActionAfxSpritecardHookKey & key);
 
 		virtual void AfxUnbind(IAfxMatRenderContext * ctx);
 
@@ -707,7 +831,7 @@ private:
 	: public CAction
 	{
 	public:
-		CActionAfxSplineRopeHook(CAfxBaseFxStream * parentStream, CActionAfxSplineRopeHookKey & key);
+		CActionAfxSplineRopeHook(CActionAfxSplineRopeHookKey & key);
 
 		virtual void AfxUnbind(IAfxMatRenderContext * ctx);
 
@@ -719,39 +843,161 @@ private:
 		static csgo_Stdshader_dx9_Combos_splinerope_ps20 m_Combos_ps20;
 		static csgo_Stdshader_dx9_Combos_splinerope_ps20b m_Combos_ps20b;
 		CActionAfxSplineRopeHookKey m_Key;
-		//CAfxMaterial m_Material;
 	};
 
+	class CActionReplace
+	: public CAction
+	{
+	public:
+		CActionReplace(char const * materialName, CAction * fallBackAction);
+
+		virtual CAction * ResolveAction(IMaterial_csgo * material);
+
+		virtual IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material);
+
+	protected:
+		virtual ~CActionReplace();
+
+	private:
+		CAfxMaterial * m_Material;
+		std::string m_MaterialName;
+		CAction * m_FallBackAction;
+
+		void EnsureMaterial(void);
+		void ExamineMaterial(IMaterial_csgo * material, bool & outSplinetype, bool & outUseinstancing);
+	};
+
+	class CActionStandardResolve
+	: public CAction
+	{
+	public:
+		enum ResolveFor {
+			RF_DrawDepth,
+			RF_DrawDepth24,
+			RF_GreenScreen,
+			RF_Black,
+			RF_White
+		};
+
+		CActionStandardResolve(ResolveFor resolveFor, CAction * fallBackAction);
+
+		virtual CAction * ResolveAction(IMaterial_csgo * material);
+
+	protected:
+		~CActionStandardResolve();
+	
+	private:
+		class CShared
+		{
+		public:
+			CShared();
+			~CShared();
+
+			void AddRef();
+			void Release();
+
+			void LevelShutdown(IAfxStreams4Stream * streams);
+
+			CAction * GetStdDepthAction();
+			CAction * GetStdDepth24Action();
+			CAction * GetStdMatteAction();
+			CAction * GetStdBlackAction();
+			CAction * GetStdWhiteAction();
+
+			CAction * GetSplineRopeHookAction(CActionAfxSplineRopeHookKey & key);
+			CAction * GetSpritecardHookAction(CActionAfxSpritecardHookKey & key);
+			CAction * GetVertexLitGenericHookAction(CActionAfxVertexLitGenericHookKey & key);
+
+		private:
+			int m_RefCount;
+			int m_ShutDownLevel;
+
+			CAction * m_StdDepthAction;
+			CAction * m_StdDepth24Action;
+			CAction * m_StdMatteAction;
+			CAction * m_StdBlackAction;
+			CAction * m_StdWhiteAction;
+
+			std::map<CActionAfxSplineRopeHookKey, CActionAfxSplineRopeHook *> m_SplineRopeHookActions;
+			std::map<CActionAfxSpritecardHookKey, CActionAfxSpritecardHook *> m_SpritecardHookActions;
+			std::map<CActionAfxVertexLitGenericHookKey, CActionAfxVertexLitGenericHook *> m_VertexLitGenericHookActions;
+
+			void InvalidateSplineRopeHookActions();
+			void InvalidateSpritecardHookActions();
+			void InvalidateVertexLitGenericHookActions();
+		};
+
+		static CShared m_Shared;
+
+
+		ResolveFor m_ResolveFor;
+		CAction * m_FallBackAction;
+	};
+
+	class CActionFilterValue
+	{
+	public:
+		CActionFilterValue()
+		: m_MatchAction(0)
+		{
+		}
+
+		CActionFilterValue(char const * matchString, CAction * matchAction)
+		: m_MatchString(matchString)
+		, m_MatchAction(matchAction)
+		{
+			if(matchAction) matchAction->AddRef();
+		}
+
+		CActionFilterValue(const CActionFilterValue & x)
+		: m_MatchString(x.m_MatchString)
+		, m_MatchAction(x.m_MatchAction)
+		{
+			if(m_MatchAction) m_MatchAction->AddRef();
+		}
+
+		~CActionFilterValue()
+		{
+			if(m_MatchAction) m_MatchAction->Release();
+		}
+
+		CActionFilterValue & operator= (const CActionFilterValue & x)
+		{
+			this->m_MatchString = x.m_MatchString;
+			this->m_MatchAction = x.m_MatchAction;
+			if(m_MatchAction) m_MatchAction->AddRef();
+			return *this;
+		}
+
+		char const * GetMatchString(void)
+		{
+			return m_MatchString.c_str();
+		}
+
+		CAction * GetMatchAction(void)
+		{
+			return m_MatchAction;
+		}
+
+		bool CalcMatch(char const * targetString);
+
+	private:
+		std::string m_MatchString;
+		CAction * m_MatchAction;
+	};
 
 	CAction * m_CurrentAction;
-	CAction * m_DepthAction;
-	CAction * m_Depth24Action;
-	CAction * m_MatteAction;
-	CAction * m_PassthroughAction;
-	CAction * m_NoDrawAction;
-	CAction * m_BlackAction;
-	CAction * m_WhiteAction;
-	CAction * m_DebugDumpAction;
-	bool m_StandardActionsInitialized;
 	bool m_BoundAction;
 	bool m_DebugPrint;
 	std::map<CAfxMaterialKey, CAction *> m_Map;
-	std::map<CActionAfxSplineRopeHookKey, CActionAfxSplineRopeHook *> m_SplineRopeHookActions;
-	std::map<CActionAfxSpritecardHookKey, CActionAfxSpritecardHook *> m_SpritecardHookActions;
-	std::map<CActionAfxVertexLitGenericHookKey, CActionAfxVertexLitGenericHook *> m_VertexLitGenericHookActions;
+	std::list<CActionFilterValue> m_ActionFilter;
 
 	CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * material);
-	CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * material, AfxAction action, bool safeMode);
+	CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * material, CAction * action);
 
-	CAction * GetSplineRopeHookAction(CActionAfxSplineRopeHookKey & key);
-	CAction * GetSpritecardHookAction(CActionAfxSpritecardHookKey & key);
-	CAction * GetVertexLitGenericHookAction(CActionAfxVertexLitGenericHookKey & key);
-	
-	void InvalidateSplineRopeHookActions();
-	void InvalidateSpritecardHookActions();
-	void InvalidateVertexLitGenericHookActions();
+	void ConvertDepthAction(CAction * & action, bool to24);
 
-	void ConvertDepthAction(AfxAction & action, bool to24);
+	void BindAction(CAction * action);
 };
 
 class CAfxDepthStream
@@ -760,23 +1006,23 @@ class CAfxDepthStream
 public:
 	CAfxDepthStream() : CAfxBaseFxStream()
 	{
-		m_ClientEffectTexturesAction = AA_DrawDepth;
-		m_WorldTexturesAction =  AA_DrawDepth;
-		m_SkyBoxTexturesAction =  AA_DrawDepth;
-		m_StaticPropTexturesAction =  AA_DrawDepth;
-		m_CableAction =  AA_DrawDepth;
-		m_PlayerModelsAction =  AA_DrawDepth;
-		m_WeaponModelsAction =  AA_DrawDepth;
-		m_StatTrakAction = AA_DrawDepth;
-		m_ShellModelsAction =  AA_DrawDepth;
-		m_OtherModelsAction =  AA_DrawDepth;
-		m_DecalTexturesAction =  AA_DrawDepth;
-		m_EffectsAction =  AA_DrawDepth;
-		m_ShellParticleAction =  AA_DrawDepth;
-		m_OtherParticleAction =  AA_DrawDepth;
-		m_StickerAction =  AA_DrawDepth;
-		m_ErrorMaterialAction = AA_DrawDepth;
-		m_OtherAction = AA_DrawDepth;
+		SetAction(m_ClientEffectTexturesAction, m_Shared.DepthAction_get());
+		SetAction(m_WorldTexturesAction, m_Shared.DepthAction_get());
+		SetAction(m_SkyBoxTexturesAction, m_Shared.DepthAction_get());
+		SetAction(m_StaticPropTexturesAction, m_Shared.DepthAction_get());
+		SetAction(m_CableAction, m_Shared.DepthAction_get());
+		SetAction(m_PlayerModelsAction, m_Shared.DepthAction_get());
+		SetAction(m_WeaponModelsAction, m_Shared.DepthAction_get());
+		SetAction(m_StatTrakAction, m_Shared.DepthAction_get());
+		SetAction(m_ShellModelsAction, m_Shared.DepthAction_get());
+		SetAction(m_OtherModelsAction, m_Shared.DepthAction_get());
+		SetAction(m_DecalTexturesAction, m_Shared.DepthAction_get());
+		SetAction(m_EffectsAction, m_Shared.DepthAction_get());
+		SetAction(m_ShellParticleAction, m_Shared.DepthAction_get());
+		SetAction(m_OtherParticleAction, m_Shared.DepthAction_get());
+		SetAction(m_StickerAction, m_Shared.DepthAction_get());
+		SetAction(m_ErrorMaterialAction, m_Shared.DepthAction_get());
+		SetAction(m_OtherAction, m_Shared.DepthAction_get());
 	}
 
 	virtual ~CAfxDepthStream() {}
@@ -790,23 +1036,23 @@ class CAfxMatteWorldStream
 public:
 	CAfxMatteWorldStream() : CAfxBaseFxStream()
 	{
-		m_ClientEffectTexturesAction = AA_Draw;
-		m_WorldTexturesAction = AA_Draw;
-		m_SkyBoxTexturesAction = AA_Draw;
-		m_StaticPropTexturesAction = AA_Draw;
-		m_CableAction =  AA_Draw;
-		m_PlayerModelsAction = AA_NoDraw;
-		m_WeaponModelsAction = AA_NoDraw;
-		m_StatTrakAction = AA_NoDraw;
-		m_ShellModelsAction = AA_NoDraw;
-		m_OtherModelsAction = AA_Draw;
-		m_DecalTexturesAction = AA_Draw;
-		m_EffectsAction = AA_Draw;
-		m_ShellParticleAction = AA_NoDraw;
-		m_OtherParticleAction = AA_Draw;
-		m_StickerAction = AA_NoDraw;
-		m_ErrorMaterialAction = AA_Draw;
-		m_OtherAction = AA_Draw;
+		SetAction(m_ClientEffectTexturesAction, m_Shared.DrawAction_get());
+		SetAction(m_WorldTexturesAction, m_Shared.DrawAction_get());
+		SetAction(m_SkyBoxTexturesAction, m_Shared.DrawAction_get());
+		SetAction(m_StaticPropTexturesAction, m_Shared.DrawAction_get());
+		SetAction(m_CableAction,  m_Shared.DrawAction_get());
+		SetAction(m_PlayerModelsAction, m_Shared.NoDrawAction_get());
+		SetAction(m_WeaponModelsAction, m_Shared.NoDrawAction_get());
+		SetAction(m_StatTrakAction, m_Shared.NoDrawAction_get());
+		SetAction(m_ShellModelsAction, m_Shared.NoDrawAction_get());
+		SetAction(m_OtherModelsAction, m_Shared.DrawAction_get());
+		SetAction(m_DecalTexturesAction, m_Shared.DrawAction_get());
+		SetAction(m_EffectsAction, m_Shared.DrawAction_get());
+		SetAction(m_ShellParticleAction, m_Shared.NoDrawAction_get());
+		SetAction(m_OtherParticleAction, m_Shared.DrawAction_get());
+		SetAction(m_StickerAction, m_Shared.NoDrawAction_get());
+		SetAction(m_ErrorMaterialAction, m_Shared.DrawAction_get());
+		SetAction(m_OtherAction, m_Shared.DrawAction_get());
 	}
 
 	virtual ~CAfxMatteWorldStream() {}
@@ -820,23 +1066,23 @@ class CAfxDepthWorldStream
 public:
 	CAfxDepthWorldStream() : CAfxBaseFxStream()
 	{
-		m_ClientEffectTexturesAction = AA_DrawDepth;
-		m_WorldTexturesAction = AA_DrawDepth;
-		m_SkyBoxTexturesAction = AA_DrawDepth;
-		m_StaticPropTexturesAction = AA_DrawDepth;
-		m_CableAction = AA_DrawDepth;
-		m_PlayerModelsAction = AA_NoDraw;
-		m_WeaponModelsAction = AA_NoDraw;
-		m_StatTrakAction = AA_NoDraw;
-		m_ShellModelsAction = AA_NoDraw;
-		m_OtherModelsAction = AA_DrawDepth;
-		m_DecalTexturesAction = AA_DrawDepth;
-		m_EffectsAction = AA_DrawDepth;
-		m_ShellParticleAction = AA_NoDraw;
-		m_OtherParticleAction = AA_DrawDepth;
-		m_StickerAction = AA_NoDraw;
-		m_ErrorMaterialAction = AA_DrawDepth;
-		m_OtherAction = AA_DrawDepth;
+		SetAction(m_ClientEffectTexturesAction, m_Shared.DepthAction_get());
+		SetAction(m_WorldTexturesAction, m_Shared.DepthAction_get());
+		SetAction(m_SkyBoxTexturesAction, m_Shared.DepthAction_get());
+		SetAction(m_StaticPropTexturesAction, m_Shared.DepthAction_get());
+		SetAction(m_CableAction, m_Shared.DepthAction_get());
+		SetAction(m_PlayerModelsAction, m_Shared.NoDrawAction_get());
+		SetAction(m_WeaponModelsAction, m_Shared.NoDrawAction_get());
+		SetAction(m_StatTrakAction, m_Shared.NoDrawAction_get());
+		SetAction(m_ShellModelsAction, m_Shared.NoDrawAction_get());
+		SetAction(m_OtherModelsAction, m_Shared.DepthAction_get());
+		SetAction(m_DecalTexturesAction, m_Shared.DepthAction_get());
+		SetAction(m_EffectsAction, m_Shared.DepthAction_get());
+		SetAction(m_ShellParticleAction, m_Shared.NoDrawAction_get());
+		SetAction(m_OtherParticleAction, m_Shared.DepthAction_get());
+		SetAction(m_StickerAction, m_Shared.NoDrawAction_get());
+		SetAction(m_ErrorMaterialAction, m_Shared.DepthAction_get());
+		SetAction(m_OtherAction, m_Shared.DepthAction_get());
 	}
 
 	virtual ~CAfxDepthWorldStream() {}
@@ -850,23 +1096,23 @@ class CAfxMatteEntityStream
 public:
 	CAfxMatteEntityStream() : CAfxBaseFxStream()
 	{
-		m_ClientEffectTexturesAction = AA_GreenScreen;
-		m_WorldTexturesAction = AA_GreenScreen;
-		m_SkyBoxTexturesAction = AA_GreenScreen;
-		m_StaticPropTexturesAction = AA_GreenScreen;
-		m_CableAction = AA_GreenScreen;
-		m_PlayerModelsAction = AA_Draw;
-		m_WeaponModelsAction = AA_Draw;
-		m_StatTrakAction = AA_Draw;
-		m_ShellModelsAction = AA_Draw;
-		m_OtherModelsAction = AA_GreenScreen;
-		m_DecalTexturesAction = AA_GreenScreen;
-		m_EffectsAction = AA_GreenScreen;
-		m_ShellParticleAction = AA_Draw;
-		m_OtherParticleAction = AA_GreenScreen;
-		m_StickerAction = AA_Draw;
-		m_ErrorMaterialAction = AA_GreenScreen;
-		m_OtherAction = AA_GreenScreen;
+		SetAction(m_ClientEffectTexturesAction, m_Shared.MaskAction_get());
+		SetAction(m_WorldTexturesAction, m_Shared.MaskAction_get());
+		SetAction(m_SkyBoxTexturesAction, m_Shared.MaskAction_get());
+		SetAction(m_StaticPropTexturesAction, m_Shared.MaskAction_get());
+		SetAction(m_CableAction, m_Shared.MaskAction_get());
+		SetAction(m_PlayerModelsAction, m_Shared.DrawAction_get());
+		SetAction(m_WeaponModelsAction, m_Shared.DrawAction_get());
+		SetAction(m_StatTrakAction, m_Shared.DrawAction_get());
+		SetAction(m_ShellModelsAction, m_Shared.DrawAction_get());
+		SetAction(m_OtherModelsAction, m_Shared.MaskAction_get());
+		SetAction(m_DecalTexturesAction, m_Shared.MaskAction_get());
+		SetAction(m_EffectsAction, m_Shared.MaskAction_get());
+		SetAction(m_ShellParticleAction, m_Shared.DrawAction_get());
+		SetAction(m_OtherParticleAction, m_Shared.MaskAction_get());
+		SetAction(m_StickerAction, m_Shared.DrawAction_get());
+		SetAction(m_ErrorMaterialAction, m_Shared.MaskAction_get());
+		SetAction(m_OtherAction, m_Shared.MaskAction_get());
 	}
 
 	virtual ~CAfxMatteEntityStream() {}
@@ -880,23 +1126,23 @@ class CAfxDepthEntityStream
 public:
 	CAfxDepthEntityStream() : CAfxBaseFxStream()
 	{
-		m_ClientEffectTexturesAction = AA_DrawDepth;
-		m_WorldTexturesAction =  AA_DrawDepth;
-		m_SkyBoxTexturesAction =  AA_DrawDepth;
-		m_StaticPropTexturesAction =  AA_DrawDepth;
-		m_CableAction =  AA_DrawDepth;
-		m_PlayerModelsAction =  AA_DrawDepth;
-		m_WeaponModelsAction =  AA_DrawDepth;
-		m_StatTrakAction = AA_DrawDepth;
-		m_ShellModelsAction =  AA_DrawDepth;
-		m_OtherModelsAction =  AA_DrawDepth;
-		m_DecalTexturesAction =  AA_DrawDepth;
-		m_EffectsAction =  AA_DrawDepth;
-		m_ShellParticleAction =  AA_DrawDepth;
-		m_OtherParticleAction =  AA_DrawDepth;
-		m_StickerAction =  AA_DrawDepth;
-		m_ErrorMaterialAction = AA_DrawDepth;
-		m_OtherAction = AA_DrawDepth;
+		SetAction(m_ClientEffectTexturesAction, m_Shared.DepthAction_get());
+		SetAction(m_WorldTexturesAction, m_Shared.DepthAction_get());
+		SetAction(m_SkyBoxTexturesAction, m_Shared.DepthAction_get());
+		SetAction(m_StaticPropTexturesAction, m_Shared.DepthAction_get());
+		SetAction(m_CableAction, m_Shared.DepthAction_get());
+		SetAction(m_PlayerModelsAction, m_Shared.DepthAction_get());
+		SetAction(m_WeaponModelsAction, m_Shared.DepthAction_get());
+		SetAction(m_StatTrakAction, m_Shared.DepthAction_get());
+		SetAction(m_ShellModelsAction, m_Shared.DepthAction_get());
+		SetAction(m_OtherModelsAction, m_Shared.DepthAction_get());
+		SetAction(m_DecalTexturesAction, m_Shared.DepthAction_get());
+		SetAction(m_EffectsAction, m_Shared.DepthAction_get());
+		SetAction(m_ShellParticleAction, m_Shared.DepthAction_get());
+		SetAction(m_OtherParticleAction, m_Shared.DepthAction_get());
+		SetAction(m_StickerAction, m_Shared.DepthAction_get());
+		SetAction(m_ErrorMaterialAction, m_Shared.DepthAction_get());
+		SetAction(m_OtherAction, m_Shared.DepthAction_get());
 	}
 
 	virtual ~CAfxDepthEntityStream() {}
@@ -910,23 +1156,23 @@ class CAfxAlphaMatteStream
 public:
 	CAfxAlphaMatteStream() : CAfxBaseFxStream()
 	{
-		m_ClientEffectTexturesAction = AA_Black;
-		m_WorldTexturesAction = AA_Black;
-		m_SkyBoxTexturesAction = AA_Black;
-		m_StaticPropTexturesAction = AA_Black;
-		m_CableAction = AA_Black;
-		m_PlayerModelsAction = AA_White;
-		m_WeaponModelsAction = AA_White;
-		m_StatTrakAction = AA_White;
-		m_ShellModelsAction = AA_White;
-		m_OtherModelsAction = AA_Black;
-		m_DecalTexturesAction = AA_Black;
-		m_EffectsAction = AA_Black;
-		m_ShellParticleAction = AA_White;
-		m_OtherParticleAction = AA_Black;
-		m_StickerAction = AA_White;
-		m_ErrorMaterialAction = AA_Black;
-		m_OtherAction = AA_Black;
+		SetAction(m_ClientEffectTexturesAction, m_Shared.BlackAction_get());
+		SetAction(m_WorldTexturesAction, m_Shared.BlackAction_get());
+		SetAction(m_SkyBoxTexturesAction, m_Shared.BlackAction_get());
+		SetAction(m_StaticPropTexturesAction, m_Shared.BlackAction_get());
+		SetAction(m_CableAction, m_Shared.BlackAction_get());
+		SetAction(m_PlayerModelsAction, m_Shared.WhiteAction_get());
+		SetAction(m_WeaponModelsAction, m_Shared.WhiteAction_get());
+		SetAction(m_StatTrakAction, m_Shared.WhiteAction_get());
+		SetAction(m_ShellModelsAction, m_Shared.WhiteAction_get());
+		SetAction(m_OtherModelsAction, m_Shared.BlackAction_get());
+		SetAction(m_DecalTexturesAction, m_Shared.BlackAction_get());
+		SetAction(m_EffectsAction, m_Shared.BlackAction_get());
+		SetAction(m_ShellParticleAction, m_Shared.WhiteAction_get());
+		SetAction(m_OtherParticleAction, m_Shared.BlackAction_get());
+		SetAction(m_StickerAction, m_Shared.WhiteAction_get());
+		SetAction(m_ErrorMaterialAction, m_Shared.BlackAction_get());
+		SetAction(m_OtherAction, m_Shared.BlackAction_get());
 	}
 
 	virtual ~CAfxAlphaMatteStream() {}
@@ -940,24 +1186,24 @@ class CAfxAlphaEntityStream
 public:
 	CAfxAlphaEntityStream() : CAfxBaseFxStream()
 	{
-		m_ClientEffectTexturesAction = AA_Draw;
-		m_WorldTexturesAction =  AA_Draw;
-		m_SkyBoxTexturesAction =  AA_Draw;
-		m_StaticPropTexturesAction =  AA_Draw;
-		m_CableAction =  AA_Draw;
-		m_PlayerModelsAction =  AA_Draw;
-		m_WeaponModelsAction =  AA_Draw;
-		m_StatTrakAction = AA_Draw;
-		m_ShellModelsAction =  AA_Draw;
-		m_OtherModelsAction =  AA_Draw;
-		m_DecalTexturesAction =  AA_Draw;
-		m_EffectsAction =  AA_Draw;
-		m_ShellParticleAction =  AA_Draw;
-		m_OtherParticleAction =  AA_Draw;
-		m_StickerAction =  AA_Draw;
-		m_ErrorMaterialAction = AA_Draw;
-		m_WriteZAction = AA_Draw;
-		m_OtherAction = AA_Draw;
+		SetAction(m_ClientEffectTexturesAction, m_Shared.DrawAction_get());
+		SetAction(m_WorldTexturesAction, m_Shared.DrawAction_get());
+		SetAction(m_SkyBoxTexturesAction, m_Shared.DrawAction_get());
+		SetAction(m_StaticPropTexturesAction, m_Shared.DrawAction_get());
+		SetAction(m_CableAction, m_Shared.DrawAction_get());
+		SetAction(m_PlayerModelsAction, m_Shared.DrawAction_get());
+		SetAction(m_WeaponModelsAction, m_Shared.DrawAction_get());
+		SetAction(m_StatTrakAction, m_Shared.DrawAction_get());
+		SetAction(m_ShellModelsAction, m_Shared.DrawAction_get());
+		SetAction(m_OtherModelsAction, m_Shared.DrawAction_get());
+		SetAction(m_DecalTexturesAction, m_Shared.DrawAction_get());
+		SetAction(m_EffectsAction, m_Shared.DrawAction_get());
+		SetAction(m_ShellParticleAction, m_Shared.DrawAction_get());
+		SetAction(m_OtherParticleAction, m_Shared.DrawAction_get());
+		SetAction(m_StickerAction, m_Shared.DrawAction_get());
+		SetAction(m_ErrorMaterialAction, m_Shared.DrawAction_get());
+		SetAction(m_WriteZAction, m_Shared.DrawAction_get());
+		SetAction(m_OtherAction, m_Shared.DrawAction_get());
 	}
 
 	virtual ~CAfxAlphaEntityStream() {}
@@ -971,23 +1217,23 @@ class CAfxAlphaWorldStream
 public:
 	CAfxAlphaWorldStream() : CAfxBaseFxStream()
 	{
-		m_ClientEffectTexturesAction = AA_Draw;
-		m_WorldTexturesAction = AA_Draw;
-		m_SkyBoxTexturesAction = AA_Draw;
-		m_StaticPropTexturesAction = AA_Draw;
-		m_CableAction = AA_Draw;
-		m_PlayerModelsAction = AA_NoDraw;
-		m_WeaponModelsAction = AA_NoDraw;
-		m_StatTrakAction = AA_NoDraw;
-		m_ShellModelsAction =  AA_NoDraw;
-		m_OtherModelsAction =  AA_Draw;
-		m_DecalTexturesAction = AA_Draw;
-		m_EffectsAction = AA_Draw;
-		m_ShellParticleAction = AA_NoDraw;
-		m_OtherParticleAction = AA_Draw;
-		m_StickerAction = AA_NoDraw;
-		m_ErrorMaterialAction = AA_Draw;
-		m_OtherAction = AA_Draw;
+		SetAction(m_ClientEffectTexturesAction, m_Shared.DrawAction_get());
+		SetAction(m_WorldTexturesAction, m_Shared.DrawAction_get());
+		SetAction(m_SkyBoxTexturesAction, m_Shared.DrawAction_get());
+		SetAction(m_StaticPropTexturesAction, m_Shared.DrawAction_get());
+		SetAction(m_CableAction, m_Shared.DrawAction_get());
+		SetAction(m_PlayerModelsAction, m_Shared.NoDrawAction_get());
+		SetAction(m_WeaponModelsAction, m_Shared.NoDrawAction_get());
+		SetAction(m_StatTrakAction, m_Shared.NoDrawAction_get());
+		SetAction(m_ShellModelsAction,  m_Shared.NoDrawAction_get());
+		SetAction(m_OtherModelsAction,  m_Shared.DrawAction_get());
+		SetAction(m_DecalTexturesAction, m_Shared.DrawAction_get());
+		SetAction(m_EffectsAction, m_Shared.DrawAction_get());
+		SetAction(m_ShellParticleAction, m_Shared.NoDrawAction_get());
+		SetAction(m_OtherParticleAction, m_Shared.DrawAction_get());
+		SetAction(m_StickerAction, m_Shared.NoDrawAction_get());
+		SetAction(m_ErrorMaterialAction, m_Shared.DrawAction_get());
+		SetAction(m_OtherAction, m_Shared.DrawAction_get());
 	}
 
 	virtual ~CAfxAlphaWorldStream() {}
@@ -1059,6 +1305,7 @@ public:
 	void Console_PrintStreams();
 	void Console_RemoveStream(const char * streamName);
 	void Console_EditStream(const char * streamName, IWrpCommandArgs * args, int argcOffset, char const * cmdPrefix);
+	void Console_ListActions(void);
 
 	/// <param name="index">stream name to preview or empty string if to preview nothing.</param>
 	void Console_PreviewStream(const char * streamName);
@@ -1204,8 +1451,8 @@ private:
 
 	bool Console_CheckStreamName(char const * value);
 
-	bool Console_ToAfxAction(char const * value, CAfxBaseFxStream::AfxAction & action);
-	char const * Console_FromAfxAction(CAfxBaseFxStream::AfxAction action);
+	bool Console_ToAfxAction(char const * value, CAfxBaseFxStream::CAction * & action);
+	char const * Console_FromAfxAction(CAfxBaseFxStream::CAction * action);
 
 	bool Console_ToStreamCombineType(char const * value, CAfxTwinStream::StreamCombineType & streamCombineType);
 	char const * Console_FromStreamCombineType(CAfxTwinStream::StreamCombineType streamCombineType);

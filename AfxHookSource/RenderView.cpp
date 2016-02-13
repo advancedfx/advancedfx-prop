@@ -60,6 +60,8 @@ void SetCvarFloat(void * pcvar, float value)
 
 Hook_VClient_RenderView::Hook_VClient_RenderView()
 : m_Globals(0)
+, handleZoomEnabled(false)
+, handleZoomMinUnzoomedFov(90.0)
 {
 	m_Export = false;
 	m_FovOverride = false;
@@ -205,7 +207,7 @@ void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, fl
 		}
 	}
 
-	if(m_FovOverride) Fov = (float)m_FovValue;
+	if(m_FovOverride && (!handleZoomEnabled || handleZoomMinUnzoomedFov <= Fov)) Fov = (float)m_FovValue;
 
 	if(g_AfxHookSourceInput.GetCameraControlMode() && m_Globals)
 	{

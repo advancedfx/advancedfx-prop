@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-05-19 by dominik.matrixstorm.com
+// 2016-02-13 by dominik.matrixstorm.com
 //
 // Firstchanges:
 // 2010-03-17 by dominik.matrixstorm.com
@@ -110,6 +110,36 @@ bool StringBeginsWith(char const * target, char const * beginning) {
 
 	if(*beginning && !*target)
 		return false;
+
+	return true;
+}
+
+bool StringIsAlphas(char const * value)
+{
+	if(StringIsEmpty(value)) return true;
+
+	while(*value)
+	{
+		if(!isalpha(*value))
+			return false;
+
+		++value;
+	}
+
+	return true;
+}
+
+bool StringIsDigits(char const * value)
+{
+	if(StringIsEmpty(value)) return true;
+
+	while(*value)
+	{
+		if(!isdigit(*value))
+			return false;
+
+		++value;
+	}
 
 	return true;
 }

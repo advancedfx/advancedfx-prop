@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-05-19 by dominik.matrixstorm.com
+// 2016-02-13 by dominik.matrixstorm.com
 //
 // Firstchanges:
 // 2010-03-17 by dominik.matrixstorm.com
@@ -19,6 +19,9 @@ bool StringEndsWith(char const * target, char const * ending);
 
 bool StringBeginsWith(char const * target, char const * beginning);
 
+bool StringIsAlphas(char const * value);
+
+bool StringIsDigits(char const * value);
 
 bool StringIsAlNum(char const * value);
 

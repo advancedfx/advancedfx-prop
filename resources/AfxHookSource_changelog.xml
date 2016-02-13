@@ -5,14 +5,40 @@
 
 <release>
 <name>AfxHookSource</name>
-<version>0.2.xx.xx</version>
-<time>2016-02-xxTxx:xxZ</time>
+<version>1.0.0.0</version>
+<time>2016-02-13T13:21Z</time>
 <changes>
+<change type="added">
+Added mirv_fov handleZoom, which allows to enable zoom handling for mirv_fov (so it doesn't override the fov when zoomed).
+For CS:GO you only need to do mirv_fov handleZoom enabled 1. For other mods not using a default 90.0 fov you might need to set the threshold with
+mirv_fov handleZoom minUnzoomedFov.
+</change>
+<change type="updated">
+Updated mirv_streams heavily to support mirv_streams actions.
+</change>
+<change type="added">
+Added a mirv_streams actions, which is the ability to add custom actions that can be used as action for baseFx based streams (currently all streams except
+developer and normal stream). There is currently only on custom action to add, which is the replace action, which allows to define a replacement material
+for an action. While HLAE does basic checks if the material is compatible with the one replaced, there might still be console errors or even crashes, if
+the material is not compatible, so use with care.<br />
+The replace action basically replaces the material ("texture") of a model, but not the model itself. So pelase don't get too excited!
+</change>
+<change type="added">
+Added a actionFilter command to mirv_streams baseFx streams. Command has built-in help. It allows to filter by material name (even using wild cards) and set an action for that material.
+Be careful, for example replacing the vgui materials will mess up your console! (Well it mostly just does what you ask it to.)
+</change>
 <change type="added">
 Added otherAction to mirv_streams, this will hoepfully improve handling of unknown materials on custom maps for the various stream templates.
 (Also added a few readonly actions that are of no real use but used internally.)
 </change>
 </changes>
+<comments>
+For custom replacement materials it's a good idea to use the resources\AfxHookSource\assets\csgo\materials folder in the HLAE installation
+directory, because HLAE mounts the whole resources\AfxHookSource\assets\csgo folder into the game. That way you won't mess up your game.
+Since the HLAE mounted directory has lowest priority, you need to use a material name that is not already used for your custom materials,
+meaning the best idea is to place them in a custom sub-directory, i.e. resources\AfxHookSource\assets\csgo\materials\my.<br />
+Good luck, have fun, happy testing!
+</comments>
 </release>
 
 <release>
