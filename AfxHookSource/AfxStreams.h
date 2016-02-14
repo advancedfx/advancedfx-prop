@@ -259,6 +259,12 @@ public:
 		{
 		}
 
+		CActionKey(const CActionKey & key, bool toLower)
+		: m_Name(key.m_Name)
+		{
+			if(toLower) ToLower();
+		}
+
 		CActionKey(const CActionKey & x)
 		: m_Name(x.m_Name)
 		{
@@ -268,6 +274,8 @@ public:
 		{
 			return m_Name.compare(y.m_Name) < 0;
 		}
+
+		void ToLower(void);
 
 	private:
 	};

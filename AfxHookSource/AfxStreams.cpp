@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <sstream>
 #include <iomanip>
+#include <algorithm>
 
 extern WrpVEngineClient * g_VEngineClient;
 
@@ -1284,7 +1285,14 @@ void CAfxBaseFxStream::SetAction(CAction * & target, CAction * src)
 	target = src;
 }
 
-// CAfxBaseFxStream::CShared ////////////////////////////////////////////////////
+// CAfxBaseFxStream::CActionKey ////////////////////////////////////////////////
+
+void CAfxBaseFxStream::CActionKey::ToLower(void)
+{
+	std::transform(m_Name.begin(), m_Name.end(), m_Name.begin(), ::tolower);
+}
+
+// CAfxBaseFxStream::CShared ///////////////////////////////////////////////////
 
 CAfxBaseFxStream::CShared::CShared()
 : m_RefCount(0)
@@ -1335,7 +1343,7 @@ void CAfxBaseFxStream::CShared::Console_ListActions(void)
 {
 	for(std::map<CActionKey, CAction *>::iterator it = m_Actions.begin(); it != m_Actions.end(); ++it)
 	{
-		Tier0_Msg("%s%s\n", it->first.m_Name.c_str(), it->second->IsStockAction_get() ? " (stock action)" : "");
+		Tier0_Msg("%s%s\n", it->second->Key_get().m_Name.c_str(), it->second->IsStockAction_get() ? " (stock action)" : "");
 	}
 }
 
@@ -1351,7 +1359,9 @@ void CAfxBaseFxStream::CShared::Console_AddReplaceAction(char const * actionName
 
 CAfxBaseFxStream::CAction * CAfxBaseFxStream::CShared::GetAction(CActionKey const & key)
 {
-	std::map<CActionKey, CAction *>::iterator it = m_Actions.find(key);
+	CActionKey lowerKey(key, true);
+	
+	std::map<CActionKey, CAction *>::iterator it = m_Actions.find(lowerKey);
 	if(it != m_Actions.end())
 	{
 		return it->second;
@@ -1362,7 +1372,9 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::CShared::GetAction(CActionKey cons
 
 bool CAfxBaseFxStream::CShared::RemoveAction(CActionKey const & key)
 {
-	std::map<CActionKey, CAction *>::iterator it = m_Actions.find(key);
+	CActionKey lowerKey(key, true);
+
+	std::map<CActionKey, CAction *>::iterator it = m_Actions.find(lowerKey);
 	if(it != m_Actions.end())
 	{
 		if(!it->second->IsStockAction_get())
@@ -1450,24 +1462,32 @@ void CAfxBaseFxStream::CShared::CreateAction(CActionKey const & key, CAction * a
 		action->IsStockAction_set(isStockAction);
 		action->AddRef();
 	}
-	m_Actions[key] = action;
+	CActionKey lowerKey(key, true);
+	m_Actions[lowerKey] = action;
 }
 
 bool CAfxBaseFxStream::CShared::Console_CheckActionKey(CActionKey & key)
 {
-	if(!StringIsAlNum(key.m_Name.c_str()))
+	CActionKey lowerKey(key, true);
+
+	if(StringIsEmpty(key.m_Name.c_str()))
 	{
-		Tier0_Warning("Eror: actionName can only contain letters and numbers!\n");
+		Tier0_Warning("Error: actionName must not be empty!\n");
 		return false;
 	}
 
-	for(std::map<CActionKey, CAction *>::iterator it = m_Actions.begin(); it != m_Actions.end(); ++it)
+	if(!StringIsAlNum(key.m_Name.c_str()))
 	{
-		if(!_stricmp(it->first.m_Name.c_str(),key.m_Name.c_str()))
-		{
-			Tier0_Warning("Eror: actionName is already in use!\n");
-			return false;
-		}
+		Tier0_Warning("Error: actionName can only contain letters and numbers!\n");
+		return false;
+	}
+
+	std::map<CActionKey, CAction *>::iterator it = m_Actions.find(lowerKey);
+
+	if(it != m_Actions.end())
+	{
+		Tier0_Warning("Error: actionName is already in use!\n");
+		return false;
 	}
 
 	return true;

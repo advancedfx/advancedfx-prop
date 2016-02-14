@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>1.0.0.3</version>
+<time>2016-02-14T11:52Z</time>
+<changes>
+<change type="fixed">
+Fixed mirv_streams actions being case sensitive in some cases (now are fully non-case sensitive again).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>1.0.0.2</version>
 <time>2016-02-14T07:34Z</time>
 <changes>
