@@ -3,6 +3,19 @@
 
 <changelog>
 
+
+<release>
+<name>AfxHookSource</name>
+<version>1.0.0.2</version>
+<time>2016-02-14T07:34Z</time>
+<changes>
+<change type="fixed">
+Fixed mirv_streams missing invisible action, which can be a problem for users still relaying on it, however it's actually just a noDraw action these days.
+</change>
+</changes>
+</release>
+
+
 <release>
 <name>AfxHookSource</name>
 <version>1.0.0.1</version>

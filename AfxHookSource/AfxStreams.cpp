@@ -1293,6 +1293,7 @@ CAfxBaseFxStream::CShared::CShared()
 {
 	CreateStdAction(m_DrawAction, CActionKey("draw"), new CAction());
 	CreateStdAction(m_NoDrawAction, CActionKey("noDraw"), new CActionNoDraw());
+	CreateAction(CActionKey("invisible"), new CActionNoDraw(), true);
 
 	CreateStdAction(m_DebugDumpAction, CActionKey("debugDump (don't use)"), new CActionDebugDump());
 
