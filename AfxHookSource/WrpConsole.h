@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-07-27 dominik.matrixstorm.com
+// 2016-02-16 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-10-02 dominik.matrixstorm.com
@@ -12,6 +12,8 @@
 // Wrapper(s) for Source engine ConCommands and ConVars.
 
 #include "SourceInterfaces.h"
+
+#include <string>
 
 
 // IWrpCommandArgs /////////////////////////////////////////////////////////////
@@ -27,6 +29,25 @@ public:
 };
 typedef void (*WrpCommandCallback)(IWrpCommandArgs * args);
 
+// CSubWrpCommandArgs //////////////////////////////////////////////////////////
+
+class CSubWrpCommandArgs
+: public IWrpCommandArgs
+{
+public:
+	CSubWrpCommandArgs(IWrpCommandArgs * commandArgs, int offset);
+
+	/// <summary> returns the count of passed arguments </summary>
+	virtual int ArgC();
+
+	/// <summary> returns the i-th argument, where 0 is being the first one </summary>
+	virtual char const * ArgV(int i);
+
+private:
+	int m_Offset;
+	IWrpCommandArgs *m_CommandArgs;
+	std::string m_Temp;
+};
 
 // WrpConCommand ///////////////////////////////////////////////////////////////
 

@@ -403,9 +403,9 @@ public:
 		m_Shared.Console_ListActions();
 	}
 
-	static void Console_AddReplaceAction(char const * actionName, char const * materialName)
+	static void Console_AddReplaceAction(IWrpCommandArgs * args)
 	{
-		m_Shared.Console_AddReplaceAction(actionName, materialName);
+		m_Shared.Console_AddReplaceAction(args);
 	}
 
 	static CAction * GetAction(CActionKey const & key)
@@ -516,6 +516,9 @@ public:
 
 	float DepthValMax_get(void);
 	void DepthValMax_set(float value);
+
+	float SmokeOverlayAlphaFactor_get(void);
+	void SmokeOverlayAlphaFactor_set(float value);
 	
 	bool DebugPrint_get(void);
 	void DebugPrint_set(bool value);
@@ -540,7 +543,7 @@ protected:
 		void Release();
 
 		void Console_ListActions(void);
-		void Console_AddReplaceAction(char const * actionName, char const * materialName);
+		void Console_AddReplaceAction(IWrpCommandArgs * args);
 		CAction * GetAction(CActionKey const & key);
 		bool RemoveAction(CActionKey const & key);
 
@@ -601,6 +604,7 @@ protected:
 	bool m_TestAction;
 	float m_DepthVal;
 	float m_DepthValMax;
+	float m_SmokeOverlayAlphaFactor;
 
 	void SetActionAndInvalidateMap(CAction * & target, CAction * src);
 	void SetAction(CAction * & target, CAction * src);
@@ -857,11 +861,61 @@ private:
 	: public CAction
 	{
 	public:
-		CActionReplace(char const * materialName, CAction * fallBackAction);
+		CActionReplace(
+			char const * materialName,
+			CAction * fallBackAction);
+
+		void OverrideColor(float const color[3])
+		{
+			m_OverrideColor = true;
+			m_Color[0] = color[0];
+			m_Color[1] = color[1];
+			m_Color[2] = color[2];
+		}
+
+		void OverrideBlend(float blend)
+		{
+			m_OverrideBlend = true;
+			m_Blend = blend;
+		}
+
+		void OverrideDepthWrite(bool depthWrite)
+		{
+			m_OverrideDepthWrite = true;
+			m_DepthWrite = depthWrite;
+		}
 
 		virtual CAction * ResolveAction(IMaterial_csgo * material);
 
+		virtual void AfxUnbind(IAfxMatRenderContext * ctx);
+
 		virtual IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material);
+
+ 		virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance )
+		{
+			if(m_OverrideColor || m_OverrideBlend)
+			{
+				MeshInstanceData_t_csgo * first = const_cast<MeshInstanceData_t_csgo *>(pInstance);
+
+				for(int i = 0; i < nInstanceCount; ++i)
+				{
+					if(m_OverrideColor)
+					{
+						first->m_DiffuseModulation.x = m_Color[0];
+						first->m_DiffuseModulation.y = m_Color[1];
+						first->m_DiffuseModulation.z = m_Color[2];
+					}
+					if(m_OverrideBlend)
+					{
+						first->m_DiffuseModulation.w = m_Blend;
+					}
+ 
+					++first;
+				}
+			}
+ 
+			ctx->GetParent()->DrawInstances(nInstanceCount, pInstance); 
+		} 
 
 	protected:
 		virtual ~CActionReplace();
@@ -870,6 +924,12 @@ private:
 		CAfxMaterial * m_Material;
 		std::string m_MaterialName;
 		CAction * m_FallBackAction;
+		bool m_OverrideColor;
+		float m_Color[3];
+		bool m_OverrideBlend;
+		float m_Blend;
+		bool m_OverrideDepthWrite;
+		bool m_DepthWrite;
 
 		void EnsureMaterial(void);
 		void ExamineMaterial(IMaterial_csgo * material, bool & outSplinetype, bool & outUseinstancing);

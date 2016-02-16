@@ -14,6 +14,7 @@
 #include "WrpVEngineClient.h"
 #include "csgo_CSkyBoxView.h"
 #include "csgo_view.h"
+#include "csgo_CViewRender.h"
 
 #include <shared/StringTools.h>
 #include <shared/FileTools.h>
@@ -574,6 +575,7 @@ CAfxBaseFxStream::CAfxBaseFxStream()
 , m_TestAction(false)
 , m_DepthVal(1)
 , m_DepthValMax(1024)
+, m_SmokeOverlayAlphaFactor(1)
 , m_CurrentAction(0)
 , m_BoundAction(false)
 , m_DebugPrint(false)
@@ -736,6 +738,8 @@ void CAfxBaseFxStream::StreamAttach(IAfxStreams4Stream * streams)
 
 	m_Shared.m_ActiveBaseFxStream = this;
 
+	g_SmokeOverlay_AlphaMod = m_SmokeOverlayAlphaFactor;
+
 	// Set a default action, just in case:
 	BindAction(m_Shared.DrawAction_get());
 
@@ -763,6 +767,8 @@ void CAfxBaseFxStream::StreamDetach(IAfxStreams4Stream * streams)
 	streams->OnMaterialHook_set(0);
 
 	m_Shared.m_ActiveBaseFxStream = 0;
+
+	g_SmokeOverlay_AlphaMod = 1;
 
 	CAfxRenderViewStream::StreamDetach(streams);
 }
@@ -1182,6 +1188,16 @@ void CAfxBaseFxStream::DepthValMax_set(float value)
 	m_DepthValMax = value;
 }
 
+float CAfxBaseFxStream::SmokeOverlayAlphaFactor_get(void)
+{
+	return m_SmokeOverlayAlphaFactor;
+}
+
+void CAfxBaseFxStream::SmokeOverlayAlphaFactor_set(float value)
+{
+	m_SmokeOverlayAlphaFactor = value;
+}
+
 bool CAfxBaseFxStream::DebugPrint_get(void)
 {
 	return m_DebugPrint;
@@ -1347,14 +1363,102 @@ void CAfxBaseFxStream::CShared::Console_ListActions(void)
 	}
 }
 
-void CAfxBaseFxStream::CShared::Console_AddReplaceAction(char const * actionName, char const * materialName)
+void CAfxBaseFxStream::CShared::Console_AddReplaceAction(IWrpCommandArgs * args)
 {
-	CActionKey key(actionName);
+	int argc = args->ArgC();
 
-	if(!Console_CheckActionKey(key))
-		return;
+	char const * prefix = args->ArgV(0);
 
-	CreateAction(key, new CActionReplace(materialName, m_NoDrawAction));
+	if(3 <= argc)
+	{
+		char const * actionName = args->ArgV(1);
+		char const * materialName = args->ArgV(2);
+
+		CActionKey key(actionName);
+
+		if(!Console_CheckActionKey(key))
+			return;
+
+		bool overrideColor = false;
+		float color[3];
+
+		bool overrideBlend = false;
+		float blend;
+
+		bool overrideDepthWrite = false;
+		bool depthWrite;
+
+		for(int i=3; i < argc; ++i)
+		{
+			char const * argOpt = args->ArgV(i);
+
+			if(StringBeginsWith(argOpt, "overrideColor="))
+			{
+				argOpt += strlen("overrideColor=");
+
+				std::istringstream iss(argOpt);
+
+				std::string word;
+
+				int j=0;
+				while(j<3 && (iss >> word))
+				{
+					color[j] = (float)atof(word.c_str());
+					++j;
+				}
+
+				if(3 == j)
+				{
+					overrideColor = true;
+				}
+				else
+				{
+					Tier0_Warning("Error: overrideColor needs 3 values!\n");
+					return;
+				}
+			}
+			else
+			if(StringBeginsWith(argOpt, "overrideBlend="))
+			{
+				argOpt += strlen("overrideBlend=");
+
+				overrideBlend = true;
+				blend = (float)atof(argOpt);
+			}
+			else
+			if(StringBeginsWith(argOpt, "overrideDepthWrite="))
+			{
+				argOpt += strlen("overrideDepthWrite=");
+
+				overrideDepthWrite = true;
+				depthWrite = 0 != atoi(argOpt);
+			}
+			else
+			{
+				Tier0_Warning("Error: invalid option %s\n", argOpt);
+				return;
+			}
+		}
+
+		CActionReplace * replaceAction = new CActionReplace(materialName, m_NoDrawAction);
+
+		if(overrideColor) replaceAction->OverrideColor(color);
+		if(overrideBlend) replaceAction->OverrideBlend(blend);
+		if(overrideDepthWrite) replaceAction->OverrideDepthWrite(depthWrite);
+
+		CreateAction(key, replaceAction);
+	}
+	else
+	{
+		Tier0_Msg(
+			"%s <actionName> <materialName> [option]*\n"
+			"Options (yes you can specify multiple) can be:\n"
+			"\t\"overrideColor=<rF> <gF> <bF>\"- Where <.F> is a floating point value between 0.0 and 1.0\n"
+			"\t\"overrideBlend=<bF>\"- Where <bF> is a floating point value between 0.0 and 1.0\n"
+			"\t\"overrideDepthWrite=<iF>\"- Where <iF> is 0 (don't write depth) or 1 (write depth)\n"
+			,
+			prefix);
+	}
 }
 
 CAfxBaseFxStream::CAction * CAfxBaseFxStream::CShared::GetAction(CActionKey const & key)
@@ -1502,10 +1606,15 @@ bool CAfxBaseFxStream::CActionFilterValue::CalcMatch(char const * targetString)
 
 // CAfxBaseFxStream::CActionReplace ////////////////////////////////////////////
 
-CAfxBaseFxStream::CActionReplace::CActionReplace(char const * materialName, CAction * fallBackAction)
+CAfxBaseFxStream::CActionReplace::CActionReplace(
+	char const * materialName,
+	CAction * fallBackAction)
 : CAction()
 , m_Material(0)
 , m_MaterialName(materialName)
+, m_OverrideColor(false)
+, m_OverrideBlend(false)
+, m_OverrideDepthWrite(false)
 {
 	if(fallBackAction) fallBackAction->AddRef();
 	m_FallBackAction = fallBackAction;
@@ -1537,9 +1646,30 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::CActionReplace::ResolveAction(IMat
 	return SafeSubResolveAction(m_FallBackAction, material);
 }
 
+void CAfxBaseFxStream::CActionReplace::AfxUnbind(IAfxMatRenderContext * ctx)
+{
+	if(m_OverrideColor)
+		CAfxBaseFxStream::m_Shared.m_ActiveBaseFxStream->m_Streams->EndOverrideSetColorModulation();
+
+	if(m_OverrideBlend)
+		CAfxBaseFxStream::m_Shared.m_ActiveBaseFxStream->m_Streams->EndOverrideSetBlend();
+
+	if(m_OverrideDepthWrite)
+		AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE();
+}
+
 IMaterial_csgo * CAfxBaseFxStream::CActionReplace::MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material)
 {
 	EnsureMaterial();
+
+	if(m_OverrideColor)
+		CAfxBaseFxStream::m_Shared.m_ActiveBaseFxStream->m_Streams->OverrideSetColorModulation(m_Color);
+
+	if(m_OverrideBlend)
+		CAfxBaseFxStream::m_Shared.m_ActiveBaseFxStream->m_Streams->OverrideSetBlend(m_Blend);
+
+	if(m_OverrideDepthWrite)
+		AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE(m_DepthWrite ? TRUE : FALSE);
 
 	return m_Material->GetMaterial();
 }
@@ -4345,6 +4475,24 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				return;
 			}
 			else
+			if(!_stricmp(cmd0, "smokeOverlayAlphaFactor"))
+			{
+				if(2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset +1);
+					curBaseFx->SmokeOverlayAlphaFactor_set((float)atof(cmd1));
+					return;
+				}
+
+				Tier0_Msg(
+					"%s smokeOverlayAlphaFactor <fValue> - Set new factor that is multiplied with smoke overlay alpha (i.e. 0 would disable it completely).\n"
+					"Current value: %f.\n"
+					, cmdPrefix
+					, curBaseFx->SmokeOverlayAlphaFactor_get()
+				);
+				return;
+			}
+			else
 			if(!_stricmp(cmd0, "debugPrint"))
 			{
 				if(2 <= argc)
@@ -4491,6 +4639,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 		Tier0_Msg("%s vguiAction [...] - Readonly.\n", cmdPrefix);
 		Tier0_Msg("%s depthVal [...]\n", cmdPrefix);
 		Tier0_Msg("%s depthValMax [...]\n", cmdPrefix);
+		Tier0_Msg("%s smokeOverlayAlphaFactor [...]\n", cmdPrefix);		
 		Tier0_Msg("%s debugPrint [...]\n", cmdPrefix);
 		Tier0_Msg("%s invalidateMap - invaldiates the material map.\n", cmdPrefix);
 		Tier0_Msg("%s man [...] - Manipulate stream more easily (i.e. depth to depth24).\n", cmdPrefix);

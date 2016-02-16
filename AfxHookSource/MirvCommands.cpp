@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-01-13 dominik.matrixstorm.com
+// 2016-02-16 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-09-30 by dominik.matrixstorm.com
@@ -414,6 +414,13 @@ CON_COMMAND(mirv_streams, "Access to streams system.")
 			return;
 		}
 		else
+		if(!_stricmp(cmd1, "previewEnd"))
+		{
+			g_AfxStreams.Console_PreviewStream("");
+			return;
+		}
+
+		else
 		if(!_stricmp(cmd1, "print"))
 		{
 			g_AfxStreams.Console_PrintStreams();
@@ -498,19 +505,15 @@ CON_COMMAND(mirv_streams, "Access to streams system.")
 						
 						if(!_stricmp(cmd3, "replace"))
 						{
-							if(6<=argc)
-							{
-								char const * actionName = args->ArgV(4);
-								char const * materialName = args->ArgV(5);
+							CSubWrpCommandArgs subArgs(args, 4);
 
-								CAfxBaseFxStream::Console_AddReplaceAction(actionName, materialName);
-								return;
-							}
+							CAfxBaseFxStream::Console_AddReplaceAction(&subArgs);
+							return;
 						}
 					}
 
 					Tier0_Msg(
-						"mirv_streams actions add replace <actionName> <materialName> - Replace with material <materialName> if possible.\n"
+						"mirv_streams actions add replace [...] - Add replace action.\n"
 					);
 					return;
 				}
@@ -545,6 +548,7 @@ CON_COMMAND(mirv_streams, "Access to streams system.")
 		"mirv_streams edit [...]- Edit a stream.\n"
 		"mirv_streams remove [...] - Remove a stream.\n"
 		"mirv_streams preview [...] - Preview a stream.\n"
+		"mirv_streams previewEnd - End preview.\n"
 		"mirv_streams print - Print current streams.\n"
 		"mirv_streams record [...] - Recording control.\n"
 		"mirv_streams actions [...] - Actions control (for baseFx based streams).\n"

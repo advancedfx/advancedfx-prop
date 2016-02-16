@@ -6,6 +6,27 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>1.1.0.0</version>
+<time>2016-02-16T18:43Z</time>
+<changes>
+<change type="added">
+Added several options to mirv_streams actions add replace.
+</change>
+<change type="added">
+Added smokeOverlayAlphaFactor to mirv_streams baseFx based streams.
+</change>
+<change type="added">
+Added easy on-screen wallhack config complete with material and texture files.<br />
+This is really easy, just enter the following into console (will print help):<br />
+exec afx/wh<br />
+This also serves as sample how to use the new features added recently (just have a look at the files in the resources folder).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>1.0.0.3</version>
 <time>2016-02-14T11:52Z</time>
 <changes>

@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2014-11-12 dominik.matrixstorm.com
+// 2016-02-16 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-10-02 dominik.matrixstorm.com
@@ -12,6 +12,8 @@
 
 #include <malloc.h>
 #include <string.h>
+#include <sstream>
+#include <iomanip>
 
 #include <windows.h>
 
@@ -252,4 +254,38 @@ void WrpConVarRef::SetDirectHack(float value)
 		m_pConVar007->m_Value.m_fValue = value;
 		m_pConVar007->m_Value.m_nValue = (int)value;
 	}
+}
+
+// CSubWrpCommandArgs //////////////////////////////////////////////////////////
+
+CSubWrpCommandArgs::CSubWrpCommandArgs(IWrpCommandArgs * commandArgs, int offset)
+: m_Offset(offset)
+, m_CommandArgs(commandArgs)
+{
+}
+
+int CSubWrpCommandArgs::ArgC()
+{
+	return m_CommandArgs->ArgC() -m_Offset +1;
+}
+
+char const * CSubWrpCommandArgs::ArgV(int i)
+{
+	if(0 == i)
+	{
+		std::ostringstream oss;
+
+		for(int i=0; i<m_Offset; ++i)
+		{
+			if(0 < i)
+				oss << " ";
+			oss << m_CommandArgs->ArgV(i);
+		}
+		
+		m_Temp = oss.str();
+
+		return m_Temp.c_str();
+	}
+
+	return m_CommandArgs->ArgV(i +m_Offset -1);
 }

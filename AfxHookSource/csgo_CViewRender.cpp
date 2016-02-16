@@ -15,6 +15,17 @@
 #include <shared/detours.h>
 
 
+float g_SmokeOverlay_AlphaMod = 1.0f;
+
+void * detoured_csgo_CViewRender_RenderSmokeOverlay_OnStoreAlpha;
+
+void __declspec(naked) touring_csgo_CViewRender_RenderSmokeOverlay_OnStoreAlpha(void)
+{
+	__asm mulss xmm1, g_SmokeOverlay_AlphaMod
+
+	__asm jmp detoured_csgo_CViewRender_RenderSmokeOverlay_OnStoreAlpha
+}
+
 void * detoured_csgo_CViewRender_RenderView_AfterVGui_DrawHud;
 
 void DoOnDrawingHud(void)
@@ -32,7 +43,7 @@ void __declspec(naked) touring_csgo_CViewRender_RenderView_AfterVGui_DrawHud(voi
 
 bool csgo_CViewRender_Install(void)
 {
-	static bool firstResult = false;
+	static bool firstResult = true;
 	static bool firstRun = true;
 	if(!firstRun) return firstResult;
 	firstRun = false;
@@ -44,9 +55,16 @@ bool csgo_CViewRender_Install(void)
 		// update original call offset:
 		DWORD * pCalladdr = (DWORD *)((BYTE *)detoured_csgo_CViewRender_RenderView_AfterVGui_DrawHud +0x1);
 		*pCalladdr = *pCalladdr -((DWORD)detoured_csgo_CViewRender_RenderView_AfterVGui_DrawHud -AFXADDR_GET(csgo_CViewRender_RenderView_AfterVGui_DrawHud));
-
-		firstResult = true;
 	}
+	else
+		firstResult = false;
+
+	if(AFXADDR_GET(csgo_CViewRender_RenderSmokeOverlay_OnStoreAlpha))
+	{
+		detoured_csgo_CViewRender_RenderSmokeOverlay_OnStoreAlpha = (void *)DetourApply((BYTE *)AFXADDR_GET(csgo_CViewRender_RenderSmokeOverlay_OnStoreAlpha), (BYTE *)touring_csgo_CViewRender_RenderSmokeOverlay_OnStoreAlpha, 0x8);
+	}
+	else
+		firstResult = false;
 
 	return firstResult;
 }
