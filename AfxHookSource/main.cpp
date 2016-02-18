@@ -480,7 +480,7 @@ void MySetup(CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals)
 				ErrorBox("Could not get a supported VMaterialSystem interface.");
 			}
 
-			if(iface = appSystemFactory(VENGINE_RENDERVIEW_INTERFACE_VERSION_CSGO_013, NULL))
+			if(iface = appSystemFactory(VENGINE_RENDERVIEW_INTERFACE_VERSION_CSGO, NULL))
 			{
 				g_AfxVRenderView = new CAfxVRenderView((IVRenderView_csgo *)iface);
 				g_AfxStreams.OnAfxVRenderView(g_AfxVRenderView);
@@ -519,7 +519,7 @@ void* AppSystemFactory_ForClient(const char *pName, int *pReturnCode)
 		return &g_ClientEngineTools;
 	}
 	else
-	if(isCsgo && !strcmp(VENGINE_RENDERVIEW_INTERFACE_VERSION_CSGO_013, pName) && g_AfxVRenderView)
+	if(isCsgo && !strcmp(VENGINE_RENDERVIEW_INTERFACE_VERSION_CSGO, pName) && g_AfxVRenderView)
 	{
 		return g_AfxVRenderView;
 	}
@@ -659,11 +659,12 @@ public:
 	virtual void ValidateData( int nVertexCount, const VertexDesc_t_csgo & desc )
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,9) }
 
+	virtual void _Unknown_10_IVertexBuffer_csgo(void)
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,10) }
+
+
 	//
 	// IMesh_csgo:
-
-	virtual void SetPrimitiveType( MaterialPrimitiveType_t_csgo type )
-	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,10) }
 
 	virtual void Draw( int firstIndex = -1, int numIndices = 0 )
 	{
@@ -839,6 +840,12 @@ public:
 
 	virtual IMesh_csgo* GetMesh()
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,12) }
+
+	virtual void _Unknown_13_IIndexBuffer_csgo(void * arg0)
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,13) }
+
+	virtual bool _Unknown_14_IIndexBuffer_csgo(void)
+	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,14) }
 
 private:
 	IMeshEx_csgo * m_Parent;

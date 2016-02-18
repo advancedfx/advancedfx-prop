@@ -1474,6 +1474,9 @@ bool csgo_Stdshader_dx9_Hooks_Init(void)
 	if(!firstRun) return firstResult;
 	firstRun = true;
 
+	// Currently not supported, since we need to update a whole lot of shit due to latest CS:GO update:
+	return false;
+
 	if(AFXADDR_GET(csgo_SplineRope_CShader_vtable))
 	{
 		detoured_csgo_SplineRope_CShader_DrawElements = (csgo_stdshader_dx9_CBaseShader_DrawElements_t)DetourIfacePtr((DWORD *)(AFXADDR_GET(csgo_SplineRope_CShader_vtable)+4*6), touring_csgo_SplineRope_CShader_DrawElements);

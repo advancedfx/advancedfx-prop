@@ -2532,6 +2532,8 @@ public:
 
 	// Call this in debug mode to make sure our data is good.
 	virtual void ValidateData( int nVertexCount, const VertexDesc_t_csgo & desc ) = 0;
+
+	virtual void _Unknown_10_IVertexBuffer_csgo(void) = 0;
 };
 
 class IIndexBuffer_csgo abstract
@@ -2570,6 +2572,10 @@ public:
 
 	// For backward compat to IMesh
 	virtual IMesh_csgo* GetMesh() = 0;
+
+	virtual void _Unknown_13_IIndexBuffer_csgo(void * arg0) = 0;
+
+	virtual bool _Unknown_14_IIndexBuffer_csgo(void) = 0;
 };
 
 class CPrimList_csgo;
@@ -2581,14 +2587,13 @@ class IMesh_csgo abstract : public IVertexBuffer_csgo, public IIndexBuffer_csgo
 public:
 	// -----------------------------------
 
-	// Sets/gets the primitive type
-	virtual void SetPrimitiveType( MaterialPrimitiveType_t_csgo type ) = 0;
-
+	// 12:
 	// Draws the mesh
 	virtual void Draw( int firstIndex = -1, int numIndices = 0 ) = 0;
 
 	virtual void SetColorMesh( IMesh_csgo *pColorMesh, int nVertexOffset ) = 0;
 
+	// 11:
 	// Draw a list of (lists of) primitives. Batching your lists together that use
 	// the same lightmap, material, vertex and index buffers with multipass shaders
 	// can drastically reduce state-switching overhead.
@@ -2683,6 +2688,7 @@ struct MeshInstanceData_t_csgo
 	ShaderStencilState_t_csgo *	m_pStencilState;
 	Vector4D_csgo				m_DiffuseModulation;
 	int _UNKNOWN_0x4c;
+	void * _UNKNOWN_0x50;
 };
 
 enum ImageFormat_csgo 
@@ -2857,18 +2863,18 @@ public:
 	virtual void _UNKNOWN_069(void) = 0; // BindVertexBuffer*?
 	virtual void _UNKNOWN_070(void) = 0; // BindIndexBuffer?
 	virtual void _UNKNOWN_071(void) = 0; // Draw?
-	virtual void _UNKNOWN_072(void) = 0; // SelectionMode
-	virtual void _UNKNOWN_073(void) = 0; // SelectionBuffer
-	virtual void _UNKNOWN_074(void) = 0; // ClearSelectionNames
-	virtual void _UNKNOWN_075(void) = 0; // LoadSelectionName
-	virtual void _UNKNOWN_076(void) = 0; // PushSelectionName
-	virtual void _UNKNOWN_077(void) = 0; // PopSelectionName
+	virtual void _UNKNOWN_072(void) = 0; // SelectionMode?
+	virtual void _UNKNOWN_073(void) = 0; // SelectionBuffer?
+	virtual void _UNKNOWN_074(void) = 0; // ClearSelectionNames?
+	virtual void _UNKNOWN_075(void) = 0; // LoadSelectionName?
+	virtual void _UNKNOWN_076(void) = 0; // PushSelectionName?
+	virtual void _UNKNOWN_077(void) = 0; // PopSelectionName?
 	virtual void _UNKNOWN_078(void) = 0; // ClearColor3ub
 	
 	// 079:
 	virtual void ClearColor4ub( unsigned char r, unsigned char g, unsigned char b, unsigned char a ) = 0;
 
-	virtual void _UNKNOWN_080(void) = 0; // OverrideDepthEnable
+	virtual void _UNKNOWN_080(void) = 0; // OverrideDepthEnable?
 	
 	// 081:
 	virtual void DrawScreenSpaceQuad(IMaterial_csgo * pMaterial) = 0;
@@ -2889,9 +2895,9 @@ public:
 	virtual void _UNKNOWN_095(void) = 0;
 	virtual void _UNKNOWN_096(void) = 0;
 	virtual void _UNKNOWN_097(void) = 0;
-	virtual void _UNKNOWN_098(void) = 0; // GetFlashlightMode
-	virtual void _UNKNOWN_099(void) = 0; // IsCullingEnabledForSinglePassFlashlight
-	virtual void _UNKNOWN_100(void) = 0; // EnableCullingForSinglePassFlashlight
+	virtual void _UNKNOWN_098(void) = 0; // GetFlashlightMode?
+	virtual void _UNKNOWN_099(void) = 0; // IsCullingEnabledForSinglePassFlashlight?
+	virtual void _UNKNOWN_100(void) = 0; // EnableCullingForSinglePassFlashlight?
 	virtual void _UNKNOWN_101(void) = 0;
 	virtual void _UNKNOWN_102(void) = 0;
 	virtual void _UNKNOWN_103(void) = 0;
@@ -2945,8 +2951,8 @@ public:
 	// This will pop a rendertarget + viewport
 	virtual void PopRenderTargetAndViewport( void ) = 0;
 
-	virtual void _UNKNOWN_120(void) = 0; // BindLightmapTexture
-	virtual void _UNKNOWN_121(void) = 0; // CopyRenderTargetToTextureEx
+	virtual void _UNKNOWN_120(void) = 0; // BindLightmapTexture?
+	virtual void _UNKNOWN_121(void) = 0; // CopyRenderTargetToTextureEx?
 	virtual void _UNKNOWN_122(void) = 0;
 	virtual void _UNKNOWN_123(void) = 0;
 	virtual void _UNKNOWN_124(void) = 0;
@@ -2955,11 +2961,11 @@ public:
 	virtual void _UNKNOWN_127(void) = 0;
 	virtual void _UNKNOWN_128(void) = 0;
 	virtual void _UNKNOWN_129(void) = 0; 
-	virtual void _UNKNOWN_130(void) = 0; // PushCustomClipPlane
-	virtual void _UNKNOWN_131(void) = 0; // PopCustomClipPlane
-	virtual void _UNKNOWN_132(void) = 0; // GetMaxToRender
-	virtual void _UNKNOWN_133(void) = 0; // GetMaxVerticesToRender
-	virtual void _UNKNOWN_134(void) = 0; // GetMaxIndicesToRender
+	virtual void _UNKNOWN_130(void) = 0; // PushCustomClipPlane?
+	virtual void _UNKNOWN_131(void) = 0; // PopCustomClipPlane?
+	virtual void _UNKNOWN_132(void) = 0; // GetMaxToRender?
+	virtual void _UNKNOWN_133(void) = 0; // GetMaxVerticesToRender?
+	virtual void _UNKNOWN_134(void) = 0; // GetMaxIndicesToRender?
 	virtual void _UNKNOWN_135(void) = 0;
 	virtual void _UNKNOWN_136(void) = 0;
 	virtual void _UNKNOWN_137(void) = 0;
@@ -2991,7 +2997,7 @@ public:
 	virtual void _UNKNOWN_163(void) = 0;
 	virtual void _UNKNOWN_164(void) = 0;
 	virtual void _UNKNOWN_165(void) = 0; 
-	virtual void _UNKNOWN_166(void) = 0; // GetMorphAccumulatorTexCoord
+	virtual void _UNKNOWN_166(void) = 0; // GetMorphAccumulatorTexCoord?
 	
 	// 167:
 	virtual IMeshEx_csgo* GetDynamicMeshEx(
@@ -3002,7 +3008,7 @@ public:
 		IMesh_csgo* pIndexOverride = 0, 
 		IMaterial_csgo *pAutoBind = 0 ) = 0;
 
-	virtual void _UNKNOWN_168(void) = 0; // FogMaxDensity
+	virtual void _UNKNOWN_168(void) = 0; // FogMaxDensity?
 	virtual void _UNKNOWN_169(void) = 0;
 	virtual void _UNKNOWN_170(void) = 0;
 	virtual void _UNKNOWN_171(void) = 0;
@@ -3030,8 +3036,8 @@ public:
 	// 192:
 	virtual void DrawInstances( int nInstanceCount, const MeshInstanceData_t_csgo *pInstance ) = 0;
 
-	virtual void _UNKNOWN_193(void) = 0; // OverrideAlphaWriteEnable
-	virtual void _UNKNOWN_194(void) = 0; // OverrideColorWriteEnable
+	virtual void _UNKNOWN_193(void) = 0; // OverrideAlphaWriteEnable?
+	virtual void _UNKNOWN_194(void) = 0; // OverrideColorWriteEnable?
 	virtual void _UNKNOWN_195(void) = 0;
 	virtual void _UNKNOWN_196(void) = 0;
 	virtual void _UNKNOWN_197(void) = 0;
@@ -3090,8 +3096,6 @@ public:
 	virtual void _UNKNOWN_250(void) = 0;
 	virtual void _UNKNOWN_251(void) = 0;
 	virtual void _UNKNOWN_252(void) = 0;
-	virtual void _UNKNOWN_253(void) = 0;
-	virtual void _UNKNOWN_254(void) = 0;
 };
 
 // IMaterialSystem_csgo ////////////////////////////////////////////////////////
@@ -3477,7 +3481,7 @@ public:
 
 // IVRenderView_csgo ///////////////////////////////////////////////////////////
 
-#define VENGINE_RENDERVIEW_INTERFACE_VERSION_CSGO_013 "VEngineRenderView013"
+#define VENGINE_RENDERVIEW_INTERFACE_VERSION_CSGO "VEngineRenderView014"
 
 class IVRenderView_csgo abstract
 {

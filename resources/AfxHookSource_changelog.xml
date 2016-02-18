@@ -5,6 +5,27 @@
 
 
 <release>
+<name>AfxHookSource lite</name>
+<version>1.1.1.0</version>
+<time>2016-02-18T15:35Z</time>
+<changes>
+<change type="updated">
+Updated AfxHookSource to work with the 17 Feb 2016 CS:GO update.<br />
+I called this AfxHookSource lite version, because you won't be able to use matte / depth / alpha streams or actions related to those. It might
+take quite a while until those features work as good as they did before again, because Valve updated the shaders that HLAE partially hooks
+with replacement shaders and there is no proper source code available (closest is still the old Alien Swarm SDK)
+and I don't know yet how complicated their new changes / additions are.<br />
+All other features should hopefully work (even the new easy wallhack effect added in AfxHookSource 1.1).
+</change>
+</changes>
+<comments>
+Please note that the game can crash for AMD users, which is not the fault of HLAE:<br />
+https://www.reddit.com/r/AMDHelp/comments/46d193/counterstrike_global_offensive_operation_wildfire/
+</comments>
+</release>
+
+
+<release>
 <name>AfxHookSource</name>
 <version>1.1.0.0</version>
 <time>2016-02-16T18:43Z</time>

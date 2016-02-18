@@ -1321,11 +1321,11 @@ CAfxBaseFxStream::CShared::CShared()
 
 	CreateStdAction(m_DebugDumpAction, CActionKey("debugDump (don't use)"), new CActionDebugDump());
 
-	CreateStdAction(m_DepthAction, CActionKey("drawDepth"), new CActionStandardResolve(CActionStandardResolve::RF_DrawDepth, m_NoDrawAction));
-	CreateStdAction(m_Depth24Action, CActionKey("drawDepth24"), new CActionStandardResolve(CActionStandardResolve::RF_DrawDepth24, m_NoDrawAction));
-	CreateStdAction(m_MaskAction, CActionKey("mask"), new CActionStandardResolve(CActionStandardResolve::RF_GreenScreen, m_NoDrawAction));
-	CreateStdAction(m_WhiteAction, CActionKey("white"), new CActionStandardResolve(CActionStandardResolve::RF_White, m_NoDrawAction));
-	CreateStdAction(m_BlackAction, CActionKey("black"), new CActionStandardResolve(CActionStandardResolve::RF_Black, m_NoDrawAction));
+	m_DepthAction = 0; // CreateStdAction(m_DepthAction, CActionKey("drawDepth"), new CActionStandardResolve(CActionStandardResolve::RF_DrawDepth, m_NoDrawAction));
+	m_Depth24Action = 0; // CreateStdAction(m_Depth24Action, CActionKey("drawDepth24"), new CActionStandardResolve(CActionStandardResolve::RF_DrawDepth24, m_NoDrawAction));
+	m_MaskAction = 0; // CreateStdAction(m_MaskAction, CActionKey("mask"), new CActionStandardResolve(CActionStandardResolve::RF_GreenScreen, m_NoDrawAction));
+	m_WhiteAction = 0; // CreateStdAction(m_WhiteAction, CActionKey("white"), new CActionStandardResolve(CActionStandardResolve::RF_White, m_NoDrawAction));
+	m_BlackAction = 0; // CreateStdAction(m_BlackAction, CActionKey("black"), new CActionStandardResolve(CActionStandardResolve::RF_Black, m_NoDrawAction));
 }
 
 CAfxBaseFxStream::CShared::~CShared()
@@ -3378,6 +3378,9 @@ void CAfxStreams::Console_AddDeveloperStream(const char * streamName)
 
 void CAfxStreams::Console_AddDepthStream(const char * streamName)
 {
+	Tier0_Warning("Due to CS:GO update this stream is not supported yet (HLAE needs further updating for that and it's complicated).\n");
+	return;
+
 	if(!Console_CheckStreamName(streamName))
 		return;
 
@@ -3386,6 +3389,9 @@ void CAfxStreams::Console_AddDepthStream(const char * streamName)
 
 void CAfxStreams::Console_AddMatteWorldStream(const char * streamName)
 {
+	Tier0_Warning("Due to CS:GO update this stream is not supported yet (HLAE needs further updating for that and it's complicated).\n");
+	return;
+
 	if(!Console_CheckStreamName(streamName))
 		return;
 
@@ -3394,6 +3400,9 @@ void CAfxStreams::Console_AddMatteWorldStream(const char * streamName)
 
 void CAfxStreams::Console_AddDepthWorldStream(const char * streamName)
 {
+	Tier0_Warning("Due to CS:GO update this stream is not supported yet (HLAE needs further updating for that and it's complicated).\n");
+	return;
+
 	if(!Console_CheckStreamName(streamName))
 		return;
 
@@ -3402,6 +3411,9 @@ void CAfxStreams::Console_AddDepthWorldStream(const char * streamName)
 
 void CAfxStreams::Console_AddMatteEntityStream(const char * streamName)
 {
+	Tier0_Warning("Due to CS:GO update this stream is not supported yet (HLAE needs further updating for that and it's complicated).\n");
+	return;
+
 	if(!Console_CheckStreamName(streamName))
 		return;
 
@@ -3412,6 +3424,9 @@ void CAfxStreams::Console_AddMatteEntityStream(const char * streamName)
 
 void CAfxStreams::Console_AddDepthEntityStream(const char * streamName)
 {
+	Tier0_Warning("Due to CS:GO update this stream is not supported yet (HLAE needs further updating for that and it's complicated).\n");
+	return;
+
 	if(!Console_CheckStreamName(streamName))
 		return;
 
@@ -3420,6 +3435,9 @@ void CAfxStreams::Console_AddDepthEntityStream(const char * streamName)
 
 void CAfxStreams::Console_AddAlphaMatteStream(const char * streamName)
 {
+	Tier0_Warning("Due to CS:GO update this stream is not supported yet (HLAE needs further updating for that and it's complicated).\n");
+	return;
+
 	if(!Console_CheckStreamName(streamName))
 		return;
 
@@ -3428,6 +3446,9 @@ void CAfxStreams::Console_AddAlphaMatteStream(const char * streamName)
 
 void CAfxStreams::Console_AddAlphaEntityStream(const char * streamName)
 {
+	Tier0_Warning("Due to CS:GO update this stream is not supported yet (HLAE needs further updating for that and it's complicated).\n");
+	return;
+
 	if(!Console_CheckStreamName(streamName))
 		return;
 
@@ -3436,6 +3457,9 @@ void CAfxStreams::Console_AddAlphaEntityStream(const char * streamName)
 
 void CAfxStreams::Console_AddAlphaWorldStream(const char * streamName)
 {
+	Tier0_Warning("Due to CS:GO update this stream is not supported yet (HLAE needs further updating for that and it's complicated).\n");
+	return;
+
 	if(!Console_CheckStreamName(streamName))
 		return;
 
@@ -3444,6 +3468,9 @@ void CAfxStreams::Console_AddAlphaWorldStream(const char * streamName)
 
 void CAfxStreams::Console_AddAlphaMatteEntityStream(const char * streamName)
 {
+	Tier0_Warning("Due to CS:GO update this stream is not supported yet (HLAE needs further updating for that and it's complicated).\n");
+	return;
+
 	if(!Console_CheckStreamName(streamName))
 		return;
 
