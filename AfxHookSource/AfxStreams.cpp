@@ -1326,6 +1326,8 @@ CAfxBaseFxStream::CShared::CShared()
 	m_MaskAction = 0; // CreateStdAction(m_MaskAction, CActionKey("mask"), new CActionStandardResolve(CActionStandardResolve::RF_GreenScreen, m_NoDrawAction));
 	m_WhiteAction = 0; // CreateStdAction(m_WhiteAction, CActionKey("white"), new CActionStandardResolve(CActionStandardResolve::RF_White, m_NoDrawAction));
 	m_BlackAction = 0; // CreateStdAction(m_BlackAction, CActionKey("black"), new CActionStandardResolve(CActionStandardResolve::RF_Black, m_NoDrawAction));
+
+	CreateAction(CActionKey("debugDepth"), new CActionDebugDepth(m_NoDrawAction), true);
 }
 
 CAfxBaseFxStream::CShared::~CShared()
@@ -1602,6 +1604,90 @@ bool CAfxBaseFxStream::CShared::Console_CheckActionKey(CActionKey & key)
 bool CAfxBaseFxStream::CActionFilterValue::CalcMatch(char const * targetString)
 {
 	return StringWildCard1Matched(m_MatchString.c_str(), targetString);
+}
+
+// CAfxBaseFxStream::CActionDebugDepth /////////////////////////////////////////
+
+CAfxBaseFxStream::CActionDebugDepth::CActionDebugDepth(CAction * fallBackAction)
+: CAction()
+, m_FallBackAction(fallBackAction)
+, m_DebugDepthMaterial(0)
+, m_MatDebugDepthVal(0)
+, m_MatDebugDepthValMax(0)
+{
+	if(fallBackAction) fallBackAction->AddRef();
+}
+
+CAfxBaseFxStream::CActionDebugDepth::~CActionDebugDepth()
+{
+	delete m_DebugDepthMaterial;
+	delete m_MatDebugDepthVal;
+	delete m_MatDebugDepthValMax;
+	if(m_FallBackAction) m_FallBackAction->Release();
+}
+
+CAfxBaseFxStream::CAction * CAfxBaseFxStream::CActionDebugDepth::ResolveAction(IMaterial_csgo * material)
+{
+	bool splinetype = false;
+	bool useinstancing = false;
+
+	if(material)
+	{
+		int numVars = material->ShaderParamCount();
+		IMaterialVar_csgo ** orgParams = material->GetShaderParams();
+		
+		IMaterialVar_csgo ** params = orgParams;
+
+		for(int i=0; i<numVars; ++i)
+		{
+			if(params[0]->IsDefined())
+			{
+				char const * varName = params[0]->GetName();
+
+				if(!strcmp(varName,"$splinetype"))
+				{
+					if(params[0]->GetIntValue())
+						splinetype = true;
+				}
+				else
+				if(!strcmp(varName,"$useinstancing"))
+				{
+					if(params[0]->GetIntValue())
+						useinstancing = true;
+				}
+			}
+
+			++params;
+		}
+	}
+
+	if(splinetype || useinstancing)
+		return SafeSubResolveAction(m_FallBackAction, material);
+
+	return this;
+}
+
+void CAfxBaseFxStream::CActionDebugDepth::AfxUnbind(IAfxMatRenderContext * ctx)
+{
+}
+
+IMaterial_csgo * CAfxBaseFxStream::CActionDebugDepth::MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material)
+{
+	if(!m_MatDebugDepthVal) m_MatDebugDepthVal = new WrpConVarRef("mat_debugdepthval");
+	if(!m_MatDebugDepthValMax) m_MatDebugDepthValMax = new WrpConVarRef("mat_debugdepthvalmax");
+
+	if(!m_DebugDepthMaterial) m_DebugDepthMaterial = new CAfxMaterial(
+		CAfxBaseFxStream::m_Shared.m_ActiveBaseFxStream->m_Streams->GetFreeMaster(),
+		CAfxBaseFxStream::m_Shared.m_ActiveBaseFxStream->m_Streams->GetMaterialSystem()->FindMaterial("afx/depth", 0));
+
+	float scale = g_bIn_csgo_CSkyBoxView_Draw ? csgo_CSkyBoxView_GetScale() : 1.0f;
+	float flDepthFactor = scale * CAfxBaseFxStream::m_Shared.m_ActiveBaseFxStream->m_DepthVal;
+	float flDepthFactorMax = scale * CAfxBaseFxStream::m_Shared.m_ActiveBaseFxStream->m_DepthValMax;
+
+	m_MatDebugDepthVal->SetValueFastHack(flDepthFactor);
+	m_MatDebugDepthValMax->SetValueFastHack(flDepthFactorMax);
+
+	return m_DebugDepthMaterial->GetMaterial();
 }
 
 // CAfxBaseFxStream::CActionReplace ////////////////////////////////////////////

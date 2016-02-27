@@ -935,6 +935,27 @@ private:
 		void ExamineMaterial(IMaterial_csgo * material, bool & outSplinetype, bool & outUseinstancing);
 	};
 
+	class CActionDebugDepth
+	: public CAction
+	{
+	public:
+		CActionDebugDepth(CAction * fallBackAction);
+
+		virtual CAction * ResolveAction(IMaterial_csgo * material);
+
+		virtual void AfxUnbind(IAfxMatRenderContext * ctx);
+
+		virtual IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material);
+
+	protected:
+		~CActionDebugDepth();
+	private:
+		CAction * m_FallBackAction;
+		CAfxMaterial * m_DebugDepthMaterial;
+		WrpConVarRef * m_MatDebugDepthVal;
+		WrpConVarRef * m_MatDebugDepthValMax;
+	};
+
 	class CActionStandardResolve
 	: public CAction
 	{
