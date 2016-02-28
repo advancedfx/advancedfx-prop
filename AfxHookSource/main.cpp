@@ -138,6 +138,7 @@ public:
 CreateInterfaceFn g_AppSystemFactory = 0;
 
 bool isCsgo = false;
+bool isV34 = false;
 
 IMaterialSystem_csgo * g_MaterialSystem_csgo = 0;
 
@@ -409,6 +410,8 @@ CAfxVRenderView * g_AfxVRenderView = 0;
 
 IFileSystem_csgo * g_FileSystem_csgo = 0;
 
+void AfxV34HookWindow(void);
+
 void MySetup(CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals)
 {
 	static bool bFirstRun = true;
@@ -507,6 +510,8 @@ void MySetup(CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals)
 		}
 		
 		g_Hook_VClient_RenderView.Install(pGlobals);
+
+		AfxV34HookWindow();
 
 		PrintInfo();
 	}
@@ -2612,6 +2617,19 @@ BOOL WINAPI new_SetCursorPos(
 	return SetCursorPos(X,Y);
 }
 
+void AfxV34HookWindow(void)
+{
+	if(isV34)
+	{
+		HWND hWnd = FindWindowW(L"Valve001",NULL);
+
+		if(!hWnd)
+			ErrorBox("AfxV34HookWindow: FindWindowW failed.");
+		else
+			g_NextWindProc = (WNDPROC)SetWindowLongW(hWnd,GWL_WNDPROC,(LONG)new_Afx_WindowProc);
+	}
+}
+
 FARPROC WINAPI new_shaderapidx9_GetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 {
 	FARPROC nResult;
@@ -2675,6 +2693,11 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 		{
 			isCsgo = true;
 		}
+
+		if(wcsstr(GetCommandLineW(),L"-afxV34"))
+		{
+			isV34 = true;
+		}
 		
 		//ScriptEngine_StartUp();
 	}
@@ -2697,11 +2720,26 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 			Tier0_ConWarning = (Tier0MsgFn)GetProcAddress(hTier0, "ConWarning");
 			Tier0_ConLog = (Tier0MsgFn)GetProcAddress(hTier0, "ConLog");
 		}
+
+		if(isV34)
+		{
+			InterceptDllCall(hTier0, "USER32.dll", "GetCursorPos", (DWORD) &new_GetCursorPos);
+			InterceptDllCall(hTier0, "USER32.dll", "SetCursorPos", (DWORD) &new_SetCursorPos);
+		}
+
 	}
 
 	if(bFirstLauncher && StringEndsWith( lpLibFileName, "launcher.dll"))
 	{
 		bFirstLauncher = false;
+		
+		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryExA", (DWORD) &new_LoadLibraryExA);
+		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryA", (DWORD) &new_LoadLibraryA);
+	}
+	else
+	if(bFirstfilesystem_stdio && StringEndsWith( lpLibFileName, "filesystem_steam.dll")) // v34
+	{
+		bFirstfilesystem_stdio = false;
 		
 		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryExA", (DWORD) &new_LoadLibraryExA);
 		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryA", (DWORD) &new_LoadLibraryA);
@@ -2728,6 +2766,12 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 		// actually this is not required, since engine.dll calls first and thus is lower in the chain:
 		InterceptDllCall(hModule, "USER32.dll", "GetWindowLongW", (DWORD) &new_GetWindowLongW);
 		InterceptDllCall(hModule, "USER32.dll", "SetWindowLongW", (DWORD) &new_SetWindowLongW);
+
+		if(isV34)
+		{
+			InterceptDllCall(hModule, "USER32.dll", "GetCursorPos", (DWORD) &new_GetCursorPos);
+			InterceptDllCall(hModule, "USER32.dll", "SetCursorPos", (DWORD) &new_SetCursorPos);
+		}
 
 		// Init the hook early, so we don't run into issues with threading:
 		Hook_csgo_SndMixTimeScalePatch();

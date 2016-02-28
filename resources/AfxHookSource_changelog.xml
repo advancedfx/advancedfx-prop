@@ -6,6 +6,21 @@
 
 <release>
 <name>AfxHookSource lite</name>
+<version>1.1.2.1</version>
+<time>2016-02-28T16:51Z</time>
+<changes>
+<change type="added">
+Added support for really old engine version (i.e. CSS 1.0.0.34). To enable it add -afxV34 to the command line options in Custom Loader (case sensitive).
+</change>
+</changes>
+<comments>
+Thanks to Contrastniy for helping with debugging.
+</comments>
+</release>
+
+
+<release>
+<name>AfxHookSource lite</name>
 <version>1.1.2.0</version>
 <time>2016-02-27T15:46Z</time>
 <changes>
