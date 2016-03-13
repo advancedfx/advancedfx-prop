@@ -6,6 +6,32 @@
 
 <release>
 <name>AfxHookSource lite</name>
+<version>1.1.3.0</version>
+<time>2016-03-13T19:13Z</time>
+<changes>
+<change type="added">
+Added mirv_streams record presentOnScreen. Allows to turn on on-screen preview (where applicable) during recording (Not recommended, might cause epileptic seizures, thus default is off!).
+</change>
+<change type="added">
+Added forcing of mat_force_tonemap_scale to 1.0 during recording with mirv_streams record for better results (i.e. no more random brightness on bomb plant etc.). Can be controlled through mirv_streams record matForceTonemapScale.
+</change>
+<change type="fixed">
+Fixed incorrect tracking of i.e. D3DRS_ALPHABLENDENABLE state due to CS:GO using Direct3D9 state blocks (IDirect3DStateBlock9), which could i.e. cause elements to be missing from screen, when using actions that change the Direct3D9 render state (i.e. noDraw action).
+Thanks to anthony for providing a demo with the bug being reproduceable!
+</change>
+<change type="fixed">
+Fixed mirv_streams not de-referencing actions properly when a stream was removed (caused actions to not be removeable due to wrongly reported dependencies).
+</change>
+</changes>
+<comments>
+For those that don't know, AfxHookSource lite has rudimentary mirv_streams support (but still no proper support again and Valve didn't reply so far), see: http://advancedfx.style-productions.net/forum/viewtopic.php?p=5475#p5475<br />
+Also you can find us on Twitter here: https://twitter.com/dtugend
+</comments>
+</release>
+
+
+<release>
+<name>AfxHookSource lite</name>
 <version>1.1.2.1</version>
 <time>2016-02-28T16:51Z</time>
 <changes>

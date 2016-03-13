@@ -40,6 +40,15 @@
 
 extern WrpVEngineClient * g_VEngineClient;
 
+CON_COMMAND(__mirv_test5, "")
+{
+	static bool firstRun = true;
+
+	if(!firstRun) return;
+	firstRun = false;
+
+
+}
 
 CON_COMMAND(__mirv_test4, "")
 {
@@ -479,7 +488,40 @@ CON_COMMAND(mirv_streams, "Access to streams system.")
 					);
 					return;
 				}
+				else
+				if(!_stricmp(cmd2, "presentOnScreen"))
+				{
+					if(4 <= argc)
+					{
+						char const * cmd3 = args->ArgV(3);
+						g_AfxStreams.Console_PresentRecordOnScreen_set(0 != atoi(cmd3));
+						return;
+					}
 
+					Tier0_Msg(
+						"mirv_streams record presentOnScreen 0|1 - Whether to show recording on screen (where possible) (1) [May cause epileptic seizures!] or not (0).\n"
+						"Current value: %s.\n",
+						g_AfxStreams.Console_PresentRecordOnScreen_get() ? "1" : "0"
+					);
+					return;
+				}
+				else
+				if(!_stricmp(cmd2, "matForceTonemapScale"))
+				{
+					if(4 <= argc)
+					{
+						char const * cmd3 = args->ArgV(3);
+						g_AfxStreams.Console_MatForceTonemapScale_set(atof(cmd3));
+						return;
+					}
+
+					Tier0_Msg(
+						"mirv_streams record matForceTonemapScale <fValue> - Force floating point value <fValue> for mat_force_tonemap_scale during recording.\n"
+						"Current value: %f.\n",
+						g_AfxStreams.Console_MatForceTonemapScale_get()
+					);
+					return;
+				}
 			}
 
 			Tier0_Msg(
@@ -487,6 +529,8 @@ CON_COMMAND(mirv_streams, "Access to streams system.")
 				"mirv_streams record start - Begin recording.\n"
 				"mirv_streams record end - End reocrding.\n"
 				"mirv_streams record format [...] - Set/get file format.\n"
+				"mirv_streams record presentOnScreen [...] - Controls screen presentation during recording.\n"
+				"mirv_streams record matForceTonemapScale [...] - Controls mat_force_tonemap_scale variable during recording.\n"
 			);
 			return;
 		}

@@ -632,6 +632,30 @@ CAfxBaseFxStream::CAfxBaseFxStream()
 CAfxBaseFxStream::~CAfxBaseFxStream()
 {
 	InvalidateMap();
+
+	SetAction(m_ClientEffectTexturesAction, 0);
+	SetAction(m_WorldTexturesAction, 0);
+	SetAction(m_SkyBoxTexturesAction, 0);
+	SetAction(m_StaticPropTexturesAction, 0);
+	SetAction(m_CableAction, 0);
+	SetAction(m_PlayerModelsAction, 0);
+	SetAction(m_WeaponModelsAction, 0);
+	SetAction(m_StatTrakAction, 0);
+	SetAction(m_ShellModelsAction, 0);
+	SetAction(m_OtherModelsAction, 0);
+	SetAction(m_DecalTexturesAction, 0);
+	SetAction(m_EffectsAction, 0);
+	SetAction(m_ShellParticleAction, 0);
+	SetAction(m_OtherParticleAction, 0);
+	SetAction(m_StickerAction, 0);
+	SetAction(m_ErrorMaterialAction, 0);
+	SetAction(m_OtherAction, 0);
+	SetAction(m_WriteZAction, 0);
+	SetAction(m_DevAction, 0);
+	SetAction(m_OtherEngineAction, 0);
+	SetAction(m_OtherSpecialAction, 0);
+	SetAction(m_VguiAction, 0);
+
 	m_Shared.Release();
 }
 
@@ -2382,18 +2406,18 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::CActionStandardResolve::ResolveAct
 
 void CAfxBaseFxStream::CActionNoDraw::AfxUnbind(IAfxMatRenderContext * ctx)
 {
-	AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE();
-	AfxD3D9OverrideEnd_D3DRS_DESTBLEND();
-	AfxD3D9OverrideEnd_D3DRS_SRCBLEND();
+	//AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE();
+	//AfxD3D9OverrideEnd_D3DRS_DESTBLEND();
+	//AfxD3D9OverrideEnd_D3DRS_SRCBLEND();
 	AfxD3D9OverrideEnd_D3DRS_ALPHABLENDENABLE();
 }
 
 IMaterial_csgo * CAfxBaseFxStream::CActionNoDraw::MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material)
 {
-	AfxD3D9OverrideBegin_D3DRS_ALPHABLENDENABLE(TRUE);
-	AfxD3D9OverrideBegin_D3DRS_SRCBLEND(D3DBLEND_ZERO);
-	AfxD3D9OverrideBegin_D3DRS_DESTBLEND(D3DBLEND_ONE);
-	AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE(FALSE);
+	//AfxD3D9OverrideBegin_D3DRS_ALPHABLENDENABLE(TRUE);
+	//AfxD3D9OverrideBegin_D3DRS_SRCBLEND(D3DBLEND_ZERO);
+	//AfxD3D9OverrideBegin_D3DRS_DESTBLEND(D3DBLEND_ONE);
+	//AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE(FALSE);
 
 	return material;
 }
@@ -3081,6 +3105,7 @@ void CAfxBaseFxStream::CActionAfxSplineRopeHook::SetPixelShader(CAfx_csgo_Shader
 
 CAfxStreams::CAfxStreams()
 : m_RecordName("untitled_rec")
+, m_PresentRecordOnScreen(false)
 , m_OnAfxBaseClientDll_Free(0)
 , m_MaterialSystem(0)
 , m_VRenderView(0)
@@ -3100,6 +3125,8 @@ CAfxStreams::CAfxStreams()
 , m_MatPostProcessEnableRef(0)
 , m_MatDynamicTonemappingRef(0)
 , m_MatMotionBlurEnabledRef(0)
+, m_MatForceTonemapScale(0)
+, m_NewMatForceTonemapScale(1.0f)
 , m_ColorModulationOverride(false)
 , m_BlendOverride(false)
 , m_FormatBmpAndNotTga(false)
@@ -3367,6 +3394,26 @@ const char * CAfxStreams::Console_RecordName_get()
 	return m_RecordName.c_str();
 }
 
+void CAfxStreams::Console_PresentRecordOnScreen_set(bool value)
+{
+	m_PresentRecordOnScreen = value;
+}
+
+bool CAfxStreams::Console_PresentRecordOnScreen_get()
+{
+	return m_PresentRecordOnScreen;
+}
+
+void CAfxStreams::Console_MatForceTonemapScale_set(float value)
+{
+	m_NewMatForceTonemapScale = value;
+}
+
+float CAfxStreams::Console_MatForceTonemapScale_get()
+{
+	return m_NewMatForceTonemapScale;
+}
+
 void CAfxStreams::Console_RecordFormat_set(const char * value)
 {
 	if(!_stricmp(value, "bmp"))
@@ -3464,7 +3511,7 @@ void CAfxStreams::Console_AddDeveloperStream(const char * streamName)
 
 void CAfxStreams::Console_AddDepthStream(const char * streamName)
 {
-	Tier0_Warning("Due to CS:GO update this stream is not supported yet (HLAE needs further updating for that and it's complicated).\n");
+	Tier0_Warning("Due to CS:GO 17th Ferbuary 2016 update this stream is not working.\nFor an alternative enter this once into console: exec afx/updateWorkaround\nRead more / support us on Twitter: https://twitter.com/dtugend/status/700669548115066880 \n");
 	return;
 
 	if(!Console_CheckStreamName(streamName))
@@ -3475,7 +3522,7 @@ void CAfxStreams::Console_AddDepthStream(const char * streamName)
 
 void CAfxStreams::Console_AddMatteWorldStream(const char * streamName)
 {
-	Tier0_Warning("Due to CS:GO update this stream is not supported yet (HLAE needs further updating for that and it's complicated).\n");
+	Tier0_Warning("Due to CS:GO 17th Ferbuary 2016 update this stream is not working.\nFor an alternative enter this once into console: exec afx/updateWorkaround\nRead more / support us on Twitter: https://twitter.com/dtugend/status/700669548115066880 \n");
 	return;
 
 	if(!Console_CheckStreamName(streamName))
@@ -3486,7 +3533,7 @@ void CAfxStreams::Console_AddMatteWorldStream(const char * streamName)
 
 void CAfxStreams::Console_AddDepthWorldStream(const char * streamName)
 {
-	Tier0_Warning("Due to CS:GO update this stream is not supported yet (HLAE needs further updating for that and it's complicated).\n");
+	Tier0_Warning("Due to CS:GO 17th Ferbuary 2016 update this stream is not working.\nFor an alternative enter this once into console: exec afx/updateWorkaround\nRead more / support us on Twitter: https://twitter.com/dtugend/status/700669548115066880 \n");
 	return;
 
 	if(!Console_CheckStreamName(streamName))
@@ -3497,7 +3544,7 @@ void CAfxStreams::Console_AddDepthWorldStream(const char * streamName)
 
 void CAfxStreams::Console_AddMatteEntityStream(const char * streamName)
 {
-	Tier0_Warning("Due to CS:GO update this stream is not supported yet (HLAE needs further updating for that and it's complicated).\n");
+	Tier0_Warning("Due to CS:GO 17th Ferbuary 2016 update this stream is not working.\nFor an alternative enter this once into console: exec afx/updateWorkaround\nRead more / support us on Twitter: https://twitter.com/dtugend/status/700669548115066880 \n");
 	return;
 
 	if(!Console_CheckStreamName(streamName))
@@ -3510,7 +3557,7 @@ void CAfxStreams::Console_AddMatteEntityStream(const char * streamName)
 
 void CAfxStreams::Console_AddDepthEntityStream(const char * streamName)
 {
-	Tier0_Warning("Due to CS:GO update this stream is not supported yet (HLAE needs further updating for that and it's complicated).\n");
+	Tier0_Warning("Due to CS:GO 17th Ferbuary 2016 update this stream is not working.\nFor an alternative enter this once into console: exec afx/updateWorkaround\nRead more / support us on Twitter: https://twitter.com/dtugend/status/700669548115066880 \n");
 	return;
 
 	if(!Console_CheckStreamName(streamName))
@@ -3521,7 +3568,7 @@ void CAfxStreams::Console_AddDepthEntityStream(const char * streamName)
 
 void CAfxStreams::Console_AddAlphaMatteStream(const char * streamName)
 {
-	Tier0_Warning("Due to CS:GO update this stream is not supported yet (HLAE needs further updating for that and it's complicated).\n");
+	Tier0_Warning("Due to CS:GO 17th Ferbuary 2016 update this stream is not working.\nFor an alternative enter this once into console: exec afx/updateWorkaround\nRead more / support us on Twitter: https://twitter.com/dtugend/status/700669548115066880 \n");
 	return;
 
 	if(!Console_CheckStreamName(streamName))
@@ -3532,7 +3579,7 @@ void CAfxStreams::Console_AddAlphaMatteStream(const char * streamName)
 
 void CAfxStreams::Console_AddAlphaEntityStream(const char * streamName)
 {
-	Tier0_Warning("Due to CS:GO update this stream is not supported yet (HLAE needs further updating for that and it's complicated).\n");
+	Tier0_Warning("Due to CS:GO 17th Ferbuary 2016 update this stream is not working.\nFor an alternative enter this once into console: exec afx/updateWorkaround\nRead more / support us on Twitter: https://twitter.com/dtugend/status/700669548115066880 \n");
 	return;
 
 	if(!Console_CheckStreamName(streamName))
@@ -3543,7 +3590,7 @@ void CAfxStreams::Console_AddAlphaEntityStream(const char * streamName)
 
 void CAfxStreams::Console_AddAlphaWorldStream(const char * streamName)
 {
-	Tier0_Warning("Due to CS:GO update this stream is not supported yet (HLAE needs further updating for that and it's complicated).\n");
+	Tier0_Warning("Due to CS:GO 17th Ferbuary 2016 update this stream is not working.\nFor an alternative enter this once into console: exec afx/updateWorkaround\nRead more / support us on Twitter: https://twitter.com/dtugend/status/700669548115066880 \n");
 	return;
 
 	if(!Console_CheckStreamName(streamName))
@@ -3554,7 +3601,7 @@ void CAfxStreams::Console_AddAlphaWorldStream(const char * streamName)
 
 void CAfxStreams::Console_AddAlphaMatteEntityStream(const char * streamName)
 {
-	Tier0_Warning("Due to CS:GO update this stream is not supported yet (HLAE needs further updating for that and it's complicated).\n");
+	Tier0_Warning("Due to CS:GO 17th Ferbuary 2016 update this stream is not working.\nFor an alternative enter this once into console: exec afx/updateWorkaround\nRead more / support us on Twitter: https://twitter.com/dtugend/status/700669548115066880 \n");
 	return;
 
 	if(!Console_CheckStreamName(streamName))
@@ -4973,8 +5020,11 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 		}
 		else
 		{
-			m_MaterialSystem->SwapBuffers();
-			AfxD3D9_Block_Present(true);
+			if(!m_PresentRecordOnScreen)
+			{
+				m_MaterialSystem->SwapBuffers();
+				AfxD3D9_Block_Present(true);
+			}
 
 			for(std::list<CAfxRecordStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
 			{
@@ -5115,6 +5165,11 @@ bool CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuf
 			Tier0_Warning("AFXERROR: CAfxStreams::CaptureStreamToBuffer: missing render target.\n");
 			return false;
 		}
+	}
+	else
+	{
+		if(m_PresentRecordOnScreen)
+			m_MaterialSystem->SwapBuffers();
 	}
 
 	bool bOk = true;
@@ -5466,6 +5521,7 @@ void CAfxStreams::BackUpMatVars()
 	m_OldMatPostProcessEnable = m_MatPostProcessEnableRef->GetInt();
 	m_OldMatDynamicTonemapping = m_MatDynamicTonemappingRef->GetInt();
 	m_OldMatMotionBlurEnabled = m_MatMotionBlurEnabledRef->GetInt();
+	m_OldMatForceTonemapScale = m_MatForceTonemapScale->GetFloat();
 }
 
 void CAfxStreams::SetMatVarsForStreams()
@@ -5476,6 +5532,7 @@ void CAfxStreams::SetMatVarsForStreams()
 	m_MatPostProcessEnableRef->SetValue(0.0f);
 	m_MatDynamicTonemappingRef->SetValue(0.0f);
 	m_MatMotionBlurEnabledRef->SetValue(0.0f);
+	m_MatForceTonemapScale->SetValue(m_NewMatForceTonemapScale);
 }
 
 void CAfxStreams::RestoreMatVars()
@@ -5486,6 +5543,7 @@ void CAfxStreams::RestoreMatVars()
 	m_MatPostProcessEnableRef->SetValue((float)m_OldMatPostProcessEnable);
 	m_MatDynamicTonemappingRef->SetValue((float)m_OldMatDynamicTonemapping);
 	m_MatMotionBlurEnabledRef->SetValue((float)m_OldMatMotionBlurEnabled);
+	m_MatForceTonemapScale->SetValue(m_OldMatForceTonemapScale);
 }
 
 void CAfxStreams::EnsureMatVars()
@@ -5494,6 +5552,7 @@ void CAfxStreams::EnsureMatVars()
 	if(!m_MatPostProcessEnableRef) m_MatPostProcessEnableRef = new WrpConVarRef("mat_postprocess_enable");
 	if(!m_MatDynamicTonemappingRef) m_MatDynamicTonemappingRef = new WrpConVarRef("mat_dynamic_tonemapping");
 	if(!m_MatMotionBlurEnabledRef) m_MatMotionBlurEnabledRef = new WrpConVarRef("mat_motion_blur_enabled");
+	if(!m_MatForceTonemapScale) m_MatForceTonemapScale = new WrpConVarRef("mat_force_tonemap_scale");
 }
 
 void CAfxStreams::AddStream(CAfxRecordStream * stream)

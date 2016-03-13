@@ -2510,30 +2510,30 @@ class IVertexBuffer_csgo abstract
 public:
 	// NOTE: The following two methods are only valid for static vertex buffers
 	// Returns the number of vertices and the format of the vertex buffer
-	virtual int VertexCount() const = 0;
-	virtual VertexFormat_t_csgo GetVertexFormat() const = 0;
+	virtual int VertexCount() const = 0; // :000
+	virtual VertexFormat_t_csgo GetVertexFormat() const = 0; // :001
 
 	// Is this vertex buffer dynamic?
-	virtual bool IsDynamic() const = 0;
+	virtual bool IsDynamic() const = 0; // :002
 
 	// NOTE: For dynamic vertex buffers only!
 	// Casts the memory of the dynamic vertex buffer to the appropriate type
-	virtual void BeginCastBuffer( VertexFormat_t_csgo format ) = 0;
-	virtual void EndCastBuffer() = 0;
+	virtual void BeginCastBuffer( VertexFormat_t_csgo format ) = 0; // :003
+	virtual void EndCastBuffer() = 0; // :004
 
 	// Returns the number of vertices that can still be written into the buffer
-	virtual int GetRoomRemaining() const = 0;
+	virtual int GetRoomRemaining() const = 0; // :005
 
-	virtual bool Lock( int nVertexCount, bool bAppend, VertexDesc_t_csgo &desc ) = 0;
-	virtual void Unlock( int nVertexCount, VertexDesc_t_csgo &desc ) = 0;
+	virtual bool Lock( int nVertexCount, bool bAppend, VertexDesc_t_csgo &desc ) = 0; // :006*
+	virtual void Unlock( int nVertexCount, VertexDesc_t_csgo &desc ) = 0; // :007*
 
 	// Spews the mesh data
-	virtual void Spew( int nVertexCount, const VertexDesc_t_csgo &desc ) = 0;
+	virtual void Spew( int nVertexCount, const VertexDesc_t_csgo &desc ) = 0;  // :008
 
 	// Call this in debug mode to make sure our data is good.
-	virtual void ValidateData( int nVertexCount, const VertexDesc_t_csgo & desc ) = 0;
+	virtual void ValidateData( int nVertexCount, const VertexDesc_t_csgo & desc ) = 0; // :009
 
-	virtual void _Unknown_10_IVertexBuffer_csgo(void) = 0;
+	virtual void _Unknown_10_IVertexBuffer_csgo(void) = 0; // :010
 };
 
 class IIndexBuffer_csgo abstract
@@ -2587,18 +2587,16 @@ class IMesh_csgo abstract : public IVertexBuffer_csgo, public IIndexBuffer_csgo
 public:
 	// -----------------------------------
 
-	// 12:
 	// Draws the mesh
-	virtual void Draw( int firstIndex = -1, int numIndices = 0 ) = 0;
+	virtual void Draw( int firstIndex = -1, int numIndices = 0 ) = 0; // :012
 
-	virtual void SetColorMesh( IMesh_csgo *pColorMesh, int nVertexOffset ) = 0;
+	virtual void SetColorMesh( IMesh_csgo *pColorMesh, int nVertexOffset ) = 0; // :013
 
-	// 11:
 	// Draw a list of (lists of) primitives. Batching your lists together that use
 	// the same lightmap, material, vertex and index buffers with multipass shaders
 	// can drastically reduce state-switching overhead.
 	// NOTE: this only works with STATIC meshes.
-	virtual void Draw( CPrimList_csgo *pLists, int nLists ) = 0;
+	virtual void Draw( CPrimList_csgo *pLists, int nLists ) = 0; // :011
 
 	// Copy verts and/or indices to a mesh builder. This only works for temp meshes!
 	virtual void CopyToMeshBuilder( 
@@ -2607,41 +2605,41 @@ public:
 		int iStartIndex,	// Which indices to copy.
 		int nIndices, 
 		int indexOffset,	// This is added to each index.
-		CMeshBuilder_csgo &builder ) = 0;
+		CMeshBuilder_csgo &builder ) = 0; // :014
 
 	// Spews the mesh data
-	virtual void Spew( int numVerts, int numIndices, const MeshDesc_t_csgo &desc ) = 0;
+	virtual void Spew( int numVerts, int numIndices, const MeshDesc_t_csgo &desc ) = 0; // :015
 
 	// Call this in debug mode to make sure our data is good.
-	virtual void ValidateData( int numVerts, int numIndices, const MeshDesc_t_csgo &desc ) = 0;
+	virtual void ValidateData( int numVerts, int numIndices, const MeshDesc_t_csgo &desc ) = 0; // :016
 
 	// New version
 	// Locks/unlocks the mesh, providing space for numVerts and numIndices.
 	// numIndices of -1 means don't lock the index buffer...
-	virtual void LockMesh( int numVerts, int numIndices, MeshDesc_t_csgo &desc, MeshBuffersAllocationSettings_t_csgo *pSettings ) = 0;
-	virtual void ModifyBegin( int firstVertex, int numVerts, int firstIndex, int numIndices, MeshDesc_t_csgo& desc ) = 0;
-	virtual void ModifyEnd( MeshDesc_t_csgo& desc ) = 0;
-	virtual void UnlockMesh( int numVerts, int numIndices, MeshDesc_t_csgo &desc ) = 0;
+	virtual void LockMesh( int numVerts, int numIndices, MeshDesc_t_csgo &desc, MeshBuffersAllocationSettings_t_csgo *pSettings ) = 0; // :017
+	virtual void ModifyBegin( int firstVertex, int numVerts, int firstIndex, int numIndices, MeshDesc_t_csgo& desc ) = 0; // :018
+	virtual void ModifyEnd( MeshDesc_t_csgo& desc ) = 0; // :019
+	virtual void UnlockMesh( int numVerts, int numIndices, MeshDesc_t_csgo &desc ) = 0; // :020
 
-	virtual void ModifyBeginEx( bool bReadOnly, int firstVertex, int numVerts, int firstIndex, int numIndices, MeshDesc_t_csgo &desc ) = 0;
+	virtual void ModifyBeginEx( bool bReadOnly, int firstVertex, int numVerts, int firstIndex, int numIndices, MeshDesc_t_csgo &desc ) = 0; // :021
 
-	virtual void SetFlexMesh( IMesh_csgo *pMesh, int nVertexOffset ) = 0;
+	virtual void SetFlexMesh( IMesh_csgo *pMesh, int nVertexOffset ) = 0; //:022
 
-	virtual void DisableFlexMesh() = 0;
+	virtual void DisableFlexMesh() = 0; // :023
 
-	virtual void MarkAsDrawn() = 0;
+	virtual void MarkAsDrawn() = 0; // :024 // Not sure if to use it's safe, in some classes this does nothing actually.
 
 	// NOTE: I chose to create this method strictly because it's 2 days to code lock
 	// and I could use the DrawInstances technique without a larger code change
 	// Draws the mesh w/ modulation.
-	virtual void DrawModulated( const Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 ) = 0;
+	virtual void DrawModulated( const Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 ) = 0; // :025
 
-	virtual unsigned int ComputeMemoryUsed() = 0;
+	virtual unsigned int ComputeMemoryUsed() = 0; // :026
 
-	virtual void *AccessRawHardwareDataStream( uint8 nRawStreamIndex, uint32 numBytes, uint32 uiFlags, void *pvContext ) = 0;
+	virtual void *AccessRawHardwareDataStream( uint8 nRawStreamIndex, uint32 numBytes, uint32 uiFlags, void *pvContext ) = 0; // :027
 
-	virtual ICachedPerFrameMeshData_csgo *GetCachedPerFrameMeshData() = 0;
-	virtual void ReconstructFromCachedPerFrameMeshData( ICachedPerFrameMeshData_csgo *pData ) = 0;
+	virtual ICachedPerFrameMeshData_csgo *GetCachedPerFrameMeshData() = 0; // :028
+	virtual void ReconstructFromCachedPerFrameMeshData( ICachedPerFrameMeshData_csgo *pData ) = 0; // :029
 };
 
 class IMeshEx_csgo abstract : public IMesh_csgo

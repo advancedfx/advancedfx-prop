@@ -716,6 +716,9 @@ private:
 
 		virtual IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material);
 
+/*		We could speed up a bit here, but I am not sure if it's safe to do this,
+        so we just let it draw for now and block the drawing instead.
+
 		virtual void Draw(IAfxMesh * am, int firstIndex = -1, int numIndices = 0)
 		{
 			am->GetParent()->MarkAsDrawn();
@@ -735,6 +738,7 @@ private:
 		{
 			return;
 		}
+*/
 	};
 
 	class CActionDraw
@@ -1375,8 +1379,16 @@ public:
 
 	void Console_RecordName_set(const char * value);
 	const char * Console_RecordName_get();
+
+	void Console_PresentRecordOnScreen_set(bool value);
+	bool Console_PresentRecordOnScreen_get();
+
+	void Console_MatForceTonemapScale_set(float value);
+	float Console_MatForceTonemapScale_get();
+
 	void Console_RecordFormat_set(const char * value);
 	const char * Console_RecordFormat_get();
+
 	void Console_Record_Start();
 	void Console_Record_End();
 	void Console_AddStream(const char * streamName);
@@ -1492,6 +1504,7 @@ private:
 	};
 
 	std::string m_RecordName;
+	bool m_PresentRecordOnScreen;
 	CFreeDelegate * m_OnAfxBaseClientDll_Free;
 	IMaterialSystem_csgo * m_MaterialSystem;
 	IAfxVRenderView * m_VRenderView;
@@ -1517,6 +1530,9 @@ private:
 	int m_OldMatDynamicTonemapping;
 	WrpConVarRef * m_MatMotionBlurEnabledRef;
 	int m_OldMatMotionBlurEnabled;
+	WrpConVarRef * m_MatForceTonemapScale;
+	float m_OldMatForceTonemapScale;
+	float m_NewMatForceTonemapScale;
 	float m_OriginalColorModulation[4];
 	bool m_ColorModulationOverride;
 	bool m_BlendOverride;
