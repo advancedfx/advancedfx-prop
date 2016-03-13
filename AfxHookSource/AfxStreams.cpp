@@ -2406,18 +2406,18 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::CActionStandardResolve::ResolveAct
 
 void CAfxBaseFxStream::CActionNoDraw::AfxUnbind(IAfxMatRenderContext * ctx)
 {
-	//AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE();
-	//AfxD3D9OverrideEnd_D3DRS_DESTBLEND();
-	//AfxD3D9OverrideEnd_D3DRS_SRCBLEND();
+	AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE();
+	AfxD3D9OverrideEnd_D3DRS_DESTBLEND();
+	AfxD3D9OverrideEnd_D3DRS_SRCBLEND();
 	AfxD3D9OverrideEnd_D3DRS_ALPHABLENDENABLE();
 }
 
 IMaterial_csgo * CAfxBaseFxStream::CActionNoDraw::MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material)
 {
-	//AfxD3D9OverrideBegin_D3DRS_ALPHABLENDENABLE(TRUE);
-	//AfxD3D9OverrideBegin_D3DRS_SRCBLEND(D3DBLEND_ZERO);
-	//AfxD3D9OverrideBegin_D3DRS_DESTBLEND(D3DBLEND_ONE);
-	//AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE(FALSE);
+	AfxD3D9OverrideBegin_D3DRS_ALPHABLENDENABLE(TRUE);
+	AfxD3D9OverrideBegin_D3DRS_SRCBLEND(D3DBLEND_ZERO);
+	AfxD3D9OverrideBegin_D3DRS_DESTBLEND(D3DBLEND_ONE);
+	AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE(FALSE);
 
 	return material;
 }
