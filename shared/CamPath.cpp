@@ -26,6 +26,82 @@
 #undef max
 #endif
 
+bool CamPath::DoubleInterp_FromString(char const * value, DoubleInterp & outValue)
+{
+	if(!_stricmp(value,"default"))
+	{
+		outValue = DI_DEFAULT;
+		return true;
+	}
+	else
+	if(!_stricmp(value,"linear"))
+	{
+		outValue = DI_LINEAR;
+		return true;
+	}
+	else
+	if(!_stricmp(value,"cubic"))
+	{
+		outValue = DI_CUBIC;
+		return true;
+	}
+
+	return false;
+}
+
+char const * CamPath::DoubleInterp_ToString(DoubleInterp value)
+{
+	switch(value)
+	{
+	case DI_DEFAULT:
+		return "default";
+	case DI_LINEAR:
+		return "linear";
+	case DI_CUBIC:
+		return "cubic";
+	}
+
+	return "[unkown]";
+}
+
+bool CamPath::QuaternionInterp_FromString(char const * value, QuaternionInterp & outValue)
+{
+	if(!_stricmp(value,"default"))
+	{
+		outValue = QI_DEFAULT;
+		return true;
+	}
+	else
+	if(!_stricmp(value,"sLinear"))
+	{
+		outValue = QI_SLINEAR;
+		return true;
+	}
+	else
+	if(!_stricmp(value,"cubic"))
+	{
+		outValue = QI_SCUBIC;
+		return true;
+	}
+
+	return false;
+}
+
+char const * CamPath::QuaternionInterp_ToString(QuaternionInterp value)
+{
+	switch(value)
+	{
+	case QI_DEFAULT:
+		return "default";
+	case QI_SLINEAR:
+		return "sLinear";
+	case QI_SCUBIC:
+		return "sCubic";
+	}
+
+	return "[unkown]";
+}
+
 CamPathValue::CamPathValue()
 : X(0.0), Y(0.0), Z(0.0), R(), Fov(90.0), Selected(false)
 {
@@ -75,6 +151,9 @@ bool CamPathIterator::operator != (CamPathIterator const &it) const
 CamPath::CamPath()
 : m_OnChanged(0)
 , m_Enabled(false)
+, m_PositionInterpMethod(DI_DEFAULT)
+, m_RotationInterpMethod(QI_DEFAULT)
+, m_FovInterpMethod(DI_DEFAULT)
 , m_XView(&m_Map, XSelector)
 , m_YView(&m_Map, YSelector)
 , m_ZView(&m_Map, ZSelector)
@@ -124,6 +203,84 @@ void CamPath::Enabled_set(bool enable)
 bool CamPath::Enabled_get(void)
 {
 	return m_Enabled;
+}
+
+void CamPath::PositionInterpMethod_set(DoubleInterp value)
+{
+	delete m_XInterp;
+	delete m_YInterp;
+	delete m_ZInterp;
+
+	m_PositionInterpMethod = value;
+
+	switch(value)
+	{
+	case DI_LINEAR:
+		m_XInterp = new CLinearDoubleInterpolation<CamPathValue>(&m_XView);
+		m_YInterp = new CLinearDoubleInterpolation<CamPathValue>(&m_YView);
+		m_ZInterp = new CLinearDoubleInterpolation<CamPathValue>(&m_ZView);
+		break;
+	default:
+		m_XInterp = new CCubicDoubleInterpolation<CamPathValue>(&m_XView);
+		m_YInterp = new CCubicDoubleInterpolation<CamPathValue>(&m_YView);
+		m_ZInterp = new CCubicDoubleInterpolation<CamPathValue>(&m_ZView);
+		break;
+	}
+
+	Changed();
+}
+
+CamPath::DoubleInterp CamPath::PositionInterpMethod_get(void)
+{
+	return m_PositionInterpMethod;
+}
+
+void CamPath::RotationInterpMethod_set(QuaternionInterp value)
+{
+	delete m_RInterp;
+
+	m_RotationInterpMethod = value;
+
+	switch(value)
+	{
+	case QI_SLINEAR:
+		m_RInterp = new CSLinearQuaternionInterpolation<CamPathValue>(&m_RView);
+		break;
+	default:
+		m_RInterp = new CSCubicQuaternionInterpolation<CamPathValue>(&m_RView);
+		break;
+	}
+
+	Changed();
+}
+
+CamPath::QuaternionInterp CamPath::RotationInterpMethod_get(void)
+{
+	return m_RotationInterpMethod;
+}
+
+void CamPath::FovInterpMethod_set(DoubleInterp value)
+{
+	delete m_FovInterp;
+
+	m_FovInterpMethod = value;
+
+	switch(value)
+	{
+	case DI_LINEAR:
+		m_FovInterp = new CLinearDoubleInterpolation<CamPathValue>(&m_FovView);
+		break;
+	default:
+		m_FovInterp = new CCubicDoubleInterpolation<CamPathValue>(&m_FovView);
+		break;
+	}
+
+	Changed();
+}
+
+CamPath::DoubleInterp CamPath::FovInterpMethod_get(void)
+{
+	return m_FovInterpMethod;
 }
 
 void CamPath::Add(double time, CamPathValue value)
@@ -242,6 +399,12 @@ bool CamPath::Save(wchar_t const * fileName)
 	doc.append_node(decl);
 
 	rapidxml::xml_node<> * cam = doc.allocate_node(rapidxml::node_element, "campath");
+	if(DI_DEFAULT != m_PositionInterpMethod)
+		cam->append_attribute(doc.allocate_attribute("positionInterp", DoubleInterp_ToString(m_PositionInterpMethod)));
+	if(QI_DEFAULT != m_RotationInterpMethod)
+		cam->append_attribute(doc.allocate_attribute("rotationInterp", QuaternionInterp_ToString(m_RotationInterpMethod)));
+	if(DI_DEFAULT != m_FovInterpMethod)
+		cam->append_attribute(doc.allocate_attribute("fovInterp", DoubleInterp_ToString(m_FovInterpMethod)));
 	doc.append_node(cam);
 
 	rapidxml::xml_node<> * pts = doc.allocate_node(rapidxml::node_element, "points");
@@ -331,12 +494,27 @@ bool CamPath::Load(wchar_t const * fileName)
 				rapidxml::xml_node<> * cur_node = doc.first_node("campath");
 				if(!cur_node) break;
 
-				cur_node = cur_node->first_node("points");
-				if(!cur_node) break;
-
 				// Clear current Campath:
 				SelectNone();
 				Clear();
+
+				rapidxml::xml_attribute<> * positionInterpA = cur_node->first_attribute("positionInterp");
+				DoubleInterp positionInterp = DI_DEFAULT;
+				if(positionInterpA) DoubleInterp_FromString(positionInterpA->value(), positionInterp);
+				PositionInterpMethod_set(positionInterp);
+
+				rapidxml::xml_attribute<> * rotationInterpA = cur_node->first_attribute("rotationInterp");
+				QuaternionInterp rotationInterp = QI_DEFAULT;
+				if(rotationInterpA) QuaternionInterp_FromString(rotationInterpA->value(), rotationInterp);
+				RotationInterpMethod_set(rotationInterp);
+
+				rapidxml::xml_attribute<> * fovInterpA = cur_node->first_attribute("fovInterp");
+				DoubleInterp fovInterp = DI_DEFAULT;
+				if(fovInterpA) DoubleInterp_FromString(fovInterpA->value(), positionInterp);
+				FovInterpMethod_set(fovInterp);
+
+				cur_node = cur_node->first_node("points");
+				if(!cur_node) break;
 
 				for(cur_node = cur_node->first_node("p"); cur_node; cur_node = cur_node->next_sibling("p"))
 				{

@@ -397,7 +397,7 @@ public:
 
 	virtual bool CanEval(void)
 	{
-		return 1 <= m_View->GetSize();
+		return 2 <= m_View->GetSize();
 	}
 
 	/// <remarks>
@@ -410,7 +410,7 @@ public:
 		m_View->GetNearestInterval(t, itLower, itUpper);
 
 		double lowerT = itLower.GetTime();
-		double lowerV = itLoer.GetValue();
+		double lowerV = itLower.GetValue();
 
 		if(t <= lowerT)
 		{
@@ -551,7 +551,7 @@ public:
 
 	virtual bool CanEval(void)
 	{
-		return 1 <= m_View->GetSize();
+		return 2 <= m_View->GetSize();
 	}
 
 	/// <remarks>
@@ -564,7 +564,7 @@ public:
 		m_View->GetNearestInterval(t, itLower, itUpper);
 
 		double lowerT = itLower.GetTime();
-		Quaternion lowerV = itLoer.GetValue();
+		Quaternion lowerV = itLower.GetValue();
 
 		if(t <= lowerT)
 		{
@@ -577,6 +577,13 @@ public:
 		if(upperT <= t)
 		{
 			return upperV;
+		}
+
+		// Make sure we will travel the short way:
+		double dotProduct = DotProduct(upperV,lowerV);
+		if(dotProduct<0.0)
+		{
+			upperV = -1.0 * upperV;
 		}
 
 		double deltaT = upperT -lowerT;
@@ -598,7 +605,7 @@ public:
 	}
 
 private:
-	CInterpolationMapView<TMap, double> * m_View;
+	CInterpolationMapView<TMap, Quaternion> * m_View;
 };
 
 template<class TMap>

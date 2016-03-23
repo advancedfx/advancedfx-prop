@@ -1251,6 +1251,99 @@ CON_COMMAND(mirv_campath,"camera paths")
 					);
 					return;
 				}
+				else
+				if(!_stricmp(arg2, "interp"))
+				{
+					if(4 <= argc)
+					{
+						char const * arg3 = args->ArgV(3);
+
+						if(!_stricmp(arg3, "position"))
+						{
+							if(5 <= argc)
+							{
+								char const * arg4 = args->ArgV(4);
+								CamPath::DoubleInterp value;
+
+								if(CamPath::DoubleInterp_FromString(arg4, value))
+								{
+									g_Hook_VClient_RenderView.m_CamPath.PositionInterpMethod_set(value);
+									return;
+								}
+							}
+
+
+							Tier0_Msg("mirv_campath edit interp positon ");
+							for(CamPath::DoubleInterp i = CamPath::DI_DEFAULT; i < CamPath::_DI_COUNT; i = (CamPath::DoubleInterp)((int)i +1))
+							{
+								Tier0_Msg("%s%s", i != CamPath::DI_DEFAULT ? "|": "", CamPath::DoubleInterp_ToString(i));
+							}
+							Tier0_Msg("\n"
+								"Current value: %s\n", CamPath::DoubleInterp_ToString(g_Hook_VClient_RenderView.m_CamPath.PositionInterpMethod_get())
+							);
+							return;
+						}
+						else
+						if(!_stricmp(arg3, "rotation"))
+						{
+							if(5 <= argc)
+							{
+								char const * arg4 = args->ArgV(4);
+								CamPath::QuaternionInterp value;
+
+								if(CamPath::QuaternionInterp_FromString(arg4, value))
+								{
+									g_Hook_VClient_RenderView.m_CamPath.RotationInterpMethod_set(value);
+									return;
+								}
+							}
+
+
+							Tier0_Msg("mirv_campath edit interp rotation ");
+							for(CamPath::QuaternionInterp i = CamPath::QI_DEFAULT; i < CamPath::_QI_COUNT; i = (CamPath::QuaternionInterp)((int)i +1))
+							{
+								Tier0_Msg("%s%s", i != CamPath::QI_DEFAULT ? "|": "", CamPath::QuaternionInterp_ToString(i));
+							}
+							Tier0_Msg("\n"
+								"Current value: %s\n", CamPath::QuaternionInterp_ToString(g_Hook_VClient_RenderView.m_CamPath.RotationInterpMethod_get())
+							);
+							return;
+						}
+						else
+						if(!_stricmp(arg3, "fov"))
+						{
+							if(5 <= argc)
+							{
+								char const * arg4 = args->ArgV(4);
+								CamPath::DoubleInterp value;
+
+								if(CamPath::DoubleInterp_FromString(arg4, value))
+								{
+									g_Hook_VClient_RenderView.m_CamPath.FovInterpMethod_set(value);
+									return;
+								}
+							}
+
+
+							Tier0_Msg("mirv_campath edit interp fov ");
+							for(CamPath::DoubleInterp i = CamPath::DI_DEFAULT; i < CamPath::_DI_COUNT; i = (CamPath::DoubleInterp)((int)i +1))
+							{
+								Tier0_Msg("%s%s", i != CamPath::DI_DEFAULT ? "|": "", CamPath::DoubleInterp_ToString(i));
+							}
+							Tier0_Msg("\n"
+								"Current value: %s\n", CamPath::DoubleInterp_ToString(g_Hook_VClient_RenderView.m_CamPath.FovInterpMethod_get())
+							);
+							return;
+						}
+					}
+
+					Tier0_Msg(
+						"mirv_campath edit interp positon [...]\n"
+						"mirv_campath edit interp rotation [...]\n"
+						"mirv_campath edit interp fov [...]\n"
+					);
+					return;
+				}
 			}
 
 			Tier0_Msg(
@@ -1262,6 +1355,7 @@ CON_COMMAND(mirv_campath,"camera paths")
 				"mirv_campath edit angles current|(<dPitchY> <dYawZ> <dRollX>) - Edit angles of the path [or selected keyframes]. All keyframes are assigned the same angles. Current uses the current camera angles, otherwise you can give the exact angles.\n"
 				"mirv_campath edit fov current|<dFov> - Similar to mirv_campath edit angles, except for field of view (fov).\n"
 				"mirv_campath edit rotate <dPitchY> <dYawZ> <dRollX> - Rotate path [or selected keyframes] around the middle of their bounding box by the given angles in degrees.\n"
+				"mirv_campath edit interp [...] - Edit interpolation properties.\n"
 			);
 			return;
 		}

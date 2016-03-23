@@ -62,12 +62,41 @@ public:
 class CamPath
 {
 public:
+	enum DoubleInterp {
+		DI_DEFAULT = 0,
+		DI_LINEAR = 1,
+		DI_CUBIC = 2,
+		_DI_COUNT = 3
+	};
+
+	enum QuaternionInterp {
+		QI_DEFAULT = 0,
+		QI_SLINEAR = 1,
+		QI_SCUBIC = 2,
+		_QI_COUNT = 3,
+	};
+
+	static bool DoubleInterp_FromString(char const * value, DoubleInterp & outValue);
+	static char const * DoubleInterp_ToString(DoubleInterp value);
+
+	static bool QuaternionInterp_FromString(char const * value, QuaternionInterp & outValue);
+	static char const * QuaternionInterp_ToString(QuaternionInterp value);
+
 	CamPath();
 	
 	~CamPath();
 
 	void Enabled_set(bool enable);
 	bool Enabled_get(void);
+
+	void PositionInterpMethod_set(DoubleInterp value);
+	DoubleInterp PositionInterpMethod_get(void);
+
+	void RotationInterpMethod_set(QuaternionInterp value);
+	QuaternionInterp RotationInterpMethod_get(void);
+
+	void FovInterpMethod_set(DoubleInterp value);
+	DoubleInterp FovInterpMethod_get(void);
 
 	void Add(double time, CamPathValue value);
 
@@ -168,6 +197,9 @@ private:
 	}
 
 	bool m_Enabled;
+	DoubleInterp m_PositionInterpMethod;
+	QuaternionInterp m_RotationInterpMethod;
+	DoubleInterp m_FovInterpMethod;
 	ICamPathChanged * m_OnChanged;
 	
 	CInterpolationMap<CamPathValue> m_Map;
