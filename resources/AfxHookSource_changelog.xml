@@ -10,7 +10,7 @@
 <time>2016-03-23T18:47Z</time>
 <changes>
 <change type="added">
-Added mirv_streams edit interp options and added support for linear interpolation (works with 2 keyframes already).
+Added mirv_campath edit interp options and added support for linear interpolation (works with 2 keyframes already).
 I doubt this is useful but it was requested.
 </change>
 </changes>
