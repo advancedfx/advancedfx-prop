@@ -594,6 +594,8 @@ public:
 		double e[3];
 		double dtheta = getang(qi,qf,e);
 
+		dtheta = dtheta/2; // Why do we have to divide by two? Is there a mistake in getang?
+
 		t = (t-lowerT)/deltaT;
 		
 		double cosTDheta = cos(t * dtheta);

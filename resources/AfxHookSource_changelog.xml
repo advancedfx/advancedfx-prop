@@ -6,6 +6,24 @@
 
 <release>
 <name>AfxHookSource lite</name>
+<version>1.1.5.0</version>
+<time>2016-03-23T18:47Z</time>
+<changes>
+<change type="added">
+Added mirv_streams edit interp options and added support for linear interpolation (works with 2 keyframes already).
+I doubt this is useful but it was requested.
+</change>
+</changes>
+<comments>
+For those that don't know, AfxHookSource lite has rudimentary mirv_streams support (but still no proper support again and Valve didn't reply so far), see: http://advancedfx.style-productions.net/forum/viewtopic.php?p=5475#p5475<br />
+Also you can find us on Twitter here: https://twitter.com/dtugend<br />
+</comments>
+</release>
+
+
+
+<release>
+<name>AfxHookSource lite</name>
 <version>1.1.4.0</version>
 <time>2016-03-13T20:18Z</time>
 <changes>
