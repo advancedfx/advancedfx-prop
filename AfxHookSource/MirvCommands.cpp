@@ -73,13 +73,6 @@ CON_COMMAND(__mirv_test4, "")
 	}
 }
 
-
-
-CON_COMMAND(__mirv_test3, "")
-{
-	Tier0_Msg("CamPathValuePiggyBack::GetInstanceCount() == %i\n", CamPathValuePiggyBack::GetInstanceCount());
-}
-
 CON_COMMAND(__mirv_test2, "")
 {
 	WrpVEngineClientDemoInfoEx * di = g_VEngineClient->GetDemoInfoEx();
@@ -511,7 +504,7 @@ CON_COMMAND(mirv_streams, "Access to streams system.")
 					if(4 <= argc)
 					{
 						char const * cmd3 = args->ArgV(3);
-						g_AfxStreams.Console_MatForceTonemapScale_set(atof(cmd3));
+						g_AfxStreams.Console_MatForceTonemapScale_set((float)atof(cmd3));
 						return;
 					}
 
@@ -915,14 +908,12 @@ CON_COMMAND(mirv_campath,"camera paths")
 		else if(!_stricmp("enable", subcmd) && 3 == argc)
 		{
 			bool enable = 0 != atoi(args->ArgV(2));
-			bool enabled = g_Hook_VClient_RenderView.m_CamPath.Enable(
-				enable
-			);
+			g_Hook_VClient_RenderView.m_CamPath.Enabled_set(enable);
 
-			if(enable && !enabled)
-				Tier0_Msg(
-					"Error: Could not enable CamPath.\n"
-					"Did you add enough points already?\n"
+			if(enable && !g_Hook_VClient_RenderView.m_CamPath.CanEval())
+				Tier0_Warning(
+					"Warning: Campath enabled but can not be evaluated yet.\n"
+					"Did you add enough points?\n"
 				);
 
 			return;
@@ -984,14 +975,15 @@ CON_COMMAND(mirv_campath,"camera paths")
 
 				double time = it.GetTime();
 				CamPathValue val = it.GetValue();
-				bool selected = it.IsSelected();
+				bool selected = val.Selected;
+				QEulerAngles ang = val.R.ToQREulerAngles().ToQEulerAngles();
 
 				vieworigin[0] = val.X;
 				vieworigin[1] = val.Y;
 				vieworigin[2] = val.Z;
-				viewangles[0] = val.Pitch;
-				viewangles[1] = val.Yaw;
-				viewangles[2] = val.Roll;
+				viewangles[0] = ang.Pitch;
+				viewangles[1] = ang.Yaw;
+				viewangles[2] = ang.Roll;
 				fov = val.Fov;
 
 				Tier0_Msg(

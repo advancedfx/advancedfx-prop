@@ -90,6 +90,7 @@
     <ClCompile Include="..\shared\hooks\gameOverlayRenderer.cpp" />
     <ClCompile Include="..\shared\OpenExrOutput.cpp" />
     <ClCompile Include="..\shared\RawOutput.cpp" />
+    <ClCompile Include="..\shared\RefCounted.cpp" />
     <ClCompile Include="..\shared\vcpp\AfxAddr.cpp" />
     <ClCompile Include="addresses.cpp" />
     <ClCompile Include="AfxClasses.cpp" />
@@ -141,6 +142,7 @@
     <ClInclude Include="..\shared\rapidxml\rapidxml_print.hpp" />
     <ClInclude Include="..\shared\rapidxml\rapidxml_utils.hpp" />
     <ClInclude Include="..\shared\RawOutput.h" />
+    <ClInclude Include="..\shared\RefCounted.h" />
     <ClInclude Include="..\shared\vcpp\AfxAddr.h" />
     <ClInclude Include="addresses.h" />
     <ClInclude Include="AfxClasses.h" />

@@ -356,8 +356,8 @@ void CCampathDrawer::OnPostRenderAllTools()
 		bool inCampath = 1 <= g_Hook_VClient_RenderView.m_CamPath.GetSize()
 			&&	g_Hook_VClient_RenderView.m_CamPath.GetLowerBound() <= curTime
 			&& curTime <= g_Hook_VClient_RenderView.m_CamPath.GetUpperBound();
-		bool campathCanEval = 4 <= g_Hook_VClient_RenderView.m_CamPath.GetSize();
-		bool campathEnabled = g_Hook_VClient_RenderView.m_CamPath.IsEnabled();
+		bool campathCanEval = g_Hook_VClient_RenderView.m_CamPath.CanEval();
+		bool campathEnabled = g_Hook_VClient_RenderView.m_CamPath.Enabled_get();
 		bool cameraMightBeSelected = false;
 
 		m_Device->SetRenderState(D3DRS_SRGBWRITEENABLE, FALSE);
@@ -545,11 +545,11 @@ void CCampathDrawer::OnPostRenderAllTools()
 			bool hasCurPt = false;
 			
 			double lastPtTime;
-			Vector3 lastPtValue;
+			CamPathValue lastPtValue;
 			double curPtTime;
-			Vector3 curPtValue;
+			CamPathValue curPtValue;
 			double nextPtTime;
-			Vector3 nextPtValue;
+			CamPathValue nextPtValue;
 
 			do
 			{
@@ -569,8 +569,7 @@ void CCampathDrawer::OnPostRenderAllTools()
 				{
 					hasCurPt = true;
 					curPtTime = *itPts;
-					CamPathValue curValue = g_Hook_VClient_RenderView.m_CamPath.Eval(curPtTime);
-					curPtValue = Vector3(curValue.X, curValue.Y, curValue.Z);
+					curPtValue = g_Hook_VClient_RenderView.m_CamPath.Eval(curPtTime);
 					++itPts;
 				}
 
@@ -584,8 +583,7 @@ void CCampathDrawer::OnPostRenderAllTools()
 				{
 					hasNextPt = true;
 					nextPtTime = *itPts;
-					CamPathValue nextValue = g_Hook_VClient_RenderView.m_CamPath.Eval(nextPtTime);
-					nextPtValue = Vector3(nextValue.X, nextValue.Y, nextValue.Z);
+					nextPtValue = g_Hook_VClient_RenderView.m_CamPath.Eval(nextPtTime);
 					++itPts;
 				}
 				else
@@ -605,8 +603,6 @@ void CCampathDrawer::OnPostRenderAllTools()
 				{
 					double deltaTime = abs(curTime -curPtTime);
 
-					bool selected = itKeysLast.IsSelected() && itKeysNext.IsSelected();
-
 					DWORD colour;
 
 					// determine colour:
@@ -614,9 +610,9 @@ void CCampathDrawer::OnPostRenderAllTools()
 					{
 						double t = (deltaTime -0.0)/1.0;
 						colour = D3DCOLOR_RGBA(
-							ValToUCCondInv(255.0*t, selected),
-							ValToUCCondInv(255, selected),
-							ValToUCCondInv(0, selected),
+							ValToUCCondInv(255.0*t, curPtValue.Selected),
+							ValToUCCondInv(255, curPtValue.Selected),
+							ValToUCCondInv(0, curPtValue.Selected),
 							(unsigned char)(127*(1.0-t))+128
 						);
 					}
@@ -625,23 +621,27 @@ void CCampathDrawer::OnPostRenderAllTools()
 					{
 						double t = (deltaTime -1.0)/1.0;
 						colour = D3DCOLOR_RGBA(
-							ValToUCCondInv(255, selected),
-							ValToUCCondInv(255.0*(1.0-t), selected),
-							ValToUCCondInv(0, selected),
+							ValToUCCondInv(255, curPtValue.Selected),
+							ValToUCCondInv(255.0*(1.0-t), curPtValue.Selected),
+							ValToUCCondInv(0, curPtValue.Selected),
 							(unsigned char)(64*(1.0-t))+64
 						);
 					}
 					else
 					{
 						colour = D3DCOLOR_RGBA(
-							ValToUCCondInv(255, selected),
-							ValToUCCondInv(0, selected),
-							ValToUCCondInv(0, selected),
+							ValToUCCondInv(255, curPtValue.Selected),
+							ValToUCCondInv(0, curPtValue.Selected),
+							ValToUCCondInv(0, curPtValue.Selected),
 							64
 						);
 					}
 
-					AutoPolyLinePoint(lastPtValue, curPtValue, colour, nextPtValue);
+					AutoPolyLinePoint(
+						Vector3(lastPtValue.X,lastPtValue.Y,lastPtValue.Z)
+						, Vector3(curPtValue.X,curPtValue.Y,curPtValue.Z)
+						, colour
+						, Vector3(nextPtValue.X,nextPtValue.Y,nextPtValue.Z));
 				}
 			}
 			while(hasNextPt);
@@ -654,7 +654,8 @@ void CCampathDrawer::OnPostRenderAllTools()
 			newCScreenInfo[2] = c_CampathCrossPixelWidth;
 			m_Device->SetVertexShaderConstantF(48, newCScreenInfo, 1);
 
-			CamPathIterator last = g_Hook_VClient_RenderView.m_CamPath.GetEnd();
+			bool lpSelected = false;
+			double lpTime;
 			
 			/*if(0 < g_Hook_VClient_RenderView.m_CamPath.GetSize())
 			{
@@ -695,17 +696,17 @@ void CCampathDrawer::OnPostRenderAllTools()
 		
 			for(CamPathIterator it = g_Hook_VClient_RenderView.m_CamPath.GetBegin(); it != g_Hook_VClient_RenderView.m_CamPath.GetEnd(); ++it)
 			{
+				double cpT = it.GetTime();
 				CamPathValue cpv = it.GetValue();
 
-				if(last != g_Hook_VClient_RenderView.m_CamPath.GetEnd())
-				{
-					cameraMightBeSelected = cameraMightBeSelected || last.IsSelected() && it.IsSelected() && last.GetTime() <= curTime && curTime <= it.GetTime();
-				}
-				last = it;
+				cameraMightBeSelected = cameraMightBeSelected || lpSelected && cpv.Selected && lpTime <= curTime && curTime <= cpT;
 
-				double deltaTime = abs(curTime -it.GetTime());
+				lpSelected = cpv.Selected;
+				lpTime = cpT;
 
-				bool selected = it.IsSelected();
+				double deltaTime = abs(curTime -cpT);
+
+				bool selected = cpv.Selected;
 
 				DWORD colour;
 
@@ -808,7 +809,8 @@ void CCampathDrawer::OnPostRenderAllTools()
 			cpv.Fov = min(179,cpv.Fov);
 
 			double forward[3], right[3], up[3];
-			MakeVectors(cpv.Roll, cpv.Pitch, cpv.Yaw, forward, right, up);
+			QEulerAngles ang = cpv.R.ToQREulerAngles().ToQEulerAngles();
+			MakeVectors(ang.Roll, ang.Pitch, ang.Yaw, forward, right, up);
 
 			Vector3 vCp(cpv.X, cpv.Y, cpv.Z);
 			Vector3 vForward(forward);

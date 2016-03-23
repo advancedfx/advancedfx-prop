@@ -280,7 +280,7 @@ void Filming::OnR_RenderView(float vieworg[3], float viewangles[3], float & fov)
 	//
 	// Camera spline interaction:
 
-	if(m_CamPath.IsEnabled())
+	if(m_CamPath.Enabled_get() && m_CamPath.CanEval())
 	{
 		double time = g_DemoPlayer->GetDemoTime();
 
@@ -288,14 +288,15 @@ void Filming::OnR_RenderView(float vieworg[3], float viewangles[3], float & fov)
 		if(m_CamPath.GetLowerBound() <= time && time <= m_CamPath.GetUpperBound())
 		{
 			CamPathValue val = m_CamPath.Eval( time );
+			QEulerAngles ang = val.R.ToQREulerAngles().ToQEulerAngles();
 
 			vieworg[0] = (float)val.X;
 			vieworg[1] = (float)val.Y;
 			vieworg[2] = (float)val.Z;
 
-			viewangles[PITCH] = (float)val.Pitch;
-			viewangles[YAW] = (float)val.Yaw;
-			viewangles[ROLL] = (float)val.Roll;
+			viewangles[PITCH] = (float)ang.Pitch;
+			viewangles[YAW] = (float)ang.Yaw;
+			viewangles[ROLL] = (float)ang.Roll;
 
 			fov = (float)val.Fov;
 		}

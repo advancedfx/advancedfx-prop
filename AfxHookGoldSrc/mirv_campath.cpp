@@ -42,14 +42,14 @@ REGISTER_CMD_FUNC(campath)
 		else if(!_stricmp("enable", subcmd) && 3 == argc)
 		{
 			bool enable = 0 != atoi(pEngfuncs->Cmd_Argv(2));
-			bool enabled = g_Filming.GetCamPath()->Enable(
+			g_Filming.GetCamPath()->Enabled_set(
 				enable
 			);
 
-			if(enable && !enabled)
+			if(enable && !g_Filming.GetCamPath()->CanEval())
 				pEngfuncs->Con_Printf(
-					"Error: Could not enable CamPath.\n"
-					"Did you add enough points already?\n"
+					"Warning: Campath enabled but can not be evaluated yet.\n"
+					"Did you add enough points?\n"
 				);
 
 			return;
@@ -75,13 +75,14 @@ REGISTER_CMD_FUNC(campath)
 
 				double time = it.GetTime();
 				CamPathValue val = it.GetValue();
+				QEulerAngles ang = val.R.ToQREulerAngles().ToQEulerAngles();
 
 				vieworigin[0] = val.X;
 				vieworigin[1] = val.Y;
 				vieworigin[2] = val.Z;
-				viewangles[PITCH] = val.Pitch;
-				viewangles[YAW] = val.Yaw;
-				viewangles[ROLL] =  val.Roll;
+				viewangles[PITCH] = ang.Pitch;
+				viewangles[YAW] = ang.Yaw;
+				viewangles[ROLL] =  ang.Roll;
 				fov = val.Fov;
 
 				pEngfuncs->Con_Printf(

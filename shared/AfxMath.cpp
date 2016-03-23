@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-08-29 dominik.matrixstorm.com
+// 2016-03-22 dominik.matrixstorm.com
 //
 // First changes:
 // 2014-11-02 dominik.matrixstorm.com
@@ -212,11 +212,6 @@ void splint(double xa[], double ya[], double y2a[], int n, double x, double *y)
 
 #define DZERO (double **)0
 #define ZERO (double *)0
-
-void freeall(
-	int n, double *h, double *a, double *b, double *c, double *dtheta,
-	double **e, double **w, double **wprev	
-);
 
 double getang(double qi[], double qf[], double e[]);
 
@@ -558,8 +553,6 @@ COPYRIGHT (C) 2003 by James McEnnan
   }
 }
 
-#define EPS 1.0e-6
-
 // Note: This function has been slighlty modified from it's original (definition only).
 int bd(
 	double e[], double dtheta, int flag, double xin[], double xout[]
@@ -618,7 +611,7 @@ COPYRIGHT (C) 2003 by James McEnnan
   int i;
   double sa, ca, b0, b1, b2, temp1[3], temp2[3];
 
-  if(dtheta > EPS)
+  if(dtheta > AFX_MATH_EPS)
   {
     ca = cos(dtheta);
     sa = sin(dtheta);
@@ -706,7 +699,7 @@ COPYRIGHT (C) 2003 by James McEnnan
   int i;
   double sa, ca, dot, mag, c1, r0, r1, temp1[3], temp2[3];
 
-  if(dtheta > EPS)
+  if(dtheta > AFX_MATH_EPS)
   {
     ca = cos(dtheta);
     sa = sin(dtheta);
@@ -807,7 +800,7 @@ COPYRIGHT (C) 2003 by James McEnnan
 
   /* final angular rate terms. */
 
-  if(dtheta > EPS)
+  if(dtheta > AFX_MATH_EPS)
   {
     c1 = 0.5*sa*dtheta/(1.0 - ca);
 
@@ -943,7 +936,7 @@ COPYRIGHT (C) 2003 by James McEnnan
   ca = cos(ang);
   sa = sin(ang);
 
-  if(ang > EPS)
+  if(ang > AFX_MATH_EPS)
   {
     /* compute angular rate vector. */
 
@@ -1146,6 +1139,7 @@ COPYRIGHT (C) 2003 by James McEnnan
   a[2] = b[0]*c[1] - b[1]*c[0];
 }
 
+/*
 // CubicObjectSpline ///////////////////////////////////////////////////////////
 
 CubicObjectSpline::CubicObjectSpline()
@@ -1258,7 +1252,7 @@ COSValue CubicObjectSpline::Eval(double t)
 
 		double wi[3] = {0.0,0.0,0.0};
 		double wf[3] = {0.0,0.0,0.0};
-		qspline_init(n, 2, EPS, wi, wf, m_Build.T, m_Build.Q_y, m_Build.Q_h, m_Build.Q_dtheta, m_Build.Q_e, m_Build.Q_w);
+		qspline_init(n, 2, AFX_MATH_EPS, wi, wf, m_Build.T, m_Build.Q_y, m_Build.Q_h, m_Build.Q_dtheta, m_Build.Q_e, m_Build.Q_w);
 
 		spline(m_Build.T , m_Build.Fov, n, false, 0.0, false, 0.0, m_Build.Fov2);
 	}
@@ -1330,18 +1324,6 @@ COSPoints::const_iterator CubicObjectSpline::GetEnd(void)
 	return m_Points.end();
 }
 
-/*
-COSPoints::const_iterator CubicObjectSpline::GetLowerBound(double t)
-{
-	return m_Points.lower_bound(t);
-}
-
-COSPoints::const_iterator CubicObjectSpline::GetUpperBound(double t)
-{
-	return m_Points.upper_bound(t);
-}
-*/
-
 double CubicObjectSpline::GetLowerBound()
 {
 	if(m_Points.size() < 1) throw "CubicObjectSpline::GetLowerBound: Size less than 1.";
@@ -1401,7 +1383,7 @@ void CubicObjectSpline::ValueRemoved(COSValue & value)
 {
 	if(m_OnValueRemoved) m_OnValueRemoved->CosObjectSplineValueRemoved(this, value);
 }
-
+*/
 
 // QEulerAngles ////////////////////////////////////////////////////////////////
 
@@ -1586,7 +1568,7 @@ QREulerAngles Quaternion::ToQREulerAngles()
 	double zYaw;
 	double xRoll;
 
-	if(sinYPitch > 1.0 -EPS)
+	if(sinYPitch > 1.0 -AFX_MATH_EPS)
 	{
 		// sout pole singularity:
 
@@ -1596,7 +1578,7 @@ QREulerAngles Quaternion::ToQREulerAngles()
 		zYaw = 0;
 	}
 	else
-	if(sinYPitch < -1.0 +EPS)
+	if(sinYPitch < -1.0 +AFX_MATH_EPS)
 	{
 		// north pole singularity:
 

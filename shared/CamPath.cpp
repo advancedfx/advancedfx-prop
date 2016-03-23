@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-08-29 dominik.matrixstorm.com
+// 2016-03-22 dominik.matrixstorm.com
 //
 // First changes:
 // 2014-11-03 dominik.matrixstorm.com
@@ -27,16 +27,21 @@
 #endif
 
 CamPathValue::CamPathValue()
-: X(0.0), Y(0.0), Z(0.0), Pitch(0.0), Yaw(0.0), Roll(0.0), Fov(90.0)
+: X(0.0), Y(0.0), Z(0.0), R(), Fov(90.0), Selected(false)
 {
 }
 
 CamPathValue::CamPathValue(double x, double y, double z, double pitch, double yaw, double roll, double fov)
-: X(x), Y(y), Z(z), Pitch(pitch), Yaw(yaw), Roll(roll), Fov(fov)
+: X(x)
+, Y(y)
+, Z(z)
+, R(Quaternion::FromQREulerAngles(QREulerAngles::FromQEulerAngles(QEulerAngles(pitch,yaw,roll))))
+, Fov(fov)
+, Selected(false)
 {
 }
 
-CamPathIterator::CamPathIterator(COSPoints::const_iterator & it) : wrapped(it)
+CamPathIterator::CamPathIterator(CInterpolationMap<CamPathValue>::const_iterator & it) : wrapped(it)
 {
 }
 
@@ -47,25 +52,7 @@ double CamPathIterator::GetTime()
 
 CamPathValue CamPathIterator::GetValue()
 {
-	Quaternion Q = wrapped->second.R;
-	QEulerAngles angles = Q.ToQREulerAngles().ToQEulerAngles();
-
-	CamPathValue result(
-		wrapped->second.T.X,
-		wrapped->second.T.Y,
-		wrapped->second.T.Z,
-		angles.Pitch,
-		angles.Yaw,
-		angles.Roll,
-		wrapped->second.Fov
-	);
-
-	return result;
-}
-
-bool CamPathIterator::IsSelected()
-{
-	return ((CamPathValuePiggyBack *)(wrapped->second.pUser))->Selected;
+	return wrapped->second;
 }
 
 CamPathIterator& CamPathIterator::operator ++ ()
@@ -88,76 +75,61 @@ bool CamPathIterator::operator != (CamPathIterator const &it) const
 CamPath::CamPath()
 : m_OnChanged(0)
 , m_Enabled(false)
+, m_XView(&m_Map, XSelector)
+, m_YView(&m_Map, YSelector)
+, m_ZView(&m_Map, ZSelector)
+, m_RView(&m_Map, RSelector)
+, m_FovView(&m_Map, FovSelector)
+, m_SelectedView(&m_Map, SelectedSelector)
 {
-	m_Spline.OnValueRemoved_set(this);
-
-	Changed();
-}
-
-CamPath::CamPath(ICamPathChanged * onChanged)
-: m_OnChanged(onChanged)
-, m_Enabled(false)
-{
-	m_Spline.OnValueRemoved_set(this);
+	m_XInterp = new CCubicDoubleInterpolation<CamPathValue>(&m_XView);
+	m_YInterp = new CCubicDoubleInterpolation<CamPathValue>(&m_YView);
+	m_ZInterp = new CCubicDoubleInterpolation<CamPathValue>(&m_ZView);
+	m_RInterp = new CSCubicQuaternionInterpolation<CamPathValue>(&m_RView);
+	m_FovInterp = new CCubicDoubleInterpolation<CamPathValue>(&m_FovView);
+	m_SelectedInterp = new CBoolAndInterpolation<CamPathValue>(&m_SelectedView);
 
 	Changed();
 }
 
 CamPath::~CamPath()
 {
-	m_Spline.Clear();
-	m_Spline.OnValueRemoved_set(0);
-}
-
-bool CamPath::DoEnable(bool enable)
-{
-	m_Enabled = enable && 4 <= GetSize();
-
-	return m_Enabled;
-}
-
-bool CamPath::Enable(bool enable)
-{
-	bool result = DoEnable(enable);
-
-	if(result != enable)
-		Changed();
-
-	return result;
-}
-
-bool CamPath::IsEnabled()
-{
-	return m_Enabled;
-}
-
-void CamPath::Add(double time, CamPathValue value, bool selected)
-{
-	COSValue val;
-
-	val.R = Quaternion::FromQREulerAngles(QREulerAngles::FromQEulerAngles(QEulerAngles(
-		value.Pitch,
-		value.Yaw,
-		value.Roll
-	)));
-
-	val.T.X = value.X;
-	val.T.Y = value.Y;
-	val.T.Z = value.Z;
-
-	val.Fov = value.Fov;
-
-	Add(time, val, selected);
+	m_Map.clear();
 
 	Changed();
+
+	delete m_SelectedInterp;
+	delete m_FovInterp;
+	delete m_RInterp;
+	delete m_ZInterp;
+	delete m_YInterp;
+	delete m_XInterp;
 }
 
-void CamPath::Add(double time, COSValue value, bool selected)
+void CamPath::DoInterpolationMapChangedAll(void)
 {
-	value.pUser = new CamPathValuePiggyBack(selected);
+	m_XInterp->InterpolationMapChanged();
+	m_YInterp->InterpolationMapChanged();
+	m_ZInterp->InterpolationMapChanged();
+	m_RInterp->InterpolationMapChanged();
+	m_FovInterp->InterpolationMapChanged();
+	m_SelectedInterp->InterpolationMapChanged();
+}
 
-	m_Spline.Add(time, value);
+void CamPath::Enabled_set(bool enable)
+{
+	m_Enabled = enable;
+}
 
+bool CamPath::Enabled_get(void)
+{
+	return m_Enabled;
+}
+
+void CamPath::Add(double time, CamPathValue value)
+{
+	m_Map[time] = value;
+	DoInterpolationMapChangedAll();
 	Changed();
 }
 
@@ -166,13 +138,10 @@ void CamPath::Changed()
 	if(m_OnChanged) m_OnChanged->CamPathChanged(this);
 }
 
-
 void CamPath::Remove(double time)
 {
-	m_Spline.Remove(time);
-
-	m_Enabled = m_Enabled && 4 <= GetSize();
-
+	m_Map.erase(time);
+	DoInterpolationMapChangedAll();
 	Changed();
 }
 
@@ -180,88 +149,75 @@ void CamPath::Clear()
 {
 	bool selectAll = true;
 
-	// TODO: optimize this somehow, this can take up to log(N)*N, which is rather slow for such a shitty operation:
-
-	COSPoints::const_iterator last = m_Spline.GetEnd();
-	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd();)
+	CInterpolationMap<CamPathValue>::iterator last = m_Map.end();
+	for(CInterpolationMap<CamPathValue>::iterator it = m_Map.begin(); it != m_Map.end();)
 	{
-		if(GetSelected(it->second))
+		CInterpolationMap<CamPathValue>::iterator itNext = it;
+		++itNext;
+
+		if(it->second.Selected)
 		{
 			selectAll = false;
-			m_Spline.Remove(it->first);
+			m_Map.erase(it);
+		}
 
-			if(last != m_Spline.GetEnd())
-			{
-				it = last;
-				last = m_Spline.GetEnd();
-			}
-			else
-				it = m_Spline.GetBegin();
-		}
-		else
-		{
-			last = it;
-			++it;
-		}
+		it = itNext;
 	}
 
-	if(selectAll) m_Spline.Clear();
+	if(selectAll) m_Map.clear();
 
-	m_Enabled = m_Enabled && 4 <= GetSize();
-
+	DoInterpolationMapChangedAll();
 	Changed();
 }
 
 size_t CamPath::GetSize()
 {
-	return m_Spline.GetSize();
+	return m_Map.size();
 }
 
 CamPathIterator CamPath::GetBegin()
 {
-	return CamPathIterator(m_Spline.GetBegin());
+	return CamPathIterator(m_Map.begin());
 }
 
 CamPathIterator CamPath::GetEnd()
 {
-	return CamPathIterator(m_Spline.GetEnd());
+	return CamPathIterator(m_Map.end());
 }
 
 double CamPath::GetLowerBound()
 {
-	return m_Spline.GetLowerBound();
-}
-
-bool CamPath::GetSelected(const COSValue & value)
-{
-	return GetPiggy(value)->Selected;
-}
-
-CamPathValuePiggyBack const * CamPath::GetPiggy( const COSValue & value)
-{
-	return (CamPathValuePiggyBack *)value.pUser;
+	return m_Map.begin()->first;
 }
 
 double CamPath::GetUpperBound()
 {
-	return m_Spline.GetUpperBound();
+	return (--m_Map.end())->first;
+}
+
+bool CamPath::CanEval(void)
+{
+	return
+		m_XInterp->CanEval()
+		&& m_YInterp->CanEval()
+		&& m_ZInterp->CanEval()
+		&& m_RInterp->CanEval()
+		&& m_FovInterp->CanEval()
+		&& m_SelectedInterp->CanEval();
 }
 
 CamPathValue CamPath::Eval(double t)
 {
-	COSValue val = m_Spline.Eval(t);
+	CamPathValue val;
+	
+	val.X = m_XInterp->Eval(t);
+	val.Y = m_YInterp->Eval(t);
+	val.Z = m_ZInterp->Eval(t);
+	val.R = m_RInterp->Eval(t);
+	val.Fov = m_FovInterp->Eval(t);
+	val.Selected = m_SelectedInterp->Eval(t);
 
-	QEulerAngles angles = val.R.ToQREulerAngles().ToQEulerAngles();
-
-	return CamPathValue(
-		val.T.X,
-		val.T.Y,
-		val.T.Z,
-		angles.Pitch,
-		angles.Yaw,
-		angles.Roll,
-		val.Fov
-	);
+	return val;
 }
 
 void CamPath::OnChanged_set(ICamPathChanged * value)
@@ -305,6 +261,7 @@ bool CamPath::Save(wchar_t const * fileName)
 	{
 		double time = it.GetTime();
 		CamPathValue val = it.GetValue();
+		QEulerAngles ang = val.R.ToQREulerAngles().ToQEulerAngles();
 
 		rapidxml::xml_node<> * pt = doc.allocate_node(rapidxml::node_element, "p");
 		pt->append_attribute(doc.allocate_attribute("t", double2xml(doc,time)));
@@ -312,15 +269,15 @@ bool CamPath::Save(wchar_t const * fileName)
 		pt->append_attribute(doc.allocate_attribute("y", double2xml(doc,val.Y)));
 		pt->append_attribute(doc.allocate_attribute("z", double2xml(doc,val.Z)));
 		pt->append_attribute(doc.allocate_attribute("fov", double2xml(doc,val.Fov)));
-		pt->append_attribute(doc.allocate_attribute("rx", double2xml(doc,val.Roll)));
-		pt->append_attribute(doc.allocate_attribute("ry", double2xml(doc,val.Pitch)));
-		pt->append_attribute(doc.allocate_attribute("rz", double2xml(doc,val.Yaw)));
+		pt->append_attribute(doc.allocate_attribute("rx", double2xml(doc,ang.Roll)));
+		pt->append_attribute(doc.allocate_attribute("ry", double2xml(doc,ang.Pitch)));
+		pt->append_attribute(doc.allocate_attribute("rz", double2xml(doc,ang.Yaw)));
 		pt->append_attribute(doc.allocate_attribute("qw", double2xml(doc,it.wrapped->second.R.W)));
 		pt->append_attribute(doc.allocate_attribute("qx", double2xml(doc,it.wrapped->second.R.X)));
 		pt->append_attribute(doc.allocate_attribute("qy", double2xml(doc,it.wrapped->second.R.Y)));
 		pt->append_attribute(doc.allocate_attribute("qz", double2xml(doc,it.wrapped->second.R.Z)));
 
-		if(GetSelected(it.wrapped->second))
+		if(val.Selected)
 			pt->append_attribute(doc.allocate_attribute("selected"));
 
 		pts->append_node(pt);
@@ -378,6 +335,7 @@ bool CamPath::Load(wchar_t const * fileName)
 				if(!cur_node) break;
 
 				// Clear current Campath:
+				SelectNone();
 				Clear();
 
 				for(cur_node = cur_node->first_node("p"); cur_node; cur_node = cur_node->next_sibling("p"))
@@ -406,18 +364,19 @@ bool CamPath::Load(wchar_t const * fileName)
 
 					if(qwA && qxA && qyA && qzA)
 					{
-						COSValue r;
-						r.T.X = dX;
-						r.T.Y = dY;
-						r.T.Z = dZ;
+						CamPathValue r;
+						r.X = dX;
+						r.Y = dY;
+						r.Z = dZ;
 						r.R.W = atof(qwA->value());
 						r.R.X = atof(qxA->value());
 						r.R.Y = atof(qyA->value());
 						r.R.Z = atof(qzA->value());
 						r.Fov = dFov;
+						r.Selected = 0 != selectedA;
 
 						// Add point:
-						Add(dT, r, 0 != selectedA);
+						Add(dT, r);
 					}
 					else
 					{
@@ -425,13 +384,16 @@ bool CamPath::Load(wchar_t const * fileName)
 						double dRYpitch = ryA ? atof(ryA->value()) : 0.0;
 						double dRZyaw = rzA ? atof(rzA->value()) : 0.0;
 
+						CamPathValue r;
+						r.X = dX;
+						r.Y = dY;
+						r.Z = dZ;
+						r.R = Quaternion::FromQREulerAngles(QREulerAngles::FromQEulerAngles(QEulerAngles(dRYpitch, dRZyaw, dRXroll)));
+						r.Fov = dFov;
+						r.Selected = 0 != selectedA;
+
 						// Add point:
-						Add(dT, CamPathValue(
-							dX, dY, dZ,
-							dRYpitch, dRZyaw, dRXroll,
-							dFov),
-							0 != selectedA
-						);
+						Add(dT, r);
 					}
 				}
 			}
@@ -447,6 +409,7 @@ bool CamPath::Load(wchar_t const * fileName)
 
 	fclose(pFile);
 
+	DoInterpolationMapChangedAll();
 	Changed();
 
 	return bOk;
@@ -454,42 +417,41 @@ bool CamPath::Load(wchar_t const * fileName)
 
 size_t CamPath::SelectAll()
 {
-	SelectNone();
+	for(CInterpolationMap<CamPathValue>::iterator it = m_Map.begin(); it != m_Map.end(); ++it)
+	{
+		it->second.Selected = true;
+	}
 
-	size_t max = m_Spline.GetSize();
-	if(0 < max) --max;
+	m_SelectedInterp->InterpolationMapChanged();
+	Changed();
 
-	return SelectAdd((size_t)0, max);
+	return m_Map.size();
 }
 
 void CamPath::SelectNone()
 {
-	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	for(CInterpolationMap<CamPathValue>::iterator it = m_Map.begin(); it != m_Map.end(); ++it)
 	{
-		CamPathValuePiggyBack * newPig = new CamPathValuePiggyBack(GetPiggy(it->second));
-		newPig->Selected = false;
-
-		delete GetPiggy(it->second);
-
-		m_Spline.SetUser(it->first, newPig);
+		it->second.Selected = false;
 	}
+
+	m_SelectedInterp->InterpolationMapChanged();
+	Changed();
 }
 
 size_t CamPath::SelectInvert()
 {
 	size_t selected = 0;
 
-	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	for(CInterpolationMap<CamPathValue>::iterator it = m_Map.begin(); it != m_Map.end(); ++it)
 	{
-		CamPathValuePiggyBack * newPig = new CamPathValuePiggyBack(GetPiggy(it->second));
-		newPig->Selected = !newPig->Selected;
+		it->second.Selected = !it->second.Selected;
 
-		if(newPig->Selected) ++selected;
-
-		delete GetPiggy(it->second);
-
-		m_Spline.SetUser(it->first, newPig);
+		if(it->second.Selected) ++selected;
 	}
+
+	m_SelectedInterp->InterpolationMapChanged();
+	Changed();
 
 	return selected;
 }
@@ -499,19 +461,17 @@ size_t CamPath::SelectAdd(size_t min, size_t max)
 	size_t i = 0;
 	size_t selected = 0;
 
-	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	for(CInterpolationMap<CamPathValue>::iterator it = m_Map.begin(); it != m_Map.end(); ++it)
 	{
-		CamPathValuePiggyBack * newPig = new CamPathValuePiggyBack(GetPiggy(it->second));
-		newPig->Selected = newPig->Selected || min <= i && i <= max;
+		it->second.Selected = it->second.Selected || min <= i && i <= max;
 
-		if(newPig->Selected) ++selected;
-
-		delete GetPiggy(it->second);
-
-		m_Spline.SetUser(it->first, newPig);
+		if(it->second.Selected) ++selected;
 
 		++i;
 	}
+
+	m_SelectedInterp->InterpolationMapChanged();
+	Changed();
 
 	return selected;
 }
@@ -520,17 +480,15 @@ size_t CamPath::SelectAdd(double min, size_t count)
 {
 	size_t selected = 0;
 
-	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	for(CInterpolationMap<CamPathValue>::iterator it = m_Map.begin(); it != m_Map.end(); ++it)
 	{
-		CamPathValuePiggyBack * newPig = new CamPathValuePiggyBack(GetPiggy(it->second));
-		newPig->Selected = newPig->Selected || min <= it->first && selected < count;
+		it->second.Selected = it->second.Selected || min <= it->first && selected < count;
 
-		if(newPig->Selected) ++selected;
-
-		delete GetPiggy(it->second);
-
-		m_Spline.SetUser(it->first, newPig);
+		if(it->second.Selected) ++selected;
 	}
+
+	m_SelectedInterp->InterpolationMapChanged();
+	Changed();
 
 	return selected;
 }
@@ -539,34 +497,31 @@ size_t CamPath::SelectAdd(double min, double max)
 {
 	size_t selected = 0;
 
-	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	for(CInterpolationMap<CamPathValue>::iterator it = m_Map.begin(); it != m_Map.end(); ++it)
 	{
-		CamPathValuePiggyBack * newPig = new CamPathValuePiggyBack(GetPiggy(it->second));
-		newPig->Selected = newPig->Selected || min <= it->first && it->first <= max;
+		it->second.Selected = it->second.Selected || min <= it->first && it->first <= max;
 
-		if(newPig->Selected) ++selected;
-
-		delete GetPiggy(it->second);
-
-		m_Spline.SetUser(it->first, newPig);
+		if(it->second.Selected) ++selected;
 	}
+
+	m_SelectedInterp->InterpolationMapChanged();
+	Changed();
 
 	return selected;
 }
 
 void CamPath::SetStart(double t)
 {
-	if(m_Spline.GetSize()<1) return;
+	if(m_Map.size()<1) return;
 
-	CubicObjectSpline tempSpline;
-	tempSpline.OnValueRemoved_set(this);
+	CInterpolationMap<CamPathValue> tempMap;
 
 	bool selectAll = true;
 	double first = 0;
 
-	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	for(CInterpolationMap<CamPathValue>::iterator it = m_Map.begin(); it != m_Map.end(); ++it)
 	{
-		if(GetSelected(it->second))
+		if(it->second.Selected)
 		{
 			if(selectAll)
 			{
@@ -577,48 +532,44 @@ void CamPath::SetStart(double t)
 		}
 	}
 
-	double deltaT = selectAll ? t -m_Spline.GetBegin()->first : t -first;
+	double deltaT = selectAll ? t -m_Map.begin()->first : t -first;
 
-	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	for(CInterpolationMap<CamPathValue>::iterator it = m_Map.begin(); it != m_Map.end(); ++it)
 	{
 		double curT = it->first;
-		COSValue curValue = it->second;
+		CamPathValue curValue = it->second;
 
-		curValue.pUser = new CamPathValuePiggyBack(GetPiggy(curValue));
-
-		if(selectAll || GetSelected(curValue))
+		if(selectAll || curValue.Selected)
 		{
-			tempSpline.Add(deltaT+curT, curValue);
+			tempMap[deltaT+curT] = curValue;
 		}
 		else
 		{
-			tempSpline.Add(curT, curValue);
+			tempMap[curT] = curValue;
 		}
-
 	}
 
-	CopyCOS(m_Spline, tempSpline);
+	CopyMap(m_Map, tempMap);
 
-	DoEnable(m_Enabled);
+	DoInterpolationMapChangedAll();
 
 	Changed();
 }
 	
 void CamPath::SetDuration(double t)
 {
-	if(m_Spline.GetSize()<2) return;
+	if(m_Map.size()<2) return;
 
-	CubicObjectSpline tempSpline;
-	tempSpline.OnValueRemoved_set(this);
+	CInterpolationMap<CamPathValue> tempMap;
 
-	CopyCOS(tempSpline, m_Spline);
+	CopyMap(tempMap, m_Map);
 
 	bool selectAll = true;
 	double first = 0, last = 0;
 
-	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	for(CInterpolationMap<CamPathValue>::iterator it = m_Map.begin(); it != m_Map.end(); ++it)
 	{
-		if(GetSelected(it->second))
+		if(it->second.Selected)
 		{
 			if(selectAll)
 			{
@@ -635,48 +586,46 @@ void CamPath::SetDuration(double t)
 
 	double oldDuration = selectAll ? GetDuration() : last -first;
 
-	m_Spline.Clear();
+	m_Map.clear();
 
 	double scale = oldDuration ? t / oldDuration : 0.0;
 	bool isFirst = true;
 	double firstT = 0;
 
-	for(COSPoints::const_iterator it = tempSpline.GetBegin(); it != tempSpline.GetEnd(); ++it)
+	for(CInterpolationMap<CamPathValue>::const_iterator it = tempMap.begin(); it != tempMap.end(); ++it)
 	{
 		double curT = it->first;
-		COSValue curValue = it->second;
+		CamPathValue curValue = it->second;
 
-		curValue.pUser = new CamPathValuePiggyBack(GetPiggy(curValue));
-
-		if(selectAll || GetSelected(curValue))
+		if(selectAll || curValue.Selected)
 		{
 			if(isFirst)
 			{
-				m_Spline.Add(curT, curValue);
+				m_Map[curT] = curValue;
 				firstT = curT;
 				isFirst = false;
 			}
 			else
-				m_Spline.Add(firstT+scale*(curT-firstT), curValue);
+				m_Map[firstT+scale*(curT-firstT)] = curValue;
 		}
 		else
-			m_Spline.Add(curT, curValue);
+			m_Map[curT] = curValue;
 	}
 
-	DoEnable(m_Enabled);
+	DoInterpolationMapChangedAll();
 
 	Changed();
 }
 
 void CamPath::SetPosition(double x, double y, double z)
 {
-	if(m_Spline.GetSize()<1) return;
+	if(m_Map.size()<1) return;
 
 	bool selectAll = true;
 
-	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	for(CInterpolationMap<CamPathValue>::const_iterator it = m_Map.begin(); it != m_Map.end(); ++it)
 	{
-		if(GetSelected(it->second))
+		if(it->second.Selected)
 		{
 			if(selectAll)
 			{
@@ -691,30 +640,30 @@ void CamPath::SetPosition(double x, double y, double z)
 	double minX = 0, maxX = 0, minY = 0, maxY = 0, minZ = 0, maxZ = 0;
 	bool first = true;
 
-	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	for(CInterpolationMap<CamPathValue>::const_iterator it = m_Map.begin(); it != m_Map.end(); ++it)
 	{
-		if(selectAll || GetSelected(it->second))
+		if(selectAll || it->second.Selected)
 		{
-			COSValue curValue = it->second;
+			CamPathValue curValue = it->second;
 
 			if(first)
 			{
-				minX = curValue.T.X;
-				minY = curValue.T.Y;
-				minZ = curValue.T.Z;
-				maxX = curValue.T.X;
-				maxY = curValue.T.Y;
-				maxZ = curValue.T.Z;
+				minX = curValue.X;
+				minY = curValue.Y;
+				minZ = curValue.Z;
+				maxX = curValue.X;
+				maxY = curValue.Y;
+				maxZ = curValue.Z;
 				first = false;
 			}
 			else
 			{
-				minX = std::min(minX, curValue.T.X);
-				minY = std::min(minY, curValue.T.Y);
-				minZ = std::min(minZ, curValue.T.Z);
-				maxX = std::max(maxX, curValue.T.X);
-				maxY = std::max(maxY, curValue.T.Y);
-				maxZ = std::max(maxZ, curValue.T.Z);
+				minX = std::min(minX, curValue.X);
+				minY = std::min(minY, curValue.Y);
+				minZ = std::min(minZ, curValue.Z);
+				maxX = std::max(maxX, curValue.X);
+				maxY = std::max(maxY, curValue.Y);
+				maxZ = std::max(maxZ, curValue.Z);
 			}
 		}
 	}
@@ -723,37 +672,37 @@ void CamPath::SetPosition(double x, double y, double z)
 	double y0 = (maxY +minY) / 2;
 	double z0 = (maxZ +minZ) / 2;
 
-	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	for(CInterpolationMap<CamPathValue>::iterator it = m_Map.begin(); it != m_Map.end(); ++it)
 	{
 		double curT = it->first;
-		COSValue curValue = it->second;
+		CamPathValue curValue = it->second;
 
-		if(selectAll || GetSelected(curValue))
+		if(selectAll || curValue.Selected)
 		{
-			curValue.T.X = x +(curValue.T.X -x0);
-			curValue.T.Y = y +(curValue.T.Y -y0);
-			curValue.T.Z = z +(curValue.T.Z -z0);
+			curValue.X = x +(curValue.X -x0);
+			curValue.Y = y +(curValue.Y -y0);
+			curValue.Z = z +(curValue.Z -z0);
 
-			curValue.pUser = new CamPathValuePiggyBack(GetPiggy(curValue));
-			m_Spline.Add(curT, curValue);
+			it->second = curValue;
 		}
-
 	}
 
-	DoEnable(m_Enabled);
+	m_XInterp->InterpolationMapChanged();
+	m_YInterp->InterpolationMapChanged();
+	m_ZInterp->InterpolationMapChanged();
 
 	Changed();
 }
 
 void CamPath::SetAngles(double yPitch, double zYaw, double xRoll)
 {
-	if(m_Spline.GetSize()<1) return;
+	if(m_Map.size()<1) return;
 
 	bool selectAll = true;
 
-	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	for(CInterpolationMap<CamPathValue>::const_iterator it = m_Map.begin(); it != m_Map.end(); ++it)
 	{
-		if(GetSelected(it->second))
+		if(it->second.Selected)
 		{
 			if(selectAll)
 			{
@@ -763,35 +712,34 @@ void CamPath::SetAngles(double yPitch, double zYaw, double xRoll)
 		}
 	}
 
-	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	for(CInterpolationMap<CamPathValue>::iterator it = m_Map.begin(); it != m_Map.end(); ++it)
 	{
 		double curT = it->first;
-		COSValue curValue = it->second;
+		CamPathValue curValue = it->second;
 
-		if(selectAll || GetSelected(curValue))
+		if(selectAll || curValue.Selected)
 		{
 			curValue.R = Quaternion::FromQREulerAngles(QREulerAngles::FromQEulerAngles(QEulerAngles(yPitch, zYaw, xRoll)));
-			curValue.pUser = new CamPathValuePiggyBack(GetPiggy(curValue));
 
-			m_Spline.Add(curT, curValue);
+			it->second = curValue;
 		}
 
 	}
 
-	DoEnable(m_Enabled);
+	m_RInterp->InterpolationMapChanged();
 
 	Changed();
 }
 
 void CamPath::SetFov(double fov)
 {
-	if(m_Spline.GetSize()<1) return;
+	if(m_Map.size()<1) return;
 
 	bool selectAll = true;
 
-	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	for(CInterpolationMap<CamPathValue>::const_iterator it = m_Map.begin(); it != m_Map.end(); ++it)
 	{
-		if(GetSelected(it->second))
+		if(it->second.Selected)
 		{
 			if(selectAll)
 			{
@@ -801,35 +749,34 @@ void CamPath::SetFov(double fov)
 		}
 	}
 
-	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	for(CInterpolationMap<CamPathValue>::iterator it = m_Map.begin(); it != m_Map.end(); ++it)
 	{
 		double curT = it->first;
-		COSValue curValue = it->second;
+		CamPathValue curValue = it->second;
 
-		if(selectAll || GetSelected(curValue))
+		if(selectAll || curValue.Selected)
 		{
 			curValue.Fov = fov;
-			curValue.pUser = new CamPathValuePiggyBack(GetPiggy(curValue));
 
-			m_Spline.Add(curT, curValue);
+			it->second = curValue;
 		}
 
 	}
 
-	DoEnable(m_Enabled);
+	m_FovInterp->InterpolationMapChanged();
 
 	Changed();
 }
 
 void CamPath::Rotate(double yPitch, double zYaw, double xRoll)
 {
-	if(m_Spline.GetSize()<1) return;
+	if(m_Map.size()<1) return;
 
 	bool selectAll = true;
 
-	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	for(CInterpolationMap<CamPathValue>::const_iterator it = m_Map.begin(); it != m_Map.end(); ++it)
 	{
-		if(GetSelected(it->second))
+		if(it->second.Selected)
 		{
 			if(selectAll)
 			{
@@ -844,30 +791,30 @@ void CamPath::Rotate(double yPitch, double zYaw, double xRoll)
 	double minX = 0, maxX = 0, minY = 0, maxY = 0, minZ = 0, maxZ = 0;
 	bool first = true;
 
-	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	for(CInterpolationMap<CamPathValue>::const_iterator it = m_Map.begin(); it != m_Map.end(); ++it)
 	{
-		if(selectAll || GetSelected(it->second))
+		if(selectAll || it->second.Selected)
 		{
-			COSValue curValue = it->second;
+			CamPathValue curValue = it->second;
 
 			if(first)
 			{
-				minX = curValue.T.X;
-				minY = curValue.T.Y;
-				minZ = curValue.T.Z;
-				maxX = curValue.T.X;
-				maxY = curValue.T.Y;
-				maxZ = curValue.T.Z;
+				minX = curValue.X;
+				minY = curValue.Y;
+				minZ = curValue.Z;
+				maxX = curValue.X;
+				maxY = curValue.Y;
+				maxZ = curValue.Z;
 				first = false;
 			}
 			else
 			{
-				minX = std::min(minX, curValue.T.X);
-				minY = std::min(minY, curValue.T.Y);
-				minZ = std::min(minZ, curValue.T.Z);
-				maxX = std::max(maxX, curValue.T.X);
-				maxY = std::max(maxY, curValue.T.Y);
-				maxZ = std::max(maxZ, curValue.T.Z);
+				minX = std::min(minX, curValue.X);
+				minY = std::min(minY, curValue.Y);
+				minZ = std::min(minZ, curValue.Z);
+				maxX = std::max(maxX, curValue.X);
+				maxY = std::max(maxY, curValue.Y);
+				maxZ = std::max(maxZ, curValue.Z);
 			}
 		}
 	}
@@ -907,19 +854,19 @@ void CamPath::Rotate(double yPitch, double zYaw, double xRoll)
 
 	// rotate:
 
-	for(COSPoints::const_iterator it = m_Spline.GetBegin(); it != m_Spline.GetEnd(); ++it)
+	for(CInterpolationMap<CamPathValue>::iterator it = m_Map.begin(); it != m_Map.end(); ++it)
 	{
 		double curT = it->first;
-		COSValue curValue = it->second;
+		CamPathValue curValue = it->second;
 
-		if(selectAll || GetSelected(curValue))
+		if(selectAll || curValue.Selected)
 		{
 			// update position:
 			{
 				// translate into origin:
-				double x = curValue.T.X -x0;
-				double y = curValue.T.Y -y0;
-				double z = curValue.T.Z -z0;
+				double x = curValue.X -x0;
+				double y = curValue.Y -y0;
+				double z = curValue.Z -z0;
 
 				// rotate:
 				double Rx = R[0][0]*x +R[0][1]*y +R[0][2]*z;
@@ -927,55 +874,46 @@ void CamPath::Rotate(double yPitch, double zYaw, double xRoll)
 				double Rz = R[2][0]*x +R[2][1]*y +R[2][2]*z;
 
 				// translate back:
-				curValue.T.X = Rx +x0;
-				curValue.T.Y = Ry +y0;
-				curValue.T.Z = Rz +z0;
+				curValue.X = Rx +x0;
+				curValue.Y = Ry +y0;
+				curValue.Z = Rz +z0;
 			}
 
 			// update rotation:
 			{
-				Quaternion quatQ =  curValue.R;
+				Quaternion quatQ = curValue.R;
 
 				curValue.R = quatR * quatQ;
 			}
 
 			// update:
-			curValue.pUser = new CamPathValuePiggyBack(GetPiggy(curValue));
-			m_Spline.Add(curT, curValue);
+			it->second = curValue;
 		}
 
 	}
 
-	DoEnable(m_Enabled);
+	m_XInterp->InterpolationMapChanged();
+	m_YInterp->InterpolationMapChanged();
+	m_ZInterp->InterpolationMapChanged();
+	m_RInterp->InterpolationMapChanged();
 
 	Changed();
 }
 
 
-void CamPath::CopyCOS(CubicObjectSpline & dst, CubicObjectSpline & src)
+void CamPath::CopyMap(CInterpolationMap<CamPathValue> & dst, CInterpolationMap<CamPathValue> & src)
 {
-	dst.Clear();
+	dst.clear();
 
-	for(COSPoints::const_iterator it = src.GetBegin(); it != src.GetEnd(); ++it)
+	for(CInterpolationMap<CamPathValue>::const_iterator it = src.begin(); it != src.end(); ++it)
 	{
-		COSValue val = it->second;
-		val.pUser = new CamPathValuePiggyBack(GetPiggy(it->second));
-
-		dst.Add(it->first, val);
+		dst[it->first] = it->second;
 	}
 }
 
 double CamPath::GetDuration()
 {
-	if(m_Spline.GetSize()<2) return 0.0;
+	if(m_Map.size()<2) return 0.0;
 
-	return (--m_Spline.GetEnd())->first - m_Spline.GetBegin()->first;
+	return (--m_Map.end())->first - m_Map.begin()->first;
 }
-
-void CamPath::CosObjectSplineValueRemoved(CubicObjectSpline * cos, COSValue & value)
-{
-	delete GetPiggy(value);
-}
-
-int CamPathValuePiggyBack::m_InstanceCount = 0;
-

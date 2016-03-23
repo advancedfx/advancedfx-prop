@@ -3,13 +3,15 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-08-15 dominik.matrixstorm.com
+// 2016-03-22 dominik.matrixstorm.com
 //
 // First changes:
 // 2014-11-03 dominik.matrixstorm.com
 
+#include "RefCounted.h"
 #include "AfxMath.h"
 
+using namespace Afx;
 using namespace Afx::Math;
 
 struct CamPathValue
@@ -18,63 +20,28 @@ struct CamPathValue
 	double Y;
 	double Z;
 
-	double Pitch;
-	double Yaw;
-	double Roll;
+	Quaternion R;
 
 	double Fov;
+
+	bool Selected;
 
 	CamPathValue();
 
 	CamPathValue(double x, double y, double z, double pitch, double yaw, double roll, double fov);
-};
 
-class CamPathValuePiggyBack
-{
-public:
-	CamPathValuePiggyBack()
-	: Selected(false)
-	{
-		++m_InstanceCount;
-	}
-
-	CamPathValuePiggyBack(bool selected)
-	: Selected(selected)
-	{
-		++m_InstanceCount;
-	}
-
-	CamPathValuePiggyBack(const CamPathValuePiggyBack * value)
-	: Selected(value->Selected)
-	{
-		++m_InstanceCount;
-	}
-
-	~CamPathValuePiggyBack()
-	{
-		--m_InstanceCount;
-	}
-
-	bool Selected;
-
-	static int GetInstanceCount() { return m_InstanceCount; }
-
-private:
-	static int m_InstanceCount;
 };
 
 struct CamPathIterator
 {
 public:
-	COSPoints::const_iterator wrapped;
+	CInterpolationMap<CamPathValue>::const_iterator wrapped;
 
-	CamPathIterator(COSPoints::const_iterator & it);
+	CamPathIterator(CInterpolationMap<CamPathValue>::const_iterator & it);
 
 	double GetTime();
 
 	CamPathValue GetValue();
-
-	bool IsSelected();
 
 	CamPathIterator& operator ++ ();
 
@@ -93,22 +60,17 @@ public:
 };
 
 class CamPath
-: public ICosObjectSplineValueRemoved
 {
 public:
 	CamPath();
-	CamPath(ICamPathChanged * onChanged);
 	
 	~CamPath();
 
-	bool Enable(bool enable);
-	bool IsEnabled();
+	void Enabled_set(bool enable);
+	bool Enabled_get(void);
 
-	void Add(double time, CamPathValue value, bool selected = false);
+	void Add(double time, CamPathValue value);
 
-	/// <remarks>value.pUser will be overwritten.</remarks>
-	void Add(double time, COSValue value, bool selected = false);
-	
 	void Remove(double time);
 	void Clear();
 
@@ -123,7 +85,11 @@ public:
 	/// <remarks>Must not be called if GetSize is less than 1!</remarks>
 	double GetUpperBound();
 
-	/// <remarks>Must not be called if GetSize is less than 4!</remarks>
+	bool CanEval(void);
+
+	/// <remarks>
+	/// Must not be called if CanEval() returns false!<br />
+	/// </remarks>
 	CamPathValue Eval(double t);
 
 	bool Save(wchar_t const * fileName);
@@ -170,17 +136,58 @@ public:
 
 	void OnChanged_set(ICamPathChanged * value);
 
-	virtual void CosObjectSplineValueRemoved(CubicObjectSpline * cos, COSValue & value);
-
 private:
+	static double XSelector(CamPathValue const & value)
+	{
+		return value.X;
+	}
+
+	static double YSelector(CamPathValue const & value)
+	{
+		return value.Y;
+	}
+
+	static double ZSelector(CamPathValue const & value)
+	{
+		return value.Z;
+	}
+
+	static Quaternion RSelector(CamPathValue const & value)
+	{
+		return value.R;
+	}
+
+	static double FovSelector(CamPathValue const & value)
+	{
+		return value.Fov;
+	}
+
+	static bool SelectedSelector(CamPathValue const & value)
+	{
+		return value.Selected;
+	}
+
 	bool m_Enabled;
 	ICamPathChanged * m_OnChanged;
-	CubicObjectSpline m_Spline;
+	
+	CInterpolationMap<CamPathValue> m_Map;
+
+	CInterpolationMapView<CamPathValue, double> m_XView;
+	CInterpolationMapView<CamPathValue, double> m_YView;
+	CInterpolationMapView<CamPathValue, double> m_ZView;
+	CInterpolationMapView<CamPathValue, Quaternion> m_RView;
+	CInterpolationMapView<CamPathValue, double> m_FovView;
+	CInterpolationMapView<CamPathValue, bool> m_SelectedView;
+
+	CInterpolation<double> * m_XInterp;
+	CInterpolation<double> * m_YInterp;
+	CInterpolation<double> * m_ZInterp;
+	CInterpolation<Quaternion> * m_RInterp;
+	CInterpolation<double> * m_FovInterp;
+	CInterpolation<bool> * m_SelectedInterp;
 
 	void Changed();
-	void CopyCOS(CubicObjectSpline & dst, CubicObjectSpline & src);
-	bool DoEnable(bool enable);
+	void CopyMap(CInterpolationMap<CamPathValue> & dst, CInterpolationMap<CamPathValue> & src);
 
-	bool GetSelected(const COSValue & value);
-	CamPathValuePiggyBack const * GetPiggy( const COSValue & value);
+	void DoInterpolationMapChangedAll(void);
 };

@@ -132,6 +132,9 @@
     <ClCompile Include="..\shared\OpenExrOutput.cpp">
       <Filter>shared</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\RefCounted.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -282,6 +285,9 @@
       <Filter>AfxHookSource</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\OpenExrOutput.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\RefCounted.h">
       <Filter>shared</Filter>
     </ClInclude>
   </ItemGroup>

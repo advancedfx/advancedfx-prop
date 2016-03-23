@@ -168,12 +168,13 @@ void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, fl
 {
 	float curTime = GetCurTime();
 
-	if(m_CamPath.IsEnabled())
+	if(m_CamPath.Enabled_get() && m_CamPath.CanEval())
 	{
 		// no extrapolation:
 		if(m_CamPath.GetLowerBound() <= curTime && curTime <= m_CamPath.GetUpperBound())
 		{
 			CamPathValue val = m_CamPath.Eval( curTime );
+			QEulerAngles ang = val.R.ToQREulerAngles().ToQEulerAngles();
 
 			//Tier0_Msg("================",curTime);
 			//Tier0_Msg("currenTime = %f",curTime);
@@ -183,9 +184,9 @@ void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, fl
 			Ty = (float)val.Y;
 			Tz = (float)val.Z;
 
-			Rx = (float)val.Pitch;
-			Ry = (float)val.Yaw;
-			Rz = (float)val.Roll;
+			Rx = (float)ang.Pitch;
+			Ry = (float)ang.Yaw;
+			Rz = (float)ang.Roll;
 
 			Fov = (float)val.Fov;
 		}
