@@ -278,20 +278,50 @@ public:
 
 	void GetNearestInterval(double time, CInterpolationMapViewIterator<TMap, T> & outLower, CInterpolationMapViewIterator<TMap, T> & outUpper)
 	{
-		CInterpolationMapViewIterator<TMap, T> end = CInterpolationMapViewIterator<TMap, T>(m_Map->end(), m_Selector);
-		outUpper = CInterpolationMapViewIterator<TMap, T>(m_Map->upper_bound(time), m_Selector);
+		size_t size = m_Map->size();
 
-		if(end == outUpper)
+		if(size < 1)
 		{
-			--outUpper;
+			outLower = GetEnd();
+			outUpper = outLower;
 		}
-
-		outLower = outUpper;
-		--outLower;
-
-		if(end == outLower)
+		else
+		if(size < 2)
 		{
-			outLower = outUpper;
+			outLower = GetBegin();
+			outUpper = outLower;
+		}
+		else
+		{
+			// 2 <= size.
+
+			CInterpolationMapViewIterator<TMap, T> end = GetEnd();
+
+			outUpper = CInterpolationMapViewIterator<TMap, T>(m_Map->upper_bound(time), m_Selector);
+
+			if(end == outUpper)
+			{
+				--outUpper;
+
+				outLower = outUpper;
+
+				--outLower;
+			}
+			else
+			{
+				CInterpolationMapViewIterator<TMap, T> begin = GetBegin();
+
+				if(begin == outUpper)
+				{
+					outLower = outUpper;
+					++outUpper;
+				}
+				else
+				{
+					outLower = outUpper;
+					--outLower;
+				}
+			}
 		}
 	}
 
