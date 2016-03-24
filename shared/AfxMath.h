@@ -594,12 +594,12 @@ public:
 		double e[3];
 		double dtheta = getang(qi,qf,e);
 
-		dtheta = dtheta/2; // Why do we have to divide by two? Is there a mistake in getang?
-
 		t = (t-lowerT)/deltaT;
+
+		double tDthetaDiv2 = t * dtheta / 2;
 		
-		double cosTDheta = cos(t * dtheta);
-		double sinTDHeta = sin(t * dtheta);
+		double cosTDheta = cos(tDthetaDiv2);
+		double sinTDHeta = sin(tDthetaDiv2);
 
 		Quaternion dq_pow_t = Quaternion(cosTDheta,e[0]*sinTDHeta,e[1]*sinTDHeta,e[2]*sinTDHeta);
 
