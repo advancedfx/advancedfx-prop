@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2014-04-30 by dominik.matrixstorm.com
+// 2016-04-05 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-11-01 by dominik.matrixstorm.com
@@ -27,6 +27,7 @@
 #include "addresses.h"
 #include "WrpVEngineClient.h"
 #include "AfxHookSourceInput.h"
+#include "aiming.h"
 
 
 BvhExport * g_BvhExport = NULL;
@@ -246,6 +247,20 @@ void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, fl
 	if(Fov<1) Fov = 1;
 	else if(Fov>179) Fov = 179;
 
+	if(m_Globals)
+	{
+		double dRx = Rx;
+		double dRy = Ry;
+		double dRz = Rz;
+
+		if(g_Aiming.Aim(m_Globals->absoluteframetime_get(), Vector3(Tx, Ty, Tz), dRx, dRy, dRz))
+		{
+			Rx = (float)dRx;
+			Ry = (float)dRy;
+			Rz = (float)dRz;
+		}
+	}
+
 	if(m_Export) {
 		g_BvhExport->WriteFrame(
 			-Ty, +Tz, -Tx,
@@ -265,7 +280,6 @@ void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, fl
 
 	//Tier0_Msg("Hook_VClient_RenderView::OnViewOverride: curTime = %f, LastCameraOrigin=%f,%f,%f\n",curTime,LastCameraOrigin[0],LastCameraOrigin[1],LastCameraOrigin[2]);
 }
-
 
 void Hook_VClient_RenderView::SetImportBaseTime(float value) {
 	m_ImportBaseTime = value;

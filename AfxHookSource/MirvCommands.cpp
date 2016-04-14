@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-02-16 dominik.matrixstorm.com
+// 2016-04-14 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-09-30 by dominik.matrixstorm.com
@@ -28,6 +28,7 @@
 #include "CampathDrawer.h"
 #include "csgo_S_StartSound.h"
 #include "d3d9Hooks.h"
+#include "aiming.h"
 
 #include "csgo_Stdshader_dx9_Hooks.h"
 
@@ -2563,5 +2564,385 @@ CON_COMMAND(mirv_snd_filter, "Sound control (i.e. blocking sounds).")
 		"mirv_snd_filter clear - Clears all blocks.\n"
 		"mirv_snd_filter debug 0|1 - Print sounds played into console.\n"
 		"<mask> - string to match, where \\* = wildcard and \\\\ = \\\n"
+	);
+}
+
+CON_COMMAND(mirv_listentities, "Print info about currently active entites. (CS:GO only)")
+{
+	if(!g_Entitylist_csgo)
+	{
+		Tier0_Warning("Not supported for your engine!\n");
+		return;
+	}
+
+	Tier0_Msg(
+		"index (distance): className::enitityName playerName\n"
+	);
+
+	Vector3 cameraOrigin(
+		g_Hook_VClient_RenderView.LastCameraOrigin[0],
+		g_Hook_VClient_RenderView.LastCameraOrigin[1],
+		g_Hook_VClient_RenderView.LastCameraOrigin[2]
+	);
+
+	int imax = g_Entitylist_csgo->GetHighestEntityIndex();
+
+	for(int i=0; i<= imax; ++i)
+	{
+		IClientEntity_csgo * ce = g_Entitylist_csgo->GetClientEntity(i);
+		C_BaseEntity_csgo * be = ce ? ce->GetBaseEntity() : 0;
+
+		if(be)
+		{
+			Vector vEntOrigin = be->GetAbsOrigin();
+			Vector3 entOrigin(vEntOrigin.x, vEntOrigin.y, vEntOrigin.z);
+
+			double dist = (entOrigin -cameraOrigin).Length();
+
+			// This won't work, because Valve doesn't overload the const function:
+			//char const * playerName = be->GetPlayerName();
+			//if(!playerName) playerName = "(null)";
+
+			char const * playerName = "[n/a]";
+
+			Tier0_Msg(
+				"%i (%f): %s::%s %s\n"
+				, i
+				, dist
+				, be->GetClassname()
+				, be->GetEntityName()
+				, playerName
+				);
+		}
+	}
+}
+
+CON_COMMAND(mirv_aim, "Aiming system control.")
+{
+	if(!g_Hook_VClient_RenderView.GetGlobals())
+	{
+		Tier0_Warning("Error: Required hooks missing.\n");
+		return;
+	}
+
+	int argc = args->ArgC();
+
+	if(2 <= argc)
+	{
+		char const * arg1 = args->ArgV(1);
+
+		if(0 == _stricmp("active", arg1))
+		{
+			if(3 <= argc)
+			{
+				char const * arg2 = args->ArgV(2);
+
+				g_Aiming.Active = 0 != atoi(arg2);
+				return;
+			}
+
+			Tier0_Msg(
+				"mirv_aim active 0|1 - Whether aiming is active (1) or not (0).\n"
+				"Current value: %s\n",
+				g_Aiming.Active ? "1" : "0"
+			);
+			return;
+		}
+		else
+		if(0 == _stricmp("softDeactivate", arg1))
+		{
+			if(3 <= argc)
+			{
+				char const * arg2 = args->ArgV(2);
+
+				g_Aiming.SoftDeactivate = 0 != atoi(arg2);
+				return;
+			}
+
+			Tier0_Msg(
+				"mirv_aim softDeactivate 0|1 - Wheter to support soft deactivation (1) or not (0).\n"
+				"Current value: %s\n",
+				g_Aiming.SoftDeactivate ? "1" : "0"
+			);
+			return;
+		}
+		else
+		if(0 == _stricmp("entityIndex", arg1))
+		{
+			if(3 <= argc)
+			{
+				char const * arg2 = args->ArgV(2);
+
+				g_Aiming.EntityIndex = atoi(arg2);
+				return;
+			}
+
+			Tier0_Msg(
+				"mirv_aim entityIndex <n> - Entity index to aim after (use mirv_listentities to get one). Use invalid index (i.e. -1) to deactivate re-targeting.\n"
+				"Current value: %i\n",
+				g_Aiming.EntityIndex
+			);
+			return;
+		}
+		else
+		if(0 == _stricmp("point", arg1))
+		{
+			if(3 <= argc)
+			{
+				char const * arg2 = args->ArgV(2);
+
+				if(_stricmp("cam", arg2))
+				{
+					Vector3 offset(0, 0, 0);
+
+					if(6 <= argc)
+					{
+						char const * arg3 = args->ArgV(3);
+						char const * arg4 = args->ArgV(4);
+						char const * arg5 = args->ArgV(5);
+
+						offset.X = atof(arg3);
+						offset.Y = atof(arg4);
+						offset.Z = atof(arg5);
+					}
+
+					g_Aiming.TargetPoint(
+						Vector3(g_Hook_VClient_RenderView.LastCameraOrigin[0],
+							g_Hook_VClient_RenderView.LastCameraOrigin[1],
+							g_Hook_VClient_RenderView.LastCameraOrigin[2])
+						+ offset);
+					return;
+				}
+				else
+				if(_stricmp("last", arg2))
+				{
+					Vector3 offset(0, 0, 0);
+
+					if(6 <= argc)
+					{
+						char const * arg3 = args->ArgV(3);
+						char const * arg4 = args->ArgV(4);
+						char const * arg5 = args->ArgV(5);
+
+						offset.X = atof(arg3);
+						offset.Y = atof(arg4);
+						offset.Z = atof(arg5);
+					}
+
+					g_Aiming.TargetPointFromLast(offset);
+					return;
+				}
+				else
+				if(_stricmp("abs", arg2) && 6 <= argc)
+				{
+					Vector3 offset(0, 0, 0);
+
+					{
+						char const * arg3 = args->ArgV(3);
+						char const * arg4 = args->ArgV(4);
+						char const * arg5 = args->ArgV(5);
+
+						offset.X = atof(arg3);
+						offset.Y = atof(arg4);
+						offset.Z = atof(arg5);
+					}
+
+					g_Aiming.TargetPoint(offset);
+				}
+			}
+
+			Tier0_Msg(
+				"mirv_aim point abs <fX> <fY> <fz> - Absolute point in world coordinates.\n"
+				"mirv_aim point cam [<fOffsetX> <fOffsetY> <fOffsetZ>] - Aim at current camera position with optional offset in world coordinates.\n"
+				"mirv_aim point last [<fOffsetX> <fOffsetY> <fOffsetZ>] - Aim at last target position with optional offset in world coordinates.\n"
+				"Current value: %i\n",
+				g_Aiming.EntityIndex
+			);
+			return;
+		}
+		else
+		if(0 == _stricmp("offset", arg1))
+		{
+			if(5 <= argc)
+			{
+				char const * arg2 = args->ArgV(2);
+				char const * arg3 = args->ArgV(3);
+				char const * arg4 = args->ArgV(4);
+
+				g_Aiming.OffSet = Vector3(
+					atof(arg2), atof(arg3), atof(arg4)
+				);
+				return;
+			}
+
+			Tier0_Msg(
+				"mirv_aim offset <x> <y> <z> - Offset in target local space to aim at (3 floating point values).\n"
+				"Current value: %f %f %f\n",
+				g_Aiming.OffSet.X, g_Aiming.OffSet.Y, g_Aiming.OffSet.Z
+			);
+			return;
+		}
+		else
+		if(0 == _stricmp("snapTo", arg1))
+		{
+			if(3 <= argc)
+			{
+				char const * arg2 = args->ArgV(2);
+
+				g_Aiming.SnapTo = 0 != atoi(arg2);
+				return;
+			}
+
+			Tier0_Msg(
+				"mirv_aim snapTo 0|1 - Wheter to aim non-soft (1) or not (0)."
+				"Current value: %s\n",
+				g_Aiming.SnapTo ? "1" : "0"
+			);
+			return;
+		}
+		else
+		if(0 == _stricmp("velLimit", arg1))
+		{
+			if(3 <= argc)
+			{
+				char const * arg2 = args->ArgV(2);
+
+				g_Aiming.LimitVelocity = atof(arg2);
+				return;
+			}
+
+			Tier0_Msg(
+				"mirv_aim velLimit <fValue> - Max velocity (in angle degrees per second^1) possible (floating point value).\n"
+				"Current value: %f\n",
+				g_Aiming.LimitVelocity
+			);
+			return;
+		}
+		else
+		if(0 == _stricmp("accelLimit", arg1))
+		{
+			if(3 <= argc)
+			{
+				char const * arg2 = args->ArgV(2);
+
+				g_Aiming.LimitAcceleration = atof(arg2);
+				return;
+			}
+
+			Tier0_Msg(
+				"mirv_aim accelLimit <fValue> - Max acceleration (in angle degrees per second^2) possible (floating point value).\n"
+				"Current value: %f\n",
+				g_Aiming.LimitAcceleration
+			);
+			return;
+		}
+		else
+		if(0 == _stricmp("jerkLimit", arg1))
+		{
+			if(3 <= argc)
+			{
+				char const * arg2 = args->ArgV(2);
+
+				g_Aiming.LimitJerk = atof(arg2);
+				return;
+			}
+
+			Tier0_Msg(
+				"mirv_aim jerkLimit <fValue> - Max jerk (in angle degrees per second^3) possible (floating point value).\n"
+				"Current value: %f\n",
+				g_Aiming.LimitJerk
+			);
+			return;
+		}
+		else
+		if(0 == _stricmp("origin", arg1))
+		{
+			if(3 <= argc)
+			{
+				char const * arg2 = args->ArgV(2);
+
+				if(0 == _stricmp("net", arg2))
+				{
+					g_Aiming.Origin = Aiming::O_Net;
+					return;
+				}
+				else
+				if(0 == _stricmp("view", arg2))
+				{
+					g_Aiming.Origin = Aiming::O_View;
+					return;
+				}
+			}
+
+			char const * curValue = "[unknown]";
+			switch(g_Aiming.Origin)
+			{
+			case Aiming::O_Net:
+				curValue = "net";
+				break;
+			case Aiming::O_View:
+				curValue = "view";
+				break;
+			}
+
+			Tier0_Msg(
+				"mirv_aim origin net|view - Target origin to use.\n"
+				"Current value: %s\n",
+				curValue
+			);
+			return;
+		}
+		else
+		if(0 == _stricmp("angles", arg1))
+		{
+			if(3 <= argc)
+			{
+				char const * arg2 = args->ArgV(2);
+
+				if(0 == _stricmp("net", arg2))
+				{
+					g_Aiming.Angles = Aiming::A_Net;
+					return;
+				}
+				else
+				if(0 == _stricmp("view", arg2))
+				{
+					g_Aiming.Angles = Aiming::A_View;
+					return;
+				}
+			}
+
+			char const * curValue = "[unknown]";
+			switch(g_Aiming.Angles)
+			{
+			case Aiming::A_Net:
+				curValue = "net";
+				break;
+			case Aiming::A_View:
+				curValue = "view";
+				break;
+			}
+
+			Tier0_Msg(
+				"mirv_aim origin net|view - Target origin to use.\n"
+				"Current value: %s\n",
+				curValue
+			);
+			return;
+		}
+	}
+
+	Tier0_Msg(
+		"mirv_aim active [...] - Whether aiming is active.\n"
+		"mirv_aim softDeactivate [...] - Wheter to support soft deactivation.\n"
+		"mirv_aim entityIndex [...] - Entity index to aim after (use mirv_listentities to get one).\n"
+		"mirv_aim point [...] - Point to aim after.\n"
+		"mirv_aim origin [...] - Target origin to use.\n"
+		"mirv_aim angles [...] - Target angles to use.\n"
+		"mirv_aim offset [...] - Offset in target space to aim at.\n"
+		// does not work atm // "mirv_aim snapTo [...] - Wheter to aim non-soft or soft.\n"
+		// does not work atm // "mirv_aim velLimit [...] - Max velocity possible (for snapTo 0).\n"
+		// does not work atm // "mirv_aim accelLimit [...] - Max acceleration possible (for snapTo 0).\n"
+		// does not work atm // "mirv_aim jerkLimit [...] - Max jerk possible (for snapTo 0).\n"
 	);
 }

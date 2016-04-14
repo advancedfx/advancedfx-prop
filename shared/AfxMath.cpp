@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-03-22 dominik.matrixstorm.com
+// 2016-04-07 dominik.matrixstorm.com
 //
 // First changes:
 // 2014-11-02 dominik.matrixstorm.com
@@ -1139,252 +1139,6 @@ COPYRIGHT (C) 2003 by James McEnnan
   a[2] = b[0]*c[1] - b[1]*c[0];
 }
 
-/*
-// CubicObjectSpline ///////////////////////////////////////////////////////////
-
-CubicObjectSpline::CubicObjectSpline()
-{
-	m_Rebuild = true;
-}
-
-CubicObjectSpline::~CubicObjectSpline()
-{
-	Clear();
-	Free();
-}
-
-void CubicObjectSpline::Add(double t, COSValue y)
-{
-	m_Rebuild = true;
-
-	std::pair<COSPoints::iterator,bool> result = m_Points.insert(std::pair<double,COSValue>(t, y));
-
-	if(!result.second)
-	{
-		COSValue oldValue = result.first->second;
-		result.first->second = y;
-
-		ValueRemoved(oldValue);
-	}
-}
-
-void CubicObjectSpline::Clear(void)
-{
-	COSPoints::iterator it;
-	while(m_Points.end() != (it = m_Points.begin()))
-	{
-		m_Rebuild = true;
-
-		COSValue oldValue = it->second;
-		m_Points.erase(it);
-
-		ValueRemoved(oldValue);
-	}
-}
-
-COSValue CubicObjectSpline::Eval(double t)
-{
-	COSValue result;
-
-	if(m_Points.size() < 4) throw "CubicObjectSpline::Eval only allowed with at least 4 points";
-
-	int n = m_Points.size();
-
-	if(m_Rebuild)
-	{
-		m_Rebuild = false;
-
-		Free();
-
-		m_Build.T = new double[n];
-		m_Build.X = new double[n];
-		m_Build.X2 = new double[n];
-		m_Build.Y = new double[n];
-		m_Build.Y2 = new double[n];
-		m_Build.Z = new double[n];
-		m_Build.Z2 = new double[n];
-		m_Build.Q_y = new double[n][4];
-		m_Build.Q_h = new double[n-1];
-		m_Build.Q_dtheta = new double[n-1];
-		m_Build.Q_e = new double[n-1][3];
-		m_Build.Q_w = new double[n][3];
-		m_Build.Fov = new double[n];
-		m_Build.Fov2 = new double[n];
-
-		{
-			Quaternion QLast;
-
-			int i = 0;
-			for(COSPoints::iterator it = m_Points.begin(); it!=m_Points.end(); it++)
-			{
-				m_Build.T[i] = it->first;
-				m_Build.X[i] = it->second.T.X;
-				m_Build.Y[i] = it->second.T.Y;
-				m_Build.Z[i] = it->second.T.Z;
-				m_Build.Fov[i] = it->second.Fov;
-
-				Quaternion Q = it->second.R;
-				
-				// Make sure we will travel the short way:
-				if(0<i)
-				{
-					// hasLast.
-					double dotProduct = DotProduct(Q,QLast);
-					if(dotProduct<0.0)
-					{
-						Q = -1.0 * Q;
-					}
-				}
-
-				m_Build.Q_y[i][0] = Q.X;
-				m_Build.Q_y[i][1] = Q.Y;
-				m_Build.Q_y[i][2] = Q.Z;
-				m_Build.Q_y[i][3] = Q.W;
-
-				QLast = Q;
-				i++;
-			}
-		}
-
-		spline(m_Build.T , m_Build.X, n, false, 0.0, false, 0.0, m_Build.X2);
-		spline(m_Build.T , m_Build.Y, n, false, 0.0, false, 0.0, m_Build.Y2);
-		spline(m_Build.T , m_Build.Z, n, false, 0.0, false, 0.0, m_Build.Z2);
-
-		double wi[3] = {0.0,0.0,0.0};
-		double wf[3] = {0.0,0.0,0.0};
-		qspline_init(n, 2, AFX_MATH_EPS, wi, wf, m_Build.T, m_Build.Q_y, m_Build.Q_h, m_Build.Q_dtheta, m_Build.Q_e, m_Build.Q_w);
-
-		spline(m_Build.T , m_Build.Fov, n, false, 0.0, false, 0.0, m_Build.Fov2);
-	}
-
-	double x,y,z;
-	double Q[4],dum1[4],dum2[4];
-	double fov;
-
-	splint(m_Build.T, m_Build.X, m_Build.X2, n, t, &x);
-	splint(m_Build.T, m_Build.Y, m_Build.Y2, n, t, &y);
-	splint(m_Build.T, m_Build.Z, m_Build.Z2, n, t, &z);
-
-	qspline_interp(n, t, m_Build.T, m_Build.Q_y, m_Build.Q_h, m_Build.Q_dtheta, m_Build.Q_e, m_Build.Q_w, Q, dum1, dum2);
-
-	splint(m_Build.T, m_Build.Fov, m_Build.Fov2, n, t, &fov);
-
-	result.T.X = x;
-	result.T.Y = y;
-	result.T.Z = z;
-	result.R.W = Q[3];
-	result.R.X = Q[0];
-	result.R.Y = Q[1];
-	result.R.Z = Q[2];
-	result.Fov = fov;
-	result.pUser = 0;
-
-	return result;
-}
-
-void CubicObjectSpline::Free()
-{
-	delete m_Build.Fov2;
-	m_Build.Fov2 = 0;
-	delete m_Build.Fov;
-	m_Build.Fov = 0;
-	delete [] m_Build.Q_w;
-	m_Build.Q_w = 0;
-	delete [] m_Build.Q_e;
-	m_Build.Q_e = 0;
-	delete m_Build.Q_dtheta;
-	m_Build.Q_dtheta = 0;
-	delete m_Build.Q_h;
-	m_Build.Q_h = 0;
-	delete [] m_Build.Q_y;
-	m_Build.Q_y = 0;
-	delete m_Build.Z2;
-	m_Build.Z2 = 0;
-	delete m_Build.Z;
-	m_Build.Z = 0;
-	delete m_Build.Y2;
-	m_Build.Y2 = 0;
-	delete m_Build.Y;
-	m_Build.Y = 0;
-	delete m_Build.X2;
-	m_Build.X2 = 0;
-	delete m_Build.X;
-	m_Build.X = 0;
-	delete m_Build.T;
-	m_Build.T = 0;
-}
-
-COSPoints::const_iterator CubicObjectSpline::GetBegin(void)
-{
-	return m_Points.begin();
-}
-
-COSPoints::const_iterator CubicObjectSpline::GetEnd(void)
-{
-	return m_Points.end();
-}
-
-double CubicObjectSpline::GetLowerBound()
-{
-	if(m_Points.size() < 1) throw "CubicObjectSpline::GetLowerBound: Size less than 1.";
-
-	return m_Points.begin()->first;
-}
-
-double CubicObjectSpline::GetUpperBound()
-{
-	if(m_Points.size() < 1) throw "CubicObjectSpline::GetUpperBound: Size less than 1.";
-
-	COSPoints::iterator it = m_Points.end();
-	it--;
-
-	return it->first;
-}
-
-size_t CubicObjectSpline::GetSize()
-{
-	return m_Points.size();
-}
-
-void CubicObjectSpline::OnValueRemoved_set(ICosObjectSplineValueRemoved * value)
-{
-	m_OnValueRemoved = value;
-}
-
-void CubicObjectSpline::Remove(double t)
-{
-	COSPoints::iterator it = m_Points.find(t);
-
-	if(it!=m_Points.end())
-	{
-		COSValue oldValue = it->second;
-		m_Points.erase(it);
-		m_Rebuild = true;
-
-		ValueRemoved(oldValue);
-	}
-}
-
-bool CubicObjectSpline::SetUser(double t, void * value)
-{
-	COSPoints::iterator it = m_Points.find(t);
-
-	if(it != m_Points.end())
-	{
-		it->second.pUser = value;
-
-		return true;
-	}
-
-	return false;
-}
-
-void CubicObjectSpline::ValueRemoved(COSValue & value)
-{
-	if(m_OnValueRemoved) m_OnValueRemoved->CosObjectSplineValueRemoved(this, value);
-}
-*/
-
 // QEulerAngles ////////////////////////////////////////////////////////////////
 
 QEulerAngles::QEulerAngles(double pitch, double yaw, double roll)
@@ -1491,12 +1245,46 @@ Quaternion::Quaternion(double w, double x, double y, double z)
 	Z = z;
 }
 
-double Quaternion::Norm()
+double Quaternion::Norm() const
 {
     return sqrt(W*W +X*X +Y*Y +Z*Z);
 }
 
-QREulerAngles Quaternion::ToQREulerAngles()
+Quaternion Quaternion::Conjugate() const
+{
+	return Quaternion(W, -X, -Y, -Z);
+}
+
+double Quaternion::GetAng(Quaternion const & y, Vector3 & outEigenAxis) const
+{
+	double qi[4] = {this->X, this->Y, this->Z, this->W};
+	double qf[4] = {y.X, y.Y, y.Z, y.W};
+
+	double axis[3];
+	double angle = getang(qi, qf, axis);
+
+	outEigenAxis = Vector3(axis[0], axis[1], axis[2]);
+	
+	return angle;
+}
+
+Quaternion Quaternion::Slerp(Quaternion const & y, double t) const
+{
+	Vector3 eigenAxis;
+
+	double dtheta = GetAng(y, eigenAxis);
+
+	double tDthetaDiv2 = t * dtheta / 2;
+		
+	double cosTDheta = cos(tDthetaDiv2);
+	double sinTDHeta = sin(tDthetaDiv2);
+
+	Quaternion dq_pow_t = Quaternion(cosTDheta, eigenAxis.X*sinTDHeta, eigenAxis.Y*sinTDHeta,eigenAxis.Z*sinTDHeta);
+
+	return (*this) * dq_pow_t;
+}
+
+QREulerAngles Quaternion::ToQREulerAngles() const
 {
 	// TODO: There might still be a problem with singualrities in here!
 

@@ -3,10 +3,45 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-03-22 dominik.matrixstorm.com
+// 2016-04-07 dominik.matrixstorm.com
 //
 // First changes:
 // 2014-11-02 dominik.matrixstorm.com
+
+/*
+
+About Quake coordinate system:
+
+https://github.com/ripieces/advancedfx/wiki/Half-Life-coordinate-system
+
+
+Quake coordinate system Cross Product:
+
+X = Y x Z
+Y = Z x X
+Z = X x Y
+
+Z x Y = -X
+X x Z = -Y
+Y x X = -Z
+
+X x X = 0
+Y x Y = 0
+Z x Z = 0
+
+u = u_1 X + u_2 Y + u_3 Z
+v = v_1 X + v_2 Y + v_3 Z
+
+u x v = (u_1 X + u_2 Y + u_3 Z) x (v_1 X + v_2 Y + v_3 Z)
+= u_1 v_1 (X x X) +u_1 v_2 (X x Y) +u_1 v_3 (X x Z)
+ +u_2 v_1 (Y X X) +u_2 v_2 (Y x Y) +u_2 v_3 (Y x Z)
+ +u_3 v_1 (Z x X) +u_3 v_2 (Z x Y) +u_3 v_3 (Z x Z)
+= u_1 v_1 0 +u_1 v_2 Z -u_1 v_3 Y
+ -u_2 v_1 Z +u_2 v_2 0 +u_2 v_3 X
+ +u_3 v_1 Y -u_3 v_2 X +u_3 v_3 0
+= (u_2 v_3 -u_3 v_2) X +(u_3 v_1 -u_1 v_3) Y +(u_1 v_2 -u_2 v_1) Z
+
+*/
 
 #include "RefCounted.h"
 #include <map>
@@ -151,40 +186,18 @@ struct Quaternion
 	Quaternion();
     Quaternion(double w, double x, double y, double z);
 
-    double Norm();
+    double Norm() const;
+
+	Quaternion Conjugate() const;
+	
+	/// <returns>slew angle between this and y in radians</returns>
+	double GetAng(Quaternion const & y, Vector3 & outEigenAxis) const;
+
+	Quaternion Slerp(Quaternion const & y, double t) const;
 
 	/// <remarks>Don't use this function for security critical things, it may still have some bugs.</remarks>
-    QREulerAngles ToQREulerAngles();
+    QREulerAngles ToQREulerAngles() const;
 };
-
-/*
-// CubicObjectSpline ///////////////////////////////////////////////////////////
-
-struct Vec3
-{
-	double X;
-	double Y;
-	double Z;
-};
-
-struct COSValue
-{
-	Vec3 T;
-	Quaternion R;
-	double Fov;
-	void * pUser;
-};
-
-typedef std::map<double,COSValue> COSPoints;
-
-class CubicObjectSpline;
-
-class ICosObjectSplineValueRemoved abstract
-{
-public:
-	virtual void CosObjectSplineValueRemoved(CubicObjectSpline * cos, COSValue & value) abstract = 0;
-};
-*/
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -280,12 +293,6 @@ public:
 	{
 		size_t size = m_Map->size();
 
-		if(size < 1)
-		{
-			outLower = GetEnd();
-			outUpper = outLower;
-		}
-		else
 		if(size < 2)
 		{
 			outLower = GetBegin();
@@ -618,22 +625,7 @@ public:
 
 		double deltaT = upperT -lowerT;
 		
-		double qi[4] = { lowerV.X, lowerV.Y, lowerV.Z, lowerV.W };
-		double qf[4] = { upperV.X, upperV.Y, upperV.Z, upperV.W };
-
-		double e[3];
-		double dtheta = getang(qi,qf,e);
-
-		t = (t-lowerT)/deltaT;
-
-		double tDthetaDiv2 = t * dtheta / 2;
-		
-		double cosTDheta = cos(tDthetaDiv2);
-		double sinTDHeta = sin(tDthetaDiv2);
-
-		Quaternion dq_pow_t = Quaternion(cosTDheta,e[0]*sinTDHeta,e[1]*sinTDHeta,e[2]*sinTDHeta);
-
-		return lowerV * dq_pow_t;
+		return lowerV.Slerp(upperV, (t-lowerT)/deltaT);
 	}
 
 private:
@@ -776,69 +768,6 @@ private:
 		m_Build.T = 0;
 	}
 };
-
-/*
-
-class CubicObjectSpline
-{
-public:
-	CubicObjectSpline();
-	~CubicObjectSpline();
-
-	void Add(double t, COSValue y);
-	void Remove(double t);
-	void Clear(void);
-
-	COSPoints::const_iterator GetBegin(void);
-	COSPoints::const_iterator GetEnd(void);
-	size_t GetSize();
-
-	/// <remarks>Must not be called if GetSize is less than 1!</remarks>
-	double GetLowerBound();
-
-	/// <remarks>Must not be called if GetSize is less than 1!</remarks>
-	double GetUpperBound();
-
-	/// <remarks>
-	/// Must not be called if GetSize is less than 4!<br />
-	/// The returned pUser member is meaningless and should not be used.
-	/// </remarks>
-	COSValue Eval(double t);
-
-	bool SetUser(double t, void * value);
-
-	void OnValueRemoved_set(ICosObjectSplineValueRemoved * value);
-
-private:
-	struct Build_s
-	{
-		double * T;
-		double * X;
-		double * X2;
-		double * Y;
-		double * Y2;
-		double * Z;
-		double * Z2;
-		double (*Q_y)[4];
-		double * Q_h;
-		double * Q_dtheta;
-		double (*Q_e)[3];
-		double (*Q_w)[3];
-		double * Fov;
-		double * Fov2;
-
-		Build_s() : T(0), X(0), X2(0), Y(0), Y2(0), Z(0), Z2(0), Q_y(0), Q_h(0),
-			Q_dtheta(0), Q_e(0), Q_w(0), Fov(0), Fov2(0) {}
-	} m_Build;
-	ICosObjectSplineValueRemoved * m_OnValueRemoved;
-	COSPoints m_Points;
-	bool m_Rebuild;
-
-	void Free();
-	void ValueRemoved(COSValue & value);
-};
-
-*/
 
 } // namespace Afx {
 } // namespace Math {

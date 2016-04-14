@@ -135,6 +135,9 @@
     <ClCompile Include="..\shared\RefCounted.cpp">
       <Filter>shared</Filter>
     </ClCompile>
+    <ClCompile Include="aiming.cpp">
+      <Filter>AfxHookSource</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -289,6 +292,9 @@
     </ClInclude>
     <ClInclude Include="..\shared\RefCounted.h">
       <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="aiming.h">
+      <Filter>AfxHookSource</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

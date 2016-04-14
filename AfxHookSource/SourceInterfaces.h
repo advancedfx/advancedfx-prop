@@ -4278,3 +4278,304 @@ class IBaseShader_csgo abstract
 	virtual void OnDrawElements( IMaterialVar_csgo **params, IShaderShadow_csgo* pShaderShadow, IShaderDynamicAPI_csgo* pShaderAPI, VertexCompressionType_t_csgo vertexCompression, CBasePerMaterialContextData_csgo **pContextDataPtr ) = 0;
 
 };
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+class IClientEntity_csgo;
+class ClientClass_csgo;
+class IClientNetworkable_csgo;
+class CBaseHandle_csgo;
+class IClientUnknown_csgo;
+struct EntityCacheInfo_t_csgo;
+
+//-----------------------------------------------------------------------------
+// Purpose: Exposes IClientEntity's to engine
+//-----------------------------------------------------------------------------
+class IClientEntityList_csgo abstract
+{
+public:
+	// Get IClientNetworkable interface for specified entity
+	virtual IClientNetworkable_csgo*	GetClientNetworkable( int entnum ) = 0;
+	virtual IClientNetworkable_csgo*	GetClientNetworkableFromHandle( CBaseHandle_csgo hEnt ) = 0;
+	virtual IClientUnknown_csgo*		GetClientUnknownFromHandle( CBaseHandle_csgo hEnt ) = 0;
+
+	// NOTE: This function is only a convenience wrapper.
+	// It returns GetClientNetworkable( entnum )->GetIClientEntity().
+	virtual IClientEntity_csgo*		GetClientEntity( int entnum ) = 0;
+	virtual IClientEntity_csgo*		GetClientEntityFromHandle( CBaseHandle_csgo hEnt ) = 0;
+
+	// Returns number of entities currently in use
+	virtual int					NumberOfEntities( bool bIncludeNonNetworkable ) = 0;
+
+	// Returns highest index actually used
+	virtual int					GetHighestEntityIndex( void ) = 0;
+
+	// Sizes entity list to specified size
+	virtual void				SetMaxEntities( int maxents ) = 0;
+	virtual int					GetMaxEntities( ) = 0;
+	virtual EntityCacheInfo_t_csgo	*GetClientNetworkableArray() = 0;
+};
+
+extern IClientEntityList_csgo * g_Entitylist_csgo;
+
+#define VCLIENTENTITYLIST_INTERFACE_VERSION_CSGO "VClientEntityList003"
+
+// An IHandleEntity-derived class can go into an entity list and use ehandles.
+class IHandleEntity_csgo
+{
+public:
+	virtual ~IHandleEntity_csgo() {}
+	virtual void SetRefEHandle( const CBaseHandle_csgo &handle ) = 0;
+	virtual const CBaseHandle_csgo& GetRefEHandle() const = 0;
+#ifdef _X360
+	IHandleEntity() :
+		m_bIsStaticProp( false )
+	{
+	}
+
+	bool m_bIsStaticProp;
+#endif
+};
+
+class C_BaseEntity_csgo;
+class IClientRenderable_csgo;
+class ICollideable_csgo;
+class IClientThinkable_csgo;
+class IClientModelRenderable_csgo;
+class IClientAlphaProperty_csgo;
+
+// This is the client's version of IUnknown. We may want to use a QueryInterface-like
+// mechanism if this gets big.
+class IClientUnknown_csgo : public IHandleEntity_csgo
+{
+public:
+	virtual ICollideable_csgo*		GetCollideable() = 0;
+	virtual IClientNetworkable_csgo*	GetClientNetworkable() = 0;
+	virtual IClientRenderable_csgo*	GetClientRenderable() = 0;
+	virtual IClientEntity_csgo*		GetIClientEntity() = 0;
+	virtual C_BaseEntity_csgo*		GetBaseEntity() = 0;
+	virtual IClientThinkable_csgo*	GetClientThinkable() = 0;
+	virtual IClientModelRenderable_csgo*	GetClientModelRenderable() = 0;
+	// not in csgo // virtual IClientAlphaProperty_csgo*	GetClientAlphaProperty() = 0;
+};
+
+class IClientRenderable_csgo abstract
+{
+	// More functions, but we don't care about this.
+};
+
+class IClientNetworkable_csgo abstract
+{
+	// More functions, but we don't care about this.
+};
+
+class IClientThinkable_csgo abstract
+{
+	// More functions, but we don't care about this.
+};
+
+
+class CMouthInfo_csgo;
+struct SpatializationInfo_t_csgo;
+
+//-----------------------------------------------------------------------------
+// Purpose: All client entities must implement this interface.
+//-----------------------------------------------------------------------------
+class IClientEntity_csgo abstract : public IClientUnknown_csgo, public IClientRenderable_csgo, public IClientNetworkable_csgo, public IClientThinkable_csgo
+{
+public:
+	// Delete yourself.
+	// not in csgo // virtual void			Release( void ) = 0;
+	
+	// Network origin + angles
+	virtual const Vector&	GetAbsOrigin( void ) const = 0;
+	virtual const QAngle&	GetAbsAngles( void ) const = 0;
+
+	virtual CMouthInfo_csgo		*GetMouth( void ) = 0;
+
+	// Retrieve sound spatialization info for the specified sound on this entity
+	// Return false to indicate sound is not audible
+	virtual bool			GetSoundSpatialization( SpatializationInfo_t_csgo& info ) = 0;
+
+	virtual bool			IsBlurred( void ) = 0;
+};
+
+class C_BaseEntity_csgo abstract : public IClientEntity_csgo
+{
+public:
+	// (0..14 is from IClientEntity_csgo)
+
+	virtual void _UNKNOWN_C_BaseEntity_015(void);
+	virtual void _UNKNOWN_C_BaseEntity_016(void);
+	virtual void _UNKNOWN_C_BaseEntity_017(void);
+	virtual void _UNKNOWN_C_BaseEntity_018(void);
+	virtual void _UNKNOWN_C_BaseEntity_019(void);
+	virtual void _UNKNOWN_C_BaseEntity_020(void);
+	virtual void _UNKNOWN_C_BaseEntity_021(void);
+	virtual void _UNKNOWN_C_BaseEntity_022(void);
+	virtual void _UNKNOWN_C_BaseEntity_023(void);
+	virtual void _UNKNOWN_C_BaseEntity_024(void);
+	virtual void _UNKNOWN_C_BaseEntity_025(void);
+	virtual void _UNKNOWN_C_BaseEntity_026(void);
+	virtual void _UNKNOWN_C_BaseEntity_027(void);
+	virtual void _UNKNOWN_C_BaseEntity_028(void);
+	virtual void _UNKNOWN_C_BaseEntity_029(void);
+	virtual void _UNKNOWN_C_BaseEntity_030(void);
+	virtual void _UNKNOWN_C_BaseEntity_031(void);
+	virtual void _UNKNOWN_C_BaseEntity_032(void);
+	virtual void _UNKNOWN_C_BaseEntity_033(void);
+	virtual void _UNKNOWN_C_BaseEntity_034(void);
+	virtual void _UNKNOWN_C_BaseEntity_035(void);
+	virtual void _UNKNOWN_C_BaseEntity_036(void);
+	virtual void _UNKNOWN_C_BaseEntity_037(void);
+	virtual void _UNKNOWN_C_BaseEntity_038(void);
+	virtual void _UNKNOWN_C_BaseEntity_039(void);
+	virtual void _UNKNOWN_C_BaseEntity_040(void);
+	virtual void _UNKNOWN_C_BaseEntity_041(void);
+	virtual void _UNKNOWN_C_BaseEntity_042(void);
+	virtual void _UNKNOWN_C_BaseEntity_043(void);
+	virtual void _UNKNOWN_C_BaseEntity_044(void);
+	virtual void _UNKNOWN_C_BaseEntity_045(void);
+	virtual void _UNKNOWN_C_BaseEntity_046(void);
+	virtual void _UNKNOWN_C_BaseEntity_047(void);
+	virtual void _UNKNOWN_C_BaseEntity_048(void);
+	virtual void _UNKNOWN_C_BaseEntity_049(void);
+	virtual void _UNKNOWN_C_BaseEntity_050(void);
+	virtual void _UNKNOWN_C_BaseEntity_051(void);
+	virtual void _UNKNOWN_C_BaseEntity_052(void);
+	virtual void _UNKNOWN_C_BaseEntity_053(void);
+	virtual void _UNKNOWN_C_BaseEntity_054(void);
+	virtual void _UNKNOWN_C_BaseEntity_055(void);
+	virtual void _UNKNOWN_C_BaseEntity_056(void);
+	virtual void _UNKNOWN_C_BaseEntity_057(void);
+	virtual void _UNKNOWN_C_BaseEntity_058(void);
+	virtual void _UNKNOWN_C_BaseEntity_059(void);
+	virtual void _UNKNOWN_C_BaseEntity_060(void);
+	virtual void _UNKNOWN_C_BaseEntity_061(void);
+	virtual void _UNKNOWN_C_BaseEntity_062(void);
+	virtual void _UNKNOWN_C_BaseEntity_063(void);
+	virtual void _UNKNOWN_C_BaseEntity_064(void);
+	virtual void _UNKNOWN_C_BaseEntity_065(void);
+	virtual void _UNKNOWN_C_BaseEntity_066(void);
+	virtual void _UNKNOWN_C_BaseEntity_067(void);
+	virtual void _UNKNOWN_C_BaseEntity_068(void);
+	virtual void _UNKNOWN_C_BaseEntity_069(void);
+	virtual void _UNKNOWN_C_BaseEntity_070(void);
+	virtual void _UNKNOWN_C_BaseEntity_071(void);
+	virtual void _UNKNOWN_C_BaseEntity_072(void);
+	virtual void _UNKNOWN_C_BaseEntity_073(void);
+	virtual void _UNKNOWN_C_BaseEntity_074(void);
+	virtual void _UNKNOWN_C_BaseEntity_075(void);
+	virtual void _UNKNOWN_C_BaseEntity_076(void);
+	virtual void _UNKNOWN_C_BaseEntity_077(void);
+	virtual void _UNKNOWN_C_BaseEntity_078(void);
+	virtual void _UNKNOWN_C_BaseEntity_079(void);
+	virtual void _UNKNOWN_C_BaseEntity_080(void);
+	virtual void _UNKNOWN_C_BaseEntity_081(void);
+	virtual void _UNKNOWN_C_BaseEntity_082(void);
+	virtual void _UNKNOWN_C_BaseEntity_083(void);
+	virtual void _UNKNOWN_C_BaseEntity_084(void);
+	virtual void _UNKNOWN_C_BaseEntity_085(void);
+	virtual void _UNKNOWN_C_BaseEntity_086(void);
+	virtual void _UNKNOWN_C_BaseEntity_087(void);
+	virtual void _UNKNOWN_C_BaseEntity_088(void);
+	virtual void _UNKNOWN_C_BaseEntity_089(void);
+	virtual void _UNKNOWN_C_BaseEntity_090(void);
+	virtual void _UNKNOWN_C_BaseEntity_091(void);
+	virtual void _UNKNOWN_C_BaseEntity_092(void);
+	virtual void _UNKNOWN_C_BaseEntity_093(void);
+	virtual void _UNKNOWN_C_BaseEntity_094(void);
+	virtual void _UNKNOWN_C_BaseEntity_095(void);
+	virtual void _UNKNOWN_C_BaseEntity_096(void);
+	virtual void _UNKNOWN_C_BaseEntity_097(void);
+	virtual void _UNKNOWN_C_BaseEntity_098(void);
+	virtual void _UNKNOWN_C_BaseEntity_099(void);
+	virtual void _UNKNOWN_C_BaseEntity_100(void);
+	virtual void _UNKNOWN_C_BaseEntity_101(void);
+	virtual void _UNKNOWN_C_BaseEntity_102(void);
+	virtual void _UNKNOWN_C_BaseEntity_103(void);
+	virtual void _UNKNOWN_C_BaseEntity_104(void);
+	virtual void _UNKNOWN_C_BaseEntity_105(void);
+	virtual void _UNKNOWN_C_BaseEntity_106(void);
+	virtual void _UNKNOWN_C_BaseEntity_107(void);
+	virtual void _UNKNOWN_C_BaseEntity_108(void);
+	virtual void _UNKNOWN_C_BaseEntity_109(void);
+	virtual void _UNKNOWN_C_BaseEntity_110(void);
+	virtual void _UNKNOWN_C_BaseEntity_111(void);
+	virtual void _UNKNOWN_C_BaseEntity_112(void);
+	virtual void _UNKNOWN_C_BaseEntity_113(void);
+	virtual void _UNKNOWN_C_BaseEntity_114(void);
+	virtual void _UNKNOWN_C_BaseEntity_115(void);
+	virtual void _UNKNOWN_C_BaseEntity_116(void);
+	virtual void _UNKNOWN_C_BaseEntity_117(void);
+	virtual void _UNKNOWN_C_BaseEntity_118(void);
+	virtual void _UNKNOWN_C_BaseEntity_119(void);
+	virtual void _UNKNOWN_C_BaseEntity_120(void);
+	virtual void _UNKNOWN_C_BaseEntity_121(void);
+	virtual void _UNKNOWN_C_BaseEntity_122(void);
+	virtual void _UNKNOWN_C_BaseEntity_123(void);
+	virtual void _UNKNOWN_C_BaseEntity_124(void);
+	virtual void _UNKNOWN_C_BaseEntity_125(void);
+	virtual void _UNKNOWN_C_BaseEntity_126(void);
+	virtual void _UNKNOWN_C_BaseEntity_127(void);
+	virtual void _UNKNOWN_C_BaseEntity_128(void);
+	virtual void _UNKNOWN_C_BaseEntity_129(void);
+	virtual void _UNKNOWN_C_BaseEntity_130(void);
+	virtual void _UNKNOWN_C_BaseEntity_131(void);
+	virtual void _UNKNOWN_C_BaseEntity_132(void);
+	virtual void _UNKNOWN_C_BaseEntity_133(void);
+	virtual void _UNKNOWN_C_BaseEntity_134(void);
+	virtual void _UNKNOWN_C_BaseEntity_135(void);
+	virtual void _UNKNOWN_C_BaseEntity_136(void);
+	virtual void _UNKNOWN_C_BaseEntity_137(void);
+	virtual void _UNKNOWN_C_BaseEntity_138(void);
+
+	// 139
+	virtual char const				*GetClassname( void );
+	
+	//char const						*GetDebugName( void );
+	
+	// 140
+	virtual const char				*GetPlayerName() const { return 0; }
+
+	virtual void _UNKNOWN_C_BaseEntity_141(void);
+	virtual void _UNKNOWN_C_BaseEntity_142(void);
+	virtual void _UNKNOWN_C_BaseEntity_143(void);
+	virtual void _UNKNOWN_C_BaseEntity_144(void);
+	virtual void _UNKNOWN_C_BaseEntity_145(void);
+	virtual void _UNKNOWN_C_BaseEntity_146(void);
+	virtual void _UNKNOWN_C_BaseEntity_147(void);
+	virtual void _UNKNOWN_C_BaseEntity_148(void);
+	virtual void _UNKNOWN_C_BaseEntity_149(void);
+	virtual void _UNKNOWN_C_BaseEntity_150(void);
+	virtual void _UNKNOWN_C_BaseEntity_151(void);
+	virtual void _UNKNOWN_C_BaseEntity_152(void);
+	virtual void _UNKNOWN_C_BaseEntity_153(void);
+	virtual void _UNKNOWN_C_BaseEntity_154(void);
+	virtual void _UNKNOWN_C_BaseEntity_155(void);
+	virtual void _UNKNOWN_C_BaseEntity_156(void);
+	virtual void _UNKNOWN_C_BaseEntity_157(void);
+	virtual void _UNKNOWN_C_BaseEntity_158(void);
+	virtual void _UNKNOWN_C_BaseEntity_159(void);
+	virtual void _UNKNOWN_C_BaseEntity_160(void);
+	virtual void _UNKNOWN_C_BaseEntity_161(void);
+	virtual void _UNKNOWN_C_BaseEntity_162(void);
+
+	// Returns the eye point + angles (used for viewing + shooting)
+	virtual Vector			EyePosition( void ); // :163
+	virtual const QAngle&	EyeAngles( void );		// Direction of eyes // :164
+	virtual const QAngle&	LocalEyeAngles( void );	// Direction of eyes in local space (pl.v_angle) // :165
+
+public:
+	const char	*GetEntityName();
+
+private:
+	int _pad_000[82];
+	char m_iName[260];
+};
+
+inline const char *C_BaseEntity_csgo::GetEntityName() 
+{ 
+	return m_iName; 
+}

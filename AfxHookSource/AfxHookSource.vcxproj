@@ -97,6 +97,7 @@
     <ClCompile Include="AfxHookSourceInput.cpp" />
     <ClCompile Include="AfxShaders.cpp" />
     <ClCompile Include="AfxStreams.cpp" />
+    <ClCompile Include="aiming.cpp" />
     <ClCompile Include="CampathDrawer.cpp" />
     <ClCompile Include="csgo_CHudDeathNotice.cpp" />
     <ClCompile Include="csgo_CSkyBoxView.cpp" />
@@ -150,6 +151,7 @@
     <ClInclude Include="AfxInterfaces.h" />
     <ClInclude Include="AfxShaders.h" />
     <ClInclude Include="AfxStreams.h" />
+    <ClInclude Include="aiming.h" />
     <ClInclude Include="CampathDrawer.h" />
     <ClInclude Include="asmClassTools.h" />
     <ClInclude Include="csgo_CHudDeathNotice.h" />

@@ -2384,6 +2384,8 @@ void HookClientDllInterface_011_Init(void * iface)
 	old_Client_Init = HookInterfaceFn(iface, 0, (void *)hook_Client_Init);
 }
 
+IClientEntityList_csgo * g_Entitylist_csgo = 0;
+
 CreateInterfaceFn old_Client_CreateInterface = 0;
 
 void* new_Client_CreateInterface(const char *pName, int *pReturnCode)
@@ -2428,6 +2430,12 @@ void* new_Client_CreateInterface(const char *pName, int *pReturnCode)
 			{
 				ErrorBox("Could not get a supported VClient interface.");
 			}
+		}
+		else
+		{
+			// isCsgo.
+
+			g_Entitylist_csgo = (IClientEntityList_csgo *)old_Client_CreateInterface(VCLIENTENTITYLIST_INTERFACE_VERSION_CSGO, NULL);
 		}
 	}
 
