@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-04-06 dominik.matrixstorm.com
+// 2016-04-15 dominik.matrixstorm.com
 //
 // First changes:
 // 2016-03-31 dominik.matrixstorm.com
@@ -39,10 +39,15 @@ public:
 		O_View
 	} Origin;
 
-	enum Angles_e{
+	enum Angles_e {
 		A_Net,
 		A_View
 	} Angles;
+
+	enum Up_e {
+		U_Input,
+		U_World
+	} Up;
 
 private:
 	Vector3 LastTargetOrigin;
@@ -50,6 +55,8 @@ private:
 	double m_YPitchAcceleration;
 	double m_ZYawVelocity;
 	double m_ZYawAcceleration;
+	double m_XRollVelocity;
+	double m_XRollAcceleration;
 	double LastYPitch;
 	double LastZYaw;
 	double LastXRoll;

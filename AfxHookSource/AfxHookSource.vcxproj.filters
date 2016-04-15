@@ -138,6 +138,9 @@
     <ClCompile Include="aiming.cpp">
       <Filter>AfxHookSource</Filter>
     </ClCompile>
+    <ClCompile Include="CommandSystem.cpp">
+      <Filter>AfxHookSource</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -294,6 +297,9 @@
       <Filter>shared</Filter>
     </ClInclude>
     <ClInclude Include="aiming.h">
+      <Filter>AfxHookSource</Filter>
+    </ClInclude>
+    <ClInclude Include="CommandSystem.h">
       <Filter>AfxHookSource</Filter>
     </ClInclude>
   </ItemGroup>

@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-04-14 dominik.matrixstorm.com
+// 2016-04-15 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-09-30 by dominik.matrixstorm.com
@@ -29,6 +29,7 @@
 #include "csgo_S_StartSound.h"
 #include "d3d9Hooks.h"
 #include "aiming.h"
+#include "CommandSystem.h"
 
 #include "csgo_Stdshader_dx9_Hooks.h"
 
@@ -1600,7 +1601,8 @@ CON_COMMAND(mirv_camimport, "controls camera motion data import") {
 
 	int argc = args->ArgC();
 
-	if(2 <= argc) {
+	if(2 <= argc)
+	{
 		char const * arg1 = args->ArgV(1);
 		if(0 == _stricmp("stop", arg1)) {
 			g_Hook_VClient_RenderView.ImportEnd();
@@ -1637,12 +1639,23 @@ CON_COMMAND(mirv_camimport, "controls camera motion data import") {
 			);
 			return;
 		}
+		else
+		if(0 == _stricmp("toCamPath", arg1) && 4 <= argc)
+		{
+			char const * arg2 = args->ArgV(2);
+			char const * arg3 = args->ArgV(3);
+
+			if(!g_Hook_VClient_RenderView.ImportToCamPath(0 != atoi(arg2), atof(arg3)))
+				Tier0_Warning("ERROR: Something went wrong when converting to mirv_campath!\n");
+			return;
+		}
 	}
 	Tier0_Msg(
 		"Usage:\n"
 		"mirv_camimport start <filename>\n"
 		"mirv_camimport stop\n"
-		"mirv_camimport basetime\n"
+		"mirv_camimport basetime [...]\n"
+		"mirv_camimport toCamPath 0|1 <fov> - Convert to mirv_campath, 0 = no interp adjust | 1 (recommended) = adjust campath interpolation (to linear), <fov> Field Of View value to use (90 recommended).\n"
 	);
 }
 
@@ -2691,7 +2704,7 @@ CON_COMMAND(mirv_aim, "Aiming system control.")
 			{
 				char const * arg2 = args->ArgV(2);
 
-				if(_stricmp("cam", arg2))
+				if(0 == _stricmp("cam", arg2))
 				{
 					Vector3 offset(0, 0, 0);
 
@@ -2714,7 +2727,7 @@ CON_COMMAND(mirv_aim, "Aiming system control.")
 					return;
 				}
 				else
-				if(_stricmp("last", arg2))
+				if(0 == _stricmp("last", arg2))
 				{
 					Vector3 offset(0, 0, 0);
 
@@ -2733,7 +2746,7 @@ CON_COMMAND(mirv_aim, "Aiming system control.")
 					return;
 				}
 				else
-				if(_stricmp("abs", arg2) && 6 <= argc)
+				if(0 == _stricmp("abs", arg2) && 6 <= argc)
 				{
 					Vector3 offset(0, 0, 0);
 
@@ -2748,6 +2761,7 @@ CON_COMMAND(mirv_aim, "Aiming system control.")
 					}
 
 					g_Aiming.TargetPoint(offset);
+					return;
 				}
 			}
 
@@ -2924,7 +2938,45 @@ CON_COMMAND(mirv_aim, "Aiming system control.")
 			}
 
 			Tier0_Msg(
-				"mirv_aim origin net|view - Target origin to use.\n"
+				"mirv_aim angles net|view - Target angles to use.\n"
+				"Current value: %s\n",
+				curValue
+			);
+			return;
+		}
+		else
+		if(0 == _stricmp("up", arg1))
+		{
+			if(3 <= argc)
+			{
+				char const * arg2 = args->ArgV(2);
+
+				if(0 == _stricmp("input", arg2))
+				{
+					g_Aiming.Up = Aiming::U_Input;
+					return;
+				}
+				else
+				if(0 == _stricmp("world", arg2))
+				{
+					g_Aiming.Up = Aiming::U_World;
+					return;
+				}
+			}
+
+			char const * curValue = "[unknown]";
+			switch(g_Aiming.Up)
+			{
+			case Aiming::U_Input:
+				curValue = "input";
+				break;
+			case Aiming::U_World:
+				curValue = "world";
+				break;
+			}
+
+			Tier0_Msg(
+				"mirv_aim up input|world - Camera up direction to use.\n"
 				"Current value: %s\n",
 				curValue
 			);
@@ -2940,9 +2992,114 @@ CON_COMMAND(mirv_aim, "Aiming system control.")
 		"mirv_aim origin [...] - Target origin to use.\n"
 		"mirv_aim angles [...] - Target angles to use.\n"
 		"mirv_aim offset [...] - Offset in target space to aim at.\n"
+		"mirv_aim up [...] - How to determine the camera up direction.\n"
 		// does not work atm // "mirv_aim snapTo [...] - Wheter to aim non-soft or soft.\n"
 		// does not work atm // "mirv_aim velLimit [...] - Max velocity possible (for snapTo 0).\n"
 		// does not work atm // "mirv_aim accelLimit [...] - Max acceleration possible (for snapTo 0).\n"
 		// does not work atm // "mirv_aim jerkLimit [...] - Max jerk possible (for snapTo 0).\n"
 	);
+}
+
+CON_COMMAND(mirv_cmd, "Command system (for sheduling commands).")
+{
+	if(!g_Hook_VClient_RenderView.IsInstalled() || !g_VEngineClient)
+	{
+		Tier0_Warning("Error: Required hooks not installed.\n");
+		return;
+	}
+
+	int argc = args->ArgC();
+
+	if(2 <= argc)
+	{
+		char const * subcmd = args->ArgV(1);
+
+		if(!_stricmp("add", subcmd))
+		{
+			std::string cmds("");
+
+			for(int i = 2; i < args->ArgC(); ++i)
+			{
+				if(2 < i) cmds.append(" ");
+				
+				cmds.append(args->ArgV(i));
+			}
+
+			g_CommandSystem.Add(
+				g_Hook_VClient_RenderView.GetCurTime()
+				, cmds.c_str()
+			);
+			return;
+		}
+		else if(!_stricmp("enabled", subcmd))
+		{
+			if(3 < argc)
+			{
+				g_CommandSystem.Enabled = 0 != atof(args->ArgV(2));
+				return;
+			}
+
+			Tier0_Msg(
+				"mirv_cmds enabled 0|1 - Disable / enable command system.\n"
+				"Current value: %s\n"
+				, g_CommandSystem.Enabled ? "1" : "0"
+			);
+			return;
+		}
+		else if(!_stricmp("clear", subcmd) && 2 == argc)
+		{
+			g_CommandSystem.Clear();
+
+			return;
+		}
+		else if(!_stricmp("print", subcmd) && 2 == argc)
+		{
+			g_CommandSystem.Console_List();
+
+			if(g_CommandSystem.Enabled)
+				Tier0_Msg("Command system is enabled (mirv_cmds enabled is 1).\n");
+			else
+				Tier0_Msg("COMMAND SYSTEM IS NOT ENABLED (mirv_cmds enabled is 0).\n");
+
+			return;
+		}
+		else if(!_stricmp("remove", subcmd) && 3 <= argc)
+		{
+			g_CommandSystem.Remove(atoi(args->ArgV(2)));
+			return;
+		}
+		else if(!_stricmp("load", subcmd) && 3 == argc)
+		{	
+			std::wstring wideString;
+			bool bOk = AnsiStringToWideString(args->ArgV(2), wideString)
+				&& g_CommandSystem.Load(wideString.c_str())
+			;
+
+			Tier0_Msg("Loading command system: %s.\n", bOk ? "OK" : "ERROR");
+
+			return;
+		}
+		else if(!_stricmp("save", subcmd) && 3 == argc)
+		{	
+			std::wstring wideString;
+			bool bOk = AnsiStringToWideString(args->ArgV(2), wideString)
+				&& g_CommandSystem.Save(wideString.c_str())
+			;
+
+			Tier0_Msg("Saving command system: %s.\n", bOk ? "OK" : "ERROR");
+
+			return;
+		}
+	}
+
+	Tier0_Msg(
+		"mirv_cmd enabled [...] - Control if command system is enabled (by default it is).\n"
+		"mirv_cmd add [command1] [command2] ... [commandN] - Adds/appends one or multiple commands at the current time.\n"
+		"mirv_cmd clear - Removes all commands.\n"
+		"mirv_cmd print - Prints commands / state.\n"
+		"mirv_cmd remove <index> - Removes a command by it's index.\n"
+		"mirv_cmd load <fileName> - loads commands from the file (XML format)\n"
+		"mirv_cmd save <fileName> - saves commands to the file (XML format)\n"
+	);
+	return;
 }

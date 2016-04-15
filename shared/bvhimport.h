@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <windows.h>
 
+#include "CamPath.h"
 
 /// <remarks> not thread safe, due to ms_readbuff </remarks>
 class BvhImport
@@ -19,6 +20,8 @@ public:
 	// outformat: see BvhChannel_t
 	// return: true on success, false otherwise
 	bool GetCamPositon(double fTimeOfs, double outCamdata[6]);
+
+	bool CopyToCampath(double timeOfs, double fov, CamPath & camPath);
 
 private:
 	enum BvhChannel_t { BC_Xposition=0, BC_Yposition, BC_Zposition, BC_Zrotation, BC_Xrotation, BC_Yrotation };

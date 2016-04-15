@@ -6,6 +6,32 @@
 
 <release>
 <name>AfxHookSource lite</name>
+<version>1.2.0.0</version>
+<time>2016-04-15T17:39Z</time>
+<changes>
+<change type="added">
+Added mirv_camimport toCamPath - enter mirv_camimport for more help on the command.
+</change>
+<change type="added">
+Added mirv_listentites - Very basic list of current entities, enter the command for more help.
+</change>
+<change type="added">
+Added mirv_aim - Overrides the camera angles and points the camera at a target, enter the command for more help.
+The aiming is currently not smooth (snaps to the target), sorry for disobeying the Twitter poll, but the mirv_camimport toCamPath feature was urgent and mirv_aim is already a bit implemented.
+</change>
+<change type="added">
+Added mirv_cmd - For timed command execution, it's not superior to Valve's demoui PlayCommands appart from being able to save and load (XML format), enter the command for more help.
+</change>
+</changes>
+<comments>
+For those that don't know, AfxHookSource lite has rudimentary mirv_streams support (but still no proper support again and Valve didn't reply so far), see: http://advancedfx.style-productions.net/forum/viewtopic.php?p=5475#p5475<br />
+Also you can find us on Twitter here: https://twitter.com/dtugend<br />
+</comments>
+</release>
+
+
+<release>
+<name>AfxHookSource lite</name>
 <version>1.1.5.0</version>
 <time>2016-03-23T18:47Z</time>
 <changes>

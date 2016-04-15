@@ -284,3 +284,27 @@ void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, fl
 void Hook_VClient_RenderView::SetImportBaseTime(float value) {
 	m_ImportBaseTime = value;
 }
+
+bool Hook_VClient_RenderView::ImportToCamPath(bool adjustInterp, double fov)
+{
+	if(!m_Import)
+		return false;
+
+	bool bOk = g_BvhImport.CopyToCampath(m_ImportBaseTime, fov, m_CamPath);
+
+	if(bOk)
+	{
+		ImportEnd();
+
+		if(adjustInterp)
+		{
+			m_CamPath.PositionInterpMethod_set(CamPath::DI_LINEAR);
+			m_CamPath.RotationInterpMethod_set(CamPath::QI_SLINEAR);
+			m_CamPath.FovInterpMethod_set(CamPath::DI_LINEAR);
+		}
+
+		m_CamPath.Enabled_set(true);
+	}
+
+	return bOk;
+}

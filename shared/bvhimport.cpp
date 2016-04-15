@@ -78,6 +78,76 @@ int BvhImport::DecodeBvhChannel(char * pszRemainder, char * & aoutNewRemainder)
 	return iret;
 }
 
+bool BvhImport::CopyToCampath(double timeOfs, double fov, CamPath & camPath)
+{
+	camPath.Clear();
+
+	if(!m_Active)
+		return true;
+
+	// we start at the first frame
+	if(fseek(m_File,m_MotionFPos,SEEK_SET))
+	{
+		// read error
+		CloseMotionFile();
+		return false;
+	}
+
+	for(m_LastFrame = 0; m_LastFrame < m_Frames; ++m_LastFrame)
+	{
+		char * pc;
+
+		// read current frame:
+		pc = CrLfZ2LfZ(fgets(ms_readbuff,sizeof(ms_readbuff)/sizeof(char),m_File));
+		if(!pc)
+		{
+			// read error
+			CloseMotionFile();
+			return false;
+		}
+
+		// decode frame:
+		int ichan;
+		char tc = 0;
+		char * pc2;
+		double fff;
+
+		pc = ms_readbuff;
+		for(ichan = 0; ichan < 6; ichan++)
+		{
+			pc2 = strchr(pc,' ');
+			if(!pc2)
+				pc2 = strchr(pc,'\t');
+			if(!pc2)
+				pc2 = pc + strlen(pc);
+
+			tc = *pc2;
+			*pc2 = 0;
+
+			fff = 0;
+			fff = atof(pc);
+
+			m_Cache[channelcode[ichan]] = fff;
+
+			*pc2 = tc;
+			pc = pc2;
+
+			while(0 != *pc && (' ' == *pc || '\t' == *pc)) pc++;
+		}
+
+		double Ty = (-m_Cache[0]);
+		double Tz = (+m_Cache[1]);
+		double Tx = (-m_Cache[2]);
+		double Rz = (-m_Cache[3]);
+		double Rx = (-m_Cache[4]);
+		double Ry = (+m_Cache[5]);
+
+		camPath.Add(timeOfs +m_LastFrame * m_FrameTime, CamPathValue(Tx, Ty, Tz, Rx, Ry, Rz, fov));
+	}
+
+	return true;
+}
+
 bool BvhImport::GetCamPositon(double fTimeOfs, double outCamdata[6])
 {
 	char * pc;

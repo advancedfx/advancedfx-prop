@@ -49,6 +49,8 @@ public:
 	bool ImportBegin(wchar_t const *fileName);
 	void ImportEnd();
 
+	bool ImportToCamPath(bool adjustInterp, double fov);
+
 	void Install(WrpGlobals * globals);
 	WrpGlobals * GetGlobals();
 

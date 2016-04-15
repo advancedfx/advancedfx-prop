@@ -37,6 +37,7 @@
 #include "csgo_Stdshader_dx9_Hooks.h"
 #include "AfxShaders.h"
 #include "csgo_CViewRender.h"
+#include "CommandSystem.h"
 
 #include <set>
 #include <map>
@@ -94,8 +95,16 @@ public:
 	
 	virtual void PostRenderAllTools()
 	{
+		// Warning: This can be called multiple times during a frame (i.e. for skybox view and normal world view)!
+
 		//Tier0_Msg("ClientEngineTools::PostRenderAllTools\n");
+
 		g_CampathDrawer.OnPostRenderAllTools();
+
+		if(g_Hook_VClient_RenderView.IsInstalled())
+		{
+			g_CommandSystem.Do_Queue_Commands(g_Hook_VClient_RenderView.GetCurTime());
+		}
 
 		g_Engine_ClientEngineTools->PostRenderAllTools();
 	}
