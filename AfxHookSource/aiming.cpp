@@ -17,7 +17,7 @@
 
 Aiming g_Aiming;
 
-void LookAnglesFromTo(Vector3 const &from, Vector3 const &to, double & outPitch, double & outYaw)
+void LookAnglesFromTo(Vector3 const &from, Vector3 const &to, double fallBackPitch, double fallBackYaw, double & outPitch, double & outYaw)
 {
 	Vector3 dir = to - from;
 
@@ -28,6 +28,13 @@ void LookAnglesFromTo(Vector3 const &from, Vector3 const &to, double & outPitch,
 
 	// Need this for later
 	double length = dir.Length();
+
+	if(length <= AFX_MATH_EPS)
+	{
+		outPitch = fallBackPitch;
+		outYaw = fallBackYaw;
+		return;
+	}
 
 	dir = dir.Normalize();
 
@@ -41,10 +48,6 @@ void LookAnglesFromTo(Vector3 const &from, Vector3 const &to, double & outPitch,
 	if (dir.Y < 0)
 		angle = 360.0 - angle;
 
-	// This is our pitchup/down
-	if (length == 0)
-		length = 0.01;
-
 	double pitch = atan(dz / length) * 180.0f / (float)M_PI;
 
 	outYaw = angle;
@@ -53,13 +56,13 @@ void LookAnglesFromTo(Vector3 const &from, Vector3 const &to, double & outPitch,
 
 Aiming::Aiming()
 : Active(false)
-, SoftDeactivate(true)
+, SoftDeactivate(false)
 , EntityIndex(-1)
 , OffSet(0.0,0.0,0.0)
 , SnapTo(false)
-, LimitVelocity(180)
-, LimitAcceleration(1)
-, LimitJerk(0.01)
+, LimitVelocity(360)
+, LimitAcceleration(90)
+//, LimitJerk(0.01)
 , Origin(O_View)
 , Angles(A_Net)
 , Up(U_World)
@@ -124,7 +127,7 @@ bool Aiming::Aim(double deltaT, Vector3 const camOrigin, double & yPitch, double
 	{
 		if(Active)
 		{
-			LookAnglesFromTo(camOrigin, LastTargetOrigin, targetYPitch, targetZYaw);
+			LookAnglesFromTo(camOrigin, LastTargetOrigin, LastYPitch, LastZYaw, targetYPitch, targetZYaw);
 			targetXRoll = U_World == Up ? 0 : targetXRoll;
 		}
 
@@ -152,17 +155,29 @@ bool Aiming::Aim(double deltaT, Vector3 const camOrigin, double & yPitch, double
 
 			// apply re-aiming:
 
+			//Tier0_Msg("+++pitch+++\n");
 			CalcSmooth(deltaT, LastYPitch +reaimYPitch, LastYPitch, m_YPitchVelocity, m_YPitchAcceleration);
 			yPitch = LastYPitch;
 
+			//Tier0_Msg("+++yaw+++\n");
 			CalcSmooth(deltaT, LastZYaw +reaimZYaw, LastZYaw, m_ZYawVelocity, m_ZYawAcceleration);
 			zYaw = LastZYaw;
 
+			//Tier0_Msg("+++roll+++\n");
 			CalcSmooth(deltaT, LastXRoll +reaimXRoll, LastXRoll, m_XRollVelocity, m_XRollAcceleration);
 			xRoll = LastXRoll;
 
 			camRotationChanged = true;
 		}
+	}
+	else
+	{
+		m_YPitchVelocity = 0;
+		m_YPitchAcceleration = 0;
+		m_ZYawVelocity = 0;
+		m_ZYawAcceleration = 0;
+		m_XRollVelocity = 0;
+		m_XRollAcceleration = 0;
 	}
 
 	// Force remembered angels to be in [-180°, 180°)
@@ -190,13 +205,11 @@ void Aiming::CalcSmooth(double deltaT, double targetPos, double & lastPos, doubl
 	if(deltaT <= 0)
 		return;
 
-	lastPos = targetPos;
-	lastVel = 0;
-	lastAccel = 0;
-	return;
+	// What we would like to have ideally is this:
+	// https://www.physicsforums.com/threads/3rd-order-motion-profile-programming-sinusoidal.868148/
 
-	// not implemented yet!
-	// .
+	// However that is way too complicated for now so we try s.th. easier for now,
+	// a 2nd order motion profile that is sort of trapezoidal:
 
 	// Objective:
 	//
@@ -206,24 +219,17 @@ void Aiming::CalcSmooth(double deltaT, double targetPos, double & lastPos, doubl
 	//
 	// phaseT_k is the (positive) phase time.
 	//
-	// jerk(k) = c_k
-	// accel(k) = accel(k-1) +Int(jerk(k),0+eps..phaseT_k) = accel(k-1) +jerk(k)*phaseT_k
-	// vel(k) = velo(k-1) +Int(accell(k),0+eps..phaseT_k) = velo(k-1) +accel(k-1) * phaseT_k +jerk(k)/2 * phaseT_k^2
-	// pos(k) = pos(k-1) +Int(vel(k),0+eps..phaseT_k) = pos(k-1) +vel(k-1)*phaseT_k +accel(k-1)/2*phaseT_k^2 +jerk(k)/6*phaseT_k^3
+	// accel(k) = c_k
+	// velo(k) = vel(k-1) +Int(accel(k),0+eps..phaseT_k) = vel(k-1) +accel(k)*phaseT_k
+	// pos(k) = pos(k-1) +Int(velo(k),0+eps..phaseT_k) = pos(k-1) +vel(k-1) * phaseT_k +accel(k)/2 * phaseT_k^2
 	//
-	// -LimitJerk <= jerk(k) <= LimitJerk
 	// -LimitAccel <= accel(k) <= LimitAccel
 	// -LimitVelocity <= vel(k) <= LimitVelocity
 	//
 	// Possible phases:
-	// P1) acceleration (decelleration) build-up
-	// P2) limit acceleration (decelleration)
-	// P3) acceleration (decelleration) ramp-down
-	// P4) limit speed
-	// P5) deceleration (accelleration) build-up
-	// P6) limit deceleration (accelleration)
-	// P7) deceleration (accelleration) ramp-down
-	//
+	// P1) velocity build-up
+	// P2) limit velocity
+	// P3) velocity ramp-down
 
 	// Complete programming problem:
 	//
@@ -232,72 +238,45 @@ void Aiming::CalcSmooth(double deltaT, double targetPos, double & lastPos, doubl
 	//
 	// LimitVelocity - absolute velocity limit, where 0 < LimitVelocity
 	// LimitAcceleration - absolute acceleration limit, where 0 < LimitAcceleration
-	// LimitJerk - absolute jerk limit, where 0 < LimitJerk
 	// targetPos - target position
 	// lastPos - last position
 	// lastVel - last velocity, where -LimitVelocity <= lastVel <= LimitVelocity
-	// lastAccel - last acceleration, where -LimitAcceleration <= lastAccel <= LimitAcceleration
 	//
 	//
 	// Output:
 	//
-	// phase1T, phase2T, phase3T, phase4T, phase5T, phase5T, phase5T, phase6T - Phase times
-	// , where 0 <= phase1T, 0 <= phase2T, 0 <= phase3T, 0 <= phase4T, 0 <= phase5T, 0 <= phase6T, 0 <= phase7T
+	// phase1T, phase2T, phase3T - Phase times
+	// , where 0 <= phase1T, 0 <= phase2T, 0 <= phase3T
 	//
-	// dir - base jerk direction, where dir \in {-1, 1}
+	// dir - base accel direction, where dir \in {-1, 1}
 	//
 	//
 	// Further Equations:
 	//
-	// jerk(1) = +dir * LimitJerk
-	// jerk(2) = 0
-	// jerk(3) = -dir * LimitJerk
-	// jerk(4) = 0
-	// jerk(5) = -dir * LimitJerk
-	// jerk(6) = 0
-	// jerk(7) = +dir * LimitJerk
-	//
-	// accel(0) = lastAccel
-	// accel(1) = accel(0) +jerk(1) * phase1T
-	// accel(2) = accel(1) +jerk(2) * phase2T
-	// accel(3) = accel(2) +jerk(3) * phase3T
-	// accel(4) = accel(3) +jerk(4) * phase4T
-	// accel(5) = accel(4) +jerk(5) * phase5T
-	// accel(6) = accel(5) +jerk(6) * phase6T
-	// accel(7) = accel(6) +jerk(7) * phase7T
-	// accel(7) = 0
-	//
-	// -LimitAccel <= accel(1), accel(2), accel(3), accel(4), accel(5), accel(6), accel(7) <= LimitAccel
+	// accel(1) = +dir * LimitAcceleration
+	// accel(2) = 0
+	// accel(3) = -dir * LimitAcceleration
 	//
 	// vel(0) = lastVel
-	// vel(1) = vel(0) +accel(0) * phase1T +jerk(1)/2 * phase1T^2
-	// vel(2) = vel(1) +accel(1) * phase2T +jerk(2)/2 * phase2T^2
-	// vel(3) = vel(2) +accel(2) * phase3T +jerk(3)/2 * phase3T^2
-	// vel(4) = vel(3) +accel(3) * phase4T +jerk(4)/2 * phase4T^2
-	// vel(5) = vel(4) +accel(4) * phase5T +jerk(5)/2 * phase5T^2
-	// vel(6) = vel(5) +accel(5) * phase6T +jerk(6)/2 * phase6T^2
-	// vel(7) = vel(6) +accel(6) * phase7T +jerk(7)/2 * phase7T^2
-	// vel(7) = 0
+	// vel(1) = vel(0) +accel(1) * phase1T = lastVel + dir * LimitAcceleration * phase1T
+	// vel(2) = vel(1) +accel(2) * phase2T = lastVel + dir * LimitAcceleration * phase1T
+	// vel(3) = vel(2) +accel(3) * phase3T = lastVel + dir * LimitAcceleration * phase1T - dir * LimitAcceleration * phase3T
+	// vel(3) = 0
 	//
-	// -LimitVelocity <= vel(1), vel(2), vel(3), vel(4), vel(5), vel(6), vel(7) <= LimitVelocity
+	// -LimitVelocity <= vel(1), vel(2), vel(3) <= LimitVelocity
 	// 
 	// resultDeltaPos = 0
 	// +Int(vel(1),0+eps,phase1T)
 	// +Int(vel(2),0+eps,phase2T)
 	// +Int(vel(3),0+eps,phase3T)
-	// +Int(vel(4),0+eps,phase4T)
-	// +Int(vel(5),0+eps,phase5T)
-	// +Int(vel(6),0+eps,phase6T)
-	// +Int(vel(7),0+eps,phase7T)
 	// = 0
-	// +vel(0) * phase1T +accel(0)/2 * phase1T^2 +jerk(1)/6 * phase1T^3
-	// +vel(1) * phase2T +accel(1)/2 * phase2T^2 +jerk(2)/6 * phase2T^3
-	// +vel(2) * phase3T +accel(2)/2 * phase3T^2 +jerk(3)/6 * phase3T^3
-	// +vel(3) * phase4T +accel(3)/2 * phase4T^2 +jerk(4)/6 * phase4T^3
-	// +vel(4) * phase5T +accel(4)/2 * phase5T^2 +jerk(5)/6 * phase5T^3
-	// +vel(5) * phase6T +accel(5)/2 * phase6T^2 +jerk(6)/6 * phase6T^3
-	// +vel(6) * phase7T +accel(6)/2 * phase7T^2 +jerk(7)/6 * phase7T^3
-	//
+	// +vel(0) * phase1T +accel(1)/2 * phase1T^2
+	// +vel(1) * phase2T +accel(2)/2 * phase2T^2
+	// +vel(2) * phase3T +accel(3)/2 * phase3T^2
+	// = 0
+	// + lastVel * phase1T +dir * LimitAcceleration / 2 * phase1T^2
+	// + (lastVel + dir * LimitAcceleration * phase1T) * phase2T
+	// + (lastVel + dir * LimitAcceleration * phase1T) * phase3T -dir * LimitAcceleration/2 * phase3T^2
 	//
 	// deltaPos = targetPos -lastPos
 	//
@@ -306,12 +285,207 @@ void Aiming::CalcSmooth(double deltaT, double targetPos, double & lastPos, doubl
 	// 1) Position error: abs(deltaPos -resultDeltaPos)
 	// 2) Position time: phase1T +phase2T +phase3T +phase4T +phase5T +phase6T +phase7T
 
-	double curT = 0;
+	//Tier0_Msg("%f: delta=%f lastVel=%f ",deltaT, targetPos-lastPos, lastVel);
 
-	while(curT +AFX_MATH_EPS < deltaT)
+	while(0 < deltaT)
 	{
-		double deltaPos = targetPos -lastPos;
+		//Tier0_Msg("%f ", deltaT);
+
+		if(lastVel > LimitVelocity)
+		{
+			// Tier0_Msg("lastVel > LimitVelocity");
+
+			// Error condition.
+			
+			// Solving Step:
+			//
+			// lower Velocity until we are within limits:
+
+			// LimitVelocity = lastVel -LimitAcceleration * phaseT
+
+			double phaseT = (LimitVelocity -lastVel) / -LimitAcceleration;
+
+			// Limit by deltaT:
+
+			phaseT = std::min(phaseT,deltaT);
+
+			lastPos += lastVel * phaseT - LimitAcceleration / 2.0 * phaseT * phaseT;
+			lastVel += -LimitAcceleration * phaseT;
+			lastAccel = 0;
+			deltaT -= phaseT;
+		}
+		else
+		if(lastVel < -LimitVelocity)
+		{
+			// Tier0_Msg("lastVel < -LimitVelocity");
+
+			// Error condition.
+			
+			// Solving Step:
+			//
+			// increase Velocity until we are within limits:
+
+			// -LimitVelocity = lastVel +LimitAcceleration * phaseT
+
+			double phaseT = (-LimitVelocity -lastVel) / +LimitAcceleration;
+
+			// Limit by deltaT:
+
+			phaseT = std::min(phaseT,deltaT);
+
+			lastPos += lastVel * phaseT + LimitAcceleration / 2.0 * phaseT * phaseT;
+			lastVel += +LimitAcceleration * phaseT;
+			lastAccel = 0;
+			deltaT -= phaseT;
+		}
+		else
+		{
+			double phase1T = 0;
+			double phase2T = 0;
+			double phase3T = 0;
+
+			// Solving Step 1:
+			//
+			// Finding a feasible solution, that is an upperBound for the position error
+			// and a lower bound for the position time:
+			//
+			// This equals a full stop, meaning phase1T_1 = 0, phase2T_1 = 0:
+			//
+			// resultDeltaPos_1 = lastVel * phase3T_1 -dir * LimitAcceleration/2 * phase3T_1^2
+			// 0 = lastVel - dir * LimitAcceleration * phase3T_1
+			//
+			// It follows:
+			// phase3T_1 = lastVel / (dir * limitAcceleration)
+			//
+			// It follows:
+			// dir = 1 in case 0 <= lastVel otherwise -1
+
+			double deltaPos = targetPos -lastPos;
+
+			double dir = 0 < lastVel ? 1 : (0 > lastVel ? -1 : (0 <= deltaPos ? 1 : -1));
+			phase3T = lastVel / (dir * LimitAcceleration);
+
+			double resultDeltaPos = lastVel * phase3T -dir * LimitAcceleration/2.0 * phase3T * phase3T;
+
+			// Tier0_Msg("Step1:dir=%f,phase3T=%f,resultDeltaPos=%f ", dir, phase3T, resultDeltaPos);
+			
+			if(
+				0 < dir && 0 < deltaPos -resultDeltaPos
+				|| 0 > dir && 0 > deltaPos -resultDeltaPos
+			)
+			{
+				// Solving Step 2 (only if we didn't (overshoot or hit) in Step 1):
+				//
+				// phase1T and phase3T are equally increased until either LimitAcceleration is hit
+				// or resultDetlaPos = deltaPos:
+				//
+				// phase2T_2 = 0, phase3T_2 = phase3T_2 +phase1T_2
+				//
+				// 2.1) Assume can hit deltaPos:
+				// deltaPos = 0
+				// + lastVel * phase1T_{2.1} +dir * LimitAcceleration / 2 * phase1T_{2.1}^2
+				// + (lastVel + dir * LimitAcceleration *  phase1T_{2.1}) * (phase3T_1 +phase1T_{2.1})
+				// -dir * LimitAcceleration/2 * (phase3T_1 +phase1T_{2.1})^2
+				// = 0
+				// + lastVel * phase1T_{2.1} +dir * LimitAcceleration / 2 * phase1T_{2.1}^2
+				// + lastVel * phase3T_1 +dir * LimitAcceleration * phase3T_1 * phase1T_{2.1}
+				// + lastVel * phase1T_{2.1} +dir * LimitAcceleration * phase1T_{2.1}^2
+				// - dir * LimitAcceleration/2 * (phase3T_1^2 +2*phase3T_1*phase1T_{2.1} +phase1T_{2.1}^2)
+				// = 0
+				// + lastVel * phase3T_1 - dir * LimitAcceleration/2 * phase3T_1^2
+				// + (lastVel +dir * LimitAcceleration * phase3T_1 +lastVel -dir * LimitAcceleration/2 *2*phase3T_1) * phase1T_{2.1}
+				// + (dir * LimitAcceleration / 2 +dir * LimitAcceleration - dir * LimitAcceleration/2) * phase1T_{2.1}^2
+				// It follows:
+				// 0 =
+				// [-deltaPos +lastVel * phase3T_1 - dir * LimitAcceleration/2 * phase3T_1^2]
+				// +[2 * lastVel] * phase1T_{2.1}
+				// +[dir * LimitAcceleration] * phase1T_{2.1}^2
+				// =
+				// [-deltaPos +lastVel * phase3T_1 - dir * LimitAcceleration/2 * phase3T_1^2]/[dir * LimitAcceleration]
+				// +[2 * lastVel]/[dir * LimitAcceleration] * phase1T_{2.1}
+				// +phase1T_{2.1}^2
+				// It follows:
+				// phase1T_{2.1.1}
+				// = 1/2 * (-[2 * lastVel]/[dir * LimitAcceleration]) +/- sqrt( ([2 * lastVel]/[dir * LimitAcceleration])^2 -4*([-deltaPos +lastVel * phase3T_1 - dir * LimitAcceleration/2 * phase3T_1^2]/[dir * LimitAcceleration]) )
+				// We only need the positive solution.
+				//
+				// 2.2) Assume we can hit LimitVelocity:
+				// -LimitVelocity <= lastVel + dir * LimitAcceleration * phase1T_{2.2} <= LimitVelocity	
+				// phase1T_{2.2} = (s_{2.2} * LimitVelocity -lastVel) / (dir * LimitAcceleration)
+				// s_{2.2} = dir
+				//
+				// phase1T_2 = min{phase1T_{2.1},phase1T_{2.2}}
+
+				double temp1 =
+					(2.0 * lastVel)/(dir * LimitAcceleration);
+
+				double phase1T_2d1 =
+					0.5 * ((-temp1)
+					+ sqrt(temp1*temp1 -4*(-deltaPos +lastVel * phase3T - dir * LimitAcceleration/2.0 * phase3T*phase3T)/(dir * LimitAcceleration)));
+
+				double phase1T_2d2 = (dir * LimitVelocity -lastVel) / (dir * LimitAcceleration);
+				
+				phase1T = std::min(phase1T_2d1, phase1T_2d2);
+				phase3T += phase1T;
+
+				resultDeltaPos = lastVel * phase1T +dir * LimitAcceleration/2.0 * phase1T * phase1T
+					+ (lastVel + dir * LimitAcceleration * phase1T) * phase3T -dir * LimitAcceleration/2.0 * phase3T*phase3T;
+
+				// Tier0_Msg("Step2:phase1T_2d1=%f,phase1T_2d2=%f,phase1T=%f,phase3T=%f,resultDeltaPos=%f ", phase1T_2d1, phase1T_2d2, phase1T, phase3T, resultDeltaPos);
+
+				if(
+					0 < dir && 0 < deltaPos -resultDeltaPos
+					|| 0 > dir && 0 > deltaPos -resultDeltaPos
+				)
+				{
+					// Solving Step 3 (only if we didn't (overshoot or hit) in Step 2):
+					// 
+					// phase2T is increased until deltaPos is hit.
+					//
+					// deltaPos =
+					// + lastVel * phase1T_2 +dir * LimitAcceleration / 2 * phase1T_2^2
+					// + (lastVel + dir * LimitAcceleration * phase1T_2) * phase2T_3
+					// + (lastVel + dir * LimitAcceleration * phase1T_2) * phase3T_2 -dir * LimitAcceleration/2 * phase3T_2^2
+					//
+					// phase2T_3 = [deltaPos -lastVel * phase1T_2 -dir * LimitAcceleration / 2 * phase1T_2^2
+					// -(lastVel + dir * LimitAcceleration * phase1T_2) * phase3T_2 +dir * LimitAcceleration/2 * phase3T_2^2]
+					// / (lastVel + dir * LimitAcceleration * phase1T_2)
+
+					double temp2 = lastVel + dir * LimitAcceleration * phase1T;
+
+					if(temp2)
+						phase2T = (deltaPos -lastVel * phase1T -dir * LimitAcceleration/2.0 * phase1T*phase1T
+						-(temp2) * phase3T +dir * LimitAcceleration/2.0 * phase3T*phase3T)
+						/ (temp2);
+					
+					// Tier0_Msg("Step3:phase2T=%f ", phase2T);
+				}
+			}
+
+			// Limit by deltaT:
+
+			// Tier0_Msg("Actual:phase1T=%f,phase2T=%f,phase3T=%f ", phase1T, phase2T, phase3T);
+
+			phase3T = std::max(std::min(phase1T +phase2T +phase3T, deltaT) -phase2T -phase1T, 0.0);
+			phase2T = std::max(std::min(phase1T +phase2T, deltaT) -phase1T, 0.0);
+			phase1T = std::min(phase1T, deltaT);
+
+			// Tier0_Msg("Limit:phase1T=%f,phase2T=%f,phase3T=%f ", phase1T, phase2T, phase3T);
 
 
+			lastPos += lastVel * phase1T +dir * LimitAcceleration/2.0 * phase1T * phase1T
+				+ (lastVel + dir * LimitAcceleration * phase1T) * phase2T
+				+ (lastVel + dir * LimitAcceleration * phase1T) * phase3T -dir * LimitAcceleration/2.0 * phase3T*phase3T;
+			lastVel += + dir * LimitAcceleration * phase1T - dir * LimitAcceleration * phase3T;
+			lastAccel = 0;
+			deltaT -= phase1T +phase2T +phase3T;
+
+			// Tier0_Msg("delta:%f", targetPos-lastPos);
+
+			// We always use up our time, even in case we are finished earlier:
+			deltaT = 0;
+		}
+
+		// Tier0_Msg("\n");
 	}
 }

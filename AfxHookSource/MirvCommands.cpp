@@ -2850,6 +2850,7 @@ CON_COMMAND(mirv_aim, "Aiming system control.")
 			);
 			return;
 		}
+/*
 		else
 		if(0 == _stricmp("jerkLimit", arg1))
 		{
@@ -2868,6 +2869,7 @@ CON_COMMAND(mirv_aim, "Aiming system control.")
 			);
 			return;
 		}
+*/
 		else
 		if(0 == _stricmp("origin", arg1))
 		{
@@ -2993,9 +2995,9 @@ CON_COMMAND(mirv_aim, "Aiming system control.")
 		"mirv_aim angles [...] - Target angles to use.\n"
 		"mirv_aim offset [...] - Offset in target space to aim at.\n"
 		"mirv_aim up [...] - How to determine the camera up direction.\n"
-		// does not work atm // "mirv_aim snapTo [...] - Wheter to aim non-soft or soft.\n"
-		// does not work atm // "mirv_aim velLimit [...] - Max velocity possible (for snapTo 0).\n"
-		// does not work atm // "mirv_aim accelLimit [...] - Max acceleration possible (for snapTo 0).\n"
+		"mirv_aim snapTo [...] - Wheter to aim non-soft or soft.\n"
+		"mirv_aim velLimit [...] - Max velocity possible (for snapTo 0).\n"
+		"mirv_aim accelLimit [...] - Max acceleration possible (for snapTo 0).\n"
 		// does not work atm // "mirv_aim jerkLimit [...] - Max jerk possible (for snapTo 0).\n"
 	);
 }

@@ -32,7 +32,7 @@ public:
 	bool SnapTo;
 	double LimitVelocity;
 	double LimitAcceleration;
-	double LimitJerk;
+	//double LimitJerk;
 
 	enum Origin_e {
 		O_Net,

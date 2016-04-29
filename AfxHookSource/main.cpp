@@ -2501,11 +2501,8 @@ LRESULT CALLBACK new_Afx_WindowProc(
 {
 	switch(uMsg)
 	{
-	case WM_SETFOCUS:
-		g_AfxHookSourceInput.Supply_Focus(true);
-		break;
-	case WM_KILLFOCUS:
-		g_AfxHookSourceInput.Supply_Focus(false);
+	case WM_ACTIVATE:
+		g_AfxHookSourceInput.Supply_Focus(LOWORD(wParam) != 0);
 		break;
 	case WM_CHAR:
 		if(g_AfxHookSourceInput.Supply_CharEvent(wParam, lParam))

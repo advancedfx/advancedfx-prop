@@ -6,6 +6,22 @@
 
 <release>
 <name>AfxHookSource lite</name>
+<version>1.2.x.x</version>
+<time>2016-04-22T18:47Z</time>
+<changes>
+<change type="fixed">
+Fixed mirv_input camera input focus loss detection (i.e. on ALT_TAB) (now uses WM_ACTIVATE message instread), thanks to anthony.
+</change>
+<change type="added">
+Added smooth aiming to mirv_aim (enabled by default, to disable enter mirv_aim snapTo 0).
+</change>
+
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource lite</name>
 <version>1.2.0.0</version>
 <time>2016-04-15T17:39Z</time>
 <changes>
