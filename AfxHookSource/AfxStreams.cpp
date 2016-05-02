@@ -1243,6 +1243,7 @@ void CAfxBaseFxStream::InvalidateMap(void)
 	m_Map.clear();
 }
 
+/*
 void CAfxBaseFxStream::ConvertStreamDepth(bool to24, bool depth24ZIP)
 {
 	ConvertDepthActions(to24);
@@ -1297,6 +1298,7 @@ void CAfxBaseFxStream::ConvertDepthAction(CAction * & action, bool to24)
 		if(isDepth24) SetAction(action, m_Shared.DepthAction_get());
 	}
 }
+*/
 
 void CAfxBaseFxStream::BindAction(CAction * action)
 {
@@ -1341,16 +1343,41 @@ CAfxBaseFxStream::CShared::CShared()
 {
 	CreateStdAction(m_DrawAction, CActionKey("draw"), new CAction());
 	CreateStdAction(m_NoDrawAction, CActionKey("noDraw"), new CActionNoDraw());
-	CreateAction(CActionKey("invisible"), new CActionNoDraw(), true);
 
 	CreateStdAction(m_DebugDumpAction, CActionKey("debugDump (don't use)"), new CActionDebugDump());
 
-	m_DepthAction = 0; // CreateStdAction(m_DepthAction, CActionKey("drawDepth"), new CActionStandardResolve(CActionStandardResolve::RF_DrawDepth, m_NoDrawAction));
-	m_Depth24Action = 0; // CreateStdAction(m_Depth24Action, CActionKey("drawDepth24"), new CActionStandardResolve(CActionStandardResolve::RF_DrawDepth24, m_NoDrawAction));
-	m_MaskAction = 0; // CreateStdAction(m_MaskAction, CActionKey("mask"), new CActionStandardResolve(CActionStandardResolve::RF_GreenScreen, m_NoDrawAction));
-	m_WhiteAction = 0; // CreateStdAction(m_WhiteAction, CActionKey("white"), new CActionStandardResolve(CActionStandardResolve::RF_White, m_NoDrawAction));
-	m_BlackAction = 0; // CreateStdAction(m_BlackAction, CActionKey("black"), new CActionStandardResolve(CActionStandardResolve::RF_Black, m_NoDrawAction));
+	CreateStdAction(m_DepthAction, CActionKey("drawDepth"), new CActionDebugDepth(m_NoDrawAction));
+	// CreateStdAction(m_DepthAction, CActionKey("drawDepth"), new CActionStandardResolve(CActionStandardResolve::RF_DrawDepth, m_NoDrawAction));
 
+	/*
+	m_Depth24Action =CreateStdAction(m_Depth24Action, CActionKey("drawDepth24"), new CActionStandardResolve(CActionStandardResolve::RF_DrawDepth24, m_NoDrawAction));
+	*/
+	{
+		CActionReplace * action = new CActionReplace("afx/greenmatte", m_NoDrawAction);
+		float color[3]={0,1,0};
+		action->OverrideColor(color);
+		CreateStdAction(m_MaskAction, CActionKey("mask"), action);
+	}
+	// CreateStdAction(m_MaskAction, CActionKey("mask"), new CActionStandardResolve(CActionStandardResolve::RF_GreenScreen, m_NoDrawAction));
+
+	{
+		CActionReplace * action = new CActionReplace("afx/white", m_NoDrawAction);
+		float color[3]={1,1,1};
+		action->OverrideColor(color);
+		CreateStdAction(m_WhiteAction, CActionKey("white"), action);
+	}
+	// CreateStdAction(m_WhiteAction, CActionKey("white"), new CActionStandardResolve(CActionStandardResolve::RF_White, m_NoDrawAction));
+
+	{
+		CActionReplace * action = new CActionReplace("afx/black", m_NoDrawAction);
+		float color[3]={0,0,0};
+		action->OverrideColor(color);
+		CreateStdAction(m_BlackAction, CActionKey("black"), action);
+	}
+	// CreateStdAction(m_BlackAction, CActionKey("black"), new CActionStandardResolve(CActionStandardResolve::RF_Black, m_NoDrawAction));
+
+	// legacy actions:
+	CreateAction(CActionKey("invisible"), new CActionNoDraw(), true);
 	CreateAction(CActionKey("debugDepth"), new CActionDebugDepth(m_NoDrawAction), true);
 }
 
@@ -1365,7 +1392,9 @@ CAfxBaseFxStream::CShared::~CShared()
 	if(m_NoDrawAction) m_NoDrawAction->Release();
 	if(m_DebugDumpAction) m_DebugDumpAction->Release();
 	if(m_DepthAction) m_DepthAction->Release();
+	/*
 	if(m_Depth24Action) m_Depth24Action->Release();
+	*/
 	if(m_MaskAction) m_MaskAction->Release();
 	if(m_WhiteAction) m_WhiteAction->Release();
 	if(m_BlackAction) m_BlackAction->Release();
@@ -1557,10 +1586,12 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::CShared::DepthAction_get(void)
 	return m_DepthAction;
 }
 
+/*
 CAfxBaseFxStream::CAction * CAfxBaseFxStream::CShared::Depth24Action_get(void)
 {
 	return m_Depth24Action;
 }
+*/
 
 CAfxBaseFxStream::CAction * CAfxBaseFxStream::CShared::MaskAction_get(void)
 {
@@ -3511,8 +3542,7 @@ void CAfxStreams::Console_AddDeveloperStream(const char * streamName)
 
 void CAfxStreams::Console_AddDepthStream(const char * streamName)
 {
-	Tier0_Warning("Due to CS:GO 17th Ferbuary 2016 update this stream is not working.\nFor an alternative enter this once into console: exec afx/updateWorkaround\nRead more / support us on Twitter: https://twitter.com/dtugend/status/700669548115066880 \n");
-	return;
+	Tier0_Warning("Warning: Due to CS:GO 17th Ferbuary 2016 update this stream is not working perfectly.\n");
 
 	if(!Console_CheckStreamName(streamName))
 		return;
@@ -3522,8 +3552,7 @@ void CAfxStreams::Console_AddDepthStream(const char * streamName)
 
 void CAfxStreams::Console_AddMatteWorldStream(const char * streamName)
 {
-	Tier0_Warning("Due to CS:GO 17th Ferbuary 2016 update this stream is not working.\nFor an alternative enter this once into console: exec afx/updateWorkaround\nRead more / support us on Twitter: https://twitter.com/dtugend/status/700669548115066880 \n");
-	return;
+	Tier0_Warning("Warning: Due to CS:GO 17th Ferbuary 2016 update this stream is not working perfectly.\n");
 
 	if(!Console_CheckStreamName(streamName))
 		return;
@@ -3533,8 +3562,7 @@ void CAfxStreams::Console_AddMatteWorldStream(const char * streamName)
 
 void CAfxStreams::Console_AddDepthWorldStream(const char * streamName)
 {
-	Tier0_Warning("Due to CS:GO 17th Ferbuary 2016 update this stream is not working.\nFor an alternative enter this once into console: exec afx/updateWorkaround\nRead more / support us on Twitter: https://twitter.com/dtugend/status/700669548115066880 \n");
-	return;
+	Tier0_Warning("Warning: Due to CS:GO 17th Ferbuary 2016 update this stream is not working perfectly.\n");
 
 	if(!Console_CheckStreamName(streamName))
 		return;
@@ -3544,8 +3572,7 @@ void CAfxStreams::Console_AddDepthWorldStream(const char * streamName)
 
 void CAfxStreams::Console_AddMatteEntityStream(const char * streamName)
 {
-	Tier0_Warning("Due to CS:GO 17th Ferbuary 2016 update this stream is not working.\nFor an alternative enter this once into console: exec afx/updateWorkaround\nRead more / support us on Twitter: https://twitter.com/dtugend/status/700669548115066880 \n");
-	return;
+	Tier0_Warning("Warning: Due to CS:GO 17th Ferbuary 2016 update this stream is not working perfectly.\n");
 
 	if(!Console_CheckStreamName(streamName))
 		return;
@@ -3557,8 +3584,7 @@ void CAfxStreams::Console_AddMatteEntityStream(const char * streamName)
 
 void CAfxStreams::Console_AddDepthEntityStream(const char * streamName)
 {
-	Tier0_Warning("Due to CS:GO 17th Ferbuary 2016 update this stream is not working.\nFor an alternative enter this once into console: exec afx/updateWorkaround\nRead more / support us on Twitter: https://twitter.com/dtugend/status/700669548115066880 \n");
-	return;
+	Tier0_Warning("Warning: Due to CS:GO 17th Ferbuary 2016 update this stream is not working perfectly.\n");
 
 	if(!Console_CheckStreamName(streamName))
 		return;
@@ -3568,8 +3594,7 @@ void CAfxStreams::Console_AddDepthEntityStream(const char * streamName)
 
 void CAfxStreams::Console_AddAlphaMatteStream(const char * streamName)
 {
-	Tier0_Warning("Due to CS:GO 17th Ferbuary 2016 update this stream is not working.\nFor an alternative enter this once into console: exec afx/updateWorkaround\nRead more / support us on Twitter: https://twitter.com/dtugend/status/700669548115066880 \n");
-	return;
+	Tier0_Warning("Warning: Due to CS:GO 17th Ferbuary 2016 update this stream is not working perfectly.\n");
 
 	if(!Console_CheckStreamName(streamName))
 		return;
@@ -3579,8 +3604,7 @@ void CAfxStreams::Console_AddAlphaMatteStream(const char * streamName)
 
 void CAfxStreams::Console_AddAlphaEntityStream(const char * streamName)
 {
-	Tier0_Warning("Due to CS:GO 17th Ferbuary 2016 update this stream is not working.\nFor an alternative enter this once into console: exec afx/updateWorkaround\nRead more / support us on Twitter: https://twitter.com/dtugend/status/700669548115066880 \n");
-	return;
+	Tier0_Warning("Warning: Due to CS:GO 17th Ferbuary 2016 update this stream is not working perfectly.\n");
 
 	if(!Console_CheckStreamName(streamName))
 		return;
@@ -3590,8 +3614,7 @@ void CAfxStreams::Console_AddAlphaEntityStream(const char * streamName)
 
 void CAfxStreams::Console_AddAlphaWorldStream(const char * streamName)
 {
-	Tier0_Warning("Due to CS:GO 17th Ferbuary 2016 update this stream is not working.\nFor an alternative enter this once into console: exec afx/updateWorkaround\nRead more / support us on Twitter: https://twitter.com/dtugend/status/700669548115066880 \n");
-	return;
+	Tier0_Warning("Warning: Due to CS:GO 17th Ferbuary 2016 update this stream is not working perfectly.\n");
 
 	if(!Console_CheckStreamName(streamName))
 		return;
@@ -3601,8 +3624,7 @@ void CAfxStreams::Console_AddAlphaWorldStream(const char * streamName)
 
 void CAfxStreams::Console_AddAlphaMatteEntityStream(const char * streamName)
 {
-	Tier0_Warning("Due to CS:GO 17th Ferbuary 2016 update this stream is not working.\nFor an alternative enter this once into console: exec afx/updateWorkaround\nRead more / support us on Twitter: https://twitter.com/dtugend/status/700669548115066880 \n");
-	return;
+	Tier0_Warning("Warning: Due to CS:GO 17th Ferbuary 2016 update this stream is not working perfectly.\n");
 
 	if(!Console_CheckStreamName(streamName))
 		return;
@@ -4699,6 +4721,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 			else
 			if(!_stricmp(cmd0, "man"))
 			{
+				/*
 				if(2 <= argc)
 				{
 					char const * cmd1 = args->ArgV(argcOffset +1);
@@ -4729,7 +4752,8 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, cmdPrefix
 					, cmdPrefix
-				);
+				);*/
+				Tier0_Warning("Warning: Due to CS:GO 17th Ferbuary 2016 update this feature is not available.\n");
 				return;
 			}
 		}

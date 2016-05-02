@@ -59,7 +59,7 @@ Aiming::Aiming()
 , SoftDeactivate(false)
 , EntityIndex(-1)
 , OffSet(0.0,0.0,0.0)
-, SnapTo(false)
+, SnapTo(true)
 , LimitVelocity(360)
 , LimitAcceleration(90)
 //, LimitJerk(0.01)
@@ -67,11 +67,8 @@ Aiming::Aiming()
 , Angles(A_Net)
 , Up(U_World)
 , m_YPitchVelocity(0)
-, m_YPitchAcceleration(0)
 , m_ZYawVelocity(0)
-, m_ZYawAcceleration(0)
 , m_XRollVelocity(0)
-, m_XRollAcceleration(0)
 , LastTargetOrigin(0, 0, 0)
 , LastYPitch(0)
 , LastZYaw(0)
@@ -156,15 +153,15 @@ bool Aiming::Aim(double deltaT, Vector3 const camOrigin, double & yPitch, double
 			// apply re-aiming:
 
 			//Tier0_Msg("+++pitch+++\n");
-			CalcSmooth(deltaT, LastYPitch +reaimYPitch, LastYPitch, m_YPitchVelocity, m_YPitchAcceleration);
+			CalcSmooth(deltaT, LastYPitch +reaimYPitch, LastYPitch, m_YPitchVelocity);
 			yPitch = LastYPitch;
 
 			//Tier0_Msg("+++yaw+++\n");
-			CalcSmooth(deltaT, LastZYaw +reaimZYaw, LastZYaw, m_ZYawVelocity, m_ZYawAcceleration);
+			CalcSmooth(deltaT, LastZYaw +reaimZYaw, LastZYaw, m_ZYawVelocity);
 			zYaw = LastZYaw;
 
 			//Tier0_Msg("+++roll+++\n");
-			CalcSmooth(deltaT, LastXRoll +reaimXRoll, LastXRoll, m_XRollVelocity, m_XRollAcceleration);
+			CalcSmooth(deltaT, LastXRoll +reaimXRoll, LastXRoll, m_XRollVelocity);
 			xRoll = LastXRoll;
 
 			camRotationChanged = true;
@@ -173,11 +170,8 @@ bool Aiming::Aim(double deltaT, Vector3 const camOrigin, double & yPitch, double
 	else
 	{
 		m_YPitchVelocity = 0;
-		m_YPitchAcceleration = 0;
 		m_ZYawVelocity = 0;
-		m_ZYawAcceleration = 0;
 		m_XRollVelocity = 0;
-		m_XRollAcceleration = 0;
 	}
 
 	// Force remembered angels to be in [-180°, 180°)
@@ -200,7 +194,7 @@ void Aiming::TargetPointFromLast(Vector3 offset)
 	TargetPoint(LastTargetOrigin +offset);
 }
 
-void Aiming::CalcSmooth(double deltaT, double targetPos, double & lastPos, double & lastVel, double & lastAccel)
+void Aiming::CalcSmooth(double deltaT, double targetPos, double & lastPos, double & lastVel)
 {
 	if(deltaT <= 0)
 		return;
@@ -209,13 +203,12 @@ void Aiming::CalcSmooth(double deltaT, double targetPos, double & lastPos, doubl
 	// https://www.physicsforums.com/threads/3rd-order-motion-profile-programming-sinusoidal.868148/
 
 	// However that is way too complicated for now so we try s.th. easier for now,
-	// a 2nd order motion profile that is sort of trapezoidal:
+	// a 2nd order motion profile that has sort of trapezoidal velocity profile:
 
 	// Objective:
 	//
 	// For the _normal_ case
-	// we build a third order motion profile
-	// (sort of sinusoidal):
+	// we build the 2nd order motion profile:
 	//
 	// phaseT_k is the (positive) phase time.
 	//
@@ -285,16 +278,12 @@ void Aiming::CalcSmooth(double deltaT, double targetPos, double & lastPos, doubl
 	// 1) Position error: abs(deltaPos -resultDeltaPos)
 	// 2) Position time: phase1T +phase2T +phase3T +phase4T +phase5T +phase6T +phase7T
 
-	//Tier0_Msg("%f: delta=%f lastVel=%f ",deltaT, targetPos-lastPos, lastVel);
-
 	while(0 < deltaT)
 	{
 		//Tier0_Msg("%f ", deltaT);
 
 		if(lastVel > LimitVelocity)
 		{
-			// Tier0_Msg("lastVel > LimitVelocity");
-
 			// Error condition.
 			
 			// Solving Step:
@@ -311,14 +300,11 @@ void Aiming::CalcSmooth(double deltaT, double targetPos, double & lastPos, doubl
 
 			lastPos += lastVel * phaseT - LimitAcceleration / 2.0 * phaseT * phaseT;
 			lastVel += -LimitAcceleration * phaseT;
-			lastAccel = 0;
 			deltaT -= phaseT;
 		}
 		else
 		if(lastVel < -LimitVelocity)
 		{
-			// Tier0_Msg("lastVel < -LimitVelocity");
-
 			// Error condition.
 			
 			// Solving Step:
@@ -335,7 +321,6 @@ void Aiming::CalcSmooth(double deltaT, double targetPos, double & lastPos, doubl
 
 			lastPos += lastVel * phaseT + LimitAcceleration / 2.0 * phaseT * phaseT;
 			lastVel += +LimitAcceleration * phaseT;
-			lastAccel = 0;
 			deltaT -= phaseT;
 		}
 		else
@@ -356,9 +341,6 @@ void Aiming::CalcSmooth(double deltaT, double targetPos, double & lastPos, doubl
 			//
 			// It follows:
 			// phase3T_1 = lastVel / (dir * limitAcceleration)
-			//
-			// It follows:
-			// dir = 1 in case 0 <= lastVel otherwise -1
 
 			double deltaPos = targetPos -lastPos;
 
@@ -367,8 +349,6 @@ void Aiming::CalcSmooth(double deltaT, double targetPos, double & lastPos, doubl
 
 			double resultDeltaPos = lastVel * phase3T -dir * LimitAcceleration/2.0 * phase3T * phase3T;
 
-			// Tier0_Msg("Step1:dir=%f,phase3T=%f,resultDeltaPos=%f ", dir, phase3T, resultDeltaPos);
-			
 			if(
 				0 < dir && 0 < deltaPos -resultDeltaPos
 				|| 0 > dir && 0 > deltaPos -resultDeltaPos
@@ -431,8 +411,6 @@ void Aiming::CalcSmooth(double deltaT, double targetPos, double & lastPos, doubl
 				resultDeltaPos = lastVel * phase1T +dir * LimitAcceleration/2.0 * phase1T * phase1T
 					+ (lastVel + dir * LimitAcceleration * phase1T) * phase3T -dir * LimitAcceleration/2.0 * phase3T*phase3T;
 
-				// Tier0_Msg("Step2:phase1T_2d1=%f,phase1T_2d2=%f,phase1T=%f,phase3T=%f,resultDeltaPos=%f ", phase1T_2d1, phase1T_2d2, phase1T, phase3T, resultDeltaPos);
-
 				if(
 					0 < dir && 0 < deltaPos -resultDeltaPos
 					|| 0 > dir && 0 > deltaPos -resultDeltaPos
@@ -457,35 +435,25 @@ void Aiming::CalcSmooth(double deltaT, double targetPos, double & lastPos, doubl
 						phase2T = (deltaPos -lastVel * phase1T -dir * LimitAcceleration/2.0 * phase1T*phase1T
 						-(temp2) * phase3T +dir * LimitAcceleration/2.0 * phase3T*phase3T)
 						/ (temp2);
-					
-					// Tier0_Msg("Step3:phase2T=%f ", phase2T);
 				}
 			}
 
 			// Limit by deltaT:
 
-			// Tier0_Msg("Actual:phase1T=%f,phase2T=%f,phase3T=%f ", phase1T, phase2T, phase3T);
-
 			phase3T = std::max(std::min(phase1T +phase2T +phase3T, deltaT) -phase2T -phase1T, 0.0);
 			phase2T = std::max(std::min(phase1T +phase2T, deltaT) -phase1T, 0.0);
 			phase1T = std::min(phase1T, deltaT);
-
-			// Tier0_Msg("Limit:phase1T=%f,phase2T=%f,phase3T=%f ", phase1T, phase2T, phase3T);
 
 
 			lastPos += lastVel * phase1T +dir * LimitAcceleration/2.0 * phase1T * phase1T
 				+ (lastVel + dir * LimitAcceleration * phase1T) * phase2T
 				+ (lastVel + dir * LimitAcceleration * phase1T) * phase3T -dir * LimitAcceleration/2.0 * phase3T*phase3T;
 			lastVel += + dir * LimitAcceleration * phase1T - dir * LimitAcceleration * phase3T;
-			lastAccel = 0;
 			deltaT -= phase1T +phase2T +phase3T;
 
-			// Tier0_Msg("delta:%f", targetPos-lastPos);
-
-			// We always use up our time, even in case we are finished earlier:
-			deltaT = 0;
+			// If we can consider to be finished, then we use-up the time completely:
+			if(abs(targetPos-lastPos) <= AFX_MATH_EPS && abs(0 -lastVel) <= AFX_MATH_EPS)
+				deltaT = 0;
 		}
-
-		// Tier0_Msg("\n");
 	}
 }

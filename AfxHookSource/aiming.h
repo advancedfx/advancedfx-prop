@@ -52,17 +52,14 @@ public:
 private:
 	Vector3 LastTargetOrigin;
 	double m_YPitchVelocity;
-	double m_YPitchAcceleration;
 	double m_ZYawVelocity;
-	double m_ZYawAcceleration;
 	double m_XRollVelocity;
-	double m_XRollAcceleration;
 	double LastYPitch;
 	double LastZYaw;
 	double LastXRoll;
 	bool m_Deactivating;
 
-	void CalcSmooth(double deltaT, double targetPos, double & lastPos, double & lastVel, double & lastAccel);
+	void CalcSmooth(double deltaT, double targetPos, double & lastPos, double & lastVel);
 };
 
 extern Aiming g_Aiming;

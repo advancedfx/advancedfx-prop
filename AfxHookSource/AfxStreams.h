@@ -525,12 +525,14 @@ public:
 
 	void InvalidateMap(void);
 
+	/*
 	/// <pram name="to24">false: depth24 to depth; true: depth to depth24</param>
 	/// <pram name="depth24ZIP">if not to24, then set SCT_Normal otherwise: false: set capturetype SCT_Depth24; true: set capturetype SCT_Depth24ZIP</param>
 	void ConvertStreamDepth(bool to24, bool depth24ZIP);
 
 	/// <pram name="to24">false: depth24 to depth; true: depth to depth24</param>
 	void ConvertDepthActions(bool to24);
+	*/
 
 protected:
 	class CShared
@@ -554,7 +556,7 @@ protected:
 		CAction * DrawAction_get(void);
 		CAction * NoDrawAction_get(void);
 		CAction * DepthAction_get(void);
-		CAction * Depth24Action_get(void);
+		//CAction * Depth24Action_get(void);
 		CAction * MaskAction_get(void);
 		CAction * WhiteAction_get(void);
 		CAction * BlackAction_get(void);
@@ -567,7 +569,7 @@ protected:
 		CAction * m_NoDrawAction;
 		CAction * m_DebugDumpAction;
 		CAction * m_DepthAction;
-		CAction * m_Depth24Action;
+		//CAction * m_Depth24Action;
 		CAction * m_MaskAction;
 		CAction * m_WhiteAction;
 		CAction * m_BlackAction;
@@ -1088,7 +1090,9 @@ private:
 	CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * material);
 	CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * material, CAction * action);
 
+	/*
 	void ConvertDepthAction(CAction * & action, bool to24);
+	*/
 
 	void BindAction(CAction * action);
 };
@@ -1099,6 +1103,7 @@ class CAfxDepthStream
 public:
 	CAfxDepthStream() : CAfxBaseFxStream()
 	{
+		/*
 		SetAction(m_ClientEffectTexturesAction, m_Shared.DepthAction_get());
 		SetAction(m_WorldTexturesAction, m_Shared.DepthAction_get());
 		SetAction(m_SkyBoxTexturesAction, m_Shared.DepthAction_get());
@@ -1116,6 +1121,25 @@ public:
 		SetAction(m_StickerAction, m_Shared.DepthAction_get());
 		SetAction(m_ErrorMaterialAction, m_Shared.DepthAction_get());
 		SetAction(m_OtherAction, m_Shared.DepthAction_get());
+		*/
+
+		SetAction(m_ClientEffectTexturesAction, m_Shared.NoDrawAction_get());
+		SetAction(m_WorldTexturesAction, m_Shared.DepthAction_get());
+		SetAction(m_SkyBoxTexturesAction, m_Shared.DepthAction_get());
+		SetAction(m_StaticPropTexturesAction, m_Shared.DepthAction_get());
+		SetAction(m_CableAction, m_Shared.NoDrawAction_get());
+		SetAction(m_PlayerModelsAction, m_Shared.DepthAction_get());
+		SetAction(m_WeaponModelsAction, m_Shared.DepthAction_get());
+		SetAction(m_StatTrakAction, m_Shared.DepthAction_get());
+		SetAction(m_ShellModelsAction, m_Shared.DepthAction_get());
+		SetAction(m_OtherModelsAction, m_Shared.DepthAction_get());
+		SetAction(m_DecalTexturesAction, m_Shared.NoDrawAction_get());
+		SetAction(m_EffectsAction, m_Shared.NoDrawAction_get());
+		SetAction(m_ShellParticleAction, m_Shared.NoDrawAction_get());
+		SetAction(m_OtherParticleAction, m_Shared.NoDrawAction_get());
+		SetAction(m_StickerAction, m_Shared.NoDrawAction_get());
+		SetAction(m_ErrorMaterialAction, m_Shared.DepthAction_get());
+		SetAction(m_OtherAction, m_Shared.DepthAction_get());
 	}
 
 	virtual ~CAfxDepthStream() {}
@@ -1129,6 +1153,26 @@ class CAfxMatteWorldStream
 public:
 	CAfxMatteWorldStream() : CAfxBaseFxStream()
 	{
+		/*
+		SetAction(m_ClientEffectTexturesAction, m_Shared.DrawAction_get());
+		SetAction(m_WorldTexturesAction, m_Shared.DrawAction_get());
+		SetAction(m_SkyBoxTexturesAction, m_Shared.DrawAction_get());
+		SetAction(m_StaticPropTexturesAction, m_Shared.DrawAction_get());
+		SetAction(m_CableAction,  m_Shared.DrawAction_get());
+		SetAction(m_PlayerModelsAction, m_Shared.NoDrawAction_get());
+		SetAction(m_WeaponModelsAction, m_Shared.NoDrawAction_get());
+		SetAction(m_StatTrakAction, m_Shared.NoDrawAction_get());
+		SetAction(m_ShellModelsAction, m_Shared.NoDrawAction_get());
+		SetAction(m_OtherModelsAction, m_Shared.DrawAction_get());
+		SetAction(m_DecalTexturesAction, m_Shared.DrawAction_get());
+		SetAction(m_EffectsAction, m_Shared.DrawAction_get());
+		SetAction(m_ShellParticleAction, m_Shared.NoDrawAction_get());
+		SetAction(m_OtherParticleAction, m_Shared.DrawAction_get());
+		SetAction(m_StickerAction, m_Shared.NoDrawAction_get());
+		SetAction(m_ErrorMaterialAction, m_Shared.DrawAction_get());
+		SetAction(m_OtherAction, m_Shared.DrawAction_get());
+		*/
+
 		SetAction(m_ClientEffectTexturesAction, m_Shared.DrawAction_get());
 		SetAction(m_WorldTexturesAction, m_Shared.DrawAction_get());
 		SetAction(m_SkyBoxTexturesAction, m_Shared.DrawAction_get());
@@ -1159,6 +1203,7 @@ class CAfxDepthWorldStream
 public:
 	CAfxDepthWorldStream() : CAfxBaseFxStream()
 	{
+		/*
 		SetAction(m_ClientEffectTexturesAction, m_Shared.DepthAction_get());
 		SetAction(m_WorldTexturesAction, m_Shared.DepthAction_get());
 		SetAction(m_SkyBoxTexturesAction, m_Shared.DepthAction_get());
@@ -1176,6 +1221,25 @@ public:
 		SetAction(m_StickerAction, m_Shared.NoDrawAction_get());
 		SetAction(m_ErrorMaterialAction, m_Shared.DepthAction_get());
 		SetAction(m_OtherAction, m_Shared.DepthAction_get());
+		*/
+
+		SetAction(m_ClientEffectTexturesAction, m_Shared.NoDrawAction_get());
+		SetAction(m_WorldTexturesAction, m_Shared.DepthAction_get());
+		SetAction(m_SkyBoxTexturesAction, m_Shared.DepthAction_get());
+		SetAction(m_StaticPropTexturesAction, m_Shared.DepthAction_get());
+		SetAction(m_CableAction, m_Shared.NoDrawAction_get());
+		SetAction(m_PlayerModelsAction, m_Shared.NoDrawAction_get());
+		SetAction(m_WeaponModelsAction, m_Shared.NoDrawAction_get());
+		SetAction(m_StatTrakAction, m_Shared.NoDrawAction_get());
+		SetAction(m_ShellModelsAction, m_Shared.NoDrawAction_get());
+		SetAction(m_OtherModelsAction, m_Shared.DepthAction_get());
+		SetAction(m_DecalTexturesAction, m_Shared.NoDrawAction_get());
+		SetAction(m_EffectsAction, m_Shared.NoDrawAction_get());
+		SetAction(m_ShellParticleAction, m_Shared.NoDrawAction_get());
+		SetAction(m_OtherParticleAction, m_Shared.NoDrawAction_get());
+		SetAction(m_StickerAction, m_Shared.NoDrawAction_get());
+		SetAction(m_ErrorMaterialAction, m_Shared.DepthAction_get());
+		SetAction(m_OtherAction, m_Shared.DepthAction_get());
 	}
 
 	virtual ~CAfxDepthWorldStream() {}
@@ -1189,6 +1253,7 @@ class CAfxMatteEntityStream
 public:
 	CAfxMatteEntityStream() : CAfxBaseFxStream()
 	{
+		/*
 		SetAction(m_ClientEffectTexturesAction, m_Shared.MaskAction_get());
 		SetAction(m_WorldTexturesAction, m_Shared.MaskAction_get());
 		SetAction(m_SkyBoxTexturesAction, m_Shared.MaskAction_get());
@@ -1206,6 +1271,28 @@ public:
 		SetAction(m_StickerAction, m_Shared.DrawAction_get());
 		SetAction(m_ErrorMaterialAction, m_Shared.MaskAction_get());
 		SetAction(m_OtherAction, m_Shared.MaskAction_get());
+		*/
+
+		SetAction(m_ClientEffectTexturesAction, m_Shared.NoDrawAction_get());
+		SetAction(m_WorldTexturesAction, m_Shared.MaskAction_get());
+		SetAction(m_SkyBoxTexturesAction, m_Shared.MaskAction_get());
+		SetAction(m_StaticPropTexturesAction, m_Shared.MaskAction_get());
+		SetAction(m_CableAction, m_Shared.NoDrawAction_get());
+		SetAction(m_PlayerModelsAction, m_Shared.DrawAction_get());
+		SetAction(m_WeaponModelsAction, m_Shared.DrawAction_get());
+		SetAction(m_StatTrakAction, m_Shared.DrawAction_get());
+		SetAction(m_ShellModelsAction, m_Shared.DrawAction_get());
+		SetAction(m_OtherModelsAction, m_Shared.MaskAction_get());
+		SetAction(m_DecalTexturesAction, m_Shared.NoDrawAction_get());
+		SetAction(m_EffectsAction, m_Shared.NoDrawAction_get());
+		SetAction(m_ShellParticleAction, m_Shared.DrawAction_get());
+		SetAction(m_OtherParticleAction, m_Shared.NoDrawAction_get());
+		SetAction(m_StickerAction, m_Shared.DrawAction_get());
+		SetAction(m_ErrorMaterialAction, m_Shared.MaskAction_get());
+		SetAction(m_OtherAction, m_Shared.NoDrawAction_get());
+
+		this->SmokeOverlayAlphaFactor_set(0.01f);
+		Console_ActionFilter_Add("effects/overlaysmoke", m_Shared.NoDrawAction_get());
 	}
 
 	virtual ~CAfxMatteEntityStream() {}
@@ -1214,33 +1301,8 @@ protected:
 };
 
 class CAfxDepthEntityStream
-: public CAfxBaseFxStream
+: public CAfxDepthStream
 {
-public:
-	CAfxDepthEntityStream() : CAfxBaseFxStream()
-	{
-		SetAction(m_ClientEffectTexturesAction, m_Shared.DepthAction_get());
-		SetAction(m_WorldTexturesAction, m_Shared.DepthAction_get());
-		SetAction(m_SkyBoxTexturesAction, m_Shared.DepthAction_get());
-		SetAction(m_StaticPropTexturesAction, m_Shared.DepthAction_get());
-		SetAction(m_CableAction, m_Shared.DepthAction_get());
-		SetAction(m_PlayerModelsAction, m_Shared.DepthAction_get());
-		SetAction(m_WeaponModelsAction, m_Shared.DepthAction_get());
-		SetAction(m_StatTrakAction, m_Shared.DepthAction_get());
-		SetAction(m_ShellModelsAction, m_Shared.DepthAction_get());
-		SetAction(m_OtherModelsAction, m_Shared.DepthAction_get());
-		SetAction(m_DecalTexturesAction, m_Shared.DepthAction_get());
-		SetAction(m_EffectsAction, m_Shared.DepthAction_get());
-		SetAction(m_ShellParticleAction, m_Shared.DepthAction_get());
-		SetAction(m_OtherParticleAction, m_Shared.DepthAction_get());
-		SetAction(m_StickerAction, m_Shared.DepthAction_get());
-		SetAction(m_ErrorMaterialAction, m_Shared.DepthAction_get());
-		SetAction(m_OtherAction, m_Shared.DepthAction_get());
-	}
-
-	virtual ~CAfxDepthEntityStream() {}
-
-protected:
 };
 
 class CAfxAlphaMatteStream
@@ -1249,6 +1311,7 @@ class CAfxAlphaMatteStream
 public:
 	CAfxAlphaMatteStream() : CAfxBaseFxStream()
 	{
+		/*
 		SetAction(m_ClientEffectTexturesAction, m_Shared.BlackAction_get());
 		SetAction(m_WorldTexturesAction, m_Shared.BlackAction_get());
 		SetAction(m_SkyBoxTexturesAction, m_Shared.BlackAction_get());
@@ -1266,6 +1329,27 @@ public:
 		SetAction(m_StickerAction, m_Shared.WhiteAction_get());
 		SetAction(m_ErrorMaterialAction, m_Shared.BlackAction_get());
 		SetAction(m_OtherAction, m_Shared.BlackAction_get());
+		*/
+		SetAction(m_ClientEffectTexturesAction, m_Shared.NoDrawAction_get());
+		SetAction(m_WorldTexturesAction, m_Shared.BlackAction_get());
+		SetAction(m_SkyBoxTexturesAction, m_Shared.BlackAction_get());
+		SetAction(m_StaticPropTexturesAction, m_Shared.BlackAction_get());
+		SetAction(m_CableAction, m_Shared.NoDrawAction_get());
+		SetAction(m_PlayerModelsAction, m_Shared.WhiteAction_get());
+		SetAction(m_WeaponModelsAction, m_Shared.WhiteAction_get());
+		SetAction(m_StatTrakAction, m_Shared.WhiteAction_get());
+		SetAction(m_ShellModelsAction, m_Shared.WhiteAction_get());
+		SetAction(m_OtherModelsAction, m_Shared.BlackAction_get());
+		SetAction(m_DecalTexturesAction, m_Shared.NoDrawAction_get());
+		SetAction(m_EffectsAction, m_Shared.NoDrawAction_get());
+		SetAction(m_ShellParticleAction, m_Shared.NoDrawAction_get());
+		SetAction(m_OtherParticleAction, m_Shared.NoDrawAction_get());
+		SetAction(m_StickerAction, m_Shared.WhiteAction_get());
+		SetAction(m_ErrorMaterialAction, m_Shared.BlackAction_get());
+		SetAction(m_OtherAction, m_Shared.BlackAction_get());
+
+		this->SmokeOverlayAlphaFactor_set(0.01f);
+		Console_ActionFilter_Add("effects/overlaysmoke", m_Shared.NoDrawAction_get());
 	}
 
 	virtual ~CAfxAlphaMatteStream() {}
@@ -1310,6 +1394,7 @@ class CAfxAlphaWorldStream
 public:
 	CAfxAlphaWorldStream() : CAfxBaseFxStream()
 	{
+		/*
 		SetAction(m_ClientEffectTexturesAction, m_Shared.DrawAction_get());
 		SetAction(m_WorldTexturesAction, m_Shared.DrawAction_get());
 		SetAction(m_SkyBoxTexturesAction, m_Shared.DrawAction_get());
@@ -1323,6 +1408,25 @@ public:
 		SetAction(m_DecalTexturesAction, m_Shared.DrawAction_get());
 		SetAction(m_EffectsAction, m_Shared.DrawAction_get());
 		SetAction(m_ShellParticleAction, m_Shared.NoDrawAction_get());
+		SetAction(m_OtherParticleAction, m_Shared.DrawAction_get());
+		SetAction(m_StickerAction, m_Shared.NoDrawAction_get());
+		SetAction(m_ErrorMaterialAction, m_Shared.DrawAction_get());
+		SetAction(m_OtherAction, m_Shared.DrawAction_get());
+		*/
+
+		SetAction(m_ClientEffectTexturesAction, m_Shared.DrawAction_get());
+		SetAction(m_WorldTexturesAction, m_Shared.DrawAction_get());
+		SetAction(m_SkyBoxTexturesAction, m_Shared.DrawAction_get());
+		SetAction(m_StaticPropTexturesAction, m_Shared.DrawAction_get());
+		SetAction(m_CableAction, m_Shared.DrawAction_get());
+		SetAction(m_PlayerModelsAction, m_Shared.NoDrawAction_get());
+		SetAction(m_WeaponModelsAction, m_Shared.NoDrawAction_get());
+		SetAction(m_StatTrakAction, m_Shared.NoDrawAction_get());
+		SetAction(m_ShellModelsAction, m_Shared.NoDrawAction_get());
+		SetAction(m_OtherModelsAction, m_Shared.DrawAction_get());
+		SetAction(m_DecalTexturesAction, m_Shared.DrawAction_get());
+		SetAction(m_EffectsAction, m_Shared.DrawAction_get());
+		SetAction(m_ShellParticleAction, m_Shared.DrawAction_get());
 		SetAction(m_OtherParticleAction, m_Shared.DrawAction_get());
 		SetAction(m_StickerAction, m_Shared.NoDrawAction_get());
 		SetAction(m_ErrorMaterialAction, m_Shared.DrawAction_get());

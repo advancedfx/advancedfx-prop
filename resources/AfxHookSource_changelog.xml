@@ -6,16 +6,22 @@
 
 <release>
 <name>AfxHookSource lite</name>
-<version>1.2.x.x</version>
-<time>2016-04-22T18:47Z</time>
+<version>1.3.0.0</version>
+<time>2016-05-02T17:51Z</time>
 <changes>
 <change type="fixed">
 Fixed mirv_input camera input focus loss detection (i.e. on ALT_TAB) (now uses WM_ACTIVATE message instread), thanks to anthony.
 </change>
 <change type="added">
-Added smooth aiming to mirv_aim (enabled by default, to disable enter mirv_aim snapTo 0).
+Added smoother aiming (using a 2nd order motion profile) to mirv_aim (disabled by default, to enable enter mirv_aim snapTo 0).
 </change>
-
+<change type="updated">
+Updated smoke texture and materials used by afx/wh config (enter exec afx/wh into console to load the config), thanks to Suky.
+</change>
+<change type="updated">
+Reintegrated updateWorkaround into mirv_streams add (meaning you can add stream templates more easily again, no need to use the
+afx/updateWorkaround config). Of course this still has the usual limitations due to the 17 Feb 2016 CS:GO update :-(
+</change>
 </changes>
 </release>
 

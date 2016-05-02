@@ -2988,7 +2988,7 @@ CON_COMMAND(mirv_aim, "Aiming system control.")
 
 	Tier0_Msg(
 		"mirv_aim active [...] - Whether aiming is active.\n"
-		"mirv_aim softDeactivate [...] - Wheter to support soft deactivation.\n"
+		"mirv_aim softDeactivate [...] - Wheter to support soft deactivation (for snapTo 0).\n"
 		"mirv_aim entityIndex [...] - Entity index to aim after (use mirv_listentities to get one).\n"
 		"mirv_aim point [...] - Point to aim after.\n"
 		"mirv_aim origin [...] - Target origin to use.\n"
