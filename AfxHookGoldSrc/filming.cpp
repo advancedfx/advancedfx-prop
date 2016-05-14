@@ -1925,52 +1925,64 @@ void FilmingStream::Capture(double time, CMdt_Media_RAWGLPIC * usePic, float sps
 		}	
 	}
 
-	if (time < m_NextFrameIsAt)
-	{
-		if (print_frame->value)
-			pEngfuncs->Con_Printf("Skipping a frame (time = %.8f, m_NextFrameIsAt = %.8f).\n", time, m_NextFrameIsAt);
-
-		m_PreviousFrame = *usePic;
-		return;
-	}
-
-	if (m_NextFrameIsAt == 0.0 || time == m_NextFrameIsAt)
-	{
-		m_PreviousFrame = *usePic;
-	}
-
-	size_t missedFrames = static_cast<size_t>((time - m_NextFrameIsAt) / (1.0 / spsHint)) + 1;
-
 	if (print_frame->value)
-		pEngfuncs->Con_Printf("Writing %lu missed frames (time = %.8f).\n", missedFrames, time);
-
-	for (size_t i = 0; i < missedFrames; ++i)
 	{
-		if (0 != m_Sampler)
+		if (time < m_NextFrameIsAt)
 		{
-			// pass on to sampling system:
-
-			m_Sampler->Sample(
-				(unsigned char const *)m_PreviousFrame.GetPointer(),
-				m_NextFrameIsAt + i * (1.0 / spsHint)
-			);
-		} else if (0 != m_SamplerFloat)
+			pEngfuncs->Con_Printf("Skipping a frame (time = %.8f, m_NextFrameIsAt = %.8f).\n", time, m_NextFrameIsAt);
+		}
+		else
 		{
-			// pass on to sampling system:
-
-			m_SamplerFloat->Sample(
-				(float const *)m_PreviousFrame.GetPointer(),
-				m_NextFrameIsAt + i * (1.0 / spsHint)
-			);
-		} else
-		{
-			// write out directly:
-			Print((unsigned char const *)m_PreviousFrame.GetPointer());
+			size_t missedFrames = static_cast<size_t>((time - m_NextFrameIsAt) / (1.0 / spsHint)) + 1;
+			pEngfuncs->Con_Printf("Writing %lu missed frames (time = %.8f).\n", missedFrames, time);
 		}
 	}
 
+	if (m_NextFrameIsAt == 0.0)
+	{
+		m_PreviousFrame = *usePic;
+	}
+
+	while (m_NextFrameIsAt < time)
+	{
+		WriteFrame(m_PreviousFrame, m_NextFrameIsAt);
+		m_NextFrameIsAt += (1.0 / spsHint);
+	}
+
 	m_PreviousFrame = *usePic;
-	m_NextFrameIsAt += missedFrames * (1.0 / spsHint);
+
+	if (m_NextFrameIsAt == time)
+	{
+		WriteFrame(m_PreviousFrame, m_NextFrameIsAt);
+		m_NextFrameIsAt += (1.0 / spsHint);
+	}
+}
+
+void FilmingStream::WriteFrame(CMdt_Media_RAWGLPIC& frame, double time)
+{
+	if (0 != m_Sampler)
+	{
+		// pass on to sampling system:
+
+		m_Sampler->Sample(
+			(unsigned char const *)frame.GetPointer(),
+			time
+		);
+	}
+	else if (0 != m_SamplerFloat)
+	{
+		// pass on to sampling system:
+
+		m_SamplerFloat->Sample(
+			(float const *)frame.GetPointer(),
+			time
+		);
+	}
+	else
+	{
+		// write out directly:
+		Print((unsigned char const *)frame.GetPointer());
+	}
 }
 
 void FilmingStream::Print(unsigned char const * data)

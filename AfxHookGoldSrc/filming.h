@@ -79,6 +79,8 @@ private:
 	CMdt_Media_RAWGLPIC m_PreviousFrame;
 	double m_NextFrameIsAt;
 
+	void WriteFrame(CMdt_Media_RAWGLPIC& frame, double time);
+
 	/// <summary>Implements IFramePrinter.</summary>
 	virtual void Print(unsigned char const * data);
 
