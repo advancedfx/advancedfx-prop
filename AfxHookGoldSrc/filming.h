@@ -76,6 +76,9 @@ private:
 	int m_X;
 	int m_Y;
 
+	CMdt_Media_RAWGLPIC m_PreviousFrame;
+	double m_NextFrameIsAt;
+
 	/// <summary>Implements IFramePrinter.</summary>
 	virtual void Print(unsigned char const * data);
 

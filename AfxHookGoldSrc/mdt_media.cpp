@@ -183,6 +183,60 @@ CMdt_Media_RAWGLPIC::~CMdt_Media_RAWGLPIC()
 	_freeAndClean();
 }
 
+void CMdt_Media_RAWGLPIC::swap(CMdt_Media_RAWGLPIC& o)
+{
+	#define SWAP(x) std::swap(x, o.x)
+
+	SWAP(_pBuffer);
+	SWAP(_uiSize);
+	SWAP(_uiBytesAllocated);
+
+	SWAP(_bHasConsistentData);
+	SWAP(_iWidth);
+	SWAP(_iHeight);
+
+	SWAP(_eGLformat);
+	SWAP(_eGLtype);
+
+	SWAP(_uiPixelSize);
+	SWAP(_ucSizeComponent);
+	SWAP(_ucNumComponents);
+	SWAP(_bComponentIsSigned);
+
+	#undef SWAP
+}
+
+CMdt_Media_RAWGLPIC::CMdt_Media_RAWGLPIC(const CMdt_Media_RAWGLPIC& o)
+	: CMdt_Media_RAWGLPIC()
+{
+	_adjustMemory(o._uiSize, false);
+	std::memcpy(_pBuffer, o._pBuffer, _uiSize);
+
+	_bHasConsistentData = o._bHasConsistentData;
+	_iWidth = o._iWidth;
+	_iHeight = o._iHeight;
+
+	_eGLformat = o._eGLformat;
+	_eGLtype = o._eGLtype;
+
+	_uiPixelSize = o._uiPixelSize;
+	_ucSizeComponent = o._ucSizeComponent;
+	_ucNumComponents = o._ucNumComponents;
+	_bComponentIsSigned = o._bComponentIsSigned;
+}
+
+CMdt_Media_RAWGLPIC::CMdt_Media_RAWGLPIC(CMdt_Media_RAWGLPIC&& o)
+	: CMdt_Media_RAWGLPIC()
+{
+	swap(o);
+}
+
+CMdt_Media_RAWGLPIC& CMdt_Media_RAWGLPIC::operator=(CMdt_Media_RAWGLPIC rhs)
+{
+	swap(rhs);
+	return *this;
+}
+
 // DoGlReadPixels:
 bool CMdt_Media_RAWGLPIC::DoGlReadPixels(int iXofs, int iYofs, int iWidth, int iHeight, GLenum eGLformat, GLenum eGLtype, bool bRepack)
 {

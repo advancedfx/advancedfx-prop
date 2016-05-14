@@ -81,9 +81,15 @@ class CMdt_Media_RAWGLPIC : public CMdt_Media_BASE
 //   Simply call DoGlReadPixels with your needs, the class will try to adjust everything as far as possible.
 //   The data and service functions can be trusted if DoGlReadPixels returns with true (it also set's HasConsistentData to true in this case).
 {
+private:
+	void swap(CMdt_Media_RAWGLPIC& o);
+
 public:
 	CMdt_Media_RAWGLPIC(); // Constructor, use this one if you want to only use autodetection
 	~CMdt_Media_RAWGLPIC();	// destructor
+	CMdt_Media_RAWGLPIC(const CMdt_Media_RAWGLPIC& o);
+	CMdt_Media_RAWGLPIC(CMdt_Media_RAWGLPIC&& o);
+	CMdt_Media_RAWGLPIC& operator=(CMdt_Media_RAWGLPIC rhs);
 
 	// glReadPixels - we always use glCoords here
 

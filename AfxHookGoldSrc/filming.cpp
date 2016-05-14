@@ -960,7 +960,7 @@ void Filming::Stop()
 	_HudRqState=HUDRQ_NORMAL;
 
 	// Need to reset this otherwise everything will run crazy fast
-	pEngfuncs->Cvar_SetValue("host_framerate", 0);
+	//pEngfuncs->Cvar_SetValue("host_framerate", 0);
 
 	// in case our code is broken [again] we better also reset the mask here: : )
 	glColorMask(TRUE, TRUE, TRUE, TRUE);
@@ -1355,7 +1355,8 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 	}
 	_bRecordBuffers_FirstCall = false;
 
-	double frameDuration = 1.0/(double)m_fps;
+	//double frameDuration = 1.0/(double)m_fps;
+	double frameDuration = pEngfuncs->pfnGetCvarFloat("host_framerate");
 	m_HostFrameCount++;
 
 	// If we've only just started, delay until the next scene so that
@@ -1370,7 +1371,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 		float fHostDuration = (float)(m_time - m_LastHostTime);
 		m_LastHostTime += fHostDuration;
 
-		pEngfuncs->Cvar_SetValue("host_framerate", fHostDuration);
+		//pEngfuncs->Cvar_SetValue("host_framerate", fHostDuration);
 
 		if (g_Filming_Stream[FS_hudcolor])
 		{
@@ -1549,7 +1550,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 	float fHostDuration = (float)(m_time - m_LastHostTime);
 	m_LastHostTime += fHostDuration;
 	
-	pEngfuncs->Cvar_SetValue("host_framerate", fHostDuration);
+	//pEngfuncs->Cvar_SetValue("host_framerate", fHostDuration);
 
 	_bRecordBuffers_FirstCall = true;
 
@@ -1777,6 +1778,7 @@ FilmingStream::FilmingStream(
 	m_Height = height;
 	m_X = x;
 	m_Y = y;
+	m_NextFrameIsAt = 0.0;
 
 	m_Path.assign(takePath);
 	m_Path.append(L"\\");
@@ -1923,29 +1925,48 @@ void FilmingStream::Capture(double time, CMdt_Media_RAWGLPIC * usePic, float sps
 		}	
 	}
 
-	if(0 != m_Sampler)
+	if (time < m_NextFrameIsAt)
 	{
-		// pass on to sampling system:
+		pEngfuncs->Con_Printf("Skipping a frame (time = %.8f, m_NextFrameIsAt = %.8f).\n", time, m_NextFrameIsAt);
+		m_PreviousFrame = *usePic;
+		return;
+	}
 
-		m_Sampler->Sample(
-			(unsigned char const *)usePic->GetPointer(),
-			time
-		);
-	}
-	else if(0 != m_SamplerFloat)
+	if (m_NextFrameIsAt == 0.0 || time == m_NextFrameIsAt)
 	{
-		// pass on to sampling system:
+		m_PreviousFrame = *usePic;
+	}
 
-		m_SamplerFloat->Sample(
-			(float const *)usePic->GetPointer(),
-			time
-		);
-	}
-	else
+	size_t missedFrames = static_cast<size_t>((time - m_NextFrameIsAt) / (1.0 / spsHint)) + 1;
+	pEngfuncs->Con_Printf("Writing %lu missed frames (time = %.8f).\n", missedFrames, time);
+
+	for (size_t i = 0; i < missedFrames; ++i)
 	{
-		// write out directly:
-		Print((unsigned char const *)usePic->GetPointer());
+		if (0 != m_Sampler)
+		{
+			// pass on to sampling system:
+
+			m_Sampler->Sample(
+				(unsigned char const *)m_PreviousFrame.GetPointer(),
+				m_NextFrameIsAt + i * (1.0 / spsHint)
+			);
+		} else if (0 != m_SamplerFloat)
+		{
+			// pass on to sampling system:
+
+			m_SamplerFloat->Sample(
+				(float const *)m_PreviousFrame.GetPointer(),
+				m_NextFrameIsAt + i * (1.0 / spsHint)
+			);
+		} else
+		{
+			// write out directly:
+			Print((unsigned char const *)m_PreviousFrame.GetPointer());
+		}
 	}
+
+	m_PreviousFrame = *usePic;
+	m_NextFrameIsAt += missedFrames * (1.0 / spsHint);
 }
 
 void FilmingStream::Print(unsigned char const * data)
