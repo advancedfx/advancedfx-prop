@@ -1932,7 +1932,15 @@ void FilmingStream::Capture(double time, CMdt_Media_RAWGLPIC * usePic, float sps
 
 	size_t framesWritten = 0;
 
-	while (m_NextFrameIsAt < time)
+	/*
+	 * If the player is seeing the current engine frame for more time than
+	 * the previous engine frame during the current video frame, use the current engine frame.
+	 *
+	 * This condition can be written as:
+	 * if the current engine time is closer to the current video frame time
+	 * than half of the video framerate.
+	 */
+	while (time - m_NextFrameIsAt > (1.0 / (spsHint * 2.0)))
 	{
 		WriteFrame(m_PreviousFrame, m_NextFrameIsAt);
 		m_NextFrameIsAt += (1.0 / spsHint);
@@ -1942,7 +1950,7 @@ void FilmingStream::Capture(double time, CMdt_Media_RAWGLPIC * usePic, float sps
 
 	m_PreviousFrame = *usePic;
 
-	if (m_NextFrameIsAt == time)
+	if (m_NextFrameIsAt <= time)
 	{
 		WriteFrame(m_PreviousFrame, m_NextFrameIsAt);
 		m_NextFrameIsAt += (1.0 / spsHint);
