@@ -1925,28 +1925,19 @@ void FilmingStream::Capture(double time, CMdt_Media_RAWGLPIC * usePic, float sps
 		}	
 	}
 
-	if (print_frame->value)
-	{
-		if (time < m_NextFrameIsAt)
-		{
-			pEngfuncs->Con_Printf("Skipping a frame (time = %.8f, m_NextFrameIsAt = %.8f).\n", time, m_NextFrameIsAt);
-		}
-		else
-		{
-			size_t missedFrames = static_cast<size_t>((time - m_NextFrameIsAt) / (1.0 / spsHint)) + 1;
-			pEngfuncs->Con_Printf("Writing %lu missed frames (time = %.8f).\n", missedFrames, time);
-		}
-	}
-
 	if (m_NextFrameIsAt == 0.0)
 	{
 		m_PreviousFrame = *usePic;
 	}
 
+	size_t framesWritten = 0;
+
 	while (m_NextFrameIsAt < time)
 	{
 		WriteFrame(m_PreviousFrame, m_NextFrameIsAt);
 		m_NextFrameIsAt += (1.0 / spsHint);
+
+		++framesWritten;
 	}
 
 	m_PreviousFrame = *usePic;
@@ -1955,6 +1946,25 @@ void FilmingStream::Capture(double time, CMdt_Media_RAWGLPIC * usePic, float sps
 	{
 		WriteFrame(m_PreviousFrame, m_NextFrameIsAt);
 		m_NextFrameIsAt += (1.0 / spsHint);
+
+		++framesWritten;
+	}
+
+	if (print_frame->value)
+	{
+		if (framesWritten > 0)
+		{
+			pEngfuncs->Con_Printf(
+				"Wrote %lu frame%s (time = %.8f, m_NextFrameIsAt = %.8f).\n",
+				framesWritten,
+				framesWritten > 1 ? "s" : "",
+				time,
+				m_NextFrameIsAt);
+		}
+		else
+		{
+			pEngfuncs->Con_Printf("Skipping a frame (time = %.8f, m_NextFrameIsAt = %.8f).\n", time, m_NextFrameIsAt);
+		}
 	}
 }
 
