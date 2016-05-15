@@ -660,7 +660,7 @@ bool GetDemoTickFromTime(double curTime, double time, int &outTick)
 
 		time -= deltaTime;
 
-		outTick = round(time / tick_interval);
+		outTick = (int)round(time / tick_interval);
 
 		return true;
 	}
@@ -3002,7 +3002,7 @@ CON_COMMAND(mirv_aim, "Aiming system control.")
 	);
 }
 
-CON_COMMAND(mirv_cmd, "Command system (for sheduling commands).")
+CON_COMMAND(mirv_cmd, "Command system (for scheduling commands).")
 {
 	if(!g_Hook_VClient_RenderView.IsInstalled() || !g_VEngineClient)
 	{
@@ -3059,9 +3059,9 @@ CON_COMMAND(mirv_cmd, "Command system (for sheduling commands).")
 			g_CommandSystem.Console_List();
 
 			if(g_CommandSystem.Enabled)
-				Tier0_Msg("Command system is enabled (mirv_cmds enabled is 1).\n");
+				Tier0_Msg("Command system is enabled (mirv_cmd enabled is 1).\n");
 			else
-				Tier0_Msg("COMMAND SYSTEM IS NOT ENABLED (mirv_cmds enabled is 0).\n");
+				Tier0_Msg("COMMAND SYSTEM IS NOT ENABLED (mirv_cmd enabled is 0).\n");
 
 			return;
 		}

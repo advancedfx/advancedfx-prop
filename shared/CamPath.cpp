@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-03-22 dominik.matrixstorm.com
+// 2016-05-14 dominik.matrixstorm.com
 //
 // First changes:
 // 2014-11-03 dominik.matrixstorm.com
@@ -14,6 +14,7 @@
 #include "rapidxml/rapidxml_print.hpp"
 #include <iterator>
 #include <stdio.h>
+#include <algorithm>
 
 #define _USE_MATH_DEFINES
 #include <math.h>

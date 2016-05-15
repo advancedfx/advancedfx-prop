@@ -1,5 +1,7 @@
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual C++ Express 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25123.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AfxHookSource", "AfxHookSource\AfxHookSource.vcxproj", "{3B8B10B2-05E6-4D15-8022-65D3D60DCCCD}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AfxCppCli", "AfxCppCli\AfxCppCli.vcxproj", "{98ECBBB4-6BE2-42E2-8754-E18827852534}"
@@ -11,6 +13,12 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DummyDll", "tests\DummyDll\DummyDll.vcxproj", "{3E037249-89F2-467D-8D42-9F27C0F33A9D}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RoundingErrors", "tests\RoundingErrors\RoundingErrors.vcxproj", "{450B6761-36BF-4FA0-A076-14F900373D8D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AfxGui", "AfxGui\AfxGui.csproj", "{0BA0C36B-DC95-4B5F-9793-4CEF5B2FC60B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShaderBuilder", "ShaderBuilder\ShaderBuilder.csproj", "{3007A356-25EE-4E2B-A4DD-081D035DD9B2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShaderDisassembler", "ShaderDisassembler\ShaderDisassembler.csproj", "{18617F26-10C7-46BA-9EBE-92B648B0ACC5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,6 +50,18 @@ Global
 		{450B6761-36BF-4FA0-A076-14F900373D8D}.Debug|Win32.Build.0 = Debug|Win32
 		{450B6761-36BF-4FA0-A076-14F900373D8D}.Release|Win32.ActiveCfg = Release|Win32
 		{450B6761-36BF-4FA0-A076-14F900373D8D}.Release|Win32.Build.0 = Release|Win32
+		{0BA0C36B-DC95-4B5F-9793-4CEF5B2FC60B}.Debug|Win32.ActiveCfg = Debug|x86
+		{0BA0C36B-DC95-4B5F-9793-4CEF5B2FC60B}.Debug|Win32.Build.0 = Debug|x86
+		{0BA0C36B-DC95-4B5F-9793-4CEF5B2FC60B}.Release|Win32.ActiveCfg = Release|x86
+		{0BA0C36B-DC95-4B5F-9793-4CEF5B2FC60B}.Release|Win32.Build.0 = Release|x86
+		{3007A356-25EE-4E2B-A4DD-081D035DD9B2}.Debug|Win32.ActiveCfg = Debug|x86
+		{3007A356-25EE-4E2B-A4DD-081D035DD9B2}.Debug|Win32.Build.0 = Debug|x86
+		{3007A356-25EE-4E2B-A4DD-081D035DD9B2}.Release|Win32.ActiveCfg = Release|x86
+		{3007A356-25EE-4E2B-A4DD-081D035DD9B2}.Release|Win32.Build.0 = Release|x86
+		{18617F26-10C7-46BA-9EBE-92B648B0ACC5}.Debug|Win32.ActiveCfg = Debug|x86
+		{18617F26-10C7-46BA-9EBE-92B648B0ACC5}.Debug|Win32.Build.0 = Debug|x86
+		{18617F26-10C7-46BA-9EBE-92B648B0ACC5}.Release|Win32.ActiveCfg = Release|x86
+		{18617F26-10C7-46BA-9EBE-92B648B0ACC5}.Release|Win32.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

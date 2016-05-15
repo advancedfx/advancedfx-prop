@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookGoldSrc</name>
+<version>2.4.10.0</version>
+<time>2016-05-15T17:28Z</time>
+<changes>
+<change type="updated">
+Updated build environment to Visual Studio 2015, should still run on Windows XP (target is v140_xp).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookGoldSrc</name>
 <version>2.4.9.0</version>
 <time>2016-01-17T16:38Z</time>
 <changes>

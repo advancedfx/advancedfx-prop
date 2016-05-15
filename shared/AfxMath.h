@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-04-07 dominik.matrixstorm.com
+// 2016-05-14 dominik.matrixstorm.com
 //
 // First changes:
 // 2014-11-02 dominik.matrixstorm.com
@@ -61,8 +61,6 @@ void MakeVectors(
 bool LUdecomposition(const double matrix[4][4], unsigned char (&outP)[4], unsigned char (&outQ)[4], double (& outL)[4][4], double (& outU)[4][4]);
 
 void SolveWithLU(const double L[4][4], const double U[4][4], const unsigned char P[4], const unsigned char Q[4], const double b[4], double (& outX)[4]);
-
-int round(double x);
 
 ////////////////////////////////////////////////////////////////////////////////
 

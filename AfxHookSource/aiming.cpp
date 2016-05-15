@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-04-15 dominik.matrixstorm.com
+// 2016-05-14 dominik.matrixstorm.com
 //
 // First changes:
 // 2016-03-31 dominik.matrixstorm.com
@@ -11,6 +11,8 @@
 #include "aiming.h"
 
 #include "SourceInterfaces.h"
+
+#include <algorithm>
 
 #define _USE_MATH_DEFINES
 #include <math.h>

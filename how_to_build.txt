@@ -3,38 +3,14 @@ Hint:
   here:
   https://cloud.gmx.net/ngcloud/external?locale=de&guestToken=OHS9FADDSUqEBYNOQ8SSig&loginName=programmer99@gmx.de
 
-[X] Download and install Microsoft Visual C++ 2010 and Microsoft Visual
-    C# 2010, which you can obtain for free from http://www.microsoft.com (Express
-    editions will do).
-
-[X] _After that_ download and install Micrsoft Visual Studio 2010 SP1,
-    which you can obtain for free from http://www.microsoft.com
+[X] Download and install Microsoft Visual Studio 2015 Community, which you can
+    obtain for free from http://www.microsoft.com .
+    You need to adjust the installer to install Visual C++ and all sub-options
+    (okay you don't really need MFC, but it won't hurt that much I guess).
 
 [X] Download the Half-Life SDK from
     http://github.com/ValveSoftware/halflife
     and install it into C:\Libraries\halflife
-
-[ ] This step is not required by default, only when you plan to build AfxHookGoldSrc with AFX_SCRIPT!
-    Download the Mozilla Build Environment from
-    http://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-1.8.0.exe
-    and install it into a folder you like.
-
-[ ] This step is not required by default, only when you plan to build AfxHookGoldSrc with AFX_SCRIPT!
-    Download the Mozilla SpiderMonkey (JS) library from
-    http://ftp.mozilla.org/pub/mozilla.org/js/mozjs-24.2.0.tar.bz2
-    and extract it into a folder you like.
-
-[ ] This step is not required by default, only when you plan to build AfxHookGoldSrc with AFX_SCRIPT!
-    Compile the SpiderMonkey (JS) library using the Mozilla Build Environment
-    ( start-msvc10.bat ) using the following commands:
-    cd path_to_js_library/js/src
-    autoconf-2.13
-    ./configure
-    make
-
-[ ] This step is not required by default, only when you plan to build AfxHookGoldSrc with AFX_SCRIPT! 
-    Copy the contents of the created JS dist folder (js/src/build-release/dist
-    to c:\Libraries\js
 
 [ ] This step is currently not required!
     Obtain freetype 2.6 from http://freetype.org/ and extract it into
@@ -44,7 +20,7 @@ Hint:
     Configuration=Release Multithreaded.
 
 [X] Obtain and install CMAKE from http://www.cmake.org/
-    We currently use "cmake-3.3.1-win32-x86.exe".
+    We currently use "cmake-3.5.2-win32-x86.msi".
 
 [ ] This step is currently not required!
     Obtain the stable version of libRocket from
@@ -75,18 +51,19 @@ Hint:
     Enter the "C:\Libraries\ilmbase-2.2.0" directory and execute
     setlocal
     del /f CMakeCache.txt
-    cmake "-DCMAKE_INSTALL_PREFIX=C:\<HLAESRC>\ilmbase-build" -G "Visual Studio 10 2010"
+    cmake "-DCMAKE_INSTALL_PREFIX=C:\<HLAESRC>\ilmbase-build" -G "Visual Studio 14 2015" -T "v140_xp"
 
 [X] Open the C:\Libraries\ilmbase-2.2.0\ilmbase.sln created in the previous step
     Select the Release configuration.
-    Build the projects b44ExpLogTable and dwaLookups.
-    Then copy the .dll files in "C:\<HLAESRC>\ilmbase-build\lib"
-    to "C:\Libraries\openexr-2.2.0\IlmImf\Release"!
     Then build the Solution.
     After that build the INSTALL project in the solution.
 
+[X] Adjust zlib's Makefile.msc in "C:\Libraries\zlib-1.2.8":
+    Add to WFLAGS: /D "_USING_V110_SDK71_"
+    Add to LDFLAGS: /SUBSYSTEM:CONSOLE",5.01"
+
 [X] Build zlib using nmake:
-    Open the Visual Studio Command Prompt (2010) and enter the
+    Open the Developer Command Prompt for VS2015 and enter the
     "C:\Libraries\zlib-1.2.8" directory and execute
     nmake -f win32/Makefile.msc zlib1.dll
     nmake -f win32/Makefile.msc example_d.exe
@@ -96,14 +73,18 @@ Hint:
     Enter the "C:\Libraries\openexr-2.2.0" directory and execute
     setlocal
     del /f CMakeCache.txt
-    cmake "-DZLIB_ROOT=C:\Libraries\zlib-1.2.8" "-DILMBASE_PACKAGE_PREFIX=C:\source\ilmbase-build" "-DCMAKE_INSTALL_PREFIX=C:\source\openexr-build" -G "Visual Studio 10 2010"
+    cmake "-DZLIB_ROOT=C:\Libraries\zlib-1.2.8" "-DILMBASE_PACKAGE_PREFIX=C:\<HLAESRC>\ilmbase-build" "-DCMAKE_INSTALL_PREFIX=C:\<HLAESRC>\openexr-build" -G "Visual Studio 14 2015" -T "v140_xp"
 
 [X] Open the C:\Libraries\openexr-2.2.0\openexr.sln created in the previous step
-    Select the Release configuration and then build the Solution.
+    Select the Release configuration.
+    Build the projects b44ExpLogTable and dwaLookups.
+    Then copy the .dll files in "C:\<HLAESRC>\ilmbase-build\lib"
+    to "C:\Libraries\openexr-2.2.0\IlmImf\Release"!
+    Then build the Solution.
     After that build the INSTALL project in the solution.
     If you want to use the .exe files in "C:\<HLAESRC>\openexr-build\bin",
     then you need to copy all DLL files from
-    "C:\<HLAESRC>\ilmbase-build\lib", "C:\source\openexr-build\lib" and
+    "C:\<HLAESRC>\ilmbase-build\lib", "C:\<HLAESRC>\openexr-build\lib" and
     "C:\Libraries\zlib-1.2.8" there.
 
 [X] Obtain the SharpDX SDK 2.6.3 from
@@ -130,34 +111,28 @@ Hint:
     The .h and .acs files build this way are required by the AfxHookSource
     project.
 
-[X] Open mdt.sln in the HLAE source code ("C:\<HLAESRC>\advancedfx" folder)
-    and Build (Configuration=Release):
-    AfxHookGoldSrc, AfxHookSource, AfxCppCli
-
 [X] AfxHook\recompile.bat, move AfxHook.dat into build\Release\bin\
 
-[X] Build AfxGui (Release), move and rename AfxGui.exe to
-    "C:\<HLAESRC>\advancedfx\build\Release\bin\HLAE.exe"
+[X] Open mdt.sln in the HLAE source code ("C:\<HLAESRC>\advancedfx" folder)
+    and Build (Configuration=Release):
+    AfxHookGoldSrc, AfxHookSource, AfxCppCli, AfxGui
 
 [X] Use "C:\<HLAESRC>\advancedfx\copy_resources_release.bat""
     to copy required files and folders to the
     "C:\<HLAESRC>\advancedfx\build\Release\bin" folder.
 
-[X] Copy msvcp100.dll, msvcr100.dll (CRT runtime, required by C++ and C++/CLI
-    projects) from your system folders (on 64 bit systems in C:\Windows\SysWOW64
-    on 32 bit systems in C:\Windows\system32)
+[X] Copy all files
+    form "C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x86"
     to "C:\<HLAESRC>\advancedfx\build\Release\bin"
-    Make sure to select the correct source folder as suggested above, so that
-    you end up with the 32 bit binaries.
+
+[X] Copy msvcp140.dll,vcruntime140.dll
+    from "C:\Windows\SysWOW64"
+    to "C:\<HLAESRC>\advancedfx\build\Release\bin"
 
 [X] Copy all DLL files from
     "C:\<HLAESRC>\ilmbase-build\lib",
-    "C:\source\openexr-build\lib" (except "IlmImfUtil-2_2.dll") and
+    "C:\source<HLAESRC>\openexr-build\lib" (except "IlmImfUtil-2_2.dll") and
     "C:\Libraries\zlib-1.2.8"
-    to "C:\<HLAESRC>\advancedfx\build\Release\bin"
-
-[ ] This step is not required by default, only when you plan to build AfxHookGoldSrc with AFX_SCRIPT!
-    Copy mozjs-24.dll from C:\Libraries\js\bin
     to "C:\<HLAESRC>\advancedfx\build\Release\bin"
 
 [ ] This step is currently not required!
@@ -167,7 +142,7 @@ Hint:
 
 [X] You currently need to package the following files and folders in the final
     .ZIP file:
-	resources,
+	resources, (You can currently leave out *.acs files in resources\AfxHookSource\shaders)
 	advancedfx.org.url,
 	AfxCppCli.dll,
 	AfxHook.dat,
@@ -175,6 +150,46 @@ Hint:
 	AfxHookGoldSrc_changelog.xml,
 	AfxHookSource.dll,
 	AfxHookSource_changelog.xml,
+	api-ms-win-core-console-l1-1-0.dll,
+	api-ms-win-core-datetime-l1-1-0.dll,
+	api-ms-win-core-debug-l1-1-0.dll,
+	api-ms-win-core-errorhandling-l1-1-0.dll,
+	api-ms-win-core-file-l1-1-0.dll,
+	api-ms-win-core-file-l1-2-0.dll,
+	api-ms-win-core-file-l2-1-0.dll,
+	api-ms-win-core-handle-l1-1-0.dll,
+	api-ms-win-core-heap-l1-1-0.dll,
+	api-ms-win-core-interlocked-l1-1-0.dll,
+	api-ms-win-core-libraryloader-l1-1-0.dll,
+	api-ms-win-core-localization-l1-2-0.dll,
+	api-ms-win-core-memory-l1-1-0.dll,
+	api-ms-win-core-namedpipe-l1-1-0.dll,
+	api-ms-win-core-processenvironment-l1-1-0.dll,
+	api-ms-win-core-processthreads-l1-1-0.dll,
+	api-ms-win-core-processthreads-l1-1-1.dll,
+	api-ms-win-core-profile-l1-1-0.dll,
+	api-ms-win-core-rtlsupport-l1-1-0.dll,
+	api-ms-win-core-string-l1-1-0.dll,
+	api-ms-win-core-synch-l1-1-0.dll,
+	api-ms-win-core-synch-l1-2-0.dll,
+	api-ms-win-core-sysinfo-l1-1-0.dll,
+	api-ms-win-core-timezone-l1-1-0.dll,
+	api-ms-win-core-util-l1-1-0.dll,
+	api-ms-win-crt-conio-l1-1-0.dll,
+	api-ms-win-crt-convert-l1-1-0.dll,
+	api-ms-win-crt-environment-l1-1-0.dll,
+	api-ms-win-crt-filesystem-l1-1-0.dll,
+	api-ms-win-crt-heap-l1-1-0.dll,
+	api-ms-win-crt-locale-l1-1-0.dll,
+	api-ms-win-crt-math-l1-1-0.dll,
+	api-ms-win-crt-multibyte-l1-1-0.dll,
+	api-ms-win-crt-private-l1-1-0.dll,
+	api-ms-win-crt-process-l1-1-0.dll,
+	api-ms-win-crt-runtime-l1-1-0.dll,
+	api-ms-win-crt-stdio-l1-1-0.dll,
+	api-ms-win-crt-string-l1-1-0.dll,
+	api-ms-win-crt-time-l1-1-0.dll,
+	api-ms-win-crt-utility-l1-1-0.dll,
 	changelog.xml,
 	changelog.xsl,
 	Half.dll,
@@ -184,7 +199,8 @@ Hint:
 	IlmImf-2_2.dll,
 	IlmThread-2_2.dll,
 	Imath-2_2.dll,
-	msvcp100.dll,
-	msvcr100.dll,
+	msvcp140.dll,
 	readme.txt,
+	ucrtbase.dll,
+	vcruntime140.dll,
 	zlib1.dll
