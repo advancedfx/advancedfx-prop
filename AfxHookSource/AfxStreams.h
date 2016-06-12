@@ -15,6 +15,10 @@
 #include "d3d9Hooks.h"
 #include "AfxShaders.h"
 #include "csgo_Stdshader_dx9_Hooks.h"
+
+#define AFX_SHADERS_CSGO 0
+
+#if AFX_SHADERS_CSGO
 #include <shaders/build/afxHook_splinerope_ps20.h>
 #include <shaders/build/afxHook_splinerope_ps20b.h>
 #include <shaders/build/afxHook_splinecard_vs20.h>
@@ -24,6 +28,7 @@
 #include <shaders/build/afxHook_vertexlit_and_unlit_generic_ps20.h>
 #include <shaders/build/afxHook_vertexlit_and_unlit_generic_ps20b.h>
 #include <shaders/build/afxHook_vertexlit_and_unlit_generic_ps30.h>
+#endif
 
 #include <string>
 #include <list>
@@ -626,6 +631,7 @@ private:
 		}
 	};
 
+#if AFX_SHADERS_CSGO
 	class CActionAfxVertexLitGenericHookKey
 	{
 	public:
@@ -704,6 +710,7 @@ private:
 		CAfxMaterial * m_Material;
 		std::string m_MaterialName;
 	};
+#endif
 
 	class CActionNoDraw
 	: public CAction
@@ -758,6 +765,7 @@ private:
 		}
 	};
 
+#if AFX_SHADERS_CSGO
 	class CActionAfxSpritecardHookKey
 	{
 	public:
@@ -862,6 +870,7 @@ private:
 		static csgo_Stdshader_dx9_Combos_splinerope_ps20b m_Combos_ps20b;
 		CActionAfxSplineRopeHookKey m_Key;
 	};
+#endif
 
 	class CActionReplace
 	: public CAction
@@ -962,6 +971,7 @@ private:
 		WrpConVarRef * m_MatDebugDepthValMax;
 	};
 
+#if AFX_SHADERS_CSGO
 	class CActionStandardResolve
 	: public CAction
 	{
@@ -1028,6 +1038,7 @@ private:
 		ResolveFor m_ResolveFor;
 		CAction * m_FallBackAction;
 	};
+#endif
 
 	class CActionFilterValue
 	{

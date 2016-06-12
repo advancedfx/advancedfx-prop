@@ -77,7 +77,7 @@ LPCTSTR GetPluginVersion(LPCTSTR pszName)
 class AfxHook
 {
 public:
-	AfxHook(LPCTSTR imageFileName)
+	AfxHook(LPCWSTR imageFileName)
 	{
 		m_BootImage = 0;
 		m_BootImageSize = 0;
@@ -92,19 +92,19 @@ public:
 
 
 	bool Inject(
-		LPCTSTR programPath, LPCTSTR programDirectory, LPTSTR programOptions,
-		LPCTSTR dllDirectory, LPCTSTR dllFileName, LPVOID environment
+		LPCWSTR programPath, LPCWSTR programDirectory, LPWSTR programOptions,
+		LPCWSTR dllDirectory, LPCWSTR dllFileName, LPVOID environment
 	)
 	{
 		PROCESS_INFORMATION processInfo;
-		STARTUPINFO startupInfo;
+		STARTUPINFOW startupInfo;
 
 		ZeroMemory( &processInfo, sizeof(processInfo) );
 
 		ZeroMemory( &startupInfo, sizeof(startupInfo) );
 		startupInfo.cb = sizeof(processInfo);
 
-		if(!CreateProcess(
+		if(!CreateProcessW(
 			programPath,
 			programOptions,
 			NULL,
@@ -116,9 +116,7 @@ public:
 				CREATE_SUSPENDED
 				//DEBUG_ONLY_THIS_PROCESS|
 				//DEBUG_PROCESS				// we want to catch debug event's (sadly also of childs)
-#ifdef _UNICODE
 				|CREATE_UNICODE_ENVIRONMENT
-#endif
 				,
 			environment,
 			programDirectory,
@@ -131,6 +129,8 @@ public:
 			MessageBox( 0, _T("Failed to launch the program."), (LPCTSTR)strErr, MB_OK|MB_ICONERROR );
 			return false;
 		}
+
+		//MessageBox(0, _T("Click OK."), _T("Waiting"), MB_OK);
 
 		bool imageInjected = InjectImage(
 			processInfo.dwProcessId, dllDirectory, dllFileName
@@ -155,11 +155,11 @@ private:
 	unsigned char * m_BootImage;
 	size_t m_BootImageSize;
 
-	void LoadImage(LPCTSTR imageFileName)
+	void LoadImage(LPCWSTR imageFileName)
 	{
 		FILE * file;
 
-		_tfopen_s(&file, imageFileName, _T("rb"));
+		_wfopen_s(&file, imageFileName, L"rb");
 
 		bool bOk =
 			0 != file
@@ -186,42 +186,34 @@ private:
 		m_BootImageSize = 0;
 	}
 
-	bool InjectImage(DWORD processId, LPCTSTR dllDirectory, LPCTSTR dllFileName)
+	bool InjectImage(DWORD processId, LPCWSTR dllDirectory, LPCWSTR dllFileName)
 	{
 		LPVOID argDllDir = 0;
 		LPVOID argDllName = 0;
-		size_t dllDirectorySz = sizeof( _TCHAR ) * (_tcsclen(dllDirectory) + 1);
-		size_t dllFileNameSz = sizeof( _TCHAR ) * (_tcsclen(dllFileName) + 1);
+		size_t dllDirectorySz = sizeof( wchar_t ) * (wcslen(dllDirectory) + 1);
+		size_t dllFileNameSz = sizeof(wchar_t) * (wcslen(dllFileName) + 1);
 		HMODULE hKernel32 = GetModuleHandle( _T("kernel32.dll") );
 		HANDLE hProc = OpenProcess(CREATE_THREAD_ACCESS, FALSE, processId);
 		HANDLE hThread = 0;
 		LPVOID imageAfxHook = 0;
-		LPVOID pLoadLibrary = 0;
-		LPVOID pSetDllDirectory = 0;
+		LPVOID pGetModuleHandleW = 0;
+		LPVOID pGetProcAddress = 0;
 
 		bool bOk =
 			m_BootImage && hKernel32 && hProc
 
-			&& (pLoadLibrary = (LPVOID) GetProcAddress(hKernel32,
-#ifdef _UNICODE
-				"LoadLibraryW"
-#elif
-				"LoadLibraryA"
-#endif
+			&& (pGetModuleHandleW = (LPVOID) GetProcAddress(hKernel32,
+				"GetModuleHandleW"
 			))
-			&& (pSetDllDirectory = (LPVOID) GetProcAddress(hKernel32,
-#ifdef _UNICODE
-				"SetDllDirectoryW"
-#elif
-				"SetDllDirectoryA"
-#endif
+			&& (pGetProcAddress = (LPVOID) GetProcAddress(hKernel32,
+				"GetProcAddress"
 			))
 
 			&& (argDllDir  = VirtualAllocEx(hProc, NULL, dllDirectorySz, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE))
 			&& (argDllName = VirtualAllocEx(hProc, NULL, dllFileNameSz, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE))
 			&& (imageAfxHook = VirtualAllocEx(hProc, NULL, m_BootImageSize, MEM_RESERVE|MEM_COMMIT, PAGE_EXECUTE_READWRITE))
 
-			&& UpdateBootImage(pLoadLibrary, pSetDllDirectory, argDllDir, argDllName)
+			&& UpdateBootImage(pGetModuleHandleW, pGetProcAddress, argDllDir, argDllName)
 
 			&& WriteProcessMemory(hProc, argDllDir, dllDirectory, dllDirectorySz, NULL)
 			&& WriteProcessMemory(hProc, argDllName, dllFileName, dllFileNameSz, NULL)
@@ -264,10 +256,18 @@ private:
 			{
 				DWORD exitCode;
 
-				bOk =
-					0 != GetExitCodeThread(hThread, &exitCode)
-					&& 0 == exitCode
-				;
+				bOk = 0 != GetExitCodeThread(hThread, &exitCode);
+
+				if (bOk)
+				{
+					if (0 != exitCode)
+					{
+						bOk = false;
+						TCHAR strErr[33];
+						_itot_s(exitCode, strErr, 10);
+						MessageBox(0, (LPCTSTR)strErr, _T("AfxHook exit code"), MB_OK | MB_ICONERROR);
+					}
+				}
 			}
 		}
 
@@ -281,15 +281,15 @@ private:
 		return bOk;
 	}
 
-	bool UpdateBootImage(LPVOID loadLibrary, LPVOID setDllDirectory, LPVOID dllDir, LPVOID dllName)
+	bool UpdateBootImage(LPVOID getModuleHandleW, LPVOID getProcAddress, LPVOID dllDir, LPVOID dllName)
 	{
-		if(!(m_BootImage && loadLibrary && setDllDirectory && dllDir && dllName))
+		if(!(m_BootImage && getModuleHandleW && getProcAddress && dllDir && dllName))
 			return false;
 
 		unsigned __int32 * imageArgs = (unsigned __int32 *)(m_BootImage +32);
 
-		imageArgs[0] = (unsigned __int32)loadLibrary;
-		imageArgs[1] = (unsigned __int32)setDllDirectory;
+		imageArgs[0] = (unsigned __int32)getModuleHandleW;
+		imageArgs[1] = (unsigned __int32)getProcAddress;
 		imageArgs[2] = (unsigned __int32)dllDir;
 		imageArgs[3] = (unsigned __int32)dllName;
 
@@ -306,7 +306,7 @@ using namespace System::Runtime::InteropServices;
 
 bool CustomLoader(System::String ^ strHookPath, System::String ^ strProgramPath, System::String ^ strCmdLine, System::String ^ strEnvironment)
 {
-	System::String ^ strDllDirectory = System::IO::Path::GetDirectoryName( strHookPath );
+	System::String ^ strDllDirectory = System::IO::Path::GetDirectoryName( strHookPath ); // maybe we should check that strDllDirectory <= MAXPATH-2 here?
 	System::String ^ strProgramDirectory = System::IO::Path::GetDirectoryName( strProgramPath );
 	System::String ^ strImageFileName = System::AppDomain::CurrentDomain->BaseDirectory + "\\AfxHook.dat";
 
@@ -315,31 +315,21 @@ bool CustomLoader(System::String ^ strHookPath, System::String ^ strProgramPath,
 	strOptsB->Append( "\" " );
 	strOptsB->Append( strCmdLine );
 
-	LPCTSTR dllDirectory = 0;
-	LPCTSTR dllFileName = 0;
-	LPCTSTR programDirectory = 0;
-	LPTSTR programOptions = 0;
-	LPCTSTR programPath = 0;
-	LPCTSTR imageFileName = 0;
+	LPCWSTR dllDirectory = 0;
+	LPCWSTR dllFileName = 0;
+	LPCWSTR programDirectory = 0;
+	LPWSTR programOptions = 0;
+	LPCWSTR programPath = 0;
+	LPCWSTR imageFileName = 0;
 	LPVOID environment = 0;
 
-#ifdef _UNICODE
-	dllDirectory = (LPCTSTR)(int)Marshal::StringToHGlobalUni( strDllDirectory );
-	dllFileName = (LPCTSTR)(int)Marshal::StringToHGlobalUni( strHookPath );
-	programDirectory = (LPCTSTR)(int)Marshal::StringToHGlobalUni( strProgramDirectory );
-	programOptions = (LPTSTR)(int)Marshal::StringToHGlobalUni( strOptsB->ToString() );
-	programPath = (LPCTSTR)(int)Marshal::StringToHGlobalUni( strProgramPath );
-	imageFileName = (LPCTSTR)(int)Marshal::StringToHGlobalUni( strImageFileName );
+	dllDirectory = (LPCWSTR)(int)Marshal::StringToHGlobalUni( strDllDirectory );
+	dllFileName = (LPCWSTR)(int)Marshal::StringToHGlobalUni( strHookPath );
+	programDirectory = (LPCWSTR)(int)Marshal::StringToHGlobalUni( strProgramDirectory );
+	programOptions = (LPWSTR)(int)Marshal::StringToHGlobalUni( strOptsB->ToString() );
+	programPath = (LPCWSTR)(int)Marshal::StringToHGlobalUni( strProgramPath );
+	imageFileName = (LPCWSTR)(int)Marshal::StringToHGlobalUni( strImageFileName );
 	environment = (LPVOID)(int)Marshal::StringToHGlobalUni( strEnvironment );
-#else
-	dllDirectory = (LPCTSTR)(int)Marshal::StringToHGlobalAnsi( strDllDirectory );
-	dllFileName = (LPCTSTR)(int)Marshal::StringToHGlobalAnsi( strHookPath );
-	programDirectory = (LPCTSTR)(int)Marshal::StringToHGlobalAnsi( strProgramDirectory );
-	programOptions = (LPTSTR)(int)Marshal::StringToHGlobalAnsi( strOptsB->ToString() );
-	programPath = (LPCTSTR)(int)Marshal::StringToHGlobalAnsi( strProgramPath );
-	imageFileName = (LPCTSTR)(int)Marshal::StringToHGlobalAnsi( strImageFileName );
-	environment = (LPVOID)(int)Marshal::StringToHGlobalAnsi( strEnvironment );
-#endif
 
 	AfxHook afxHook(imageFileName);
 

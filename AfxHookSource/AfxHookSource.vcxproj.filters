@@ -16,12 +16,6 @@
     <Filter Include="shared\hooks">
       <UniqueIdentifier>{7c634ae7-379f-48e5-b446-bd992d03a428}</UniqueIdentifier>
     </Filter>
-    <Filter Include="shaders">
-      <UniqueIdentifier>{6e648155-96eb-4ae2-82cc-8023fb789326}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="shaders\build">
-      <UniqueIdentifier>{4ca9d697-0106-4a13-b6c4-10d640fc715a}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\bvhexport.cpp">
@@ -259,33 +253,6 @@
     </ClInclude>
     <ClInclude Include="csgo_Stdshader_dx9_Hooks.h">
       <Filter>AfxHookSource</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shaders\build\afxHook_vertexlit_and_unlit_generic_ps30.h">
-      <Filter>shaders\build</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shaders\build\afxHook_vertexlit_and_unlit_generic_ps20b.h">
-      <Filter>shaders\build</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shaders\build\afxHook_vertexlit_and_unlit_generic_ps20.h">
-      <Filter>shaders\build</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shaders\build\afxHook_spritecard_ps20.h">
-      <Filter>shaders\build</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shaders\build\afxHook_spritecard_ps20b.h">
-      <Filter>shaders\build</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shaders\build\afxHook_spritecard_vs20.h">
-      <Filter>shaders\build</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shaders\build\afxHook_splinecard_vs20.h">
-      <Filter>shaders\build</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shaders\build\afxHook_splinerope_ps20.h">
-      <Filter>shaders\build</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shaders\build\afxHook_splinerope_ps20b.h">
-      <Filter>shaders\build</Filter>
     </ClInclude>
     <ClInclude Include="csgo_CViewRender.h">
       <Filter>AfxHookSource</Filter>

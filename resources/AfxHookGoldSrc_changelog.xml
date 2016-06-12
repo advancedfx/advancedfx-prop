@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookGoldSrc</name>
+<version>2.4.11</version>
+<time>2016-06-12T12:08Z</time>
+<changes>
+<change type="updated">
+Testing workaround for UCRT problems with SetDllDirectory (using SetCurrentDirectory instead).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookGoldSrc</name>
 <version>2.4.10.0</version>
 <time>2016-05-15T17:28Z</time>
 <changes>

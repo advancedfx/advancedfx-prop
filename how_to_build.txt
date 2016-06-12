@@ -58,7 +58,7 @@ Hint:
     Then build the Solution.
     After that build the INSTALL project in the solution.
 
-[X] Adjust zlib's Makefile.msc in "C:\Libraries\zlib-1.2.8":
+[X] Adjust zlib's Makefile.msc in "C:\Libraries\zlib-1.2.8\win32":
     Add to WFLAGS: /D "_USING_V110_SDK71_"
     Add to LDFLAGS: /SUBSYSTEM:CONSOLE",5.01"
 
@@ -87,12 +87,14 @@ Hint:
     "C:\<HLAESRC>\ilmbase-build\lib", "C:\<HLAESRC>\openexr-build\lib" and
     "C:\Libraries\zlib-1.2.8" there.
 
-[X] Obtain the SharpDX SDK 2.6.3 from
+[ ] This step is currently not required!
+    Obtain the SharpDX SDK 2.6.3 from
     https://github.com/sharpdx/SharpDX/releases/tag/2.6.3
     and extract it into a folder named "SharpDX" in the same folder where the
     HLAE source code folder is located.
 
-[X] Compile and run the ShaderBuilder project (requires the SharpDX SDK) and
+[ ] This step is currently not required!
+    Compile and run the ShaderBuilder project (requires the SharpDX SDK) and
     compile the following Shaders to the "shaders\build" folder:
     - shaders\afxHook_splinerope_ps2x.fxc:
       - to afxHook_splinerope_ps20 (profile ps_2_0)
@@ -125,10 +127,10 @@ Hint:
     form "C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x86"
     to "C:\<HLAESRC>\advancedfx\build\Release\bin"
 
-[X] Copy msvcp140.dll,vcruntime140.dll
-    from "C:\Windows\SysWOW64"
+[X] Copy all files
+    form "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT"
     to "C:\<HLAESRC>\advancedfx\build\Release\bin"
-
+	
 [X] Copy all DLL files from
     "C:\<HLAESRC>\ilmbase-build\lib",
     "C:\source<HLAESRC>\openexr-build\lib" (except "IlmImfUtil-2_2.dll") and
@@ -192,6 +194,7 @@ Hint:
 	api-ms-win-crt-utility-l1-1-0.dll,
 	changelog.xml,
 	changelog.xsl,
+	concrt140.dll
 	Half.dll,
 	HLAE.exe,
 	Iex-2_2.dll,
@@ -202,5 +205,6 @@ Hint:
 	msvcp140.dll,
 	readme.txt,
 	ucrtbase.dll,
+	vccorlib140.dll,
 	vcruntime140.dll,
 	zlib1.dll

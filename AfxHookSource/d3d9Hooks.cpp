@@ -60,10 +60,12 @@ public:
 	{
 		--m_RefCount;
 
+		HRESULT result = m_Parent->Release();
+
 		if(0 == m_RefCount)
 			delete this;
 
-		return m_Parent->Release();
+		return result;
 	}
 
     /*** IDirect3DStateBlock9 methods ***/

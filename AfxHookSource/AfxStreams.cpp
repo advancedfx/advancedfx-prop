@@ -1861,6 +1861,7 @@ void CAfxBaseFxStream::CActionReplace::ExamineMaterial(IMaterial_csgo * material
 	outUseinstancing = useinstancing;
 }
 
+#if AFX_SHADERS_CSGO
 // CAfxBaseFxStream::CActionStandardResolve:CShared ////////////////////////////
 
 CAfxBaseFxStream::CActionStandardResolve::CShared::CShared()
@@ -2431,7 +2432,7 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::CActionStandardResolve::ResolveAct
 
 	return SafeSubResolveAction(m_FallBackAction, material);
 }
-
+#endif
 
 // CAfxBaseFxStream::CActionNoDraw /////////////////////////////////////////////
 
@@ -2455,6 +2456,7 @@ IMaterial_csgo * CAfxBaseFxStream::CActionNoDraw::MaterialHook(IAfxMatRenderCont
 
 // CAfxBaseFxStream::CActionAfxVertexLitGenericHook ////////////////////////////
 
+#if AFX_SHADERS_CSGO
 csgo_Stdshader_dx9_Combos_vertexlit_and_unlit_generic_ps20 CAfxBaseFxStream::CActionAfxVertexLitGenericHook::m_Combos_ps20;
 csgo_Stdshader_dx9_Combos_vertexlit_and_unlit_generic_ps20b CAfxBaseFxStream::CActionAfxVertexLitGenericHook::m_Combos_ps20b;
 csgo_Stdshader_dx9_Combos_vertexlit_and_unlit_generic_ps30 CAfxBaseFxStream::CActionAfxVertexLitGenericHook::m_Combos_ps30;
@@ -3131,6 +3133,7 @@ void CAfxBaseFxStream::CActionAfxSplineRopeHook::SetPixelShader(CAfx_csgo_Shader
 		Tier0_Warning("AFXERROR: CAfxBaseFxStream::CActionAfxSplineRopeHook::SetPixelShader: No replacement defined for %s.\n", shaderName);
 
 }
+#endif
 
 // CAfxStreams /////////////////////////////////////////////////////////////////
 
