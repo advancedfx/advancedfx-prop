@@ -38,6 +38,7 @@
 #include "AfxShaders.h"
 #include "csgo_CViewRender.h"
 #include "CommandSystem.h"
+#include "csgo_writeWaveConsoleCheck.h"
 
 #include <set>
 #include <map>
@@ -2665,6 +2666,8 @@ FARPROC WINAPI new_shaderapidx9_GetProcAddress(HMODULE hModule, LPCSTR lpProcNam
 HMODULE WINAPI new_LoadLibraryA(LPCSTR lpLibFileName);
 HMODULE WINAPI new_LoadLibraryExA(LPCSTR lpLibFileName, HANDLE hFile, DWORD dwFlags);
 
+extern HMODULE g_H_EngineDll;
+
 void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 {
 	static bool bFirstRun = true;
@@ -2771,6 +2774,8 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 	{
 		bFirstEngine = false;
 
+		g_H_EngineDll = hModule;
+
 		Addresses_InitEngineDll((AfxAddr)hModule, isCsgo);
 
 		InterceptDllCall(hModule, "Kernel32.dll", "GetProcAddress", (DWORD) &new_Engine_GetProcAddress);
@@ -2832,6 +2837,7 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 
 		csgo_CSkyBoxView_Draw_Install();
 		csgo_CViewRender_Install();
+		Hook_csgo_writeWaveConsoleCheck();
 	}
 	else
 	if(bFirstScaleformui && StringEndsWith( lpLibFileName, "scaleformui.dll"))

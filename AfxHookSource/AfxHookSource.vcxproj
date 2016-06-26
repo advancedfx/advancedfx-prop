@@ -114,6 +114,7 @@
     <ClCompile Include="csgo_Stdshader_dx9_Hooks.cpp" />
     <ClCompile Include="csgo_S_StartSound.cpp" />
     <ClCompile Include="csgo_view.cpp" />
+    <ClCompile Include="csgo_writeWaveConsoleCheck.cpp" />
     <ClCompile Include="d3d9Hooks.cpp" />
     <ClCompile Include="hlaeFolder.cpp" />
     <ClCompile Include="main.cpp" />
@@ -161,6 +162,7 @@
     <ClInclude Include="csgo_Stdshader_dx9_Hooks.h" />
     <ClInclude Include="csgo_S_StartSound.h" />
     <ClInclude Include="csgo_view.h" />
+    <ClInclude Include="csgo_writeWaveConsoleCheck.h" />
     <ClInclude Include="d3d9Hooks.h" />
     <ClInclude Include="hlaeFolder.h" />
     <ClInclude Include="RenderView.h" />

@@ -6,6 +6,25 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>1.4.0</version>
+<time>2016-06-26T18:05Z</time>
+<changes>
+<change type="added">
+Added mirv_streams previewEnd command to make scripting easier.
+</change>
+<change type="added">
+Added mirv_streams record startMovieWav 0|1 (default 1), when enabled automatically uses startmovie/endmovie to capture a WAV file to the take folder.
+</change>
+<change type="added">
+Added mirv_streams record bvh, allows to control recording of HLAE BVH camera motion data files for main camera and multiple entities at once (You can use mirv_listentites or voice_show_mute for a list of entity / player indexes).
+</change>
+</changes>
+</release>
+
+
+
+<release>
+<name>AfxHookSource</name>
 <version>1.3.2</version>
 <time>2016-06-12T12:08Z</time>
 <changes>

@@ -15,6 +15,8 @@
 #include "csgo_CSkyBoxView.h"
 #include "csgo_view.h"
 #include "csgo_CViewRender.h"
+#include "csgo_writeWaveConsoleCheck.h"
+#include "RenderView.h"
 
 #include <shared/StringTools.h>
 #include <shared/FileTools.h>
@@ -3140,6 +3142,7 @@ void CAfxBaseFxStream::CActionAfxSplineRopeHook::SetPixelShader(CAfx_csgo_Shader
 CAfxStreams::CAfxStreams()
 : m_RecordName("untitled_rec")
 , m_PresentRecordOnScreen(false)
+, m_StartMovieWav(true)
 , m_OnAfxBaseClientDll_Free(0)
 , m_MaterialSystem(0)
 , m_VRenderView(0)
@@ -3167,6 +3170,8 @@ CAfxStreams::CAfxStreams()
 , m_Current_View_Render_ThreadId(0)
 //, m_RgbaRenderTarget(0)
 , m_RenderTargetDepthF(0)
+, m_CamBvh(false)
+, m_HostFrameRate(0)
 {
 	m_OverrideColor[0] =
 	m_OverrideColor[1] =
@@ -3180,6 +3185,12 @@ CAfxStreams::CAfxStreams()
 
 CAfxStreams::~CAfxStreams()
 {
+	while (!m_EntityBvhCaptures.empty())
+	{
+		delete m_EntityBvhCaptures.front();
+		m_EntityBvhCaptures.pop_front();
+	}
+
 	while(!m_Streams.empty())
 	{
 		delete m_Streams.front();
@@ -3190,6 +3201,7 @@ CAfxStreams::~CAfxStreams()
 
 	delete m_MatQueueModeRef;
 	delete m_MatPostProcessEnableRef;
+	delete m_HostFrameRate;
 }
 
 
@@ -3438,6 +3450,17 @@ bool CAfxStreams::Console_PresentRecordOnScreen_get()
 	return m_PresentRecordOnScreen;
 }
 
+void CAfxStreams::Console_StartMovieWav_set(bool value)
+{
+	m_StartMovieWav = value;
+}
+
+bool CAfxStreams::Console_StartMovieWav_get()
+{
+	return m_StartMovieWav;
+}
+
+
 void CAfxStreams::Console_MatForceTonemapScale_set(float value)
 {
 	m_NewMatForceTonemapScale = value;
@@ -3477,19 +3500,61 @@ void CAfxStreams::Console_Record_Start()
 	{
 		m_Recording = true;
 		m_Frame = 0;
+		m_StartMovieWavUsed = false;
 
 		BackUpMatVars();
 		SetMatVarsForStreams();
+
+		if (!m_HostFrameRate)
+			m_HostFrameRate = new WrpConVarRef("host_framerate");
+
+		double frameTime = m_HostFrameRate->GetFloat();
+		if (1.0 <= frameTime) frameTime = 1.0 / frameTime;
 
 		for(std::list<CAfxRecordStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
 		{
 			(*it)->RecordStart();
 		}
 
+		if (m_CamBvh)
+		{
+			std::wstring m_CamFileName(m_TakeDir);
+			m_CamFileName.append(L"\\cam_main.bvh");
+
+			g_Hook_VClient_RenderView.ExportBegin(m_CamFileName.c_str(), frameTime);
+		}
+
+		for (std::list<CEntityBvhCapture *>::iterator it = m_EntityBvhCaptures.begin(); it != m_EntityBvhCaptures.end(); ++it)
+		{
+			(*it)->StartCapture(m_TakeDir, frameTime);
+		}
+
 		Tier0_Msg("done.\n");
 
 		std::string ansiTakeDir;
-		Tier0_Msg("Recording to \"%s\".\n", WideStringToAnsiString(m_TakeDir.c_str(), ansiTakeDir) ? ansiTakeDir.c_str() : "?");
+		bool ansiTakeDirOk = WideStringToAnsiString(m_TakeDir.c_str(), ansiTakeDir);
+		Tier0_Msg("Recording to \"%s\".\n", ansiTakeDirOk ? ansiTakeDir.c_str() : "?");
+
+		if (ansiTakeDirOk)
+		{
+			m_StartMovieWavUsed = m_StartMovieWav;
+
+
+			if (m_StartMovieWavUsed)
+			{
+				csgo_writeWaveConsoleCheckOverride = true;
+
+				std::string startMovieWaveCmd("startmovie \"");
+				startMovieWaveCmd.append(ansiTakeDir);
+				startMovieWaveCmd.append("\\audio.wav\" wav");
+
+				g_VEngineClient->ExecuteClientCmd(startMovieWaveCmd.c_str());
+
+				Tier0_Msg("Contrary to what is said nearby, recording will start instantly! :-)\n");
+			}
+		}
+		else
+			Tier0_Warning("Error: Cannot convert take directory to ansi string. I.e. sound recording might be affected!\n");
 	}
 	else
 	{
@@ -3503,6 +3568,22 @@ void CAfxStreams::Console_Record_End()
 	if(m_Recording)
 	{
 		Tier0_Msg("Finishing recording ... ");
+
+		if (m_StartMovieWavUsed)
+		{
+			g_VEngineClient->ExecuteClientCmd("endmovie");
+			csgo_writeWaveConsoleCheckOverride = false;
+		}
+
+		if (m_CamBvh)
+		{
+			g_Hook_VClient_RenderView.ExportEnd();
+		}
+
+		for (std::list<CEntityBvhCapture *>::iterator it = m_EntityBvhCaptures.begin(); it != m_EntityBvhCaptures.end(); ++it)
+		{
+			(*it)->EndCapture();
+		}
 
 		for(std::list<CAfxRecordStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
 		{
@@ -4837,6 +4918,202 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 	Tier0_Msg("No further options for this stream.\n");
 }
 
+void CAfxStreams::Console_Bvh(IWrpCommandArgs * args)
+{
+	int argc = args->ArgC();
+
+	char const * prefix = args->ArgV(0);
+
+	if (m_Recording)
+	{
+		Tier0_Warning("Error: These settings cannot be accessed during mirv_streams recording!\n");
+		return;
+	}
+
+	if (2 <= argc)
+	{
+		char const * cmd1 = args->ArgV(1);
+
+		if (!_stricmp(cmd1, "cam"))
+		{
+			if (3 <= argc)
+			{
+				char const * cmd2 = args->ArgV(2);
+
+				m_CamBvh = 0 != atoi(cmd2);
+				return;
+			}
+
+			Tier0_Msg(
+				"%s cam 0|1 - Enable (1) / Disable (0) main camera export (overrides/uses mirv_camexport actually).\n"
+				"Current value: %i.\n"
+				, prefix
+				, m_CamBvh ? 1 : 0
+			);
+			return;
+		}
+		else
+		if (!_stricmp(cmd1, "ent"))
+		{
+			if (3 <= argc)
+			{
+				char const * cmd2 = args->ArgV(2);
+
+				if (!_stricmp(cmd2, "add"))
+				{
+					if (6 <= argc)
+					{
+						char const * sIndex = args->ArgV(3);
+						char const * sOrigin = args->ArgV(4);
+						char const * sAngles = args->ArgV(5);
+
+						int entityIndex = atoi(sIndex);
+
+						CEntityBvhCapture::Origin_e origin = CEntityBvhCapture::O_View;
+						if (!_stricmp(sOrigin, "net"))
+						{
+							origin = CEntityBvhCapture::O_Net;
+						}
+						else
+						if (!_stricmp(sOrigin, "view"))
+						{
+							origin = CEntityBvhCapture::O_View;
+						}
+						else
+						{
+							Tier0_Warning("Error: invalid <originType>!\n");
+							return;
+						}
+
+						CEntityBvhCapture::Angles_e angles = CEntityBvhCapture::A_View;
+						if (!_stricmp(sAngles, "net"))
+						{
+							angles = CEntityBvhCapture::A_Net;
+						}
+						else
+						if (!_stricmp(sAngles, "view"))
+						{
+							angles = CEntityBvhCapture::A_View;
+						}
+						else
+						{
+							Tier0_Warning("Error: invalid <anglesType>!\n");
+							return;
+						}
+
+						CEntityBvhCapture * bvhEntityCapture = new CEntityBvhCapture(entityIndex, origin, angles);
+
+						std::list<CEntityBvhCapture *>::iterator cur = m_EntityBvhCaptures.begin();
+
+						while (cur != m_EntityBvhCaptures.end() && (*cur)->EntityIndex_get() < entityIndex)
+							++cur;
+
+						if (cur != m_EntityBvhCaptures.end() && (*cur)->EntityIndex_get() == entityIndex)
+						{
+							delete (*cur);
+							m_EntityBvhCaptures.emplace(cur, bvhEntityCapture);
+						}
+						else
+						{
+							m_EntityBvhCaptures.insert(cur, bvhEntityCapture);
+						}
+
+						return;
+					}
+
+					Tier0_Msg(
+						"%s ent add <entityIndex> <originType> <anglesType> - Add an entity to list, <originType> and <anglesType> can be \"net\" or \"view\".\n"
+						, prefix
+					);
+					return;
+				}
+				else
+				if (!_stricmp(cmd2, "del"))
+				{
+					if (4 <= argc)
+					{
+						int index = atoi(args->ArgV(3));
+
+						for (std::list<CEntityBvhCapture *>::iterator it = m_EntityBvhCaptures.begin(); it != m_EntityBvhCaptures.end(); ++it)
+						{
+							if ((*it)->EntityIndex_get() == index)
+							{
+								delete (*it);
+
+								m_EntityBvhCaptures.erase(it);
+								return;
+							}
+						}
+
+						Tier0_Warning("Error: Index %i not found!\n", index);
+						return;
+					}
+
+					Tier0_Msg(
+						"%s ent del <entityIndex> - Remove given <entityIndex> from list.\n"
+						, prefix
+					);
+					return;
+				}
+				else
+				if (!_stricmp(cmd2, "list"))
+				{
+					Tier0_Msg("<entityIndex>: <originType> <anglesType>\n");
+
+					for (std::list<CEntityBvhCapture *>::iterator it = m_EntityBvhCaptures.begin(); it != m_EntityBvhCaptures.end(); ++it)
+					{
+						CEntityBvhCapture * cap = (*it);
+
+						CEntityBvhCapture::Origin_e origin = cap->Origin_get();
+						CEntityBvhCapture::Angles_e angles = cap->Angles_get();
+
+						Tier0_Msg(
+							"%i: %s %s"
+							, cap->EntityIndex_get()
+							, origin == CEntityBvhCapture::O_Net ? "net" : (origin == CEntityBvhCapture::O_View ? "view" : "[UNKNOWN]")
+							, angles == CEntityBvhCapture::A_Net ? "net" : (angles == CEntityBvhCapture::A_View ? "view" : "[UNKNOWN]")
+						);
+					}
+
+					Tier0_Msg("---- End Of List ----\n");
+					return;
+				}
+				else
+				if (!_stricmp(cmd2, "clear"))
+				{
+					while (!m_EntityBvhCaptures.empty())
+					{
+						delete m_EntityBvhCaptures.front();
+						m_EntityBvhCaptures.pop_front();
+					}
+
+					Tier0_Msg("List cleared.\n");
+					return;
+				}
+			}
+
+			Tier0_Msg(
+				"%s ent add [...] - Add an entity to the export list.\n"
+				"%s ent del [...] - Remove an entity from the export list.\n"
+				"%s ent list - List current entities being exported.\n"
+				"%s ent clear - Remove all from list.\n"
+				, prefix
+				, prefix
+				, prefix
+				, prefix
+			);
+			return;
+		}
+	}
+
+	Tier0_Msg(
+		"%s cam [...] - Whether main camera export (overrides/uses mirv_camexport actually).\n"
+		"%s ent [...] - Entity BVH export list control.\n"
+		, prefix
+		, prefix
+	);
+}
+
 IMaterialSystem_csgo * CAfxStreams::GetMaterialSystem(void)
 {
 	return m_MaterialSystem;
@@ -5031,6 +5308,12 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 	}
 
 	cl->GetParent()->View_Render(rect);
+
+	// Capture BVHs (except main):
+	for (std::list<CEntityBvhCapture *>::iterator it = m_EntityBvhCaptures.begin(); it != m_EntityBvhCaptures.end(); ++it)
+	{
+		(*it)->CaptureFrame();
+	}
 
 	if(previewStream && canFeed)
 	{
@@ -5674,4 +5957,75 @@ bool CAfxStreams::CImageBuffer::AutoRealloc(ImageBufferPixelFormat pixelFormat, 
 	ImageBytes = imageBytes;
 
 	return 0 != Buffer;
+}
+
+// CAfxStreams::CEntityBvhCapture //////////////////////////////////////////////
+
+CAfxStreams::CEntityBvhCapture::CEntityBvhCapture(int entityIndex, Origin_e origin, Angles_e angles)
+: m_BvhExport(0)
+, m_EntityIndex(entityIndex)
+, m_Origin(origin)
+, m_Angles(angles)
+{
+}
+
+CAfxStreams::CEntityBvhCapture::~CEntityBvhCapture()
+{
+	EndCapture();
+}
+
+void CAfxStreams::CEntityBvhCapture::StartCapture(std::wstring const & takePath, double frameTime)
+{
+	EndCapture();
+
+	std::wostringstream os;
+	os << takePath << L"\\cam_ent_" << m_EntityIndex << L".bvh";
+
+	m_BvhExport = new BvhExport(
+		os.str().c_str(),
+		"MdtCam",
+		frameTime
+	);
+}
+
+void CAfxStreams::CEntityBvhCapture::EndCapture(void)
+{
+	if (!m_BvhExport)
+		return;
+
+	delete m_BvhExport;
+	m_BvhExport = 0;
+}
+
+void CAfxStreams::CEntityBvhCapture::CaptureFrame(void)
+{
+	if (!m_BvhExport)
+		return;
+
+	Vector o;
+	QAngle a;
+
+	IClientEntity_csgo * ce = g_Entitylist_csgo->GetClientEntity(m_EntityIndex);
+	C_BaseEntity_csgo * be = ce ? ce->GetBaseEntity() : 0;
+
+	if (ce)
+	{
+		o = be && O_View == m_Origin ? be->EyePosition() : ce->GetAbsOrigin();
+		a = be && A_View == m_Angles ? be->EyeAngles() : ce->GetAbsAngles();
+	}
+	else
+	{
+		o.x = 0;
+		o.y = 0;
+		o.z = 0;
+
+		a.x = 0;
+		a.y = 0;
+		a.z = 0;
+	}
+
+	m_BvhExport->WriteFrame(
+		-o.y, +o.z, -o.x,
+		-a.z, -a.x, +a.y
+	);
 }

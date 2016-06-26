@@ -30,6 +30,8 @@
 #include <shaders/build/afxHook_vertexlit_and_unlit_generic_ps30.h>
 #endif
 
+#include <shared/bvhexport.h>
+
 #include <string>
 #include <list>
 #include <queue>
@@ -1498,6 +1500,9 @@ public:
 	void Console_PresentRecordOnScreen_set(bool value);
 	bool Console_PresentRecordOnScreen_get();
 
+	void Console_StartMovieWav_set(bool value);
+	bool Console_StartMovieWav_get();	
+
 	void Console_MatForceTonemapScale_set(float value);
 	float Console_MatForceTonemapScale_get();
 
@@ -1522,6 +1527,7 @@ public:
 	void Console_RemoveStream(const char * streamName);
 	void Console_EditStream(const char * streamName, IWrpCommandArgs * args, int argcOffset, char const * cmdPrefix);
 	void Console_ListActions(void);
+	void Console_Bvh(IWrpCommandArgs * args);
 
 	/// <param name="index">stream name to preview or empty string if to preview nothing.</param>
 	void Console_PreviewStream(const char * streamName);
@@ -1618,8 +1624,42 @@ private:
 		size_t m_BufferBytesAllocated;
 	};
 
+	class CEntityBvhCapture
+	{
+	public:
+		enum Origin_e {
+			O_Net,
+			O_View
+		};
+
+		enum Angles_e {
+			A_Net,
+			A_View
+		};
+
+		CEntityBvhCapture(int entityIndex, Origin_e origin, Angles_e angles);
+		~CEntityBvhCapture();
+
+		void StartCapture(std::wstring const & takePath, double frameTime);
+		void EndCapture(void);
+
+		void CaptureFrame(void);
+
+		int EntityIndex_get(void) { return m_EntityIndex; }
+		Origin_e Origin_get(void) { return m_Origin; }
+		Angles_e Angles_get(void) { return m_Angles; }
+
+	private:
+		Origin_e m_Origin;
+		Angles_e m_Angles;
+		int m_EntityIndex;
+		BvhExport * m_BvhExport;
+	};
+
 	std::string m_RecordName;
 	bool m_PresentRecordOnScreen;
+	bool m_StartMovieWav;
+	bool m_StartMovieWavUsed;
 	CFreeDelegate * m_OnAfxBaseClientDll_Free;
 	IMaterialSystem_csgo * m_MaterialSystem;
 	IAfxVRenderView * m_VRenderView;
@@ -1636,7 +1676,10 @@ private:
 	IAfxSetVertexShader * m_OnSetVertexShader;
 	IAfxSetPixelShader * m_OnSetPixelShader;
 	IAfxDrawingHud * m_OnDrawingHud;
+	bool m_CamBvh;
+	std::list<CEntityBvhCapture *> m_EntityBvhCaptures;
 
+	WrpConVarRef * m_HostFrameRate;
 	WrpConVarRef * m_MatQueueModeRef;
 	int m_OldMatQueueMode;
 	WrpConVarRef * m_MatPostProcessEnableRef;

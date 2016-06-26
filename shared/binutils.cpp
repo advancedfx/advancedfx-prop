@@ -10,6 +10,8 @@
 
 #include "binutils.h"
 
+#include <algorithm>
+
 #define PtrFromRva( base, rva ) ( ( ( PBYTE ) base ) + rva )
 
 namespace Afx {
@@ -23,8 +25,11 @@ MemRange FindBytes(MemRange memRange, char const * pattern, DWORD patternSize)
 	DWORD matchDepth = 0;
 	DWORD oldMemRangeStart = memRange.Start;
 
+	if(!pattern)
+		return MemRange(oldMemRangeStart, min(oldMemRangeStart, memRange.End));
+
 	if(1 > patternSize)
-		return MemRange(oldMemRangeStart, oldMemRangeStart);
+		return MemRange(oldMemRangeStart, min(oldMemRangeStart +1, memRange.End));
 
 	for(;memRange.Start < memRange.End;memRange.Start++)
 	{
@@ -43,7 +48,7 @@ MemRange FindBytes(MemRange memRange, char const * pattern, DWORD patternSize)
 			return MemRange(memRange.Start-matchDepth+1, memRange.Start+1);
 	}
 
-	return MemRange(oldMemRangeStart, oldMemRangeStart);
+	return MemRange(oldMemRangeStart, min(oldMemRangeStart, memRange.End));
 }
 
 MemRange FindCString(MemRange memRange, char const * pattern)
@@ -54,6 +59,70 @@ MemRange FindCString(MemRange memRange, char const * pattern)
 MemRange FindWCString(MemRange memRange, wchar_t const * pattern)
 {
 	return FindBytes(memRange, (char const *)pattern, sizeof(wchar_t)*(wcslen(pattern)+1));
+}
+
+MemRange FindPatternString(MemRange memRange, char const * hexBytePattern)
+{
+	DWORD matchDepth = 0;
+	DWORD oldMemRangeStart = memRange.Start;
+	size_t patternPos = 0;
+
+	if (!hexBytePattern)
+		return MemRange(oldMemRangeStart, min(oldMemRangeStart, memRange.End));
+
+	for (; memRange.Start < memRange.End; ++memRange.Start)
+	{
+		char cur = *(char const *)memRange.Start;
+
+		char pat0;
+		do
+		{
+			pat0 = hexBytePattern[patternPos];
+			++patternPos;
+		}
+		while (' ' == pat0);
+
+		char pat1 = 0;
+		if (pat0)
+		{
+			do
+			{
+				pat1 = hexBytePattern[patternPos];
+				++patternPos;
+			} while (' ' == pat1);
+		}
+
+		bool endHi = !pat0;
+		bool endLo = !pat1;
+
+		if (endHi)
+			return MemRange(memRange.Start - matchDepth + 1, memRange.Start + 1);
+
+		bool wildHi = '?' == pat0 || endHi;
+		bool wildLo = '?' == pat1 || endLo;
+
+		pat0 = ('0' <= pat0 && pat0 <= '9') ? pat0 - '0' : ('A' <= pat0 && pat0 <= 'Z' ? pat0 - 'A' + '\xa' : pat0 - 'a' + '\xa');
+		pat1 = ('0' <= pat1 && pat1 <= '9') ? pat1 - '0' : ('A' <= pat1 && pat1 <= 'Z' ? pat1 - 'A' + '\xa' : pat1 - 'a' + '\xa');
+
+		char matchval = ((pat0 & 0xf) << 4) | (pat1 & 0xF);
+
+		bool match = (wildHi || ((matchval & 0xf0) == (cur & 0xf0))) && (wildLo || ((matchval & 0xf) == (cur & 0xf)));
+
+		if (match)
+			++matchDepth;
+		else
+		{
+			memRange.Start -= matchDepth;
+			matchDepth = 0;
+			patternPos = 0;
+			continue;
+		}
+
+		if (endHi || endLo || !hexBytePattern[patternPos])
+			return MemRange(memRange.Start - matchDepth + 1, memRange.Start + 1);
+	}
+
+	return MemRange(oldMemRangeStart, min(oldMemRangeStart, memRange.End));
 }
 
 // ImageSectionsReader /////////////////////////////////////////////////////////

@@ -6,6 +6,18 @@
 
 <release>
 <name>HLAE</name>
+<version>2.12.0</version>
+<time>2016-06-26T18:086</time>
+<changes>
+<change type="updated">
+Included AfxHookSource 1.4.0 (2016-06-26T18:05Z).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.11.2</version>
 <time>2016-06-12T12:08Z</time>
 <changes>
@@ -16,7 +28,7 @@ Testing workaround for UCRT problems with SetDllDirectory (using SetCurrentDirec
 Included AfxHookGoldSrc 2.4.11.0 (2016-06-12T12:08Z).
 </change>
 <change type="updated">
-Included AfxHookSource lite 1.3.2.0 (2016-06-12T12:08Z).
+Included AfxHookSource 1.3.2.0 (2016-06-12T12:08Z).
 </change>
 </changes>
 </release>

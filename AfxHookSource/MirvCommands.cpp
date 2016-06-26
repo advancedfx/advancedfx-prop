@@ -30,6 +30,7 @@
 #include "d3d9Hooks.h"
 #include "aiming.h"
 #include "CommandSystem.h"
+#include <shared/binutils.h>
 
 #include "csgo_Stdshader_dx9_Hooks.h"
 
@@ -42,14 +43,51 @@
 
 extern WrpVEngineClient * g_VEngineClient;
 
+HMODULE g_H_EngineDll = 0;
+
 CON_COMMAND(__mirv_test5, "")
 {
-	static bool firstRun = true;
+	int argc = args->ArgC();
 
-	if(!firstRun) return;
-	firstRun = false;
+	if (2 <= argc)
+	{
+		char const * cmd1 = args->ArgV(1);
 
+		Afx::BinUtils::ImageSectionsReader sections(g_H_EngineDll);
+		if (!sections.Eof())
+		{
+			Afx::BinUtils::MemRange search = sections.GetMemRange();
 
+			Afx::BinUtils::MemRange result;
+
+			int numResults = 0;
+
+			while (!search.IsEmpty())
+			{
+				result = FindPatternString(search, cmd1);
+
+				if (result.IsEmpty())
+					break;
+
+				Tier0_Msg(
+					"%i: [0x%08x,0x%08x)\n",
+					numResults,
+					result.Start - (DWORD)g_H_EngineDll,
+					result.End - (DWORD)g_H_EngineDll
+				);
+
+				search = Afx::BinUtils::MemRange(result.End, search.End);
+
+				++numResults;
+
+				if (100 < numResults)
+				{
+					Tier0_Msg("RESULT LIMIT REACHED\n");
+					break;
+				}
+			}
+		}
+	}
 }
 
 CON_COMMAND(__mirv_test2, "")
@@ -494,6 +532,32 @@ CON_COMMAND(mirv_streams, "Access to streams system.")
 					);
 					return;
 				}
+				else
+				if (!_stricmp(cmd2, "startMovieWav"))
+				{
+					if (4 <= argc)
+					{
+						char const * cmd3 = args->ArgV(3);
+						g_AfxStreams.Console_StartMovieWav_set(0 != atoi(cmd3));
+						return;
+					}
+
+					Tier0_Msg(
+						"mirv_streams record presentOnScreen 0|1 - Whether to show recording on screen (where possible) (1) [May cause epileptic seizures!] or not (0).\n"
+						"Current value: %s.\n",
+						g_AfxStreams.Console_StartMovieWav_get() ? "1" : "0"
+					);
+					return;
+				}
+				else
+				if (!_stricmp(cmd2, "bvh"))
+				{
+					CSubWrpCommandArgs subArgs(args, 3);
+
+					g_AfxStreams.Console_Bvh(&subArgs);
+					return;
+				}
+
 			}
 
 			Tier0_Msg(
@@ -503,6 +567,8 @@ CON_COMMAND(mirv_streams, "Access to streams system.")
 				"mirv_streams record format [...] - Set/get file format.\n"
 				"mirv_streams record presentOnScreen [...] - Controls screen presentation during recording.\n"
 				"mirv_streams record matForceTonemapScale [...] - Controls mat_force_tonemap_scale variable during recording.\n"
+				"mirv_streams record startMovieWav [...] - Controls whether startmovie shall be used for automatically recording audio.\n"
+				"mirv_streams record bvh [...] - Controls the HLAE/BVH Camera motion data capture output."
 			);
 			return;
 		}

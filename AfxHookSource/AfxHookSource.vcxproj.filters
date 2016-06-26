@@ -135,6 +135,9 @@
     <ClCompile Include="CommandSystem.cpp">
       <Filter>AfxHookSource</Filter>
     </ClCompile>
+    <ClCompile Include="csgo_writeWaveConsoleCheck.cpp">
+      <Filter>AfxHookSource</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -267,6 +270,9 @@
       <Filter>AfxHookSource</Filter>
     </ClInclude>
     <ClInclude Include="CommandSystem.h">
+      <Filter>AfxHookSource</Filter>
+    </ClInclude>
+    <ClInclude Include="csgo_writeWaveConsoleCheck.h">
       <Filter>AfxHookSource</Filter>
     </ClInclude>
   </ItemGroup>
