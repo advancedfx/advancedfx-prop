@@ -101,14 +101,14 @@ CAfxMaterial::CAfxMaterial()
 {
 }
 
-CAfxMaterial::CAfxMaterial(IMaterial_csgo * material)
+CAfxMaterial::CAfxMaterial(SOURCESDK::IMaterial_csgo * material)
 : CAfxFreeable()
 , m_Material(material)
 {
 	if(m_Material) m_Material->IncrementReferenceCount();
 }
 
-CAfxMaterial::CAfxMaterial(IAfxFreeMaster * freeMaster, IMaterial_csgo * material)
+CAfxMaterial::CAfxMaterial(IAfxFreeMaster * freeMaster, SOURCESDK::IMaterial_csgo * material)
 : CAfxFreeable(freeMaster)
 , m_Material(material)
 {
@@ -127,7 +127,7 @@ CAfxMaterial::~CAfxMaterial()
 	AfxFree();
 }
 
-IMaterial_csgo * CAfxMaterial::GetMaterial() const
+SOURCESDK::IMaterial_csgo * CAfxMaterial::GetMaterial() const
 {
 	return m_Material;
 }
@@ -142,12 +142,12 @@ void CAfxMaterial::AfxFree(void)
 
 // CAfxMaterialKey /////////////////////////////////////////////////////////////
 
-CAfxMaterialKey::CAfxMaterialKey(IMaterial_csgo * material)
+CAfxMaterialKey::CAfxMaterialKey(SOURCESDK::IMaterial_csgo * material)
 : CAfxMaterial(material)
 {
 }
 
-CAfxMaterialKey::CAfxMaterialKey(IAfxFreeMaster * freeMaster, IMaterial_csgo * material)
+CAfxMaterialKey::CAfxMaterialKey(IAfxFreeMaster * freeMaster, SOURCESDK::IMaterial_csgo * material)
 : CAfxMaterial(freeMaster, material)
 {
 }

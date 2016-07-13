@@ -31,6 +31,7 @@
 #include "aiming.h"
 #include "CommandSystem.h"
 #include <shared/binutils.h>
+#include "ClientTools.h"
 
 #include "csgo_Stdshader_dx9_Hooks.h"
 
@@ -44,6 +45,29 @@
 extern WrpVEngineClient * g_VEngineClient;
 
 HMODULE g_H_EngineDll = 0;
+
+
+CON_COMMAND(__mirv_ct, "")
+{
+	int argc = args->ArgC();
+
+	if (2 <= argc)
+	{
+		char const * cmd1 = args->ArgV(1);
+
+		if (!_stricmp("start", cmd1))
+		{
+
+			g_ClientTools.StartRecording(L"afxGameRecord.xml");
+		}
+		else
+		if (!_stricmp("end", cmd1))
+		{
+			g_ClientTools.EndRecording();
+		}
+
+	}
+}
 
 CON_COMMAND(__mirv_test5, "")
 {
@@ -1704,20 +1728,20 @@ CON_COMMAND(mirv_camimport, "controls camera motion data import") {
 
 CON_COMMAND(mirv_cvar_unhide_all,"(CS:GO only) removes hidden and development only flags from all cvars.")
 {
-	ICvar_007 * pCvar = WrpConCommands::GetVEngineCvar007();
+	SOURCESDK::ICvar_007 * pCvar = WrpConCommands::GetVEngineCvar007();
 	if(!pCvar)
 	{
 		Tier0_Warning("Error: No suitable Cvar interface found.\n");
 		return;
 	}
 
-	ICvar_007::Iterator iter(pCvar);
+	SOURCESDK::ICvar_007::Iterator iter(pCvar);
 
 	int nUnhidden = 0;
 
 	for(iter.SetFirst(); iter.IsValid(); iter.Next())
 	{
-		ConCommandBase_007 * cmd = iter.Get();
+		SOURCESDK::ConCommandBase_007 * cmd = iter.Get();
 
 		if(cmd->IsFlagSet(FCVAR_DEVELOPMENTONLY | FCVAR_HIDDEN))
 			nUnhidden++;
@@ -2625,7 +2649,7 @@ CON_COMMAND(mirv_snd_filter, "Sound control (i.e. blocking sounds).")
 
 CON_COMMAND(mirv_listentities, "Print info about currently active entites. (CS:GO only)")
 {
-	if(!g_Entitylist_csgo)
+	if(!SOURCESDK::g_Entitylist_csgo)
 	{
 		Tier0_Warning("Not supported for your engine!\n");
 		return;
@@ -2641,16 +2665,16 @@ CON_COMMAND(mirv_listentities, "Print info about currently active entites. (CS:G
 		g_Hook_VClient_RenderView.LastCameraOrigin[2]
 	);
 
-	int imax = g_Entitylist_csgo->GetHighestEntityIndex();
+	int imax = SOURCESDK::g_Entitylist_csgo->GetHighestEntityIndex();
 
 	for(int i=0; i<= imax; ++i)
 	{
-		IClientEntity_csgo * ce = g_Entitylist_csgo->GetClientEntity(i);
-		C_BaseEntity_csgo * be = ce ? ce->GetBaseEntity() : 0;
+		SOURCESDK::IClientEntity_csgo * ce = SOURCESDK::g_Entitylist_csgo->GetClientEntity(i);
+		SOURCESDK::C_BaseEntity_csgo * be = ce ? ce->GetBaseEntity() : 0;
 
 		if(be)
 		{
-			Vector vEntOrigin = be->GetAbsOrigin();
+			SOURCESDK::Vector vEntOrigin = be->GetAbsOrigin();
 			Vector3 entOrigin(vEntOrigin.x, vEntOrigin.y, vEntOrigin.z);
 
 			double dist = (entOrigin -cameraOrigin).Length();

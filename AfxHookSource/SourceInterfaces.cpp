@@ -18,9 +18,6 @@
 
 #include <windows.h>
 
-
-static int s_nDLLIdentifier = -1;
-
 Tier0MsgFn Tier0_Msg=0;
 Tier0DMsgFn Tier0_DMsg=0;
 Tier0MsgFn Tier0_Warning=0;
@@ -35,6 +32,10 @@ Tier0MsgFn Tier0_ConLog=0;
 Tier0MsgFn Tier0_ConDMsg=0;
 Tier0MsgFn Tier0_ConDWarning=0;
 Tier0MsgFn Tier0_ConDLog=0;
+
+namespace SOURCESDK {
+
+static int s_nDLLIdentifier = -1;
 
 CreateInterfaceFn Sys_GetFactory( CSysModule *pModule )
 {
@@ -63,13 +64,22 @@ IMemAlloc_csgo * Get_g_pMemAlloc(void)
 	return result;
 }
 
+// Vector //////////////////////////////////////////////////////////////////////
+
+void Vector::Init(vec_t ix, vec_t iy, vec_t iz)
+{
+	x = ix;
+	y = iy;
+	z = iz;
+}
+
 //
 // Helpers for wrapping command args:
 
 // ArgsFromConCommand_003 //////////////////////////////////////////////////////
 
 class ArgsFromConCommand_003 :
-	public IWrpCommandArgs
+	public ::IWrpCommandArgs
 {
 public:
 	/// <comments> implements IWrpCommandArgs </comments>
@@ -94,7 +104,7 @@ ArgsFromConCommand_003 g_ArgsFromConCommand_003;
 // ArgsFromCCommand_004 ////////////////////////////////////////////////////////
 
 class ArgsFromCCommand_004 :
-	public IWrpCommandArgs
+	public ::IWrpCommandArgs
 {
 public:
 	/// <remarks> SetCommand must have been supplied with the command arg first </remarks>
@@ -129,7 +139,7 @@ ArgsFromCCommand_004 g_ArgsFromCCommand_004; // I dunno why () wouldn't work, cr
 // ArgsFromCCommand_007 ////////////////////////////////////////////////////////
 
 class ArgsFromCCommand_007 :
-	public IWrpCommandArgs
+	public ::IWrpCommandArgs
 {
 public:
 	/// <remarks> SetCommand must have been supplied with the command arg first </remarks>
@@ -192,7 +202,7 @@ bool ConCommand_003::CanAutoComplete( void ) {
 
 void ConCommand_003::Dispatch( void ) {
 	if(m_Callback)
-		m_Callback((IWrpCommandArgs *)&g_ArgsFromConCommand_003);
+		m_Callback((::IWrpCommandArgs *)&g_ArgsFromConCommand_003);
 }
 
 
@@ -250,7 +260,7 @@ void ConCommand_004::Dispatch( const CCommand_004 &command )
 		if ( m_fnCommandCallback )
 		{
 			g_ArgsFromCCommand_004.SetCommand(&command);
-			m_fnCommandCallback((IWrpCommandArgs *)&g_ArgsFromCCommand_004);
+			m_fnCommandCallback((::IWrpCommandArgs *)&g_ArgsFromCCommand_004);
 			return;
 		}
 	}
@@ -322,7 +332,7 @@ void ConCommand_007::Dispatch( const CCommand_007 &command )
 		if ( m_fnCommandCallback )
 		{
 			g_ArgsFromCCommand_007.SetCommand(&command);
-			m_fnCommandCallback((IWrpCommandArgs *)&g_ArgsFromCCommand_007);
+			m_fnCommandCallback((::IWrpCommandArgs *)&g_ArgsFromCCommand_007);
 			return;
 		}
 	}
@@ -748,3 +758,215 @@ MdtMatrix::MdtMatrix(const MdtMatrix & mdtMatrix)
 	memcpy(m[0],mdtMatrix.m[0], sizeof(m));
 }
 
+
+namespace CSGO {
+
+//-----------------------------------------------------------------------------
+// Purpose: Get the name of the current key section
+//-----------------------------------------------------------------------------
+const char *KeyValues::GetName( void ) const
+{
+	return KeyValuesSystem()->GetStringForSymbol(m_iKeyName);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get the symbol name of the current key section
+//-----------------------------------------------------------------------------
+int KeyValues::GetNameSymbol() const
+{
+	return m_iKeyName;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: looks up a key by symbol name
+//-----------------------------------------------------------------------------
+KeyValues *KeyValues::FindKey(int keySymbol) const
+{
+	for (KeyValues *dat = m_pSub; dat != NULL; dat = dat->m_pPeer)
+	{
+		if (dat->m_iKeyName == keySymbol)
+			return dat;
+	}
+
+	return NULL;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Find a keyValue, create it if it is not found.
+//			Set bCreate to true to create the key if it doesn't already exist 
+//			(which ensures a valid pointer will be returned)
+//-----------------------------------------------------------------------------
+KeyValues *KeyValues::FindKey(const char *keyName, bool bCreate)
+{
+	// return the current key if a NULL subkey is asked for
+	if (!keyName || !keyName[0])
+		return this;
+
+	// look for '/' characters deliminating sub fields
+	char szBuf[256];
+	const char *subStr = strchr(keyName, '/');
+	const char *searchStr = keyName;
+
+	// pull out the substring if it exists
+	if (subStr)
+	{
+		int size = subStr - keyName;
+		Q_memcpy( szBuf, keyName, size );
+		szBuf[size] = 0;
+		searchStr = szBuf;
+	}
+
+	// lookup the symbol for the search string
+	HKeySymbol iSearchStr = KeyValuesSystem()->GetSymbolForString( searchStr, bCreate );
+
+	if ( iSearchStr == INVALID_KEY_SYMBOL )
+	{
+		// not found, couldn't possibly be in key value list
+		return NULL;
+	}
+
+	KeyValues *lastItem = NULL;
+	KeyValues *dat;
+	// find the searchStr in the current peer list
+	for (dat = m_pSub; dat != NULL; dat = dat->m_pPeer)
+	{
+		lastItem = dat;	// record the last item looked at (for if we need to append to the end of the list)
+
+		// symbol compare
+		if (dat->m_iKeyName == iSearchStr)
+		{
+			break;
+		}
+	}
+
+	if ( !dat && m_pChain )
+	{
+		dat = m_pChain->FindKey(keyName, false);
+	}
+
+	// make sure a key was found
+	if (!dat)
+	{
+		if (bCreate)
+		{
+			/*
+			// we need to create a new key
+			dat = new KeyValues( searchStr );
+//			Assert(dat != NULL);
+
+			dat->UsesEscapeSequences( m_bHasEscapeSequences != 0 );	// use same format as parent
+			//dat->UsesConditionals( m_bEvaluateConditionals != 0 );
+
+			// insert new key at end of list
+			if (lastItem)
+			{
+				lastItem->m_pPeer = dat;
+			}
+			else
+			{
+				m_pSub = dat;
+			}
+			dat->m_pPeer = NULL;
+
+			// a key graduates to be a submsg as soon as it's m_pSub is set
+			// this should be the only place m_pSub is set
+			m_iDataType = TYPE_NONE;
+			*/
+			throw "KeyValues::FindKey not implemented for bCreate == true!";
+		}
+		else
+		{
+			return NULL;
+		}
+	}
+	
+	// if we've still got a subStr we need to keep looking deeper in the tree
+	if ( subStr )
+	{
+		// recursively chain down through the paths in the string
+		return dat->FindKey(subStr + 1, bCreate);
+	}
+
+	return dat;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Get the integer value of a keyName. Default value is returned
+//			if the keyName can't be found.
+//-----------------------------------------------------------------------------
+int KeyValues::GetInt(const char *keyName, int defaultValue)
+{
+	KeyValues *dat = FindKey(keyName, false);
+	if (dat)
+	{
+		switch (dat->m_iDataType)
+		{
+		case TYPE_STRING:
+			return atoi(dat->m_sValue);
+		case TYPE_WSTRING:
+			return _wtoi(dat->m_wsValue);
+		case TYPE_FLOAT:
+			return (int)dat->m_flValue;
+		case TYPE_UINT64:
+			// can't convert, since it would lose data
+			Assert(0);
+			return 0;
+		case TYPE_INT:
+		case TYPE_PTR:
+		default:
+			return dat->m_iValue;
+		};
+	}
+	return defaultValue;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get the pointer value of a keyName. Default value is returned
+//			if the keyName can't be found.
+//-----------------------------------------------------------------------------
+void *KeyValues::GetPtr(const char *keyName, void *defaultValue)
+{
+	KeyValues *dat = FindKey(keyName, false);
+	if (dat)
+	{
+		switch (dat->m_iDataType)
+		{
+		case TYPE_PTR:
+			return dat->m_pValue;
+
+		case TYPE_WSTRING:
+		case TYPE_STRING:
+		case TYPE_FLOAT:
+		case TYPE_INT:
+		case TYPE_UINT64:
+		default:
+			return NULL;
+		};
+	}
+	return defaultValue;
+}
+
+typedef IKeyValuesSystem * (*vstdblib_KeyValuesSystem_t)(void);
+
+IKeyValuesSystem *KeyValuesSystem()
+{
+	static vstdblib_KeyValuesSystem_t vstdblib_KeyValuesSystem = 0;
+	static bool firstRun = true;
+
+	if (firstRun)
+	{
+		firstRun = false;
+
+		HMODULE hModule = GetModuleHandleA("vstdlib");
+		if (hModule)
+		{
+			vstdblib_KeyValuesSystem = (vstdblib_KeyValuesSystem_t)GetProcAddress(hModule, "KeyValuesSystem");
+		}
+	}
+
+	return vstdblib_KeyValuesSystem();
+}
+
+} // namespace CSGO {
+} // namespace SOURCESDK {

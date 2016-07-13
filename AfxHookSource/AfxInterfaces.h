@@ -29,7 +29,7 @@ public:
 class IAfxMaterial abstract
 {
 public:
-	virtual IMaterial_csgo * GetMaterial() const = 0;
+	virtual SOURCESDK::IMaterial_csgo * GetMaterial() const = 0;
 };
 
 class IAfxVRenderView;
@@ -49,7 +49,7 @@ public:
 class IAfxVRenderView abstract
 {
 public:
-	virtual IVRenderView_csgo * GetParent() = 0;
+	virtual SOURCESDK::IVRenderView_csgo * GetParent() = 0;
 
 	virtual void OnSetBlend_set(IAfxVRenderViewSetBlend * value) = 0;
 	virtual void OnSetColorModulation_set(IAfxVRenderViewSetColorModulation * value) = 0;
@@ -62,18 +62,18 @@ class IAfxMatRenderContextMaterialHook abstract
 {
 public:
 	/// <returns>Return the material you want to use (instead).</returns>
-	virtual IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material) = 0;
+	virtual SOURCESDK::IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, SOURCESDK::IMaterial_csgo * material) = 0;
 };
 
 class IAfxMatRenderContextDrawInstances abstract
 {
 public:
-	virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance ) = 0;
+	virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const SOURCESDK::MeshInstanceData_t_csgo *pInstance ) = 0;
 };
 class IAfxMatRenderContext abstract
 {
 public:
-	virtual IMatRenderContext_csgo * GetParent() = 0;
+	virtual SOURCESDK::IMatRenderContext_csgo * GetParent() = 0;
 
 	virtual void OnMaterialHook_set(IAfxMatRenderContextMaterialHook * value) = 0;
 	virtual void OnDrawInstances_set(IAfxMatRenderContextDrawInstances * value) = 0;
@@ -97,13 +97,13 @@ public:
 class IAfxBaseClientDllView_Render abstract
 {
 public:
-	virtual void View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx, vrect_t_csgo *rect) = 0;
+	virtual void View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx, SOURCESDK::vrect_t_csgo *rect) = 0;
 };
 
 class IAfxBaseClientDll abstract
 {
 public:
-	virtual IBaseClientDLL_csgo * GetParent() = 0;
+	virtual SOURCESDK::IBaseClientDLL_csgo * GetParent() = 0;
 	virtual IAfxFreeMaster * GetFreeMaster() = 0;
 
 	virtual void OnShutdown_set(IAfxBaseClientDllShutdown * value) = 0;
@@ -114,7 +114,7 @@ public:
 class IAfxMesh abstract
 {
 public:
-	virtual IMeshEx_csgo * GetParent(void) = 0;
+	virtual SOURCESDK::IMeshEx_csgo * GetParent(void) = 0;
 };
 
 class IAfxMeshDraw abstract
@@ -126,13 +126,13 @@ public:
 class IAfxMeshDraw_2 abstract
 {
 public:
-	virtual void Draw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists) = 0;
+	virtual void Draw_2(IAfxMesh * am, SOURCESDK::CPrimList_csgo *pLists, int nLists) = 0;
 };
 
 class IAfxMeshDrawModulated abstract
 {
 public:
-	virtual void DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 ) = 0;
+	virtual void DrawModulated(IAfxMesh * am, const SOURCESDK::Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 ) = 0;
 };
 
 class IAfxSetVertexShader abstract
@@ -158,10 +158,10 @@ class IAfxStreams4Stream abstract
 public:
 	virtual void DebugDump() = 0;
 
-	virtual IMaterialSystem_csgo * GetMaterialSystem(void) = 0;
+	virtual SOURCESDK::IMaterialSystem_csgo * GetMaterialSystem(void) = 0;
 	virtual IAfxFreeMaster * GetFreeMaster(void) = 0;
 	virtual IAfxMatRenderContext * GetCurrentContext(void) = 0;
-	virtual IShaderShadow_csgo * GetShaderShadow(void) = 0;
+	virtual SOURCESDK::IShaderShadow_csgo * GetShaderShadow(void) = 0;
 
 	virtual std::wstring GetTakeDir(void) = 0;
 

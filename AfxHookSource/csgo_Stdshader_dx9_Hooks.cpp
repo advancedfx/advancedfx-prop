@@ -71,7 +71,7 @@ public:
 		Unlock();
 	}
 
-	void OnStatic_BlendFunc(CAfxStdShaderHookKey key, ShaderBlendFactor_t_csgo srcFactor, ShaderBlendFactor_t_csgo dstFactor)
+	void OnStatic_BlendFunc(CAfxStdShaderHookKey key, SOURCESDK::ShaderBlendFactor_t_csgo srcFactor, SOURCESDK::ShaderBlendFactor_t_csgo dstFactor)
 	{
 		Lock();
 
@@ -214,9 +214,9 @@ private:
 } g_AfxStdShaderHook;
 
 class CAfxBasePerMaterialContextDataPiggyBack_csgo
-: public CBasePerMaterialContextData_csgo
-, public IShaderShadow_csgo
-, public IShaderDynamicAPI_csgo
+: public SOURCESDK::CBasePerMaterialContextData_csgo
+, public SOURCESDK::IShaderShadow_csgo
+, public SOURCESDK::IShaderDynamicAPI_csgo
 {
 public:
 	CAfxBasePerMaterialContextDataPiggyBack_csgo( void )
@@ -314,7 +314,7 @@ public:
 	virtual void IShaderShadow_csgo::_UNKOWN_008(void)
 	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 8) }
 
-	virtual void IShaderShadow_csgo::BlendFunc( ShaderBlendFactor_t_csgo srcFactor, ShaderBlendFactor_t_csgo dstFactor )
+	virtual void IShaderShadow_csgo::BlendFunc(SOURCESDK::ShaderBlendFactor_t_csgo srcFactor, SOURCESDK::ShaderBlendFactor_t_csgo dstFactor )
 	{
 		//JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderShadow, 0xC, 0x0, 9)
 	
@@ -597,7 +597,7 @@ public:
 	virtual void IShaderDynamicAPI_csgo::_UNKOWN_057(void)
 	{ JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 57) }
 
-	virtual void IShaderDynamicAPI_csgo::ExecuteCommandBuffer( uint8 *pCmdBuffer )
+	virtual void IShaderDynamicAPI_csgo::ExecuteCommandBuffer(SOURCESDK::uint8 *pCmdBuffer )
 	{
 		// JMP_CLASSMEMBERIFACE_OFSEX_FN(CAfxBasePerMaterialContextDataPiggyBack_csgo, m_ParentShaderDynamicAPI, 0x10, 0x0, 58)
 
@@ -873,10 +873,10 @@ public:
 #pragma warning(pop)
 
 private:
-	CBasePerMaterialContextData_csgo * m_PiggyBack;
+	SOURCESDK::CBasePerMaterialContextData_csgo * m_PiggyBack;
 	CAfxStdShaderHookKey m_Key;
-	IShaderShadow_csgo * m_ParentShaderShadow;
-	IShaderDynamicAPI_csgo * m_ParentShaderDynamicAPI;
+	SOURCESDK::IShaderShadow_csgo * m_ParentShaderShadow;
+	SOURCESDK::IShaderDynamicAPI_csgo * m_ParentShaderDynamicAPI;
 	CAfx_csgo_ShaderState m_State;
 
 	void DoSetVertexShaderIndex(int vshIndex = -1 )
@@ -889,7 +889,7 @@ private:
 		g_AfxStdShaderHook.OnDynamic_SetPixelShaderIndex(m_Key, pshIndex);
 	}
 
-	void DoExecuteCommandBuffer(uint8 *pCmdBuffer)
+	void DoExecuteCommandBuffer(SOURCESDK::uint8 *pCmdBuffer)
 	{
 		if(!pCmdBuffer)
 			// In that case we can't do anything useful anyway.
@@ -901,28 +901,28 @@ private:
 		{
 			switch(*(int *)pCmdBuffer)
 			{
-			case CBCMD_END:
+			case SOURCESDK::CBCMD_END:
 				{
 					pCmdBuffer += sizeof(int);
 				}
 				return;
-			case CBCMD_JUMP:
+			case SOURCESDK::CBCMD_JUMP:
 				{
 					pCmdBuffer += sizeof(int);
-					uint8 * ptr = *(uint8 **)pCmdBuffer;
+					SOURCESDK::uint8 * ptr = *(SOURCESDK::uint8 **)pCmdBuffer;
 					pCmdBuffer += sizeof(ptr);
 					DoExecuteCommandBuffer(ptr);
 				}
 				return;
-			case CBCMD_JSR:
+			case SOURCESDK::CBCMD_JSR:
 				{
 					pCmdBuffer += sizeof(int);
-					uint8 * ptr = *(uint8 **)pCmdBuffer;
+					SOURCESDK::uint8 * ptr = *(SOURCESDK::uint8 **)pCmdBuffer;
 					pCmdBuffer += sizeof(ptr);
 					DoExecuteCommandBuffer(ptr);
 				}
 				break;
-			case CBCMD_SET_PIXEL_SHADER_FLOAT_CONST:
+			case SOURCESDK::CBCMD_SET_PIXEL_SHADER_FLOAT_CONST:
 				{
 					pCmdBuffer += sizeof(int);
 					pCmdBuffer += sizeof(int);
@@ -931,7 +931,7 @@ private:
 					pCmdBuffer += nregs * 4 * sizeof(float);
 				}
 				break;
-			case CBCMD_SET_VERTEX_SHADER_FLOAT_CONST:
+			case SOURCESDK::CBCMD_SET_VERTEX_SHADER_FLOAT_CONST:
 				{
 					pCmdBuffer += sizeof(int);
 					pCmdBuffer += sizeof(int);
@@ -940,41 +940,41 @@ private:
 					pCmdBuffer += nregs * 4 * sizeof(float);
 				}
 				break;
-			case CBCMD_SETPIXELSHADERFOGPARAMS:
+			case SOURCESDK::CBCMD_SETPIXELSHADERFOGPARAMS:
 				{
 					pCmdBuffer += sizeof(int);
 					pCmdBuffer += sizeof(int);
 				}
 				break;
-			case CBCMD_STORE_EYE_POS_IN_PSCONST:
-				{
-					pCmdBuffer += sizeof(int);
-					pCmdBuffer += sizeof(int);
-					pCmdBuffer += sizeof(float);
-				}
-				break;
-			case CBCMD_SET_DEPTH_FEATHERING_CONST:
+			case SOURCESDK::CBCMD_STORE_EYE_POS_IN_PSCONST:
 				{
 					pCmdBuffer += sizeof(int);
 					pCmdBuffer += sizeof(int);
 					pCmdBuffer += sizeof(float);
 				}
 				break;
-			case CBCMD_BIND_STANDARD_TEXTURE:
+			case SOURCESDK::CBCMD_SET_DEPTH_FEATHERING_CONST:
+				{
+					pCmdBuffer += sizeof(int);
+					pCmdBuffer += sizeof(int);
+					pCmdBuffer += sizeof(float);
+				}
+				break;
+			case SOURCESDK::CBCMD_BIND_STANDARD_TEXTURE:
 				{
 					pCmdBuffer += sizeof(int);
 					pCmdBuffer += sizeof(int);
 					pCmdBuffer += sizeof(int);
 				}
 				break;
-			case CBCMD_BIND_SHADERAPI_TEXTURE_HANDLE:
+			case SOURCESDK::CBCMD_BIND_SHADERAPI_TEXTURE_HANDLE:
 				{
 					pCmdBuffer += sizeof(int);
 					pCmdBuffer += sizeof(int);
 					pCmdBuffer += sizeof(int);
 				}
 				break;
-			case CBCMD_SET_PSHINDEX:
+			case SOURCESDK::CBCMD_SET_PSHINDEX:
 				{
 					pCmdBuffer += sizeof(int);
 					int nIndex = *(int *)pCmdBuffer;
@@ -982,7 +982,7 @@ private:
 					pCmdBuffer += sizeof(int);
 				}
 				break;
-			case CBCMD_SET_VSHINDEX:
+			case SOURCESDK::CBCMD_SET_VSHINDEX:
 				{
 					pCmdBuffer += sizeof(int);
 					int nIndex = *(int *)pCmdBuffer;
@@ -990,30 +990,19 @@ private:
 					pCmdBuffer += sizeof(int);
 				}
 				break;
-			case CBCMD_SET_VERTEX_SHADER_FLASHLIGHT_STATE:
+			case SOURCESDK::CBCMD_SET_VERTEX_SHADER_FLASHLIGHT_STATE:
 				{
 					pCmdBuffer += sizeof(int);
 					pCmdBuffer += sizeof(int);
 				}
 				break;
-			case CBCMD_SET_PIXEL_SHADER_FLASHLIGHT_STATE:
+			case SOURCESDK::CBCMD_SET_PIXEL_SHADER_FLASHLIGHT_STATE:
 				{
 					pCmdBuffer += sizeof(int);
 					pCmdBuffer += sizeof(int);
 					pCmdBuffer += sizeof(int);
 					pCmdBuffer += sizeof(int);
 					pCmdBuffer += sizeof(int);
-					pCmdBuffer += sizeof(int);
-					pCmdBuffer += sizeof(int);
-					pCmdBuffer += sizeof(int);
-					pCmdBuffer += sizeof(int);
-					pCmdBuffer += sizeof(int);
-					pCmdBuffer += sizeof(int);
-					pCmdBuffer += sizeof(int);
-				}
-				break;
-			case CBCMD_SET_PIXEL_SHADER_UBERLIGHT_STATE:
-				{
 					pCmdBuffer += sizeof(int);
 					pCmdBuffer += sizeof(int);
 					pCmdBuffer += sizeof(int);
@@ -1023,7 +1012,18 @@ private:
 					pCmdBuffer += sizeof(int);
 				}
 				break;
-			case CBCMD_SET_VERTEX_SHADER_NEARZFARZ_STATE:
+			case SOURCESDK::CBCMD_SET_PIXEL_SHADER_UBERLIGHT_STATE:
+				{
+					pCmdBuffer += sizeof(int);
+					pCmdBuffer += sizeof(int);
+					pCmdBuffer += sizeof(int);
+					pCmdBuffer += sizeof(int);
+					pCmdBuffer += sizeof(int);
+					pCmdBuffer += sizeof(int);
+					pCmdBuffer += sizeof(int);
+				}
+				break;
+			case SOURCESDK::CBCMD_SET_VERTEX_SHADER_NEARZFARZ_STATE:
 				{
 					pCmdBuffer += sizeof(int);
 					pCmdBuffer += sizeof(int);
@@ -1039,19 +1039,19 @@ private:
 
 typedef void (__stdcall *csgo_stdshader_dx9_CBaseShader_DrawElements_t)(
 	DWORD *this_ptr,
-	IMaterialVar_csgo **ppParams, int nModulationFlags,
-	IShaderShadow_csgo* pShaderShadow, IShaderDynamicAPI_csgo* pShaderAPI,
-	VertexCompressionType_t_csgo vertexCompression,
-	CBasePerMaterialContextData_csgo **pContextDataPtr, CBasePerInstanceContextData_csgo** pInstanceDataPtr);
+	SOURCESDK::IMaterialVar_csgo **ppParams, int nModulationFlags,
+	SOURCESDK::IShaderShadow_csgo* pShaderShadow, SOURCESDK::IShaderDynamicAPI_csgo* pShaderAPI,
+	SOURCESDK::VertexCompressionType_t_csgo vertexCompression,
+	SOURCESDK::CBasePerMaterialContextData_csgo **pContextDataPtr, SOURCESDK::CBasePerInstanceContextData_csgo** pInstanceDataPtr);
 
 typedef void (__stdcall *csgo_stdshader_dx9_CBaseShader_SomewhatDrawElements_t)(
 	DWORD *this_ptr,
 	unsigned __int32 * unkDataPtr1,
 	unsigned __int32 * unkDataPtr2,
 	void * unkClass1, // related to VertexBuffer
-	IShaderDynamicAPI_csgo* pShaderAPI,
+	SOURCESDK::IShaderDynamicAPI_csgo* pShaderAPI,
 	unsigned __int32 unkData2,
-	CBasePerMaterialContextData_csgo **pContext,
+	SOURCESDK::CBasePerMaterialContextData_csgo **pContext,
 	unsigned __int32 unkData3
 	);
 
@@ -1061,10 +1061,10 @@ csgo_stdshader_dx9_CBaseShader_DrawElements_t detoured_csgo_SplineRope_CShader_D
 //
 void __stdcall touring_csgo_SplineRope_CShader_DrawElements(
 	DWORD *this_ptr,
-	IMaterialVar_csgo **ppParams, int nModulationFlags,
-	IShaderShadow_csgo* pShaderShadow, IShaderDynamicAPI_csgo* pShaderAPI,
-	VertexCompressionType_t_csgo vertexCompression,
-	CBasePerMaterialContextData_csgo **pContextDataPtr, CBasePerInstanceContextData_csgo** pInstanceDataPtr)
+	SOURCESDK::IMaterialVar_csgo **ppParams, int nModulationFlags,
+	SOURCESDK::IShaderShadow_csgo* pShaderShadow, SOURCESDK::IShaderDynamicAPI_csgo* pShaderAPI,
+	SOURCESDK::VertexCompressionType_t_csgo vertexCompression,
+	SOURCESDK::CBasePerMaterialContextData_csgo **pContextDataPtr, SOURCESDK::CBasePerInstanceContextData_csgo** pInstanceDataPtr)
 {
 	//if(pShaderShadow) Tier0_Msg("touring_csgo_SplineRope_CShader_OnDrawElements(0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x (* = 0x%08x)):%s (0x%08x) threadId=%i\n",this_ptr, ppParams, pShaderShadow, pShaderAPI, vertexCompression, pContextDataPtr, *pContextDataPtr, ppParams[0]->GetOwningMaterial()->GetName(), ppParams[0]->GetOwningMaterial(), GetCurrentThreadId());
 
@@ -1075,7 +1075,7 @@ void __stdcall touring_csgo_SplineRope_CShader_DrawElements(
 		pContextData = new CAfxBasePerMaterialContextDataPiggyBack_csgo();
 	}
 
-	CBasePerMaterialContextData_csgo * payLoad = pContextData->PreUpdatePiggy();
+	SOURCESDK::CBasePerMaterialContextData_csgo * payLoad = pContextData->PreUpdatePiggy();
 
 	pContextData->SetParentApis(pShaderShadow, pShaderAPI);
 	pContextData->SetKey(pContextDataPtr);
@@ -1105,9 +1105,9 @@ void __stdcall touring_csgo_SplineRope_CShader_SomewhatDrawElements(
 	unsigned __int32 * unkDataPtr1,
 	unsigned __int32 * unkDataPtr2,
 	void * unkClass1, // related to VertexBuffer
-	IShaderDynamicAPI_csgo* pShaderAPI,
+	SOURCESDK::IShaderDynamicAPI_csgo* pShaderAPI,
 	unsigned __int32 unkData2,
-	CBasePerMaterialContextData_csgo **pContext,
+	SOURCESDK::CBasePerMaterialContextData_csgo **pContext,
 	unsigned __int32 unkData3
 	)
 {
@@ -1137,7 +1137,7 @@ void __stdcall touring_csgo_SplineRope_CShader_SomewhatDrawElements(
 		pContextData = new CAfxBasePerMaterialContextDataPiggyBack_csgo();
 	}
 
-	CBasePerMaterialContextData_csgo * payLoad = pContextData->PreUpdatePiggy();
+	SOURCESDK::CBasePerMaterialContextData_csgo * payLoad = pContextData->PreUpdatePiggy();
 
 	pContextData->SetParentApis(0, pShaderAPI);
 	pContextData->SetKey(pContext);
@@ -1164,10 +1164,10 @@ csgo_stdshader_dx9_CBaseShader_DrawElements_t detoured_csgo_Spritecard_CShader_D
 //
 void __stdcall touring_csgo_Spritecard_CShader_DrawElements(
 	DWORD *this_ptr,
-	IMaterialVar_csgo **ppParams, int nModulationFlags,
-	IShaderShadow_csgo* pShaderShadow, IShaderDynamicAPI_csgo* pShaderAPI,
-	VertexCompressionType_t_csgo vertexCompression,
-	CBasePerMaterialContextData_csgo **pContextDataPtr, CBasePerInstanceContextData_csgo** pInstanceDataPtr)
+	SOURCESDK::IMaterialVar_csgo **ppParams, int nModulationFlags,
+	SOURCESDK::IShaderShadow_csgo* pShaderShadow, SOURCESDK::IShaderDynamicAPI_csgo* pShaderAPI,
+	SOURCESDK::VertexCompressionType_t_csgo vertexCompression,
+	SOURCESDK::CBasePerMaterialContextData_csgo **pContextDataPtr, SOURCESDK::CBasePerInstanceContextData_csgo** pInstanceDataPtr)
 {
 	//if(pShaderShadow) Tier0_Msg("touring_csgo_Spritecard_CShader_OnDrawElements(0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x (* = 0x%08x)):%s (0x%08x) threadId=%i\n",this_ptr, ppParams, pShaderShadow, pShaderAPI, vertexCompression, pContextDataPtr, *pContextDataPtr, ppParams[0]->GetOwningMaterial()->GetName(), ppParams[0]->GetOwningMaterial(), GetCurrentThreadId());
 
@@ -1178,7 +1178,7 @@ void __stdcall touring_csgo_Spritecard_CShader_DrawElements(
 		pContextData = new CAfxBasePerMaterialContextDataPiggyBack_csgo();
 	}
 
-	CBasePerMaterialContextData_csgo * payLoad = pContextData->PreUpdatePiggy();
+	SOURCESDK::CBasePerMaterialContextData_csgo * payLoad = pContextData->PreUpdatePiggy();
 
 	pContextData->SetParentApis(pShaderShadow, pShaderAPI);
 	pContextData->SetKey(pContextDataPtr);
@@ -1208,9 +1208,9 @@ void __stdcall touring_csgo_Spritecard_CShader_SomewhatDrawElements(
 	unsigned __int32 * unkDataPtr1,
 	unsigned __int32 * unkDataPtr2,
 	void * unkClass1, // related to VertexBuffer
-	IShaderDynamicAPI_csgo* pShaderAPI,
+	SOURCESDK::IShaderDynamicAPI_csgo* pShaderAPI,
 	unsigned __int32 unkData2,
-	CBasePerMaterialContextData_csgo **pContext,
+	SOURCESDK::CBasePerMaterialContextData_csgo **pContext,
 	unsigned __int32 unkData3
 	)
 {
@@ -1240,7 +1240,7 @@ void __stdcall touring_csgo_Spritecard_CShader_SomewhatDrawElements(
 		pContextData = new CAfxBasePerMaterialContextDataPiggyBack_csgo();
 	}
 
-	CBasePerMaterialContextData_csgo * payLoad = pContextData->PreUpdatePiggy();
+	SOURCESDK::CBasePerMaterialContextData_csgo * payLoad = pContextData->PreUpdatePiggy();
 
 	pContextData->SetParentApis(0, pShaderAPI);
 	pContextData->SetKey(pContext);
@@ -1267,10 +1267,10 @@ csgo_stdshader_dx9_CBaseShader_DrawElements_t detoured_csgo_VertexLitGeneric_CSh
 //
 void __stdcall touring_csgo_VertexLitGeneric_CShader_DrawElements(
 	DWORD *this_ptr,
-	IMaterialVar_csgo **ppParams, int nModulationFlags,
-	IShaderShadow_csgo* pShaderShadow, IShaderDynamicAPI_csgo* pShaderAPI,
-	VertexCompressionType_t_csgo vertexCompression,
-	CBasePerMaterialContextData_csgo **pContextDataPtr, CBasePerInstanceContextData_csgo** pInstanceDataPtr)
+	SOURCESDK::IMaterialVar_csgo **ppParams, int nModulationFlags,
+	SOURCESDK::IShaderShadow_csgo* pShaderShadow, SOURCESDK::IShaderDynamicAPI_csgo* pShaderAPI,
+	SOURCESDK::VertexCompressionType_t_csgo vertexCompression,
+	SOURCESDK::CBasePerMaterialContextData_csgo **pContextDataPtr, SOURCESDK::CBasePerInstanceContextData_csgo** pInstanceDataPtr)
 {
 	//if(pShaderShadow) Tier0_Msg("touring_csgo_Spritecard_CShader_OnDrawElements(0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x (* = 0x%08x)):%s (0x%08x) threadId=%i\n",this_ptr, ppParams, pShaderShadow, pShaderAPI, vertexCompression, pContextDataPtr, *pContextDataPtr, ppParams[0]->GetOwningMaterial()->GetName(), ppParams[0]->GetOwningMaterial(), GetCurrentThreadId());
 
@@ -1281,7 +1281,7 @@ void __stdcall touring_csgo_VertexLitGeneric_CShader_DrawElements(
 		pContextData = new CAfxBasePerMaterialContextDataPiggyBack_csgo();
 	}
 
-	CBasePerMaterialContextData_csgo * payLoad = pContextData->PreUpdatePiggy();
+	SOURCESDK::CBasePerMaterialContextData_csgo * payLoad = pContextData->PreUpdatePiggy();
 
 	pContextData->SetParentApis(pShaderShadow, pShaderAPI);
 	pContextData->SetKey(pContextDataPtr);
@@ -1311,9 +1311,9 @@ void __stdcall touring_csgo_VertexLitGeneric_CShader_SomewhatDrawElements(
 	unsigned __int32 * unkDataPtr1,
 	unsigned __int32 * unkDataPtr2,
 	void * unkClass1, // related to VertexBuffer
-	IShaderDynamicAPI_csgo* pShaderAPI,
+	SOURCESDK::IShaderDynamicAPI_csgo* pShaderAPI,
 	unsigned __int32 unkData2,
-	CBasePerMaterialContextData_csgo **pContext,
+	SOURCESDK::CBasePerMaterialContextData_csgo **pContext,
 	unsigned __int32 unkData3
 	)
 {
@@ -1343,7 +1343,7 @@ void __stdcall touring_csgo_VertexLitGeneric_CShader_SomewhatDrawElements(
 		pContextData = new CAfxBasePerMaterialContextDataPiggyBack_csgo();
 	}
 
-	CBasePerMaterialContextData_csgo * payLoad = pContextData->PreUpdatePiggy();
+	SOURCESDK::CBasePerMaterialContextData_csgo * payLoad = pContextData->PreUpdatePiggy();
 
 	pContextData->SetParentApis(0, pShaderAPI);
 	pContextData->SetKey(pContext);
@@ -1370,10 +1370,10 @@ csgo_stdshader_dx9_CBaseShader_DrawElements_t detoured_csgo_UnlitGeneric_CShader
 //
 void __stdcall touring_csgo_UnlitGeneric_CShader_DrawElements(
 	DWORD *this_ptr,
-	IMaterialVar_csgo **ppParams, int nModulationFlags,
-	IShaderShadow_csgo* pShaderShadow, IShaderDynamicAPI_csgo* pShaderAPI,
-	VertexCompressionType_t_csgo vertexCompression,
-	CBasePerMaterialContextData_csgo **pContextDataPtr, CBasePerInstanceContextData_csgo** pInstanceDataPtr)
+	SOURCESDK::IMaterialVar_csgo **ppParams, int nModulationFlags,
+	SOURCESDK::IShaderShadow_csgo* pShaderShadow, SOURCESDK::IShaderDynamicAPI_csgo* pShaderAPI,
+	SOURCESDK::VertexCompressionType_t_csgo vertexCompression,
+	SOURCESDK::CBasePerMaterialContextData_csgo **pContextDataPtr, SOURCESDK::CBasePerInstanceContextData_csgo** pInstanceDataPtr)
 {
 	//if(pShaderShadow) Tier0_Msg("touring_csgo_Spritecard_CShader_OnDrawElements(0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x (* = 0x%08x)):%s (0x%08x) threadId=%i\n",this_ptr, ppParams, pShaderShadow, pShaderAPI, vertexCompression, pContextDataPtr, *pContextDataPtr, ppParams[0]->GetOwningMaterial()->GetName(), ppParams[0]->GetOwningMaterial(), GetCurrentThreadId());
 
@@ -1384,7 +1384,7 @@ void __stdcall touring_csgo_UnlitGeneric_CShader_DrawElements(
 		pContextData = new CAfxBasePerMaterialContextDataPiggyBack_csgo();
 	}
 
-	CBasePerMaterialContextData_csgo * payLoad = pContextData->PreUpdatePiggy();
+	SOURCESDK::CBasePerMaterialContextData_csgo * payLoad = pContextData->PreUpdatePiggy();
 
 	pContextData->SetParentApis(pShaderShadow, pShaderAPI);
 	pContextData->SetKey(pContextDataPtr);
@@ -1414,9 +1414,9 @@ void __stdcall touring_csgo_UnlitGeneric_CShader_SomewhatDrawElements(
 	unsigned __int32 * unkDataPtr1,
 	unsigned __int32 * unkDataPtr2,
 	void * unkClass1, // related to VertexBuffer
-	IShaderDynamicAPI_csgo* pShaderAPI,
+	SOURCESDK::IShaderDynamicAPI_csgo* pShaderAPI,
 	unsigned __int32 unkData2,
-	CBasePerMaterialContextData_csgo **pContext,
+	SOURCESDK::CBasePerMaterialContextData_csgo **pContext,
 	unsigned __int32 unkData3
 	)
 {
@@ -1446,7 +1446,7 @@ void __stdcall touring_csgo_UnlitGeneric_CShader_SomewhatDrawElements(
 		pContextData = new CAfxBasePerMaterialContextDataPiggyBack_csgo();
 	}
 
-	CBasePerMaterialContextData_csgo * payLoad = pContextData->PreUpdatePiggy();
+	SOURCESDK::CBasePerMaterialContextData_csgo * payLoad = pContextData->PreUpdatePiggy();
 
 	pContextData->SetParentApis(0, pShaderAPI);
 	pContextData->SetKey(pContext);

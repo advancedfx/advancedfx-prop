@@ -17,7 +17,7 @@
 
 // WrpVEngineClient_012 ///////////////////////////////////////////////////////////
 
-WrpVEngineClient_012::WrpVEngineClient_012(IVEngineClient_012 * iface) {
+WrpVEngineClient_012::WrpVEngineClient_012(SOURCESDK::IVEngineClient_012 * iface) {
 	m_VEngineClient_012 = iface;
 }
 
@@ -37,11 +37,11 @@ bool WrpVEngineClient_012::Con_IsVisible( void ) {
 	return m_VEngineClient_012->Con_IsVisible();
 }
 
-void WrpVEngineClient_012::GetViewAngles( QAngle& va ) {
+void WrpVEngineClient_012::GetViewAngles(SOURCESDK::QAngle& va ) {
 	m_VEngineClient_012->GetViewAngles(va);
 }
 
-void WrpVEngineClient_012::SetViewAngles( QAngle& va ) {
+void WrpVEngineClient_012::SetViewAngles(SOURCESDK::QAngle& va ) {
 	m_VEngineClient_012->SetViewAngles(va);
 }
 
@@ -71,12 +71,12 @@ const char *  WrpVEngineClient_012::GetGameDirectory( void ) {
 	return m_VEngineClient_012->GetGameDirectory();
 }
 
-const VMatrix& WrpVEngineClient_012::WorldToScreenMatrix()
+const SOURCESDK::VMatrix& WrpVEngineClient_012::WorldToScreenMatrix()
 {
 	return m_VEngineClient_012->WorldToScreenMatrix();
 }
 
-const VMatrix& WrpVEngineClient_012::WorldToViewMatrix()
+const SOURCESDK::VMatrix& WrpVEngineClient_012::WorldToViewMatrix()
 {
 	return m_VEngineClient_012->WorldToViewMatrix();
 }
@@ -161,7 +161,7 @@ WrpVEngineClientDemoInfoEx * WrpVEngineClient_012::GetDemoInfoEx(void)
 
 // WrpVEngineClient_013 ///////////////////////////////////////////////////////////
 
-WrpVEngineClient_013::WrpVEngineClient_013(IVEngineClient_013 * iface) {
+WrpVEngineClient_013::WrpVEngineClient_013(SOURCESDK::IVEngineClient_013 * iface) {
 	m_VEngineClient_013 = iface;
 }
 
@@ -181,11 +181,11 @@ bool WrpVEngineClient_013::Con_IsVisible( void ) {
 	return m_VEngineClient_013->Con_IsVisible();
 }
 
-void WrpVEngineClient_013::GetViewAngles( QAngle& va ) {
+void WrpVEngineClient_013::GetViewAngles(SOURCESDK::QAngle& va ) {
 	m_VEngineClient_013->GetViewAngles(va);
 }
 
-void WrpVEngineClient_013::SetViewAngles( QAngle& va ) {
+void WrpVEngineClient_013::SetViewAngles(SOURCESDK::QAngle& va ) {
 	m_VEngineClient_013->SetViewAngles(va);
 }
 
@@ -215,12 +215,12 @@ const char *  WrpVEngineClient_013::GetGameDirectory( void ) {
 	return m_VEngineClient_013->GetGameDirectory();
 }
 
-const VMatrix& WrpVEngineClient_013::WorldToScreenMatrix()
+const SOURCESDK::VMatrix& WrpVEngineClient_013::WorldToScreenMatrix()
 {
 	return m_VEngineClient_013->WorldToScreenMatrix();
 }
 
-const VMatrix& WrpVEngineClient_013::WorldToViewMatrix()
+const SOURCESDK::VMatrix& WrpVEngineClient_013::WorldToViewMatrix()
 {
 	return m_VEngineClient_013->WorldToViewMatrix();
 }
@@ -329,7 +329,7 @@ WrpVEngineClientDemoInfoEx * WrpVEngineClient_013::GetDemoInfoEx(void)
 
 // WrpVEngineClient_013_csgo ///////////////////////////////////////////////////////////
 
-WrpVEngineClient_013_csgo::WrpVEngineClient_013_csgo(IVEngineClient_013_csgo * iface) {
+WrpVEngineClient_013_csgo::WrpVEngineClient_013_csgo(SOURCESDK::IVEngineClient_013_csgo * iface) {
 	m_VEngineClient_013 = iface;
 }
 
@@ -349,11 +349,11 @@ bool WrpVEngineClient_013_csgo::Con_IsVisible( void ) {
 	return m_VEngineClient_013->Con_IsVisible();
 }
 
-void WrpVEngineClient_013_csgo::GetViewAngles( QAngle& va ) {
+void WrpVEngineClient_013_csgo::GetViewAngles(SOURCESDK::QAngle& va ) {
 	m_VEngineClient_013->GetViewAngles(va);
 }
 
-void WrpVEngineClient_013_csgo::SetViewAngles( QAngle& va ) {
+void WrpVEngineClient_013_csgo::SetViewAngles(SOURCESDK::QAngle& va ) {
 	m_VEngineClient_013->SetViewAngles(va);
 }
 
@@ -383,12 +383,12 @@ const char *  WrpVEngineClient_013_csgo::GetGameDirectory( void ) {
 	return m_VEngineClient_013->GetGameDirectory();
 }
 
-const VMatrix& WrpVEngineClient_013_csgo::WorldToScreenMatrix()
+const SOURCESDK::VMatrix& WrpVEngineClient_013_csgo::WorldToScreenMatrix()
 {
 	return m_VEngineClient_013->WorldToScreenMatrix();
 }
 
-const VMatrix& WrpVEngineClient_013_csgo::WorldToViewMatrix()
+const SOURCESDK::VMatrix& WrpVEngineClient_013_csgo::WorldToViewMatrix()
 {
 	return m_VEngineClient_013->WorldToViewMatrix();
 }

@@ -60,7 +60,7 @@ private:
 	bool m_PolyLineStarted;
 	bool m_RebuildDrawing;
 	IAfxVertexShader * m_VertexShader;
-	VMatrix m_WorldToScreenMatrix;
+	SOURCESDK::VMatrix m_WorldToScreenMatrix;
 	IDirect3DVertexBuffer9 * m_VertexBuffer;
 	UINT m_VertexBufferVertexCount; // c_VertexBufferVertexCount
 	Vertex * m_LockedVertexBuffer;

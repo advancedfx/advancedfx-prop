@@ -10,4 +10,4 @@
 
 #include "SourceInterfaces.h"
 
-IViewRender_csgo * GetView_csgo(void);
+SOURCESDK::IViewRender_csgo * GetView_csgo(void);

@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-06-01 dominik.matrixstorm.com
+// 2016-07-06 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-09-30 dominik.matrixstorm.com
@@ -13,6 +13,12 @@
 
 // Description:
 // Interface definitions for accessing the Source engine.
+
+
+class IWrpCommandArgs;
+class WrpConCommands;
+class WrpConVarRef;
+
 
 typedef char tier0_char;
 
@@ -36,10 +42,38 @@ extern Tier0MsgFn Tier0_ConDWarning;
 extern Tier0MsgFn Tier0_ConDLog;
 
 
+namespace SOURCESDK {
+
+#ifndef NULL
+#define NULL 0
+#endif
+
 #define FORCEINLINE __forceinline
 #define FORCEINLINE_CVAR FORCEINLINE
 
+#define Assert(condition)
+#define CHECK_VALID( _v)
 
+#define Q_memcpy strncpy
+
+typedef float vec_t;
+typedef unsigned __int32 uint32;
+
+inline vec_t BitsToFloat(uint32 i)
+{
+	union Convertor_t
+	{
+		vec_t f;
+		unsigned long ul;
+	}tmp;
+	tmp.ul = i;
+	return tmp.f;
+}
+
+#define FLOAT32_NAN_BITS     (uint32)0x7FC00000	// not a number!
+#define FLOAT32_NAN          BitsToFloat( FLOAT32_NAN_BITS )
+
+#define VEC_T_NAN FLOAT32_NAN
 
 #define FCVAR_NONE				0 
 #define FCVAR_UNREGISTERED		(1<<0)
@@ -57,19 +91,19 @@ typedef void* (*CreateInterfaceFn)(const char *pName, int *pReturnCode);
 
 CreateInterfaceFn Sys_GetFactory( CSysModule *pModule );
 
-typedef float vec_t;
 
 
 // Vector //////////////////////////////////////////////////////////////////////
 
-class MdtVector;
-typedef MdtVector Vector;
-
-class MdtVector				
+class Vector				
 {
 public:
 	// Members
 	vec_t x, y, z;
+
+	// Initialization
+	void Init(vec_t ix = 0.0f, vec_t iy = 0.0f, vec_t iz = 0.0f);
+	// TODO (Ilya): Should there be an init that takes a single float for consistency?
 
 	// shortened.
 };
@@ -77,17 +111,456 @@ public:
 
 // QAngle //////////////////////////////////////////////////////////////////////
 
-class MdtQAngle;
-typedef MdtQAngle QAngle;
+//-----------------------------------------------------------------------------
+// Degree Euler QAngle pitch, yaw, roll
+//-----------------------------------------------------------------------------
+class QAngleByValue;
 
-class MdtQAngle				
+class QAngle
 {
 public:
 	// Members
 	vec_t x, y, z;
 
-	// shortened.
+	// Construction/destruction
+	QAngle(void);
+	QAngle(vec_t X, vec_t Y, vec_t Z);
+	//	QAngle(RadianEuler const &angles);	// evil auto type promotion!!!
+
+	// Allow pass-by-value
+	operator QAngleByValue &() { return *((QAngleByValue *)(this)); }
+	operator const QAngleByValue &() const { return *((const QAngleByValue *)(this)); }
+
+	// Initialization
+	void Init(vec_t ix = 0.0f, vec_t iy = 0.0f, vec_t iz = 0.0f);
+	void Random(vec_t minVal, vec_t maxVal);
+
+	// Got any nasty NAN's?
+	bool IsValid() const;
+	void Invalidate();
+
+	// array access...
+	vec_t operator[](int i) const;
+	vec_t& operator[](int i);
+
+	// Base address...
+	vec_t* Base();
+	vec_t const* Base() const;
+
+	// equality
+	bool operator==(const QAngle& v) const;
+	bool operator!=(const QAngle& v) const;
+
+	// arithmetic operations
+	QAngle&	operator+=(const QAngle &v);
+	QAngle&	operator-=(const QAngle &v);
+	QAngle&	operator*=(float s);
+	QAngle&	operator/=(float s);
+
+	// Get the vector's magnitude.
+	vec_t	Length() const;
+	vec_t	LengthSqr() const;
+
+	// negate the QAngle components
+	//void	Negate(); 
+
+	// No assignment operators either...
+	QAngle& operator=(const QAngle& src);
+
+#ifndef VECTOR_NO_SLOW_OPERATIONS
+	// copy constructors
+
+	// arithmetic operations
+	QAngle	operator-(void) const;
+
+	QAngle	operator+(const QAngle& v) const;
+	QAngle	operator-(const QAngle& v) const;
+	QAngle	operator*(float fl) const;
+	QAngle	operator/(float fl) const;
+#else
+
+private:
+	// No copy constructors allowed if we're in optimal mode
+	QAngle(const QAngle& vOther);
+
+#endif
 };
+
+//-----------------------------------------------------------------------------
+// Allows us to specifically pass the vector by value when we need to
+//-----------------------------------------------------------------------------
+class QAngleByValue : public QAngle
+{
+public:
+	// Construction/destruction:
+	QAngleByValue(void) : QAngle() {}
+	QAngleByValue(vec_t X, vec_t Y, vec_t Z) : QAngle(X, Y, Z) {}
+	QAngleByValue(const QAngleByValue& vOther) { *this = vOther; }
+};
+
+
+inline void VectorAdd(const QAngle& a, const QAngle& b, QAngle& result)
+{
+	CHECK_VALID(a);
+	CHECK_VALID(b);
+	result.x = a.x + b.x;
+	result.y = a.y + b.y;
+	result.z = a.z + b.z;
+}
+
+inline void VectorMA(const QAngle &start, float scale, const QAngle &direction, QAngle &dest)
+{
+	CHECK_VALID(start);
+	CHECK_VALID(direction);
+	dest.x = start.x + scale * direction.x;
+	dest.y = start.y + scale * direction.y;
+	dest.z = start.z + scale * direction.z;
+}
+
+
+//-----------------------------------------------------------------------------
+// constructors
+//-----------------------------------------------------------------------------
+inline QAngle::QAngle(void)
+{
+#ifdef _DEBUG
+#ifdef VECTOR_PARANOIA
+	// Initialize to NAN to catch errors
+	x = y = z = VEC_T_NAN;
+#endif
+#endif
+}
+
+inline QAngle::QAngle(vec_t X, vec_t Y, vec_t Z)
+{
+	x = X; y = Y; z = Z;
+	CHECK_VALID(*this);
+}
+
+
+//-----------------------------------------------------------------------------
+// initialization
+//-----------------------------------------------------------------------------
+inline void QAngle::Init(vec_t ix, vec_t iy, vec_t iz)
+{
+	x = ix; y = iy; z = iz;
+	CHECK_VALID(*this);
+}
+
+//-----------------------------------------------------------------------------
+// assignment
+//-----------------------------------------------------------------------------
+inline QAngle& QAngle::operator=(const QAngle &vOther)
+{
+	CHECK_VALID(vOther);
+	x = vOther.x; y = vOther.y; z = vOther.z;
+	return *this;
+}
+
+
+//-----------------------------------------------------------------------------
+// Array access
+//-----------------------------------------------------------------------------
+inline vec_t& QAngle::operator[](int i)
+{
+	Assert((i >= 0) && (i < 3));
+	return ((vec_t*)this)[i];
+}
+
+inline vec_t QAngle::operator[](int i) const
+{
+	Assert((i >= 0) && (i < 3));
+	return ((vec_t*)this)[i];
+}
+
+
+//-----------------------------------------------------------------------------
+// Base address...
+//-----------------------------------------------------------------------------
+inline vec_t* QAngle::Base()
+{
+	return (vec_t*)this;
+}
+
+inline vec_t const* QAngle::Base() const
+{
+	return (vec_t const*)this;
+}
+
+
+//-----------------------------------------------------------------------------
+// Invalidate
+//-----------------------------------------------------------------------------
+
+inline void QAngle::Invalidate()
+{
+	//#ifdef _DEBUG
+	//#ifdef VECTOR_PARANOIA
+	x = y = z = VEC_T_NAN;
+	//#endif
+	//#endif
+}
+
+//-----------------------------------------------------------------------------
+// comparison
+//-----------------------------------------------------------------------------
+inline bool QAngle::operator==(const QAngle& src) const
+{
+	CHECK_VALID(src);
+	CHECK_VALID(*this);
+	return (src.x == x) && (src.y == y) && (src.z == z);
+}
+
+inline bool QAngle::operator!=(const QAngle& src) const
+{
+	CHECK_VALID(src);
+	CHECK_VALID(*this);
+	return (src.x != x) || (src.y != y) || (src.z != z);
+}
+
+
+//-----------------------------------------------------------------------------
+// Copy
+//-----------------------------------------------------------------------------
+inline void VectorCopy(const QAngle& src, QAngle& dst)
+{
+	CHECK_VALID(src);
+	dst.x = src.x;
+	dst.y = src.y;
+	dst.z = src.z;
+}
+
+
+//-----------------------------------------------------------------------------
+// standard math operations
+//-----------------------------------------------------------------------------
+inline QAngle& QAngle::operator+=(const QAngle& v)
+{
+	CHECK_VALID(*this);
+	CHECK_VALID(v);
+	x += v.x; y += v.y; z += v.z;
+	return *this;
+}
+
+inline QAngle& QAngle::operator-=(const QAngle& v)
+{
+	CHECK_VALID(*this);
+	CHECK_VALID(v);
+	x -= v.x; y -= v.y; z -= v.z;
+	return *this;
+}
+
+inline QAngle& QAngle::operator*=(float fl)
+{
+	x *= fl;
+	y *= fl;
+	z *= fl;
+	CHECK_VALID(*this);
+	return *this;
+}
+
+inline QAngle& QAngle::operator/=(float fl)
+{
+	Assert(fl != 0.0f);
+	float oofl = 1.0f / fl;
+	x *= oofl;
+	y *= oofl;
+	z *= oofl;
+	CHECK_VALID(*this);
+	return *this;
+}
+
+
+inline vec_t QAngle::LengthSqr() const
+{
+	CHECK_VALID(*this);
+	return x * x + y * y + z * z;
+}
+
+
+//-----------------------------------------------------------------------------
+// arithmetic operations (SLOW!!)
+//-----------------------------------------------------------------------------
+#ifndef VECTOR_NO_SLOW_OPERATIONS
+
+inline QAngle QAngle::operator-(void) const
+{
+	QAngle ret(-x, -y, -z);
+	return ret;
+}
+
+inline QAngle QAngle::operator+(const QAngle& v) const
+{
+	QAngle res;
+	res.x = x + v.x;
+	res.y = y + v.y;
+	res.z = z + v.z;
+	return res;
+}
+
+inline QAngle QAngle::operator-(const QAngle& v) const
+{
+	QAngle res;
+	res.x = x - v.x;
+	res.y = y - v.y;
+	res.z = z - v.z;
+	return res;
+}
+
+inline QAngle QAngle::operator*(float fl) const
+{
+	QAngle res;
+	res.x = x * fl;
+	res.y = y * fl;
+	res.z = z * fl;
+	return res;
+}
+
+inline QAngle QAngle::operator/(float fl) const
+{
+	QAngle res;
+	res.x = x / fl;
+	res.y = y / fl;
+	res.z = z / fl;
+	return res;
+}
+
+inline QAngle operator*(float fl, const QAngle& v)
+{
+	QAngle ret(v * fl);
+	return ret;
+}
+
+#endif // VECTOR_NO_SLOW_OPERATIONS
+
+
+struct matrix3x4_t
+{
+	matrix3x4_t() {}
+	matrix3x4_t(
+		float m00, float m01, float m02, float m03,
+		float m10, float m11, float m12, float m13,
+		float m20, float m21, float m22, float m23)
+	{
+		m_flMatVal[0][0] = m00;	m_flMatVal[0][1] = m01; m_flMatVal[0][2] = m02; m_flMatVal[0][3] = m03;
+		m_flMatVal[1][0] = m10;	m_flMatVal[1][1] = m11; m_flMatVal[1][2] = m12; m_flMatVal[1][3] = m13;
+		m_flMatVal[2][0] = m20;	m_flMatVal[2][1] = m21; m_flMatVal[2][2] = m22; m_flMatVal[2][3] = m23;
+	}
+
+	//-----------------------------------------------------------------------------
+	// Creates a matrix where the X axis = forward
+	// the Y axis = left, and the Z axis = up
+	//-----------------------------------------------------------------------------
+	void Init(const Vector& xAxis, const Vector& yAxis, const Vector& zAxis, const Vector &vecOrigin)
+	{
+		m_flMatVal[0][0] = xAxis.x; m_flMatVal[0][1] = yAxis.x; m_flMatVal[0][2] = zAxis.x; m_flMatVal[0][3] = vecOrigin.x;
+		m_flMatVal[1][0] = xAxis.y; m_flMatVal[1][1] = yAxis.y; m_flMatVal[1][2] = zAxis.y; m_flMatVal[1][3] = vecOrigin.y;
+		m_flMatVal[2][0] = xAxis.z; m_flMatVal[2][1] = yAxis.z; m_flMatVal[2][2] = zAxis.z; m_flMatVal[2][3] = vecOrigin.z;
+	}
+
+	//-----------------------------------------------------------------------------
+	// Creates a matrix where the X axis = forward
+	// the Y axis = left, and the Z axis = up
+	//-----------------------------------------------------------------------------
+	matrix3x4_t(const Vector& xAxis, const Vector& yAxis, const Vector& zAxis, const Vector &vecOrigin)
+	{
+		Init(xAxis, yAxis, zAxis, vecOrigin);
+	}
+
+	inline void SetOrigin(Vector const & p)
+	{
+		m_flMatVal[0][3] = p.x;
+		m_flMatVal[1][3] = p.y;
+		m_flMatVal[2][3] = p.z;
+	}
+
+	inline void Invalidate(void)
+	{
+		for (int i = 0; i < 3; i++)
+		{
+			for (int j = 0; j < 4; j++)
+			{
+				m_flMatVal[i][j] = VEC_T_NAN;
+			}
+		}
+	}
+
+	float *operator[](int i) { Assert((i >= 0) && (i < 3)); return m_flMatVal[i]; }
+	const float *operator[](int i) const { Assert((i >= 0) && (i < 3)); return m_flMatVal[i]; }
+	float *Base() { return &m_flMatVal[0][0]; }
+	const float *Base() const { return &m_flMatVal[0][0]; }
+
+	float m_flMatVal[3][4];
+};
+
+//-----------------------------------------------------------------------------
+// Quaternion
+//-----------------------------------------------------------------------------
+
+class RadianEuler;
+
+class Quaternion				// same data-layout as engine's vec4_t,
+{								//		which is a vec_t[4]
+public:
+	inline Quaternion(void) {
+
+		// Initialize to NAN to catch errors
+#ifdef _DEBUG
+#ifdef VECTOR_PARANOIA
+		x = y = z = w = VEC_T_NAN;
+#endif
+#endif
+	}
+	inline Quaternion(vec_t ix, vec_t iy, vec_t iz, vec_t iw) : x(ix), y(iy), z(iz), w(iw) { }
+	inline Quaternion(RadianEuler const &angle);	// evil auto type promotion!!!
+
+	inline void Init(vec_t ix = 0.0f, vec_t iy = 0.0f, vec_t iz = 0.0f, vec_t iw = 0.0f) { x = ix; y = iy; z = iz; w = iw; }
+
+	bool IsValid() const;
+	void Invalidate();
+
+	bool operator==(const Quaternion &src) const;
+	bool operator!=(const Quaternion &src) const;
+
+	vec_t* Base() { return (vec_t*)this; }
+	const vec_t* Base() const { return (vec_t*)this; }
+
+	// array access...
+	vec_t operator[](int i) const;
+	vec_t& operator[](int i);
+
+	vec_t x, y, z, w;
+};
+
+
+//-----------------------------------------------------------------------------
+// Array access
+//-----------------------------------------------------------------------------
+inline vec_t& Quaternion::operator[](int i)
+{
+	Assert((i >= 0) && (i < 4));
+	return ((vec_t*)this)[i];
+}
+
+inline vec_t Quaternion::operator[](int i) const
+{
+	Assert((i >= 0) && (i < 4));
+	return ((vec_t*)this)[i];
+}
+
+
+//-----------------------------------------------------------------------------
+// Equality test
+//-----------------------------------------------------------------------------
+inline bool Quaternion::operator==(const Quaternion &src) const
+{
+	return (x == src.x) && (y == src.y) && (z == src.z) && (w == src.w);
+}
+
+inline bool Quaternion::operator!=(const Quaternion &src) const
+{
+	return !operator==(src);
+}
 
 
 // VMatrix /////////////////////////////////////////////////////////////////////
@@ -113,8 +586,7 @@ class CGlobalVarsBase;
 // Command / Cvar related:
 
 // we hack around a bit here:
-class IWrpCommandArgs;
-typedef void (*WrpCommandCallback)(IWrpCommandArgs * args);
+typedef void (*WrpCommandCallback)(::IWrpCommandArgs * args);
 
 class ConVar_003;
 
@@ -174,8 +646,6 @@ public:
 
 // ConCommandBase_003 /////////////////////////////////////////////////////////////
 
-class WrpConCommands;
-
 /// <remarks> DO NOT CHANGE WITHOUT KNOWING WHAT YOU DO, DIRECTLY ACCESSED BY SOURCE ENGINE! </remarks>
 /// <comments> I guess if Valve used a non determisitic C++ compiler they would
 ///		be screwed when sharing such classes among various compile units.
@@ -183,7 +653,7 @@ class WrpConCommands;
 ///		</comments>
 class ConCommandBase_003
 {
-	friend WrpConCommands; // ugly hack, just like Valve did
+	friend ::WrpConCommands; // ugly hack, just like Valve did
 
 public:
 	ConCommandBase_003( void );
@@ -295,7 +765,7 @@ public:
 ///		</comments>
 class ConCommandBase_004
 {
-	friend WrpConCommands; // ugly hack, just like Valve did
+	friend ::WrpConCommands; // ugly hack, just like Valve did
 
 public:
 	ConCommandBase_004( void );
@@ -679,7 +1149,7 @@ class ICommandCompletionCallback_007;
 
 class ConCommandBase_007
 {
-	friend WrpConCommands; // ugly hack, just like Valve did
+	friend ::WrpConCommands; // ugly hack, just like Valve did
 
 public:
 								ConCommandBase_007( void );
@@ -1114,7 +1584,7 @@ friend class CCvar_007;
 friend class ConVarRef_007;
 friend class SplitScreenConVarRef_007;
 
-friend class WrpConVarRef;
+friend class ::WrpConVarRef;
 
 public:
 	typedef ConCommandBase_007 BaseClass;
@@ -1405,6 +1875,7 @@ public:
 // IVEngineClient_013 //////////////////////////////////////////////////////////
 
 #define VENGINE_CLIENT_INTERFACE_VERSION_013 "VEngineClient013"
+#define VENGINE_CLIENT_INTERFACE_VERSION_015 "VEngineClient015"
 
 /// <comments>
 ///		Supported by: Portal First Slice
@@ -1571,7 +2042,7 @@ public:
 
 	// new in Source SDK 2013:
 	// Get video modes 
-	virtual void _UNUSED_etVideoModes(void) = 0; 
+	virtual void _UNUSED_GetVideoModes(void) = 0; 
 
 	virtual void _UNUSED_SetOcclusionParameters(void)=0;
 	virtual void _UNUSED_GetUILanguage(void)=0;
@@ -1639,7 +2110,7 @@ public:
 #define VENGINE_CLIENT_INTERFACE_VERSION_013_CSGO "VEngineClient013"
 
 /// <comments>
-///		Supported by: Portal First Slice
+///		Supported by: CS:GO
 ///		</comments>
 class IVEngineClient_013_csgo abstract
 {
@@ -2169,6 +2640,9 @@ public:
 
 #define CLIENT_DLL_INTERFACE_VERSION_017		"VClient017"
 
+// IBaseClientDll_018 //////////////////////////////////////////////////////////
+
+#define CLIENT_DLL_INTERFACE_VERSION_018		"VClient018"
 
 // IBaseInterface //////////////////////////////////////////////////////////////
 
@@ -2181,7 +2655,7 @@ public:
 // IClientEngineTools //////////////////////////////////////////////////////////
 
 typedef void * HTOOLHANDLE;
-typedef void KeyValues;
+typedef void KeyValues_something;
 typedef struct {} AudioState_t;
 
 class IClientEngineTools_001 : public IBaseInterface
@@ -2199,7 +2673,7 @@ public:
 	virtual void PreRenderAllTools() = 0;
 	virtual void PostRenderAllTools() = 0;
 
-	virtual void PostToolMessage( HTOOLHANDLE hEntity, KeyValues *msg ) = 0;
+	virtual void PostToolMessage( HTOOLHANDLE hEntity, KeyValues_something *msg ) = 0;
 
 	virtual void AdjustEngineViewport( int& x, int& y, int& width, int& height ) = 0;
 	virtual bool SetupEngineView( Vector &origin, QAngle &angles, float &fov ) = 0;
@@ -4282,10 +4756,13 @@ class IBaseShader_csgo abstract
 
 ////////////////////////////////////////////////////////////////////////////////
 
+namespace CSGO {
+	class CBaseHandle;
+}
+
 class IClientEntity_csgo;
 class ClientClass_csgo;
 class IClientNetworkable_csgo;
-class CBaseHandle_csgo;
 class IClientUnknown_csgo;
 struct EntityCacheInfo_t_csgo;
 
@@ -4297,13 +4774,13 @@ class IClientEntityList_csgo abstract
 public:
 	// Get IClientNetworkable interface for specified entity
 	virtual IClientNetworkable_csgo*	GetClientNetworkable( int entnum ) = 0;
-	virtual IClientNetworkable_csgo*	GetClientNetworkableFromHandle( CBaseHandle_csgo hEnt ) = 0;
-	virtual IClientUnknown_csgo*		GetClientUnknownFromHandle( CBaseHandle_csgo hEnt ) = 0;
+	virtual IClientNetworkable_csgo*	GetClientNetworkableFromHandle( CSGO::CBaseHandle hEnt ) = 0;
+	virtual IClientUnknown_csgo*		GetClientUnknownFromHandle( CSGO::CBaseHandle hEnt ) = 0;
 
 	// NOTE: This function is only a convenience wrapper.
 	// It returns GetClientNetworkable( entnum )->GetIClientEntity().
 	virtual IClientEntity_csgo*		GetClientEntity( int entnum ) = 0;
-	virtual IClientEntity_csgo*		GetClientEntityFromHandle( CBaseHandle_csgo hEnt ) = 0;
+	virtual IClientEntity_csgo*		GetClientEntityFromHandle( CSGO::CBaseHandle hEnt ) = 0;
 
 	// Returns number of entities currently in use
 	virtual int					NumberOfEntities( bool bIncludeNonNetworkable ) = 0;
@@ -4326,8 +4803,8 @@ class IHandleEntity_csgo
 {
 public:
 	virtual ~IHandleEntity_csgo() {}
-	virtual void SetRefEHandle( const CBaseHandle_csgo &handle ) = 0;
-	virtual const CBaseHandle_csgo& GetRefEHandle() const = 0;
+	virtual void SetRefEHandle( const CSGO::CBaseHandle &handle ) = 0;
+	virtual const CSGO::CBaseHandle& GetRefEHandle() const = 0;
 #ifdef _X360
 	IHandleEntity() :
 		m_bIsStaticProp( false )
@@ -4579,3 +5056,1213 @@ inline const char *C_BaseEntity_csgo::GetEntityName()
 { 
 	return m_iName; 
 }
+
+namespace CSGO {
+
+#define IClientRenderable IClientRenderable_csgo
+#define IBaseFileSystem IBaseFileSystem_csgo
+
+class IHandleEntity;
+
+
+// How many bits to use to encode an edict.
+#define	SOURCESDK_CSGO_MAX_EDICT_BITS				11			// # of bits needed to represent max edicts
+// Max # of edicts in a level
+#define	SOURCESDK_CSGO_MAX_EDICTS					(1<<MAX_EDICT_BITS)
+
+// Used for networking ehandles.
+#define SOURCESDK_CSGO_NUM_ENT_ENTRY_BITS		(SOURCESDK_CSGO_MAX_EDICT_BITS + 2)
+#define SOURCESDK_CSGO_NUM_ENT_ENTRIES			(1 << SOURCESDK_CSGO_NUM_ENT_ENTRY_BITS)
+#define SOURCESDK_CSGO_INVALID_EHANDLE_INDEX	0xFFFFFFFF
+
+#define SOURCESDK_CSGO_NUM_SERIAL_NUM_BITS		16 // (32 - NUM_ENT_ENTRY_BITS)
+#define SOURCESDK_CSGO_NUM_SERIAL_NUM_SHIFT_BITS (32 - SOURCESDK_CSGO_NUM_SERIAL_NUM_BITS)
+#define SOURCESDK_CSGO_ENT_ENTRY_MASK	(( 1 << SOURCESDK_CSGO_NUM_SERIAL_NUM_BITS) - 1)
+
+
+// -------------------------------------------------------------------------------------------------- //
+// CBaseHandle.
+// -------------------------------------------------------------------------------------------------- //
+
+class CBaseHandle
+{
+friend class CBaseEntityList;
+
+public:
+
+	CBaseHandle();
+	CBaseHandle( const CBaseHandle &other );
+	CBaseHandle( unsigned long value );
+	CBaseHandle( int iEntry, int iSerialNumber );
+
+	void Init( int iEntry, int iSerialNumber );
+	void Term();
+
+	// Even if this returns true, Get() still can return return a non-null value.
+	// This just tells if the handle has been initted with any values.
+	bool IsValid() const;
+
+	int GetEntryIndex() const;
+	int GetSerialNumber() const;
+
+	int ToInt() const;
+	bool operator !=( const CBaseHandle &other ) const;
+	bool operator ==( const CBaseHandle &other ) const;
+	bool operator ==( const IHandleEntity* pEnt ) const;
+	bool operator !=( const IHandleEntity* pEnt ) const;
+	bool operator <( const CBaseHandle &other ) const;
+	bool operator <( const IHandleEntity* pEnt ) const;
+
+	// Assign a value to the handle.
+	const CBaseHandle& operator=( const IHandleEntity *pEntity );
+	const CBaseHandle& Set( const IHandleEntity *pEntity );
+
+	// Use this to dereference the handle.
+	// Note: this is implemented in game code (ehandle.h)
+	IHandleEntity* Get() const;
+
+
+protected:
+	// The low NUM_SERIAL_BITS hold the index. If this value is less than MAX_EDICTS, then the entity is networkable.
+	// The high NUM_SERIAL_NUM_BITS bits are the serial number.
+	unsigned long	m_Index;
+};
+
+inline CBaseHandle::CBaseHandle()
+{
+	m_Index = SOURCESDK_CSGO_INVALID_EHANDLE_INDEX;
+}
+
+inline CBaseHandle::CBaseHandle( const CBaseHandle &other )
+{
+	m_Index = other.m_Index;
+}
+
+inline CBaseHandle::CBaseHandle( unsigned long value )
+{
+	m_Index = value;
+}
+
+inline CBaseHandle::CBaseHandle( int iEntry, int iSerialNumber )
+{
+	Init( iEntry, iSerialNumber );
+}
+
+inline void CBaseHandle::Init( int iEntry, int iSerialNumber )
+{
+	Assert( iEntry >= 0 && (iEntry & SOURCESDK_CSGO_ENT_ENTRY_MASK) == iEntry);
+	Assert( iSerialNumber >= 0 && iSerialNumber < (1 << SOURCESDK_CSGO_NUM_SERIAL_NUM_BITS) );
+
+	m_Index = iEntry | (iSerialNumber << SOURCESDK_CSGO_NUM_SERIAL_NUM_SHIFT_BITS);
+}
+
+inline void CBaseHandle::Term()
+{
+	m_Index = SOURCESDK_CSGO_INVALID_EHANDLE_INDEX;
+}
+
+inline bool CBaseHandle::IsValid() const
+{
+	return m_Index != SOURCESDK_CSGO_INVALID_EHANDLE_INDEX;
+}
+
+inline int CBaseHandle::GetEntryIndex() const
+{
+	// There is a hack here: due to a bug in the original implementation of the 
+	// entity handle system, an attempt to look up an invalid entity index in 
+	// certain cirumstances might fall through to the the mask operation below.
+	// This would mask an invalid index to be in fact a lookup of entity number
+	// NUM_ENT_ENTRIES, so invalid ent indexes end up actually looking up the
+	// last slot in the entities array. Since this slot is always empty, the 
+	// lookup returns NULL and the expected behavior occurs through this unexpected
+	// route.
+	// A lot of code actually depends on this behavior, and the bug was only exposed
+	// after a change to NUM_SERIAL_NUM_BITS increased the number of allowable
+	// static props in the world. So the if-stanza below detects this case and 
+	// retains the prior (bug-submarining) behavior.
+	if ( !IsValid() )
+		return SOURCESDK_CSGO_NUM_ENT_ENTRIES-1;
+	return m_Index & SOURCESDK_CSGO_ENT_ENTRY_MASK;
+}
+
+inline int CBaseHandle::GetSerialNumber() const
+{
+	return m_Index >> SOURCESDK_CSGO_NUM_SERIAL_NUM_SHIFT_BITS;
+}
+
+inline int CBaseHandle::ToInt() const
+{
+	return (int)m_Index;
+}
+
+inline bool CBaseHandle::operator !=( const CBaseHandle &other ) const
+{
+	return m_Index != other.m_Index;
+}
+
+inline bool CBaseHandle::operator ==( const CBaseHandle &other ) const
+{
+	return m_Index == other.m_Index;
+}
+
+
+class CUtlBuffer;
+
+template< class T, class I = int >
+/// <remarks>Warning, only required elements declared and defined!</remarks>
+class CUtlMemory
+{
+public:
+	//
+	// We don't need this
+};
+
+template< class T, class A = CUtlMemory<T> >
+/// <remarks>Warning, only required elements declared and defined!</remarks>
+class CUtlVector
+{
+	typedef A CAllocator;
+public:
+	typedef T ElemType_t;
+
+protected:
+	CAllocator m_Memory;
+	int m_Size;
+
+#ifndef _X360
+	// For easier access to the elements through the debugger
+	// it's in release builds so this can be used in libraries correctly
+	T *m_pElements;
+
+#else
+#endif
+};
+
+typedef unsigned __int16 uint16;
+
+typedef void * FileHandle_t;
+
+typedef unsigned char byte;
+
+// callback to evaluate a $<symbol> during evaluation, return true or false
+typedef bool(*GetSymbolProc_t)(const char *pKey);
+
+typedef struct color32_s
+{
+	bool operator!=(const struct color32_s &other) const;
+
+	byte r, g, b, a;
+
+	// assign and copy by using the whole register rather
+	// than byte-by-byte copy. (No, the compiler is not
+	// smart enough to do this for you. /FAcs if you 
+	// don't believe me.)
+	inline unsigned *asInt(void) { return reinterpret_cast<unsigned*>(this); }
+	inline const unsigned *asInt(void) const { return reinterpret_cast<const unsigned*>(this); }
+	// This thing is in a union elsewhere, and union members can't have assignment
+	// operators, so you have to explicitly assign using this, or be slow. SUCK.
+	inline void Copy(const color32_s &rhs)
+	{
+		*asInt() = *rhs.asInt();
+	}
+
+} color32;
+
+inline bool color32::operator!=(const color32 &other) const
+{
+	return r != other.r || g != other.g || b != other.b || a != other.a;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Basic handler for an rgb set of colors
+//			This class is fully inline
+//-----------------------------------------------------------------------------
+class Color
+{
+public:
+	// constructors
+	Color()
+	{
+		*((int *)this) = 0;
+	}
+	Color(int _r, int _g, int _b)
+	{
+		SetColor(_r, _g, _b, 0);
+	}
+	Color(int _r, int _g, int _b, int _a)
+	{
+		SetColor(_r, _g, _b, _a);
+	}
+
+	// set the color
+	// r - red component (0-255)
+	// g - green component (0-255)
+	// b - blue component (0-255)
+	// a - alpha component, controls transparency (0 - transparent, 255 - opaque);
+	void SetColor(int _r, int _g, int _b, int _a = 0)
+	{
+		_color[0] = (unsigned char)_r;
+		_color[1] = (unsigned char)_g;
+		_color[2] = (unsigned char)_b;
+		_color[3] = (unsigned char)_a;
+	}
+
+	void GetColor(int &_r, int &_g, int &_b, int &_a) const
+	{
+		_r = _color[0];
+		_g = _color[1];
+		_b = _color[2];
+		_a = _color[3];
+	}
+
+	void SetRawColor(int color32)
+	{
+		*((int *)this) = color32;
+	}
+
+	int GetRawColor() const
+	{
+		return *((int *)this);
+	}
+
+	inline int r() const { return _color[0]; }
+	inline int g() const { return _color[1]; }
+	inline int b() const { return _color[2]; }
+	inline int a() const { return _color[3]; }
+
+	unsigned char &operator[](int index)
+	{
+		return _color[index];
+	}
+
+	const unsigned char &operator[](int index) const
+	{
+		return _color[index];
+	}
+
+	bool operator == (const Color &rhs) const
+	{
+		return (*((int *)this) == *((int *)&rhs));
+	}
+
+	bool operator != (const Color &rhs) const
+	{
+		return !(operator==(rhs));
+	}
+
+	Color &operator=(const Color &rhs)
+	{
+		SetRawColor(rhs.GetRawColor());
+		return *this;
+	}
+
+	Color &operator=(const color32 &rhs)
+	{
+		_color[0] = rhs.r;
+		_color[1] = rhs.g;
+		_color[2] = rhs.b;
+		_color[3] = rhs.a;
+		return *this;
+	}
+
+	color32 ToColor32() const
+	{
+		color32 newColor;
+		newColor.r = _color[0];
+		newColor.g = _color[1];
+		newColor.b = _color[2];
+		newColor.a = _color[3];
+		return newColor;
+	}
+
+private:
+	unsigned char _color[4];
+};
+
+class IKeyValuesDumpContext;
+
+//-----------------------------------------------------------------------------
+// Purpose: Simple recursive data access class
+//			Used in vgui for message parameters and resource files
+//			Destructor deletes all child KeyValues nodes
+//			Data is stored in key (string names) - (string/int/float)value pairs called nodes.
+//
+//	About KeyValues Text File Format:
+
+//	It has 3 control characters '{', '}' and '"'. Names and values may be quoted or
+//	not. The quote '"' charater must not be used within name or values, only for
+//	quoting whole tokens. You may use escape sequences wile parsing and add within a
+//	quoted token a \" to add quotes within your name or token. When using Escape
+//	Sequence the parser must now that by setting KeyValues::UsesEscapeSequences( true ),
+//	which it's off by default. Non-quoted tokens ends with a whitespace, '{', '}' and '"'.
+//	So you may use '{' and '}' within quoted tokens, but not for non-quoted tokens.
+//  An open bracket '{' after a key name indicates a list of subkeys which is finished
+//  with a closing bracket '}'. Subkeys use the same definitions recursively.
+//  Whitespaces are space, return, newline and tabulator. Allowed Escape sequences
+//	are \n, \t, \\, \n and \". The number character '#' is used for macro purposes 
+//	(eg #include), don't use it as first charater in key names.
+//-----------------------------------------------------------------------------
+class KeyValues
+{
+public:
+/*	KeyValues(const char *setName);
+
+	//
+	// AutoDelete class to automatically free the keyvalues.
+	// Simply construct it with the keyvalues you allocated and it will free them when falls out of scope.
+	// When you decide that keyvalues shouldn't be deleted call Assign(NULL) on it.
+	// If you constructed AutoDelete(NULL) you can later assign the keyvalues to be deleted with Assign(pKeyValues).
+	//
+	class AutoDelete
+	{
+	public:
+		explicit inline AutoDelete(KeyValues *pKeyValues) : m_pKeyValues(pKeyValues) {}
+		explicit inline AutoDelete(const char *pchKVName) : m_pKeyValues(new KeyValues(pchKVName)) {}
+		inline ~AutoDelete(void) { if (m_pKeyValues) m_pKeyValues->deleteThis(); }
+		inline void Assign(KeyValues *pKeyValues) { m_pKeyValues = pKeyValues; }
+		KeyValues *operator->() { return m_pKeyValues; }
+		operator KeyValues *() { return m_pKeyValues; }
+	private:
+		AutoDelete(AutoDelete const &x); // forbid
+		AutoDelete & operator= (AutoDelete const &x); // forbid
+	protected:
+		KeyValues *m_pKeyValues;
+	};
+
+	//
+	// AutoDeleteInline is useful when you want to hold your keyvalues object inside
+	// and delete it right after using.
+	// You can also pass temporary KeyValues object as an argument to a function by wrapping it into KeyValues::AutoDeleteInline
+	// instance:   call_my_function( KeyValues::AutoDeleteInline( new KeyValues( "test" ) ) )
+	//
+	class AutoDeleteInline : public AutoDelete
+	{
+	public:
+		explicit inline AutoDeleteInline(KeyValues *pKeyValues) : AutoDelete(pKeyValues) {}
+		inline operator KeyValues *() const { return m_pKeyValues; }
+		inline KeyValues * Get() const { return m_pKeyValues; }
+	};
+
+	// Quick setup constructors
+	KeyValues(const char *setName, const char *firstKey, const char *firstValue);
+	KeyValues(const char *setName, const char *firstKey, const wchar_t *firstValue);
+	KeyValues(const char *setName, const char *firstKey, int firstValue);
+	KeyValues(const char *setName, const char *firstKey, const char *firstValue, const char *secondKey, const char *secondValue);
+	KeyValues(const char *setName, const char *firstKey, int firstValue, const char *secondKey, int secondValue);
+*/
+	// Section name
+	const char *GetName() const;
+	void SetName(const char *setName);
+
+	// gets the name as a unique int
+	int GetNameSymbol() const;
+	int GetNameSymbolCaseSensitive() const;
+
+	// File access. Set UsesEscapeSequences true, if resource file/buffer uses Escape Sequences (eg \n, \t)
+	void UsesEscapeSequences(bool state); // default false
+	bool LoadFromFile(IBaseFileSystem *filesystem, const char *resourceName, const char *pathID = NULL, GetSymbolProc_t pfnEvaluateSymbolProc = NULL);
+	bool SaveToFile(IBaseFileSystem *filesystem, const char *resourceName, const char *pathID = NULL);
+
+	// Read from a buffer...  Note that the buffer must be null terminated
+	bool LoadFromBuffer(char const *resourceName, const char *pBuffer, IBaseFileSystem* pFileSystem = NULL, const char *pPathID = NULL, GetSymbolProc_t pfnEvaluateSymbolProc = NULL);
+
+	// Read from a utlbuffer...
+	bool LoadFromBuffer(char const *resourceName, CUtlBuffer &buf, IBaseFileSystem* pFileSystem = NULL, const char *pPathID = NULL, GetSymbolProc_t pfnEvaluateSymbolProc = NULL);
+
+	// Find a keyValue, create it if it is not found.
+	// Set bCreate to true to create the key if it doesn't already exist (which ensures a valid pointer will be returned)
+	KeyValues *FindKey(const char *keyName, bool bCreate = false);
+	KeyValues *FindKey(int keySymbol) const;
+	KeyValues *CreateNewKey();		// creates a new key, with an autogenerated name.  name is guaranteed to be an integer, of value 1 higher than the highest other integer key name
+	void AddSubKey(KeyValues *pSubkey);	// Adds a subkey. Make sure the subkey isn't a child of some other keyvalues
+	void RemoveSubKey(KeyValues *subKey);	// removes a subkey from the list, DOES NOT DELETE IT
+	void InsertSubKey(int nIndex, KeyValues *pSubKey); // Inserts the given sub-key before the Nth child location
+	bool ContainsSubKey(KeyValues *pSubKey); // Returns true if this key values contains the specified sub key, false otherwise.
+	void SwapSubKey(KeyValues *pExistingSubKey, KeyValues *pNewSubKey);	// Swaps an existing subkey for a new one, DOES NOT DELETE THE OLD ONE but takes ownership of the new one
+	void ElideSubKey(KeyValues *pSubKey);	// Removes a subkey but inserts all of its children in its place, in-order (flattens a tree, like firing a manager!)
+
+											// Key iteration.
+											//
+											// NOTE: GetFirstSubKey/GetNextKey will iterate keys AND values. Use the functions 
+											// below if you want to iterate over just the keys or just the values.
+											//
+	KeyValues *GetFirstSubKey();	// returns the first subkey in the list
+	KeyValues *GetNextKey();		// returns the next subkey
+	void SetNextKey(KeyValues * pDat);
+
+	//
+	// These functions can be used to treat it like a true key/values tree instead of 
+	// confusing values with keys.
+	//
+	// So if you wanted to iterate all subkeys, then all values, it would look like this:
+	//     for ( KeyValues *pKey = pRoot->GetFirstTrueSubKey(); pKey; pKey = pKey->GetNextTrueSubKey() )
+	//     {
+	//		   Msg( "Key name: %s\n", pKey->GetName() );
+	//     }
+	//     for ( KeyValues *pValue = pRoot->GetFirstValue(); pKey; pKey = pKey->GetNextValue() )
+	//     {
+	//         Msg( "Int value: %d\n", pValue->GetInt() );  // Assuming pValue->GetDataType() == TYPE_INT...
+	//     }
+	KeyValues* GetFirstTrueSubKey();
+	KeyValues* GetNextTrueSubKey();
+
+	KeyValues* GetFirstValue();	// When you get a value back, you can use GetX and pass in NULL to get the value.
+	KeyValues* GetNextValue();
+
+
+	// Data access
+	int   GetInt(const char *keyName = NULL, int defaultValue = 0);
+	uint64 GetUint64(const char *keyName = NULL, uint64 defaultValue = 0);
+	float GetFloat(const char *keyName = NULL, float defaultValue = 0.0f);
+	const char *GetString(const char *keyName = NULL, const char *defaultValue = "");
+	const wchar_t *GetWString(const char *keyName = NULL, const wchar_t *defaultValue = L"");
+	void *GetPtr(const char *keyName = NULL, void *defaultValue = (void*)0);
+	Color GetColor(const char *keyName = NULL, const Color &defaultColor = Color(0, 0, 0, 0));
+	bool GetBool(const char *keyName = NULL, bool defaultValue = false) { return GetInt(keyName, defaultValue ? 1 : 0) ? true : false; }
+	bool  IsEmpty(const char *keyName = NULL);
+
+	// Data access
+	int   GetInt(int keySymbol, int defaultValue = 0);
+	uint64 GetUint64(int keySymbol, uint64 defaultValue = 0);
+	float GetFloat(int keySymbol, float defaultValue = 0.0f);
+	const char *GetString(int keySymbol, const char *defaultValue = "");
+	const wchar_t *GetWString(int keySymbol, const wchar_t *defaultValue = L"");
+	void *GetPtr(int keySymbol, void *defaultValue = (void*)0);
+	Color GetColor(int keySymbol /* default value is all black */);
+	bool GetBool(int keySymbol, bool defaultValue = false) { return GetInt(keySymbol, defaultValue ? 1 : 0) ? true : false; }
+	bool  IsEmpty(int keySymbol);
+
+	// Key writing
+	void SetWString(const char *keyName, const wchar_t *value);
+	void SetString(const char *keyName, const char *value);
+	void SetInt(const char *keyName, int value);
+	void SetUint64(const char *keyName, uint64 value);
+	void SetFloat(const char *keyName, float value);
+	void SetPtr(const char *keyName, void *value);
+	void SetColor(const char *keyName, Color value);
+	void SetBool(const char *keyName, bool value) { SetInt(keyName, value ? 1 : 0); }
+
+	// Memory allocation (optimized)
+	void *operator new(size_t iAllocSize);
+	void *operator new(size_t iAllocSize, int nBlockUse, const char *pFileName, int nLine);
+	void operator delete(void *pMem);
+	void operator delete(void *pMem, int nBlockUse, const char *pFileName, int nLine);
+
+	KeyValues& operator=(KeyValues& src);
+
+	// Adds a chain... if we don't find stuff in this keyvalue, we'll look
+	// in the one we're chained to.
+	void ChainKeyValue(KeyValues* pChain);
+
+	void RecursiveSaveToFile(CUtlBuffer& buf, int indentLevel);
+
+	bool WriteAsBinary(CUtlBuffer &buffer);
+	bool ReadAsBinary(CUtlBuffer &buffer);
+
+	// Allocate & create a new copy of the keys
+	KeyValues *MakeCopy(void) const;
+
+	// Make a new copy of all subkeys, add them all to the passed-in keyvalues
+	void CopySubkeys(KeyValues *pParent) const;
+
+	// Clear out all subkeys, and the current value
+	void Clear(void);
+
+	// Data type
+	enum types_t
+	{
+		TYPE_NONE = 0,
+		TYPE_STRING,
+		TYPE_INT,
+		TYPE_FLOAT,
+		TYPE_PTR,
+		TYPE_WSTRING,
+		TYPE_COLOR,
+		TYPE_UINT64,
+		TYPE_COMPILED_INT_BYTE,			// hack to collapse 1 byte ints in the compiled format
+		TYPE_COMPILED_INT_0,			// hack to collapse 0 in the compiled format
+		TYPE_COMPILED_INT_1,			// hack to collapse 1 in the compiled format
+		TYPE_NUMTYPES,
+	};
+	types_t GetDataType(const char *keyName = NULL);
+
+	// Virtual deletion function - ensures that KeyValues object is deleted from correct heap
+	void deleteThis();
+
+	void SetStringValue(char const *strValue);
+
+	// unpack a key values list into a structure
+	void UnpackIntoStructure(struct KeyValuesUnpackStructure const *pUnpackTable, void *pDest);
+
+	// Process conditional keys for widescreen support.
+	bool ProcessResolutionKeys(const char *pResString);
+
+	// Dump keyvalues recursively into a dump context
+	bool Dump(IKeyValuesDumpContext *pDump, int nIndentLevel = 0);
+
+	// Merge operations describing how two keyvalues can be combined
+	enum MergeKeyValuesOp_t
+	{
+		MERGE_KV_ALL,
+		MERGE_KV_UPDATE,	// update values are copied into storage, adding new keys to storage or updating existing ones
+		MERGE_KV_DELETE,	// update values specify keys that get deleted from storage
+		MERGE_KV_BORROW,	// update values only update existing keys in storage, keys in update that do not exist in storage are discarded
+	};
+	void MergeFrom(KeyValues *kvMerge, MergeKeyValuesOp_t eOp = MERGE_KV_ALL);
+
+	// Assign keyvalues from a string
+	static KeyValues * FromString(char const *szName, char const *szStringVal, char const **ppEndOfParse = NULL);
+
+private:
+	KeyValues(KeyValues&);	// prevent copy constructor being used
+
+							// prevent delete being called except through deleteThis()
+	~KeyValues();
+
+	KeyValues* CreateKey(const char *keyName);
+
+	void RecursiveCopyKeyValues(KeyValues& src);
+	void RemoveEverything();
+	//	void RecursiveSaveToFile( IBaseFileSystem *filesystem, CUtlBuffer &buffer, int indentLevel );
+	//	void WriteConvertedString( CUtlBuffer &buffer, const char *pszString );
+
+	// NOTE: If both filesystem and pBuf are non-null, it'll save to both of them.
+	// If filesystem is null, it'll ignore f.
+	void RecursiveSaveToFile(IBaseFileSystem *filesystem, FileHandle_t f, CUtlBuffer *pBuf, int indentLevel);
+	void WriteConvertedString(IBaseFileSystem *filesystem, FileHandle_t f, CUtlBuffer *pBuf, const char *pszString);
+
+	void RecursiveLoadFromBuffer(char const *resourceName, CUtlBuffer &buf, GetSymbolProc_t pfnEvaluateSymbolProc);
+
+	// for handling #include "filename"
+	void AppendIncludedKeys(CUtlVector< KeyValues * >& includedKeys);
+	void ParseIncludedKeys(char const *resourceName, const char *filetoinclude,
+		IBaseFileSystem* pFileSystem, const char *pPathID, CUtlVector< KeyValues * >& includedKeys, GetSymbolProc_t pfnEvaluateSymbolProc);
+
+	// For handling #base "filename"
+	void MergeBaseKeys(CUtlVector< KeyValues * >& baseKeys);
+	void RecursiveMergeKeyValues(KeyValues *baseKV);
+
+	// NOTE: If both filesystem and pBuf are non-null, it'll save to both of them.
+	// If filesystem is null, it'll ignore f.
+	void InternalWrite(IBaseFileSystem *filesystem, FileHandle_t f, CUtlBuffer *pBuf, const void *pData, int len);
+
+	void Init();
+	const char * ReadToken(CUtlBuffer &buf, bool &wasQuoted, bool &wasConditional);
+	void WriteIndents(IBaseFileSystem *filesystem, FileHandle_t f, CUtlBuffer *pBuf, int indentLevel);
+
+	void FreeAllocatedValue();
+	void AllocateValueBlock(int size);
+
+	bool ReadAsBinaryPooledFormat(CUtlBuffer &buf, IBaseFileSystem *pFileSystem, unsigned int poolKey, GetSymbolProc_t pfnEvaluateSymbolProc);
+
+	bool EvaluateConditional(const char *pExpressionString, GetSymbolProc_t pfnEvaluateSymbolProc);
+
+	uint32 m_iKeyName : 24;	// keyname is a symbol defined in KeyValuesSystem
+	uint32 m_iKeyNameCaseSensitive1 : 8;	// 1st part of case sensitive symbol defined in KeyValueSystem
+
+											// These are needed out of the union because the API returns string pointers
+	char *m_sValue;
+	wchar_t *m_wsValue;
+
+	// we don't delete these
+	union
+	{
+		int m_iValue;
+		float m_flValue;
+		void *m_pValue;
+		unsigned char m_Color[4];
+	};
+
+	char	   m_iDataType;
+	char	   m_bHasEscapeSequences; // true, if while parsing this KeyValue, Escape Sequences are used (default false)
+	uint16	   m_iKeyNameCaseSensitive2;	// 2nd part of case sensitive symbol defined in KeyValueSystem;
+
+	KeyValues *m_pPeer;	// pointer to next key in list
+	KeyValues *m_pSub;	// pointer to Start of a new sub key list
+	KeyValues *m_pChain;// Search here if it's not in our list
+};
+
+//typedef KeyValues::AutoDelete KeyValuesAD;
+
+enum KeyValuesUnpackDestinationTypes_t
+{
+	UNPACK_TYPE_FLOAT,										// dest is a float
+	UNPACK_TYPE_VECTOR,										// dest is a Vector
+	UNPACK_TYPE_VECTOR_COLOR,								// dest is a vector, src is a color
+	UNPACK_TYPE_STRING,										// dest is a char *. unpacker will allocate.
+	UNPACK_TYPE_INT,										// dest is an int
+	UNPACK_TYPE_FOUR_FLOATS,	 // dest is an array of 4 floats. source is a string like "1 2 3 4"
+	UNPACK_TYPE_TWO_FLOATS,		 // dest is an array of 2 floats. source is a string like "1 2"
+};
+
+#define UNPACK_FIXED( kname, kdefault, dtype, ofs ) { kname, kdefault, dtype, ofs, 0 }
+#define UNPACK_VARIABLE( kname, kdefault, dtype, ofs, sz ) { kname, kdefault, dtype, ofs, sz }
+#define UNPACK_END_MARKER { NULL, NULL, UNPACK_TYPE_FLOAT, 0 }
+
+struct KeyValuesUnpackStructure
+{
+	char const *m_pKeyName;									// null to terminate tbl
+	char const *m_pKeyDefault;								// null ok
+	KeyValuesUnpackDestinationTypes_t m_eDataType;			// UNPACK_TYPE_INT, ..
+	size_t m_nFieldOffset;									// use offsetof to set
+	size_t m_nFieldSize;									// for strings or other variable length
+};
+
+//-----------------------------------------------------------------------------
+// inline methods
+//-----------------------------------------------------------------------------
+inline int   KeyValues::GetInt(int keySymbol, int defaultValue)
+{
+	KeyValues *dat = FindKey(keySymbol);
+	return dat ? dat->GetInt((const char *)NULL, defaultValue) : defaultValue;
+}
+
+inline uint64 KeyValues::GetUint64(int keySymbol, uint64 defaultValue)
+{
+	KeyValues *dat = FindKey(keySymbol);
+	return dat ? dat->GetUint64((const char *)NULL, defaultValue) : defaultValue;
+}
+
+inline float KeyValues::GetFloat(int keySymbol, float defaultValue)
+{
+	KeyValues *dat = FindKey(keySymbol);
+	return dat ? dat->GetFloat((const char *)NULL, defaultValue) : defaultValue;
+}
+
+inline const char *KeyValues::GetString(int keySymbol, const char *defaultValue)
+{
+	KeyValues *dat = FindKey(keySymbol);
+	return dat ? dat->GetString((const char *)NULL, defaultValue) : defaultValue;
+}
+
+inline const wchar_t *KeyValues::GetWString(int keySymbol, const wchar_t *defaultValue)
+{
+	KeyValues *dat = FindKey(keySymbol);
+	return dat ? dat->GetWString((const char *)NULL, defaultValue) : defaultValue;
+}
+
+inline void *KeyValues::GetPtr(int keySymbol, void *defaultValue)
+{
+	KeyValues *dat = FindKey(keySymbol);
+	return dat ? dat->GetPtr((const char *)NULL, defaultValue) : defaultValue;
+}
+
+inline Color KeyValues::GetColor(int keySymbol)
+{
+	Color defaultValue(0, 0, 0, 0);
+	KeyValues *dat = FindKey(keySymbol);
+	return dat ? dat->GetColor() : defaultValue;
+}
+
+inline bool  KeyValues::IsEmpty(int keySymbol)
+{
+	KeyValues *dat = FindKey(keySymbol);
+	return dat ? dat->IsEmpty() : true;
+}
+
+
+//
+// KeyValuesDumpContext and generic implementations
+//
+
+class IKeyValuesDumpContext
+{
+public:
+	virtual bool KvBeginKey(KeyValues *pKey, int nIndentLevel) = 0;
+	virtual bool KvWriteValue(KeyValues *pValue, int nIndentLevel) = 0;
+	virtual bool KvEndKey(KeyValues *pKey, int nIndentLevel) = 0;
+};
+
+class IKeyValuesDumpContextAsText : public IKeyValuesDumpContext
+{
+public:
+	virtual bool KvBeginKey(KeyValues *pKey, int nIndentLevel);
+	virtual bool KvWriteValue(KeyValues *pValue, int nIndentLevel);
+	virtual bool KvEndKey(KeyValues *pKey, int nIndentLevel);
+
+public:
+	virtual bool KvWriteIndent(int nIndentLevel);
+	virtual bool KvWriteText(char const *szText) = 0;
+};
+
+class CKeyValuesDumpContextAsDevMsg : public IKeyValuesDumpContextAsText
+{
+public:
+	// Overrides developer level to dump in DevMsg, zero to dump as Msg
+	CKeyValuesDumpContextAsDevMsg(int nDeveloperLevel = 1) : m_nDeveloperLevel(nDeveloperLevel) {}
+
+public:
+	virtual bool KvBeginKey(KeyValues *pKey, int nIndentLevel);
+	virtual bool KvWriteText(char const *szText);
+
+protected:
+	int m_nDeveloperLevel;
+};
+
+inline bool KeyValuesDumpAsDevMsg(KeyValues *pKeyValues, int nIndentLevel = 0, int nDeveloperLevel = 1)
+{
+	CKeyValuesDumpContextAsDevMsg ctx(nDeveloperLevel);
+	return pKeyValues->Dump(&ctx, nIndentLevel);
+}
+
+struct FlashlightState_t
+{
+	FlashlightState_t()
+	{
+		throw "not implemented";
+	}
+};
+
+//-----------------------------------------------------------------------------
+// Indicates the type of translucency of an unmodulated renderable
+//-----------------------------------------------------------------------------
+enum RenderableTranslucencyType_t
+{
+	RENDERABLE_IS_OPAQUE = 0,
+	RENDERABLE_IS_TRANSLUCENT,
+	RENDERABLE_IS_TWO_PASS,	// has both translucent and opaque sub-partsa
+};
+
+enum RenderableModelType_t
+{
+	RENDERABLE_MODEL_UNKNOWN_TYPE = -1,
+	RENDERABLE_MODEL_ENTITY = 0,
+	RENDERABLE_MODEL_STUDIOMDL,
+	RENDERABLE_MODEL_STATIC_PROP,
+	RENDERABLE_MODEL_BRUSH,
+};
+
+//-----------------------------------------------------------------------------
+// Handles to a client shadow
+//-----------------------------------------------------------------------------
+typedef unsigned short ClientShadowHandle_t;
+
+enum
+{
+	CLIENTSHADOW_INVALID_HANDLE = (ClientShadowHandle_t)~0
+};
+
+//-----------------------------------------------------------------------------
+// Safe accessor to an entity
+//-----------------------------------------------------------------------------
+typedef unsigned int HTOOLHANDLE;
+enum
+{
+	HTOOLHANDLE_INVALID = 0
+};
+
+//-----------------------------------------------------------------------------
+// Flags for the creation method
+//-----------------------------------------------------------------------------
+enum ShadowFlags_t
+{
+	SHADOW_FLAGS_FLASHLIGHT = (1 << 0),
+	SHADOW_FLAGS_SHADOW = (1 << 1),
+	SHADOW_FLAGS_SIMPLE_PROJECTION = (1 << 2),
+
+	// Update this if you add flags
+	SHADOW_FLAGS_LAST_FLAG = SHADOW_FLAGS_SIMPLE_PROJECTION
+};
+
+//-----------------------------------------------------------------------------
+// If you change this, change the flags in IClientShadowMgr.h also
+//-----------------------------------------------------------------------------
+enum ClientShadowFlags_t
+{
+	SHADOW_FLAGS_USE_RENDER_TO_TEXTURE = (SHADOW_FLAGS_LAST_FLAG << 1),
+	SHADOW_FLAGS_ANIMATING_SOURCE = (SHADOW_FLAGS_LAST_FLAG << 2),
+	SHADOW_FLAGS_USE_DEPTH_TEXTURE = (SHADOW_FLAGS_LAST_FLAG << 3),
+	SHADOW_FLAGS_CUSTOM_DRAW = (SHADOW_FLAGS_LAST_FLAG << 4),
+	// Update this if you add flags
+	CLIENT_SHADOW_FLAGS_LAST_FLAG = SHADOW_FLAGS_CUSTOM_DRAW
+};
+
+
+//-----------------------------------------------------------------------------
+// Opaque pointer returned from Find* methods, don't store this, you need to 
+// Attach it to a tool entity or discard after searching
+//-----------------------------------------------------------------------------
+typedef void *EntitySearchResult;
+typedef void *ParticleSystemSearchResult;
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Client side tool interace (right now just handles IClientRenderables).
+//  In theory could support hooking into client side entities directly
+//-----------------------------------------------------------------------------
+class IClientTools : public IBaseInterface
+{
+public:
+	// Allocates or returns the handle to an entity previously found using the Find* APIs below
+	virtual HTOOLHANDLE		AttachToEntity(EntitySearchResult entityToAttach) = 0;
+	virtual void			DetachFromEntity(EntitySearchResult entityToDetach) = 0;
+
+	virtual EntitySearchResult	GetEntity(HTOOLHANDLE handle) = 0;
+
+	// Checks whether a handle is still valid.
+	virtual bool			IsValidHandle(HTOOLHANDLE handle) = 0;
+
+	// Iterates the list of entities which have been associated with tools
+	virtual int				GetNumRecordables() = 0;
+	virtual HTOOLHANDLE		GetRecordable(int index) = 0;
+
+	// Iterates through ALL entities (separate list for client vs. server)
+	virtual EntitySearchResult	NextEntity(EntitySearchResult currentEnt) = 0;
+	EntitySearchResult			FirstEntity() { return NextEntity(NULL); }
+
+	// Use this to turn on/off the presence of an underlying game entity
+	virtual void			SetEnabled(HTOOLHANDLE handle, bool enabled) = 0;
+	// Use this to tell an entity to post "state" to all listening tools
+	virtual void			SetRecording(HTOOLHANDLE handle, bool recording) = 0;
+	// Some entities are marked with ShouldRecordInTools false, such as ui entities, etc.
+	virtual bool			ShouldRecord(HTOOLHANDLE handle) = 0;
+
+	virtual HTOOLHANDLE		GetToolHandleForEntityByIndex(int entindex) = 0;
+
+	virtual int				GetModelIndex(HTOOLHANDLE handle) = 0;
+	virtual const char*		GetModelName(HTOOLHANDLE handle) = 0;
+	virtual const char*		GetClassname(HTOOLHANDLE handle) = 0;
+
+	virtual void			AddClientRenderable(IClientRenderable *pRenderable, bool bDrawWithViewModels, RenderableTranslucencyType_t nType, RenderableModelType_t nModelType = RENDERABLE_MODEL_UNKNOWN_TYPE) = 0;
+	virtual void			RemoveClientRenderable(IClientRenderable *pRenderable) = 0;
+	virtual void			SetTranslucencyType(IClientRenderable *pRenderable, RenderableTranslucencyType_t nType) = 0;
+	virtual void			MarkClientRenderableDirty(IClientRenderable *pRenderable) = 0;
+	virtual void			UpdateProjectedTexture(ClientShadowHandle_t h, bool bForce) = 0;
+
+	virtual bool			DrawSprite(IClientRenderable *pRenderable, float scale, float frame, int rendermode, int renderfx, const Color &color, float flProxyRadius, int *pVisHandle) = 0;
+	virtual void			DrawSprite(const Vector &vecOrigin, float flWidth, float flHeight, color32 color) = 0;
+
+	virtual EntitySearchResult	GetLocalPlayer() = 0;
+	virtual bool			GetLocalPlayerEyePosition(Vector& org, QAngle& ang, float &fov) = 0;
+
+	// See ClientShadowFlags_t above
+	virtual ClientShadowHandle_t CreateShadow(CBaseHandle handle, int nFlags) = 0;
+	virtual void			DestroyShadow(ClientShadowHandle_t h) = 0;
+
+	virtual ClientShadowHandle_t CreateFlashlight(const FlashlightState_t &lightState) = 0;
+	virtual void			DestroyFlashlight(ClientShadowHandle_t h) = 0;
+	virtual void			UpdateFlashlightState(ClientShadowHandle_t h, const FlashlightState_t &lightState) = 0;
+
+	virtual void			AddToDirtyShadowList(ClientShadowHandle_t h, bool force = false) = 0;
+	virtual void			MarkRenderToTextureShadowDirty(ClientShadowHandle_t h) = 0;
+
+	// Global toggle for recording
+	virtual void			EnableRecordingMode(bool bEnable) = 0;
+	virtual bool			IsInRecordingMode() const = 0;
+
+	// Trigger a temp entity
+	virtual void			TriggerTempEntity(KeyValues *pKeyValues) = 0;
+
+	// get owning weapon (for viewmodels)
+	virtual int				GetOwningWeaponEntIndex(int entindex) = 0;
+	virtual int				GetEntIndex(EntitySearchResult entityToAttach) = 0;
+
+	virtual int				FindGlobalFlexcontroller(char const *name) = 0;
+	virtual char const		*GetGlobalFlexControllerName(int idx) = 0;
+
+	// helper for traversing ownership hierarchy
+	virtual EntitySearchResult	GetOwnerEntity(EntitySearchResult currentEnt) = 0;
+
+	// common and useful types to query for hierarchically
+	virtual bool			IsPlayer(EntitySearchResult currentEnt) = 0;
+	virtual bool			IsCombatCharacter(EntitySearchResult currentEnt) = 0;
+	virtual bool			IsNPC(EntitySearchResult currentEnt) = 0;
+	virtual bool			IsRagdoll(EntitySearchResult currentEnt) = 0;
+	virtual bool			IsViewModel(EntitySearchResult currentEnt) = 0;
+	virtual bool			IsViewModelOrAttachment(EntitySearchResult currentEnt) = 0;
+	virtual bool			IsWeapon(EntitySearchResult currentEnt) = 0;
+	virtual bool			IsSprite(EntitySearchResult currentEnt) = 0;
+	virtual bool			IsProp(EntitySearchResult currentEnt) = 0;
+	virtual bool			IsBrush(EntitySearchResult currentEnt) = 0;
+
+	virtual Vector			GetAbsOrigin(HTOOLHANDLE handle) = 0;
+	virtual QAngle			GetAbsAngles(HTOOLHANDLE handle) = 0;
+
+	// This reloads a portion or all of a particle definition file.
+	// It's up to the client to decide if it cares about this file
+	// Use a UtlBuffer to crack the data
+	virtual void			ReloadParticleDefintions(const char *pFileName, const void *pBufData, int nLen) = 0;
+
+	// ParticleSystem iteration, query, modification
+	virtual ParticleSystemSearchResult	FirstParticleSystem() { return NextParticleSystem(NULL); }
+	virtual ParticleSystemSearchResult	NextParticleSystem(ParticleSystemSearchResult sr) = 0;
+	virtual void						SetRecording(ParticleSystemSearchResult sr, bool bRecord) = 0;
+
+	// Sends a mesage from the tool to the client
+	virtual void			PostToolMessage(KeyValues *pKeyValues) = 0;
+
+	// Indicates whether the client should render particle systems
+	virtual void			EnableParticleSystems(bool bEnable) = 0;
+
+	// Is the game rendering in 3rd person mode?
+	virtual bool			IsRenderingThirdPerson() const = 0;
+};
+
+#define SOURCESDK_CSGO_VCLIENTTOOLS_INTERFACE_VERSION "VCLIENTTOOLS001"
+
+
+// handle to a KeyValues key name symbol
+typedef int HKeySymbol;
+#define INVALID_KEY_SYMBOL (-1)
+
+//-----------------------------------------------------------------------------
+// Purpose: Interface to shared data repository for KeyValues (included in vgui_controls.lib)
+//			allows for central data storage point of KeyValues symbol table
+//-----------------------------------------------------------------------------
+class IKeyValuesSystem
+{
+public:
+	// registers the size of the KeyValues in the specified instance
+	// so it can build a properly sized memory pool for the KeyValues objects
+	// the sizes will usually never differ but this is for versioning safety
+	virtual void RegisterSizeofKeyValues(int size) = 0;
+
+	// allocates/frees a KeyValues object from the shared mempool
+	virtual void *AllocKeyValuesMemory(int size) = 0;
+	virtual void FreeKeyValuesMemory(void *pMem) = 0;
+
+	// symbol table access (used for key names)
+	virtual HKeySymbol GetSymbolForString(const char *name, bool bCreate = true) = 0;
+	virtual const char *GetStringForSymbol(HKeySymbol symbol) = 0;
+
+	// for debugging, adds KeyValues record into global list so we can track memory leaks
+	virtual void AddKeyValuesToMemoryLeakList(void *pMem, HKeySymbol name) = 0;
+	virtual void RemoveKeyValuesFromMemoryLeakList(void *pMem) = 0;
+};
+
+IKeyValuesSystem *KeyValuesSystem();
+
+
+#define SOURCESDK_CSGO_MAXSTUDIOPOSEPARAM	24
+
+//-----------------------------------------------------------------------------
+// Forward declarations
+//-----------------------------------------------------------------------------
+class IToolSystem;
+struct SpatializationInfo_t;
+class KeyValues;
+class CBoneList;
+
+
+//-----------------------------------------------------------------------------
+// Standard messages
+//-----------------------------------------------------------------------------
+struct EffectRecordingState_t
+{
+	bool m_bVisible : 1;
+	bool m_bThirdPerson : 1;
+	Color m_Color;
+	float m_Scale;
+	const char *m_pMaterialName;
+	int m_nAttachment;
+	Vector m_vecAttachment; // only used if m_nAttachment is -1
+};
+
+struct BaseEntityRecordingState_t
+{
+	BaseEntityRecordingState_t() :
+		m_flTime(0.0f),
+		m_pModelName(0),
+		m_nOwner(-1),
+		m_fEffects(0),
+		m_bVisible(false),
+		m_bRecordFinalVisibleSample(false),
+		m_numEffects(0),
+		m_pEffects(NULL),
+		m_nFollowEntity(-1)
+	{
+		m_vecRenderOrigin.Init();
+		m_vecRenderAngles.Init();
+	}
+
+	float m_flTime;
+	const char *m_pModelName;
+	int m_nOwner;
+	int m_fEffects;
+	bool m_bVisible : 1;
+	bool m_bRecordFinalVisibleSample : 1;
+	Vector m_vecRenderOrigin;
+	QAngle m_vecRenderAngles;
+	int m_nFollowEntity;
+
+	int m_numEffects;
+	EffectRecordingState_t *m_pEffects;
+};
+
+struct SpriteRecordingState_t
+{
+	float m_flRenderScale;
+	float m_flFrame;
+	int m_nRenderMode;
+	bool m_nRenderFX;
+	Color m_Color;
+	float m_flProxyRadius;
+};
+
+struct BaseAnimatingHighLevelRecordingState_t
+{
+	BaseAnimatingHighLevelRecordingState_t()
+		: m_bClearIkTargets(false),
+		m_bIsRagdoll(false),
+		m_bShouldCreateIkContext(false),
+		m_nNumPoseParams(0),
+		m_flCycle(0.0f),
+		m_flPlaybackRate(1.0f),
+		m_flCycleRate(0.0f),
+		m_nFrameCount(0),
+		m_bInterpEffectActive(false)
+	{
+	}
+
+	bool m_bClearIkTargets;
+	bool m_bIsRagdoll;
+	bool m_bShouldCreateIkContext;
+	int m_nNumPoseParams;
+
+	float m_flCycle;
+	float m_flPlaybackRate;
+	float m_flCycleRate;
+	int m_nFrameCount;
+
+	float m_flPoseParameter[SOURCESDK_CSGO_MAXSTUDIOPOSEPARAM];
+
+	bool m_bInterpEffectActive;
+};
+
+struct BaseAnimatingRecordingState_t
+{
+	BaseAnimatingHighLevelRecordingState_t m_highLevelState;
+
+	int m_nSkin;
+	int m_nBody;
+	int m_nSequence;
+	CBoneList *m_pBoneList;
+};
+
+struct BaseFlexRecordingState_t
+{
+	int m_nFlexCount;
+	float *m_pDestWeight;
+	Vector m_vecViewTarget;
+};
+
+struct CameraRecordingState_t
+{
+	bool m_bThirdPerson;
+	float m_flFOV;
+	Vector m_vecEyePosition;
+	QAngle m_vecEyeAngles;
+};
+
+struct MonitorRecordingState_t
+{
+	bool	m_bActive;
+	float	m_flFOV;
+	bool	m_bFogEnabled;
+	float	m_flFogStart;
+	float	m_flFogEnd;
+	Color	m_FogColor;
+};
+
+struct EntityTeleportedRecordingState_t
+{
+	Vector m_vecTo;
+	QAngle m_qaTo;
+	bool m_bTeleported;
+	bool m_bViewOverride;
+	matrix3x4_t m_teleportMatrix;
+};
+
+struct PortalRecordingState_t
+{
+	int				m_nPortalId;
+	int				m_nLinkedPortalId;
+	float			m_fStaticAmount;
+	float			m_fSecondaryStaticAmount;
+	float			m_fOpenAmount;
+	bool			m_bIsPortal2; //for any set of portals, one must be portal 1, and the other portal 2. Uses different render targets
+};
+
+struct ParticleSystemCreatedState_t
+{
+	int				m_nParticleSystemId;
+	const char *	m_pName;
+	float			m_flTime;
+	int				m_nOwner;
+};
+
+struct ParticleSystemDestroyedState_t
+{
+	int				m_nParticleSystemId;
+	float			m_flTime;
+};
+
+struct ParticleSystemStopEmissionState_t
+{
+	int				m_nParticleSystemId;
+	float			m_flTime;
+	bool			m_bInfiniteOnly;
+};
+
+struct ParticleSystemSetControlPointObjectState_t
+{
+	int				m_nParticleSystemId;
+	float			m_flTime;
+	int				m_nControlPoint;
+	int				m_nObject;
+};
+
+struct ParticleSystemSetControlPointPositionState_t
+{
+	int				m_nParticleSystemId;
+	float			m_flTime;
+	int				m_nControlPoint;
+	Vector			m_vecPosition;
+};
+
+struct ParticleSystemSetControlPointOrientationState_t
+{
+	int				m_nParticleSystemId;
+	float			m_flTime;
+	int				m_nControlPoint;
+	Quaternion		m_qOrientation;
+};
+
+#define SOURCESDK_CSGO_MAXSTUDIOBONES		128		// total bones actually used
+
+class CBoneList
+{
+public:
+
+	CBoneList();
+
+	void Release();
+
+	static CBoneList *Alloc();
+
+	unsigned int GetWriteSize() const
+	{
+		return 2 + m_nBones * (sizeof(Vector) + sizeof(Quaternion));
+	}
+
+	// The order of these data members must be maintained in order for the server
+	// demo system.  ServerDemoPacket_BaseAnimating::GetSize() depends on this.
+
+private:
+	bool		m_bShouldDelete : 1;
+
+public:
+	uint16		m_nBones : 15;
+	Vector		m_vecPos[SOURCESDK_CSGO_MAXSTUDIOBONES];
+	Quaternion	m_quatRot[SOURCESDK_CSGO_MAXSTUDIOBONES];
+};
+
+
+#undef IBaseFileSystem
+#undef CBaseHandle
+#undef IClientRenderable
+
+
+
+} // namespace CSGO {
+} // namespace SOURCESDK {

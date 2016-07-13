@@ -76,9 +76,9 @@ public:
 	//  at the right time.
 	/// Normally you should use the other constructors instead.
 	/// </remarks>
-	CAfxMaterial(IMaterial_csgo * material);
+	CAfxMaterial(SOURCESDK::IMaterial_csgo * material);
 
-	CAfxMaterial(IAfxFreeMaster * freeMaster, IMaterial_csgo * material);
+	CAfxMaterial(IAfxFreeMaster * freeMaster, SOURCESDK::IMaterial_csgo * material);
 
 	/// <remarks>
 	/// The copy will use the same freeMaster, meaning the copy's material
@@ -88,12 +88,12 @@ public:
 
 	virtual ~CAfxMaterial();
 
-	virtual IMaterial_csgo * GetMaterial() const;
+	virtual SOURCESDK::IMaterial_csgo * GetMaterial() const;
 
 	virtual void AfxFree(void);
 
 protected:
-	IMaterial_csgo * m_Material;
+	SOURCESDK::IMaterial_csgo * m_Material;
 };
 
 // CAfxMaterialKey /////////////////////////////////////////////////////////////
@@ -106,9 +106,9 @@ public:
 	//  at the right time.
 	/// Normally you should use the other constructors instead.
 	/// </remarks>
-	CAfxMaterialKey(IMaterial_csgo * material);
+	CAfxMaterialKey(SOURCESDK::IMaterial_csgo * material);
 
-	CAfxMaterialKey(IAfxFreeMaster * freeMaster, IMaterial_csgo * material);
+	CAfxMaterialKey(IAfxFreeMaster * freeMaster, SOURCESDK::IMaterial_csgo * material);
 
 	/// <remarks>
 	/// The copy will use the same freeMaster, meaning the copy's material

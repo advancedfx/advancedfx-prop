@@ -42,12 +42,12 @@ public:
 
 		struct CBlendFunc
 		{
-			ShaderBlendFactor_t_csgo srcFactor;
-			ShaderBlendFactor_t_csgo dstFactor;
+			SOURCESDK::ShaderBlendFactor_t_csgo srcFactor;
+			SOURCESDK::ShaderBlendFactor_t_csgo dstFactor;
 
 			CBlendFunc()
-			: srcFactor(SHADER_BLEND_ONE)
-			, dstFactor(SHADER_BLEND_ZERO)
+			: srcFactor(SOURCESDK::SHADER_BLEND_ONE)
+			, dstFactor(SOURCESDK::SHADER_BLEND_ZERO)
 			{
 			}
 		} BlendFunc;

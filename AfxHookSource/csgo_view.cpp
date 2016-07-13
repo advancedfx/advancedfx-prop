@@ -12,9 +12,9 @@
 
 #include "addresses.h"
 
-IViewRender_csgo * GetView_csgo(void)
+SOURCESDK::IViewRender_csgo * GetView_csgo(void)
 {
-	IViewRender_csgo ** pView = (IViewRender_csgo **)AFXADDR_GET(csgo_view);
+	SOURCESDK::IViewRender_csgo ** pView = (SOURCESDK::IViewRender_csgo **)AFXADDR_GET(csgo_view);
 
 	if(pView)
 		return *pView;

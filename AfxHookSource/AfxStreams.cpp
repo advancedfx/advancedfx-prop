@@ -517,7 +517,7 @@ void CAfxDeveloperStream::StreamDetach(IAfxStreams4Stream * streams)
 	CAfxRenderViewStream::StreamDetach(streams);
 }
 
-IMaterial_csgo * CAfxDeveloperStream::MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material)
+SOURCESDK::IMaterial_csgo * CAfxDeveloperStream::MaterialHook(IAfxMatRenderContext * ctx, SOURCESDK::IMaterial_csgo * material)
 {
 	bool replace =
 		m_Replace
@@ -530,7 +530,7 @@ IMaterial_csgo * CAfxDeveloperStream::MaterialHook(IAfxMatRenderContext * ctx, I
 	return replace ? m_ReplaceMaterial->GetMaterial() : material;
 }
 
-void CAfxDeveloperStream::DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance )
+void CAfxDeveloperStream::DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const SOURCESDK::MeshInstanceData_t_csgo *pInstance )
 {
 	//if(m_ReplaceMaterialActive) Tier0_Msg("CAfxDeveloperStream::DrawInstances\n");
 
@@ -548,7 +548,7 @@ void CAfxDeveloperStream::Draw(IAfxMesh * am, int firstIndex, int numIndices)
 		am->GetParent()->MarkAsDrawn();
 }
 
-void CAfxDeveloperStream::Draw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists)
+void CAfxDeveloperStream::Draw_2(IAfxMesh * am, SOURCESDK::CPrimList_csgo *pLists, int nLists)
 {
 	//if(m_ReplaceMaterialActive) Tier0_Msg("CAfxDeveloperStream::Draw_2\n");
 
@@ -558,7 +558,7 @@ void CAfxDeveloperStream::Draw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLis
 		am->GetParent()->MarkAsDrawn();
 }
 
-void CAfxDeveloperStream::DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex, int numIndices)
+void CAfxDeveloperStream::DrawModulated(IAfxMesh * am, const SOURCESDK::Vector4D_csgo &vecDiffuseModulation, int firstIndex, int numIndices)
 {
 	//if(m_ReplaceMaterialActive) Tier0_Msg("CAfxDeveloperStream::DrawModulated\n");
 
@@ -799,7 +799,7 @@ void CAfxBaseFxStream::StreamDetach(IAfxStreams4Stream * streams)
 	CAfxRenderViewStream::StreamDetach(streams);
 }
 
-IMaterial_csgo * CAfxBaseFxStream::MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material)
+SOURCESDK::IMaterial_csgo * CAfxBaseFxStream::MaterialHook(IAfxMatRenderContext * ctx, SOURCESDK::IMaterial_csgo * material)
 {
 	CAfxMaterialKey key(material);
 
@@ -829,7 +829,7 @@ void CAfxBaseFxStream::DrawingHud(void)
 	BindAction(m_Shared.DrawAction_get());
 }
 
-CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * material)
+CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(SOURCESDK::IMaterial_csgo * material)
 {
 	const char * groupName =  material->GetTextureGroupName();
 	const char * name = material->GetName();
@@ -946,14 +946,14 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * materia
 	return GetAction(material, 0);
 }
 
-CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * material, CAction * action)
+CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(SOURCESDK::IMaterial_csgo * material, CAction * action)
 {
 	if(!action) action = m_Shared.DrawAction_get();
 	action = action->ResolveAction(material);
 	return action;
 }
 
-void CAfxBaseFxStream::DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance )
+void CAfxBaseFxStream::DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const SOURCESDK::MeshInstanceData_t_csgo *pInstance )
 {
 	m_CurrentAction->DrawInstances(ctx, nInstanceCount, pInstance);
 }
@@ -963,12 +963,12 @@ void CAfxBaseFxStream::Draw(IAfxMesh * am, int firstIndex, int numIndices)
 	m_CurrentAction->Draw(am, firstIndex, numIndices);
 }
 
-void CAfxBaseFxStream::Draw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists)
+void CAfxBaseFxStream::Draw_2(IAfxMesh * am, SOURCESDK::CPrimList_csgo *pLists, int nLists)
 {
 	m_CurrentAction->Draw_2(am, pLists, nLists);
 }
 
-void CAfxBaseFxStream::DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex, int numIndices)
+void CAfxBaseFxStream::DrawModulated(IAfxMesh * am, const SOURCESDK::Vector4D_csgo &vecDiffuseModulation, int firstIndex, int numIndices)
 {
 	m_CurrentAction->DrawModulated(am, vecDiffuseModulation, firstIndex, numIndices);
 }
@@ -1683,7 +1683,7 @@ CAfxBaseFxStream::CActionDebugDepth::~CActionDebugDepth()
 	if(m_FallBackAction) m_FallBackAction->Release();
 }
 
-CAfxBaseFxStream::CAction * CAfxBaseFxStream::CActionDebugDepth::ResolveAction(IMaterial_csgo * material)
+CAfxBaseFxStream::CAction * CAfxBaseFxStream::CActionDebugDepth::ResolveAction(SOURCESDK::IMaterial_csgo * material)
 {
 	bool splinetype = false;
 	bool useinstancing = false;
@@ -1691,9 +1691,9 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::CActionDebugDepth::ResolveAction(I
 	if(material)
 	{
 		int numVars = material->ShaderParamCount();
-		IMaterialVar_csgo ** orgParams = material->GetShaderParams();
+		SOURCESDK::IMaterialVar_csgo ** orgParams = material->GetShaderParams();
 		
-		IMaterialVar_csgo ** params = orgParams;
+		SOURCESDK::IMaterialVar_csgo ** params = orgParams;
 
 		for(int i=0; i<numVars; ++i)
 		{
@@ -1728,7 +1728,7 @@ void CAfxBaseFxStream::CActionDebugDepth::AfxUnbind(IAfxMatRenderContext * ctx)
 {
 }
 
-IMaterial_csgo * CAfxBaseFxStream::CActionDebugDepth::MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material)
+SOURCESDK::IMaterial_csgo * CAfxBaseFxStream::CActionDebugDepth::MaterialHook(IAfxMatRenderContext * ctx, SOURCESDK::IMaterial_csgo * material)
 {
 	if(!m_MatDebugDepthVal) m_MatDebugDepthVal = new WrpConVarRef("mat_debugdepthval");
 	if(!m_MatDebugDepthValMax) m_MatDebugDepthValMax = new WrpConVarRef("mat_debugdepthvalmax");
@@ -1769,7 +1769,7 @@ CAfxBaseFxStream::CActionReplace::~CActionReplace()
 	if(m_Material) delete m_Material;
 }
 
-CAfxBaseFxStream::CAction * CAfxBaseFxStream::CActionReplace::ResolveAction(IMaterial_csgo * material)
+CAfxBaseFxStream::CAction * CAfxBaseFxStream::CActionReplace::ResolveAction(SOURCESDK::IMaterial_csgo * material)
 {
 	EnsureMaterial();
 
@@ -1801,7 +1801,7 @@ void CAfxBaseFxStream::CActionReplace::AfxUnbind(IAfxMatRenderContext * ctx)
 		AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE();
 }
 
-IMaterial_csgo * CAfxBaseFxStream::CActionReplace::MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material)
+SOURCESDK::IMaterial_csgo * CAfxBaseFxStream::CActionReplace::MaterialHook(IAfxMatRenderContext * ctx, SOURCESDK::IMaterial_csgo * material)
 {
 	EnsureMaterial();
 
@@ -1824,7 +1824,7 @@ void CAfxBaseFxStream::CActionReplace::EnsureMaterial(void)
 		CAfxBaseFxStream::m_Shared.m_ActiveBaseFxStream->m_Streams->GetMaterialSystem()->FindMaterial(m_MaterialName.c_str(), 0));
 }
 
-void CAfxBaseFxStream::CActionReplace::ExamineMaterial(IMaterial_csgo * material, bool & outSplinetype, bool & outUseinstancing)
+void CAfxBaseFxStream::CActionReplace::ExamineMaterial(SOURCESDK::IMaterial_csgo * material, bool & outSplinetype, bool & outUseinstancing)
 {
 	bool splinetype = false;
 	bool useinstancing = false;
@@ -1832,9 +1832,9 @@ void CAfxBaseFxStream::CActionReplace::ExamineMaterial(IMaterial_csgo * material
 	if(material)
 	{
 		int numVars = material->ShaderParamCount();
-		IMaterialVar_csgo ** orgParams = material->GetShaderParams();
+		SOURCESDK::IMaterialVar_csgo ** orgParams = material->GetShaderParams();
 		
-		IMaterialVar_csgo ** params = orgParams;
+		SOURCESDK::IMaterialVar_csgo ** params = orgParams;
 
 		for(int i=0; i<numVars; ++i)
 		{
@@ -2446,7 +2446,7 @@ void CAfxBaseFxStream::CActionNoDraw::AfxUnbind(IAfxMatRenderContext * ctx)
 	AfxD3D9OverrideEnd_D3DRS_ALPHABLENDENABLE();
 }
 
-IMaterial_csgo * CAfxBaseFxStream::CActionNoDraw::MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material)
+SOURCESDK::IMaterial_csgo * CAfxBaseFxStream::CActionNoDraw::MaterialHook(IAfxMatRenderContext * ctx, SOURCESDK::IMaterial_csgo * material)
 {
 	AfxD3D9OverrideBegin_D3DRS_ALPHABLENDENABLE(TRUE);
 	AfxD3D9OverrideBegin_D3DRS_SRCBLEND(D3DBLEND_ZERO);
@@ -3205,7 +3205,7 @@ CAfxStreams::~CAfxStreams()
 }
 
 
-void CAfxStreams::OnMaterialSystem(IMaterialSystem_csgo * value)
+void CAfxStreams::OnMaterialSystem(SOURCESDK::IMaterialSystem_csgo * value)
 {
 	m_MaterialSystem = value;
 
@@ -3266,7 +3266,7 @@ void CAfxStreams::OnAfxBaseClientDll_Free(void)
 	}
 }
 
-void CAfxStreams::OnShaderShadow(IShaderShadow_csgo * value)
+void CAfxStreams::OnShaderShadow(SOURCESDK::IShaderShadow_csgo * value)
 {
 	m_ShaderShadow = value;
 }
@@ -3279,7 +3279,7 @@ void CAfxStreams::OnDraw(IAfxMesh * am, int firstIndex, int numIndices)
 		am->GetParent()->Draw(firstIndex, numIndices);
 }
 
-void CAfxStreams::OnDraw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists)
+void CAfxStreams::OnDraw_2(IAfxMesh * am, SOURCESDK::CPrimList_csgo *pLists, int nLists)
 {
 	if(m_OnDraw_2)
 		m_OnDraw_2->Draw_2(am, pLists, nLists);
@@ -3287,7 +3287,7 @@ void CAfxStreams::OnDraw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists)
 		am->GetParent()->Draw(pLists, nLists);
 }
 
-void CAfxStreams::OnDrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex, int numIndices)
+void CAfxStreams::OnDrawModulated(IAfxMesh * am, const SOURCESDK::Vector4D_csgo &vecDiffuseModulation, int firstIndex, int numIndices)
 {
 	if(m_OnDrawModulated)
 		m_OnDrawModulated->DrawModulated(am, vecDiffuseModulation, firstIndex, numIndices);
@@ -5114,7 +5114,7 @@ void CAfxStreams::Console_Bvh(IWrpCommandArgs * args)
 	);
 }
 
-IMaterialSystem_csgo * CAfxStreams::GetMaterialSystem(void)
+SOURCESDK::IMaterialSystem_csgo * CAfxStreams::GetMaterialSystem(void)
 {
 	return m_MaterialSystem;
 }
@@ -5130,7 +5130,7 @@ IAfxMatRenderContext * CAfxStreams::GetCurrentContext(void)
 	return m_CurrentContext;
 }
 
-IShaderShadow_csgo * CAfxStreams::GetShaderShadow(void)
+SOURCESDK::IShaderShadow_csgo * CAfxStreams::GetShaderShadow(void)
 {
 	return m_ShaderShadow;
 }
@@ -5203,7 +5203,7 @@ void CAfxStreams::DebugDump()
 			0, 0,
 			width, height,
 			(unsigned char*)m_BufferA.Buffer,
-			isRgba ? IMAGE_FORMAT_RGBA8888 : IMAGE_FORMAT_RGB888
+			isRgba ? SOURCESDK::IMAGE_FORMAT_RGBA8888 : SOURCESDK::IMAGE_FORMAT_RGB888
 		);
 
 		// (back) transform to MDT native format:
@@ -5272,7 +5272,7 @@ void CAfxStreams::DebugDump()
 
 }
 
-void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx, vrect_t_csgo *rect)
+void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx, SOURCESDK::vrect_t_csgo *rect)
 {
 	AfxD3D9_Block_Present(false);
 
@@ -5453,9 +5453,9 @@ bool CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuf
 	CAfxRenderViewStream::StreamCaptureType captureType = stream->StreamCaptureType_get();
 	bool isDepthF = captureType == CAfxRenderViewStream::SCT_DepthF || captureType == CAfxRenderViewStream::SCT_DepthFZIP;
 
-	IViewRender_csgo * view = GetView_csgo();
+	SOURCESDK::IViewRender_csgo * view = GetView_csgo();
 
-	const CViewSetup_csgo * viewSetup = view->GetViewSetup();
+	const SOURCESDK::CViewSetup_csgo * viewSetup = view->GetViewSetup();
 
 	if(isDepthF)
 	{
@@ -5490,15 +5490,15 @@ bool CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuf
 
 	if(0 < strlen(stream->AttachCommands_get())) g_VEngineClient->ExecuteClientCmd(stream->AttachCommands_get());
 
-	int whatToDraw = RENDERVIEW_UNSPECIFIED;
+	int whatToDraw = SOURCESDK::RENDERVIEW_UNSPECIFIED;
 
-	if(stream->DrawHud_get()) whatToDraw |= RENDERVIEW_DRAWHUD;
-	if(stream->DrawViewModel_get()) whatToDraw |= RENDERVIEW_DRAWVIEWMODEL;
+	if(stream->DrawHud_get()) whatToDraw |= SOURCESDK::RENDERVIEW_DRAWHUD;
+	if(stream->DrawViewModel_get()) whatToDraw |= SOURCESDK::RENDERVIEW_DRAWVIEWMODEL;
 
 	cx->GetParent()->ClearColor4ub(0,0,0,0);
 	cx->GetParent()->ClearBuffers(true,false,false);
 
-	view->RenderView(*viewSetup, *viewSetup, VIEW_CLEAR_STENCIL|VIEW_CLEAR_DEPTH, whatToDraw);
+	view->RenderView(*viewSetup, *viewSetup, SOURCESDK::VIEW_CLEAR_STENCIL|SOURCESDK::VIEW_CLEAR_DEPTH, whatToDraw);
 
 	if(isDepthF)
 	{
@@ -5508,7 +5508,7 @@ bool CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuf
 				viewSetup->m_nUnscaledX, viewSetup->m_nUnscaledY,
 				buffer.Width, buffer.Height,
 				(unsigned char*)buffer.Buffer,
-				IMAGE_FORMAT_R32F
+				SOURCESDK::IMAGE_FORMAT_R32F
 			);
 
 			// Post process buffer:
@@ -5549,7 +5549,7 @@ bool CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuf
 			viewSetup->m_nUnscaledX, viewSetup->m_nUnscaledY,
 			buffer.Width, buffer.Height,
 			(unsigned char*)buffer.Buffer,
-			IMAGE_FORMAT_RGB888
+			SOURCESDK::IMAGE_FORMAT_RGB888
 		);
 
 		if(CAfxRenderViewStream::SCT_Depth24 == captureType || CAfxRenderViewStream::SCT_Depth24ZIP == captureType)
@@ -5872,7 +5872,7 @@ void CAfxStreams::AddStream(CAfxRecordStream * stream)
 	if(m_Recording) stream->RecordStart();
 }
 
-void CAfxStreams::CreateRenderTargets(IMaterialSystem_csgo * materialSystem)
+void CAfxStreams::CreateRenderTargets(SOURCESDK::IMaterialSystem_csgo * materialSystem)
 {
 	materialSystem->BeginRenderTargetAllocation();
 
@@ -5888,7 +5888,7 @@ void CAfxStreams::CreateRenderTargets(IMaterialSystem_csgo * materialSystem)
 	}
 */
 
-	m_RenderTargetDepthF = materialSystem->CreateRenderTargetTexture(0,0,RT_SIZE_FULL_FRAME_BUFFER,IMAGE_FORMAT_R32F,MATERIAL_RT_DEPTH_SHARED);
+	m_RenderTargetDepthF = materialSystem->CreateRenderTargetTexture(0,0, SOURCESDK::RT_SIZE_FULL_FRAME_BUFFER, SOURCESDK::IMAGE_FORMAT_R32F, SOURCESDK::MATERIAL_RT_DEPTH_SHARED);
 	if(m_RenderTargetDepthF)
 	{
 		m_RenderTargetDepthF->IncrementReferenceCount();
@@ -6002,11 +6002,11 @@ void CAfxStreams::CEntityBvhCapture::CaptureFrame(void)
 	if (!m_BvhExport)
 		return;
 
-	Vector o;
-	QAngle a;
+	SOURCESDK::Vector o;
+	SOURCESDK::QAngle a;
 
-	IClientEntity_csgo * ce = g_Entitylist_csgo->GetClientEntity(m_EntityIndex);
-	C_BaseEntity_csgo * be = ce ? ce->GetBaseEntity() : 0;
+	SOURCESDK::IClientEntity_csgo * ce = SOURCESDK::g_Entitylist_csgo->GetClientEntity(m_EntityIndex);
+	SOURCESDK::C_BaseEntity_csgo * be = ce ? ce->GetBaseEntity() : 0;
 
 	if (ce)
 	{

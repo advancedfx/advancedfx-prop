@@ -54,67 +54,67 @@ char const * WrpConCommand::GetName() {
 
 // WrpConCommands //////////////////////////////////////////////////////////////
 
-ICvar_003 * WrpConCommands::m_CvarIface_003 = 0;
-ICvar_004 * WrpConCommands::m_CvarIface_004 = 0;
-ICvar_007 * WrpConCommands::m_CvarIface_007 = 0;
+SOURCESDK::ICvar_003 * WrpConCommands::m_CvarIface_003 = 0;
+SOURCESDK::ICvar_004 * WrpConCommands::m_CvarIface_004 = 0;
+SOURCESDK::ICvar_007 * WrpConCommands::m_CvarIface_007 = 0;
 WrpConCommandsListEntry * WrpConCommands::m_CommandListRoot = 0;
-IVEngineClient_012 * WrpConCommands::m_VEngineClient_012 = 0;
+SOURCESDK::IVEngineClient_012 * WrpConCommands::m_VEngineClient_012 = 0;
 
-IVEngineClient_012 * WrpConCommands::GetVEngineClient_012() {
+SOURCESDK::IVEngineClient_012 * WrpConCommands::GetVEngineClient_012() {
 	return m_VEngineClient_012;
 }
 
-ICvar_007 * WrpConCommands::GetVEngineCvar007()
+SOURCESDK::ICvar_007 * WrpConCommands::GetVEngineCvar007()
 {
 	return m_CvarIface_007;
 }
 
-void WrpConCommands::RegisterCommands(ICvar_003 * cvarIface, IVEngineClient_012 * vEngineClientInterface) {
+void WrpConCommands::RegisterCommands(SOURCESDK::ICvar_003 * cvarIface, SOURCESDK::IVEngineClient_012 * vEngineClientInterface) {
 	if(m_CvarIface_003)
 		// already registered the current list
 		return;
 
 	m_CvarIface_003 = cvarIface;
 	m_VEngineClient_012 = vEngineClientInterface;
-	ConCommandBase_003::s_pAccessor = new WrpConCommandsRegistrar_003();
+	SOURCESDK::ConCommandBase_003::s_pAccessor = new WrpConCommandsRegistrar_003();
 
 	for(WrpConCommandsListEntry * entry = m_CommandListRoot; entry; entry = entry->Next) {
 		WrpConCommand * cmd = entry->Command;
 
 		// will init themself since s_pAccessor is set:
-		new ConCommand_003(cmd->GetName(), cmd->GetCallback(), cmd->GetHelpString(), FCVAR_CLIENTDLL);
+		new SOURCESDK::ConCommand_003(cmd->GetName(), cmd->GetCallback(), cmd->GetHelpString(), FCVAR_CLIENTDLL);
 	}
 }
 
-void WrpConCommands::RegisterCommands(ICvar_004 * cvarIface) {
+void WrpConCommands::RegisterCommands(SOURCESDK::ICvar_004 * cvarIface) {
 	if(m_CvarIface_004)
 		// already registered the current list
 		return;
 
 	m_CvarIface_004 = cvarIface;
-	ConCommandBase_004::s_pAccessor = new WrpConCommandsRegistrar_004();
+	SOURCESDK::ConCommandBase_004::s_pAccessor = new WrpConCommandsRegistrar_004();
 
 	for(WrpConCommandsListEntry * entry = m_CommandListRoot; entry; entry = entry->Next) {
 		WrpConCommand * cmd = entry->Command;
 
 		// will init themself since s_pAccessor is set:
-		new ConCommand_004(cmd->GetName(), cmd->GetCallback(), cmd->GetHelpString(), FCVAR_CLIENTDLL);
+		new SOURCESDK::ConCommand_004(cmd->GetName(), cmd->GetCallback(), cmd->GetHelpString(), FCVAR_CLIENTDLL);
 	}
 }
 
-void WrpConCommands::RegisterCommands(ICvar_007 * cvarIface) {
+void WrpConCommands::RegisterCommands(SOURCESDK::ICvar_007 * cvarIface) {
 	if(m_CvarIface_007)
 		// already registered the current list
 		return;
 
 	m_CvarIface_007 = cvarIface;
-	ConCommandBase_007::s_pAccessor = new WrpConCommandsRegistrar_007();
+	SOURCESDK::ConCommandBase_007::s_pAccessor = new WrpConCommandsRegistrar_007();
 
 	for(WrpConCommandsListEntry * entry = m_CommandListRoot; entry; entry = entry->Next) {
 		WrpConCommand * cmd = entry->Command;
 
 		// will init themself since s_pAccessor is set:
-		new ConCommand_007(cmd->GetName(), cmd->GetCallback(), cmd->GetHelpString(), FCVAR_CLIENTDLL);
+		new SOURCESDK::ConCommand_007(cmd->GetName(), cmd->GetCallback(), cmd->GetHelpString(), FCVAR_CLIENTDLL);
 	}
 }
 
@@ -128,11 +128,11 @@ void WrpConCommands::WrpConCommand_Register(WrpConCommand * cmd) {
 	// in the engine:
 
 	if(m_CvarIface_007)
-		new ConCommand_007(cmd->GetName(), cmd->GetCallback(), cmd->GetHelpString());
+		new SOURCESDK::ConCommand_007(cmd->GetName(), cmd->GetCallback(), cmd->GetHelpString());
 	else if(m_CvarIface_004)
-		new ConCommand_004(cmd->GetName(), cmd->GetCallback(), cmd->GetHelpString());
+		new SOURCESDK::ConCommand_004(cmd->GetName(), cmd->GetCallback(), cmd->GetHelpString());
 	else if(m_CvarIface_003)
-		new ConCommand_003(cmd->GetName(), cmd->GetCallback(), cmd->GetHelpString());
+		new SOURCESDK::ConCommand_003(cmd->GetName(), cmd->GetCallback(), cmd->GetHelpString());
 }
 
 void WrpConCommands::WrpConCommand_Unregister(WrpConCommand * cmd) {
@@ -147,7 +147,7 @@ void WrpConCommands::WrpConCommand_Unregister(WrpConCommand * cmd) {
 	}
 }
 
-bool WrpConCommands::WrpConCommandsRegistrar_003_Register( ConCommandBase_003 *pVar ) {
+bool WrpConCommands::WrpConCommandsRegistrar_003_Register(SOURCESDK::ConCommandBase_003 *pVar ) {
 	if(!m_CvarIface_003)
 		return false;
 
@@ -158,7 +158,7 @@ bool WrpConCommands::WrpConCommandsRegistrar_003_Register( ConCommandBase_003 *p
 }
 
 
-bool WrpConCommands::WrpConCommandsRegistrar_004_Register( ConCommandBase_004 *pVar ) {
+bool WrpConCommands::WrpConCommandsRegistrar_004_Register(SOURCESDK::ConCommandBase_004 *pVar ) {
 	if(!m_CvarIface_004)
 		return false;
 
@@ -168,7 +168,7 @@ bool WrpConCommands::WrpConCommandsRegistrar_004_Register( ConCommandBase_004 *p
 	return true;
 }
 
-bool WrpConCommands::WrpConCommandsRegistrar_007_Register( ConCommandBase_007 *pVar ) {
+bool WrpConCommands::WrpConCommandsRegistrar_007_Register(SOURCESDK::ConCommandBase_007 *pVar ) {
 	if(!m_CvarIface_007)
 		return false;
 
@@ -181,19 +181,19 @@ bool WrpConCommands::WrpConCommandsRegistrar_007_Register( ConCommandBase_007 *p
 
 // WrpConCommandsRegistrar_003 ////////////////////////////////////////////////////
 
-bool WrpConCommandsRegistrar_003::RegisterConCommandBase( ConCommandBase_003 *pVar ) {
+bool WrpConCommandsRegistrar_003::RegisterConCommandBase(SOURCESDK::ConCommandBase_003 *pVar ) {
 	return WrpConCommands::WrpConCommandsRegistrar_003_Register(pVar);
 }
 
 // WrpConCommandsRegistrar_004 ////////////////////////////////////////////////////
 
-bool WrpConCommandsRegistrar_004::RegisterConCommandBase( ConCommandBase_004 *pVar ) {
+bool WrpConCommandsRegistrar_004::RegisterConCommandBase(SOURCESDK::ConCommandBase_004 *pVar ) {
 	return WrpConCommands::WrpConCommandsRegistrar_004_Register(pVar);
 }
 
 // WrpConCommandsRegistrar_007 ////////////////////////////////////////////////////
 
-bool WrpConCommandsRegistrar_007::RegisterConCommandBase( ConCommandBase_007 *pVar ) {
+bool WrpConCommandsRegistrar_007::RegisterConCommandBase(SOURCESDK::ConCommandBase_007 *pVar ) {
 	return WrpConCommands::WrpConCommandsRegistrar_007_Register(pVar);
 }
 
@@ -202,7 +202,7 @@ bool WrpConCommandsRegistrar_007::RegisterConCommandBase( ConCommandBase_007 *pV
 WrpConVarRef::WrpConVarRef(char const * pName)
 : m_pConVar007(0)
 {
-	ICvar_007 * iCvar007 = WrpConCommands::GetVEngineCvar007();
+	SOURCESDK::ICvar_007 * iCvar007 = WrpConCommands::GetVEngineCvar007();
 	if(iCvar007)
 	{
 		m_pConVar007 = iCvar007->FindVar(pName);

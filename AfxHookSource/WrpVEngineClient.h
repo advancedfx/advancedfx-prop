@@ -35,16 +35,16 @@ public:
 	virtual void ServerCmd( const char *szCmdString, bool bReliable = true ) abstract = 0;
 	virtual void ClientCmd( const char *szCmdString ) abstract = 0;
 	virtual bool Con_IsVisible( void ) abstract = 0;
-	virtual void GetViewAngles( QAngle& va ) abstract = 0;
-	virtual void SetViewAngles( QAngle& va ) abstract = 0;
+	virtual void GetViewAngles( SOURCESDK::QAngle& va ) abstract = 0;
+	virtual void SetViewAngles( SOURCESDK::QAngle& va ) abstract = 0;
 	virtual int GetMaxClients( void ) abstract = 0;
 	virtual bool IsInGame( void ) abstract = 0;
 	virtual bool IsConnected( void ) abstract = 0;
 	virtual bool IsDrawingLoadingImage( void ) abstract = 0;
 	virtual void Con_NPrintf( int pos, const char *fmt, ... ) abstract = 0;
 	virtual const char *  GetGameDirectory( void ) abstract = 0;
-	virtual const VMatrix& WorldToScreenMatrix() abstract = 0;
-	virtual const VMatrix& WorldToViewMatrix() abstract = 0;
+	virtual const SOURCESDK::VMatrix& WorldToScreenMatrix() abstract = 0;
+	virtual const SOURCESDK::VMatrix& WorldToViewMatrix() abstract = 0;
 	virtual char const *  GetLevelName( void ) abstract = 0;
 	virtual void EngineStats_BeginFrame( void ) abstract = 0;
 	virtual void EngineStats_EndFrame( void ) abstract = 0;
@@ -74,22 +74,22 @@ public:
 class WrpVEngineClient_012 : public WrpVEngineClient
 {
 public:
-	WrpVEngineClient_012(IVEngineClient_012 * iface);
+	WrpVEngineClient_012(SOURCESDK::IVEngineClient_012 * iface);
 
 	virtual void GetScreenSize( int& width, int& height );
 	virtual void ServerCmd( const char *szCmdString, bool bReliable = true );
 	virtual void ClientCmd( const char *szCmdString );
 	virtual bool Con_IsVisible( void );
-	virtual void GetViewAngles( QAngle& va );
-	virtual void SetViewAngles( QAngle& va );
+	virtual void GetViewAngles(SOURCESDK::QAngle& va );
+	virtual void SetViewAngles(SOURCESDK::QAngle& va );
 	virtual int GetMaxClients( void );
 	virtual bool IsInGame( void );
 	virtual bool IsConnected( void );
 	virtual bool IsDrawingLoadingImage( void );
 	virtual void Con_NPrintf( int pos, const char *fmt, ... );
 	virtual const char *  GetGameDirectory( void );
-	virtual const VMatrix& WorldToScreenMatrix();
-	virtual const VMatrix& WorldToViewMatrix();
+	virtual const SOURCESDK::VMatrix& WorldToScreenMatrix();
+	virtual const SOURCESDK::VMatrix& WorldToViewMatrix();
 	virtual char const *  GetLevelName( void );
 	virtual void EngineStats_BeginFrame( void );
 	virtual void EngineStats_EndFrame( void );
@@ -112,7 +112,7 @@ public:
 	virtual WrpVEngineClientDemoInfoEx * GetDemoInfoEx(void);
 
 private:
-	IVEngineClient_012 * m_VEngineClient_012;
+	SOURCESDK::IVEngineClient_012 * m_VEngineClient_012;
 };
 
 // WrpVEngineClient_013 ////////////////////////////////////////////////////////
@@ -122,22 +122,22 @@ class WrpVEngineClient_013
 , public WrpVEngineClientDemoInfoEx
 {
 public:
-	WrpVEngineClient_013(IVEngineClient_013 * iface);
+	WrpVEngineClient_013(SOURCESDK::IVEngineClient_013 * iface);
 
 	virtual void GetScreenSize( int& width, int& height );
 	virtual void ServerCmd( const char *szCmdString, bool bReliable = true );
 	virtual void ClientCmd( const char *szCmdString );
 	virtual bool Con_IsVisible( void );
-	virtual void GetViewAngles( QAngle& va );
-	virtual void SetViewAngles( QAngle& va );
+	virtual void GetViewAngles(SOURCESDK::QAngle& va );
+	virtual void SetViewAngles(SOURCESDK::QAngle& va );
 	virtual int GetMaxClients( void );
 	virtual bool IsInGame( void );
 	virtual bool IsConnected( void );
 	virtual bool IsDrawingLoadingImage( void );
 	virtual void Con_NPrintf( int pos, const char *fmt, ... );
 	virtual const char *  GetGameDirectory( void );
-	virtual const VMatrix& WorldToScreenMatrix();
-	virtual const VMatrix& WorldToViewMatrix();
+	virtual const SOURCESDK::VMatrix& WorldToScreenMatrix();
+	virtual const SOURCESDK::VMatrix& WorldToViewMatrix();
 	virtual char const *  GetLevelName( void );
 	virtual void EngineStats_BeginFrame( void );
 	virtual void EngineStats_EndFrame( void );
@@ -167,7 +167,7 @@ public:
 	virtual WrpVEngineClientDemoInfoEx * GetDemoInfoEx(void);
 
 private:
-	IVEngineClient_013 * m_VEngineClient_013;
+	SOURCESDK::IVEngineClient_013 * m_VEngineClient_013;
 };
 
 // WrpVEngineClient_013 ////////////////////////////////////////////////////////
@@ -177,22 +177,22 @@ class WrpVEngineClient_013_csgo
 , public WrpVEngineClientDemoInfoEx
 {
 public:
-	WrpVEngineClient_013_csgo(IVEngineClient_013_csgo * iface);
+	WrpVEngineClient_013_csgo(SOURCESDK::IVEngineClient_013_csgo * iface);
 
 	virtual void GetScreenSize( int& width, int& height );
 	virtual void ServerCmd( const char *szCmdString, bool bReliable = true );
 	virtual void ClientCmd( const char *szCmdString );
 	virtual bool Con_IsVisible( void );
-	virtual void GetViewAngles( QAngle& va );
-	virtual void SetViewAngles( QAngle& va );
+	virtual void GetViewAngles(SOURCESDK::QAngle& va );
+	virtual void SetViewAngles(SOURCESDK::QAngle& va );
 	virtual int GetMaxClients( void );
 	virtual bool IsInGame( void );
 	virtual bool IsConnected( void );
 	virtual bool IsDrawingLoadingImage( void );
 	virtual void Con_NPrintf( int pos, const char *fmt, ... );
 	virtual const char *  GetGameDirectory( void );
-	virtual const VMatrix& WorldToScreenMatrix();
-	virtual const VMatrix& WorldToViewMatrix();
+	virtual const SOURCESDK::VMatrix& WorldToScreenMatrix();
+	virtual const SOURCESDK::VMatrix& WorldToViewMatrix();
 	virtual char const *  GetLevelName( void );
 	virtual void EngineStats_BeginFrame( void );
 	virtual void EngineStats_EndFrame( void );
@@ -222,5 +222,5 @@ public:
 	virtual WrpVEngineClientDemoInfoEx * GetDemoInfoEx(void);
 
 private:
-	IVEngineClient_013_csgo * m_VEngineClient_013;
+	SOURCESDK::IVEngineClient_013_csgo * m_VEngineClient_013;
 };

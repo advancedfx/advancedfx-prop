@@ -39,13 +39,14 @@
 #include "csgo_CViewRender.h"
 #include "CommandSystem.h"
 #include "csgo_writeWaveConsoleCheck.h"
+#include "ClientTools.h"
 
 #include <set>
 #include <map>
 #include <string>
 
 WrpVEngineClient * g_VEngineClient = 0;
-ICvar_003 * g_Cvar = 0;
+SOURCESDK::ICvar_003 * g_Cvar = 0;
 
 
 void ErrorBox(char const * messageText) {
@@ -77,9 +78,9 @@ void PrintInfo() {
 	Tier0_Msg("|" "\n");
 }
 
-IClientEngineTools_001 * g_Engine_ClientEngineTools;
+SOURCESDK::IClientEngineTools_001 * g_Engine_ClientEngineTools;
 
-class ClientEngineTools : public IClientEngineTools_001
+class ClientEngineTools : public SOURCESDK::IClientEngineTools_001
 {
 public:
 	// TODO: we should call the destructor of g_Engine_ClientEngineTools on destuction?
@@ -92,6 +93,8 @@ public:
 	{
 		//Tier0_Msg("ClientEngineTools::PreRenderAllTools\n");
 		g_Engine_ClientEngineTools->PreRenderAllTools();
+
+		g_ClientTools.OnPreRenderAllTools();
 	}
 	
 	virtual void PostRenderAllTools()
@@ -110,10 +113,14 @@ public:
 		g_Engine_ClientEngineTools->PostRenderAllTools();
 	}
 
-	virtual void PostToolMessage( HTOOLHANDLE hEntity, KeyValues *msg ) { g_Engine_ClientEngineTools->PostToolMessage(hEntity, msg); }
+	virtual void PostToolMessage(SOURCESDK::HTOOLHANDLE hEntity, SOURCESDK::KeyValues_something *msg )
+	{
+		g_ClientTools.OnPostToolMessage((SOURCESDK::CSGO::HTOOLHANDLE)hEntity, (SOURCESDK::CSGO::KeyValues *)msg);
+		g_Engine_ClientEngineTools->PostToolMessage(hEntity, msg);
+	}
 	virtual void AdjustEngineViewport( int& x, int& y, int& width, int& height ) { g_Engine_ClientEngineTools->AdjustEngineViewport(x, y, width, height); }
 	
-	virtual bool SetupEngineView( Vector &origin, QAngle &angles, float &fov )
+	virtual bool SetupEngineView(SOURCESDK::Vector &origin, SOURCESDK::QAngle &angles, float &fov )
 	{
 		//Tier0_Msg("ClientEngineTools::SetupEngineView\n");
 		bool bRet = g_Engine_ClientEngineTools->SetupEngineView(origin, angles, fov);
@@ -127,7 +134,7 @@ public:
 		return bRet;
 	}
 	
-	virtual bool SetupAudioState( AudioState_t &audioState ) { return g_Engine_ClientEngineTools->SetupAudioState(audioState); }
+	virtual bool SetupAudioState(SOURCESDK::AudioState_t &audioState ) { return g_Engine_ClientEngineTools->SetupAudioState(audioState); }
 	
 	virtual void VGui_PreRenderAllTools( int paintMode )
 	{
@@ -142,24 +149,29 @@ public:
 	}
 
 	virtual bool IsThirdPersonCamera() { return g_Engine_ClientEngineTools->IsThirdPersonCamera(); }
-	virtual bool InToolMode()  { return g_Engine_ClientEngineTools->InToolMode(); }
+
+	virtual bool InToolMode()
+	{
+		return g_Engine_ClientEngineTools->InToolMode() || g_ClientTools.GetRecording();
+	}
+
 } g_ClientEngineTools;
 
-CreateInterfaceFn g_AppSystemFactory = 0;
+SOURCESDK::CreateInterfaceFn g_AppSystemFactory = 0;
 
 bool isCsgo = false;
 bool isV34 = false;
 
-IMaterialSystem_csgo * g_MaterialSystem_csgo = 0;
+SOURCESDK::IMaterialSystem_csgo * g_MaterialSystem_csgo = 0;
 
 
 #pragma warning(push)
 #pragma warning(disable:4731) // frame pointer register 'ebp' modified by inline assembly code
 
-class CAfxVRenderView : public IVRenderView_csgo, public IAfxVRenderView
+class CAfxVRenderView : public SOURCESDK::IVRenderView_csgo, public IAfxVRenderView
 {
 public:
-	CAfxVRenderView(IVRenderView_csgo * parent)
+	CAfxVRenderView(SOURCESDK::IVRenderView_csgo * parent)
 	: m_Parent(parent)
 	, m_OnSetBlend(0)
 	, m_OnSetColorModulation(0)
@@ -169,7 +181,7 @@ public:
 	//
 	// IAfxVRenderView:
 
-	virtual IVRenderView_csgo * GetParent()
+	virtual SOURCESDK::IVRenderView_csgo * GetParent()
 	{
 		return m_Parent;
 	}
@@ -409,7 +421,7 @@ public:
 	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 59) }
 
 private:
-	IVRenderView_csgo * m_Parent;
+	SOURCESDK::IVRenderView_csgo * m_Parent;
 	IAfxVRenderViewSetBlend * m_OnSetBlend;
 	IAfxVRenderViewSetColorModulation * m_OnSetColorModulation;
 };
@@ -418,11 +430,11 @@ private:
 
 CAfxVRenderView * g_AfxVRenderView = 0;
 
-IFileSystem_csgo * g_FileSystem_csgo = 0;
+SOURCESDK::IFileSystem_csgo * g_FileSystem_csgo = 0;
 
 void AfxV34HookWindow(void);
 
-void MySetup(CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals)
+void MySetup(SOURCESDK::CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals)
 {
 	static bool bFirstRun = true;
 
@@ -434,20 +446,31 @@ void MySetup(CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals)
 
 		g_AppSystemFactory = appSystemFactory;
 
+		if (!isCsgo && (iface = appSystemFactory(VENGINE_CLIENT_INTERFACE_VERSION_015, NULL)))
+		{
+			// This is not really 100% backward compatible, there is a problem with the CVAR interface or s.th..
+			// But the guy that tested it wasn't available for further debugging, so I'll just leave it as
+			// it is now. Will crash as soon as i.e. ExecuteCliendCmd is used, due to some crash
+			// related to CVAR system.
+			
+			g_Info_VEngineClient = VENGINE_CLIENT_INTERFACE_VERSION_015;
+			g_VEngineClient = new WrpVEngineClient_013((SOURCESDK::IVEngineClient_013 *)iface);
+		}
+		else
 		if(isCsgo && (iface = appSystemFactory(VENGINE_CLIENT_INTERFACE_VERSION_013_CSGO, NULL)))
 		{
 			g_Info_VEngineClient = VENGINE_CLIENT_INTERFACE_VERSION_013_CSGO " (CS:GO)";
-			g_VEngineClient = new WrpVEngineClient_013_csgo((IVEngineClient_013_csgo *)iface);
+			g_VEngineClient = new WrpVEngineClient_013_csgo((SOURCESDK::IVEngineClient_013_csgo *)iface);
 		}
 		else
 		if(iface = appSystemFactory(VENGINE_CLIENT_INTERFACE_VERSION_013, NULL))
 		{
 			g_Info_VEngineClient = VENGINE_CLIENT_INTERFACE_VERSION_013;
-			g_VEngineClient = new WrpVEngineClient_013((IVEngineClient_013 *)iface);
+			g_VEngineClient = new WrpVEngineClient_013((SOURCESDK::IVEngineClient_013 *)iface);
 		}
 		else if(iface = appSystemFactory(VENGINE_CLIENT_INTERFACE_VERSION_012, NULL)) {
 			g_Info_VEngineClient = VENGINE_CLIENT_INTERFACE_VERSION_012;
-			g_VEngineClient = new WrpVEngineClient_012((IVEngineClient_012 *)iface);
+			g_VEngineClient = new WrpVEngineClient_012((SOURCESDK::IVEngineClient_012 *)iface);
 		}
 		else {
 			ErrorBox("Could not get a supported VEngineClient interface.");
@@ -456,19 +479,19 @@ void MySetup(CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals)
 		if((iface = appSystemFactory( CVAR_INTERFACE_VERSION_007, NULL )))
 		{
 			g_Info_VEngineCvar = CVAR_INTERFACE_VERSION_007;
-			WrpConCommands::RegisterCommands((ICvar_007 *)iface);
+			WrpConCommands::RegisterCommands((SOURCESDK::ICvar_007 *)iface);
 		}
 		else if((iface = appSystemFactory( VENGINE_CVAR_INTERFACE_VERSION_004, NULL )))
 		{
 			g_Info_VEngineCvar = VENGINE_CVAR_INTERFACE_VERSION_004;
-			WrpConCommands::RegisterCommands((ICvar_004 *)iface);
+			WrpConCommands::RegisterCommands((SOURCESDK::ICvar_004 *)iface);
 		}
 		else if(
 			(iface = appSystemFactory( VENGINE_CVAR_INTERFACE_VERSION_003, NULL ))
 			&& (iface2 = appSystemFactory(VENGINE_CLIENT_INTERFACE_VERSION_012, NULL))
 		) {
 			g_Info_VEngineCvar = VENGINE_CVAR_INTERFACE_VERSION_003 " & " VENGINE_CLIENT_INTERFACE_VERSION_012;
-			WrpConCommands::RegisterCommands((ICvar_003 *)iface, (IVEngineClient_012 *)iface2);
+			WrpConCommands::RegisterCommands((SOURCESDK::ICvar_003 *)iface, (SOURCESDK::IVEngineClient_012 *)iface2);
 		}
 		else {
 			ErrorBox("Could not get a supported VEngineCvar interface.");
@@ -476,7 +499,7 @@ void MySetup(CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals)
 
 		if(iface = appSystemFactory(VCLIENTENGINETOOLS_INTERFACE_VERSION_001, NULL))
 		{
-			g_Engine_ClientEngineTools = (IClientEngineTools_001 *)iface;
+			g_Engine_ClientEngineTools = (SOURCESDK::IClientEngineTools_001 *)iface;
 		}
 		else {
 			ErrorBox("Could not get a supported VClientEngineTools interface.");
@@ -486,7 +509,7 @@ void MySetup(CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals)
 		{
 			if(iface = appSystemFactory(MATERIAL_SYSTEM_INTERFACE_VERSION_CSGO_80, NULL))
 			{
-				g_MaterialSystem_csgo = (IMaterialSystem_csgo *)iface;
+				g_MaterialSystem_csgo = (SOURCESDK::IMaterialSystem_csgo *)iface;
 				g_AfxStreams.OnMaterialSystem(g_MaterialSystem_csgo);
 			}
 			else {
@@ -495,7 +518,7 @@ void MySetup(CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals)
 
 			if(iface = appSystemFactory(VENGINE_RENDERVIEW_INTERFACE_VERSION_CSGO, NULL))
 			{
-				g_AfxVRenderView = new CAfxVRenderView((IVRenderView_csgo *)iface);
+				g_AfxVRenderView = new CAfxVRenderView((SOURCESDK::IVRenderView_csgo *)iface);
 				g_AfxStreams.OnAfxVRenderView(g_AfxVRenderView);
 			}
 			else {
@@ -504,7 +527,7 @@ void MySetup(CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals)
 
 			if(iface = appSystemFactory(FILESYSTEM_INTERFACE_VERSION_CSGO_017, NULL))
 			{
-				g_FileSystem_csgo = (IFileSystem_csgo *)iface;
+				g_FileSystem_csgo = (SOURCESDK::IFileSystem_csgo *)iface;
 			}
 			else {
 				ErrorBox("Could not get a supported VFileSystem interface.");
@@ -512,7 +535,7 @@ void MySetup(CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals)
 
 			if(iface = appSystemFactory(SHADERSHADOW_INTERFACE_VERSION_CSGO, NULL))
 			{
-				g_AfxStreams.OnShaderShadow((IShaderShadow_csgo *)iface);
+				g_AfxStreams.OnShaderShadow((SOURCESDK::IShaderShadow_csgo *)iface);
 			}
 			else {
 				ErrorBox("Could not get a supported ShaderShadow interface.");
@@ -543,7 +566,7 @@ void* AppSystemFactory_ForClient(const char *pName, int *pReturnCode)
 
 void * old_Client_Init;
 
-int __stdcall new_Client_Init(DWORD *this_ptr, CreateInterfaceFn appSystemFactory, CreateInterfaceFn physicsFactory, CGlobalVarsBase *pGlobals) {
+int __stdcall new_Client_Init(DWORD *this_ptr, SOURCESDK::CreateInterfaceFn appSystemFactory, SOURCESDK::CreateInterfaceFn physicsFactory, SOURCESDK::CGlobalVarsBase *pGlobals) {
 	static bool bFirstCall = true;
 	int myret;
 
@@ -615,11 +638,11 @@ bool g_DebugEnabled = false;
 #pragma warning(disable:4731) // frame pointer register 'ebp' modified by inline assembly code
 
 class CAfxMesh
-: public IMeshEx_csgo
+: public SOURCESDK::IMeshEx_csgo
 , public IAfxMesh
 {
 public:
-	CAfxMesh(IMeshEx_csgo * parent)
+	CAfxMesh(SOURCESDK::IMeshEx_csgo * parent)
 	: m_Parent(parent)
 	{
 	}
@@ -636,7 +659,7 @@ public:
 	//
 	// IAfxMesh:
 
-	virtual IMeshEx_csgo * GetParent(void)
+	virtual SOURCESDK::IMeshEx_csgo * GetParent(void)
 	{
 		return m_Parent;
 	}
@@ -647,13 +670,13 @@ public:
 	virtual int VertexCount() const
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,0) }
 
-	virtual VertexFormat_t_csgo GetVertexFormat() const
+	virtual SOURCESDK::VertexFormat_t_csgo GetVertexFormat() const
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,1) }
 
 	virtual bool IsDynamic() const
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,2) }
 
-	virtual void BeginCastBuffer( VertexFormat_t_csgo format )
+	virtual void BeginCastBuffer(SOURCESDK::VertexFormat_t_csgo format )
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,3) }
 
 	virtual void EndCastBuffer()
@@ -662,16 +685,16 @@ public:
 	virtual int GetRoomRemaining() const
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,5) }
 
-	virtual bool Lock( int nVertexCount, bool bAppend, VertexDesc_t_csgo &desc )
+	virtual bool Lock( int nVertexCount, bool bAppend, SOURCESDK::VertexDesc_t_csgo &desc )
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,6) }
 
-	virtual void Unlock( int nVertexCount, VertexDesc_t_csgo &desc )
+	virtual void Unlock( int nVertexCount, SOURCESDK::VertexDesc_t_csgo &desc )
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,7) }
 
-	virtual void Spew( int nVertexCount, const VertexDesc_t_csgo &desc )
+	virtual void Spew( int nVertexCount, const SOURCESDK::VertexDesc_t_csgo &desc )
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,8) }
 
-	virtual void ValidateData( int nVertexCount, const VertexDesc_t_csgo & desc )
+	virtual void ValidateData( int nVertexCount, const SOURCESDK::VertexDesc_t_csgo & desc )
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,9) }
 
 	virtual void _Unknown_10_IVertexBuffer_csgo(void)
@@ -693,7 +716,7 @@ public:
 	virtual void SetColorMesh( IMesh_csgo *pColorMesh, int nVertexOffset )
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,13) /* !ofs different due to overloaded method! */ }
 
-	virtual void Draw( CPrimList_csgo *pLists, int nLists )
+	virtual void Draw(SOURCESDK::CPrimList_csgo *pLists, int nLists )
 	{
 		// JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,11) /* !ofs different due to overloaded method! */
 
@@ -702,28 +725,28 @@ public:
 		g_AfxStreams.OnDraw_2(this, pLists, nLists);
 	}
 
-	virtual void CopyToMeshBuilder(int iStartVert, int nVerts, int iStartIndex,	int nIndices, int indexOffset, CMeshBuilder_csgo &builder )
+	virtual void CopyToMeshBuilder(int iStartVert, int nVerts, int iStartIndex,	int nIndices, int indexOffset, SOURCESDK::CMeshBuilder_csgo &builder )
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,14) }
 
-	virtual void Spew( int numVerts, int numIndices, const MeshDesc_t_csgo &desc )
+	virtual void Spew( int numVerts, int numIndices, const SOURCESDK::MeshDesc_t_csgo &desc )
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,15) }
 
-	virtual void ValidateData( int numVerts, int numIndices, const MeshDesc_t_csgo &desc )
+	virtual void ValidateData( int numVerts, int numIndices, const SOURCESDK::MeshDesc_t_csgo &desc )
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,16) }
 
-	virtual void LockMesh( int numVerts, int numIndices, MeshDesc_t_csgo &desc, MeshBuffersAllocationSettings_t_csgo *pSettings )
+	virtual void LockMesh( int numVerts, int numIndices, SOURCESDK::MeshDesc_t_csgo &desc, SOURCESDK::MeshBuffersAllocationSettings_t_csgo *pSettings )
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,17) }
 
-	virtual void ModifyBegin( int firstVertex, int numVerts, int firstIndex, int numIndices, MeshDesc_t_csgo& desc )
+	virtual void ModifyBegin( int firstVertex, int numVerts, int firstIndex, int numIndices, SOURCESDK::MeshDesc_t_csgo& desc )
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,18) }
 
-	virtual void ModifyEnd( MeshDesc_t_csgo& desc )
+	virtual void ModifyEnd( SOURCESDK::MeshDesc_t_csgo& desc )
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,19) }
 
-	virtual void UnlockMesh( int numVerts, int numIndices, MeshDesc_t_csgo &desc )
+	virtual void UnlockMesh( int numVerts, int numIndices, SOURCESDK::MeshDesc_t_csgo &desc )
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,20) }
 
-	virtual void ModifyBeginEx( bool bReadOnly, int firstVertex, int numVerts, int firstIndex, int numIndices, MeshDesc_t_csgo &desc )
+	virtual void ModifyBeginEx( bool bReadOnly, int firstVertex, int numVerts, int firstIndex, int numIndices, SOURCESDK::MeshDesc_t_csgo &desc )
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,21) }
 
 	virtual void SetFlexMesh( IMesh_csgo *pMesh, int nVertexOffset )
@@ -735,7 +758,7 @@ public:
 	virtual void MarkAsDrawn()
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,24) }
 	
-	virtual void DrawModulated( const Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 )
+	virtual void DrawModulated( const SOURCESDK::Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 )
 	{
 		// JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,25)
 	
@@ -745,13 +768,13 @@ public:
 	virtual unsigned int ComputeMemoryUsed()
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,26) }
 
-	virtual void *AccessRawHardwareDataStream( uint8 nRawStreamIndex, uint32 numBytes, uint32 uiFlags, void *pvContext )
+	virtual void *AccessRawHardwareDataStream(SOURCESDK::uint8 nRawStreamIndex, SOURCESDK::uint32 numBytes, SOURCESDK::uint32 uiFlags, void *pvContext )
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,27) }
 
-	virtual ICachedPerFrameMeshData_csgo *GetCachedPerFrameMeshData()
+	virtual SOURCESDK::ICachedPerFrameMeshData_csgo *GetCachedPerFrameMeshData()
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,28) }
 
-	virtual void ReconstructFromCachedPerFrameMeshData( ICachedPerFrameMeshData_csgo *pData )
+	virtual void ReconstructFromCachedPerFrameMeshData(SOURCESDK::ICachedPerFrameMeshData_csgo *pData )
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,29) }
 
 	//
@@ -820,13 +843,13 @@ public:
 	virtual int IndexCount() const
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,0) }
 
-	virtual MaterialIndexFormat_t_csgo IndexFormat() const
+	virtual SOURCESDK::MaterialIndexFormat_t_csgo IndexFormat() const
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,1) }
 
 	//virtual bool IsDynamic() const
 	//{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,2) }
 
-	virtual void BeginCastBuffer( MaterialIndexFormat_t_csgo format )
+	virtual void BeginCastBuffer(SOURCESDK::MaterialIndexFormat_t_csgo format )
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,3) }
 
 	//virtual void EndCastBuffer()
@@ -835,22 +858,22 @@ public:
 	//virtual int GetRoomRemaining() const
 	//{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,5) }
 
-	virtual bool Lock( int nMaxIndexCount, bool bAppend, IndexDesc_t_csgo &desc )
+	virtual bool Lock( int nMaxIndexCount, bool bAppend, SOURCESDK::IndexDesc_t_csgo &desc )
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,6) }
 
-	virtual void Unlock( int nWrittenIndexCount, IndexDesc_t_csgo &desc )
+	virtual void Unlock( int nWrittenIndexCount, SOURCESDK::IndexDesc_t_csgo &desc )
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,7) }
 
-	virtual void ModifyBegin( bool bReadOnly, int nFirstIndex, int nIndexCount, IndexDesc_t_csgo& desc )
+	virtual void ModifyBegin( bool bReadOnly, int nFirstIndex, int nIndexCount, SOURCESDK::IndexDesc_t_csgo& desc )
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,8) }
 
-	virtual void ModifyEnd( IndexDesc_t_csgo& desc )
+	virtual void ModifyEnd(SOURCESDK::IndexDesc_t_csgo& desc )
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,9) }
 
-	virtual void Spew( int nIndexCount, const IndexDesc_t_csgo &desc )
+	virtual void Spew( int nIndexCount, const SOURCESDK::IndexDesc_t_csgo &desc )
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,10) }
 
-	virtual void ValidateData( int nIndexCount, const IndexDesc_t_csgo &desc )
+	virtual void ValidateData( int nIndexCount, const SOURCESDK::IndexDesc_t_csgo &desc )
 	{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,11) }
 
 	virtual IMesh_csgo* GetMesh()
@@ -868,17 +891,17 @@ private:
 
 #pragma warning(pop)
 
-std::map<IMeshEx_csgo *,CAfxMesh *> g_MeshMap_csgo;
+std::map<SOURCESDK::IMeshEx_csgo *,CAfxMesh *> g_MeshMap_csgo;
 
 #pragma warning(push)
 #pragma warning(disable:4731) // frame pointer register 'ebp' modified by inline assembly code
 
 class CAfxMatRenderContext
-: public IMatRenderContext_csgo
+: public SOURCESDK::IMatRenderContext_csgo
 , public IAfxMatRenderContext
 {
 public:
-	CAfxMatRenderContext(IMatRenderContext_csgo * parent)
+	CAfxMatRenderContext(SOURCESDK::IMatRenderContext_csgo * parent)
 	: m_Parent(parent)
 	, m_OnMaterialHook(0)
 	, m_OnDrawInstances(0)
@@ -895,9 +918,9 @@ private:
 
 public:
 
-	IMeshEx_csgo * AfxWrapMesh(IMeshEx_csgo * mesh)
+	SOURCESDK::IMeshEx_csgo * AfxWrapMesh(SOURCESDK::IMeshEx_csgo * mesh)
 	{
-		std::map<IMeshEx_csgo *, CAfxMesh *>::iterator it = g_MeshMap_csgo.find(mesh);
+		std::map<SOURCESDK::IMeshEx_csgo *, CAfxMesh *>::iterator it = g_MeshMap_csgo.find(mesh);
 
 		CAfxMesh * afxMesh;
 
@@ -990,7 +1013,7 @@ public:
 	virtual void _UNUSED_008_GetRenderTargetDimensions(void)
 	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 8) }
 
-	virtual void Bind( IMaterial_csgo * material, void *proxyData = 0 )
+	virtual void Bind(SOURCESDK::IMaterial_csgo * material, void *proxyData = 0 )
 	{
 		// JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 9)
 
@@ -1008,7 +1031,7 @@ public:
 	virtual void ClearBuffers( bool bClearColor, bool bClearDepth, bool bClearStencil = false )
 	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 12) }
 
-	virtual void ReadPixels( int x, int y, int width, int height, unsigned char *data, ImageFormat_csgo dstFormat, unsigned __int32 _unknown7 = 0)
+	virtual void ReadPixels( int x, int y, int width, int height, unsigned char *data, SOURCESDK::ImageFormat_csgo dstFormat, unsigned __int32 _unknown7 = 0)
 	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 13) }
 
 	virtual void _UNKNOWN_014(void)
@@ -1155,12 +1178,12 @@ public:
 	virtual void _UNKNOWN_061(void)
 	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 61) }
 
-	virtual IMeshEx_csgo* GetDynamicMesh(bool buffered = true, IMesh_csgo* pVertexOverride = 0, IMesh_csgo* pIndexOverride = 0, IMaterial_csgo *pAutoBind = 0 )
+	virtual SOURCESDK::IMeshEx_csgo* GetDynamicMesh(bool buffered = true, SOURCESDK::IMesh_csgo* pVertexOverride = 0, SOURCESDK::IMesh_csgo* pIndexOverride = 0, SOURCESDK::IMaterial_csgo *pAutoBind = 0 )
 	{ //JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 62)
 
 		Debug(62);
 
-		IMeshEx_csgo * iMesh = m_Parent->GetDynamicMesh(buffered, pVertexOverride, pIndexOverride,
+		SOURCESDK::IMeshEx_csgo * iMesh = m_Parent->GetDynamicMesh(buffered, pVertexOverride, pIndexOverride,
 			DoOnMaterialHook(pAutoBind));
 
 		return AfxWrapMesh(iMesh);
@@ -1220,7 +1243,7 @@ public:
 	virtual void _UNKNOWN_080(void)
 	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 80) }
 
-	virtual void DrawScreenSpaceQuad(IMaterial_csgo * pMaterial)
+	virtual void DrawScreenSpaceQuad(SOURCESDK::IMaterial_csgo * pMaterial)
 	{
 		//JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 81)
 	
@@ -1325,7 +1348,7 @@ public:
 	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 112) }
 
 	virtual void DrawScreenSpaceRectangle(
-		IMaterial_csgo *pMaterial,
+		SOURCESDK::IMaterial_csgo *pMaterial,
 		int destx, int desty,
 		int width, int height,
 		float src_texture_x0, float src_texture_y0,	
@@ -1357,13 +1380,13 @@ public:
 	virtual void PushRenderTargetAndViewport( )
 	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 118) }
 
-	virtual void PushRenderTargetAndViewport( ITexture_csgo *pTexture )
+	virtual void PushRenderTargetAndViewport(SOURCESDK::ITexture_csgo *pTexture )
 	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 117) }
 
-	virtual void PushRenderTargetAndViewport( ITexture_csgo *pTexture, int nViewX, int nViewY, int nViewW, int nViewH )
+	virtual void PushRenderTargetAndViewport(SOURCESDK::ITexture_csgo *pTexture, int nViewX, int nViewY, int nViewW, int nViewH )
 	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 116) }
 
-	virtual void PushRenderTargetAndViewport( ITexture_csgo *pTexture, ITexture_csgo *pDepthTexture, int nViewX, int nViewY, int nViewW, int nViewH )
+	virtual void PushRenderTargetAndViewport(SOURCESDK::ITexture_csgo *pTexture, SOURCESDK::ITexture_csgo *pDepthTexture, int nViewX, int nViewY, int nViewW, int nViewH )
 	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 115) }
 
 	virtual void PopRenderTargetAndViewport( void )
@@ -1510,18 +1533,18 @@ public:
 	virtual void _UNKNOWN_166(void)
 	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 166) }
 
-	virtual IMeshEx_csgo* GetDynamicMeshEx(
+	virtual SOURCESDK::IMeshEx_csgo* GetDynamicMeshEx(
 		unsigned __int32 _unknown1,
 		bool buffered, 
 		unsigned __int32 _unknown2,
-		IMesh_csgo* pVertexOverride = 0,	
-		IMesh_csgo* pIndexOverride = 0, 
-		IMaterial_csgo *pAutoBind = 0 )
+		SOURCESDK::IMesh_csgo* pVertexOverride = 0,
+		SOURCESDK::IMesh_csgo* pIndexOverride = 0,
+		SOURCESDK::IMaterial_csgo *pAutoBind = 0 )
 	{ //JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 167)
 
 		Debug(167);
 
-		IMeshEx_csgo * iMesh = m_Parent->GetDynamicMeshEx(_unknown1, buffered, _unknown2, pVertexOverride, pIndexOverride,
+		SOURCESDK::IMeshEx_csgo * iMesh = m_Parent->GetDynamicMeshEx(_unknown1, buffered, _unknown2, pVertexOverride, pIndexOverride,
 			DoOnMaterialHook(pAutoBind));
 
 		return AfxWrapMesh(iMesh);
@@ -1599,7 +1622,7 @@ public:
 	virtual void _UNKNOWN_191(void)
 	{ JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 191) }
 
-	virtual void DrawInstances( int nInstanceCount, const MeshInstanceData_t_csgo *pInstance )
+	virtual void DrawInstances( int nInstanceCount, const SOURCESDK::MeshInstanceData_t_csgo *pInstance )
 	{
 		// JMP_CLASSMEMBERIFACE_FN_DBG(CAfxMatRenderContext, m_Parent, 192)
 
@@ -1807,7 +1830,7 @@ private:
 	IAfxMatRenderContextMaterialHook * m_OnMaterialHook;
 	IAfxMatRenderContextDrawInstances * m_OnDrawInstances;
 
-	IMaterial_csgo * DoOnMaterialHook(IMaterial_csgo * value)
+	SOURCESDK::IMaterial_csgo * DoOnMaterialHook(SOURCESDK::IMaterial_csgo * value)
 	{
 		if(m_OnMaterialHook && value)
 			return m_OnMaterialHook->MaterialHook(this, value);
@@ -1818,13 +1841,13 @@ private:
 
 #pragma warning(pop)
 
-std::map<IMatRenderContext_csgo *,CAfxMatRenderContext *> g_RenderContextMap_csgo;
+std::map<SOURCESDK::IMatRenderContext_csgo *,CAfxMatRenderContext *> g_RenderContextMap_csgo;
 
 #pragma warning(push)
 #pragma warning(disable:4731) // frame pointer register 'ebp' modified by inline assembly code
 
 class CAfxBaseClientDll
-: public IBaseClientDLL_csgo
+: public SOURCESDK::IBaseClientDLL_csgo
 , public IAfxBaseClientDll
 , public IAfxFreeMaster
 {
@@ -1885,13 +1908,13 @@ public:
 	//
 	// IBaseClientDll_csgo:
 
-	virtual int Connect( CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGlobals )
+	virtual int Connect(SOURCESDK::CreateInterfaceFn appSystemFactory, SOURCESDK::CGlobalVarsBase *pGlobals )
 	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 0) }
 
 	virtual void Disconnect()
 	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 1) }
 
-	virtual int Init( CreateInterfaceFn appSystemFactory, CGlobalVarsBase *pGlobals )
+	virtual int Init(SOURCESDK::CreateInterfaceFn appSystemFactory, SOURCESDK::CGlobalVarsBase *pGlobals )
 	{
 		// JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 2)
 
@@ -1913,7 +1936,7 @@ public:
 
 			path.append("resources\\AfxHookSource\\assets\\csgo"); 
 
-			g_FileSystem_csgo->AddSearchPath(path.c_str(), "GAME", PATH_ADD_TO_TAIL);
+			g_FileSystem_csgo->AddSearchPath(path.c_str(), "GAME", SOURCESDK::PATH_ADD_TO_TAIL);
 		}
 
 		return result;
@@ -2006,7 +2029,7 @@ public:
 	virtual void _UNKOWN_025(void)
 	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 25) }
 
-	virtual void View_Render( vrect_t_csgo *rect )
+	virtual void View_Render(SOURCESDK::vrect_t_csgo *rect )
 	{
 		// JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 26)
 
@@ -2015,9 +2038,9 @@ public:
 		if(!rectNull && g_MaterialSystem_csgo)
 		{
 			CAfxMatRenderContext * wrapper;
-			IMatRenderContext_csgo * oldContext = g_MaterialSystem_csgo->GetRenderContext();
+			SOURCESDK::IMatRenderContext_csgo * oldContext = g_MaterialSystem_csgo->GetRenderContext();
 
-			std::map<IMatRenderContext_csgo *, CAfxMatRenderContext *>::iterator it = g_RenderContextMap_csgo.find(oldContext);
+			std::map<SOURCESDK::IMatRenderContext_csgo *, CAfxMatRenderContext *>::iterator it = g_RenderContextMap_csgo.find(oldContext);
 
 			if(it != g_RenderContextMap_csgo.end())
 			{
@@ -2040,7 +2063,7 @@ public:
 				g_RenderContextMap_csgo[wrapper] = wrapper; // make it possible to detect our self
 			}
 
-			if((IMatRenderContext_csgo *)wrapper != oldContext)
+			if((SOURCESDK::IMatRenderContext_csgo *)wrapper != oldContext)
 			{
 				g_MaterialSystem_csgo->SetRenderContext(wrapper);
 				wrapper->Release(); // SetRenderContext calls AddRef on param
@@ -2063,7 +2086,7 @@ public:
 		}
 	}
 
-	virtual void RenderView( const CViewSetup_csgo &view, int nClearFlags, int whatToDraw )
+	virtual void RenderView( const SOURCESDK::CViewSetup_csgo &view, int nClearFlags, int whatToDraw )
 	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 27) }
 
 	virtual void _UNKOWN_028(void)
@@ -2394,9 +2417,9 @@ void HookClientDllInterface_011_Init(void * iface)
 	old_Client_Init = HookInterfaceFn(iface, 0, (void *)hook_Client_Init);
 }
 
-IClientEntityList_csgo * g_Entitylist_csgo = 0;
+SOURCESDK::IClientEntityList_csgo * SOURCESDK::g_Entitylist_csgo = 0;
 
-CreateInterfaceFn old_Client_CreateInterface = 0;
+SOURCESDK::CreateInterfaceFn old_Client_CreateInterface = 0;
 
 void* new_Client_CreateInterface(const char *pName, int *pReturnCode)
 {
@@ -2412,6 +2435,11 @@ void* new_Client_CreateInterface(const char *pName, int *pReturnCode)
 		
 		if(!isCsgo)
 		{
+			if (iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_018, NULL)) {
+				g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_018;
+				HookClientDllInterface_011_Init(iface);
+			}
+			else
 			if(iface = old_Client_CreateInterface(CLIENT_DLL_INTERFACE_VERSION_017, NULL)) {
 				g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_017;
 				HookClientDllInterface_011_Init(iface);
@@ -2445,7 +2473,9 @@ void* new_Client_CreateInterface(const char *pName, int *pReturnCode)
 		{
 			// isCsgo.
 
-			g_Entitylist_csgo = (IClientEntityList_csgo *)old_Client_CreateInterface(VCLIENTENTITYLIST_INTERFACE_VERSION_CSGO, NULL);
+			SOURCESDK::g_Entitylist_csgo = (SOURCESDK::IClientEntityList_csgo *)old_Client_CreateInterface(VCLIENTENTITYLIST_INTERFACE_VERSION_CSGO, NULL);
+
+			g_ClientTools.SetClientTools((SOURCESDK::CSGO::IClientTools *)old_Client_CreateInterface(SOURCESDK_CSGO_VCLIENTTOOLS_INTERFACE_VERSION, NULL));
 		}
 	}
 
@@ -2454,7 +2484,7 @@ void* new_Client_CreateInterface(const char *pName, int *pReturnCode)
 		if(!g_AfxBaseClientDll)
 		{
 			g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_CSGO_017 " (CS:GO)";
-			g_AfxBaseClientDll = new CAfxBaseClientDll((IBaseClientDLL_csgo *)pRet);
+			g_AfxBaseClientDll = new CAfxBaseClientDll((SOURCESDK::IBaseClientDLL_csgo *)pRet);
 			g_AfxStreams.OnAfxBaseClientDll(g_AfxBaseClientDll);
 		}
 
@@ -2481,7 +2511,7 @@ FARPROC WINAPI new_Engine_GetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 			hModule == g_H_ClientDll
 			&& !lstrcmp(lpProcName, "CreateInterface")
 		) {
-			old_Client_CreateInterface = (CreateInterfaceFn)nResult;
+			old_Client_CreateInterface = (SOURCESDK::CreateInterfaceFn)nResult;
 			return (FARPROC) &new_Client_CreateInterface;
 		}
 
@@ -2913,12 +2943,12 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 		{
 			// actually this gets called now.
 
-			for(std::map<IMatRenderContext_csgo *, CAfxMatRenderContext *>::iterator it = g_RenderContextMap_csgo.begin(); it != g_RenderContextMap_csgo.end(); ++it)
+			for(std::map<SOURCESDK::IMatRenderContext_csgo *, CAfxMatRenderContext *>::iterator it = g_RenderContextMap_csgo.begin(); it != g_RenderContextMap_csgo.end(); ++it)
 			{
 				delete it->second;
 			}
 
-			for(std::map<IMeshEx_csgo *, CAfxMesh *>::iterator it = g_MeshMap_csgo.begin(); it != g_MeshMap_csgo.end(); ++it)
+			for(std::map<SOURCESDK::IMeshEx_csgo *, CAfxMesh *>::iterator it = g_MeshMap_csgo.begin(); it != g_MeshMap_csgo.end(); ++it)
 			{
 				delete it->second;
 			}

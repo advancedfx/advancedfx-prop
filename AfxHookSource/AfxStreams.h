@@ -223,12 +223,12 @@ public:
 	virtual void StreamAttach(IAfxStreams4Stream * streams);
 	virtual void StreamDetach(IAfxStreams4Stream * streams);
 
-	virtual IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material);
-	virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance );
+	virtual SOURCESDK::IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, SOURCESDK::IMaterial_csgo * material);
+	virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const SOURCESDK::MeshInstanceData_t_csgo *pInstance );
 
 	virtual void Draw(IAfxMesh * am, int firstIndex = -1, int numIndices = 0);
-	virtual void Draw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists);
-	virtual void DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 );
+	virtual void Draw_2(IAfxMesh * am, SOURCESDK::CPrimList_csgo *pLists, int nLists);
+	virtual void DrawModulated(IAfxMesh * am, const SOURCESDK::Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 );
 
 private:
 	std::string m_MatchTextureGroupName;
@@ -339,7 +339,7 @@ public:
 			m_Key = value;
 		}
 
-		virtual CAction * ResolveAction(IMaterial_csgo * material)
+		virtual CAction * ResolveAction(SOURCESDK::IMaterial_csgo * material)
 		{
 			return this;
 		}
@@ -352,12 +352,12 @@ public:
 		{
 		}
 
-		virtual IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material)
+		virtual SOURCESDK::IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, SOURCESDK::IMaterial_csgo * material)
 		{
 			return material;
 		}
 
-		virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance )
+		virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const SOURCESDK::MeshInstanceData_t_csgo *pInstance )
 		{
 			ctx->GetParent()->DrawInstances(nInstanceCount, pInstance);
 		}
@@ -367,12 +367,12 @@ public:
 			am->GetParent()->Draw(firstIndex, numIndices);
 		}
 
-		virtual void Draw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists)
+		virtual void Draw_2(IAfxMesh * am, SOURCESDK::CPrimList_csgo *pLists, int nLists)
 		{
 			am->GetParent()->Draw(pLists, nLists);
 		}
 
-		virtual void DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 )
+		virtual void DrawModulated(IAfxMesh * am, const SOURCESDK::Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 )
 		{
 			am->GetParent()->DrawModulated(vecDiffuseModulation, firstIndex, numIndices);
 		}
@@ -393,7 +393,7 @@ public:
 		{
 		}
 
-		virtual CAction * SafeSubResolveAction(CAction * action, IMaterial_csgo * material)
+		virtual CAction * SafeSubResolveAction(CAction * action, SOURCESDK::IMaterial_csgo * material)
 		{
 			if(action)
 				return action->ResolveAction(material);
@@ -441,12 +441,12 @@ public:
 	virtual void StreamAttach(IAfxStreams4Stream * streams);
 	virtual void StreamDetach(IAfxStreams4Stream * streams);
 
-	virtual IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material);
-	virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance );
+	virtual SOURCESDK::IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, SOURCESDK::IMaterial_csgo * material);
+	virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const SOURCESDK::MeshInstanceData_t_csgo *pInstance );
 
 	virtual void Draw(IAfxMesh * am, int firstIndex = -1, int numIndices = 0);
-	virtual void Draw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists);
-	virtual void DrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 );
+	virtual void Draw_2(IAfxMesh * am, SOURCESDK::CPrimList_csgo *pLists, int nLists);
+	virtual void DrawModulated(IAfxMesh * am, const SOURCESDK::Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 );
 
 	virtual void SetVertexShader(CAfx_csgo_ShaderState & state);
 	virtual void SetPixelShader(CAfx_csgo_ShaderState & state);
@@ -725,7 +725,7 @@ private:
 
 		virtual void AfxUnbind(IAfxMatRenderContext * ctx);
 
-		virtual IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material);
+		virtual SOURCESDK::IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, SOURCESDK::IMaterial_csgo * material);
 
 /*		We could speed up a bit here, but I am not sure if it's safe to do this,
         so we just let it draw for now and block the drawing instead.
@@ -761,7 +761,7 @@ private:
 		{
 		}
 
-		virtual bool CheckIsCompatible(IMaterial_csgo * material)
+		virtual bool CheckIsCompatible(SOURCESDK::IMaterial_csgo * material)
 		{
 			return true;
 		}
@@ -902,17 +902,17 @@ private:
 			m_DepthWrite = depthWrite;
 		}
 
-		virtual CAction * ResolveAction(IMaterial_csgo * material);
+		virtual CAction * ResolveAction(SOURCESDK::IMaterial_csgo * material);
 
 		virtual void AfxUnbind(IAfxMatRenderContext * ctx);
 
-		virtual IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material);
+		virtual SOURCESDK::IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, SOURCESDK::IMaterial_csgo * material);
 
- 		virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const MeshInstanceData_t_csgo *pInstance )
+ 		virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const SOURCESDK::MeshInstanceData_t_csgo *pInstance )
 		{
 			if(m_OverrideColor || m_OverrideBlend)
 			{
-				MeshInstanceData_t_csgo * first = const_cast<MeshInstanceData_t_csgo *>(pInstance);
+				SOURCESDK::MeshInstanceData_t_csgo * first = const_cast<SOURCESDK::MeshInstanceData_t_csgo *>(pInstance);
 
 				for(int i = 0; i < nInstanceCount; ++i)
 				{
@@ -949,7 +949,7 @@ private:
 		bool m_DepthWrite;
 
 		void EnsureMaterial(void);
-		void ExamineMaterial(IMaterial_csgo * material, bool & outSplinetype, bool & outUseinstancing);
+		void ExamineMaterial(SOURCESDK::IMaterial_csgo * material, bool & outSplinetype, bool & outUseinstancing);
 	};
 
 	class CActionDebugDepth
@@ -958,11 +958,11 @@ private:
 	public:
 		CActionDebugDepth(CAction * fallBackAction);
 
-		virtual CAction * ResolveAction(IMaterial_csgo * material);
+		virtual CAction * ResolveAction(SOURCESDK::IMaterial_csgo * material);
 
 		virtual void AfxUnbind(IAfxMatRenderContext * ctx);
 
-		virtual IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, IMaterial_csgo * material);
+		virtual SOURCESDK::IMaterial_csgo * MaterialHook(IAfxMatRenderContext * ctx, SOURCESDK::IMaterial_csgo * material);
 
 	protected:
 		~CActionDebugDepth();
@@ -1100,8 +1100,8 @@ private:
 	std::map<CAfxMaterialKey, CAction *> m_Map;
 	std::list<CActionFilterValue> m_ActionFilter;
 
-	CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * material);
-	CAction * CAfxBaseFxStream::GetAction(IMaterial_csgo * material, CAction * action);
+	CAction * CAfxBaseFxStream::GetAction(SOURCESDK::IMaterial_csgo * material);
+	CAction * CAfxBaseFxStream::GetAction(SOURCESDK::IMaterial_csgo * material, CAction * action);
 
 	/*
 	void ConvertDepthAction(CAction * & action, bool to24);
@@ -1474,14 +1474,14 @@ public:
 	CAfxStreams();
 	~CAfxStreams();
 
-	void OnMaterialSystem(IMaterialSystem_csgo * value);
+	void OnMaterialSystem(SOURCESDK::IMaterialSystem_csgo * value);
 	void OnAfxVRenderView(IAfxVRenderView * value);
 	void OnAfxBaseClientDll(IAfxBaseClientDll * value);
-	void OnShaderShadow(IShaderShadow_csgo * value);
+	void OnShaderShadow(SOURCESDK::IShaderShadow_csgo * value);
 
 	void OnDraw(IAfxMesh * am, int firstIndex = -1, int numIndices = 0);
-	void OnDraw_2(IAfxMesh * am, CPrimList_csgo *pLists, int nLists);
-	void OnDrawModulated(IAfxMesh * am, const Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 );
+	void OnDraw_2(IAfxMesh * am, SOURCESDK::CPrimList_csgo *pLists, int nLists);
+	void OnDrawModulated(IAfxMesh * am, const SOURCESDK::Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 );
 
 	/// <remarks>This function can be called from diffrent threads, but only one thread at a time.</remarks>
 	void OnSetVertexShader(CAfx_csgo_ShaderState & state);
@@ -1534,10 +1534,10 @@ public:
 
 	virtual void DebugDump();
 
-	virtual IMaterialSystem_csgo * GetMaterialSystem(void);
+	virtual SOURCESDK::IMaterialSystem_csgo * GetMaterialSystem(void);
 	virtual IAfxFreeMaster * GetFreeMaster(void);
 	virtual IAfxMatRenderContext * GetCurrentContext(void);
-	virtual IShaderShadow_csgo * GetShaderShadow(void);
+	virtual SOURCESDK::IShaderShadow_csgo * GetShaderShadow(void);
 
 	virtual std::wstring GetTakeDir(void);
 
@@ -1564,7 +1564,7 @@ public:
 
 	virtual void LevelShutdown(IAfxBaseClientDll * cl);
 
-	virtual void View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx, vrect_t_csgo *rect);
+	virtual void View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx, SOURCESDK::vrect_t_csgo *rect);
 
 private:
 	class CFreeDelegate : public IAfxFreeable
@@ -1661,10 +1661,10 @@ private:
 	bool m_StartMovieWav;
 	bool m_StartMovieWavUsed;
 	CFreeDelegate * m_OnAfxBaseClientDll_Free;
-	IMaterialSystem_csgo * m_MaterialSystem;
+	SOURCESDK::IMaterialSystem_csgo * m_MaterialSystem;
 	IAfxVRenderView * m_VRenderView;
 	IAfxBaseClientDll * m_AfxBaseClientDll;
-	IShaderShadow_csgo * m_ShaderShadow;
+	SOURCESDK::IShaderShadow_csgo * m_ShaderShadow;
 	IAfxMatRenderContext * m_CurrentContext;
 	std::list<CAfxRecordStream *> m_Streams;
 	CAfxRecordStream * m_PreviewStream;
@@ -1700,7 +1700,7 @@ private:
 	std::wstring m_TakeDir;
 	bool m_FormatBmpAndNotTga;
 	//ITexture_csgo * m_RgbaRenderTarget;
-	ITexture_csgo * m_RenderTargetDepthF;
+	SOURCESDK::ITexture_csgo * m_RenderTargetDepthF;
 	//CAfxMaterial * m_ShowzMaterial;
 	DWORD m_Current_View_Render_ThreadId;
 
@@ -1732,7 +1732,7 @@ private:
 
 	void AddStream(CAfxRecordStream * stream);
 
-	void CreateRenderTargets(IMaterialSystem_csgo * materialSystem);
+	void CreateRenderTargets(SOURCESDK::IMaterialSystem_csgo * materialSystem);
 
 	bool CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuffer & buffer, IAfxMatRenderContext * cx);
 
