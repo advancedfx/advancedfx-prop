@@ -6228,7 +6228,7 @@ struct ParticleSystemSetControlPointOrientationState_t
 	Quaternion		m_qOrientation;
 };
 
-#define SOURCESDK_CSGO_MAXSTUDIOBONES		128		// total bones actually used
+#define SOURCESDK_CSGO_MAXSTUDIOBONES		256		// total bones actually used
 
 class CBoneList
 {

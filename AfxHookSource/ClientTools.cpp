@@ -12,6 +12,9 @@
 
 #include <shared/rapidxml/rapidxml_print.hpp>
 
+#include <iostream>
+#include <fstream>
+
 char * double2xml(rapidxml::xml_document<> & doc, double value);
 
 using namespace SOURCESDK::CSGO;
@@ -71,7 +74,7 @@ void ClientTools::OnPostToolMessage(SOURCESDK::CSGO::HTOOLHANDLE hEntity, SOURCE
 					{
 						rapidxml::xml_node<> * pXBaseEntity = m_Doc.allocate_node(rapidxml::node_element, "baseentity");
 						pXBaseEntity->append_attribute(m_Doc.allocate_attribute("time", double2xml(m_Doc, pBaseEntityRs->m_flTime)));
-						pXBaseEntity->append_attribute(m_Doc.allocate_attribute("modleName", m_Doc.allocate_string(pBaseEntityRs->m_pModelName)));
+						pXBaseEntity->append_attribute(m_Doc.allocate_attribute("modelName", m_Doc.allocate_string(pBaseEntityRs->m_pModelName)));
 						pXBaseEntity->append_attribute(m_Doc.allocate_attribute("visible", bool2xml(m_Doc, pBaseEntityRs->m_bVisible)));
 
 						{
@@ -195,19 +198,19 @@ void ClientTools::EndRecording()
 		m_ClientTools->EnableRecordingMode(false);
 	}
 
-	std::string xmlString;
-	rapidxml::print(std::back_inserter(xmlString), m_Doc);
+	std::ofstream ofs(m_FileName.c_str(), std::ios_base::binary);
 
-	FILE * pFile = 0;
-	_wfopen_s(&pFile, m_FileName.c_str(), L"wb");
-
-	if (0 != pFile)
+	if (!ofs.fail())
 	{
-		fputs(xmlString.c_str(), pFile);
-		fclose(pFile);
+		ofs << m_Doc;
+
+		if(ofs.fail())
+			Tier0_Warning("Error: Error writing afxGameRecord data!\n");
 	}
 	else
 		Tier0_Warning("Error: Could not open file to save afxGameRecord data!\n");
+
+	ofs.close();
 
 	m_Doc.clear();
 
