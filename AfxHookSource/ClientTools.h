@@ -18,6 +18,8 @@ class ClientTools
 public:
 	ClientTools();
 
+	void DebugEntIndex(int index);
+
 	void SetClientTools(SOURCESDK::CSGO::IClientTools * clientTools);
 
 	void OnPostToolMessage(SOURCESDK::CSGO::HTOOLHANDLE hEntity, SOURCESDK::CSGO::KeyValues * msg);
@@ -32,6 +34,7 @@ public:
 
 private:
 	std::map<std::string, int> m_Dictionary;
+	std::map<SOURCESDK::CSGO::HTOOLHANDLE, int> m_TrackedHandles;
 
 	bool m_Recording;
 	SOURCESDK::CSGO::IClientTools * m_ClientTools;

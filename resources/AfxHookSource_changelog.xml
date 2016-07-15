@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>1.6.0</version>
+<time>2016-07-15T19:56Z</time>
+<changes>
+<change type="added">
+Improved mirv_streams record agr command (game state recording in CS:GO, still in developement), now tracks entity deletions. Can be imported with https://github.com/ripieces/afx-sfm-scripts version 1.2.0 or newer into Source FilmMaker.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>1.5.0</version>
 <time>2016-07-15T13:20Z</time>
 <changes>

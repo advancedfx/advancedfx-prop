@@ -5912,14 +5912,16 @@ public:
 
 	// Use this to turn on/off the presence of an underlying game entity
 	virtual void			SetEnabled(HTOOLHANDLE handle, bool enabled) = 0;
+
 	// Use this to tell an entity to post "state" to all listening tools
 	virtual void			SetRecording(HTOOLHANDLE handle, bool recording) = 0;
+
 	// Some entities are marked with ShouldRecordInTools false, such as ui entities, etc.
 	virtual bool			ShouldRecord(HTOOLHANDLE handle) = 0;
 
 	virtual HTOOLHANDLE		GetToolHandleForEntityByIndex(int entindex) = 0;
 
-	virtual int				GetModelIndex(HTOOLHANDLE handle) = 0;
+	virtual int				GetModelIndex(HTOOLHANDLE handle) = 0;// sub_105C8F90?
 	virtual const char*		GetModelName(HTOOLHANDLE handle) = 0;
 	virtual const char*		GetClassname(HTOOLHANDLE handle) = 0;
 
@@ -5989,13 +5991,13 @@ public:
 	virtual void						SetRecording(ParticleSystemSearchResult sr, bool bRecord) = 0;
 
 	// Sends a mesage from the tool to the client
-	virtual void			PostToolMessage(KeyValues *pKeyValues) = 0;
+	virtual void			PostToolMessage(KeyValues *pKeyValues) = 0; //55
 
 	// Indicates whether the client should render particle systems
-	virtual void			EnableParticleSystems(bool bEnable) = 0;
+	virtual void			EnableParticleSystems(bool bEnable) = 0; //56
 
 	// Is the game rendering in 3rd person mode?
-	virtual bool			IsRenderingThirdPerson() const = 0;
+	virtual bool			IsRenderingThirdPerson() const = 0; //57
 };
 
 #define SOURCESDK_CSGO_VCLIENTTOOLS_INTERFACE_VERSION "VCLIENTTOOLS001"

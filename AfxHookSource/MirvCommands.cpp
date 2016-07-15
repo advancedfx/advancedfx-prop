@@ -65,6 +65,11 @@ CON_COMMAND(__mirv_ct, "")
 		{
 			g_ClientTools.EndRecording();
 		}
+		else
+		if (!_stricmp("debug", cmd1) && 3 <= argc)
+		{
+			g_ClientTools.DebugEntIndex(atoi(args->ArgV(2)));
+		}
 
 	}
 }
