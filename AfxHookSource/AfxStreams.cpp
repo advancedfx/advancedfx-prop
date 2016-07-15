@@ -17,6 +17,7 @@
 #include "csgo_CViewRender.h"
 #include "csgo_writeWaveConsoleCheck.h"
 #include "RenderView.h"
+#include "ClientTools.h"
 
 #include <shared/StringTools.h>
 #include <shared/FileTools.h>
@@ -3172,6 +3173,7 @@ CAfxStreams::CAfxStreams()
 , m_RenderTargetDepthF(0)
 , m_CamBvh(false)
 , m_HostFrameRate(0)
+, m_GameRecording(false)
 {
 	m_OverrideColor[0] =
 	m_OverrideColor[1] =
@@ -3516,6 +3518,14 @@ void CAfxStreams::Console_Record_Start()
 			(*it)->RecordStart();
 		}
 
+		if (m_GameRecording)
+		{
+			std::wstring fileName(m_TakeDir);
+			fileName.append(L"\\afxGameRecord.agr");
+
+			g_ClientTools.StartRecording(fileName.c_str());
+		}
+
 		if (m_CamBvh)
 		{
 			std::wstring m_CamFileName(m_TakeDir);
@@ -3583,6 +3593,11 @@ void CAfxStreams::Console_Record_End()
 		for (std::list<CEntityBvhCapture *>::iterator it = m_EntityBvhCaptures.begin(); it != m_EntityBvhCaptures.end(); ++it)
 		{
 			(*it)->EndCapture();
+		}
+
+		if (m_GameRecording)
+		{
+			g_ClientTools.EndRecording();
 		}
 
 		for(std::list<CAfxRecordStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
@@ -5110,6 +5125,48 @@ void CAfxStreams::Console_Bvh(IWrpCommandArgs * args)
 		"%s cam [...] - Whether main camera export (overrides/uses mirv_camexport actually).\n"
 		"%s ent [...] - Entity BVH export list control.\n"
 		, prefix
+		, prefix
+	);
+}
+
+void CAfxStreams::Console_GameRecording(IWrpCommandArgs * args)
+{
+	int argc = args->ArgC();
+
+	char const * prefix = args->ArgV(0);
+
+	if (m_Recording)
+	{
+		Tier0_Warning("Error: These settings cannot be accessed during mirv_streams recording!\n");
+		return;
+	}
+
+	if (2 <= argc)
+	{
+		char const * cmd1 = args->ArgV(1);
+
+		if (!_stricmp(cmd1, "enabled"))
+		{
+			if (3 <= argc)
+			{
+				char const * cmd2 = args->ArgV(2);
+
+				m_GameRecording = 0 != atoi(cmd2);
+				return;
+			}
+
+			Tier0_Msg(
+				"%s enabled 0|1 - Enable (1) / Disable (0) afxGameRecording (game state recording).\n"
+				"Current value: %i.\n"
+				, prefix
+				, m_GameRecording ? 1 : 0
+			);
+			return;
+		}
+	}
+
+	Tier0_Msg(
+		"%s enabled [...]\n"
 		, prefix
 	);
 }

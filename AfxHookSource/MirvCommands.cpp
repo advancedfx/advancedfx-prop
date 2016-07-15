@@ -58,7 +58,7 @@ CON_COMMAND(__mirv_ct, "")
 		if (!_stricmp("start", cmd1))
 		{
 
-			g_ClientTools.StartRecording(L"afxGameRecord.xml");
+			g_ClientTools.StartRecording(L"afxGameRecord.agr");
 		}
 		else
 		if (!_stricmp("end", cmd1))
@@ -581,7 +581,14 @@ CON_COMMAND(mirv_streams, "Access to streams system.")
 					g_AfxStreams.Console_Bvh(&subArgs);
 					return;
 				}
+				else
+				if (!_stricmp(cmd2, "agr"))
+				{
+					CSubWrpCommandArgs subArgs(args, 3);
 
+					g_AfxStreams.Console_GameRecording(&subArgs);
+					return;
+				}
 			}
 
 			Tier0_Msg(
@@ -592,7 +599,8 @@ CON_COMMAND(mirv_streams, "Access to streams system.")
 				"mirv_streams record presentOnScreen [...] - Controls screen presentation during recording.\n"
 				"mirv_streams record matForceTonemapScale [...] - Controls mat_force_tonemap_scale variable during recording.\n"
 				"mirv_streams record startMovieWav [...] - Controls whether startmovie shall be used for automatically recording audio.\n"
-				"mirv_streams record bvh [...] - Controls the HLAE/BVH Camera motion data capture output."
+				"mirv_streams record bvh [...] - Controls the HLAE/BVH Camera motion data capture output.\n"
+				"mirv_streams record agr [...] - Controls afxGameRecord (.agr) game state recording [still in developement, file format will have breaking changes].\n"
 			);
 			return;
 		}

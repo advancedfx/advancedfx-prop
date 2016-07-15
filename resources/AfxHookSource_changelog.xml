@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>1.5.0</version>
+<time>2016-07-15T13:20Z</time>
+<changes>
+<change type="added">
+Added mirv_streams record agr command (still in developement). For testing game state recording in CS:GO. Can be imported with https://github.com/ripieces/afx-sfm-scripts into Source FilmMaker.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>1.4.0</version>
 <time>2016-06-26T18:05Z</time>
 <changes>

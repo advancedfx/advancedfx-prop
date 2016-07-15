@@ -44,7 +44,7 @@ char * bool2xml(rapidxml::xml_document<> & doc, bool value)
 
 void ClientTools::OnPostToolMessage(SOURCESDK::CSGO::HTOOLHANDLE hEntity, SOURCESDK::CSGO::KeyValues * msg)
 {
-	if (!m_Recording)
+	if (!(m_Recording && m_File))
 		return;
 
 	if (!(m_ClientTools && (hEntity != SOURCESDK::CSGO::HTOOLHANDLE_INVALID)  && msg))
@@ -65,35 +65,19 @@ void ClientTools::OnPostToolMessage(SOURCESDK::CSGO::HTOOLHANDLE hEntity, SOURCE
 			{
 				int handle = ce->GetRefEHandle().ToInt();
 
-				rapidxml::xml_node<> * pXEntityState = m_Doc.allocate_node(rapidxml::node_element, "entity_state");
-				pXEntityState->append_attribute(m_Doc.allocate_attribute("handle", int2xml(m_Doc, handle)));
-
+				WriteDictionary("entity_state");
+				WriteDictionary("handle"); Write((int)handle);
 				{
 					SOURCESDK::CSGO::BaseEntityRecordingState_t * pBaseEntityRs = (SOURCESDK::CSGO::BaseEntityRecordingState_t *)(msg->GetPtr("baseentity"));
 					if (pBaseEntityRs)
 					{
-						rapidxml::xml_node<> * pXBaseEntity = m_Doc.allocate_node(rapidxml::node_element, "baseentity");
-						pXBaseEntity->append_attribute(m_Doc.allocate_attribute("time", double2xml(m_Doc, pBaseEntityRs->m_flTime)));
-						pXBaseEntity->append_attribute(m_Doc.allocate_attribute("modelName", m_Doc.allocate_string(pBaseEntityRs->m_pModelName)));
-						pXBaseEntity->append_attribute(m_Doc.allocate_attribute("visible", bool2xml(m_Doc, pBaseEntityRs->m_bVisible)));
-
-						{
-							rapidxml::xml_node<> * pXOrigin = m_Doc.allocate_node(rapidxml::node_element, "renderOrigin");
-							pXOrigin->append_attribute(m_Doc.allocate_attribute("x", double2xml(m_Doc, pBaseEntityRs->m_vecRenderOrigin.x)));
-							pXOrigin->append_attribute(m_Doc.allocate_attribute("y", double2xml(m_Doc, pBaseEntityRs->m_vecRenderOrigin.y)));
-							pXOrigin->append_attribute(m_Doc.allocate_attribute("z", double2xml(m_Doc, pBaseEntityRs->m_vecRenderOrigin.z)));
-							pXBaseEntity->append_node(pXOrigin);
-						}
-
-						{
-							rapidxml::xml_node<> * pXAngles = m_Doc.allocate_node(rapidxml::node_element, "renderAngles");
-							pXAngles->append_attribute(m_Doc.allocate_attribute("x", double2xml(m_Doc, pBaseEntityRs->m_vecRenderAngles.x)));
-							pXAngles->append_attribute(m_Doc.allocate_attribute("y", double2xml(m_Doc, pBaseEntityRs->m_vecRenderAngles.y)));
-							pXAngles->append_attribute(m_Doc.allocate_attribute("z", double2xml(m_Doc, pBaseEntityRs->m_vecRenderAngles.z)));
-							pXBaseEntity->append_node(pXAngles);
-						}
-
-						pXEntityState->append_node(pXBaseEntity);
+						WriteDictionary("baseentity");
+						WriteDictionary("time"); Write((double)pBaseEntityRs->m_flTime);
+						WriteDictionary("modelName"); WriteDictionary(pBaseEntityRs->m_pModelName);
+						WriteDictionary("visible"); Write((bool)pBaseEntityRs->m_bVisible);
+						WriteDictionary("renderOrigin"); Write(pBaseEntityRs->m_vecRenderOrigin);
+						WriteDictionary("renderAngles"); Write(pBaseEntityRs->m_vecRenderAngles);
+						WriteDictionary("/");
 					}
 				}
 
@@ -101,43 +85,23 @@ void ClientTools::OnPostToolMessage(SOURCESDK::CSGO::HTOOLHANDLE hEntity, SOURCE
 					SOURCESDK::CSGO::BaseAnimatingRecordingState_t * pBaseAnimatingRs = (SOURCESDK::CSGO::BaseAnimatingRecordingState_t *)(msg->GetPtr("baseanimating"));
 					if (pBaseAnimatingRs)
 					{
-						rapidxml::xml_node<> * pxBaseAnimating = m_Doc.allocate_node(rapidxml::node_element, "baseanimating");
-						pxBaseAnimating->append_attribute(m_Doc.allocate_attribute("skin", int2xml(m_Doc, pBaseAnimatingRs->m_nSkin)));
-						pxBaseAnimating->append_attribute(m_Doc.allocate_attribute("body", int2xml(m_Doc, pBaseAnimatingRs->m_nBody)));
-						pxBaseAnimating->append_attribute(m_Doc.allocate_attribute("sequence", int2xml(m_Doc, pBaseAnimatingRs->m_nSequence)));
-
-						CBoneList * bl = pBaseAnimatingRs->m_pBoneList;
-						if(bl)
+						WriteDictionary("baseanimating");
+						WriteDictionary("skin"); Write((int)pBaseAnimatingRs->m_nSkin);
+						WriteDictionary("body"); Write((int)pBaseAnimatingRs->m_nBody);
+						WriteDictionary("sequence"); Write((int)pBaseAnimatingRs->m_nSequence);
+						if (pBaseAnimatingRs->m_pBoneList)
 						{
-							rapidxml::xml_node<> * pXBoneList = m_Doc.allocate_node(rapidxml::node_element, "boneList");
-							//pXBoneList->append_attribute(m_Doc.allocate_attribute("bones", int2xml(m_Doc, bl->m_nBones)));
-
-							for (int i = 0; i < bl->m_nBones; ++i)
-							{
-								rapidxml::xml_node<> * pXBone = m_Doc.allocate_node(rapidxml::node_element, "b");
-								pXBone->append_attribute(m_Doc.allocate_attribute("i", int2xml(m_Doc, i)));
-								pXBone->append_attribute(m_Doc.allocate_attribute("x", double2xml(m_Doc, bl->m_vecPos[i].x)));
-								pXBone->append_attribute(m_Doc.allocate_attribute("y", double2xml(m_Doc, bl->m_vecPos[i].y)));
-								pXBone->append_attribute(m_Doc.allocate_attribute("z", double2xml(m_Doc, bl->m_vecPos[i].z)));
-								pXBone->append_attribute(m_Doc.allocate_attribute("qx", double2xml(m_Doc, bl->m_quatRot[i].x)));
-								pXBone->append_attribute(m_Doc.allocate_attribute("qy", double2xml(m_Doc, bl->m_quatRot[i].y)));
-								pXBone->append_attribute(m_Doc.allocate_attribute("qz", double2xml(m_Doc, bl->m_quatRot[i].z)));
-								pXBone->append_attribute(m_Doc.allocate_attribute("qw", double2xml(m_Doc, bl->m_quatRot[i].w)));
-
-								pXBoneList->append_node(pXBone);
-							}
-
-							pxBaseAnimating->append_node(pXBoneList);
+							WriteDictionary("boneList"); Write(pBaseAnimatingRs->m_pBoneList);
 						}
-
-						pXEntityState->append_node(pxBaseAnimating);
+						WriteDictionary("/");
 					}
 				}
 
 				bool viewModel = msg->GetBool("viewmodel");
-				pXEntityState->append_attribute(m_Doc.allocate_attribute("viewmodel", bool2xml(m_Doc, viewModel)));
 
-				m_AfxGameRecord->append_node(pXEntityState);
+				WriteDictionary("viewmodel"); Write((bool)viewModel);
+
+				WriteDictionary("/");
 			}
 		}
 	}
@@ -159,22 +123,20 @@ void ClientTools::StartRecording(wchar_t const * fileName)
 
 	m_Recording = true;
 
-	m_FileName.assign(fileName);
+	Dictionary_Clear();
+	m_File = 0;
 
-	m_Doc.clear();
+	_wfopen_s(&m_File, fileName, L"wb");
 
-	rapidxml::xml_node<> * decl = m_Doc.allocate_node(rapidxml::node_declaration);
-	decl->append_attribute(m_Doc.allocate_attribute("version", "1.0"));
-	decl->append_attribute(m_Doc.allocate_attribute("encoding", "utf-8"));
-	m_Doc.append_node(decl);
-	
-	rapidxml::xml_node<> * cmt = m_Doc.allocate_node(rapidxml::node_comment, 0,
-		"Recorded with HLAE / AfxHookSource from http://www.advancedfx.org"
-	);
-
-	m_AfxGameRecord = m_Doc.allocate_node(rapidxml::node_element, "afxGameRecord");
-	m_AfxGameRecord->append_attribute(m_Doc.allocate_attribute("version", "0.0.1"));
-	m_Doc.append_node(m_AfxGameRecord);
+	if (m_File)
+	{
+		fputs("afxGameRecord", m_File);
+		fputc('\0', m_File);
+		int version = 0;
+		fwrite(&version, sizeof(version), 1, m_File);
+	}
+	else
+		Tier0_Warning("ERROR opening file \"%s\" for writing.\n", fileName);
 
 	if (m_ClientTools)
 	{
@@ -198,21 +160,12 @@ void ClientTools::EndRecording()
 		m_ClientTools->EnableRecordingMode(false);
 	}
 
-	std::ofstream ofs(m_FileName.c_str(), std::ios_base::binary);
-
-	if (!ofs.fail())
+	if (m_File)
 	{
-		ofs << m_Doc;
-
-		if(ofs.fail())
-			Tier0_Warning("Error: Error writing afxGameRecord data!\n");
+		fclose(m_File);
 	}
-	else
-		Tier0_Warning("Error: Could not open file to save afxGameRecord data!\n");
 
-	ofs.close();
-
-	m_Doc.clear();
+	Dictionary_Clear();
 
 	m_Recording = false;
 }
@@ -234,4 +187,70 @@ void ClientTools::UpdateRecording()
 		// never detach, the ToolsSystem does that already when the entity is removed:
 		// m_ClientTools->DetachFromEntity(ent);
 	}
+}
+
+void ClientTools::WriteDictionary(char const * value)
+{
+	int idx = Dictionary_Get(value);
+
+	Write(idx);
+
+	if (-1 == idx)
+	{
+		Write(value);
+	}
+}
+
+void ClientTools::Write(bool value)
+{
+	fwrite(&value, sizeof(value), 1, m_File);
+}
+
+void ClientTools::Write(int value)
+{
+	fwrite(&value, sizeof(value), 1, m_File);
+}
+
+void ClientTools::Write(double value)
+{
+	fwrite(&value, sizeof(value), 1, m_File);
+}
+
+void ClientTools::Write(char const * value)
+{
+	fputs(value, m_File);
+	fputc('\0', m_File);
+}
+
+void ClientTools::Write(SOURCESDK::Vector const & value)
+{
+	Write((double)value.x);
+	Write((double)value.y);
+	Write((double)value.z);
+}
+
+void ClientTools::Write(SOURCESDK::QAngle const & value)
+{
+	Write((double)value.x);
+	Write((double)value.y);
+	Write((double)value.z);
+}
+
+void ClientTools::Write(SOURCESDK::CSGO::CBoneList const * value)
+{
+	Write((int)value->m_nBones);
+
+	for (int i = 0; i < value->m_nBones; ++i)
+	{
+		Write(value->m_vecPos[i]);
+		Write(value->m_quatRot[i]);
+	}
+}
+
+void ClientTools::Write(SOURCESDK::Quaternion const & value)
+{
+	Write((double)value.x);
+	Write((double)value.y);
+	Write((double)value.z);
+	Write((double)value.w);
 }

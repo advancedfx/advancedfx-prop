@@ -10,8 +10,8 @@
 
 #include "SourceInterfaces.h"
 
-#include <shared/rapidxml/rapidxml.hpp>
 #include <string>
+#include <map>
 
 class ClientTools
 {
@@ -31,13 +31,45 @@ public:
 
 
 private:
+	std::map<std::string, int> m_Dictionary;
+
 	bool m_Recording;
 	SOURCESDK::CSGO::IClientTools * m_ClientTools;
-	rapidxml::xml_document<> m_Doc;
-	rapidxml::xml_node<> * m_AfxGameRecord;
-	std::wstring m_FileName;
+	FILE * m_File;
 
 	void UpdateRecording();
+
+	void Dictionary_Clear()
+	{
+		m_Dictionary.clear();
+	}
+
+	int Dictionary_Get(char const * value)
+	{
+		std::string sValue(value);
+
+		std::map<std::string, int>::iterator it = m_Dictionary.find(sValue);
+
+		if (it != m_Dictionary.end())
+		{
+			std::pair<std::string, int> pair = *it;
+			return pair.second;
+		}
+
+		m_Dictionary[sValue] = m_Dictionary.size();
+		return -1;
+	}
+
+	void WriteDictionary(char const * value);
+
+	void Write(bool value);
+	void Write(int value);
+	void Write(double value);
+	void Write(char const * value); // Consider using WriteDictionary instead (if string is long enough and likely to repeat often).
+	void Write(SOURCESDK::Vector const & value);
+	void Write(SOURCESDK::QAngle const & value);
+	void Write(SOURCESDK::Quaternion const & value);
+	void Write(SOURCESDK::CSGO::CBoneList const * value);
 };
 
 extern ClientTools g_ClientTools;

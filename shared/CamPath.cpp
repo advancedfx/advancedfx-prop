@@ -14,6 +14,7 @@
 #include "rapidxml/rapidxml_print.hpp"
 #include <iterator>
 #include <stdio.h>
+#include <fstream>
 #include <algorithm>
 
 #define _USE_MATH_DEFINES
@@ -450,17 +451,21 @@ bool CamPath::Save(wchar_t const * fileName)
 	std::string xmlString;
 	rapidxml::print(std::back_inserter(xmlString), doc);
 
-	FILE * pFile = 0;
-	_wfopen_s(&pFile, fileName, L"wb");
+	std::ofstream ofs(fileName, std::ios_base::binary);
 
-	if(0 != pFile)
+	bool bOk = !ofs.fail();
+
+	if (bOk)
 	{
-		fputs(xmlString.c_str(), pFile);
-		fclose(pFile);
-		return true;
+		ofs << doc;
 	}
+
+	if (ofs.fail())
+		bOk = false;
+
+	ofs.close();
 	
-	return false;
+	return bOk;
 }
 
 bool CamPath::Load(wchar_t const * fileName)

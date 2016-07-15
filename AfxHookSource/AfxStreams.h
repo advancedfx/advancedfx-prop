@@ -1528,6 +1528,7 @@ public:
 	void Console_EditStream(const char * streamName, IWrpCommandArgs * args, int argcOffset, char const * cmdPrefix);
 	void Console_ListActions(void);
 	void Console_Bvh(IWrpCommandArgs * args);
+	void Console_GameRecording(IWrpCommandArgs * args);
 
 	/// <param name="index">stream name to preview or empty string if to preview nothing.</param>
 	void Console_PreviewStream(const char * streamName);
@@ -1678,6 +1679,7 @@ private:
 	IAfxDrawingHud * m_OnDrawingHud;
 	bool m_CamBvh;
 	std::list<CEntityBvhCapture *> m_EntityBvhCaptures;
+	bool m_GameRecording;
 
 	WrpConVarRef * m_HostFrameRate;
 	WrpConVarRef * m_MatQueueModeRef;
