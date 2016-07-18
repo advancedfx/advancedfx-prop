@@ -10,7 +10,10 @@
 
 #include "ClientTools.h"
 
+#include "addresses.h"
 #include "RenderView.h"
+#include <shared/detours.h>
+#include <shared/StringTools.h>
 
 #include <iostream>
 #include <fstream>
@@ -18,6 +21,34 @@
 using namespace SOURCESDK::CSGO;
 
 ClientTools g_ClientTools;
+
+
+typedef void (*C_BaseEntity_ToolRecordEntities_t)(void);
+
+C_BaseEntity_ToolRecordEntities_t detoured_C_BaseEntity_ToolRecordEntities;
+
+void touring_C_BaseEntity_ToolRecordEntities(void)
+{
+	g_ClientTools.OnC_BaseEntity_ToolRecordEntities();
+
+	detoured_C_BaseEntity_ToolRecordEntities();
+}
+
+bool Hook_C_BaseEntity_ToolRecordEnties(void)
+{
+	static bool firstResult = false;
+	static bool firstRun = true;
+	if (!firstRun) return firstResult;
+	firstRun = false;
+
+	if (AFXADDR_GET(csgo_C_BaseEntity_ToolRecordEnties))
+	{
+		detoured_C_BaseEntity_ToolRecordEntities = (C_BaseEntity_ToolRecordEntities_t)DetourClassFunc((BYTE *)AFXADDR_GET(csgo_C_BaseEntity_ToolRecordEnties), (BYTE *)touring_C_BaseEntity_ToolRecordEntities, (int)AFXADDR_GET(csgo_C_BaseEntity_ToolRecordEnties_DSZ));
+		firstResult = true;
+	}
+
+	return firstResult;
+}
 
 ClientTools::ClientTools()
 : m_Recording(false)
@@ -59,9 +90,17 @@ void ClientTools::OnPostToolMessage(SOURCESDK::CSGO::HTOOLHANDLE hEntity, SOURCE
 		SOURCESDK::IClientEntity_csgo * ce = SOURCESDK::g_Entitylist_csgo->GetClientEntity(idx);
 		SOURCESDK::C_BaseEntity_csgo * be = ce ? ce->GetBaseEntity() : 0;
 
+		char const * className = be ? be->GetClassname() : 0;
+
 		if (ce
-			&& (m_ClientTools->IsPlayer(ent) || m_ClientTools->IsViewModel(ent) || m_ClientTools->IsRagdoll(ent)
-				|| (be && !strcmp(be->GetClassname(), "class C_CSRagdoll"))
+			&& (m_ClientTools->IsPlayer(ent)
+				//|| m_ClientTools->IsViewModel(ent)
+				|| m_ClientTools->IsRagdoll(ent)
+				//|| m_ClientTools->IsWeapon(ent)
+				|| (className && (
+					!strcmp(className, "class C_CSRagdoll")
+					//|| StringBeginsWith(className ,"weapon")
+				))
 			)
 		)
 		{
@@ -126,7 +165,7 @@ void ClientTools::OnPostToolMessage(SOURCESDK::CSGO::HTOOLHANDLE hEntity, SOURCE
 	}
 }
 
-void ClientTools::OnPreRenderAllTools(void)
+void ClientTools::OnC_BaseEntity_ToolRecordEntities(void)
 {
 	UpdateRecording();
 }
@@ -201,7 +240,7 @@ void ClientTools::UpdateRecording()
 	{
 		SOURCESDK::CSGO::HTOOLHANDLE hEnt = m_ClientTools->AttachToEntity(ent);
 
-		if (hEnt != SOURCESDK::CSGO::HTOOLHANDLE_INVALID)
+		if (hEnt != SOURCESDK::CSGO::HTOOLHANDLE_INVALID && m_ClientTools->ShouldRecord(hEnt))
 		{
 			m_ClientTools->SetRecording(hEnt, true);
 		}

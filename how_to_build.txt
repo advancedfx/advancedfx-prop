@@ -38,7 +38,9 @@ Hint:
     Configuration=Release
 
 [X] Obtain the HLAE source code from http://advancedfx.org and extract it into a
-    folder you like, we'll call it <HLAESRC> from now on.
+    folder you like, we'll call it <HLAESRC> from now on (by that I mean
+    extract it so that you end up with the files like mdt.sln and directories
+    in C:\<HLAESRC>\advancedfx folder).
 
 [X] Obtain the following files from http://openexr.com/ :
     ilmbase-2.2.0.tar.gz, openexr-2.2.0.tar.gz and extract their contents

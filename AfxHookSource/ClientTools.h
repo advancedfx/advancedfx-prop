@@ -13,6 +13,8 @@
 #include <string>
 #include <map>
 
+bool Hook_C_BaseEntity_ToolRecordEnties(void);
+
 class ClientTools
 {
 public:
@@ -24,7 +26,7 @@ public:
 
 	void OnPostToolMessage(SOURCESDK::CSGO::HTOOLHANDLE hEntity, SOURCESDK::CSGO::KeyValues * msg);
 
-	void OnPreRenderAllTools(void);
+	void OnC_BaseEntity_ToolRecordEntities(void);
 
 	bool GetRecording(void);
 

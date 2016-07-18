@@ -93,8 +93,6 @@ public:
 	{
 		//Tier0_Msg("ClientEngineTools::PreRenderAllTools\n");
 		g_Engine_ClientEngineTools->PreRenderAllTools();
-
-		g_ClientTools.OnPreRenderAllTools();
 	}
 	
 	virtual void PostRenderAllTools()
@@ -2868,6 +2866,7 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 		csgo_CSkyBoxView_Draw_Install();
 		csgo_CViewRender_Install();
 		Hook_csgo_writeWaveConsoleCheck();
+		Hook_C_BaseEntity_ToolRecordEnties();
 	}
 	else
 	if(bFirstScaleformui && StringEndsWith( lpLibFileName, "scaleformui.dll"))

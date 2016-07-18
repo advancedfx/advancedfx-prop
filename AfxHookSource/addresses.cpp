@@ -14,6 +14,8 @@
 
 using namespace Afx::BinUtils;
 
+AFXADDR_DEF(csgo_C_BaseEntity_ToolRecordEnties)
+AFXADDR_DEF(csgo_C_BaseEntity_ToolRecordEnties_DSZ)
 AFXADDR_DEF(csgo_C_BasePlayer_OFS_m_skybox3d_scale)
 AFXADDR_DEF(csgo_CUnknown_GetPlayerName)
 AFXADDR_DEF(csgo_CUnknown_GetPlayerName_DSZ)
@@ -953,9 +955,66 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 
 			AFXADDR_SET(csgo_C_BasePlayer_OFS_m_skybox3d_scale, ofs_m_Local_m_skybox3d_scale);
 		}
+
+		// csgo_C_BaseEntity_ToolRecordEnties:
+		{
+			DWORD addr = 0;
+			DWORD strAddr = 0;
+			{
+				ImageSectionsReader sections((HMODULE)clientDll);
+				if (!sections.Eof())
+				{
+					sections.Next(); // skip .text
+					if (!sections.Eof())
+					{
+						MemRange result = FindCString(sections.GetMemRange(), "C_BaseEntity::ToolRecordEnties");
+						if (!result.IsEmpty())
+						{
+							strAddr = result.Start;
+						}
+						else ErrorBox(MkErrStr(__FILE__, __LINE__));
+					}
+					else ErrorBox(MkErrStr(__FILE__, __LINE__));
+				}
+				else ErrorBox(MkErrStr(__FILE__, __LINE__));
+			}
+			if (strAddr)
+			{
+				ImageSectionsReader sections((HMODULE)clientDll);
+
+				MemRange baseRange = sections.GetMemRange();
+				MemRange result = FindBytes(baseRange, (char const *)&strAddr, sizeof(strAddr));
+				if (!result.IsEmpty())
+				{
+					DWORD targetAddr = result.Start - 0x27;
+
+					// check for pattern nearby to see if it is the right address:
+					unsigned char pattern[6] = { 0x55, 0x8b, 0xec, 0x51, 0x8b, 0x0d };
+
+					DWORD patternSize = sizeof(pattern) / sizeof(pattern[0]);
+					MemRange patternRange(targetAddr, targetAddr + patternSize);
+					MemRange result = FindBytes(patternRange, (char *)pattern, patternSize);
+					if (result.Start != patternRange.Start || result.End != patternRange.End)
+						ErrorBox(MkErrStr(__FILE__, __LINE__));
+					else
+						addr = targetAddr;
+				}
+				else ErrorBox(MkErrStr(__FILE__, __LINE__));
+			}
+			if (addr)
+			{
+				AFXADDR_SET(csgo_C_BaseEntity_ToolRecordEnties, addr);
+			}
+			else
+			{
+				AFXADDR_SET(csgo_C_BaseEntity_ToolRecordEnties, 0x0);
+			}
+		}
+
 	}
 	else
 	{
+		AFXADDR_SET(csgo_C_BaseEntity_ToolRecordEnties, 0x0);
 		AFXADDR_SET(csgo_C_BasePlayer_OFS_m_skybox3d_scale, (AfxAddr)-1);
 		AFXADDR_SET(csgo_CUnknown_GetPlayerName, 0x0);
 		AFXADDR_SET(csgo_CHudDeathNotice_FireGameEvent, 0x0);
@@ -970,6 +1029,7 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 		AFXADDR_SET(csgo_view, 0x0);
 	}
 
+	AFXADDR_SET(csgo_C_BaseEntity_ToolRecordEnties_DSZ, 0xa);
 	AFXADDR_SET(csgo_CUnknown_GetPlayerName_DSZ, 0x0b);
 	AFXADDR_SET(csgo_CHudDeathNotice_FireGameEvent_DSZ, 0x0b);
 	AFXADDR_SET(csgo_CHudDeathNotice_UnkAddDeathNotice_DSZ, 0x09);

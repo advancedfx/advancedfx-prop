@@ -10,6 +10,8 @@
 
 #include <shared/vcpp/AfxAddr.h>
 
+AFXADDR_DECL(csgo_C_BaseEntity_ToolRecordEnties)
+AFXADDR_DECL(csgo_C_BaseEntity_ToolRecordEnties_DSZ)
 AFXADDR_DECL(csgo_C_BasePlayer_OFS_m_skybox3d_scale)
 AFXADDR_DECL(csgo_CUnknown_GetPlayerName)
 AFXADDR_DECL(csgo_CUnknown_GetPlayerName_DSZ)

@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>1.6.1</version>
+<time>2016-07-18T18:07Z</time>
+<changes>
+<change type="fixed">
+Fixed mirv_streams record agr command: newly created entities could slip through in their first frame (causing i.e. rag dolls to display a frame too late).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>1.6.0</version>
 <time>2016-07-15T19:56Z</time>
 <changes>
