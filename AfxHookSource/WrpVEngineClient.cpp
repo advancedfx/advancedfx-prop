@@ -128,10 +128,6 @@ bool WrpVEngineClient_012::IsInEditMode( void ) {
 	return m_VEngineClient_012->IsInEditMode();
 }
 
-float WrpVEngineClient_012::GetScreenAspectRatio() {
-	return m_VEngineClient_012->GetScreenAspectRatio();
-}
-
 unsigned int WrpVEngineClient_012::GetEngineBuildNumber() {
 	return m_VEngineClient_012->GetEngineBuildNumber();
 }
@@ -298,10 +294,6 @@ bool WrpVEngineClient_013::IsInEditMode( void ) {
 	return m_VEngineClient_013->IsInEditMode();
 }
 
-float WrpVEngineClient_013::GetScreenAspectRatio() {
-	return m_VEngineClient_013->GetScreenAspectRatio();
-}
-
 unsigned int WrpVEngineClient_013::GetEngineBuildNumber() {
 	return m_VEngineClient_013->GetEngineBuildNumber();
 }
@@ -327,170 +319,166 @@ WrpVEngineClientDemoInfoEx * WrpVEngineClient_013::GetDemoInfoEx(void)
 	return this;
 }
 
-// WrpVEngineClient_013_csgo ///////////////////////////////////////////////////////////
+// WrpVEngineClient_014_csgo ///////////////////////////////////////////////////////////
 
-WrpVEngineClient_013_csgo::WrpVEngineClient_013_csgo(SOURCESDK::IVEngineClient_013_csgo * iface) {
-	m_VEngineClient_013 = iface;
+WrpVEngineClient_014_csgo::WrpVEngineClient_014_csgo(SOURCESDK::IVEngineClient_014_csgo * iface) {
+	m_VEngineClient = iface;
 }
 
-void WrpVEngineClient_013_csgo::GetScreenSize( int& width, int& height ) {
-	m_VEngineClient_013->GetScreenSize(width, height);
+void WrpVEngineClient_014_csgo::GetScreenSize( int& width, int& height ) {
+	m_VEngineClient->GetScreenSize(width, height);
 }
 
-void WrpVEngineClient_013_csgo::ServerCmd( const char *szCmdString, bool bReliable) {
-	m_VEngineClient_013->ServerCmd(szCmdString, bReliable);
+void WrpVEngineClient_014_csgo::ServerCmd( const char *szCmdString, bool bReliable) {
+	m_VEngineClient->ServerCmd(szCmdString, bReliable);
 }
 
-void WrpVEngineClient_013_csgo::ClientCmd( const char *szCmdString ) {
-	m_VEngineClient_013->ClientCmd(szCmdString);
+void WrpVEngineClient_014_csgo::ClientCmd( const char *szCmdString ) {
+	m_VEngineClient->ClientCmd(szCmdString);
 }
 
-bool WrpVEngineClient_013_csgo::Con_IsVisible( void ) {
-	return m_VEngineClient_013->Con_IsVisible();
+bool WrpVEngineClient_014_csgo::Con_IsVisible( void ) {
+	return m_VEngineClient->Con_IsVisible();
 }
 
-void WrpVEngineClient_013_csgo::GetViewAngles(SOURCESDK::QAngle& va ) {
-	m_VEngineClient_013->GetViewAngles(va);
+void WrpVEngineClient_014_csgo::GetViewAngles(SOURCESDK::QAngle& va ) {
+	m_VEngineClient->GetViewAngles(va);
 }
 
-void WrpVEngineClient_013_csgo::SetViewAngles(SOURCESDK::QAngle& va ) {
-	m_VEngineClient_013->SetViewAngles(va);
+void WrpVEngineClient_014_csgo::SetViewAngles(SOURCESDK::QAngle& va ) {
+	m_VEngineClient->SetViewAngles(va);
 }
 
-int WrpVEngineClient_013_csgo::GetMaxClients( void ) {
-	return m_VEngineClient_013->GetMaxClients();
+int WrpVEngineClient_014_csgo::GetMaxClients( void ) {
+	return m_VEngineClient->GetMaxClients();
 }
 
-bool WrpVEngineClient_013_csgo::IsInGame( void ) {
-	return m_VEngineClient_013->IsInGame();
+bool WrpVEngineClient_014_csgo::IsInGame( void ) {
+	return m_VEngineClient->IsInGame();
 }
 
-bool WrpVEngineClient_013_csgo::IsConnected( void ) {
-	return m_VEngineClient_013->IsConnected();
+bool WrpVEngineClient_014_csgo::IsConnected( void ) {
+	return m_VEngineClient->IsConnected();
 }
 
-bool WrpVEngineClient_013_csgo::IsDrawingLoadingImage( void ) {
-	return m_VEngineClient_013->IsDrawingLoadingImage();
+bool WrpVEngineClient_014_csgo::IsDrawingLoadingImage( void ) {
+	return m_VEngineClient->IsDrawingLoadingImage();
 }
 
-void WrpVEngineClient_013_csgo::Con_NPrintf( int pos, const char *fmt, ... ) {
+void WrpVEngineClient_014_csgo::Con_NPrintf( int pos, const char *fmt, ... ) {
 	va_list argptr;
 	va_start(argptr, fmt);
-	m_VEngineClient_013->Con_NPrintf(pos, fmt, argptr);
+	m_VEngineClient->Con_NPrintf(pos, fmt, argptr);
 }
 
-const char *  WrpVEngineClient_013_csgo::GetGameDirectory( void ) {
-	return m_VEngineClient_013->GetGameDirectory();
+const char *  WrpVEngineClient_014_csgo::GetGameDirectory( void ) {
+	return m_VEngineClient->GetGameDirectory();
 }
 
-const SOURCESDK::VMatrix& WrpVEngineClient_013_csgo::WorldToScreenMatrix()
+const SOURCESDK::VMatrix& WrpVEngineClient_014_csgo::WorldToScreenMatrix()
 {
-	return m_VEngineClient_013->WorldToScreenMatrix();
+	return m_VEngineClient->WorldToScreenMatrix();
 }
 
-const SOURCESDK::VMatrix& WrpVEngineClient_013_csgo::WorldToViewMatrix()
+const SOURCESDK::VMatrix& WrpVEngineClient_014_csgo::WorldToViewMatrix()
 {
-	return m_VEngineClient_013->WorldToViewMatrix();
+	return m_VEngineClient->WorldToViewMatrix();
 }
 
 
-char const *  WrpVEngineClient_013_csgo::GetLevelName( void ) {
-	return m_VEngineClient_013->GetLevelName();
+char const *  WrpVEngineClient_014_csgo::GetLevelName( void ) {
+	return m_VEngineClient->GetLevelName();
 }
 
-void WrpVEngineClient_013_csgo::EngineStats_BeginFrame( void ) {
-	return m_VEngineClient_013->EngineStats_BeginFrame();
+void WrpVEngineClient_014_csgo::EngineStats_BeginFrame( void ) {
+	return m_VEngineClient->EngineStats_BeginFrame();
 }
 
-void WrpVEngineClient_013_csgo::EngineStats_EndFrame( void ) {
-	return m_VEngineClient_013->EngineStats_EndFrame();
+void WrpVEngineClient_014_csgo::EngineStats_EndFrame( void ) {
+	return m_VEngineClient->EngineStats_EndFrame();
 }
 
-bool WrpVEngineClient_013_csgo::IsPlayingDemo( void ) {
-	return m_VEngineClient_013->IsPlayingDemo();
+bool WrpVEngineClient_014_csgo::IsPlayingDemo( void ) {
+	return m_VEngineClient->IsPlayingDemo();
 }
 
-bool WrpVEngineClient_013_csgo::IsRecordingDemo( void ) {
-	return m_VEngineClient_013->IsRecordingDemo();
+bool WrpVEngineClient_014_csgo::IsRecordingDemo( void ) {
+	return m_VEngineClient->IsRecordingDemo();
 }
 
-bool WrpVEngineClient_013_csgo::IsPlayingTimeDemo( void ) {
-	return m_VEngineClient_013->IsPlayingTimeDemo();
+bool WrpVEngineClient_014_csgo::IsPlayingTimeDemo( void ) {
+	return m_VEngineClient->IsPlayingTimeDemo();
 }
 
-int WrpVEngineClient_013_csgo::GetDemoRecordingTick( void )
+int WrpVEngineClient_014_csgo::GetDemoRecordingTick( void )
 {
-	return m_VEngineClient_013->GetDemoRecordingTick();
+	return m_VEngineClient->GetDemoRecordingTick();
 }
 
-int	WrpVEngineClient_013_csgo::GetDemoPlaybackTick( void )
+int	WrpVEngineClient_014_csgo::GetDemoPlaybackTick( void )
 {
-	return m_VEngineClient_013->GetDemoPlaybackTick();
+	return m_VEngineClient->GetDemoPlaybackTick();
 }
 
-int	WrpVEngineClient_013_csgo::GetDemoPlaybackStartTick( void )
+int	WrpVEngineClient_014_csgo::GetDemoPlaybackStartTick( void )
 {
-	return m_VEngineClient_013->GetDemoPlaybackStartTick();
+	return m_VEngineClient->GetDemoPlaybackStartTick();
 }
 
-float WrpVEngineClient_013_csgo::GetDemoPlaybackTimeScale( void )
+float WrpVEngineClient_014_csgo::GetDemoPlaybackTimeScale( void )
 {
-	return m_VEngineClient_013->GetDemoPlaybackTimeScale();
+	return m_VEngineClient->GetDemoPlaybackTimeScale();
 }
 
-int WrpVEngineClient_013_csgo::GetDemoPlaybackTotalTicks( void )
+int WrpVEngineClient_014_csgo::GetDemoPlaybackTotalTicks( void )
 {
-	return m_VEngineClient_013->GetDemoPlaybackTotalTicks();
+	return m_VEngineClient->GetDemoPlaybackTotalTicks();
 }
 
-bool WrpVEngineClient_013_csgo::IsPaused( void ) {
-	return m_VEngineClient_013->IsPaused();
+bool WrpVEngineClient_014_csgo::IsPaused( void ) {
+	return m_VEngineClient->IsPaused();
 }
 
-bool WrpVEngineClient_013_csgo::IsTakingScreenshot( void ) {
-	return m_VEngineClient_013->IsTakingScreenshot();
+bool WrpVEngineClient_014_csgo::IsTakingScreenshot( void ) {
+	return m_VEngineClient->IsTakingScreenshot();
 }
-bool WrpVEngineClient_013_csgo::IsHLTV( void ) {
-	return m_VEngineClient_013->IsHLTV();
-}
-
-bool WrpVEngineClient_013_csgo::IsLevelMainMenuBackground( void ) {
-	return m_VEngineClient_013->IsLevelMainMenuBackground();
+bool WrpVEngineClient_014_csgo::IsHLTV( void ) {
+	return m_VEngineClient->IsHLTV();
 }
 
-void WrpVEngineClient_013_csgo::GetMainMenuBackgroundName( char *dest, int destlen ) {
-	return m_VEngineClient_013->GetMainMenuBackgroundName(dest, destlen);
+bool WrpVEngineClient_014_csgo::IsLevelMainMenuBackground( void ) {
+	return m_VEngineClient->IsLevelMainMenuBackground();
 }
 
-bool WrpVEngineClient_013_csgo::IsInEditMode( void ) {
-	return m_VEngineClient_013->IsInEditMode();
+void WrpVEngineClient_014_csgo::GetMainMenuBackgroundName( char *dest, int destlen ) {
+	return m_VEngineClient->GetMainMenuBackgroundName(dest, destlen);
 }
 
-float WrpVEngineClient_013_csgo::GetScreenAspectRatio() {
-	return m_VEngineClient_013->GetScreenAspectRatio();
+bool WrpVEngineClient_014_csgo::IsInEditMode( void ) {
+	return m_VEngineClient->IsInEditMode();
 }
 
-unsigned int WrpVEngineClient_013_csgo::GetEngineBuildNumber() {
-	return m_VEngineClient_013->GetEngineBuildNumber();
+unsigned int WrpVEngineClient_014_csgo::GetEngineBuildNumber() {
+	return m_VEngineClient->GetEngineBuildNumber();
 }
 
-const char * WrpVEngineClient_013_csgo::GetProductVersionString() {
-	return m_VEngineClient_013->GetProductVersionString();
+const char * WrpVEngineClient_014_csgo::GetProductVersionString() {
+	return m_VEngineClient->GetProductVersionString();
 }
 
-bool WrpVEngineClient_013_csgo::IsHammerRunning( ) const {
-	return m_VEngineClient_013->IsHammerRunning();
+bool WrpVEngineClient_014_csgo::IsHammerRunning( ) const {
+	return m_VEngineClient->IsHammerRunning();
 }
 
-void WrpVEngineClient_013_csgo::ExecuteClientCmd( const char *szCmdString ) {
-	m_VEngineClient_013->ExecuteClientCmd(szCmdString);
+void WrpVEngineClient_014_csgo::ExecuteClientCmd( const char *szCmdString ) {
+	m_VEngineClient->ExecuteClientCmd(szCmdString);
 }
 
-void WrpVEngineClient_013_csgo::ClientCmd_Unrestricted( const char *szCmdString ) {
-	m_VEngineClient_013->ClientCmd_Unrestricted(szCmdString);
+void WrpVEngineClient_014_csgo::ClientCmd_Unrestricted( const char *szCmdString ) {
+	m_VEngineClient->ClientCmd_Unrestricted(szCmdString);
 }
 
-WrpVEngineClientDemoInfoEx * WrpVEngineClient_013_csgo::GetDemoInfoEx(void)
+WrpVEngineClientDemoInfoEx * WrpVEngineClient_014_csgo::GetDemoInfoEx(void)
 {
 	return this;
 }

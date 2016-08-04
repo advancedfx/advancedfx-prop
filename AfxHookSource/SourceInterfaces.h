@@ -2105,234 +2105,226 @@ public:
 	// .... might be more in some games (i.e. source-sdk-2013)
 };
 
-// IVEngineClient_013_csgo /////////////////////////////////////////////////////
+// IVEngineClient_014_csgo /////////////////////////////////////////////////////
 
-#define VENGINE_CLIENT_INTERFACE_VERSION_013_CSGO "VEngineClient013"
+#define VENGINE_CLIENT_INTERFACE_VERSION_014_CSGO "VEngineClient014"
 
 /// <comments>
 ///		Supported by: CS:GO
 ///		</comments>
-class IVEngineClient_013_csgo abstract
+class IVEngineClient_014_csgo abstract
 {
 public:
-	virtual void _UNUSED_GetIntersectingSurfaces(void)=0;
-	virtual void _UNUSED_GetLightForPoint(void)=0;
-	virtual void _UNUSED_TraceLineMaterialAndLighting(void)=0;
-	virtual void _UNUSED_ParseFile(void)=0;
-	virtual void _UNUSED_CopyFile(void)=0;
+	virtual void _UNUSED_GetIntersectingSurfaces(void)=0; // :0
+	virtual void _UNUSED_GetLightForPoint(void)=0; // :1
+	virtual void _UNUSED_TraceLineMaterialAndLighting(void)=0; // :2
+	virtual void _UNUSED_ParseFile(void)=0; // :3
+	virtual void _UNUSED_CopyFile(void)=0; // :4
 
 	// Gets the dimensions of the game window
-	virtual void				GetScreenSize( int& width, int& height ) = 0;
+	virtual void				GetScreenSize( int& width, int& height ) = 0; // :5
 
 	// Forwards szCmdString to the server, sent reliably if bReliable is set
-	virtual void				ServerCmd( const char *szCmdString, bool bReliable = true ) = 0;
+	virtual void				ServerCmd( const char *szCmdString, bool bReliable = true ) = 0; // :6
 	// Inserts szCmdString into the command buffer as if it was typed by the client to his/her console.
 	// Note: Calls to this are checked against FCVAR_CLIENTCMD_CAN_EXECUTE (if that bit is not set, then this function can't change it).
 	//       Call ClientCmd_Unrestricted to have access to FCVAR_CLIENTCMD_CAN_EXECUTE vars.
-	virtual void				ClientCmd( const char *szCmdString ) = 0;
+	virtual void				ClientCmd( const char *szCmdString ) = 0; // :7
 
-	virtual void _UNUSED_GetPlayerInfo(void)=0;
-	virtual void _UNUSED_GetPlayerForUserID(void)=0;
-	virtual void _UNUSED_TextMessageGet(void)=0;
+	virtual void _UNUSED_GetPlayerInfo(void)=0; // :8
+	virtual void _UNUSED_GetPlayerForUserID(void)=0; // :9
+	virtual void _UNUSED_TextMessageGet(void)=0; // :10
 
 	// Returns true if the console is visible
-	virtual bool				Con_IsVisible( void ) = 0;
+	virtual bool				Con_IsVisible( void ) = 0; // :11
 
-	virtual void _UNUSED_GetLocalPlayer(void)=0;
-	virtual void _UNUSED_LoadModel(void)=0;
+	virtual void _UNUSED_GetLocalPlayer(void)=0; // :12
+	virtual void _UNUSED_LoadModel(void)=0; // :13
 
-	virtual float _UNKNOWN_014(void) = 0;
+	// Get the exact server timesstamp ( server time ) from the last message received from the server
+	virtual float				GetLastTimeStamp( void ) = 0;  // :14
 
-	virtual void _UNUSED_GetSentence(void)=0;
-	virtual void _UNUSED_GetSentenceLength(void)=0;
-	virtual void _UNUSED_IsStreaming(void)=0;
+	virtual void _UNUSED_GetSentence(void)=0; // :15
+	virtual void _UNUSED_GetSentenceLength(void)=0; // :16
+	virtual void _UNUSED_IsStreaming(void)=0; // :17
 
 	// Copy current view orientation into va
-	virtual void				GetViewAngles( QAngle& va ) = 0;
+	virtual void				GetViewAngles( QAngle& va ) = 0; // :18
 	// Set current view orientation from va
-	virtual void				SetViewAngles( QAngle& va ) = 0;
+	virtual void				SetViewAngles( QAngle& va ) = 0; // :19
 	
 	// Retrieve the current game's maxclients setting
-	virtual int					GetMaxClients( void ) = 0;
+	virtual int					GetMaxClients( void ) = 0; // :20
 
-	virtual void _UNUSED_Key_LookupBinding(void)=0;
-	virtual void _UNUSED_Key_BindingForKey(void)=0;
+	virtual void _UNUSED_Key_LookupBinding(void)=0; // :21
+	virtual void _UNUSED_Key_BindingForKey(void)=0; // :22
 
-	virtual void _UNKOWN_023(void) = 0;
+	virtual void _UNKOWN_023(void) = 0; // :23
 
-	virtual void _UNUSED_StartKeyTrapMode(void)=0;
-	virtual void _UNUSED_CheckDoneKeyTrapping(void)=0;
+	virtual void _UNUSED_StartKeyTrapMode(void)=0; // :24
+	virtual void _UNUSED_CheckDoneKeyTrapping(void)=0; // :25
 
 	// Returns true if the player is fully connected and active in game (i.e, not still loading)
-	virtual bool				IsInGame( void ) = 0;
+	virtual bool				IsInGame( void ) = 0; // :26
 	// Returns true if the player is connected, but not necessarily active in game (could still be loading)
-	virtual bool				IsConnected( void ) = 0;
+	virtual bool				IsConnected( void ) = 0; // :27
 	// Returns true if the loading plaque should be drawn
-	virtual bool				IsDrawingLoadingImage( void ) = 0;
+	virtual bool				IsDrawingLoadingImage( void ) = 0; // :28
 
 	// new in csgo:
-	virtual void				HideLoadingPlaque( void ) = 0;
+	virtual void				HideLoadingPlaque( void ) = 0; // :29
 
 	// Prints the formatted string to the notification area of the screen ( down the right hand edge
 	//  numbered lines starting at position 0
-	virtual void				Con_NPrintf( int pos, const char *fmt, ... ) = 0;
+	virtual void				Con_NPrintf( int pos, const char *fmt, ... ) = 0; // :30
 	
-	virtual void _UNUSED_Con_NXPrintf(void)=0;
-	virtual void _UNUSED_IsBoxVisible(void)=0;
-	virtual void _UNUSED_IsBoxInViewCluster(void)=0;
-	virtual void _UNUSED_CullBox(void)=0;
-	virtual void _UNUSED_Sound_ExtraUpdate(void)=0;
+	virtual void _UNUSED_Con_NXPrintf(void)=0; // :31
+	virtual void _UNUSED_IsBoxVisible(void)=0; // :32
+	virtual void _UNUSED_IsBoxInViewCluster(void)=0; // :33
+	virtual void _UNUSED_CullBox(void)=0; // :34
+	virtual void _UNUSED_Sound_ExtraUpdate(void)=0; // :35
 
 	// Get the current game directory ( e.g., hl2, tf2, cstrike, hl1 )
-	virtual const char			*GetGameDirectory( void ) = 0;
+	virtual const char			*GetGameDirectory( void ) = 0; // :36
 
 	// Get access to the world to screen transformation matrix
-	virtual const VMatrix& 		WorldToScreenMatrix() = 0;
+	virtual const VMatrix& 		WorldToScreenMatrix() = 0; // :37
 	
 	// Get the matrix to move a point from world space into view space
 	// (translate and rotate so the camera is at the origin looking down X).
-	virtual const VMatrix& 		WorldToViewMatrix() = 0;
+	virtual const VMatrix& 		WorldToViewMatrix() = 0; // :38
 
-	virtual void _UNUSED_GameLumpVersion(void)=0;
-	virtual void _UNUSED_GameLumpSize(void)=0;
-	virtual void _UNUSED_LoadGameLump(void)=0;
-	virtual void _UNUSED_LevelLeafCount(void)=0;
-	virtual void _UNUSED_GetBSPTreeQuery(void)=0;
-	virtual void _UNUSED_LinearToGamma(void)=0;
-	virtual void _UNUSED_LightStyleValue(void)=0;
-	virtual void _UNUSED_ComputeDynamicLighting(void)=0;
-	virtual void _UNUSED_GetAmbientLightColor(void)=0;
-	virtual void _UNUSED_GetDXSupportLevel(void)=0;
-	virtual void _UNUSED_SupportsHDR(void)=0;
-	virtual void _UNUSED_Mat_Stub(void)=0;
-	virtual void _UNUSED_GetChapterName(void)=0;
+	virtual void _UNUSED_GameLumpVersion(void)=0; // :39
+	virtual void _UNUSED_GameLumpSize(void)=0; // :40
+	virtual void _UNUSED_LoadGameLump(void)=0; // :41
+	virtual void _UNUSED_LevelLeafCount(void)=0; // :42
+	virtual void _UNUSED_GetBSPTreeQuery(void)=0; // :43
+	virtual void _UNUSED_LinearToGamma(void)=0; // :44
+	virtual void _UNUSED_LightStyleValue(void)=0; // :45
+	virtual void _UNUSED_ComputeDynamicLighting(void)=0; // :46
+	virtual void _UNUSED_GetAmbientLightColor(void)=0; // :47
+	virtual void _UNUSED_GetDXSupportLevel(void)=0; // :48
+	virtual void _UNUSED_SupportsHDR(void)=0; // :49
+	virtual void _UNUSED_Mat_Stub(void)=0; // :50
+	virtual void _UNUSED_GetChapterName(void)=0; // :51
 
-	virtual char const	*GetLevelName( void ) = 0;
+	virtual char const	*GetLevelName( void ) = 0; // :52
 
-	virtual void _UNKOWN_053(void);
+	virtual char const	*GetLevelNameShort(void) = 0; // :53
 
 	// New in source SDK 2013
-	virtual int GetLevelVersion( void ) = 0;
+	virtual int GetLevelVersion( void ) = 0; // :54
 
 #if !defined( NO_VOICE )
-	virtual void _UNUSED_GetVoiceTweakAPI(void)=0;
+	virtual void _UNUSED_GetVoiceTweakAPI(void)=0; // :55
 #endif
 	// Tell engine stats gathering system that the rendering frame is beginning/ending
-	virtual void		EngineStats_BeginFrame( void ) = 0;
-	virtual void		EngineStats_EndFrame( void ) = 0;
+	virtual void		EngineStats_BeginFrame( void ) = 0; // :56
+	virtual void		EngineStats_EndFrame( void ) = 0; // :57
 
-	virtual void _UNKOWN_058(void);
+	virtual void _UNKOWN_058(void); // :58
 	
-	virtual void _UNUSED_FireEvents(void)=0;
-	virtual void _UNUSED_GetLeavesArea(void)=0;
-	virtual void _UNUSED_DoesBoxTouchAreaFrustum(void)=0;
+	virtual void _UNUSED_FireEvents(void)=0; // :59
+	virtual void _UNUSED_GetLeavesArea(void)=0; // :60
+	virtual void _UNUSED_DoesBoxTouchAreaFrustum(void)=0; // :61
 	
-	virtual void _UNKOWN_062(void) = 0;
+	virtual void _UNKOWN_062(void) = 0; // :62
 
-	virtual void _UNKOWN_063(void) = 0;
-	virtual void _UNKOWN_064(void) = 0;
+	virtual void _UNKOWN_063(void) = 0; // :63
+	virtual void _UNKOWN_064(void) = 0; // :64
 
-	virtual void _UNUSED_SentenceGroupPick(void)=0;
-	virtual void _UNUSED_SentenceGroupPickSequential(void)=0;
-	virtual void _UNUSED_SentenceIndexFromName(void)=0;
-	virtual void _UNUSED_SentenceNameFromIndex(void)=0;
-	virtual void _UNUSED_SentenceGroupIndexFromName(void)=0;
-	virtual void _UNUSED_SentenceGroupNameFromIndex(void)=0;
-	virtual void _UNUSED_SentenceLength(void)=0;
-	virtual void _UNUSED_ComputeLighting(void)=0;
+	virtual void _UNUSED_SentenceGroupPick(void)=0; // :65
+	virtual void _UNUSED_SentenceGroupPickSequential(void)=0; // :66
+	virtual void _UNUSED_SentenceIndexFromName(void)=0; // :67
+	virtual void _UNUSED_SentenceNameFromIndex(void)=0; // :68
+	virtual void _UNUSED_SentenceGroupIndexFromName(void)=0; // :69
+	virtual void _UNUSED_SentenceGroupNameFromIndex(void)=0; // :70
+	virtual void _UNUSED_SentenceLength(void)=0; // :71
+	virtual void _UNUSED_ComputeLighting(void)=0; // :72
 
-	virtual void _UNKOWN_073(void);
-	virtual void _UNKOWN_074(void);
-	virtual void _UNKOWN_075(void);
+	virtual void _UNKOWN_073(void); // :73
+	virtual void _UNKOWN_074(void); // :74
+	virtual void _UNKOWN_075(void); // :75
 
-	virtual void _UNUSED_SaveAllocMemory(void)=0;
-	virtual void _UNUSED_SaveFreeMemory(void)=0;
-	virtual void _UNUSED_GetNetChannelInfo(void)=0;
-	virtual void _UNUSED_DebugDrawPhysCollide(void)=0;
-	virtual void _UNUSED_CheckPoint(void)=0;
-	virtual void _UNUSED_DrawPortals(void)=0;
+	virtual void _UNUSED_SaveAllocMemory(void)=0; // :76
+	virtual void _UNUSED_SaveFreeMemory(void)=0; // :77
+	virtual void _UNUSED_GetNetChannelInfo(void)=0; // :78
+	virtual void _UNUSED_DebugDrawPhysCollide(void)=0; // :79
+	virtual void _UNUSED_CheckPoint(void)=0; // :80
+	virtual void _UNUSED_DrawPortals(void)=0; // :81
 
-	// 82:
 	// Determine whether the client is playing back or recording a demo
-	virtual bool		IsPlayingDemo( void ) = 0;
-	virtual bool		IsRecordingDemo( void ) = 0;
-	virtual bool		IsPlayingTimeDemo( void ) = 0;
+	virtual bool		IsPlayingDemo( void ) = 0; // :82
+	virtual bool		IsRecordingDemo( void ) = 0; // :83
+	virtual bool		IsPlayingTimeDemo( void ) = 0; // :84
 
 	// new in csgo:
-	virtual int			GetDemoRecordingTick( void ) = 0;
-	virtual int			GetDemoPlaybackTick( void ) = 0;
-	virtual int			GetDemoPlaybackStartTick( void ) = 0;
-	virtual float		GetDemoPlaybackTimeScale( void ) = 0;
-	virtual int			GetDemoPlaybackTotalTicks( void ) = 0;
+	virtual int			GetDemoRecordingTick( void ) = 0; // :85
+	virtual int			GetDemoPlaybackTick( void ) = 0; // :86
+	virtual int			GetDemoPlaybackStartTick( void ) = 0; // :87
+	virtual float		GetDemoPlaybackTimeScale( void ) = 0; // :88
+	virtual int			GetDemoPlaybackTotalTicks( void ) = 0; // :89
 
-	// 90:
 	// Is the game paused?
-	virtual bool		IsPaused( void ) = 0;
-	// Is the game currently taking a screenshot?
+	virtual bool		IsPaused( void ) = 0; // :90
 
-	// 091:
 	// What is the game timescale multiplied with the host_timescale?
-	virtual float GetTimescale( void ) const = 0;
+	virtual float GetTimescale( void ) const = 0; // :91
 
-	// 092:
-	virtual bool		IsTakingScreenshot( void ) = 0;
+	// Is the game currently taking a screenshot?
+	virtual bool		IsTakingScreenshot( void ) = 0; // :92
 	
-	// 093:
 	// Is this a HLTV broadcast ?
-	virtual bool		IsHLTV( void ) = 0;
+	virtual bool		IsHLTV( void ) = 0; // :93
 	
-	// 094:
 	// is this level loaded as just the background to the main menu? (active, but unplayable)
-	virtual bool		IsLevelMainMenuBackground( void ) = 0;
+	virtual bool		IsLevelMainMenuBackground( void ) = 0; // :94
 	
-	// 095:
 	// returns the name of the background level
-	virtual void		GetMainMenuBackgroundName( char *dest, int destlen ) = 0;
+	virtual void		GetMainMenuBackgroundName( char *dest, int destlen ) = 0; // :95
 
-	// 096:
-	virtual void _UNUSED_SetOcclusionParameters(void)=0;
+	virtual void _UNUSED_SetOcclusionParameters(void)=0; // :96
 
-	// 097:
-	virtual void _UNUSED_GetUILanguage(void)=0;
+	virtual void _UNUSED_GetUILanguage(void)=0; // :97
 
 
-	virtual void _UNUSED_IsSkyboxVisibleFromPoint(void)=0;
-	virtual void _UNUSED_GetMapEntitiesString(void)=0;
+	virtual void _UNUSED_IsSkyboxVisibleFromPoint(void)=0; // :98
+	virtual void _UNUSED_GetMapEntitiesString(void)=0; // :99
 
 	// Is the engine in map edit mode ?
-	virtual bool		IsInEditMode( void ) = 0;
+	virtual bool		IsInEditMode( void ) = 0; // :100
 
 	// current screen aspect ratio (eg. 4.0f/3.0f, 16.0f/9.0f)
-	virtual float		GetScreenAspectRatio() = 0;
+	virtual float		GetScreenAspectRatio(int viewportWidth, int viewportHeight) = 0; // :101
 
-	virtual void _UNUSED_REMOVED_SteamRefreshLogin(void)=0;
-	virtual void _UNUSED_REMOVED_SteamProcessCall(void)=0;
+	virtual void _UNUSED_REMOVED_SteamRefreshLogin(void)=0; // :102
+	virtual void _UNUSED_REMOVED_SteamProcessCall(void)=0; // :103
 
 	// allow other modules to know about engine versioning (one use is a proxy for network compatability)
-	virtual unsigned int	GetEngineBuildNumber() = 0; // engines build
-	virtual const char *	GetProductVersionString() = 0; // mods version number (steam.inf)
+	virtual unsigned int	GetEngineBuildNumber() = 0; // engines build // :104
+	virtual const char *	GetProductVersionString() = 0; // mods version number (steam.inf) // :105
 
-	virtual void _UNUSED_GrabPreColorCorrectedFrame(void)=0;
+	virtual void _UNUSED_GrabPreColorCorrectedFrame(void)=0; // :106
 
-	virtual bool			IsHammerRunning( ) const = 0;
+	virtual bool			IsHammerRunning( ) const = 0; // :107
 
-	// 108:
 	// Inserts szCmdString into the command buffer as if it was typed by the client to his/her console.
 	// And then executes the command string immediately (vs ClientCmd() which executes in the next frame)
 	//
 	// Note: this is NOT checked against the FCVAR_CLIENTCMD_CAN_EXECUTE vars.
-	virtual void			ExecuteClientCmd( const char *szCmdString ) = 0;
+	virtual void			ExecuteClientCmd( const char *szCmdString ) = 0; // :108
 
 
-	virtual void _UNKOWN_109(void);
-	virtual void _UNKOWN_110(void);
-	virtual void _UNKOWN_111(void);
-	virtual void _UNKOWN_112(void);
-	virtual void _UNKOWN_113(void);
+	virtual void _UNKOWN_109(void); // :109
+	virtual void _UNKOWN_110(void); // :110
 
-	// 114:
+	virtual int	GetAppID() = 0; // :111
+
+	virtual void _UNKOWN_112(void); // :112
+	virtual void _UNKOWN_113(void); // :113
+
 	// This version does NOT check against FCVAR_CLIENTCMD_CAN_EXECUTE.
-	virtual void ClientCmd_Unrestricted( const char *szCmdString ) = 0;
+	virtual void ClientCmd_Unrestricted( const char *szCmdString ) = 0; // :114
 
 	//
 	// might be in-accurate:

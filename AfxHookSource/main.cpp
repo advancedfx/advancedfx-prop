@@ -72,7 +72,7 @@ void PrintInfo() {
 	Tier0_Msg("| VClient: %s\n", g_Info_VClient);
 	Tier0_Msg("| VEngineClient: %s\n", g_Info_VEngineClient);
 	Tier0_Msg("| VEngineCvar: %s\n", g_Info_VEngineCvar);
-	Tier0_Msg("| GameDirectory: %s\n", g_VEngineClient->GetGameDirectory());
+	Tier0_Msg("| GameDirectory: %s\n", g_VEngineClient ? g_VEngineClient->GetGameDirectory() : "n/a");
 	Tier0_Msg("| WrpConCommands::GetVEngineCvar007() == 0x%08x\n", WrpConCommands::GetVEngineCvar007());
 
 	Tier0_Msg("|" "\n");
@@ -455,10 +455,10 @@ void MySetup(SOURCESDK::CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals
 			g_VEngineClient = new WrpVEngineClient_013((SOURCESDK::IVEngineClient_013 *)iface);
 		}
 		else
-		if(isCsgo && (iface = appSystemFactory(VENGINE_CLIENT_INTERFACE_VERSION_013_CSGO, NULL)))
+		if(isCsgo && (iface = appSystemFactory(VENGINE_CLIENT_INTERFACE_VERSION_014_CSGO, NULL)))
 		{
-			g_Info_VEngineClient = VENGINE_CLIENT_INTERFACE_VERSION_013_CSGO " (CS:GO)";
-			g_VEngineClient = new WrpVEngineClient_013_csgo((SOURCESDK::IVEngineClient_013_csgo *)iface);
+			g_Info_VEngineClient = VENGINE_CLIENT_INTERFACE_VERSION_014_CSGO " (CS:GO)";
+			g_VEngineClient = new WrpVEngineClient_014_csgo((SOURCESDK::IVEngineClient_014_csgo *)iface);
 		}
 		else
 		if(iface = appSystemFactory(VENGINE_CLIENT_INTERFACE_VERSION_013, NULL))

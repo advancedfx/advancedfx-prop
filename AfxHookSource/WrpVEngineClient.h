@@ -57,7 +57,6 @@ public:
 	virtual bool IsLevelMainMenuBackground( void ) abstract = 0;
 	virtual void GetMainMenuBackgroundName( char *dest, int destlen ) abstract = 0;
 	virtual bool IsInEditMode( void ) abstract = 0;
-	virtual float GetScreenAspectRatio() abstract = 0;
 	virtual unsigned int GetEngineBuildNumber() abstract = 0;
 	virtual const char * GetProductVersionString() abstract = 0;
 	virtual bool IsHammerRunning( ) const abstract = 0;
@@ -102,7 +101,6 @@ public:
 	virtual bool IsLevelMainMenuBackground( void );
 	virtual void GetMainMenuBackgroundName( char *dest, int destlen );
 	virtual bool IsInEditMode( void );
-	virtual float GetScreenAspectRatio();
 	virtual unsigned int GetEngineBuildNumber();
 	virtual const char * GetProductVersionString();
 	virtual bool IsHammerRunning( ) const;
@@ -157,7 +155,6 @@ public:
 	virtual bool IsLevelMainMenuBackground( void );
 	virtual void GetMainMenuBackgroundName( char *dest, int destlen );
 	virtual bool IsInEditMode( void );
-	virtual float GetScreenAspectRatio();
 	virtual unsigned int GetEngineBuildNumber();
 	virtual const char * GetProductVersionString();
 	virtual bool IsHammerRunning( ) const;
@@ -170,14 +167,14 @@ private:
 	SOURCESDK::IVEngineClient_013 * m_VEngineClient_013;
 };
 
-// WrpVEngineClient_013 ////////////////////////////////////////////////////////
+// WrpVEngineClient_014_csgo ///////////////////////////////////////////////////
 
-class WrpVEngineClient_013_csgo
+class WrpVEngineClient_014_csgo
 : public WrpVEngineClient
 , public WrpVEngineClientDemoInfoEx
 {
 public:
-	WrpVEngineClient_013_csgo(SOURCESDK::IVEngineClient_013_csgo * iface);
+	WrpVEngineClient_014_csgo(SOURCESDK::IVEngineClient_014_csgo * iface);
 
 	virtual void GetScreenSize( int& width, int& height );
 	virtual void ServerCmd( const char *szCmdString, bool bReliable = true );
@@ -212,7 +209,6 @@ public:
 	virtual bool IsLevelMainMenuBackground( void );
 	virtual void GetMainMenuBackgroundName( char *dest, int destlen );
 	virtual bool IsInEditMode( void );
-	virtual float GetScreenAspectRatio();
 	virtual unsigned int GetEngineBuildNumber();
 	virtual const char * GetProductVersionString();
 	virtual bool IsHammerRunning( ) const;
@@ -222,5 +218,5 @@ public:
 	virtual WrpVEngineClientDemoInfoEx * GetDemoInfoEx(void);
 
 private:
-	SOURCESDK::IVEngineClient_013_csgo * m_VEngineClient_013;
+	SOURCESDK::IVEngineClient_014_csgo * m_VEngineClient;
 };
