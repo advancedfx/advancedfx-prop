@@ -256,3 +256,6 @@ Other contributors:
  
 Niklas 'nkoep' Koep
   https://github.com/nkoep
+
+snaacky
+  https://github.com/snaacky
