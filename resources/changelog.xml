@@ -6,6 +6,21 @@
 
 <release>
 <name>HLAE</name>
+<version>2.14.4</version>
+<time>2016-08-06T18:50Z</time>
+<changes>
+<change type="updated">
+Included AfxHookSource 1.6.4 (2016-08-06T18:50Z).
+</change>
+</changes>
+<comments>
+We are aware that HLAE currently doesn't work on Windows XP anymore lately, we'll try to release another update that addresses that.
+</comments>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.14.3</version>
 <time>2016-08-06T08:08Z</time>
 <changes>

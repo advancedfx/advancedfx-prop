@@ -214,18 +214,34 @@ WrpConVarRef::WrpConVarRef(char const * pName)
 	}
 }
 
+typedef union {
+	DWORD d;
+	float f;
+	int i;
+} xor_helper_t;
+
 float WrpConVarRef::GetFloat(void) const
 {
 	if(m_pConVar007)
-		return m_pConVar007->m_Value.m_fValue;
+	{
+		xor_helper_t h;
+		h.f = m_pConVar007->m_Value.m_fValue;
+		h.d ^= (DWORD)m_pConVar007;
+		return h.f;
+	}
 
 	return 0;
 }
 
 int WrpConVarRef::GetInt(void) const
 {
-	if(m_pConVar007)
-		return m_pConVar007->m_Value.m_nValue;
+	if (m_pConVar007)
+	{
+		xor_helper_t h;
+		h.i = m_pConVar007->m_Value.m_nValue;
+		h.d ^= (DWORD)m_pConVar007;
+		return h.i;
+	}
 
 	return 0;
 }
@@ -238,11 +254,7 @@ void WrpConVarRef::SetValue(float value)
 
 void WrpConVarRef::SetValueFastHack(float value)
 {
-	if(m_pConVar007)
-	{
-		m_pConVar007->m_Value.m_fValue = value;
-		m_pConVar007->m_Value.m_nValue = (int)value;
-	}
+	SetDirectHack(value);
 
 	SetValue(value);
 }
@@ -251,8 +263,15 @@ void WrpConVarRef::SetDirectHack(float value)
 {
 	if(m_pConVar007)
 	{
-		m_pConVar007->m_Value.m_fValue = value;
-		m_pConVar007->m_Value.m_nValue = (int)value;
+		xor_helper_t h;
+
+		h.f = value;
+		h.d ^= (DWORD)m_pConVar007;
+		m_pConVar007->m_Value.m_fValue = h.f;
+
+		h.i = (int)value;
+		h.d ^= (DWORD)m_pConVar007;
+		m_pConVar007->m_Value.m_nValue = h.i;
 	}
 }
 

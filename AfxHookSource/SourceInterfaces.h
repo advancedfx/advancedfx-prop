@@ -1609,7 +1609,7 @@ public:
 	virtual const char			*GetBaseName( void ) const = 0;
 
 	/// <remarks>not implemented</remarks>
-	virtual int					GetSplitScreenPlayerSlot() const = 0;
+	//virtual int					GetSplitScreenPlayerSlot() const = 0;
 
 	/// <remarks>not implemented</remarks>
 	virtual void				AddFlags( int flags ) = 0;
@@ -1619,6 +1619,9 @@ public:
 
 	/// <remarks>not implemented</remarks>
 	virtual	bool				IsCommand( void ) const = 0;
+
+	virtual float			GetFloat(void) const = 0; // new
+	virtual int			GetInt(void) const = 0; // new
 
 	// These just call into the IConCommandBaseAccessor to check flags and set the var (which ends up calling InternalSetValue).
 	virtual void				SetValue( const char *value ) = 0;

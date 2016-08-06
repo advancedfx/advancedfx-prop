@@ -119,6 +119,26 @@ CON_COMMAND(__mirv_test5, "")
 	}
 }
 
+CON_COMMAND(__mirv_test4, "")
+{
+	if (3 <= args->ArgC())
+	{
+		WrpConVarRef ref(args->ArgV(1));
+
+		ref.SetValue(atof(args->ArgV(2)));
+	}
+}
+
+CON_COMMAND(__mirv_test3, "")
+{
+	if (2 <= args->ArgC())
+	{
+		WrpConVarRef ref(args->ArgV(1));
+
+		Tier0_Msg("%s: f:%f, i:%i\n", args->ArgV(1), ref.GetFloat(), ref.GetInt());
+	}
+}
+
 CON_COMMAND(__mirv_test2, "")
 {
 	WrpVEngineClientDemoInfoEx * di = g_VEngineClient->GetDemoInfoEx();

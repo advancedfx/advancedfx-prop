@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>1.6.4</version>
+<time>2016-08-06T18:50Z</time>
+<changes>
+<change type="fixed">
+Fixed mirv_streams being affected by Valve's super duper ConVar value cheat protection (I hope they don't start a stupid cat and mice game here that HLAE will lose and real cheats will keep up with).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>1.6.3</version>
 <time>2016-08-06T08:08Z</time>
 <changes>
