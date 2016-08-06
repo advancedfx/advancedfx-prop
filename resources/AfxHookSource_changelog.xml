@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>1.6.3</version>
+<time>2016-08-06T08:08Z</time>
+<changes>
+<change type="updated">
+Adjusted to 5th Aug 2016 CS:GO update.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>1.6.2</version>
 <time>2016-08-04T08:45Z</time>
 <changes>

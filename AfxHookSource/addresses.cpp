@@ -93,24 +93,43 @@ void Addresses_InitEngineDll(AfxAddr engineDll, bool isCsgo)
 				MemRange result = FindBytes(baseRange, (char const *)&strAddr, sizeof(strAddr));
 				if(!result.IsEmpty())
 				{
-					addr = result.Start +0xB9;
+					DWORD tempAddr = result.Start +0xB9;
 
-					addr = addr +4 + *(DWORD *)addr;
-					// in MIX_PaintChannels now.
+					MemRange result = FindPatternString(MemRange(tempAddr-3, tempAddr-3+3), "51 52 E8");
+					if (!result.IsEmpty())
+					{
+						tempAddr = tempAddr + 4 + *(DWORD *)tempAddr;
+						// in MIX_PaintChannels now.
 
-					addr = addr +0x237;
+						tempAddr = tempAddr + 0x293;
 
-					addr = addr +4 + *(DWORD *)addr;
-					// In SoundMixFunction2 now.
+						MemRange result = FindPatternString(MemRange(tempAddr - 7, tempAddr - 7 + 7), "8D 8D 50 FE FF FF E8");
+						if (!result.IsEmpty())
+						{
+							tempAddr = tempAddr + 4 + *(DWORD *)tempAddr;
+							// In SoundMixFunction2 now.
 
-					addr = addr +0xED;
+							tempAddr = tempAddr + 0xED;
 
-					addr = addr +4 + *(DWORD *)addr;
-					// In SoundMixFunction now.
+							MemRange result = FindPatternString(MemRange(tempAddr - 5, tempAddr - 5 + 5), "33 D2 8B CF E8");
+							if (!result.IsEmpty())
+							{
+								tempAddr = tempAddr + 4 + *(DWORD *)tempAddr;
+								// In SoundMixFunction now.
 
-					addr = addr +0x66;
+								tempAddr = tempAddr + 0x66;
 
-					// After call VEnglineClient013::GetTimeScale now.
+								MemRange result = FindPatternString(MemRange(tempAddr - 2, tempAddr - 2 + 2), "FF D0");
+								if (!result.IsEmpty())
+								{
+									// After call VEnglineClient013::GetTimeScale now.
+
+									addr = tempAddr;
+								}
+							}
+						}
+					}
+					else ErrorBox(MkErrStr(__FILE__, __LINE__));
 				}
 				else ErrorBox(MkErrStr(__FILE__,__LINE__));
 			}
@@ -359,7 +378,7 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 				MemRange result = FindBytes(baseRange, (char const *)&strAddr, sizeof(strAddr));
 				if(!result.IsEmpty())
 				{
-					addr = result.Start -0x375;
+					addr = result.Start -0x377;
 
 					// check for pattern to see if it is the right address:
 					unsigned char pattern[3] = { 0x55, 0x8B, 0xEC };
