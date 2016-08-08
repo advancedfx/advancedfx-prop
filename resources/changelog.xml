@@ -6,6 +6,24 @@
 
 <release>
 <name>HLAE</name>
+<version>2.14.5</version>
+<time>2016-08-08T13:37Z</time>
+<changes>
+<change type="updated">
+Included AfxHookGoldSrc 2.4.12 (2016-08-08T13:37Z).
+</change>
+<change type="updated">
+Included AfxHookSource 1.6.5 (2016-08-08T13:37Z).
+</change>
+</changes>
+<change type="fixed">
+Fixed HLAE not working on Windows XP.
+</change>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.14.4</version>
 <time>2016-08-06T18:50Z</time>
 <changes>

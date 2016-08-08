@@ -224,6 +224,8 @@ float WrpConVarRef::GetFloat(void) const
 {
 	if(m_pConVar007)
 	{
+		//return m_pConVar007->GetFloat();
+
 		xor_helper_t h;
 		h.f = m_pConVar007->m_Value.m_fValue;
 		h.d ^= (DWORD)m_pConVar007;
@@ -237,6 +239,8 @@ int WrpConVarRef::GetInt(void) const
 {
 	if (m_pConVar007)
 	{
+		//return m_pConVar007->GetInt();
+
 		xor_helper_t h;
 		h.i = m_pConVar007->m_Value.m_nValue;
 		h.d ^= (DWORD)m_pConVar007;

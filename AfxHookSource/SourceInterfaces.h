@@ -1651,12 +1651,12 @@ public:
 
 private:
 	// Called by CCvar when the value of a var is changing.
-	virtual void				InternalSetValue(const char *value) = 0;
+	//virtual void				InternalSetValue(const char *value) = 0;
 
 	// For CVARs marked FCVAR_NEVER_AS_STRING
-	virtual void				InternalSetFloatValue( float fNewValue ) = 0;
-	virtual void				InternalSetIntValue( int nValue ) = 0;
-	virtual void				InternalSetColorValue( Color value ) = 0;
+	//virtual void				InternalSetFloatValue( float fNewValue ) = 0;
+	//virtual void				InternalSetIntValue( int nValue ) = 0;
+	//virtual void				InternalSetColorValue( Color value ) = 0;
 
 	virtual bool				ClampValue( float& value ) = 0;
 	virtual void				ChangeStringValue( const char *tempVal, float flOldValue ) = 0;

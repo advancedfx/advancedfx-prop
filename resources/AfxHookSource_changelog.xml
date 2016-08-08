@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>1.6.5</version>
+<time>2016-08-08T13:37Z</time>
+<changes>
+<change type="fixed">
+Fixed HLAE not working on Windows XP.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>1.6.4</version>
 <time>2016-08-06T18:50Z</time>
 <changes>

@@ -3,6 +3,12 @@ Hint:
   here:
   https://cloud.gmx.net/ngcloud/external?locale=de&guestToken=OHS9FADDSUqEBYNOQ8SSig&loginName=programmer99@gmx.de
 
+
+Notice:
+  We recommend using GIT Bash of https://git-scm.com/ to obtain the HLAE source
+  code and also for applying the .patch files to libraries where neccessary.
+
+
 [X] Download and install Microsoft Visual Studio 2015 Community, which you can
     obtain for free from http://www.microsoft.com .
     You need to adjust the installer to install Visual C++ and all sub-options
@@ -41,6 +47,8 @@ Hint:
     folder you like, we'll call it <HLAESRC> from now on (by that I mean
     extract it so that you end up with the files like mdt.sln and directories
     in C:\<HLAESRC>\advancedfx folder).
+    We recommend using the GIT Bash to obtain the source code, so you can
+    easily fetch and merge updates from the advancedfx repository.
 
 [X] Obtain the following files from http://openexr.com/ :
     ilmbase-2.2.0.tar.gz, openexr-2.2.0.tar.gz and extract their contents
@@ -48,6 +56,11 @@ Hint:
 
 [X] Obtain zlib-1.2.8.tar.gz from http://zlib.net and extract it into
     "C:\Libraries"
+
+[X] Open the GIT Bash we recommended above in order to apply the patches
+    for the ilmbase library:
+    cd /c/Libraries/ilmbase-2.2.0/
+    patch CMakeLists.txt /c/<HLAESRC>/advancedfx/patches/ilmbase-2.2.0/CMakeLists.txt.patch
 
 [X] Build ilmbase solutions using cmake:
     Enter the "C:\Libraries\ilmbase-2.2.0" directory and execute
@@ -60,9 +73,10 @@ Hint:
     Then build the Solution.
     After that build the INSTALL project in the solution.
 
-[X] Adjust zlib's Makefile.msc in "C:\Libraries\zlib-1.2.8\win32":
-    Add to WFLAGS: /D "_USING_V110_SDK71_"
-    Add to LDFLAGS: /SUBSYSTEM:CONSOLE",5.01"
+[X] Open the GIT Bash we recommended above in order to apply the patches
+    for the zlib library:
+    cd /c/Libraries/zlib-1.2.8/win32/
+    patch Makefile.msc /c/<HLAESRC>/advancedfx/patches/zlib-1.2.8/win32/Makefile.msc.patch
 
 [X] Build zlib using nmake:
     Open the Developer Command Prompt for VS2015 and enter the
@@ -70,6 +84,11 @@ Hint:
     nmake -f win32/Makefile.msc zlib1.dll
     nmake -f win32/Makefile.msc example_d.exe
     example_d.exe (To see if the zlib1.dll is okay.)
+
+[X] Open the GIT Bash we recommended above in order to apply the patches
+    for the openexr library:
+    cd /c/Libraries/openexr-2.2.0/
+    patch CMakeLists.txt /c/<HLAESRC>/advancedfx/patches/openexr-2.2.0/CMakeLists.txt.patch
 
 [X] Build openexr solutions using cmake:
     Enter the "C:\Libraries\openexr-2.2.0" directory and execute
@@ -118,7 +137,7 @@ Hint:
 [X] AfxHook\recompile.bat, move AfxHook.dat into build\Release\bin\
 
 [X] Open mdt.sln in the HLAE source code ("C:\<HLAESRC>\advancedfx" folder)
-    and Build (Configuration=Release):
+    and Build (Configuration=Release) in this order:
     AfxHookGoldSrc, AfxHookSource, AfxCppCli, AfxGui
 
 [X] Use "C:\<HLAESRC>\advancedfx\copy_resources_release.bat""

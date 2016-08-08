@@ -2500,6 +2500,9 @@ FARPROC WINAPI new_Engine_GetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 	FARPROC nResult;
 	nResult = GetProcAddress(hModule, lpProcName);
 
+	if (!nResult)
+		return nResult;
+
 	if (HIWORD(lpProcName))
 	{
 		if (!lstrcmp(lpProcName, "GetProcAddress"))
@@ -2677,6 +2680,9 @@ FARPROC WINAPI new_shaderapidx9_GetProcAddress(HMODULE hModule, LPCSTR lpProcNam
 {
 	FARPROC nResult;
 	nResult = GetProcAddress(hModule, lpProcName);
+
+	if (!nResult)
+		return nResult; // This can happen on Windows XP for Direct3DCreateEx9
 
 	if (HIWORD(lpProcName))
 	{
