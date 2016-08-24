@@ -93,7 +93,7 @@ public:
 
 	bool Inject(
 		LPCWSTR programPath, LPCWSTR programDirectory, LPWSTR programOptions,
-		LPCWSTR dllDirectory, LPCWSTR dllFileName, LPVOID environment
+		LPCWSTR dllFilePath, LPVOID environment
 	)
 	{
 		PROCESS_INFORMATION processInfo;
@@ -133,7 +133,7 @@ public:
 		//MessageBox(0, _T("Click OK."), _T("Waiting"), MB_OK);
 
 		bool imageInjected = InjectImage(
-			processInfo.dwProcessId, dllDirectory, dllFileName
+			processInfo.dwProcessId, dllFilePath
 		);
 
 		if (!imageInjected)
@@ -186,12 +186,10 @@ private:
 		m_BootImageSize = 0;
 	}
 
-	bool InjectImage(DWORD processId, LPCWSTR dllDirectory, LPCWSTR dllFileName)
+	bool InjectImage(DWORD processId, LPCWSTR dllFilePath)
 	{
-		LPVOID argDllDir = 0;
-		LPVOID argDllName = 0;
-		size_t dllDirectorySz = sizeof( wchar_t ) * (wcslen(dllDirectory) + 1);
-		size_t dllFileNameSz = sizeof(wchar_t) * (wcslen(dllFileName) + 1);
+		LPVOID argDllFilePath = 0;
+		size_t dllFilePathSz = sizeof(wchar_t) * (wcslen(dllFilePath) + 1);
 		HMODULE hKernel32 = GetModuleHandle( _T("kernel32.dll") );
 		HANDLE hProc = OpenProcess(CREATE_THREAD_ACCESS, FALSE, processId);
 		HANDLE hThread = 0;
@@ -209,14 +207,12 @@ private:
 				"GetProcAddress"
 			))
 
-			&& (argDllDir  = VirtualAllocEx(hProc, NULL, dllDirectorySz, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE))
-			&& (argDllName = VirtualAllocEx(hProc, NULL, dllFileNameSz, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE))
-			&& (imageAfxHook = VirtualAllocEx(hProc, NULL, m_BootImageSize, MEM_RESERVE|MEM_COMMIT, PAGE_EXECUTE_READWRITE))
+			&& (imageAfxHook = VirtualAllocEx(hProc, NULL, m_BootImageSize, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE))
+			&& (argDllFilePath = VirtualAllocEx(hProc, NULL, dllFilePathSz, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE))
 
-			&& UpdateBootImage(pGetModuleHandleW, pGetProcAddress, argDllDir, argDllName)
+			&& UpdateBootImage(pGetModuleHandleW, pGetProcAddress, argDllFilePath)
 
-			&& WriteProcessMemory(hProc, argDllDir, dllDirectory, dllDirectorySz, NULL)
-			&& WriteProcessMemory(hProc, argDllName, dllFileName, dllFileNameSz, NULL)
+			&& WriteProcessMemory(hProc, argDllFilePath, dllFilePath, dllFilePathSz, NULL)
 			&& WriteProcessMemory(hProc, imageAfxHook, m_BootImage, m_BootImageSize, NULL)
 
 			&& (hThread = CreateRemoteThread(
@@ -273,25 +269,23 @@ private:
 
 		if(hThread) CloseHandle(hThread);
 		if(imageAfxHook) VirtualFreeEx(hProc, imageAfxHook, 0, MEM_RELEASE);
-		if(argDllDir) VirtualFreeEx(hProc, argDllName, 0, MEM_RELEASE);
-		if(argDllName) VirtualFreeEx(hProc, argDllDir, 0, MEM_RELEASE);
+		if(argDllFilePath) VirtualFreeEx(hProc, argDllFilePath, 0, MEM_RELEASE);
 
 		if(hProc) CloseHandle(hProc);
 
 		return bOk;
 	}
 
-	bool UpdateBootImage(LPVOID getModuleHandleW, LPVOID getProcAddress, LPVOID dllDir, LPVOID dllName)
+	bool UpdateBootImage(LPVOID getModuleHandleW, LPVOID getProcAddress, LPVOID dllFilePath)
 	{
-		if(!(m_BootImage && getModuleHandleW && getProcAddress && dllDir && dllName))
+		if(!(m_BootImage && getModuleHandleW && getProcAddress && dllFilePath))
 			return false;
 
 		unsigned __int32 * imageArgs = (unsigned __int32 *)(m_BootImage +32);
 
 		imageArgs[0] = (unsigned __int32)getModuleHandleW;
 		imageArgs[1] = (unsigned __int32)getProcAddress;
-		imageArgs[2] = (unsigned __int32)dllDir;
-		imageArgs[3] = (unsigned __int32)dllName;
+		imageArgs[2] = (unsigned __int32)dllFilePath;
 
 		return true;
 	}
@@ -306,7 +300,6 @@ using namespace System::Runtime::InteropServices;
 
 bool CustomLoader(System::String ^ strHookPath, System::String ^ strProgramPath, System::String ^ strCmdLine, System::String ^ strEnvironment)
 {
-	System::String ^ strDllDirectory = System::IO::Path::GetDirectoryName( strHookPath ); // maybe we should check that strDllDirectory <= MAXPATH-2 here?
 	System::String ^ strProgramDirectory = System::IO::Path::GetDirectoryName( strProgramPath );
 	System::String ^ strImageFileName = System::AppDomain::CurrentDomain->BaseDirectory + "\\AfxHook.dat";
 
@@ -315,16 +308,14 @@ bool CustomLoader(System::String ^ strHookPath, System::String ^ strProgramPath,
 	strOptsB->Append( "\" " );
 	strOptsB->Append( strCmdLine );
 
-	LPCWSTR dllDirectory = 0;
-	LPCWSTR dllFileName = 0;
+	LPCWSTR dllFilePath = 0;
 	LPCWSTR programDirectory = 0;
 	LPWSTR programOptions = 0;
 	LPCWSTR programPath = 0;
 	LPCWSTR imageFileName = 0;
 	LPVOID environment = 0;
 
-	dllDirectory = (LPCWSTR)(int)Marshal::StringToHGlobalUni( strDllDirectory );
-	dllFileName = (LPCWSTR)(int)Marshal::StringToHGlobalUni( strHookPath );
+	dllFilePath = (LPCWSTR)(int)Marshal::StringToHGlobalUni( strHookPath );
 	programDirectory = (LPCWSTR)(int)Marshal::StringToHGlobalUni( strProgramDirectory );
 	programOptions = (LPWSTR)(int)Marshal::StringToHGlobalUni( strOptsB->ToString() );
 	programPath = (LPCWSTR)(int)Marshal::StringToHGlobalUni( strProgramPath );
@@ -335,7 +326,7 @@ bool CustomLoader(System::String ^ strHookPath, System::String ^ strProgramPath,
 
 	bool bOk = afxHook.Inject(
 		programPath, programDirectory, programOptions,
-		dllDirectory, dllFileName, environment
+		dllFilePath, environment
 	);
 
 	Marshal::FreeHGlobal( (System::IntPtr)(int)environment );
@@ -343,8 +334,7 @@ bool CustomLoader(System::String ^ strHookPath, System::String ^ strProgramPath,
 	Marshal::FreeHGlobal( (System::IntPtr)(int)programPath );
 	Marshal::FreeHGlobal( (System::IntPtr)(int)programOptions );
 	Marshal::FreeHGlobal( (System::IntPtr)(int)programDirectory );
-	Marshal::FreeHGlobal( (System::IntPtr)(int)dllFileName );
-	Marshal::FreeHGlobal( (System::IntPtr)(int)dllDirectory );
+	Marshal::FreeHGlobal( (System::IntPtr)(int)dllFilePath);
 
 	return bOk;
 }
