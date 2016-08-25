@@ -6,6 +6,34 @@
 
 <release>
 <name>HLAE</name>
+<version>2.14.7</version>
+<time>2016-08-25T15:50Z</time>
+<changes>
+<change type="fixed">
+Reverted to old injection method, since otherwise there will be even more trouble with the UCRT again (on systems where it is not present, basically several UCRT DLLs ignore the alternate DLL search order).
+Combined it partially with new method, so we hopefully get the best result possible.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
+<version>2.14.6</version>
+<time>2016-08-24T17:30Z</time>
+<changes>
+<change type="fixed">
+Fixed HLAE injection method causing Windows to load potentially incompatible DLLs from the system folders
+(i.e. vcruntime140.dll) instead of those supplied in the HLAE folder.
+Please note: We cannot do much about ucrtbase.dll and similar DLLs being loaded from the Windows folder if present there at the moment:
+https://connect.microsoft.com/VisualStudio/feedback/details/2725185/ucrt-function-forwarders-ignore-setdlldirectory-and-make-it-unsuitable-for-side-by-side-deployment
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.14.5</version>
 <time>2016-08-08T13:37Z</time>
 <changes>
@@ -15,10 +43,10 @@ Included AfxHookGoldSrc 2.4.12 (2016-08-08T13:37Z).
 <change type="updated">
 Included AfxHookSource 1.6.5 (2016-08-08T13:37Z).
 </change>
-</changes>
 <change type="fixed">
 Fixed HLAE not working on Windows XP.
 </change>
+</changes>
 </release>
 
 

@@ -1,7 +1,13 @@
 ; This hook is a bit complicated, because we cannot simply relay on
 ; SetDllDirectoryW to work, since this won't work well with UCRT DLL function
-; forwarders. Instead we change the Current Working Directory and
-; change it back afterwards.
+; forwarders:
+; Basically parts of the UCRT seem to completely ignore the alternate DLL
+; search order.
+; Thus:
+; - Instead we change the Current Working Directory and
+;   change it back afterwards.
+; - Also we use LoadLibraryExW with LOAD_WITH_ALTERED_SEARCH_PATH,
+;   to get the best priority for at least the other DLLs.
 
 CPU 586 ; PENTIUM like
 BITS 32 ; 32 BIT mode
@@ -14,14 +20,14 @@ labelArgs:
 	argGetModuleHandleW: dd 0
 	argGetProcAddress: dd 0
 	argDllDirectory: dd 0 ; length must not exceed MAX_PATH-2 (or MAX_PATH-1 if last char is '\')
-	argDllName: dd 0
+	argDllFilePath: dd 0
 	datKernel32Dll: dw __utf16__('kernel32.dll'), 0
 	datGetProcessHeap: db 'GetProcessHeap', 0
 	datHeapAlloc: db 'HeapAlloc', 0
 	datHeapFree: db 'HeapFree', 0
 	datGetCurrentDirectoryW: db 'GetCurrentDirectoryW', 0
 	datSetCurrentDirectoryW: db 'SetCurrentDirectoryW', 0
-	datLoadLibraryW: db 'LoadLibraryW', 0
+	datLoadLibraryExW: db 'LoadLibraryExW', 0
 
 labelOfs:
 	mov ebx, [esp]
@@ -45,7 +51,7 @@ labelGotOfs:
 	; -0x10 : pHeapFree
 	; -0x14 : pGetCurrentDirectoryW
 	; -0x18 : pSetCurrentDirectoryW
-	; -0x1c : pLoadLibraryW
+	; -0x1c : pLoadLibraryExW
 	; -0x20 : hHeap
 	; -0x24 : nBufferLength
 	; -0x28 : pMemory
@@ -150,9 +156,9 @@ labelCont5:
 labelCont6:
 	mov [ebp -0x18], eax
 	
-	; get pLoadLibraryW:
+	; get pLoadLibraryExW:
 	mov eax, ebx
-	add eax, datLoadLibraryW -labelArgs
+	add eax, datLoadLibraryExW -labelArgs
 	push eax
 	mov eax, [ebp -0x4]
 	push eax
@@ -241,8 +247,10 @@ labelCont11:
 	ret 4
 labelCont12:
 	
-	; LoadLibraryW:	
-	mov eax, [ebx +argDllName -labelArgs]
+	; LoadLibraryExW:
+	push 0x00000008 ; LOAD_WITH_ALTERED_SEARCH_PATH
+	push 0
+	mov eax, [ebx +argDllFilePath -labelArgs]
 	push eax
 	call [ebp -0x1c]
 	cmp eax, 0
