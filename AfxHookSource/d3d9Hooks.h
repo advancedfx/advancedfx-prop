@@ -16,7 +16,16 @@ HRESULT WINAPI new_Direct3DCreate9Ex(UINT SDKVersion, IDirect3D9Ex** ppD3DDevice
 bool AfxD3D9_Check_Supports_R32F_With_Blending(void);
 
 /// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
-void AfxD3D9SetModulationColorFix(float const color[4]);
+void AfxD3D9OverrideBegin_ModulationColor(float const color[3]);
+
+/// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
+void AfxD3D9OverrideEnd_ModulationColor(void);
+
+/// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
+void AfxD3D9OverrideBegin_ModulationBlend(float value);
+
+/// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
+void AfxD3D9OverrideEnd_ModulationBlend(void);
 
 /// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
 void AfxD3D9OverrideBegin_D3DRS_SRCBLEND(DWORD value);
@@ -49,13 +58,13 @@ void AfxD3D9OverrideBegin_D3DRS_ALPHABLENDENABLE(DWORD value);
 void AfxD3D9OverrideEnd_D3DRS_ALPHABLENDENABLE(void);
 
 /// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
-void AfxD3D9_OverrideBegin_ps_c0(float values[4]);
+void AfxD3D9_OverrideBegin_ps_c0(float const values[4]);
 
 /// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
 void AfxD3D9_OverrideEnd_ps_c0(void);
 
 /// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
-void AfxD3D9_OverrideBegin_ps_c5(float values[4]);
+void AfxD3D9_OverrideBegin_ps_c5(float const values[4]);
 
 /// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
 void AfxD3D9_OverrideEnd_ps_c5(void);
@@ -73,7 +82,7 @@ void AfxD3D9_OverrideBegin_ps_c29_w(float value);
 void AfxD3D9_OverrideEnd_ps_c29_w(void);
 
 /// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
-void AfxD3D9_OverrideBegin_ps_c31(float values[4]);
+void AfxD3D9_OverrideBegin_ps_c31(float const values[4]);
 
 /// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
 void AfxD3D9_OverrideEnd_ps_c31(void);

@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-07-06 dominik.matrixstorm.com
+// 2016-09-23 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-09-30 dominik.matrixstorm.com
@@ -3137,6 +3137,12 @@ public:
 
 // IMatRenderContext_csgo //////////////////////////////////////////////////////
 
+namespace CSGO {
+
+class ICallQueue;
+
+} // namespace CSGO {
+
 struct MeshInstanceData_t_csgo
 {
 	int						m_nIndexOffset;
@@ -3448,7 +3454,10 @@ public:
 	virtual void _UNKNOWN_147(void) = 0;
 	virtual void _UNKNOWN_148(void) = 0;
 	virtual void _UNKNOWN_149(void) = 0;
-	virtual void _UNKNOWN_150(void) = 0;
+	
+	// Raw access to the call queue, which can be NULL if not in a queued mode
+	virtual SOURCESDK::CSGO::ICallQueue *GetCallQueue() = 0; //:150
+
 	virtual void _UNKNOWN_151(void) = 0;
 	virtual void _UNKNOWN_152(void) = 0;
 	virtual void _UNKNOWN_153(void) = 0;
@@ -3596,11 +3605,11 @@ enum MaterialRenderTargetDepth_t_csgo
 class IMaterialSystem_csgo abstract : public IAppSystem_csgo
 {
 public:
-	virtual void _UNKNOWN_009(void) = 0;
-	virtual void _UNKNOWN_010(void) = 0;
-	virtual void _UNKNOWN_011(void) = 0;
-	virtual void _UNKNOWN_012(void) = 0;
-	virtual void _UNKNOWN_013(void) = 0;
+	virtual void _UNKNOWN_009(void) = 0; // Init
+	virtual void _UNKNOWN_010(void) = 0; // SetShaderAPI
+	virtual void _UNKNOWN_011(void) = 0; // SetAdapter
+	virtual void _UNKNOWN_012(void) = 0; // ModInit
+	virtual void _UNKNOWN_013(void) = 0; // ModShutdown
 	virtual void _UNKNOWN_014(void) = 0;
 	virtual void _UNKNOWN_015(void) = 0;
 	virtual void _UNKNOWN_016(void) = 0;
@@ -3729,6 +3738,7 @@ public:
 	virtual void _UNKNOWN_114(void) = 0;
 	
 	// 115:
+	/// <remarks>GetRenderContext calls AddRef on returned!</remarks>
 	virtual IMatRenderContext_csgo *	GetRenderContext() = 0;
 
 	virtual void _UNKNOWN_116(void) = 0;
@@ -3738,6 +3748,7 @@ public:
 	virtual void _UNKNOWN_120(void) = 0;
 
 	// 121:
+	/// <remarks>SetRenderContext calls AddRef on param!</remarks>
 	virtual IMatRenderContext_csgo *SetRenderContext( IMatRenderContext_csgo * ) = 0;
 
 	// ...
@@ -6259,7 +6270,48 @@ public:
 #undef CBaseHandle
 #undef IClientRenderable
 
+//-----------------------------------------------------------------------------
+// Purpose:	Do a an inline AddRef then return the pointer, useful when
+//			returning an object from a function
+//-----------------------------------------------------------------------------
 
+#define SOURCESDK_CSGO_RetAddRef( p ) ( (p)->AddRef(), (p) )
+#define SOURCESDK_CSGO_InlineAddRef( p ) ( (p)->AddRef(), (p) )
+
+class CFunctor abstract : public IRefCounted_csgo
+{
+public:
+	CFunctor()
+	{
+//#ifdef DEBUG
+		m_nUserID = 0;
+//#endif
+	}
+
+	virtual ~CFunctor() // new in CS:GO // :002
+	{
+		
+	}
+
+	virtual void operator()() = 0; // :003
+
+	unsigned m_nUserID; // For debugging
+};
+
+class ICallQueue
+{
+public:
+	void QueueFunctor(CFunctor *pFunctor)
+	{
+		QueueFunctorInternal(SOURCESDK_CSGO_RetAddRef(pFunctor));
+	}
+
+	// FUCK THESE: //FUNC_GENERATE_QUEUE_METHODS();
+
+// private: // this won't do
+public:
+	virtual void QueueFunctorInternal(CFunctor *pFunctor) = 0;
+};
 
 } // namespace CSGO {
 } // namespace SOURCESDK {

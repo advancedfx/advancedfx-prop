@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-04-15 dominik.matrixstorm.com
+// 2016-08-30 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-09-30 by dominik.matrixstorm.com
@@ -125,7 +125,7 @@ CON_COMMAND(__mirv_test4, "")
 	{
 		WrpConVarRef ref(args->ArgV(1));
 
-		ref.SetValue(atof(args->ArgV(2)));
+		ref.SetValue((float)atof(args->ArgV(2)));
 	}
 }
 
@@ -328,23 +328,6 @@ CON_COMMAND(mirv_streams, "Access to streams system.")
 					return;
 				}
 				else
-				if(!_stricmp(cmd2, "developer"))
-				{
-					if(4 <= argc)
-					{
-						char const * cmd3 = args->ArgV(3);
-
-						g_AfxStreams.Console_AddDeveloperStream(cmd3);
-
-						return;
-					}
-
-					Tier0_Msg(
-						"mirv_streams add developer <name> - Add a developer stream with name <name>.\n"
-					);
-					return;
-				}				
-				else
 				if(!_stricmp(cmd2, "alphaMatteEntity"))
 				{
 					if(4 <= argc)
@@ -422,7 +405,6 @@ CON_COMMAND(mirv_streams, "Access to streams system.")
 				"mirv_streams add depthWorld [...] - Add a depth world stream. WILL NOT WORK PROPERLY ATM!\n"
 				"mirv_streams add matteEntity [...] - Add a matte entity stream.\n"
 				"mirv_streams add depthEntity [...] - Add a depth entity stream. WILL NOT WORK PROPERLY ATM!\n"
-				"mirv_streams add developer [...] - Add a developer stream.\n"
 				"mirv_streams add alphaMatteEntity [...] - Add a entity stream with alpha matte combined into a single stream.\n"
 				"mirv_streams add alphaWorld [...] - Add a alpha world stream.\n"
 				"mirv_streams add alphaMatte [...] - Add a alpha matte stream (alpha channel of alphaMatteEntity).\n"
@@ -437,10 +419,9 @@ CON_COMMAND(mirv_streams, "Access to streams system.")
 			{
 				char const * cmd2 = args->ArgV(2);
 
-				std::string prefix("mirv_streams edit ");
-				prefix.append(cmd2);
-				
-				g_AfxStreams.Console_EditStream(cmd2, args, 3, prefix.c_str());
+				CSubWrpCommandArgs subArgs(args, 3);
+
+				g_AfxStreams.Console_EditStream(cmd2, &subArgs);
 				return;
 			}
 
