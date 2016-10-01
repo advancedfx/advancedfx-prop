@@ -827,7 +827,7 @@ private:
 			g_CallQueueMap_csgo[callQueue] = afxCallQueue; // track new mesh
 		}
 
-		g_MeshMap_csgo_Mutex.unlock();
+		g_CallQueueMap_csgo_Mutex.unlock();
 
 		afxCallQueue->AfxMatRenderContext_set(this); // tell it about us :-)
 
@@ -907,7 +907,7 @@ SOURCESDK::CSGO::ICallQueue * _stdcall MatRenderContextHook_GetCallQueue(
 	DWORD *this_ptr)
 {
 	CMatRenderContextHook * ctxh = CMatRenderContextHook::GetMatRenderContextHook((SOURCESDK::IMatRenderContext_csgo *)this_ptr);
-	return ctxh->GetCallQueue();
+	return ctxh->Hook_GetCallQueue();
 }
 
 SOURCESDK::IMeshEx_csgo* _stdcall MatRenderContextHook_GetDynamicMeshEx(

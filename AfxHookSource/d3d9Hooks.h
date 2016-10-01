@@ -15,6 +15,19 @@ HRESULT WINAPI new_Direct3DCreate9Ex(UINT SDKVersion, IDirect3D9Ex** ppD3DDevice
 /// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
 bool AfxD3D9_Check_Supports_R32F_With_Blending(void);
 
+
+//
+// Override state management:
+//
+// Initially there is already a current state pushed, which should not be popped.
+// Make sure to maintain push and pop correctly.
+
+/// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
+void AfxD3D9PushOverrideState(void);
+
+/// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
+void AfxD3D9PopOverrideState(void);
+
 /// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
 void AfxD3D9OverrideBegin_ModulationColor(float const color[3]);
 
@@ -98,6 +111,9 @@ void AfxD3D9_OverrideBegin_SetPixelShader(IDirect3DPixelShader9 * overrideShader
 
 /// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
 void AfxD3D9_OverrideEnd_SetPixelShader();
+
+//
+// //
 
 /// <remarks>IDirect3D9Device only (i.e. CS:GO but not CSS).</remarks>
 void AfxD3D9_Block_Present(bool block);

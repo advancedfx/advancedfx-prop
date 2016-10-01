@@ -177,7 +177,6 @@ void DebugDepthFixDraw(IMesh_csgo * pMesh)
 }
 */
 
-/*
 void QueueOrExecute(IAfxMatRenderContextOrg * ctx, SOURCESDK::CSGO::CFunctor * functor)
 {
 	SOURCESDK::CSGO::ICallQueue * queue = ctx->GetCallQueue();
@@ -193,7 +192,6 @@ void QueueOrExecute(IAfxMatRenderContextOrg * ctx, SOURCESDK::CSGO::CFunctor * f
 		queue->QueueFunctor(functor);
 	}
 }
-*/
 
 class CAfxMyFunctor abstract
 : public SOURCESDK::CSGO::CFunctor
@@ -235,6 +233,26 @@ public:
 private:
 	std::mutex m_RefMutex;
 	int m_RefCount;
+};
+
+class AfxD3D9PushOverrideState_Functor
+	: public CAfxMyFunctor
+{
+public:
+	virtual void operator()()
+	{
+		AfxD3D9PushOverrideState();
+	}
+};
+
+class AfxD3D9PopOverrideState_Functor
+	: public CAfxMyFunctor
+{
+public:
+	virtual void operator()()
+	{
+		AfxD3D9PopOverrideState();
+	}
 };
 
 class AfxD3D9OverrideEnd_ModulationColor_Functor
@@ -445,14 +463,6 @@ CAfxRenderViewStream::CAfxRenderViewStream()
 }
 
 CAfxRenderViewStream::~CAfxRenderViewStream()
-{
-}
-
-void CAfxRenderViewStream::OnRenderBegin()
-{
-}
-
-void CAfxRenderViewStream::OnRenderEnd()
 {
 }
 
@@ -869,6 +879,8 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::RetrieveAction(SOURCESDK::IMateria
 
 	CAfxMaterialKey key(material);
 
+	m_MapMutex.lock();
+
 	std::map<CAfxMaterialKey, CAction *>::iterator it = m_Map.find(key);
 
 	if(it != m_Map.end())
@@ -884,6 +896,8 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::RetrieveAction(SOURCESDK::IMateria
 
 		if(m_DebugPrint) Tier0_Msg("%s\n", action ? action->Key_get().m_Name.c_str() : "(null)");
 	}
+
+	m_MapMutex.unlock();
 
 	return action;;
 }
@@ -1265,13 +1279,17 @@ void CAfxBaseFxStream::DebugPrint_set(bool value)
 
 void CAfxBaseFxStream::InvalidateMap(void)
 {
+	m_MapMutex.lock();
+
 	if(m_DebugPrint) Tier0_Msg("Stream: Invalidating material cache.\n");
-	
+
 	for(std::map<CAfxMaterialKey, CAction *>::iterator it = m_Map.begin(); it != m_Map.end(); ++it)
 	{
 		it->second->Release();
 	}
 	m_Map.clear();
+
+	m_MapMutex.unlock();
 }
 
 /*
@@ -1354,14 +1372,14 @@ void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::RenderBegin(IAfxMatRenderCon
 
 	m_Ctx->Hook_set(this);
 
-	this->LeafExecute(AfxD3D9PushRenderState_Functor);
+	QueueOrExecute(m_Ctx->GetOrg(), new AfxD3D9PushOverrideState_Functor());
 }
 
 void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::RenderEnd(void)
 {
 	BindAction(0);
 
-	this->LeafExecute(AfxD3D9PopRenderState_Functor);
+	QueueOrExecute(m_Ctx->GetOrg(), new AfxD3D9PopOverrideState_Functor());
 	
 	m_Ctx->Hook_set(0);
 
@@ -1434,7 +1452,7 @@ void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::DrawInstances(int nInstanceC
 		m_Ctx->GetOrg()->DrawInstances(nInstanceCount, pInstance);
 }
 
-void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::Draw(IAfxMesh * am, int firstIndex = -1, int numIndices = 0)
+void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::Draw(IAfxMesh * am, int firstIndex, int numIndices)
 {
 	if (m_CurrentAction)
 		m_CurrentAction->Draw(this, am, firstIndex, numIndices);
@@ -1450,7 +1468,7 @@ void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::Draw_2(IAfxMesh * am, SOURCE
 		am->GetParent()->Draw(pLists, nLists);
 }
 
-void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::DrawModulated(IAfxMesh * am, const SOURCESDK::Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0)
+void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::DrawModulated(IAfxMesh * am, const SOURCESDK::Vector4D_csgo &vecDiffuseModulation, int firstIndex, int numIndices)
 {
 	if (m_CurrentAction)
 		m_CurrentAction->DrawModulated(this, am, vecDiffuseModulation, firstIndex, numIndices);
@@ -1845,8 +1863,6 @@ CAfxBaseFxStream::CActionDebugDepth::CActionDebugDepth(CAction * fallBackAction)
 : CAction()
 , m_FallBackAction(fallBackAction)
 , m_DebugDepthMaterial(0)
-, m_MatDebugDepthVal(0)
-, m_MatDebugDepthValMax(0)
 , m_Initalized(false)
 {
 	if(fallBackAction) fallBackAction->AddRef();
@@ -1855,8 +1871,6 @@ CAfxBaseFxStream::CActionDebugDepth::CActionDebugDepth(CAction * fallBackAction)
 CAfxBaseFxStream::CActionDebugDepth::~CActionDebugDepth()
 {
 	delete m_DebugDepthMaterial;
-	delete m_MatDebugDepthVal;
-	delete m_MatDebugDepthValMax;
 	if(m_FallBackAction) m_FallBackAction->Release();
 }
 
@@ -1907,33 +1921,32 @@ void CAfxBaseFxStream::CActionDebugDepth::AfxUnbind(CAfxBaseFxStreamContextHook 
 
 SOURCESDK::IMaterial_csgo * CAfxBaseFxStream::CActionDebugDepth::MaterialHook(CAfxBaseFxStreamContextHook * ch, SOURCESDK::IMaterial_csgo * material)
 {
-	if (!m_Initalized)
-	{
-		m_InitalizedMutex.lock();
-
-		if (!m_Initalized)
-		{
-			if (!m_MatDebugDepthVal) m_MatDebugDepthVal = new WrpConVarRef("mat_debugdepthval");
-			if (!m_MatDebugDepthValMax) m_MatDebugDepthValMax = new WrpConVarRef("mat_debugdepthvalmax");
-
-			if (!m_DebugDepthMaterial) m_DebugDepthMaterial = new CAfxMaterial(
-				g_AfxStreams.GetFreeMaster(),
-				g_AfxStreams.GetMaterialSystem()->FindMaterial("afx/depth", 0));
-
-			m_Initalized = true;
-		}
-
-		m_InitalizedMutex.unlock();
-	}
+	if (!m_DebugDepthMaterial) m_DebugDepthMaterial = new CAfxMaterial(
+		g_AfxStreams.GetFreeMaster(),
+		g_AfxStreams.GetMaterialSystem()->FindMaterial("afx/depth", 0));
 
 	float scale = ch->DrawingSkyBoxView_get() ? csgo_CSkyBoxView_GetScale() : 1.0f;
-	float flDepthFactor = scale * stream->m_DepthVal;
-	float flDepthFactorMax = scale * stream->m_DepthValMax;
+	float flDepthFactor = scale * ch->GetStream()->m_DepthVal;
+	float flDepthFactorMax = scale * ch->GetStream()->m_DepthValMax;
 
-	m_MatDebugDepthVal->SetValueFastHack(flDepthFactor);
-	m_MatDebugDepthValMax->SetValueFastHack(flDepthFactorMax);
+	QueueOrExecute(ch->GetCtx()->GetOrg(), new CDepthValFunctor(flDepthFactor, flDepthFactorMax));
 
 	return m_DebugDepthMaterial->GetMaterial();
+}
+
+CAfxBaseFxStream::CActionDebugDepth::CStatic CAfxBaseFxStream::CActionDebugDepth::m_Static;
+
+void CAfxBaseFxStream::CActionDebugDepth::CStatic::SetDepthVal(float min, float max)
+{
+	m_MatDebugDepthValsMutex.lock();
+
+	if (!m_MatDebugDepthVal) m_MatDebugDepthVal = new WrpConVarRef("mat_debugdepthval");
+	if (!m_MatDebugDepthValMax) m_MatDebugDepthValMax = new WrpConVarRef("mat_debugdepthvalmax");
+
+	m_MatDebugDepthVal->SetValueFastHack(min);
+	m_MatDebugDepthValMax->SetValueFastHack(max);
+
+	m_MatDebugDepthValsMutex.unlock();
 }
 
 // CAfxBaseFxStream::CActionDebugDump //////////////////////////////////////////
@@ -1987,32 +2000,34 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::CActionReplace::ResolveAction(SOUR
 
 void CAfxBaseFxStream::CActionReplace::AfxUnbind(CAfxBaseFxStreamContextHook * ch)
 {
-	IAfxMatRenderContextOrg * ctxp = ch->GetCtx->GetOrg();
+	IAfxMatRenderContext * ctx = ch->GetCtx();
+	IAfxContextHook * ctxh = ctx->Hook_get();
 
 	if (m_OverrideColor)
-		QueueOrExecute(ctxp, new AfxD3D9OverrideEnd_ModulationColor_Functor());
+		QueueOrExecute(ch->GetCtx()->GetOrg(), new AfxD3D9OverrideEnd_ModulationColor_Functor());
 
 	if (m_OverrideBlend)
-		QueueOrExecute(ctxp, new AfxD3D9OverrideEnd_ModulationBlend_Functor());
+		QueueOrExecute(ch->GetCtx()->GetOrg(), new AfxD3D9OverrideEnd_ModulationBlend_Functor());
 
 	if (m_OverrideDepthWrite)
-		QueueOrExecute(ctxp, new AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE_Functor());
+		QueueOrExecute(ch->GetCtx()->GetOrg(), new AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE_Functor());
 }
 
 SOURCESDK::IMaterial_csgo * CAfxBaseFxStream::CActionReplace::MaterialHook(CAfxBaseFxStreamContextHook * ch, SOURCESDK::IMaterial_csgo * material)
 {
 	EnsureMaterial();
 
-	IAfxMatRenderContextOrg * ctxp = GetCurrentContext()->GetOrg();
+	IAfxMatRenderContext * ctx = ch->GetCtx();
+	IAfxContextHook * ctxh = ctx->Hook_get();
 
 	if (m_OverrideBlend)
-		QueueOrExecute(ctxp, new	AfxD3D9OverrideBegin_ModulationBlend_Functor(m_Blend));
+		QueueOrExecute(ch->GetCtx()->GetOrg(), new AfxD3D9OverrideBegin_ModulationBlend_Functor(m_Blend));
 
 	if (m_OverrideColor)
-		QueueOrExecute(ctxp, new AfxD3D9OverrideBegin_ModulationColor_Functor(m_Color));
+		QueueOrExecute(ch->GetCtx()->GetOrg(), new AfxD3D9OverrideBegin_ModulationColor_Functor(m_Color));
 
 	if(m_OverrideDepthWrite)
-		QueueOrExecute(ctxp, new AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE_Functor(m_DepthWrite ? TRUE : FALSE));
+		QueueOrExecute(ch->GetCtx()->GetOrg(), new AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE_Functor(m_DepthWrite ? TRUE : FALSE));
 
 	return m_Material->GetMaterial();
 }
@@ -2640,22 +2655,24 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::CActionStandardResolve::ResolveAct
 
 void CAfxBaseFxStream::CActionNoDraw::AfxUnbind(CAfxBaseFxStreamContextHook * ch)
 {
-	IAfxMatRenderContextOrg * ctxp = ch->GetCtx()->GetOrg();
+	IAfxMatRenderContext * ctx = ch->GetCtx();
+	IAfxContextHook * ctxh = ctx->Hook_get();
 
-	QueueOrExecute(ctxp, new AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE_Functor());
-	QueueOrExecute(ctxp, new AfxD3D9OverrideEnd_D3DRS_DESTBLEND_Functor());
-	QueueOrExecute(ctxp, new AfxD3D9OverrideEnd_D3DRS_SRCBLEND_Functor());
-	QueueOrExecute(ctxp, new AfxD3D9OverrideEnd_D3DRS_ALPHABLENDENABLE_Functor());
+	QueueOrExecute(ch->GetCtx()->GetOrg(), new AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE_Functor());
+	QueueOrExecute(ch->GetCtx()->GetOrg(), new AfxD3D9OverrideEnd_D3DRS_DESTBLEND_Functor());
+	QueueOrExecute(ch->GetCtx()->GetOrg(), new AfxD3D9OverrideEnd_D3DRS_SRCBLEND_Functor());
+	QueueOrExecute(ch->GetCtx()->GetOrg(), new AfxD3D9OverrideEnd_D3DRS_ALPHABLENDENABLE_Functor());
 }
 
 SOURCESDK::IMaterial_csgo * CAfxBaseFxStream::CActionNoDraw::MaterialHook(CAfxBaseFxStreamContextHook * ch, SOURCESDK::IMaterial_csgo * material)
 {
-	IAfxMatRenderContextOrg * ctxp = ch->GetCtx()->GetOrg();
+	IAfxMatRenderContext * ctx = ch->GetCtx();
+	IAfxContextHook * ctxh = ctx->Hook_get();
 
-	QueueOrExecute(ctxp, new AfxD3D9OverrideBegin_D3DRS_ALPHABLENDENABLE_Functor(TRUE));
-	QueueOrExecute(ctxp, new AfxD3D9OverrideBegin_D3DRS_SRCBLEND_Functor(D3DBLEND_ZERO));
-	QueueOrExecute(ctxp, new AfxD3D9OverrideBegin_D3DRS_DESTBLEND_Functor(D3DBLEND_ONE));
-	QueueOrExecute(ctxp, new AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE_Functor(FALSE));
+	QueueOrExecute(ch->GetCtx()->GetOrg(), new AfxD3D9OverrideBegin_D3DRS_ALPHABLENDENABLE_Functor(TRUE));
+	QueueOrExecute(ch->GetCtx()->GetOrg(), new AfxD3D9OverrideBegin_D3DRS_SRCBLEND_Functor(D3DBLEND_ZERO));
+	QueueOrExecute(ch->GetCtx()->GetOrg(), new AfxD3D9OverrideBegin_D3DRS_DESTBLEND_Functor(D3DBLEND_ONE));
+	QueueOrExecute(ch->GetCtx()->GetOrg(), new AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE_Functor(FALSE));
 
 	return material;
 }

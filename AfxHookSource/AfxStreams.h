@@ -172,13 +172,15 @@ public:
 	}
 
 protected:
+	std::mutex m_RefMutex;
+	int m_RefCount;
+
 	virtual ~CAfxSafeRefCounted()
 	{
 	}
 
 private:
-	std::mutex m_RefMutex;
-	int m_RefCount;
+
 };
 
 class CAfxFunctor abstract
@@ -522,25 +524,13 @@ private:
 public:
 
 	class CAction
+		: public CAfxSafeRefCounted
 	{
 	public:
 		CAction()
-		: m_RefCount(0)
-		, m_IsStockAction(false)
+		: m_IsStockAction(false)
 		, m_Key("(unnamed)")
 		{
-		}
-
-		void AddRef(void)
-		{
-			++m_RefCount;
-		}
-
-		void Release(void)
-		{
-			--m_RefCount;
-			if(0 == m_RefCount)
-				delete this;
 		}
 
 		int GetRefCount(void)
@@ -631,7 +621,7 @@ public:
 		}
 
 	private:
-		int m_RefCount;
+
 	};
 
 	static void Console_ListActions(void)
@@ -1184,11 +1174,48 @@ private:
 	protected:
 		~CActionDebugDepth();
 	private:
+		class CStatic
+		{
+		public:
+			void SetDepthVal(float min, float max);
+
+			~CStatic()
+			{
+				delete m_MatDebugDepthVal;
+				delete m_MatDebugDepthValMax;
+			}
+
+		private:
+			WrpConVarRef * m_MatDebugDepthVal = 0;
+			WrpConVarRef * m_MatDebugDepthValMax = 0;
+			std::mutex m_MatDebugDepthValsMutex;
+		};
+
+		static CStatic m_Static;
+
+		class CDepthValFunctor
+			: public CAfxFunctor
+		{
+		public:
+			CDepthValFunctor(float min, float max)
+				: m_Min(min)
+				, m_Max(max)
+			{
+			}
+
+			virtual void operator()()
+			{
+				m_Static.SetDepthVal(m_Min, m_Max);
+			}
+
+		private:
+			float m_Min;
+			float m_Max;
+		};
+
 		CAction * m_FallBackAction;
 
 		CAfxMaterial * m_DebugDepthMaterial;
-		WrpConVarRef * m_MatDebugDepthVal;
-		WrpConVarRef * m_MatDebugDepthValMax;
 		bool m_Initalized;
 		std::mutex m_InitalizedMutex;
 	};
@@ -1457,6 +1484,7 @@ private:
 
 	bool m_DebugPrint;
 	std::map<CAfxMaterialKey, CAction *> m_Map;
+	std::mutex m_MapMutex;
 	std::list<CActionFilterValue> m_ActionFilter;
 
 	CAction * CAfxBaseFxStream::GetAction(SOURCESDK::IMaterial_csgo * material);
@@ -2055,4 +2083,6 @@ private:
 	bool WriteBufferToFile(const CImageBuffer & buffer, const std::wstring & path, bool ifZip);
 
 	IAfxContextHook * FindHook(IAfxMatRenderContext * ctx);
+
+	void BlockPresent(bool value);
 };
