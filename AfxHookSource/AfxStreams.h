@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-09-23 dominik.matrixstorm.com
+// 2016-10-01 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -88,17 +88,6 @@ public:
 	virtual void SetVertexShader(CAfx_csgo_ShaderState & state) = 0;
 
 	virtual void SetPixelShader(CAfx_csgo_ShaderState & state) = 0;
-
-	//
-	// Helper functions:
-
-	/// <remarks>
-	/// The functor passed will be executed on the leaf queue / context,
-	/// meaning you can i.e. handle DirectX Render States directly here
-	/// in the desired order.
-	/// <remarks>
-	virtual void LeafExecute(SOURCESDK::CSGO::CFunctor * functor) = 0;
-
 };
 
 class CAfxRecordStream;
@@ -1405,8 +1394,6 @@ private:
 
 		virtual void SetPixelShader(CAfx_csgo_ShaderState & state);
 
-		virtual void LeafExecute(SOURCESDK::CSGO::CFunctor * functor);
-
 	protected:
 		~CAfxBaseFxStreamContextHook()
 		{
@@ -1414,29 +1401,6 @@ private:
 		}
 
 	private:
-		class CLeafExecuteFunctor
-			: public CAfxFunctor
-		{
-		public:
-			CLeafExecuteFunctor(SOURCESDK::CSGO::CFunctor * functor)
-				: m_Functor(functor)
-			{
-				functor->AddRef();
-			}
-
-			virtual void operator()();
-
-		protected:
-			virtual ~CLeafExecuteFunctor()
-			{
-				m_Functor->Release();
-			}
-
-		private:
-			SOURCESDK::CSGO::CFunctor * m_Functor;
-
-		};
-
 		class CRenderBeginFunctor
 			: public CAfxFunctor
 		{
@@ -2005,6 +1969,43 @@ private:
 		BvhExport * m_BvhExport;
 	};
 
+
+	class CDrawUnlockFunctor
+		: public CAfxFunctor
+	{
+	public:
+		CDrawUnlockFunctor(CAfxStreams * streams)
+			: m_Streams(streams)
+		{
+		}
+
+		virtual void operator()()
+		{
+			m_Streams->DrawUnlock();
+		}
+
+	private:
+		CAfxStreams * m_Streams;
+	};
+
+	class CDrawLockFunctor
+		: public CAfxFunctor
+	{
+	public:
+		CDrawLockFunctor(CAfxStreams * streams)
+			: m_Streams(streams)
+		{
+		}
+
+		virtual void operator()()
+		{
+			m_Streams->DrawLock();
+		}
+
+	private:
+		CAfxStreams * m_Streams;
+	};
+
 	std::string m_RecordName;
 	bool m_PresentRecordOnScreen;
 	bool m_StartMovieWav;
@@ -2045,6 +2046,9 @@ private:
 	SOURCESDK::ITexture_csgo * m_RenderTargetDepthF;
 	//CAfxMaterial * m_ShowzMaterial;
 	DWORD m_Current_View_Render_ThreadId;
+	std::mutex m_DrawLockMutex;
+	std::condition_variable m_DrawLockCondition;
+	bool m_DrawLock = false;
 
 	void SetCurrent_View_Render_ThreadId(DWORD id);
 
@@ -2054,7 +2058,7 @@ private:
 
 	void Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args);
 
-	void Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandArgs * args);
+	bool Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandArgs * args);
 
 	bool Console_CheckStreamName(char const * value);
 
@@ -2084,5 +2088,29 @@ private:
 
 	IAfxContextHook * FindHook(IAfxMatRenderContext * ctx);
 
-	void BlockPresent(bool value);
+	void BlockPresent(IAfxMatRenderContextOrg * ctx, bool value);
+
+	void DrawLock(void)
+	{
+		std::unique_lock<std::mutex> lock(m_DrawLockMutex);
+
+		m_DrawLockCondition.wait(lock, [this]() { return !m_DrawLock; });
+
+		m_DrawLock = true;
+	}
+
+	void DrawUnlock(void)
+	{
+		{
+			std::unique_lock<std::mutex> lock(m_DrawLockMutex);
+
+			m_DrawLock = false;
+		}
+
+		m_DrawLockCondition.notify_one();
+	}
+
+	void ScheduleDrawLock(IAfxMatRenderContextOrg * ctx);
+	void ScheduleDrawUnlock(IAfxMatRenderContextOrg * ctx);
+
 };

@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-09-23 dominik.matrixstorm.com
+// 2016-10-01 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -419,6 +419,60 @@ public:
 private:
 	DWORD m_Value;
 };
+
+class AfxD3D9BlockPresent_Functor
+	: public CAfxMyFunctor
+{
+public:
+	AfxD3D9BlockPresent_Functor(bool value)
+		: m_Value(value)
+	{
+	}
+
+	virtual void operator()()
+	{
+		AfxD3D9_Block_Present(m_Value);
+	}
+
+private:
+	bool m_Value;
+};
+
+class CAfxLeafExecute_Functor
+	: public CAfxMyFunctor
+{
+public:
+	CAfxLeafExecute_Functor(SOURCESDK::CSGO::CFunctor * functor)
+		: m_Functor(functor)
+	{
+		m_Functor->AddRef();
+	}
+
+	virtual void operator()()
+	{
+		SOURCESDK::CSGO::ICallQueue * queue = GetCurrentContext()->GetOrg()->GetCallQueue();
+
+		if (queue)
+		{
+			queue->QueueFunctor(this);
+		}
+		else
+		{
+			(*m_Functor)();
+		}
+	}
+
+protected:
+	virtual ~CAfxLeafExecute_Functor()
+	{
+		m_Functor->Release();
+	}
+
+private:
+	SOURCESDK::CSGO::CFunctor * m_Functor;
+	
+};
+
 
 // CAfxFileTracker /////////////////////////////////////////////////////////////
 
@@ -848,6 +902,8 @@ void CAfxBaseFxStream::LevelShutdown(void)
 void CAfxBaseFxStream::OnRenderBegin(void)
 {
 	CAfxRenderViewStream::OnRenderBegin();
+
+	this->InterLockIncrement();
 
 	g_SmokeOverlay_AlphaMod = m_SmokeOverlayAlphaFactor;
 
@@ -1366,20 +1422,21 @@ void CAfxBaseFxStream::SetAction(CAction * & target, CAction * src)
 
 void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::RenderBegin(IAfxMatRenderContext * ctx)
 {
-	m_Stream->InterLockIncrement();
-
 	m_Ctx = ctx;
+
+	if (0 != m_Ctx->Hook_get())
+		Tier0_Warning("CAfxBaseFxStream::CAfxBaseFxStreamContextHook::RenderBegin: Error ctx already hooked!\n");
 
 	m_Ctx->Hook_set(this);
 
-	QueueOrExecute(m_Ctx->GetOrg(), new AfxD3D9PushOverrideState_Functor());
+	QueueOrExecute(m_Ctx->GetOrg(),new CAfxLeafExecute_Functor(new AfxD3D9PushOverrideState_Functor()));
 }
 
 void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::RenderEnd(void)
 {
 	BindAction(0);
 
-	QueueOrExecute(m_Ctx->GetOrg(), new AfxD3D9PopOverrideState_Functor());
+	QueueOrExecute(m_Ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9PopOverrideState_Functor()));
 	
 	m_Ctx->Hook_set(0);
 
@@ -1390,28 +1447,13 @@ void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::RenderEnd(void)
 	delete this;
 }
 
-void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::LeafExecute(SOURCESDK::CSGO::CFunctor * functor)
-{
-	SOURCESDK::CSGO::ICallQueue * queue = m_Ctx->GetOrg()->GetCallQueue();
-
-	if (queue)
-	{
-		queue->QueueFunctor(new CLeafExecuteFunctor(functor));
-	}
-	else
-	{
-		functor->AddRef();
-		(*functor)();
-		functor->Release();
-	}
-}
-
 void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::QueueFunctorInternal(IAfxCallQueue * aq, SOURCESDK::CSGO::CFunctor *pFunctor)
 {
 	SOURCESDK::CSGO::ICallQueue * q = aq->GetParent();
 
 	CAfxBaseFxStreamContextHook * ch = new CAfxBaseFxStreamContextHook(m_Stream, this);
 
+	m_Stream->InterLockIncrement();
 	q->QueueFunctor(new CRenderBeginFunctor(ch));
 	q->QueueFunctor(pFunctor);
 	q->QueueFunctor(new CRenderEndFunctor());
@@ -1486,19 +1528,6 @@ void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::SetPixelShader(CAfx_csgo_Sha
 {
 	if (m_CurrentAction)
 		m_CurrentAction->SetPixelShader(this, state);
-}
-
-// CAfxBaseFxStream::CAfxBaseFxStreamContextHook::CLeafExecuteFunctor //////////
-
-void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::CLeafExecuteFunctor::operator()()
-{
-	if (IAfxMatRenderContext * ctx = GetCurrentContext())
-	{
-		if (IAfxContextHook * hook = ctx->Hook_get())
-		{
-			hook->LeafExecute(m_Functor);
-		}
-	}
 }
 
 // CAfxBaseFxStream::CAfxBaseFxStreamContextHook::CRenderBeginFunctor //////////
@@ -1929,7 +1958,7 @@ SOURCESDK::IMaterial_csgo * CAfxBaseFxStream::CActionDebugDepth::MaterialHook(CA
 	float flDepthFactor = scale * ch->GetStream()->m_DepthVal;
 	float flDepthFactorMax = scale * ch->GetStream()->m_DepthValMax;
 
-	QueueOrExecute(ch->GetCtx()->GetOrg(), new CDepthValFunctor(flDepthFactor, flDepthFactorMax));
+	QueueOrExecute(ch->GetCtx()->GetOrg(), new CAfxLeafExecute_Functor(new CDepthValFunctor(flDepthFactor, flDepthFactorMax)));
 
 	return m_DebugDepthMaterial->GetMaterial();
 }
@@ -2004,13 +2033,13 @@ void CAfxBaseFxStream::CActionReplace::AfxUnbind(CAfxBaseFxStreamContextHook * c
 	IAfxContextHook * ctxh = ctx->Hook_get();
 
 	if (m_OverrideColor)
-		QueueOrExecute(ch->GetCtx()->GetOrg(), new AfxD3D9OverrideEnd_ModulationColor_Functor());
+		QueueOrExecute(ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9OverrideEnd_ModulationColor_Functor()));
 
 	if (m_OverrideBlend)
-		QueueOrExecute(ch->GetCtx()->GetOrg(), new AfxD3D9OverrideEnd_ModulationBlend_Functor());
+		QueueOrExecute(ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9OverrideEnd_ModulationBlend_Functor()));
 
 	if (m_OverrideDepthWrite)
-		QueueOrExecute(ch->GetCtx()->GetOrg(), new AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE_Functor());
+		QueueOrExecute(ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE_Functor()));
 }
 
 SOURCESDK::IMaterial_csgo * CAfxBaseFxStream::CActionReplace::MaterialHook(CAfxBaseFxStreamContextHook * ch, SOURCESDK::IMaterial_csgo * material)
@@ -2021,13 +2050,13 @@ SOURCESDK::IMaterial_csgo * CAfxBaseFxStream::CActionReplace::MaterialHook(CAfxB
 	IAfxContextHook * ctxh = ctx->Hook_get();
 
 	if (m_OverrideBlend)
-		QueueOrExecute(ch->GetCtx()->GetOrg(), new AfxD3D9OverrideBegin_ModulationBlend_Functor(m_Blend));
+		QueueOrExecute(ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9OverrideBegin_ModulationBlend_Functor(m_Blend)));
 
 	if (m_OverrideColor)
-		QueueOrExecute(ch->GetCtx()->GetOrg(), new AfxD3D9OverrideBegin_ModulationColor_Functor(m_Color));
+		QueueOrExecute(ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9OverrideBegin_ModulationColor_Functor(m_Color)));
 
 	if(m_OverrideDepthWrite)
-		QueueOrExecute(ch->GetCtx()->GetOrg(), new AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE_Functor(m_DepthWrite ? TRUE : FALSE));
+		QueueOrExecute(ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE_Functor(m_DepthWrite ? TRUE : FALSE)));
 
 	return m_Material->GetMaterial();
 }
@@ -2658,10 +2687,10 @@ void CAfxBaseFxStream::CActionNoDraw::AfxUnbind(CAfxBaseFxStreamContextHook * ch
 	IAfxMatRenderContext * ctx = ch->GetCtx();
 	IAfxContextHook * ctxh = ctx->Hook_get();
 
-	QueueOrExecute(ch->GetCtx()->GetOrg(), new AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE_Functor());
-	QueueOrExecute(ch->GetCtx()->GetOrg(), new AfxD3D9OverrideEnd_D3DRS_DESTBLEND_Functor());
-	QueueOrExecute(ch->GetCtx()->GetOrg(), new AfxD3D9OverrideEnd_D3DRS_SRCBLEND_Functor());
-	QueueOrExecute(ch->GetCtx()->GetOrg(), new AfxD3D9OverrideEnd_D3DRS_ALPHABLENDENABLE_Functor());
+	QueueOrExecute(ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE_Functor()));
+	QueueOrExecute(ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9OverrideEnd_D3DRS_DESTBLEND_Functor()));
+	QueueOrExecute(ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9OverrideEnd_D3DRS_SRCBLEND_Functor()));
+	QueueOrExecute(ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9OverrideEnd_D3DRS_ALPHABLENDENABLE_Functor()));
 }
 
 SOURCESDK::IMaterial_csgo * CAfxBaseFxStream::CActionNoDraw::MaterialHook(CAfxBaseFxStreamContextHook * ch, SOURCESDK::IMaterial_csgo * material)
@@ -2669,10 +2698,10 @@ SOURCESDK::IMaterial_csgo * CAfxBaseFxStream::CActionNoDraw::MaterialHook(CAfxBa
 	IAfxMatRenderContext * ctx = ch->GetCtx();
 	IAfxContextHook * ctxh = ctx->Hook_get();
 
-	QueueOrExecute(ch->GetCtx()->GetOrg(), new AfxD3D9OverrideBegin_D3DRS_ALPHABLENDENABLE_Functor(TRUE));
-	QueueOrExecute(ch->GetCtx()->GetOrg(), new AfxD3D9OverrideBegin_D3DRS_SRCBLEND_Functor(D3DBLEND_ZERO));
-	QueueOrExecute(ch->GetCtx()->GetOrg(), new AfxD3D9OverrideBegin_D3DRS_DESTBLEND_Functor(D3DBLEND_ONE));
-	QueueOrExecute(ch->GetCtx()->GetOrg(), new AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE_Functor(FALSE));
+	QueueOrExecute(ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9OverrideBegin_D3DRS_ALPHABLENDENABLE_Functor(TRUE)));
+	QueueOrExecute(ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9OverrideBegin_D3DRS_SRCBLEND_Functor(D3DBLEND_ZERO)));
+	QueueOrExecute(ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9OverrideBegin_D3DRS_DESTBLEND_Functor(D3DBLEND_ONE)));
+	QueueOrExecute(ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE_Functor(FALSE)));
 
 	return material;
 }
@@ -3693,7 +3722,7 @@ void CAfxStreams::Console_Record_End()
 
 		Tier0_Msg("done.\n");
 
-		AfxD3D9_Block_Present(false);
+		//AfxD3D9_Block_Present(false);
 	}
 
 	m_Recording = false;
@@ -4015,7 +4044,8 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 
 	if(curRenderView)
 	{
-		Console_EditStream(curRenderView, args);
+		if (Console_EditStream(curRenderView, args))
+			return;
 	}		
 
 	if (curTwin)
@@ -4042,7 +4072,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 	Tier0_Msg("== No more properties. ==\n");
 }
 
-void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandArgs * args)
+bool CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandArgs * args)
 {
 	CAfxRenderViewStream * curRenderView = stream;
 	CAfxBaseFxStream * curBaseFx = 0;
@@ -4082,7 +4112,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					}
 					
 					curRenderView->AttachCommands_set(value.c_str());
-					return;
+					return true;
 				}
 
 				Tier0_Msg(
@@ -4091,7 +4121,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, curRenderView->AttachCommands_get()
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "detachCommands"))
@@ -4110,7 +4140,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					}
 					
 					curRenderView->DetachCommands_set(value.c_str());
-					return;
+					return true;
 				}
 
 				Tier0_Msg(
@@ -4119,7 +4149,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, curRenderView->DetachCommands_get()
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "drawHud"))
@@ -4130,7 +4160,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 
 					curRenderView->DrawHud_set(atoi(cmd1) != 0 ? true : false);
 
-					return;
+					return true;
 				}
 
 				Tier0_Msg(
@@ -4139,7 +4169,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, curRenderView->DrawHud_get() ? "1" : "0"
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "drawViewModel"))
@@ -4150,7 +4180,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 
 					curRenderView->DrawViewModel_set(atoi(cmd1) != 0 ? true : false);
 
-					return;
+					return true;
 				}
 
 				Tier0_Msg(
@@ -4159,7 +4189,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, curRenderView->DrawViewModel_get() ? "1" : "0"
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "captureType"))
@@ -4179,7 +4209,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 							}
 						}
 						curRenderView->StreamCaptureType_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4189,7 +4219,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, Console_FromStreamCaptureType(curRenderView->StreamCaptureType_get())
 				);
-				return;
+				return true;
 			}
 		}
 	}
@@ -4218,7 +4248,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 							if(Console_ToAfxAction(cmd3, value))
 							{
 								curBaseFx->Console_ActionFilter_Add(cmd2, value);
-								return;
+								return true;
 							}
 						}
 
@@ -4229,13 +4259,13 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 							"\t<actionName> - name of action (see mirv_actions).\n"
 							, cmdPrefix
 						);
-						return;
+						return true;
 					}
 					else
 					if(!_stricmp(cmd1, "print"))
 					{
 						curBaseFx->Console_ActionFilter_Print();
-						return;
+						return true;
 					}
 					else
 					if(!_stricmp(cmd1, "remove"))
@@ -4246,14 +4276,14 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 
 							curBaseFx->Console_ActionFilter_Remove(atoi(cmd2));
 
-							return;
+							return true;
 						}
 						
 						Tier0_Msg(
 							"%s actionFilter remove <actionId> - Removes action with id number <actionId>.\n"
 							, cmdPrefix
 						);
-						return;
+						return true;
 					}
 					else
 					if(!_stricmp(cmd1, "move"))
@@ -4266,14 +4296,14 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 
 							curBaseFx->Console_ActionFilter_Move(atoi(cmd2), atoi(cmd3));
 
-							return;
+							return true;
 						}
 						
 						Tier0_Msg(
 							"%s actionFilter move <actionId> <beforeId> - Moves action with id number <actionId> before action with id <beforeId> (<beforeId> value can be 1 greater than the last id to move at the end).\n"
 							, cmdPrefix
 						);
-						return;
+						return true;
 					}
 				}
 
@@ -4287,7 +4317,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, cmdPrefix
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "clientEffectTexturesAction"))
@@ -4300,7 +4330,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->ClientEffectTexturesAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4310,7 +4340,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->ClientEffectTexturesAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "worldTexturesAction"))
@@ -4323,7 +4353,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->WorldTexturesAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4333,7 +4363,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->WorldTexturesAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "skyBoxTexturesAction"))
@@ -4346,7 +4376,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->SkyBoxTexturesAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4356,7 +4386,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->SkyBoxTexturesAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "staticPropTexturesAction"))
@@ -4369,7 +4399,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->StaticPropTexturesAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4379,7 +4409,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->StaticPropTexturesAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "cableAction"))
@@ -4392,7 +4422,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->CableAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4402,7 +4432,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->CableAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "playerModelsAction"))
@@ -4415,7 +4445,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->PlayerModelsAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4425,7 +4455,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->PlayerModelsAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "weaponModelsAction"))
@@ -4438,7 +4468,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->WeaponModelsAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4448,7 +4478,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->WeaponModelsAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "statTrakAction")||!_stricmp(cmd0, "stattrackAction"))
@@ -4461,7 +4491,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->StatTrakAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4471,7 +4501,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->StatTrakAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "shellModelsAction"))
@@ -4484,7 +4514,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->ShellModelsAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4494,7 +4524,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->ShellModelsAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "otherModelsAction"))
@@ -4507,7 +4537,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->OtherModelsAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4517,7 +4547,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->OtherModelsAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "decalTexturesAction"))
@@ -4530,7 +4560,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->DecalTexturesAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4540,7 +4570,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->DecalTexturesAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "effectsAction"))
@@ -4553,7 +4583,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->EffectsAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4563,7 +4593,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->EffectsAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "shellParticleAction"))
@@ -4576,7 +4606,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->ShellParticleAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4586,7 +4616,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->ShellParticleAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "otherParticleAction"))
@@ -4599,7 +4629,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->OtherParticleAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4609,7 +4639,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->OtherParticleAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "stickerAction"))
@@ -4622,7 +4652,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->StickerAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4632,7 +4662,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->StickerAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "errorMaterialAction"))
@@ -4645,7 +4675,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->ErrorMaterialAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4655,7 +4685,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->ErrorMaterialAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "otherAction"))
@@ -4668,7 +4698,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->OtherAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4678,7 +4708,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->OtherAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "writeZAction"))
@@ -4691,7 +4721,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->WriteZAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4701,7 +4731,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->WriteZAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "devAction"))
@@ -4712,7 +4742,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->DevAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "otherEngineAction"))
@@ -4723,7 +4753,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->OtherEngineAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "otherSpecialAction"))
@@ -4734,7 +4764,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->OtherSpecialAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "vguiAction"))
@@ -4745,7 +4775,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->VguiAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "depthVal"))
@@ -4754,7 +4784,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 				{
 					char const * cmd1 = args->ArgV(argcOffset +1);
 					curBaseFx->DepthVal_set((float)atof(cmd1));
-					return;
+					return true;
 				}
 
 				Tier0_Msg(
@@ -4763,7 +4793,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, curBaseFx->DepthVal_get()
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "depthValMax"))
@@ -4772,7 +4802,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 				{
 					char const * cmd1 = args->ArgV(argcOffset +1);
 					curBaseFx->DepthValMax_set((float)atof(cmd1));
-					return;
+					return true;
 				}
 
 				Tier0_Msg(
@@ -4781,7 +4811,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, curBaseFx->DepthValMax_get()
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "smokeOverlayAlphaFactor"))
@@ -4790,7 +4820,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 				{
 					char const * cmd1 = args->ArgV(argcOffset +1);
 					curBaseFx->SmokeOverlayAlphaFactor_set((float)atof(cmd1));
-					return;
+					return true;
 				}
 
 				Tier0_Msg(
@@ -4799,7 +4829,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, curBaseFx->SmokeOverlayAlphaFactor_get()
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "debugPrint"))
@@ -4809,7 +4839,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					char const * cmd1 = args->ArgV(argcOffset +1);
 
 					curBaseFx->DebugPrint_set(0 != atoi(cmd1) ? true : false);
-					return;
+					return true;
 				}
 
 				Tier0_Msg(
@@ -4818,13 +4848,13 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, curBaseFx->DebugPrint_get() ? "1" : "0"
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "invalidateMap"))
 			{
 				curBaseFx->InvalidateMap();
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "testAction"))
@@ -4834,7 +4864,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					char const * cmd1 = args->ArgV(argcOffset +1);
 
 					curBaseFx->TestAction_set(0 != atoi(cmd1) ? true : false);
-					return;
+					return true;
 				}
 
 				Tier0_Msg(
@@ -4843,7 +4873,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 					, curBaseFx->TestAction_get() ? "1" : "0"
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "man"))
@@ -4881,7 +4911,7 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 					, cmdPrefix
 				);*/
 				Tier0_Warning("Warning: Due to CS:GO 17th Ferbuary 2016 update this feature is not available.\n");
-				return;
+				return true;
 			}
 		}
 	}
@@ -4931,6 +4961,8 @@ void CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 		Tier0_Msg("%s drawViewModel [...] - Controls whether or not view model (in-eye weapon) is drawn for this stream.\n", cmdPrefix);
 		Tier0_Msg("%s captureType [...] - Stream capture type.\n", cmdPrefix);
 	}
+
+	return false;
 }
 
 
@@ -5287,9 +5319,9 @@ void CAfxStreams::DebugDump(IAfxMatRenderContextOrg * ctxp)
 
 void CAfxStreams::View_Render(IAfxBaseClientDll * cl, SOURCESDK::vrect_t_csgo *rect)
 {
-	AfxD3D9_Block_Present(false);
-
 	IAfxMatRenderContextOrg * ctxp = GetCurrentContext()->GetOrg();
+
+	BlockPresent(ctxp, false);
 
 	SetCurrent_View_Render_ThreadId(GetCurrentThreadId());
 
@@ -5323,7 +5355,9 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, SOURCESDK::vrect_t_csgo *r
 		}
 	}
 
-	cl->GetParent()->View_Render(rect);
+	//DrawLock(ctxp);
+	cl->GetParent()->View_Render(rect);	
+	//ScheduleDrawUnlock(ctxp);
 
 	// Capture BVHs (except main):
 	for (std::list<CEntityBvhCapture *>::iterator it = m_EntityBvhCaptures.begin(); it != m_EntityBvhCaptures.end(); ++it)
@@ -5355,7 +5389,7 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, SOURCESDK::vrect_t_csgo *r
 			if(!m_PresentRecordOnScreen)
 			{
 				m_MaterialSystem->SwapBuffers();
-				AfxD3D9_Block_Present(true);
+				BlockPresent(ctxp, true);
 			}
 
 			for(std::list<CAfxRecordStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
@@ -5522,7 +5556,9 @@ bool CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuf
 	ctxp->ClearColor4ub(0,0,0,0);
 	ctxp->ClearBuffers(true,false,false);
 
+	//DrawLock(ctxp);
 	view->RenderView(*viewSetup, *viewSetup, SOURCESDK::VIEW_CLEAR_STENCIL|SOURCESDK::VIEW_CLEAR_DEPTH, whatToDraw);
+	//ScheduleDrawUnlock(ctxp);
 
 	if(isDepthF)
 	{
@@ -6054,4 +6090,19 @@ void CAfxStreams::CEntityBvhCapture::CaptureFrame(void)
 		-o.y, +o.z, -o.x,
 		-a.z, -a.x, +a.y
 	);
+}
+
+void CAfxStreams::BlockPresent(IAfxMatRenderContextOrg * ctx, bool value)
+{
+	QueueOrExecute(ctx, new CAfxLeafExecute_Functor(new AfxD3D9BlockPresent_Functor(value)));
+}
+
+void CAfxStreams::ScheduleDrawLock(IAfxMatRenderContextOrg * ctx)
+{
+	QueueOrExecute(ctx, new CAfxLeafExecute_Functor(new CDrawLockFunctor(this)));
+}
+
+void CAfxStreams::ScheduleDrawUnlock(IAfxMatRenderContextOrg * ctx)
+{
+	QueueOrExecute(ctx, new CAfxLeafExecute_Functor(new CDrawUnlockFunctor(this)));
 }
