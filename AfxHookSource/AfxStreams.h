@@ -2006,6 +2006,24 @@ private:
 		CAfxStreams * m_Streams;
 	};
 
+	class CSleepFunctor
+		: public CAfxFunctor
+	{
+	public:
+		CSleepFunctor(DWORD sleep)
+			: m_Sleep(sleep)
+		{
+		}
+
+		virtual void operator()()
+		{
+			Sleep(m_Sleep);
+		}
+
+	private:
+		DWORD m_Sleep;
+	};
+
 	std::string m_RecordName;
 	bool m_PresentRecordOnScreen;
 	bool m_StartMovieWav;

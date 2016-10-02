@@ -3644,8 +3644,10 @@ public:
 	virtual void _UNKNOWN_039(void) = 0;
 	virtual void _UNKNOWN_040(void) = 0;
 	virtual void _UNKNOWN_041(void) = 0;
-	virtual void _UNKNOWN_042(void) = 0;
-	virtual void _UNKNOWN_043(void) = 0;
+	
+	virtual void				BeginFrame(float frameTime) = 0; //:042
+	virtual void				EndFrame() = 0; //:043
+
 	virtual void _UNKNOWN_044(void) = 0;
 	virtual void _UNKNOWN_045(void) = 0;
 
@@ -3686,9 +3688,9 @@ public:
 	virtual void _UNKNOWN_078(void) = 0;
 	virtual void _UNKNOWN_079(void) = 0;
 	virtual void _UNKNOWN_080(void) = 0;
-	virtual void _UNKNOWN_081(void) = 0;
-	virtual void _UNKNOWN_082(void) = 0;
-	virtual void _UNKNOWN_083(void) = 0;
+	virtual void _UNKNOWN_081(void) = 0; 
+	virtual void _UNKNOWN_082(void) = 0; // ? ReloadMaterials
+	virtual void _UNKNOWN_083(void) = 0; // CreateMaterial
 
 	// 084:
 	virtual IMaterial_csgo * FindMaterial( char const* pMaterialName, const char *pTextureGroupName, bool complain = true, const char *pComplainPrefix = 0 ) = 0;

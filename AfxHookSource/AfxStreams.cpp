@@ -1455,7 +1455,7 @@ void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::QueueFunctorInternal(IAfxCal
 
 	m_Stream->InterLockIncrement();
 	q->QueueFunctor(new CRenderBeginFunctor(ch));
-	q->QueueFunctor(pFunctor);
+	q->QueueFunctorInternal(pFunctor);
 	q->QueueFunctor(new CRenderEndFunctor());
 }
 
@@ -5388,7 +5388,7 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, SOURCESDK::vrect_t_csgo *r
 		{
 			if(!m_PresentRecordOnScreen)
 			{
-				m_MaterialSystem->SwapBuffers();
+				//m_MaterialSystem->SwapBuffers();
 				BlockPresent(ctxp, true);
 			}
 
@@ -5505,6 +5505,11 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, SOURCESDK::vrect_t_csgo *r
 
 bool CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuffer & buffer, IAfxMatRenderContextOrg * ctxp, bool isInPreview)
 {
+	// Work around game running out of memory because of too much shit on the queue
+	// aka issue ripieces/advancedfx#22
+	m_MaterialSystem->EndFrame();
+	m_MaterialSystem->BeginFrame(0);
+	
 	CAfxRenderViewStream::StreamCaptureType captureType = stream->StreamCaptureType_get();
 	bool isDepthF = captureType == CAfxRenderViewStream::SCT_DepthF || captureType == CAfxRenderViewStream::SCT_DepthFZIP;
 
@@ -5533,8 +5538,8 @@ bool CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuf
 	}
 	else
 	{
-		if(m_PresentRecordOnScreen)
-			m_MaterialSystem->SwapBuffers();
+		//if(m_PresentRecordOnScreen)
+		//	m_MaterialSystem->SwapBuffers();
 	}
 
 	bool bOk = true;
