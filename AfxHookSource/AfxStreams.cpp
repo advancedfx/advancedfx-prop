@@ -5322,6 +5322,7 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, SOURCESDK::vrect_t_csgo *r
 	IAfxMatRenderContextOrg * ctxp = GetCurrentContext()->GetOrg();
 
 	BlockPresent(ctxp, false);
+	m_PresentBlocked = false;
 
 	SetCurrent_View_Render_ThreadId(GetCurrentThreadId());
 
@@ -5355,9 +5356,7 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, SOURCESDK::vrect_t_csgo *r
 		}
 	}
 
-	//DrawLock(ctxp);
 	cl->GetParent()->View_Render(rect);	
-	//ScheduleDrawUnlock(ctxp);
 
 	// Capture BVHs (except main):
 	for (std::list<CEntityBvhCapture *>::iterator it = m_EntityBvhCaptures.begin(); it != m_EntityBvhCaptures.end(); ++it)
@@ -5386,12 +5385,6 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, SOURCESDK::vrect_t_csgo *r
 		}
 		else
 		{
-			if(!m_PresentRecordOnScreen)
-			{
-				//m_MaterialSystem->SwapBuffers();
-				BlockPresent(ctxp, true);
-			}
-
 			for(std::list<CAfxRecordStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
 			{
 				if(!(*it)->Record_get()) continue;
@@ -5505,8 +5498,17 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, SOURCESDK::vrect_t_csgo *r
 
 bool CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuffer & buffer, IAfxMatRenderContextOrg * ctxp, bool isInPreview)
 {
+	if (!m_PresentRecordOnScreen)
+	{
+		if (!m_PresentBlocked)
+		{
+			BlockPresent(ctxp, true);
+			m_PresentBlocked = true;
+		}
+	}
+	
 	// Work around game running out of memory because of too much shit on the queue
-	// aka issue ripieces/advancedfx#22
+	// aka issue ripieces/advancedfx#22 :
 	m_MaterialSystem->EndFrame();
 	m_MaterialSystem->BeginFrame(0);
 	

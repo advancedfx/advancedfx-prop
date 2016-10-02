@@ -2067,6 +2067,7 @@ private:
 	std::mutex m_DrawLockMutex;
 	std::condition_variable m_DrawLockCondition;
 	bool m_DrawLock = false;
+	bool m_PresentBlocked;
 
 	void SetCurrent_View_Render_ThreadId(DWORD id);
 
