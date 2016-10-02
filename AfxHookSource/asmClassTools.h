@@ -3,10 +3,10 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-06-12 by dominik.matrixstorm.com
+// 2016-10-02 dominik.matrixstorm.com
 //
 // First changes:
-// 2015-06-26 by dominik.matrixstorm.com
+// 2015-06-26 dominik.matrixstorm.com
 
 // The first 3 asm instructions unroll the compiler epiloge code,
 // this might need to be updated. I couldn't find a better way yet,
@@ -57,7 +57,8 @@
 	__asm mov esp, ebp \
 	__asm pop ebp \
 	__asm mov ecx, eax \
-	__asm mov eax, [ecx +4*ofs] \
+	__asm add ecx, 4*ofs \
+	__asm mov eax, [ecx] \
 	__asm mov eax, [eax +4*index] \
 	__asm jmp eax
 
@@ -76,7 +77,8 @@
 	__asm mov esp, ebp \
 	__asm pop ebp \
 	__asm mov ecx, eax \
-	__asm mov eax, [ecx +4*ofs] \
+	__asm add ecx, 4*ofs \
+	__asm mov eax, [ecx] \
 	__asm mov eax, [eax +4*index] \
 	__asm jmp eax
 
@@ -88,6 +90,7 @@
 	__asm mov esp, ebp \
 	__asm pop ebp \
 	__asm mov ecx, eax \
-	__asm mov eax, [ecx +targetOfsBytes] \
+	__asm add ecx, targetOfsBytes \
+	__asm mov eax, [ecx] \
 	__asm mov eax, [eax +4*index] \
 	__asm jmp eax

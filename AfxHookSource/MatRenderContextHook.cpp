@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-09-23 dominik.matrixstorm.com
+// 2016-10-02 dominik.matrixstorm.com
 //
 // First changes:
 // 2016-09-19 dominik.matrixstorm.com
@@ -793,6 +793,7 @@ private:
 			afxMesh = new CAfxMesh(mesh);
 
 			g_MeshMap_csgo[mesh] = afxMesh; // track new mesh
+			g_MeshMap_csgo[afxMesh] = afxMesh; // make sure we won't wrap ourself!
 		}
 
 		g_MeshMap_csgo_Mutex.unlock();
@@ -816,15 +817,14 @@ private:
 
 		if (it != g_CallQueueMap_csgo.end())
 		{
-			//Tier0_Msg("Found known IMesh 0x%08x.\n", (DWORD)iMesh);
 			afxCallQueue = it->second; // re-use
 		}
 		else
 		{
-			//Tier0_Msg("New IMesh 0x%08x.\n", (DWORD)iMesh);
 			afxCallQueue = new CAfxCallQueue(callQueue);
 
 			g_CallQueueMap_csgo[callQueue] = afxCallQueue; // track new mesh
+			g_CallQueueMap_csgo[afxCallQueue] = afxCallQueue; // make sure we won't wrap ourself!
 		}
 
 		g_CallQueueMap_csgo_Mutex.unlock();

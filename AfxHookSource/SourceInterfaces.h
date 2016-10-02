@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-09-23 dominik.matrixstorm.com
+// 2016-10-02 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-09-30 dominik.matrixstorm.com
@@ -3042,6 +3042,9 @@ public:
 	// For backward compat to IMesh
 	virtual IMesh_csgo* GetMesh() = 0;
 
+	//
+	// Those are probably not required anymore, but better safe than sorry:
+
 	virtual void _Unknown_13_IIndexBuffer_csgo(void * arg0) = 0;
 
 	virtual bool _Unknown_14_IIndexBuffer_csgo(void) = 0;
@@ -3114,6 +3117,9 @@ public:
 class IMeshEx_csgo abstract : public IMesh_csgo
 {
 public:
+	//
+	// Those are probably not required anymore, but better safe than sorry:
+
 	virtual void _UNKNOWN_030(void) = 0;
 	virtual void _UNKNOWN_031(void) = 0;
 	virtual void _UNKNOWN_032(void) = 0;
