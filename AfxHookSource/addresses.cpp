@@ -378,7 +378,7 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 				MemRange result = FindBytes(baseRange, (char const *)&strAddr, sizeof(strAddr));
 				if(!result.IsEmpty())
 				{
-					addr = result.Start -0x377;
+					addr = result.Start -0x396;
 
 					// check for pattern to see if it is the right address:
 					unsigned char pattern[3] = { 0x55, 0x8B, 0xEC };
