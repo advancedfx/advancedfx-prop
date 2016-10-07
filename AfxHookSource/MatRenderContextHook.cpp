@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-10-02 dominik.matrixstorm.com
+// 2016-10-03 dominik.matrixstorm.com
 //
 // First changes:
 // 2016-09-19 dominik.matrixstorm.com
@@ -15,6 +15,7 @@
 #include <shared/detours.h>
 
 #include <map>
+#include <stack>
 #include <set>
 #include <mutex>
 
@@ -419,6 +420,7 @@ private:
 #pragma warning(pop)
 
 std::map<SOURCESDK::IMeshEx_csgo *, CAfxMesh *> g_MeshMap_csgo;
+std::stack<CAfxMesh *> g_MeshHooks_csgo;
 std::mutex g_MeshMap_csgo_Mutex;
 
 
@@ -465,6 +467,7 @@ private:
 };
 
 std::map<SOURCESDK::CSGO::ICallQueue *, CAfxCallQueue *> g_CallQueueMap_csgo;
+std::stack<CAfxCallQueue *> g_CallQueueHooks_csgo;
 std::mutex g_CallQueueMap_csgo_Mutex;
 
 
@@ -792,8 +795,9 @@ private:
 			//Tier0_Msg("New IMesh 0x%08x.\n", (DWORD)iMesh);
 			afxMesh = new CAfxMesh(mesh);
 
-			g_MeshMap_csgo[mesh] = afxMesh; // track new mesh
+			g_MeshMap_csgo[mesh] = afxMesh; // track hooked mesh
 			g_MeshMap_csgo[afxMesh] = afxMesh; // make sure we won't wrap ourself!
+			g_MeshHooks_csgo.push(afxMesh);
 		}
 
 		g_MeshMap_csgo_Mutex.unlock();
@@ -825,6 +829,7 @@ private:
 
 			g_CallQueueMap_csgo[callQueue] = afxCallQueue; // track new mesh
 			g_CallQueueMap_csgo[afxCallQueue] = afxCallQueue; // make sure we won't wrap ourself!
+			g_CallQueueHooks_csgo.push(afxCallQueue);
 		}
 
 		g_CallQueueMap_csgo_Mutex.unlock();
@@ -975,13 +980,18 @@ IAfxMatRenderContext * MatRenderContextHook(SOURCESDK::IMaterialSystem_csgo * ma
 
 void MatRenderContextHook_Shutdown(void)
 {
-	//TODO: not sure if good idea atm, might be used afterwards?
-	for (std::map<SOURCESDK::IMeshEx_csgo *, CAfxMesh *>::iterator it = g_MeshMap_csgo.begin(); it != g_MeshMap_csgo.end(); ++it)
+	while (!g_MeshHooks_csgo.empty())
 	{
-		delete it->second;
+		delete g_MeshHooks_csgo.top();
+		g_MeshHooks_csgo.pop();
 	}
 
-	//TODO: not sure if good idea atm, might be used afterwards?
+	while (!g_CallQueueHooks_csgo.empty())
+	{
+		delete g_CallQueueHooks_csgo.top();
+		g_CallQueueHooks_csgo.pop();
+	}
+
 	for (std::map<SOURCESDK::IMatRenderContext_csgo *, CMatRenderContextHook *>::iterator it = CMatRenderContextHook::m_Map.begin(); it != CMatRenderContextHook::m_Map.end(); ++it)
 	{
 		delete it->second;
