@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-08-30 dominik.matrixstorm.com
+// 2016-10-09 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-09-30 by dominik.matrixstorm.com
@@ -46,6 +46,15 @@ extern WrpVEngineClient * g_VEngineClient;
 
 HMODULE g_H_EngineDll = 0;
 
+
+#if AFXSTREAMS_REFTRACKER
+
+CON_COMMAND(__mirv_streams_ref, "")
+{
+	Tier0_Msg("Current tracked count: %i\n", AfxStreams_RefTracker_Get());
+}
+
+#endif
 
 CON_COMMAND(__mirv_ct, "")
 {

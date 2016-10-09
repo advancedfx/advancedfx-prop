@@ -3,10 +3,12 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-10-01 dominik.matrixstorm.com
+// 2016-10-09 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
+
+#define AFXSTREAMS_REFTRACKER 0
 
 #include "SourceInterfaces.h"
 #include "AfxInterfaces.h"
@@ -35,6 +37,7 @@
 #include <list>
 #include <queue>
 #include <map>
+#include <stack>
 #include <mutex>
 #include <condition_variable>
 
@@ -90,9 +93,189 @@ public:
 	virtual void SetPixelShader(CAfx_csgo_ShaderState & state) = 0;
 };
 
+#if AFXSTREAMS_REFTRACKER
+void AfxStreams_RefTracker_Inc(void);
+void AfxStreams_RefTracker_Dec(void);
+
+int AfxStreams_RefTracker_Get(void);
+
+#define AFXSTREAMS_REFTRACKER_INC AfxStreams_RefTracker_Inc();
+#define AFXSTREAMS_REFTRACKER_DEC AfxStreams_RefTracker_Dec();
+
+#else
+
+#define AFXSTREAMS_REFTRACKER_INC
+#define AFXSTREAMS_REFTRACKER_DEC
+
+#endif
+
+class CAfxImageBuffer;
+
+class CAfxImageBufferPool
+{
+public:
+	CAfxImageBufferPool();
+
+	/// <remarks>Must not be called until all buffers are done.</remarks>
+	~CAfxImageBufferPool();
+
+	CAfxImageBuffer * AquireBuffer(void);
+
+	void ImageBuffer_Done(CAfxImageBuffer * buffer);
+
+private:
+	std::stack<CAfxImageBuffer *> m_Buffers;
+	std::mutex m_BuffersMutex;
+	std::condition_variable m_BufferAvailableCondition;
+};
+
+class CAfxImageBuffer
+{
+public:
+	enum ImageBufferPixelFormat
+	{
+		IBPF_BGR,
+		IBPF_BGRA,
+		IBPF_A,
+		IBPF_ZFloat
+	};
+
+	void * Buffer;
+
+	ImageBufferPixelFormat PixelFormat;
+	int Width;
+	int Height;
+	size_t ImagePitch;
+	size_t ImageBytes;
+
+	CAfxImageBuffer(CAfxImageBufferPool * pool);
+	~CAfxImageBuffer();
+
+	/// <summary>Releases the buffer back to the pool (it may not be used anymore until being aquired from the pool again).</summary>
+	void Release(void);
+
+	bool AutoRealloc(ImageBufferPixelFormat pixelFormat, int width, int height);
+	bool WriteToFile(const std::wstring & path, bool ifZip, bool ifBmpNotTga) const;
+
+	/// <summary>
+	/// Resizes and merges this BGR format buffer with the blue component of
+	/// an buffer of same Width, Height and ImagePitch.
+	/// On success the resulting format is BGRA
+	/// </summary>
+	bool BgrMergeBlueToRgba(CAfxImageBuffer const * alphaBuffer);
+
+private:
+	size_t m_BufferBytesAllocated;
+	CAfxImageBufferPool * m_Pool;
+};
+
+
 class CAfxRecordStream;
 
+class CAfxStreamShared
+{
+public:
+	//
+	// Reference counting:
+
+	virtual int AddRef(void)
+	{
+		AFXSTREAMS_REFTRACKER_INC
+
+		m_RefMutex.lock();
+
+		++m_RefCount;
+		int result = m_RefCount;
+
+		m_RefMutex.unlock();
+
+		return m_RefCount;
+	}
+
+	virtual int Release(void)
+	{
+		m_RefMutex.lock();
+
+		--m_RefCount;
+
+		int result = m_RefCount;
+
+		m_RefMutex.unlock();
+
+		if (0 == result)
+			delete this;
+
+		AFXSTREAMS_REFTRACKER_DEC
+
+		return result;
+	}
+
+	//
+	// Lock functions:
+	//
+	// These should be used when accessing concurrent resources on the stream.
+
+	void InterLock(void)
+	{
+		std::unique_lock<std::mutex> lock(m_LockMutex);
+
+		m_LockCondition.wait(lock, [this]() { return m_LockCount == 0; });
+
+		++m_LockCount;
+	}
+
+	void InterLockIncrement(void)
+	{
+		std::unique_lock<std::mutex> lock(m_LockMutex);
+
+		++m_LockCount;
+	}
+
+	void InterLockDecrement(void)
+	{
+		bool notify = false;
+
+		{
+			std::unique_lock<std::mutex> lock(m_LockMutex);
+			--m_LockCount;
+
+			notify = m_LockCount == 0;
+		}
+
+		if (notify)
+			m_LockCondition.notify_one();
+	}
+
+private:
+	std::mutex m_RefMutex;
+	std::mutex m_LockMutex;
+	std::condition_variable m_LockCondition;
+	int m_LockCount = 0;
+	int m_RefCount = 0;
+};
+
+class CAfxStreamSharedInterLock
+{
+public:
+	CAfxStreamSharedInterLock(CAfxStreamShared * stream)
+		: m_Stream(stream)
+	{
+		if (m_Stream)
+			m_Stream->InterLock();
+	}
+
+	~CAfxStreamSharedInterLock()
+	{
+		if (m_Stream)
+			m_Stream->InterLockDecrement();
+	}
+
+private:
+	CAfxStreamShared * m_Stream;
+};
+
 class CAfxStream
+	: public CAfxStreamShared
 {
 public:
 	CAfxStream()
@@ -134,6 +317,8 @@ public:
 
 	virtual int AddRef(void)
 	{
+		AFXSTREAMS_REFTRACKER_INC
+
 		m_RefMutex.lock();
 
 		++m_RefCount;
@@ -156,6 +341,8 @@ public:
 
 		if (0 == result)
 			delete this;
+
+		AFXSTREAMS_REFTRACKER_DEC
 
 		return result;
 	}
@@ -186,6 +373,8 @@ public:
 
 	virtual int AddRef(void)
 	{
+		AFXSTREAMS_REFTRACKER_INC
+
 		m_RefMutex.lock();
 
 		++m_RefCount;
@@ -209,6 +398,8 @@ public:
 		if (0 == result)
 			delete this;
 
+		AFXSTREAMS_REFTRACKER_DEC
+			
 		return result;
 	}
 
@@ -225,6 +416,7 @@ private:
 class CAfxBaseFxStream;
 
 class CAfxRenderViewStream
+	: public CAfxStreamShared
 {
 public:
 	enum StreamCaptureType
@@ -237,73 +429,6 @@ public:
 	};
 
 	CAfxRenderViewStream();
-
-	//
-	// Reference counting:
-
-	virtual int AddRef(void)
-	{
-		m_RefMutex.lock();
-
-		++m_RefCount;
-		int result = m_RefCount;
-
-		m_RefMutex.unlock();
-
-		return m_RefCount;
-	}
-
-	virtual int Release(void)
-	{
-		m_RefMutex.lock();
-
-		--m_RefCount;
-
-		int result = m_RefCount;
-
-		m_RefMutex.unlock();
-
-		if (0 == result)
-			delete this;
-
-		return result;
-	}
-
-	//
-	// Lock functions:
-	//
-	// These should be used when accessing concurrent resources on the stream.
-
-	void InterLock(void)
-	{
-		std::unique_lock<std::mutex> lock(m_LockMutex);
-
-		m_LockCondition.wait(lock, [this]() { return m_LockCount == 0; });
-
-		++m_LockCount;
-	}
-
-	void InterLockIncrement(void)
-	{
-		std::unique_lock<std::mutex> lock(m_LockMutex);
-		
-		++m_LockCount;
-	}
-
-	void InterLockDecrement(void)
-	{
-		bool notify = false;
-
-		{
-			std::unique_lock<std::mutex> lock(m_LockMutex);
-			--m_LockCount;
-
-			notify = m_LockCount == 0;
-		}
-
-		if(notify)
-			m_LockCondition.notify_one();		
-	}
 
 	//
 	//
@@ -331,6 +456,8 @@ public:
 	{
 	}
 
+	void QueueCapture(IAfxMatRenderContextOrg * ctx, CAfxRecordStream * captureTarget, int x, int y, int width, int height);
+
 	//
 	// State information:
 
@@ -349,41 +476,35 @@ protected:
 	virtual ~CAfxRenderViewStream();
 
 private:
-	std::mutex m_RefMutex;
-	std::mutex m_LockMutex;
-	std::condition_variable m_LockCondition;
-	int m_LockCount;
-	int m_RefCount;
+	class CCaptureFunctor :
+		public CAfxFunctor
+	{
+	public:
+		CCaptureFunctor(CAfxRenderViewStream & stream, CAfxRecordStream * captureTarget, int x, int y, int width, int height);
+
+		void operator()();
+
+	private:
+		CAfxRenderViewStream & m_Stream;
+		CAfxRecordStream * m_CaptureTarget;
+		int m_X;
+		int m_Y;
+		int m_Width;
+		int m_Height;
+	};
+
 	bool m_DrawViewModel;
 	bool m_DrawHud;
 	std::string m_AttachCommands;
 	std::string m_DetachCommands;
-};
 
-class CAfxRenderViewStreamInterLock
-{
-public:
-	CAfxRenderViewStreamInterLock(CAfxRenderViewStream * stream)
-	: m_Stream(stream)
-	{
-		if(m_Stream)
-			m_Stream->InterLock();
-	}
-
-	~CAfxRenderViewStreamInterLock()
-	{
-		if (m_Stream)
-			m_Stream->InterLockDecrement();
-	}
-
-private:
-	CAfxRenderViewStream * m_Stream;
+	void Capture(CAfxRecordStream * captureTarget, int x, int y, int width, int height);
 };
 
 class CAfxSingleStream;
 class CAfxTwinStream;
 
-class CAfxRecordStream
+class CAfxRecordStream abstract
 : public CAfxStream
 {
 public:
@@ -402,18 +523,115 @@ public:
 	/// <remarks>This is called regardless of Record value.</remarks>
 	void RecordStart();
 
-	/// <remarks>This is only called between RecordStart and RecordEnd and only if Record is true.</remarks>
-	bool CreateCapturePath(const std::wstring & takeDir, int frameNumber, wchar_t const * fileExtension, std::wstring &outPath);
+	void QueueCaptureStart(IAfxMatRenderContextOrg * ctx);
+
+	void QueueCaptureEnd(IAfxMatRenderContextOrg * ctx, const std::wstring & takeDir, int frameNumber, wchar_t const * fileExtension);
+
+	/// <remarks>This is not guaranteed to be called, i.e. not called upon buffer re-allocation error.</remarks>
+	virtual void OnImageBufferCaptured(CAfxRenderViewStream * stream, CAfxImageBuffer * buffer) = 0;
 
 	/// <remarks>This is called regardless of Record value.</remarks>
 	void RecordEnd();
 
+protected:
+	virtual void CaptureStart(void) = 0;
+
+	/// <param name="outPath">Can be 0 in case the path could not be created successfully.</param>
+	virtual void CaptureEnd(std::wstring const * outPath) = 0;
+
+	static void WriteFile_EnterScope(void)
+	{
+		m_Shared.WriteFile_EnterScope();	
+	}
+
+	static void WriteFile_ExitScope(void)
+	{
+		m_Shared.WriteFile_ExitScope();
+	}
+
 private:
+	class CCaptureStartFunctor
+		: public CAfxFunctor
+	{
+	public:
+		CCaptureStartFunctor(CAfxRecordStream & stream)
+			: m_Stream(stream)
+		{
+			m_Stream.AddRef();
+			m_Stream.InterLockIncrement();
+		}
+
+		void operator()()
+		{
+			m_Stream.CaptureStart();
+		}
+
+	private:
+		CAfxRecordStream & m_Stream;
+	};
+
+	class CCaptureEndFunctor
+		: public CAfxFunctor
+	{
+	public:
+		CCaptureEndFunctor(CAfxRecordStream & stream, const std::wstring & takeDir, int frameNumber, wchar_t const * fileExtension)
+			: m_Stream(stream)
+		{
+			m_OutPathOk = m_Stream.CreateCapturePath(takeDir, frameNumber, fileExtension, m_OutPath);
+		}
+
+		void operator()()
+		{
+			m_Stream.CaptureEnd(m_OutPathOk ? &m_OutPath : 0);
+			m_Stream.InterLockDecrement();
+			m_Stream.Release();
+		}
+
+	private:
+		CAfxRecordStream & m_Stream;
+		std::wstring m_OutPath;
+		bool m_OutPathOk;
+	};
+
+	class CShared
+	{
+	public:
+		void WriteFile_EnterScope(void)
+		{
+			std::unique_lock<std::mutex> lock(m_WriteFileMutex);
+
+			m_WriteFileCondition.wait(lock, [this]() { return m_WriteFileCount < m_MaxInScope; });
+
+			++m_WriteFileCount;
+		}
+
+		void WriteFile_ExitScope(void)
+		{
+			{
+				std::unique_lock<std::mutex> lock(m_WriteFileMutex);
+				--m_WriteFileCount;
+			}
+
+			m_WriteFileCondition.notify_one();
+		}
+
+	private:
+		static const int m_MaxInScope = 2;
+		std::mutex m_WriteFileMutex;
+		std::condition_variable m_WriteFileCondition;
+		int m_WriteFileCount = 0;
+	};
+
+	static CShared m_Shared;
+
 	std::string m_StreamName;
 	std::wstring m_CapturePath;
 	bool m_Record;
 	bool m_TriedCreatePath;
 	bool m_SucceededCreatePath;
+
+	/// <remarks>This is only called between RecordStart and RecordEnd and only if Record is true.</remarks>
+	bool CreateCapturePath(const std::wstring & takeDir, int frameNumber, wchar_t const * fileExtension, std::wstring &outPath);
 };
 
 class CAfxSingleStream
@@ -428,12 +646,22 @@ public:
 
 	CAfxRenderViewStream * Stream_get(void);
 
+	virtual void OnImageBufferCaptured(CAfxRenderViewStream * stream, CAfxImageBuffer * buffer);
+
 protected:
 	virtual ~CAfxSingleStream();
 
+	virtual void CaptureStart(void);
+
+	/// <param name="outPath">Can be 0 in case the path could not be created successfully.</param>
+	virtual void CaptureEnd(std::wstring const * outPath);
+
 private:
 	CAfxRenderViewStream * m_Stream;
-
+	CAfxImageBuffer * m_Buffer;
+	std::mutex m_CaptureMutex;
+	std::condition_variable m_CaptureCondition;
+	bool m_Capturing = false;
 };
 
 class CAfxTwinStream
@@ -459,13 +687,26 @@ public:
 	StreamCombineType StreamCombineType_get(void);
 	void StreamCombineType_set(StreamCombineType value);
 
+	virtual void OnImageBufferCaptured(CAfxRenderViewStream * stream, CAfxImageBuffer * buffer);
+
 protected:
 	virtual ~CAfxTwinStream();
+
+	virtual void CaptureStart(void);
+
+	/// <param name="outPath">Can be 0 in case the path could not be created successfully.</param>
+	virtual void CaptureEnd(std::wstring const * outPath);
 
 private:
 	CAfxRenderViewStream * m_StreamA;
 	CAfxRenderViewStream * m_StreamB;
 	StreamCombineType m_StreamCombineType;
+
+	CAfxImageBuffer * m_BufferA;
+	CAfxImageBuffer * m_BufferB;
+	std::mutex m_CaptureMutex;
+	std::condition_variable m_CaptureCondition;
+	bool m_Capturing = false;
 };
 
 
@@ -1810,6 +2051,10 @@ class CAfxStreams
 , public IAfxBaseClientDllView_Render
 {
 public:
+	CAfxImageBufferPool ImageBufferPool;
+
+	bool m_FormatBmpAndNotTga;
+
 	CAfxStreams();
 	~CAfxStreams();
 
@@ -1907,34 +2152,6 @@ private:
 		CAfxStreams * m_ClassPtr;
 		void (CAfxStreams::*m_ClassFn)(void);
 
-	};
-
-	class CImageBuffer
-	{
-	public:
-		enum ImageBufferPixelFormat
-		{
-			IBPF_BGR,
-			IBPF_BGRA,
-			IBPF_A,
-			IBPF_ZFloat
-		};
-
-		void * Buffer;
-
-		ImageBufferPixelFormat PixelFormat;
-		int Width;
-		int Height;
-		size_t ImagePitch;
-		size_t ImageBytes;
-
-		CImageBuffer();
-		~CImageBuffer();
-
-		bool AutoRealloc(ImageBufferPixelFormat pixelFormat, int width, int height);
-
-	private:
-		size_t m_BufferBytesAllocated;
 	};
 
 	class CEntityBvhCapture
@@ -2056,10 +2273,7 @@ private:
 	bool m_ColorModulationOverride;
 	bool m_BlendOverride;
 	float m_OverrideColor[4];
-	CImageBuffer m_BufferA;
-	CImageBuffer m_BufferB;
 	std::wstring m_TakeDir;
-	bool m_FormatBmpAndNotTga;
 	//ITexture_csgo * m_RgbaRenderTarget;
 	SOURCESDK::ITexture_csgo * m_RenderTargetDepthF;
 	//CAfxMaterial * m_ShowzMaterial;
@@ -2101,9 +2315,7 @@ private:
 
 	void CreateRenderTargets(SOURCESDK::IMaterialSystem_csgo * materialSystem);
 
-	bool CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuffer & buffer, IAfxMatRenderContextOrg * ctxp, bool isInPreview);
-
-	bool WriteBufferToFile(const CImageBuffer & buffer, const std::wstring & path, bool ifZip);
+	IAfxMatRenderContextOrg *  CaptureStreamToBuffer(CAfxRenderViewStream * stream, CAfxRecordStream * captureTarget, bool isInPreview, bool first, bool last);
 
 	IAfxContextHook * FindHook(IAfxMatRenderContext * ctx);
 

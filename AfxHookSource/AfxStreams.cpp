@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-10-01 dominik.matrixstorm.com
+// 2016-10-09 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -32,6 +32,29 @@
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
+
+#if AFXSTREAMS_REFTRACKER
+
+#include <atomic>
+
+std::atomic_int g_AfxStreams_RefTracker_Count = 0;
+
+void AfxStreams_RefTracker_Inc(void)
+{
+	++g_AfxStreams_RefTracker_Count;
+}
+
+void AfxStreams_RefTracker_Dec(void)
+{
+	--g_AfxStreams_RefTracker_Count;
+}
+
+int AfxStreams_RefTracker_Get(void)
+{
+	return g_AfxStreams_RefTracker_Count;
+}
+
+#endif
 
 
 extern WrpVEngineClient * g_VEngineClient;
@@ -193,50 +216,8 @@ void QueueOrExecute(IAfxMatRenderContextOrg * ctx, SOURCESDK::CSGO::CFunctor * f
 	}
 }
 
-class CAfxMyFunctor abstract
-: public SOURCESDK::CSGO::CFunctor
-{
-public:
-	CAfxMyFunctor()
-	: m_RefCount(0)
-	{
-	}
-
-	virtual int AddRef(void)
-	{
-		m_RefMutex.lock();
-
-		++m_RefCount;
-		int result = m_RefCount;
-
-		m_RefMutex.unlock();
-
-		return m_RefCount;
-	}
-
-	virtual int Release(void)
-	{
-		m_RefMutex.lock();
-
-		--m_RefCount;
-
-		int result = m_RefCount;
-
-		m_RefMutex.unlock();
-
-		if (0 == result)
-			delete this;
-
-		return result;
-	}
-
-private:
-	std::mutex m_RefMutex;
-	int m_RefCount;
-};
-
 class AfxD3D9PushOverrideState_Functor
-	: public CAfxMyFunctor
+	: public CAfxFunctor
 {
 public:
 	virtual void operator()()
@@ -246,7 +227,7 @@ public:
 };
 
 class AfxD3D9PopOverrideState_Functor
-	: public CAfxMyFunctor
+	: public CAfxFunctor
 {
 public:
 	virtual void operator()()
@@ -256,7 +237,7 @@ public:
 };
 
 class AfxD3D9OverrideEnd_ModulationColor_Functor
-	: public CAfxMyFunctor
+	: public CAfxFunctor
 {
 public:
 	virtual void operator()()
@@ -266,7 +247,7 @@ public:
 };
 
 class AfxD3D9OverrideEnd_ModulationBlend_Functor
-	: public CAfxMyFunctor
+	: public CAfxFunctor
 {
 public:
 	virtual void operator()()
@@ -276,7 +257,7 @@ public:
 };
 
 class AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE_Functor
-	: public CAfxMyFunctor
+	: public CAfxFunctor
 {
 public:
 	virtual void operator()()
@@ -286,7 +267,7 @@ public:
 };
 
 class AfxD3D9OverrideBegin_ModulationBlend_Functor
-	: public CAfxMyFunctor
+	: public CAfxFunctor
 {
 public:
 	AfxD3D9OverrideBegin_ModulationBlend_Functor(float blend)
@@ -303,7 +284,7 @@ private:
 };
 
 class AfxD3D9OverrideBegin_ModulationColor_Functor
-	: public CAfxMyFunctor
+	: public CAfxFunctor
 {
 public:
 	AfxD3D9OverrideBegin_ModulationColor_Functor(float color[3])
@@ -323,7 +304,7 @@ private:
 
 
 class AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE_Functor
-	: public CAfxMyFunctor
+	: public CAfxFunctor
 {
 public:
 	AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE_Functor(DWORD enable)
@@ -340,7 +321,7 @@ private:
 };
 
 class AfxD3D9OverrideEnd_D3DRS_DESTBLEND_Functor
-	: public CAfxMyFunctor
+	: public CAfxFunctor
 {
 public:
 	virtual void operator()()
@@ -350,7 +331,7 @@ public:
 };
 
 class AfxD3D9OverrideEnd_D3DRS_SRCBLEND_Functor
-	: public CAfxMyFunctor
+	: public CAfxFunctor
 {
 public:
 	virtual void operator()()
@@ -360,7 +341,7 @@ public:
 };
 
 class AfxD3D9OverrideEnd_D3DRS_ALPHABLENDENABLE_Functor
-	: public CAfxMyFunctor
+	: public CAfxFunctor
 {
 public:
 	virtual void operator()()
@@ -370,7 +351,7 @@ public:
 };
 
 class AfxD3D9OverrideBegin_D3DRS_ALPHABLENDENABLE_Functor
-	: public CAfxMyFunctor
+	: public CAfxFunctor
 {
 public:
 	AfxD3D9OverrideBegin_D3DRS_ALPHABLENDENABLE_Functor(DWORD value)
@@ -387,7 +368,7 @@ private:
 };
 
 class AfxD3D9OverrideBegin_D3DRS_SRCBLEND_Functor
-	: public CAfxMyFunctor
+	: public CAfxFunctor
 {
 public:
 	AfxD3D9OverrideBegin_D3DRS_SRCBLEND_Functor(DWORD value)
@@ -404,7 +385,7 @@ private:
 };
 
 class AfxD3D9OverrideBegin_D3DRS_DESTBLEND_Functor
-	: public CAfxMyFunctor
+	: public CAfxFunctor
 {
 public:
 	AfxD3D9OverrideBegin_D3DRS_DESTBLEND_Functor(DWORD value)
@@ -421,7 +402,7 @@ private:
 };
 
 class AfxD3D9BlockPresent_Functor
-	: public CAfxMyFunctor
+	: public CAfxFunctor
 {
 public:
 	AfxD3D9BlockPresent_Functor(bool value)
@@ -439,7 +420,7 @@ private:
 };
 
 class CAfxLeafExecute_Functor
-	: public CAfxMyFunctor
+	: public CAfxFunctor
 {
 public:
 	CAfxLeafExecute_Functor(SOURCESDK::CSGO::CFunctor * functor)
@@ -507,13 +488,10 @@ void CAfxFileTracker::WaitForFiles(unsigned int maxUnfinishedFiles)
 // CAfxRenderViewStream ////////////////////////////////////////////////////////
 
 CAfxRenderViewStream::CAfxRenderViewStream()
-: m_RefCount(0) // this needs to be before functor initalization, since those access m_RefCount indirectly.
-, m_DrawViewModel(true)
+: m_DrawViewModel(true)
 , m_DrawHud(false)
 , m_StreamCaptureType(SCT_Normal)
-, m_LockCount(0)
 {
-	m_LockCondition.notify_one();
 }
 
 CAfxRenderViewStream::~CAfxRenderViewStream()
@@ -570,13 +548,195 @@ void CAfxRenderViewStream::StreamCaptureType_set(StreamCaptureType value)
 	m_StreamCaptureType = value;
 }
 
+void CAfxRenderViewStream::QueueCapture(IAfxMatRenderContextOrg * ctx, CAfxRecordStream * captureTarget, int x, int y, int width, int height)
+{
+	QueueOrExecute(ctx, new CAfxLeafExecute_Functor(new CCaptureFunctor(*this, captureTarget, x, y, width, height)));
+}
+
+void CAfxRenderViewStream::Capture(CAfxRecordStream * captureTarget, int x, int y, int width, int height)
+{
+	IAfxMatRenderContextOrg * ctx = GetCurrentContext()->GetOrg();
+
+	bool isDepthF = m_StreamCaptureType == CAfxRenderViewStream::SCT_DepthF || m_StreamCaptureType == CAfxRenderViewStream::SCT_DepthFZIP;
+
+	CAfxImageBuffer * buffer = g_AfxStreams.ImageBufferPool.AquireBuffer();
+
+	if(isDepthF)
+	{
+		if(buffer->AutoRealloc(CAfxImageBuffer::IBPF_ZFloat, width, height))
+		{
+			unsigned char * pBuffer = (unsigned char*)buffer->Buffer;
+			int imagePitch = buffer->ImagePitch;
+
+			ctx->ReadPixels(
+				x, y, width, height,
+				pBuffer,
+				SOURCESDK::IMAGE_FORMAT_R32F
+			);
+
+			// Post process buffer:
+
+			float depthScale = 1.0f;
+			float depthOfs = 0.0f;
+
+			if(CAfxBaseFxStream * baseFx = this->AsAfxBaseFxStream())
+			{
+				depthScale = baseFx->DepthValMax_get() - baseFx->DepthVal_get();
+				depthOfs = baseFx->DepthVal_get();
+			}
+
+			for(int y=0; y < height; ++y)
+			{
+				for(int x=0; x < width; ++x)
+				{
+					float depth = *(float *)((unsigned char *)pBuffer +y*imagePitch +x*sizeof(float));
+
+					depth *= depthScale;
+					depth += depthOfs;
+
+					*(float *)((unsigned char *)pBuffer +y*imagePitch +x*sizeof(float))
+						= depth;
+				}
+			}
+
+			captureTarget->OnImageBufferCaptured(this, buffer);
+		}
+		else
+		{
+			buffer->Release();
+			Tier0_Warning("CAfxStreams::CaptureStreamToBuffer: Failed to realloc buffer.\n");
+		}
+	}
+	else
+	if(buffer->AutoRealloc(CAfxImageBuffer::IBPF_BGR, width, height))
+	{
+		unsigned char * pBuffer = (unsigned char*)buffer->Buffer;
+		int imagePitch = buffer->ImagePitch;
+
+		ctx->ReadPixels(
+			x, y, width, height,
+			(unsigned char*)pBuffer,
+			SOURCESDK::IMAGE_FORMAT_RGB888
+		);
+
+		if(CAfxRenderViewStream::SCT_Depth24 == m_StreamCaptureType || CAfxRenderViewStream::SCT_Depth24ZIP == m_StreamCaptureType)
+		{
+			float depthScale = 1.0f;
+			float depthOfs = 0.0f;
+
+			if(CAfxBaseFxStream * baseFx = this->AsAfxBaseFxStream())
+			{
+				depthScale = baseFx->DepthValMax_get() - baseFx->DepthVal_get();
+				depthOfs = baseFx->DepthVal_get();
+			}
+
+			int oldImagePitch =  imagePitch;
+
+			// make the 24bit RGB into a float buffer:
+			if(buffer->AutoRealloc(CAfxImageBuffer::IBPF_ZFloat, width, height))
+			{
+				unsigned char * pBuffer = (unsigned char*)buffer->Buffer;
+				int imagePitch = buffer->ImagePitch;
+
+				for(int y = height-1; y >= 0; --y)
+				{
+					for(int x = width-1; x >= 0; --x)
+					{
+						unsigned char r = ((unsigned char *)pBuffer)[y*oldImagePitch +3*x +0];
+						unsigned char g = ((unsigned char *)pBuffer)[y*oldImagePitch +3*x +1];
+						unsigned char b = ((unsigned char *)pBuffer)[y*oldImagePitch +3*x +2];
+
+						float depth;
+
+						depth = (1.0f/16777215.0f)*r +(256.0f/16777215.0f)*g +(65536.0f/16777215.0f)*b;
+
+						depth *= depthScale;
+						depth += depthOfs;
+
+						*(float *)((unsigned char *)pBuffer +y*imagePitch +x*sizeof(float))
+							= depth;
+					}
+				}
+
+				captureTarget->OnImageBufferCaptured(this, buffer);
+			}
+			else
+			{
+				buffer->Release();
+				Tier0_Warning("CAfxStreams::CaptureStreamToBuffer: Failed to realloc buffer.\n");
+			}
+		}
+		else
+		{
+			// (back) transform to MDT native format:
+
+			int lastLine = height >> 1;
+			if(height & 0x1) ++lastLine;
+
+			for(int y=0;y<lastLine;++y)
+			{
+				int srcLine = y;
+				int dstLine = height -1 -y;
+
+				for(int x=0;x<width;++x)
+				{
+					unsigned char r = ((unsigned char *)pBuffer)[dstLine*imagePitch +3*x +0];
+					unsigned char g = ((unsigned char *)pBuffer)[dstLine*imagePitch +3*x +1];
+					unsigned char b = ((unsigned char *)pBuffer)[dstLine*imagePitch +3*x +2];
+									
+					((unsigned char *)pBuffer)[dstLine*imagePitch +3*x +0] = ((unsigned char *)pBuffer)[srcLine*imagePitch +3*x +2];
+					((unsigned char *)pBuffer)[dstLine*imagePitch +3*x +1] = ((unsigned char *)pBuffer)[srcLine*imagePitch +3*x +1];
+					((unsigned char *)pBuffer)[dstLine*imagePitch +3*x +2] = ((unsigned char *)pBuffer)[srcLine*imagePitch +3*x +0];
+									
+					((unsigned char *)pBuffer)[srcLine*imagePitch +3*x +0] = b;
+					((unsigned char *)pBuffer)[srcLine*imagePitch +3*x +1] = g;
+					((unsigned char *)pBuffer)[srcLine*imagePitch +3*x +2] = r;
+				}
+			}
+
+			captureTarget->OnImageBufferCaptured(this, buffer);
+		}
+	}
+	else
+	{
+		buffer->Release();
+		Tier0_Warning("CAfxStreams::CaptureStreamToBuffer: Failed to realloc buffer.\n");
+	}
+}
+
+// CAfxRenderViewStream::CCaptureFunctor ///////////////////////////////////////
+
+CAfxRenderViewStream::CCaptureFunctor::CCaptureFunctor(CAfxRenderViewStream & stream, CAfxRecordStream * captureTarget, int x, int y, int width, int height)
+	: m_Stream(stream)
+	, m_CaptureTarget(captureTarget)
+	, m_X(x), m_Y(y), m_Width(width), m_Height(height)
+{
+	m_Stream.AddRef();
+	m_Stream.InterLockIncrement();
+
+	m_CaptureTarget->AddRef();
+}
+
+void CAfxRenderViewStream::CCaptureFunctor::operator()()
+{
+	m_Stream.Capture(m_CaptureTarget, m_X, m_Y, m_Width, m_Height);
+
+	m_CaptureTarget->Release();
+
+	m_Stream.InterLockDecrement();
+	m_Stream.Release();
+}
+
 // CAfxRecordStream ////////////////////////////////////////////////////////////
+
+CAfxRecordStream::CShared CAfxRecordStream::m_Shared;
 
 CAfxRecordStream::CAfxRecordStream(char const * streamName)
 : CAfxStream()
 , m_StreamName(streamName)
 , m_Record(true)
 {
+
 }
 
 bool CAfxRecordStream::Record_get(void)
@@ -644,6 +804,17 @@ char const * CAfxRecordStream::StreamName_get(void)
 	return m_StreamName.c_str();
 }
 
+void CAfxRecordStream::QueueCaptureStart(IAfxMatRenderContextOrg * ctx)
+{
+	QueueOrExecute(ctx, new CAfxLeafExecute_Functor(new CCaptureStartFunctor(*this)));
+}
+
+void CAfxRecordStream::QueueCaptureEnd(IAfxMatRenderContextOrg * ctx, const std::wstring & takeDir, int frameNumber, wchar_t const * fileExtension)
+{
+	QueueOrExecute(ctx, new CAfxLeafExecute_Functor(new CCaptureEndFunctor(*this, takeDir, frameNumber, fileExtension)));
+}
+
+
 // CAfxSingleStream ////////////////////////////////////////////////////////////
 
 CAfxSingleStream::CAfxSingleStream(char const * streamName, CAfxRenderViewStream * stream)
@@ -651,6 +822,8 @@ CAfxSingleStream::CAfxSingleStream(char const * streamName, CAfxRenderViewStream
 , m_Stream(stream)
 {
 	m_Stream->AddRef();
+
+	m_CaptureCondition.notify_one();
 }
 
 CAfxSingleStream::~CAfxSingleStream()
@@ -667,6 +840,60 @@ void CAfxSingleStream::LevelShutdown(void)
 {
 	m_Stream->LevelShutdown();
 }
+
+void CAfxSingleStream::OnImageBufferCaptured(CAfxRenderViewStream * stream, CAfxImageBuffer * buffer)
+{
+	if (m_Stream == stream)
+		m_Buffer = buffer;
+	else
+		buffer->Release();
+}
+
+
+void CAfxSingleStream::CaptureStart(void)
+{
+	{
+		std::unique_lock<std::mutex> lock(m_CaptureMutex);
+
+		m_CaptureCondition.wait(lock, [this]() { return !m_Capturing; });
+
+		m_Capturing = true;
+	}
+
+	m_Buffer = 0;
+}
+
+void CAfxSingleStream::CaptureEnd(std::wstring const * outPath)
+{
+	CAfxImageBuffer * buffer = m_Buffer;
+
+	{
+		std::unique_lock<std::mutex> lock(m_CaptureMutex);
+		m_Capturing = false;
+	}
+
+	m_CaptureCondition.notify_one();
+
+	if (buffer)
+	{
+		if (outPath)
+		{
+			CAfxRenderViewStream::StreamCaptureType captureType = m_Stream->StreamCaptureType_get();
+
+			WriteFile_EnterScope();
+			
+			if (!buffer->WriteToFile(*outPath, (captureType == CAfxRenderViewStream::SCT_Depth24ZIP || captureType == CAfxRenderViewStream::SCT_DepthFZIP), g_AfxStreams.m_FormatBmpAndNotTga))
+			{
+				Tier0_Warning("AFXERROR: Failed writing image for stream %s\n.", this->StreamName_get());
+			}
+
+			WriteFile_ExitScope();
+		}
+
+		buffer->Release();
+	}
+}
+
 
 // CAfxTwinStream //////////////////////////////////////////////////////////////
 
@@ -711,6 +938,119 @@ void CAfxTwinStream::StreamCombineType_set(StreamCombineType value)
 {
 	m_StreamCombineType = value;
 }
+
+void CAfxTwinStream::OnImageBufferCaptured(CAfxRenderViewStream * stream, CAfxImageBuffer * buffer)
+{
+	if (m_StreamA == stream)
+		m_BufferA = buffer;
+	else if (m_StreamB == stream)
+		m_BufferB = buffer;
+	else
+		buffer->Release();
+}
+
+
+void CAfxTwinStream::CaptureStart(void)
+{
+	{
+		std::unique_lock<std::mutex> lock(m_CaptureMutex);
+
+		m_CaptureCondition.wait(lock, [this]() { return !m_Capturing; });
+
+		m_Capturing = true;
+	}
+
+	m_BufferA = 0;
+	m_BufferB = 0;
+}
+
+void CAfxTwinStream::CaptureEnd(std::wstring const * outPath)
+{
+	CAfxImageBuffer * bufferA = m_BufferA;
+	CAfxImageBuffer * bufferB = m_BufferB;
+	CAfxRenderViewStream::StreamCaptureType captureType;
+	bool canCombine = false;
+
+	if (CAfxTwinStream::SCT_ARedAsAlphaBColor == m_StreamCombineType)
+	{
+		bufferA = m_BufferB;
+		captureType = m_StreamB->StreamCaptureType_get();
+		bufferB = m_BufferA;
+		canCombine = true;
+	}
+	else
+	if (CAfxTwinStream::SCT_AColorBRedAsAlpha == m_StreamCombineType)
+	{
+		bufferA = m_BufferA;
+		captureType = m_StreamA->StreamCaptureType_get();
+		bufferB = m_BufferB;
+		canCombine = true;
+	}
+
+	{
+		std::unique_lock<std::mutex> lock(m_CaptureMutex);
+		m_Capturing = false;
+	}
+
+	m_CaptureCondition.notify_one();
+
+	if (outPath && canCombine && bufferA && bufferB)
+	{
+		canCombine = 
+			bufferA->Width == bufferB->Width
+			&& bufferA->Height == bufferB->Height
+			&& bufferA->PixelFormat == bufferA->IBPF_BGR
+			&& bufferA->PixelFormat == bufferB->PixelFormat
+			&& bufferA->ImagePitch == bufferB->ImagePitch
+			&& bufferA->AutoRealloc(bufferA->IBPF_BGRA, bufferA->Width, bufferA->Height)
+			;
+
+		if (canCombine)
+		{
+			// interleave B as alpha into A:
+
+			int height = bufferA->Height;
+			int width = bufferB->Width;
+			int imagePitch = bufferA->ImagePitch;
+
+			unsigned char * pBufferA = (unsigned char *)(bufferA->Buffer);
+			unsigned char * pBufferB = (unsigned char *)(bufferB->Buffer);
+
+			for (int y = height - 1;y >= 0;--y)
+			{
+				for (int x = width - 1;x >= 0;--x)
+				{
+					unsigned char b = ((unsigned char *)pBufferA)[y*imagePitch + x * 3 + 0];
+					unsigned char g = ((unsigned char *)pBufferA)[y*imagePitch + x * 3 + 1];
+					unsigned char r = ((unsigned char *)pBufferA)[y*imagePitch + x * 3 + 2];
+					unsigned char a = ((unsigned char *)pBufferB)[y*imagePitch + x * 3 + 0];
+
+					((unsigned char *)pBufferA)[y*imagePitch + x * 4 + 0] = b;
+					((unsigned char *)pBufferA)[y*imagePitch + x * 4 + 1] = g;
+					((unsigned char *)pBufferA)[y*imagePitch + x * 4 + 2] = r;
+					((unsigned char *)pBufferA)[y*imagePitch + x * 4 + 3] = a;
+				}
+			}
+
+			WriteFile_EnterScope();
+
+			if (!bufferA->WriteToFile(*outPath, (captureType == CAfxRenderViewStream::SCT_Depth24ZIP || captureType == CAfxRenderViewStream::SCT_DepthFZIP), g_AfxStreams.m_FormatBmpAndNotTga))
+			{
+				Tier0_Warning("AFXERROR: Failed writing image for stream %s\n.", this->StreamName_get());
+			}
+
+			WriteFile_ExitScope();
+		}
+		else
+		{
+			Tier0_Warning("CAfxStreams::View_Render: Combining sub-streams for stream %s, failed.\n", this->StreamName_get());
+		}
+	}
+
+	if (bufferB) bufferB->Release();
+	if (bufferA) bufferA->Release();
+}
+
 
 
 // CAfxBaseFxStream ////////////////////////////////////////////////////////////
@@ -1429,7 +1769,7 @@ void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::RenderBegin(IAfxMatRenderCon
 
 	m_Ctx->Hook_set(this);
 
-	QueueOrExecute(m_Ctx->GetOrg(),new CAfxLeafExecute_Functor(new AfxD3D9PushOverrideState_Functor()));
+	QueueOrExecute(m_Ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9PushOverrideState_Functor()));
 }
 
 void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::RenderEnd(void)
@@ -3435,7 +3775,7 @@ CAfxStreams::~CAfxStreams()
 
 	while(!m_Streams.empty())
 	{
-		delete m_Streams.front();
+		m_Streams.front()->Release();
 		m_Streams.pop_front();
 	}
 
@@ -3865,7 +4205,7 @@ void CAfxStreams::Console_RemoveStream(const char * streamName)
 
 			m_Streams.erase(it);
 
-			delete cur;
+			cur->Release();
 
 			return;
 		}
@@ -3916,9 +4256,9 @@ void CAfxStreams::Console_ListActions(void)
 
 void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * args)
 {
-	for(std::list<CAfxRecordStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
+	for (std::list<CAfxRecordStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
 	{
-		if(!_stricmp(streamName, (*it)->StreamName_get()))
+		if (!_stricmp(streamName, (*it)->StreamName_get()))
 		{
 			Console_EditStream((*it), args);
 			return;
@@ -3936,6 +4276,8 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 	CAfxSingleStream * curSingle = 0;
 	CAfxTwinStream * curTwin = 0;
 	CAfxRenderViewStream * curRenderView = 0;
+
+	CAfxStreamSharedInterLock afxStreamInterLock(cur);
 	
 	if(cur)
 	{
@@ -4077,7 +4419,7 @@ bool CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 	CAfxRenderViewStream * curRenderView = stream;
 	CAfxBaseFxStream * curBaseFx = 0;
 	
-	CAfxRenderViewStreamInterLock afxRenderViewStreamInterLock(curRenderView);
+	CAfxStreamSharedInterLock afxRenderViewStreamInterLock(curRenderView);
 
 	if(curRenderView)
 	{
@@ -5242,12 +5584,14 @@ void CAfxStreams::DebugDump(IAfxMatRenderContextOrg * ctxp)
 	int width = 1280;
 	int height = 720;
 
-	if(m_BufferA.AutoRealloc(isRgba ? m_BufferA.IBPF_BGRA : m_BufferA.IBPF_BGR, width, height))
+	CAfxImageBuffer * buffer = ImageBufferPool.AquireBuffer();
+
+	if(buffer->AutoRealloc(isRgba ? buffer->IBPF_BGRA : buffer->IBPF_BGR, width, height))
 	{
 		ctxp->ReadPixels(
 			0, 0,
 			width, height,
-			(unsigned char*)m_BufferA.Buffer,
+			(unsigned char*)buffer->Buffer,
 			isRgba ? SOURCESDK::IMAGE_FORMAT_RGBA8888 : SOURCESDK::IMAGE_FORMAT_RGB888
 		);
 
@@ -5265,37 +5609,37 @@ void CAfxStreams::DebugDump(IAfxMatRenderContextOrg * ctxp)
 				{
 					for(int x=0;x<width;++x)
 					{
-						unsigned char r = ((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +4*x +0];
-						unsigned char g = ((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +4*x +1];
-						unsigned char b = ((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +4*x +2];
-						unsigned char a = ((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +4*x +3];
+						unsigned char r = ((unsigned char *)buffer->Buffer)[dstLine*buffer->ImagePitch +4*x +0];
+						unsigned char g = ((unsigned char *)buffer->Buffer)[dstLine*buffer->ImagePitch +4*x +1];
+						unsigned char b = ((unsigned char *)buffer->Buffer)[dstLine*buffer->ImagePitch +4*x +2];
+						unsigned char a = ((unsigned char *)buffer->Buffer)[dstLine*buffer->ImagePitch +4*x +3];
 									
-						((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +4*x +0] = ((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +4*x +2];
-						((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +4*x +1] = ((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +4*x +1];
-						((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +4*x +2] = ((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +4*x +0];
-						((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +4*x +3] = ((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +4*x +3];
+						((unsigned char *)buffer->Buffer)[dstLine*buffer->ImagePitch +4*x +0] = ((unsigned char *)buffer->Buffer)[srcLine*buffer->ImagePitch +4*x +2];
+						((unsigned char *)buffer->Buffer)[dstLine*buffer->ImagePitch +4*x +1] = ((unsigned char *)buffer->Buffer)[srcLine*buffer->ImagePitch +4*x +1];
+						((unsigned char *)buffer->Buffer)[dstLine*buffer->ImagePitch +4*x +2] = ((unsigned char *)buffer->Buffer)[srcLine*buffer->ImagePitch +4*x +0];
+						((unsigned char *)buffer->Buffer)[dstLine*buffer->ImagePitch +4*x +3] = ((unsigned char *)buffer->Buffer)[srcLine*buffer->ImagePitch +4*x +3];
 
-						((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +4*x +0] = b;
-						((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +4*x +1] = g;
-						((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +4*x +2] = r;
-						((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +4*x +3] = a;
+						((unsigned char *)buffer->Buffer)[srcLine*buffer->ImagePitch +4*x +0] = b;
+						((unsigned char *)buffer->Buffer)[srcLine*buffer->ImagePitch +4*x +1] = g;
+						((unsigned char *)buffer->Buffer)[srcLine*buffer->ImagePitch +4*x +2] = r;
+						((unsigned char *)buffer->Buffer)[srcLine*buffer->ImagePitch +4*x +3] = a;
 					}
 				}
 				else
 				{
 					for(int x=0;x<width;++x)
 					{
-						unsigned char r = ((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +3*x +0];
-						unsigned char g = ((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +3*x +1];
-						unsigned char b = ((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +3*x +2];
+						unsigned char r = ((unsigned char *)buffer->Buffer)[dstLine*buffer->ImagePitch +3*x +0];
+						unsigned char g = ((unsigned char *)buffer->Buffer)[dstLine*buffer->ImagePitch +3*x +1];
+						unsigned char b = ((unsigned char *)buffer->Buffer)[dstLine*buffer->ImagePitch +3*x +2];
 									
-						((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +3*x +0] = ((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +3*x +2];
-						((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +3*x +1] = ((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +3*x +1];
-						((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +3*x +2] = ((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +3*x +0];
+						((unsigned char *)buffer->Buffer)[dstLine*buffer->ImagePitch +3*x +0] = ((unsigned char *)buffer->Buffer)[srcLine*buffer->ImagePitch +3*x +2];
+						((unsigned char *)buffer->Buffer)[dstLine*buffer->ImagePitch +3*x +1] = ((unsigned char *)buffer->Buffer)[srcLine*buffer->ImagePitch +3*x +1];
+						((unsigned char *)buffer->Buffer)[dstLine*buffer->ImagePitch +3*x +2] = ((unsigned char *)buffer->Buffer)[srcLine*buffer->ImagePitch +3*x +0];
 									
-						((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +3*x +0] = b;
-						((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +3*x +1] = g;
-						((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +3*x +2] = r;
+						((unsigned char *)buffer->Buffer)[srcLine*buffer->ImagePitch +3*x +0] = b;
+						((unsigned char *)buffer->Buffer)[srcLine*buffer->ImagePitch +3*x +1] = g;
+						((unsigned char *)buffer->Buffer)[srcLine*buffer->ImagePitch +3*x +2] = r;
 					}
 				}
 			}
@@ -5304,7 +5648,7 @@ void CAfxStreams::DebugDump(IAfxMatRenderContextOrg * ctxp)
 		// Write to disk:
 		{
 			std::wstring path = L"debug.tga";
-			if(!WriteBufferToFile(m_BufferA, path, false))
+			if(!buffer->WriteToFile(path, false, false))
 			{
 				Tier0_Warning("CAfxStreams::DebugDump:Failed writing image for frame #%i\n.", m_Frame);
 			}
@@ -5390,7 +5734,7 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, SOURCESDK::vrect_t_csgo *r
 				if(!(*it)->Record_get()) continue;
 
 				//
-				// Record the stream:
+				// Render a stream and queue capturing etc.:
 
 				CAfxRenderViewStream * streamA = 0;
 				CAfxRenderViewStream * streamB = 0;
@@ -5424,69 +5768,13 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, SOURCESDK::vrect_t_csgo *r
 
 				if(streamA)
 				{
-					streamAOk = CaptureStreamToBuffer(streamA, m_BufferA, ctxp, streamA == previewStream && previewStreamWillRecord);
+					ctxp = CaptureStreamToBuffer(streamA, (*it), streamA == previewStream && previewStreamWillRecord, true, !streamB);
 				}
 
 				if(streamB)
 				{
-					streamBOk = CaptureStreamToBuffer(streamB, m_BufferB, ctxp, streamB == previewStream && previewStreamWillRecord);
+					ctxp = CaptureStreamToBuffer(streamB, (*it), streamB == previewStream && previewStreamWillRecord, !streamA, true);
 				}
-
-				if(streamA && streamB)
-				{
-					streamAOk = streamAOk && streamBOk
-						&& m_BufferA.Width == m_BufferB.Width
-						&& m_BufferA.Height == m_BufferB.Height
-						&& m_BufferA.PixelFormat == m_BufferA.IBPF_BGR
-						&& m_BufferA.PixelFormat == m_BufferB.PixelFormat
-						&& m_BufferA.ImagePitch == m_BufferB.ImagePitch
-						&& m_BufferA.AutoRealloc(m_BufferA.IBPF_BGRA, m_BufferA.Width, m_BufferA.Height)
-					;
-
-					if(streamAOk)
-					{
-						// interleave B as alpha into A:
-
-						for(int y = m_BufferA.Height-1;y>=0;--y)
-						{
-							for(int x=m_BufferA.Width-1;x>=0;--x)
-							{
-								unsigned char b = ((unsigned char *)m_BufferA.Buffer)[y*m_BufferB.ImagePitch+x*3+0];
-								unsigned char g = ((unsigned char *)m_BufferA.Buffer)[y*m_BufferB.ImagePitch+x*3+1];
-								unsigned char r = ((unsigned char *)m_BufferA.Buffer)[y*m_BufferB.ImagePitch+x*3+2];
-								unsigned char a = ((unsigned char *)m_BufferB.Buffer)[y*m_BufferB.ImagePitch+x*3+0];
-
-								((unsigned char *)m_BufferA.Buffer)[y*m_BufferA.ImagePitch+x*4+0] = b;
-								((unsigned char *)m_BufferA.Buffer)[y*m_BufferA.ImagePitch+x*4+1] = g;
-								((unsigned char *)m_BufferA.Buffer)[y*m_BufferA.ImagePitch+x*4+2] = r;
-								((unsigned char *)m_BufferA.Buffer)[y*m_BufferA.ImagePitch+x*4+3] = a;
-							}
-						}
-					}
-					else
-					{
-						Tier0_Warning("CAfxStreams::View_Render: Combining streams failed.\n");
-					}
-				}
-
-				// Write to disk:
-				if(streamAOk)
-				{
-					CAfxRenderViewStream::StreamCaptureType captureType = streamA->StreamCaptureType_get();
-					std::wstring path;
-					if((*it)->CreateCapturePath(
-						m_TakeDir,
-						m_Frame,
-						(captureType == CAfxRenderViewStream::SCT_Depth24 || captureType == CAfxRenderViewStream::SCT_Depth24ZIP || captureType == CAfxRenderViewStream::SCT_DepthF || captureType == CAfxRenderViewStream::SCT_DepthFZIP) ? L".exr" : (m_FormatBmpAndNotTga ? L".bmp" : L".tga"),
-						path))
-					{
-						if(!WriteBufferToFile(m_BufferA, path, captureType == CAfxRenderViewStream::SCT_Depth24ZIP || captureType == CAfxRenderViewStream::SCT_DepthFZIP))
-						{
-							Tier0_Warning("Failed writing image #%i for stream %s\n.", m_Frame, (*it)->StreamName_get());
-						}
-					}
-				}
-
 			}
 		}
 
@@ -5496,8 +5784,28 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, SOURCESDK::vrect_t_csgo *r
 	SetCurrent_View_Render_ThreadId(0);
 }
 
-bool CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuffer & buffer, IAfxMatRenderContextOrg * ctxp, bool isInPreview)
+IAfxMatRenderContextOrg * CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CAfxRecordStream * captureTarget, bool isInPreview, bool first, bool last)
 {
+	if (!m_PresentRecordOnScreen)
+	{
+		m_MaterialSystem->SwapBuffers();
+	}
+
+	// Work around game running out of memory because of too much shit on the queue
+	// aka issue ripieces/advancedfx#22 :
+	m_MaterialSystem->EndFrame();
+	m_MaterialSystem->BeginFrame(0);
+
+	//
+	// We are on potentially a new context now!
+
+	IAfxMatRenderContextOrg * ctxp = GetCurrentContext()->GetOrg();
+
+	if (first)
+	{
+		captureTarget->QueueCaptureStart(ctxp);
+	}
+
 	if (!m_PresentRecordOnScreen)
 	{
 		if (!m_PresentBlocked)
@@ -5506,11 +5814,6 @@ bool CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuf
 			m_PresentBlocked = true;
 		}
 	}
-	
-	// Work around game running out of memory because of too much shit on the queue
-	// aka issue ripieces/advancedfx#22 :
-	m_MaterialSystem->EndFrame();
-	m_MaterialSystem->BeginFrame(0);
 	
 	CAfxRenderViewStream::StreamCaptureType captureType = stream->StreamCaptureType_get();
 	bool isDepthF = captureType == CAfxRenderViewStream::SCT_DepthF || captureType == CAfxRenderViewStream::SCT_DepthFZIP;
@@ -5544,8 +5847,6 @@ bool CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuf
 		//	m_MaterialSystem->SwapBuffers();
 	}
 
-	bool bOk = true;
-
 	SetMatVarsForStreams(); // keep them set in case a mofo resets them.
 
 	if (!isInPreview)
@@ -5567,134 +5868,12 @@ bool CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuf
 	view->RenderView(*viewSetup, *viewSetup, SOURCESDK::VIEW_CLEAR_STENCIL|SOURCESDK::VIEW_CLEAR_DEPTH, whatToDraw);
 	//ScheduleDrawUnlock(ctxp);
 
-	if(isDepthF)
-	{
-		if(buffer.AutoRealloc(CImageBuffer::IBPF_ZFloat, viewSetup->m_nUnscaledWidth, viewSetup->m_nUnscaledHeight))
-		{
-			ctxp->ReadPixels(
-				viewSetup->m_nUnscaledX, viewSetup->m_nUnscaledY,
-				buffer.Width, buffer.Height,
-				(unsigned char*)buffer.Buffer,
-				SOURCESDK::IMAGE_FORMAT_R32F
-			);
-
-			// Post process buffer:
-
-			float depthScale = 1.0f;
-			float depthOfs = 0.0f;
-
-			if(CAfxBaseFxStream * baseFx = stream->AsAfxBaseFxStream())
-			{
-				depthScale = baseFx->DepthValMax_get() - baseFx->DepthVal_get();
-				depthOfs = baseFx->DepthVal_get();
-			}
-
-			for(int y=0; y < buffer.Height; ++y)
-			{
-				for(int x=0; x < buffer.Width; ++x)
-				{
-					float depth = *(float *)((unsigned char *)buffer.Buffer +y*buffer.ImagePitch +x*sizeof(float));
-
-					depth *= depthScale;
-					depth += depthOfs;
-
-					*(float *)((unsigned char *)buffer.Buffer +y*buffer.ImagePitch +x*sizeof(float))
-						= depth;
-				}
-			}
-		}
-		else
-		{
-			bOk = false;
-			Tier0_Warning("CAfxStreams::CaptureStreamToBuffer: Failed to realloc buffer.\n");
-		}
-	}
-	else
-	if(buffer.AutoRealloc(CImageBuffer::IBPF_BGR, viewSetup->m_nUnscaledWidth, viewSetup->m_nUnscaledHeight))
-	{
-		ctxp->ReadPixels(
-			viewSetup->m_nUnscaledX, viewSetup->m_nUnscaledY,
-			buffer.Width, buffer.Height,
-			(unsigned char*)buffer.Buffer,
-			SOURCESDK::IMAGE_FORMAT_RGB888
+	stream->QueueCapture(ctxp, captureTarget,
+		viewSetup->m_nUnscaledX,
+		viewSetup->m_nUnscaledY,
+		viewSetup->m_nUnscaledWidth,
+		viewSetup->m_nUnscaledHeight
 		);
-
-		if(CAfxRenderViewStream::SCT_Depth24 == captureType || CAfxRenderViewStream::SCT_Depth24ZIP == captureType)
-		{
-			float depthScale = 1.0f;
-			float depthOfs = 0.0f;
-
-			if(CAfxBaseFxStream * baseFx = stream->AsAfxBaseFxStream())
-			{
-				depthScale = baseFx->DepthValMax_get() - baseFx->DepthVal_get();
-				depthOfs = baseFx->DepthVal_get();
-			}
-
-			int oldImagePitch = buffer.ImagePitch;
-
-			// make the 24bit RGB into a float buffer:
-			if(buffer.AutoRealloc(CImageBuffer::IBPF_ZFloat, buffer.Width, buffer.Height))
-			{
-				for(int y=buffer.Height-1; y >= 0; --y)
-				{
-					for(int x=buffer.Width-1; x >= 0; --x)
-					{
-						unsigned char r = ((unsigned char *)buffer.Buffer)[y*oldImagePitch +3*x +0];
-						unsigned char g = ((unsigned char *)buffer.Buffer)[y*oldImagePitch +3*x +1];
-						unsigned char b = ((unsigned char *)buffer.Buffer)[y*oldImagePitch +3*x +2];
-
-						float depth;
-
-						depth = (1.0f/16777215.0f)*r +(256.0f/16777215.0f)*g +(65536.0f/16777215.0f)*b;
-
-						depth *= depthScale;
-						depth += depthOfs;
-
-						*(float *)((unsigned char *)buffer.Buffer +y*buffer.ImagePitch +x*sizeof(float))
-							= depth;
-					}
-				}
-			}
-			else
-			{
-				bOk = false;
-				Tier0_Warning("CAfxStreams::CaptureStreamToBuffer: Failed to realloc buffer.\n");
-			}
-		}
-		else
-		{
-			// (back) transform to MDT native format:
-
-			int lastLine = buffer.Height >> 1;
-			if(buffer.Height & 0x1) ++lastLine;
-
-			for(int y=0;y<lastLine;++y)
-			{
-				int srcLine = y;
-				int dstLine = buffer.Height -1 -y;
-
-				for(int x=0;x<buffer.Width;++x)
-				{
-					unsigned char r = ((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +3*x +0];
-					unsigned char g = ((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +3*x +1];
-					unsigned char b = ((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +3*x +2];
-									
-					((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +3*x +0] = ((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +3*x +2];
-					((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +3*x +1] = ((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +3*x +1];
-					((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +3*x +2] = ((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +3*x +0];
-									
-					((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +3*x +0] = b;
-					((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +3*x +1] = g;
-					((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +3*x +2] = r;
-				}
-			}
-		}
-	}
-	else
-	{
-		bOk = false;
-		Tier0_Warning("CAfxStreams::CaptureStreamToBuffer: Failed to realloc buffer.\n");
-	}
 
 	if(0 < strlen(stream->DetachCommands_get())) g_VEngineClient->ExecuteClientCmd(stream->DetachCommands_get());
 
@@ -5705,38 +5884,12 @@ bool CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuf
 		ctxp->PopRenderTargetAndViewport();
 	}
 
-	return bOk;
-}
-
-bool CAfxStreams::WriteBufferToFile(const CImageBuffer & buffer, const std::wstring & path, bool ifZip)
-{
-	if(buffer.IBPF_ZFloat == buffer.PixelFormat)
+	if (last)
 	{
-		return WriteFloatZOpenExr(
-			path.c_str(),
-			(unsigned char*)buffer.Buffer,
-			buffer.Width,
-			buffer.Height,
-			sizeof(float),
-			buffer.ImagePitch,
-			ifZip ? WFZOEC_Zip : WFZOEC_None
-			);
+		captureTarget->QueueCaptureEnd(ctxp, m_TakeDir, m_Frame, (captureType == CAfxRenderViewStream::SCT_Depth24 || captureType == CAfxRenderViewStream::SCT_Depth24ZIP || captureType == CAfxRenderViewStream::SCT_DepthF || captureType == CAfxRenderViewStream::SCT_DepthFZIP) ? L".exr" : (m_FormatBmpAndNotTga ? L".bmp" : L".tga"));
 	}
 
-	if(buffer.IBPF_A == buffer.PixelFormat)
-	{
-		return m_FormatBmpAndNotTga
-			? WriteRawBitmap((unsigned char*)buffer.Buffer, path.c_str(), buffer.Width, buffer.Height, 8, buffer.ImagePitch)
-			: WriteRawTarga((unsigned char*)buffer.Buffer, path.c_str(), buffer.Width, buffer.Height, 8, true, buffer.ImagePitch, 0)
-		;
-	}
-
-	bool isBgra = buffer.IBPF_BGRA == buffer.PixelFormat;
-
-	return m_FormatBmpAndNotTga && !isBgra
-		? WriteRawBitmap((unsigned char*)buffer.Buffer, path.c_str(), buffer.Width, buffer.Height, 24, buffer.ImagePitch)
-		: WriteRawTarga((unsigned char*)buffer.Buffer, path.c_str(), buffer.Width, buffer.Height, isBgra ? 32 : 24, false, buffer.ImagePitch, isBgra ? 8 : 0)
-	;
+	return ctxp;
 }
 
 bool CAfxStreams::Console_CheckStreamName(char const * value)
@@ -5928,6 +6081,7 @@ void CAfxStreams::EnsureMatVars()
 
 void CAfxStreams::AddStream(CAfxRecordStream * stream)
 {
+	stream->AddRef();
 	m_Streams.push_back(stream);
 
 	if(m_Recording) stream->RecordStart();
@@ -5971,20 +6125,71 @@ IAfxContextHook * CAfxStreams::FindHook(IAfxMatRenderContext * ctx)
 	return ctx->Hook_get();
 }
 
-// CAfxStreams::CImageBuffer ///////////////////////////////////////////////////
+// CAfxImageBufferPool /////////////////////////////////////////////////////////
 
-CAfxStreams::CImageBuffer::CImageBuffer()
+CAfxImageBufferPool::CAfxImageBufferPool()
+{
+	for (int i = 0; i < 3; ++i)
+	{
+		m_Buffers.push(new CAfxImageBuffer(this));
+	}
+
+	m_BufferAvailableCondition.notify_one();
+}
+
+CAfxImageBufferPool::~CAfxImageBufferPool()
+{
+	while (!m_Buffers.empty())
+	{
+		delete m_Buffers.top();
+		m_Buffers.pop();
+	}
+}
+
+CAfxImageBuffer * CAfxImageBufferPool::AquireBuffer(void)
+{
+	std::unique_lock<std::mutex> lock(m_BuffersMutex);
+
+	m_BufferAvailableCondition.wait(lock, [this]() { return !m_Buffers.empty(); });
+
+	CAfxImageBuffer * result = m_Buffers.top();
+
+	m_Buffers.pop();
+
+	return result;
+}
+
+void CAfxImageBufferPool::ImageBuffer_Done(CAfxImageBuffer * buffer)
+{
+	{
+		std::unique_lock<std::mutex> lock(m_BuffersMutex);
+
+		m_Buffers.push(buffer);
+	}
+
+	m_BufferAvailableCondition.notify_one();
+}
+
+// CAfxImageBuffer /////////////////////////////////////////////////////////////
+
+CAfxImageBuffer::CAfxImageBuffer(CAfxImageBufferPool * pool)
 : Buffer(0)
 , m_BufferBytesAllocated(0)
+, m_Pool(pool)
 {
 }
 
-CAfxStreams::CImageBuffer::~CImageBuffer()
+CAfxImageBuffer::~CAfxImageBuffer()
 {
 	free(Buffer);
 }
 
-bool CAfxStreams::CImageBuffer::AutoRealloc(ImageBufferPixelFormat pixelFormat, int width, int height)
+void CAfxImageBuffer::Release(void)
+{
+	m_Pool->ImageBuffer_Done(this);
+}
+
+bool CAfxImageBuffer::AutoRealloc(ImageBufferPixelFormat pixelFormat, int width, int height)
 {
 	size_t pitch = width;
 
@@ -6003,7 +6208,7 @@ bool CAfxStreams::CImageBuffer::AutoRealloc(ImageBufferPixelFormat pixelFormat, 
 		pitch *= 1 * sizeof(float);
 		break;
 	default:
-		Tier0_Warning("CAfxStreams::CImageBuffer::AutoRealloc: Unsupported pixelFormat\n");
+		Tier0_Warning("CAfxImageBuffer::AutoRealloc: Unsupported pixelFormat\n");
 		return false;
 	}
 
@@ -6026,6 +6231,77 @@ bool CAfxStreams::CImageBuffer::AutoRealloc(ImageBufferPixelFormat pixelFormat, 
 	ImageBytes = imageBytes;
 
 	return 0 != Buffer;
+}
+
+
+bool CAfxImageBuffer::WriteToFile(const std::wstring & path, bool ifZip, bool ifBmpNotTga) const
+{
+	if (IBPF_ZFloat == PixelFormat)
+	{
+		return WriteFloatZOpenExr(
+			path.c_str(),
+			(unsigned char*)Buffer,
+			Width,
+			Height,
+			sizeof(float),
+			ImagePitch,
+			ifZip ? WFZOEC_Zip : WFZOEC_None
+		);
+	}
+
+	if (IBPF_A == PixelFormat)
+	{
+		return ifBmpNotTga
+			? WriteRawBitmap((unsigned char*)Buffer, path.c_str(), Width, Height, 8, ImagePitch)
+			: WriteRawTarga((unsigned char*)Buffer, path.c_str(), Width, Height, 8, true, ImagePitch, 0)
+			;
+	}
+
+	bool isBgra = IBPF_BGRA == PixelFormat;
+
+	return ifBmpNotTga && !isBgra
+		? WriteRawBitmap((unsigned char*)Buffer, path.c_str(), Width, Height, 24, ImagePitch)
+		: WriteRawTarga((unsigned char*)Buffer, path.c_str(), Width, Height, isBgra ? 32 : 24, false, ImagePitch, isBgra ? 8 : 0)
+		;
+}
+
+bool CAfxImageBuffer::BgrMergeBlueToRgba(CAfxImageBuffer const * alphaBuffer)
+{
+	bool ok = alphaBuffer
+		&& Width == alphaBuffer->Width
+		&& Height == alphaBuffer->Height
+		&& PixelFormat == IBPF_BGR
+		&& PixelFormat == alphaBuffer->PixelFormat
+		&& ImagePitch == alphaBuffer->ImagePitch
+		&& AutoRealloc(IBPF_BGRA, Width, Height)
+		;
+
+	if (ok)
+	{
+		// interleave B as alpha into A:
+
+		for (int y = Height - 1;y >= 0;--y)
+		{
+			for (int x = Width - 1;x >= 0;--x)
+			{
+				unsigned char b = ((unsigned char *)Buffer)[y*ImagePitch + x * 3 + 0];
+				unsigned char g = ((unsigned char *)Buffer)[y*ImagePitch + x * 3 + 1];
+				unsigned char r = ((unsigned char *)Buffer)[y*ImagePitch + x * 3 + 2];
+				unsigned char a = ((unsigned char *)alphaBuffer->Buffer)[y*alphaBuffer->ImagePitch + x * 3 + 0];
+
+				((unsigned char *)Buffer)[y*ImagePitch + x * 4 + 0] = b;
+				((unsigned char *)Buffer)[y*ImagePitch + x * 4 + 1] = g;
+				((unsigned char *)Buffer)[y*ImagePitch + x * 4 + 2] = r;
+				((unsigned char *)Buffer)[y*ImagePitch + x * 4 + 3] = a;
+			}
+		}
+	}
+	else
+	{
+		Tier0_Warning("CAfxStreams::View_Render: Combining streams failed.\n");
+	}
+
+	return ok;
 }
 
 // CAfxStreams::CEntityBvhCapture //////////////////////////////////////////////
