@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-01-06 dominik.matrixstorm.com
+// 2016-09-23 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -50,13 +50,11 @@ class IAfxVRenderView abstract
 {
 public:
 	virtual SOURCESDK::IVRenderView_csgo * GetParent() = 0;
-
-	virtual void OnSetBlend_set(IAfxVRenderViewSetBlend * value) = 0;
-	virtual void OnSetColorModulation_set(IAfxVRenderViewSetColorModulation * value) = 0;
 };
 
 
 class IAfxMatRenderContext;
+class IAfxStream;
 
 class IAfxMatRenderContextMaterialHook abstract
 {
@@ -68,17 +66,43 @@ public:
 class IAfxMatRenderContextDrawInstances abstract
 {
 public:
-	virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const SOURCESDK::MeshInstanceData_t_csgo *pInstance ) = 0;
+	virtual void DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const SOURCESDK::MeshInstanceData_t_csgo *pInstance) = 0;
 };
+
+class IAfxContextHook;
+class CAfxMatRenderContext;
+
+class IAfxMatRenderContextOrg abstract
+{
+public:
+	virtual void ClearBuffers(bool bClearColor, bool bClearDepth, bool bClearStencil = false) = 0; //:012
+
+	virtual void ReadPixels(int x, int y, int width, int height, unsigned char *data, SOURCESDK::ImageFormat_csgo dstFormat, unsigned __int32 _unknown7 = 0) = 0; //:013
+
+	virtual void ClearColor4ub(unsigned char r, unsigned char g, unsigned char b, unsigned char a) = 0; //:079
+
+	virtual void PushRenderTargetAndViewport(SOURCESDK::ITexture_csgo *pTexture, SOURCESDK::ITexture_csgo *pDepthTexture, int nViewX, int nViewY, int nViewW, int nViewH) = 0; //:115
+
+	virtual void PopRenderTargetAndViewport(void) = 0; //:119
+
+	virtual SOURCESDK::CSGO::ICallQueue *GetCallQueue() = 0; //:150
+
+	virtual void DrawInstances(int nInstanceCount, const SOURCESDK::MeshInstanceData_t_csgo *pInstance) = 0; //:192
+};
+
 class IAfxMatRenderContext abstract
 {
 public:
-	virtual SOURCESDK::IMatRenderContext_csgo * GetParent() = 0;
+	virtual IAfxMatRenderContextOrg * GetOrg(void) = 0;
 
-	virtual void OnMaterialHook_set(IAfxMatRenderContextMaterialHook * value) = 0;
-	virtual void OnDrawInstances_set(IAfxMatRenderContextDrawInstances * value) = 0;
+	virtual IAfxContextHook * Hook_get(void) = 0;
+
+	virtual void Hook_set(IAfxContextHook * value) = 0;
+
+	//virtual void * HookData_get(void) = 0;
+
+	//virtual void * HookData_set(void * value) = 0;
 };
-
 
 class IAfxBaseClientDll;
 
@@ -97,7 +121,7 @@ public:
 class IAfxBaseClientDllView_Render abstract
 {
 public:
-	virtual void View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx, SOURCESDK::vrect_t_csgo *rect) = 0;
+	virtual void View_Render(IAfxBaseClientDll * cl, SOURCESDK::vrect_t_csgo *rect) = 0;
 };
 
 class IAfxBaseClientDll abstract
@@ -115,6 +139,8 @@ class IAfxMesh abstract
 {
 public:
 	virtual SOURCESDK::IMeshEx_csgo * GetParent(void) = 0;
+
+	virtual IAfxMatRenderContext * GetContext(void) = 0;
 };
 
 class IAfxMeshDraw abstract
@@ -153,36 +179,8 @@ public:
 	virtual void DrawingHud(void) = 0;
 };
 
-class IAfxStreams4Stream abstract
+class IAfxCallQueue
 {
 public:
-	virtual void DebugDump() = 0;
-
-	virtual SOURCESDK::IMaterialSystem_csgo * GetMaterialSystem(void) = 0;
-	virtual IAfxFreeMaster * GetFreeMaster(void) = 0;
-	virtual IAfxMatRenderContext * GetCurrentContext(void) = 0;
-	virtual SOURCESDK::IShaderShadow_csgo * GetShaderShadow(void) = 0;
-
-	virtual std::wstring GetTakeDir(void) = 0;
-
-	virtual void GetBlend(float &outBlend) = 0;
-	virtual void GetColorModulation(float (& outColor)[3]) = 0;
-
-	virtual void OverrideSetColorModulation(float const color[3]) = 0;
-	virtual void EndOverrideSetColorModulation() = 0;
-
-	virtual void OverrideSetBlend(float blend) = 0;
-	virtual void EndOverrideSetBlend() = 0;
-
-	virtual void OnMaterialHook_set(IAfxMatRenderContextMaterialHook * value) = 0;
-	virtual void OnDrawInstances_set(IAfxMatRenderContextDrawInstances * value) = 0;
-
-	virtual void OnDraw_set(IAfxMeshDraw * value) = 0;
-	virtual void OnDraw_2_set(IAfxMeshDraw_2 * value) = 0;
-	virtual void OnDrawModulated_set(IAfxMeshDrawModulated * value) = 0;
-
-	virtual void OnSetVertexShader_set(IAfxSetVertexShader * value) = 0;
-	virtual void OnSetPixelShader_set(IAfxSetPixelShader * value) = 0;
-
-	virtual void OnDrawingHud_set(IAfxDrawingHud * value) = 0;
+	virtual SOURCESDK::CSGO::ICallQueue * GetParent(void) = 0;
 };

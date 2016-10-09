@@ -2,6 +2,9 @@
 
 #include <shared/detours.h>
 
+//TODO: MdtAllocExecuteableMemory needs probably FlushInstructionCache right after when used
+// but we currently only obey that in DetourClassFunc.
+
 //#define MDT_DEBUG
 
 #define JMP32_SZ	5	// the size of JMP <address>
@@ -314,7 +317,7 @@ void MdtMemAccessBegin(LPVOID lpAddress, size_t size, MdtMemBlockInfos *mdtMemBl
 
 	for(size_t i=0; i < mdtMemBlockInfos->size(); i++) {
 		mbi2 = mdtMemBlockInfos->at(i);
-		VirtualProtect(mbi2.BaseAddress, mbi2.RegionSize, PAGE_READWRITE, &dwDummy);
+		VirtualProtect(mbi2.BaseAddress, mbi2.RegionSize, PAGE_EXECUTE_READWRITE, &dwDummy);
 	}
 }
 
@@ -323,10 +326,14 @@ void MdtMemAccessEnd(MdtMemBlockInfos *mdtMemBlockInfos)
 	MdtMemBlockInfo mbi2;
 	DWORD dwDummy;
 
+	HANDLE currentProcess = GetCurrentProcess();
+
 	for(size_t i=0; i < mdtMemBlockInfos->size(); i++) {
 		mbi2 = mdtMemBlockInfos->at(i);
+		FlushInstructionCache(currentProcess, mbi2.BaseAddress, mbi2.RegionSize);
 		VirtualProtect(mbi2.BaseAddress, mbi2.RegionSize, mbi2.Protect, &dwDummy);
 	}
+
 }
 
 // Detour
@@ -416,6 +423,7 @@ void * DetourIfacePtr(DWORD * ptr, void const * hook)
 {
 	MdtMemBlockInfos mbis;
 	DWORD orgAddr;
+	HANDLE hCurrentProcss = GetCurrentProcess();
 
 	MdtMemAccessBegin(ptr, sizeof(DWORD), &mbis);
 
@@ -430,6 +438,9 @@ void * DetourIfacePtr(DWORD * ptr, void const * hook)
 	jmpTarget[3] = JMP;						// jmp
 	*(DWORD*)(jmpTarget+4) = (orgAddr - (DWORD)(jmpTarget+3)) - JMP32_SZ;
 
+	FlushInstructionCache(hCurrentProcss, jmpTarget, JMP32_SZ + POPREG_SZ + POPREG_SZ + POPREG_SZ);
+
+
 	BYTE * jmpHook = (BYTE*)MdtAllocExecuteableMemory(JMP32_SZ+POPREG_SZ+POPREG_SZ+POPREG_SZ);
 
 	// padding code that jumps to our hook:
@@ -439,8 +450,10 @@ void * DetourIfacePtr(DWORD * ptr, void const * hook)
 	jmpHook[3] = JMP;							// jmp
 	*(DWORD*)(jmpHook+4) = (DWORD)((BYTE *)hook - (jmpHook+3)) - JMP32_SZ;
 
+	FlushInstructionCache(hCurrentProcss, jmpHook, JMP32_SZ + POPREG_SZ + POPREG_SZ + POPREG_SZ);
+
 	// update iface ptr:
-	*ptr = (DWORD)jmpHook;
+	*ptr = (DWORD)jmpHook; // this needs to be an atomic operation!!! (currently is)
 
 	MdtMemAccessEnd(&mbis);
 

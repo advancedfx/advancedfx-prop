@@ -6,6 +6,26 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>1.7.0</version>
+<time>2016-10-09T16:54Z</time>
+<changes>
+<change type="updated">
+Many changes under the hood, i.e. HLAE is now handling mat_queue_mode (mutli threading / queueing) and thus hopefully less bugs.
+</change>
+<change type="fixed">
+Issue 22 fixed, by telling the materialsystem to end frame and begin new
+frame, otherwise it would have too much on the IMatRenderContext queue
+and run out of memory and thus HLAE would crash the game.
+</change>
+</changes>
+<comments>
+Please report new bugs / errors you encounter, due to the many changes, new bugs are possible!
+</comments>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>1.6.6</version>
 <time>2016-10-07T08:50Z</time>
 <changes>

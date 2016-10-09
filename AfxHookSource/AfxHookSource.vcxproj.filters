@@ -141,6 +141,9 @@
     <ClCompile Include="ClientTools.cpp">
       <Filter>AfxHookSource</Filter>
     </ClCompile>
+    <ClCompile Include="MatRenderContextHook.cpp">
+      <Filter>AfxHookSource</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -279,6 +282,9 @@
       <Filter>AfxHookSource</Filter>
     </ClInclude>
     <ClInclude Include="ClientTools.h">
+      <Filter>AfxHookSource</Filter>
+    </ClInclude>
+    <ClInclude Include="MatRenderContextHook.h">
       <Filter>AfxHookSource</Filter>
     </ClInclude>
   </ItemGroup>

@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-02-13 dominik.matrixstorm.com
+// 2016-10-09 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -18,6 +18,8 @@
 #include "csgo_writeWaveConsoleCheck.h"
 #include "RenderView.h"
 #include "ClientTools.h"
+#include "d3d9Hooks.h"
+#include "MatRenderContextHook.h"
 
 #include <shared/StringTools.h>
 #include <shared/FileTools.h>
@@ -31,7 +33,37 @@
 #include <iomanip>
 #include <algorithm>
 
+#if AFXSTREAMS_REFTRACKER
+
+#include <atomic>
+
+std::atomic_int g_AfxStreams_RefTracker_Count = 0;
+
+void AfxStreams_RefTracker_Inc(void)
+{
+	++g_AfxStreams_RefTracker_Count;
+}
+
+void AfxStreams_RefTracker_Dec(void)
+{
+	--g_AfxStreams_RefTracker_Count;
+}
+
+int AfxStreams_RefTracker_Get(void)
+{
+	return g_AfxStreams_RefTracker_Count;
+}
+
+#endif
+
+
 extern WrpVEngineClient * g_VEngineClient;
+extern SOURCESDK::IMaterialSystem_csgo * g_MaterialSystem_csgo;
+
+IAfxMatRenderContext * GetCurrentContext()
+{
+	return MatRenderContextHook(g_MaterialSystem_csgo);
+}
 
 CAfxStreams g_AfxStreams;
 
@@ -168,6 +200,261 @@ void DebugDepthFixDraw(IMesh_csgo * pMesh)
 }
 */
 
+void QueueOrExecute(IAfxMatRenderContextOrg * ctx, SOURCESDK::CSGO::CFunctor * functor)
+{
+	SOURCESDK::CSGO::ICallQueue * queue = ctx->GetCallQueue();
+
+	if (!queue)
+{	
+		functor->AddRef();
+		(*functor)();
+		functor->Release();
+	}
+	else
+	{
+		queue->QueueFunctor(functor);
+	}
+}
+
+class AfxD3D9PushOverrideState_Functor
+	: public CAfxFunctor
+{
+public:
+	virtual void operator()()
+	{
+		AfxD3D9PushOverrideState();
+	}
+};
+
+class AfxD3D9PopOverrideState_Functor
+	: public CAfxFunctor
+{
+public:
+	virtual void operator()()
+	{
+		AfxD3D9PopOverrideState();
+	}
+};
+
+class AfxD3D9OverrideEnd_ModulationColor_Functor
+	: public CAfxFunctor
+{
+public:
+	virtual void operator()()
+	{
+		AfxD3D9OverrideEnd_ModulationColor();
+	}
+};
+
+class AfxD3D9OverrideEnd_ModulationBlend_Functor
+	: public CAfxFunctor
+{
+public:
+	virtual void operator()()
+	{
+		AfxD3D9OverrideEnd_ModulationBlend();
+	}
+};
+
+class AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE_Functor
+	: public CAfxFunctor
+{
+public:
+	virtual void operator()()
+	{
+		AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE();
+	}
+};
+
+class AfxD3D9OverrideBegin_ModulationBlend_Functor
+	: public CAfxFunctor
+{
+public:
+	AfxD3D9OverrideBegin_ModulationBlend_Functor(float blend)
+		: m_Blend(blend)
+	{
+	}
+
+	virtual void operator()()
+	{
+		AfxD3D9OverrideBegin_ModulationBlend(m_Blend);
+	}
+private:
+	float m_Blend;
+};
+
+class AfxD3D9OverrideBegin_ModulationColor_Functor
+	: public CAfxFunctor
+{
+public:
+	AfxD3D9OverrideBegin_ModulationColor_Functor(float color[3])
+	{
+		m_Color[0] = color[0];
+		m_Color[1] = color[1];
+		m_Color[2] = color[2];
+	}
+
+	virtual void operator()()
+	{
+		AfxD3D9OverrideBegin_ModulationColor(m_Color);
+	}
+private:
+	float m_Color[3];
+};
+
+
+class AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE_Functor
+	: public CAfxFunctor
+{
+public:
+	AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE_Functor(DWORD enable)
+		: m_Enable(enable)
+	{
+	}
+
+	virtual void operator()()
+	{
+		AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE(m_Enable);
+	}
+private:
+	DWORD m_Enable;
+};
+
+class AfxD3D9OverrideEnd_D3DRS_DESTBLEND_Functor
+	: public CAfxFunctor
+{
+public:
+	virtual void operator()()
+	{
+		AfxD3D9OverrideEnd_D3DRS_DESTBLEND();
+	}
+};
+
+class AfxD3D9OverrideEnd_D3DRS_SRCBLEND_Functor
+	: public CAfxFunctor
+{
+public:
+	virtual void operator()()
+	{
+		AfxD3D9OverrideEnd_D3DRS_SRCBLEND();
+	}
+};
+
+class AfxD3D9OverrideEnd_D3DRS_ALPHABLENDENABLE_Functor
+	: public CAfxFunctor
+{
+public:
+	virtual void operator()()
+	{
+		AfxD3D9OverrideEnd_D3DRS_ALPHABLENDENABLE();
+	}
+};
+
+class AfxD3D9OverrideBegin_D3DRS_ALPHABLENDENABLE_Functor
+	: public CAfxFunctor
+{
+public:
+	AfxD3D9OverrideBegin_D3DRS_ALPHABLENDENABLE_Functor(DWORD value)
+		: m_Value(value)
+	{
+	}
+
+	virtual void operator()()
+	{
+		AfxD3D9OverrideBegin_D3DRS_ALPHABLENDENABLE(m_Value);
+	}
+private:
+	DWORD m_Value;
+};
+
+class AfxD3D9OverrideBegin_D3DRS_SRCBLEND_Functor
+	: public CAfxFunctor
+{
+public:
+	AfxD3D9OverrideBegin_D3DRS_SRCBLEND_Functor(DWORD value)
+		: m_Value(value)
+	{
+	}
+
+	virtual void operator()()
+	{
+		AfxD3D9OverrideBegin_D3DRS_SRCBLEND(m_Value);
+	}
+private:
+	DWORD m_Value;
+};
+
+class AfxD3D9OverrideBegin_D3DRS_DESTBLEND_Functor
+	: public CAfxFunctor
+{
+public:
+	AfxD3D9OverrideBegin_D3DRS_DESTBLEND_Functor(DWORD value)
+		: m_Value(value)
+	{
+	}
+
+	virtual void operator()()
+	{
+		AfxD3D9OverrideBegin_D3DRS_DESTBLEND(m_Value);
+	}
+private:
+	DWORD m_Value;
+};
+
+class AfxD3D9BlockPresent_Functor
+	: public CAfxFunctor
+{
+public:
+	AfxD3D9BlockPresent_Functor(bool value)
+		: m_Value(value)
+	{
+	}
+
+	virtual void operator()()
+	{
+		AfxD3D9_Block_Present(m_Value);
+	}
+
+private:
+	bool m_Value;
+};
+
+class CAfxLeafExecute_Functor
+	: public CAfxFunctor
+{
+public:
+	CAfxLeafExecute_Functor(SOURCESDK::CSGO::CFunctor * functor)
+		: m_Functor(functor)
+	{
+		m_Functor->AddRef();
+	}
+
+	virtual void operator()()
+	{
+		SOURCESDK::CSGO::ICallQueue * queue = GetCurrentContext()->GetOrg()->GetCallQueue();
+
+		if (queue)
+		{
+			queue->QueueFunctor(this);
+		}
+		else
+		{
+			(*m_Functor)();
+		}
+	}
+
+protected:
+	virtual ~CAfxLeafExecute_Functor()
+	{
+		m_Functor->Release();
+	}
+
+private:
+	SOURCESDK::CSGO::CFunctor * m_Functor;
+	
+};
+
+
 // CAfxFileTracker /////////////////////////////////////////////////////////////
 
 void CAfxFileTracker::TrackFile(char const * filePath)
@@ -198,39 +485,17 @@ void CAfxFileTracker::WaitForFiles(unsigned int maxUnfinishedFiles)
 	}
 }
 
-// CAfxStream //////////////////////////////////////////////////////////////////
-
-CAfxStream::CAfxStream()
-{
-}
-
-CAfxStream::~CAfxStream()
-{
-}
-
-void CAfxStream::LevelShutdown(IAfxStreams4Stream * streams)
-{
-}
-
 // CAfxRenderViewStream ////////////////////////////////////////////////////////
 
 CAfxRenderViewStream::CAfxRenderViewStream()
-: CAfxStream()
-, m_Streams(0)
-, m_DrawViewModel(true)
+: m_DrawViewModel(true)
 , m_DrawHud(false)
 , m_StreamCaptureType(SCT_Normal)
 {
 }
 
-void CAfxRenderViewStream::StreamAttach(IAfxStreams4Stream * streams)
+CAfxRenderViewStream::~CAfxRenderViewStream()
 {
-	m_Streams = streams;
-}
-
-void CAfxRenderViewStream::StreamDetach(IAfxStreams4Stream * streams)
-{
-	m_Streams = 0;
 }
 
 char const * CAfxRenderViewStream::AttachCommands_get(void)
@@ -283,13 +548,195 @@ void CAfxRenderViewStream::StreamCaptureType_set(StreamCaptureType value)
 	m_StreamCaptureType = value;
 }
 
+void CAfxRenderViewStream::QueueCapture(IAfxMatRenderContextOrg * ctx, CAfxRecordStream * captureTarget, int x, int y, int width, int height)
+{
+	QueueOrExecute(ctx, new CAfxLeafExecute_Functor(new CCaptureFunctor(*this, captureTarget, x, y, width, height)));
+}
+
+void CAfxRenderViewStream::Capture(CAfxRecordStream * captureTarget, int x, int y, int width, int height)
+{
+	IAfxMatRenderContextOrg * ctx = GetCurrentContext()->GetOrg();
+
+	bool isDepthF = m_StreamCaptureType == CAfxRenderViewStream::SCT_DepthF || m_StreamCaptureType == CAfxRenderViewStream::SCT_DepthFZIP;
+
+	CAfxImageBuffer * buffer = g_AfxStreams.ImageBufferPool.AquireBuffer();
+
+	if(isDepthF)
+	{
+		if(buffer->AutoRealloc(CAfxImageBuffer::IBPF_ZFloat, width, height))
+		{
+			unsigned char * pBuffer = (unsigned char*)buffer->Buffer;
+			int imagePitch = buffer->ImagePitch;
+
+			ctx->ReadPixels(
+				x, y, width, height,
+				pBuffer,
+				SOURCESDK::IMAGE_FORMAT_R32F
+			);
+
+			// Post process buffer:
+
+			float depthScale = 1.0f;
+			float depthOfs = 0.0f;
+
+			if(CAfxBaseFxStream * baseFx = this->AsAfxBaseFxStream())
+			{
+				depthScale = baseFx->DepthValMax_get() - baseFx->DepthVal_get();
+				depthOfs = baseFx->DepthVal_get();
+			}
+
+			for(int y=0; y < height; ++y)
+			{
+				for(int x=0; x < width; ++x)
+				{
+					float depth = *(float *)((unsigned char *)pBuffer +y*imagePitch +x*sizeof(float));
+
+					depth *= depthScale;
+					depth += depthOfs;
+
+					*(float *)((unsigned char *)pBuffer +y*imagePitch +x*sizeof(float))
+						= depth;
+				}
+			}
+
+			captureTarget->OnImageBufferCaptured(this, buffer);
+		}
+		else
+		{
+			buffer->Release();
+			Tier0_Warning("CAfxStreams::CaptureStreamToBuffer: Failed to realloc buffer.\n");
+		}
+	}
+	else
+	if(buffer->AutoRealloc(CAfxImageBuffer::IBPF_BGR, width, height))
+	{
+		unsigned char * pBuffer = (unsigned char*)buffer->Buffer;
+		int imagePitch = buffer->ImagePitch;
+
+		ctx->ReadPixels(
+			x, y, width, height,
+			(unsigned char*)pBuffer,
+			SOURCESDK::IMAGE_FORMAT_RGB888
+		);
+
+		if(CAfxRenderViewStream::SCT_Depth24 == m_StreamCaptureType || CAfxRenderViewStream::SCT_Depth24ZIP == m_StreamCaptureType)
+		{
+			float depthScale = 1.0f;
+			float depthOfs = 0.0f;
+
+			if(CAfxBaseFxStream * baseFx = this->AsAfxBaseFxStream())
+			{
+				depthScale = baseFx->DepthValMax_get() - baseFx->DepthVal_get();
+				depthOfs = baseFx->DepthVal_get();
+			}
+
+			int oldImagePitch =  imagePitch;
+
+			// make the 24bit RGB into a float buffer:
+			if(buffer->AutoRealloc(CAfxImageBuffer::IBPF_ZFloat, width, height))
+			{
+				unsigned char * pBuffer = (unsigned char*)buffer->Buffer;
+				int imagePitch = buffer->ImagePitch;
+
+				for(int y = height-1; y >= 0; --y)
+				{
+					for(int x = width-1; x >= 0; --x)
+					{
+						unsigned char r = ((unsigned char *)pBuffer)[y*oldImagePitch +3*x +0];
+						unsigned char g = ((unsigned char *)pBuffer)[y*oldImagePitch +3*x +1];
+						unsigned char b = ((unsigned char *)pBuffer)[y*oldImagePitch +3*x +2];
+
+						float depth;
+
+						depth = (1.0f/16777215.0f)*r +(256.0f/16777215.0f)*g +(65536.0f/16777215.0f)*b;
+
+						depth *= depthScale;
+						depth += depthOfs;
+
+						*(float *)((unsigned char *)pBuffer +y*imagePitch +x*sizeof(float))
+							= depth;
+					}
+				}
+
+				captureTarget->OnImageBufferCaptured(this, buffer);
+			}
+			else
+			{
+				buffer->Release();
+				Tier0_Warning("CAfxStreams::CaptureStreamToBuffer: Failed to realloc buffer.\n");
+			}
+		}
+		else
+		{
+			// (back) transform to MDT native format:
+
+			int lastLine = height >> 1;
+			if(height & 0x1) ++lastLine;
+
+			for(int y=0;y<lastLine;++y)
+			{
+				int srcLine = y;
+				int dstLine = height -1 -y;
+
+				for(int x=0;x<width;++x)
+				{
+					unsigned char r = ((unsigned char *)pBuffer)[dstLine*imagePitch +3*x +0];
+					unsigned char g = ((unsigned char *)pBuffer)[dstLine*imagePitch +3*x +1];
+					unsigned char b = ((unsigned char *)pBuffer)[dstLine*imagePitch +3*x +2];
+									
+					((unsigned char *)pBuffer)[dstLine*imagePitch +3*x +0] = ((unsigned char *)pBuffer)[srcLine*imagePitch +3*x +2];
+					((unsigned char *)pBuffer)[dstLine*imagePitch +3*x +1] = ((unsigned char *)pBuffer)[srcLine*imagePitch +3*x +1];
+					((unsigned char *)pBuffer)[dstLine*imagePitch +3*x +2] = ((unsigned char *)pBuffer)[srcLine*imagePitch +3*x +0];
+									
+					((unsigned char *)pBuffer)[srcLine*imagePitch +3*x +0] = b;
+					((unsigned char *)pBuffer)[srcLine*imagePitch +3*x +1] = g;
+					((unsigned char *)pBuffer)[srcLine*imagePitch +3*x +2] = r;
+				}
+			}
+
+			captureTarget->OnImageBufferCaptured(this, buffer);
+		}
+	}
+	else
+	{
+		buffer->Release();
+		Tier0_Warning("CAfxStreams::CaptureStreamToBuffer: Failed to realloc buffer.\n");
+	}
+}
+
+// CAfxRenderViewStream::CCaptureFunctor ///////////////////////////////////////
+
+CAfxRenderViewStream::CCaptureFunctor::CCaptureFunctor(CAfxRenderViewStream & stream, CAfxRecordStream * captureTarget, int x, int y, int width, int height)
+	: m_Stream(stream)
+	, m_CaptureTarget(captureTarget)
+	, m_X(x), m_Y(y), m_Width(width), m_Height(height)
+{
+	m_Stream.AddRef();
+	m_Stream.InterLockIncrement();
+
+	m_CaptureTarget->AddRef();
+}
+
+void CAfxRenderViewStream::CCaptureFunctor::operator()()
+{
+	m_Stream.Capture(m_CaptureTarget, m_X, m_Y, m_Width, m_Height);
+
+	m_CaptureTarget->Release();
+
+	m_Stream.InterLockDecrement();
+	m_Stream.Release();
+}
+
 // CAfxRecordStream ////////////////////////////////////////////////////////////
+
+CAfxRecordStream::CShared CAfxRecordStream::m_Shared;
 
 CAfxRecordStream::CAfxRecordStream(char const * streamName)
 : CAfxStream()
 , m_StreamName(streamName)
 , m_Record(true)
 {
+
 }
 
 bool CAfxRecordStream::Record_get(void)
@@ -357,17 +804,31 @@ char const * CAfxRecordStream::StreamName_get(void)
 	return m_StreamName.c_str();
 }
 
+void CAfxRecordStream::QueueCaptureStart(IAfxMatRenderContextOrg * ctx)
+{
+	QueueOrExecute(ctx, new CAfxLeafExecute_Functor(new CCaptureStartFunctor(*this)));
+}
+
+void CAfxRecordStream::QueueCaptureEnd(IAfxMatRenderContextOrg * ctx, const std::wstring & takeDir, int frameNumber, wchar_t const * fileExtension)
+{
+	QueueOrExecute(ctx, new CAfxLeafExecute_Functor(new CCaptureEndFunctor(*this, takeDir, frameNumber, fileExtension)));
+}
+
+
 // CAfxSingleStream ////////////////////////////////////////////////////////////
 
 CAfxSingleStream::CAfxSingleStream(char const * streamName, CAfxRenderViewStream * stream)
 : CAfxRecordStream(streamName)
 , m_Stream(stream)
 {
+	m_Stream->AddRef();
+
+	m_CaptureCondition.notify_one();
 }
 
 CAfxSingleStream::~CAfxSingleStream()
 {
-	delete m_Stream;
+	m_Stream->Release();
 }
 
 CAfxRenderViewStream * CAfxSingleStream::Stream_get(void)
@@ -375,10 +836,64 @@ CAfxRenderViewStream * CAfxSingleStream::Stream_get(void)
 	return m_Stream;
 }
 
-void CAfxSingleStream::LevelShutdown(IAfxStreams4Stream * streams)
+void CAfxSingleStream::LevelShutdown(void)
 {
-	m_Stream->LevelShutdown(streams);
+	m_Stream->LevelShutdown();
 }
+
+void CAfxSingleStream::OnImageBufferCaptured(CAfxRenderViewStream * stream, CAfxImageBuffer * buffer)
+{
+	if (m_Stream == stream)
+		m_Buffer = buffer;
+	else
+		buffer->Release();
+}
+
+
+void CAfxSingleStream::CaptureStart(void)
+{
+	{
+		std::unique_lock<std::mutex> lock(m_CaptureMutex);
+
+		m_CaptureCondition.wait(lock, [this]() { return !m_Capturing; });
+
+		m_Capturing = true;
+	}
+
+	m_Buffer = 0;
+}
+
+void CAfxSingleStream::CaptureEnd(std::wstring const * outPath)
+{
+	CAfxImageBuffer * buffer = m_Buffer;
+
+	{
+		std::unique_lock<std::mutex> lock(m_CaptureMutex);
+		m_Capturing = false;
+	}
+
+	m_CaptureCondition.notify_one();
+
+	if (buffer)
+	{
+		if (outPath)
+		{
+			CAfxRenderViewStream::StreamCaptureType captureType = m_Stream->StreamCaptureType_get();
+
+			WriteFile_EnterScope();
+			
+			if (!buffer->WriteToFile(*outPath, (captureType == CAfxRenderViewStream::SCT_Depth24ZIP || captureType == CAfxRenderViewStream::SCT_DepthFZIP), g_AfxStreams.m_FormatBmpAndNotTga))
+			{
+				Tier0_Warning("AFXERROR: Failed writing image for stream %s\n.", this->StreamName_get());
+			}
+
+			WriteFile_ExitScope();
+		}
+
+		buffer->Release();
+	}
+}
+
 
 // CAfxTwinStream //////////////////////////////////////////////////////////////
 
@@ -388,18 +903,20 @@ CAfxTwinStream::CAfxTwinStream(char const * streamName, CAfxRenderViewStream * s
 , m_StreamB(streamB)
 , m_StreamCombineType(streamCombineType)
 {
+	m_StreamA->AddRef();
+	m_StreamB->AddRef();
 }
 
 CAfxTwinStream::~CAfxTwinStream()
 {
-	delete m_StreamA;
-	delete m_StreamB;
+	m_StreamB->Release();
+	m_StreamA->Release();
 }
 
-void CAfxTwinStream::LevelShutdown(IAfxStreams4Stream * streams)
+void CAfxTwinStream::LevelShutdown(void)
 {
-	m_StreamA->LevelShutdown(streams);
-	m_StreamB->LevelShutdown(streams);
+	m_StreamA->LevelShutdown();
+	m_StreamB->LevelShutdown();
 }
 
 CAfxRenderViewStream * CAfxTwinStream::StreamA_get()
@@ -422,152 +939,119 @@ void CAfxTwinStream::StreamCombineType_set(StreamCombineType value)
 	m_StreamCombineType = value;
 }
 
-
-// CAfxDeveloperStream /////////////////////////////////////////////////////////
-
-CAfxDeveloperStream::CAfxDeveloperStream()
-: CAfxRenderViewStream()
-, m_ReplaceUpdate(false)
-, m_Replace (false)
-, m_ReplaceMaterial(0)
-, m_ReplaceMaterialActive(false)
-, m_BlockDraw(false)
+void CAfxTwinStream::OnImageBufferCaptured(CAfxRenderViewStream * stream, CAfxImageBuffer * buffer)
 {
-}
-	
-CAfxDeveloperStream::~CAfxDeveloperStream()
-{
-	delete m_ReplaceMaterial;
+	if (m_StreamA == stream)
+		m_BufferA = buffer;
+	else if (m_StreamB == stream)
+		m_BufferB = buffer;
+	else
+		buffer->Release();
 }
 
-void CAfxDeveloperStream::MatchName_set(char const * value)
-{
-	m_MatchName.assign(value);
-}
 
-char const * CAfxDeveloperStream::MatchName_get(void)
+void CAfxTwinStream::CaptureStart(void)
 {
-	return m_MatchName.c_str();
-}
-
-void CAfxDeveloperStream::MatchTextureGroupName_set(char const * value)
-{
-	m_MatchTextureGroupName.assign(value);
-}
-
-char const * CAfxDeveloperStream::MatchTextureGroupName_get(void)
-{
-	return m_MatchTextureGroupName.c_str();
-}
-
-void CAfxDeveloperStream::ReplaceName_set(char const * name)
-{
-	m_ReplaceName.assign(name);
-	m_ReplaceUpdate = true;
-}
-
-char const * CAfxDeveloperStream::ReplaceName_get(void)
-{
-	return m_ReplaceName.c_str();
-}
-
-void CAfxDeveloperStream::BlockDraw_set(bool value)
-{
-	m_BlockDraw = value;
-}
-
-bool CAfxDeveloperStream::BlockDraw_get(void)
-{
-	return m_BlockDraw;
-}
-
-void CAfxDeveloperStream::StreamAttach(IAfxStreams4Stream * streams)
-{
-	CAfxRenderViewStream::StreamAttach(streams);
-
-	if(m_ReplaceUpdate)
 	{
-		m_ReplaceUpdate = false;
-		m_Replace = !m_ReplaceName.empty();
+		std::unique_lock<std::mutex> lock(m_CaptureMutex);
 
-		if(m_Replace)
+		m_CaptureCondition.wait(lock, [this]() { return !m_Capturing; });
+
+		m_Capturing = true;
+	}
+
+	m_BufferA = 0;
+	m_BufferB = 0;
+}
+
+void CAfxTwinStream::CaptureEnd(std::wstring const * outPath)
+{
+	CAfxImageBuffer * bufferA = m_BufferA;
+	CAfxImageBuffer * bufferB = m_BufferB;
+	CAfxRenderViewStream::StreamCaptureType captureType;
+	bool canCombine = false;
+
+	if (CAfxTwinStream::SCT_ARedAsAlphaBColor == m_StreamCombineType)
+	{
+		bufferA = m_BufferB;
+		captureType = m_StreamB->StreamCaptureType_get();
+		bufferB = m_BufferA;
+		canCombine = true;
+	}
+	else
+	if (CAfxTwinStream::SCT_AColorBRedAsAlpha == m_StreamCombineType)
+	{
+		bufferA = m_BufferA;
+		captureType = m_StreamA->StreamCaptureType_get();
+		bufferB = m_BufferB;
+		canCombine = true;
+	}
+
+	{
+		std::unique_lock<std::mutex> lock(m_CaptureMutex);
+		m_Capturing = false;
+	}
+
+	m_CaptureCondition.notify_one();
+
+	if (outPath && canCombine && bufferA && bufferB)
+	{
+		canCombine = 
+			bufferA->Width == bufferB->Width
+			&& bufferA->Height == bufferB->Height
+			&& bufferA->PixelFormat == bufferA->IBPF_BGR
+			&& bufferA->PixelFormat == bufferB->PixelFormat
+			&& bufferA->ImagePitch == bufferB->ImagePitch
+			&& bufferA->AutoRealloc(bufferA->IBPF_BGRA, bufferA->Width, bufferA->Height)
+			;
+
+		if (canCombine)
 		{
-			delete m_ReplaceMaterial; m_ReplaceMaterial = 0;
-			m_ReplaceMaterial = new CAfxMaterial(streams->GetFreeMaster(), streams->GetMaterialSystem()->FindMaterial(m_ReplaceName.c_str(),NULL));
+			// interleave B as alpha into A:
+
+			int height = bufferA->Height;
+			int width = bufferB->Width;
+			int imagePitch = bufferA->ImagePitch;
+
+			unsigned char * pBufferA = (unsigned char *)(bufferA->Buffer);
+			unsigned char * pBufferB = (unsigned char *)(bufferB->Buffer);
+
+			for (int y = height - 1;y >= 0;--y)
+			{
+				for (int x = width - 1;x >= 0;--x)
+				{
+					unsigned char b = ((unsigned char *)pBufferA)[y*imagePitch + x * 3 + 0];
+					unsigned char g = ((unsigned char *)pBufferA)[y*imagePitch + x * 3 + 1];
+					unsigned char r = ((unsigned char *)pBufferA)[y*imagePitch + x * 3 + 2];
+					unsigned char a = ((unsigned char *)pBufferB)[y*imagePitch + x * 3 + 0];
+
+					((unsigned char *)pBufferA)[y*imagePitch + x * 4 + 0] = b;
+					((unsigned char *)pBufferA)[y*imagePitch + x * 4 + 1] = g;
+					((unsigned char *)pBufferA)[y*imagePitch + x * 4 + 2] = r;
+					((unsigned char *)pBufferA)[y*imagePitch + x * 4 + 3] = a;
+				}
+			}
+
+			WriteFile_EnterScope();
+
+			if (!bufferA->WriteToFile(*outPath, (captureType == CAfxRenderViewStream::SCT_Depth24ZIP || captureType == CAfxRenderViewStream::SCT_DepthFZIP), g_AfxStreams.m_FormatBmpAndNotTga))
+			{
+				Tier0_Warning("AFXERROR: Failed writing image for stream %s\n.", this->StreamName_get());
+			}
+
+			WriteFile_ExitScope();
+		}
+		else
+		{
+			Tier0_Warning("CAfxStreams::View_Render: Combining sub-streams for stream %s, failed.\n", this->StreamName_get());
 		}
 	}
 
-	if(m_Replace)
-	{
-		streams->OnMaterialHook_set(this);
-		streams->OnDraw_set(this);
-		streams->OnDraw_2_set(this);
-		streams->OnDrawModulated_set(this);
-		streams->OnDrawInstances_set(this);
-	}
+	if (bufferB) bufferB->Release();
+	if (bufferA) bufferA->Release();
 }
 
-void CAfxDeveloperStream::StreamDetach(IAfxStreams4Stream * streams)
-{
-	streams->OnDrawInstances_set(0);
-	streams->OnDrawModulated_set(0);
-	streams->OnDraw_2_set(0);
-	streams->OnDraw_set(0);
-	streams->OnMaterialHook_set(0);
 
-	CAfxRenderViewStream::StreamDetach(streams);
-}
-
-SOURCESDK::IMaterial_csgo * CAfxDeveloperStream::MaterialHook(IAfxMatRenderContext * ctx, SOURCESDK::IMaterial_csgo * material)
-{
-	bool replace =
-		m_Replace
-		&& !strcmp(material->GetTextureGroupName(), m_MatchTextureGroupName.c_str())
-		&& !strcmp(material->GetName(), m_MatchName.c_str())
-	;
-
-	m_ReplaceMaterialActive = replace;
-
-	return replace ? m_ReplaceMaterial->GetMaterial() : material;
-}
-
-void CAfxDeveloperStream::DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const SOURCESDK::MeshInstanceData_t_csgo *pInstance )
-{
-	//if(m_ReplaceMaterialActive) Tier0_Msg("CAfxDeveloperStream::DrawInstances\n");
-
-	if(!(m_BlockDraw && m_ReplaceMaterialActive)) 
-		ctx->GetParent()->DrawInstances(nInstanceCount, pInstance);
-}
-
-void CAfxDeveloperStream::Draw(IAfxMesh * am, int firstIndex, int numIndices)
-{
-	//if(m_ReplaceMaterialActive) Tier0_Msg("CAfxDeveloperStream::Draw\n");
-
-	if(!(m_BlockDraw && m_ReplaceMaterialActive)) 
-		am->GetParent()->Draw(firstIndex, numIndices);
-	else
-		am->GetParent()->MarkAsDrawn();
-}
-
-void CAfxDeveloperStream::Draw_2(IAfxMesh * am, SOURCESDK::CPrimList_csgo *pLists, int nLists)
-{
-	//if(m_ReplaceMaterialActive) Tier0_Msg("CAfxDeveloperStream::Draw_2\n");
-
-	if(!(m_BlockDraw && m_ReplaceMaterialActive)) 
-		am->GetParent()->Draw(pLists, nLists);
-	else
-		am->GetParent()->MarkAsDrawn();
-}
-
-void CAfxDeveloperStream::DrawModulated(IAfxMesh * am, const SOURCESDK::Vector4D_csgo &vecDiffuseModulation, int firstIndex, int numIndices)
-{
-	//if(m_ReplaceMaterialActive) Tier0_Msg("CAfxDeveloperStream::DrawModulated\n");
-
-	if(!(m_BlockDraw && m_ReplaceMaterialActive)) 
-		am->GetParent()->DrawModulated(vecDiffuseModulation, firstIndex, numIndices);
-	else
-		am->GetParent()->MarkAsDrawn();
-}
 
 // CAfxBaseFxStream ////////////////////////////////////////////////////////////
 
@@ -579,8 +1063,6 @@ CAfxBaseFxStream::CAfxBaseFxStream()
 , m_DepthVal(1)
 , m_DepthValMax(1024)
 , m_SmokeOverlayAlphaFactor(1)
-, m_CurrentAction(0)
-, m_BoundAction(false)
 , m_DebugPrint(false)
 , m_ClientEffectTexturesAction(0)
 , m_WorldTexturesAction(0)
@@ -751,83 +1233,69 @@ void CAfxBaseFxStream::Console_ActionFilter_Move(int id, int moveBeforeId)
 	}
 }
 
-void CAfxBaseFxStream::LevelShutdown(IAfxStreams4Stream * streams)
+void CAfxBaseFxStream::LevelShutdown(void)
 {
 	InvalidateMap();
-	m_Shared.LevelShutdown(streams);
-
-	CAfxStream::LevelShutdown(streams);
+	m_Shared.LevelShutdown();
 }
 
-void CAfxBaseFxStream::StreamAttach(IAfxStreams4Stream * streams)
+void CAfxBaseFxStream::OnRenderBegin(void)
 {
-	CAfxRenderViewStream::StreamAttach(streams);
+	CAfxRenderViewStream::OnRenderBegin();
 
-	m_Shared.m_ActiveBaseFxStream = this;
+	this->InterLockIncrement();
 
 	g_SmokeOverlay_AlphaMod = m_SmokeOverlayAlphaFactor;
 
-	// Set a default action, just in case:
-	BindAction(m_Shared.DrawAction_get());
 
-	streams->OnMaterialHook_set(this);
-	streams->OnDrawInstances_set(this);
-	streams->OnDraw_set(this);
-	streams->OnDraw_2_set(this);
-	streams->OnDrawModulated_set(this);
-	streams->OnSetVertexShader_set(this);
-	streams->OnSetPixelShader_set(this);
-	streams->OnDrawingHud_set(this);
+	CAfxBaseFxStreamContextHook * ch = new CAfxBaseFxStreamContextHook(this, 0);
+
+	ch->RenderBegin(GetCurrentContext());
 }
 
-void CAfxBaseFxStream::StreamDetach(IAfxStreams4Stream * streams)
+void CAfxBaseFxStream::OnRenderEnd()
 {
-	BindAction(0);
+	if (IAfxMatRenderContext * ctx = GetCurrentContext())
+	{
+		if (IAfxContextHook * hook = ctx->Hook_get())
+		{
+			hook->RenderEnd();
+		}
+	}
 
-	streams->OnDrawingHud_set(0);
-	streams->OnSetPixelShader_set(0);
-	streams->OnSetVertexShader_set(0);
-	streams->OnDrawModulated_set(0);
-	streams->OnDraw_2_set(0);
-	streams->OnDraw_set(0);
-	streams->OnDrawInstances_set(0);
-	streams->OnMaterialHook_set(0);
-
-	m_Shared.m_ActiveBaseFxStream = 0;
 
 	g_SmokeOverlay_AlphaMod = 1;
 
-	CAfxRenderViewStream::StreamDetach(streams);
+	CAfxRenderViewStream::OnRenderEnd();
 }
 
-SOURCESDK::IMaterial_csgo * CAfxBaseFxStream::MaterialHook(IAfxMatRenderContext * ctx, SOURCESDK::IMaterial_csgo * material)
+CAfxBaseFxStream::CAction * CAfxBaseFxStream::RetrieveAction(SOURCESDK::IMaterial_csgo * material)
 {
+	CAction * action = 0;
+
 	CAfxMaterialKey key(material);
+
+	m_MapMutex.lock();
 
 	std::map<CAfxMaterialKey, CAction *>::iterator it = m_Map.find(key);
 
 	if(it != m_Map.end())
-		BindAction(it->second);
+		action = it->second;
 	else
 	{
 		// determine current action and cache it.
 
-		CAction * action = GetAction(material);
+		action = GetAction(material);
 		
 		action->AddRef();
 		m_Map[key] = action;
 
-		BindAction(action);
-
-		if(m_DebugPrint) Tier0_Msg("%s\n", m_CurrentAction ? m_CurrentAction->Key_get().m_Name.c_str() : "(null)");
+		if(m_DebugPrint) Tier0_Msg("%s\n", action ? action->Key_get().m_Name.c_str() : "(null)");
 	}
 
-	return m_CurrentAction->MaterialHook(ctx, material);
-}
+	m_MapMutex.unlock();
 
-void CAfxBaseFxStream::DrawingHud(void)
-{
-	BindAction(m_Shared.DrawAction_get());
+	return action;;
 }
 
 CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(SOURCESDK::IMaterial_csgo * material)
@@ -952,36 +1420,6 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(SOURCESDK::IMaterial_csg
 	if(!action) action = m_Shared.DrawAction_get();
 	action = action->ResolveAction(material);
 	return action;
-}
-
-void CAfxBaseFxStream::DrawInstances(IAfxMatRenderContext * ctx, int nInstanceCount, const SOURCESDK::MeshInstanceData_t_csgo *pInstance )
-{
-	m_CurrentAction->DrawInstances(ctx, nInstanceCount, pInstance);
-}
-
-void CAfxBaseFxStream::Draw(IAfxMesh * am, int firstIndex, int numIndices)
-{
-	m_CurrentAction->Draw(am, firstIndex, numIndices);
-}
-
-void CAfxBaseFxStream::Draw_2(IAfxMesh * am, SOURCESDK::CPrimList_csgo *pLists, int nLists)
-{
-	m_CurrentAction->Draw_2(am, pLists, nLists);
-}
-
-void CAfxBaseFxStream::DrawModulated(IAfxMesh * am, const SOURCESDK::Vector4D_csgo &vecDiffuseModulation, int firstIndex, int numIndices)
-{
-	m_CurrentAction->DrawModulated(am, vecDiffuseModulation, firstIndex, numIndices);
-}
-
-void CAfxBaseFxStream::SetVertexShader(CAfx_csgo_ShaderState & state)
-{
-	m_CurrentAction->SetVertexShader(state);
-}
-
-void CAfxBaseFxStream::SetPixelShader(CAfx_csgo_ShaderState & state)
-{
-	m_CurrentAction->SetPixelShader(state);
 }
 
 CAfxBaseFxStream::CAction * CAfxBaseFxStream::ClientEffectTexturesAction_get(void)
@@ -1237,13 +1675,17 @@ void CAfxBaseFxStream::DebugPrint_set(bool value)
 
 void CAfxBaseFxStream::InvalidateMap(void)
 {
+	m_MapMutex.lock();
+
 	if(m_DebugPrint) Tier0_Msg("Stream: Invalidating material cache.\n");
-	
+
 	for(std::map<CAfxMaterialKey, CAction *>::iterator it = m_Map.begin(); it != m_Map.end(); ++it)
 	{
 		it->second->Release();
 	}
 	m_Map.clear();
+
+	m_MapMutex.unlock();
 }
 
 /*
@@ -1303,20 +1745,6 @@ void CAfxBaseFxStream::ConvertDepthAction(CAction * & action, bool to24)
 }
 */
 
-void CAfxBaseFxStream::BindAction(CAction * action)
-{
-	if(m_CurrentAction)
-	{
-		m_CurrentAction->AfxUnbind(m_Streams->GetCurrentContext());
-		m_CurrentAction->Release();
-	}
-	if(action)
-	{
-		action->AddRef();
-	}
-	m_CurrentAction = action;
-}
-
 void CAfxBaseFxStream::SetActionAndInvalidateMap(CAction * & target, CAction * src)
 {
 	InvalidateMap();
@@ -1328,6 +1756,141 @@ void CAfxBaseFxStream::SetAction(CAction * & target, CAction * src)
 	if(target) target->Release();
 	if(src) src->AddRef();
 	target = src;
+}
+
+// CAfxBaseFxStream::CAfxBaseFxStreamContextHook ///////////////////////////////
+
+void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::RenderBegin(IAfxMatRenderContext * ctx)
+{
+	m_Ctx = ctx;
+
+	if (0 != m_Ctx->Hook_get())
+		Tier0_Warning("CAfxBaseFxStream::CAfxBaseFxStreamContextHook::RenderBegin: Error ctx already hooked!\n");
+
+	m_Ctx->Hook_set(this);
+
+	QueueOrExecute(m_Ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9PushOverrideState_Functor()));
+}
+
+void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::RenderEnd(void)
+{
+	BindAction(0);
+
+	QueueOrExecute(m_Ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9PopOverrideState_Functor()));
+	
+	m_Ctx->Hook_set(0);
+
+	m_Ctx = 0;
+
+	m_Stream->InterLockDecrement();
+
+	delete this;
+}
+
+void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::QueueFunctorInternal(IAfxCallQueue * aq, SOURCESDK::CSGO::CFunctor *pFunctor)
+{
+	SOURCESDK::CSGO::ICallQueue * q = aq->GetParent();
+
+	CAfxBaseFxStreamContextHook * ch = new CAfxBaseFxStreamContextHook(m_Stream, this);
+
+	m_Stream->InterLockIncrement();
+	q->QueueFunctor(new CRenderBeginFunctor(ch));
+	q->QueueFunctorInternal(pFunctor);
+	q->QueueFunctor(new CRenderEndFunctor());
+}
+
+void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::DrawingHudBegin(void)
+{
+	BindAction(0); // We don't handle HUD atm.
+}
+
+void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::DrawingSkyBoxViewBegin(void)
+{
+	m_DrawingSkyBoxView = true;
+}
+
+void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::DrawingSkyBoxViewEnd(void)
+{
+	m_DrawingSkyBoxView = false;
+}
+
+SOURCESDK::IMaterial_csgo * CAfxBaseFxStream::CAfxBaseFxStreamContextHook::MaterialHook(SOURCESDK::IMaterial_csgo * material)
+{
+	CAction * action = m_Stream->RetrieveAction(material);
+
+	BindAction(action);
+
+	if (m_CurrentAction)
+		return m_CurrentAction->MaterialHook(this, material);
+
+	return material;
+}
+
+void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::DrawInstances(int nInstanceCount, const SOURCESDK::MeshInstanceData_t_csgo *pInstance)
+{
+	if (m_CurrentAction)
+		m_CurrentAction->DrawInstances(this, nInstanceCount, pInstance);
+	else
+		m_Ctx->GetOrg()->DrawInstances(nInstanceCount, pInstance);
+}
+
+void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::Draw(IAfxMesh * am, int firstIndex, int numIndices)
+{
+	if (m_CurrentAction)
+		m_CurrentAction->Draw(this, am, firstIndex, numIndices);
+	else
+		am->GetParent()->Draw(firstIndex, numIndices);
+}
+
+void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::Draw_2(IAfxMesh * am, SOURCESDK::CPrimList_csgo *pLists, int nLists)
+{
+	if (m_CurrentAction)
+		m_CurrentAction->Draw_2(this, am, pLists, nLists);
+	else
+		am->GetParent()->Draw(pLists, nLists);
+}
+
+void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::DrawModulated(IAfxMesh * am, const SOURCESDK::Vector4D_csgo &vecDiffuseModulation, int firstIndex, int numIndices)
+{
+	if (m_CurrentAction)
+		m_CurrentAction->DrawModulated(this, am, vecDiffuseModulation, firstIndex, numIndices);
+	else
+		am->GetParent()->DrawModulated(vecDiffuseModulation, firstIndex, numIndices);
+}
+
+void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::SetVertexShader(CAfx_csgo_ShaderState & state)
+{
+	if (m_CurrentAction)
+		m_CurrentAction->SetVertexShader(this, state);
+}
+
+void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::SetPixelShader(CAfx_csgo_ShaderState & state)
+{
+	if (m_CurrentAction)
+		m_CurrentAction->SetPixelShader(this, state);
+}
+
+// CAfxBaseFxStream::CAfxBaseFxStreamContextHook::CRenderBeginFunctor //////////
+
+void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::CRenderBeginFunctor::operator()()
+{
+	if (IAfxMatRenderContext * ctx = GetCurrentContext())
+	{
+		m_Ch->RenderBegin(ctx);
+	}
+}
+
+// CAfxBaseFxStream::CAfxBaseFxStreamContextHook::CRenderEndFunctor ////////////
+
+void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::CRenderEndFunctor::operator()()
+{
+	if (IAfxMatRenderContext * ctx = GetCurrentContext())
+	{
+		if (IAfxContextHook * hook = ctx->Hook_get())
+		{
+			hook->RenderEnd();
+		}
+	}
 }
 
 // CAfxBaseFxStream::CActionKey ////////////////////////////////////////////////
@@ -1342,7 +1905,6 @@ void CAfxBaseFxStream::CActionKey::ToLower(void)
 CAfxBaseFxStream::CShared::CShared()
 : m_RefCount(0)
 , m_ShutDownLevel(0)
-, m_ActiveBaseFxStream(0)
 {
 	CreateStdAction(m_DrawAction, CActionKey("draw"), new CAction());
 	CreateStdAction(m_NoDrawAction, CActionKey("noDraw"), new CActionNoDraw());
@@ -1560,7 +2122,7 @@ bool CAfxBaseFxStream::CShared::RemoveAction(CActionKey const & key)
 }
 
 
-void CAfxBaseFxStream::CShared::LevelShutdown(IAfxStreams4Stream * streams)
+void CAfxBaseFxStream::CShared::LevelShutdown(void)
 {
 	++m_ShutDownLevel;
 
@@ -1568,7 +2130,7 @@ void CAfxBaseFxStream::CShared::LevelShutdown(IAfxStreams4Stream * streams)
 	{
 		for(std::map<CActionKey, CAction *>::iterator it = m_Actions.begin(); it != m_Actions.end(); ++it)
 		{
-			it->second->LevelShutdown(streams);
+			it->second->LevelShutdown();
 		}
 		m_ShutDownLevel = 0;
 	}
@@ -1670,8 +2232,7 @@ CAfxBaseFxStream::CActionDebugDepth::CActionDebugDepth(CAction * fallBackAction)
 : CAction()
 , m_FallBackAction(fallBackAction)
 , m_DebugDepthMaterial(0)
-, m_MatDebugDepthVal(0)
-, m_MatDebugDepthValMax(0)
+, m_Initalized(false)
 {
 	if(fallBackAction) fallBackAction->AddRef();
 }
@@ -1679,8 +2240,6 @@ CAfxBaseFxStream::CActionDebugDepth::CActionDebugDepth(CAction * fallBackAction)
 CAfxBaseFxStream::CActionDebugDepth::~CActionDebugDepth()
 {
 	delete m_DebugDepthMaterial;
-	delete m_MatDebugDepthVal;
-	delete m_MatDebugDepthValMax;
 	if(m_FallBackAction) m_FallBackAction->Release();
 }
 
@@ -1725,27 +2284,45 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::CActionDebugDepth::ResolveAction(S
 	return this;
 }
 
-void CAfxBaseFxStream::CActionDebugDepth::AfxUnbind(IAfxMatRenderContext * ctx)
+void CAfxBaseFxStream::CActionDebugDepth::AfxUnbind(CAfxBaseFxStreamContextHook * ch)
 {
 }
 
-SOURCESDK::IMaterial_csgo * CAfxBaseFxStream::CActionDebugDepth::MaterialHook(IAfxMatRenderContext * ctx, SOURCESDK::IMaterial_csgo * material)
+SOURCESDK::IMaterial_csgo * CAfxBaseFxStream::CActionDebugDepth::MaterialHook(CAfxBaseFxStreamContextHook * ch, SOURCESDK::IMaterial_csgo * material)
 {
-	if(!m_MatDebugDepthVal) m_MatDebugDepthVal = new WrpConVarRef("mat_debugdepthval");
-	if(!m_MatDebugDepthValMax) m_MatDebugDepthValMax = new WrpConVarRef("mat_debugdepthvalmax");
+	if (!m_DebugDepthMaterial) m_DebugDepthMaterial = new CAfxMaterial(
+		g_AfxStreams.GetFreeMaster(),
+		g_AfxStreams.GetMaterialSystem()->FindMaterial("afx/depth", 0));
 
-	if(!m_DebugDepthMaterial) m_DebugDepthMaterial = new CAfxMaterial(
-		CAfxBaseFxStream::m_Shared.m_ActiveBaseFxStream->m_Streams->GetFreeMaster(),
-		CAfxBaseFxStream::m_Shared.m_ActiveBaseFxStream->m_Streams->GetMaterialSystem()->FindMaterial("afx/depth", 0));
+	float scale = ch->DrawingSkyBoxView_get() ? csgo_CSkyBoxView_GetScale() : 1.0f;
+	float flDepthFactor = scale * ch->GetStream()->m_DepthVal;
+	float flDepthFactorMax = scale * ch->GetStream()->m_DepthValMax;
 
-	float scale = g_bIn_csgo_CSkyBoxView_Draw ? csgo_CSkyBoxView_GetScale() : 1.0f;
-	float flDepthFactor = scale * CAfxBaseFxStream::m_Shared.m_ActiveBaseFxStream->m_DepthVal;
-	float flDepthFactorMax = scale * CAfxBaseFxStream::m_Shared.m_ActiveBaseFxStream->m_DepthValMax;
-
-	m_MatDebugDepthVal->SetValueFastHack(flDepthFactor);
-	m_MatDebugDepthValMax->SetValueFastHack(flDepthFactorMax);
+	QueueOrExecute(ch->GetCtx()->GetOrg(), new CAfxLeafExecute_Functor(new CDepthValFunctor(flDepthFactor, flDepthFactorMax)));
 
 	return m_DebugDepthMaterial->GetMaterial();
+}
+
+CAfxBaseFxStream::CActionDebugDepth::CStatic CAfxBaseFxStream::CActionDebugDepth::m_Static;
+
+void CAfxBaseFxStream::CActionDebugDepth::CStatic::SetDepthVal(float min, float max)
+{
+	m_MatDebugDepthValsMutex.lock();
+
+	if (!m_MatDebugDepthVal) m_MatDebugDepthVal = new WrpConVarRef("mat_debugdepthval");
+	if (!m_MatDebugDepthValMax) m_MatDebugDepthValMax = new WrpConVarRef("mat_debugdepthvalmax");
+
+	m_MatDebugDepthVal->SetValueFastHack(min);
+	m_MatDebugDepthValMax->SetValueFastHack(max);
+
+	m_MatDebugDepthValsMutex.unlock();
+}
+
+// CAfxBaseFxStream::CActionDebugDump //////////////////////////////////////////
+
+void CAfxBaseFxStream::CActionDebugDump::AfxUnbind(CAfxBaseFxStreamContextHook * ch)
+{
+	g_AfxStreams.DebugDump(ch->GetCtx()->GetOrg());
 }
 
 // CAfxBaseFxStream::CActionReplace ////////////////////////////////////////////
@@ -1790,30 +2367,36 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::CActionReplace::ResolveAction(SOUR
 	return SafeSubResolveAction(m_FallBackAction, material);
 }
 
-void CAfxBaseFxStream::CActionReplace::AfxUnbind(IAfxMatRenderContext * ctx)
+void CAfxBaseFxStream::CActionReplace::AfxUnbind(CAfxBaseFxStreamContextHook * ch)
 {
-	if(m_OverrideColor)
-		CAfxBaseFxStream::m_Shared.m_ActiveBaseFxStream->m_Streams->EndOverrideSetColorModulation();
+	IAfxMatRenderContext * ctx = ch->GetCtx();
+	IAfxContextHook * ctxh = ctx->Hook_get();
 
-	if(m_OverrideBlend)
-		CAfxBaseFxStream::m_Shared.m_ActiveBaseFxStream->m_Streams->EndOverrideSetBlend();
+	if (m_OverrideColor)
+		QueueOrExecute(ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9OverrideEnd_ModulationColor_Functor()));
 
-	if(m_OverrideDepthWrite)
-		AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE();
+	if (m_OverrideBlend)
+		QueueOrExecute(ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9OverrideEnd_ModulationBlend_Functor()));
+
+	if (m_OverrideDepthWrite)
+		QueueOrExecute(ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE_Functor()));
 }
 
-SOURCESDK::IMaterial_csgo * CAfxBaseFxStream::CActionReplace::MaterialHook(IAfxMatRenderContext * ctx, SOURCESDK::IMaterial_csgo * material)
+SOURCESDK::IMaterial_csgo * CAfxBaseFxStream::CActionReplace::MaterialHook(CAfxBaseFxStreamContextHook * ch, SOURCESDK::IMaterial_csgo * material)
 {
 	EnsureMaterial();
 
-	if(m_OverrideColor)
-		CAfxBaseFxStream::m_Shared.m_ActiveBaseFxStream->m_Streams->OverrideSetColorModulation(m_Color);
+	IAfxMatRenderContext * ctx = ch->GetCtx();
+	IAfxContextHook * ctxh = ctx->Hook_get();
 
-	if(m_OverrideBlend)
-		CAfxBaseFxStream::m_Shared.m_ActiveBaseFxStream->m_Streams->OverrideSetBlend(m_Blend);
+	if (m_OverrideBlend)
+		QueueOrExecute(ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9OverrideBegin_ModulationBlend_Functor(m_Blend)));
+
+	if (m_OverrideColor)
+		QueueOrExecute(ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9OverrideBegin_ModulationColor_Functor(m_Color)));
 
 	if(m_OverrideDepthWrite)
-		AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE(m_DepthWrite ? TRUE : FALSE);
+		QueueOrExecute(ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE_Functor(m_DepthWrite ? TRUE : FALSE)));
 
 	return m_Material->GetMaterial();
 }
@@ -1821,8 +2404,8 @@ SOURCESDK::IMaterial_csgo * CAfxBaseFxStream::CActionReplace::MaterialHook(IAfxM
 void CAfxBaseFxStream::CActionReplace::EnsureMaterial(void)
 {
 	if(!m_Material) m_Material = new CAfxMaterial(
-		CAfxBaseFxStream::m_Shared.m_ActiveBaseFxStream->m_Streams->GetFreeMaster(),
-		CAfxBaseFxStream::m_Shared.m_ActiveBaseFxStream->m_Streams->GetMaterialSystem()->FindMaterial(m_MaterialName.c_str(), 0));
+		g_AfxStreams.GetFreeMaster(),
+		g_AfxStreams.GetMaterialSystem()->FindMaterial(m_MaterialName.c_str(), 0));
 }
 
 void CAfxBaseFxStream::CActionReplace::ExamineMaterial(SOURCESDK::IMaterial_csgo * material, bool & outSplinetype, bool & outUseinstancing)
@@ -2439,20 +3022,26 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::CActionStandardResolve::ResolveAct
 
 // CAfxBaseFxStream::CActionNoDraw /////////////////////////////////////////////
 
-void CAfxBaseFxStream::CActionNoDraw::AfxUnbind(IAfxMatRenderContext * ctx)
+void CAfxBaseFxStream::CActionNoDraw::AfxUnbind(CAfxBaseFxStreamContextHook * ch)
 {
-	AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE();
-	AfxD3D9OverrideEnd_D3DRS_DESTBLEND();
-	AfxD3D9OverrideEnd_D3DRS_SRCBLEND();
-	AfxD3D9OverrideEnd_D3DRS_ALPHABLENDENABLE();
+	IAfxMatRenderContext * ctx = ch->GetCtx();
+	IAfxContextHook * ctxh = ctx->Hook_get();
+
+	QueueOrExecute(ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9OverrideEnd_D3DRS_ZWRITEENABLE_Functor()));
+	QueueOrExecute(ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9OverrideEnd_D3DRS_DESTBLEND_Functor()));
+	QueueOrExecute(ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9OverrideEnd_D3DRS_SRCBLEND_Functor()));
+	QueueOrExecute(ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9OverrideEnd_D3DRS_ALPHABLENDENABLE_Functor()));
 }
 
-SOURCESDK::IMaterial_csgo * CAfxBaseFxStream::CActionNoDraw::MaterialHook(IAfxMatRenderContext * ctx, SOURCESDK::IMaterial_csgo * material)
+SOURCESDK::IMaterial_csgo * CAfxBaseFxStream::CActionNoDraw::MaterialHook(CAfxBaseFxStreamContextHook * ch, SOURCESDK::IMaterial_csgo * material)
 {
-	AfxD3D9OverrideBegin_D3DRS_ALPHABLENDENABLE(TRUE);
-	AfxD3D9OverrideBegin_D3DRS_SRCBLEND(D3DBLEND_ZERO);
-	AfxD3D9OverrideBegin_D3DRS_DESTBLEND(D3DBLEND_ONE);
-	AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE(FALSE);
+	IAfxMatRenderContext * ctx = ch->GetCtx();
+	IAfxContextHook * ctxh = ctx->Hook_get();
+
+	QueueOrExecute(ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9OverrideBegin_D3DRS_ALPHABLENDENABLE_Functor(TRUE)));
+	QueueOrExecute(ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9OverrideBegin_D3DRS_SRCBLEND_Functor(D3DBLEND_ZERO)));
+	QueueOrExecute(ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9OverrideBegin_D3DRS_DESTBLEND_Functor(D3DBLEND_ONE)));
+	QueueOrExecute(ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE_Functor(FALSE)));
 
 	return material;
 }
@@ -3146,20 +3735,11 @@ CAfxStreams::CAfxStreams()
 , m_StartMovieWav(true)
 , m_OnAfxBaseClientDll_Free(0)
 , m_MaterialSystem(0)
-, m_VRenderView(0)
 , m_AfxBaseClientDll(0)
 , m_ShaderShadow(0)
-, m_CurrentContext(0)
 , m_PreviewStream(0)
 , m_Recording(false)
 , m_Frame(0)
-, m_OnDraw(0)
-, m_OnDraw_2(0)
-, m_OnDrawModulated(0)
-, m_OnSetVertexShader(0)
-, m_OnSetPixelShader(0)
-, m_OnDrawingHud(0)
-, m_MatQueueModeRef(0)
 , m_MatPostProcessEnableRef(0)
 , m_MatDynamicTonemappingRef(0)
 , m_MatMotionBlurEnabledRef(0)
@@ -3195,13 +3775,12 @@ CAfxStreams::~CAfxStreams()
 
 	while(!m_Streams.empty())
 	{
-		delete m_Streams.front();
+		m_Streams.front()->Release();
 		m_Streams.pop_front();
 	}
 
 	delete m_OnAfxBaseClientDll_Free;
 
-	delete m_MatQueueModeRef;
 	delete m_MatPostProcessEnableRef;
 	delete m_HostFrameRate;
 }
@@ -3212,14 +3791,6 @@ void CAfxStreams::OnMaterialSystem(SOURCESDK::IMaterialSystem_csgo * value)
 	m_MaterialSystem = value;
 
 	CreateRenderTargets(value);
-}
-
-void CAfxStreams::OnAfxVRenderView(IAfxVRenderView * value)
-{
-	m_VRenderView = value;
-
-	if(m_VRenderView) m_VRenderView->OnSetBlend_set(this);
-	if(m_VRenderView) m_VRenderView->OnSetColorModulation_set(this);
 }
 
 void CAfxStreams::SetCurrent_View_Render_ThreadId(DWORD id)
@@ -3273,164 +3844,46 @@ void CAfxStreams::OnShaderShadow(SOURCESDK::IShaderShadow_csgo * value)
 	m_ShaderShadow = value;
 }
 
-void CAfxStreams::OnDraw(IAfxMesh * am, int firstIndex, int numIndices)
-{
-	if(m_OnDraw)
-		m_OnDraw->Draw(am, firstIndex, numIndices);
-	else
-		am->GetParent()->Draw(firstIndex, numIndices);
-}
-
-void CAfxStreams::OnDraw_2(IAfxMesh * am, SOURCESDK::CPrimList_csgo *pLists, int nLists)
-{
-	if(m_OnDraw_2)
-		m_OnDraw_2->Draw_2(am, pLists, nLists);
-	else
-		am->GetParent()->Draw(pLists, nLists);
-}
-
-void CAfxStreams::OnDrawModulated(IAfxMesh * am, const SOURCESDK::Vector4D_csgo &vecDiffuseModulation, int firstIndex, int numIndices)
-{
-	if(m_OnDrawModulated)
-		m_OnDrawModulated->DrawModulated(am, vecDiffuseModulation, firstIndex, numIndices);
-	else
-		am->GetParent()->DrawModulated(vecDiffuseModulation, firstIndex, numIndices);
-}
-
 void CAfxStreams::OnSetVertexShader(CAfx_csgo_ShaderState & state)
 {
-	if(!(m_Recording || m_PreviewStream) || GetCurrent_View_Render_ThreadId() != GetCurrentThreadId())
-		// If streams system is live, then the thread should be the View_Render thread,
-		// because we run in mat_queue_mode 0,
-		// so we quit if it's from a different thread.
-		return;
-	
-	if(m_OnSetVertexShader)
-		m_OnSetVertexShader->SetVertexShader(state);
+	IAfxContextHook * hook = FindHook(GetCurrentContext());
+
+	if (hook)
+		hook->SetVertexShader(state);
 }
 
 void CAfxStreams::OnSetPixelShader(CAfx_csgo_ShaderState & state)
 {
-	if(!(m_Recording || m_PreviewStream) || GetCurrent_View_Render_ThreadId() != GetCurrentThreadId())
-		// If streams system is live, then the thread should be the View_Render thread,
-		// because we run in mat_queue_mode 0,
-		// so we quit if it's from a different thread.
-		return;
-	
-	if(m_OnSetPixelShader)
-		m_OnSetPixelShader->SetPixelShader(state);
+	IAfxContextHook * hook = FindHook(GetCurrentContext());
+
+	if (hook)
+		hook->SetPixelShader(state);
 }
 
 void CAfxStreams::OnDrawingHud(void)
 {
-	if(m_OnDrawingHud)
-		m_OnDrawingHud->DrawingHud();
+	IAfxContextHook * hook = FindHook(GetCurrentContext());
+
+	if (hook)
+		hook->DrawingHudBegin();
 }
 
-void CAfxStreams::SetBlend(IAfxVRenderView * rv, float blend )
+void CAfxStreams::OnDrawingSkyBoxViewBegin(void)
 {
-	m_OriginalColorModulation[3] = blend;
+	IAfxContextHook * hook = FindHook(GetCurrentContext());
 
-	if(!m_BlendOverride)
-	{
-		m_OverrideColor[3] = blend;
-	}
-
-	rv->GetParent()->SetBlend(blend);
-
-	if(m_ColorModulationOverride||m_BlendOverride) AfxD3D9SetModulationColorFix(m_OverrideColor);
+	if (hook)
+		hook->DrawingSkyBoxViewBegin();
 }
 
-void CAfxStreams::SetColorModulation(IAfxVRenderView * rv, float const* blend )
+void CAfxStreams::OnDrawingSkyBoxViewEnd(void)
 {
-	if(blend)
-	{
-		m_OriginalColorModulation[0] = blend[0];
-		m_OriginalColorModulation[1] = blend[1];
-		m_OriginalColorModulation[2] = blend[2];
+	IAfxContextHook * hook = FindHook(GetCurrentContext());
 
-		if(!m_ColorModulationOverride)
-		{
-			m_OverrideColor[0] = blend[0];
-			m_OverrideColor[1] = blend[1];
-			m_OverrideColor[2] = blend[2];
-		}
-	}
-
-	rv->GetParent()->SetColorModulation(blend);
-
-	if(m_ColorModulationOverride||m_BlendOverride) AfxD3D9SetModulationColorFix(m_OverrideColor);
+	if (hook)
+		hook->DrawingSkyBoxViewEnd();
 }
 
-void CAfxStreams::GetBlend(float &outBlend)
-{
-	if(!m_VRenderView)
-		outBlend = m_OriginalColorModulation[3];
-	else
-		outBlend = m_VRenderView->GetParent()->GetBlend();
-}
-
-void CAfxStreams::GetColorModulation(float (& outColor)[3])
-{
-	if(!m_VRenderView)
-	{
-		outColor[0] = m_OriginalColorModulation[0];
-		outColor[1] = m_OriginalColorModulation[1];
-		outColor[2] = m_OriginalColorModulation[2];
-	}
-	else
-	{
-		m_VRenderView->GetParent()->GetColorModulation(outColor);
-	}
-
-}
-
-void CAfxStreams::OverrideSetColorModulation(float const color[3])
-{
-	m_ColorModulationOverride = true;
-
-	m_OverrideColor[0] = color[0];
-	m_OverrideColor[1] = color[1];
-	m_OverrideColor[2] = color[2];
-
-	AfxD3D9SetModulationColorFix(m_OverrideColor);
-}
-
-void CAfxStreams::EndOverrideSetColorModulation()
-{
-	if(m_ColorModulationOverride)
-	{
-		m_OverrideColor[0] = m_OriginalColorModulation[0];
-		m_OverrideColor[1] = m_OriginalColorModulation[1];
-		m_OverrideColor[2] = m_OriginalColorModulation[2];
-
-		AfxD3D9SetModulationColorFix(m_OverrideColor);
-
-		m_ColorModulationOverride = false;
-	}
-}
-
-void CAfxStreams::OverrideSetBlend(float blend)
-{
-	m_BlendOverride = true;
-
-	m_OverrideColor[3] = blend;
-
-	AfxD3D9SetModulationColorFix(m_OverrideColor);
-
-}
-
-void CAfxStreams::EndOverrideSetBlend()
-{
-	if(m_BlendOverride)
-	{
-		m_OverrideColor[3] = m_OriginalColorModulation[3];
-
-		AfxD3D9SetModulationColorFix(m_OverrideColor);
-
-		m_BlendOverride = false;
-	}
-}
 
 void CAfxStreams::Console_RecordName_set(const char * value)
 {
@@ -3609,7 +4062,7 @@ void CAfxStreams::Console_Record_End()
 
 		Tier0_Msg("done.\n");
 
-		AfxD3D9_Block_Present(false);
+		//AfxD3D9_Block_Present(false);
 	}
 
 	m_Recording = false;
@@ -3629,14 +4082,6 @@ void CAfxStreams::Console_AddBaseFxStream(const char * streamName)
 		return;
 
 	AddStream(new CAfxSingleStream(streamName, new CAfxBaseFxStream()));
-}
-
-void CAfxStreams::Console_AddDeveloperStream(const char * streamName)
-{
-	if(!Console_CheckStreamName(streamName))
-		return;
-
-	AddStream(new CAfxSingleStream(streamName, new CAfxDeveloperStream()));
 }
 
 void CAfxStreams::Console_AddDepthStream(const char * streamName)
@@ -3760,7 +4205,7 @@ void CAfxStreams::Console_RemoveStream(const char * streamName)
 
 			m_Streams.erase(it);
 
-			delete cur;
+			cur->Release();
 
 			return;
 		}
@@ -3809,20 +4254,21 @@ void CAfxStreams::Console_ListActions(void)
 #define CAFXBASEFXSTREAM_STREAMCAPTURETYPES "normal|depth24|depth24ZIP|depthF|depthFZIP"
 #define CAFXSTREAMS_ACTIONSUFFIX " <actionName> - Set action with name <actionName> (see mirv_streams actions)."
 
-void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * args, int argcOffset, char const * cmdPrefix)
+void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * args)
 {
-	for(std::list<CAfxRecordStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
+	for (std::list<CAfxRecordStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
 	{
-		if(!_stricmp(streamName, (*it)->StreamName_get()))
+		if (!_stricmp(streamName, (*it)->StreamName_get()))
 		{
-			Console_EditStream((*it), args, argcOffset, cmdPrefix);
+			Console_EditStream((*it), args);
 			return;
 		}
 	}
-	Tier0_Msg("Error: invalid streamName.\n");
+
+	Tier0_Msg("Error: invalid streamName %s.\n", streamName);
 }
 
-void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args, int argcOffset, char const * cmdPrefix)
+void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args)
 {
 	CAfxStream * cur = stream;
 
@@ -3830,8 +4276,8 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 	CAfxSingleStream * curSingle = 0;
 	CAfxTwinStream * curTwin = 0;
 	CAfxRenderViewStream * curRenderView = 0;
-	CAfxDeveloperStream * curDeveloper = 0;
-	CAfxBaseFxStream * curBaseFx = 0;
+
+	CAfxStreamSharedInterLock afxStreamInterLock(cur);
 	
 	if(cur)
 	{
@@ -3847,19 +4293,13 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				curRenderView = curSingle->Stream_get();
 			}
 		}
-		else
-		{
-			curRenderView = cur->AsAfxRenderViewStream();
-		}
 	}
 
-	if(curRenderView)
-	{
-		curDeveloper = curRenderView->AsAfxDeveloperStream();
-		curBaseFx = curRenderView->AsAfxBaseFxStream();
-	}
+	char const * cmdPrefix = args->ArgV(0);
 
-	int argc = args->ArgC() -argcOffset;
+	int argcOffset = 1;
+
+	int argc = args->ArgC() - argcOffset;
 
 	if(cur)
 	{
@@ -3877,17 +4317,17 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 
 			if(!_stricmp(cmd0, "streamA"))
 			{
-				std::string newPrefix(cmdPrefix);
-				newPrefix.append(" streamA");
-				Console_EditStream(curTwin->StreamA_get(), args, argcOffset+1, newPrefix.c_str());
+				CSubWrpCommandArgs subArgs(args, 1);
+
+				Console_EditStream(curTwin->StreamA_get(), args);
 				return;
 			}
 			else
 			if(!_stricmp(cmd0, "streamB"))
 			{
-				std::string newPrefix(cmdPrefix);
-				newPrefix.append(" streamB");
-				Console_EditStream(curTwin->StreamB_get(), args, argcOffset+1, newPrefix.c_str());
+				CSubWrpCommandArgs subArgs(args, 1);
+
+				Console_EditStream(curTwin->StreamB_get(), args);
 				return;
 			}
 			else
@@ -3946,6 +4386,54 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 
 	if(curRenderView)
 	{
+		if (Console_EditStream(curRenderView, args))
+			return;
+	}		
+
+	if (curTwin)
+	{
+		Tier0_Msg("-- twin properties --\n");
+		Tier0_Msg("%s streamA [...] - Edit sub stream A.\n", cmdPrefix);
+		Tier0_Msg("%s streamB [...] - Edit sub stream B.\n", cmdPrefix);
+		Tier0_Msg("%s streamCombineType [...] - Controlls how streams are combined.\n", cmdPrefix);
+	}
+
+	if (curSingle)
+	{
+	}
+
+	if (curRecord)
+	{
+		Tier0_Msg("-- record properties --\n");
+		Tier0_Msg("%s record [...] - Controlls whether or not this stream is recorded with mirv_streams record.\n", cmdPrefix);
+	}
+
+	if (cur)
+	{
+	}
+	Tier0_Msg("== No more properties. ==\n");
+}
+
+bool CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandArgs * args)
+{
+	CAfxRenderViewStream * curRenderView = stream;
+	CAfxBaseFxStream * curBaseFx = 0;
+	
+	CAfxStreamSharedInterLock afxRenderViewStreamInterLock(curRenderView);
+
+	if(curRenderView)
+	{
+		curBaseFx = curRenderView->AsAfxBaseFxStream();
+	}
+
+	char const * cmdPrefix = args->ArgV(0);
+
+	int argcOffset = 1;
+
+	int argc = args->ArgC() - argcOffset;
+
+	if(curRenderView)
+	{
 		if(1 <= argc)
 		{
 			char const * cmd0 = args->ArgV(argcOffset +0);
@@ -3966,7 +4454,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					}
 					
 					curRenderView->AttachCommands_set(value.c_str());
-					return;
+					return true;
 				}
 
 				Tier0_Msg(
@@ -3975,7 +4463,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, curRenderView->AttachCommands_get()
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "detachCommands"))
@@ -3994,7 +4482,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					}
 					
 					curRenderView->DetachCommands_set(value.c_str());
-					return;
+					return true;
 				}
 
 				Tier0_Msg(
@@ -4003,7 +4491,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, curRenderView->DetachCommands_get()
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "drawHud"))
@@ -4014,7 +4502,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 
 					curRenderView->DrawHud_set(atoi(cmd1) != 0 ? true : false);
 
-					return;
+					return true;
 				}
 
 				Tier0_Msg(
@@ -4023,7 +4511,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, curRenderView->DrawHud_get() ? "1" : "0"
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "drawViewModel"))
@@ -4034,7 +4522,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 
 					curRenderView->DrawViewModel_set(atoi(cmd1) != 0 ? true : false);
 
-					return;
+					return true;
 				}
 
 				Tier0_Msg(
@@ -4043,7 +4531,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, curRenderView->DrawViewModel_get() ? "1" : "0"
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "captureType"))
@@ -4063,7 +4551,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 							}
 						}
 						curRenderView->StreamCaptureType_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4073,95 +4561,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, Console_FromStreamCaptureType(curRenderView->StreamCaptureType_get())
 				);
-				return;
-			}
-		}
-	}
-
-	if(curDeveloper)
-	{
-		if(1 <= argc)
-		{
-			char const * cmd0 = args->ArgV(argcOffset +0);
-
-			if(!_stricmp(cmd0, "matchTextureGroupName"))
-			{
-				if(2 <= argc)
-				{
-					char const * cmd1 = args->ArgV(argcOffset +1);
-
-					curDeveloper->MatchTextureGroupName_set(cmd1);
-
-					return;
-				}
-
-				Tier0_Msg(
-					"%s matchTextureGroupName <name> - Set new texture group name to match.\n"
-					"Current value: %s.\n"
-					, cmdPrefix
-					, curDeveloper->MatchTextureGroupName_get()
-				);
-				return;
-			}
-			else
-			if(!_stricmp(cmd0, "matchName"))
-			{
-				if(2 <= argc)
-				{
-					char const * cmd1 = args->ArgV(argcOffset +1);
-
-					curDeveloper->MatchName_set(cmd1);
-
-					return;
-				}
-
-				Tier0_Msg(
-					"%s matchName <name> - Set new name to match.\n"
-					"Current value: %s.\n"
-					, cmdPrefix
-					, curDeveloper->MatchName_get()
-				);
-				return;
-			}
-			else
-			if(!_stricmp(cmd0, "replaceName"))
-			{
-				if(2 <= argc)
-				{
-					char const * cmd1 = args->ArgV(argcOffset +1);
-
-					curDeveloper->ReplaceName_set(cmd1);
-
-					return;
-				}
-
-				Tier0_Msg(
-					"%s replaceName <name> - Set the name of the replacement material, set an empty string(\"\") to replace nothing.\n"
-					"Current value: %s.\n"
-					, cmdPrefix
-					, curDeveloper->ReplaceName_get()
-				);
-				return;
-			}
-			else
-			if(!_stricmp(cmd0, "blockDraw"))
-			{
-				if(2 <= argc)
-				{
-					char const * cmd1 = args->ArgV(argcOffset +1);
-
-					curDeveloper->BlockDraw_set(0 != atoi(cmd1));
-
-					return;
-				}
-
-				Tier0_Msg(
-					"%s blockDraw 0|1 - Whether to block drawing when replaceMaterial is active.\n"
-					"Current value: %i.\n"
-					, cmdPrefix
-					, curDeveloper->BlockDraw_get() ? 1L : 0L
-				);
-				return;
+				return true;
 			}
 		}
 	}
@@ -4190,7 +4590,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 							if(Console_ToAfxAction(cmd3, value))
 							{
 								curBaseFx->Console_ActionFilter_Add(cmd2, value);
-								return;
+								return true;
 							}
 						}
 
@@ -4201,13 +4601,13 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 							"\t<actionName> - name of action (see mirv_actions).\n"
 							, cmdPrefix
 						);
-						return;
+						return true;
 					}
 					else
 					if(!_stricmp(cmd1, "print"))
 					{
 						curBaseFx->Console_ActionFilter_Print();
-						return;
+						return true;
 					}
 					else
 					if(!_stricmp(cmd1, "remove"))
@@ -4218,14 +4618,14 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 
 							curBaseFx->Console_ActionFilter_Remove(atoi(cmd2));
 
-							return;
+							return true;
 						}
 						
 						Tier0_Msg(
 							"%s actionFilter remove <actionId> - Removes action with id number <actionId>.\n"
 							, cmdPrefix
 						);
-						return;
+						return true;
 					}
 					else
 					if(!_stricmp(cmd1, "move"))
@@ -4238,14 +4638,14 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 
 							curBaseFx->Console_ActionFilter_Move(atoi(cmd2), atoi(cmd3));
 
-							return;
+							return true;
 						}
 						
 						Tier0_Msg(
 							"%s actionFilter move <actionId> <beforeId> - Moves action with id number <actionId> before action with id <beforeId> (<beforeId> value can be 1 greater than the last id to move at the end).\n"
 							, cmdPrefix
 						);
-						return;
+						return true;
 					}
 				}
 
@@ -4259,7 +4659,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, cmdPrefix
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "clientEffectTexturesAction"))
@@ -4272,7 +4672,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->ClientEffectTexturesAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4282,7 +4682,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->ClientEffectTexturesAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "worldTexturesAction"))
@@ -4295,7 +4695,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->WorldTexturesAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4305,7 +4705,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->WorldTexturesAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "skyBoxTexturesAction"))
@@ -4318,7 +4718,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->SkyBoxTexturesAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4328,7 +4728,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->SkyBoxTexturesAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "staticPropTexturesAction"))
@@ -4341,7 +4741,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->StaticPropTexturesAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4351,7 +4751,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->StaticPropTexturesAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "cableAction"))
@@ -4364,7 +4764,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->CableAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4374,7 +4774,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->CableAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "playerModelsAction"))
@@ -4387,7 +4787,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->PlayerModelsAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4397,7 +4797,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->PlayerModelsAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "weaponModelsAction"))
@@ -4410,7 +4810,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->WeaponModelsAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4420,7 +4820,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->WeaponModelsAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "statTrakAction")||!_stricmp(cmd0, "stattrackAction"))
@@ -4433,7 +4833,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->StatTrakAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4443,7 +4843,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->StatTrakAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "shellModelsAction"))
@@ -4456,7 +4856,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->ShellModelsAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4466,7 +4866,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->ShellModelsAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "otherModelsAction"))
@@ -4479,7 +4879,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->OtherModelsAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4489,7 +4889,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->OtherModelsAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "decalTexturesAction"))
@@ -4502,7 +4902,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->DecalTexturesAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4512,7 +4912,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->DecalTexturesAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "effectsAction"))
@@ -4525,7 +4925,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->EffectsAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4535,7 +4935,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->EffectsAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "shellParticleAction"))
@@ -4548,7 +4948,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->ShellParticleAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4558,7 +4958,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->ShellParticleAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "otherParticleAction"))
@@ -4571,7 +4971,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->OtherParticleAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4581,7 +4981,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->OtherParticleAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "stickerAction"))
@@ -4594,7 +4994,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->StickerAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4604,7 +5004,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->StickerAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "errorMaterialAction"))
@@ -4617,7 +5017,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->ErrorMaterialAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4627,7 +5027,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->ErrorMaterialAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "otherAction"))
@@ -4640,7 +5040,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->OtherAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4650,7 +5050,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->OtherAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "writeZAction"))
@@ -4663,7 +5063,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					if(Console_ToAfxAction(cmd1, value))
 					{
 						curBaseFx->WriteZAction_set(value);
-						return;
+						return true;
 					}
 				}
 
@@ -4673,7 +5073,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->WriteZAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "devAction"))
@@ -4684,7 +5084,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->DevAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "otherEngineAction"))
@@ -4695,7 +5095,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->OtherEngineAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "otherSpecialAction"))
@@ -4706,7 +5106,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->OtherSpecialAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "vguiAction"))
@@ -4717,7 +5117,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, Console_FromAfxAction(curBaseFx->VguiAction_get())
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "depthVal"))
@@ -4726,7 +5126,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				{
 					char const * cmd1 = args->ArgV(argcOffset +1);
 					curBaseFx->DepthVal_set((float)atof(cmd1));
-					return;
+					return true;
 				}
 
 				Tier0_Msg(
@@ -4735,7 +5135,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, curBaseFx->DepthVal_get()
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "depthValMax"))
@@ -4744,7 +5144,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				{
 					char const * cmd1 = args->ArgV(argcOffset +1);
 					curBaseFx->DepthValMax_set((float)atof(cmd1));
-					return;
+					return true;
 				}
 
 				Tier0_Msg(
@@ -4753,7 +5153,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, curBaseFx->DepthValMax_get()
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "smokeOverlayAlphaFactor"))
@@ -4762,7 +5162,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 				{
 					char const * cmd1 = args->ArgV(argcOffset +1);
 					curBaseFx->SmokeOverlayAlphaFactor_set((float)atof(cmd1));
-					return;
+					return true;
 				}
 
 				Tier0_Msg(
@@ -4771,7 +5171,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, curBaseFx->SmokeOverlayAlphaFactor_get()
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "debugPrint"))
@@ -4781,7 +5181,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					char const * cmd1 = args->ArgV(argcOffset +1);
 
 					curBaseFx->DebugPrint_set(0 != atoi(cmd1) ? true : false);
-					return;
+					return true;
 				}
 
 				Tier0_Msg(
@@ -4790,13 +5190,13 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, curBaseFx->DebugPrint_get() ? "1" : "0"
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "invalidateMap"))
 			{
 				curBaseFx->InvalidateMap();
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "testAction"))
@@ -4806,7 +5206,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					char const * cmd1 = args->ArgV(argcOffset +1);
 
 					curBaseFx->TestAction_set(0 != atoi(cmd1) ? true : false);
-					return;
+					return true;
 				}
 
 				Tier0_Msg(
@@ -4815,7 +5215,7 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 					, curBaseFx->TestAction_get() ? "1" : "0"
 				);
-				return;
+				return true;
 			}
 			else
 			if(!_stricmp(cmd0, "man"))
@@ -4853,50 +5253,14 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 					, cmdPrefix
 				);*/
 				Tier0_Warning("Warning: Due to CS:GO 17th Ferbuary 2016 update this feature is not available.\n");
-				return;
+				return true;
 			}
 		}
 	}
 
-	if(cur)
-	{
-	}
-
-	if(curRecord)
-	{
-		Tier0_Msg("%s record [...] - Controlls whether or not this stream is recorded with mirv_streams record.\n", cmdPrefix);
-	}
-
-	if(curSingle)
-	{
-	}
-
-	if(curTwin)
-	{
-		Tier0_Msg("%s streamA [...] - Edit sub stream A.\n", cmdPrefix);
-		Tier0_Msg("%s streamB [...] - Edit sub stream B.\n", cmdPrefix);
-		Tier0_Msg("%s streamCombineType [...] - Controlls how streams are combined.\n", cmdPrefix);
-	}
-
-	if(curRenderView)
-	{
-		Tier0_Msg("%s attachCommands [...] - Commands to be executed when stream is attached. WARNING. Use at your own risk, game may crash!\n", cmdPrefix);
-		Tier0_Msg("%s detachCommands [...] - Commands to be executed when stream is detached. WARNING. Use at your own risk, game may crash!\n", cmdPrefix);
-		Tier0_Msg("%s drawHud [...] - Controlls whether or not HUD is drawn for this stream.\n", cmdPrefix);
-		Tier0_Msg("%s drawViewModel [...] - Controls whether or not view model (in-eye weapon) is drawn for this stream.\n", cmdPrefix);
-		Tier0_Msg("%s captureType [...] - Stream capture type.\n", cmdPrefix);
-	}
-			
-	if(curDeveloper)
-	{
-		Tier0_Msg("%s matchTextureGroupName [...]\n", cmdPrefix);
-		Tier0_Msg("%s matchName [...]\n", cmdPrefix);
-		Tier0_Msg("%s replaceName [...]\n", cmdPrefix);
-		Tier0_Msg("%s blockDraw [...]\n", cmdPrefix);
-	}
-
 	if(curBaseFx)
 	{
+		Tier0_Msg("-- baseFx properties --\n");
 		Tier0_Msg("%s actionFilter [...] - Set actions by material name (not safe maybe).\n", cmdPrefix);
 		Tier0_Msg("%s clientEffectTexturesAction [...]\n", cmdPrefix);
 		Tier0_Msg("%s worldTexturesAction [...]\n", cmdPrefix);
@@ -4930,8 +5294,19 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 		// Tier0_Msg("%s testAction [...]\n", cmdPrefix);
 	}
 
-	Tier0_Msg("No further options for this stream.\n");
+	if (curRenderView)
+	{
+		Tier0_Msg("-- renderView properties --\n");
+		Tier0_Msg("%s attachCommands [...] - Commands to be executed when stream is attached. WARNING. Use at your own risk, game may crash!\n", cmdPrefix);
+		Tier0_Msg("%s detachCommands [...] - Commands to be executed when stream is detached. WARNING. Use at your own risk, game may crash!\n", cmdPrefix);
+		Tier0_Msg("%s drawHud [...] - Controlls whether or not HUD is drawn for this stream.\n", cmdPrefix);
+		Tier0_Msg("%s drawViewModel [...] - Controls whether or not view model (in-eye weapon) is drawn for this stream.\n", cmdPrefix);
+		Tier0_Msg("%s captureType [...] - Stream capture type.\n", cmdPrefix);
+	}
+
+	return false;
 }
+
 
 void CAfxStreams::Console_Bvh(IWrpCommandArgs * args)
 {
@@ -5182,11 +5557,6 @@ IAfxFreeMaster * CAfxStreams::GetFreeMaster(void)
 	return 0;
 }
 
-IAfxMatRenderContext * CAfxStreams::GetCurrentContext(void)
-{
-	return m_CurrentContext;
-}
-
 SOURCESDK::IShaderShadow_csgo * CAfxStreams::GetShaderShadow(void)
 {
 	return m_ShaderShadow;
@@ -5197,69 +5567,31 @@ std::wstring CAfxStreams::GetTakeDir(void)
 	return m_TakeDir;
 }
 
-void CAfxStreams::OnMaterialHook_set(IAfxMatRenderContextMaterialHook * value)
-{
-	if(m_CurrentContext) m_CurrentContext->OnMaterialHook_set(value);
-}
-
-void CAfxStreams::OnDrawInstances_set(IAfxMatRenderContextDrawInstances * value)
-{
-	if(m_CurrentContext) m_CurrentContext->OnDrawInstances_set(value);
-}
-
-void CAfxStreams::OnDraw_set(IAfxMeshDraw * value)
-{
-	m_OnDraw = value;
-}
-
-void CAfxStreams::OnDraw_2_set(IAfxMeshDraw_2 * value)
-{
-	m_OnDraw_2 = value;
-}
-
-void CAfxStreams::OnDrawModulated_set(IAfxMeshDrawModulated * value)
-{
-	m_OnDrawModulated = value;
-}
-
-void CAfxStreams::OnSetVertexShader_set(IAfxSetVertexShader * value)
-{
-	m_OnSetVertexShader = value;
-}
-
-void CAfxStreams::OnSetPixelShader_set(IAfxSetPixelShader * value)
-{
-	m_OnSetPixelShader = value;
-}
-
-void CAfxStreams::OnDrawingHud_set(IAfxDrawingHud * value)
-{
-	m_OnDrawingHud = value;
-}
-
 void CAfxStreams::LevelShutdown(IAfxBaseClientDll * cl)
 {
 	for(std::list<CAfxRecordStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
 	{
-		(*it)->LevelShutdown(this);
+		(*it)->LevelShutdown();
 	}
 }
 
 extern bool g_bD3D9DebugPrint;
 
-void CAfxStreams::DebugDump()
+void CAfxStreams::DebugDump(IAfxMatRenderContextOrg * ctxp)
 {
 	bool isRgba = true;
 
 	int width = 1280;
 	int height = 720;
 
-	if(m_BufferA.AutoRealloc(isRgba ? m_BufferA.IBPF_BGRA : m_BufferA.IBPF_BGR, width, height))
+	CAfxImageBuffer * buffer = ImageBufferPool.AquireBuffer();
+
+	if(buffer->AutoRealloc(isRgba ? buffer->IBPF_BGRA : buffer->IBPF_BGR, width, height))
 	{
-		m_CurrentContext->GetParent()->ReadPixels(
+		ctxp->ReadPixels(
 			0, 0,
 			width, height,
-			(unsigned char*)m_BufferA.Buffer,
+			(unsigned char*)buffer->Buffer,
 			isRgba ? SOURCESDK::IMAGE_FORMAT_RGBA8888 : SOURCESDK::IMAGE_FORMAT_RGB888
 		);
 
@@ -5277,37 +5609,37 @@ void CAfxStreams::DebugDump()
 				{
 					for(int x=0;x<width;++x)
 					{
-						unsigned char r = ((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +4*x +0];
-						unsigned char g = ((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +4*x +1];
-						unsigned char b = ((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +4*x +2];
-						unsigned char a = ((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +4*x +3];
+						unsigned char r = ((unsigned char *)buffer->Buffer)[dstLine*buffer->ImagePitch +4*x +0];
+						unsigned char g = ((unsigned char *)buffer->Buffer)[dstLine*buffer->ImagePitch +4*x +1];
+						unsigned char b = ((unsigned char *)buffer->Buffer)[dstLine*buffer->ImagePitch +4*x +2];
+						unsigned char a = ((unsigned char *)buffer->Buffer)[dstLine*buffer->ImagePitch +4*x +3];
 									
-						((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +4*x +0] = ((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +4*x +2];
-						((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +4*x +1] = ((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +4*x +1];
-						((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +4*x +2] = ((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +4*x +0];
-						((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +4*x +3] = ((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +4*x +3];
+						((unsigned char *)buffer->Buffer)[dstLine*buffer->ImagePitch +4*x +0] = ((unsigned char *)buffer->Buffer)[srcLine*buffer->ImagePitch +4*x +2];
+						((unsigned char *)buffer->Buffer)[dstLine*buffer->ImagePitch +4*x +1] = ((unsigned char *)buffer->Buffer)[srcLine*buffer->ImagePitch +4*x +1];
+						((unsigned char *)buffer->Buffer)[dstLine*buffer->ImagePitch +4*x +2] = ((unsigned char *)buffer->Buffer)[srcLine*buffer->ImagePitch +4*x +0];
+						((unsigned char *)buffer->Buffer)[dstLine*buffer->ImagePitch +4*x +3] = ((unsigned char *)buffer->Buffer)[srcLine*buffer->ImagePitch +4*x +3];
 
-						((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +4*x +0] = b;
-						((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +4*x +1] = g;
-						((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +4*x +2] = r;
-						((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +4*x +3] = a;
+						((unsigned char *)buffer->Buffer)[srcLine*buffer->ImagePitch +4*x +0] = b;
+						((unsigned char *)buffer->Buffer)[srcLine*buffer->ImagePitch +4*x +1] = g;
+						((unsigned char *)buffer->Buffer)[srcLine*buffer->ImagePitch +4*x +2] = r;
+						((unsigned char *)buffer->Buffer)[srcLine*buffer->ImagePitch +4*x +3] = a;
 					}
 				}
 				else
 				{
 					for(int x=0;x<width;++x)
 					{
-						unsigned char r = ((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +3*x +0];
-						unsigned char g = ((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +3*x +1];
-						unsigned char b = ((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +3*x +2];
+						unsigned char r = ((unsigned char *)buffer->Buffer)[dstLine*buffer->ImagePitch +3*x +0];
+						unsigned char g = ((unsigned char *)buffer->Buffer)[dstLine*buffer->ImagePitch +3*x +1];
+						unsigned char b = ((unsigned char *)buffer->Buffer)[dstLine*buffer->ImagePitch +3*x +2];
 									
-						((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +3*x +0] = ((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +3*x +2];
-						((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +3*x +1] = ((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +3*x +1];
-						((unsigned char *)m_BufferA.Buffer)[dstLine*m_BufferA.ImagePitch +3*x +2] = ((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +3*x +0];
+						((unsigned char *)buffer->Buffer)[dstLine*buffer->ImagePitch +3*x +0] = ((unsigned char *)buffer->Buffer)[srcLine*buffer->ImagePitch +3*x +2];
+						((unsigned char *)buffer->Buffer)[dstLine*buffer->ImagePitch +3*x +1] = ((unsigned char *)buffer->Buffer)[srcLine*buffer->ImagePitch +3*x +1];
+						((unsigned char *)buffer->Buffer)[dstLine*buffer->ImagePitch +3*x +2] = ((unsigned char *)buffer->Buffer)[srcLine*buffer->ImagePitch +3*x +0];
 									
-						((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +3*x +0] = b;
-						((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +3*x +1] = g;
-						((unsigned char *)m_BufferA.Buffer)[srcLine*m_BufferA.ImagePitch +3*x +2] = r;
+						((unsigned char *)buffer->Buffer)[srcLine*buffer->ImagePitch +3*x +0] = b;
+						((unsigned char *)buffer->Buffer)[srcLine*buffer->ImagePitch +3*x +1] = g;
+						((unsigned char *)buffer->Buffer)[srcLine*buffer->ImagePitch +3*x +2] = r;
 					}
 				}
 			}
@@ -5316,7 +5648,7 @@ void CAfxStreams::DebugDump()
 		// Write to disk:
 		{
 			std::wstring path = L"debug.tga";
-			if(!WriteBufferToFile(m_BufferA, path, false))
+			if(!buffer->WriteToFile(path, false, false))
 			{
 				Tier0_Warning("CAfxStreams::DebugDump:Failed writing image for frame #%i\n.", m_Frame);
 			}
@@ -5329,12 +5661,14 @@ void CAfxStreams::DebugDump()
 
 }
 
-void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx, SOURCESDK::vrect_t_csgo *rect)
+void CAfxStreams::View_Render(IAfxBaseClientDll * cl, SOURCESDK::vrect_t_csgo *rect)
 {
-	AfxD3D9_Block_Present(false);
+	IAfxMatRenderContextOrg * ctxp = GetCurrentContext()->GetOrg();
+
+	BlockPresent(ctxp, false);
+	m_PresentBlocked = false;
 
 	SetCurrent_View_Render_ThreadId(GetCurrentThreadId());
-	m_CurrentContext = cx;
 
 	bool canFeed = CheckCanFeedStreams();
 
@@ -5347,6 +5681,8 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 		}
 	}
 
+	bool previewStreamWillRecord = false;
+
 	if(previewStream)
 	{
 		if(!canFeed)
@@ -5355,16 +5691,16 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 		{
 			SetMatVarsForStreams(); // keep them set in case a mofo resets them.
 
-			previewStream->StreamAttach(this);
+			previewStream->OnRenderBegin();
 
 			if(0 < strlen(previewStream->AttachCommands_get())) g_VEngineClient->ExecuteClientCmd(previewStream->AttachCommands_get());
 
-			cx->GetParent()->ClearColor4ub(0,0,0,0);
-			cx->GetParent()->ClearBuffers(true,false,false);
+			ctxp->ClearColor4ub(0,0,0,0);
+			ctxp->ClearBuffers(true,false,false);
 		}
 	}
 
-	cl->GetParent()->View_Render(rect);
+	cl->GetParent()->View_Render(rect);	
 
 	// Capture BVHs (except main):
 	for (std::list<CEntityBvhCapture *>::iterator it = m_EntityBvhCaptures.begin(); it != m_EntityBvhCaptures.end(); ++it)
@@ -5376,7 +5712,13 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 	{
 		if(0 < strlen(previewStream->DetachCommands_get())) g_VEngineClient->ExecuteClientCmd(previewStream->DetachCommands_get());
 
-		previewStream->StreamDetach(this);
+		previewStreamWillRecord = m_Recording && canFeed && m_PreviewStream->Record_get();
+
+		previewStream->OnRenderEnd();
+
+		if (!previewStreamWillRecord)
+		{
+		}
 	}
 
 	if(m_Recording)
@@ -5387,18 +5729,12 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 		}
 		else
 		{
-			if(!m_PresentRecordOnScreen)
-			{
-				m_MaterialSystem->SwapBuffers();
-				AfxD3D9_Block_Present(true);
-			}
-
 			for(std::list<CAfxRecordStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
 			{
 				if(!(*it)->Record_get()) continue;
 
 				//
-				// Record the stream:
+				// Render a stream and queue capturing etc.:
 
 				CAfxRenderViewStream * streamA = 0;
 				CAfxRenderViewStream * streamB = 0;
@@ -5432,81 +5768,53 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, IAfxMatRenderContext * cx,
 
 				if(streamA)
 				{
-					streamAOk = CaptureStreamToBuffer(streamA, m_BufferA, cx);
+					ctxp = CaptureStreamToBuffer(streamA, (*it), streamA == previewStream && previewStreamWillRecord, true, !streamB);
 				}
 
 				if(streamB)
 				{
-					streamBOk = CaptureStreamToBuffer(streamB, m_BufferB, cx);
+					ctxp = CaptureStreamToBuffer(streamB, (*it), streamB == previewStream && previewStreamWillRecord, !streamA, true);
 				}
-
-				if(streamA && streamB)
-				{
-					streamAOk = streamAOk && streamBOk
-						&& m_BufferA.Width == m_BufferB.Width
-						&& m_BufferA.Height == m_BufferB.Height
-						&& m_BufferA.PixelFormat == m_BufferA.IBPF_BGR
-						&& m_BufferA.PixelFormat == m_BufferB.PixelFormat
-						&& m_BufferA.ImagePitch == m_BufferB.ImagePitch
-						&& m_BufferA.AutoRealloc(m_BufferA.IBPF_BGRA, m_BufferA.Width, m_BufferA.Height)
-					;
-
-					if(streamAOk)
-					{
-						// interleave B as alpha into A:
-
-						for(int y = m_BufferA.Height-1;y>=0;--y)
-						{
-							for(int x=m_BufferA.Width-1;x>=0;--x)
-							{
-								unsigned char b = ((unsigned char *)m_BufferA.Buffer)[y*m_BufferB.ImagePitch+x*3+0];
-								unsigned char g = ((unsigned char *)m_BufferA.Buffer)[y*m_BufferB.ImagePitch+x*3+1];
-								unsigned char r = ((unsigned char *)m_BufferA.Buffer)[y*m_BufferB.ImagePitch+x*3+2];
-								unsigned char a = ((unsigned char *)m_BufferB.Buffer)[y*m_BufferB.ImagePitch+x*3+0];
-
-								((unsigned char *)m_BufferA.Buffer)[y*m_BufferA.ImagePitch+x*4+0] = b;
-								((unsigned char *)m_BufferA.Buffer)[y*m_BufferA.ImagePitch+x*4+1] = g;
-								((unsigned char *)m_BufferA.Buffer)[y*m_BufferA.ImagePitch+x*4+2] = r;
-								((unsigned char *)m_BufferA.Buffer)[y*m_BufferA.ImagePitch+x*4+3] = a;
-							}
-						}
-					}
-					else
-					{
-						Tier0_Warning("CAfxStreams::View_Render: Combining streams failed.\n");
-					}
-				}
-
-				// Write to disk:
-				if(streamAOk)
-				{
-					CAfxRenderViewStream::StreamCaptureType captureType = streamA->StreamCaptureType_get();
-					std::wstring path;
-					if((*it)->CreateCapturePath(
-						m_TakeDir,
-						m_Frame,
-						(captureType == CAfxRenderViewStream::SCT_Depth24 || captureType == CAfxRenderViewStream::SCT_Depth24ZIP || captureType == CAfxRenderViewStream::SCT_DepthF || captureType == CAfxRenderViewStream::SCT_DepthFZIP) ? L".exr" : (m_FormatBmpAndNotTga ? L".bmp" : L".tga"),
-						path))
-					{
-						if(!WriteBufferToFile(m_BufferA, path, captureType == CAfxRenderViewStream::SCT_Depth24ZIP || captureType == CAfxRenderViewStream::SCT_DepthFZIP))
-						{
-							Tier0_Warning("Failed writing image #%i for stream %s\n.", m_Frame, (*it)->StreamName_get());
-						}
-					}
-				}
-
 			}
 		}
 
 		++m_Frame;
 	}
 
-	m_CurrentContext = 0;
 	SetCurrent_View_Render_ThreadId(0);
 }
 
-bool CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuffer & buffer, IAfxMatRenderContext * cx)
+IAfxMatRenderContextOrg * CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CAfxRecordStream * captureTarget, bool isInPreview, bool first, bool last)
 {
+	if (!m_PresentRecordOnScreen)
+	{
+		m_MaterialSystem->SwapBuffers();
+	}
+
+	// Work around game running out of memory because of too much shit on the queue
+	// aka issue ripieces/advancedfx#22 :
+	m_MaterialSystem->EndFrame();
+	m_MaterialSystem->BeginFrame(0);
+
+	//
+	// We are on potentially a new context now!
+
+	IAfxMatRenderContextOrg * ctxp = GetCurrentContext()->GetOrg();
+
+	if (first)
+	{
+		captureTarget->QueueCaptureStart(ctxp);
+	}
+
+	if (!m_PresentRecordOnScreen)
+	{
+		if (!m_PresentBlocked)
+		{
+			BlockPresent(ctxp, true);
+			m_PresentBlocked = true;
+		}
+	}
+	
 	CAfxRenderViewStream::StreamCaptureType captureType = stream->StreamCaptureType_get();
 	bool isDepthF = captureType == CAfxRenderViewStream::SCT_DepthF || captureType == CAfxRenderViewStream::SCT_DepthFZIP;
 
@@ -5518,7 +5826,7 @@ bool CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuf
 	{
 		if(m_RenderTargetDepthF)
 		{
-			cx->GetParent()->PushRenderTargetAndViewport(
+			ctxp->PushRenderTargetAndViewport(
 				m_RenderTargetDepthF,
 				0,
 				viewSetup->m_nUnscaledX,
@@ -5535,15 +5843,16 @@ bool CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuf
 	}
 	else
 	{
-		if(m_PresentRecordOnScreen)
-			m_MaterialSystem->SwapBuffers();
+		//if(m_PresentRecordOnScreen)
+		//	m_MaterialSystem->SwapBuffers();
 	}
-
-	bool bOk = true;
 
 	SetMatVarsForStreams(); // keep them set in case a mofo resets them.
 
-	stream->StreamAttach(this);
+	if (!isInPreview)
+	{
+	}
+	stream->OnRenderBegin();
 
 	if(0 < strlen(stream->AttachCommands_get())) g_VEngineClient->ExecuteClientCmd(stream->AttachCommands_get());
 
@@ -5552,181 +5861,35 @@ bool CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStream * stream, CImageBuf
 	if(stream->DrawHud_get()) whatToDraw |= SOURCESDK::RENDERVIEW_DRAWHUD;
 	if(stream->DrawViewModel_get()) whatToDraw |= SOURCESDK::RENDERVIEW_DRAWVIEWMODEL;
 
-	cx->GetParent()->ClearColor4ub(0,0,0,0);
-	cx->GetParent()->ClearBuffers(true,false,false);
+	ctxp->ClearColor4ub(0,0,0,0);
+	ctxp->ClearBuffers(true,false,false);
 
+	//DrawLock(ctxp);
 	view->RenderView(*viewSetup, *viewSetup, SOURCESDK::VIEW_CLEAR_STENCIL|SOURCESDK::VIEW_CLEAR_DEPTH, whatToDraw);
+	//ScheduleDrawUnlock(ctxp);
 
-	if(isDepthF)
-	{
-		if(buffer.AutoRealloc(CImageBuffer::IBPF_ZFloat, viewSetup->m_nUnscaledWidth, viewSetup->m_nUnscaledHeight))
-		{
-			cx->GetParent()->ReadPixels(
-				viewSetup->m_nUnscaledX, viewSetup->m_nUnscaledY,
-				buffer.Width, buffer.Height,
-				(unsigned char*)buffer.Buffer,
-				SOURCESDK::IMAGE_FORMAT_R32F
-			);
-
-			// Post process buffer:
-
-			float depthScale = 1.0f;
-			float depthOfs = 0.0f;
-
-			if(CAfxBaseFxStream * baseFx = stream->AsAfxBaseFxStream())
-			{
-				depthScale = baseFx->DepthValMax_get() - baseFx->DepthVal_get();
-				depthOfs = baseFx->DepthVal_get();
-			}
-
-			for(int y=0; y < buffer.Height; ++y)
-			{
-				for(int x=0; x < buffer.Width; ++x)
-				{
-					float depth = *(float *)((unsigned char *)buffer.Buffer +y*buffer.ImagePitch +x*sizeof(float));
-
-					depth *= depthScale;
-					depth += depthOfs;
-
-					*(float *)((unsigned char *)buffer.Buffer +y*buffer.ImagePitch +x*sizeof(float))
-						= depth;
-				}
-			}
-		}
-		else
-		{
-			bOk = false;
-			Tier0_Warning("CAfxStreams::CaptureStreamToBuffer: Failed to realloc buffer.\n");
-		}
-	}
-	else
-	if(buffer.AutoRealloc(CImageBuffer::IBPF_BGR, viewSetup->m_nUnscaledWidth, viewSetup->m_nUnscaledHeight))
-	{
-		cx->GetParent()->ReadPixels(
-			viewSetup->m_nUnscaledX, viewSetup->m_nUnscaledY,
-			buffer.Width, buffer.Height,
-			(unsigned char*)buffer.Buffer,
-			SOURCESDK::IMAGE_FORMAT_RGB888
+	stream->QueueCapture(ctxp, captureTarget,
+		viewSetup->m_nUnscaledX,
+		viewSetup->m_nUnscaledY,
+		viewSetup->m_nUnscaledWidth,
+		viewSetup->m_nUnscaledHeight
 		);
-
-		if(CAfxRenderViewStream::SCT_Depth24 == captureType || CAfxRenderViewStream::SCT_Depth24ZIP == captureType)
-		{
-			float depthScale = 1.0f;
-			float depthOfs = 0.0f;
-
-			if(CAfxBaseFxStream * baseFx = stream->AsAfxBaseFxStream())
-			{
-				depthScale = baseFx->DepthValMax_get() - baseFx->DepthVal_get();
-				depthOfs = baseFx->DepthVal_get();
-			}
-
-			int oldImagePitch = buffer.ImagePitch;
-
-			// make the 24bit RGB into a float buffer:
-			if(buffer.AutoRealloc(CImageBuffer::IBPF_ZFloat, buffer.Width, buffer.Height))
-			{
-				for(int y=buffer.Height-1; y >= 0; --y)
-				{
-					for(int x=buffer.Width-1; x >= 0; --x)
-					{
-						unsigned char r = ((unsigned char *)buffer.Buffer)[y*oldImagePitch +3*x +0];
-						unsigned char g = ((unsigned char *)buffer.Buffer)[y*oldImagePitch +3*x +1];
-						unsigned char b = ((unsigned char *)buffer.Buffer)[y*oldImagePitch +3*x +2];
-
-						float depth;
-
-						depth = (1.0f/16777215.0f)*r +(256.0f/16777215.0f)*g +(65536.0f/16777215.0f)*b;
-
-						depth *= depthScale;
-						depth += depthOfs;
-
-						*(float *)((unsigned char *)buffer.Buffer +y*buffer.ImagePitch +x*sizeof(float))
-							= depth;
-					}
-				}
-			}
-			else
-			{
-				bOk = false;
-				Tier0_Warning("CAfxStreams::CaptureStreamToBuffer: Failed to realloc buffer.\n");
-			}
-		}
-		else
-		{
-			// (back) transform to MDT native format:
-
-			int lastLine = buffer.Height >> 1;
-			if(buffer.Height & 0x1) ++lastLine;
-
-			for(int y=0;y<lastLine;++y)
-			{
-				int srcLine = y;
-				int dstLine = buffer.Height -1 -y;
-
-				for(int x=0;x<buffer.Width;++x)
-				{
-					unsigned char r = ((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +3*x +0];
-					unsigned char g = ((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +3*x +1];
-					unsigned char b = ((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +3*x +2];
-									
-					((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +3*x +0] = ((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +3*x +2];
-					((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +3*x +1] = ((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +3*x +1];
-					((unsigned char *)buffer.Buffer)[dstLine*buffer.ImagePitch +3*x +2] = ((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +3*x +0];
-									
-					((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +3*x +0] = b;
-					((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +3*x +1] = g;
-					((unsigned char *)buffer.Buffer)[srcLine*buffer.ImagePitch +3*x +2] = r;
-				}
-			}
-		}
-	}
-	else
-	{
-		bOk = false;
-		Tier0_Warning("CAfxStreams::CaptureStreamToBuffer: Failed to realloc buffer.\n");
-	}
 
 	if(0 < strlen(stream->DetachCommands_get())) g_VEngineClient->ExecuteClientCmd(stream->DetachCommands_get());
 
-	stream->StreamDetach(this);
-
+	stream->OnRenderEnd();
+	
 	if(isDepthF)
 	{
-		cx->GetParent()->PopRenderTargetAndViewport();
+		ctxp->PopRenderTargetAndViewport();
 	}
 
-	return bOk;
-}
-
-bool CAfxStreams::WriteBufferToFile(const CImageBuffer & buffer, const std::wstring & path, bool ifZip)
-{
-	if(buffer.IBPF_ZFloat == buffer.PixelFormat)
+	if (last)
 	{
-		return WriteFloatZOpenExr(
-			path.c_str(),
-			(unsigned char*)buffer.Buffer,
-			buffer.Width,
-			buffer.Height,
-			sizeof(float),
-			buffer.ImagePitch,
-			ifZip ? WFZOEC_Zip : WFZOEC_None
-			);
+		captureTarget->QueueCaptureEnd(ctxp, m_TakeDir, m_Frame, (captureType == CAfxRenderViewStream::SCT_Depth24 || captureType == CAfxRenderViewStream::SCT_Depth24ZIP || captureType == CAfxRenderViewStream::SCT_DepthF || captureType == CAfxRenderViewStream::SCT_DepthFZIP) ? L".exr" : (m_FormatBmpAndNotTga ? L".bmp" : L".tga"));
 	}
 
-	if(buffer.IBPF_A == buffer.PixelFormat)
-	{
-		return m_FormatBmpAndNotTga
-			? WriteRawBitmap((unsigned char*)buffer.Buffer, path.c_str(), buffer.Width, buffer.Height, 8, buffer.ImagePitch)
-			: WriteRawTarga((unsigned char*)buffer.Buffer, path.c_str(), buffer.Width, buffer.Height, 8, true, buffer.ImagePitch, 0)
-		;
-	}
-
-	bool isBgra = buffer.IBPF_BGRA == buffer.PixelFormat;
-
-	return m_FormatBmpAndNotTga && !isBgra
-		? WriteRawBitmap((unsigned char*)buffer.Buffer, path.c_str(), buffer.Width, buffer.Height, 24, buffer.ImagePitch)
-		: WriteRawTarga((unsigned char*)buffer.Buffer, path.c_str(), buffer.Width, buffer.Height, isBgra ? 32 : 24, false, buffer.ImagePitch, isBgra ? 8 : 0)
-	;
+	return ctxp;
 }
 
 bool CAfxStreams::Console_CheckStreamName(char const * value)
@@ -5873,10 +6036,8 @@ bool CAfxStreams::CheckCanFeedStreams(void)
 {
 	return 0 != GetView_csgo()
 		&& 0 != m_MaterialSystem
-		&& 0 != m_VRenderView
 		&& 0 != m_AfxBaseClientDll
 		&& 0 != m_ShaderShadow
-		&& 0 != m_CurrentContext
 	;
 }
 
@@ -5884,7 +6045,6 @@ void CAfxStreams::BackUpMatVars()
 {
 	EnsureMatVars();
 
-	m_OldMatQueueMode = m_MatQueueModeRef->GetInt();
 	m_OldMatPostProcessEnable = m_MatPostProcessEnableRef->GetInt();
 	m_OldMatDynamicTonemapping = m_MatDynamicTonemappingRef->GetInt();
 	m_OldMatMotionBlurEnabled = m_MatMotionBlurEnabledRef->GetInt();
@@ -5895,7 +6055,6 @@ void CAfxStreams::SetMatVarsForStreams()
 {
 	EnsureMatVars();
 
-	m_MatQueueModeRef->SetValue(0.0f);
 	m_MatPostProcessEnableRef->SetValue(0.0f);
 	m_MatDynamicTonemappingRef->SetValue(0.0f);
 	m_MatMotionBlurEnabledRef->SetValue(0.0f);
@@ -5906,7 +6065,6 @@ void CAfxStreams::RestoreMatVars()
 {
 	EnsureMatVars();
 
-	m_MatQueueModeRef->SetValue((float)m_OldMatQueueMode);
 	m_MatPostProcessEnableRef->SetValue((float)m_OldMatPostProcessEnable);
 	m_MatDynamicTonemappingRef->SetValue((float)m_OldMatDynamicTonemapping);
 	m_MatMotionBlurEnabledRef->SetValue((float)m_OldMatMotionBlurEnabled);
@@ -5915,7 +6073,6 @@ void CAfxStreams::RestoreMatVars()
 
 void CAfxStreams::EnsureMatVars()
 {
-	if(!m_MatQueueModeRef) m_MatQueueModeRef = new WrpConVarRef("mat_queue_mode");
 	if(!m_MatPostProcessEnableRef) m_MatPostProcessEnableRef = new WrpConVarRef("mat_postprocess_enable");
 	if(!m_MatDynamicTonemappingRef) m_MatDynamicTonemappingRef = new WrpConVarRef("mat_dynamic_tonemapping");
 	if(!m_MatMotionBlurEnabledRef) m_MatMotionBlurEnabledRef = new WrpConVarRef("mat_motion_blur_enabled");
@@ -5924,6 +6081,7 @@ void CAfxStreams::EnsureMatVars()
 
 void CAfxStreams::AddStream(CAfxRecordStream * stream)
 {
+	stream->AddRef();
 	m_Streams.push_back(stream);
 
 	if(m_Recording) stream->RecordStart();
@@ -5959,20 +6117,79 @@ void CAfxStreams::CreateRenderTargets(SOURCESDK::IMaterialSystem_csgo * material
 
 }
 
-// CAfxStreams::CImageBuffer ///////////////////////////////////////////////////
+IAfxContextHook * CAfxStreams::FindHook(IAfxMatRenderContext * ctx)
+{
+	if (!ctx)
+		return 0;
 
-CAfxStreams::CImageBuffer::CImageBuffer()
+	return ctx->Hook_get();
+}
+
+// CAfxImageBufferPool /////////////////////////////////////////////////////////
+
+CAfxImageBufferPool::CAfxImageBufferPool()
+{
+	for (int i = 0; i < 3; ++i)
+	{
+		m_Buffers.push(new CAfxImageBuffer(this));
+	}
+
+	m_BufferAvailableCondition.notify_one();
+}
+
+CAfxImageBufferPool::~CAfxImageBufferPool()
+{
+	while (!m_Buffers.empty())
+	{
+		delete m_Buffers.top();
+		m_Buffers.pop();
+	}
+}
+
+CAfxImageBuffer * CAfxImageBufferPool::AquireBuffer(void)
+{
+	std::unique_lock<std::mutex> lock(m_BuffersMutex);
+
+	m_BufferAvailableCondition.wait(lock, [this]() { return !m_Buffers.empty(); });
+
+	CAfxImageBuffer * result = m_Buffers.top();
+
+	m_Buffers.pop();
+
+	return result;
+}
+
+void CAfxImageBufferPool::ImageBuffer_Done(CAfxImageBuffer * buffer)
+{
+	{
+		std::unique_lock<std::mutex> lock(m_BuffersMutex);
+
+		m_Buffers.push(buffer);
+	}
+
+	m_BufferAvailableCondition.notify_one();
+}
+
+// CAfxImageBuffer /////////////////////////////////////////////////////////////
+
+CAfxImageBuffer::CAfxImageBuffer(CAfxImageBufferPool * pool)
 : Buffer(0)
 , m_BufferBytesAllocated(0)
+, m_Pool(pool)
 {
 }
 
-CAfxStreams::CImageBuffer::~CImageBuffer()
+CAfxImageBuffer::~CAfxImageBuffer()
 {
 	free(Buffer);
 }
 
-bool CAfxStreams::CImageBuffer::AutoRealloc(ImageBufferPixelFormat pixelFormat, int width, int height)
+void CAfxImageBuffer::Release(void)
+{
+	m_Pool->ImageBuffer_Done(this);
+}
+
+bool CAfxImageBuffer::AutoRealloc(ImageBufferPixelFormat pixelFormat, int width, int height)
 {
 	size_t pitch = width;
 
@@ -5991,7 +6208,7 @@ bool CAfxStreams::CImageBuffer::AutoRealloc(ImageBufferPixelFormat pixelFormat, 
 		pitch *= 1 * sizeof(float);
 		break;
 	default:
-		Tier0_Warning("CAfxStreams::CImageBuffer::AutoRealloc: Unsupported pixelFormat\n");
+		Tier0_Warning("CAfxImageBuffer::AutoRealloc: Unsupported pixelFormat\n");
 		return false;
 	}
 
@@ -6014,6 +6231,77 @@ bool CAfxStreams::CImageBuffer::AutoRealloc(ImageBufferPixelFormat pixelFormat, 
 	ImageBytes = imageBytes;
 
 	return 0 != Buffer;
+}
+
+
+bool CAfxImageBuffer::WriteToFile(const std::wstring & path, bool ifZip, bool ifBmpNotTga) const
+{
+	if (IBPF_ZFloat == PixelFormat)
+	{
+		return WriteFloatZOpenExr(
+			path.c_str(),
+			(unsigned char*)Buffer,
+			Width,
+			Height,
+			sizeof(float),
+			ImagePitch,
+			ifZip ? WFZOEC_Zip : WFZOEC_None
+		);
+	}
+
+	if (IBPF_A == PixelFormat)
+	{
+		return ifBmpNotTga
+			? WriteRawBitmap((unsigned char*)Buffer, path.c_str(), Width, Height, 8, ImagePitch)
+			: WriteRawTarga((unsigned char*)Buffer, path.c_str(), Width, Height, 8, true, ImagePitch, 0)
+			;
+	}
+
+	bool isBgra = IBPF_BGRA == PixelFormat;
+
+	return ifBmpNotTga && !isBgra
+		? WriteRawBitmap((unsigned char*)Buffer, path.c_str(), Width, Height, 24, ImagePitch)
+		: WriteRawTarga((unsigned char*)Buffer, path.c_str(), Width, Height, isBgra ? 32 : 24, false, ImagePitch, isBgra ? 8 : 0)
+		;
+}
+
+bool CAfxImageBuffer::BgrMergeBlueToRgba(CAfxImageBuffer const * alphaBuffer)
+{
+	bool ok = alphaBuffer
+		&& Width == alphaBuffer->Width
+		&& Height == alphaBuffer->Height
+		&& PixelFormat == IBPF_BGR
+		&& PixelFormat == alphaBuffer->PixelFormat
+		&& ImagePitch == alphaBuffer->ImagePitch
+		&& AutoRealloc(IBPF_BGRA, Width, Height)
+		;
+
+	if (ok)
+	{
+		// interleave B as alpha into A:
+
+		for (int y = Height - 1;y >= 0;--y)
+		{
+			for (int x = Width - 1;x >= 0;--x)
+			{
+				unsigned char b = ((unsigned char *)Buffer)[y*ImagePitch + x * 3 + 0];
+				unsigned char g = ((unsigned char *)Buffer)[y*ImagePitch + x * 3 + 1];
+				unsigned char r = ((unsigned char *)Buffer)[y*ImagePitch + x * 3 + 2];
+				unsigned char a = ((unsigned char *)alphaBuffer->Buffer)[y*alphaBuffer->ImagePitch + x * 3 + 0];
+
+				((unsigned char *)Buffer)[y*ImagePitch + x * 4 + 0] = b;
+				((unsigned char *)Buffer)[y*ImagePitch + x * 4 + 1] = g;
+				((unsigned char *)Buffer)[y*ImagePitch + x * 4 + 2] = r;
+				((unsigned char *)Buffer)[y*ImagePitch + x * 4 + 3] = a;
+			}
+		}
+	}
+	else
+	{
+		Tier0_Warning("CAfxStreams::View_Render: Combining streams failed.\n");
+	}
+
+	return ok;
 }
 
 // CAfxStreams::CEntityBvhCapture //////////////////////////////////////////////
@@ -6085,4 +6373,19 @@ void CAfxStreams::CEntityBvhCapture::CaptureFrame(void)
 		-o.y, +o.z, -o.x,
 		-a.z, -a.x, +a.y
 	);
+}
+
+void CAfxStreams::BlockPresent(IAfxMatRenderContextOrg * ctx, bool value)
+{
+	QueueOrExecute(ctx, new CAfxLeafExecute_Functor(new AfxD3D9BlockPresent_Functor(value)));
+}
+
+void CAfxStreams::ScheduleDrawLock(IAfxMatRenderContextOrg * ctx)
+{
+	QueueOrExecute(ctx, new CAfxLeafExecute_Functor(new CDrawLockFunctor(this)));
+}
+
+void CAfxStreams::ScheduleDrawUnlock(IAfxMatRenderContextOrg * ctx)
+{
+	QueueOrExecute(ctx, new CAfxLeafExecute_Functor(new CDrawUnlockFunctor(this)));
 }
