@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>1.7.1</version>
+<time>2016-10-12T08:10Z</time>
+<changes>
+<change type="fixed">
+Fixed alphaMatteEntity streams not working, thanks to https://twitter.com/Barabulyko
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>1.7.0</version>
 <time>2016-10-09T16:54Z</time>
 <changes>

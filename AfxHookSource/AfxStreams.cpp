@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-10-09 dominik.matrixstorm.com
+// 2016-10-12 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -996,12 +996,14 @@ void CAfxTwinStream::CaptureEnd(std::wstring const * outPath)
 
 	if (outPath && canCombine && bufferA && bufferB)
 	{
+		int orgImagePitch;
+
 		canCombine = 
 			bufferA->Width == bufferB->Width
 			&& bufferA->Height == bufferB->Height
 			&& bufferA->PixelFormat == bufferA->IBPF_BGR
 			&& bufferA->PixelFormat == bufferB->PixelFormat
-			&& bufferA->ImagePitch == bufferB->ImagePitch
+			&& (orgImagePitch = bufferA->ImagePitch) == bufferB->ImagePitch
 			&& bufferA->AutoRealloc(bufferA->IBPF_BGRA, bufferA->Width, bufferA->Height)
 			;
 
@@ -1010,8 +1012,8 @@ void CAfxTwinStream::CaptureEnd(std::wstring const * outPath)
 			// interleave B as alpha into A:
 
 			int height = bufferA->Height;
-			int width = bufferB->Width;
-			int imagePitch = bufferA->ImagePitch;
+			int width = bufferA->Width;
+			int newImagePitchA = bufferA->ImagePitch;
 
 			unsigned char * pBufferA = (unsigned char *)(bufferA->Buffer);
 			unsigned char * pBufferB = (unsigned char *)(bufferB->Buffer);
@@ -1020,15 +1022,15 @@ void CAfxTwinStream::CaptureEnd(std::wstring const * outPath)
 			{
 				for (int x = width - 1;x >= 0;--x)
 				{
-					unsigned char b = ((unsigned char *)pBufferA)[y*imagePitch + x * 3 + 0];
-					unsigned char g = ((unsigned char *)pBufferA)[y*imagePitch + x * 3 + 1];
-					unsigned char r = ((unsigned char *)pBufferA)[y*imagePitch + x * 3 + 2];
-					unsigned char a = ((unsigned char *)pBufferB)[y*imagePitch + x * 3 + 0];
+					unsigned char b = ((unsigned char *)pBufferA)[y*orgImagePitch + x * 3 + 0];
+					unsigned char g = ((unsigned char *)pBufferA)[y*orgImagePitch + x * 3 + 1];
+					unsigned char r = ((unsigned char *)pBufferA)[y*orgImagePitch + x * 3 + 2];
+					unsigned char a = ((unsigned char *)pBufferB)[y*orgImagePitch + x * 3 + 0];
 
-					((unsigned char *)pBufferA)[y*imagePitch + x * 4 + 0] = b;
-					((unsigned char *)pBufferA)[y*imagePitch + x * 4 + 1] = g;
-					((unsigned char *)pBufferA)[y*imagePitch + x * 4 + 2] = r;
-					((unsigned char *)pBufferA)[y*imagePitch + x * 4 + 3] = a;
+					((unsigned char *)pBufferA)[y*newImagePitchA + x * 4 + 0] = b;
+					((unsigned char *)pBufferA)[y*newImagePitchA + x * 4 + 1] = g;
+					((unsigned char *)pBufferA)[y*newImagePitchA + x * 4 + 2] = r;
+					((unsigned char *)pBufferA)[y*newImagePitchA + x * 4 + 3] = a;
 				}
 			}
 
@@ -4317,17 +4319,17 @@ void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args
 
 			if(!_stricmp(cmd0, "streamA"))
 			{
-				CSubWrpCommandArgs subArgs(args, 1);
+				CSubWrpCommandArgs subArgs(args, argcOffset + 1);
 
-				Console_EditStream(curTwin->StreamA_get(), args);
+				Console_EditStream(curTwin->StreamA_get(), &subArgs);
 				return;
 			}
 			else
 			if(!_stricmp(cmd0, "streamB"))
 			{
-				CSubWrpCommandArgs subArgs(args, 1);
+				CSubWrpCommandArgs subArgs(args, argcOffset + 1);
 
-				Console_EditStream(curTwin->StreamB_get(), args);
+				Console_EditStream(curTwin->StreamB_get(), &subArgs);
 				return;
 			}
 			else

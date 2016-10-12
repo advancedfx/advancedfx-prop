@@ -1,7 +1,7 @@
 ﻿// Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2016-10-09 dominik.matrixstorm.com
+// 2016-10-12 dominik.matrixstorm.com
 //
 // First changes:
 // 2008-12-23 by dominik.matrixstorm.com
@@ -59,11 +59,11 @@ namespace AfxGui
 
             m_Guids = new Guid[]{
                 // current GUID:
-				new Guid("994e184a-ad8a-4dfa-b8b1-d2d4ec8c45d1"),
+				new Guid("c73a7918-52b0-4199-b1be-b4dd0b87863a"),
                 // current roll-back GUID:
-				new Guid("75b4a571-b4fb-4c77-ad6a-9b3854837a58"),
+				new Guid("1e207e7e-cf99-44c3-8db4-c343668de548"),
                 // old GUID(s) to accept:
-                new Guid("27db95ff-6325-49cf-a0e2-4e621ba6e705")
+                new Guid("994e184a-ad8a-4dfa-b8b1-d2d4ec8c45d1")
             };
 
 	        m_Targets = new LinkedList<UpdateCheckNotificationTarget>();
