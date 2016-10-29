@@ -50,9 +50,12 @@ bool __stdcall touring_csgo_GameEventManager_FireEvent_Internal(DWORD *this_ptr,
 
 		Tier0_Warning("touring_csgo_GameEventManager_FireEvent_Internal: %s\n", gameEventName);
 		
-		if (!strcmp("hltv_changed_target", gameEventName))
+		if (!strcmp("spec_target_updated", gameEventName)
+			|| !strcmp("player_footstep", gameEventName)
+			|| !strcmp("bomb_planted", gameEventName)
+			|| !strcmp("bomb_beep", gameEventName))
 		{
-			Tier0_Warning("touring_csgo_GameEventManager_FireEvent_Internal, blocked hltv_changed_target\n");
+			Tier0_Warning("touring_csgo_GameEventManager_FireEvent_Internal, blocked spec_target_updated\n");
 			call_csgo_GameEventManager_Free(this_ptr, gameEvent);
 			return true;
 		}

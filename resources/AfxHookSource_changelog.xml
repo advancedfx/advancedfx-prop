@@ -6,6 +6,21 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>1.7.3</version>
+<time>2016-10-29T12:16Z</time>
+<changes>
+<change type="added">
+Added mirv_fix blockObserverTarget - For CS:GO only, fixes unwanted player switching (spec lag/spin) i.e. upon bomb plant (blocks C_BasePlayer::RecvProxy_ObserverTarget).
+</change>
+</changes>
+<comments>
+Please report any new HLAE problems you didn't experience before AfxHookSource 1.7.1 / the 28 Oct 2016 CS:GO update!
+</comments>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>1.7.2</version>
 <time>2016-10-29T06:51Z</time>
 <changes>

@@ -33,6 +33,7 @@
 #include <shared/binutils.h>
 #include "ClientTools.h"
 #include "csgo_spec_player.h"
+#include "csgo_CBasePlayer.h"
 
 #include "csgo_Stdshader_dx9_Hooks.h"
 
@@ -3237,3 +3238,42 @@ CON_COMMAND(mirv_spec_player, "Control over spec_player command (i.e. can fix vi
 	return;
 }
 */
+
+CON_COMMAND(mirv_fix, "Various fixes")
+{
+	int argc = args->ArgC();
+
+	if (2 <= argc)
+	{
+		char const * cmd1 = args->ArgV(1);
+
+		if (!_stricmp("blockObserverTarget", cmd1))
+		{
+			if (!Hook_csgo_C_BasePlayer_RecvProxy_ObserverTarget())
+			{
+				Tier0_Warning("Error: Required hooks not installed.\n");
+				return;
+			}
+
+			if (3 <= argc)
+			{
+				char const * cmd2 = args->ArgV(2);
+
+				g_csgo_Block_C_BasePlayer_RecvProxy_ObserverTarget = 0 != atoi(cmd2);
+				return;
+			}
+
+			Tier0_Msg(
+				"mirv_fix blockObserverTarget 0|1 - Fixes unwanted player switching i.e. upon bomb plant (blocks C_BasePlayer::RecvProxy_ObserverTarget).\n"
+				"Current value: %i\n",
+				g_csgo_Block_C_BasePlayer_RecvProxy_ObserverTarget ? 1 : 0
+			);
+			return;
+		}
+	}
+
+	Tier0_Msg(
+		"mirv_fix blockObserverTarget [...] - Fixes unwanted player switching i.e. upon bomb plant (blocks C_BasePlayer::RecvProxy_ObserverTarget).\n"
+	);
+	return;
+}

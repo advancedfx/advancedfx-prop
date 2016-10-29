@@ -108,6 +108,7 @@
     <ClCompile Include="CampathDrawer.cpp" />
     <ClCompile Include="ClientTools.cpp" />
     <ClCompile Include="CommandSystem.cpp" />
+    <ClCompile Include="csgo_CBasePlayer.cpp" />
     <ClCompile Include="csgo_CHudDeathNotice.cpp" />
     <ClCompile Include="csgo_CSkyBoxView.cpp" />
     <ClCompile Include="csgo_CViewRender.cpp" />
@@ -160,6 +161,7 @@
     <ClInclude Include="asmClassTools.h" />
     <ClInclude Include="ClientTools.h" />
     <ClInclude Include="CommandSystem.h" />
+    <ClInclude Include="csgo_CBasePlayer.h" />
     <ClInclude Include="csgo_CHudDeathNotice.h" />
     <ClInclude Include="csgo_CSkyBoxView.h" />
     <ClInclude Include="csgo_CViewRender.h" />

@@ -17,6 +17,7 @@ using namespace Afx::BinUtils;
 AFXADDR_DEF(csgo_C_BaseEntity_ToolRecordEnties)
 AFXADDR_DEF(csgo_C_BaseEntity_ToolRecordEnties_DSZ)
 AFXADDR_DEF(csgo_C_BasePlayer_OFS_m_skybox3d_scale)
+AFXADDR_DEF(csgo_C_BasePlayer_RecvProxy_ObserverTarget)
 AFXADDR_DEF(csgo_CUnknown_GetPlayerName)
 AFXADDR_DEF(csgo_CUnknown_GetPlayerName_DSZ)
 AFXADDR_DEF(csgo_CHudDeathNotice_FireGameEvent)
@@ -1154,11 +1155,64 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 			*/
 			AFXADDR_SET(csgo_spec_player, addr);
 		}
+		// csgo_C_BasePlayer_RecvProxy_ObserverTarget:
+		{
+			DWORD addr = 0;
+			DWORD strAddr = 0;
+			{
+				ImageSectionsReader sections((HMODULE)clientDll);
+				if (!sections.Eof())
+				{
+					sections.Next(); // skip .text
+					if (!sections.Eof())
+					{
+						MemRange result = FindCString(sections.GetMemRange(), "m_hObserverTarget");
+						if (!result.IsEmpty())
+						{
+							strAddr = result.Start;
+						}
+						else ErrorBox(MkErrStr(__FILE__, __LINE__));
+					}
+					else ErrorBox(MkErrStr(__FILE__, __LINE__));
+				}
+				else ErrorBox(MkErrStr(__FILE__, __LINE__));
+			}
+			if (strAddr)
+			{
+				ImageSectionsReader sections((HMODULE)clientDll);
+
+				if (!sections.Eof())
+				{
+					MemRange textRange = sections.GetMemRange();
+
+					MemRange result = FindBytes(textRange, (const char *)&strAddr, sizeof(strAddr));
+
+					if (!result.IsEmpty())
+					{
+						DWORD tmpAddr = result.Start - 0x0b;
+
+						char movEaxOffsetDword = 0xb8;
+
+						result = FindBytes(MemRange(tmpAddr, result.End), (const char *)&movEaxOffsetDword, sizeof(movEaxOffsetDword));
+
+						if (!result.IsEmpty())
+						{
+							addr = *(DWORD *)(tmpAddr + 0x1);
+						}
+						else ErrorBox(MkErrStr(__FILE__, __LINE__));
+					}
+					else ErrorBox(MkErrStr(__FILE__, __LINE__));
+				}
+				else ErrorBox(MkErrStr(__FILE__, __LINE__));
+			}
+			AFXADDR_SET(csgo_C_BasePlayer_RecvProxy_ObserverTarget, addr);
+		}
 	}
 	else
 	{
 		AFXADDR_SET(csgo_C_BaseEntity_ToolRecordEnties, 0x0);
 		AFXADDR_SET(csgo_C_BasePlayer_OFS_m_skybox3d_scale, (AfxAddr)-1);
+		AFXADDR_SET(csgo_C_BasePlayer_RecvProxy_ObserverTarget, 0x0);
 		AFXADDR_SET(csgo_CUnknown_GetPlayerName, 0x0);
 		AFXADDR_SET(csgo_CHudDeathNotice_FireGameEvent, 0x0);
 		AFXADDR_SET(csgo_CHudDeathNotice_UnkAddDeathNotice, 0x0);

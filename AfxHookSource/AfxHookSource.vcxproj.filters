@@ -148,6 +148,7 @@
     <ClCompile Include="csgo_GameEventManager.cpp">
       <Filter>AfxHookSource</Filter>
     </ClCompile>
+    <ClCompile Include="csgo_CBasePlayer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -295,5 +296,6 @@
     <ClInclude Include="csgo_GameEventManager.h">
       <Filter>AfxHookSource</Filter>
     </ClInclude>
+    <ClInclude Include="csgo_CBasePlayer.h" />
   </ItemGroup>
 </Project>
