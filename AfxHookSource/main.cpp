@@ -41,6 +41,7 @@
 #include "csgo_writeWaveConsoleCheck.h"
 #include "ClientTools.h"
 #include "MatRenderContextHook.h"
+#include "csgo_GameEventManager.h"
 
 #include <set>
 #include <map>
@@ -1182,11 +1183,11 @@ void* new_Client_CreateInterface(const char *pName, int *pReturnCode)
 		}
 	}
 
-	if(isCsgo && !strcmp(pName, CLIENT_DLL_INTERFACE_VERSION_CSGO_017))
+	if(isCsgo && !strcmp(pName, CLIENT_DLL_INTERFACE_VERSION_CSGO_018))
 	{
 		if(!g_AfxBaseClientDll)
 		{
-			g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_CSGO_017 " (CS:GO)";
+			g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_CSGO_018 " (CS:GO)";
 			g_AfxBaseClientDll = new CAfxBaseClientDll((SOURCESDK::IBaseClientDLL_csgo *)pRet);
 			g_AfxStreams.OnAfxBaseClientDll(g_AfxBaseClientDll);
 		}
@@ -1533,6 +1534,7 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 
 		// Init the hook early, so we don't run into issues with threading:
 		Hook_csgo_SndMixTimeScalePatch();
+		//csgo_GameEventManager_Install();
 	}
 	else
 	if(bFirstInputsystem && StringEndsWith( lpLibFileName, "inputsystem.dll"))

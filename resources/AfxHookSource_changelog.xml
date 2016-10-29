@@ -6,6 +6,21 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>1.7.2</version>
+<time>2016-10-29T06:51Z</time>
+<changes>
+<change type="fixed">
+Adjusted interface name to newer CS:GO VEngineClient018 version.
+</change>
+</changes>
+<comments>
+This is a quick hack, things might have slipped through / there might be still new problems. Please report any new problems!
+</comments>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>1.7.1</version>
 <time>2016-10-12T08:10Z</time>
 <changes>

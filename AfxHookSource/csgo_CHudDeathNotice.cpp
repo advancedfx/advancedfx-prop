@@ -18,32 +18,7 @@
 
 #include <list>
 
-class csgo_IGameEvent abstract
-{
-public:
-	virtual ~csgo_IGameEvent() {};
-	virtual const char *GetName() const = 0;	// get event name
-	
-	virtual bool IsReliable() const = 0; // if event handled reliable
-	virtual bool IsLocal() const = 0; // if event is never networked
-	virtual bool IsEmpty(const char *keyName = NULL) = 0; // check if data field exists
-	
-	// Data access
-	virtual bool GetBool( const char *keyName = NULL, bool defaultValue = false ) = 0;
-	virtual int GetInt( const char *keyName = NULL, int defaultValue = 0 ) = 0;
-	virtual float GetFloat( const char *keyName = NULL, float defaultValue = 0.0f ) = 0;
-	virtual void __unkown_008(void);
-	virtual const char *GetString( const char *keyName = NULL, const char *defaultValue = "" ) = 0;
-	
-	virtual void SetBool( const char *keyName, bool value ) = 0;
-	virtual void SetInt( const char *keyName, int value ) = 0;
-	virtual void SetFloat( const char *keyName, float value ) = 0;
-	virtual void __unkown_013(void);
-	virtual void SetString( const char *keyName, const char *value ) = 0;
-};
-
-
-typedef void (__stdcall *csgo_CHudDeathNotice_FireGameEvent_t)(DWORD *this_ptr, csgo_IGameEvent * event);
+typedef void (__stdcall *csgo_CHudDeathNotice_FireGameEvent_t)(DWORD *this_ptr, SOURCESDK::CSGO::IGameEvent * event);
 
 csgo_CHudDeathNotice_FireGameEvent_t detoured_csgo_CHudDeathNotice_FireGameEvent;
 
@@ -95,7 +70,7 @@ bool csgo_CHudDeathNotice_HighLightId_matchedAttacker;
 bool csgo_CHudDeathNotice_ModTime_set;
 float csgo_CHudDeathNotice_ModTime;
 
-void __stdcall touring_csgo_CHudDeathNotice_FireGameEvent(DWORD *this_ptr, csgo_IGameEvent * event)
+void __stdcall touring_csgo_CHudDeathNotice_FireGameEvent(DWORD *this_ptr, SOURCESDK::CSGO::IGameEvent * event)
 {
 	static bool firstRun = true;
 	if(firstRun)

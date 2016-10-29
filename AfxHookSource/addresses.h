@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-06-26 dominik.matrixstorm.com
+// 2016-10-18 dominik.matrixstorm.com
 //
 // First changes:
 // 2010-09-27 dominik.matrixstorm.com
@@ -36,12 +36,16 @@ AFXADDR_DECL(csgo_VertexLitGeneric_CShader_vtable)
 AFXADDR_DECL(csgo_S_StartSound_StringConversion)
 AFXADDR_DECL(csgo_Scaleformui_CUnkown_Loader)
 AFXADDR_DECL(csgo_Scaleformui_CUnkown_Loader_DSZ)
+AFXADDR_DECL(csgo_gameeventmanager_fire_internal)
+AFXADDR_DECL(csgo_gameeventmanager_fire_internal_DSZ)
 AFXADDR_DECL(csgo_gpGlobals_OFS_curtime)
 AFXADDR_DECL(csgo_gpGlobals_OFS_interpolation_amount)
 AFXADDR_DECL(csgo_gpGlobals_OFS_interval_per_tick)
 AFXADDR_DECL(csgo_pLocalPlayer)
 AFXADDR_DECL(csgo_snd_mix_timescale_patch)
 AFXADDR_DECL(csgo_snd_mix_timescale_patch_DSZ)
+AFXADDR_DECL(csgo_spec_player)
+AFXADDR_DECL(csgo_spec_player_DSZ)
 AFXADDR_DECL(csgo_view)
 AFXADDR_DECL(csgo_writeWaveConsoleOpenJNZ)
 AFXADDR_DECL(cstrike_gpGlobals_OFS_absoluteframetime)

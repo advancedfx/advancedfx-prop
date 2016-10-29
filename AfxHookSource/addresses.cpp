@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-06-26 dominik.matrixstorm.com
+// 2016-10-18 dominik.matrixstorm.com
 //
 // First changes:
 // 2010-09-27 dominik.matrixstorm.com
@@ -40,12 +40,16 @@ AFXADDR_DEF(csgo_VertexLitGeneric_CShader_vtable)
 AFXADDR_DEF(csgo_S_StartSound_StringConversion)
 AFXADDR_DEF(csgo_Scaleformui_CUnkown_Loader)
 AFXADDR_DEF(csgo_Scaleformui_CUnkown_Loader_DSZ)
-AFXADDR_DEF(csgo_pLocalPlayer)
+AFXADDR_DEF(csgo_gameeventmanager_fire_internal)
+AFXADDR_DEF(csgo_gameeventmanager_fire_internal_DSZ)
 AFXADDR_DEF(csgo_gpGlobals_OFS_curtime)
 AFXADDR_DEF(csgo_gpGlobals_OFS_interpolation_amount)
 AFXADDR_DEF(csgo_gpGlobals_OFS_interval_per_tick)
+AFXADDR_DEF(csgo_pLocalPlayer)
 AFXADDR_DEF(csgo_snd_mix_timescale_patch)
 AFXADDR_DEF(csgo_snd_mix_timescale_patch_DSZ)
+AFXADDR_DEF(csgo_spec_player)
+AFXADDR_DEF(csgo_spec_player_DSZ)
 AFXADDR_DEF(csgo_view)
 AFXADDR_DEF(csgo_writeWaveConsoleOpenJNZ)
 AFXADDR_DEF(cstrike_gpGlobals_OFS_absoluteframetime)
@@ -265,6 +269,51 @@ void Addresses_InitEngineDll(AfxAddr engineDll, bool isCsgo)
 			}
 		}
 
+		// csgo_gameeventmanager_fire_internal
+		{
+			DWORD addr = 0;
+			/*
+			DWORD strAddr = 0;
+			{
+				ImageSectionsReader sections((HMODULE)engineDll);
+				if (!sections.Eof())
+				{
+					sections.Next(); // skip .text
+					if (!sections.Eof())
+					{
+						MemRange result = FindCString(sections.GetMemRange(), "Game event \"%s\", Tick %i:\n");
+						if (!result.IsEmpty())
+						{
+							strAddr = result.Start;
+						}
+						else ErrorBox(MkErrStr(__FILE__, __LINE__));
+					}
+					else ErrorBox(MkErrStr(__FILE__, __LINE__));
+				}
+				else ErrorBox(MkErrStr(__FILE__, __LINE__));
+			}
+			if (strAddr)
+			{
+				ImageSectionsReader sections((HMODULE)engineDll);
+
+				MemRange baseRange = sections.GetMemRange();
+				MemRange result = FindBytes(baseRange, (char const *)&strAddr, sizeof(strAddr));
+				if (!result.IsEmpty())
+				{
+					DWORD tempAddr = result.Start - 0xd5;
+
+					MemRange result = FindPatternString(MemRange(tempAddr, tempAddr + 3), "55 8b ec");
+					if (!result.IsEmpty())
+					{
+						addr = result.Start;
+					}
+					else ErrorBox(MkErrStr(__FILE__, __LINE__));
+				}
+				else ErrorBox(MkErrStr(__FILE__, __LINE__));
+			}
+			*/
+			AFXADDR_SET(csgo_gameeventmanager_fire_internal, addr);
+		}
 	}
 	else
 	{
@@ -274,6 +323,7 @@ void Addresses_InitEngineDll(AfxAddr engineDll, bool isCsgo)
 		AFXADDR_SET(csgo_DS_CanRecord_ConsoleOpenCall, 0x0);
 	}
 	AFXADDR_SET(csgo_snd_mix_timescale_patch_DSZ, 0x09);
+	AFXADDR_SET(csgo_gameeventmanager_fire_internal_DSZ, 0x09);
 }
 
 void Addresses_InitScaleformuiDll(AfxAddr scaleformuiDll, bool isCsgo)
@@ -1030,6 +1080,80 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 			}
 		}
 
+
+		// csgo_spec_player:
+		{
+			DWORD addr = 0;
+			/*
+			DWORD strAddr = 0;
+			{
+				ImageSectionsReader sections((HMODULE)clientDll);
+				if (!sections.Eof())
+				{
+					sections.Next(); // skip .text
+					if (!sections.Eof())
+					{
+						MemRange result = FindCString(sections.GetMemRange(), "spec_player");
+						if (!result.IsEmpty())
+						{
+							strAddr = result.Start;
+						}
+						else ErrorBox(MkErrStr(__FILE__, __LINE__));
+					}
+					else ErrorBox(MkErrStr(__FILE__, __LINE__));
+				}
+				else ErrorBox(MkErrStr(__FILE__, __LINE__));
+			}
+			if (strAddr)
+			{
+				ImageSectionsReader sections((HMODULE)clientDll);
+
+				if (!sections.Eof())
+				{
+					MemRange text1Range = sections.GetMemRange();
+
+					sections.Next(); // skip .text
+
+					if (!sections.Eof())
+					{
+						sections.Next(); // skip .rdata / .idata
+						if (!sections.Eof())
+						{
+							// in .data now:
+
+							MemRange data2Range = sections.GetMemRange();
+							MemRange result = FindBytes(data2Range, (char const *)&strAddr, sizeof(strAddr));
+							if (!result.IsEmpty())
+							{
+								DWORD targetAddr = result.Start + 0xc;
+
+								targetAddr = *(DWORD *)targetAddr; // get command function
+
+								if (text1Range.Start <= targetAddr && targetAddr < text1Range.End)
+								{
+									MemRange patternRange(targetAddr, targetAddr + 9);
+
+									MemRange result = FindPatternString(patternRange, "55 8B EC 8B 0D ?? ?? ?? ??");
+
+									if (result.IsEmpty())
+										ErrorBox(MkErrStr(__FILE__, __LINE__));
+									else
+										addr = targetAddr;
+								}
+								else ErrorBox(MkErrStr(__FILE__, __LINE__));
+							}
+							else ErrorBox(MkErrStr(__FILE__, __LINE__));
+
+						}
+						else ErrorBox(MkErrStr(__FILE__, __LINE__));
+					}
+					else ErrorBox(MkErrStr(__FILE__, __LINE__));
+				}
+				else ErrorBox(MkErrStr(__FILE__, __LINE__));
+			}
+			*/
+			AFXADDR_SET(csgo_spec_player, addr);
+		}
 	}
 	else
 	{
@@ -1046,6 +1170,7 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 		AFXADDR_SET(csgo_CViewRender_RenderSmokeOverlay_OnStoreAlpha, 0x0);
 		AFXADDR_SET(csgo_pLocalPlayer, 0x0);
 		AFXADDR_SET(csgo_view, 0x0);
+		AFXADDR_SET(csgo_spec_player, 0x0);
 	}
 
 	AFXADDR_SET(csgo_C_BaseEntity_ToolRecordEnties_DSZ, 0xa);
@@ -1062,6 +1187,7 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 	AFXADDR_SET(cstrike_gpGlobals_OFS_absoluteframetime, 2*4);
 	AFXADDR_SET(cstrike_gpGlobals_OFS_interpolation_amount, 8*4);
 	AFXADDR_SET(cstrike_gpGlobals_OFS_interval_per_tick, 7*4);
+	AFXADDR_SET(csgo_spec_player_DSZ, 0x9);
 }
 
 void Addresses_InitStdshader_dx9Dll(AfxAddr stdshader_dx9Dll, bool isCsgo)

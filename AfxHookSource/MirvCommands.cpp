@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-10-09 dominik.matrixstorm.com
+// 2016-10-18 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-09-30 by dominik.matrixstorm.com
@@ -32,6 +32,7 @@
 #include "CommandSystem.h"
 #include <shared/binutils.h>
 #include "ClientTools.h"
+#include "csgo_spec_player.h"
 
 #include "csgo_Stdshader_dx9_Hooks.h"
 
@@ -3195,3 +3196,44 @@ CON_COMMAND(mirv_cmd, "Command system (for scheduling commands).")
 	);
 	return;
 }
+
+/* Does not work
+CON_COMMAND(mirv_spec_player, "Control over spec_player command (i.e. can fix view spin / lag).")
+{
+	if (!Hook_csgo_spec_player())
+	{
+		Tier0_Warning("Error: Required hooks not installed.\n");
+		return;
+	}
+
+	int argc = args->ArgC();
+
+	if (2 <= argc)
+	{
+		char const * cmd1 = args->ArgV(1);
+
+		if (!_stricmp("block", cmd1))
+		{
+			if (3 <= argc)
+			{
+				char const * cmd2 = args->ArgV(2);
+
+				g_csgo_spec_player_Block = 0 != atoi(cmd2);
+				return;
+			}
+
+			Tier0_Msg(
+				"mirv_spec_player block 0|1 - Block spec_player command (i.e. can fix view spin / lag).\n"
+				"Current value: %i\n",
+				g_csgo_spec_player_Block ? 1 : 0
+			);
+			return;
+		}
+	}
+
+	Tier0_Msg(
+		"mirv_spec_player block [...] - Block spec_player command (i.e. can fix view spin / lag).\n"
+	);
+	return;
+}
+*/
