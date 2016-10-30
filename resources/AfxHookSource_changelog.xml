@@ -6,6 +6,21 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>1.7.4</version>
+<time>2016-10-30T08:12Z</time>
+<changes>
+<change type="fxied">
+This should fix a lot of crashes: fixed AfxHookSource render context call queue wrapping causing a memory leak among other things due to a typo (wrong variable name) (already wrapped queues weren't detected most of the time due to that and wrapped again).
+</change>
+</changes>
+<comments>
+Please report any new HLAE problems you didn't experience before AfxHookSource 1.7.1 / the 28 Oct 2016 CS:GO update!
+</comments>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>1.7.3</version>
 <time>2016-10-29T12:16Z</time>
 <changes>

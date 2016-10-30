@@ -816,7 +816,7 @@ private:
 
 		g_CallQueueMap_csgo_Mutex.lock();
 
-		std::map<SOURCESDK::CSGO::ICallQueue *, CAfxCallQueue *>::iterator it = g_CallQueueMap_csgo.find(afxCallQueue);
+		std::map<SOURCESDK::CSGO::ICallQueue *, CAfxCallQueue *>::iterator it = g_CallQueueMap_csgo.find(callQueue);
 
 
 		if (it != g_CallQueueMap_csgo.end())
