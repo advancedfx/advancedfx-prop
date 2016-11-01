@@ -112,11 +112,9 @@
     <ClCompile Include="csgo_CHudDeathNotice.cpp" />
     <ClCompile Include="csgo_CSkyBoxView.cpp" />
     <ClCompile Include="csgo_CViewRender.cpp" />
-    <ClCompile Include="csgo_GameEventManager.cpp" />
     <ClCompile Include="csgo_GetPlayerName.cpp" />
     <ClCompile Include="csgo_ScaleForm_Hooks.cpp" />
     <ClCompile Include="csgo_SndMixTimeScalePatch.cpp" />
-    <ClCompile Include="csgo_spec_player.cpp" />
     <ClCompile Include="csgo_Stdshader_dx9_Hooks.cpp" />
     <ClCompile Include="csgo_S_StartSound.cpp" />
     <ClCompile Include="csgo_view.cpp" />
@@ -165,11 +163,9 @@
     <ClInclude Include="csgo_CHudDeathNotice.h" />
     <ClInclude Include="csgo_CSkyBoxView.h" />
     <ClInclude Include="csgo_CViewRender.h" />
-    <ClInclude Include="csgo_GameEventManager.h" />
     <ClInclude Include="csgo_GetPlayerName.h" />
     <ClInclude Include="csgo_ScaleForm_Hooks.h" />
     <ClInclude Include="csgo_SndMixTimeScalePatch.h" />
-    <ClInclude Include="csgo_spec_player.h" />
     <ClInclude Include="csgo_Stdshader_dx9_Hooks.h" />
     <ClInclude Include="csgo_S_StartSound.h" />
     <ClInclude Include="csgo_view.h" />

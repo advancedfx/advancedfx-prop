@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-10-09 dominik.matrixstorm.com
+// 2016-11-01 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -59,6 +59,8 @@ public:
 	virtual void RenderBegin(IAfxMatRenderContext * ctx) = 0;
 
 	virtual void RenderEnd(void) = 0;
+
+	virtual float RenderSmokeOverlayAlphaMod(void) = 0;
 
 	virtual void DrawingHudBegin(void) = 0;
 
@@ -1613,6 +1615,8 @@ private:
 
 		virtual void RenderEnd(void);
 
+		virtual float RenderSmokeOverlayAlphaMod(void);
+
 		virtual void DrawingHudBegin(void);
 
 		virtual void DrawingSkyBoxViewBegin(void);
@@ -2067,6 +2071,8 @@ public:
 
 	/// <remarks>This function can be called from diffrent threads, but only one thread at a time.</remarks>
 	void OnSetPixelShader(CAfx_csgo_ShaderState & state);
+
+	float OnRenderSmokeOverlayAlphaMod(void);
 
 	void OnDrawingHud(void);
 

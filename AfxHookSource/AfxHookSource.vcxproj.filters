@@ -144,11 +144,9 @@
     <ClCompile Include="MatRenderContextHook.cpp">
       <Filter>AfxHookSource</Filter>
     </ClCompile>
-    <ClCompile Include="csgo_spec_player.cpp" />
-    <ClCompile Include="csgo_GameEventManager.cpp">
+    <ClCompile Include="csgo_CBasePlayer.cpp">
       <Filter>AfxHookSource</Filter>
     </ClCompile>
-    <ClCompile Include="csgo_CBasePlayer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -292,10 +290,8 @@
     <ClInclude Include="MatRenderContextHook.h">
       <Filter>AfxHookSource</Filter>
     </ClInclude>
-    <ClInclude Include="csgo_spec_player.h" />
-    <ClInclude Include="csgo_GameEventManager.h">
+    <ClInclude Include="csgo_CBasePlayer.h">
       <Filter>AfxHookSource</Filter>
     </ClInclude>
-    <ClInclude Include="csgo_CBasePlayer.h" />
   </ItemGroup>
 </Project>

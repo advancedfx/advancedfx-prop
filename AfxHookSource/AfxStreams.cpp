@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-10-12 dominik.matrixstorm.com
+// 2016-11-01 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -1247,9 +1247,6 @@ void CAfxBaseFxStream::OnRenderBegin(void)
 
 	this->InterLockIncrement();
 
-	g_SmokeOverlay_AlphaMod = m_SmokeOverlayAlphaFactor;
-
-
 	CAfxBaseFxStreamContextHook * ch = new CAfxBaseFxStreamContextHook(this, 0);
 
 	ch->RenderBegin(GetCurrentContext());
@@ -1264,9 +1261,6 @@ void CAfxBaseFxStream::OnRenderEnd()
 			hook->RenderEnd();
 		}
 	}
-
-
-	g_SmokeOverlay_AlphaMod = 1;
 
 	CAfxRenderViewStream::OnRenderEnd();
 }
@@ -1799,6 +1793,11 @@ void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::QueueFunctorInternal(IAfxCal
 	q->QueueFunctor(new CRenderBeginFunctor(ch));
 	q->QueueFunctorInternal(pFunctor);
 	q->QueueFunctor(new CRenderEndFunctor());
+}
+
+float CAfxBaseFxStream::CAfxBaseFxStreamContextHook::RenderSmokeOverlayAlphaMod(void)
+{
+	return m_Stream->m_SmokeOverlayAlphaFactor;
 }
 
 void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::DrawingHudBegin(void)
@@ -3860,6 +3859,16 @@ void CAfxStreams::OnSetPixelShader(CAfx_csgo_ShaderState & state)
 
 	if (hook)
 		hook->SetPixelShader(state);
+}
+
+float CAfxStreams::OnRenderSmokeOverlayAlphaMod(void)
+{
+	IAfxContextHook * hook = FindHook(GetCurrentContext());
+
+	if (hook)
+		return hook->RenderSmokeOverlayAlphaMod();
+
+	return 1.0f;
 }
 
 void CAfxStreams::OnDrawingHud(void)

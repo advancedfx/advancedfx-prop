@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-08-30 dominik.matrixstorm.com
+// 2016-11-01 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-09-29 dominik.matrixstorm.com
@@ -41,7 +41,6 @@
 #include "csgo_writeWaveConsoleCheck.h"
 #include "ClientTools.h"
 #include "MatRenderContextHook.h"
-#include "csgo_GameEventManager.h"
 
 #include <set>
 #include <map>
@@ -1534,7 +1533,6 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 
 		// Init the hook early, so we don't run into issues with threading:
 		Hook_csgo_SndMixTimeScalePatch();
-		//csgo_GameEventManager_Install();
 	}
 	else
 	if(bFirstInputsystem && StringEndsWith( lpLibFileName, "inputsystem.dll"))

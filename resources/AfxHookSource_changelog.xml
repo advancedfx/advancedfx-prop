@@ -6,10 +6,22 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>1.7.5</version>
+<time>2016-11-01T16:31Z</time>
+<changes>
+<change type="fixed">
+Fixed mirv_streams property smokeOverlayAlphaFactor not working properly. Fix was a bit tricky, but it should work now :-)
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>1.7.4</version>
 <time>2016-10-30T08:12Z</time>
 <changes>
-<change type="fxied">
+<change type="fixed">
 This should fix a lot of crashes: fixed AfxHookSource render context call queue wrapping causing a memory leak among other things due to a typo (wrong variable name) (already wrapped queues weren't detected most of the time due to that and wrapped again).
 </change>
 </changes>
