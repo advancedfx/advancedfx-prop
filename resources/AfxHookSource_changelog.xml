@@ -6,6 +6,21 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>1.8.0</version>
+<time>2016-11-04T11:19Z</time>
+<changes>
+<change type="fixed">
+Fixed hang / crash i.e. on Windows XP upon startup (moved thread synchcronization out of being run during DllMain).
+</change>
+<change type="added">
+Added mirv_input mem sub command, allows to store, use, save and load states (view position, angles and fov) when using mirv_input camera. (Requested by cZF.)
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>1.7.5</version>
 <time>2016-11-01T16:31Z</time>
 <changes>

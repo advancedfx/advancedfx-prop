@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-11-01 dominik.matrixstorm.com
+// 2016-11-02 dominik.matrixstorm.com
 //
 // First changes:
 // 2010-09-27 dominik.matrixstorm.com
@@ -14,6 +14,8 @@
 
 using namespace Afx::BinUtils;
 
+AFXADDR_DEF(csgo_CPredictionCopy_TransferData)
+AFXADDR_DEF(csgo_CPredictionCopy_TransferData_DSZ)
 AFXADDR_DEF(csgo_C_BaseEntity_ToolRecordEnties)
 AFXADDR_DEF(csgo_C_BaseEntity_ToolRecordEnties_DSZ)
 AFXADDR_DEF(csgo_C_BasePlayer_OFS_m_skybox3d_scale)
@@ -1191,9 +1193,65 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 			}
 			AFXADDR_SET(csgo_CCSViewRender_RenderView, addr);
 		}
+
+		AFXADDR_SET(csgo_CPredictionCopy_TransferData, 0x0);
+		/*
+		// csgo_CPredictionCopy_TransferData:
+		{
+			DWORD addr = 0;
+			DWORD strAddr = 0;
+			{
+				ImageSectionsReader sections((HMODULE)clientDll);
+				if (!sections.Eof())
+				{
+					sections.Next(); // skip .text
+					if (!sections.Eof())
+					{
+						MemRange result = FindCString(sections.GetMemRange(), "C_BaseEntity::SaveData");
+						if (!result.IsEmpty())
+						{
+							strAddr = result.Start;
+						}
+						else ErrorBox(MkErrStr(__FILE__, __LINE__));
+					}
+					else ErrorBox(MkErrStr(__FILE__, __LINE__));
+				}
+				else ErrorBox(MkErrStr(__FILE__, __LINE__));
+			}
+			if (strAddr)
+			{
+				ImageSectionsReader sections((HMODULE)clientDll);
+
+				if (!sections.Eof())
+				{
+					MemRange textRange = sections.GetMemRange();
+
+					MemRange result = FindBytes(textRange, (const char *)&strAddr, sizeof(strAddr));
+
+					if (!result.IsEmpty())
+					{
+						DWORD tmpAddr = result.Start + 0x8;
+
+						tmpAddr = *(DWORD *)(tmpAddr +0x1) + tmpAddr + 0x5; // read call target of copyHelper.TransferData in C_BaseEntity::SaveData
+
+						if (textRange.Start <= tmpAddr
+							&& tmpAddr < textRange.End
+							&& (result = FindPatternString(MemRange(tmpAddr, tmpAddr+0x3), "55 8B EC"), !result.IsEmpty()))
+						{
+							addr = tmpAddr;
+						}
+						else ErrorBox(MkErrStr(__FILE__, __LINE__));
+					}
+					else ErrorBox(MkErrStr(__FILE__, __LINE__));
+				}
+				else ErrorBox(MkErrStr(__FILE__, __LINE__));
+			}
+			AFXADDR_SET(csgo_CPredictionCopy_TransferData, addr);
+		}*/
 	}
 	else
 	{
+		AFXADDR_SET(csgo_CPredictionCopy_TransferData, 0x0);
 		AFXADDR_SET(csgo_C_BaseEntity_ToolRecordEnties, 0x0);
 		AFXADDR_SET(csgo_C_BasePlayer_OFS_m_skybox3d_scale, (AfxAddr)-1);
 		AFXADDR_SET(csgo_C_BasePlayer_RecvProxy_ObserverTarget, 0x0);
@@ -1213,6 +1271,7 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 		AFXADDR_SET(csgo_CCSViewRender_RenderSmokeOverlay_OnBeforeExitFunc, 0x0);
 	}
 
+	AFXADDR_SET(csgo_CPredictionCopy_TransferData_DSZ, 0x0a);
 	AFXADDR_SET(csgo_C_BaseEntity_ToolRecordEnties_DSZ, 0xa);
 	AFXADDR_SET(csgo_CCSViewRender_RenderView_DSZ, 0xc);
 	AFXADDR_SET(csgo_CUnknown_GetPlayerName_DSZ, 0x0b);

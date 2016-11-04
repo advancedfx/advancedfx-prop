@@ -3,13 +3,15 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-11-01 dominik.matrixstorm.com
+// 2016-11-02 dominik.matrixstorm.com
 //
 // First changes:
 // 2010-09-27 dominik.matrixstorm.com
 
 #include <shared/vcpp/AfxAddr.h>
 
+AFXADDR_DECL(csgo_CPredictionCopy_TransferData)
+AFXADDR_DECL(csgo_CPredictionCopy_TransferData_DSZ)
 AFXADDR_DECL(csgo_C_BaseEntity_ToolRecordEnties)
 AFXADDR_DECL(csgo_C_BaseEntity_ToolRecordEnties_DSZ)
 AFXADDR_DECL(csgo_C_BasePlayer_OFS_m_skybox3d_scale)

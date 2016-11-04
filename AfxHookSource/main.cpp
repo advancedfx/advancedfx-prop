@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-11-01 dominik.matrixstorm.com
+// 2016-11-04 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-09-29 dominik.matrixstorm.com
@@ -675,6 +675,8 @@ public:
 			g_FileSystem_csgo->AddSearchPath(path.c_str(), "GAME", SOURCESDK::PATH_ADD_TO_TAIL);
 		}
 
+		CAfxBaseFxStream::AfxStreamsInit();
+
 		return result;
 	}
 
@@ -688,6 +690,8 @@ public:
 		if(m_OnShutdown) m_OnShutdown->Shutdown(this);
 
 		m_FreeMaster.AfxFree();
+		
+		CAfxBaseFxStream::AfxStreamsShutdown();
 
 		m_Parent->Shutdown();
 	}

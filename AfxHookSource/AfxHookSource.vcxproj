@@ -124,6 +124,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MatRenderContextHook.cpp" />
     <ClCompile Include="MirvCommands.cpp" />
+    <ClCompile Include="MirvInputMem.cpp" />
     <ClCompile Include="RenderView.cpp" />
     <ClCompile Include="SourceInterfaces.cpp" />
     <ClCompile Include="WrpConsole.cpp" />
@@ -173,6 +174,7 @@
     <ClInclude Include="d3d9Hooks.h" />
     <ClInclude Include="hlaeFolder.h" />
     <ClInclude Include="MatRenderContextHook.h" />
+    <ClInclude Include="MirvInputMem.h" />
     <ClInclude Include="RenderView.h" />
     <ClInclude Include="SourceInterfaces.h" />
     <ClInclude Include="stdafx.h" />

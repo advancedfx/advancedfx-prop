@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-11-01 dominik.matrixstorm.com
+// 2016-11-04 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -1146,6 +1146,17 @@ CAfxBaseFxStream::~CAfxBaseFxStream()
 	m_Shared.Release();
 }
 
+void CAfxBaseFxStream::AfxStreamsInit(void)
+{
+	m_Shared.AfxStreamsInit();
+}
+
+void CAfxBaseFxStream::AfxStreamsShutdown(void)
+{
+	m_Shared.AfxStreamsShutdown();
+}
+
+
 void CAfxBaseFxStream::Console_ActionFilter_Add(const char * expression, CAction * action)
 {
 	InvalidateMap();
@@ -1904,8 +1915,14 @@ void CAfxBaseFxStream::CActionKey::ToLower(void)
 // CAfxBaseFxStream::CShared ///////////////////////////////////////////////////
 
 CAfxBaseFxStream::CShared::CShared()
-: m_RefCount(0)
-, m_ShutDownLevel(0)
+{
+}
+
+CAfxBaseFxStream::CShared::~CShared()
+{
+}
+
+void CAfxBaseFxStream::CShared::AfxStreamsInit(void)
 {
 	CreateStdAction(m_DrawAction, CActionKey("draw"), new CAction());
 	CreateStdAction(m_NoDrawAction, CActionKey("noDraw"), new CActionNoDraw());
@@ -1920,7 +1937,7 @@ CAfxBaseFxStream::CShared::CShared()
 	*/
 	{
 		CActionReplace * action = new CActionReplace("afx/greenmatte", m_NoDrawAction);
-		float color[3]={0,1,0};
+		float color[3] = { 0,1,0 };
 		action->OverrideColor(color);
 		CreateStdAction(m_MaskAction, CActionKey("mask"), action);
 	}
@@ -1928,7 +1945,7 @@ CAfxBaseFxStream::CShared::CShared()
 
 	{
 		CActionReplace * action = new CActionReplace("afx/white", m_NoDrawAction);
-		float color[3]={1,1,1};
+		float color[3] = { 1,1,1 };
 		action->OverrideColor(color);
 		CreateStdAction(m_WhiteAction, CActionKey("white"), action);
 	}
@@ -1936,7 +1953,7 @@ CAfxBaseFxStream::CShared::CShared()
 
 	{
 		CActionReplace * action = new CActionReplace("afx/black", m_NoDrawAction);
-		float color[3]={0,0,0};
+		float color[3] = { 0,0,0 };
 		action->OverrideColor(color);
 		CreateStdAction(m_BlackAction, CActionKey("black"), action);
 	}
@@ -1945,25 +1962,26 @@ CAfxBaseFxStream::CShared::CShared()
 	// legacy actions:
 	CreateAction(CActionKey("invisible"), new CActionNoDraw(), true);
 	CreateAction(CActionKey("debugDepth"), new CActionDebugDepth(m_NoDrawAction), true);
+
 }
 
-CAfxBaseFxStream::CShared::~CShared()
+void CAfxBaseFxStream::CShared::AfxStreamsShutdown(void)
 {
-	for(std::map<CActionKey, CAction *>::iterator it = m_Actions.begin(); it != m_Actions.end(); ++it)
+	for (std::map<CActionKey, CAction *>::iterator it = m_Actions.begin(); it != m_Actions.end(); ++it)
 	{
 		it->second->Release();
 	}
 
-	if(m_DrawAction) m_DrawAction->Release();
-	if(m_NoDrawAction) m_NoDrawAction->Release();
-	if(m_DebugDumpAction) m_DebugDumpAction->Release();
-	if(m_DepthAction) m_DepthAction->Release();
+	if (m_DrawAction) m_DrawAction->Release();
+	if (m_NoDrawAction) m_NoDrawAction->Release();
+	if (m_DebugDumpAction) m_DebugDumpAction->Release();
+	if (m_DepthAction) m_DepthAction->Release();
 	/*
 	if(m_Depth24Action) m_Depth24Action->Release();
 	*/
-	if(m_MaskAction) m_MaskAction->Release();
-	if(m_WhiteAction) m_WhiteAction->Release();
-	if(m_BlackAction) m_BlackAction->Release();
+	if (m_MaskAction) m_MaskAction->Release();
+	if (m_WhiteAction) m_WhiteAction->Release();
+	if (m_BlackAction) m_BlackAction->Release();
 }
 
 void CAfxBaseFxStream::CShared::AddRef()
@@ -6399,4 +6417,14 @@ void CAfxStreams::ScheduleDrawLock(IAfxMatRenderContextOrg * ctx)
 void CAfxStreams::ScheduleDrawUnlock(IAfxMatRenderContextOrg * ctx)
 {
 	QueueOrExecute(ctx, new CAfxLeafExecute_Functor(new CDrawUnlockFunctor(this)));
+}
+
+void CAfxStreams::AfxStreamsInit(void)
+{
+	CAfxBaseFxStream::AfxStreamsInit();
+}
+
+void CAfxStreams::AfxStreamsShutdown(void)
+{
+	CAfxBaseFxStream::AfxStreamsShutdown();
 }

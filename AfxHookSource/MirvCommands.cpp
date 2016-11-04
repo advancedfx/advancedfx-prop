@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-11-01 dominik.matrixstorm.com
+// 2016-11-04 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-09-30 by dominik.matrixstorm.com
@@ -33,6 +33,7 @@
 #include <shared/binutils.h>
 #include "ClientTools.h"
 #include "csgo_CBasePlayer.h"
+#include "MirvInputMem.h"
 
 #include "csgo_Stdshader_dx9_Hooks.h"
 
@@ -2525,6 +2526,14 @@ CON_COMMAND(mirv_input, "Input mode configuration.")
 			);
 			return;
 		}
+		else if (0 == _stricmp("mem", arg1))
+		{
+			CSubWrpCommandArgs subArgs(args, 2);
+
+			g_MirvInputMem.Console(&subArgs);
+
+			return;
+		}
 	}
 
 	Tier0_Msg(
@@ -2535,6 +2544,7 @@ CON_COMMAND(mirv_input, "Input mode configuration.")
 		"mirv_input positon [...]\n"
 		"mirv_input angles [...]\n"
 		"mirv_input fov [...]\n"
+		"mirv_input mem [...] - Store, use, save and load mirv_input view states.\n"
 	);
 }
 
@@ -3228,10 +3238,36 @@ CON_COMMAND(mirv_fix, "Various fixes")
 			);
 			return;
 		}
+		/* Doesn't do what is says, does s.th. but not what we want
+		else
+		if (!_stricmp("netOnlyDataEntityIndex", cmd1))
+		{
+			if (!Hook_csgo_CPredictionCopy_TransferData())
+			{
+				Tier0_Warning("Error: Required hooks not installed.\n");
+				return;
+			}
+
+			if (3 <= argc)
+			{
+				char const * cmd2 = args->ArgV(2);
+
+				g_csgo_NetOnly_CPredictionCopy_TransferData_EntIndex = atoi(cmd2);
+				return;
+			}
+
+			Tier0_Msg(
+				"mirv_fix netOnlyDataEntityIndex <entIndex> - Can fix player stuck in duck for old demos (if you set entindex of the player here).\n"
+				"Current value: %i\n",
+				g_csgo_NetOnly_CPredictionCopy_TransferData_EntIndex
+			);
+			return;
+		}*/
 	}
 
 	Tier0_Msg(
 		"mirv_fix blockObserverTarget [...] - Fixes unwanted player switching i.e. upon bomb plant (blocks C_BasePlayer::RecvProxy_ObserverTarget).\n"
+		//"mirv_fix netOnlyDataEntityIndex [...] - Can fix player stuck in duck for old demos (if you set entindex of the player here)."
 	);
 	return;
 }

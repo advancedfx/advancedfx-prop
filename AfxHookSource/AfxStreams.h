@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-11-01 dominik.matrixstorm.com
+// 2016-11-04 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -878,6 +878,10 @@ public:
 
 	CAfxBaseFxStream();
 
+	static void AfxStreamsInit(void);
+
+	static void AfxStreamsShutdown(void);
+
 	virtual void OnRenderBegin(void);
 
 	virtual void OnRenderEnd(void);
@@ -988,6 +992,9 @@ protected:
 		CShared();
 		~CShared();
 
+		void AfxStreamsInit(void);
+		void AfxStreamsShutdown(void);
+
 		void AddRef();
 		void Release();
 
@@ -1009,17 +1016,17 @@ protected:
 		CAction * BlackAction_get(void);
 	
 	private:
-		int m_RefCount;
-		int m_ShutDownLevel;
+		int m_RefCount = 0;
+		int m_ShutDownLevel = 0;
 		std::map<CActionKey, CAction *> m_Actions;
-		CAction * m_DrawAction;
-		CAction * m_NoDrawAction;
-		CAction * m_DebugDumpAction;
-		CAction * m_DepthAction;
-		//CAction * m_Depth24Action;
-		CAction * m_MaskAction;
-		CAction * m_WhiteAction;
-		CAction * m_BlackAction;
+		CAction * m_DrawAction = 0;
+		CAction * m_NoDrawAction = 0;
+		CAction * m_DebugDumpAction = 0;
+		CAction * m_DepthAction = 0;
+		//CAction * m_Depth24Action = 0;
+		CAction * m_MaskAction = 0;
+		CAction * m_WhiteAction = 0;
+		CAction * m_BlackAction = 0;
 
 		void CreateStdAction(CAction * & stdTarget, CActionKey const & key, CAction * action);
 		void CreateAction(CActionKey const & key, CAction * action, bool isStockAction = false);
@@ -2061,6 +2068,13 @@ public:
 
 	CAfxStreams();
 	~CAfxStreams();
+
+	/// <summary>Carry out initalization that cannot be done in DllMain</summary>
+	static void AfxStreamsInit(void);
+
+	/// <summary>Carry out shutdown that cannot be done in DllMain</summary>
+	static void AfxStreamsShutdown(void);
+
 
 	void OnMaterialSystem(SOURCESDK::IMaterialSystem_csgo * value);
 	void OnAfxBaseClientDll(IAfxBaseClientDll * value);
