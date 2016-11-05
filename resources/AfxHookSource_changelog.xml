@@ -6,6 +6,23 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>1.9.0</version>
+<time>2016-11-06T20:30Z</time>
+<changes>
+<change type="added">
+Added mirv_deathsmg fake sub command. Suggest by several people, including @C9Calle. I didn't want to add it, because last time we did that for GoldSrc engine, we caused a lot of fakes, but it has been requested several times now and more importantly, GOTV demos can miss player_death game event messages (used for the death notification), because those are not transmitted realibaly.
+</change>
+</changes>
+<comments>
+What would you like to see next in HLAE?<br />
+You can tell us on Twitter: https://twitter.com/dtugend/status/794921631525310464<br />
+Or on the forum: http://advancedfx.style-productions.net/forum/viewtopic.php?f=17&amp;t=1877
+</comments>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>1.8.0</version>
 <time>2016-11-04T11:19Z</time>
 <changes>

@@ -1996,7 +1996,26 @@ CON_COMMAND(mirv_deathmsg, "controls death notification options")
 			);
 			return;
 		}
+		else if (0 == _stricmp("fake", arg1))
+		{
+			if (5 <= argc)
+			{
+				Console_csgo_CHudDeathNotice_Fake(
+					args->ArgV(2),
+					0 != atoi(args->ArgV(3)),
+					0 != atoi(args->ArgV(4))
+				);
+			}
 
+			Tier0_Msg(
+				"mirv_deathmsg fake <htmlString> <bIsVictim> <bIsVictim> - Fake a death message (mirv_deathmsg command needs to be entered once (so hooks get installed) and after that one deathmsg has to be drawn earlier already (so it gets the object pointer) for this to work!).\n"
+				"\t<htmlString> - String with HTML, i.e. \"\".\n"
+				"\t<bIsVictim> - can be 0 or 1 (relevant for POV demo style / local player, for GOTV fakes you usually want 0 here)\n"
+				"\t<bIsKiller> - can be 0 or 1 (relevant for POV demo style / local player, for GOTV fakes you usually want 0 here)\n"
+				"Example: mirv_deathmsg fake \"<font color='#eabe54'>Cloud9 Stewie2K</font><font color='#eabe54'></font> <img src='icon-ak47.png' height='16'/><font color='#6f9ce6'>Na`Vi Zeus</font>\" 0 0\n"
+			);
+			return;
+		}
 	}
 	Tier0_Msg(
 		"Usage:\n"
@@ -2006,6 +2025,7 @@ CON_COMMAND(mirv_deathmsg, "controls death notification options")
 		"mirv_deathmsg highLightId [...] - control highlighting.\n"
 		"mirv_deathmsg highLightAssists [...] - Whether to highlight assists for highLightId.\n"
 		"mirv_deathmsg modTime [...] - allows to set a display time multiplier for a message.\n"
+		"mirv_deathmsg fake [...] - Fake a death message.\n"
 	);
 }
 

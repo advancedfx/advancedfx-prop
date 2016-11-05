@@ -177,8 +177,12 @@ typedef void (__stdcall *csgo_CHudDeathNotice_UnkAddDeathNotice_t)(DWORD *this_p
 
 csgo_CHudDeathNotice_UnkAddDeathNotice_t detoured_csgo_CHudDeathNotice_UnkAddDeathNotice;
 
+DWORD * csgo_CHudDeathNotice_UnkAddDeathNotice_last_this_ptr = 0;
+
 void __stdcall touring_csgo_CHudDeathNotice_UnkAddDeathNotice(DWORD *this_ptr, void * arg0, bool bIsVictim, bool bIsKiller)
 {
+	csgo_CHudDeathNotice_UnkAddDeathNotice_last_this_ptr = this_ptr;
+
 	if(0 < csgo_CHudDeathNotice_HighLightId)
 	{
 		detoured_csgo_CHudDeathNotice_UnkAddDeathNotice(this_ptr, arg0,
@@ -311,4 +315,20 @@ void csgo_CHudDeathNotice_Block_List(void)
 void csgo_CHudDeathNotice_Block_Clear(void)
 {
 	deathMessageBlock.clear();
+}
+
+void Console_csgo_CHudDeathNotice_Fake(char const * htmlString, bool bIsVictim, bool bIsKiller)
+{
+	if (!csgo_CHudDeathNotice_UnkAddDeathNotice_last_this_ptr)
+	{
+		Tier0_Warning("Error: There must have been at least one death notice for this to work (load another demo i.e. or s.th.)!");
+		return;
+	}
+
+	std::wstring wideString;
+
+	if (!AnsiStringToWideString(htmlString, wideString))
+		Tier0_Warning("Error upon converting \"%s\" to a wide string.\n", htmlString);
+	else
+		detoured_csgo_CHudDeathNotice_UnkAddDeathNotice(csgo_CHudDeathNotice_UnkAddDeathNotice_last_this_ptr, (void *)wideString.c_str(), bIsVictim, bIsKiller);
 }

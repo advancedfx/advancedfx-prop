@@ -23,3 +23,5 @@ bool csgo_CHudDeathNotice_Install(void);
 void csgo_CHudDeathNotice_Block(char const * uidAttacker, char const * uidVictim, char const * uidAssister, float modTime);
 void csgo_CHudDeathNotice_Block_List(void);
 void csgo_CHudDeathNotice_Block_Clear(void);
+
+void Console_csgo_CHudDeathNotice_Fake(char const * htmlString, bool bIsVictim, bool bIsKiller);
