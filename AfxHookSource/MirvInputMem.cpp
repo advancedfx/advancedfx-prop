@@ -32,7 +32,7 @@ void MirvInputMem::Console(IWrpCommandArgs * args)
 	{
 		char const * cmd1 = args->ArgV(1);
 
-		if (!stricmp("store", cmd1) && 3 <= argc)
+		if (!_stricmp("store", cmd1) && 3 <= argc)
 		{
 			char const * name = args->ArgV(2);
 
@@ -48,7 +48,7 @@ void MirvInputMem::Console(IWrpCommandArgs * args)
 
 			return;
 		}
-		else if (!stricmp("use", cmd1) && 3 <= argc)
+		else if (!_stricmp("use", cmd1) && 3 <= argc)
 		{
 			char const * name = args->ArgV(2);
 
@@ -60,11 +60,11 @@ void MirvInputMem::Console(IWrpCommandArgs * args)
 			{
 				char const * opt = args->ArgV(i);
 
-				if (!stricmp("origin", opt))
+				if (!_stricmp("origin", opt))
 					useOrigin = true;
-				if (!stricmp("angles", opt))
+				if (!_stricmp("angles", opt))
 					useAngles = true;
-				if (!stricmp("fov", opt))
+				if (!_stricmp("fov", opt))
 					useFov = true;
 			}
 
@@ -99,7 +99,7 @@ void MirvInputMem::Console(IWrpCommandArgs * args)
 			Tier0_Msg("Error: There is no state with name %s.\n", name);
 			return;
 		}
-		else if (!stricmp("use", cmd1) && 3 <= argc)
+		else if (!_stricmp("remove", cmd1) && 3 <= argc)
 		{
 			char const * name = args->ArgV(2);
 
@@ -114,7 +114,7 @@ void MirvInputMem::Console(IWrpCommandArgs * args)
 			Tier0_Msg("Error: There is no state with name %s.\n", name);
 			return;
 		}
-		else if (!stricmp("print", cmd1))
+		else if (!_stricmp("print", cmd1))
 		{
 			Tier0_Msg("name: x y z | xRoll yPitch zYaw | fov\n");
 			for (std::map<std::string, CData>::iterator it = m_Map.begin(); it != m_Map.end(); ++it)
@@ -133,12 +133,12 @@ void MirvInputMem::Console(IWrpCommandArgs * args)
 
 			return;
 		}
-		else if (!stricmp("clear", cmd1))
+		else if (!_stricmp("clear", cmd1))
 		{
 			m_Map.clear();
 			return;
 		}
-		else if (!stricmp("save", cmd1) && 3 <= argc)
+		else if (!_stricmp("save", cmd1) && 3 <= argc)
 		{
 			char const * name = args->ArgV(2);
 
@@ -150,7 +150,7 @@ void MirvInputMem::Console(IWrpCommandArgs * args)
 
 			return;
 		}
-		else if (!stricmp("load", cmd1) && 3 <= argc)
+		else if (!_stricmp("load", cmd1) && 3 <= argc)
 		{
 			char const * name = args->ArgV(2);
 

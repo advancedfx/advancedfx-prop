@@ -110,6 +110,7 @@
     <ClCompile Include="CommandSystem.cpp" />
     <ClCompile Include="csgo_CBasePlayer.cpp" />
     <ClCompile Include="csgo_CHudDeathNotice.cpp" />
+    <ClCompile Include="csgo_CCSGameMovement.cpp" />
     <ClCompile Include="csgo_CSkyBoxView.cpp" />
     <ClCompile Include="csgo_CViewRender.cpp" />
     <ClCompile Include="csgo_GetPlayerName.cpp" />
@@ -162,6 +163,7 @@
     <ClInclude Include="CommandSystem.h" />
     <ClInclude Include="csgo_CBasePlayer.h" />
     <ClInclude Include="csgo_CHudDeathNotice.h" />
+    <ClInclude Include="csgo_CCSGameMovement.h" />
     <ClInclude Include="csgo_CSkyBoxView.h" />
     <ClInclude Include="csgo_CViewRender.h" />
     <ClInclude Include="csgo_GetPlayerName.h" />

@@ -3,17 +3,20 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-11-02 dominik.matrixstorm.com
+// 2016-11-06 dominik.matrixstorm.com
 //
 // First changes:
 // 2010-09-27 dominik.matrixstorm.com
 
 #include <shared/vcpp/AfxAddr.h>
 
-AFXADDR_DECL(csgo_CPredictionCopy_TransferData)
-AFXADDR_DECL(csgo_CPredictionCopy_TransferData_DSZ)
+//AFXADDR_DECL(csgo_CPredictionCopy_TransferData)
+//AFXADDR_DECL(csgo_CPredictionCopy_TransferData_DSZ)
 AFXADDR_DECL(csgo_C_BaseEntity_ToolRecordEnties)
 AFXADDR_DECL(csgo_C_BaseEntity_ToolRecordEnties_DSZ)
+//AFXADDR_DECL(csgo_C_BasePlayer_OFS_m_bDucked)
+//AFXADDR_DECL(csgo_C_BasePlayer_OFS_m_bDucking)
+//AFXADDR_DECL(csgo_C_BasePlayer_OFS_m_flDuckAmount)
 AFXADDR_DECL(csgo_C_BasePlayer_OFS_m_skybox3d_scale)
 AFXADDR_DECL(csgo_C_BasePlayer_RecvProxy_ObserverTarget)
 AFXADDR_DECL(csgo_CCSViewRender_RenderView)
@@ -30,6 +33,7 @@ AFXADDR_DECL(csgo_CHudDeathNotice_UnkAddDeathNotice_DSZ)
 AFXADDR_DECL(csgo_CHudDeathNotice_UnkAddDeathNotice_AddMovie_AfterModTime)
 //AFXADDR_DECL(csgo_CScaleformSlotInitControllerClientImpl_UnkCheckSwf)
 //AFXADDR_DECL(csgo_CScaleformSlotInitControllerClientImpl_UnkCheckSwf_DSZ)
+AFXADDR_DECL(csgo_CCSGameMovement_vtable)
 AFXADDR_DECL(csgo_CSkyboxView_Draw)
 AFXADDR_DECL(csgo_CSkyboxView_Draw_DSZ)
 //AFXADDR_DECL(csgo_CViewRender_Render)

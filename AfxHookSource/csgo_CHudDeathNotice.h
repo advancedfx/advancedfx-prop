@@ -8,6 +8,8 @@
 // First changes:
 // 2014-10-21 dominik.matrixstorm.com
 
+#include "WrpConsole.h"
+
 extern int csgo_CHudDeathNotice_HighLightId;
 extern bool csgo_CHudDeathNotice_HighLightAssists;
 extern int csgo_debug_CHudDeathNotice_FireGameEvent;

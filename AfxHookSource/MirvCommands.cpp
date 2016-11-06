@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-11-04 dominik.matrixstorm.com
+// 2016-11-06 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-09-30 by dominik.matrixstorm.com
@@ -34,6 +34,7 @@
 #include "ClientTools.h"
 #include "csgo_CBasePlayer.h"
 #include "MirvInputMem.h"
+#include "csgo_CCSGameMovement.h"
 
 #include "csgo_Stdshader_dx9_Hooks.h"
 
@@ -2005,6 +2006,8 @@ CON_COMMAND(mirv_deathmsg, "controls death notification options")
 					0 != atoi(args->ArgV(3)),
 					0 != atoi(args->ArgV(4))
 				);
+
+				return;
 			}
 
 			Tier0_Msg(
@@ -3258,11 +3261,10 @@ CON_COMMAND(mirv_fix, "Various fixes")
 			);
 			return;
 		}
-		/* Doesn't do what is says, does s.th. but not what we want
 		else
-		if (!_stricmp("netOnlyDataEntityIndex", cmd1))
+		if (!_stricmp("oldDuckFix", cmd1))
 		{
-			if (!Hook_csgo_CPredictionCopy_TransferData())
+			if (!Hook_csgo_CCSGameMovement_DuckFix())
 			{
 				Tier0_Warning("Error: Required hooks not installed.\n");
 				return;
@@ -3272,22 +3274,22 @@ CON_COMMAND(mirv_fix, "Various fixes")
 			{
 				char const * cmd2 = args->ArgV(2);
 
-				g_csgo_NetOnly_CPredictionCopy_TransferData_EntIndex = atoi(cmd2);
+				g_Enable_csgo_CCSGameMovement_DuckFix = 0 != atoi(cmd2);
 				return;
 			}
 
 			Tier0_Msg(
-				"mirv_fix netOnlyDataEntityIndex <entIndex> - Can fix player stuck in duck for old demos (if you set entindex of the player here).\n"
+				"mirv_fix oldDuckFix 0|1 - Can fix player stuck in duck for old demos.\n"
 				"Current value: %i\n",
-				g_csgo_NetOnly_CPredictionCopy_TransferData_EntIndex
+				g_Enable_csgo_CCSGameMovement_DuckFix ? 1 : 0
 			);
 			return;
-		}*/
+		}
 	}
 
 	Tier0_Msg(
 		"mirv_fix blockObserverTarget [...] - Fixes unwanted player switching i.e. upon bomb plant (blocks C_BasePlayer::RecvProxy_ObserverTarget).\n"
-		//"mirv_fix netOnlyDataEntityIndex [...] - Can fix player stuck in duck for old demos (if you set entindex of the player here)."
+		"mirv_fix oldDuckFix [...] - Can fix player stuck in duck for old demos.\n"
 	);
 	return;
 }

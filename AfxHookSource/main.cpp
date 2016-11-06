@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-11-04 dominik.matrixstorm.com
+// 2016-11-06 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-09-29 dominik.matrixstorm.com
@@ -41,6 +41,7 @@
 #include "csgo_writeWaveConsoleCheck.h"
 #include "ClientTools.h"
 #include "MatRenderContextHook.h"
+//#include "csgo_IPrediction.h"
 
 #include <set>
 #include <map>
@@ -1186,16 +1187,24 @@ void* new_Client_CreateInterface(const char *pName, int *pReturnCode)
 		}
 	}
 
-	if(isCsgo && !strcmp(pName, CLIENT_DLL_INTERFACE_VERSION_CSGO_018))
+	if(isCsgo)
 	{
-		if(!g_AfxBaseClientDll)
+		if(!g_AfxBaseClientDll && !strcmp(pName, CLIENT_DLL_INTERFACE_VERSION_CSGO_018))
 		{
 			g_Info_VClient = CLIENT_DLL_INTERFACE_VERSION_CSGO_018 " (CS:GO)";
 			g_AfxBaseClientDll = new CAfxBaseClientDll((SOURCESDK::IBaseClientDLL_csgo *)pRet);
 			g_AfxStreams.OnAfxBaseClientDll(g_AfxBaseClientDll);
-		}
 
-		pRet = g_AfxBaseClientDll;
+			pRet = g_AfxBaseClientDll;
+		}
+		/*
+		else if (!g_AfxCsgoPrediction && !strcmp(SOURCESDK_CSGO_VCLIENT_PREDICTION_INTERFACE_VERSION, pName))
+		{
+			g_AfxCsgoPrediction = new CAfxCsgoPrediction((SOURCESDK::CSGO::IPrediction *)pRet);
+
+			pRet = g_AfxCsgoPrediction;
+		}
+		*/
 	}
 
 	return pRet;

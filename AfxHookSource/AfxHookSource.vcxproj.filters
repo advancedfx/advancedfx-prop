@@ -150,6 +150,9 @@
     <ClCompile Include="MirvInputMem.cpp">
       <Filter>AfxHookSource</Filter>
     </ClCompile>
+    <ClCompile Include="csgo_CCSGameMovement.cpp">
+      <Filter>AfxHookSource</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -297,6 +300,9 @@
       <Filter>AfxHookSource</Filter>
     </ClInclude>
     <ClInclude Include="MirvInputMem.h">
+      <Filter>AfxHookSource</Filter>
+    </ClInclude>
+    <ClInclude Include="csgo_CCSGameMovement.h">
       <Filter>AfxHookSource</Filter>
     </ClInclude>
   </ItemGroup>

@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-11-02 dominik.matrixstorm.com
+// 2016-11-06 dominik.matrixstorm.com
 //
 // First changes:
 // 2016-10-29 dominik.matrixstorm.com
@@ -45,7 +45,7 @@ bool Hook_csgo_C_BasePlayer_RecvProxy_ObserverTarget(void)
 
 	return firstResult;
 }
-
+/*
 typedef void csgo_datamap_t;
 
 typedef int(__stdcall * csgo_CPredictionCopy_TransferData_t)(DWORD * this_ptr, const char *operation, int entindex, csgo_datamap_t *dmap);
@@ -92,3 +92,4 @@ bool Hook_csgo_CPredictionCopy_TransferData(void)
 
 	return firstResult;
 }
+*/

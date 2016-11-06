@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-10-04 dominik.matrixstorm.com
+// 2015-10-06 dominik.matrixstorm.com
 //
 // First changes:
 // 2014-10-21 dominik.matrixstorm.com
@@ -321,7 +321,7 @@ void Console_csgo_CHudDeathNotice_Fake(char const * htmlString, bool bIsVictim, 
 {
 	if (!csgo_CHudDeathNotice_UnkAddDeathNotice_last_this_ptr)
 	{
-		Tier0_Warning("Error: There must have been at least one death notice for this to work (load another demo i.e. or s.th.)!");
+		Tier0_Warning("Error: There must have been at least one death notice for this to work after the command has been entered the first time (wait for a frag or load another demo)!");
 		return;
 	}
 
