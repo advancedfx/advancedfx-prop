@@ -1218,10 +1218,10 @@ CON_COMMAND(mirv_campath,"camera paths")
 							{
 								arg3 += strlen("delta+");
 
-								if(1 <= g_Hook_VClient_RenderView.m_CamPath.GetSize())
-									g_Hook_VClient_RenderView.m_CamPath.SetStart(
-										g_Hook_VClient_RenderView.m_CamPath.GetLowerBound() + atof(arg3)
-									);
+								g_Hook_VClient_RenderView.m_CamPath.SetStart(
+									atof(arg3)
+									, true
+								);
 
 								return;
 							}
@@ -1230,10 +1230,10 @@ CON_COMMAND(mirv_campath,"camera paths")
 							{
 								arg3 += strlen("delta-");
 
-								if(1 <= g_Hook_VClient_RenderView.m_CamPath.GetSize())
-									g_Hook_VClient_RenderView.m_CamPath.SetStart(
-										g_Hook_VClient_RenderView.m_CamPath.GetLowerBound() - atof(arg3)
-									);
+								g_Hook_VClient_RenderView.m_CamPath.SetStart(
+									- atof(arg3)
+									, true
+								);
 
 								return;
 							}
@@ -3166,7 +3166,7 @@ CON_COMMAND(mirv_cmd, "Command system (for scheduling commands).")
 			}
 
 			Tier0_Msg(
-				"mirv_cmds enabled 0|1 - Disable / enable command system.\n"
+				"mirv_cmd enabled 0|1 - Disable / enable command system.\n"
 				"Current value: %s\n"
 				, g_CommandSystem.Enabled ? "1" : "0"
 			);

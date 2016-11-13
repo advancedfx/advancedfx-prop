@@ -694,7 +694,7 @@ size_t CamPath::SelectAdd(double min, double max)
 	return selected;
 }
 
-void CamPath::SetStart(double t)
+void CamPath::SetStart(double t, bool relative)
 {
 	if(m_Map.size()<1) return;
 
@@ -716,7 +716,7 @@ void CamPath::SetStart(double t)
 		}
 	}
 
-	double deltaT = selectAll ? t -m_Map.begin()->first : t -first;
+	double deltaT = relative ? t : (selectAll ? t -m_Map.begin()->first : t -first);
 
 	for(CInterpolationMap<CamPathValue>::iterator it = m_Map.begin(); it != m_Map.end(); ++it)
 	{

@@ -125,7 +125,8 @@ public:
 	bool Load(wchar_t const * fileName);
 	
 	/// <remarks>In the current implementation if points happen to fall on the same time value, then the last point's value will be used (no interpolation).</remarks>
-	void SetStart(double t);
+	/// <param name="relative">If t is an relative offset (true), or absolute value (false).</param>
+	void SetStart(double t, bool relative = false);
 	
 	/// <remarks>In the current implementation if points happen to fall on the same time value, then the last point's value will be used (no interpolation).
 	/// Setting duration for a path with less than 2 points will do nothing.</remarks>
