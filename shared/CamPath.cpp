@@ -80,7 +80,7 @@ bool CamPath::QuaternionInterp_FromString(char const * value, QuaternionInterp &
 		return true;
 	}
 	else
-	if(!_stricmp(value,"cubic"))
+	if(!_stricmp(value,"sCubic"))
 	{
 		outValue = QI_SCUBIC;
 		return true;

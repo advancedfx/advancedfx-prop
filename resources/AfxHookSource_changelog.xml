@@ -11,6 +11,8 @@
 <changes>
 <change type="fixed">
 Fixed ripieces/advancedfx#28 : mirv_campath edit start delta+/delta- sub-commands not working correctly.
+</change><change type="fixed">
+Fixed mirv_campath edit interp rotation, expecting cubic instead of intended sCubic, thanks to cZF.
 </change>
 </changes>
 </release>
