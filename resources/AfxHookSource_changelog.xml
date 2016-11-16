@@ -6,12 +6,20 @@
 
 <release>
 <name>AfxHookSource</name>
-<version>1.10.x</version>
-<time>2016-11-13T14:58Z</time>
+<version>1.11.0</version>
+<time>2016-11-16T17:57Z</time>
 <changes>
+<change type="added">
+Added shouldForceNoVisOverride to mirv_streams edit for baseFx based streams (which most are). When set to 1 specifies visibility extension (disabling of visiblity checks) per stream (still not perfect, but okay I guess) and replaces the r_novis console variable method, that would affect all streams and thus could have unwanted side-effects. The afx/wh cfg was updated accordingly, people with custom cfgs might need to add this new setting to their cfgs.
+</change>
+<change type="fixed">
+Fixed mirv_streams crashes due to material creation and class variable initialization issues.
+Moved material initialization onto the main thread, because it seems the CS:GO material system FindMaterial function can crash when called from different threads, especially when called at the same time.
+</change>
 <change type="fixed">
 Fixed ripieces/advancedfx#28 : mirv_campath edit start delta+/delta- sub-commands not working correctly.
-</change><change type="fixed">
+</change>
+<change type="fixed">
 Fixed mirv_campath edit interp rotation, expecting cubic instead of intended sCubic, thanks to cZF.
 </change>
 </changes>

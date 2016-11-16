@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-11-04 dominik.matrixstorm.com
+// 2016-11-15 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -61,6 +61,8 @@ public:
 	virtual void RenderEnd(void) = 0;
 
 	virtual float RenderSmokeOverlayAlphaMod(void) = 0;
+
+	virtual bool ViewRenderShouldForceNoVis(bool orgValue) = 0;
 
 	virtual void DrawingHudBegin(void) = 0;
 
@@ -795,6 +797,10 @@ public:
 			return this;
 		}
 
+		virtual void MainThreadInitialize(void)
+		{
+		}
+
 		virtual void LevelShutdown(void)
 		{
 		}
@@ -881,6 +887,8 @@ public:
 	static void AfxStreamsInit(void);
 
 	static void AfxStreamsShutdown(void);
+
+	static void MainThreadInitialize(void);
 
 	virtual void OnRenderBegin(void);
 
@@ -970,6 +978,9 @@ public:
 
 	float SmokeOverlayAlphaFactor_get(void);
 	void SmokeOverlayAlphaFactor_set(float value);
+
+	bool ShouldForceNoVisOverride_get(void);
+	void ShouldForceNoVisOverride_set(bool value);
 	
 	bool DebugPrint_get(void);
 	void DebugPrint_set(bool value);
@@ -1003,6 +1014,8 @@ protected:
 		CAction * GetAction(CActionKey const & key);
 		bool RemoveAction(CActionKey const & key);
 
+		void MainThreadInitialize(void);
+
 		void LevelShutdown(void);
 
 		//CAfxBaseFxStream * m_ActiveBaseFxStream;
@@ -1017,6 +1030,7 @@ protected:
 	
 	private:
 		int m_RefCount = 0;
+		int m_MainThreadInitalizeLevel = 0;
 		int m_ShutDownLevel = 0;
 		std::map<CActionKey, CAction *> m_Actions;
 		CAction * m_DrawAction = 0;
@@ -1061,6 +1075,7 @@ protected:
 	float m_DepthVal;
 	float m_DepthValMax;
 	float m_SmokeOverlayAlphaFactor;
+	bool m_ShouldForceNoVisOverride;
 
 	virtual ~CAfxBaseFxStream();
 
@@ -1350,6 +1365,8 @@ private:
 
 		virtual CAction * ResolveAction(SOURCESDK::IMaterial_csgo * material);
 
+		virtual void MainThreadInitialize(void);
+
 		virtual void AfxUnbind(CAfxBaseFxStreamContextHook * ch);
 
 		virtual SOURCESDK::IMaterial_csgo * MaterialHook(CAfxBaseFxStreamContextHook * ch, SOURCESDK::IMaterial_csgo * material);
@@ -1394,7 +1411,6 @@ private:
 		bool m_OverrideDepthWrite;
 		bool m_DepthWrite;
 
-		void EnsureMaterial(void);
 		void ExamineMaterial(SOURCESDK::IMaterial_csgo * material, bool & outSplinetype, bool & outUseinstancing);
 	};
 
@@ -1405,6 +1421,8 @@ private:
 		CActionDebugDepth(CAction * fallBackAction);
 
 		virtual CAction * ResolveAction(SOURCESDK::IMaterial_csgo * material);
+
+		virtual void MainThreadInitialize(void);
 
 		virtual void AfxUnbind(CAfxBaseFxStreamContextHook * ch);
 
@@ -1455,8 +1473,6 @@ private:
 		CAction * m_FallBackAction;
 
 		CAfxMaterial * m_DebugDepthMaterial;
-		bool m_Initalized;
-		std::mutex m_InitalizedMutex;
 	};
 
 #if AFX_SHADERS_CSGO
@@ -1623,6 +1639,8 @@ private:
 		virtual void RenderEnd(void);
 
 		virtual float RenderSmokeOverlayAlphaMod(void);
+
+		virtual bool ViewRenderShouldForceNoVis(bool orgValue);
 
 		virtual void DrawingHudBegin(void);
 
@@ -2087,6 +2105,8 @@ public:
 	void OnSetPixelShader(CAfx_csgo_ShaderState & state);
 
 	float OnRenderSmokeOverlayAlphaMod(void);
+
+	bool OnViewRenderShouldForceNoVis(bool orgValue);
 
 	void OnDrawingHud(void);
 

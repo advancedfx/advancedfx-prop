@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-11-04 dominik.matrixstorm.com
+// 2016-11-15 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -1065,6 +1065,7 @@ CAfxBaseFxStream::CAfxBaseFxStream()
 , m_DepthVal(1)
 , m_DepthValMax(1024)
 , m_SmokeOverlayAlphaFactor(1)
+, m_ShouldForceNoVisOverride(false)
 , m_DebugPrint(false)
 , m_ClientEffectTexturesAction(0)
 , m_WorldTexturesAction(0)
@@ -1244,6 +1245,11 @@ void CAfxBaseFxStream::Console_ActionFilter_Move(int id, int moveBeforeId)
 
 		m_ActionFilter.insert(it,val);
 	}
+}
+
+void CAfxBaseFxStream::MainThreadInitialize(void)
+{
+	m_Shared.MainThreadInitialize();
 }
 
 void CAfxBaseFxStream::LevelShutdown(void)
@@ -1670,6 +1676,17 @@ void CAfxBaseFxStream::SmokeOverlayAlphaFactor_set(float value)
 	m_SmokeOverlayAlphaFactor = value;
 }
 
+bool CAfxBaseFxStream::ShouldForceNoVisOverride_get(void)
+{
+	return m_ShouldForceNoVisOverride;
+}
+
+void CAfxBaseFxStream::ShouldForceNoVisOverride_set(bool value)
+{
+	m_ShouldForceNoVisOverride = value;
+}
+
+
 bool CAfxBaseFxStream::DebugPrint_get(void)
 {
 	return m_DebugPrint;
@@ -1809,6 +1826,12 @@ void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::QueueFunctorInternal(IAfxCal
 float CAfxBaseFxStream::CAfxBaseFxStreamContextHook::RenderSmokeOverlayAlphaMod(void)
 {
 	return m_Stream->m_SmokeOverlayAlphaFactor;
+}
+
+
+bool CAfxBaseFxStream::CAfxBaseFxStreamContextHook::ViewRenderShouldForceNoVis(bool orgValue)
+{
+	return m_Stream->m_ShouldForceNoVisOverride ? true : orgValue;
 }
 
 void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::DrawingHudBegin(void)
@@ -2140,6 +2163,13 @@ bool CAfxBaseFxStream::CShared::RemoveAction(CActionKey const & key)
 	return false;
 }
 
+void CAfxBaseFxStream::CShared::MainThreadInitialize(void)
+{
+	for (std::map<CActionKey, CAction *>::iterator it = m_Actions.begin(); it != m_Actions.end(); ++it)
+	{
+		it->second->MainThreadInitialize();
+	}
+}
 
 void CAfxBaseFxStream::CShared::LevelShutdown(void)
 {
@@ -2251,7 +2281,6 @@ CAfxBaseFxStream::CActionDebugDepth::CActionDebugDepth(CAction * fallBackAction)
 : CAction()
 , m_FallBackAction(fallBackAction)
 , m_DebugDepthMaterial(0)
-, m_Initalized(false)
 {
 	if(fallBackAction) fallBackAction->AddRef();
 }
@@ -2303,15 +2332,24 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::CActionDebugDepth::ResolveAction(S
 	return this;
 }
 
+void CAfxBaseFxStream::CActionDebugDepth::MainThreadInitialize(void)
+{
+	if(!m_DebugDepthMaterial)
+	{
+		m_DebugDepthMaterial = new CAfxMaterial(
+			g_AfxStreams.GetFreeMaster(),
+			g_AfxStreams.GetMaterialSystem()->FindMaterial("afx/depth", 0));
+	}
+}
+
 void CAfxBaseFxStream::CActionDebugDepth::AfxUnbind(CAfxBaseFxStreamContextHook * ch)
 {
 }
 
 SOURCESDK::IMaterial_csgo * CAfxBaseFxStream::CActionDebugDepth::MaterialHook(CAfxBaseFxStreamContextHook * ch, SOURCESDK::IMaterial_csgo * material)
 {
-	if (!m_DebugDepthMaterial) m_DebugDepthMaterial = new CAfxMaterial(
-		g_AfxStreams.GetFreeMaster(),
-		g_AfxStreams.GetMaterialSystem()->FindMaterial("afx/depth", 0));
+	if (!m_DebugDepthMaterial)		
+		return material; // Should not happen, but you never know.
 
 	float scale = ch->DrawingSkyBoxView_get() ? csgo_CSkyBoxView_GetScale() : 1.0f;
 	float flDepthFactor = scale * ch->GetStream()->m_DepthVal;
@@ -2368,22 +2406,33 @@ CAfxBaseFxStream::CActionReplace::~CActionReplace()
 
 CAfxBaseFxStream::CAction * CAfxBaseFxStream::CActionReplace::ResolveAction(SOURCESDK::IMaterial_csgo * material)
 {
-	EnsureMaterial();
+	if (m_Material)
+	{
+		bool srcSplinetype;
+		bool srcUseinstancing;
 
-	bool srcSplinetype;
-	bool srcUseinstancing;
+		bool dstSplinetype;
+		bool dstUseinstancing;
 
-	bool dstSplinetype;
-	bool dstUseinstancing;
+		ExamineMaterial(material, srcSplinetype, srcUseinstancing);
+		ExamineMaterial(m_Material->GetMaterial(), dstSplinetype, dstUseinstancing);
 
-	ExamineMaterial(material, srcSplinetype, srcUseinstancing);
-	ExamineMaterial(m_Material->GetMaterial(), dstSplinetype, dstUseinstancing);
-
-	if(srcSplinetype == dstSplinetype
-		&& srcUseinstancing == dstUseinstancing)
-		return this;
+		if (srcSplinetype == dstSplinetype
+			&& srcUseinstancing == dstUseinstancing)
+			return this;
+	}
 
 	return SafeSubResolveAction(m_FallBackAction, material);
+}
+
+void CAfxBaseFxStream::CActionReplace::MainThreadInitialize(void)
+{
+	if (!m_Material)
+	{
+		m_Material = new CAfxMaterial(
+			g_AfxStreams.GetFreeMaster(),
+			g_AfxStreams.GetMaterialSystem()->FindMaterial(m_MaterialName.c_str(), 0));
+	}
 }
 
 void CAfxBaseFxStream::CActionReplace::AfxUnbind(CAfxBaseFxStreamContextHook * ch)
@@ -2403,8 +2452,6 @@ void CAfxBaseFxStream::CActionReplace::AfxUnbind(CAfxBaseFxStreamContextHook * c
 
 SOURCESDK::IMaterial_csgo * CAfxBaseFxStream::CActionReplace::MaterialHook(CAfxBaseFxStreamContextHook * ch, SOURCESDK::IMaterial_csgo * material)
 {
-	EnsureMaterial();
-
 	IAfxMatRenderContext * ctx = ch->GetCtx();
 	IAfxContextHook * ctxh = ctx->Hook_get();
 
@@ -2417,14 +2464,7 @@ SOURCESDK::IMaterial_csgo * CAfxBaseFxStream::CActionReplace::MaterialHook(CAfxB
 	if(m_OverrideDepthWrite)
 		QueueOrExecute(ctx->GetOrg(), new CAfxLeafExecute_Functor(new AfxD3D9OverrideBegin_D3DRS_ZWRITEENABLE_Functor(m_DepthWrite ? TRUE : FALSE)));
 
-	return m_Material->GetMaterial();
-}
-
-void CAfxBaseFxStream::CActionReplace::EnsureMaterial(void)
-{
-	if(!m_Material) m_Material = new CAfxMaterial(
-		g_AfxStreams.GetFreeMaster(),
-		g_AfxStreams.GetMaterialSystem()->FindMaterial(m_MaterialName.c_str(), 0));
+	return m_Material ? m_Material->GetMaterial() : material;
 }
 
 void CAfxBaseFxStream::CActionReplace::ExamineMaterial(SOURCESDK::IMaterial_csgo * material, bool & outSplinetype, bool & outUseinstancing)
@@ -3889,6 +3929,16 @@ float CAfxStreams::OnRenderSmokeOverlayAlphaMod(void)
 	return 1.0f;
 }
 
+bool CAfxStreams::OnViewRenderShouldForceNoVis(bool orgValue)
+{
+	IAfxContextHook * hook = FindHook(GetCurrentContext());
+
+	if (hook)
+		return hook->ViewRenderShouldForceNoVis(orgValue);
+
+	return orgValue;
+}
+
 void CAfxStreams::OnDrawingHud(void)
 {
 	IAfxContextHook * hook = FindHook(GetCurrentContext());
@@ -5203,6 +5253,29 @@ bool CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 				return true;
 			}
 			else
+				if (!_stricmp(cmd0, "shouldForceNoVisOverride"))
+				{
+					if (!Hook_csgo_CViewRender_ShouldForceNoVis())
+					{
+						Tier0_Warning("%s smokeOverlayAlphaFactor - ERROR: Required hook not available, will not work.\n", cmdPrefix);
+					}
+
+					if (2 <= argc)
+					{
+						char const * cmd1 = args->ArgV(argcOffset + 1);
+						curBaseFx->ShouldForceNoVisOverride_set(0 != atoi(cmd1));
+						return true;
+					}
+
+					Tier0_Msg(
+						"%s shouldForceNoVisOverride 0|1 - Useful for wallhack: If to force ShouldForceNoVisOverride to return true.\n"
+						"Current value: %i.\n"
+						, cmdPrefix
+						, curBaseFx->ShouldForceNoVisOverride_get() ? 1 : 0
+					);
+					return true;
+				}
+				else
 			if(!_stricmp(cmd0, "debugPrint"))
 			{
 				if(2 <= argc)
@@ -5315,7 +5388,8 @@ bool CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 		Tier0_Msg("%s vguiAction [...] - Readonly.\n", cmdPrefix);
 		Tier0_Msg("%s depthVal [...]\n", cmdPrefix);
 		Tier0_Msg("%s depthValMax [...]\n", cmdPrefix);
-		Tier0_Msg("%s smokeOverlayAlphaFactor [...]\n", cmdPrefix);		
+		Tier0_Msg("%s smokeOverlayAlphaFactor [...]\n", cmdPrefix);
+		Tier0_Msg("%s shouldForceNoVisOverride [...]\n", cmdPrefix);
 		Tier0_Msg("%s debugPrint [...]\n", cmdPrefix);
 		Tier0_Msg("%s invalidateMap - invaldiates the material map.\n", cmdPrefix);
 		Tier0_Msg("%s man [...] - Manipulate stream more easily (i.e. depth to depth24).\n", cmdPrefix);
@@ -5692,6 +5766,8 @@ void CAfxStreams::DebugDump(IAfxMatRenderContextOrg * ctxp)
 
 void CAfxStreams::View_Render(IAfxBaseClientDll * cl, SOURCESDK::vrect_t_csgo *rect)
 {
+	CAfxBaseFxStream::MainThreadInitialize();
+	
 	IAfxMatRenderContextOrg * ctxp = GetCurrentContext()->GetOrg();
 
 	BlockPresent(ctxp, false);
