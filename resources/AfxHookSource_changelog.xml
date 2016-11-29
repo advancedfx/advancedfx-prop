@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>1.11.1</version>
+<time>2016-11-29T06:54Z</time>
+<changes>
+<change type="fixed">
+Adjusted to 28 Nov 2016 CS:GO update / fixed Error addresses.cpp:1528 (removed non-required shader hooking code (non-required, because Valve ignored our requests for updated stdshader source code since Februrary :( )).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>1.11.0</version>
 <time>2016-11-16T17:57Z</time>
 <changes>

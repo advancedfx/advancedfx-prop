@@ -63,4 +63,4 @@ AFXADDR_DECL(cstrike_gpGlobals_OFS_interval_per_tick)
 void Addresses_InitEngineDll(AfxAddr engineDll, bool isCsgo);
 void Addresses_InitScaleformuiDll(AfxAddr scaleformuiDll, bool isCsgo);
 void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo);
-void Addresses_InitStdshader_dx9Dll(AfxAddr stdshader_dx9Dll, bool isCsgo);
+//void Addresses_InitStdshader_dx9Dll(AfxAddr stdshader_dx9Dll, bool isCsgo);

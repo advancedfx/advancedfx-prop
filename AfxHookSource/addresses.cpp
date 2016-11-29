@@ -1436,6 +1436,7 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 	AFXADDR_SET(cstrike_gpGlobals_OFS_interval_per_tick, 7*4);
 }
 
+/*
 void Addresses_InitStdshader_dx9Dll(AfxAddr stdshader_dx9Dll, bool isCsgo)
 {
 	if(isCsgo)
@@ -1652,3 +1653,4 @@ void Addresses_InitStdshader_dx9Dll(AfxAddr stdshader_dx9Dll, bool isCsgo)
 		AFXADDR_SET(csgo_VertexLitGeneric_CShader_vtable, 0x0);
 	}
 }
+*/

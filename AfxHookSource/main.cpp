@@ -1609,12 +1609,12 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 	{
 		bFirstStdshader_dx9 = false;
 
-		Addresses_InitStdshader_dx9Dll((AfxAddr)hModule, isCsgo);
+		//Addresses_InitStdshader_dx9Dll((AfxAddr)hModule, isCsgo);
 
 		//
 		// Install early hooks:
 
-		csgo_Stdshader_dx9_Hooks_Init();
+		//csgo_Stdshader_dx9_Hooks_Init();
 	}
 }
 
