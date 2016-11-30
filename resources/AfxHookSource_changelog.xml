@@ -6,6 +6,21 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>1.12.0</version>
+<time>2016-11-30T21:21Z</time>
+<changes>
+<change type="fixed">
+Fixed typo in afx/wh.cfg causing the per stream shouldForceNoVisOverride option not to be set to 1.
+</change>
+<change type="updated">
+Updated afx/wh.cfg to give maximum wallhack: Added special commands r_occlusion 0 and r_portalsopenall 1 (unlocked with mirv_cvar_unhide_all) to the config, thanks to twitter.com/over_fuze for helping to find them.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>1.11.1</version>
 <time>2016-11-29T06:54Z</time>
 <changes>
