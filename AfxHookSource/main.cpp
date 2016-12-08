@@ -379,6 +379,9 @@ private:
 
 SOURCESDK::IFileSystem_csgo * g_FileSystem_csgo = 0;
 
+SOURCESDK::CSGO::vgui::IPanel * g_pVGuiPanel_csgo = 0;
+SOURCESDK::CSGO::vgui::ISurface *g_pVGuiSurface_csgo = 0;
+
 void AfxV34HookWindow(void);
 
 void MySetup(SOURCESDK::CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals)
@@ -477,6 +480,22 @@ void MySetup(SOURCESDK::CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals
 			}
 			else {
 				ErrorBox("Could not get a supported VFileSystem interface.");
+			}
+
+			if (iface = appSystemFactory(SOURCESDK_CSGO_VGUI_PANEL_INTERFACE_VERSION, NULL))
+			{
+				g_pVGuiPanel_csgo = (SOURCESDK::CSGO::vgui::IPanel *)iface;
+			}
+			else {
+				ErrorBox("Could not get a supported VGUI_Panel interface.");
+			}
+
+			if (iface = appSystemFactory(SOURCESDK_CSGO_VGUI_VGUI_SURFACE_INTERFACE_VERSION, NULL))
+			{
+				g_pVGuiSurface_csgo = (SOURCESDK::CSGO::vgui::ISurface *)iface;
+			}
+			else {
+				ErrorBox("Could not get a supported VGUI_Surface interface.");
 			}
 
 			if(iface = appSystemFactory(SHADERSHADOW_INTERFACE_VERSION_CSGO, NULL))

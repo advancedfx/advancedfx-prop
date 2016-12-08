@@ -6,6 +6,26 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>1.12.1</version>
+<time>2016-12-08T15:17Z</time>
+<changes>
+<change type="fixed">
+Fixed Problem in addresses.cpp:402 error (affected mirv_replace_name).
+</change>
+<change type="fixed">
+Fixed mirv_streams edit causing to hang the whole game when editing a stream that was recorded / in preview and had attachCommands / detachCommands. Thanks to https://twitter.com/DanielZ1337 .
+</change>
+<change type="added">
+Added mirv_vpanel command for testing. It's probably not useful and thus not planned to stay. An example for it would be<br />
+mirv_streams edit streamNameHere attachCommands "mirv_vpanel hide HudZoom"<br />
+This will hide the scope overlay of the Hud and leave the other HUD untouched.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>1.12.0</version>
 <time>2016-11-30T21:21Z</time>
 <changes>

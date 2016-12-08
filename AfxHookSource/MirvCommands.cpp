@@ -3293,3 +3293,100 @@ CON_COMMAND(mirv_fix, "Various fixes")
 	);
 	return;
 }
+
+extern SOURCESDK::CSGO::vgui::IPanel * g_pVGuiPanel_csgo;
+extern SOURCESDK::CSGO::vgui::ISurface *g_pVGuiSurface_csgo;
+
+bool MirvFindVPanel(SOURCESDK::CSGO::vgui::VPANEL panel, char const * panelName, SOURCESDK::CSGO::vgui::VPANEL * outPanel)
+{
+	if (!outPanel)
+		return false;
+
+	if (!strcmp(panelName, g_pVGuiPanel_csgo->GetName(panel)))
+	{
+		*outPanel = panel;
+		return true;
+	}			
+
+	for (int i = 0; i < g_pVGuiPanel_csgo->GetChildCount(panel); ++i)
+	{
+		if (MirvFindVPanel(g_pVGuiPanel_csgo->GetChild(panel, i), panelName, outPanel))
+			return true;
+	}
+
+	return false;
+}
+
+bool MirvVPanelSetVisible(char const * panelName, bool visible)
+{
+	SOURCESDK::CSGO::vgui::VPANEL panel;
+
+	if (MirvFindVPanel(g_pVGuiSurface_csgo->GetEmbeddedPanel(), panelName, &panel))
+	{
+		g_pVGuiPanel_csgo->SetVisible(panel, visible);
+		return true;
+	}
+
+	return false;
+}
+
+CON_COMMAND(mirv_vpanel, "VGUI Panel access")
+{
+	if (!(g_pVGuiSurface_csgo && g_pVGuiPanel_csgo))
+	{
+		Tier0_Warning("Errror: Missing dependencies.\n");
+		return;
+	}
+
+	int argc = args->ArgC();
+
+	if (2 <= argc)
+	{
+		char const * cmd1 = args->ArgV(1);
+
+
+		if (!_stricmp("hide", cmd1))
+		{
+			if (3 <= argc)
+			{
+				char const * cmd2 = args->ArgV(2);
+
+				if (!MirvVPanelSetVisible(cmd2, false))
+				{
+					Tier0_Warning("Error: Invalid panel name %s\n", cmd2);
+				}		
+				return;
+			}
+
+			Tier0_Msg(
+				"mirv_vpanel hide <panelName>\n"
+			);
+			return;
+		}
+		else
+		if (!_stricmp("show", cmd1))
+		{
+			if (3 <= argc)
+			{
+				char const * cmd2 = args->ArgV(2);
+
+				if (!MirvVPanelSetVisible(cmd2, true))
+				{
+					Tier0_Warning("Error: Invalid panel name %s\n", cmd2);
+				}
+				return;
+			}
+
+			Tier0_Msg(
+				"mirv_vpanel show <panelName>\n"
+			);
+			return;
+		}
+	}
+
+	Tier0_Msg(
+		"mirv_vpanel hide [...]\n"
+		"mirv_vpanel show [...]\n"
+		"Hint: To find panel names use vgui_drawtree 1.\n"
+	);
+}

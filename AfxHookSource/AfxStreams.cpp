@@ -5796,9 +5796,10 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, SOURCESDK::vrect_t_csgo *r
 		{
 			SetMatVarsForStreams(); // keep them set in case a mofo resets them.
 
-			previewStream->OnRenderBegin();
+			if (0 < strlen(previewStream->AttachCommands_get()))
+				g_VEngineClient->ExecuteClientCmd(previewStream->AttachCommands_get()); // Execute commands before we lock the stream!
 
-			if(0 < strlen(previewStream->AttachCommands_get())) g_VEngineClient->ExecuteClientCmd(previewStream->AttachCommands_get());
+			previewStream->OnRenderBegin();
 
 			ctxp->ClearColor4ub(0,0,0,0);
 			ctxp->ClearBuffers(true,false,false);
@@ -5815,15 +5816,12 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, SOURCESDK::vrect_t_csgo *r
 
 	if(previewStream && canFeed)
 	{
-		if(0 < strlen(previewStream->DetachCommands_get())) g_VEngineClient->ExecuteClientCmd(previewStream->DetachCommands_get());
-
 		previewStreamWillRecord = m_Recording && canFeed && m_PreviewStream->Record_get();
 
 		previewStream->OnRenderEnd();
 
-		if (!previewStreamWillRecord)
-		{
-		}
+		if (0 < strlen(previewStream->DetachCommands_get()))
+			g_VEngineClient->ExecuteClientCmd(previewStream->DetachCommands_get()); // Execute commands after we unlocked the stream!
 	}
 
 	if(m_Recording)
@@ -5954,12 +5952,10 @@ IAfxMatRenderContextOrg * CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStrea
 
 	SetMatVarsForStreams(); // keep them set in case a mofo resets them.
 
-	if (!isInPreview)
-	{
-	}
-	stream->OnRenderBegin();
+	if (0 < strlen(stream->AttachCommands_get()))
+		g_VEngineClient->ExecuteClientCmd(stream->AttachCommands_get()); // Execute commands before we lock the stream!
 
-	if(0 < strlen(stream->AttachCommands_get())) g_VEngineClient->ExecuteClientCmd(stream->AttachCommands_get());
+	stream->OnRenderBegin();
 
 	int whatToDraw = SOURCESDK::RENDERVIEW_UNSPECIFIED;
 
@@ -5980,10 +5976,11 @@ IAfxMatRenderContextOrg * CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStrea
 		viewSetup->m_nUnscaledHeight
 		);
 
-	if(0 < strlen(stream->DetachCommands_get())) g_VEngineClient->ExecuteClientCmd(stream->DetachCommands_get());
-
 	stream->OnRenderEnd();
-	
+
+	if (0 < strlen(stream->DetachCommands_get()))
+		g_VEngineClient->ExecuteClientCmd(stream->DetachCommands_get()); // Execute commands after we lock the stream!
+
 	if(isDepthF)
 	{
 		ctxp->PopRenderTargetAndViewport();
