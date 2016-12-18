@@ -523,7 +523,7 @@ public:
 		curOverride.m_OverrideValue_ps_c47_xyz[2] = value[2];
 
 		float tmp[4] = { value[0], value[1], value[2], curOverride.m_Override_ps_c47_w ? curOverride.m_OverrideValue_ps_c47_w : m_OriginalValue_ps_c47[3] };
-		g_OldDirect3DDevice9->SetVertexShaderConstantF(47, tmp, 1);
+		g_OldDirect3DDevice9->SetPixelShaderConstantF(47, tmp, 1);
 	}
 
 	void OverrideEnd_ps_c47_xyz(void)
@@ -547,7 +547,7 @@ public:
 		curOverride.m_OverrideValue_ps_c47_w = value;
 
 		float tmp[4] = { curOverride.m_Override_ps_c47_xyz ? curOverride.m_OverrideValue_ps_c47_xyz[0] : m_OriginalValue_ps_c47[0], curOverride.m_Override_ps_c47_xyz ? curOverride.m_OverrideValue_ps_c47_xyz[1] : m_OriginalValue_ps_c47[1], curOverride.m_Override_ps_c47_xyz ? curOverride.m_OverrideValue_ps_c47_xyz[2] : m_OriginalValue_ps_c47[2], value };
-		g_OldDirect3DDevice9->SetVertexShaderConstantF(47, tmp, 1);
+		g_OldDirect3DDevice9->SetPixelShaderConstantF(47, tmp, 1);
 	}
 
 	void OverrideEnd_ps_c47_w(void)
@@ -1291,7 +1291,7 @@ public:
 				m_OriginalValue_ps_c47[2] = pConstantData[4 * (47 - StartRegister) + 2];
 				m_OriginalValue_ps_c47[3] = pConstantData[4 * (47 - StartRegister) + 3];
 
-				if (curOverride.m_Override_ps_c47_xyz | curOverride.m_Override_ps_c47_w)
+				if (curOverride.m_Override_ps_c47_xyz || curOverride.m_Override_ps_c47_w)
 				{
 					float tmp[4] = { curOverride.m_Override_ps_c47_xyz ? curOverride.m_OverrideValue_ps_c47_xyz[0] : m_OriginalValue_ps_c47[0], curOverride.m_Override_ps_c47_xyz ? curOverride.m_OverrideValue_ps_c47_xyz[1] : m_OriginalValue_ps_c47[1], curOverride.m_Override_ps_c47_xyz ? curOverride.m_OverrideValue_ps_c47_xyz[2] : m_OriginalValue_ps_c47[2], curOverride.m_Override_ps_c47_w ? curOverride.m_OverrideValue_ps_c47_w : m_OriginalValue_ps_c47[3] };
 					g_OldDirect3DDevice9->SetPixelShaderConstantF(47, tmp, 1);
@@ -1767,11 +1767,14 @@ void AfxD3D9OverrideEnd_ModulationColor(void)
 {
 	if (!g_OldDirect3DDevice9) return;
 
+	g_NewDirect3DDevice9.OverrideEnd_ps_c47_xyz();
 }
 
 void AfxD3D9OverrideBegin_ModulationBlend(float value)
 {
 	if (!g_OldDirect3DDevice9) return;
+
+	g_NewDirect3DDevice9.OverrideBegin_ps_c47_w(value);
 
 }
 
@@ -1779,6 +1782,7 @@ void AfxD3D9OverrideEnd_ModulationBlend(void)
 {
 	if (!g_OldDirect3DDevice9) return;
 
+	g_NewDirect3DDevice9.OverrideEnd_ps_c47_w();
 }
 
 void AfxD3D9OverrideBegin_D3DRS_SRCBLEND(DWORD value)

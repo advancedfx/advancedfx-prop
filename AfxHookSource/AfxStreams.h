@@ -895,6 +895,7 @@ public:
 	virtual void OnRenderEnd(void);
 
 	void Console_ActionFilter_Add(const char * expression, CAction * action);
+	void Console_ActionFilter_AddEx(CAfxStreams * streams, IWrpCommandArgs * args);
 	void Console_ActionFilter_Print(void);
 	void Console_ActionFilter_Remove(int id);
 	void Console_ActionFilter_Move(int id, int moveBeforeId);
@@ -903,7 +904,7 @@ public:
 
 	virtual void LevelShutdown(void);
 
-	CAction * RetrieveAction(SOURCESDK::IMaterial_csgo * material);
+	CAction * RetrieveAction(SOURCESDK::IMaterial_csgo * material, SOURCESDK::CSGO::CBaseHandle const & entityHandle);
 
 	CAction * ClientEffectTexturesAction_get(void);
 	void ClientEffectTexturesAction_set(CAction * value);
@@ -986,6 +987,11 @@ public:
 	void DebugPrint_set(bool value);
 
 	void InvalidateMap(void);
+
+	void Picker_Start(void);
+	void Picker_Stop(void);
+	void Picker_Pick(bool pickEntity, bool enityVisible, bool pickMaterial, bool materialVisible);
+	void Picker_Print(void);
 
 	/*
 	/// <pram name="to24">false: depth24 to depth; true: depth to depth24</param>
@@ -1547,20 +1553,57 @@ private:
 	class CActionFilterValue
 	{
 	public:
+		enum TriState {
+			TS_DontCare,
+			TS_True,
+			TS_False
+		};
+
 		CActionFilterValue()
-		: m_MatchAction(0)
+		: m_UseHandle(false)
+		, m_IsErrorMaterial(TS_DontCare)
+		, m_MatchAction(0)
 		{
 		}
 
+		CActionFilterValue(
+			bool useHandle,
+			SOURCESDK::CSGO::CBaseHandle const & handle,
+			char const * name,
+			char const * textureGroupName,
+			char const * shaderName,
+			TriState isErrorMaterial,
+			CAction * matchAction)
+			: m_UseHandle(useHandle)
+			, m_Handle(handle)
+			, m_Name(name)
+			, m_TextureGroupName(textureGroupName)
+			, m_ShaderName(shaderName)
+			, m_IsErrorMaterial(isErrorMaterial)
+			, m_MatchAction(matchAction)
+		{
+			if (matchAction) matchAction->AddRef();
+		}
+
 		CActionFilterValue(char const * matchString, CAction * matchAction)
-		: m_MatchString(matchString)
+		: m_UseHandle(false)
+		, m_Handle()
+		, m_Name(matchString)
+		, m_TextureGroupName("\\*")
+		, m_ShaderName("\\*")
+		, m_IsErrorMaterial(TS_DontCare)
 		, m_MatchAction(matchAction)
 		{
 			if(matchAction) matchAction->AddRef();
 		}
 
 		CActionFilterValue(const CActionFilterValue & x)
-		: m_MatchString(x.m_MatchString)
+		: m_UseHandle(x.m_UseHandle)
+		, m_Handle(x.m_Handle)
+		, m_Name(x.m_Name)
+		, m_TextureGroupName(x.m_TextureGroupName)
+		, m_ShaderName(x.m_ShaderName)
+		, m_IsErrorMaterial(x.m_IsErrorMaterial)
 		, m_MatchAction(x.m_MatchAction)
 		{
 			if(m_MatchAction) m_MatchAction->AddRef();
@@ -1573,15 +1616,38 @@ private:
 
 		CActionFilterValue & operator= (const CActionFilterValue & x)
 		{
-			this->m_MatchString = x.m_MatchString;
+			this->m_UseHandle = x.m_UseHandle;
+			this->m_Handle = x.m_Handle;
+			this->m_Name = x.m_Name;
+			this->m_TextureGroupName = x.m_TextureGroupName;
+			this->m_ShaderName = x.m_ShaderName;
+			this->m_IsErrorMaterial = x.m_IsErrorMaterial;
 			this->m_MatchAction = x.m_MatchAction;
+			
 			if(m_MatchAction) m_MatchAction->AddRef();
 			return *this;
 		}
 
-		char const * GetMatchString(void)
+		static CActionFilterValue * Console_Parse(CAfxStreams * streams, IWrpCommandArgs * args);
+
+		void Console_Print(int id)
 		{
-			return m_MatchString.c_str();
+			std::string handleStr("(don't care)");
+
+			if (m_UseHandle)
+			{
+				handleStr = std::to_string(m_Handle.ToInt());
+			}
+
+			Tier0_Msg("id=%i, entityHandle=%s, materialName=\"%s\", textureGroupName=\"%s\", shaderName=\"%s\", isErrorMaterial=%s, action=\"%s\"\n",
+				id,
+				handleStr.c_str(),
+				m_Name.c_str(),
+				m_TextureGroupName.c_str(),
+				m_ShaderName.c_str(),
+				m_IsErrorMaterial == TS_True ? "1" : (m_IsErrorMaterial == TS_False ? "0" : "(don't care)"),
+				m_MatchAction ? m_MatchAction->Key_get().m_Name.c_str() : "(null)"
+			);
 		}
 
 		CAction * GetMatchAction(void)
@@ -1589,10 +1655,15 @@ private:
 			return m_MatchAction;
 		}
 
-		bool CalcMatch(char const * targetString);
+		bool CalcMatch(SOURCESDK::IMaterial_csgo * material, SOURCESDK::CSGO::CBaseHandle const & entityHandle);
 
 	private:
-		std::string m_MatchString;
+		bool m_UseHandle;
+		SOURCESDK::CSGO::CBaseHandle m_Handle;
+		std::string m_Name;
+		std::string m_TextureGroupName;
+		std::string m_ShaderName;
+		TriState m_IsErrorMaterial;
 		CAction * m_MatchAction;
 	};
 
@@ -1608,11 +1679,15 @@ private:
 
 			if (cloneFrom)
 			{
-				m_DrawingSkyBoxView = cloneFrom->m_DrawingSkyBoxView;
+				m_IsRootCtx = false;
+				m_DrawingSkyBoxView = cloneFrom->m_DrawingSkyBoxView;				
+				m_CurrentEntityHandle.AfxAssign(cloneFrom->GetCurrentEntityHandle()); // Either cached value or last chance to get the current value.
 			}
 			else
 			{
+				m_IsRootCtx = true;
 				m_DrawingSkyBoxView = false;
+				m_CurrentEntityHandle.AfxAssign(GetCurrentEntityHandle()); // Last chance to get the current value.
 			}
 		}
 
@@ -1700,6 +1775,8 @@ private:
 		IAfxMatRenderContext * m_Ctx;
 		bool m_DrawingSkyBoxView;
 		CAfxBaseFxStream::CAction * m_CurrentAction;
+		SOURCESDK::CSGO::CBaseHandle m_CurrentEntityHandle;
+		bool m_IsRootCtx;
 
 		void BindAction(CAction * action)
 		{
@@ -1714,6 +1791,8 @@ private:
 			}
 			m_CurrentAction = action;
 		}
+
+		SOURCESDK::CSGO::CBaseHandle const & GetCurrentEntityHandle();
 	};
 
 	bool m_DebugPrint;
@@ -1721,12 +1800,32 @@ private:
 	std::mutex m_MapMutex;
 	std::list<CActionFilterValue> m_ActionFilter;
 
+	std::map<CAfxMaterialKey, int> m_PickerMaterials;
+	int m_PickerMaterialsLo;
+	int m_PickerMaterialsHi;
+	bool m_PickingMaterials;
+	bool m_PickerMaterialsAlerted;
+	std::map<int, int> m_PickerEntityHandles;
+	int m_PickerEntityHandlesLo;
+	int m_PickerEntityHandlesHi;
+	bool m_PickingEntities;
+	bool m_PickerEntitiesAlerted;
+	enum PickerState
+	{
+		PS_Inactive,
+		PS_Collect,
+		PS_Picking
+	} m_PickerState = PS_Inactive;
+	std::mutex m_PickerMutex;
+
 	CAction * CAfxBaseFxStream::GetAction(SOURCESDK::IMaterial_csgo * material);
 	CAction * CAfxBaseFxStream::GetAction(SOURCESDK::IMaterial_csgo * material, CAction * action);
 
 	/*
 	void ConvertDepthAction(CAction * & action, bool to24);
 	*/
+
+	bool Picker_GetHidden(SOURCESDK::CSGO::CBaseHandle const & entityHandle, SOURCESDK::IMaterial_csgo * material);
 };
 
 class CAfxDepthStream
@@ -2152,6 +2251,9 @@ public:
 	/// <param name="index">stream name to preview or empty string if to preview nothing.</param>
 	void Console_PreviewStream(const char * streamName);
 
+	bool Console_ToAfxAction(char const * value, CAfxBaseFxStream::CAction * & action);
+	char const * Console_FromAfxAction(CAfxBaseFxStream::CAction * action);
+
 	void DebugDump(IAfxMatRenderContextOrg * ctxp);
 
 	virtual SOURCESDK::IMaterialSystem_csgo * GetMaterialSystem(void);
@@ -2334,9 +2436,6 @@ private:
 	bool Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandArgs * args);
 
 	bool Console_CheckStreamName(char const * value);
-
-	bool Console_ToAfxAction(char const * value, CAfxBaseFxStream::CAction * & action);
-	char const * Console_FromAfxAction(CAfxBaseFxStream::CAction * action);
 
 	bool Console_ToStreamCombineType(char const * value, CAfxTwinStream::StreamCombineType & streamCombineType);
 	char const * Console_FromStreamCombineType(CAfxTwinStream::StreamCombineType streamCombineType);

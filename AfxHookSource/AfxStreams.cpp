@@ -1160,24 +1160,25 @@ void CAfxBaseFxStream::AfxStreamsShutdown(void)
 
 void CAfxBaseFxStream::Console_ActionFilter_Add(const char * expression, CAction * action)
 {
-	InvalidateMap();
 	m_ActionFilter.push_back(CActionFilterValue(expression,action));
+}
+
+void CAfxBaseFxStream::Console_ActionFilter_AddEx(CAfxStreams * streams, IWrpCommandArgs * args)
+{
+	CActionFilterValue * value = CActionFilterValue::Console_Parse(streams, args);
+	if (value)
+	{
+		m_ActionFilter.push_back(*value);
+		delete value;
+	}
 }
 
 void CAfxBaseFxStream::Console_ActionFilter_Print(void)
 {
-	Tier0_Msg("id: \"<materialPath>\" -> <actionName>\n");
-	
 	int id = 0;
 	for(std::list<CActionFilterValue>::iterator it = m_ActionFilter.begin(); it != m_ActionFilter.end(); ++it)
 	{
-		CAction * action = it->GetMatchAction();
-
-		Tier0_Msg("%i: \"%s\" -> %s\n",
-			id,
-			it->GetMatchString(),
-			action ? action->Key_get().m_Name.c_str() : "(null)"
-		);
+		it->Console_Print(id);
 
 		++id;
 	}
@@ -1185,8 +1186,6 @@ void CAfxBaseFxStream::Console_ActionFilter_Print(void)
 
 void CAfxBaseFxStream::Console_ActionFilter_Remove(int id)
 {
-	InvalidateMap();
-
 	int curId = 0;
 	for(std::list<CActionFilterValue>::iterator it = m_ActionFilter.begin(); it != m_ActionFilter.end(); ++it)
 	{
@@ -1199,13 +1198,11 @@ void CAfxBaseFxStream::Console_ActionFilter_Remove(int id)
 		++curId;
 	}
 
-	Tier0_Warning("Error: %i is not a valid actionFilter id!\n");
+	Tier0_Warning("Error: %i is not a valid actionFilter id!\n", id);
 }
 
 void CAfxBaseFxStream::Console_ActionFilter_Move(int id, int moveBeforeId)
 {
-	InvalidateMap();
-
 	CActionFilterValue val;
 
 	if(moveBeforeId < 0 || moveBeforeId > (int)m_ActionFilter.size())
@@ -1254,6 +1251,7 @@ void CAfxBaseFxStream::MainThreadInitialize(void)
 
 void CAfxBaseFxStream::LevelShutdown(void)
 {
+	Picker_Stop();
 	InvalidateMap();
 	m_Shared.LevelShutdown();
 }
@@ -1282,52 +1280,75 @@ void CAfxBaseFxStream::OnRenderEnd()
 	CAfxRenderViewStream::OnRenderEnd();
 }
 
-CAfxBaseFxStream::CAction * CAfxBaseFxStream::RetrieveAction(SOURCESDK::IMaterial_csgo * material)
+CAfxBaseFxStream::CAction * CAfxBaseFxStream::RetrieveAction(SOURCESDK::IMaterial_csgo * material, SOURCESDK::CSGO::CBaseHandle const & entityHandle)
 {
 	CAction * action = 0;
 
-	CAfxMaterialKey key(material);
-
-	m_MapMutex.lock();
-
-	std::map<CAfxMaterialKey, CAction *>::iterator it = m_Map.find(key);
-
-	if(it != m_Map.end())
-		action = it->second;
+	if (Picker_GetHidden(entityHandle, material))
+	{
+		action = GetAction(material, m_Shared.NoDrawAction_get());
+	}
 	else
 	{
-		// determine current action and cache it.
-
-		action = GetAction(material);
-		
-		action->AddRef();
-		m_Map[key] = action;
-
-		if(m_DebugPrint) Tier0_Msg("%s\n", action ? action->Key_get().m_Name.c_str() : "(null)");
+		for (std::list<CActionFilterValue>::iterator it = m_ActionFilter.begin(); it != m_ActionFilter.end(); ++it)
+		{
+			if (it->CalcMatch(material, entityHandle))
+			{
+				action = GetAction(material, it->GetMatchAction());
+				break;
+			}
+		}
 	}
 
-	m_MapMutex.unlock();
+	if (!action)
+	{
+		CAfxMaterialKey key(material);
 
-	return action;;
+		m_MapMutex.lock();
+
+		std::map<CAfxMaterialKey, CAction *>::iterator it = m_Map.find(key);
+
+		if (it != m_Map.end())
+			action = it->second;
+		else
+		{
+			// determine current action and cache it.
+
+			action = GetAction(material);
+
+			action->AddRef();
+			m_Map[key] = action;
+
+			if (m_DebugPrint)
+			{
+				const char * name = material->GetName();
+				const char * groupName = material->GetTextureGroupName();
+				const char * shaderName = material->GetShaderName();
+				bool isErrorMaterial = material->IsErrorMaterial();
+
+				Tier0_Msg("Stream: RetrieveAction: Standard action material cache miss: \"handle=%i\" (not used) \"name=%s\" \"textureGroup=%s\" \"shader=%s\" \"isErrrorMaterial=%u\" -> %s\n"
+					, entityHandle.ToInt()
+					, name
+					, groupName
+					, shaderName
+					, isErrorMaterial ? 1 : 0
+					, action ? action->Key_get().m_Name.c_str() : "(null)");
+			}
+
+		}
+
+		m_MapMutex.unlock();
+	}
+
+	return action;
 }
 
 CAfxBaseFxStream::CAction * CAfxBaseFxStream::GetAction(SOURCESDK::IMaterial_csgo * material)
 {
 	const char * groupName =  material->GetTextureGroupName();
 	const char * name = material->GetName();
-	const char * shaderName = material->GetShaderName();
+	//const char * shaderName = material->GetShaderName();
 	bool isErrorMaterial = material->IsErrorMaterial();
-
-	if(m_DebugPrint)
-		Tier0_Msg("Stream: GetAction: %s|%s|%s%s -> ", groupName, name, shaderName, isErrorMaterial ? "|isErrorMaterial" : "");
-
-	for(std::list<CActionFilterValue>::iterator it = m_ActionFilter.begin(); it != m_ActionFilter.end(); ++it)
-	{
-		if(it->CalcMatch(name))
-		{
-			return GetAction(material, it->GetMatchAction());
-		}
-	}
 
 	if(isErrorMaterial)
 		return GetAction(material, m_ErrorMaterialAction);
@@ -1712,6 +1733,213 @@ void CAfxBaseFxStream::InvalidateMap(void)
 	m_MapMutex.unlock();
 }
 
+void CAfxBaseFxStream::Picker_Start(void)
+{
+	Picker_Stop();
+
+	{
+		std::unique_lock<std::mutex> lock(m_PickerMutex);
+
+		m_PickerState = PS_Collect;
+
+		Tier0_Msg("Picker started.\n");
+	}
+}
+
+void CAfxBaseFxStream::Picker_Stop(void)
+{
+	std::unique_lock<std::mutex> lock(m_PickerMutex);
+
+	if (PS_Inactive != m_PickerState)
+	{
+		m_PickerMaterials.clear();
+		m_PickerEntityHandles.clear();
+
+		m_PickerState = PS_Inactive;
+
+		Tier0_Msg("Picker stopped.\n");
+	}
+}
+
+void CAfxBaseFxStream::Picker_Print(void)
+{
+	std::unique_lock<std::mutex> lock(m_PickerMutex);
+
+	switch (m_PickerState)
+	{
+	case PS_Collect:
+	case PS_Picking:
+		Tier0_Msg("---- Entity handles: ----\n");
+		for (std::map<int, int>::iterator it = m_PickerEntityHandles.begin(); it != m_PickerEntityHandles.end(); ++it)
+		{
+			int idx = it->second;
+			if (m_PickerEntityHandlesLo <= idx && idx <= m_PickerEntityHandlesHi)
+			{
+				Tier0_Msg("%i\n", it->first);
+			}
+		}
+		Tier0_Msg("---- Materials: ----\n");
+		for (std::map<CAfxMaterialKey, int>::iterator it = m_PickerMaterials.begin(); it != m_PickerMaterials.end(); ++it)
+		{
+			int idx = it->second;
+			if (m_PickerMaterialsLo <= idx && idx <= m_PickerMaterialsHi)
+			{
+				CAfxMaterialKey const & mat = it->first;
+
+				SOURCESDK::IMaterial_csgo * material = mat.GetMaterial();
+
+				Tier0_Msg("name=\"%s\" \"textureGroup=%s\" \"shader=%s\" \"isErrorMaterial=%i\"\n", material->GetName(), material->GetTextureGroupName(), material->GetShaderName(), material->IsErrorMaterial() ? 1 : 0);
+			}
+		}
+		Tier0_Msg("---- END ----\n");
+		break;
+	default:
+		Tier0_Warning("Picker not active, nothing to print.");
+	}
+}
+
+void CAfxBaseFxStream::Picker_Pick(bool pickEntity, bool enityVisible, bool pickMaterial, bool materialVisible)
+{
+	std::unique_lock<std::mutex> lock(m_PickerMutex);
+
+	switch (m_PickerState)
+	{
+	case PS_Collect:
+		{
+			m_PickerMaterialsLo = 0;
+			m_PickerMaterialsHi = m_PickerMaterials.size() - 1;
+			m_PickerMaterialsAlerted = false;
+			m_PickingMaterials = false;
+
+			m_PickerEntityHandlesLo = 0;
+			m_PickerEntityHandlesHi = m_PickerEntityHandles.size() - 1;
+			m_PickerEntitiesAlerted = false;
+			m_PickingEntities = false;
+
+			m_PickerState = PS_Picking;
+		}
+		// fall through on Purpose!
+	case PS_Picking:
+		{
+			if (pickEntity)
+			{
+				if (m_PickingEntities)
+				{
+					if (m_PickerEntityHandlesLo < m_PickerEntityHandlesHi)
+					{
+						int mid = (m_PickerEntityHandlesLo + m_PickerEntityHandlesHi) >> 1;
+
+						if (!enityVisible)
+						{
+							m_PickerEntityHandlesLo = mid + 1;
+						}
+						else
+						{
+							m_PickerEntityHandlesHi = mid;
+						}
+					}
+				}
+				else m_PickingEntities = true;
+
+				if (m_PickerEntityHandlesLo == m_PickerEntityHandlesHi && !m_PickerEntitiesAlerted)
+				{
+					Tier0_Warning("==== Picker: Entity is determined! ====\n");
+					m_PickerEntitiesAlerted = true;
+					if(g_VEngineClient && !g_VEngineClient->Con_IsVisible())
+						g_VEngineClient->ClientCmd_Unrestricted("toggleconsole");
+				}
+			}
+	
+			if (pickMaterial)
+			{
+				if (m_PickingMaterials)
+				{
+					if (m_PickerMaterialsLo < m_PickerMaterialsHi)
+					{
+						int mid = (m_PickerMaterialsLo + m_PickerMaterialsHi) >> 1;
+
+						if (!materialVisible)
+						{
+							m_PickerMaterialsLo = mid + 1;
+						}
+						else
+						{
+							m_PickerEntityHandlesHi = mid;
+						}
+					}
+				}
+				else m_PickingMaterials = true;
+				
+				if (m_PickerMaterialsLo == m_PickerMaterialsHi && !m_PickerMaterialsAlerted)
+				{
+					Tier0_Warning("==== Picker: Material is determined! ====\n");
+					m_PickerMaterialsAlerted = true;
+					if (g_VEngineClient && !g_VEngineClient->Con_IsVisible())
+						g_VEngineClient->ClientCmd_Unrestricted("toggleconsole");
+				}
+			}
+	}
+		break;
+	default:
+		Tier0_Warning("Error: Picker needs to be started, before you can start picking.\n");
+	}
+}
+
+bool CAfxBaseFxStream::Picker_GetHidden(SOURCESDK::CSGO::CBaseHandle const & entityHandle, SOURCESDK::IMaterial_csgo * material)
+{
+	std::unique_lock<std::mutex> lock(m_PickerMutex);
+
+	switch (m_PickerState)
+	{
+	case PS_Collect:		
+		{
+			int handle = entityHandle.ToInt();
+
+			if (m_PickerEntityHandles.end() == m_PickerEntityHandles.find(handle))
+			{
+				m_PickerEntityHandles[handle] = m_PickerEntityHandles.size();
+			}
+
+			CAfxMaterialKey mat(material);
+
+			if (m_PickerMaterials.end() == m_PickerMaterials.find(material))
+			{
+				m_PickerMaterials[material] = m_PickerMaterials.size();
+			}
+		}
+		break;
+	case PS_Picking:
+		{
+			if(m_PickingEntities)
+			{
+				int handle = entityHandle.ToInt();
+
+				std::map<int, int>::iterator it = m_PickerEntityHandles.find(handle);
+
+				if (m_PickerEntityHandles.end() != it)
+				{
+					return it->second > ((m_PickerEntityHandlesLo + m_PickerEntityHandlesHi) >> 1);
+				}
+			}
+	
+			if (m_PickingMaterials)
+			{
+				CAfxMaterialKey mat(material);
+
+				std::map<CAfxMaterialKey, int>::iterator it = m_PickerMaterials.find(mat);
+
+				if (m_PickerMaterials.end() != it)
+				{
+					return it->second > ((m_PickerMaterialsLo + m_PickerMaterialsHi) >> 1);
+				}
+			}
+		}
+		break;
+	};
+
+	return false;
+}
+
 /*
 void CAfxBaseFxStream::ConvertStreamDepth(bool to24, bool depth24ZIP)
 {
@@ -1851,7 +2079,10 @@ void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::DrawingSkyBoxViewEnd(void)
 
 SOURCESDK::IMaterial_csgo * CAfxBaseFxStream::CAfxBaseFxStreamContextHook::MaterialHook(SOURCESDK::IMaterial_csgo * material)
 {
-	CAction * action = m_Stream->RetrieveAction(material);
+	CAction * action = m_Stream->RetrieveAction(
+		material,
+		GetCurrentEntityHandle()
+	);
 
 	BindAction(action);
 
@@ -1903,6 +2134,28 @@ void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::SetPixelShader(CAfx_csgo_Sha
 {
 	if (m_CurrentAction)
 		m_CurrentAction->SetPixelShader(this, state);
+}
+
+SOURCESDK::CSGO::CBaseHandle const & CAfxBaseFxStream::CAfxBaseFxStreamContextHook::GetCurrentEntityHandle()
+{
+	if (m_IsRootCtx)
+	{
+		// If we are on main thread, we can update with the current value, otherwise we have to use the last value.
+
+		SOURCESDK::CSGO::CBaseHandle handle;
+
+		if (SOURCESDK::IViewRender_csgo * view = GetView_csgo())
+		{
+			if (SOURCESDK::C_BaseEntity_csgo * ce = view->GetCurrentlyDrawingEntity())
+			{
+				handle.AfxAssign(ce->GetRefEHandle());
+			}
+		}
+
+		m_CurrentEntityHandle.AfxAssign(handle);
+	}
+
+	return m_CurrentEntityHandle;
 }
 
 // CAfxBaseFxStream::CAfxBaseFxStreamContextHook::CRenderBeginFunctor //////////
@@ -2270,9 +2523,119 @@ bool CAfxBaseFxStream::CShared::Console_CheckActionKey(CActionKey & key)
 
 // CAfxBaseFxStream::CActionFilterValue ////////////////////////////////////////
 
-bool CAfxBaseFxStream::CActionFilterValue::CalcMatch(char const * targetString)
+CAfxBaseFxStream::CActionFilterValue * CAfxBaseFxStream::CActionFilterValue::Console_Parse(CAfxStreams * streams, IWrpCommandArgs * args)
 {
-	return StringWildCard1Matched(m_MatchString.c_str(), targetString);
+	if (args->ArgC() <= 1)
+	{
+		Tier0_Msg(
+			"Usage:\n"
+			"%s <option> <option> ...\n"
+			"\n"
+			"<option> can be:\n"
+			"\"handle=<handleNumber>\" (of entity, see mirv_listentities)\n"
+			"\"name=<wildCardString>\" (of material)\n"
+			"\"textureGroup=<wildCardString>\" (of material)\n"
+			"\"shader=<wildCardString>\" (of material)\n"
+			"\"isErrorMaterial=0|1\" (of material)\n"
+			"\"action=<actionName>\"\n"
+			"\n"
+			"- The action option must be given!\n"
+			"- <wildCardString> is a string without quotes, where \\* is the wildcard and \\\\ is \\-"
+			"- Any option except action that is not given will be treated as if it doesn't matter for a match."
+			, args->ArgV(0)
+		);
+
+		return 0;
+	}
+
+	bool useHandle = false;
+	SOURCESDK::CSGO::CBaseHandle * handle = 0;
+	std::string name("\\*");
+	std::string textureGroupName("\\*");
+	std::string shaderName("\\*");
+	TriState isErrorMaterial = TS_DontCare;
+	CAction * matchAction = 0;
+
+	for (int i = 1; i < args->ArgC(); ++i)
+	{
+		std::string sArg(args->ArgV(i));
+
+		size_t posDelimiter = sArg.find_first_of('=');
+
+		std::string sKey = sArg.substr(0, posDelimiter);
+		std::string sValue = sArg.substr(posDelimiter + 1);
+
+		char const * key = sKey.c_str();
+
+		if (!_stricmp("handle", key))
+		{
+			useHandle = true;
+			handle = new SOURCESDK::CSGO::CBaseHandle((unsigned long)(atoi(sValue.c_str())));
+		}
+		else if (!_stricmp("name", key))
+		{
+			name = sValue;
+		}
+		else if (!_stricmp("textureGroup", key))
+		{
+			textureGroupName = sValue;
+		}
+		else if (!_stricmp("shader", key))
+		{
+			shaderName = sValue;
+		}
+		else if (!_stricmp("isErrorMaterial", key))
+		{
+			bool value = 0 != atoi(sValue.c_str());
+
+			isErrorMaterial = value ? TS_True : TS_False;
+		}
+		else if (!_stricmp("action", key))
+		{
+			CAfxBaseFxStream::CAction * action;
+			if (streams->Console_ToAfxAction(sValue.c_str(), action))
+			{
+				matchAction = action;
+			}
+			else
+				return 0;
+		}
+		else
+		{
+			Tier0_Warning("Error: %s is not a valid option!\n", sKey.c_str());
+			return 0;
+		}
+	}
+
+	if (!matchAction)
+	{
+		Tier0_Warning("Error: Action must be given!\n");
+		return 0;
+	}
+
+	if (!handle)
+	{
+		handle = new SOURCESDK::CSGO::CBaseHandle();
+	}
+
+	CActionFilterValue * result = new CActionFilterValue(useHandle, *handle, name.c_str(), textureGroupName.c_str(), shaderName.c_str(), isErrorMaterial, matchAction);
+
+	delete handle;
+
+	return result;
+}
+
+bool CAfxBaseFxStream::CActionFilterValue::CalcMatch(SOURCESDK::IMaterial_csgo * material, SOURCESDK::CSGO::CBaseHandle const & entityHandle)
+{
+	if (!material)
+		return false;
+
+	return
+		(m_UseHandle ? m_Handle == entityHandle : true)
+		&& StringWildCard1Matched(m_Name.c_str(), material->GetName())
+		&& StringWildCard1Matched(m_TextureGroupName.c_str(), material->GetTextureGroupName())
+		&& StringWildCard1Matched(m_ShaderName.c_str(), material->GetShaderName())
+		&& (m_IsErrorMaterial == TS_True ? (material->IsErrorMaterial() == true) : (m_IsErrorMaterial == TS_False ? (material->IsErrorMaterial() == false) : true));
 }
 
 // CAfxBaseFxStream::CActionDebugDepth /////////////////////////////////////////
@@ -4651,6 +5014,62 @@ bool CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 		{
 			char const * cmd0 = args->ArgV(argcOffset +0);
 
+			if (!_stricmp(cmd0, "picker"))
+			{
+				if (2 <= argc)
+				{
+					char const * cmd1 = args->ArgV(argcOffset + 1);
+
+					if (!_stricmp(cmd1, "start"))
+					{
+						curBaseFx->Picker_Start();
+						return true;
+					}
+					else
+					if (!_stricmp(cmd1, "ent") && 3 <= argc)
+					{
+						bool value = 0 != atoi(args->ArgV(argcOffset + 2));
+						curBaseFx->Picker_Pick(true, value, false, true);
+						return true;
+					}
+					else
+					if (!_stricmp(cmd1, "mat") && 3 <= argc)
+					{
+						bool value = 0 != atoi(args->ArgV(argcOffset + 2));
+						curBaseFx->Picker_Pick(false, true, true, value);
+						return true;
+					}
+					else
+					if (!_stricmp(cmd1, "print"))
+					{
+						curBaseFx->Picker_Print();
+						return true;
+					}
+					else
+					if (!_stricmp(cmd1, "stop"))
+					{
+						curBaseFx->Picker_Stop();
+						return true;
+					}
+				}
+
+				Tier0_Msg(
+					"%s picker start - Start/prepare picking.\n"
+					"%s picker ent 0|1 - Tell picker if entity is visible (1) or not (0). (First pick should be 1.)\n"
+					"%s picker mat 0|1 - Tell picker if material is visible (1) or not (0). (First pick should be 1.)\n"
+					"%s picker print - Prints currently picked result set (entities / materials).\n"
+					"%s picker stop - Stop picking.\n"
+					"ATTENTION: Stream needs to be in preview of course, otherwise you won't see anything ;)\n"
+					, cmdPrefix
+					, cmdPrefix
+					, cmdPrefix
+					, cmdPrefix
+					, cmdPrefix
+				);
+
+				return true;
+			}
+			else
 			if(!_stricmp(cmd0, "actionFilter"))
 			{
 				if(2 <= argc)
@@ -4680,6 +5099,12 @@ bool CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 							"\t<actionName> - name of action (see mirv_actions).\n"
 							, cmdPrefix
 						);
+						return true;
+					}
+					else if (!_stricmp("addEx", cmd1))
+					{
+						CSubWrpCommandArgs subArgs(args, 3);
+						curBaseFx->Console_ActionFilter_AddEx(this, &subArgs);
 						return true;
 					}
 					else
@@ -4730,9 +5155,11 @@ bool CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 
 				Tier0_Msg(
 					"%s actionFilter add [...] - Add a new filter action.\n"
+					"%s actionFilter addEx [...] - Add a new filter action.\n"
 					"%s actionFilter print - Print current filter actions.\n"
 					"%s actionFilter remove [...] - Remove a filter action.\n"
 					"%s actionFilter move [...] - Move filter action (change priority).\n"
+					, cmdPrefix
 					, cmdPrefix
 					, cmdPrefix
 					, cmdPrefix
@@ -5363,6 +5790,7 @@ bool CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 	if(curBaseFx)
 	{
 		Tier0_Msg("-- baseFx properties --\n");
+		Tier0_Msg("%s picker [...] - Helps picking a visible material / entity.\n", cmdPrefix);
 		Tier0_Msg("%s actionFilter [...] - Set actions by material name (not safe maybe).\n", cmdPrefix);
 		Tier0_Msg("%s clientEffectTexturesAction [...]\n", cmdPrefix);
 		Tier0_Msg("%s worldTexturesAction [...]\n", cmdPrefix);

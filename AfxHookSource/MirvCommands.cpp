@@ -2713,7 +2713,7 @@ CON_COMMAND(mirv_listentities, "Print info about currently active entites. (CS:G
 	}
 
 	Tier0_Msg(
-		"index (distance): className::enitityName playerName\n"
+		"index (distance): className::enitityName playerName :entityHandle\n"
 	);
 
 	Vector3 cameraOrigin(
@@ -2743,12 +2743,13 @@ CON_COMMAND(mirv_listentities, "Print info about currently active entites. (CS:G
 			char const * playerName = "[n/a]";
 
 			Tier0_Msg(
-				"%i (%f): %s::%s %s\n"
+				"%i (%f): %s::%s %s :%i\n"
 				, i
 				, dist
 				, be->GetClassname()
 				, be->GetEntityName()
 				, playerName
+				, be->GetRefEHandle().ToInt()
 				);
 		}
 	}

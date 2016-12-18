@@ -231,11 +231,6 @@ Peter 'psh' Paunchev
   Technical support, IRC.
   Since January 2016
   http://steamcommunity.com/id/psh4president
-  
-'Dec'
-  Forum, IRC.
-  Since March 2011.
-  http://www.youtube.com/AMDECKARN
 
 Past members:
 
@@ -251,6 +246,11 @@ Fabian 'neomic'
 'juGGaKNot'
   Forum, community relations, testing, tutorials.
   March 2008 - January 2010.
+  
+'Dec'
+  Forum, IRC.
+  March 2011 - August 2016.
+  http://www.youtube.com/AMDECKARN
 
 Other contributors:
  

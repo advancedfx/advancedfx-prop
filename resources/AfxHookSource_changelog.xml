@@ -6,6 +6,27 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>1.13.x</version>
+<time>2016-12-18Txx:xxZ</time>
+<changes>
+<change type="fixed">
+Fixed mistakes in d3d9 hooking code, causing invalid / unwanted render states (could cause i.e. missing decals textures etc.).
+</change>
+<change type="added">
+Added actionFilter addEx property on baseFx streams for actionFilter (takes i.e. entity handle as option).
+</change>
+<change type="added">
+Added picker property on baseFx streams, allows finding a visible entity handle / material. (TODO: NOT FINISHED!)
+</change>
+<change type="fixed">
+Various minor fixes.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>1.12.1</version>
 <time>2016-12-08T15:17Z</time>
 <changes>

@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-10-02 dominik.matrixstorm.com
+// 2016-12-16 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-09-30 dominik.matrixstorm.com
@@ -4041,6 +4041,8 @@ public:
 
 // IViewRender_csgo ////////////////////////////////////////////////////////////
 
+class C_BaseEntity_csgo;
+
 class IViewRender_csgo abstract
 {
 public:
@@ -4082,8 +4084,10 @@ public:
 	virtual void _UNKOWN_025(void) = 0;
 	virtual void _UNKOWN_026(void) = 0;
 	virtual void _UNKOWN_027(void) = 0;
-	virtual void _UNKOWN_028(void) = 0;
-	virtual void _UNKOWN_029(void) = 0;
+
+	virtual C_BaseEntity_csgo *GetCurrentlyDrawingEntity() = 0; //:028
+
+	virtual void		SetCurrentlyDrawingEntity(C_BaseEntity_csgo *pEnt) = 0; //:029
 
 	// 030:
 	virtual bool UpdateShadowDepthTexture( ITexture_csgo *pRenderTarget, ITexture_csgo *pDepthTexture, const CViewSetup_csgo &shadowView, unsigned char _unkArg4 = 1, unsigned char _unkArg5 = 0 ) = 0;
@@ -5131,6 +5135,10 @@ public:
 	// Note: this is implemented in game code (ehandle.h)
 	IHandleEntity* Get() const;
 
+	void AfxAssign(const CBaseHandle &other)
+	{
+		m_Index = other.m_Index;
+	}
 
 protected:
 	// The low NUM_SERIAL_BITS hold the index. If this value is less than MAX_EDICTS, then the entity is networkable.
@@ -5214,7 +5222,6 @@ inline bool CBaseHandle::operator ==( const CBaseHandle &other ) const
 {
 	return m_Index == other.m_Index;
 }
-
 
 class CUtlBuffer;
 
