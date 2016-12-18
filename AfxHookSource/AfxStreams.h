@@ -34,6 +34,7 @@
 #include <shared/bvhexport.h>
 
 #include <string>
+#include <set>
 #include <list>
 #include <queue>
 #include <map>
@@ -988,9 +989,8 @@ public:
 
 	void InvalidateMap(void);
 
-	void Picker_Start(void);
+	void Picker_Pick(bool pickEntityNotMaterial, bool wasVisible);
 	void Picker_Stop(void);
-	void Picker_Pick(bool pickEntity, bool enityVisible, bool pickMaterial, bool materialVisible);
 	void Picker_Print(void);
 
 	/*
@@ -1800,22 +1800,38 @@ private:
 	std::mutex m_MapMutex;
 	std::list<CActionFilterValue> m_ActionFilter;
 
-	std::map<CAfxMaterialKey, int> m_PickerMaterials;
-	int m_PickerMaterialsLo;
-	int m_PickerMaterialsHi;
+	struct CPickerMatValue
+	{
+		int Index;
+		std::set<int> Entities;
+
+		CPickerMatValue(int index, int entity)
+		{
+			Index = index;
+			Entities.insert(entity);
+		}
+	};
+	std::map<CAfxMaterialKey, CPickerMatValue> m_PickerMaterials;
 	bool m_PickingMaterials;
 	bool m_PickerMaterialsAlerted;
-	std::map<int, int> m_PickerEntityHandles;
-	int m_PickerEntityHandlesLo;
-	int m_PickerEntityHandlesHi;
+
+	struct CPickerEntValue
+	{
+		int Index;
+		std::set<CAfxMaterialKey> Materials;
+
+		CPickerEntValue(int index, CAfxMaterialKey & material)
+		{
+			Index = index;
+			Materials.insert(material);
+		}
+	};
+	std::map<int, CPickerEntValue> m_PickerEntities;
 	bool m_PickingEntities;
 	bool m_PickerEntitiesAlerted;
-	enum PickerState
-	{
-		PS_Inactive,
-		PS_Collect,
-		PS_Picking
-	} m_PickerState = PS_Inactive;
+
+	bool m_PickerActive = false;
+	bool m_PickerCollecting;
 	std::mutex m_PickerMutex;
 
 	CAction * CAfxBaseFxStream::GetAction(SOURCESDK::IMaterial_csgo * material);

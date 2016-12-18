@@ -1733,29 +1733,16 @@ void CAfxBaseFxStream::InvalidateMap(void)
 	m_MapMutex.unlock();
 }
 
-void CAfxBaseFxStream::Picker_Start(void)
-{
-	Picker_Stop();
-
-	{
-		std::unique_lock<std::mutex> lock(m_PickerMutex);
-
-		m_PickerState = PS_Collect;
-
-		Tier0_Msg("Picker started.\n");
-	}
-}
-
 void CAfxBaseFxStream::Picker_Stop(void)
 {
 	std::unique_lock<std::mutex> lock(m_PickerMutex);
 
-	if (PS_Inactive != m_PickerState)
+	if(m_PickerActive)
 	{
 		m_PickerMaterials.clear();
-		m_PickerEntityHandles.clear();
+		m_PickerEntities.clear();
 
-		m_PickerState = PS_Inactive;
+		m_PickerActive = false;
 
 		Tier0_Msg("Picker stopped.\n");
 	}
@@ -1765,179 +1752,174 @@ void CAfxBaseFxStream::Picker_Print(void)
 {
 	std::unique_lock<std::mutex> lock(m_PickerMutex);
 
-	switch (m_PickerState)
+	Tier0_Msg("---- Materials: ----\n");
+	for (std::map<CAfxMaterialKey, CPickerMatValue>::iterator it = m_PickerMaterials.begin(); it != m_PickerMaterials.end(); ++it)
 	{
-	case PS_Collect:
-	case PS_Picking:
-		Tier0_Msg("---- Entity handles: ----\n");
-		for (std::map<int, int>::iterator it = m_PickerEntityHandles.begin(); it != m_PickerEntityHandles.end(); ++it)
-		{
-			int idx = it->second;
-			if (m_PickerEntityHandlesLo <= idx && idx <= m_PickerEntityHandlesHi)
-			{
-				Tier0_Msg("%i\n", it->first);
-			}
-		}
-		Tier0_Msg("---- Materials: ----\n");
-		for (std::map<CAfxMaterialKey, int>::iterator it = m_PickerMaterials.begin(); it != m_PickerMaterials.end(); ++it)
-		{
-			int idx = it->second;
-			if (m_PickerMaterialsLo <= idx && idx <= m_PickerMaterialsHi)
-			{
-				CAfxMaterialKey const & mat = it->first;
+		int idx = it->second.Index;
 
-				SOURCESDK::IMaterial_csgo * material = mat.GetMaterial();
+		CAfxMaterialKey const & mat = it->first;
 
-				Tier0_Msg("name=\"%s\" \"textureGroup=%s\" \"shader=%s\" \"isErrorMaterial=%i\"\n", material->GetName(), material->GetTextureGroupName(), material->GetShaderName(), material->IsErrorMaterial() ? 1 : 0);
-			}
-		}
-		Tier0_Msg("---- END ----\n");
-		break;
-	default:
-		Tier0_Warning("Picker not active, nothing to print.");
+		SOURCESDK::IMaterial_csgo * material = mat.GetMaterial();
+
+		Tier0_Msg("\"name=%s\" \"textureGroup=%s\" \"shader=%s\" \"isErrorMaterial=%i\" (%s)\n", material->GetName(), material->GetTextureGroupName(), material->GetShaderName(), material->IsErrorMaterial() ? 1 : 0, m_PickingMaterials && (1 == (idx & 0x1)) ? "hidden" : "visible");
 	}
+	Tier0_Msg("---- Entities: ----\n");
+	for (std::map<int, CPickerEntValue>::iterator it = m_PickerEntities.begin(); it != m_PickerEntities.end(); ++it)
+	{
+		int idx = it->second.Index;
+		Tier0_Msg("\"handle=%i\" (%s)\n", it->first, m_PickingEntities && (1 == (idx & 0x1)) ? "hidden" : "visible");
+	}
+	Tier0_Msg("---- END ----\n");
 }
 
-void CAfxBaseFxStream::Picker_Pick(bool pickEntity, bool enityVisible, bool pickMaterial, bool materialVisible)
+void CAfxBaseFxStream::Picker_Pick(bool pickEntityNotMaterial, bool wasVisible)
 {
 	std::unique_lock<std::mutex> lock(m_PickerMutex);
 
-	switch (m_PickerState)
+	if (!m_PickerActive)
 	{
-	case PS_Collect:
+		m_PickerActive = true;
+		m_PickerCollecting = true;
+	}
+	else
+	{
+		if (m_PickerCollecting)
+			m_PickerCollecting = false;
+
+		if (m_PickingEntities)
 		{
-			m_PickerMaterialsLo = 0;
-			m_PickerMaterialsHi = m_PickerMaterials.size() - 1;
-			m_PickerMaterialsAlerted = false;
-			m_PickingMaterials = false;
+			std::set<CAfxMaterialKey> usedMats;
+			int index = 0;
 
-			m_PickerEntityHandlesLo = 0;
-			m_PickerEntityHandlesHi = m_PickerEntityHandles.size() - 1;
-			m_PickerEntitiesAlerted = false;
-			m_PickingEntities = false;
+			for (std::map<int, CPickerEntValue>::iterator it = m_PickerEntities.begin(); it != m_PickerEntities.end(); )
+			{
+				int oldIndex = it->second.Index;
 
-			m_PickerState = PS_Picking;
+				if ((1 == (oldIndex & 0x1)) == wasVisible)
+				{
+					it = m_PickerEntities.erase(it);
+				}
+				else
+				{
+					usedMats.insert(it->second.Materials.begin(), it->second.Materials.end());
+					it->second.Index = index;
+					++index;
+					++it;
+				}
+			}
+
+			for(std::map<CAfxMaterialKey,CPickerMatValue>::iterator it = m_PickerMaterials.begin(); it != m_PickerMaterials.end(); )
+			{
+				if (usedMats.end() != usedMats.find(it->first))
+					++it;
+				else
+					it = m_PickerMaterials.erase(it);
+			}
 		}
-		// fall through on Purpose!
-	case PS_Picking:
+
+		if (m_PickingMaterials)
 		{
-			if (pickEntity)
+			std::set<int> usedEnts;
+			int index = 0;
+
+			for (std::map<CAfxMaterialKey, CPickerMatValue>::iterator it = m_PickerMaterials.begin(); it != m_PickerMaterials.end(); )
 			{
-				if (m_PickingEntities)
-				{
-					if (m_PickerEntityHandlesLo < m_PickerEntityHandlesHi)
-					{
-						int mid = (m_PickerEntityHandlesLo + m_PickerEntityHandlesHi) >> 1;
+				int oldIndex = it->second.Index;
 
-						if (!enityVisible)
-						{
-							m_PickerEntityHandlesLo = mid + 1;
-						}
-						else
-						{
-							m_PickerEntityHandlesHi = mid;
-						}
-					}
+				if ((1 == (oldIndex & 0x1)) == wasVisible)
+				{
+					it = m_PickerMaterials.erase(it);
 				}
-				else m_PickingEntities = true;
-
-				if (m_PickerEntityHandlesLo == m_PickerEntityHandlesHi && !m_PickerEntitiesAlerted)
+				else
 				{
-					Tier0_Warning("==== Picker: Entity is determined! ====\n");
-					m_PickerEntitiesAlerted = true;
-					if(g_VEngineClient && !g_VEngineClient->Con_IsVisible())
-						g_VEngineClient->ClientCmd_Unrestricted("toggleconsole");
+					usedEnts.insert(it->second.Entities.begin(), it->second.Entities.end());
+					it->second.Index = index;
+					++index;
+					++it;
 				}
 			}
-	
-			if (pickMaterial)
-			{
-				if (m_PickingMaterials)
-				{
-					if (m_PickerMaterialsLo < m_PickerMaterialsHi)
-					{
-						int mid = (m_PickerMaterialsLo + m_PickerMaterialsHi) >> 1;
 
-						if (!materialVisible)
-						{
-							m_PickerMaterialsLo = mid + 1;
-						}
-						else
-						{
-							m_PickerEntityHandlesHi = mid;
-						}
-					}
-				}
-				else m_PickingMaterials = true;
-				
-				if (m_PickerMaterialsLo == m_PickerMaterialsHi && !m_PickerMaterialsAlerted)
-				{
-					Tier0_Warning("==== Picker: Material is determined! ====\n");
-					m_PickerMaterialsAlerted = true;
-					if (g_VEngineClient && !g_VEngineClient->Con_IsVisible())
-						g_VEngineClient->ClientCmd_Unrestricted("toggleconsole");
-				}
+			for (std::map<int, CPickerEntValue>::iterator it = m_PickerEntities.begin(); it != m_PickerEntities.end(); )
+			{
+				if (usedEnts.end() != usedEnts.find(it->first))
+					++it;
+				else
+					it = m_PickerEntities.erase(it);
 			}
+		}
+
+		bool determinedEntities = m_PickerEntities.size() <= 1;
+		bool determinedMaterials = m_PickerMaterials.size() <= 1;
+
+		if (pickEntityNotMaterial)
+		{
+			if (determinedEntities)
+			{
+				m_PickingEntities = false;
+				m_PickingMaterials = false;
+
+				Tier0_Warning("==== Entity%s determined! ====\n", determinedMaterials ? " and Material" : "");
+				if (g_VEngineClient && !g_VEngineClient->Con_IsVisible()) g_VEngineClient->ClientCmd_Unrestricted("toggleconsole");
+				return;
+			}
+		}
+		else
+		{
+			if (determinedMaterials)
+			{
+				m_PickingEntities = false;
+				m_PickingMaterials = false;
+
+				Tier0_Warning("==== %sMaterial determined! ====\n", determinedEntities ? "Entity and " : "");
+				if (g_VEngineClient && !g_VEngineClient->Con_IsVisible()) g_VEngineClient->ClientCmd_Unrestricted("toggleconsole");
+				return;
+			}
+		}
 	}
-		break;
-	default:
-		Tier0_Warning("Error: Picker needs to be started, before you can start picking.\n");
-	}
+
+	m_PickingEntities = pickEntityNotMaterial;
+	m_PickingMaterials = !pickEntityNotMaterial;
 }
 
 bool CAfxBaseFxStream::Picker_GetHidden(SOURCESDK::CSGO::CBaseHandle const & entityHandle, SOURCESDK::IMaterial_csgo * material)
 {
 	std::unique_lock<std::mutex> lock(m_PickerMutex);
 
-	switch (m_PickerState)
+	if (!m_PickerActive)
+		return false;
+
+	int ent = entityHandle.ToInt();
+	CAfxMaterialKey mat(material);
+
+	std::map<int, CPickerEntValue>::iterator itEnt = m_PickerEntities.find(ent);
+	std::map<CAfxMaterialKey, CPickerMatValue>::iterator itMat = m_PickerMaterials.find(mat);
+
+	if (m_PickerCollecting)
 	{
-	case PS_Collect:		
+
+		if (m_PickerEntities.end() == itEnt)
 		{
-			int handle = entityHandle.ToInt();
-
-			if (m_PickerEntityHandles.end() == m_PickerEntityHandles.find(handle))
-			{
-				m_PickerEntityHandles[handle] = m_PickerEntityHandles.size();
-			}
-
-			CAfxMaterialKey mat(material);
-
-			if (m_PickerMaterials.end() == m_PickerMaterials.find(material))
-			{
-				m_PickerMaterials[material] = m_PickerMaterials.size();
-			}
+			itEnt = m_PickerEntities.try_emplace(ent, m_PickerEntities.size(), mat).first;
 		}
-		break;
-	case PS_Picking:
+		else
 		{
-			if(m_PickingEntities)
-			{
-				int handle = entityHandle.ToInt();
-
-				std::map<int, int>::iterator it = m_PickerEntityHandles.find(handle);
-
-				if (m_PickerEntityHandles.end() != it)
-				{
-					return it->second > ((m_PickerEntityHandlesLo + m_PickerEntityHandlesHi) >> 1);
-				}
-			}
-	
-			if (m_PickingMaterials)
-			{
-				CAfxMaterialKey mat(material);
-
-				std::map<CAfxMaterialKey, int>::iterator it = m_PickerMaterials.find(mat);
-
-				if (m_PickerMaterials.end() != it)
-				{
-					return it->second > ((m_PickerMaterialsLo + m_PickerMaterialsHi) >> 1);
-				}
-			}
+			itEnt->second.Materials.insert(mat);
 		}
-		break;
-	};
 
-	return false;
+		if (m_PickerMaterials.end() == itMat)
+		{
+			itMat = m_PickerMaterials.try_emplace(mat, m_PickerMaterials.size(), ent).first;
+		}
+		else
+		{
+			itMat->second.Entities.insert(ent);
+		}
+	}
+
+	bool hiddenEnt = m_PickingEntities && (m_PickerEntities.end() != itEnt) && (((itEnt->second.Index) & 0x1) == 1);
+	bool hiddenMat = m_PickingMaterials && (m_PickerMaterials.end() != itMat) && (((itMat->second.Index) & 0x1) == 1);
+
+	return hiddenEnt || hiddenMat;
 }
 
 /*
@@ -5020,23 +5002,17 @@ bool CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 				{
 					char const * cmd1 = args->ArgV(argcOffset + 1);
 
-					if (!_stricmp(cmd1, "start"))
-					{
-						curBaseFx->Picker_Start();
-						return true;
-					}
-					else
 					if (!_stricmp(cmd1, "ent") && 3 <= argc)
 					{
 						bool value = 0 != atoi(args->ArgV(argcOffset + 2));
-						curBaseFx->Picker_Pick(true, value, false, true);
+						curBaseFx->Picker_Pick(true, value);
 						return true;
 					}
 					else
 					if (!_stricmp(cmd1, "mat") && 3 <= argc)
 					{
 						bool value = 0 != atoi(args->ArgV(argcOffset + 2));
-						curBaseFx->Picker_Pick(false, true, true, value);
+						curBaseFx->Picker_Pick(false, value);
 						return true;
 					}
 					else
@@ -5054,12 +5030,12 @@ bool CAfxStreams::Console_EditStream(CAfxRenderViewStream * stream, IWrpCommandA
 				}
 
 				Tier0_Msg(
-					"%s picker start - Start/prepare picking.\n"
-					"%s picker ent 0|1 - Tell picker if entity is visible (1) or not (0). (First pick should be 1.)\n"
-					"%s picker mat 0|1 - Tell picker if material is visible (1) or not (0). (First pick should be 1.)\n"
+					"%s picker ent 0|1 - Tell picker if entity is visible (1) or not (0). (Or start picking with 1.)\n"
+					"%s picker mat 0|1 - Tell picker if material is visible (1) or not (0). (Or start picking with 1.)\n"
 					"%s picker print - Prints currently picked result set (entities / materials).\n"
 					"%s picker stop - Stop picking.\n"
 					"ATTENTION: Stream needs to be in preview of course, otherwise you won't see anything ;)\n"
+					"ATTENTION: Do not forget to stop the picker, otherwise you might have some surprises ;)\n"
 					, cmdPrefix
 					, cmdPrefix
 					, cmdPrefix

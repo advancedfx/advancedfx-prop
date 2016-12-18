@@ -6,22 +6,25 @@
 
 <release>
 <name>AfxHookSource</name>
-<version>1.13.x</version>
-<time>2016-12-18Txx:xxZ</time>
+<version>1.13.0</version>
+<time>2016-12-18T16:32Z</time>
 <changes>
 <change type="fixed">
-Fixed mistakes in d3d9 hooking code, causing invalid / unwanted render states (could cause i.e. missing decals textures etc.).
+Fixed mistakes in d3d9 related code, causing invalid / unwanted render states (could cause i.e. missing decals textures etc.).
 </change>
 <change type="added">
 Added actionFilter addEx property on baseFx streams for actionFilter (takes i.e. entity handle as option).
 </change>
 <change type="added">
-Added picker property on baseFx streams, allows finding a visible entity handle / material. (TODO: NOT FINISHED!)
+Added picker property on baseFx streams, allows finding visible entity handle(s) / material(s).
 </change>
 <change type="fixed">
 Various minor fixes.
 </change>
 </changes>
+<comments>
+Advanced excercise for you: Try to use the new features to hide only the shadow of exactly one alive player.
+</comments>
 </release>
 
 
