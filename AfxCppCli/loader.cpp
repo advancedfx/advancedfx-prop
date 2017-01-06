@@ -308,7 +308,7 @@ bool CustomLoader(System::String ^ strHookPath, System::String ^ strProgramPath,
 {
 	System::String ^ strDllDirectory = System::IO::Path::GetDirectoryName( strHookPath ); // maybe we should check that strDllDirectory <= MAXPATH-2 here?
 	System::String ^ strProgramDirectory = System::IO::Path::GetDirectoryName( strProgramPath );
-	System::String ^ strImageFileName = System::AppDomain::CurrentDomain->BaseDirectory + "\\AfxHook.dat";
+	System::String ^ strImageFileName = strDllDirectory + "\\AfxHook.dat";
 
 	System::Text::StringBuilder ^strOptsB = gcnew System::Text::StringBuilder( "\"" );
 	strOptsB->Append( strProgramPath );
