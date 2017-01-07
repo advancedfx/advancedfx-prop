@@ -94,9 +94,7 @@ public class HlaeRemote_1 : MarshalByRefObject, IHlaeRemote_1
 
             cfg.CustomCmdLine = OverrideCustomArgs;
 
-            Afx.AfxGoldSrc.StartSettings settings = cfg.MakeStartSettings();
-
-            return m_MainForm.AfxGoldSrc.Start(settings);
+            return Launcher.Launch(cfg);
         };
 
         return (bool)m_MainForm.Invoke(start);

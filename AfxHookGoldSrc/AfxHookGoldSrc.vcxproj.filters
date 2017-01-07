@@ -51,9 +51,6 @@
     <ClCompile Include="..\shared\bvhimport.cpp">
       <Filter>shared</Filter>
     </ClCompile>
-    <ClCompile Include="AfxGoldSrcComClient.cpp">
-      <Filter>AfxHookGoldSrc</Filter>
-    </ClCompile>
     <ClCompile Include="cstrike_smoke.cpp">
       <Filter>AfxHookGoldSrc</Filter>
     </ClCompile>
@@ -285,6 +282,9 @@
     <ClCompile Include="hooks\hw\Host_Init.cpp">
       <Filter>AfxHookGoldSrc\hooks\hw</Filter>
     </ClCompile>
+    <ClCompile Include="AfxSettings.cpp">
+      <Filter>AfxHookGoldSrc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -292,9 +292,6 @@
     </ClInclude>
     <ClInclude Include="..\shared\bvhimport.h">
       <Filter>shared</Filter>
-    </ClInclude>
-    <ClInclude Include="AfxGoldSrcComClient.h">
-      <Filter>AfxHookGoldSrc</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\com\AfxGoldSrcComDefs.h">
       <Filter>shared\com</Filter>
@@ -505,6 +502,9 @@
     </ClInclude>
     <ClInclude Include="hooks\hw\Host_Init.h">
       <Filter>AfxHookGoldSrc\hooks\hw</Filter>
+    </ClInclude>
+    <ClInclude Include="AfxSettings.h">
+      <Filter>AfxHookGoldSrc</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

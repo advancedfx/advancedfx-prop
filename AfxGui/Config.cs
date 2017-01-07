@@ -1,10 +1,10 @@
 ﻿// Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2015-05-16 by dominik.matrixstorm.com
+// 2017-07-01 dominik.matrixstorm.com
 //
 // First changes:
-// 2008-10-18 by dominik.matrixstorm.com
+// 2008-10-18 dominik.matrixstorm.com
 
 using System;
 using System.ComponentModel;
@@ -57,38 +57,6 @@ public class CfgLauncher
 		this.FullScreen = from.FullScreen;
 		this.RenderMode = from.RenderMode;
 	}
-
-    internal Afx.AfxGoldSrc.StartSettings MakeStartSettings()
-    {
-        Afx.AfxGoldSrc.StartSettings s = new Afx.AfxGoldSrc.StartSettings(
-            this.GamePath,
-            this.Modification
-        );
-
-		s.Alpha8 = this.ForceAlpha;
-		s.Bpp = this.GfxBpp;
-		s.CustomLaunchOptions = this.CustomCmdLine;
-		s.ForceRes = this.GfxForce;
-		s.FullScreen = this.FullScreen;
-		s.HalfLifePath = this.GamePath;
-		s.Height = this.GfxHeight;
-		s.Modification = this.Modification;
-		s.OptWindowVisOnRec = this.OptimizeVisibilty;
-		switch(this.RenderMode) {
-		case 1:
-            s.RenderMode = Afx.AfxGoldSrc.RenderMode.FrameBufferObject;
-			break;
-		case 2:
-            s.RenderMode = Afx.AfxGoldSrc.RenderMode.MemoryDC;
-			break;
-		default:
-            s.RenderMode = Afx.AfxGoldSrc.RenderMode.Default;
-            break;
-		}
-		s.Width = this.GfxWidth;
-
-        return s;
-    }
 
     private void ThisDefault()
     {

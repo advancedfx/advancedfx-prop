@@ -3,7 +3,7 @@
 // Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2014-02-12 dominik.matrixstorm.com
+// 2017-01-07 dominik.matrixstorm.com
 //
 // First changes
 // 2009-11-16 dominik.matrixstorm.com
@@ -36,7 +36,7 @@
 #include "AfxImageUtils.h"
 #include "film_sound.h"
 #include "filming.h"
-#include "AfxGoldSrcComClient.h"
+#include "AfxSettings.h"
 #include "hlaeFolder.h"
 
 #include <shared/FileTools.h>
@@ -461,9 +461,7 @@ AfxGlobal_afxFilmingStart(JSContext *cx, unsigned argc, JS::Value *vp)
 {
 	JS::CallReceiver rec = JS::CallReceiverFromVp(vp);
 
-	g_AfxGoldSrcComClient.OnRecordStarting();
-
-	if(g_AfxGoldSrcComClient.GetOptimizeCaptureVis())
+	if(g_AfxSettings.OptimizeCaptureVis_get())
 		UndockGameWindowForCapture();
 
 	if (g_pSupportRender)
@@ -481,10 +479,8 @@ AfxGlobal_afxFilmingStop(JSContext *cx, unsigned argc, JS::Value *vp)
 	if (g_pSupportRender)
 		g_pSupportRender->hlaeOnFilmingStop();
 
-	if(g_AfxGoldSrcComClient.GetOptimizeCaptureVis())
+	if(g_AfxSettings.OptimizeCaptureVis_get())
 		RedockGameWindow();
-
-	g_AfxGoldSrcComClient.OnRecordEnded();
 
 	rec.rval().set(JSVAL_VOID);
     return JS_TRUE;
@@ -1319,7 +1315,7 @@ AfxGlobal_hasGlArbMultiTexture_get(JSContext *cx, JS::HandleObject obj, JS::Hand
 static JSBool
 AfxGlobal_height_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
 {
-	int value = g_AfxGoldSrcComClient.GetHeight();
+	int value = g_AfxSettings.Height_get();
 
 	vp.set(JS_NumberValue(value));
     return JS_TRUE;
@@ -1387,7 +1383,7 @@ AfxGlobal_scriptFolder_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
 static JSBool
 AfxGlobal_width_get(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
 {
-	int value = g_AfxGoldSrcComClient.GetWidth();
+	int value = g_AfxSettings.Width_get();
 
 	vp.set(JS_NumberValue(value));
     return JS_TRUE;

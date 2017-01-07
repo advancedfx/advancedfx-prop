@@ -6,6 +6,26 @@
 
 <release>
 <name>HLAE</name>
+<version>2.22.0</version>
+<time>2017-07-01T15:47Z</time>
+<changes>
+<change type="updated">
+Included AfxHookGoldSrc 2.4.13 (2017-07-01T15:47Z).
+</change>
+<change type="updated">
+Included AfxHookSource 1.13.2 (2017-07-01T15:47Z).
+</change>
+<change type="added">
+Added -noGui option for -csgoLauncher, -afxHookGoldSrc and -customLoader command line options:<br />
+When specified the HLAE.exe GUI won't be started at all - since HLAE exits as soon as the requested operations have been carried out, it's not possible to tell errors that might happen later on in the game / target process being launched.
+You can check the HLAE.exe process ExitCode to determine if the requested operations are being carried out successful so far (0) or failed for sure (1).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>HLAE</name>
 <version>2.21.1</version>
 <time>2016-12-18T19:13Z</time>
 <changes>

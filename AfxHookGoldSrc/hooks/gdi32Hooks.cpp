@@ -2,7 +2,7 @@
 
 #include "gdi32Hooks.h"
 
-#include "../AfxGoldSrcComClient.h"
+#include "../AfxSettings.h"
 
 void MbPrintPixelFormatDescriptor(char const * title, PIXELFORMATDESCRIPTOR const * pfd)
 {
@@ -22,7 +22,7 @@ void MbPrintPixelFormatDescriptor(char const * title, PIXELFORMATDESCRIPTOR cons
 
 BOOL  WINAPI NewSetPixelFormat(__in HDC hdc, __in int format, __in CONST PIXELFORMATDESCRIPTOR * ppfd)
 {
-	if (!g_AfxGoldSrcComClient.GetForceAlpha8())
+	if (!g_AfxSettings.ForceAlpha8_get())
 		return SetPixelFormat(hdc, format, ppfd);
 
 	PIXELFORMATDESCRIPTOR *myppfd = const_cast<PIXELFORMATDESCRIPTOR *>(ppfd);

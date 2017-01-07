@@ -1,10 +1,10 @@
 ﻿// Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2010-06-27 by dominik.matrixstorm.com
+// 2017-07-01 dominik.matrixstorm.com
 //
 // First changes:
-// 2008-10-18 by dominik.matrixstorm.com
+// 2008-10-18 dominik.matrixstorm.com
 
 
 namespace AfxGui {
@@ -15,11 +15,13 @@ class Globals
     internal static bool AutoStartAfxHookGoldSrc { get { return m_AutoStartAfxHookGoldSrc; } set { m_AutoStartAfxHookGoldSrc = value; } }
     internal static bool AutoStartCustomLoader { get { return m_AutoStartCustomLoader; } set { m_AutoStartCustomLoader = value; } }
     internal static bool EnableHlaeRemote { get { return m_EnableHlaeRemote; } set { m_EnableHlaeRemote = value; } }
+    internal static bool NoGui { get { return m_NoGui; } set { m_NoGui = value; } }
 
     static bool m_AutoStartCsgo;
     static bool m_AutoStartAfxHookGoldSrc;
     static bool m_AutoStartCustomLoader;
     static bool m_EnableHlaeRemote;
+    static bool m_NoGui;
 }
 
 class GlobalConfig

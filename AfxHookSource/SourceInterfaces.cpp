@@ -890,6 +890,67 @@ KeyValues *KeyValues::FindKey(const char *keyName, bool bCreate)
 	return dat;
 }
 
+// ---------------------------------------------------------------------------- -
+// Purpose: Return the first subkey in the list
+//-----------------------------------------------------------------------------
+KeyValues *KeyValues::GetFirstSubKey()
+{
+	return m_pSub;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Return the next subkey
+//-----------------------------------------------------------------------------
+KeyValues *KeyValues::GetNextKey()
+{
+	return m_pPeer;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Sets this key's peer to the KeyValues passed in
+//-----------------------------------------------------------------------------
+void KeyValues::SetNextKey(KeyValues *pDat)
+{
+	m_pPeer = pDat;
+}
+
+
+KeyValues* KeyValues::GetFirstTrueSubKey()
+{
+	KeyValues *pRet = m_pSub;
+	while (pRet && pRet->m_iDataType != TYPE_NONE)
+		pRet = pRet->m_pPeer;
+
+	return pRet;
+}
+
+KeyValues* KeyValues::GetNextTrueSubKey()
+{
+	KeyValues *pRet = m_pPeer;
+	while (pRet && pRet->m_iDataType != TYPE_NONE)
+		pRet = pRet->m_pPeer;
+
+	return pRet;
+}
+
+KeyValues* KeyValues::GetFirstValue()
+{
+	KeyValues *pRet = m_pSub;
+	while (pRet && pRet->m_iDataType == TYPE_NONE)
+		pRet = pRet->m_pPeer;
+
+	return pRet;
+}
+
+KeyValues* KeyValues::GetNextValue()
+{
+	KeyValues *pRet = m_pPeer;
+	while (pRet && pRet->m_iDataType == TYPE_NONE)
+		pRet = pRet->m_pPeer;
+
+	return pRet;
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Get the integer value of a keyName. Default value is returned

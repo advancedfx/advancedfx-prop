@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>1.13.2</version>
+<time>2017-07-01T15:47Z</time>
+<changes>
+</changes>
+<comments>
+No relevant changes.
+</comments>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>1.13.1</version>
 <time>2016-12-18T19:13Z</time>
 <changes>

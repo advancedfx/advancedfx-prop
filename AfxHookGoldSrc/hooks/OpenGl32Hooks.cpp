@@ -7,7 +7,7 @@
 #include "../gui/Gui.h"
 #endif
 
-#include "../AfxGoldSrcComClient.h"
+#include "../AfxSettings.h"
 #include "../aiming.h"
 #include "../cmdregister.h"
 #include "../filming.h"
@@ -421,7 +421,7 @@ HGLRC WINAPI NewWglCreateContext(HDC hDc)
 	static int iCallCount = 0;
 	iCallCount++;
 	if(2 == iCallCount)
-		return Init_Support_Renderer( g_GameWindow, hDc, g_AfxGoldSrcComClient.GetWidth(), g_AfxGoldSrcComClient.GetHeight() );
+		return Init_Support_Renderer( g_GameWindow, hDc, g_AfxSettings.Width_get(), g_AfxSettings.Height_get() );
 
 	return wglCreateContext(hDc);
 }
@@ -460,12 +460,12 @@ HGLRC Init_Support_Renderer(HWND hMainWindow, HDC hMainWindowDC, int iWidth, int
 	// determine desired target renderer:
 	CHlaeSupportRender::ERenderTarget eRenderTarget = CHlaeSupportRender::RT_GAMEWINDOW;
 
-	switch(g_AfxGoldSrcComClient.GetRenderMode())
+	switch(g_AfxSettings.RenderMode_get())
 	{
-	case RM_FrameBufferObject:
+	case AfxSettings::RenderMode_FrameBufferObject:
 		eRenderTarget = CHlaeSupportRender::RT_FRAMEBUFFEROBJECT;
 		break;
-	case RM_MemoryDc:
+	case AfxSettings::RenderMode_MemoryDC:
 		eRenderTarget = CHlaeSupportRender::RT_MEMORYDC;
 	}
 

@@ -4,7 +4,7 @@
 
 #include <shared/detours.h>
 
-#include "../AfxGoldSrcComClient.h"
+#include "../AfxSettings.h"
 #include "../supportrender.h"
 
 HWND g_GameWindow = NULL;
@@ -31,7 +31,7 @@ LRESULT CALLBACK NewGameWindowProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 			g_GameWindowActive = false;
 		break;
 	case WM_MOUSEACTIVATE:
-		if( !g_AfxGoldSrcComClient.GetFullScreen() && !g_GameWindowUndocked && !g_GameWindowActive )
+		if( !g_AfxSettings.FullScreen_get() && !g_GameWindowUndocked && !g_GameWindowActive )
 		{
 			// Client Windows won't recieve window activation events,
 			// so we will fake them:
@@ -51,7 +51,7 @@ LRESULT CALLBACK NewGameWindowProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 	case WM_SETFOCUS:
 		break;
 	case WM_KILLFOCUS:
-		if( !g_AfxGoldSrcComClient.GetFullScreen() && !g_GameWindowUndocked && g_GameWindowActive )
+		if( !g_AfxSettings.FullScreen_get() && !g_GameWindowUndocked && g_GameWindowActive )
 		{
 			g_GameWindowActive = false;
 			g_GameWindowProc(hWnd, WM_ACTIVATE, WA_INACTIVE, NULL);//lParam);
@@ -72,7 +72,7 @@ HWND APIENTRY NewCreateWindowExW(DWORD dwExStyle,LPCWSTR lpClassName,LPCWSTR lpW
 
 	// it's the window we want.
 	
-	if(!g_AfxGoldSrcComClient.GetFullScreen())
+	if(!g_AfxSettings.FullScreen_get())
 	{
 		// currently won't work:
 		/*// modifiy some properities to our needs:
@@ -105,9 +105,6 @@ BOOL APIENTRY NewDestroyWindow(HWND hWnd)
 	{
 		// H-L main game window being destroyed
 
-		// Close Communication with AfxServer:
-		g_AfxGoldSrcComClient.Close();
-
 		g_GameWindow = NULL;
 
 		if (g_pSupportRender) delete g_pSupportRender;
@@ -127,14 +124,14 @@ void CloseGameWindow()
 
 void RedockGameWindow()
 {
-	if(!g_AfxGoldSrcComClient.GetFullScreen() && g_GameWindowUndocked)
+	if(!g_AfxSettings.FullScreen_get() && g_GameWindowUndocked)
 	{
 		DWORD dwExStyle = GetWindowLong(g_GameWindow, GWL_EXSTYLE);
 
 		// restore old style and parent (see SetParent() on MSDN2, why we do it in this order):
 		SetWindowLongPtr( g_GameWindow, GWL_STYLE, g_OldWindowStyle);
 		//SetParent( g_GameWindow, g_AfxGoldSrcComClient.GetParentWindow() );
-		RECT windowRect = {0, 0, g_AfxGoldSrcComClient.GetWidth(), g_AfxGoldSrcComClient.GetHeight() };
+		RECT windowRect = {0, 0, g_AfxSettings.Width_get(), g_AfxSettings.Height_get() };
 		AdjustWindowRectEx(&windowRect, g_OldWindowStyle, FALSE, dwExStyle);
 		SetWindowPos( g_GameWindow, HWND_NOTOPMOST, 0, 0, windowRect.right -windowRect.left, windowRect.bottom -windowRect.top, SWP_FRAMECHANGED|SWP_SHOWWINDOW);
 
@@ -145,7 +142,7 @@ void RedockGameWindow()
 
 void UndockGameWindowForCapture()
 {
-	if(!g_AfxGoldSrcComClient.GetFullScreen() && !g_GameWindowUndocked)
+	if(!g_AfxSettings.FullScreen_get() && !g_GameWindowUndocked)
 	{
 		g_GameWindowUndocked = true;
 
@@ -154,7 +151,7 @@ void UndockGameWindowForCapture()
 		// set new parent and style (see SetParent() on MSDN2, why we do it in this order):
 		SetParent( g_GameWindow, NULL );
 		SetWindowLongPtr( g_GameWindow, GWL_STYLE, WS_POPUP );
-		RECT windowRect = {0, 0, g_AfxGoldSrcComClient.GetWidth(), g_AfxGoldSrcComClient.GetHeight() };
+		RECT windowRect = {0, 0, g_AfxSettings.Width_get(), g_AfxSettings.Height_get() };
 		AdjustWindowRectEx(&windowRect, WS_POPUP, FALSE, dwExStyle);
 		SetWindowPos( g_GameWindow, HWND_TOPMOST, 0, 0, windowRect.right -windowRect.left, windowRect.bottom -windowRect.top, SWP_FRAMECHANGED|SWP_SHOWWINDOW);
 	}

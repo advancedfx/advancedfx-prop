@@ -1,10 +1,10 @@
 ﻿// Copyright (c) by advancedfx.org
 //
 // Last changes:
-// 2014-02-12 by dominik.matrixstorm.com
+// 2017-07-01 dominik.matrixstorm.com
 //
 // First changes:
-// 2008-05-18 by dominik.matrixstorm.com
+// 2008-05-18 dominik.matrixstorm.com
 
 using System;
 using System.Collections.Generic;
@@ -33,18 +33,9 @@ namespace AfxGui
             m_UpdateCheckNotification = new UpdateCheckNotificationTarget(this, new UpdateCheckedDelegate(OnUpdateChecked));
         }
 
-        internal Afx.AfxGoldSrc AfxGoldSrc
-        {
-            get
-            {
-                return m_AfxGoldSrc;
-            }
-        }
-
         //
         // Private members:
 
-        Afx.AfxGoldSrc m_AfxGoldSrc;
         hlae.remoting.HlaeRemoting m_HlaeRemoting;
         Guid m_LastUpdateGuid;
         UpdateCheckNotificationTarget m_UpdateCheckNotification;
@@ -140,40 +131,10 @@ namespace AfxGui
                 this.stripEnableUpdateCheck.Visible = true;
             }
 
-            // init AfxGoldSrc:
-            m_AfxGoldSrc = new Afx.AfxGoldSrc(this);
-
 	        // start up public remoting system (if requested):
             if (Globals.EnableHlaeRemote)
             {
                 m_HlaeRemoting = new hlae.remoting.HlaeRemoting(this);
-            }
-
-            // start-up CS:GO if requested (i.e. by command line)
-            if (Globals.AutoStartCsgo)
-            {
-                LaunchCsgo.Launch(GlobalConfig.Instance.Settings.LauncherCsgo);
-            }
-
-            // start-up AfxHookGoldSrc if requested (i.e. by command line)
-            if (Globals.AutoStartAfxHookGoldSrc)
-            {
-                CfgLauncher cfg = new CfgLauncher();
-
-                cfg.CopyFrom(GlobalConfig.Instance.Settings.Launcher);
-
-                Afx.AfxGoldSrc.StartSettings settings = cfg.MakeStartSettings();
-
-                m_AfxGoldSrc.Start(settings);
-            }
-
-            // start-up CustomLoader if requested (i.e. by command line)
-            if (Globals.AutoStartCustomLoader)
-            {
-                bool bOk = AfxCppCli.AfxHook.LauchAndHook(GlobalConfig.Instance.Settings.CustomLoader.ProgramPath, GlobalConfig.Instance.Settings.CustomLoader.CmdLine, GlobalConfig.Instance.Settings.CustomLoader.HookDllPath);
-
-                if (!bOk)
-                    MessageBox.Show("CustomLoader failed", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -181,9 +142,6 @@ namespace AfxGui
         {
             // close down remoting:
             if (null != m_HlaeRemoting) m_HlaeRemoting.Dispose();
-
-            // close down ag:
-            m_AfxGoldSrc.Dispose();
 
             GlobalUpdateCheck.Instance.EndCheckedNotification(m_UpdateCheckNotification);
         }
@@ -263,7 +221,7 @@ namespace AfxGui
 
         private void menuLaunch_Click(object sender, EventArgs e)
         {
-            Launcher.RunLauncher(this, m_AfxGoldSrc);
+            Launcher.RunLauncherDialog(this);
         }
 
         private void menuGuidToClipBoard_Click(object sender, EventArgs e)

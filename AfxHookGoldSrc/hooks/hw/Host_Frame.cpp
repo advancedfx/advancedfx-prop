@@ -2,7 +2,6 @@
 
 #include "Host_Frame.h"
 #include <hl_addresses.h>
-#include "../../AfxGoldSrcComClient.h"
 #include "../HookGameLoaded.h"
 
 #include <shared/detours.h>
@@ -17,8 +16,6 @@ bool g_Host_Frame_Called = false;
 void New_Host_Frame (float time)
 {
 	g_Host_Frame_Called = true;
-
-	g_AfxGoldSrcComClient.OnHostFrame();
 
 	g_Host_Frame_time = time;
 	g_Old_HostFrame(time);

@@ -30,8 +30,6 @@
 
 #include "hooks/HookHl.h"
 
-#include "AfxGoldSrcComClient.h"
-
 #ifdef AFX_SCRIPT
 #include "scripting.h"
 #endif // AFX_SCRIPT
@@ -64,8 +62,6 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 #ifdef AFX_SCRIPT
 			g_Script_CanConsolePrint = false;
 #endif // AFX_SCRIPT
-
-			g_AfxGoldSrcComClient.Close();
 
 #ifdef AFX_SCRIPT
 			ScriptEngine_ShutDown();

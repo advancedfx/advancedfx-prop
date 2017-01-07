@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookGoldSrc</name>
+<version>2.4.13</version>
+<time>2017-07-01T15:47Z</time>
+<changes>
+<change type="updated">
+Removed PipeCom system and replaced it by simple command line parameters.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookGoldSrc</name>
 <version>2.4.12</version>
 <time>2016-08-08T13:37Z</time>
 <changes>

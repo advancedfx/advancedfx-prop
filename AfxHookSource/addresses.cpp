@@ -16,6 +16,7 @@ using namespace Afx::BinUtils;
 
 //AFXADDR_DEF(csgo_CPredictionCopy_TransferData)
 //AFXADDR_DEF(csgo_CPredictionCopy_TransferData_DSZ)
+AFXADDR_DEF(csgo_C_BaseAnimating_vtable)
 AFXADDR_DEF(csgo_C_BaseEntity_ToolRecordEnties)
 AFXADDR_DEF(csgo_C_BaseEntity_ToolRecordEnties_DSZ)
 //AFXADDR_DEF(csgo_C_BasePlayer_OFS_m_bDucked)
@@ -1391,10 +1392,68 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 			}
 			AFXADDR_SET(csgo_CCSGameMovement_vtable, addr);
 		}
+
+		// csgo_C_BaseAnimating_vtable:
+		{
+			DWORD addr = 0;
+			{
+				ImageSectionsReader sections((HMODULE)clientDll);
+				if (!sections.Eof())
+				{
+					sections.Next(); // skip .text
+					if (!sections.Eof())
+					{
+						MemRange firstDataRange = sections.GetMemRange();
+
+						sections.Next(); // skip first .data
+						if (!sections.Eof())
+						{
+							MemRange result = FindCString(sections.GetMemRange(), ".?AVC_BaseAnimating@@");
+							if (!result.IsEmpty())
+							{
+								DWORD tmpAddr = result.Start;
+								tmpAddr -= 0x8;
+
+								result.Start = firstDataRange.Start;
+								result.End = firstDataRange.Start;
+
+								for (int i = 0; i < 7; ++i)
+								{
+									result = FindBytes(MemRange(result.End, firstDataRange.End), (char const *)&tmpAddr, sizeof(tmpAddr));
+								}
+
+								if (!result.IsEmpty())
+								{
+									DWORD tmpAddr = result.Start;
+									tmpAddr -= 0xC;
+
+									result = FindBytes(firstDataRange, (char const *)&tmpAddr, sizeof(tmpAddr));
+									if (!result.IsEmpty())
+									{
+										DWORD tmpAddr = result.Start;
+										tmpAddr += (1) * 4;
+
+										addr = tmpAddr;
+									}
+									else ErrorBox(MkErrStr(__FILE__, __LINE__));
+								}
+								else ErrorBox(MkErrStr(__FILE__, __LINE__));
+							}
+							else ErrorBox(MkErrStr(__FILE__, __LINE__));
+						}
+						else ErrorBox(MkErrStr(__FILE__, __LINE__));
+					}
+					else ErrorBox(MkErrStr(__FILE__, __LINE__));
+				}
+				else ErrorBox(MkErrStr(__FILE__, __LINE__));
+			}
+			AFXADDR_SET(csgo_C_BaseAnimating_vtable, addr);
+		}
 	}
 	else
 	{
 		//AFXADDR_SET(csgo_CPredictionCopy_TransferData, 0x0);
+		AFXADDR_SET(csgo_C_BaseAnimating_vtable, 0x0);
 		AFXADDR_SET(csgo_C_BaseEntity_ToolRecordEnties, 0x0);
 		//AFXADDR_SET(csgo_C_BasePlayer_OFS_m_bDucked, (AfxAddr)-1);
 		//AFXADDR_SET(csgo_C_BasePlayer_OFS_m_bDucking, (AfxAddr)-1);

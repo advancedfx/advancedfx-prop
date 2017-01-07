@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-07-13 dominik.matrixstorm.com
+// 2017-07-01 dominik.matrixstorm.com
 //
 // First changes:
 // 2016-07-06 dominik.matrixstorm.com
@@ -32,6 +32,22 @@ void touring_C_BaseEntity_ToolRecordEntities(void)
 	g_ClientTools.OnC_BaseEntity_ToolRecordEntities();
 
 	detoured_C_BaseEntity_ToolRecordEntities();
+}
+
+void Call_CBaseAnimating_GetToolRecordingState(SOURCESDK::C_BaseEntity_csgo * object, SOURCESDK::CSGO::KeyValues * msg)
+{
+	if (g_AfxAddr_csgo_C_BaseAnimating_vtable)
+	{
+		void * functionPtr = ((void **)g_AfxAddr_csgo_C_BaseAnimating_vtable)[102];
+
+		__asm
+		{
+			mov ecx, msg
+			push msg
+			mov ecx, object
+			call functionPtr
+		}
+	}
 }
 
 bool Hook_C_BaseEntity_ToolRecordEnties(void)
@@ -86,9 +102,8 @@ void ClientTools::OnPostToolMessage(SOURCESDK::CSGO::HTOOLHANDLE hEntity, SOURCE
 	{
 		SOURCESDK::CSGO::EntitySearchResult ent = m_ClientTools->GetEntity(hEntity);
 
-		int idx = m_ClientTools->GetEntIndex(ent);
-		SOURCESDK::IClientEntity_csgo * ce = SOURCESDK::g_Entitylist_csgo->GetClientEntity(idx);
-		SOURCESDK::C_BaseEntity_csgo * be = ce ? ce->GetBaseEntity() : 0;
+		SOURCESDK::C_BaseEntity_csgo * be = reinterpret_cast<SOURCESDK::C_BaseEntity_csgo *>(ent);
+		SOURCESDK::IClientEntity_csgo * ce = be ? be->GetIClientEntity() : 0;
 
 		char const * className = be ? be->GetClassname() : 0;
 
@@ -99,7 +114,7 @@ void ClientTools::OnPostToolMessage(SOURCESDK::CSGO::HTOOLHANDLE hEntity, SOURCE
 				//|| m_ClientTools->IsWeapon(ent)
 				|| (className && (
 					!strcmp(className, "class C_CSRagdoll")
-					//|| StringBeginsWith(className ,"weapon")
+					//|| StringBeginsWith(className ,"weapon") && !m_ClientTools->IsViewModel(ent)
 				))
 			)
 		)
@@ -107,6 +122,23 @@ void ClientTools::OnPostToolMessage(SOURCESDK::CSGO::HTOOLHANDLE hEntity, SOURCE
 			int handle = ce->GetRefEHandle().ToInt();
 
 			m_TrackedHandles[hEntity] = handle;
+
+			if (!msg->GetPtr("baseentity") && m_ClientTools->IsWeapon(ent) && StringBeginsWith(className, "weapon"))
+			{
+				// Fix up broken overloaded C_BaseCombatWeapon code as good as we can:
+				Call_CBaseAnimating_GetToolRecordingState(be, msg);
+
+				// Btw.: We don't need to call CBaseAnimating::CleanupToolRecordingState afterwards, because that code is still fully functional / function not overloaded.
+			}
+			/*
+			{
+				Tier0_Msg("-- %s @0x%08x--\n", className, be);
+				for (SOURCESDK::CSGO::KeyValues * subKey = msg->GetFirstSubKey(); 0 != subKey; subKey = subKey->GetNextKey())
+				Tier0_Msg("%s,\n", subKey->GetName());
+
+				Tier0_Msg("----\n");
+			}
+			*/
 
 			WriteDictionary("entity_state");
 			WriteDictionary("handle"); Write((int)handle);
@@ -121,6 +153,10 @@ void ClientTools::OnPostToolMessage(SOURCESDK::CSGO::HTOOLHANDLE hEntity, SOURCE
 					WriteDictionary("renderOrigin"); Write(pBaseEntityRs->m_vecRenderOrigin);
 					WriteDictionary("renderAngles"); Write(pBaseEntityRs->m_vecRenderAngles);
 					WriteDictionary("/");
+
+					//Tier0_Msg("IsViewModel: %i\n", m_ClientTools->IsViewModel(ent) ? 1 : 0);
+					//Tier0_Msg("modelName: %s\n", pBaseEntityRs->m_pModelName);
+
 				}
 			}
 
@@ -338,6 +374,7 @@ void ClientTools::DebugEntIndex(int index)
 	}
 
 	Tier0_Msg(
+		"ShouldRecord: %i\n"
 		"IsPlayer: %i\n"
 		"IsCombatCharacter: %i\n"
 		"IsNPC: %i\n"
@@ -348,6 +385,7 @@ void ClientTools::DebugEntIndex(int index)
 		"IsSprite: %i\n"
 		"IsProp: %i\n"
 		"IsBrush: %i\n"
+		, m_ClientTools->ShouldRecord(hHandle) ? 1 : 0
 		, m_ClientTools->IsPlayer(sResult) ? 1 : 0
 		, m_ClientTools->IsCombatCharacter(sResult) ? 1 : 0
 		, m_ClientTools->IsNPC(sResult) ? 1 : 0

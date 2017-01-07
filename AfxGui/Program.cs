@@ -44,6 +44,9 @@ namespace AfxGui
                 case "-autoStart":
                     Globals.AutoStartAfxHookGoldSrc = true;
                     break;
+                case "-noGui":
+                    Globals.NoGui = true;
+                    break;
                 case "-gamePath":
                     if (i + 1 < args.Length)
                     {
@@ -150,6 +153,9 @@ namespace AfxGui
                     case "-autoStart":
                         Globals.AutoStartCustomLoader = true;
                         break;
+                    case "-noGui":
+                        Globals.NoGui = true;
+                        break;
                     case "-hookDllPath":
                         if (i + 1 < args.Length)
                         {
@@ -187,6 +193,9 @@ namespace AfxGui
                 {
                     case "-autoStart":
                         Globals.AutoStartCsgo = true;
+                        break;
+                    case "-noGui":
+                        Globals.NoGui = true;
                         break;
                     case "-csgoExe":
                         if (i + 1 < args.Length)
@@ -297,7 +306,7 @@ namespace AfxGui
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
+        static int Main()
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
@@ -311,11 +320,43 @@ namespace AfxGui
 
             ProcessCommandLine();
 
-            Application.Run(new MainForm());
+            ////
+
+            bool bOk = true;
+
+            // start-up CS:GO if requested (i.e. by command line)
+            if (Globals.AutoStartCsgo)
+            {
+                if (!LaunchCsgo.Launch(GlobalConfig.Instance.Settings.LauncherCsgo))
+                    bOk = false;
+            }
+
+            // start-up AfxHookGoldSrc if requested (i.e. by command line)
+            if (Globals.AutoStartAfxHookGoldSrc)
+            {
+                if (!Launcher.Launch(GlobalConfig.Instance.Settings.Launcher))
+                    bOk = false;
+            }
+
+            // start-up CustomLoader if requested (i.e. by command line)
+            if (Globals.AutoStartCustomLoader)
+            {
+                if (!AfxCppCli.AfxHook.LauchAndHook(GlobalConfig.Instance.Settings.CustomLoader.ProgramPath, GlobalConfig.Instance.Settings.CustomLoader.CmdLine, GlobalConfig.Instance.Settings.CustomLoader.HookDllPath))
+                    bOk = false;
+            }
+
+            ////
+
+            if (!Globals.NoGui)
+            {
+                Application.Run(new MainForm());
+            }
 
             GlobalConfig.Instance.BackUp();
 
             GlobalUpdateCheck.Instance.Dispose();
+
+            return bOk ? 0 : 1;
         }
     }
 }

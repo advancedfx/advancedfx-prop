@@ -123,10 +123,10 @@
     <ClCompile Include="..\shared\FileTools.cpp" />
     <ClCompile Include="..\shared\hooks\gameOverlayRenderer.cpp" />
     <ClCompile Include="..\shared\vcpp\AfxAddr.cpp" />
-    <ClCompile Include="AfxGoldSrcComClient.cpp" />
     <ClCompile Include="AfxGlImage.cpp" />
     <ClCompile Include="AfxImageUtils.cpp" />
     <ClCompile Include="AfxMemory.cpp" />
+    <ClCompile Include="AfxSettings.cpp" />
     <ClCompile Include="aiming.cpp" />
     <ClCompile Include="camexport.cpp" />
     <ClCompile Include="camimport.cpp" />
@@ -214,10 +214,10 @@
     <ClInclude Include="..\shared\rapidxml\rapidxml_print.hpp" />
     <ClInclude Include="..\shared\rapidxml\rapidxml_utils.hpp" />
     <ClInclude Include="..\shared\vcpp\AfxAddr.h" />
-    <ClInclude Include="AfxGoldSrcComClient.h" />
     <ClInclude Include="AfxGlImage.h" />
     <ClInclude Include="AfxImageUtils.h" />
     <ClInclude Include="AfxMemory.h" />
+    <ClInclude Include="AfxSettings.h" />
     <ClInclude Include="aiming.h" />
     <ClInclude Include="camexport.h" />
     <ClInclude Include="camimport.h" />

@@ -26,7 +26,7 @@
 #include "hooks/client/cstrike/CrossHairFix.h"
 #include "hooks/DemoPlayer/DemoPlayer.h"
 
-#include "AfxGoldSrcComClient.h"
+#include "AfxSettings.h"
 #include "supportrender.h"
 #include "camimport.h"
 #include "camexport.h"
@@ -660,9 +660,7 @@ void Filming::Start()
 		pEngfuncs->Con_Printf("Recording (simulated).");
 	}
 
-	g_AfxGoldSrcComClient.OnRecordStarting();
-
-	if(g_AfxGoldSrcComClient.GetOptimizeCaptureVis())
+	if(g_AfxSettings.OptimizeCaptureVis_get())
 		UndockGameWindowForCapture();
 
 	m_MatteMethod = 2 == matte_method->value ? MM_ALPHA : MM_KEY;
@@ -968,10 +966,8 @@ void Filming::Stop()
 	glColorMask(TRUE, TRUE, TRUE, TRUE);
 	glDepthMask(TRUE);
 
-	if(g_AfxGoldSrcComClient.GetOptimizeCaptureVis())
+	if(g_AfxSettings.OptimizeCaptureVis_get())
 		RedockGameWindow();
-
-	g_AfxGoldSrcComClient.OnRecordEnded();
 
 	// Print stats:
 	{

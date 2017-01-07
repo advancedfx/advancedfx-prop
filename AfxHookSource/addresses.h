@@ -12,6 +12,7 @@
 
 //AFXADDR_DECL(csgo_CPredictionCopy_TransferData)
 //AFXADDR_DECL(csgo_CPredictionCopy_TransferData_DSZ)
+AFXADDR_DECL(csgo_C_BaseAnimating_vtable)
 AFXADDR_DECL(csgo_C_BaseEntity_ToolRecordEnties)
 AFXADDR_DECL(csgo_C_BaseEntity_ToolRecordEnties_DSZ)
 //AFXADDR_DECL(csgo_C_BasePlayer_OFS_m_bDucked)
