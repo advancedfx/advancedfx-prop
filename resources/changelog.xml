@@ -7,13 +7,13 @@
 <release>
 <name>HLAE</name>
 <version>2.22.0</version>
-<time>2017-07-01T15:47Z</time>
+<time>2017-01-07T15:47Z</time>
 <changes>
 <change type="updated">
-Included AfxHookGoldSrc 2.4.13 (2017-07-01T15:47Z).
+Included AfxHookGoldSrc 2.4.13 (2017-01-07T15:47Z).
 </change>
 <change type="updated">
-Included AfxHookSource 1.13.2 (2017-07-01T15:47Z).
+Included AfxHookSource 1.13.2 (2017-01-07T15:47Z).
 </change>
 <change type="added">
 Added -noGui option for -csgoLauncher, -afxHookGoldSrc and -customLoader command line options:<br />

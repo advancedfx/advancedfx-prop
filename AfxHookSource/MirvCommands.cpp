@@ -585,7 +585,7 @@ CON_COMMAND(mirv_streams, "Access to streams system.")
 					}
 
 					Tier0_Msg(
-						"mirv_streams record presentOnScreen 0|1 - Whether to show recording on screen (where possible) (1) [May cause epileptic seizures!] or not (0).\n"
+						"mirv_streams record startMovieWav 0|1 - Whether to record WAV audio (1) or not (0).\n"
 						"Current value: %s.\n",
 						g_AfxStreams.Console_StartMovieWav_get() ? "1" : "0"
 					);
@@ -1000,7 +1000,8 @@ CON_COMMAND(mirv_campath,"camera paths")
 
 			return;
 		}
-		else if(!_stricmp("enable", subcmd) && 3 == argc)
+		else if(!_stricmp("enabled", subcmd) && 3 == argc
+			|| !_stricmp("enable", subcmd) && 3 == argc)
 		{
 			bool enable = 0 != atoi(args->ArgV(2));
 			g_Hook_VClient_RenderView.m_CamPath.Enabled_set(enable);
@@ -1623,16 +1624,16 @@ CON_COMMAND(mirv_campath,"camera paths")
 	}
 
 	Tier0_Msg(
-		"mirv_campath add - adds current demotime and view as keyframe\n"
-		"mirv_campath enable 0|1 - set whether the camera splines are active or not. Please note that currently at least 4 Points are required to make it active successfully!\n"
-		"mirv_campath draw [...] - controls drawing of the camera path.\n"
-		"mirv_campath clear - removes all [or all selected] keyframes\n"
-		"mirv_campath print - prints keyframes\n"
-		"mirv_campath remove <id> - removes a keyframe\n"
-		"mirv_campath load <fileName> - loads the campath from the file (XML format)\n"
-		"mirv_campath save <fileName> - saves the campath to the file (XML format)\n"
-		"mirv_campath edit [...] - edit properties of the path [or selected keyframes]\n"
-		"mirv_campath select [...] - keyframe selection.\n"
+		"mirv_campath add - Adds current demotime and view as keyframe\n"
+		"mirv_campath enabled 0|1 - Set whether the camera path is active or not. Please note that currently at least 4 Points are required to make it active successfully!\n"
+		"mirv_campath draw [...] - Controls drawing of the camera path.\n"
+		"mirv_campath clear - Removes all [or all selected] keyframes\n"
+		"mirv_campath print - Prints keyframes\n"
+		"mirv_campath remove <id> - Removes a keyframe\n"
+		"mirv_campath load <fileName> - Loads the campath from the file (XML format)\n"
+		"mirv_campath save <fileName> - Saves the campath to the file (XML format)\n"
+		"mirv_campath edit [...] - Edit properties of the path [or selected keyframes]\n"
+		"mirv_campath select [...] - Keyframe selection.\n"
 	);
 	return;
 }
@@ -2011,7 +2012,7 @@ CON_COMMAND(mirv_deathmsg, "controls death notification options")
 			}
 
 			Tier0_Msg(
-				"mirv_deathmsg fake <htmlString> <bIsVictim> <bIsVictim> - Fake a death message (mirv_deathmsg command needs to be entered once (so hooks get installed) and after that one deathmsg has to be drawn earlier already (so it gets the object pointer) for this to work!).\n"
+				"mirv_deathmsg fake <htmlString> <bIsVictim> <bIsKiller> - Fake a death message (mirv_deathmsg command needs to be entered once (so hooks get installed) and after that one deathmsg has to be drawn earlier already (so it gets the object pointer) for this to work!).\n"
 				"\t<htmlString> - String with HTML, i.e. \"\".\n"
 				"\t<bIsVictim> - can be 0 or 1 (relevant for POV demo style / local player, for GOTV fakes you usually want 0 here)\n"
 				"\t<bIsKiller> - can be 0 or 1 (relevant for POV demo style / local player, for GOTV fakes you usually want 0 here)\n"
@@ -2612,7 +2613,8 @@ CON_COMMAND(mirv_gameoverlay, "GameOverlayRenderer control.")
 	{
 		const char * arg1 = args->ArgV(1);
 
-		if(0 == _stricmp("enable", arg1))
+		if( 0 == _stricmp("enabled", arg1)
+			|| 0 == _stricmp("enable", arg1))
 		{
 			bool value = 0 != atoi(args->ArgV(2));
 			Tier0_Msg(
@@ -2626,7 +2628,7 @@ CON_COMMAND(mirv_gameoverlay, "GameOverlayRenderer control.")
 
 	Tier0_Msg(
 		"Usage:\n"
-		"mirv_gameoverlay enable 0|1 - Disable/Enable the GameOverlay (will only do s.th. useful when it was enabled initally).\n"
+		"mirv_gameoverlay enabled 0|1 - Disable/Enable the GameOverlay (will only do s.th. useful when it was enabled initally).\n"
 	);
 }
 
