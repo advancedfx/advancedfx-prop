@@ -6,6 +6,21 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>1.14.0</version>
+<time>2017-01-22T18:21Z</time>
+<changes>
+<change type="added">
+Added mirv_fix physicsMaxFps, allows to raise / set the FPS limit for physics (i.e. rag dolls, so they don't freeze upon high host_framerate).
+</change>
+<change type="fixed">
+Minor fixes (i.e. changed enable to enabled in some mirv_ sub commands for higher command convergence (old version is silently supported)).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>1.13.2</version>
 <time>2017-01-07T15:47Z</time>
 <changes>

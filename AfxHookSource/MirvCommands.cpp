@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-11-15 dominik.matrixstorm.com
+// 2017-01-22 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-09-30 by dominik.matrixstorm.com
@@ -35,6 +35,7 @@
 #include "csgo_CBasePlayer.h"
 #include "MirvInputMem.h"
 #include "csgo_CCSGameMovement.h"
+#include "csgo_vphysics.h"
 
 #include "csgo_Stdshader_dx9_Hooks.h"
 
@@ -90,11 +91,19 @@ CON_COMMAND(__mirv_test5, "")
 {
 	int argc = args->ArgC();
 
-	if (2 <= argc)
+	if (3 <= argc)
 	{
-		char const * cmd1 = args->ArgV(1);
+		HMODULE hModule = GetModuleHandleA(args->ArgV(1));
 
-		Afx::BinUtils::ImageSectionsReader sections(g_H_EngineDll);
+		if (!hModule)
+		{
+			Tier0_Warning("Invalid module name.\n");
+			return;
+		}
+
+		char const * cmd1 = args->ArgV(2);
+
+		Afx::BinUtils::ImageSectionsReader sections(hModule);
 		if (!sections.Eof())
 		{
 			Afx::BinUtils::MemRange search = sections.GetMemRange();
@@ -113,8 +122,8 @@ CON_COMMAND(__mirv_test5, "")
 				Tier0_Msg(
 					"%i: [0x%08x,0x%08x)\n",
 					numResults,
-					result.Start - (DWORD)g_H_EngineDll,
-					result.End - (DWORD)g_H_EngineDll
+					result.Start - (DWORD)hModule,
+					result.End - (DWORD)hModule
 				);
 
 				search = Afx::BinUtils::MemRange(result.End, search.End);
@@ -3241,7 +3250,31 @@ CON_COMMAND(mirv_fix, "Various fixes")
 	{
 		char const * cmd1 = args->ArgV(1);
 
-		if (!_stricmp("blockObserverTarget", cmd1))
+		if (!_stricmp("physicsMaxFps", cmd1))
+		{
+			if (!Hook_csgo_vphsyics_frametime_lowerlimit())
+			{
+				Tier0_Warning("Error: Required hooks not installed.\n");
+				return;
+			}
+
+			if (3 <= argc)
+			{
+				char const * cmd2 = args->ArgV(2);
+
+				csgo_vphysics_SetMaxFps(atof(cmd2));
+				return;
+			}
+
+			Tier0_Msg(
+				"mirv_fix physicsMaxFps <floatFPSval> - Set the FPS limit for physics.\n"
+				"Current value: %f\n",
+				csgo_vphysics_GetMaxFps()
+			);
+			return;
+		}
+		else
+			if (!_stricmp("blockObserverTarget", cmd1))
 		{
 			if (!Hook_csgo_C_BasePlayer_RecvProxy_ObserverTarget())
 			{
@@ -3291,6 +3324,7 @@ CON_COMMAND(mirv_fix, "Various fixes")
 	}
 
 	Tier0_Msg(
+		"mirv_fix physicsMaxFps [...] - Can raise the FPS limit for physics (i.e. rag dolls, so they don't freeze upon high host_framerate).\n"
 		"mirv_fix blockObserverTarget [...] - Fixes unwanted player switching i.e. upon bomb plant (blocks C_BasePlayer::RecvProxy_ObserverTarget).\n"
 		"mirv_fix oldDuckFix [...] - Can fix player stuck in duck for old demos.\n"
 	);
