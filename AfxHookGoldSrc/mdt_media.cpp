@@ -10,6 +10,8 @@ Description : see mdt_media.h
 
 #include "mdt_media.h"
 
+#include <algorithm>
+
 //#define MDT_DEBUG
 #ifdef MDT_DEBUG
 	#include <stdio.h> // _snprintf
