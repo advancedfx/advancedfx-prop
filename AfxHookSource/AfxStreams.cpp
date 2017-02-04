@@ -4680,16 +4680,27 @@ void CAfxStreams::Console_ListActions(void)
 
 void CAfxStreams::Console_EditStream(const char * streamName, IWrpCommandArgs * args)
 {
+	bool streamEdited = false;
+
+	std::string sInputName(streamName);
+	std::transform(sInputName.begin(), sInputName.end(), sInputName.begin(), ::tolower);
+
 	for (std::list<CAfxRecordStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
 	{
-		if (!_stricmp(streamName, (*it)->StreamName_get()))
+		char const * targetName = (*it)->StreamName_get();
+		std::string sTargetName(targetName);
+		std::transform(sTargetName.begin(), sTargetName.end(), sTargetName.begin(), ::tolower);
+
+		if (StringWildCard1Matched(sInputName.c_str(), sTargetName.c_str()))
 		{
+			Tier0_Msg("--- Editing stream \"%s\" ----\n", targetName);
 			Console_EditStream((*it), args);
-			return;
+			streamEdited = true;
 		}
 	}
 
-	Tier0_Msg("Error: invalid streamName %s.\n", streamName);
+	if(!streamEdited)
+		Tier0_Warning("Error: No streamName matches \"%s\".\n", streamName);
 }
 
 void CAfxStreams::Console_EditStream(CAfxStream * stream, IWrpCommandArgs * args)

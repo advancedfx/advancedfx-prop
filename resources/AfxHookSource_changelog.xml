@@ -6,6 +6,24 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>1.15.0</version>
+<time>2017-02-04T13:07Z</time>
+<changes>
+<change type="fixed">
+Adjusted to 3 Feb 2017 CS:GO update.
+</change>
+<change type="fixed">
+Fixed mirv_deathmsg highLightId not working anymore due to CS:GO update.
+</change>
+<change type="added">
+Added HLAE wildcard support to mirv_streams edit (you can edit multiple streams at once, in case they are compatible).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>1.14.0</version>
 <time>2017-01-22T18:21Z</time>
 <changes>

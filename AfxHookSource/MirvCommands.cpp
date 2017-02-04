@@ -447,7 +447,7 @@ CON_COMMAND(mirv_streams, "Access to streams system.")
 			}
 
 			Tier0_Msg(
-				"mirv_streams edit <streamName> [...] - Edit the stream with name <streamName>, you can get the value from mirv_streams print.\n"
+				"mirv_streams edit <streamName> [...] - Edit the stream with name <streamName>, you can get the value from mirv_streams print. <streamName> can match multiple streams when using wildcards (\\* = wildcard and \\\\ = \\), however this will only do something useful when the streams matched are compatible!\n"
 			);
 			return;
 		}

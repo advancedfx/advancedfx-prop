@@ -503,8 +503,22 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 				MemRange result = FindBytes(baseRange, (char const *)&strAddr, sizeof(strAddr));
 				if(!result.IsEmpty())
 				{
-					addr = (DWORD)((char const *)result.Start +0x2c);
-					addr = addr +4 + *(DWORD *)addr;
+					DWORD tmpAddr = result.Start +0x2E;
+
+					if (result = FindPatternString(MemRange(tmpAddr - 0xA, tmpAddr + 0x4), "74 24 24 FF 74 24 30 50 E8 ?? ?? ?? ??"), !result.IsEmpty())
+					{
+						tmpAddr = tmpAddr + 4 + *(DWORD *)tmpAddr; // get call address.
+
+						if (baseRange.Start <= tmpAddr && tmpAddr < baseRange.End
+							&& (result = FindPatternString(MemRange(tmpAddr, tmpAddr + 0x9), "55 8B EC 81 EC 28 04 00 00"), !result.IsEmpty()))
+						{
+							addr = tmpAddr;
+						}
+						else
+							ErrorBox(MkErrStr(__FILE__, __LINE__));
+					}
+					else
+						ErrorBox(MkErrStr(__FILE__, __LINE__));
 				}
 				else ErrorBox(MkErrStr(__FILE__,__LINE__));
 			}
