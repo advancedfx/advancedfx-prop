@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-11-06 dominik.matrixstorm.com
+// 2017-03-12 dominik.matrixstorm.com
 //
 // First changes:
 // 2010-09-27 dominik.matrixstorm.com
@@ -13,6 +13,9 @@
 //AFXADDR_DECL(csgo_CPredictionCopy_TransferData)
 //AFXADDR_DECL(csgo_CPredictionCopy_TransferData_DSZ)
 AFXADDR_DECL(csgo_C_BaseAnimating_vtable)
+AFXADDR_DECL(csgo_DT_Animationlayer_m_flCycle_fn)
+AFXADDR_DECL(csgo_DT_Animationlayer_m_flPrevCycle_fn)
+AFXADDR_DECL(csgo_mystique_animation)
 AFXADDR_DECL(csgo_C_BaseEntity_ToolRecordEnties)
 AFXADDR_DECL(csgo_C_BaseEntity_ToolRecordEnties_DSZ)
 //AFXADDR_DECL(csgo_C_BasePlayer_OFS_m_bDucked)
@@ -25,6 +28,8 @@ AFXADDR_DECL(csgo_CCSViewRender_RenderView_DSZ)
 AFXADDR_DECL(csgo_CCSViewRender_RenderSmokeOverlay_OnLoadOldAlpha)
 AFXADDR_DECL(csgo_CCSViewRender_RenderSmokeOverlay_OnLoadAlphaBeforeDraw)
 AFXADDR_DECL(csgo_CCSViewRender_RenderSmokeOverlay_OnBeforeExitFunc)
+AFXADDR_DECL(csgo_CGlowOverlay_Draw)
+AFXADDR_DECL(csgo_CGlowOverlay_Draw_DSZ)
 AFXADDR_DECL(csgo_CUnknown_GetPlayerName)
 AFXADDR_DECL(csgo_CUnknown_GetPlayerName_DSZ)
 AFXADDR_DECL(csgo_CHudDeathNotice_FireGameEvent)

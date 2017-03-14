@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2017-01-22 dominik.matrixstorm.com
+// 2017-03-13 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-09-30 by dominik.matrixstorm.com
@@ -36,6 +36,8 @@
 #include "MirvInputMem.h"
 #include "csgo_CCSGameMovement.h"
 #include "csgo_vphysics.h"
+#include "csgo_c_baseentity.h"
+#include"csgo_c_baseanimatingoverlay.h"
 
 #include "csgo_Stdshader_dx9_Hooks.h"
 
@@ -59,6 +61,97 @@ CON_COMMAND(__mirv_streams_ref, "")
 }
 
 #endif
+
+
+float mirv_setup_add = 0;
+
+CON_COMMAND(__mirv_test8, "")
+{
+	int argc = args->ArgC();
+
+	if (2 > argc)
+		return;
+
+
+	int idx = atoi(args->ArgV(1));
+
+	SOURCESDK::IClientEntity_csgo * ce = SOURCESDK::g_Entitylist_csgo->GetClientEntity(idx);
+	SOURCESDK::C_BaseEntity_csgo * be = ce ? ce->GetBaseEntity() : 0;
+
+	if (be)
+	{
+		int * p = (int *)((char *)be + 0xA38);
+		int * pp = (int *)((char *)be + 0xA38+0x8);
+
+		float *fp = (float *)((char *)be + 0x25c);
+		*pp = *p;
+
+		*fp = g_Hook_VClient_RenderView.GetGlobals()->curtime_get() + g_Hook_VClient_RenderView.GetGlobals()->frametime_get();
+
+		Tier0_Msg("%i: %i / %f\n", idx, *p, *fp);
+	}
+}
+
+
+CON_COMMAND(__mirv_test6, "")
+{
+	int argc = args->ArgC();
+
+	if (2 > argc)
+		return;
+
+
+	int idx = atoi(args->ArgV(1));
+	
+	SOURCESDK::IClientEntity_csgo * ce = SOURCESDK::g_Entitylist_csgo->GetClientEntity(idx);
+	SOURCESDK::C_BaseEntity_csgo * be = ce ? ce->GetBaseEntity() : 0;
+
+	if (be)
+	{
+		static float old_m_flAnimTime = 0;
+		static float old_m_flSimualtionTime = 0;
+		static float old_curtime = 0;
+
+		float m_flAnimTime = *(float *)((char *)be +0x25c);
+		float m_flSimulationTime = *(float *)((char *)be + 0x264);
+		float curtime = g_Hook_VClient_RenderView.GetGlobals()->curtime_get();
+
+		float delta_m_flAnimTime = m_flAnimTime - old_m_flAnimTime;
+		float delta_m_flSimualtionTime = m_flSimulationTime - old_m_flSimualtionTime;
+		float delta_curtime = curtime - old_curtime;
+
+		bool oneIsNeg = delta_m_flAnimTime < 0 || delta_m_flSimualtionTime < 0 || delta_curtime < 0;
+
+		if (!oneIsNeg)
+			Tier0_Msg(
+				"%i: animTime=%f (%f), simulationTime=%f (%f) | curTime=%f (%f)\n"
+				, idx, m_flAnimTime, delta_m_flAnimTime, m_flSimulationTime, delta_m_flSimualtionTime, curtime, delta_curtime
+			);
+		else
+			Tier0_Warning(
+				"%i: animTime=%f (%f), simulationTime=%f (%f) | curTime=%f (%f)\n"
+				, idx, m_flAnimTime, delta_m_flAnimTime, m_flSimulationTime, delta_m_flSimualtionTime, curtime, delta_curtime
+			);
+
+		old_m_flAnimTime = m_flAnimTime;
+		old_m_flSimualtionTime = m_flSimulationTime;
+		old_curtime = curtime;
+	}
+}
+
+std::map<void *, float> m_MirvSetupMap;
+
+//extern HMODULE g_H_ClientDll;
+
+void  __declspec(naked) __declspec(dllexport) mirv_setup(void)
+{
+	/*
+	__asm mov eax, [g_H_ClientDll]
+	__asm add eax, 0x1D8D97
+	__asm mov tmp, eax
+	__asm jmp [tmp]
+	*/
+}
 
 CON_COMMAND(__mirv_ct, "")
 {
@@ -1454,7 +1547,7 @@ CON_COMMAND(mirv_campath,"camera paths")
 			Tier0_Msg(
 				"mirv_campath edit start - Sets current demotime as new start time for the path [or selected keyframes].\n"
 				"mirv_campath edit start abs <dValue> - Sets an given floating point value as new start time for the path [or selected keyframes].\n"
-				"mirv_campath edit start delta(+|-)<dValue> - Offsets the path [or selected keyframes] by the given <dValue> delta value (Example: \"mirv_campah edit start delta-1.5\" moves the path [or selected keyframes] 1.5 seconds back in time).\n"
+				"mirv_campath edit start delta(+|-)<dValue> - Offsets the path [or selected keyframes] by the given <dValue> delta value (Example: \"mirv_campath edit start delta-1.5\" moves the path [or selected keyframes] 1.5 seconds back in time).\n"
 				"mirv_campath edit duration <dValue> - set floating point value <dValue> as new duration for the path [or selected keyframes] (in seconds). Please see remarks in HLAE manual.\n"
 				"mirv_campath edit position current|(<dX> <dY> <dZ>) - Edit position of the path [or selected keyframes]. The position is applied to the center of the bounding box (\"middle\") of all [or the selected] keyframes, meaning the keyframes are moved releative to that. Current uses the current camera position, otherwise you can give the exact position.\n"
 				"mirv_campath edit angles current|(<dPitchY> <dYawZ> <dRollX>) - Edit angles of the path [or selected keyframes]. All keyframes are assigned the same angles. Current uses the current camera angles, otherwise you can give the exact angles.\n"
@@ -3321,12 +3414,38 @@ CON_COMMAND(mirv_fix, "Various fixes")
 			);
 			return;
 		}
+		else
+		if (!_stricmp("playerAnimState", cmd1))
+		{
+			if (!Hook_csgo_PlayerAnimStateFix())
+			{
+				Tier0_Warning("Error: Required hooks not installed.\n");
+				return;
+			}
+
+			if (3 <= argc)
+			{
+				char const * cmd2 = args->ArgV(2);
+
+				Enable_csgo_PlayerAnimStateFix_set(atoi(cmd2));
+
+				return;
+			}
+
+			Tier0_Msg(
+				"mirv_fix playerAnimState 0|1|2- Fixes twitching of player arms, 0 - disabled, 1 - enabled, 2 - debug.\n"
+				"Current value: %i [%f]\n",
+				Enable_csgo_PlayerAnimStateFix_get()
+			);
+			return;
+		}
 	}
 
 	Tier0_Msg(
 		"mirv_fix physicsMaxFps [...] - Can raise the FPS limit for physics (i.e. rag dolls, so they don't freeze upon high host_framerate).\n"
 		"mirv_fix blockObserverTarget [...] - Fixes unwanted player switching i.e. upon bomb plant (blocks C_BasePlayer::RecvProxy_ObserverTarget).\n"
 		"mirv_fix oldDuckFix [...] - Can fix player stuck in duck for old demos.\n"
+		"mirv_fix playerAnimState [...] - Fixes twitching of player arms."
 	);
 	return;
 }

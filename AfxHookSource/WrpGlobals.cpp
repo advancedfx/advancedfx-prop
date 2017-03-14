@@ -19,9 +19,19 @@ WrpGlobalsCsGo::WrpGlobalsCsGo(void * pGlobals)
 	m_pGlobals = pGlobals;
 }
 
+float WrpGlobalsCsGo::frametime_get(void)
+{
+	return *(float *)((unsigned char *)m_pGlobals +0x14);
+}
+
 float WrpGlobalsCsGo::absoluteframetime_get(void)
 {
 	return *(float *)((unsigned char *)m_pGlobals +AFXADDR_GET(cstrike_gpGlobals_OFS_absoluteframetime));
+}
+
+void WrpGlobalsCsGo::curtime_set(float value)
+{
+	*(float *)((unsigned char *)m_pGlobals + AFXADDR_GET(csgo_gpGlobals_OFS_curtime)) = value;
 }
 
 float WrpGlobalsCsGo::curtime_get(void)

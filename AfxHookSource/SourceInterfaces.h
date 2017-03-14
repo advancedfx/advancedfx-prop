@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-12-16 dominik.matrixstorm.com
+// 2017-02-09 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-09-30 dominik.matrixstorm.com
@@ -625,7 +625,13 @@ public:
 	virtual void _UNUSED_002(void) = 0;
 	virtual void _UNUSED_003(void) = 0;
 	virtual void _UNUSED_004(void) = 0;
-	virtual void Free( void *pMem ) = 0;
+
+	virtual void Free( void *pMem ) = 0; //:005
+
+	virtual void _UNUSED_006(void) = 0;
+	virtual void _UNUSED_007(void) = 0;
+
+	virtual size_t GetSize(void *pMem) = 0; //:008
 
 	// There is more, but we don't need it at the moment
 	// [....]
@@ -3788,6 +3794,35 @@ enum RenderViewInfo_t_csgo
 
 #define CLIENT_DLL_INTERFACE_VERSION_CSGO_018 "VClient018"
 
+namespace CSGO
+{
+//-----------------------------------------------------------------------------
+// Purpose: The engine reports to the client DLL what stage it's entering so the DLL can latch events
+//  and make sure that certain operations only happen during the right stages.
+// The value for each stage goes up as you move through the frame so you can check ranges of values
+//  and if new stages get added in-between, the range is still valid.
+//-----------------------------------------------------------------------------
+enum ClientFrameStage_t
+{
+	FRAME_UNDEFINED = -1,			// (haven't run any frames yet)
+	FRAME_START,
+
+	// A network packet is being recieved
+	FRAME_NET_UPDATE_START,
+	// Data has been received and we're going to start calling PostDataUpdate
+	FRAME_NET_UPDATE_POSTDATAUPDATE_START,
+	// Data has been received and we've called PostDataUpdate on all data recipients
+	FRAME_NET_UPDATE_POSTDATAUPDATE_END,
+	// We've received all packets, we can now do interpolation, prediction, etc..
+	FRAME_NET_UPDATE_END,
+
+	// We're about to start rendering the scene
+	FRAME_RENDER_START,
+	// We've finished rendering the scene.
+	FRAME_RENDER_END
+};
+}
+
 class IBaseClientDLL_csgo abstract
 {
 public:
@@ -3854,7 +3889,10 @@ public:
 	virtual void _UNKOWN_033(void) = 0;
 	virtual void _UNKOWN_034(void) = 0;
 	virtual void _UNKOWN_035(void) = 0;
-	virtual void _UNKOWN_036(void) = 0;
+	
+	// 036:
+	virtual void FrameStageNotify(SOURCESDK::CSGO::ClientFrameStage_t curStage) = 0;
+
 	virtual void _UNKOWN_037(void) = 0;
 	virtual void _UNKOWN_038(void) = 0;
 	virtual void _UNKOWN_039(void) = 0;
@@ -4190,6 +4228,10 @@ public:
 	// height of view window
 	int			height;
 	int			m_nUnscaledHeight;
+
+	char _unknown_20_14c[0x12c];
+
+	bool		m_bCacheFullSceneState : 1;
 
 	// ...
 	// more we don't care about.
@@ -4993,7 +5035,9 @@ public:
 	virtual void _UNKNOWN_C_BaseEntity_108(void);
 	virtual void _UNKNOWN_C_BaseEntity_109(void);
 	virtual void _UNKNOWN_C_BaseEntity_110(void);
-	virtual void _UNKNOWN_C_BaseEntity_111(void);
+	
+	virtual float					GetInterpolationAmount(int flags); //:111
+
 	virtual void _UNKNOWN_C_BaseEntity_112(void);
 	virtual void _UNKNOWN_C_BaseEntity_113(void);
 	virtual void _UNKNOWN_C_BaseEntity_114(void);

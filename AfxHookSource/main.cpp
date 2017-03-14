@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-11-06 dominik.matrixstorm.com
+// 2017-03-13 dominik.matrixstorm.com
 //
 // First changes:
 // 2009-09-29 dominik.matrixstorm.com
@@ -42,6 +42,8 @@
 #include "ClientTools.h"
 #include "MatRenderContextHook.h"
 //#include "csgo_IPrediction.h"
+#include "csgo_MemAlloc.h"
+#include "csgo_c_baseanimatingoverlay.h"
 
 #include <set>
 #include <map>
@@ -598,6 +600,7 @@ void * HookInterfaceFn(void * iface, int idx, void * fn)
 
 bool g_DebugEnabled = false;
 
+bool g_csgo_FirstFrameAfterNetUpdateEnd = false;
 
 #pragma warning(push)
 #pragma warning(disable:4731) // frame pointer register 'ebp' modified by inline assembly code
@@ -793,6 +796,8 @@ public:
 	{
 		// JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 26)
 
+		//Tier0_Msg("---- View_Render ----\n");
+
 		bool rectNull = rect->width == 0 || rect->height == 0;
 
 		if(g_MaterialSystem_csgo && !rectNull)
@@ -840,8 +845,33 @@ public:
 	virtual void _UNKOWN_035(void)
 	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 35) }
 
-	virtual void _UNKOWN_036(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 36) }
+	virtual void FrameStageNotify(SOURCESDK::CSGO::ClientFrameStage_t curStage)
+	{
+		// JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 36)
+
+		static bool firstFrameAfterNetUpdateEnd = false;
+
+		switch(curStage)
+		{
+		case SOURCESDK::CSGO::FRAME_NET_UPDATE_START:
+			break;
+		case SOURCESDK::CSGO::FRAME_NET_UPDATE_END:
+			firstFrameAfterNetUpdateEnd = true;
+			break;
+		case SOURCESDK::CSGO::FRAME_RENDER_START:
+			g_csgo_FirstFrameAfterNetUpdateEnd = firstFrameAfterNetUpdateEnd;
+			firstFrameAfterNetUpdateEnd = false;
+			break;
+		}
+
+		m_Parent->FrameStageNotify(curStage);
+
+		switch (curStage)
+		{
+		case SOURCESDK::CSGO::FRAME_RENDER_END:
+			break;
+		}
+	}
 
 	virtual void _UNKOWN_037(void)
 	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 37) }
@@ -1507,14 +1537,18 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 			Tier0_ConMsg = (Tier0MsgFn)GetProcAddress(hTier0, "ConMsg");
 			Tier0_ConWarning = (Tier0MsgFn)GetProcAddress(hTier0, "ConWarning");
 			Tier0_ConLog = (Tier0MsgFn)GetProcAddress(hTier0, "ConLog");
-		}
 
-		if(isV34)
-		{
-			InterceptDllCall(hTier0, "USER32.dll", "GetCursorPos", (DWORD) &new_GetCursorPos);
-			InterceptDllCall(hTier0, "USER32.dll", "SetCursorPos", (DWORD) &new_SetCursorPos);
-		}
+			if (isV34)
+			{
+				InterceptDllCall(hTier0, "USER32.dll", "GetCursorPos", (DWORD)&new_GetCursorPos);
+				InterceptDllCall(hTier0, "USER32.dll", "SetCursorPos", (DWORD)&new_SetCursorPos);
+			}
 
+			if (!Hook_csgo_MemAlloc())
+			{
+				ErrorBox("Error: Hook_csgo_MemAlloc failed. This can cause mayor bugs!");
+			}
+		}
 	}
 
 	if(bFirstLauncher && StringEndsWith( lpLibFileName, "launcher.dll"))
@@ -1610,6 +1644,7 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 		csgo_CViewRender_Install();
 		Hook_csgo_writeWaveConsoleCheck();
 		Hook_C_BaseEntity_ToolRecordEnties();
+		Hook_csgo_PlayerAnimStateFix();
 	}
 	else
 	if(bFirstScaleformui && StringEndsWith( lpLibFileName, "scaleformui.dll"))

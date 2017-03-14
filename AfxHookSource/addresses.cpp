@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-11-06 dominik.matrixstorm.com
+// 2017-03-12 dominik.matrixstorm.com
 //
 // First changes:
 // 2010-09-27 dominik.matrixstorm.com
@@ -17,6 +17,9 @@ using namespace Afx::BinUtils;
 //AFXADDR_DEF(csgo_CPredictionCopy_TransferData)
 //AFXADDR_DEF(csgo_CPredictionCopy_TransferData_DSZ)
 AFXADDR_DEF(csgo_C_BaseAnimating_vtable)
+AFXADDR_DEF(csgo_DT_Animationlayer_m_flCycle_fn)
+AFXADDR_DEF(csgo_DT_Animationlayer_m_flPrevCycle_fn)
+AFXADDR_DEF(csgo_mystique_animation)
 AFXADDR_DEF(csgo_C_BaseEntity_ToolRecordEnties)
 AFXADDR_DEF(csgo_C_BaseEntity_ToolRecordEnties_DSZ)
 //AFXADDR_DEF(csgo_C_BasePlayer_OFS_m_bDucked)
@@ -29,6 +32,8 @@ AFXADDR_DEF(csgo_CCSViewRender_RenderView_DSZ)
 AFXADDR_DEF(csgo_CCSViewRender_RenderSmokeOverlay_OnLoadOldAlpha)
 AFXADDR_DEF(csgo_CCSViewRender_RenderSmokeOverlay_OnLoadAlphaBeforeDraw)
 AFXADDR_DEF(csgo_CCSViewRender_RenderSmokeOverlay_OnBeforeExitFunc)
+AFXADDR_DEF(csgo_CGlowOverlay_Draw)
+AFXADDR_DEF(csgo_CGlowOverlay_Draw_DSZ)
 AFXADDR_DEF(csgo_CUnknown_GetPlayerName)
 AFXADDR_DEF(csgo_CUnknown_GetPlayerName_DSZ)
 AFXADDR_DEF(csgo_CHudDeathNotice_FireGameEvent)
@@ -1231,6 +1236,115 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 			AFXADDR_SET(csgo_C_BasePlayer_RecvProxy_ObserverTarget, addr);
 		}
 
+		// csgo_DT_Animationlayer_m_flCycle
+		{
+			DWORD addr = 0;
+			DWORD strAddr = 0;
+			{
+				ImageSectionsReader sections((HMODULE)clientDll);
+				if (!sections.Eof())
+				{
+					sections.Next(); // skip .text
+					if (!sections.Eof())
+					{
+						MemRange result = FindCString(sections.GetMemRange(), "m_flCycle");
+						if (!result.IsEmpty())
+						{
+							strAddr = result.Start;
+						}
+						else ErrorBox(MkErrStr(__FILE__, __LINE__));
+					}
+					else ErrorBox(MkErrStr(__FILE__, __LINE__));
+				}
+				else ErrorBox(MkErrStr(__FILE__, __LINE__));
+			}
+			if (strAddr)
+			{
+				ImageSectionsReader sections((HMODULE)clientDll);
+
+				if (!sections.Eof())
+				{
+					MemRange textRange = sections.GetMemRange();
+
+					MemRange result = textRange;
+
+					for (int i = 0; i < 2 && !(result = FindBytes(result, (const char *)&strAddr, sizeof(strAddr))).IsEmpty(); ++i)
+					{
+						if (i < 1)
+						{
+							result.Start = result.End;
+							result.End = textRange.End;
+						}
+					}
+
+					// may check instruction opcode here, hm.
+
+					if (!result.IsEmpty())
+					{
+						addr = result.Start + 0x24;
+					}
+					else ErrorBox(MkErrStr(__FILE__, __LINE__));
+				}
+				else ErrorBox(MkErrStr(__FILE__, __LINE__));
+			}
+			AFXADDR_SET(csgo_DT_Animationlayer_m_flCycle_fn, addr);
+		}
+
+		// csgo_DT_Animationlayer_m_flPrevCycle_fn
+		{
+			DWORD addr = 0;
+			DWORD strAddr = 0;
+			{
+				ImageSectionsReader sections((HMODULE)clientDll);
+				if (!sections.Eof())
+				{
+					sections.Next(); // skip .text
+					if (!sections.Eof())
+					{
+						MemRange result = FindCString(sections.GetMemRange(), "m_flPrevCycle");
+						if (!result.IsEmpty())
+						{
+							strAddr = result.Start;
+						}
+						else ErrorBox(MkErrStr(__FILE__, __LINE__));
+					}
+					else ErrorBox(MkErrStr(__FILE__, __LINE__));
+				}
+				else ErrorBox(MkErrStr(__FILE__, __LINE__));
+			}
+			if (strAddr)
+			{
+				ImageSectionsReader sections((HMODULE)clientDll);
+
+				if (!sections.Eof())
+				{
+					MemRange textRange = sections.GetMemRange();
+
+					MemRange result = textRange;
+
+					for (int i = 0; i < 1 && !(result = FindBytes(result, (const char *)&strAddr, sizeof(strAddr))).IsEmpty(); ++i)
+					{
+						if (i < 0)
+						{
+							result.Start = result.End;
+							result.End = textRange.End;
+						}
+					}
+
+					// may check instruction opcode here, hm.
+
+					if (!result.IsEmpty())
+					{
+						addr = result.Start + 0x24;
+					}
+					else ErrorBox(MkErrStr(__FILE__, __LINE__));
+				}
+				else ErrorBox(MkErrStr(__FILE__, __LINE__));
+			}
+			AFXADDR_SET(csgo_DT_Animationlayer_m_flPrevCycle_fn, addr);
+		}
+
+
 		// csgo_CCSViewRender_RenderView:
 		{
 			DWORD addr = 0;
@@ -1463,17 +1577,109 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 			}
 			AFXADDR_SET(csgo_C_BaseAnimating_vtable, addr);
 		}
+
+		// csgo_CGlowOverlay_Destructor, csgo_CGlowOverlay_Draw:
+		{
+			DWORD addrDraw = 0;
+			/*{
+				ImageSectionsReader sections((HMODULE)clientDll);
+				if (!sections.Eof())
+				{
+					MemRange textRange = sections.GetMemRange();
+
+					sections.Next(); // skip .text
+					if (!sections.Eof())
+					{
+						MemRange firstDataRange = sections.GetMemRange();
+
+						sections.Next(); // skip first .data
+						if (!sections.Eof())
+						{
+							MemRange result = FindCString(sections.GetMemRange(), ".?AVCGlowOverlay@@");
+							if (!result.IsEmpty())
+							{
+								DWORD tmpAddr = result.Start;
+								tmpAddr -= 0x8;
+
+								result.Start = firstDataRange.Start;
+								result.End = firstDataRange.Start;
+
+								for (int i = 0; i < 2; ++i)
+								{
+									result = FindBytes(MemRange(result.End, firstDataRange.End), (char const *)&tmpAddr, sizeof(tmpAddr));
+								}
+
+								if (!result.IsEmpty())
+								{
+									DWORD tmpAddr = result.Start;
+									tmpAddr -= 0xC;
+
+									result = FindBytes(firstDataRange, (char const *)&tmpAddr, sizeof(tmpAddr));
+									if (!result.IsEmpty())
+									{
+										DWORD vtableAddr = result.Start;
+										vtableAddr += (1) * 4;
+
+										DWORD tmpDrawAddr = *(DWORD *)( 4*4 +vtableAddr);
+										if (textRange.Start <= tmpDrawAddr && tmpDrawAddr < textRange.End - 0xc)
+										{
+											if (!FindPatternString(MemRange(tmpDrawAddr, tmpDrawAddr + 0xc), "55 8B EC 83 E4 F0 81 EC 78 04 00 00").IsEmpty())
+											{
+												addrDraw = tmpDrawAddr;
+											}
+											else ErrorBox(MkErrStr(__FILE__, __LINE__));
+										}
+										else ErrorBox(MkErrStr(__FILE__, __LINE__));
+									}
+									else ErrorBox(MkErrStr(__FILE__, __LINE__));
+								}
+								else ErrorBox(MkErrStr(__FILE__, __LINE__));
+							}
+							else ErrorBox(MkErrStr(__FILE__, __LINE__));
+						}
+						else ErrorBox(MkErrStr(__FILE__, __LINE__));
+					}
+					else ErrorBox(MkErrStr(__FILE__, __LINE__));
+				}
+				else ErrorBox(MkErrStr(__FILE__, __LINE__));
+			}*/
+			AFXADDR_SET(csgo_CGlowOverlay_Draw, addrDraw);			
+		}
+
+		// csgo_mystique_animation:
+		{
+			DWORD addr = 0;
+
+			ImageSectionsReader sections((HMODULE)clientDll);
+			if (!sections.Eof())
+			{
+				MemRange textRange = sections.GetMemRange();
+
+				MemRange result = FindPatternString(textRange, "55 8B EC 83 EC 1C 56 57 8B F9 F3 0F 11 55 F8 F3 0F 11 4D F4 8B 4F 60 85 C9");
+
+				if (!result.IsEmpty())
+					addr = result.Start;
+				else
+					ErrorBox(MkErrStr(__FILE__, __LINE__));
+			}
+			else ErrorBox(MkErrStr(__FILE__, __LINE__));
+
+			AFXADDR_SET(csgo_mystique_animation, addr);
+		}
 	}
 	else
 	{
 		//AFXADDR_SET(csgo_CPredictionCopy_TransferData, 0x0);
 		AFXADDR_SET(csgo_C_BaseAnimating_vtable, 0x0);
+		AFXADDR_SET(csgo_DT_Animationlayer_m_flCycle_fn, 0x0);
+		AFXADDR_SET(csgo_DT_Animationlayer_m_flPrevCycle_fn, 0x0);
 		AFXADDR_SET(csgo_C_BaseEntity_ToolRecordEnties, 0x0);
 		//AFXADDR_SET(csgo_C_BasePlayer_OFS_m_bDucked, (AfxAddr)-1);
 		//AFXADDR_SET(csgo_C_BasePlayer_OFS_m_bDucking, (AfxAddr)-1);
 		AFXADDR_SET(csgo_C_BasePlayer_OFS_m_skybox3d_scale, (AfxAddr)-1);
 		//AFXADDR_SET(csgo_C_BasePlayer_OFS_m_flDuckAmount, (AfxAddr)-1);
 		AFXADDR_SET(csgo_C_BasePlayer_RecvProxy_ObserverTarget, 0x0);
+		AFXADDR_SET(csgo_CGlowOverlay_Draw, 0x0);
 		AFXADDR_SET(csgo_CUnknown_GetPlayerName, 0x0);
 		AFXADDR_SET(csgo_CHudDeathNotice_FireGameEvent, 0x0);
 		AFXADDR_SET(csgo_CHudDeathNotice_UnkAddDeathNotice, 0x0);
@@ -1489,11 +1695,13 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 		AFXADDR_SET(csgo_CCSViewRender_RenderSmokeOverlay_OnLoadOldAlpha, 0x0);
 		AFXADDR_SET(csgo_CCSViewRender_RenderSmokeOverlay_OnLoadAlphaBeforeDraw, 0x0);
 		AFXADDR_SET(csgo_CCSViewRender_RenderSmokeOverlay_OnBeforeExitFunc, 0x0);
+		AFXADDR_SET(csgo_mystique_animation, 0x0);
 	}
 
 	//AFXADDR_SET(csgo_CPredictionCopy_TransferData_DSZ, 0x0a);
 	AFXADDR_SET(csgo_C_BaseEntity_ToolRecordEnties_DSZ, 0xa);
 	AFXADDR_SET(csgo_CCSViewRender_RenderView_DSZ, 0xc);
+	AFXADDR_SET(csgo_CGlowOverlay_Draw_DSZ, 0xc);
 	AFXADDR_SET(csgo_CUnknown_GetPlayerName_DSZ, 0x0b);
 	AFXADDR_SET(csgo_CHudDeathNotice_FireGameEvent_DSZ, 0x0b);
 	AFXADDR_SET(csgo_CHudDeathNotice_UnkAddDeathNotice_DSZ, 0x09);

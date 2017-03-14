@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2017-07-01 dominik.matrixstorm.com
+// 2017-02-09 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -20,6 +20,7 @@
 #include "ClientTools.h"
 #include "d3d9Hooks.h"
 #include "MatRenderContextHook.h"
+#include "csgo_GlowOverlay.h"
 
 #include <shared/StringTools.h>
 #include <shared/FileTools.h>
@@ -4133,6 +4134,19 @@ void CAfxBaseFxStream::CActionAfxSplineRopeHook::SetPixelShader(CAfx_csgo_Shader
 
 // CAfxStreams /////////////////////////////////////////////////////////////////
 
+void FinishStreamForGlowOverlayFix(CAfxRecordStream * stream)
+{
+	if (CAfxSingleStream * singleStream = stream->AsAfxSingleStream())
+	{
+		//GetCsgoCGlowOverlayFix()->OnStreamFinished(singleStream->Stream_get());
+	}
+	if (CAfxTwinStream * twinStream = stream->AsAfxTwinStream())
+	{
+		//GetCsgoCGlowOverlayFix()->OnStreamFinished(twinStream->StreamA_get());
+		//GetCsgoCGlowOverlayFix()->OnStreamFinished(twinStream->StreamB_get());
+	}
+}
+
 CAfxStreams::CAfxStreams()
 : m_RecordName("untitled_rec")
 , m_PresentRecordOnScreen(false)
@@ -4480,6 +4494,8 @@ void CAfxStreams::Console_Record_End()
 		for(std::list<CAfxRecordStream *>::iterator it = m_Streams.begin(); it != m_Streams.end(); ++it)
 		{
 			(*it)->RecordEnd();
+
+			FinishStreamForGlowOverlayFix(*it);
 		}
 
 		RestoreMatVars();
@@ -4626,6 +4642,8 @@ void CAfxStreams::Console_RemoveStream(const char * streamName)
 			if(m_Recording) cur->RecordEnd();
 
 			if(m_PreviewStream == cur) m_PreviewStream = 0;
+
+			FinishStreamForGlowOverlayFix(cur);
 
 			m_Streams.erase(it);
 
@@ -6221,6 +6239,8 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, SOURCESDK::vrect_t_csgo *r
 		}
 	}
 
+	//GetCsgoCGlowOverlayFix()->OnMainViewRenderBegin();
+
 	cl->GetParent()->View_Render(rect);	
 
 	// Capture BVHs (except main):
@@ -6381,6 +6401,7 @@ IAfxMatRenderContextOrg * CAfxStreams::CaptureStreamToBuffer(CAfxRenderViewStrea
 	ctxp->ClearBuffers(true,false,false);
 
 	//DrawLock(ctxp);
+	//GetCsgoCGlowOverlayFix()->OnStreamRenderViewBegin(stream);
 	view->RenderView(*viewSetup, *viewSetup, SOURCESDK::VIEW_CLEAR_STENCIL|SOURCESDK::VIEW_CLEAR_DEPTH, whatToDraw);
 	//ScheduleDrawUnlock(ctxp);
 
