@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2017-03-12 dominik.matrixstorm.com
+// 2017-03-15 dominik.matrixstorm.com
 //
 // First changes:
 // 2010-09-27 dominik.matrixstorm.com
@@ -18,8 +18,8 @@ using namespace Afx::BinUtils;
 //AFXADDR_DEF(csgo_CPredictionCopy_TransferData_DSZ)
 AFXADDR_DEF(csgo_C_BaseAnimating_vtable)
 AFXADDR_DEF(csgo_DT_Animationlayer_m_flCycle_fn)
-AFXADDR_DEF(csgo_DT_Animationlayer_m_flPrevCycle_fn)
-AFXADDR_DEF(csgo_mystique_animation)
+//AFXADDR_DEF(csgo_DT_Animationlayer_m_flPrevCycle_fn)
+//AFXADDR_DEF(csgo_mystique_animation)
 AFXADDR_DEF(csgo_C_BaseEntity_ToolRecordEnties)
 AFXADDR_DEF(csgo_C_BaseEntity_ToolRecordEnties_DSZ)
 //AFXADDR_DEF(csgo_C_BasePlayer_OFS_m_bDucked)
@@ -1290,6 +1290,7 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 			AFXADDR_SET(csgo_DT_Animationlayer_m_flCycle_fn, addr);
 		}
 
+		/*
 		// csgo_DT_Animationlayer_m_flPrevCycle_fn
 		{
 			DWORD addr = 0;
@@ -1343,7 +1344,7 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 			}
 			AFXADDR_SET(csgo_DT_Animationlayer_m_flPrevCycle_fn, addr);
 		}
-
+		*/
 
 		// csgo_CCSViewRender_RenderView:
 		{
@@ -1646,6 +1647,7 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 			AFXADDR_SET(csgo_CGlowOverlay_Draw, addrDraw);			
 		}
 
+		/*
 		// csgo_mystique_animation:
 		{
 			DWORD addr = 0;
@@ -1666,13 +1668,14 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 
 			AFXADDR_SET(csgo_mystique_animation, addr);
 		}
+		*/
 	}
 	else
 	{
 		//AFXADDR_SET(csgo_CPredictionCopy_TransferData, 0x0);
 		AFXADDR_SET(csgo_C_BaseAnimating_vtable, 0x0);
 		AFXADDR_SET(csgo_DT_Animationlayer_m_flCycle_fn, 0x0);
-		AFXADDR_SET(csgo_DT_Animationlayer_m_flPrevCycle_fn, 0x0);
+		//AFXADDR_SET(csgo_DT_Animationlayer_m_flPrevCycle_fn, 0x0);
 		AFXADDR_SET(csgo_C_BaseEntity_ToolRecordEnties, 0x0);
 		//AFXADDR_SET(csgo_C_BasePlayer_OFS_m_bDucked, (AfxAddr)-1);
 		//AFXADDR_SET(csgo_C_BasePlayer_OFS_m_bDucking, (AfxAddr)-1);
@@ -1695,7 +1698,7 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 		AFXADDR_SET(csgo_CCSViewRender_RenderSmokeOverlay_OnLoadOldAlpha, 0x0);
 		AFXADDR_SET(csgo_CCSViewRender_RenderSmokeOverlay_OnLoadAlphaBeforeDraw, 0x0);
 		AFXADDR_SET(csgo_CCSViewRender_RenderSmokeOverlay_OnBeforeExitFunc, 0x0);
-		AFXADDR_SET(csgo_mystique_animation, 0x0);
+		//AFXADDR_SET(csgo_mystique_animation, 0x0);
 	}
 
 	//AFXADDR_SET(csgo_CPredictionCopy_TransferData_DSZ, 0x0a);

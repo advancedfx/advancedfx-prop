@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2017-03-14 dominik.matrixstorm.com
+// 2017-03-15 dominik.matrixstorm.com
 //
 // First changes:
 // 2017-03-12 dominik.matrixstorm.com
@@ -66,27 +66,65 @@ public:
 
 				float deltaNet = newNetValue >= oldNetValue ? newNetValue - oldNetValue : newNetValue + 1.0f - oldNetValue;
 
-				float centeredNet = (oldNetValue < 0.5f ? oldNetValue : oldNetValue - 1.0f) + 0.5f;
-				float centeredEngine = (newEngineValue < 0.5f ? newEngineValue : newEngineValue - 1.0f) + 0.5f;
+				float net = oldNetValue;
+				float engine = newEngineValue;
+				float totalError;
 
-				float error = centeredNet - centeredEngine;
+				// I wish I was better at math, the correction values could need some numerical optimization!
 
-				float totalError = error + res.first->second.oldError;
-				if (1.0f <= fabs(totalError)) totalError = 0; // give up
+				if (net >= engine)
+				{
+					if (0.5f >= net - engine)
+						totalError = net - engine;
+					else
+						totalError = net -1.0f -engine;
+				}
+				else
+				{
+					if (0.5f >= net +1.0f -engine)
+						totalError = net + 1.0f - engine;
+					else
+						totalError = net +1.0f - 1.0f - engine;
+				}
 
-				float correctionError = 0.4f * error + 0.6f * totalError;
-
+				if (totalError < -0.5f)
+				{
+					// actually should never happen, just for readability.
+					if (1 < g_csgo_PlayerAnimStateFix) Tier0_Warning("CCsgoPlayerAnimStateFix::Fix on m_flCycle at 0x%08x: Engine: %f  | Net: %f -> %f (%f) | total error: %f, ERROR in HLAE code, limiting to -0.5!.\n", pOut, newEngineValue, oldNetValue, newNetValue, deltaNet, totalError);
+					totalError = -0.5f;
+				}
+				else
+				if (0.5f < totalError)
+				{
+					// actually should never happen, just for readability.
+					if (1 < g_csgo_PlayerAnimStateFix) Tier0_Warning("CCsgoPlayerAnimStateFix::Fix on m_flCycle at 0x%08x: Engine: %f  | Net: %f -> %f (%f) | total error: %f, ERROR in HLAE code, limiting to 0.5!.\n", pOut, newEngineValue, oldNetValue, newNetValue, deltaNet, totalError);
+					totalError = 0.5f;
+				}
 				res.first->second.oldError = totalError;
 
-				float targetDelta = deltaNet + correctionError;
-				if (targetDelta < 0) targetDelta = 0.001 * deltaNet; // we'll try to catch up later.
+				float targetVal;
 
-				float targetVal = mirv_cycle_mod(newEngineValue +targetDelta);
+				if (0.3f <= abs(totalError))
+				{
+					targetVal = newNetValue; // give up
+
+					if (1 < g_csgo_PlayerAnimStateFix) Tier0_Warning("CCsgoPlayerAnimStateFix::Fix on m_flCycle at 0x%08x: Engine: %f  | Net: %f -> %f (%f) | total error: %f, GIVING UP, new target: %f.\n", pOut, newEngineValue, oldNetValue, newNetValue, deltaNet, totalError, targetVal);
+				}
+				else
+				{
+					float targetDelta = 0.9f*deltaNet + totalError;
+
+					if (targetDelta < 0) targetDelta = 0;
+
+					targetVal = mirv_cycle_mod(newEngineValue + targetDelta);
+
+					if (1 < g_csgo_PlayerAnimStateFix) Tier0_Msg("CCsgoPlayerAnimStateFix::Fix on m_flCycle at 0x%08x: Engine: %f  | Net: %f -> %f (%f) | total error: %f, new target: %f (%f).\n", pOut, newEngineValue, oldNetValue, newNetValue, deltaNet, totalError, targetVal, targetDelta);
+				}
 
 				*pValue = targetVal;
 
-				if (1 < g_csgo_PlayerAnimStateFix)
-					Tier0_Msg("CCsgoPlayerAnimStateFix::Fix on m_flCycle at 0x%08x: Engine: %f  | Net: %f -> %f (%f) | current error: %f, total error: %f, error correction value: %f | New target value: %f (%f).\n", pOut, newEngineValue, oldNetValue, newNetValue, deltaNet, error, totalError, correctionError, targetVal, targetDelta);
+				//float * p_m_flPrevCycle = (float *)((char *)pValue - 0x10);
+				// nope, don't : // *p_m_flPrevCycle = newEngineValue; // fix up this shit as well.
 
 				return true;
 			}
@@ -146,9 +184,10 @@ void touring_csgo__RecvProxy_m_flCycle(const csgo_CRecvProxyData_t *pData, void 
 
 		detoured_csgo_RecvProxy_m_flCycle(pData, pStruct, pOut);
 
+		//Tier0_Msg("touring_csgo__RecvProxy_m_flCycle: %f\n", *pValue);
+
 		if(fixed) *pValue = orgValue;
 
-		//float * p_m_flPlaybackRate = (float *)((char *)pStruct + 0x28);
 		//g_csgo_PlayerAnimStateFix_origValues.emplace_back(p_m_flPlaybackRate); // we want to get at m_flPlayBackRate later on :-)
 
 		return;
@@ -172,7 +211,7 @@ void touring_csgo__RecvProxy_m_flPrevCycle(const csgo_CRecvProxyData_t *pData, v
 void Enable_csgo_PlayerAnimStateFix_set(int value)
 {
 	if (value < 0) value = 0;
-	else if (2 < value) value = 2;
+	else if (3 < value) value = 3;
 
 	g_csgo_PlayerAnimStateFix = value;
 }
@@ -192,21 +231,20 @@ float g_csgo_mystique_annimation_factor = 0.0f;
 
 void __stdcall touring_csgo_mystique_animation(DWORD * this_ptr, DWORD arg0, float argXmm1, float argXmm2)
 {
-	//volatile float * mystique = (float *)((char *)this_ptr + 0x98); // new cycle value
+/*	//volatile float * mystique = (float *)((char *)this_ptr + 0x98); // new cycle value
 	//volatile float * p_m_flCycle = (float *)((char*)this_ptr + 0x4FC);
 	volatile float * p_m_unk_flLastCurTime = (float *)((char*)this_ptr + 0x6c);
 	volatile bool * p_m_somecheck = (bool *)((char*)this_ptr + 0x50);
 
 	if (g_csgo_PlayerAnimStateFix)
 	{
+		float newTime = g_Hook_VClient_RenderView.GetGlobals()->curtime_get() - (g_csgo_FirstFrameAfterNetUpdateEnd ? 0.0f : g_Hook_VClient_RenderView.GetGlobals()->frametime_get());
 
-		//float newTime = *p_m_unk_flLastCurTime + g_csgo_mystique_annimation_factor;
+		if (2 < g_csgo_PlayerAnimStateFix) Tier0_Msg("touring_csgo_mystique_animation (probably CBasePlayerAnimState::Update) on 0x%08x: p_m_unk_flLastCurTime: %f -> %f (curtime=%f)\n", this_ptr, *p_m_unk_flLastCurTime, newTime, g_Hook_VClient_RenderView.GetGlobals()->curtime_get());
 
-		//if (1 < g_csgo_PlayerAnimStateFix) Tier0_Msg("touring_csgo_mystique_animation (probably CBasePlayerAnimState::Update) on 0x%08x: p_m_unk_flLastCurTime: %f -> %f (curtime=%f)", this_ptr, *p_m_unk_flLastCurTime, newTime, g_Hook_VClient_RenderView.GetGlobals()->curtime_get());
-
-		//*p_m_unk_flLastCurTime = newTime;
+		*p_m_unk_flLastCurTime = newTime;
 	}
-
+*/
 	{
 		__asm mov ecx, this_ptr
 		__asm push arg0
@@ -214,11 +252,12 @@ void __stdcall touring_csgo_mystique_animation(DWORD * this_ptr, DWORD arg0, flo
 		__asm movss xmm1, argXmm1
 		__asm call detoured_csgo_mystique_animation
 	}
-
+/*
 	if (g_csgo_PlayerAnimStateFix)
 	{
-		//if (1 < g_csgo_PlayerAnimStateFix) Tier0_Msg(" --> afterwards: %f\n", *p_m_unk_flLastCurTime);
+		*p_m_unk_flLastCurTime = g_Hook_VClient_RenderView.GetGlobals()->curtime_get(); // important, otherwise this shit will carsh
 	}
+*/
 }
 
 void __declspec(naked) naked_touring_csgo_mystique_animation(void)
@@ -250,7 +289,7 @@ bool Hook_csgo_PlayerAnimStateFix(void)
 	if (!firstRun) return firstResult;
 	firstRun = false;
 
-	if (AFXADDR_GET(csgo_DT_Animationlayer_m_flCycle_fn) && AFXADDR_GET(csgo_DT_Animationlayer_m_flPrevCycle_fn) && AFXADDR_GET(csgo_mystique_animation))
+	if (AFXADDR_GET(csgo_DT_Animationlayer_m_flCycle_fn))// && AFXADDR_GET(csgo_DT_Animationlayer_m_flPrevCycle_fn) && AFXADDR_GET(csgo_mystique_animation))
 	{
 		//MdtMemBlockInfos mbis;
 
@@ -262,6 +301,7 @@ bool Hook_csgo_PlayerAnimStateFix(void)
 		*pMovArgFn = touring_csgo__RecvProxy_m_flCycle;
 		//MdtMemAccessEnd(&mbis);
 
+		/*
 		pMovArgFn = *(csgo_C_BasePlayer_RecvProxy_t **)AFXADDR_GET(csgo_DT_Animationlayer_m_flPrevCycle_fn);
 		//MdtMemAccessBegin(pMovArgFn, sizeof(void *), &mbis);
 		detoured_csgo_RecvProxy_m_flPrevCycle = *pMovArgFn;
@@ -269,6 +309,7 @@ bool Hook_csgo_PlayerAnimStateFix(void)
 		//MdtMemAccessEnd(&mbis);
 
 		detoured_csgo_mystique_animation = DetourApply((BYTE *)AFXADDR_GET(csgo_mystique_animation), (BYTE *)naked_touring_csgo_mystique_animation, 0x0a);
+		*/
 
 		firstResult = true;
 	}
