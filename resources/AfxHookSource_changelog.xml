@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>1.16.1</version>
+<time>2017-03-17T16:30Z</time>
+<changes>
+<change type="added">
+Fixed mirv_fix playerAnimState related console spam (now every 10 seconds maximum).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>1.16.0</version>
 <time>2017-03-15T08:12Z</time>
 <changes>

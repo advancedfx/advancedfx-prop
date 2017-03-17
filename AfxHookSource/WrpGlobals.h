@@ -11,6 +11,7 @@
 class WrpGlobals abstract
 {
 public:
+	virtual void frametime_set(float value) { } // csgo only
 	virtual float frametime_get(void) { return 0; } // csgo only
 	virtual void curtime_set(float value) { } // csgo only
 
@@ -25,10 +26,12 @@ class WrpGlobalsCsGo : public WrpGlobals
 public:
 	WrpGlobalsCsGo(void * pGlobals);
 
+	virtual void frametime_set(float value);
 	virtual float frametime_get(void);
+	virtual void curtime_set(float value);
+
 	virtual float absoluteframetime_get(void);
 	virtual float curtime_get(void);
-	virtual void curtime_set(float value);
 	virtual float interval_per_tick_get(void);
 	virtual float interpolation_amount_get(void);
 

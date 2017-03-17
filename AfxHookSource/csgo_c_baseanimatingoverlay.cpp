@@ -14,6 +14,7 @@
 #include "SourceInterfaces.h"
 #include "RenderView.h"
 #include "csgo_MemAlloc.h"
+#include "WrpConsole.h"
 
 #include <shared/detours.h>
 
@@ -112,19 +113,20 @@ public:
 				}
 				else
 				{
-					float targetDelta = 0.9f*deltaNet + totalError;
-
+					float targetDelta = deltaNet +totalError;
 					if (targetDelta < 0) targetDelta = 0;
-
 					targetVal = mirv_cycle_mod(newEngineValue + targetDelta);
+
+					//float targetDelta = 0;
+					//targetVal = newEngineValue;
 
 					if (1 < g_csgo_PlayerAnimStateFix) Tier0_Msg("CCsgoPlayerAnimStateFix::Fix on m_flCycle at 0x%08x: Engine: %f  | Net: %f -> %f (%f) | total error: %f, new target: %f (%f).\n", pOut, newEngineValue, oldNetValue, newNetValue, deltaNet, totalError, targetVal, targetDelta);
 				}
 
 				*pValue = targetVal;
 
-				//float * p_m_flPrevCycle = (float *)((char *)pValue - 0x10);
-				// nope, don't : // *p_m_flPrevCycle = newEngineValue; // fix up this shit as well.
+				float * p_m_flPrevCycle = (float *)((char *)pValue - 0x10);
+				*p_m_flPrevCycle = newEngineValue; // fix up this shit as well.
 
 				return true;
 			}
@@ -189,14 +191,19 @@ void touring_csgo__RecvProxy_m_flCycle(const csgo_CRecvProxyData_t *pData, void 
 		if(fixed) *pValue = orgValue;
 
 		//g_csgo_PlayerAnimStateFix_origValues.emplace_back(p_m_flPlaybackRate); // we want to get at m_flPlayBackRate later on :-)
-
+		
 		return;
 	}
 	
-	if(broken)
+	static DWORD lastTickCount = 0;
+
+	DWORD tickCount = GetTickCount();
+
+	if(broken && (lastTickCount +10000 <= tickCount || tickCount <= lastTickCount -10000))
 	{
 	
-		Tier0_Warning("touring_csgo__RecvProxy_m_flCycle: HLAE detected cycle inconsistency at 0x%08x: %f -> %f! You may want to use \"mirv_fix playerAnimState 1\"!\n", pOut, oldCycle, newCycle);
+		Tier0_Warning("touring_csgo__RecvProxy_m_flCycle: HLAE detected cycle inconsistency at 0x%08x: %f -> %f! You may want to use \"mirv_fix playerAnimState 1\"! (Supressing warnings for 10 seconds.)\n", pOut, oldCycle, newCycle);
+		lastTickCount = tickCount;
 	}
 
 	detoured_csgo_RecvProxy_m_flCycle(pData, pStruct, pOut);
@@ -204,6 +211,8 @@ void touring_csgo__RecvProxy_m_flCycle(const csgo_CRecvProxyData_t *pData, void 
 
 void touring_csgo__RecvProxy_m_flPrevCycle(const csgo_CRecvProxyData_t *pData, void *pStruct, void *pOut)
 {
+	Tier0_Msg("touring_csgo__RecvProxy_m_flPrevCycle\n");
+
 	detoured_csgo_RecvProxy_m_flPrevCycle(pData, pStruct, pOut);
 }
 
@@ -227,24 +236,25 @@ csgo_mystique_animation_t detoured_csgo_mystique_animation;
 
 extern bool g_csgo_FirstFrameAfterNetUpdateEnd;
 
-float g_csgo_mystique_annimation_factor = 0.0f;
+float g_csgo_mystique_annimation_factor = 0.9f;
 
 void __stdcall touring_csgo_mystique_animation(DWORD * this_ptr, DWORD arg0, float argXmm1, float argXmm2)
 {
-/*	//volatile float * mystique = (float *)((char *)this_ptr + 0x98); // new cycle value
+	//volatile float * mystique = (float *)((char *)this_ptr + 0x98); // new cycle value
 	//volatile float * p_m_flCycle = (float *)((char*)this_ptr + 0x4FC);
 	volatile float * p_m_unk_flLastCurTime = (float *)((char*)this_ptr + 0x6c);
-	volatile bool * p_m_somecheck = (bool *)((char*)this_ptr + 0x50);
+	//volatile bool * p_m_oldSequence = (bool *)((char*)this_ptr + 0x50);
+
+
+	float frameTime = g_Hook_VClient_RenderView.GetGlobals()->frametime_get();
+	float curTime = g_Hook_VClient_RenderView.GetGlobals()->curtime_get();
 
 	if (g_csgo_PlayerAnimStateFix)
 	{
-		float newTime = g_Hook_VClient_RenderView.GetGlobals()->curtime_get() - (g_csgo_FirstFrameAfterNetUpdateEnd ? 0.0f : g_Hook_VClient_RenderView.GetGlobals()->frametime_get());
-
-		if (2 < g_csgo_PlayerAnimStateFix) Tier0_Msg("touring_csgo_mystique_animation (probably CBasePlayerAnimState::Update) on 0x%08x: p_m_unk_flLastCurTime: %f -> %f (curtime=%f)\n", this_ptr, *p_m_unk_flLastCurTime, newTime, g_Hook_VClient_RenderView.GetGlobals()->curtime_get());
-
-		*p_m_unk_flLastCurTime = newTime;
+		*p_m_unk_flLastCurTime = curTime -frameTime;
 	}
-*/
+
+	//if(!g_csgo_PlayerAnimStateFix)
 	{
 		__asm mov ecx, this_ptr
 		__asm push arg0
@@ -252,12 +262,11 @@ void __stdcall touring_csgo_mystique_animation(DWORD * this_ptr, DWORD arg0, flo
 		__asm movss xmm1, argXmm1
 		__asm call detoured_csgo_mystique_animation
 	}
-/*
+
 	if (g_csgo_PlayerAnimStateFix)
 	{
-		*p_m_unk_flLastCurTime = g_Hook_VClient_RenderView.GetGlobals()->curtime_get(); // important, otherwise this shit will carsh
+		*p_m_unk_flLastCurTime = curTime;
 	}
-*/
 }
 
 void __declspec(naked) naked_touring_csgo_mystique_animation(void)
@@ -289,7 +298,10 @@ bool Hook_csgo_PlayerAnimStateFix(void)
 	if (!firstRun) return firstResult;
 	firstRun = false;
 
-	if (AFXADDR_GET(csgo_DT_Animationlayer_m_flCycle_fn))// && AFXADDR_GET(csgo_DT_Animationlayer_m_flPrevCycle_fn) && AFXADDR_GET(csgo_mystique_animation))
+	if (AFXADDR_GET(csgo_DT_Animationlayer_m_flCycle_fn)
+		//&& AFXADDR_GET(csgo_DT_Animationlayer_m_flPrevCycle_fn)
+		//&& AFXADDR_GET(csgo_mystique_animation)
+	)
 	{
 		//MdtMemBlockInfos mbis;
 
@@ -307,9 +319,9 @@ bool Hook_csgo_PlayerAnimStateFix(void)
 		detoured_csgo_RecvProxy_m_flPrevCycle = *pMovArgFn;
 		*pMovArgFn = touring_csgo__RecvProxy_m_flPrevCycle;
 		//MdtMemAccessEnd(&mbis);
-
-		detoured_csgo_mystique_animation = DetourApply((BYTE *)AFXADDR_GET(csgo_mystique_animation), (BYTE *)naked_touring_csgo_mystique_animation, 0x0a);
 		*/
+
+		//detoured_csgo_mystique_animation = DetourApply((BYTE *)AFXADDR_GET(csgo_mystique_animation), (BYTE *)naked_touring_csgo_mystique_animation, 0x0a);
 
 		firstResult = true;
 	}

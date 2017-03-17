@@ -24,6 +24,12 @@ float WrpGlobalsCsGo::frametime_get(void)
 	return *(float *)((unsigned char *)m_pGlobals +0x14);
 }
 
+void WrpGlobalsCsGo::frametime_set(float value)
+{
+	*(float *)((unsigned char *)m_pGlobals + 0x14) = value;
+}
+
+
 float WrpGlobalsCsGo::absoluteframetime_get(void)
 {
 	return *(float *)((unsigned char *)m_pGlobals +AFXADDR_GET(cstrike_gpGlobals_OFS_absoluteframetime));
