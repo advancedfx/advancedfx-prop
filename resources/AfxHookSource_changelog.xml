@@ -6,10 +6,22 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>1.x.x</version>
+<time>2017-xx-xxTxx:xxZ</time>
+<changes>
+<change type="updated">
+Adjust afx/wh.cfg to new models.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>1.16.1</version>
 <time>2017-03-17T16:30Z</time>
 <changes>
-<change type="added">
+<change type="fixed">
 Fixed mirv_fix playerAnimState related console spam (now every 10 seconds maximum).
 </change>
 </changes>
