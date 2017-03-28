@@ -1341,6 +1341,22 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::RetrieveAction(SOURCESDK::IMateria
 		m_MapMutex.unlock();
 	}
 
+	if(false)
+	{
+		const char * name = material->GetName();
+		const char * groupName = material->GetTextureGroupName();
+		const char * shaderName = material->GetShaderName();
+		bool isErrorMaterial = material->IsErrorMaterial();
+
+		Tier0_Msg("Info: \"handle=%i\" (not used) \"name=%s\" \"textureGroup=%s\" \"shader=%s\" \"isErrrorMaterial=%u\" -> %s\n"
+			, entityHandle.ToInt()
+			, name
+			, groupName
+			, shaderName
+			, isErrorMaterial ? 1 : 0
+			, action ? action->Key_get().m_Name.c_str() : "(null)");
+	}
+
 	return action;
 }
 
