@@ -67,7 +67,7 @@ REGISTER_CVAR(fx_wh_noquads, "0", 0);
 REGISTER_CVAR(fx_wh_tint_enable, "0", 0);
 REGISTER_CVAR(fx_wh_xtendvis, "1", 0);
 REGISTER_CVAR(fx_xtendvis, "0", 0);
-REGISTER_CVAR(capture_mode, "0", 0);
+REGISTER_CVAR(tas_mode, "0", 0);
 
 REGISTER_CVAR(matte_entityquads, "2", 0);
 REGISTER_CVAR(matte_method, "1", 0);
@@ -676,10 +676,7 @@ void Filming::Start()
 	m_time = 0.0;
 	m_LastHostTime = m_time;
 
-	if (capture_mode->value == 1.0f)
-		m_CaptureMode = TAS_EXECUTION;
-	else
-		m_CaptureMode = NORMAL;
+	m_TASMode = (tas_mode->value != 0.0f);
 
 	if (_pSupportRender)
 		_pSupportRender->hlaeOnFilmingStart();	
@@ -803,7 +800,7 @@ void Filming::Start()
 				takePath, !m_EnableStereoMode ? L"all" : L"all_left",
 				FB_COLOR,
 				samplingFrameDuration,
-				m_CaptureMode,
+				m_TASMode,
 				x, y, width, height
 			);
 
@@ -813,7 +810,7 @@ void Filming::Start()
 					takePath, L"all_right",
 					FB_COLOR,
 					samplingFrameDuration,
-					m_CaptureMode,
+					m_TASMode,
 					x, y, width, height
 				);
 			}
@@ -825,7 +822,7 @@ void Filming::Start()
 				takePath, !m_EnableStereoMode ? L"world" : L"world_left",
 				FB_COLOR,
 				samplingFrameDuration,
-				m_CaptureMode,
+				m_TASMode,
 				x, y, width, height
 			);
 
@@ -835,7 +832,7 @@ void Filming::Start()
 					takePath, L"world_right",
 					FB_COLOR,
 					samplingFrameDuration,
-					m_CaptureMode,
+					m_TASMode,
 					x, y, width, height
 				);
 			}
@@ -847,7 +844,7 @@ void Filming::Start()
 				takePath, !m_EnableStereoMode ? L"entity" : L"entity_left",
 				FB_COLOR,
 				samplingFrameDuration,
-				m_CaptureMode,
+				m_TASMode,
 				x, y, width, height
 			);
 
@@ -857,7 +854,7 @@ void Filming::Start()
 					takePath, L"entity_right",
 					FB_COLOR,
 					samplingFrameDuration,
-					m_CaptureMode,
+					m_TASMode,
 					x, y, width, height
 				);
 			}
@@ -869,7 +866,7 @@ void Filming::Start()
 				takePath, L"hudcolor",
 				FB_COLOR,
 				0.0, // Sampling not supported // samplingFrameDuration,
-				m_CaptureMode,
+				m_TASMode,
 				x, y, width, height
 			);
 		}
@@ -880,7 +877,7 @@ void Filming::Start()
 				takePath, L"hudalpha",
 				FB_ALPHA,
 				0.0, // Sampling not supported // samplingFrameDuration,
-				m_CaptureMode,
+				m_TASMode,
 				x, y, width, height
 			);
 		}
@@ -891,7 +888,7 @@ void Filming::Start()
 				takePath, !m_EnableStereoMode ? L"depthall" : L"depthall_left",
 				FB_DEPTH,
 				samplingFrameDuration,
-				m_CaptureMode,
+				m_TASMode,
 				x, y, width, height
 			);
 
@@ -901,7 +898,7 @@ void Filming::Start()
 					takePath, L"depthall_right",
 					FB_DEPTH,
 					samplingFrameDuration,
-					m_CaptureMode,
+					m_TASMode,
 					x, y, width, height
 				);
 			}
@@ -913,7 +910,7 @@ void Filming::Start()
 				takePath, !m_EnableStereoMode ? L"depthworld" : L"depthworld_left",
 				FB_DEPTH,
 				samplingFrameDuration,
-				m_CaptureMode,
+				m_TASMode,
 				x, y, width, height
 			);
 
@@ -923,7 +920,7 @@ void Filming::Start()
 					takePath, L"depthworld_right",
 					FB_DEPTH,
 					samplingFrameDuration,
-					m_CaptureMode,
+					m_TASMode,
 					x, y, width, height
 				);
 			}
@@ -935,7 +932,7 @@ void Filming::Start()
 				takePath, L"debug",
 				FB_COLOR,
 				samplingFrameDuration,
-				m_CaptureMode,
+				m_TASMode,
 				x, y, width, height
 			);
 		}
@@ -979,8 +976,8 @@ void Filming::Stop()
 	_HudRqState=HUDRQ_NORMAL;
 
 	// Need to reset this otherwise everything will run crazy fast
-	// But not on TAS execution since it's not our business there
-	if (m_CaptureMode != TAS_EXECUTION)
+	// But not in TAS mode since it's not our business there
+	if (!m_TASMode)
 		pEngfuncs->Cvar_SetValue("host_framerate", 0);
 
 	// in case our code is broken [again] we better also reset the mask here: : )
@@ -1377,7 +1374,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 	_bRecordBuffers_FirstCall = false;
 
 	double frameDuration;
-	if (m_CaptureMode == TAS_EXECUTION)
+	if (m_TASMode)
 		frameDuration = pEngfuncs->pfnGetCvarFloat("host_framerate");
 	else
 		frameDuration = 1.0 / (double)m_fps;
@@ -1396,7 +1393,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 		float fHostDuration = (float)(m_time - m_LastHostTime);
 		m_LastHostTime += fHostDuration;
 
-		if (m_CaptureMode != TAS_EXECUTION)
+		if (!m_TASMode)
 			pEngfuncs->Cvar_SetValue("host_framerate", fHostDuration);
 
 		if (g_Filming_Stream[FS_hudcolor])
@@ -1576,7 +1573,7 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 	float fHostDuration = (float)(m_time - m_LastHostTime);
 	m_LastHostTime += fHostDuration;
 	
-	if (m_CaptureMode != TAS_EXECUTION)
+	if (!m_TASMode)
 		pEngfuncs->Cvar_SetValue("host_framerate", fHostDuration);
 
 	_bRecordBuffers_FirstCall = true;
@@ -1757,7 +1754,7 @@ FilmingStream::FilmingStream(
 	wchar_t const * takePath, wchar_t const * name,
 	FILMING_BUFFER buffer,
 	double samplingFrameDuration,
-	CAPTURE_MODE captureMode,
+	bool TASMode,
 	int x, int y, int width, int height
 )
 {
@@ -1806,7 +1803,7 @@ FilmingStream::FilmingStream(
 	m_Height = height;
 	m_X = x;
 	m_Y = y;
-	m_CaptureMode = captureMode;
+	m_TASMode = TASMode;
 	m_NextFrameIsAt = 0.0;
 
 	m_Path.assign(takePath);
@@ -1954,7 +1951,7 @@ void FilmingStream::Capture(double time, CMdt_Media_RAWGLPIC * usePic, float sps
 		}	
 	}
 
-	if (m_CaptureMode != TAS_EXECUTION)
+	if (!m_TASMode)
 	{
 		WriteFrame(*usePic, time);
 	}

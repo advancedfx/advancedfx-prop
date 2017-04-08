@@ -30,8 +30,8 @@
 xcommand_t g_Old_connect = NULL;
 void Hook_connect(void)
 {
-	// Don't print the warning when in TAS execution mode.
-	if (pEngfuncs->pfnGetCvarFloat("mirv_capture_mode") == 1.0f)
+	// Don't print the warning when in TAS mode.
+	if (pEngfuncs->pfnGetCvarFloat("mirv_tas_mode") != 0.0f)
 		return g_Old_connect();
 
 	int imbret = MessageBoxA(NULL,
