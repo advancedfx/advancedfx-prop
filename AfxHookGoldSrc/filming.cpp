@@ -67,6 +67,7 @@ REGISTER_CVAR(fx_wh_noquads, "0", 0);
 REGISTER_CVAR(fx_wh_tint_enable, "0", 0);
 REGISTER_CVAR(fx_wh_xtendvis, "1", 0);
 REGISTER_CVAR(fx_xtendvis, "0", 0);
+REGISTER_CVAR(tas_mode, "0", 0);
 
 REGISTER_CVAR(matte_entityquads, "2", 0);
 REGISTER_CVAR(matte_method, "1", 0);
@@ -675,6 +676,8 @@ void Filming::Start()
 	m_time = 0.0;
 	m_LastHostTime = m_time;
 
+	m_TASMode = (tas_mode->value != 0.0f);
+
 	if (_pSupportRender)
 		_pSupportRender->hlaeOnFilmingStart();	
 
@@ -797,6 +800,7 @@ void Filming::Start()
 				takePath, !m_EnableStereoMode ? L"all" : L"all_left",
 				FB_COLOR,
 				samplingFrameDuration,
+				m_TASMode,
 				x, y, width, height
 			);
 
@@ -806,6 +810,7 @@ void Filming::Start()
 					takePath, L"all_right",
 					FB_COLOR,
 					samplingFrameDuration,
+					m_TASMode,
 					x, y, width, height
 				);
 			}
@@ -817,6 +822,7 @@ void Filming::Start()
 				takePath, !m_EnableStereoMode ? L"world" : L"world_left",
 				FB_COLOR,
 				samplingFrameDuration,
+				m_TASMode,
 				x, y, width, height
 			);
 
@@ -826,6 +832,7 @@ void Filming::Start()
 					takePath, L"world_right",
 					FB_COLOR,
 					samplingFrameDuration,
+					m_TASMode,
 					x, y, width, height
 				);
 			}
@@ -837,6 +844,7 @@ void Filming::Start()
 				takePath, !m_EnableStereoMode ? L"entity" : L"entity_left",
 				FB_COLOR,
 				samplingFrameDuration,
+				m_TASMode,
 				x, y, width, height
 			);
 
@@ -846,6 +854,7 @@ void Filming::Start()
 					takePath, L"entity_right",
 					FB_COLOR,
 					samplingFrameDuration,
+					m_TASMode,
 					x, y, width, height
 				);
 			}
@@ -857,6 +866,7 @@ void Filming::Start()
 				takePath, L"hudcolor",
 				FB_COLOR,
 				0.0, // Sampling not supported // samplingFrameDuration,
+				m_TASMode,
 				x, y, width, height
 			);
 		}
@@ -867,6 +877,7 @@ void Filming::Start()
 				takePath, L"hudalpha",
 				FB_ALPHA,
 				0.0, // Sampling not supported // samplingFrameDuration,
+				m_TASMode,
 				x, y, width, height
 			);
 		}
@@ -877,6 +888,7 @@ void Filming::Start()
 				takePath, !m_EnableStereoMode ? L"depthall" : L"depthall_left",
 				FB_DEPTH,
 				samplingFrameDuration,
+				m_TASMode,
 				x, y, width, height
 			);
 
@@ -886,6 +898,7 @@ void Filming::Start()
 					takePath, L"depthall_right",
 					FB_DEPTH,
 					samplingFrameDuration,
+					m_TASMode,
 					x, y, width, height
 				);
 			}
@@ -897,6 +910,7 @@ void Filming::Start()
 				takePath, !m_EnableStereoMode ? L"depthworld" : L"depthworld_left",
 				FB_DEPTH,
 				samplingFrameDuration,
+				m_TASMode,
 				x, y, width, height
 			);
 
@@ -906,6 +920,7 @@ void Filming::Start()
 					takePath, L"depthworld_right",
 					FB_DEPTH,
 					samplingFrameDuration,
+					m_TASMode,
 					x, y, width, height
 				);
 			}
@@ -917,6 +932,7 @@ void Filming::Start()
 				takePath, L"debug",
 				FB_COLOR,
 				samplingFrameDuration,
+				m_TASMode,
 				x, y, width, height
 			);
 		}
@@ -960,7 +976,9 @@ void Filming::Stop()
 	_HudRqState=HUDRQ_NORMAL;
 
 	// Need to reset this otherwise everything will run crazy fast
-	pEngfuncs->Cvar_SetValue("host_framerate", 0);
+	// But not in TAS mode since it's not our business there
+	if (!m_TASMode)
+		pEngfuncs->Cvar_SetValue("host_framerate", 0);
 
 	// in case our code is broken [again] we better also reset the mask here: : )
 	glColorMask(TRUE, TRUE, TRUE, TRUE);
@@ -1355,7 +1373,12 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 	}
 	_bRecordBuffers_FirstCall = false;
 
-	double frameDuration = 1.0/(double)m_fps;
+	double frameDuration;
+	if (m_TASMode)
+		frameDuration = pEngfuncs->pfnGetCvarFloat("host_framerate");
+	else
+		frameDuration = 1.0 / (double)m_fps;
+
 	m_HostFrameCount++;
 
 	// If we've only just started, delay until the next scene so that
@@ -1370,7 +1393,8 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 		float fHostDuration = (float)(m_time - m_LastHostTime);
 		m_LastHostTime += fHostDuration;
 
-		pEngfuncs->Cvar_SetValue("host_framerate", fHostDuration);
+		if (!m_TASMode)
+			pEngfuncs->Cvar_SetValue("host_framerate", fHostDuration);
 
 		if (g_Filming_Stream[FS_hudcolor])
 		{
@@ -1549,7 +1573,8 @@ bool Filming::recordBuffers(HDC hSwapHDC,BOOL *bSwapRes)
 	float fHostDuration = (float)(m_time - m_LastHostTime);
 	m_LastHostTime += fHostDuration;
 	
-	pEngfuncs->Cvar_SetValue("host_framerate", fHostDuration);
+	if (!m_TASMode)
+		pEngfuncs->Cvar_SetValue("host_framerate", fHostDuration);
 
 	_bRecordBuffers_FirstCall = true;
 
@@ -1729,6 +1754,7 @@ FilmingStream::FilmingStream(
 	wchar_t const * takePath, wchar_t const * name,
 	FILMING_BUFFER buffer,
 	double samplingFrameDuration,
+	bool TASMode,
 	int x, int y, int width, int height
 )
 {
@@ -1777,6 +1803,8 @@ FilmingStream::FilmingStream(
 	m_Height = height;
 	m_X = x;
 	m_Y = y;
+	m_TASMode = TASMode;
+	m_NextFrameIsAt = 0.0;
 
 	m_Path.assign(takePath);
 	m_Path.append(L"\\");
@@ -1923,28 +1951,87 @@ void FilmingStream::Capture(double time, CMdt_Media_RAWGLPIC * usePic, float sps
 		}	
 	}
 
-	if(0 != m_Sampler)
+	if (!m_TASMode)
+	{
+		WriteFrame(*usePic, time);
+	}
+	else
+	{
+		if (m_NextFrameIsAt == 0.0)
+		{
+			m_PreviousFrame = *usePic;
+		}
+
+		size_t framesWritten = 0;
+
+		/*
+		 * If the player is seeing the current engine frame for more time than
+		 * the previous engine frame during the current video frame, use the current engine frame.
+		 *
+		 * This condition can be written as:
+		 * if the current engine time is closer to the current video frame time
+		 * than half of the video framerate.
+		 */
+		while (time - m_NextFrameIsAt > (1.0 / (spsHint * 2.0)))
+		{
+			WriteFrame(m_PreviousFrame, m_NextFrameIsAt);
+			m_NextFrameIsAt += (1.0 / spsHint);
+
+			++framesWritten;
+		}
+
+		m_PreviousFrame = *usePic;
+
+		if (m_NextFrameIsAt <= time)
+		{
+			WriteFrame(m_PreviousFrame, m_NextFrameIsAt);
+			m_NextFrameIsAt += (1.0 / spsHint);
+
+			++framesWritten;
+		}
+
+		if (print_frame->value)
+		{
+			if (framesWritten > 0)
+			{
+				pEngfuncs->Con_Printf(
+					"Wrote %lu frame%s (time = %.8f, m_NextFrameIsAt = %.8f).\n",
+					framesWritten,
+					framesWritten > 1 ? "s" : "",
+					time,
+					m_NextFrameIsAt);
+			} else
+			{
+				pEngfuncs->Con_Printf("Skipping a frame (time = %.8f, m_NextFrameIsAt = %.8f).\n", time, m_NextFrameIsAt);
+			}
+		}
+	}
+}
+
+void FilmingStream::WriteFrame(CMdt_Media_RAWGLPIC& frame, double time)
+{
+	if (0 != m_Sampler)
 	{
 		// pass on to sampling system:
 
 		m_Sampler->Sample(
-			(unsigned char const *)usePic->GetPointer(),
+			(unsigned char const *)frame.GetPointer(),
 			time
 		);
 	}
-	else if(0 != m_SamplerFloat)
+	else if (0 != m_SamplerFloat)
 	{
 		// pass on to sampling system:
 
 		m_SamplerFloat->Sample(
-			(float const *)usePic->GetPointer(),
+			(float const *)frame.GetPointer(),
 			time
 		);
 	}
 	else
 	{
 		// write out directly:
-		Print((unsigned char const *)usePic->GetPointer());
+		Print((unsigned char const *)frame.GetPointer());
 	}
 }
 

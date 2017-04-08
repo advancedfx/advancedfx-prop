@@ -30,6 +30,10 @@
 xcommand_t g_Old_connect = NULL;
 void Hook_connect(void)
 {
+	// Don't print the warning when in TAS mode.
+	if (pEngfuncs->pfnGetCvarFloat("mirv_tas_mode") != 0.0f)
+		return g_Old_connect();
+
 	int imbret = MessageBoxA(NULL,
 		"WARNING: You are about to connect to a server.\n"
 		"It is strongly recommended to NOT connect to any server while HLAE is running!\n"

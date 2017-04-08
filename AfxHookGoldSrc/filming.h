@@ -49,6 +49,7 @@ public:
 		wchar_t const * takePath, wchar_t const * name,
 		FILMING_BUFFER buffer,
 		double samplingFrameDuration,
+		bool TASMode,
 		int x, int y, int width, int height
 	);
 	~FilmingStream();
@@ -75,6 +76,11 @@ private:
 	int m_Width;
 	int m_X;
 	int m_Y;
+	bool m_TASMode;
+	CMdt_Media_RAWGLPIC m_PreviousFrame;
+	double m_NextFrameIsAt;
+
+	void WriteFrame(CMdt_Media_RAWGLPIC& frame, double time);
 
 	/// <summary>Implements IFramePrinter.</summary>
 	virtual void Print(unsigned char const * data);
@@ -228,6 +234,7 @@ private:
 	float m_fps;
 	double m_time;
 	double m_LastHostTime;
+	bool m_TASMode;
 
 
 	CHlaeSupportRender *_pSupportRender;
