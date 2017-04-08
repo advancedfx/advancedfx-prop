@@ -36,6 +36,7 @@ void GLfloatArrayToXByteArray(GLfloat *pBuffer, unsigned int width, unsigned int
 
 enum FILMING_BUFFER { FB_COLOR, FB_DEPTH, FB_ALPHA };
 enum FILMING_DEPTHFN { FD_INV, FD_LINEAR, FD_LOG };
+enum CAPTURE_MODE { NORMAL, TAS_EXECUTION };
 
 
 class FilmingStream :
@@ -49,6 +50,7 @@ public:
 		wchar_t const * takePath, wchar_t const * name,
 		FILMING_BUFFER buffer,
 		double samplingFrameDuration,
+		CAPTURE_MODE captureMode,
 		int x, int y, int width, int height
 	);
 	~FilmingStream();
@@ -75,7 +77,7 @@ private:
 	int m_Width;
 	int m_X;
 	int m_Y;
-
+	CAPTURE_MODE m_CaptureMode;
 	CMdt_Media_RAWGLPIC m_PreviousFrame;
 	double m_NextFrameIsAt;
 
@@ -233,6 +235,7 @@ private:
 	float m_fps;
 	double m_time;
 	double m_LastHostTime;
+	CAPTURE_MODE m_CaptureMode;
 
 
 	CHlaeSupportRender *_pSupportRender;
