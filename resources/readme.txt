@@ -253,6 +253,9 @@ Fabian 'neomic'
   http://www.youtube.com/AMDECKARN
 
 Other contributors:
+
+Ivan Molodetskikh
+  https://github.com/YaLTeR
  
 Niklas 'nkoep' Koep
   https://github.com/nkoep

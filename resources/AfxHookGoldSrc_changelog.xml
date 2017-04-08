@@ -6,6 +6,18 @@
 
 <release>
 <name>AfxHookGoldSrc</name>
+<version>2.5.0</version>
+<time>2017-04-08T18:40Z</time>
+<changes>
+<change type="updated">
+Added mirv_tas_mode, added by YaLTeR (thanks).
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookGoldSrc</name>
 <version>2.4.13</version>
 <time>2017-01-07T15:47Z</time>
 <changes>

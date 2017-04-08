@@ -10,7 +10,7 @@
 <time>2017-03-28T16:32Z</time>
 <changes>
 <change type="updated">
-Adjust afx/wh.cfg to new models (can be loaded as before with exec afx/wh).
+Adjusted afx/wh.cfg to new models (can be loaded as before with exec afx/wh).
 </change>
 </changes>
 </release>
