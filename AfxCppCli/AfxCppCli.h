@@ -25,3 +25,13 @@ public:
 };
 
 } // namespace AfxCppCli {
+
+extern "C" __declspec(dllexport)
+bool __cdecl LaunchAndHook(char* programPath, char* cmdLine, char* hookPath, char* environment)
+{
+	String^ env = nullptr;
+	if (environment != nullptr) {
+		env = gcnew String(environment);
+	}
+	return AfxCppCli::AfxHook::LauchAndHook(gcnew String(programPath), gcnew String(cmdLine), gcnew String(hookPath), env);
+};
