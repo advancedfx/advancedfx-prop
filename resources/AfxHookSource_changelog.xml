@@ -6,6 +6,21 @@
 
 <release>
 <name>AfxHookSource</name>
+<version>1.16.3</version>
+<time>2017-04-13T09:01Z</time>
+<changes>
+<change type="fixed">
+Adjusted to 4/12/2017 CS:GO update.
+</change>
+<change type="fixed">
+Fixed mirv_snd_timescale not working due to CS:GO update.
+</change>
+</changes>
+</release>
+
+
+<release>
+<name>AfxHookSource</name>
 <version>1.16.2</version>
 <time>2017-03-28T16:32Z</time>
 <changes>

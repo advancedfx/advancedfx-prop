@@ -118,7 +118,7 @@ void Addresses_InitEngineDll(AfxAddr engineDll, bool isCsgo)
 						tempAddr = tempAddr + 4 + *(DWORD *)tempAddr;
 						// in MIX_PaintChannels now.
 
-						tempAddr = tempAddr + 0x293;
+						tempAddr = tempAddr + 0x27A;
 
 						MemRange result = FindPatternString(MemRange(tempAddr - 7, tempAddr - 7 + 7), "8D 8D 50 FE FF FF E8");
 						if (!result.IsEmpty())
@@ -128,7 +128,7 @@ void Addresses_InitEngineDll(AfxAddr engineDll, bool isCsgo)
 
 							tempAddr = tempAddr + 0xED;
 
-							MemRange result = FindPatternString(MemRange(tempAddr - 5, tempAddr - 5 + 5), "33 D2 8B CF E8");
+							MemRange result = FindPatternString(MemRange(tempAddr - 5, tempAddr - 5 + 5), "33 D2 8B CE E8");
 							if (!result.IsEmpty())
 							{
 								tempAddr = tempAddr + 4 + *(DWORD *)tempAddr;
@@ -143,8 +143,11 @@ void Addresses_InitEngineDll(AfxAddr engineDll, bool isCsgo)
 
 									addr = tempAddr;
 								}
+								else ErrorBox(MkErrStr(__FILE__, __LINE__));
 							}
+							else ErrorBox(MkErrStr(__FILE__, __LINE__));
 						}
+						else ErrorBox(MkErrStr(__FILE__, __LINE__));
 					}
 					else ErrorBox(MkErrStr(__FILE__, __LINE__));
 				}
