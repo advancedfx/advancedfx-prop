@@ -2602,7 +2602,7 @@ CON_COMMAND(mirv_input, "Input mode configuration.")
 			}
 
 			Tier0_Msg(
-				"mirv_input positon <x> <y> <z> - Set new position (only useful in camera input mode).\n"
+				"mirv_input position <x> <y> <z> - Set new position (only useful in camera input mode).\n"
 				"Current value: %f %f %f\n"
 				, g_Hook_VClient_RenderView.LastCameraOrigin[0]
 				, g_Hook_VClient_RenderView.LastCameraOrigin[1]
