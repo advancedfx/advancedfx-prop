@@ -60,10 +60,10 @@ namespace AfxGui
             {
                 DialogResult dr = MessageBox.Show(
                     "You should leave this checkbox checked\n"
-                    + "in order to avoid VAC bans!\n"
+                    + "in order to avoid VAC bans!\n" // line rewritten 2017-05-01T16:20Z to avoid trivial copyright issues.
                     + "\n"
-                    + "Do you still want to uncheck it?",
-                    "Really risk VAC bans?",
+                    + "Do you still want to uncheck it?", // line rewritten 2017-05-01T16:20Z to avoid trivial copyright issues.
+                    "Really risk VAC bans?", // line rewritten 2017-05-01T16:20Z to avoid trivial copyright issues.
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Exclamation,
                     MessageBoxDefaultButton.Button2

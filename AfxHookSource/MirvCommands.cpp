@@ -714,7 +714,7 @@ CON_COMMAND(mirv_streams, "Access to streams system.")
 			Tier0_Msg(
 				"mirv_streams record name [...] - Set/get record name.\n"
 				"mirv_streams record start - Begin recording.\n"
-				"mirv_streams record end - End recording.\n"
+				"mirv_streams record end - End recording.\n" // line rewritten 2017-05-01T16:20Z to avoid trivial copyright issues.
 				"mirv_streams record format [...] - Set/get file format.\n"
 				"mirv_streams record presentOnScreen [...] - Controls screen presentation during recording.\n"
 				"mirv_streams record matForceTonemapScale [...] - Controls mat_force_tonemap_scale variable during recording.\n"
