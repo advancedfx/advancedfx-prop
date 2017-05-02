@@ -18,13 +18,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AfxCppCli.h">
-      <Filter>AfxCppCli</Filter>
-    </ClInclude>
     <ClInclude Include="stdafx.h">
-      <Filter>AfxCppCli</Filter>
-    </ClInclude>
-    <ClInclude Include="loader.h">
       <Filter>AfxCppCli</Filter>
     </ClInclude>
     <ClInclude Include="old\tools\skymanager\skymanager.h">
@@ -59,9 +53,6 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>AfxCppCli</Filter>
     </ClCompile>
-    <ClCompile Include="loader.cpp">
-      <Filter>AfxCppCli</Filter>
-    </ClCompile>
     <ClCompile Include="old\tools\skymanager\skymanager.cpp">
       <Filter>AfxCppCli\old\tools\skymanager</Filter>
     </ClCompile>
@@ -73,9 +64,6 @@
     </ClCompile>
     <ClCompile Include="old\tools\demotools\DemoToolsProgressForm.cpp">
       <Filter>AfxCppCli\old\tools\demotools</Filter>
-    </ClCompile>
-    <ClCompile Include="AfxCppCli.cpp">
-      <Filter>AfxCppCli</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
