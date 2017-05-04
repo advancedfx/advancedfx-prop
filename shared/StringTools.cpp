@@ -100,6 +100,17 @@ bool StringEndsWith(char const * target, char const * ending) {
 	return !strcmp(target +(lenTarget-lenEnding), ending);
 }
 
+bool StringEndsWithW(wchar_t const * target, wchar_t const * ending)
+{
+	size_t lenTarget = wcslen(target);
+	size_t lenEnding = wcslen(ending);
+
+	if (lenTarget < lenEnding) return false;
+
+	return !wcscmp(target + (lenTarget - lenEnding), ending);
+}
+
+
 bool StringBeginsWith(char const * target, char const * beginning) {
 	while(*target && *beginning) {
 		if(*beginning != *target)

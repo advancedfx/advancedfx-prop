@@ -16,6 +16,7 @@ bool AnsiStringToWideString(char const * ansiChars, std::wstring & outWideString
 
 
 bool StringEndsWith(char const * target, char const * ending);
+bool StringEndsWithW(wchar_t const * target, wchar_t const * ending);
 
 bool StringBeginsWith(char const * target, char const * beginning);
 

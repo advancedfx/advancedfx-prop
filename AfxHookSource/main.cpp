@@ -1487,10 +1487,10 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 	if(!hModule || !lpLibFileName)
 		return;
 
-#if 0
+#if 1
 	static FILE *f1=NULL;
 
-	if( !f1 ) f1=fopen("mdt_log_LibraryHooksA.txt","wb");
+	if( !f1 ) f1=fopen("hlae_log_LibraryHooksA.txt","wb");
 	fprintf(f1,"%s\n", lpLibFileName);
 	fflush(f1);
 #endif
@@ -1672,6 +1672,30 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 	}
 }
 
+void LibraryHooksW(HMODULE hModule, LPCWSTR lpLibFileName)
+{
+	static bool bFirstLauncher = true;
+
+	if (!hModule || !lpLibFileName)
+		return;
+
+#if 1
+	static FILE *f1 = NULL;
+
+	if (!f1) f1 = fopen("hlae_log_LibraryHooksW.txt", "wb");
+	fwprintf(f1, L"%s\n", lpLibFileName);
+	fflush(f1);
+#endif
+
+	if (bFirstLauncher && StringEndsWithW(lpLibFileName, L"launcher.dll"))
+	{
+		bFirstLauncher = false;
+
+		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryExA", (DWORD)&new_LoadLibraryExA);
+		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryA", (DWORD)&new_LoadLibraryA);
+	}
+}
+
 
 // i.e. called by Counter-Strike Source
 HMODULE WINAPI new_LoadLibraryA( LPCSTR lpLibFileName ) {
@@ -1692,6 +1716,15 @@ HMODULE WINAPI new_LoadLibraryExA(LPCSTR lpLibFileName, HANDLE hFile, DWORD dwFl
 	return hRet;
 }
 
+// i.e. called by CS:GO since 5/4/2017:
+HMODULE WINAPI new_LoadLibraryExW(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwFlags) {
+	HMODULE hRet = LoadLibraryExW(lpLibFileName, hFile, dwFlags);
+
+	LibraryHooksW(hRet, lpLibFileName);
+
+	return hRet;
+}
+
 bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 {
 	switch (fdwReason) 
@@ -1702,10 +1735,11 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 			MessageBox(0,"DLL_PROCESS_ATTACH","MDT_DEBUG",MB_OK);
 #endif
 
-			if(!(
-				InterceptDllCall(GetModuleHandle(NULL), "Kernel32.dll", "LoadLibraryExA", (DWORD) &new_LoadLibraryExA)
-				||InterceptDllCall(GetModuleHandle(NULL), "Kernel32.dll", "LoadLibraryA", (DWORD) &new_LoadLibraryA)
-			))
+			bool bLoadLibraryExA = 0 != InterceptDllCall(GetModuleHandle(NULL), "Kernel32.dll", "LoadLibraryExA", (DWORD)&new_LoadLibraryExA);
+			bool bLoadLibraryA = 0 != InterceptDllCall(GetModuleHandle(NULL), "Kernel32.dll", "LoadLibraryA", (DWORD)&new_LoadLibraryA);
+			bool bLoadLibraryExW = 0 != InterceptDllCall(GetModuleHandle(NULL), "Kernel32.dll", "LoadLibraryExW", (DWORD)&new_LoadLibraryExW);
+
+			if (!(bLoadLibraryExA || bLoadLibraryA || bLoadLibraryExW))
 				ErrorBox();
 
 			//
