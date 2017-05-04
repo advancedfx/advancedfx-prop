@@ -17,8 +17,6 @@ Alternatively you can use the [releases section](https://github.com/ripieces/adv
 
 ## [Manual](https://github.com/ripieces/advancedfx/wiki)
 
-## [History](https://github.com/ripieces/advancedfx/wiki/Half-Life-Advanced-Effects)
-
 ## Team
 
 The team description can be found in the [readme.txt](https://github.com/ripieces/advancedfx/blob/master/resources/readme.txt).
@@ -26,3 +24,12 @@ The team description can be found in the [readme.txt](https://github.com/ripiece
 ## Credits
 
 The credits can be found in the [readme.txt](https://github.com/ripieces/advancedfx/blob/master/resources/readme.txt).
+
+## Source code
+
+We are moving parts of the source code in a different repository, because of changing license for those parts (will be MIT).
+The source code root currently is at [https://github.com/ripieces/advancedfx-mit](https://github.com/ripieces/advancedfx-mit)
+
+## Version
+
+HLAE 2.26.2 (2017-05-05T08:25Z)
