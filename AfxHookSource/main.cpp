@@ -1487,7 +1487,7 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 	if(!hModule || !lpLibFileName)
 		return;
 
-#if 1
+#if 0
 	static FILE *f1=NULL;
 
 	if( !f1 ) f1=fopen("hlae_log_LibraryHooksA.txt","wb");
@@ -1679,7 +1679,7 @@ void LibraryHooksW(HMODULE hModule, LPCWSTR lpLibFileName)
 	if (!hModule || !lpLibFileName)
 		return;
 
-#if 1
+#if 0
 	static FILE *f1 = NULL;
 
 	if (!f1) f1 = fopen("hlae_log_LibraryHooksW.txt", "wb");
