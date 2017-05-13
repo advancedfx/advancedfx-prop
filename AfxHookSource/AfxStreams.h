@@ -16,6 +16,7 @@
 #include "WrpConsole.h"
 #include "AfxShaders.h"
 #include "csgo_Stdshader_dx9_Hooks.h"
+#include "CamIO.h"
 
 #define AFX_SHADERS_CSGO 0
 
@@ -2262,6 +2263,13 @@ public:
 	void Console_EditStream(const char * streamName, IWrpCommandArgs * args);
 	void Console_ListActions(void);
 	void Console_Bvh(IWrpCommandArgs * args);
+
+	bool CamExport_get(void) { return m_CamExport;  }
+	void CamExport_set(bool value) { m_CamExport = value;  }
+
+	CamExport::ScaleFov CamExportScaleFov_get(void) { return m_CamExportScaleFov;  }
+	void CamExportScaleFov_set(CamExport::ScaleFov value) { m_CamExportScaleFov = value;  }
+
 	void Console_GameRecording(IWrpCommandArgs * args);
 
 	/// <param name="index">stream name to preview or empty string if to preview nothing.</param>
@@ -2413,6 +2421,9 @@ private:
 	int m_Frame;
 	bool m_CamBvh;
 	std::list<CEntityBvhCapture *> m_EntityBvhCaptures;
+	bool m_CamExport = false;
+	CamExport::ScaleFov m_CamExportScaleFov = CamExport::SF_None;
+	CamExport * m_CamExportObj = 0;
 	bool m_GameRecording;
 	std::mutex m_ContextToStreamMutex;
 

@@ -4201,6 +4201,8 @@ CAfxStreams::CAfxStreams()
 
 CAfxStreams::~CAfxStreams()
 {
+	delete m_CamExportObj;
+
 	while (!m_EntityBvhCaptures.empty())
 	{
 		delete m_EntityBvhCaptures.front();
@@ -4411,6 +4413,9 @@ void CAfxStreams::Console_Record_Start()
 		m_Frame = 0;
 		m_StartMovieWavUsed = false;
 
+		std::string ansiTakeDir;
+		bool ansiTakeDirOk = WideStringToAnsiString(m_TakeDir.c_str(), ansiTakeDir);
+
 		BackUpMatVars();
 		SetMatVarsForStreams();
 
@@ -4435,10 +4440,10 @@ void CAfxStreams::Console_Record_Start()
 
 		if (m_CamBvh)
 		{
-			std::wstring m_CamFileName(m_TakeDir);
-			m_CamFileName.append(L"\\cam_main.bvh");
+			std::wstring camFileName(m_TakeDir);
+			camFileName.append(L"\\cam_main.bvh");
 
-			g_Hook_VClient_RenderView.ExportBegin(m_CamFileName.c_str(), frameTime);
+			g_Hook_VClient_RenderView.ExportBegin(camFileName.c_str(), frameTime);
 		}
 
 		for (std::list<CEntityBvhCapture *>::iterator it = m_EntityBvhCaptures.begin(); it != m_EntityBvhCaptures.end(); ++it)
@@ -4446,10 +4451,16 @@ void CAfxStreams::Console_Record_Start()
 			(*it)->StartCapture(m_TakeDir, frameTime);
 		}
 
+		if (m_CamExport && ansiTakeDirOk)
+		{
+			std::string camFileName(ansiTakeDir);
+			camFileName.append("\\cam_main.cam");
+
+			m_CamExportObj = new CamExport(camFileName.c_str(), m_CamExportScaleFov);
+		}
+
 		Tier0_Msg("done.\n");
 
-		std::string ansiTakeDir;
-		bool ansiTakeDirOk = WideStringToAnsiString(m_TakeDir.c_str(), ansiTakeDir);
 		Tier0_Msg("Recording to \"%s\".\n", ansiTakeDirOk ? ansiTakeDir.c_str() : "?");
 
 		if (ansiTakeDirOk)
@@ -4490,6 +4501,12 @@ void CAfxStreams::Console_Record_End()
 		{
 			g_VEngineClient->ExecuteClientCmd("endmovie");
 			csgo_writeWaveConsoleCheckOverride = false;
+		}
+
+		if (m_CamExportObj)
+		{
+			delete m_CamExportObj;
+			m_CamExportObj = 0;
 		}
 
 		if (m_CamBvh)

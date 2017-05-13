@@ -85,6 +85,9 @@ Hook_VClient_RenderView::Hook_VClient_RenderView()
 Hook_VClient_RenderView::~Hook_VClient_RenderView() {
 	ExportEnd();
 	ImportEnd();
+
+	delete m_CamExport;
+	delete m_CamImport;
 }
 
 bool Hook_VClient_RenderView::ExportBegin(wchar_t const *fileName, double frameTime) {
@@ -209,6 +212,22 @@ void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, fl
 		}
 	}
 
+	if (m_CamImport)
+	{
+		CamIO::CamData camData;
+
+		if (m_CamImport->GetCamData(curTime, LastWidth, LastHeight, camData))
+		{
+			Tx = (float)camData.XPosition;
+			Ty = (float)camData.YPosition;
+			Tz = (float)camData.ZPosition;
+			Rx = (float)camData.YRotation;
+			Ry = (float)camData.ZRotation;
+			Rz = (float)camData.XRotation;
+			Fov = (float)camData.Fov;
+		}
+	}
+
 	if(m_FovOverride && (!handleZoomEnabled || handleZoomMinUnzoomedFov <= Fov)) Fov = (float)m_FovValue;
 
 	if(g_AfxHookSourceInput.GetCameraControlMode() && m_Globals)
@@ -268,6 +287,21 @@ void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, fl
 		);
 	}
 
+	if (m_CamExport)
+	{
+		CamIO::CamData camData;
+
+		camData.XPosition = Tx;
+		camData.YPosition = Ty;
+		camData.ZPosition = Tz;
+		camData.YRotation = Rx;
+		camData.ZRotation = Ry;
+		camData.XRotation = Rz;
+		camData.Fov = Fov;
+
+		m_CamExport->WriteFrame(LastWidth, LastHeight, camData);
+	}
+
 	LastCameraOrigin[0] = Tx;
 	LastCameraOrigin[1] = Ty;
 	LastCameraOrigin[2] = Tz;
@@ -307,4 +341,94 @@ bool Hook_VClient_RenderView::ImportToCamPath(bool adjustInterp, double fov)
 	}
 
 	return bOk;
+}
+
+void Hook_VClient_RenderView::Console_CamIO(IWrpCommandArgs * args)
+{
+	int argc = args->ArgC();
+
+	char const * cmd0 = args->ArgV(0);
+
+	if (2 <= argc)
+	{
+		char const * cmd1 = args->ArgV(1);
+
+		if (0 == _stricmp("export", cmd1))
+		{
+			if (3 <= argc)
+			{
+				char const * cmd2 = args->ArgV(2);
+
+				if (0 == _stricmp("start", cmd2) && 5 <= argc)
+				{
+					if (0 != m_CamExport)
+					{
+						delete m_CamExport;
+						m_CamExport = 0;
+					}
+
+					m_CamExport = new CamExport(args->ArgV(3), 0 == _stricmp("alienSwarm", args->ArgV(4)) ? CamExport::SF_AlienSwarm : CamExport::SF_None);
+
+					return;
+				}
+				else if (0 == _stricmp("end", cmd2))
+				{
+					if (0 != m_CamExport)
+					{
+						delete m_CamExport;
+						m_CamExport = 0;
+					}
+					else
+						Tier0_Warning("No cam export was active.");
+
+					return;
+				}
+			}
+
+			Tier0_Msg(
+				"%s export start <fileName> <fovScaling> - Starts exporting to file <fileName>, <fovScaling> can be \"none\" for engine FOV or \"alienSwarm\" for scaling like Alien Swarm SDK (i.e. CS:GO).\n"
+				"%s export end - Stops exporting.\n"
+				, cmd0
+				, cmd0
+			);
+			return;
+		}
+		else if (0 == _stricmp("import", cmd1))
+		{
+			if (3 <= argc)
+			{
+				char const * cmd2 = args->ArgV(2);
+
+				if (0 == _stricmp("start", cmd2) && 4 <= argc)
+				{
+					if (0 != m_CamImport)
+					{
+						delete m_CamImport;
+						m_CamImport = 0;
+					}
+
+					m_CamImport = new CamImport(args->ArgV(3), GetCurTime());
+				}
+				else if (0 == _stricmp("end", cmd2))
+				{
+					delete m_CamImport;
+					m_CamImport = 0;
+				}
+
+			}
+
+			Tier0_Msg(
+				"%s import start <fileName> - Starts importing cam from file <fileName>.\n"
+				"%s import end - Stops importing.\n"
+			);
+			return;
+		}
+	}
+
+	Tier0_Msg(
+		"%s export [...] - Controls export of new camera motion data.\n"
+		"%s import [...] - Controls import of new camera motion data.\n"
+		, cmd0
+		, cmd0
+	);
 }

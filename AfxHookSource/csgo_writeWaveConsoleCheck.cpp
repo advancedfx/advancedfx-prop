@@ -79,7 +79,7 @@ bool Hook_csgo_writeWaveConsoleCheck(void)
 	{
 		DWORD addr_csgo_writeWaveConsoleOpenJNZ = AFXADDR_GET(csgo_writeWaveConsoleOpenJNZ);
 		csgo_writeWaveConsoleOpenJNZ_CONTINUE = addr_csgo_writeWaveConsoleOpenJNZ + 6;
-		csgo_writeWaveConsoleOpenJNZ_JMP = *(DWORD *)(addr_csgo_writeWaveConsoleOpenJNZ + 2);
+		csgo_writeWaveConsoleOpenJNZ_JMP = addr_csgo_writeWaveConsoleOpenJNZ + 6 + *(DWORD *)(addr_csgo_writeWaveConsoleOpenJNZ + 2);
 
 		Asm32ReplaceWithJmp((void *)addr_csgo_writeWaveConsoleOpenJNZ, 6, touring_csgo_writeWaveConsoleCheck);
 

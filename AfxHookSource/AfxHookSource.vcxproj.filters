@@ -165,6 +165,9 @@
     <ClCompile Include="csgo_c_baseanimatingoverlay.cpp">
       <Filter>AfxHookSource</Filter>
     </ClCompile>
+    <ClCompile Include="CamIO.cpp">
+      <Filter>AfxHookSource</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -327,6 +330,9 @@
       <Filter>AfxHookSource</Filter>
     </ClInclude>
     <ClInclude Include="csgo_c_baseanimatingoverlay.h">
+      <Filter>AfxHookSource</Filter>
+    </ClInclude>
+    <ClInclude Include="CamIO.h">
       <Filter>AfxHookSource</Filter>
     </ClInclude>
   </ItemGroup>

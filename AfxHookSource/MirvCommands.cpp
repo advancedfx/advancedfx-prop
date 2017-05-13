@@ -702,6 +702,51 @@ CON_COMMAND(mirv_streams, "Access to streams system.")
 					return;
 				}
 				else
+				if (!_stricmp(cmd2, "cam"))
+				{
+					if (4 <= argc)
+					{
+						char const * cmd3 = args->ArgV(3);
+
+						if (!_stricmp("enabled", cmd3))
+						{
+							if (5 <= argc)
+							{
+								g_AfxStreams.CamExport_set(0 != atoi(args->ArgV(4)));
+								return;
+							}
+
+							Tier0_Msg(
+								"mirv_streams record cam enabled 0|1 - Disable (0) or enable (1).\n"
+								"Current value: %i\n"
+								, g_AfxStreams.CamExport_get() ? 1 : 0
+							);
+							return;
+						}
+						else if (!_stricmp("fovScaling", cmd3))
+						{
+							if (5 <= argc)
+							{
+								g_AfxStreams.CamExportScaleFov_set(0 == _stricmp("alienSwarm",args->ArgV(4)) ? CamExport::SF_AlienSwarm : CamExport::SF_None);
+								return;
+							}
+
+							Tier0_Msg(
+								"mirv_streams record cam fovScaling none|alienSwarm - Use engine FOV (none) or use Alien Swarm SDK like scaling i.e. used by CS:GO (alienSwarm).\n"
+								"Current value: %s\n"
+								, g_AfxStreams.CamExportScaleFov_get() == CamExport::SF_AlienSwarm ? "alienSwarm" : "none"
+							);
+							return;
+						}
+					}
+
+					Tier0_Msg(
+						"mirv_streams record cam enabled [...]\n"
+						"mirv_streams record cam fovScaling [...]\n"
+					);
+					return;
+				}
+				else
 				if (!_stricmp(cmd2, "agr"))
 				{
 					CSubWrpCommandArgs subArgs(args, 3);
@@ -720,6 +765,7 @@ CON_COMMAND(mirv_streams, "Access to streams system.")
 				"mirv_streams record matForceTonemapScale [...] - Controls mat_force_tonemap_scale variable during recording.\n"
 				"mirv_streams record startMovieWav [...] - Controls whether startmovie shall be used for automatically recording audio.\n"
 				"mirv_streams record bvh [...] - Controls the HLAE/BVH Camera motion data capture output.\n"
+				"mirv_streams record cam [...] - Controls the camera motion data capture output (can be imported with mirv_camio).\n"
 				"mirv_streams record agr [...] - Controls afxGameRecord (.agr) game state recording [still in developement, file format will have breaking changes].\n"
 			);
 			return;
@@ -3548,4 +3594,9 @@ CON_COMMAND(mirv_vpanel, "VGUI Panel access")
 		"mirv_vpanel show [...]\n"
 		"Hint: To find panel names use vgui_drawtree 1.\n"
 	);
+}
+
+CON_COMMAND(mirv_camio, "New camera motion data import / export.")
+{
+	g_Hook_VClient_RenderView.Console_CamIO(args);
 }

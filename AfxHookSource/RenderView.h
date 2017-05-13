@@ -10,6 +10,8 @@
 
 
 #include "WrpGlobals.h"
+#include "WrpConsole.h"
+#include "CamIO.h"
 #include <shared/CamPath.h>
 
 class Hook_VClient_RenderView;
@@ -27,6 +29,8 @@ public:
 	double LastCameraOrigin[3];
 	double LastCameraAngles[3];
 	double LastCameraFov;
+	int LastWidth = 1280;
+	int LastHeight = 720;
 
 	bool handleZoomEnabled;
 	double handleZoomMinUnzoomedFov;
@@ -56,9 +60,17 @@ public:
 
 	bool IsInstalled(void);
 
+	void OnAdjustEngineViewport(int& x, int& y, int& width, int& height)
+	{
+		LastWidth = width;
+		LastHeight = height;
+	}
+
 	void OnViewOverride(float &Tx, float &Ty, float &Tz, float &Rx, float &Ry, float &Rz, float &Fov);
 
 	void SetImportBaseTime(float value);
+
+	void Console_CamIO(IWrpCommandArgs * args);
 
 private:
 	bool m_Export;
@@ -71,5 +83,8 @@ private:
 
 	void Install_cstrike(void);
 	void Install_ep2(void);
+
+	CamExport * m_CamExport = 0;
+	CamImport * m_CamImport = 0;
 };
 

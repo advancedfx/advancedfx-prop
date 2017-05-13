@@ -120,7 +120,12 @@ public:
 		g_ClientTools.OnPostToolMessage((SOURCESDK::CSGO::HTOOLHANDLE)hEntity, (SOURCESDK::CSGO::KeyValues *)msg);
 		g_Engine_ClientEngineTools->PostToolMessage(hEntity, msg);
 	}
-	virtual void AdjustEngineViewport( int& x, int& y, int& width, int& height ) { g_Engine_ClientEngineTools->AdjustEngineViewport(x, y, width, height); }
+	virtual void AdjustEngineViewport( int& x, int& y, int& width, int& height )
+	{
+		g_Engine_ClientEngineTools->AdjustEngineViewport(x, y, width, height);
+
+		g_Hook_VClient_RenderView.OnAdjustEngineViewport(x, y, width, height);
+	}
 	
 	virtual bool SetupEngineView(SOURCESDK::Vector &origin, SOURCESDK::QAngle &angles, float &fov )
 	{

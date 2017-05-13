@@ -169,6 +169,7 @@
     <ClCompile Include="AfxShaders.cpp" />
     <ClCompile Include="AfxStreams.cpp" />
     <ClCompile Include="aiming.cpp" />
+    <ClCompile Include="CamIO.cpp" />
     <ClCompile Include="CampathDrawer.cpp" />
     <ClCompile Include="ClientTools.cpp" />
     <ClCompile Include="CommandSystem.cpp" />
@@ -225,6 +226,7 @@
     <ClInclude Include="AfxShaders.h" />
     <ClInclude Include="AfxStreams.h" />
     <ClInclude Include="aiming.h" />
+    <ClInclude Include="CamIO.h" />
     <ClInclude Include="CampathDrawer.h" />
     <ClInclude Include="asmClassTools.h" />
     <ClInclude Include="ClientTools.h" />
