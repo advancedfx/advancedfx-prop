@@ -291,6 +291,7 @@ void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, fl
 	{
 		CamIO::CamData camData;
 
+		camData.Time = curTime;
 		camData.XPosition = Tx;
 		camData.YPosition = Ty;
 		camData.ZPosition = Tz;
@@ -408,11 +409,13 @@ void Hook_VClient_RenderView::Console_CamIO(IWrpCommandArgs * args)
 					}
 
 					m_CamImport = new CamImport(args->ArgV(3), GetCurTime());
+					return;
 				}
 				else if (0 == _stricmp("end", cmd2))
 				{
 					delete m_CamImport;
 					m_CamImport = 0;
+					return;
 				}
 
 			}
@@ -420,6 +423,8 @@ void Hook_VClient_RenderView::Console_CamIO(IWrpCommandArgs * args)
 			Tier0_Msg(
 				"%s import start <fileName> - Starts importing cam from file <fileName>.\n"
 				"%s import end - Stops importing.\n"
+				, cmd0
+				, cmd0
 			);
 			return;
 		}

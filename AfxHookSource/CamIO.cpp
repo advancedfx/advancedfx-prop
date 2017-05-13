@@ -152,7 +152,7 @@ bool CamImport::GetCamData(double time, double width, double height, CamData & o
 		m_NextQuat = Afx::Math::Quaternion::FromQREulerAngles(Afx::Math::QREulerAngles::FromQEulerAngles(Afx::Math::QEulerAngles(m_NextFrame.YRotation, m_NextFrame.ZRotation, m_NextFrame.XRotation)));
 	}
 
-	double orgTime = time + m_StartTime;
+	double orgTime = time - m_StartTime + m_FirstFrameTime;
 
 	double delta = m_NextFrame.Time - m_LastFrame.Time;
 	double t = delta ? ((orgTime - m_LastFrame.Time) / delta) : 0;

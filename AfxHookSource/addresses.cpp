@@ -908,10 +908,9 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 				if(!result.IsEmpty())
 				{
 					DWORD tmpAddr = result.Start;
-					tmpAddr -= 0x6;
-					tmpAddr += 0x10;
+					tmpAddr += 0xB;
 
-					if (!FindPatternString(MemRange(tmpAddr -1, tmpAddr + 10 -1), "0D ?? ?? ?? ?? 8B 01 FF 50 10").IsEmpty())
+					if (!FindPatternString(MemRange(tmpAddr -2, tmpAddr + 11 -2), "8B  0D ?? ?? ?? ?? 8B 01 FF 50 10").IsEmpty())
 					{
 						addr = *(DWORD *)tmpAddr;
 					}
@@ -1716,7 +1715,7 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 	AFXADDR_SET(csgo_CHudDeathNotice_FireGameEvent_DSZ, 0x0b);
 	AFXADDR_SET(csgo_CHudDeathNotice_UnkAddDeathNotice_DSZ, 0x09);
 	//AFXADDR_SET(csgo_CScaleformSlotInitControllerClientImpl_UnkCheckSwf_DSZ,0x0c);
-	AFXADDR_SET(csgo_CSkyboxView_Draw_DSZ, 0x0d);
+	AFXADDR_SET(csgo_CSkyboxView_Draw_DSZ, 0x0a);
 	AFXADDR_SET(csgo_gpGlobals_OFS_curtime, 4*4);
 	AFXADDR_SET(csgo_gpGlobals_OFS_interpolation_amount, 9*4);
 	AFXADDR_SET(csgo_gpGlobals_OFS_interval_per_tick, 8*4);

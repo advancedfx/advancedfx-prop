@@ -6276,6 +6276,23 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, SOURCESDK::vrect_t_csgo *r
 
 	cl->GetParent()->View_Render(rect);	
 
+	// Capture
+	if (m_CamExportObj)
+	{
+		CamIO::CamData camData;
+
+		camData.Time = g_Hook_VClient_RenderView.GetCurTime();
+		camData.XPosition = g_Hook_VClient_RenderView.LastCameraOrigin[0];
+		camData.YPosition = g_Hook_VClient_RenderView.LastCameraOrigin[1];
+		camData.ZPosition = g_Hook_VClient_RenderView.LastCameraOrigin[2];
+		camData.YRotation = g_Hook_VClient_RenderView.LastCameraAngles[0];
+		camData.ZRotation = g_Hook_VClient_RenderView.LastCameraAngles[1];
+		camData.XRotation = g_Hook_VClient_RenderView.LastCameraAngles[2];
+		camData.Fov = g_Hook_VClient_RenderView.LastCameraFov;
+
+		m_CamExportObj->WriteFrame(g_Hook_VClient_RenderView.LastWidth, g_Hook_VClient_RenderView.LastHeight, camData);
+	}
+
 	// Capture BVHs (except main):
 	for (std::list<CEntityBvhCapture *>::iterator it = m_EntityBvhCaptures.begin(); it != m_EntityBvhCaptures.end(); ++it)
 	{
