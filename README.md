@@ -32,4 +32,4 @@ The source code root currently is at [https://github.com/ripieces/advancedfx-mit
 
 ## Version
 
-HLAE 2.26.6 (2017-05-13T20:45Z)
+HLAE 2.26.7 (2017-05-14T09:45Z)
