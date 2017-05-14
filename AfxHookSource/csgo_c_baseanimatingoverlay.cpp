@@ -307,11 +307,11 @@ bool Hook_csgo_PlayerAnimStateFix(void)
 
 		csgo_C_BasePlayer_RecvProxy_t * pMovArgFn;
 
-		pMovArgFn = (csgo_C_BasePlayer_RecvProxy_t *)AFXADDR_GET(csgo_DT_Animationlayer_m_flCycle_fn);
-		MdtMemAccessBegin(pMovArgFn, sizeof(void *), &mbis);
+		pMovArgFn = *(csgo_C_BasePlayer_RecvProxy_t **)AFXADDR_GET(csgo_DT_Animationlayer_m_flCycle_fn);
+		//MdtMemAccessBegin(pMovArgFn, sizeof(void *), &mbis);
 		detoured_csgo_RecvProxy_m_flCycle = *pMovArgFn;
 		*pMovArgFn = touring_csgo__RecvProxy_m_flCycle;
-		MdtMemAccessEnd(&mbis);
+		//MdtMemAccessEnd(&mbis);
 
 		/*
 		pMovArgFn = *(csgo_C_BasePlayer_RecvProxy_t **)AFXADDR_GET(csgo_DT_Animationlayer_m_flPrevCycle_fn);

@@ -2,6 +2,7 @@
 
 #include "CamIO.h"
 
+#define _USE_MATH_DEFINES
 #include <math.h>
 #include <string>
 #include <sstream>
@@ -15,9 +16,9 @@ double CamIO::DoFovScaling(double width, double height, double fov)
 		double engineAspectRatio = width / height;
 		double defaultAscpectRatio = 4.0 / 3.0;
 		double ratio = engineAspectRatio / defaultAscpectRatio;
-		double halfAngle = 0.5 * fov;
+		double halfAngle = 0.5 * fov * (2.0 * M_PI / 360.0);
 		double t = ratio * tan(halfAngle);
-		return 2.0 * atan(t);
+		return 2.0 * atan(t) / (2.0 * M_PI / 360.0);
 	}
 
 	return fov;
@@ -32,9 +33,9 @@ double CamIO::UndoFovScaling(double width, double height, double fov)
 		double engineAspectRatio = width / height;
 		double defaultAscpectRatio = 4.0 / 3.0;
 		double ratio = engineAspectRatio / defaultAscpectRatio;
-		double t = tan(0.5 * fov);
+		double t = tan(0.5 * fov * (2.0 * M_PI / 360.0));
 		double halfAngle = atan(t / ratio);
-		return 2.0 * halfAngle;
+		return 2.0 * halfAngle / (2.0 * M_PI / 360.0);
 	}
 
 	return fov;
@@ -51,6 +52,9 @@ CamExport::CamExport(char const * fileName, ScaleFov scaleFov)
 	m_Ofs << "scaleFov " << (m_ScaleFov == SF_AlienSwarm ? "alienSwarm" : "none") << std::endl;
 	m_Ofs << "channels time xPosition yPosition zPositon xRotation yRotation zRotation fov" << std::endl;
 	m_Ofs << "DATA" << std::endl;
+
+	m_Ofs << std::fixed;
+	m_Ofs.precision(6);
 }
 
 CamExport::~CamExport()

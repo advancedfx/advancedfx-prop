@@ -64,9 +64,9 @@ void __declspec(naked) touring_csgo_CViewRender_RenderSmokeOverlay_OnLoadOldAlph
 	__asm jmp detoured_csgo_CViewRender_RenderSmokeOverlay_OnLoadOldAlpha
 }
 
-void * detoured_csgo_CViewRender_RenderSmokeOverlay_OnLoadAlphaBeforeDraw;
+void * detoured_csgo_CViewRender_RenderSmokeOverlay_OnCompareAlphaBeforeDraw;
 
-void __declspec(naked) touring_csgo_CViewRender_RenderSmokeOverlay_OnLoadAlphaBeforeDraw(void)
+void __declspec(naked) touring_csgo_CViewRender_RenderSmokeOverlay_OnCompareAlphaBeforeDraw(void)
 {
 	// store new old value:
 	__asm push eax
@@ -79,7 +79,7 @@ void __declspec(naked) touring_csgo_CViewRender_RenderSmokeOverlay_OnLoadAlphaBe
 	__asm mulss xmm1, g_csgo_AfxSmokeOverlayAlphaMod
 	__asm movss dword ptr [edx + 588h], xmm1
 
-	__asm jmp detoured_csgo_CViewRender_RenderSmokeOverlay_OnLoadAlphaBeforeDraw
+	__asm jmp detoured_csgo_CViewRender_RenderSmokeOverlay_OnCompareAlphaBeforeDraw
 }
 
 void * detoured_csgo_CViewRender_RenderSmokeOverlay_OnBeforeExitFunc;
@@ -121,12 +121,12 @@ bool csgo_CViewRender_Install(void)
 
 	if (AFXADDR_GET(csgo_CCSViewRender_RenderSmokeOverlay_OnLoadOldAlpha)
 		&& AFXADDR_GET(csgo_CCSViewRender_RenderView)
-		&& AFXADDR_GET(csgo_CCSViewRender_RenderSmokeOverlay_OnLoadAlphaBeforeDraw)
+		&& AFXADDR_GET(csgo_CCSViewRender_RenderSmokeOverlay_OnCompareAlphaBeforeDraw)
 		&& AFXADDR_GET(csgo_CCSViewRender_RenderSmokeOverlay_OnBeforeExitFunc))
 	{
 		detoured_csgo_CViewRender_RenderSmokeOverlay_OnLoadOldAlpha = (void *)DetourApply((BYTE *)AFXADDR_GET(csgo_CCSViewRender_RenderSmokeOverlay_OnLoadOldAlpha), (BYTE *)touring_csgo_CViewRender_RenderSmokeOverlay_OnLoadOldAlpha, 8);
 		detoured_CCSViewRender_RenderView = (CCSViewRender_RenderView_t)DetourClassFunc((BYTE *)AFXADDR_GET(csgo_CCSViewRender_RenderView), (BYTE *)touring_CCSViewRender_RenderView, (int)AFXADDR_GET(csgo_CCSViewRender_RenderView_DSZ));
-		detoured_csgo_CViewRender_RenderSmokeOverlay_OnLoadAlphaBeforeDraw = (void *)DetourApply((BYTE *)AFXADDR_GET(csgo_CCSViewRender_RenderSmokeOverlay_OnLoadAlphaBeforeDraw), (BYTE *)touring_csgo_CViewRender_RenderSmokeOverlay_OnLoadAlphaBeforeDraw, 8);
+		detoured_csgo_CViewRender_RenderSmokeOverlay_OnCompareAlphaBeforeDraw = (void *)DetourApply((BYTE *)AFXADDR_GET(csgo_CCSViewRender_RenderSmokeOverlay_OnCompareAlphaBeforeDraw), (BYTE *)touring_csgo_CViewRender_RenderSmokeOverlay_OnCompareAlphaBeforeDraw, 7);
 		detoured_csgo_CViewRender_RenderSmokeOverlay_OnBeforeExitFunc = (void *)DetourApply((BYTE *)AFXADDR_GET(csgo_CCSViewRender_RenderSmokeOverlay_OnBeforeExitFunc), (BYTE *)touring_csgo_CViewRender_RenderSmokeOverlay_OnBeforeExitFunc, 8);
 	}
 	else
