@@ -1234,7 +1234,7 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 			AFXADDR_SET(csgo_C_BasePlayer_RecvProxy_ObserverTarget, addr);
 		}
 
-		// csgo_DT_Animationlayer_m_flCycle_fn: // Checked 2017-05-13.
+		// csgo_DT_Animationlayer_m_flCycle_fn: // Checked 2017-05-19.
 		{
 			DWORD addr = 0;
 			DWORD strAddr = 0;
@@ -1281,7 +1281,7 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 					{
 						DWORD tmpAddr = result.Start + 0x24;
 
-						result = FindPatternString(MemRange(tmpAddr -0x2, tmpAddr +0xB -0x2), "C7 05 ?? ?? ?? ?? ?? ?? ?? ?? E8");
+						result = FindPatternString(MemRange(tmpAddr -0x2, tmpAddr +0xC -0x2), "C7 05 ?? ?? ?? ?? ?? ?? ?? ?? C7 05");
 
 						if (!result.IsEmpty() && result.Start == tmpAddr - 2)
 						{
