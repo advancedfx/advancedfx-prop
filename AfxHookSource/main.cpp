@@ -44,6 +44,7 @@
 //#include "csgo_IPrediction.h"
 #include "csgo_MemAlloc.h"
 #include "csgo_c_baseanimatingoverlay.h"
+#include "MirvPgl.h"
 
 #include <set>
 #include <map>
@@ -725,7 +726,15 @@ public:
 	}
 
 	virtual void LevelInitPreEntity( char const* pMapName )
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 5) }
+	{
+		// JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 5)
+	
+#ifdef AFX_MIRV_PGL
+		MirvPgl::SupplyLevelInit(pMapName);
+#endif	
+
+		m_Parent->LevelInitPreEntity(pMapName);
+	}
 
 	virtual void LevelInitPostEntity( )
 	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 6) }
@@ -739,6 +748,10 @@ public:
 		csgo_Stdshader_dx9_Hooks_OnLevelShutdown();
 
 		g_AfxShaders.ReleaseUnusedShaders();
+
+#ifdef AFX_MIRV_PGL
+		MirvPgl::SupplyLevelShutdown();
+#endif
 
 		m_Parent->LevelShutdown();
 	}
@@ -858,6 +871,12 @@ public:
 
 		switch(curStage)
 		{
+		case SOURCESDK::CSGO::FRAME_START:
+#ifdef AFX_MIRV_PGL
+			MirvPgl::CheckStartedAndRestoreIfDown();
+			MirvPgl::ExecuteQueuedCommands();
+#endif
+			break;
 		case SOURCESDK::CSGO::FRAME_NET_UPDATE_START:
 			break;
 		case SOURCESDK::CSGO::FRAME_NET_UPDATE_END:

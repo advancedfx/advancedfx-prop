@@ -5,6 +5,7 @@
 #include "SourceInterfaces.h"
 #include "CampathDrawer.h"
 #include "AfxShaders.h"
+#include "MirvPgl.h"
 
 #include <shared/detours.h>
 
@@ -763,9 +764,13 @@ public:
 
     STDMETHOD(Present)(THIS_ CONST RECT* pSourceRect,CONST RECT* pDestRect,HWND hDestWindowOverride,CONST RGNDATA* pDirtyRegion)
 	{
-		if(m_Block_Present) return D3D_OK;
-		
-		return g_OldDirect3DDevice9->Present(pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
+		HRESULT result = m_Block_Present ? D3D_OK : g_OldDirect3DDevice9->Present(pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
+
+#ifdef AFX_MIRV_PGL
+		MirvPgl::DrawingThread_PresentedUnleashCamDataOnFirstCall();
+#endif
+
+		return result;
 	}
 
     IFACE_PASSTHROUGH(IDirect3DDevice9, GetBackBuffer, g_OldDirect3DDevice9);

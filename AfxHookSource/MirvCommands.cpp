@@ -17,7 +17,6 @@
 #include "SourceInterfaces.h"
 #include "WrpVEngineClient.h"
 #include "WrpConsole.h"
-#include "WrpVEngineClient.h"
 #include "csgo_CHudDeathNotice.h"
 #include "csgo_GetPlayerName.h"
 #include "csgo_SndMixTimeScalePatch.h"

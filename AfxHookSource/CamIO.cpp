@@ -7,19 +7,34 @@
 #include <string>
 #include <sstream>
 
+double AlienSwarm_FovScaling(double width, double height, double fov)
+{
+	if (!height) return fov;
+
+	double engineAspectRatio = width / height;
+	double defaultAscpectRatio = 4.0 / 3.0;
+	double ratio = engineAspectRatio / defaultAscpectRatio;
+	double halfAngle = 0.5 * fov * (2.0 * M_PI / 360.0);
+	double t = ratio * tan(halfAngle);
+	return 2.0 * atan(t) / (2.0 * M_PI / 360.0);
+}
+
+double AlienSwarm_InverseFovScaling(double width, double height, double fov)
+{
+	if (!height) return fov;
+
+	double engineAspectRatio = width / height;
+	double defaultAscpectRatio = 4.0 / 3.0;
+	double ratio = engineAspectRatio / defaultAscpectRatio;
+	double t = tan(0.5 * fov * (2.0 * M_PI / 360.0));
+	double halfAngle = atan(t / ratio);
+	return 2.0 * halfAngle / (2.0 * M_PI / 360.0);
+}
+
 double CamIO::DoFovScaling(double width, double height, double fov)
 {
 	if (SF_AlienSwarm == m_ScaleFov)
-	{
-		if (!height) return fov;
-
-		double engineAspectRatio = width / height;
-		double defaultAscpectRatio = 4.0 / 3.0;
-		double ratio = engineAspectRatio / defaultAscpectRatio;
-		double halfAngle = 0.5 * fov * (2.0 * M_PI / 360.0);
-		double t = ratio * tan(halfAngle);
-		return 2.0 * atan(t) / (2.0 * M_PI / 360.0);
-	}
+		return AlienSwarm_FovScaling(width, height, fov);
 
 	return fov;
 }
@@ -27,16 +42,7 @@ double CamIO::DoFovScaling(double width, double height, double fov)
 double CamIO::UndoFovScaling(double width, double height, double fov)
 {
 	if (SF_AlienSwarm == m_ScaleFov)
-	{
-		if (!height) return fov;
-
-		double engineAspectRatio = width / height;
-		double defaultAscpectRatio = 4.0 / 3.0;
-		double ratio = engineAspectRatio / defaultAscpectRatio;
-		double t = tan(0.5 * fov * (2.0 * M_PI / 360.0));
-		double halfAngle = atan(t / ratio);
-		return 2.0 * halfAngle / (2.0 * M_PI / 360.0);
-	}
+		return AlienSwarm_InverseFovScaling(width, height, fov);
 
 	return fov;
 }

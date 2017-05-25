@@ -6,6 +6,10 @@
 #include <fstream>
 #include <map>
 
+double AlienSwarm_FovScaling(double width, double height, double fov);
+
+double AlienSwarm_InverseFovScaling(double width, double height, double fov);
+
 class CamIO
 {
 public:
@@ -33,6 +37,7 @@ protected:
 	double DoFovScaling(double width, double height, double fov);
 	double UndoFovScaling(double width, double height, double fov);
 };
+
 
 class CamExport : public CamIO
 {
