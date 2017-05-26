@@ -31,6 +31,7 @@ using easywsclient::WebSocket;
 
 namespace MirvPgl
 {
+	const int m_CheckRestoreEveryTicks = 5000;
 	const int m_ThreadSleepMsIfNoData = 1;
 	const uint32_t m_Version = 0;
 
@@ -50,8 +51,9 @@ namespace MirvPgl
 	std::vector<uint8_t> m_TempData;
 
 	std::thread * m_Thread = 0;
+	bool m_WantClose = false;
 
-	DWORD m_LastRestoreTick = 0;
+	DWORD m_LastCheckRestoreTick = 0;
 
 	bool m_CamDataAvailable = false;
 	CamIO::CamData m_CamData;
@@ -60,7 +62,6 @@ namespace MirvPgl
 
 	void AppendCString(char const * cstr, std::vector<uint8_t> &outVec)
 	{
-
 		std::string str(cstr);
 		outVec.insert(outVec.end(), str.begin(), str.end());
 		outVec.push_back(static_cast<uint8_t>('\0'));
@@ -100,22 +101,24 @@ namespace MirvPgl
 
 	void Recv_Bytes(const std::vector<uint8_t>& message)
 	{
-		while (true)
+		std::vector<uint8_t>::const_iterator itBegin = message.begin();
+
+		while (itBegin != message.end())
 		{
 			std::vector<uint8_t>::const_iterator itDelim = message.end();
 
-			for (std::vector<uint8_t>::const_iterator it = message.begin(); it != message.end(); ++it)
+			for (std::vector<uint8_t>::const_iterator it = itBegin; it != message.end(); ++it)
 			{
 				if ((uint8_t)'\0' == *it)
 				{
-					itDelim;
+					itDelim = it;
 					break;
 				}
 			}
 
-			if (message.end() != itDelim && message.begin() != itDelim)
+			if (message.end() != itDelim && itBegin != itDelim)
 			{
-				std::string strCode(message.begin(), itDelim - 1);
+				std::string strCode(itBegin, itDelim);
 
 				char const * code = strCode.c_str();
 
@@ -123,28 +126,29 @@ namespace MirvPgl
 				{
 					std::unique_lock<std::mutex> lock(m_CommandsMutex);
 
-					std::vector<uint8_t>::const_iterator itStart = itDelim + 1;
-					std::vector<uint8_t>::const_iterator itEnd = itStart;
+					std::vector<uint8_t>::const_iterator itCmdStart = itDelim + 1;
+					std::vector<uint8_t>::const_iterator itCmdEnd = itCmdStart;
 
 					bool foundDelim = false;
 
-					for (std::vector<uint8_t>::const_iterator it = message.begin(); it != message.end(); ++it)
+					for (std::vector<uint8_t>::const_iterator it = itCmdStart; it != message.end(); ++it)
 					{
 						if ((uint8_t)'\0' == *it)
 						{
 							foundDelim = true;
+							itCmdEnd = it;
 							break;
-						}
-						
-						itEnd = it;
+						}					
 					}
 
 					if (!foundDelim)
 						break;
 
-					std::string cmds(itStart, itEnd);
+					std::string cmds(itCmdStart, itCmdEnd);
 
 					m_Commands.push_back(cmds);
+
+					itBegin = itCmdEnd + 1;
 
 					continue;
 				}
@@ -160,15 +164,24 @@ namespace MirvPgl
 
 		while (true)
 		{
-			std::unique_lock<std::mutex> lock(m_WsMutex);
+			{
+				std::unique_lock<std::mutex> wsLock(m_WsMutex);
 
-			if (0 == m_Ws || WebSocket::CLOSED != m_Ws->getReadyState())
-				break;
+				if (WebSocket::CLOSED == m_Ws->getReadyState())
+				{
+					delete m_Ws;
+					m_Ws = 0;
+					break;
+				}
+			}
 
 			m_Ws->poll();
 
+			// this would eat our shit: m_Ws->dispatch(Recv_String); 
+			m_Ws->dispatchBinary(Recv_Bytes);
+
 			std::unique_lock<std::mutex> dataLock(m_DataMutex);
-			m_DataAvailableCondition.wait_for(dataLock, m_ThreadSleepMsIfNoData * 1ms, [] { return !m_Data.empty(); }); // if we don't need to send data, we are a bit lazy in order to save some CPU. Of course this assumes, that the data we get from network can wait that long ;)
+			m_DataAvailableCondition.wait_for(dataLock, m_ThreadSleepMsIfNoData * 1ms, [] { return !m_Data.empty() || m_WantClose; }); // if we don't need to send data, we are a bit lazy in order to save some CPU. Of course this assumes, that the data we get from network can wait that long ;)
 
 			if (!m_Data.empty())
 			{
@@ -177,15 +190,15 @@ namespace MirvPgl
 				dataLock.unlock();
 
 				m_Ws->sendBinary(m_TempData);
+
+
 				m_TempData.clear();
 			}
 			else
 				dataLock.unlock();
-		}
 
-		{
-			std::unique_lock<std::mutex> dataLock(m_DataMutex);
-			m_Data.clear();
+			if (m_WantClose)
+				m_Ws->close();
 		}
 	}
 	
@@ -193,8 +206,16 @@ namespace MirvPgl
 	{
 		if (0 != m_Thread)
 		{
+			m_WantClose = true;
+			
+			m_DataAvailableCondition.notify_one();
+
 			m_Thread->join();
+			
+			delete m_Thread;
 			m_Thread = 0;
+			
+			m_WantClose = false;
 		}
 	}
 
@@ -212,7 +233,7 @@ namespace MirvPgl
 
 		WSADATA wsaData;
 
-		m_WsaActive = 0 != WSAStartup(MAKEWORD(2, 2), &wsaData);
+		m_WsaActive = 0 == WSAStartup(MAKEWORD(2, 2), &wsaData);
 	}
 
 	void Shutdown()
@@ -232,26 +253,19 @@ namespace MirvPgl
 
 		if(m_WsaActive)
 		{
-			std::unique_lock<std::mutex> lock(m_WsMutex);
-
 			m_WantWs = true;
 			m_WsUrl = url;
 
-			if (0 == m_Ws)
+			m_Ws = WebSocket::from_url(m_WsUrl);
+
+			if (0 != m_Ws)
 			{
-				m_Ws = WebSocket::from_url(m_WsUrl);
+				AppendHello(m_Data);
 
+				if (!m_CurrentLevel.empty())
 				{
-					std::unique_lock<std::mutex> lock(m_DataMutex);
-
-					AppendHello(m_Data);
-
-					if (!m_CurrentLevel.empty())
-					{
-
-						AppendCString("levelInit", m_Data);
-						AppendCString(m_CurrentLevel.c_str(), m_Data);
-					}
+					AppendCString("levelInit", m_Data);
+					AppendCString(m_CurrentLevel.c_str(), m_Data);
 				}
 
 				CreateThread();
@@ -261,21 +275,9 @@ namespace MirvPgl
 
 	void Stop()
 	{
-		{
-			std::unique_lock<std::mutex> lock(m_WsMutex);
-
-			if (0 != m_Ws)
-			{
-				m_Ws->close();
-
-				delete m_Ws;
-				m_Ws = 0;
-			}
-
-			m_WantWs = false;
-		}
-
 		EndThread();
+
+		m_WantWs = false;
 	}
 
 	bool IsStarted()
@@ -289,19 +291,15 @@ namespace MirvPgl
 		{
 			DWORD curTick = GetTickCount();
 
-			if (5000 <= abs((int)m_LastRestoreTick - (int)curTick))
+			if (m_CheckRestoreEveryTicks <= abs((int)m_LastCheckRestoreTick - (int)curTick))
 			{
-				m_LastRestoreTick = curTick;
+				m_LastCheckRestoreTick = curTick;
 
 				bool needRestore = false;
 				{
-
 					std::unique_lock<std::mutex> lock(m_WsMutex);
 
-					if (m_WantWs)
-					{
-						needRestore = 0 == m_Ws || WebSocket::CLOSED == m_Ws->getReadyState();
-					}
+					needRestore = 0 == m_Ws;
 				}
 
 				if (needRestore)
@@ -392,4 +390,39 @@ namespace MirvPgl
 	}
 
 }
+
+CON_COMMAND(mirv_pgl, "PGL")
+{
+	if (!MirvPgl::m_WsaActive)
+	{
+		Tier0_Warning("Error: WinSock(2.2) not active, feature not available!\n");
+		return;
+	}
+
+	int argc = args->ArgC();
+
+	if (2 <= argc)
+	{
+		char const * cmd1 = args->ArgV(1);
+
+		if (0 == _stricmp("start", cmd1) && 3 <= argc)
+		{
+			MirvPgl::Start(args->ArgV(2));
+			return;
+		}
+		else if (0 == _stricmp("stop", cmd1))
+		{
+			MirvPgl::Stop();
+			return;
+		}
+	}
+
+	Tier0_Msg(
+		"mirv_pgl start \"ws://host:port/path\" - (Re-)Starts connectinion to server.\n"
+		"mirv_pgl stop - Stops connection to server.\n"
+	);
+
+}
+
+
 #endif // ifdef AFX_MIRV_PGL

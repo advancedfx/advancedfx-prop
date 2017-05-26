@@ -8,22 +8,24 @@
 
 /*
 
-Version: 0
-
-
 Usage:
 
 
-It is a good idea to run with the FPS limited (either by vsync (recommended) or by host_framerate).
-Otherwise the network will be flooded with "cam" messages, since there is currently not throttling.
+It is a good idea to run with the FPS limited (either by vsync or by fps_max).
+Otherwise the network / server will be flooded with "cam" messages or the send buffer will overflow eventually, since there is currently no throttling at all implemented so far.
 
 
 Console commands:
 
-mirv_pgl start "ws://host:port/path" - (Re-)Starts connectinion to server.*
-mirv_pgl stop - Stops connection to server.*
+mirv_pgl start "ws://host:port/path" - (Re-)Starts connectinion to server.
+mirv_pgl stop - Stops connection to server.
 
-* It is NOT safe to execute this command using the "exec" command from the server (deadlock will occur).
+It is safe to exec mirv_pgl stop from the server, but how will you reconnect then?
+
+
+Example server:
+
+An example server is located in misc/mirv_pgl_test/server.js
 
 
 Connection loss:
@@ -64,7 +66,6 @@ Purpose:
   Is sent after "levelInit" when level is shut down.
 Format:
   CString cmd = "levelShutdown"
-  CString levelName;
 
 "cam"
 Purpose:

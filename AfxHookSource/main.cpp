@@ -704,6 +704,10 @@ public:
 			g_FileSystem_csgo->AddSearchPath(path.c_str(), "GAME", SOURCESDK::PATH_ADD_TO_TAIL);
 		}
 
+#ifdef AFX_MIRV_PGL
+		MirvPgl::Init();
+#endif	
+
 		CAfxBaseFxStream::AfxStreamsInit();
 
 		return result;
@@ -721,6 +725,10 @@ public:
 		m_FreeMaster.AfxFree();
 		
 		CAfxBaseFxStream::AfxStreamsShutdown();
+
+#ifdef AFX_MIRV_PGL
+		MirvPgl::Shutdown();
+#endif	
 
 		m_Parent->Shutdown();
 	}
