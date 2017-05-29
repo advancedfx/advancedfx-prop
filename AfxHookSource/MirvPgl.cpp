@@ -33,13 +33,30 @@ namespace MirvPgl
 {
 	const int m_CheckRestoreEveryTicks = 5000;
 	const int m_ThreadSleepMsIfNoData = 1;
-	const uint32_t m_Version = 0;
+	const uint32_t m_Version = 1;
+
+	CamData::CamData()
+	{
+
+	}
+
+	CamData::CamData(float time, float xPosition, float yPosition, float zPosition, float xRotation, float yRotation, float zRotation, float fov)
+	: Time(time)
+	, XPosition(xPosition)
+	, YPosition(yPosition)
+	, ZPosition(zPosition)
+	, XRotation(xRotation)
+	, YRotation(yRotation)
+	, ZRotation(zRotation)
+	, Fov(fov)
+	{
+	}
 
 	bool m_WsaActive = false;
 
 	WebSocket * m_Ws = 0;
 	bool m_WantWs = false;
-	std::string m_WsUrl;
+	std::string m_WsUrl("ws://host:port/path");
 	std::mutex m_WsMutex;
 
 	std::list<std::string> m_Commands;
@@ -56,7 +73,7 @@ namespace MirvPgl
 	DWORD m_LastCheckRestoreTick = 0;
 
 	bool m_CamDataAvailable = false;
-	CamIO::CamData m_CamData;
+	CamData m_CamData;
 
 	std::string m_CurrentLevel;
 
@@ -78,18 +95,18 @@ namespace MirvPgl
 		outVec.insert(m_Data.end(), std::begin(data), std::end(data));
 	}
 
-	void AppendCamData(CamIO::CamData const camData, std::vector<uint8_t> &outVec)
+	void AppendCamData(CamData const camData, std::vector<uint8_t> &outVec)
 	{
-		uint8_t data[8 * sizeof(double)];
+		uint8_t data[8 * sizeof(float)];
 
-		memcpy(&(data[0 * sizeof(double)]), &camData.Time, sizeof(double));
-		memcpy(&(data[1 * sizeof(double)]), &camData.XPosition, sizeof(double));
-		memcpy(&(data[2 * sizeof(double)]), &camData.YPosition, sizeof(double));
-		memcpy(&(data[3 * sizeof(double)]), &camData.ZPosition, sizeof(double));
-		memcpy(&(data[4 * sizeof(double)]), &camData.XRotation, sizeof(double));
-		memcpy(&(data[5 * sizeof(double)]), &camData.YRotation, sizeof(double));
-		memcpy(&(data[6 * sizeof(double)]), &camData.ZRotation, sizeof(double));
-		memcpy(&(data[7 * sizeof(double)]), &camData.Fov, sizeof(double));
+		memcpy(&(data[0 * sizeof(float)]), &camData.Time, sizeof(float));
+		memcpy(&(data[1 * sizeof(float)]), &camData.XPosition, sizeof(float));
+		memcpy(&(data[2 * sizeof(float)]), &camData.YPosition, sizeof(float));
+		memcpy(&(data[3 * sizeof(float)]), &camData.ZPosition, sizeof(float));
+		memcpy(&(data[4 * sizeof(float)]), &camData.XRotation, sizeof(float));
+		memcpy(&(data[5 * sizeof(float)]), &camData.YRotation, sizeof(float));
+		memcpy(&(data[6 * sizeof(float)]), &camData.ZRotation, sizeof(float));
+		memcpy(&(data[7 * sizeof(float)]), &camData.Fov, sizeof(float));
 
 		outVec.insert(m_Data.end(), std::begin(data), std::end(data));
 	}
@@ -247,14 +264,23 @@ namespace MirvPgl
 		}
 	}
 
-	void Start(char const * url)
+	void Url_set(char const * url)
+	{
+		m_WsUrl = url;
+	}
+
+	char const * Url_get(void)
+	{
+		return m_WsUrl.c_str();
+	}
+
+	void Start()
 	{
 		Stop();
 
 		if(m_WsaActive)
 		{
 			m_WantWs = true;
-			m_WsUrl = url;
 
 			m_Ws = WebSocket::from_url(m_WsUrl);
 
@@ -304,15 +330,13 @@ namespace MirvPgl
 
 				if (needRestore)
 				{
-					std::string oldUrl = m_WsUrl;
-
-					Start(oldUrl.c_str());
+					Start();
 				}
 			}
 		}
 	}
 
-	void SupplyCamData(CamIO::CamData const & camData)
+	void SupplyCamData(CamData const & camData)
 	{
 		if (!m_WantWs)
 			return;
@@ -374,7 +398,7 @@ namespace MirvPgl
 	}
 
 
-	void DrawingThread_SupplyCamData(CamIO::CamData const & camData)
+	void DrawingThread_SupplyCamData(CamData const & camData)
 	{
 		m_CamDataAvailable = true;
 		m_CamData = camData;
@@ -405,9 +429,9 @@ CON_COMMAND(mirv_pgl, "PGL")
 	{
 		char const * cmd1 = args->ArgV(1);
 
-		if (0 == _stricmp("start", cmd1) && 3 <= argc)
+		if (0 == _stricmp("start", cmd1))
 		{
-			MirvPgl::Start(args->ArgV(2));
+			MirvPgl::Start();
 			return;
 		}
 		else if (0 == _stricmp("stop", cmd1))
@@ -415,11 +439,28 @@ CON_COMMAND(mirv_pgl, "PGL")
 			MirvPgl::Stop();
 			return;
 		}
+		else if (0 == _stricmp("url", cmd1))
+		{
+			if (3 <= argc)
+			{
+				MirvPgl::Url_set(args->ArgV(2));
+				return;
+			}
+
+			Tier0_Msg(
+				"mirv_pgl url <url> - Set url to use with start.\n"
+				"Current value: %s\n"
+				, MirvPgl::Url_get()
+			);
+			return;
+		}
+
 	}
 
 	Tier0_Msg(
-		"mirv_pgl start \"ws://host:port/path\" - (Re-)Starts connectinion to server.\n"
+		"mirv_pgl start \"ws://host:port/path\" - (Re-)Starts connectinion to server, using the URL set with url.\n"
 		"mirv_pgl stop - Stops connection to server.\n"
+		"mirv_pgl url [...] - Set url to use with start.\n"
 	);
 
 }

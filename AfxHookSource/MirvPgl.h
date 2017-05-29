@@ -4,9 +4,12 @@
 
 #ifdef AFX_MIRV_PGL
 
-#include "CamIO.h"
-
 /*
+
+Changes from version 0 to version 1:
+- "cam" uses all Float (instead of Double) now.
+- "mirv_pgl url" sets / gets the url to use, "mirv_pgl start" doesn't take parameters anymore.
+
 
 Usage:
 
@@ -17,7 +20,8 @@ Otherwise the network / server will be flooded with "cam" messages or the send b
 
 Console commands:
 
-mirv_pgl start "ws://host:port/path" - (Re-)Starts connectinion to server.
+mirv_pgl url [<url>] - Set the server's URL, example: mirv_pgl url "ws://localhost:31337/mirv"
+mirv_pgl start - (Re-)Starts connectinion to server.
 mirv_pgl stop - Stops connection to server.
 
 It is safe to exec mirv_pgl stop from the server, but how will you reconnect then?
@@ -74,14 +78,14 @@ Purpose:
   The fov is currently automatically converted according to Alien Swarm SDK (suitable for CS:GO).
 Format:
   CString cmd = "cam";
-  Double time;
-  Double xPosition;
-  Double yPosition;
-  Double zPoisiton;
-  Double xRotation;
-  Double yRotation;
-  Double zRotation;
-  Double fov;
+  Float time;
+  Float xPosition;
+  Float yPosition;
+  Float zPoisiton;
+  Float xRotation;
+  Float yRotation;
+  Float zRotation;
+  Float fov;
 
 
 Messages received:
@@ -104,10 +108,28 @@ Ideas for the future:
 
 namespace MirvPgl
 {
+	struct CamData
+	{
+		float Time = 0;
+		float XPosition = 0;
+		float YPosition = 0;
+		float ZPosition = 0;
+		float XRotation = 0;
+		float YRotation = 0;
+		float ZRotation = 0;
+		float Fov = 90;
+
+		CamData();
+		CamData(float time, float xPosition, float yPosition, float zPosition, float xRotation, float yRotation, float zRotation, float fov);
+	};
+
 	void Init();
 	void Shutdown();
 
-	void Start(char const * url);
+	void Url_set(char const * url);
+	char const * Url_get(void);
+
+	void Start();
 	void Stop();
 	bool IsStarted();
 
@@ -118,7 +140,7 @@ namespace MirvPgl
 	void SupplyLevelInit(char const * mapName);
 	void SupplyLevelShutdown();
 
-	void DrawingThread_SupplyCamData(CamIO::CamData const & camData);
+	void DrawingThread_SupplyCamData(CamData const & camData);
 
 	void DrawingThread_PresentedUnleashCamDataOnFirstCall();
 }

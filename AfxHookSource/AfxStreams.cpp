@@ -21,7 +21,6 @@
 #include "d3d9Hooks.h"
 #include "MatRenderContextHook.h"
 #include "csgo_GlowOverlay.h"
-#include "CamIO.h"
 #include "MirvPgl.h"
 
 #include <shared/StringTools.h>
@@ -428,7 +427,7 @@ class AfxSupplyCamData_Functor
 	: public CAfxFunctor
 {
 public:
-	AfxSupplyCamData_Functor(CamIO::CamData const & value)
+	AfxSupplyCamData_Functor(MirvPgl::CamData const & value)
 		: m_Value(value)
 	{
 	}
@@ -439,7 +438,7 @@ public:
 	}
 
 private:
-	CamIO::CamData m_Value;
+	MirvPgl::CamData m_Value;
 };
 
 #endif
@@ -6303,16 +6302,16 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, SOURCESDK::vrect_t_csgo *r
 #ifdef AFX_MIRV_PGL
 	if (MirvPgl::IsStarted())
 	{
-		CamIO::CamData camData;
-
-		camData.Time = g_Hook_VClient_RenderView.GetCurTime();
-		camData.XPosition = g_Hook_VClient_RenderView.LastCameraOrigin[0];
-		camData.YPosition = g_Hook_VClient_RenderView.LastCameraOrigin[1];
-		camData.ZPosition = g_Hook_VClient_RenderView.LastCameraOrigin[2];
-		camData.YRotation = g_Hook_VClient_RenderView.LastCameraAngles[0];
-		camData.ZRotation = g_Hook_VClient_RenderView.LastCameraAngles[1];
-		camData.XRotation = g_Hook_VClient_RenderView.LastCameraAngles[2];
-		camData.Fov = AlienSwarm_FovScaling(rect->width, rect->height, g_Hook_VClient_RenderView.LastCameraFov);
+		MirvPgl::CamData camData(
+			g_Hook_VClient_RenderView.GetCurTime(),
+			(float)g_Hook_VClient_RenderView.LastCameraOrigin[0],
+			(float)g_Hook_VClient_RenderView.LastCameraOrigin[1],
+			(float)g_Hook_VClient_RenderView.LastCameraOrigin[2],
+			(float)g_Hook_VClient_RenderView.LastCameraAngles[2],
+			(float)g_Hook_VClient_RenderView.LastCameraAngles[0],
+			(float)g_Hook_VClient_RenderView.LastCameraAngles[1],
+			(float)(AlienSwarm_FovScaling(rect->width, rect->height, g_Hook_VClient_RenderView.LastCameraFov))
+		);
 
 		QueueOrExecute(ctxp, new CAfxLeafExecute_Functor(new AfxSupplyCamData_Functor(camData)));
 	}
