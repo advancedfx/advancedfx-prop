@@ -1796,7 +1796,35 @@ private:
 		SOURCESDK::CSGO::CBaseHandle const & GetCurrentEntityHandle();
 	};
 
+	class CHandleMaterialKey
+	{
+	public:
+		CHandleMaterialKey(SOURCESDK::CSGO::CBaseHandle const & entityHandle, CAfxMaterialKey const & materialKey)
+			: m_EntityHandle(entityHandle)
+			, m_MaterialKey(materialKey)
+		{
+
+		}
+
+		CHandleMaterialKey(const CHandleMaterialKey & x)
+			: m_EntityHandle(x.m_EntityHandle)
+			, m_MaterialKey(x.m_MaterialKey)
+		{
+
+		}
+
+		bool operator < (const CHandleMaterialKey & y) const
+		{
+			return (m_EntityHandle < y.m_EntityHandle) || (m_MaterialKey < y.m_MaterialKey);
+		}
+
+	private:
+		SOURCESDK::CSGO::CBaseHandle m_EntityHandle;
+		CAfxMaterialKey m_MaterialKey;
+	};
+
 	bool m_DebugPrint;
+	std::map<CHandleMaterialKey, CAction *> m_Map1;
 	std::map<CAfxMaterialKey, CAction *> m_Map;
 	std::mutex m_MapMutex;
 	std::list<CActionFilterValue> m_ActionFilter;

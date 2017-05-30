@@ -5267,6 +5267,11 @@ inline bool CBaseHandle::operator ==( const CBaseHandle &other ) const
 	return m_Index == other.m_Index;
 }
 
+inline bool CBaseHandle::operator <(const CBaseHandle &other) const
+{
+	return m_Index < other.m_Index;
+}
+
 class CUtlBuffer;
 
 template< class T, class I = int >

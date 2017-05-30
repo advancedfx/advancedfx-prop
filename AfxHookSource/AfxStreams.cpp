@@ -1184,6 +1184,7 @@ void CAfxBaseFxStream::AfxStreamsShutdown(void)
 
 void CAfxBaseFxStream::Console_ActionFilter_Add(const char * expression, CAction * action)
 {
+	InvalidateMap();
 	m_ActionFilter.push_back(CActionFilterValue(expression,action));
 }
 
@@ -1192,6 +1193,7 @@ void CAfxBaseFxStream::Console_ActionFilter_AddEx(CAfxStreams * streams, IWrpCom
 	CActionFilterValue * value = CActionFilterValue::Console_Parse(streams, args);
 	if (value)
 	{
+		InvalidateMap();
 		m_ActionFilter.push_back(*value);
 		delete value;
 	}
@@ -1215,6 +1217,7 @@ void CAfxBaseFxStream::Console_ActionFilter_Remove(int id)
 	{
 		if(curId == id)
 		{
+			InvalidateMap();
 			m_ActionFilter.erase(it);
 			return;
 		}
@@ -1251,6 +1254,8 @@ void CAfxBaseFxStream::Console_ActionFilter_Move(int id, int moveBeforeId)
 		}
 
 		val = *it;
+
+		InvalidateMap();
 
 		m_ActionFilter.erase(it);
 	}
@@ -1312,56 +1317,75 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::RetrieveAction(SOURCESDK::IMateria
 	{
 		action = GetAction(material, m_Shared.NoDrawAction_get());
 	}
-	else
-	{
-		for (std::list<CActionFilterValue>::iterator it = m_ActionFilter.begin(); it != m_ActionFilter.end(); ++it)
-		{
-			if (it->CalcMatch(material, entityHandle))
-			{
-				action = GetAction(material, it->GetMatchAction());
-				break;
-			}
-		}
-	}
 
 	if (!action)
 	{
 		CAfxMaterialKey key(material);
+		CHandleMaterialKey key1(entityHandle, material);
 
 		m_MapMutex.lock();
 
-		std::map<CAfxMaterialKey, CAction *>::iterator it = m_Map.find(key);
+		std::map<CHandleMaterialKey, CAction *>::iterator it1 = m_Map1.find(key1);
 
-		if (it != m_Map.end())
-			action = it->second;
+		if (it1 != m_Map1.end())
+		{
+			action = it1->second;
+			m_MapMutex.unlock();
+		}
 		else
 		{
-			// determine current action and cache it.
+			std::map<CAfxMaterialKey, CAction *>::iterator it = m_Map.find(key);
 
-			action = GetAction(material);
-
-			action->AddRef();
-			m_Map[key] = action;
-
-			if (m_DebugPrint)
+			if (it != m_Map.end())
 			{
-				const char * name = material->GetName();
-				const char * groupName = material->GetTextureGroupName();
-				const char * shaderName = material->GetShaderName();
-				bool isErrorMaterial = material->IsErrorMaterial();
-
-				Tier0_Msg("Stream: RetrieveAction: Standard action material cache miss: \"handle=%i\" (not used) \"name=%s\" \"textureGroup=%s\" \"shader=%s\" \"isErrrorMaterial=%u\" -> %s\n"
-					, entityHandle.ToInt()
-					, name
-					, groupName
-					, shaderName
-					, isErrorMaterial ? 1 : 0
-					, action ? action->Key_get().m_Name.c_str() : "(null)");
+				action = it->second;
+				m_MapMutex.unlock();
 			}
+			else
+			{
+				// determine current action and cache it.
 
+				for (std::list<CActionFilterValue>::iterator it = m_ActionFilter.begin(); it != m_ActionFilter.end(); ++it)
+				{
+					if (it->CalcMatch(material, entityHandle))
+					{
+						action = GetAction(material, it->GetMatchAction());
+						break;
+					}
+				}
+
+				if(action)
+				{
+					action->AddRef();
+					m_Map1[key1] = action;
+					m_MapMutex.unlock();
+				}
+				else
+				{
+					action = GetAction(material);
+
+					action->AddRef();
+					m_Map[key] = action;
+					m_MapMutex.unlock();
+				}
+
+				if (m_DebugPrint)
+				{
+					const char * name = material->GetName();
+					const char * groupName = material->GetTextureGroupName();
+					const char * shaderName = material->GetShaderName();
+					bool isErrorMaterial = material->IsErrorMaterial();
+
+					Tier0_Msg("Stream: RetrieveAction: Mmaterial action cache miss: \"handle=%i\" \"name=%s\" \"textureGroup=%s\" \"shader=%s\" \"isErrrorMaterial=%u\" -> %s\n"
+						, entityHandle.ToInt()
+						, name
+						, groupName
+						, shaderName
+						, isErrorMaterial ? 1 : 0
+						, action ? action->Key_get().m_Name.c_str() : "(null)");
+				}
+			}
 		}
-
-		m_MapMutex.unlock();
 	}
 
 	if(false)
@@ -1763,6 +1787,12 @@ void CAfxBaseFxStream::InvalidateMap(void)
 	m_MapMutex.lock();
 
 	if(m_DebugPrint) Tier0_Msg("Stream: Invalidating material cache.\n");
+
+	for (std::map<CHandleMaterialKey, CAction *>::iterator it1 = m_Map1.begin(); it1 != m_Map1.end(); ++it1)
+	{
+		it1->second->Release();
+	}
+	m_Map1.clear();
 
 	for(std::map<CAfxMaterialKey, CAction *>::iterator it = m_Map.begin(); it != m_Map.end(); ++it)
 	{
