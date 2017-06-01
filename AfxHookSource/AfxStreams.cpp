@@ -1323,14 +1323,14 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::RetrieveAction(SOURCESDK::IMateria
 		CAfxMaterialKey key(material);
 		CHandleMaterialKey key1(entityHandle, material);
 
-		m_MapMutex.lock();
+		m_MapMutex.lock_shared();
 
 		std::map<CHandleMaterialKey, CAction *>::iterator it1 = m_Map1.find(key1);
 
 		if (it1 != m_Map1.end())
 		{
 			action = it1->second;
-			m_MapMutex.unlock();
+			m_MapMutex.unlock_shared();
 		}
 		else
 		{
@@ -1339,51 +1339,71 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::RetrieveAction(SOURCESDK::IMateria
 			if (it != m_Map.end())
 			{
 				action = it->second;
-				m_MapMutex.unlock();
+				m_MapMutex.unlock_shared();
 			}
 			else
 			{
-				// determine current action and cache it.
+				m_MapMutex.unlock_shared();
+				m_MapMutex.lock();
 
-				for (std::list<CActionFilterValue>::iterator it = m_ActionFilter.begin(); it != m_ActionFilter.end(); ++it)
+				it1 = m_Map1.find(key1);
+				
+				if (it1 != m_Map1.end())
+					action = it1->second;
+				else
 				{
-					if (it->CalcMatch(material, entityHandle))
+					it = m_Map.find(key);
+
+					if (it != m_Map.end())
+						action = it->second;
+				}
+
+				if (!action)
+				{
+					// determine current action and cache it.
+
+					for (std::list<CActionFilterValue>::iterator it = m_ActionFilter.begin(); it != m_ActionFilter.end(); ++it)
 					{
-						action = GetAction(material, it->GetMatchAction());
-						break;
+						if (it->CalcMatch(material, entityHandle))
+						{
+							action = GetAction(material, it->GetMatchAction());
+							break;
+						}
+					}
+
+					if (action)
+					{
+						action->AddRef();
+						m_Map1[key1] = action;
+						m_MapMutex.unlock();
+					}
+					else
+					{
+						action = GetAction(material);
+
+						action->AddRef();
+						m_Map[key] = action;
+						m_MapMutex.unlock();
+					}
+
+					if (m_DebugPrint)
+					{
+						const char * name = material->GetName();
+						const char * groupName = material->GetTextureGroupName();
+						const char * shaderName = material->GetShaderName();
+						bool isErrorMaterial = material->IsErrorMaterial();
+
+						Tier0_Msg("Stream: RetrieveAction: Mmaterial action cache miss: \"handle=%i\" \"name=%s\" \"textureGroup=%s\" \"shader=%s\" \"isErrrorMaterial=%u\" -> %s\n"
+							, entityHandle.ToInt()
+							, name
+							, groupName
+							, shaderName
+							, isErrorMaterial ? 1 : 0
+							, action ? action->Key_get().m_Name.c_str() : "(null)");
 					}
 				}
 
-				if(action)
-				{
-					action->AddRef();
-					m_Map1[key1] = action;
-					m_MapMutex.unlock();
-				}
-				else
-				{
-					action = GetAction(material);
-
-					action->AddRef();
-					m_Map[key] = action;
-					m_MapMutex.unlock();
-				}
-
-				if (m_DebugPrint)
-				{
-					const char * name = material->GetName();
-					const char * groupName = material->GetTextureGroupName();
-					const char * shaderName = material->GetShaderName();
-					bool isErrorMaterial = material->IsErrorMaterial();
-
-					Tier0_Msg("Stream: RetrieveAction: Mmaterial action cache miss: \"handle=%i\" \"name=%s\" \"textureGroup=%s\" \"shader=%s\" \"isErrrorMaterial=%u\" -> %s\n"
-						, entityHandle.ToInt()
-						, name
-						, groupName
-						, shaderName
-						, isErrorMaterial ? 1 : 0
-						, action ? action->Key_get().m_Name.c_str() : "(null)");
-				}
+				m_MapMutex.unlock();
 			}
 		}
 	}
@@ -1805,7 +1825,7 @@ void CAfxBaseFxStream::InvalidateMap(void)
 
 void CAfxBaseFxStream::Picker_Stop(void)
 {
-	std::unique_lock<std::mutex> lock(m_PickerMutex);
+	std::unique_lock<std::shared_timed_mutex> lock(m_PickerMutex);
 
 	if(m_PickerActive)
 	{
@@ -1820,7 +1840,7 @@ void CAfxBaseFxStream::Picker_Stop(void)
 
 void CAfxBaseFxStream::Picker_Print(void)
 {
-	std::unique_lock<std::mutex> lock(m_PickerMutex);
+	std::shared_lock<std::shared_timed_mutex> lock(m_PickerMutex);
 
 	Tier0_Msg("---- Materials: ----\n");
 	for (std::map<CAfxMaterialKey, CPickerMatValue>::iterator it = m_PickerMaterials.begin(); it != m_PickerMaterials.end(); ++it)
@@ -1844,7 +1864,7 @@ void CAfxBaseFxStream::Picker_Print(void)
 
 void CAfxBaseFxStream::Picker_Pick(bool pickEntityNotMaterial, bool wasVisible)
 {
-	std::unique_lock<std::mutex> lock(m_PickerMutex);
+	std::unique_lock<std::shared_timed_mutex> lock(m_PickerMutex);
 
 	if (!m_PickerActive)
 	{
@@ -1953,43 +1973,72 @@ void CAfxBaseFxStream::Picker_Pick(bool pickEntityNotMaterial, bool wasVisible)
 
 bool CAfxBaseFxStream::Picker_GetHidden(SOURCESDK::CSGO::CBaseHandle const & entityHandle, SOURCESDK::IMaterial_csgo * material)
 {
-	std::unique_lock<std::mutex> lock(m_PickerMutex);
-
 	if (!m_PickerActive)
 		return false;
 
-	int ent = entityHandle.ToInt();
-	CAfxMaterialKey mat(material);
+	m_PickerMutex.lock_shared();
 
-	std::map<int, CPickerEntValue>::iterator itEnt = m_PickerEntities.find(ent);
-	std::map<CAfxMaterialKey, CPickerMatValue>::iterator itMat = m_PickerMaterials.find(mat);
+	if (!m_PickerActive)
+	{
+		m_PickerMutex.unlock_shared();
+		return false;
+	}
+
+	bool uniqueLocked = false;
 
 	if (m_PickerCollecting)
 	{
+		m_PickerMutex.unlock_shared();
+		m_PickerMutex.lock();
 
-		if (m_PickerEntities.end() == itEnt)
-		{
-			itEnt = m_PickerEntities.try_emplace(ent, m_PickerEntities.size(), mat).first;
-		}
-		else
-		{
-			itEnt->second.Materials.insert(mat);
-		}
-
-		if (m_PickerMaterials.end() == itMat)
-		{
-			itMat = m_PickerMaterials.try_emplace(mat, m_PickerMaterials.size(), ent).first;
-		}
-		else
-		{
-			itMat->second.Entities.insert(ent);
-		}
+		uniqueLocked = true;
 	}
 
-	bool hiddenEnt = m_PickingEntities && (m_PickerEntities.end() != itEnt) && (((itEnt->second.Index) & 0x1) == 1);
-	bool hiddenMat = m_PickingMaterials && (m_PickerMaterials.end() != itMat) && (((itMat->second.Index) & 0x1) == 1);
+	bool hidden = false;
 
-	return hiddenEnt || hiddenMat;
+	if (m_PickerActive)
+	{
+		int ent = entityHandle.ToInt();
+		CAfxMaterialKey mat(material);
+
+		if (!m_PickerCollecting)
+		{
+			if (!hidden && m_PickingMaterials)
+			{
+				std::map<CAfxMaterialKey, CPickerMatValue>::iterator itMat = m_PickerMaterials.find(mat);
+				hidden = (m_PickerMaterials.end() != itMat) && (((itMat->second.Index) & 0x1) == 1);
+			}
+			if (!hidden && m_PickingEntities)
+			{
+				std::map<int, CPickerEntValue>::iterator itEnt = m_PickerEntities.find(ent);
+				hidden = (m_PickerEntities.end() != itEnt) && (((itEnt->second.Index) & 0x1) == 1);
+			}
+		}
+		else
+		{
+			const std::pair<const std::map<CAfxMaterialKey, CPickerMatValue>::iterator, bool> & empMat = m_PickerMaterials.try_emplace(mat, m_PickerMaterials.size(), ent);
+			const std::pair<const std::map<int, CPickerEntValue>::iterator, bool> & empEnt = m_PickerEntities.try_emplace(ent, m_PickerEntities.size(), mat);
+
+			if(!empEnt.second)
+				empEnt.first->second.Materials.insert(mat);
+
+			if(!empMat.second)
+				empMat.first->second.Entities.insert(ent);
+
+			hidden =
+				(m_PickingEntities && (((empEnt.first->second.Index) & 0x1) == 1))
+				|| (m_PickingMaterials && (((empMat.first->second.Index) & 0x1) == 1))
+				;
+		}
+
+	}
+
+	if (!uniqueLocked)
+		m_PickerMutex.unlock_shared();
+	else
+		m_PickerMutex.unlock();
+
+	return hidden;
 }
 
 /*
@@ -7037,16 +7086,6 @@ void CAfxStreams::CEntityBvhCapture::CaptureFrame(void)
 void CAfxStreams::BlockPresent(IAfxMatRenderContextOrg * ctx, bool value)
 {
 	QueueOrExecute(ctx, new CAfxLeafExecute_Functor(new AfxD3D9BlockPresent_Functor(value)));
-}
-
-void CAfxStreams::ScheduleDrawLock(IAfxMatRenderContextOrg * ctx)
-{
-	QueueOrExecute(ctx, new CAfxLeafExecute_Functor(new CDrawLockFunctor(this)));
-}
-
-void CAfxStreams::ScheduleDrawUnlock(IAfxMatRenderContextOrg * ctx)
-{
-	QueueOrExecute(ctx, new CAfxLeafExecute_Functor(new CDrawUnlockFunctor(this)));
 }
 
 void CAfxStreams::AfxStreamsInit(void)

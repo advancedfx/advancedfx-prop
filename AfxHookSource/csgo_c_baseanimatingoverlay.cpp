@@ -51,7 +51,7 @@ public:
 		float newNetValue = outOrgValue;
 		float newEngineValue = *pOut;
 
-		std::pair<std::map<float *, Entry>::iterator, bool> res = m_Map.insert(std::make_pair(pOut, Entry(newNetValue, newEngineValue, 0)));
+		const std::pair<const std::map<float *, Entry>::iterator, bool> & res = m_Map.insert(std::make_pair(pOut, Entry(newNetValue, newEngineValue, 0)));
 
 		if (!res.second)
 		{

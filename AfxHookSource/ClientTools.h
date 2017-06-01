@@ -57,7 +57,7 @@ private:
 
 		if (it != m_Dictionary.end())
 		{
-			std::pair<std::string, int> pair = *it;
+			const std::pair<const std::string, int> & pair = *it;
 			return pair.second;
 		}
 

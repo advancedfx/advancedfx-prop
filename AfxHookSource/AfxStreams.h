@@ -40,6 +40,8 @@
 #include <queue>
 #include <map>
 #include <stack>
+#include <atomic>
+#include <shared_mutex>
 #include <mutex>
 #include <condition_variable>
 
@@ -1826,7 +1828,7 @@ private:
 	bool m_DebugPrint;
 	std::map<CHandleMaterialKey, CAction *> m_Map1;
 	std::map<CAfxMaterialKey, CAction *> m_Map;
-	std::mutex m_MapMutex;
+	std::shared_timed_mutex m_MapMutex;
 	std::list<CActionFilterValue> m_ActionFilter;
 
 	struct CPickerMatValue
@@ -1859,9 +1861,9 @@ private:
 	bool m_PickingEntities;
 	bool m_PickerEntitiesAlerted;
 
-	bool m_PickerActive = false;
+	std::atomic_bool m_PickerActive = false;
 	bool m_PickerCollecting;
-	std::mutex m_PickerMutex;
+	std::shared_timed_mutex m_PickerMutex;
 
 	CAction * CAfxBaseFxStream::GetAction(SOURCESDK::IMaterial_csgo * material);
 	CAction * CAfxBaseFxStream::GetAction(SOURCESDK::IMaterial_csgo * material, CAction * action);
@@ -2381,42 +2383,6 @@ private:
 	};
 
 
-	class CDrawUnlockFunctor
-		: public CAfxFunctor
-	{
-	public:
-		CDrawUnlockFunctor(CAfxStreams * streams)
-			: m_Streams(streams)
-		{
-		}
-
-		virtual void operator()()
-		{
-			m_Streams->DrawUnlock();
-		}
-
-	private:
-		CAfxStreams * m_Streams;
-	};
-
-	class CDrawLockFunctor
-		: public CAfxFunctor
-	{
-	public:
-		CDrawLockFunctor(CAfxStreams * streams)
-			: m_Streams(streams)
-		{
-		}
-
-		virtual void operator()()
-		{
-			m_Streams->DrawLock();
-		}
-
-	private:
-		CAfxStreams * m_Streams;
-	};
-
 	class CSleepFunctor
 		: public CAfxFunctor
 	{
@@ -2453,7 +2419,6 @@ private:
 	CamExport::ScaleFov m_CamExportScaleFov = CamExport::SF_None;
 	CamExport * m_CamExportObj = 0;
 	bool m_GameRecording;
-	std::mutex m_ContextToStreamMutex;
 
 	WrpConVarRef * m_HostFrameRate;
 	int m_OldMatQueueMode;
@@ -2475,9 +2440,6 @@ private:
 	SOURCESDK::ITexture_csgo * m_RenderTargetDepthF;
 	//CAfxMaterial * m_ShowzMaterial;
 	DWORD m_Current_View_Render_ThreadId;
-	std::mutex m_DrawLockMutex;
-	std::condition_variable m_DrawLockCondition;
-	bool m_DrawLock = false;
 	bool m_PresentBlocked;
 
 	void SetCurrent_View_Render_ThreadId(DWORD id);
@@ -2514,28 +2476,4 @@ private:
 	IAfxContextHook * FindHook(IAfxMatRenderContext * ctx);
 
 	void BlockPresent(IAfxMatRenderContextOrg * ctx, bool value);
-
-	void DrawLock(void)
-	{
-		std::unique_lock<std::mutex> lock(m_DrawLockMutex);
-
-		m_DrawLockCondition.wait(lock, [this]() { return !m_DrawLock; });
-
-		m_DrawLock = true;
-	}
-
-	void DrawUnlock(void)
-	{
-		{
-			std::unique_lock<std::mutex> lock(m_DrawLockMutex);
-
-			m_DrawLock = false;
-		}
-
-		m_DrawLockCondition.notify_one();
-	}
-
-	void ScheduleDrawLock(IAfxMatRenderContextOrg * ctx);
-	void ScheduleDrawUnlock(IAfxMatRenderContextOrg * ctx);
-
 };

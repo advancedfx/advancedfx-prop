@@ -17,6 +17,7 @@
 #include <map>
 #include <stack>
 #include <set>
+#include <shared_mutex>
 #include <mutex>
 
 
@@ -421,7 +422,7 @@ private:
 
 std::map<SOURCESDK::IMeshEx_csgo *, CAfxMesh *> g_MeshMap_csgo;
 std::stack<CAfxMesh *> g_MeshHooks_csgo;
-std::mutex g_MeshMap_csgo_Mutex;
+std::shared_timed_mutex g_MeshMap_csgo_Mutex;
 
 
 class CAfxCallQueue
@@ -468,7 +469,7 @@ private:
 
 std::map<SOURCESDK::CSGO::ICallQueue *, CAfxCallQueue *> g_CallQueueMap_csgo;
 std::stack<CAfxCallQueue *> g_CallQueueHooks_csgo;
-std::mutex g_CallQueueMap_csgo_Mutex;
+std::shared_timed_mutex g_CallQueueMap_csgo_Mutex;
 
 
 //:009
@@ -554,7 +555,7 @@ class CMatRenderContextHook
 {
 public:
 	static std::map<SOURCESDK::IMatRenderContext_csgo *, CMatRenderContextHook *> m_Map;
-	static std::mutex m_MapMutex;
+	static std::shared_timed_mutex m_MapMutex;
 
 	/// <remarks>
 	/// This can be called from yet unknown contexts outside of the current material system context,
@@ -564,20 +565,34 @@ public:
 	{
 		CMatRenderContextHook * result;
 
-		CMatRenderContextHook::m_MapMutex.lock();
+		m_MapMutex.lock_shared();
 
-		std::map<SOURCESDK::IMatRenderContext_csgo *, CMatRenderContextHook *>::iterator it = CMatRenderContextHook::m_Map.find(ctx);
+		std::map<SOURCESDK::IMatRenderContext_csgo *, CMatRenderContextHook *>::iterator it = m_Map.find(ctx);
 
-		if (it != CMatRenderContextHook::m_Map.end())
+		if (it != m_Map.end())
 		{
 			result = it->second;
+			m_MapMutex.unlock_shared();
 		}
 		else
 		{
-			result = CMatRenderContextHook::m_Map[ctx] = new CMatRenderContextHook(ctx);
+			m_MapMutex.unlock_shared();
+			m_MapMutex.lock();
+
+			it = m_Map.find(ctx);
+
+			if (it != m_Map.end())
+			{
+				result = it->second;
+			}
+			else
+			{
+				result = m_Map[ctx] = new CMatRenderContextHook(ctx);
+			}
+
+			m_MapMutex.unlock();
 		}
 
-		CMatRenderContextHook::m_MapMutex.unlock();
 
 		return result;
 	}
@@ -780,7 +795,7 @@ private:
 
 		CAfxMesh * afxMesh;
 
-		g_MeshMap_csgo_Mutex.lock();
+		g_MeshMap_csgo_Mutex.lock_shared();
 
 		std::map<SOURCESDK::IMeshEx_csgo *, CAfxMesh *>::iterator it = g_MeshMap_csgo.find(mesh);
 
@@ -789,18 +804,31 @@ private:
 		{
 			//Tier0_Msg("Found known IMesh 0x%08x.\n", (DWORD)iMesh);
 			afxMesh = it->second; // re-use
+			g_MeshMap_csgo_Mutex.unlock_shared();
 		}
 		else
 		{
-			//Tier0_Msg("New IMesh 0x%08x.\n", (DWORD)iMesh);
-			afxMesh = new CAfxMesh(mesh);
+			g_MeshMap_csgo_Mutex.unlock_shared();
+			g_MeshMap_csgo_Mutex.lock();
 
-			g_MeshMap_csgo[mesh] = afxMesh; // track hooked mesh
-			g_MeshMap_csgo[afxMesh] = afxMesh; // make sure we won't wrap ourself!
-			g_MeshHooks_csgo.push(afxMesh);
+			it = g_MeshMap_csgo.find(mesh);
+
+			if (it != g_MeshMap_csgo.end())
+			{
+				afxMesh = it->second;
+			}
+			else
+			{
+				//Tier0_Msg("New IMesh 0x%08x.\n", (DWORD)iMesh);
+				afxMesh = new CAfxMesh(mesh);
+
+				g_MeshMap_csgo[mesh] = afxMesh; // track hooked mesh
+				g_MeshMap_csgo[afxMesh] = afxMesh; // make sure we won't wrap ourself!
+				g_MeshHooks_csgo.push(afxMesh);
+			}
+
+			g_MeshMap_csgo_Mutex.unlock();
 		}
-
-		g_MeshMap_csgo_Mutex.unlock();
 
 		afxMesh->AfxMatRenderContext_set(this); // tell it about us :-)
 
@@ -814,7 +842,7 @@ private:
 
 		CAfxCallQueue * afxCallQueue;
 
-		g_CallQueueMap_csgo_Mutex.lock();
+		g_CallQueueMap_csgo_Mutex.lock_shared();
 
 		std::map<SOURCESDK::CSGO::ICallQueue *, CAfxCallQueue *>::iterator it = g_CallQueueMap_csgo.find(callQueue);
 
@@ -822,17 +850,31 @@ private:
 		if (it != g_CallQueueMap_csgo.end())
 		{
 			afxCallQueue = it->second; // re-use
+			g_CallQueueMap_csgo_Mutex.unlock_shared();
 		}
 		else
 		{
-			afxCallQueue = new CAfxCallQueue(callQueue);
+			g_CallQueueMap_csgo_Mutex.unlock_shared();
+			g_CallQueueMap_csgo_Mutex.lock();
 
-			g_CallQueueMap_csgo[callQueue] = afxCallQueue; // track new mesh
-			g_CallQueueMap_csgo[afxCallQueue] = afxCallQueue; // make sure we won't wrap ourself!
-			g_CallQueueHooks_csgo.push(afxCallQueue);
+			it = g_CallQueueMap_csgo.find(callQueue);
+
+			if (it != g_CallQueueMap_csgo.end())
+			{
+				afxCallQueue = it->second; // re-use
+			}
+			else
+			{
+				afxCallQueue = new CAfxCallQueue(callQueue);
+
+				g_CallQueueMap_csgo[callQueue] = afxCallQueue; // track new mesh
+				g_CallQueueMap_csgo[afxCallQueue] = afxCallQueue; // make sure we won't wrap ourself!
+				g_CallQueueHooks_csgo.push(afxCallQueue);
+			}
+
+			g_CallQueueMap_csgo_Mutex.unlock();
 		}
 
-		g_CallQueueMap_csgo_Mutex.unlock();
 
 		afxCallQueue->AfxMatRenderContext_set(this); // tell it about us :-)
 
@@ -851,7 +893,7 @@ private:
 
 
 std::map<SOURCESDK::IMatRenderContext_csgo *, CMatRenderContextHook *> CMatRenderContextHook::m_Map;
-std::mutex CMatRenderContextHook::m_MapMutex;
+std::shared_timed_mutex CMatRenderContextHook::m_MapMutex;
 std::map<int *, CMatRenderContextDetours> CMatRenderContextHook::m_VtableMap;
 
 

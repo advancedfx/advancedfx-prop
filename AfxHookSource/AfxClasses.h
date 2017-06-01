@@ -13,6 +13,8 @@
 
 #include <list>
 #include <map>
+#include <atomic>
+#include <shared_mutex>
 
 
 // CAfxFreeable ////////////////////////////////////////////////////////////////
@@ -93,6 +95,12 @@ public:
 	virtual void AfxFree(void);
 
 protected:
+	static std::map<SOURCESDK::IMaterial_csgo *, std::atomic_int> m_KnownMaterials;
+	static std::shared_timed_mutex m_KnownMaterialsMutex;
+
+	static void AddRef(SOURCESDK::IMaterial_csgo * material);
+	static void Release(SOURCESDK::IMaterial_csgo * material);
+
 	SOURCESDK::IMaterial_csgo * m_Material;
 };
 
@@ -116,5 +124,9 @@ public:
 	/// </remarks>
 	CAfxMaterialKey(const CAfxMaterialKey & x);
 
+
+	/// <remarks>
+	/// This is object pointer based, meaning different references on the same material can have different keys
+	/// </remarks>
 	bool operator < (const CAfxMaterialKey & y) const;
 };
