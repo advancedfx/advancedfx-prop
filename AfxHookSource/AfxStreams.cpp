@@ -1321,90 +1321,115 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::RetrieveAction(SOURCESDK::IMateria
 	if (!action)
 	{
 		CAfxMaterialKey key(material);
-		CHandleMaterialKey key1(entityHandle, material);
 
 		m_MapMutex.lock_shared();
 
-		std::map<CHandleMaterialKey, CAction *>::iterator it1 = m_Map1.find(key1);
+		std::map<CAfxMaterialKey, CCacheEntry>::iterator it = m_Map.find(key);
 
-		if (it1 != m_Map1.end())
+		if (it != m_Map.end())
 		{
-			action = it1->second;
+			std::map<SOURCESDK::CSGO::CBaseHandle, CAction *>::iterator itEnt = it->second.EntityActions.find(entityHandle);
+			if (itEnt != it->second.EntityActions.end())
+				action = itEnt->second;
+			else
+				action = it->second.DefaultAction;
+
 			m_MapMutex.unlock_shared();
 		}
 		else
 		{
-			std::map<CAfxMaterialKey, CAction *>::iterator it = m_Map.find(key);
+			m_MapMutex.unlock_shared();
+			m_MapMutex.lock();
+
+			it = m_Map.find(key);
 
 			if (it != m_Map.end())
 			{
-				action = it->second;
+				std::map<SOURCESDK::CSGO::CBaseHandle, CAction *>::iterator itEnt = it->second.EntityActions.find(entityHandle);
+				if (itEnt != it->second.EntityActions.end())
+					action = itEnt->second;
+				else
+					action = it->second.DefaultAction;
+
 				m_MapMutex.unlock_shared();
 			}
-			else
+
+			if (!action)
 			{
-				m_MapMutex.unlock_shared();
-				m_MapMutex.lock();
+				// determine current action and cache it.
 
-				it1 = m_Map1.find(key1);
-				
-				if (it1 != m_Map1.end())
-					action = it1->second;
-				else
+				CCacheEntry & entry = m_Map[key];
+
+				for (std::list<CActionFilterValue>::iterator it = m_ActionFilter.begin(); it != m_ActionFilter.end(); ++it)
 				{
-					it = m_Map.find(key);
-
-					if (it != m_Map.end())
-						action = it->second;
-				}
-
-				if (!action)
-				{
-					// determine current action and cache it.
-
-					for (std::list<CActionFilterValue>::iterator it = m_ActionFilter.begin(); it != m_ActionFilter.end(); ++it)
+					if (it->CalcMatch_Material(material))
 					{
-						if (it->CalcMatch(material, entityHandle))
+						if (it->GetUseHandle())
 						{
-							action = GetAction(material, it->GetMatchAction());
-							break;
+							SOURCESDK::CSGO::CBaseHandle const & itHandle = it->GetHandle();
+
+							if (entry.EntityActions.end() == entry.EntityActions.find(itHandle))
+							{
+								CAction * itAction = GetAction(material, it->GetMatchAction());
+								itAction->AddRef();
+								entry.EntityActions[itHandle] = itAction;
+
+								if (!action && itHandle == entityHandle)
+								{
+									action = itAction;
+								}
+							}
 						}
-					}
+						else
+						{
+							if (!entry.DefaultAction)
+							{
+								CAction * itAction = GetAction(material, it->GetMatchAction());
+								itAction->AddRef();
+								entry.DefaultAction = itAction;
 
-					if (action)
-					{
-						action->AddRef();
-						m_Map1[key1] = action;
-						m_MapMutex.unlock();
-					}
-					else
-					{
-						action = GetAction(material);
-
-						action->AddRef();
-						m_Map[key] = action;
-						m_MapMutex.unlock();
-					}
-
-					if (m_DebugPrint)
-					{
-						const char * name = material->GetName();
-						const char * groupName = material->GetTextureGroupName();
-						const char * shaderName = material->GetShaderName();
-						bool isErrorMaterial = material->IsErrorMaterial();
-
-						Tier0_Msg("Stream: RetrieveAction: Mmaterial action cache miss: \"handle=%i\" \"name=%s\" \"textureGroup=%s\" \"shader=%s\" \"isErrrorMaterial=%u\" -> %s\n"
-							, entityHandle.ToInt()
-							, name
-							, groupName
-							, shaderName
-							, isErrorMaterial ? 1 : 0
-							, action ? action->Key_get().m_Name.c_str() : "(null)");
+								if (!action)
+								{
+									action = itAction;
+								}
+							}
+						}
+						break;
 					}
 				}
+
+				if (!entry.DefaultAction)
+				{
+					CAction * itAction = GetAction(material);
+					itAction->AddRef();
+					entry.DefaultAction = itAction;
+
+					if (!action)
+						action = entry.DefaultAction;
+				}
+
+				Assert(0 != action);
 
 				m_MapMutex.unlock();
+
+				if (m_DebugPrint)
+				{
+					const char * name = material->GetName();
+					const char * groupName = material->GetTextureGroupName();
+					const char * shaderName = material->GetShaderName();
+					bool isErrorMaterial = material->IsErrorMaterial();
+
+					Tier0_Msg("Stream: RetrieveAction: Mmaterial action cache miss: \"handle=%i\" \"name=%s\" \"textureGroup=%s\" \"shader=%s\" \"isErrrorMaterial=%u\" -> %s\n"
+						, entityHandle.ToInt()
+						, name
+						, groupName
+						, shaderName
+						, isErrorMaterial ? 1 : 0
+						, action ? action->Key_get().m_Name.c_str() : "(null)");
+				}
 			}
+
+			m_MapMutex.unlock();
 		}
 	}
 
@@ -1808,15 +1833,14 @@ void CAfxBaseFxStream::InvalidateMap(void)
 
 	if(m_DebugPrint) Tier0_Msg("Stream: Invalidating material cache.\n");
 
-	for (std::map<CHandleMaterialKey, CAction *>::iterator it1 = m_Map1.begin(); it1 != m_Map1.end(); ++it1)
+	for(std::map<CAfxMaterialKey, CCacheEntry>::iterator it = m_Map.begin(); it != m_Map.end(); ++it)
 	{
-		it1->second->Release();
-	}
-	m_Map1.clear();
+		for (std::map<SOURCESDK::CSGO::CBaseHandle, CAction *>::iterator itIt = it->second.EntityActions.begin(); itIt != it->second.EntityActions.end(); ++itIt)
+		{
+			itIt->second->Release();
+		}
 
-	for(std::map<CAfxMaterialKey, CAction *>::iterator it = m_Map.begin(); it != m_Map.end(); ++it)
-	{
-		it->second->Release();
+		it->second.DefaultAction->Release();
 	}
 	m_Map.clear();
 
@@ -2726,14 +2750,13 @@ CAfxBaseFxStream::CActionFilterValue * CAfxBaseFxStream::CActionFilterValue::Con
 	return result;
 }
 
-bool CAfxBaseFxStream::CActionFilterValue::CalcMatch(SOURCESDK::IMaterial_csgo * material, SOURCESDK::CSGO::CBaseHandle const & entityHandle)
+bool CAfxBaseFxStream::CActionFilterValue::CalcMatch_Material(SOURCESDK::IMaterial_csgo * material)
 {
 	if (!material)
 		return false;
 
 	return
-		(m_UseHandle ? m_Handle == entityHandle : true)
-		&& StringWildCard1Matched(m_Name.c_str(), material->GetName())
+		StringWildCard1Matched(m_Name.c_str(), material->GetName())
 		&& StringWildCard1Matched(m_TextureGroupName.c_str(), material->GetTextureGroupName())
 		&& StringWildCard1Matched(m_ShaderName.c_str(), material->GetShaderName())
 		&& (m_IsErrorMaterial == TS_True ? (material->IsErrorMaterial() == true) : (m_IsErrorMaterial == TS_False ? (material->IsErrorMaterial() == false) : true));

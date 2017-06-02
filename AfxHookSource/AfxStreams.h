@@ -1658,7 +1658,17 @@ private:
 			return m_MatchAction;
 		}
 
-		bool CalcMatch(SOURCESDK::IMaterial_csgo * material, SOURCESDK::CSGO::CBaseHandle const & entityHandle);
+		bool GetUseHandle(void)
+		{
+			return m_UseHandle;
+		}
+
+		SOURCESDK::CSGO::CBaseHandle const & GetHandle(void)
+		{
+			return m_Handle;
+		}
+
+		bool CalcMatch_Material(SOURCESDK::IMaterial_csgo * material);
 
 	private:
 		bool m_UseHandle;
@@ -1798,37 +1808,20 @@ private:
 		SOURCESDK::CSGO::CBaseHandle const & GetCurrentEntityHandle();
 	};
 
-	class CHandleMaterialKey
-	{
-	public:
-		CHandleMaterialKey(SOURCESDK::CSGO::CBaseHandle const & entityHandle, CAfxMaterialKey const & materialKey)
-			: m_EntityHandle(entityHandle)
-			, m_MaterialKey(materialKey)
-		{
-
-		}
-
-		CHandleMaterialKey(const CHandleMaterialKey & x)
-			: m_EntityHandle(x.m_EntityHandle)
-			, m_MaterialKey(x.m_MaterialKey)
-		{
-
-		}
-
-		bool operator < (const CHandleMaterialKey & y) const
-		{
-			return (m_EntityHandle < y.m_EntityHandle) || (m_MaterialKey < y.m_MaterialKey);
-		}
-
-	private:
-		SOURCESDK::CSGO::CBaseHandle m_EntityHandle;
-		CAfxMaterialKey m_MaterialKey;
-	};
-
 	bool m_DebugPrint;
-	std::map<CHandleMaterialKey, CAction *> m_Map1;
-	std::map<CAfxMaterialKey, CAction *> m_Map;
+	struct CCacheEntry
+	{
+		std::map<SOURCESDK::CSGO::CBaseHandle, CAction *> EntityActions;
+		CAction * DefaultAction;
+
+		CCacheEntry()
+			: DefaultAction(0)
+		{
+		}
+	};
+	std::map<CAfxMaterialKey, CCacheEntry> m_Map;
 	std::shared_timed_mutex m_MapMutex;
+
 	std::list<CActionFilterValue> m_ActionFilter;
 
 	struct CPickerMatValue
