@@ -96,9 +96,11 @@ public:
 	/// </remarks>
 	virtual void QueueFunctorInternal(IAfxCallQueue * aq, SOURCESDK::CSGO::CFunctor *pFunctor) = 0;
 
+#if AFX_SHADERS_CSGO
 	virtual void SetVertexShader(CAfx_csgo_ShaderState & state) = 0;
 
 	virtual void SetPixelShader(CAfx_csgo_ShaderState & state) = 0;
+#endif
 };
 
 #if AFXSTREAMS_REFTRACKER
@@ -838,6 +840,7 @@ public:
 			am->GetParent()->DrawModulated(vecDiffuseModulation, firstIndex, numIndices);
 		}
 
+#if AFX_SHADERS_CSGO
 		virtual void SetVertexShader(CAfxBaseFxStreamContextHook * ch, CAfx_csgo_ShaderState & state)
 		{
 		}
@@ -845,6 +848,7 @@ public:
 		virtual void SetPixelShader(CAfxBaseFxStreamContextHook * ch, CAfx_csgo_ShaderState & state)
 		{
 		}
+#endif
 
 	protected:
 		bool m_IsStockAction;
@@ -1748,9 +1752,11 @@ private:
 
 		virtual void QueueFunctorInternal(IAfxCallQueue * aq, SOURCESDK::CSGO::CFunctor *pFunctor);
 
+#if AFX_SHADERS_CSGO
 		virtual void SetVertexShader(CAfx_csgo_ShaderState & state);
 
 		virtual void SetPixelShader(CAfx_csgo_ShaderState & state);
+#endif
 
 	protected:
 		~CAfxBaseFxStreamContextHook()
@@ -2237,11 +2243,13 @@ public:
 	void OnAfxBaseClientDll(IAfxBaseClientDll * value);
 	void OnShaderShadow(SOURCESDK::IShaderShadow_csgo * value);
 
+#if AFX_SHADERS_CSGO
 	/// <remarks>This function can be called from diffrent threads, but only one thread at a time.</remarks>
 	void OnSetVertexShader(CAfx_csgo_ShaderState & state);
 
 	/// <remarks>This function can be called from diffrent threads, but only one thread at a time.</remarks>
 	void OnSetPixelShader(CAfx_csgo_ShaderState & state);
+#endif
 
 	float OnRenderSmokeOverlayAlphaMod(void);
 

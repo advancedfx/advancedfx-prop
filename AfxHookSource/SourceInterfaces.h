@@ -3483,12 +3483,12 @@ public:
 	
 	// 167:
 	virtual IMeshEx_csgo* GetDynamicMeshEx(
-		unsigned __int32 _unknown1,
-		bool buffered, 
-		unsigned __int32 _unknown2,
+		VertexFormat_t_csgo vertexFormat,
+		bool buffered = true, 
 		IMesh_csgo* pVertexOverride = 0,	
 		IMesh_csgo* pIndexOverride = 0, 
-		IMaterial_csgo *pAutoBind = 0 ) = 0;
+		IMaterial_csgo *pAutoBind = 0
+	) = 0;
 
 	virtual void _UNKNOWN_168(void) = 0; // FogMaxDensity?
 	virtual void _UNKNOWN_169(void) = 0;

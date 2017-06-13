@@ -172,219 +172,6 @@ bool isV34 = false;
 
 SOURCESDK::IMaterialSystem_csgo * g_MaterialSystem_csgo = 0;
 
-
-#pragma warning(push)
-#pragma warning(disable:4731) // frame pointer register 'ebp' modified by inline assembly code
-
-class CAfxVRenderView : public SOURCESDK::IVRenderView_csgo, public IAfxVRenderView
-{
-public:
-	CAfxVRenderView(SOURCESDK::IVRenderView_csgo * parent)
-	: m_Parent(parent)
-	{
-	}
-
-	//
-	// IAfxVRenderView:
-
-	virtual SOURCESDK::IVRenderView_csgo * GetParent()
-	{
-		return m_Parent;
-	}
-
-	//
-	// IVRenderView_csgo:
-
-	virtual void _UNKOWN_000(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 0) }
-
-	virtual void _UNKOWN_001(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 1) }
-
-	virtual void _UNKOWN_002(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 2) }
-
-	virtual void _UNKOWN_003(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 3) }
-
-	// 004:
-	virtual void SetBlend( float blend )
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 4) }
-
-	virtual float GetBlend( void )
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 5) }
-
-	// 006:
-	virtual void SetColorModulation( float const* blend )
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 6) }
-
-	virtual void GetColorModulation( float* blend )
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 7) }
-
-	virtual void _UNKOWN_008(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 8) }
-
-	virtual void _UNKOWN_009(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 9) }
-
-	virtual void _UNKOWN_010(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 10) }
-
-	virtual void _UNKOWN_011(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 11) }
-
-	virtual void _UNKOWN_012(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 12) }
-
-	virtual void _UNKOWN_013(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 13) }
-
-	virtual void _UNKOWN_014(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 14) }
-
-	virtual void _UNKOWN_015(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 15) }
-
-	virtual void _UNKOWN_016(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 16) }
-
-	virtual void _UNKOWN_017(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 17) }
-
-	virtual void _UNKOWN_018(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 18) }
-
-	virtual void _UNKOWN_019(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 19) }
-
-	virtual void _UNKOWN_020(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 20) }
-
-	virtual void _UNKOWN_021(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 21) }
-
-	virtual void _UNKOWN_022(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 22) }
-
-	virtual void _UNKOWN_023(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 23) }
-
-	virtual void _UNKOWN_024(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 24) }
-
-	virtual void _UNKOWN_025(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 25) }
-
-	virtual void _UNKOWN_026(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 26) }
-
-	virtual void _UNKOWN_027(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 27) }
-
-	virtual void _UNKOWN_028(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 28) }
-
-	virtual void _UNKOWN_029(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 29) }
-
-	virtual void _UNKOWN_030(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 30) }
-
-	virtual void _UNKOWN_031(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 31) }
-
-	virtual void _UNKOWN_032(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 32) }
-
-	virtual void _UNKOWN_033(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 33) }
-
-	virtual void _UNKOWN_034(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 34) }
-
-	virtual void _UNKOWN_035(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 35) }
-
-	virtual void _UNKOWN_036(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 36) }
-
-	virtual void _UNKOWN_037(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 37) }
-
-	virtual void _UNKOWN_038(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 38) }
-
-	virtual void _UNKOWN_039(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 39) }
-
-	virtual void _UNKOWN_040(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 40) }
-
-	virtual void _UNKOWN_041(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 41) }
-
-	virtual void _UNKOWN_042(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 42) }
-
-	virtual void _UNKOWN_043(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 43) }
-
-	virtual void _UNKOWN_044(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 44) }
-
-	virtual void _UNKOWN_045(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 45) }
-
-	virtual void _UNKOWN_046(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 46) }
-
-	virtual void _UNKOWN_047(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 47) }
-
-	virtual void _UNKOWN_048(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 48) }
-
-	virtual void _UNKOWN_049(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 49) }
-
-	virtual void _UNKOWN_050(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 50) }
-
-	virtual void _UNKOWN_051(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 51) }
-
-	virtual void _UNKOWN_052(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 52) }
-
-	virtual void _UNKOWN_053(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 53) }
-
-	virtual void _UNKOWN_054(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 54) }
-
-	virtual void _UNKOWN_055(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 55) }
-
-	virtual void _UNKOWN_056(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 56) }
-
-	virtual void _UNKOWN_057(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 57) }
-
-	virtual void _UNKOWN_058(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 58) }
-
-	virtual void _UNKOWN_059(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxVRenderView, m_Parent, 59) }
-
-private:
-	SOURCESDK::IVRenderView_csgo * m_Parent;
-};
-
-#pragma warning(pop)
-
-//CAfxVRenderView * g_AfxVRenderView = 0;
-
 SOURCESDK::IFileSystem_csgo * g_FileSystem_csgo = 0;
 
 SOURCESDK::CSGO::vgui::IPanel * g_pVGuiPanel_csgo = 0;
@@ -473,14 +260,6 @@ void MySetup(SOURCESDK::CreateInterfaceFn appSystemFactory, WrpGlobals *pGlobals
 			else {
 				ErrorBox("Could not get a supported VMaterialSystem interface.");
 			}
-
-			//if(iface = appSystemFactory(VENGINE_RENDERVIEW_INTERFACE_VERSION_CSGO, NULL))
-			//{
-			//	g_AfxVRenderView = new CAfxVRenderView((SOURCESDK::IVRenderView_csgo *)iface);
-			//}
-			//else {
-			//	ErrorBox("Could not get a supported VEngineRenderView interface.");
-			//}
 
 			if(iface = appSystemFactory(FILESYSTEM_INTERFACE_VERSION_CSGO_017, NULL))
 			{
@@ -608,9 +387,6 @@ bool g_DebugEnabled = false;
 
 bool g_csgo_FirstFrameAfterNetUpdateEnd = false;
 
-#pragma warning(push)
-#pragma warning(disable:4731) // frame pointer register 'ebp' modified by inline assembly code
-
 class CAfxBaseClientDll
 : public SOURCESDK::IBaseClientDLL_csgo
 , public IAfxBaseClientDll
@@ -673,521 +449,140 @@ public:
 	//
 	// IBaseClientDll_csgo:
 
-	virtual int Connect(SOURCESDK::CreateInterfaceFn appSystemFactory, SOURCESDK::CGlobalVarsBase *pGlobals )
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 0) }
-
-	virtual void Disconnect()
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 1) }
-
-	virtual int Init(SOURCESDK::CreateInterfaceFn appSystemFactory, SOURCESDK::CGlobalVarsBase *pGlobals )
-	{
-		// JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 2)
-
-		static bool bFirstCall = true;
-
-		if(bFirstCall)
-		{
-			bFirstCall = false;
-
-			MySetup(appSystemFactory, new WrpGlobalsCsGo(pGlobals));
-		}
-
-		int result = m_Parent->Init(AppSystemFactory_ForClient, pGlobals);
-
-		// Add file system search path for our assets:
-		if(g_FileSystem_csgo)
-		{
-			std::string path(GetHlaeFolder());
-
-			path.append("resources\\AfxHookSource\\assets\\csgo"); 
-
-			g_FileSystem_csgo->AddSearchPath(path.c_str(), "GAME", SOURCESDK::PATH_ADD_TO_TAIL);
-		}
-
-#ifdef AFX_MIRV_PGL
-		MirvPgl::Init();
-#endif	
-
-		CAfxBaseFxStream::AfxStreamsInit();
-
-		return result;
-	}
-
-	virtual void PostInit()
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 3) }
-
-	virtual void Shutdown( void )
-	{
-		// JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 4)
-
-		if(m_OnShutdown) m_OnShutdown->Shutdown(this);
-
-		m_FreeMaster.AfxFree();
-		
-		CAfxBaseFxStream::AfxStreamsShutdown();
-
-#ifdef AFX_MIRV_PGL
-		MirvPgl::Shutdown();
-#endif	
-
-		m_Parent->Shutdown();
-	}
-
-	virtual void LevelInitPreEntity( char const* pMapName )
-	{
-		// JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 5)
-	
-#ifdef AFX_MIRV_PGL
-		MirvPgl::SupplyLevelInit(pMapName);
-#endif	
-
-		m_Parent->LevelInitPreEntity(pMapName);
-	}
-
-	virtual void LevelInitPostEntity( )
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 6) }
-
-	virtual void LevelShutdown( void )
-	{
-		// JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 7)
-
-		if(m_OnLevelShutdown) m_OnLevelShutdown->LevelShutdown(this);
-
-		csgo_Stdshader_dx9_Hooks_OnLevelShutdown();
-
-		g_AfxShaders.ReleaseUnusedShaders();
-
-#ifdef AFX_MIRV_PGL
-		MirvPgl::SupplyLevelShutdown();
-#endif
-
-		m_Parent->LevelShutdown();
-	}
-
-	virtual void _UNKOWN_008(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 8) }
-
-	virtual void _UNKOWN_009(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 9) }
-
-	virtual void _UNKOWN_010(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 10) }
-
-	virtual void _UNKOWN_011(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 11) }
-
-	virtual void _UNKOWN_012(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 12) }
-
-	virtual void _UNKOWN_013(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 13) }
-
-	virtual void _UNKOWN_014(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 14) }
-
-	virtual void _UNKOWN_015(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 15) }
-
-	virtual void _UNKOWN_016(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 16) }
-
-	virtual void _UNKOWN_017 (void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 17) }
-
-	virtual void _UNKOWN_018 (void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 18) }
-
-	virtual void _UNKOWN_019(void )
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 19) }
-
-	virtual void _UNKOWN_020(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 20) }
-
-	virtual void _UNKOWN_021 (void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 21) }
-		
-	virtual void _UNKOWN_022(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 22) }
-
-	virtual void _UNKOWN_023(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 23) }
-
-	virtual void _UNKOWN_024(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 24) }
-
-	virtual void _UNKOWN_025(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 25) }
-
-	virtual void View_Render(SOURCESDK::vrect_t_csgo *rect )
-	{
-		// JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 26)
-
-		//Tier0_Msg("---- View_Render ----\n");
-
-		bool rectNull = rect->width == 0 || rect->height == 0;
-
-		if(g_MaterialSystem_csgo && !rectNull)
-		{
-
-			if(m_OnView_Render)
-			{
-				m_OnView_Render->View_Render(this, rect);
-			}
-			else
-			{
-				m_Parent->View_Render( rect );
-			}
-		}
-		else
-		{
-			m_Parent->View_Render( rect );
-		}
-	}
-
-	virtual void RenderView( const SOURCESDK::CViewSetup_csgo &view, int nClearFlags, int whatToDraw )
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 27) }
-
-	virtual void _UNKOWN_028(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 28) }
-
-	virtual void _UNKOWN_029(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 29) }
-
-	virtual void _UNKOWN_030(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 30) }
-
-	virtual void _UNKOWN_031(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 31) }
-
-	virtual void _UNKOWN_032(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 32) }
-
-	virtual void _UNKOWN_033(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 33) }
-
-	virtual void _UNKOWN_034(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 34) }
-
-	virtual void _UNKOWN_035(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 35) }
-
-	virtual void FrameStageNotify(SOURCESDK::CSGO::ClientFrameStage_t curStage)
-	{
-		// JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 36)
-
-		static bool firstFrameAfterNetUpdateEnd = false;
-
-		switch(curStage)
-		{
-		case SOURCESDK::CSGO::FRAME_START:
-#ifdef AFX_MIRV_PGL
-			MirvPgl::CheckStartedAndRestoreIfDown();
-			MirvPgl::ExecuteQueuedCommands();
-#endif
-			break;
-		case SOURCESDK::CSGO::FRAME_NET_UPDATE_START:
-			break;
-		case SOURCESDK::CSGO::FRAME_NET_UPDATE_END:
-			firstFrameAfterNetUpdateEnd = true;
-			break;
-		case SOURCESDK::CSGO::FRAME_RENDER_START:
-			g_csgo_FirstFrameAfterNetUpdateEnd = firstFrameAfterNetUpdateEnd;
-			firstFrameAfterNetUpdateEnd = false;
-			break;
-		}
-
-		m_Parent->FrameStageNotify(curStage);
-
-		switch (curStage)
-		{
-		case SOURCESDK::CSGO::FRAME_RENDER_END:
-			break;
-		}
-	}
-
-	virtual void _UNKOWN_037(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 37) }
-
-	virtual void _UNKOWN_038(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 38) }
-
-	virtual void _UNKOWN_039(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 39) }
-
-	virtual void _UNKOWN_040(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 40) }
-
-	virtual void _UNKOWN_041(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 41) }
-
-	virtual void _UNKOWN_042(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 42) }
-
-	virtual void _UNKOWN_043(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 43) }
-
-	virtual void _UNKOWN_044(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 44) }
-
-	virtual void _UNKOWN_045(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 45) }
-
-	virtual void _UNKOWN_046(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 46) }
-
-	virtual void _UNKOWN_047(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 47) }
-
-	virtual void _UNKOWN_048(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 48) }
-
-	virtual void _UNKOWN_049(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 49) }
-
-	virtual void _UNKOWN_050(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 50) }
-
-	virtual void _UNKOWN_051(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 51) }
-
-	virtual void _UNKOWN_052(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 52) }
-
-	virtual void _UNKOWN_053(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 53) }
-
-	virtual void _UNKOWN_054(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 54) }
-
-	virtual void _UNKOWN_055(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 55) }
-
-	virtual void _UNKOWN_056(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 56) }
-
-	virtual void _UNKOWN_057(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 57) }
-
-	virtual void _UNKOWN_058(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 58) }
-
-	virtual void _UNKOWN_059(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 59) }
-
-	virtual void _UNKOWN_060(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 60) }
-
-	virtual void _UNKOWN_061(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 61) }
-
-	virtual void _UNKOWN_062(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 62) }
-
-	virtual void _UNUSED_GetScreenWidth(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 63) }
-
-	virtual void _UNUSED_GetScreenHeight(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 64) }
-
-	virtual void WriteSaveGameScreenshotOfSize( const char *pFilename, int width, int height, bool bCreatePowerOf2Padded = false, bool bWriteVTF = false )
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 65) }
-
-	virtual void _UNKOWN_066(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 66) }
-
-	virtual void _UNKOWN_067(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 67) }
-
-	virtual void _UNKOWN_068(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 68) }
-
-	virtual void _UNKOWN_069(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 69) }
-
-	virtual void _UNKOWN_070(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 70) }
-
-	virtual void _UNKOWN_071(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 71) }
-
-	virtual void _UNKOWN_072(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 72) }
-
-	virtual void _UNKOWN_073(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 73) }
-
-	virtual void _UNKOWN_074(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 74) }
-
-	virtual void _UNKOWN_075(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 75) }
-
-	virtual void _UNKOWN_076(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 76) }
-
-	virtual void _UNKOWN_077(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 77) }
-
-	virtual void _UNKOWN_078(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 78) }
-
-	virtual void _UNKOWN_079(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 79) }
-
-	virtual void _UNKOWN_080(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 80) }
-
-	virtual void _UNKOWN_081(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 81) }
-
-	virtual void _UNKOWN_082(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 82) }
-
-	virtual void _UNKOWN_083(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 83) }
-
-	virtual void _UNKOWN_084(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 84) }
-
-	virtual void _UNKOWN_085(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 85) }
-
-	virtual void _UNKOWN_086(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 86) }
-
-	virtual void _UNKOWN_087(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 87) }
-
-	virtual void _UNKOWN_088(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 88) }
-
-	virtual void _UNKOWN_089(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 89) }
-
-	virtual void _UNKOWN_090(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 90) }
-
-	virtual void _UNKOWN_091(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 91) }
-
-	virtual void _UNKOWN_092(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 92) }
-
-	virtual void _UNKOWN_093(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 93) }
-
-	virtual void _UNKOWN_094(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 94) }
-
-	virtual void _UNKOWN_095(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 95) }
-
-	virtual void _UNKOWN_096(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 96) }
-
-	virtual void _UNKOWN_097(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 97) }
-
-	virtual void _UNKOWN_098(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 98) }
-
-	virtual void _UNKOWN_099(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 99) }
-
-	virtual void _UNKOWN_100(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 100) }
-
-	virtual void _UNKOWN_101(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 101) }
-
-	virtual void _UNKOWN_102(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 102) }
-
-	virtual void _UNKOWN_103(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 103) }
-
-	virtual void _UNKOWN_104(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 104) }
-
-	virtual void _UNKOWN_105(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 105) }
-
-	virtual void _UNKOWN_106(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 106) }
-
-	virtual void _UNKOWN_107(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 107) }
-
-	virtual void _UNKOWN_108(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 108) }
-
-	virtual void _UNKOWN_109(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 109) }
-
-	virtual void _UNKOWN_110(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 110) }
+	virtual int Connect(SOURCESDK::CreateInterfaceFn appSystemFactory, SOURCESDK::CGlobalVarsBase *pGlobals);
+	virtual void Disconnect();
+	virtual int Init(SOURCESDK::CreateInterfaceFn appSystemFactory, SOURCESDK::CGlobalVarsBase *pGlobals);
+	virtual void PostInit();
+	virtual void Shutdown(void);
+	virtual void LevelInitPreEntity(char const* pMapName);
+	virtual void LevelInitPostEntity();
+	virtual void LevelShutdown(void);
+	virtual void _UNKOWN_008(void);
+	virtual void _UNKOWN_009(void);
+	virtual void _UNKOWN_010(void);
+	virtual void _UNKOWN_011(void);
+	virtual void _UNKOWN_012(void);
+	virtual void _UNKOWN_013(void);
+	virtual void _UNKOWN_014(void);
+	virtual void _UNKOWN_015(void);
+	virtual void _UNKOWN_016(void);
+	virtual void _UNKOWN_017(void);
+	virtual void _UNKOWN_018(void);
+	virtual void _UNKOWN_019(void);
+	virtual void _UNKOWN_020(void);
+	virtual void _UNKOWN_021(void);
+	virtual void _UNKOWN_022(void);
+	virtual void _UNKOWN_023(void);
+	virtual void _UNKOWN_024(void);
+	virtual void _UNKOWN_025(void);
+	virtual void View_Render(SOURCESDK::vrect_t_csgo *rect);
+	virtual void RenderView(const SOURCESDK::CViewSetup_csgo &view, int nClearFlags, int whatToDraw);
+	virtual void _UNKOWN_028(void);
+	virtual void _UNKOWN_029(void);
+	virtual void _UNKOWN_030(void);
+	virtual void _UNKOWN_031(void);
+	virtual void _UNKOWN_032(void);
+	virtual void _UNKOWN_033(void);
+	virtual void _UNKOWN_034(void);
+	virtual void _UNKOWN_035(void);
+	virtual void FrameStageNotify(SOURCESDK::CSGO::ClientFrameStage_t curStage);
+	virtual void _UNKOWN_037(void);
+	virtual void _UNKOWN_038(void);
+	virtual void _UNKOWN_039(void);
+	virtual void _UNKOWN_040(void);
+	virtual void _UNKOWN_041(void);
+	virtual void _UNKOWN_042(void);
+	virtual void _UNKOWN_043(void);
+	virtual void _UNKOWN_044(void);
+	virtual void _UNKOWN_045(void);
+	virtual void _UNKOWN_046(void);
+	virtual void _UNKOWN_047(void);
+	virtual void _UNKOWN_048(void);
+	virtual void _UNKOWN_049(void);
+	virtual void _UNKOWN_050(void);
+	virtual void _UNKOWN_051(void);
+	virtual void _UNKOWN_052(void);
+	virtual void _UNKOWN_053(void);
+	virtual void _UNKOWN_054(void);
+	virtual void _UNKOWN_055(void);
+	virtual void _UNKOWN_056(void);
+	virtual void _UNKOWN_057(void);
+	virtual void _UNKOWN_058(void);
+	virtual void _UNKOWN_059(void);
+	virtual void _UNKOWN_060(void);
+	virtual void _UNKOWN_061(void);
+	virtual void _UNKOWN_062(void);
+	virtual void _UNUSED_GetScreenWidth(void);
+	virtual void _UNUSED_GetScreenHeight(void);
+	virtual void WriteSaveGameScreenshotOfSize(const char *pFilename, int width, int height, bool bCreatePowerOf2Padded = false, bool bWriteVTF = false);
+	virtual void _UNKOWN_066(void);
+	virtual void _UNKOWN_067(void);
+	virtual void _UNKOWN_068(void);
+	virtual void _UNKOWN_069(void);
+	virtual void _UNKOWN_070(void);
+	virtual void _UNKOWN_071(void);
+	virtual void _UNKOWN_072(void);
+	virtual void _UNKOWN_073(void);
+	virtual void _UNKOWN_074(void);
+	virtual void _UNKOWN_075(void);
+	virtual void _UNKOWN_076(void);
+	virtual void _UNKOWN_077(void);
+	virtual void _UNKOWN_078(void);
+	virtual void _UNKOWN_079(void);
+	virtual void _UNKOWN_080(void);
+	virtual void _UNKOWN_081(void);
+	virtual void _UNKOWN_082(void);
+	virtual void _UNKOWN_083(void);
+	virtual void _UNKOWN_084(void);
+	virtual void _UNKOWN_085(void);
+	virtual void _UNKOWN_086(void);
+	virtual void _UNKOWN_087(void);
+	virtual void _UNKOWN_088(void);
+	virtual void _UNKOWN_089(void);
+	virtual void _UNKOWN_090(void);
+	virtual void _UNKOWN_091(void);
+	virtual void _UNKOWN_092(void);
+	virtual void _UNKOWN_093(void);
+	virtual void _UNKOWN_094(void);
+	virtual void _UNKOWN_095(void);
+	virtual void _UNKOWN_096(void);
+	virtual void _UNKOWN_097(void);
+	virtual void _UNKOWN_098(void);
+	virtual void _UNKOWN_099(void);
+	virtual void _UNKOWN_100(void);
+	virtual void _UNKOWN_101(void);
+	virtual void _UNKOWN_102(void);
+	virtual void _UNKOWN_103(void);
+	virtual void _UNKOWN_104(void);
+	virtual void _UNKOWN_105(void);
+	virtual void _UNKOWN_106(void);
+	virtual void _UNKOWN_107(void);
+	virtual void _UNKOWN_108(void);
+	virtual void _UNKOWN_109(void);
+	virtual void _UNKOWN_110(void);
 
 	// and a few more to be save from updates:
 
-	virtual void _UNKOWN_111(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 111) }
-
-	virtual void _UNKOWN_112(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 112) }
-
-	virtual void _UNKOWN_113(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 113) }
-
-	virtual void _UNKOWN_114(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 114) }
-
-	virtual void _UNKOWN_115(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 115) }
-
-	virtual void _UNKOWN_116(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 116) }
-
-	virtual void _UNKOWN_117(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 117) }
-
-	virtual void _UNKOWN_118(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 118) }
-
-	virtual void _UNKOWN_119(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 119) }
-
-	virtual void _UNKOWN_120(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 120) }
-
-	virtual void _UNKOWN_121(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 121) }
-
-	virtual void _UNKOWN_122(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 122) }
-
-	virtual void _UNKOWN_123(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 123) }
-
-	virtual void _UNKOWN_124(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 124) }
-
-	virtual void _UNKOWN_125(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 125) }
-
-	virtual void _UNKOWN_126(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 126) }
-
-	virtual void _UNKOWN_127(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 127) }
-
-	virtual void _UNKOWN_128(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 128) }
-
-	virtual void _UNKOWN_129(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 129) }
-
-	virtual void _UNKOWN_130(void)
-	{ JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 130) }
+	virtual void _UNKOWN_111(void);
+	virtual void _UNKOWN_112(void);
+	virtual void _UNKOWN_113(void);
+	virtual void _UNKOWN_114(void);
+	virtual void _UNKOWN_115(void);
+	virtual void _UNKOWN_116(void);
+	virtual void _UNKOWN_117(void);
+	virtual void _UNKOWN_118(void);
+	virtual void _UNKOWN_119(void);
+	virtual void _UNKOWN_120(void);
+	virtual void _UNKOWN_121(void);
+	virtual void _UNKOWN_122(void);
+	virtual void _UNKOWN_123(void);
+	virtual void _UNKOWN_124(void);
+	virtual void _UNKOWN_125(void);
+	virtual void _UNKOWN_126(void);
+	virtual void _UNKOWN_127(void);
+	virtual void _UNKOWN_128(void);
+	virtual void _UNKOWN_129(void);
+	virtual void _UNKOWN_130(void);
 
 private:
 	IBaseClientDLL_csgo * m_Parent;
@@ -1199,7 +594,521 @@ private:
 
 CAfxBaseClientDll * g_AfxBaseClientDll = 0;
 
-#pragma warning(pop)
+__declspec(naked) int CAfxBaseClientDll::Connect(SOURCESDK::CreateInterfaceFn appSystemFactory, SOURCESDK::CGlobalVarsBase *pGlobals)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 0) }
+
+__declspec(naked) void CAfxBaseClientDll::Disconnect()
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 1) }
+
+//__declspec(naked) 
+int CAfxBaseClientDll::Init(SOURCESDK::CreateInterfaceFn appSystemFactory, SOURCESDK::CGlobalVarsBase *pGlobals)
+{ // NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 2)
+
+	static bool bFirstCall = true;
+
+	if (bFirstCall)
+	{
+		bFirstCall = false;
+
+		MySetup(appSystemFactory, new WrpGlobalsCsGo(pGlobals));
+	}
+
+	int result = m_Parent->Init(AppSystemFactory_ForClient, pGlobals);
+
+	// Add file system search path for our assets:
+	if (g_FileSystem_csgo)
+	{
+		std::string path(GetHlaeFolder());
+
+		path.append("resources\\AfxHookSource\\assets\\csgo");
+
+		g_FileSystem_csgo->AddSearchPath(path.c_str(), "GAME", SOURCESDK::PATH_ADD_TO_TAIL);
+	}
+
+#ifdef AFX_MIRV_PGL
+	MirvPgl::Init();
+#endif	
+
+	CAfxBaseFxStream::AfxStreamsInit();
+
+	return result;
+}
+
+__declspec(naked) void CAfxBaseClientDll::PostInit()
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 3) }
+
+ //__declspec(naked) 
+void CAfxBaseClientDll::Shutdown(void)
+{ // NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 4)
+
+	if (m_OnShutdown) m_OnShutdown->Shutdown(this);
+
+	m_FreeMaster.AfxFree();
+
+	CAfxBaseFxStream::AfxStreamsShutdown();
+
+#ifdef AFX_MIRV_PGL
+	MirvPgl::Shutdown();
+#endif	
+
+	m_Parent->Shutdown();
+}
+
+//__declspec(naked) 
+void CAfxBaseClientDll::LevelInitPreEntity(char const* pMapName)
+{ // NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 5)
+
+#ifdef AFX_MIRV_PGL
+	MirvPgl::SupplyLevelInit(pMapName);
+#endif	
+
+	m_Parent->LevelInitPreEntity(pMapName);
+}
+
+__declspec(naked) void CAfxBaseClientDll::LevelInitPostEntity()
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 6) }
+
+//__declspec(naked) 
+void CAfxBaseClientDll::LevelShutdown(void)
+{ // NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 7)
+
+	if (m_OnLevelShutdown) m_OnLevelShutdown->LevelShutdown(this);
+
+#if AFX_SHADERS_CSGO
+	csgo_Stdshader_dx9_Hooks_OnLevelShutdown();
+#endif
+
+	g_AfxShaders.ReleaseUnusedShaders();
+
+#ifdef AFX_MIRV_PGL
+	MirvPgl::SupplyLevelShutdown();
+#endif
+
+	m_Parent->LevelShutdown();
+}
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_008(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 8) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_009(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 9) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_010(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 10) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_011(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 11) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_012(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 12) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_013(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 13) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_014(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 14) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_015(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 15) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_016(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 16) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_017(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 17) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_018(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 18) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_019(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 19) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_020(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 20) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_021(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 21) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_022(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 22) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_023(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 23) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_024(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 24) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_025(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 25) }
+
+//__declspec(naked) 
+void CAfxBaseClientDll::View_Render(SOURCESDK::vrect_t_csgo *rect)
+{ // NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 26)
+
+	//Tier0_Msg("---- View_Render ----\n");
+
+	bool rectNull = rect->width == 0 || rect->height == 0;
+
+	if (g_MaterialSystem_csgo && !rectNull)
+	{
+
+		if (m_OnView_Render)
+		{
+			m_OnView_Render->View_Render(this, rect);
+		}
+		else
+		{
+			m_Parent->View_Render(rect);
+		}
+	}
+	else
+	{
+		m_Parent->View_Render(rect);
+	}
+}
+
+__declspec(naked) void CAfxBaseClientDll::RenderView(const SOURCESDK::CViewSetup_csgo &view, int nClearFlags, int whatToDraw)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 27) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_028(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 28) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_029(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 29) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_030(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 30) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_031(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 31) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_032(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 32) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_033(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 33) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_034(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 34) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_035(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 35) }
+
+//__declspec(naked)
+void CAfxBaseClientDll::FrameStageNotify(SOURCESDK::CSGO::ClientFrameStage_t curStage)
+{ // NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 36)
+
+	static bool firstFrameAfterNetUpdateEnd = false;
+
+	switch (curStage)
+	{
+	case SOURCESDK::CSGO::FRAME_START:
+#ifdef AFX_MIRV_PGL
+		MirvPgl::CheckStartedAndRestoreIfDown();
+		MirvPgl::ExecuteQueuedCommands();
+#endif
+		break;
+	case SOURCESDK::CSGO::FRAME_NET_UPDATE_START:
+		break;
+	case SOURCESDK::CSGO::FRAME_NET_UPDATE_END:
+		firstFrameAfterNetUpdateEnd = true;
+		break;
+	case SOURCESDK::CSGO::FRAME_RENDER_START:
+		g_csgo_FirstFrameAfterNetUpdateEnd = firstFrameAfterNetUpdateEnd;
+		firstFrameAfterNetUpdateEnd = false;
+		break;
+	}
+
+	m_Parent->FrameStageNotify(curStage);
+
+	switch (curStage)
+	{
+	case SOURCESDK::CSGO::FRAME_RENDER_END:
+		break;
+	}
+}
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_037(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 37) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_038(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 38) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_039(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 39) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_040(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 40) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_041(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 41) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_042(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 42) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_043(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 43) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_044(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 44) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_045(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 45) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_046(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 46) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_047(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 47) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_048(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 48) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_049(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 49) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_050(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 50) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_051(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 51) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_052(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 52) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_053(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 53) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_054(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 54) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_055(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 55) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_056(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 56) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_057(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 57) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_058(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 58) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_059(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 59) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_060(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 60) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_061(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 61) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_062(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 62) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNUSED_GetScreenWidth(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 63) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNUSED_GetScreenHeight(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 64) }
+
+__declspec(naked) void CAfxBaseClientDll::WriteSaveGameScreenshotOfSize(const char *pFilename, int width, int height, bool bCreatePowerOf2Padded, bool bWriteVTF)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 65) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_066(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 66) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_067(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 67) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_068(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 68) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_069(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 69) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_070(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 70) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_071(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 71) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_072(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 72) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_073(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 73) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_074(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 74) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_075(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 75) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_076(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 76) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_077(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 77) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_078(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 78) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_079(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 79) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_080(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 80) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_081(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 81) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_082(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 82) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_083(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 83) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_084(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 84) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_085(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 85) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_086(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 86) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_087(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 87) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_088(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 88) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_089(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 89) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_090(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 90) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_091(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 91) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_092(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 92) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_093(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 93) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_094(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 94) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_095(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 95) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_096(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 96) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_097(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 97) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_098(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 98) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_099(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 99) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_100(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 100) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_101(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 101) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_102(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 102) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_103(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 103) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_104(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 104) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_105(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 105) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_106(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 106) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_107(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 107) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_108(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 108) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_109(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 109) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_110(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 110) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_111(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 111) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_112(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 112) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_113(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 113) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_114(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 114) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_115(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 115) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_116(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 116) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_117(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 117) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_118(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 118) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_119(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 119) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_120(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 120) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_121(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 121) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_122(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 122) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_123(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 123) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_124(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 124) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_125(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 125) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_126(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 126) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_127(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 127) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_128(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 128) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_129(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 129) }
+
+__declspec(naked) void CAfxBaseClientDll::_UNKOWN_130(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 130) }
 
 void HookClientDllInterface_011_Init(void * iface)
 {
@@ -1501,61 +1410,40 @@ HMODULE WINAPI new_LoadLibraryExA(LPCSTR lpLibFileName, HANDLE hFile, DWORD dwFl
 
 extern HMODULE g_H_EngineDll;
 
-void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
+void CommonHooks()
 {
 	static bool bFirstRun = true;
-	static bool bFirstClient = true;
-	static bool bFirstEngine = true;
-	static bool bFirstInputsystem = true;
 	static bool bFirstTier0 = true;
-	//static bool bFirstGameOverlayRenderer = true;
-	static bool bFirstLauncher = true;
-	static bool bFirstfilesystem_stdio = true;
-	static bool bFirstShaderapidx9 = true;
-	static bool bFirstMaterialsystem = true;
-	static bool bFirstScaleformui = true;
-	static bool bFirstStdshader_dx9 = true;
-
-	if(!hModule || !lpLibFileName)
-		return;
-
-#if 0
-	static FILE *f1=NULL;
-
-	if( !f1 ) f1=fopen("hlae_log_LibraryHooksA.txt","wb");
-	fprintf(f1,"%s\n", lpLibFileName);
-	fflush(f1);
-#endif
 
 	// do not use messageboxes here, there is some friggin hooking going on in between by the
 	// Source engine.
 
-	if(bFirstRun)
+	if (bFirstRun)
 	{
 		bFirstRun = false;
 
 		// detect if we are csgo:
 
 		char filePath[MAX_PATH] = { 0 };
-		GetModuleFileName( 0, filePath, MAX_PATH );
+		GetModuleFileName(0, filePath, MAX_PATH);
 
-		if(StringEndsWith(filePath,"csgo.exe"))
+		if (StringEndsWith(filePath, "csgo.exe"))
 		{
 			isCsgo = true;
 		}
 
-		if(wcsstr(GetCommandLineW(),L"-afxV34"))
+		if (wcsstr(GetCommandLineW(), L"-afxV34"))
 		{
 			isV34 = true;
 		}
-		
+
 		//ScriptEngine_StartUp();
 	}
 
-	if(bFirstTier0)
+	if (bFirstTier0)
 	{
 		HMODULE hTier0;
-		if(hTier0 = GetModuleHandleA("tier0.dll"))
+		if (hTier0 = GetModuleHandleA("tier0.dll"))
 		{
 			bFirstTier0 = false;
 
@@ -1576,21 +1464,40 @@ void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
 				InterceptDllCall(hTier0, "USER32.dll", "SetCursorPos", (DWORD)&new_SetCursorPos);
 			}
 
-			if (!Hook_csgo_MemAlloc())
-			{
-				ErrorBox("Error: Hook_csgo_MemAlloc failed. This can cause mayor bugs!");
-			}
+			// this won't work
+			//if (!Hook_csgo_MemAlloc())
+			//{
+			//	ErrorBox("Error: Hook_csgo_MemAlloc failed. This can cause mayor bugs!");
+			//}
 		}
 	}
+}
 
-	if(bFirstLauncher && StringEndsWith( lpLibFileName, "launcher.dll"))
-	{
-		bFirstLauncher = false;
-		
-		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryExA", (DWORD) &new_LoadLibraryExA);
-		InterceptDllCall(hModule, "Kernel32.dll", "LoadLibraryA", (DWORD) &new_LoadLibraryA);
-	}
-	else
+void LibraryHooksA(HMODULE hModule, LPCSTR lpLibFileName)
+{
+	static bool bFirstClient = true;
+	static bool bFirstEngine = true;
+	static bool bFirstInputsystem = true;
+	//static bool bFirstGameOverlayRenderer = true;
+	static bool bFirstfilesystem_stdio = true;
+	static bool bFirstShaderapidx9 = true;
+	static bool bFirstMaterialsystem = true;
+	static bool bFirstScaleformui = true;
+	static bool bFirstStdshader_dx9 = true;
+
+	CommonHooks();
+
+	if(!hModule || !lpLibFileName)
+		return;
+
+#if 0
+	static FILE *f1=NULL;
+
+	if( !f1 ) f1=fopen("hlae_log_LibraryHooksA.txt","wb");
+	fprintf(f1,"%s\n", lpLibFileName);
+	fflush(f1);
+#endif
+
 	if(bFirstfilesystem_stdio && StringEndsWith( lpLibFileName, "filesystem_steam.dll")) // v34
 	{
 		bFirstfilesystem_stdio = false;
@@ -1708,6 +1615,8 @@ void LibraryHooksW(HMODULE hModule, LPCWSTR lpLibFileName)
 {
 	static bool bFirstLauncher = true;
 
+	CommonHooks();
+
 	if (!hModule || !lpLibFileName)
 		return;
 
@@ -1763,7 +1672,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 	{ 
 		case DLL_PROCESS_ATTACH:
 		{
-#if 0
+#if 1
 			MessageBox(0,"DLL_PROCESS_ATTACH","MDT_DEBUG",MB_OK);
 #endif
 

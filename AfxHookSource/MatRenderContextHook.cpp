@@ -21,9 +21,6 @@
 #include <mutex>
 
 
-#pragma warning(push)
-#pragma warning(disable:4731) // frame pointer register 'ebp' modified by inline assembly code
-
 class CAfxMesh
 	: public SOURCESDK::IMeshEx_csgo
 	, public IAfxMesh
@@ -40,10 +37,9 @@ public:
 	}
 
 private:
-	void Debug(int ofs, int index)
+	void Debug(int index, int ofs)
 	{
-		if (g_DebugEnabled)
-			Tier0_Msg("CAfxMesh::Debug(%i,%i)\n", ofs, index);
+
 	}
 
 public:
@@ -64,361 +60,321 @@ public:
 	//
 	// IVertexBuffer_csgo:
 
-	virtual int VertexCount() const
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 0)
-	}
-
-	virtual SOURCESDK::VertexFormat_t_csgo GetVertexFormat() const
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 1)
-	}
-
-	virtual bool IsDynamic() const
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 2)
-	}
-
-	virtual void BeginCastBuffer(SOURCESDK::VertexFormat_t_csgo format)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 3)
-	}
-
-	virtual void EndCastBuffer()
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 4)
-	}
-
-	virtual int GetRoomRemaining() const
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 5)
-	}
-
-	virtual bool Lock(int nVertexCount, bool bAppend, SOURCESDK::VertexDesc_t_csgo &desc)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 6)
-	}
-
-	virtual void Unlock(int nVertexCount, SOURCESDK::VertexDesc_t_csgo &desc)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 7)
-	}
-
-	virtual void Spew(int nVertexCount, const SOURCESDK::VertexDesc_t_csgo &desc)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 8)
-	}
-
-	virtual void ValidateData(int nVertexCount, const SOURCESDK::VertexDesc_t_csgo & desc)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 9)
-	}
-
-	virtual void _Unknown_10_IVertexBuffer_csgo(void)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 10)
-	}
-
+	virtual int VertexCount() const;
+	virtual SOURCESDK::VertexFormat_t_csgo GetVertexFormat() const;
+	virtual bool IsDynamic() const;
+	virtual void BeginCastBuffer(SOURCESDK::VertexFormat_t_csgo format);
+	virtual void EndCastBuffer();
+	virtual int GetRoomRemaining() const;
+	virtual bool Lock(int nVertexCount, bool bAppend, SOURCESDK::VertexDesc_t_csgo &desc);
+	virtual void Unlock(int nVertexCount, SOURCESDK::VertexDesc_t_csgo &desc);
+	virtual void Spew(int nVertexCount, const SOURCESDK::VertexDesc_t_csgo &desc);
+	virtual void ValidateData(int nVertexCount, const SOURCESDK::VertexDesc_t_csgo & desc);
+	virtual void _Unknown_10_IVertexBuffer_csgo(void);
 
 	//
 	// IMesh_csgo:
 
-	virtual void Draw(int firstIndex = -1, int numIndices = 0)
-	{
-		//JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,12) /* !ofs different due to overloaded method! */
-
-		Debug(0, 12);
-
-		IAfxContextHook * stream = m_AfxMatRenderContext->Hook_get();
-
-		if (stream)
-			stream->Draw(this, firstIndex, numIndices);
-		else
-			m_Parent->Draw(firstIndex, numIndices);
-	}
-
-	virtual void SetColorMesh(IMesh_csgo *pColorMesh, int nVertexOffset)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 13) /* !ofs different due to overloaded method! */
-	}
-
-	virtual void Draw(SOURCESDK::CPrimList_csgo *pLists, int nLists)
-	{
-		// JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,11) /* !ofs different due to overloaded method! */
-
-		Debug(0, 11);
-
-		IAfxContextHook * stream = m_AfxMatRenderContext->Hook_get();
-
-		if (stream)
-			stream->Draw_2(this, pLists, nLists);
-		else
-			m_Parent->Draw(pLists, nLists);
-	}
-
-	virtual void CopyToMeshBuilder(int iStartVert, int nVerts, int iStartIndex, int nIndices, int indexOffset, SOURCESDK::CMeshBuilder_csgo &builder)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 14)
-	}
-
-	virtual void Spew(int numVerts, int numIndices, const SOURCESDK::MeshDesc_t_csgo &desc)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 15)
-	}
-
-	virtual void ValidateData(int numVerts, int numIndices, const SOURCESDK::MeshDesc_t_csgo &desc)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 16)
-	}
-
-	virtual void LockMesh(int numVerts, int numIndices, SOURCESDK::MeshDesc_t_csgo &desc, SOURCESDK::MeshBuffersAllocationSettings_t_csgo *pSettings)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 17)
-	}
-
-	virtual void ModifyBegin(int firstVertex, int numVerts, int firstIndex, int numIndices, SOURCESDK::MeshDesc_t_csgo& desc)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 18)
-	}
-
-	virtual void ModifyEnd(SOURCESDK::MeshDesc_t_csgo& desc)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 19)
-	}
-
-	virtual void UnlockMesh(int numVerts, int numIndices, SOURCESDK::MeshDesc_t_csgo &desc)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 20)
-	}
-
-	virtual void ModifyBeginEx(bool bReadOnly, int firstVertex, int numVerts, int firstIndex, int numIndices, SOURCESDK::MeshDesc_t_csgo &desc)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 21)
-	}
-
-	virtual void SetFlexMesh(IMesh_csgo *pMesh, int nVertexOffset)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 22)
-	}
-
-	virtual void DisableFlexMesh()
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 23)
-	}
-
-	virtual void MarkAsDrawn()
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 24)
-	}
-
-	virtual void DrawModulated(const SOURCESDK::Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0)
-	{
-		// JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,25)
-
-		IAfxContextHook * stream = m_AfxMatRenderContext->Hook_get();
-
-		if (stream)
-			stream->DrawModulated(this, vecDiffuseModulation, firstIndex, numIndices);
-		else
-			m_Parent->DrawModulated(vecDiffuseModulation, firstIndex, numIndices);
-	}
-
-	virtual unsigned int ComputeMemoryUsed()
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 26)
-	}
-
-	virtual void *AccessRawHardwareDataStream(SOURCESDK::uint8 nRawStreamIndex, SOURCESDK::uint32 numBytes, SOURCESDK::uint32 uiFlags, void *pvContext)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 27)
-	}
-
-	virtual SOURCESDK::ICachedPerFrameMeshData_csgo *GetCachedPerFrameMeshData()
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 28)
-	}
-
-	virtual void ReconstructFromCachedPerFrameMeshData(SOURCESDK::ICachedPerFrameMeshData_csgo *pData)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 29)
-	}
+	virtual void Draw(int firstIndex = -1, int numIndices = 0);
+	virtual void SetColorMesh(IMesh_csgo *pColorMesh, int nVertexOffset);
+	virtual void Draw(SOURCESDK::CPrimList_csgo *pLists, int nLists);
+	virtual void CopyToMeshBuilder(int iStartVert, int nVerts, int iStartIndex, int nIndices, int indexOffset, SOURCESDK::CMeshBuilder_csgo &builder);
+	virtual void Spew(int numVerts, int numIndices, const SOURCESDK::MeshDesc_t_csgo &desc);
+	virtual void ValidateData(int numVerts, int numIndices, const SOURCESDK::MeshDesc_t_csgo &desc);
+	virtual void LockMesh(int numVerts, int numIndices, SOURCESDK::MeshDesc_t_csgo &desc, SOURCESDK::MeshBuffersAllocationSettings_t_csgo *pSettings);
+	virtual void ModifyBegin(int firstVertex, int numVerts, int firstIndex, int numIndices, SOURCESDK::MeshDesc_t_csgo& desc);
+	virtual void ModifyEnd(SOURCESDK::MeshDesc_t_csgo& desc);
+	virtual void UnlockMesh(int numVerts, int numIndices, SOURCESDK::MeshDesc_t_csgo &desc);
+	virtual void ModifyBeginEx(bool bReadOnly, int firstVertex, int numVerts, int firstIndex, int numIndices, SOURCESDK::MeshDesc_t_csgo &desc);
+	virtual void SetFlexMesh(IMesh_csgo *pMesh, int nVertexOffset);
+	virtual void DisableFlexMesh();
+	virtual void MarkAsDrawn();
+	virtual void DrawModulated(const SOURCESDK::Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0);
+	virtual unsigned int ComputeMemoryUsed();
+	virtual void *AccessRawHardwareDataStream(SOURCESDK::uint8 nRawStreamIndex, SOURCESDK::uint32 numBytes, SOURCESDK::uint32 uiFlags, void *pvContext);
+	virtual SOURCESDK::ICachedPerFrameMeshData_csgo *GetCachedPerFrameMeshData();
+	virtual void ReconstructFromCachedPerFrameMeshData(SOURCESDK::ICachedPerFrameMeshData_csgo *pData);
 
 	//
 	// IMeshEx_csgo:
 
-	virtual void _UNKNOWN_030(void)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 30)
-	}
-
-	virtual void _UNKNOWN_031(void)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 31)
-	}
-
-	virtual void _UNKNOWN_032(void)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 32)
-	}
-
-	virtual void _UNKNOWN_033(void)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 33)
-	}
-
-	virtual void _UNKNOWN_034(void)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 34)
-	}
-
-	virtual void _UNKNOWN_035(void)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 35)
-	}
-
-	virtual void _UNKNOWN_036(void)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 36)
-	}
-
-	virtual void _UNKNOWN_037(void)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 37)
-	}
-
-	virtual void _UNKNOWN_038(void)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 38)
-	}
-
-	virtual void _UNKNOWN_039(void)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 39)
-	}
-
-	virtual void _UNKNOWN_040(void)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 40)
-	}
-
-	virtual void _UNKNOWN_041(void)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 41)
-	}
-
-	virtual void _UNKNOWN_042(void)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 42)
-	}
-
-	virtual void _UNKNOWN_043(void)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 43)
-	}
-
-	virtual void _UNKNOWN_044(void)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 44)
-	}
-
-	virtual void _UNKNOWN_045(void)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 45)
-	}
-
-	virtual void _UNKNOWN_046(void)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 46)
-	}
-
-	virtual void _UNKNOWN_047(void)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 47)
-	}
-
-	virtual void _UNKNOWN_048(void)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 48)
-	}
+	virtual void _UNKNOWN_030(void);
+	virtual void _UNKNOWN_031(void);
+	virtual void _UNKNOWN_032(void);
+	virtual void _UNKNOWN_033(void);
+	virtual void _UNKNOWN_034(void);
+	virtual void _UNKNOWN_035(void);
+	virtual void _UNKNOWN_036(void);
+	virtual void _UNKNOWN_037(void);
+	virtual void _UNKNOWN_038(void);
+	virtual void _UNKNOWN_039(void);
+	virtual void _UNKNOWN_040(void);
+	virtual void _UNKNOWN_041(void);
+	virtual void _UNKNOWN_042(void);
+	virtual void _UNKNOWN_043(void);
+	virtual void _UNKNOWN_044(void);
+	virtual void _UNKNOWN_045(void);
+	virtual void _UNKNOWN_046(void);
+	virtual void _UNKNOWN_047(void);
+	virtual void _UNKNOWN_048(void);
 
 	//
 	// IIndexBuffer_csgo:
 
-	virtual int IndexCount() const
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 1, 0)
-	}
-
-	virtual SOURCESDK::MaterialIndexFormat_t_csgo IndexFormat() const
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 1, 1)
-	}
-
-	//virtual bool IsDynamic() const
-	//{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,2) }
-
-	virtual void BeginCastBuffer(SOURCESDK::MaterialIndexFormat_t_csgo format)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 1, 3)
-	}
-
-	//virtual void EndCastBuffer()
-	//{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,4) }
-
-	//virtual int GetRoomRemaining() const
-	//{ JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,5) }
-
-	virtual bool Lock(int nMaxIndexCount, bool bAppend, SOURCESDK::IndexDesc_t_csgo &desc)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 1, 6)
-	}
-
-	virtual void Unlock(int nWrittenIndexCount, SOURCESDK::IndexDesc_t_csgo &desc)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 1, 7)
-	}
-
-	virtual void ModifyBegin(bool bReadOnly, int nFirstIndex, int nIndexCount, SOURCESDK::IndexDesc_t_csgo& desc)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 1, 8)
-	}
-
-	virtual void ModifyEnd(SOURCESDK::IndexDesc_t_csgo& desc)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 1, 9)
-	}
-
-	virtual void Spew(int nIndexCount, const SOURCESDK::IndexDesc_t_csgo &desc)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 1, 10)
-	}
-
-	virtual void ValidateData(int nIndexCount, const SOURCESDK::IndexDesc_t_csgo &desc)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 1, 11)
-	}
-
-	virtual IMesh_csgo* GetMesh()
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 1, 12)
-	}
-
-	virtual void _Unknown_13_IIndexBuffer_csgo(void * arg0)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 1, 13)
-	}
-
-	virtual bool _Unknown_14_IIndexBuffer_csgo(void)
-	{
-		JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 1, 14)
-	}
+	virtual int IndexCount() const;
+	virtual SOURCESDK::MaterialIndexFormat_t_csgo IndexFormat() const;
+	//virtual bool IsDynamic() const;
+	virtual void BeginCastBuffer(SOURCESDK::MaterialIndexFormat_t_csgo format);
+	//virtual void EndCastBuffer();
+	//virtual int GetRoomRemaining() const;
+	virtual bool Lock(int nMaxIndexCount, bool bAppend, SOURCESDK::IndexDesc_t_csgo &desc);
+	virtual void Unlock(int nWrittenIndexCount, SOURCESDK::IndexDesc_t_csgo &desc);
+	virtual void ModifyBegin(bool bReadOnly, int nFirstIndex, int nIndexCount, SOURCESDK::IndexDesc_t_csgo& desc);
+	virtual void ModifyEnd(SOURCESDK::IndexDesc_t_csgo& desc);
+	virtual void Spew(int nIndexCount, const SOURCESDK::IndexDesc_t_csgo &desc);
+	virtual void ValidateData(int nIndexCount, const SOURCESDK::IndexDesc_t_csgo &desc);
+	virtual SOURCESDK::IMesh_csgo* GetMesh();
+	virtual void _Unknown_13_IIndexBuffer_csgo(void * arg0);
+	virtual bool _Unknown_14_IIndexBuffer_csgo(void);
 
 private:
 	IMeshEx_csgo * m_Parent;
 	IAfxMatRenderContext * m_AfxMatRenderContext;
 };
 
-#pragma warning(pop)
+__declspec(naked) int CAfxMesh::VertexCount() const
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 0) }
+
+__declspec(naked) SOURCESDK::VertexFormat_t_csgo CAfxMesh::GetVertexFormat() const
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 1) }
+
+__declspec(naked) bool CAfxMesh::IsDynamic() const
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 2) }
+
+__declspec(naked) void CAfxMesh::BeginCastBuffer(SOURCESDK::VertexFormat_t_csgo format)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 3) }
+
+__declspec(naked) void CAfxMesh::EndCastBuffer()
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 4) }
+
+__declspec(naked) int CAfxMesh::GetRoomRemaining() const
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 5) }
+
+__declspec(naked) bool CAfxMesh::Lock(int nVertexCount, bool bAppend, SOURCESDK::VertexDesc_t_csgo &desc)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 6) }
+
+__declspec(naked) void CAfxMesh::Unlock(int nVertexCount, SOURCESDK::VertexDesc_t_csgo &desc)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 7) }
+
+__declspec(naked) void CAfxMesh::Spew(int nVertexCount, const SOURCESDK::VertexDesc_t_csgo &desc)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 8) }
+
+__declspec(naked) void CAfxMesh::ValidateData(int nVertexCount, const SOURCESDK::VertexDesc_t_csgo & desc)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 9) }
+
+__declspec(naked) void CAfxMesh::_Unknown_10_IVertexBuffer_csgo(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 10) }
+
+
+//
+// IMesh_csgo:
+
+//__declspec(naked) 
+void CAfxMesh::Draw(int firstIndex, int numIndices)
+{ //NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,12) /* !ofs different due to overloaded method! */
+
+	Debug(0, 12);
+
+	IAfxContextHook * stream = m_AfxMatRenderContext->Hook_get();
+
+	if (stream)
+		stream->Draw(this, firstIndex, numIndices);
+	else
+		m_Parent->Draw(firstIndex, numIndices);
+}
+
+__declspec(naked) void CAfxMesh::SetColorMesh(IMesh_csgo *pColorMesh, int nVertexOffset)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 13) /* !ofs different due to overloaded method! */ }
+
+//__declspec(naked) 
+void CAfxMesh::Draw(SOURCESDK::CPrimList_csgo *pLists, int nLists)
+{ // NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,11) /* !ofs different due to overloaded method! */
+
+	Debug(0, 11);
+
+	IAfxContextHook * stream = m_AfxMatRenderContext->Hook_get();
+
+	if (stream)
+		stream->Draw_2(this, pLists, nLists);
+	else
+		m_Parent->Draw(pLists, nLists);
+}
+
+__declspec(naked) void CAfxMesh::CopyToMeshBuilder(int iStartVert, int nVerts, int iStartIndex, int nIndices, int indexOffset, SOURCESDK::CMeshBuilder_csgo &builder)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 14) }
+
+__declspec(naked) void CAfxMesh::Spew(int numVerts, int numIndices, const SOURCESDK::MeshDesc_t_csgo &desc)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 15) }
+
+__declspec(naked) void CAfxMesh::ValidateData(int numVerts, int numIndices, const SOURCESDK::MeshDesc_t_csgo &desc)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 16) }
+
+__declspec(naked) void CAfxMesh::LockMesh(int numVerts, int numIndices, SOURCESDK::MeshDesc_t_csgo &desc, SOURCESDK::MeshBuffersAllocationSettings_t_csgo *pSettings)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 17) }
+
+__declspec(naked) void CAfxMesh::ModifyBegin(int firstVertex, int numVerts, int firstIndex, int numIndices, SOURCESDK::MeshDesc_t_csgo& desc)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 18) }
+
+__declspec(naked) void CAfxMesh::ModifyEnd(SOURCESDK::MeshDesc_t_csgo& desc)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 19) }
+
+__declspec(naked) void CAfxMesh::UnlockMesh(int numVerts, int numIndices, SOURCESDK::MeshDesc_t_csgo &desc)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 20) }
+
+__declspec(naked) void CAfxMesh::ModifyBeginEx(bool bReadOnly, int firstVertex, int numVerts, int firstIndex, int numIndices, SOURCESDK::MeshDesc_t_csgo &desc)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 21) }
+
+__declspec(naked) void CAfxMesh::SetFlexMesh(IMesh_csgo *pMesh, int nVertexOffset)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 22) }
+
+__declspec(naked) void CAfxMesh::DisableFlexMesh()
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 23) }
+
+__declspec(naked) void CAfxMesh::MarkAsDrawn()
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 24) }
+
+//__declspec(naked) 
+void CAfxMesh::DrawModulated(const SOURCESDK::Vector4D_csgo &vecDiffuseModulation, int firstIndex, int numIndices)
+{ // NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,0,25)
+
+	IAfxContextHook * stream = m_AfxMatRenderContext->Hook_get();
+
+	if (stream)
+		stream->DrawModulated(this, vecDiffuseModulation, firstIndex, numIndices);
+	else
+		m_Parent->DrawModulated(vecDiffuseModulation, firstIndex, numIndices);
+}
+
+__declspec(naked) unsigned int CAfxMesh::ComputeMemoryUsed()
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 26) }
+
+__declspec(naked) void *CAfxMesh::AccessRawHardwareDataStream(SOURCESDK::uint8 nRawStreamIndex, SOURCESDK::uint32 numBytes, SOURCESDK::uint32 uiFlags, void *pvContext)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 27) }
+
+__declspec(naked) SOURCESDK::ICachedPerFrameMeshData_csgo *CAfxMesh::GetCachedPerFrameMeshData()
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 28) }
+
+__declspec(naked) void CAfxMesh::ReconstructFromCachedPerFrameMeshData(SOURCESDK::ICachedPerFrameMeshData_csgo *pData)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 29) }
+
+//
+// IMeshEx_csgo:
+
+__declspec(naked) void CAfxMesh::_UNKNOWN_030(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 30) }
+
+__declspec(naked) void CAfxMesh::_UNKNOWN_031(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 31) }
+
+__declspec(naked) void CAfxMesh::_UNKNOWN_032(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 32) }
+
+__declspec(naked) void CAfxMesh::_UNKNOWN_033(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 33) }
+
+__declspec(naked) void CAfxMesh::_UNKNOWN_034(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 34) }
+
+__declspec(naked) void CAfxMesh::_UNKNOWN_035(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 35) }
+
+__declspec(naked) void CAfxMesh::_UNKNOWN_036(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 36) }
+
+__declspec(naked) void CAfxMesh::_UNKNOWN_037(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 37) }
+
+__declspec(naked) void CAfxMesh::_UNKNOWN_038(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 38) }
+
+__declspec(naked) void CAfxMesh::_UNKNOWN_039(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 39) }
+
+__declspec(naked) void CAfxMesh::_UNKNOWN_040(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 40) }
+
+__declspec(naked) void CAfxMesh::_UNKNOWN_041(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 41) }
+
+__declspec(naked) void CAfxMesh::_UNKNOWN_042(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 42) }
+
+__declspec(naked) void CAfxMesh::_UNKNOWN_043(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 43) }
+
+__declspec(naked) void CAfxMesh::_UNKNOWN_044(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 44) }
+
+__declspec(naked) void CAfxMesh::_UNKNOWN_045(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 45) }
+
+__declspec(naked) void CAfxMesh::_UNKNOWN_046(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 46) }
+
+__declspec(naked) void CAfxMesh::_UNKNOWN_047(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 47) }
+
+__declspec(naked) void CAfxMesh::_UNKNOWN_048(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 0, 48) }
+
+//
+// IIndexBuffer_csgo:
+
+__declspec(naked) int CAfxMesh::IndexCount() const
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 1, 0) }
+
+__declspec(naked) SOURCESDK::MaterialIndexFormat_t_csgo CAfxMesh::IndexFormat() const
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 1, 1) }
+
+//__declspec(naked) bool IsDynamic() const
+//{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,2) }
+
+__declspec(naked) void CAfxMesh::BeginCastBuffer(SOURCESDK::MaterialIndexFormat_t_csgo format)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 1, 3) }
+
+//__declspec(naked) void CAfxMesh::EndCastBuffer()
+//{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,4) }
+
+//__declspec(naked) int CAfxMesh::GetRoomRemaining() const
+//{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh,m_Parent,1,5) }
+
+__declspec(naked) bool CAfxMesh::Lock(int nMaxIndexCount, bool bAppend, SOURCESDK::IndexDesc_t_csgo &desc)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 1, 6) }
+
+__declspec(naked) void CAfxMesh::Unlock(int nWrittenIndexCount, SOURCESDK::IndexDesc_t_csgo &desc)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 1, 7) }
+
+__declspec(naked) void CAfxMesh::ModifyBegin(bool bReadOnly, int nFirstIndex, int nIndexCount, SOURCESDK::IndexDesc_t_csgo& desc)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 1, 8) }
+
+__declspec(naked) void CAfxMesh::ModifyEnd(SOURCESDK::IndexDesc_t_csgo& desc)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 1, 9) }
+
+__declspec(naked) void CAfxMesh::Spew(int nIndexCount, const SOURCESDK::IndexDesc_t_csgo &desc)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 1, 10) }
+
+__declspec(naked) void CAfxMesh::ValidateData(int nIndexCount, const SOURCESDK::IndexDesc_t_csgo &desc)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 1, 11) }
+
+__declspec(naked) SOURCESDK::IMesh_csgo* CAfxMesh::GetMesh()
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 1, 12) }
+
+__declspec(naked) void CAfxMesh::_Unknown_13_IIndexBuffer_csgo(void * arg0)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 1, 13) }
+
+__declspec(naked) bool CAfxMesh::_Unknown_14_IIndexBuffer_csgo(void)
+{ NAKED_JMP_CLASSMEMBERIFACE_OFS_FN_DBG(CAfxMesh, m_Parent, 1, 14) }
+
 
 std::map<SOURCESDK::IMeshEx_csgo *, CAfxMesh *> g_MeshMap_csgo;
 std::stack<CAfxMesh *> g_MeshHooks_csgo;
@@ -511,9 +467,8 @@ typedef SOURCESDK::CSGO::ICallQueue * (_stdcall * MatRenderContextHook_GetCallQu
 //:167
 typedef SOURCESDK::IMeshEx_csgo* (_stdcall * MatRenderContextHook_GetDynamicMeshEx_t)(
 	DWORD *this_ptr,
-	unsigned __int32 _unknown1,
+	SOURCESDK::VertexFormat_t_csgo vertexFormat,
 	bool buffered,
-	unsigned __int32 _unknown2,
 	SOURCESDK::IMesh_csgo* pVertexOverride,
 	SOURCESDK::IMesh_csgo* pIndexOverride,
 	SOURCESDK::IMaterial_csgo *pAutoBind);
@@ -742,17 +697,15 @@ public:
 	}
 
 	SOURCESDK::IMeshEx_csgo* Hook_GetDynamicMeshEx(
-		unsigned __int32 _unknown1,
+		SOURCESDK::VertexFormat_t_csgo vertexFormat,
 		bool buffered,
-		unsigned __int32 _unknown2,
 		SOURCESDK::IMesh_csgo* pVertexOverride,
 		SOURCESDK::IMesh_csgo* pIndexOverride,
 		SOURCESDK::IMaterial_csgo *pAutoBind)
 	{
 		SOURCESDK::IMeshEx_csgo * iMesh = m_Detours->GetDynamicMeshEx((DWORD *)m_Ctx,
-			_unknown1,
+			vertexFormat,
 			buffered,
-			_unknown2,
 			pVertexOverride,
 			pIndexOverride,
 			DoOnMaterialHook(pAutoBind));
@@ -959,18 +912,16 @@ SOURCESDK::CSGO::ICallQueue * _stdcall MatRenderContextHook_GetCallQueue(
 
 SOURCESDK::IMeshEx_csgo* _stdcall MatRenderContextHook_GetDynamicMeshEx(
 	DWORD *this_ptr,
-	unsigned __int32 _unknown1,
+	SOURCESDK::VertexFormat_t_csgo vertexFormat,
 	bool buffered,
-	unsigned __int32 _unknown2,
 	SOURCESDK::IMesh_csgo* pVertexOverride,
 	SOURCESDK::IMesh_csgo* pIndexOverride,
 	SOURCESDK::IMaterial_csgo *pAutoBind)
 {
 	CMatRenderContextHook * ctxh = CMatRenderContextHook::GetMatRenderContextHook((SOURCESDK::IMatRenderContext_csgo *)this_ptr);
 	return ctxh->Hook_GetDynamicMeshEx(
-		_unknown1,
+		vertexFormat,
 		buffered,
-		_unknown2,
 		pVertexOverride,
 		pIndexOverride,
 		pAutoBind);

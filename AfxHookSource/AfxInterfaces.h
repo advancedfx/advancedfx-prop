@@ -161,6 +161,8 @@ public:
 	virtual void DrawModulated(IAfxMesh * am, const SOURCESDK::Vector4D_csgo &vecDiffuseModulation, int firstIndex = -1, int numIndices = 0 ) = 0;
 };
 
+#if AFX_SHADERS_CSGO
+
 class IAfxSetVertexShader abstract
 {
 public:
@@ -172,6 +174,8 @@ class IAfxSetPixelShader abstract
 public:
 	virtual void SetPixelShader(CAfx_csgo_ShaderState & state) = 0;
 };
+
+#endif
 
 class IAfxDrawingHud abstract
 {

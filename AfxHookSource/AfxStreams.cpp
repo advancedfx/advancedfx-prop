@@ -2249,6 +2249,7 @@ void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::DrawModulated(IAfxMesh * am,
 		am->GetParent()->DrawModulated(vecDiffuseModulation, firstIndex, numIndices);
 }
 
+#if AFX_SHADERS_CSGO
 void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::SetVertexShader(CAfx_csgo_ShaderState & state)
 {
 	if (m_CurrentAction)
@@ -2260,6 +2261,7 @@ void CAfxBaseFxStream::CAfxBaseFxStreamContextHook::SetPixelShader(CAfx_csgo_Sha
 	if (m_CurrentAction)
 		m_CurrentAction->SetPixelShader(this, state);
 }
+#endif
 
 SOURCESDK::CSGO::CBaseHandle const & CAfxBaseFxStream::CAfxBaseFxStreamContextHook::GetCurrentEntityHandle()
 {
@@ -4405,6 +4407,7 @@ void CAfxStreams::OnShaderShadow(SOURCESDK::IShaderShadow_csgo * value)
 	m_ShaderShadow = value;
 }
 
+#if AFX_SHADERS_CSGO
 void CAfxStreams::OnSetVertexShader(CAfx_csgo_ShaderState & state)
 {
 	IAfxContextHook * hook = FindHook(GetCurrentContext());
@@ -4420,6 +4423,7 @@ void CAfxStreams::OnSetPixelShader(CAfx_csgo_ShaderState & state)
 	if (hook)
 		hook->SetPixelShader(state);
 }
+#endif
 
 float CAfxStreams::OnRenderSmokeOverlayAlphaMod(void)
 {

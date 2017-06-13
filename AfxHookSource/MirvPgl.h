@@ -56,7 +56,7 @@ Purpose:
   If received with unexpected version, server should close the connection.
 Format:
   CString cmd = "hello"
-  UInt32 version = 0;
+  UInt32 version = 1;
 
 "levelInit"
 Purpose:

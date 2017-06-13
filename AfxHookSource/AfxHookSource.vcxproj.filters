@@ -117,9 +117,6 @@
     <ClCompile Include="AfxShaders.cpp">
       <Filter>AfxHookSource</Filter>
     </ClCompile>
-    <ClCompile Include="csgo_Stdshader_dx9_Hooks.cpp">
-      <Filter>AfxHookSource</Filter>
-    </ClCompile>
     <ClCompile Include="csgo_CViewRender.cpp">
       <Filter>AfxHookSource</Filter>
     </ClCompile>
@@ -169,6 +166,9 @@
       <Filter>AfxHookSource</Filter>
     </ClCompile>
     <ClCompile Include="MirvPgl.cpp">
+      <Filter>AfxHookSource</Filter>
+    </ClCompile>
+    <ClCompile Include="csgo_Stdshader_dx9_Hooks.cpp">
       <Filter>AfxHookSource</Filter>
     </ClCompile>
   </ItemGroup>
@@ -287,9 +287,6 @@
     <ClInclude Include="asmClassTools.h">
       <Filter>AfxHookSource</Filter>
     </ClInclude>
-    <ClInclude Include="csgo_Stdshader_dx9_Hooks.h">
-      <Filter>AfxHookSource</Filter>
-    </ClInclude>
     <ClInclude Include="csgo_CViewRender.h">
       <Filter>AfxHookSource</Filter>
     </ClInclude>
@@ -339,6 +336,9 @@
       <Filter>AfxHookSource</Filter>
     </ClInclude>
     <ClInclude Include="MirvPgl.h">
+      <Filter>AfxHookSource</Filter>
+    </ClInclude>
+    <ClInclude Include="csgo_Stdshader_dx9_Hooks.h">
       <Filter>AfxHookSource</Filter>
     </ClInclude>
   </ItemGroup>

@@ -92,7 +92,7 @@ namespace MirvPgl
 		AppendCString("hello", outVec);
 		memcpy(&(data[0 * sizeof(uint32_t)]), &version, sizeof(uint32_t));
 
-		outVec.insert(m_Data.end(), std::begin(data), std::end(data));
+		outVec.insert(outVec.end(), std::begin(data), std::end(data));
 	}
 
 	void AppendCamData(CamData const camData, std::vector<uint8_t> &outVec)
@@ -108,7 +108,7 @@ namespace MirvPgl
 		memcpy(&(data[6 * sizeof(float)]), &camData.ZRotation, sizeof(float));
 		memcpy(&(data[7 * sizeof(float)]), &camData.Fov, sizeof(float));
 
-		outVec.insert(m_Data.end(), std::begin(data), std::end(data));
+		outVec.insert(outVec.end(), std::begin(data), std::end(data));
 	}
 
 	void Recv_String(const std::string & message)
@@ -458,7 +458,7 @@ CON_COMMAND(mirv_pgl, "PGL")
 	}
 
 	Tier0_Msg(
-		"mirv_pgl start \"ws://host:port/path\" - (Re-)Starts connectinion to server, using the URL set with url.\n"
+		"mirv_pgl start - (Re-)Starts connectinion to server.\n"
 		"mirv_pgl stop - Stops connection to server.\n"
 		"mirv_pgl url [...] - Set url to use with start.\n"
 	);

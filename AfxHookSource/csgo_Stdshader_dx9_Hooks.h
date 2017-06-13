@@ -1,5 +1,7 @@
 #pragma once
 
+#if AFX_SHADERS_CSGO
+
 // Copyright (c) advancedfx.org
 //
 // Last changes:
@@ -868,3 +870,5 @@ public:
 	int m_SHADOWDEPTH; // 0..1
 	int m_ALPHATESTREF; // 0..1
 };
+
+#endif

@@ -1,5 +1,7 @@
 #include "stdafx.h"
 
+#if AFX_SHADERS_CSGO
+
 // Copyright (c) advancedfx.org
 //
 // Last changes:
@@ -1517,3 +1519,5 @@ void csgo_Stdshader_dx9_Hooks_OnLevelShutdown(void)
 {
 	g_AfxStdShaderHook.OnLevelShutDown();
 }
+
+#endif
