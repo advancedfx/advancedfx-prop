@@ -61,6 +61,42 @@ CON_COMMAND(__mirv_streams_ref, "")
 
 #endif
 
+#ifdef _DEBUG
+CON_COMMAND(__mirv_dumpmemoryleaks, "")
+{
+	_CrtDumpMemoryLeaks();
+}
+
+CON_COMMAND(__mirv_memdiff, "")
+{
+	static int state = 0;
+	static _CrtMemState s1;
+	static _CrtMemState s2;
+	_CrtMemState s3;
+
+	switch (state)
+	{
+	case 0:
+		_CrtMemCheckpoint(&s1);
+		state = 1;
+		break;
+	case 1:
+		_CrtMemCheckpoint(&s2);
+		if (_CrtMemDifference(&s3, &s1, &s2))
+			_CrtMemDumpStatistics(&s3);
+		state = 2;
+		break;
+	case 2:
+		_CrtMemCheckpoint(&s1);
+		if (_CrtMemDifference(&s3, &s2, &s1))
+			_CrtMemDumpStatistics(&s3);
+		state = 1;
+		break;
+	}
+}
+
+#endif
+
 
 float mirv_setup_add = 0;
 

@@ -34,6 +34,7 @@
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
+#include <utility>
 
 #if AFXSTREAMS_REFTRACKER
 
@@ -1085,6 +1086,8 @@ CAfxBaseFxStream::CShared CAfxBaseFxStream::m_Shared;
 
 CAfxBaseFxStream::CAfxBaseFxStream()
 : CAfxRenderViewStream()
+, m_MapRleaseNotification(this)
+, m_PickerMaterialsRleaseNotification(this)
 , m_TestAction(false)
 , m_DepthVal(1)
 , m_DepthValMax(1024)
@@ -1113,7 +1116,6 @@ CAfxBaseFxStream::CAfxBaseFxStream()
 , m_OtherEngineAction(0)
 , m_OtherSpecialAction(0)
 , m_VguiAction(0)
-
 {
 	m_Shared.AddRef();
 
@@ -1320,11 +1322,11 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::RetrieveAction(SOURCESDK::IMateria
 
 	if (!action)
 	{
-		CAfxMaterialKey key(material);
+		CAfxTrackedMaterial findKey(material, 0);
 
 		m_MapMutex.lock_shared();
 
-		std::map<CAfxMaterialKey, CCacheEntry>::iterator it = m_Map.find(key);
+		std::map<CAfxTrackedMaterial, CCacheEntry>::iterator it = m_Map.find(findKey);
 
 		if (it != m_Map.end())
 		{
@@ -1341,7 +1343,7 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::RetrieveAction(SOURCESDK::IMateria
 			m_MapMutex.unlock_shared();
 			m_MapMutex.lock();
 
-			it = m_Map.find(key);
+			it = m_Map.find(findKey);
 
 			if (it != m_Map.end())
 			{
@@ -1350,15 +1352,13 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::RetrieveAction(SOURCESDK::IMateria
 					action = itEnt->second;
 				else
 					action = it->second.DefaultAction;
-
-				m_MapMutex.unlock_shared();
 			}
 
 			if (!action)
 			{
 				// determine current action and cache it.
 
-				CCacheEntry & entry = m_Map[key];
+				CCacheEntry & entry = m_Map.emplace(std::piecewise_construct, std::forward_as_tuple(material, &m_MapRleaseNotification),std::forward_as_tuple()).first->second;
 
 				for (std::list<CActionFilterValue>::iterator it = m_ActionFilter.begin(); it != m_ActionFilter.end(); ++it)
 				{
@@ -1409,8 +1409,6 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::RetrieveAction(SOURCESDK::IMateria
 				}
 
 				Assert(0 != action);
-
-				m_MapMutex.unlock();
 
 				if (m_DebugPrint)
 				{
@@ -1833,7 +1831,7 @@ void CAfxBaseFxStream::InvalidateMap(void)
 
 	if(m_DebugPrint) Tier0_Msg("Stream: Invalidating material cache.\n");
 
-	for(std::map<CAfxMaterialKey, CCacheEntry>::iterator it = m_Map.begin(); it != m_Map.end(); ++it)
+	for(std::map<CAfxTrackedMaterial, CCacheEntry>::iterator it = m_Map.begin(); it != m_Map.end(); ++it)
 	{
 		for (std::map<SOURCESDK::CSGO::CBaseHandle, CAction *>::iterator itIt = it->second.EntityActions.begin(); itIt != it->second.EntityActions.end(); ++itIt)
 		{
@@ -1867,11 +1865,11 @@ void CAfxBaseFxStream::Picker_Print(void)
 	std::shared_lock<std::shared_timed_mutex> lock(m_PickerMutex);
 
 	Tier0_Msg("---- Materials: ----\n");
-	for (std::map<CAfxMaterialKey, CPickerMatValue>::iterator it = m_PickerMaterials.begin(); it != m_PickerMaterials.end(); ++it)
+	for (std::map<CAfxTrackedMaterial, CPickerMatValue>::iterator it = m_PickerMaterials.begin(); it != m_PickerMaterials.end(); ++it)
 	{
 		int idx = it->second.Index;
 
-		CAfxMaterialKey const & mat = it->first;
+		CAfxTrackedMaterial const & mat = it->first;
 
 		SOURCESDK::IMaterial_csgo * material = mat.GetMaterial();
 
@@ -1922,7 +1920,7 @@ void CAfxBaseFxStream::Picker_Pick(bool pickEntityNotMaterial, bool wasVisible)
 				}
 			}
 
-			for(std::map<CAfxMaterialKey,CPickerMatValue>::iterator it = m_PickerMaterials.begin(); it != m_PickerMaterials.end(); )
+			for(std::map<CAfxTrackedMaterial,CPickerMatValue>::iterator it = m_PickerMaterials.begin(); it != m_PickerMaterials.end(); )
 			{
 				if (usedMats.end() != usedMats.find(it->first))
 					++it;
@@ -1936,7 +1934,7 @@ void CAfxBaseFxStream::Picker_Pick(bool pickEntityNotMaterial, bool wasVisible)
 			std::set<int> usedEnts;
 			int index = 0;
 
-			for (std::map<CAfxMaterialKey, CPickerMatValue>::iterator it = m_PickerMaterials.begin(); it != m_PickerMaterials.end(); )
+			for (std::map<CAfxTrackedMaterial, CPickerMatValue>::iterator it = m_PickerMaterials.begin(); it != m_PickerMaterials.end(); )
 			{
 				int oldIndex = it->second.Index;
 
@@ -2023,13 +2021,13 @@ bool CAfxBaseFxStream::Picker_GetHidden(SOURCESDK::CSGO::CBaseHandle const & ent
 	if (m_PickerActive)
 	{
 		int ent = entityHandle.ToInt();
-		CAfxMaterialKey mat(material);
+		CAfxTrackedMaterial findMat(material, 0);
 
 		if (!m_PickerCollecting)
 		{
 			if (!hidden && m_PickingMaterials)
 			{
-				std::map<CAfxMaterialKey, CPickerMatValue>::iterator itMat = m_PickerMaterials.find(mat);
+				std::map<CAfxTrackedMaterial, CPickerMatValue>::iterator itMat = m_PickerMaterials.find(findMat);
 				hidden = (m_PickerMaterials.end() != itMat) && (((itMat->second.Index) & 0x1) == 1);
 			}
 			if (!hidden && m_PickingEntities)
@@ -2040,18 +2038,37 @@ bool CAfxBaseFxStream::Picker_GetHidden(SOURCESDK::CSGO::CBaseHandle const & ent
 		}
 		else
 		{
-			const std::pair<const std::map<CAfxMaterialKey, CPickerMatValue>::iterator, bool> & empMat = m_PickerMaterials.try_emplace(mat, m_PickerMaterials.size(), ent);
-			const std::pair<const std::map<int, CPickerEntValue>::iterator, bool> & empEnt = m_PickerEntities.try_emplace(ent, m_PickerEntities.size(), mat);
+			CPickerMatValue * pickerMatValue;
 
-			if(!empEnt.second)
-				empEnt.first->second.Materials.insert(mat);
+			const std::map<CAfxTrackedMaterial, CPickerMatValue>::iterator itMat = m_PickerMaterials.lower_bound(findMat);
+			if (itMat == m_PickerMaterials.end() || (findMat < itMat->first))
+			{
+				pickerMatValue = &(m_PickerMaterials.emplace_hint(itMat,std::piecewise_construct, std::forward_as_tuple(material, &m_PickerMaterialsRleaseNotification), std::forward_as_tuple(m_PickerMaterials.size(), ent))->second);
+			}
+			else
+			{
+				pickerMatValue = &(itMat->second);
 
-			if(!empMat.second)
-				empMat.first->second.Entities.insert(ent);
+				itMat->second.Entities.insert(ent);
+			}
+
+			CPickerEntValue * pickerEntValue;
+
+			const std::map<int, CPickerEntValue>::iterator itEnt = m_PickerEntities.lower_bound(ent);
+			if (itEnt == m_PickerEntities.end() || (ent < itEnt->first))
+				pickerEntValue = &(m_PickerEntities.emplace_hint(itEnt, std::piecewise_construct, std::forward_as_tuple(ent), std::forward_as_tuple(this, m_PickerEntities.size(), material))->second);
+			else
+			{
+				pickerEntValue = &(itEnt->second);
+
+				std::set<CAfxTrackedMaterial>::iterator itEntMats = itEnt->second.Materials.lower_bound(findMat);
+				if (itEntMats == itEnt->second.Materials.end() || (findMat < *itEntMats))
+					itEnt->second.Materials.emplace_hint(itEntMats, material, &(itEnt->second));
+			}
 
 			hidden =
-				(m_PickingEntities && (((empEnt.first->second.Index) & 0x1) == 1))
-				|| (m_PickingMaterials && (((empMat.first->second.Index) & 0x1) == 1))
+				(m_PickingEntities && (((itEnt->second.Index) & 0x1) == 1))
+				|| (m_PickingMaterials && (((itMat->second.Index) & 0x1) == 1))
 				;
 		}
 
@@ -2825,9 +2842,7 @@ void CAfxBaseFxStream::CActionDebugDepth::MainThreadInitialize(void)
 {
 	if(!m_DebugDepthMaterial)
 	{
-		m_DebugDepthMaterial = new CAfxMaterial(
-			g_AfxStreams.GetFreeMaster(),
-			g_AfxStreams.GetMaterialSystem()->FindMaterial("afx/depth", 0));
+		m_DebugDepthMaterial = new CAfxOwnedMaterial(g_AfxStreams.GetMaterialSystem()->FindMaterial("afx/depth", 0));
 	}
 }
 
@@ -2918,9 +2933,7 @@ void CAfxBaseFxStream::CActionReplace::MainThreadInitialize(void)
 {
 	if (!m_Material)
 	{
-		m_Material = new CAfxMaterial(
-			g_AfxStreams.GetFreeMaster(),
-			g_AfxStreams.GetMaterialSystem()->FindMaterial(m_MaterialName.c_str(), 0));
+		m_Material = new CAfxOwnedMaterial(g_AfxStreams.GetMaterialSystem()->FindMaterial(m_MaterialName.c_str(), 0));
 	}
 }
 
@@ -4294,7 +4307,6 @@ CAfxStreams::CAfxStreams()
 : m_RecordName("untitled_rec")
 , m_PresentRecordOnScreen(false)
 , m_StartMovieWav(true)
-, m_OnAfxBaseClientDll_Free(0)
 , m_MaterialSystem(0)
 , m_AfxBaseClientDll(0)
 , m_ShaderShadow(0)
@@ -4328,24 +4340,7 @@ CAfxStreams::CAfxStreams()
 
 CAfxStreams::~CAfxStreams()
 {
-	delete m_CamExportObj;
-
-	while (!m_EntityBvhCaptures.empty())
-	{
-		delete m_EntityBvhCaptures.front();
-		m_EntityBvhCaptures.pop_front();
-	}
-
-	while(!m_Streams.empty())
-	{
-		m_Streams.front()->Release();
-		m_Streams.pop_front();
-	}
-
-	delete m_OnAfxBaseClientDll_Free;
-
-	delete m_MatPostProcessEnableRef;
-	delete m_HostFrameRate;
+	ShutDown();
 }
 
 
@@ -4369,11 +4364,9 @@ DWORD CAfxStreams::GetCurrent_View_Render_ThreadId()
 
 void CAfxStreams::OnAfxBaseClientDll(IAfxBaseClientDll * value)
 {
-	if(m_OnAfxBaseClientDll_Free) { delete m_OnAfxBaseClientDll_Free; m_OnAfxBaseClientDll_Free = 0; }
 	m_AfxBaseClientDll = value;
 	if(m_AfxBaseClientDll)
 	{
-		m_OnAfxBaseClientDll_Free = new CFreeDelegate(m_AfxBaseClientDll->GetFreeMaster(), this, &CAfxStreams::OnAfxBaseClientDll_Free);
 		m_AfxBaseClientDll->OnLevelShutdown_set(this);
 		m_AfxBaseClientDll->OnView_Render_set(this);
 	}
@@ -6249,12 +6242,6 @@ SOURCESDK::IMaterialSystem_csgo * CAfxStreams::GetMaterialSystem(void)
 	return m_MaterialSystem;
 }
 
-IAfxFreeMaster * CAfxStreams::GetFreeMaster(void)
-{
-	if(m_AfxBaseClientDll) return m_AfxBaseClientDll->GetFreeMaster();
-	return 0;
-}
-
 SOURCESDK::IShaderShadow_csgo * CAfxStreams::GetShaderShadow(void)
 {
 	return m_ShaderShadow;
@@ -7120,7 +7107,29 @@ void CAfxStreams::AfxStreamsInit(void)
 	CAfxBaseFxStream::AfxStreamsInit();
 }
 
-void CAfxStreams::AfxStreamsShutdown(void)
+void CAfxStreams::ShutDown(void)
 {
-	CAfxBaseFxStream::AfxStreamsShutdown();
+	if (!m_ShutDown)
+	{
+		m_ShutDown = true;
+		
+		CAfxBaseFxStream::AfxStreamsShutdown();
+
+		delete m_CamExportObj;
+
+		while (!m_EntityBvhCaptures.empty())
+		{
+			delete m_EntityBvhCaptures.front();
+			m_EntityBvhCaptures.pop_front();
+		}
+
+		while (!m_Streams.empty())
+		{
+			m_Streams.front()->Release();
+			m_Streams.pop_front();
+		}
+
+		delete m_MatPostProcessEnableRef;
+		delete m_HostFrameRate;
+	}
 }

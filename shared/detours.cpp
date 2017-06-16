@@ -419,7 +419,8 @@ void *DetourVoidClassFunc(BYTE *src, const BYTE *dst, const int len)
 	return jmp;
 }
 
-void * DetourIfacePtr(DWORD * ptr, void const * hook)
+
+void DetourIfacePtr(DWORD * ptr, void const * hook, DetourIfacePtr_fn & outTarget)
 {
 	MdtMemBlockInfos mbis;
 	DWORD orgAddr;
@@ -441,6 +442,9 @@ void * DetourIfacePtr(DWORD * ptr, void const * hook)
 	FlushInstructionCache(hCurrentProcss, jmpTarget, JMP32_SZ + POPREG_SZ + POPREG_SZ + POPREG_SZ);
 
 
+	outTarget = (void(*)(void))jmpTarget;
+
+
 	BYTE * jmpHook = (BYTE*)MdtAllocExecuteableMemory(JMP32_SZ+POPREG_SZ+POPREG_SZ+POPREG_SZ);
 
 	// padding code that jumps to our hook:
@@ -456,8 +460,6 @@ void * DetourIfacePtr(DWORD * ptr, void const * hook)
 	*ptr = (DWORD)jmpHook; // this needs to be an atomic operation!!! (currently is)
 
 	MdtMemAccessEnd(&mbis);
-
-	return jmpTarget;
 }
 
 

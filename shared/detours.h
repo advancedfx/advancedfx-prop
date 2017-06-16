@@ -20,7 +20,11 @@ void *DetourApply(BYTE *orig, BYTE *hook, int len);
 /// </remarks>
 void *DetourClassFunc(BYTE *src, const BYTE *dst, const int len);
 
-void * DetourIfacePtr(DWORD * ptr, void const * hook);
+
+typedef void(*DetourIfacePtr_fn)(void);
+
+/// <remarks>This is somewhat threadsafe, but be aware that outTarget can be already called while you are still in this function.</remarks>
+void DetourIfacePtr(DWORD * ptr, void const * hookk, DetourIfacePtr_fn & outTarget);
 
 void * InterceptDllCall(HMODULE hModule, char * szDllName, char * szFunctionName, DWORD pNewFunction);
 

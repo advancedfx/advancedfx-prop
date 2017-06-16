@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-06-26 dominik.matrixstorm.com
+// 2017-06-16 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -11,122 +11,98 @@
 #include "AfxInterfaces.h"
 #include "SourceInterfaces.h"
 
-#include <list>
+#include <set>
 #include <map>
 #include <atomic>
+#include <mutex>
 #include <shared_mutex>
 
-
-// CAfxFreeable ////////////////////////////////////////////////////////////////
-
-class CAfxFreeable
-: public IAfxFreeable
-{
-public:
-	CAfxFreeable();
-	CAfxFreeable(IAfxFreeMaster * parent);
-
-	virtual ~CAfxFreeable();
-
-	/// <remarks>
-	/// Implementations must a) make sure that they can be called multiple times
-	/// and b) call the base class' AfxFree and c) call this in the destructor
-	/// of every derived class that overrides AfxFree (that's why there is b)
-	/// </remarks>
-	virtual void AfxFree(void);
-
-protected:
-	IAfxFreeMaster * GetParentFreeMaster() const;
-
-private:
-	IAfxFreeMaster * m_Parent;
-};
-
-// CAfxFreeMaster //////////////////////////////////////////////////////////////
-
-class CAfxFreeMaster
-: public CAfxFreeable
-, public IAfxFreeMaster
-{
-public:
-	CAfxFreeMaster();
-	CAfxFreeMaster(IAfxFreeMaster * parent);
-
-	virtual ~CAfxFreeMaster();
-
-	virtual void AfxFree(void);
-
-	virtual void AfxFreeable_Register(IAfxFreeable * value);
-	virtual void AfxFreeable_Unregister(IAfxFreeable * value);
-
-private:
-	std::list<IAfxFreeable *> m_Childs;
-};
-
-
-// CAfxMaterial ////////////////////////////////////////////////////////////////
-
-class CAfxMaterial
-: public CAfxFreeable
-, public IAfxMaterial
-{
-public:
-	CAfxMaterial();
-
-	/// <remarks>
-	/// This should only be used, when you have proper control about destruction
-	//  at the right time.
-	/// Normally you should use the other constructors instead.
-	/// </remarks>
-	CAfxMaterial(SOURCESDK::IMaterial_csgo * material);
-
-	CAfxMaterial(IAfxFreeMaster * freeMaster, SOURCESDK::IMaterial_csgo * material);
-
-	/// <remarks>
-	/// The copy will use the same freeMaster, meaning the copy's material
-	/// usually won't live longer than the original (except if freeMaster is 0).
-	/// </remarks>
-	CAfxMaterial(const CAfxMaterial & x);
-
-	virtual ~CAfxMaterial();
-
-	virtual SOURCESDK::IMaterial_csgo * GetMaterial() const;
-
-	virtual void AfxFree(void);
-
-protected:
-	static std::map<SOURCESDK::IMaterial_csgo *, std::atomic_int> m_KnownMaterials;
-	static std::shared_timed_mutex m_KnownMaterialsMutex;
-
-	static void AddRef(SOURCESDK::IMaterial_csgo * material);
-	static void Release(SOURCESDK::IMaterial_csgo * material);
-
-	SOURCESDK::IMaterial_csgo * m_Material;
-};
+#include <Windows.h>
 
 // CAfxMaterialKey /////////////////////////////////////////////////////////////
 
-class CAfxMaterialKey : public CAfxMaterial
+class CAfxMaterialKey
 {
 public:
-	/// <remarks>
-	/// This should only be used, when you have proper control about destruction
-	//  at the right time.
-	/// Normally you should use the other constructors instead.
-	/// </remarks>
 	CAfxMaterialKey(SOURCESDK::IMaterial_csgo * material);
 
-	CAfxMaterialKey(IAfxFreeMaster * freeMaster, SOURCESDK::IMaterial_csgo * material);
+	CAfxMaterialKey::CAfxMaterialKey(const CAfxMaterialKey & x);
+
+	virtual ~CAfxMaterialKey();
 
 	/// <remarks>
-	/// The copy will use the same freeMaster, meaning the copy's material
-	/// usually won't live longer than the original (except if freeMaster is 0).
-	/// </remarks>
-	CAfxMaterialKey(const CAfxMaterialKey & x);
-
-
-	/// <remarks>
-	/// This is object pointer based, meaning different references on the same material can have different keys
+	/// This is internal material object pointer based, meaning different references on the same material can have different keys
 	/// </remarks>
 	bool operator < (const CAfxMaterialKey & y) const;
+
+	SOURCESDK::IMaterial_csgo * GetMaterial() const;
+
+protected:
+	SOURCESDK::IMaterial_csgo * m_Material;
+};
+
+
+// CAfxTrackedMaterial /////////////////////////////////////////////////////////
+
+class CAfxTrackedMaterial;
+
+class IAfxMaterialFree abstract
+{
+public:
+	virtual void AfxMaterialFree(CAfxTrackedMaterial * material) abstract = 0;
+};
+
+class CAfxTrackedMaterial : public CAfxMaterialKey
+{
+public:
+	//:192
+	typedef void (_stdcall * MaterialHook_Free_t)(DWORD *this_ptr);
+
+	struct CMaterialDetours
+	{
+		//:034
+		MaterialHook_Free_t DeleteIfUnreferenced;
+	};
+
+	/// <remarks>Hint: Give afxLastEngineRelease as 0 if you want just fast comparision on a map or s.th.</remarks>
+	CAfxTrackedMaterial(SOURCESDK::IMaterial_csgo * material, IAfxMaterialFree * notifyee);
+
+	virtual ~CAfxTrackedMaterial();
+
+	void AfxMaterialFree(void);
+
+private:
+	static std::map<SOURCESDK::IMaterial_csgo *, std::set<CAfxTrackedMaterial *>> m_Notifyees;
+	static std::mutex m_NotifyeesMutex;
+
+	static std::map<int *, CMaterialDetours> m_VtableMap;
+	static std::shared_timed_mutex m_VtableMapMutex;
+
+	static void AddNotifyee(SOURCESDK::IMaterial_csgo * material, CAfxTrackedMaterial * notifyee);
+	static void RemoveNotifyee(SOURCESDK::IMaterial_csgo * material, CAfxTrackedMaterial * notifyee);
+
+	static void HooKVtable(SOURCESDK::IMaterial_csgo * orgMaterial);
+
+	static void __stdcall CAfxTrackedMaterial::Material_DeleteIfUnreferenced(DWORD *this_ptr);
+
+	static void OnMaterialFree(SOURCESDK::IMaterial_csgo * material);
+
+	IAfxMaterialFree * m_Notifyee;
+};
+
+
+// CAfxTrackedMaterial /////////////////////////////////////////////////////////
+
+class CAfxOwnedMaterial : public CAfxMaterialKey
+{
+public:
+	CAfxOwnedMaterial(SOURCESDK::IMaterial_csgo * material);
+	virtual ~CAfxOwnedMaterial();
+
+private:
+	static std::map<SOURCESDK::IMaterial_csgo *, std::atomic_int> m_OwnedMaterials;
+	static std::shared_timed_mutex m_OwnedMaterialsMutex;
+
+	static void AddRef(SOURCESDK::IMaterial_csgo * material);
+	static void Release(SOURCESDK::IMaterial_csgo * material);
 };

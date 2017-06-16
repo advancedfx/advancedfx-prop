@@ -46,7 +46,7 @@ public:
 private:
 	int m_Offset;
 	IWrpCommandArgs *m_CommandArgs;
-	std::string m_Temp;
+	std::string m_Prefix;
 };
 
 // WrpConCommand ///////////////////////////////////////////////////////////////

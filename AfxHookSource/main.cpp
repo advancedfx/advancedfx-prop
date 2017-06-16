@@ -390,12 +390,10 @@ bool g_csgo_FirstFrameAfterNetUpdateEnd = false;
 class CAfxBaseClientDll
 : public SOURCESDK::IBaseClientDLL_csgo
 , public IAfxBaseClientDll
-, public IAfxFreeMaster
 {
 public:
 	CAfxBaseClientDll(IBaseClientDLL_csgo * parent)
 	: m_Parent(parent)
-	, m_OnShutdown(0)
 	, m_OnLevelShutdown(0)
 	, m_OnView_Render(0)
 	{
@@ -406,34 +404,11 @@ public:
 	}
 
 	//
-	// IAfxFreeMaster:
-
-	virtual void AfxFreeable_Register(IAfxFreeable * value)
-	{
-		m_FreeMaster.AfxFreeable_Register(value);
-	}
-
-	virtual void AfxFreeable_Unregister(IAfxFreeable * value)
-	{
-		m_FreeMaster.AfxFreeable_Unregister(value);
-	}
-
-	//
 	// IAfxBaseClientDll:
 
 	virtual IBaseClientDLL_csgo * GetParent()
 	{
 		return m_Parent;
-	}
-
-	virtual IAfxFreeMaster * GetFreeMaster()
-	{
-		return &m_FreeMaster;
-	}
-
-	virtual void OnShutdown_set(IAfxBaseClientDllShutdown * value)
-	{
-		m_OnShutdown = value;
 	}
 
 	virtual void OnLevelShutdown_set(IAfxBaseClientDllLevelShutdown * value)
@@ -586,10 +561,8 @@ public:
 
 private:
 	IBaseClientDLL_csgo * m_Parent;
-	IAfxBaseClientDllShutdown * m_OnShutdown;
 	IAfxBaseClientDllLevelShutdown * m_OnLevelShutdown;
 	IAfxBaseClientDllView_Render * m_OnView_Render;
-	CAfxFreeMaster m_FreeMaster;
 };
 
 CAfxBaseClientDll * g_AfxBaseClientDll = 0;
@@ -641,11 +614,7 @@ __declspec(naked) void CAfxBaseClientDll::PostInit()
 void CAfxBaseClientDll::Shutdown(void)
 { // NAKED_JMP_CLASSMEMBERIFACE_FN(CAfxBaseClientDll, m_Parent, 4)
 
-	if (m_OnShutdown) m_OnShutdown->Shutdown(this);
-
-	m_FreeMaster.AfxFree();
-
-	CAfxBaseFxStream::AfxStreamsShutdown();
+	g_AfxStreams.ShutDown();
 
 #ifdef AFX_MIRV_PGL
 	MirvPgl::Shutdown();
@@ -1464,7 +1433,6 @@ void CommonHooks()
 				InterceptDllCall(hTier0, "USER32.dll", "SetCursorPos", (DWORD)&new_SetCursorPos);
 			}
 
-			// this won't work
 			//if (!Hook_csgo_MemAlloc())
 			//{
 			//	ErrorBox("Error: Hook_csgo_MemAlloc failed. This can cause mayor bugs!");
@@ -1698,6 +1666,10 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 			MatRenderContextHook_Shutdown();
 
 			if(g_AfxBaseClientDll) { delete g_AfxBaseClientDll; g_AfxBaseClientDll = 0; }
+
+#ifdef _DEBUG
+			_CrtDumpMemoryLeaks();
+#endif
 
 			break;
 		}

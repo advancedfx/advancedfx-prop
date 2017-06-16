@@ -41,7 +41,7 @@ bool Hook_csgo_CCSGameMovement_DuckFix(void)
 	{
 		DWORD * vtable = (DWORD *)(AFXADDR_GET(csgo_CCSGameMovement_vtable));
 
-		detoured_csgo_CCSGameMovement_DuckShit = (csgo_CCSGameMovement_DuckShit_t)DetourIfacePtr((DWORD *)&(vtable[56]), csgo_CCSGameMovement_DuckShit);
+		DetourIfacePtr((DWORD *)&(vtable[56]), csgo_CCSGameMovement_DuckShit, (DetourIfacePtr_fn &)detoured_csgo_CCSGameMovement_DuckShit);
 
 		firstResult = true;
 	}

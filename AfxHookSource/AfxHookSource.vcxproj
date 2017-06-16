@@ -180,7 +180,6 @@
     <ClCompile Include="csgo_CViewRender.cpp" />
     <ClCompile Include="csgo_c_baseanimatingoverlay.cpp" />
     <ClCompile Include="csgo_GetPlayerName.cpp" />
-    <ClCompile Include="csgo_GlowOverlay.cpp" />
     <ClCompile Include="csgo_MemAlloc.cpp" />
     <ClCompile Include="csgo_ScaleForm_Hooks.cpp" />
     <ClCompile Include="csgo_SndMixTimeScalePatch.cpp" />
@@ -239,7 +238,6 @@
     <ClInclude Include="csgo_CViewRender.h" />
     <ClInclude Include="csgo_c_baseanimatingoverlay.h" />
     <ClInclude Include="csgo_GetPlayerName.h" />
-    <ClInclude Include="csgo_GlowOverlay.h" />
     <ClInclude Include="csgo_MemAlloc.h" />
     <ClInclude Include="csgo_ScaleForm_Hooks.h" />
     <ClInclude Include="csgo_SndMixTimeScalePatch.h" />

@@ -3,162 +3,234 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2015-06-26 dominik.matrixstorm.com
+// 2017-06-16 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
 
 #include "AfxClasses.h"
 
+#include <shared/detours.h>
+
 #include <string.h>
 
 
-// CAfxFreeable ////////////////////////////////////////////////////////////////
+// CAfxMaterialKey /////////////////////////////////////////////////////////////
 
-CAfxFreeable::CAfxFreeable()
-: m_Parent(0)
+CAfxMaterialKey::CAfxMaterialKey(SOURCESDK::IMaterial_csgo * material)
+	: m_Material(material)
 {
-}
-CAfxFreeable::CAfxFreeable(IAfxFreeMaster * parent)
-: m_Parent(parent)
-{
-	if(m_Parent) m_Parent->AfxFreeable_Register(this);
+
 }
 
-CAfxFreeable::~CAfxFreeable()
+CAfxMaterialKey::CAfxMaterialKey(const CAfxMaterialKey & x)
+	: m_Material(x.m_Material)
 {
-	AfxFree();
+
 }
 
-void CAfxFreeable::AfxFree(void)
+CAfxMaterialKey::~CAfxMaterialKey()
 {
-	if(m_Parent) { m_Parent->AfxFreeable_Unregister(this); m_Parent = 0; }
+
 }
 
-IAfxFreeMaster * CAfxFreeable::GetParentFreeMaster() const
-{
-	return m_Parent;
-}
-
-// CAfxFreeMaster //////////////////////////////////////////////////////////////
-
-CAfxFreeMaster::CAfxFreeMaster()
-: CAfxFreeable()
-{
-}
-CAfxFreeMaster::CAfxFreeMaster(IAfxFreeMaster * parent)
-: CAfxFreeable(parent)
-{
-}
-
-CAfxFreeMaster::~CAfxFreeMaster()
-{
-	AfxFree();
-}
-
-void CAfxFreeMaster::AfxFree(void)
-{
-	std::list<IAfxFreeable *>::iterator it;
-	IAfxFreeable * last = 0;
-	while((it = m_Childs.begin()) != m_Childs.end())
-	{
-		IAfxFreeable * current = *it;
-
-		if(current == last) throw "CAfxFreeMaster::AfxFree: Child failed to unregister.";
-
-		current->AfxFree();
-
-		last = current;
-	}
-
-	CAfxFreeable::AfxFree();
-}
-
-void CAfxFreeMaster::AfxFreeable_Register(IAfxFreeable * value)
-{
-	m_Childs.push_back(value);
-}
-
-void CAfxFreeMaster::AfxFreeable_Unregister(IAfxFreeable * value)
-{
-	// we could use m_Childs.remove here, but I want to make sure that regardless
-	// of implementation the first elements are scanned first:
-	for(std::list<IAfxFreeable *>::iterator it = m_Childs.begin(); it != m_Childs.end(); ++it)
-	{
-		if(*it == value)
-		{
-			m_Childs.erase(it);
-			break;
-		}
-	}
-}
-
-// CAfxMaterial ////////////////////////////////////////////////////////////////
-
-std::map<SOURCESDK::IMaterial_csgo *, std::atomic_int> CAfxMaterial::m_KnownMaterials;
-std::shared_timed_mutex CAfxMaterial::m_KnownMaterialsMutex;
-
-CAfxMaterial::CAfxMaterial()
-: CAfxFreeable()
-, m_Material(0)
-{
-}
-
-CAfxMaterial::CAfxMaterial(SOURCESDK::IMaterial_csgo * material)
-: CAfxFreeable()
-, m_Material(material)
-{
-	if(m_Material) AddRef(m_Material);
-}
-
-CAfxMaterial::CAfxMaterial(IAfxFreeMaster * freeMaster, SOURCESDK::IMaterial_csgo * material)
-: CAfxFreeable(freeMaster)
-, m_Material(material)
-{
-	if (m_Material) AddRef(m_Material);
-}
-
-CAfxMaterial::CAfxMaterial(const CAfxMaterial & x)
-: CAfxFreeable(x.GetParentFreeMaster())
-, m_Material(x.GetMaterial())
-{
-	if (m_Material) AddRef(m_Material);
-}
-
-CAfxMaterial::~CAfxMaterial()
-{
-	AfxFree();
-}
-
-SOURCESDK::IMaterial_csgo * CAfxMaterial::GetMaterial() const
+SOURCESDK::IMaterial_csgo * CAfxMaterialKey::GetMaterial() const
 {
 	return m_Material;
 }
 
-void CAfxMaterial::AfxFree(void)
+bool CAfxMaterialKey::operator < (const CAfxMaterialKey & y) const
 {
-	if(m_Material) { Release(m_Material); m_Material = 0; }
-	
-	CAfxFreeable::AfxFree();
+	/*
+	int cmp1 = strcmp(this->m_Material->GetTextureGroupName(), y.m_Material->GetTextureGroupName());
+	if(cmp1 < 0)
+	return true;
+	else
+	if(cmp1 > 0)
+	return false;
+
+	return strcmp(this->m_Material->GetName(), y.m_Material->GetName()) < 0;
+	*/
+
+	return this->m_Material < y.m_Material;
 }
 
-void CAfxMaterial::AddRef(SOURCESDK::IMaterial_csgo * material)
+
+// CAfxTracedMaterial //////////////////////////////////////////////////////////
+
+std::map<SOURCESDK::IMaterial_csgo *, std::set<CAfxTrackedMaterial *>> CAfxTrackedMaterial::m_Notifyees;
+std::mutex CAfxTrackedMaterial::m_NotifyeesMutex;
+
+void CAfxTrackedMaterial::AddNotifyee(SOURCESDK::IMaterial_csgo * material, CAfxTrackedMaterial * notifyee)
 {
-	m_KnownMaterialsMutex.lock_shared();
+	{
+		std::unique_lock<std::mutex> lock(m_NotifyeesMutex);
 
-	std::map<SOURCESDK::IMaterial_csgo *, std::atomic_int>::iterator it = m_KnownMaterials.find(material);
+		m_Notifyees[material].insert(notifyee);
+	}
 
-	if (it != m_KnownMaterials.end())
+	HooKVtable(material);
+}
+
+void CAfxTrackedMaterial::RemoveNotifyee(SOURCESDK::IMaterial_csgo * material, CAfxTrackedMaterial * notifyee)
+{
+	std::unique_lock<std::mutex> lock(m_NotifyeesMutex);
+
+	std::map<SOURCESDK::IMaterial_csgo *, std::set<CAfxTrackedMaterial *>>::iterator it = m_Notifyees.find(material);
+
+	if (it != m_Notifyees.end())
+	{
+		it->second.erase(notifyee);
+		if (it->second.empty())
+		{
+			m_Notifyees.erase(it);
+		}
+	}
+}
+
+std::map<int *, CAfxTrackedMaterial::CMaterialDetours> CAfxTrackedMaterial::m_VtableMap;
+std::shared_timed_mutex CAfxTrackedMaterial::m_VtableMapMutex;
+
+void CAfxTrackedMaterial::OnMaterialFree(SOURCESDK::IMaterial_csgo * material)
+{
+	bool is_zero = *(int *)((unsigned char *)material + 0x1c);
+
+	if (is_zero)
+	{
+		Tier0_Msg("Releasing OnInterlockedDecremented on Material 0x%08x (%s).\n", material, material->GetName());
+
+		std::unique_lock<std::mutex> lock(m_NotifyeesMutex);
+
+		std::map<SOURCESDK::IMaterial_csgo *, std::set<CAfxTrackedMaterial *>>::iterator it = m_Notifyees.find(material);
+
+		if (it != m_Notifyees.end())
+		{
+			for (std::set<CAfxTrackedMaterial *>::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+			{
+				(*it2)->AfxMaterialFree();
+			}
+			m_Notifyees.erase(it);
+		}
+	}
+}
+
+void __stdcall CAfxTrackedMaterial::Material_DeleteIfUnreferenced(DWORD *this_ptr)
+{
+	Tier0_Msg("FUCK THIS SHIT!\n");
+
+	int * vtable = *(int**)this_ptr;
+
+	m_VtableMapMutex.lock_shared();
+
+	std::map<int *, CMaterialDetours>::iterator it = m_VtableMap.find(vtable);
+
+	if (it != m_VtableMap.end())
+	{
+		OnMaterialFree((SOURCESDK::IMaterial_csgo *) this_ptr);
+
+		it->second.DeleteIfUnreferenced(this_ptr);
+	}
+	else
+		Assert(0); // should not happen.
+
+	m_VtableMapMutex.unlock_shared();
+}
+
+
+void CAfxTrackedMaterial::HooKVtable(SOURCESDK::IMaterial_csgo * orgMaterial)
+{
+	int * vtable = *(int**)orgMaterial;
+
+	m_VtableMapMutex.lock_shared();
+
+	std::map<int *, CMaterialDetours>::iterator it = m_VtableMap.find(vtable);
+
+	if (it != m_VtableMap.end())
+	{
+		m_VtableMapMutex.unlock_shared();
+		return;
+	}
+
+	m_VtableMapMutex.unlock_shared();
+	m_VtableMapMutex.lock();
+
+	it = m_VtableMap.find(vtable);
+
+	if (it != m_VtableMap.end())
+	{
+		m_VtableMapMutex.unlock();
+		return;
+	}
+
+	Tier0_Msg("WORLD!\n");
+
+	CMaterialDetours & m_Detours = m_VtableMap[vtable];
+
+	DetourIfacePtr((DWORD *)&(vtable[50]), Material_DeleteIfUnreferenced, (DetourIfacePtr_fn &)m_Detours.DeleteIfUnreferenced);
+
+	m_VtableMapMutex.unlock();
+}
+
+
+CAfxTrackedMaterial::CAfxTrackedMaterial(SOURCESDK::IMaterial_csgo * material, IAfxMaterialFree * notifyee)
+	: CAfxMaterialKey(material), m_Notifyee(notifyee)
+{
+	if (m_Notifyee) AddNotifyee(m_Material, this);
+}
+
+CAfxTrackedMaterial::~CAfxTrackedMaterial()
+{
+	if (m_Notifyee)
+	{
+		m_Notifyee = 0;
+		RemoveNotifyee(m_Material, this);
+	}
+}
+
+void CAfxTrackedMaterial::AfxMaterialFree(void)
+{
+	if (m_Notifyee)
+	{
+		IAfxMaterialFree * notifyee = m_Notifyee;
+		m_Notifyee = 0;
+		notifyee->AfxMaterialFree(this);
+	}
+}
+
+
+// CAfxOwnedMaterial ///////////////////////////////////////////////////////////
+
+std::map<SOURCESDK::IMaterial_csgo *, std::atomic_int> CAfxOwnedMaterial::m_OwnedMaterials;
+std::shared_timed_mutex CAfxOwnedMaterial::m_OwnedMaterialsMutex;
+
+CAfxOwnedMaterial::CAfxOwnedMaterial(SOURCESDK::IMaterial_csgo * material)
+	: CAfxMaterialKey(material)
+{
+	AddRef(m_Material);
+}
+
+CAfxOwnedMaterial::~CAfxOwnedMaterial()
+{
+	Release(m_Material);
+}
+
+void CAfxOwnedMaterial::AddRef(SOURCESDK::IMaterial_csgo * material)
+{
+	m_OwnedMaterialsMutex.lock_shared();
+
+	std::map<SOURCESDK::IMaterial_csgo *, std::atomic_int>::iterator it = m_OwnedMaterials.find(material);
+
+	if (it != m_OwnedMaterials.end())
 	{
 		++(it->second);
-		m_KnownMaterialsMutex.unlock_shared();
+		m_OwnedMaterialsMutex.unlock_shared();
 	}
 	else
 	{
-		m_KnownMaterialsMutex.unlock_shared();
-		m_KnownMaterialsMutex.lock();
+		m_OwnedMaterialsMutex.unlock_shared();
+		m_OwnedMaterialsMutex.lock();
 
-		const std::pair<const std::map<SOURCESDK::IMaterial_csgo *,std::atomic_int>::iterator, bool> & emp = m_KnownMaterials.try_emplace(material, 1);
+		const std::pair<const std::map<SOURCESDK::IMaterial_csgo *,std::atomic_int>::iterator, bool> & emp = m_OwnedMaterials.try_emplace(material, 1);
 
 		if (!emp.second)
 		{
@@ -169,76 +241,42 @@ void CAfxMaterial::AddRef(SOURCESDK::IMaterial_csgo * material)
 			material->IncrementReferenceCount(); // expensive operation!
 		}
 
-		m_KnownMaterialsMutex.unlock();
+		m_OwnedMaterialsMutex.unlock();
 	}
 }
 
-void CAfxMaterial::Release(SOURCESDK::IMaterial_csgo * material)
+void CAfxOwnedMaterial::Release(SOURCESDK::IMaterial_csgo * material)
 {
-	m_KnownMaterialsMutex.lock_shared();
+	m_OwnedMaterialsMutex.lock_shared();
 
-	std::map<SOURCESDK::IMaterial_csgo *, std::atomic_int>::iterator it = m_KnownMaterials.find(material);
+	std::map<SOURCESDK::IMaterial_csgo *, std::atomic_int>::iterator it = m_OwnedMaterials.find(material);
 
-	if (it != m_KnownMaterials.end())
+	if (it != m_OwnedMaterials.end())
 	{
 		int lastValue = --(it->second);
-		m_KnownMaterialsMutex.unlock_shared();
+		m_OwnedMaterialsMutex.unlock_shared();
 
 		if (0 == lastValue)
 		{
-			m_KnownMaterialsMutex.lock();
+			m_OwnedMaterialsMutex.lock();
 
-			std::map<SOURCESDK::IMaterial_csgo *, std::atomic_int>::iterator it = m_KnownMaterials.find(material);
+			std::map<SOURCESDK::IMaterial_csgo *, std::atomic_int>::iterator it = m_OwnedMaterials.find(material);
 
-			if (it != m_KnownMaterials.end())
+			if (it != m_OwnedMaterials.end())
 			{
 				if (0 == it->second)
 				{
-					m_KnownMaterials.erase(it);
+					m_OwnedMaterials.erase(it);
 					material->DecrementReferenceCount(); // expensive operation!
 				}
 			}
 
-			m_KnownMaterialsMutex.unlock();
+			m_OwnedMaterialsMutex.unlock();
 		}
 	}
 	else
 	{
-		m_KnownMaterialsMutex.unlock_shared();
-		throw "void CAfxMaterial::Release(SOURCESDK::IMaterial_csgo * material): Unexpected call.";
+		m_OwnedMaterialsMutex.unlock_shared();
+		throw "void CAfxOwnedMaterial::Release(SOURCESDK::IMaterial_csgo * material): Unexpected call.";
 	}
-}
-
-
-// CAfxMaterialKey /////////////////////////////////////////////////////////////
-
-CAfxMaterialKey::CAfxMaterialKey(SOURCESDK::IMaterial_csgo * material)
-: CAfxMaterial(material)
-{
-}
-
-CAfxMaterialKey::CAfxMaterialKey(IAfxFreeMaster * freeMaster, SOURCESDK::IMaterial_csgo * material)
-: CAfxMaterial(freeMaster, material)
-{
-}
-
-CAfxMaterialKey::CAfxMaterialKey(const CAfxMaterialKey & x)
-: CAfxMaterial(x)
-{
-}
-
-bool CAfxMaterialKey::operator < (const CAfxMaterialKey & y) const
-{
-	/*
-	int cmp1 = strcmp(this->m_Material->GetTextureGroupName(), y.m_Material->GetTextureGroupName());
-	if(cmp1 < 0)
-		return true;
-	else
-	if(cmp1 > 0)
-		return false;
-
-	return strcmp(this->m_Material->GetName(), y.m_Material->GetName()) < 0;
-	*/
-
-	return this->m_Material < y.m_Material;
 }

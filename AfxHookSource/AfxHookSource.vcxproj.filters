@@ -153,12 +153,6 @@
     <ClCompile Include="csgo_vphysics.cpp">
       <Filter>AfxHookSource</Filter>
     </ClCompile>
-    <ClCompile Include="csgo_MemAlloc.cpp">
-      <Filter>AfxHookSource</Filter>
-    </ClCompile>
-    <ClCompile Include="csgo_GlowOverlay.cpp">
-      <Filter>AfxHookSource</Filter>
-    </ClCompile>
     <ClCompile Include="csgo_c_baseanimatingoverlay.cpp">
       <Filter>AfxHookSource</Filter>
     </ClCompile>
@@ -169,6 +163,9 @@
       <Filter>AfxHookSource</Filter>
     </ClCompile>
     <ClCompile Include="csgo_Stdshader_dx9_Hooks.cpp">
+      <Filter>AfxHookSource</Filter>
+    </ClCompile>
+    <ClCompile Include="csgo_MemAlloc.cpp">
       <Filter>AfxHookSource</Filter>
     </ClCompile>
   </ItemGroup>
@@ -323,12 +320,6 @@
     <ClInclude Include="csgo_vphysics.h">
       <Filter>AfxHookSource</Filter>
     </ClInclude>
-    <ClInclude Include="csgo_MemAlloc.h">
-      <Filter>AfxHookSource</Filter>
-    </ClInclude>
-    <ClInclude Include="csgo_GlowOverlay.h">
-      <Filter>AfxHookSource</Filter>
-    </ClInclude>
     <ClInclude Include="csgo_c_baseanimatingoverlay.h">
       <Filter>AfxHookSource</Filter>
     </ClInclude>
@@ -339,6 +330,9 @@
       <Filter>AfxHookSource</Filter>
     </ClInclude>
     <ClInclude Include="csgo_Stdshader_dx9_Hooks.h">
+      <Filter>AfxHookSource</Filter>
+    </ClInclude>
+    <ClInclude Include="csgo_MemAlloc.h">
       <Filter>AfxHookSource</Filter>
     </ClInclude>
   </ItemGroup>

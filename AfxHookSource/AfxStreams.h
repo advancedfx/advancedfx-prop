@@ -893,7 +893,6 @@ public:
 	CAfxBaseFxStream();
 
 	static void AfxStreamsInit(void);
-
 	static void AfxStreamsShutdown(void);
 
 	static void MainThreadInitialize(void);
@@ -1414,7 +1413,7 @@ private:
 		virtual ~CActionReplace();
 
 	private:
-		CAfxMaterial * m_Material;
+		CAfxOwnedMaterial * m_Material;
 		std::string m_MaterialName;
 		CAction * m_FallBackAction;
 		bool m_OverrideColor;
@@ -1485,7 +1484,7 @@ private:
 
 		CAction * m_FallBackAction;
 
-		CAfxMaterial * m_DebugDepthMaterial;
+		CAfxOwnedMaterial * m_DebugDepthMaterial;
 	};
 
 #if AFX_SHADERS_CSGO
@@ -1825,8 +1824,52 @@ private:
 		{
 		}
 	};
-	std::map<CAfxMaterialKey, CCacheEntry> m_Map;
+	std::map<CAfxTrackedMaterial, CCacheEntry> m_Map;
 	std::shared_timed_mutex m_MapMutex;
+
+	class CMapRleaseNotification : public IAfxMaterialFree
+	{
+	public:
+		class CMapRleaseNotification(CAfxBaseFxStream * stream)
+			: m_Stream(stream)
+		{
+		}
+
+		virtual void AfxMaterialFree(CAfxTrackedMaterial * material)
+		{
+			std::unique_lock<std::shared_timed_mutex> unique_lock(m_Stream->m_MapMutex);
+
+			m_Stream->m_Map.erase(*material);
+		}
+
+	private:
+		CAfxBaseFxStream * m_Stream;
+
+	} m_MapRleaseNotification;
+
+	class CPickerEntValue : public IAfxMaterialFree
+	{
+	public:
+		int Index;
+		std::set<CAfxTrackedMaterial> Materials;
+
+		virtual void AfxMaterialFree(CAfxTrackedMaterial * material)
+		{
+			std::unique_lock<std::shared_timed_mutex> unique_lock(m_Stream->m_PickerMutex);
+
+			Materials.erase(*material);
+		}
+
+		CPickerEntValue(CAfxBaseFxStream * stream, int index, SOURCESDK::IMaterial_csgo * material)
+			: m_Stream(stream)
+			, Index(index)
+		{
+			Materials.emplace(material, this);
+		}
+
+	private:
+		CAfxBaseFxStream * m_Stream;
+	};
 
 	std::list<CActionFilterValue> m_ActionFilter;
 
@@ -1841,21 +1884,30 @@ private:
 			Entities.insert(entity);
 		}
 	};
-	std::map<CAfxMaterialKey, CPickerMatValue> m_PickerMaterials;
+	std::map<CAfxTrackedMaterial, CPickerMatValue> m_PickerMaterials;
 	bool m_PickingMaterials;
 	bool m_PickerMaterialsAlerted;
 
-	struct CPickerEntValue
+	class CPickerMaterialsRleaseNotification : public IAfxMaterialFree
 	{
-		int Index;
-		std::set<CAfxMaterialKey> Materials;
-
-		CPickerEntValue(int index, CAfxMaterialKey & material)
+	public: 
+		class CPickerMaterialsRleaseNotification(CAfxBaseFxStream * stream)
+			: m_Stream(stream)
 		{
-			Index = index;
-			Materials.insert(material);
 		}
-	};
+
+		virtual void AfxMaterialFree(CAfxTrackedMaterial * material)
+		{
+			std::unique_lock<std::shared_timed_mutex> unique_lock(m_Stream->m_PickerMutex);
+
+			m_Stream->m_PickerMaterials.erase(*material);
+		}
+
+	private:
+		CAfxBaseFxStream * m_Stream;
+
+	} m_PickerMaterialsRleaseNotification;
+
 	std::map<int, CPickerEntValue> m_PickerEntities;
 	bool m_PickingEntities;
 	bool m_PickerEntitiesAlerted;
@@ -2232,6 +2284,8 @@ public:
 	CAfxStreams();
 	~CAfxStreams();
 
+	void ShutDown(void);
+
 	/// <summary>Carry out initalization that cannot be done in DllMain</summary>
 	static void AfxStreamsInit(void);
 
@@ -2312,7 +2366,6 @@ public:
 	void DebugDump(IAfxMatRenderContextOrg * ctxp);
 
 	virtual SOURCESDK::IMaterialSystem_csgo * GetMaterialSystem(void);
-	virtual IAfxFreeMaster * GetFreeMaster(void);
 	virtual SOURCESDK::IShaderShadow_csgo * GetShaderShadow(void);
 
 	virtual std::wstring GetTakeDir(void);
@@ -2322,35 +2375,6 @@ public:
 	virtual void View_Render(IAfxBaseClientDll * cl, SOURCESDK::vrect_t_csgo *rect);
 
 private:
-	class CFreeDelegate : public IAfxFreeable
-	{
-	public:
-		CFreeDelegate(IAfxFreeMaster * freeMaster, CAfxStreams * classPtr, void (CAfxStreams::*classFn)(void))
-		: m_FreeMaster(freeMaster)
-		, m_ClassPtr(classPtr)
-		, m_ClassFn(classFn)
-		{
-			m_FreeMaster->AfxFreeable_Register(this);
-		}
-
-		~CFreeDelegate()
-		{
-			AfxFree();
-		}
-
-		virtual void AfxFree(void)
-		{
-			if(m_ClassPtr) { (m_ClassPtr->*m_ClassFn)(); m_ClassPtr = 0; }
-			if(m_FreeMaster) { m_FreeMaster->AfxFreeable_Unregister(this); m_FreeMaster = 0; }
-		}
-
-	private:
-		IAfxFreeMaster * m_FreeMaster;
-		CAfxStreams * m_ClassPtr;
-		void (CAfxStreams::*m_ClassFn)(void);
-
-	};
-
 	class CEntityBvhCapture
 	{
 	public:
@@ -2406,7 +2430,6 @@ private:
 	bool m_PresentRecordOnScreen;
 	bool m_StartMovieWav;
 	bool m_StartMovieWavUsed;
-	CFreeDelegate * m_OnAfxBaseClientDll_Free;
 	SOURCESDK::IMaterialSystem_csgo * m_MaterialSystem;
 	IAfxBaseClientDll * m_AfxBaseClientDll;
 	SOURCESDK::IShaderShadow_csgo * m_ShaderShadow;
@@ -2442,6 +2465,7 @@ private:
 	//CAfxMaterial * m_ShowzMaterial;
 	DWORD m_Current_View_Render_ThreadId;
 	bool m_PresentBlocked;
+	bool m_ShutDown = false;
 
 	void SetCurrent_View_Render_ThreadId(DWORD id);
 

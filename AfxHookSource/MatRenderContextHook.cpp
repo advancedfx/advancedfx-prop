@@ -953,13 +953,13 @@ void CMatRenderContextHook::HooKVtable(SOURCESDK::IMatRenderContext_csgo * orgCt
 	m_Detours = &(m_VtableMap[vtable]);
 
 	//OutputDebugString("HooKVtable DETOUR BEGIN\n");
-	m_Detours->Bind = (MatRenderContextHook_Bind_t)DetourIfacePtr((DWORD *)&(vtable[9]), MatRenderContextHook_Bind);
-	m_Detours->GetDynamicMesh = (MatRenderContextHook_GetDynamicMesh_t)DetourIfacePtr((DWORD *)&(vtable[62]), MatRenderContextHook_GetDynamicMesh);
-	m_Detours->DrawScreenSpaceQuad = (MatRenderContextHook_DrawScreenSpaceQuad_t)DetourIfacePtr((DWORD *)&(vtable[81]), MatRenderContextHook_DrawScreenSpaceQuad);
-	m_Detours->DrawScreenSpaceRectangle = (MatRenderContextHook_DrawScreenSpaceRectangle_t)DetourIfacePtr((DWORD *)&(vtable[113]), MatRenderContextHook_DrawScreenSpaceRectangle);
-	m_Detours->GetCallQueue = (MatRenderContextHook_GetCallQueue_t)DetourIfacePtr((DWORD *)&(vtable[150]), MatRenderContextHook_GetCallQueue);
-	m_Detours->GetDynamicMeshEx = (MatRenderContextHook_GetDynamicMeshEx_t)DetourIfacePtr((DWORD *)&(vtable[167]), MatRenderContextHook_GetDynamicMeshEx);
-	m_Detours->DrawInstances = (MatRenderContextHook_DrawInstances_t)DetourIfacePtr((DWORD *)&(vtable[192]), MatRenderContextHook_DrawInstances);
+	DetourIfacePtr((DWORD *)&(vtable[9]), MatRenderContextHook_Bind, (DetourIfacePtr_fn &)m_Detours->Bind);
+	DetourIfacePtr((DWORD *)&(vtable[62]), MatRenderContextHook_GetDynamicMesh, (DetourIfacePtr_fn &)m_Detours->GetDynamicMesh);
+	DetourIfacePtr((DWORD *)&(vtable[81]), MatRenderContextHook_DrawScreenSpaceQuad, (DetourIfacePtr_fn &)m_Detours->DrawScreenSpaceQuad);
+	DetourIfacePtr((DWORD *)&(vtable[113]), MatRenderContextHook_DrawScreenSpaceRectangle, (DetourIfacePtr_fn &)m_Detours->DrawScreenSpaceRectangle);
+	DetourIfacePtr((DWORD *)&(vtable[150]), MatRenderContextHook_GetCallQueue, (DetourIfacePtr_fn &)m_Detours->GetCallQueue);
+	DetourIfacePtr((DWORD *)&(vtable[167]), MatRenderContextHook_GetDynamicMeshEx, (DetourIfacePtr_fn &)m_Detours->GetDynamicMeshEx);
+	DetourIfacePtr((DWORD *)&(vtable[192]), MatRenderContextHook_DrawInstances, (DetourIfacePtr_fn &)m_Detours->DrawInstances);
 	//OutputDebugString("HooKVtable DETOUR END\n");
 }
 

@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2017-02-09 dominik.matrixstorm.com
+// 2017-06-16 dominik.matrixstorm.com
 //
 // First changes:
 // 2017-02-09 dominik.matrixstorm.com
@@ -34,6 +34,11 @@ public:
 		m_Set.erase(notifyee);
 	}
 
+	bool IsEmpty(void)
+	{
+		return m_Set.empty();
+	}
+
 	void Notify(void *pMem)
 	{
 		for (std::set<ITier0MemAllocFreeNotifyee *>::iterator it = m_Set.begin(); it != m_Set.end(); ++it)
@@ -51,13 +56,27 @@ std::map<void *, CTier0MemAllocFreeNotifyees> g_Tier0MemAllocFreeNotifyees;
 std::mutex g_Tier0MemAllocFreeNotifyeesMutex;
 bool g_Tier0MemAllocFreeNotifyeesChanged = false;
 
-void NotifiyOnTier0MemAllocFree(ITier0MemAllocFreeNotifyee * notifyee, void * ptr)
+void NotifiyOnTier0MemAllocFree(ITier0MemAllocFreeNotifyee * notifyee, void * pMem)
 {
 	std::unique_lock<std::mutex> lock(g_Tier0MemAllocFreeNotifyeesMutex);
 
-	g_Tier0MemAllocFreeNotifyees[ptr].Insert(notifyee);
+	g_Tier0MemAllocFreeNotifyees[pMem].Insert(notifyee);
 
 	g_Tier0MemAllocFreeNotifyeesChanged = true;
+}
+
+void DenotifiyOnTier0MemAllocFree(ITier0MemAllocFreeNotifyee * notifyee, void * pMem)
+{
+	std::unique_lock<std::mutex> lock(g_Tier0MemAllocFreeNotifyeesMutex);
+
+	std::map<void *, CTier0MemAllocFreeNotifyees>::iterator it = g_Tier0MemAllocFreeNotifyees.find(pMem);
+
+	if (it != g_Tier0MemAllocFreeNotifyees.end())
+	{
+		it->second.Remove(notifyee);
+		if (it->second.IsEmpty())
+			g_Tier0MemAllocFreeNotifyees.erase(it);
+	}
 }
 
 typedef void (__stdcall * Tier0_CMemAlloc_Free_t)(DWORD * this_ptr, void *pMem);
@@ -107,7 +126,7 @@ bool Hook_csgo_MemAlloc(void)
 		{
 			int * vtable = *(int**)iface;
 
-			g_Tier0_CMemAlloc_Free = (Tier0_CMemAlloc_Free_t)DetourIfacePtr((DWORD *)&(vtable[5]), touring_Tier0_CMemAlloc_Free);
+			 DetourIfacePtr((DWORD *)&(vtable[5]), touring_Tier0_CMemAlloc_Free, (DetourIfacePtr_fn &)g_Tier0_CMemAlloc_Free);
 
 			firstResult = true;
 		}

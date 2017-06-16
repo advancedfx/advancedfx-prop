@@ -3,7 +3,7 @@
 // Copyright (c) advancedfx.org
 //
 // Last changes:
-// 2016-09-23 dominik.matrixstorm.com
+// 2017-06-14 dominik.matrixstorm.com
 //
 // First changes:
 // 2015-06-26 dominik.matrixstorm.com
@@ -12,25 +12,6 @@
 #include "csgo_Stdshader_dx9_Hooks.h"
 
 #include <string>
-
-class IAfxFreeable abstract
-{
-public:
-	virtual void AfxFree(void) = 0;
-};
-
-class IAfxFreeMaster abstract
-{
-public:
-	virtual void AfxFreeable_Register(IAfxFreeable * value) = 0;
-	virtual void AfxFreeable_Unregister(IAfxFreeable * value) = 0;
-};
-
-class IAfxMaterial abstract
-{
-public:
-	virtual SOURCESDK::IMaterial_csgo * GetMaterial() const = 0;
-};
 
 class IAfxVRenderView;
 
@@ -128,9 +109,7 @@ class IAfxBaseClientDll abstract
 {
 public:
 	virtual SOURCESDK::IBaseClientDLL_csgo * GetParent() = 0;
-	virtual IAfxFreeMaster * GetFreeMaster() = 0;
 
-	virtual void OnShutdown_set(IAfxBaseClientDllShutdown * value) = 0;
 	virtual void OnLevelShutdown_set(IAfxBaseClientDllLevelShutdown * value) = 0;
 	virtual void OnView_Render_set(IAfxBaseClientDllView_Render * value) = 0;
 };

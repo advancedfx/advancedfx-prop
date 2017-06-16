@@ -285,6 +285,16 @@ CSubWrpCommandArgs::CSubWrpCommandArgs(IWrpCommandArgs * commandArgs, int offset
 : m_Offset(offset)
 , m_CommandArgs(commandArgs)
 {
+	std::ostringstream oss;
+
+	for (int i = 0; i<m_Offset; ++i)
+	{
+		if (0 < i)
+			oss << " ";
+		oss << m_CommandArgs->ArgV(i);
+	}
+
+	m_Prefix = oss.str();
 }
 
 int CSubWrpCommandArgs::ArgC()
@@ -296,18 +306,7 @@ char const * CSubWrpCommandArgs::ArgV(int i)
 {
 	if(0 == i)
 	{
-		std::ostringstream oss;
-
-		for(int i=0; i<m_Offset; ++i)
-		{
-			if(0 < i)
-				oss << " ";
-			oss << m_CommandArgs->ArgV(i);
-		}
-		
-		m_Temp = oss.str();
-
-		return m_Temp.c_str();
+		return m_Prefix.c_str();
 	}
 
 	return m_CommandArgs->ArgV(i +m_Offset -1);
