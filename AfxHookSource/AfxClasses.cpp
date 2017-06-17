@@ -177,7 +177,9 @@ CAfxTrackedMaterial::~CAfxTrackedMaterial()
 {
 	if (m_Notifyee)
 	{
-		//Tier0_Msg("CAfxTrackedMaterial::~CAfxTrackedMaterial 0x%08x -> %s (PRE-FREE)\n", this, m_Material->GetName());
+#ifdef _DEBUG
+		Tier0_Msg("CAfxTrackedMaterial::~CAfxTrackedMaterial 0x%08x -> %s (PRE-FREE)\n", this, m_Material->GetName());
+#endif
 
 		m_Notifyee = 0;
 		RemoveNotifyee(m_Material, this);
@@ -186,7 +188,9 @@ CAfxTrackedMaterial::~CAfxTrackedMaterial()
 
 void CAfxTrackedMaterial::AfxMaterialFree(void)
 {
-	//Tier0_Msg("CAfxTrackedMaterial::AfxMaterialFree 0x%08x -> %s (%s)\n", this, m_Material->GetName(), m_Notifyee ? "notifying" : "NOT NOTIFYING");
+#ifdef _DEBUG
+	Tier0_Msg("CAfxTrackedMaterial::AfxMaterialFree 0x%08x -> %s (%s)\n", this, m_Material->GetName(), m_Notifyee ? "notifying" : "NOT NOTIFYING");
+#endif
 
 	if (m_Notifyee)
 	{
