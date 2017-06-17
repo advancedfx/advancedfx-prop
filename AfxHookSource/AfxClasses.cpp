@@ -93,12 +93,11 @@ std::shared_timed_mutex CAfxTrackedMaterial::m_VtableMapMutex;
 
 void CAfxTrackedMaterial::OnMaterialFree(SOURCESDK::IMaterial_csgo * material)
 {
-	bool is_zero = *(int *)((unsigned char *)material + 0x1c);
+	int refCount = material->Probably_GetReferenceCount();
+	bool will_become_zero = 1 == refCount;
 
-	if (is_zero)
+	if (will_become_zero)
 	{
-		Tier0_Msg("Releasing OnInterlockedDecremented on Material 0x%08x (%s).\n", material, material->GetName());
-
 		std::unique_lock<std::mutex> lock(m_NotifyeesMutex);
 
 		std::map<SOURCESDK::IMaterial_csgo *, std::set<CAfxTrackedMaterial *>>::iterator it = m_Notifyees.find(material);
@@ -114,10 +113,8 @@ void CAfxTrackedMaterial::OnMaterialFree(SOURCESDK::IMaterial_csgo * material)
 	}
 }
 
-void __stdcall CAfxTrackedMaterial::Material_DeleteIfUnreferenced(DWORD *this_ptr)
+void __stdcall CAfxTrackedMaterial::Material_InterlockedDecrement(DWORD *this_ptr)
 {
-	Tier0_Msg("FUCK THIS SHIT!\n");
-
 	int * vtable = *(int**)this_ptr;
 
 	m_VtableMapMutex.lock_shared();
@@ -128,7 +125,7 @@ void __stdcall CAfxTrackedMaterial::Material_DeleteIfUnreferenced(DWORD *this_pt
 	{
 		OnMaterialFree((SOURCESDK::IMaterial_csgo *) this_ptr);
 
-		it->second.DeleteIfUnreferenced(this_ptr);
+		it->second.InterlockedDecrement(this_ptr);
 	}
 	else
 		Assert(0); // should not happen.
@@ -162,11 +159,9 @@ void CAfxTrackedMaterial::HooKVtable(SOURCESDK::IMaterial_csgo * orgMaterial)
 		return;
 	}
 
-	Tier0_Msg("WORLD!\n");
-
 	CMaterialDetours & m_Detours = m_VtableMap[vtable];
 
-	DetourIfacePtr((DWORD *)&(vtable[50]), Material_DeleteIfUnreferenced, (DetourIfacePtr_fn &)m_Detours.DeleteIfUnreferenced);
+	DetourIfacePtr((DWORD *)&(vtable[13]), Material_InterlockedDecrement, (DetourIfacePtr_fn &)m_Detours.InterlockedDecrement);
 
 	m_VtableMapMutex.unlock();
 }
@@ -182,6 +177,8 @@ CAfxTrackedMaterial::~CAfxTrackedMaterial()
 {
 	if (m_Notifyee)
 	{
+		//Tier0_Msg("CAfxTrackedMaterial::~CAfxTrackedMaterial 0x%08x -> %s (PRE-FREE)\n", this, m_Material->GetName());
+
 		m_Notifyee = 0;
 		RemoveNotifyee(m_Material, this);
 	}
@@ -189,6 +186,8 @@ CAfxTrackedMaterial::~CAfxTrackedMaterial()
 
 void CAfxTrackedMaterial::AfxMaterialFree(void)
 {
+	//Tier0_Msg("CAfxTrackedMaterial::AfxMaterialFree 0x%08x -> %s (%s)\n", this, m_Material->GetName(), m_Notifyee ? "notifying" : "NOT NOTIFYING");
+
 	if (m_Notifyee)
 	{
 		IAfxMaterialFree * notifyee = m_Notifyee;

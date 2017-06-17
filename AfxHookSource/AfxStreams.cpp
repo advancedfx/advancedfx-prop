@@ -1283,7 +1283,7 @@ void CAfxBaseFxStream::MainThreadInitialize(void)
 void CAfxBaseFxStream::LevelShutdown(void)
 {
 	Picker_Stop();
-	InvalidateMap();
+	// no resaon to do that anymore // InvalidateMap();
 	m_Shared.LevelShutdown();
 }
 
@@ -1417,7 +1417,7 @@ CAfxBaseFxStream::CAction * CAfxBaseFxStream::RetrieveAction(SOURCESDK::IMateria
 					const char * shaderName = material->GetShaderName();
 					bool isErrorMaterial = material->IsErrorMaterial();
 
-					Tier0_Msg("Stream: RetrieveAction: Mmaterial action cache miss: \"handle=%i\" \"name=%s\" \"textureGroup=%s\" \"shader=%s\" \"isErrrorMaterial=%u\" -> %s\n"
+					Tier0_Msg("Stream: RetrieveAction: Material action cache miss: \"handle=%i\" \"name=%s\" \"textureGroup=%s\" \"shader=%s\" \"isErrrorMaterial=%u\" -> %s\n"
 						, entityHandle.ToInt()
 						, name
 						, groupName
@@ -2038,29 +2038,23 @@ bool CAfxBaseFxStream::Picker_GetHidden(SOURCESDK::CSGO::CBaseHandle const & ent
 		}
 		else
 		{
-			CPickerMatValue * pickerMatValue;
-
-			const std::map<CAfxTrackedMaterial, CPickerMatValue>::iterator itMat = m_PickerMaterials.lower_bound(findMat);
+			std::map<CAfxTrackedMaterial, CPickerMatValue>::iterator itMat = m_PickerMaterials.lower_bound(findMat);
 			if (itMat == m_PickerMaterials.end() || (findMat < itMat->first))
 			{
-				pickerMatValue = &(m_PickerMaterials.emplace_hint(itMat,std::piecewise_construct, std::forward_as_tuple(material, &m_PickerMaterialsRleaseNotification), std::forward_as_tuple(m_PickerMaterials.size(), ent))->second);
+				itMat = m_PickerMaterials.emplace_hint(itMat,std::piecewise_construct, std::forward_as_tuple(material, &m_PickerMaterialsRleaseNotification), std::forward_as_tuple(m_PickerMaterials.size(), ent));
 			}
 			else
 			{
-				pickerMatValue = &(itMat->second);
-
 				itMat->second.Entities.insert(ent);
 			}
 
-			CPickerEntValue * pickerEntValue;
-
-			const std::map<int, CPickerEntValue>::iterator itEnt = m_PickerEntities.lower_bound(ent);
+			std::map<int, CPickerEntValue>::iterator itEnt = m_PickerEntities.lower_bound(ent);
 			if (itEnt == m_PickerEntities.end() || (ent < itEnt->first))
-				pickerEntValue = &(m_PickerEntities.emplace_hint(itEnt, std::piecewise_construct, std::forward_as_tuple(ent), std::forward_as_tuple(this, m_PickerEntities.size(), material))->second);
+			{
+				itEnt = m_PickerEntities.emplace_hint(itEnt, std::piecewise_construct, std::forward_as_tuple(ent), std::forward_as_tuple(this, m_PickerEntities.size(), material));
+			}
 			else
 			{
-				pickerEntValue = &(itEnt->second);
-
 				std::set<CAfxTrackedMaterial>::iterator itEntMats = itEnt->second.Materials.lower_bound(findMat);
 				if (itEntMats == itEnt->second.Materials.end() || (findMat < *itEntMats))
 					itEnt->second.Materials.emplace_hint(itEntMats, material, &(itEnt->second));

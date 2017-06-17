@@ -61,7 +61,7 @@ public:
 	struct CMaterialDetours
 	{
 		//:034
-		MaterialHook_Free_t DeleteIfUnreferenced;
+		MaterialHook_Free_t InterlockedDecrement;
 	};
 
 	/// <remarks>Hint: Give afxLastEngineRelease as 0 if you want just fast comparision on a map or s.th.</remarks>
@@ -83,7 +83,7 @@ private:
 
 	static void HooKVtable(SOURCESDK::IMaterial_csgo * orgMaterial);
 
-	static void __stdcall CAfxTrackedMaterial::Material_DeleteIfUnreferenced(DWORD *this_ptr);
+	static void __stdcall CAfxTrackedMaterial::Material_InterlockedDecrement(DWORD *this_ptr);
 
 	static void OnMaterialFree(SOURCESDK::IMaterial_csgo * material);
 

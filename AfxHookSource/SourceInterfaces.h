@@ -2772,6 +2772,18 @@ public:
 	// 049:
 	virtual const char * GetShaderName() const = 0;
 
+	// 050:
+	virtual void			DeleteIfUnreferenced() = 0;
+
+	virtual void _UNKNOWN_051(void) = 0;
+	virtual void _UNKNOWN_052(void) = 0;
+	virtual void _UNKNOWN_053(void) = 0;
+	virtual void _UNKNOWN_054(void) = 0;
+	virtual void _UNKNOWN_055(void) = 0;
+
+	// 056:
+	virtual int Probably_GetReferenceCount(void) = 0;
+
 	// ...
 	// there are more here that we don't care about.
 };
