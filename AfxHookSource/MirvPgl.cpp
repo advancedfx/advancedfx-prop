@@ -4,21 +4,26 @@
 
 #ifdef AFX_MIRV_PGL
 
-#include "WrpVEngineClient.h"
-#include "WrpConsole.h"
-
 #include "../../shared/easywsclient/easywsclient.hpp"
 #include "../../shared/easywsclient/easywsclient.cpp"
 
 #pragma comment( lib, "ws2_32" )
 #include <WinSock2.h>
 
+#include "WrpVEngineClient.h"
+#include "WrpConsole.h"
+#include "AfxStreams.h"
+
 #include <math.h>
 
-#include <mutex>
-#include <condition_variable>
 #include <string>
 #include <list>
+#include <queue>
+#include <set>
+
+#include <atomic>
+#include <mutex>
+#include <condition_variable>
 #include <chrono>
 
 
@@ -33,7 +38,7 @@ namespace MirvPgl
 {
 	const int m_CheckRestoreEveryTicks = 5000;
 	const int m_ThreadSleepMsIfNoData = 1;
-	const uint32_t m_Version = 1;
+	const uint32_t m_Version = 2;
 
 	CamData::CamData()
 	{
@@ -52,6 +57,121 @@ namespace MirvPgl
 	{
 	}
 
+	class CThreadData
+	{
+	public:
+		void Prepare(std::vector<std::uint8_t> const & data)
+		{
+			m_IsCancelled = false;
+			m_Data = data;
+		}
+
+		void Cancel()
+		{
+			m_IsCancelled = true;
+		}
+
+		bool IsCancelled()
+		{
+			return m_IsCancelled;
+		}
+
+		std::vector<uint8_t> & AccessData()
+		{
+			return m_Data;
+		}
+
+	private:
+		std::atomic_bool m_IsCancelled;
+		std::vector<uint8_t> m_Data;
+	};
+
+	void DrawingThread_SupplyThreadData(CThreadData * threadData);
+
+	class CSupplyThreadData_Functor
+		: public CAfxFunctor
+	{
+	public:
+		CSupplyThreadData_Functor(CThreadData * threadData)
+			: m_Value(threadData)
+		{
+		}
+
+		virtual void operator()()
+		{
+			DrawingThread_SupplyThreadData(m_Value);
+		}
+
+	private:
+		CThreadData * m_Value;
+	};
+
+
+	class CThreadDataPool
+	{
+	public:
+		/// <remarks>Must only be called from main thread.</remarks>
+		std::vector<std::uint8_t> & AccessNextThreadData(void)
+		{
+			return m_Data;
+		}
+
+		/// <remarks>Must only be called from main thread.</remarks>
+		CThreadData * Acquire(void)
+		{
+			std::unique_lock<std::mutex> lock(m_ThreadDataQueueMutex);
+
+			CThreadData * threadData;
+			
+			if (m_ThreadDataAvailable.empty())
+			{
+				threadData = new CThreadData();
+			}
+			else
+			{
+				threadData = m_ThreadDataAvailable.front();
+				m_ThreadDataAvailable.pop();
+			}
+
+			threadData->Prepare(m_Data);
+
+			m_Data.clear();
+
+			m_ThreadDataInUse.insert(threadData);
+
+			return threadData;
+		}
+
+		void Return(CThreadData * threadData)
+		{
+			threadData->Cancel();
+
+			std::unique_lock<std::mutex> lock(m_ThreadDataQueueMutex);
+
+			m_ThreadDataInUse.erase(threadData);
+
+			m_ThreadDataAvailable.push(threadData);
+		}
+
+		void Cancel(void)
+		{
+			std::unique_lock<std::mutex> lock(m_ThreadDataQueueMutex);
+
+			for (std::set<CThreadData *>::iterator it = m_ThreadDataInUse.begin(); it != m_ThreadDataInUse.end(); ++it)
+			{
+				(*it)->Cancel();
+			}
+
+			m_Data.clear();
+		}
+
+	private:
+		std::vector<std::uint8_t> m_Data;
+		std::queue<CThreadData *> m_ThreadDataAvailable;
+		std::set<CThreadData *> m_ThreadDataInUse;
+		std::mutex m_ThreadDataQueueMutex;
+	} m_ThreadDataPool;
+
 	bool m_WsaActive = false;
 
 	WebSocket * m_Ws = 0;
@@ -62,18 +182,20 @@ namespace MirvPgl
 	std::list<std::string> m_Commands;
 	std::mutex m_CommandsMutex;
 
-	std::vector<uint8_t> m_Data;
-	std::condition_variable m_DataAvailableCondition;
-	std::mutex m_DataMutex;
-	std::vector<uint8_t> m_TempData;
+	std::vector<uint8_t> m_SendThreadTempData;
+
+	std::vector<uint8_t> m_DataForSendThread;
+	std::condition_variable m_DataForSendThreadAvailableCondition;
+	std::mutex m_DataForSendThreadMutex;
+
+	bool m_DataActive = false;
 
 	std::thread * m_Thread = 0;
 	bool m_WantClose = false;
 
 	DWORD m_LastCheckRestoreTick = 0;
 
-	bool m_CamDataAvailable = false;
-	CamData m_CamData;
+	CThreadData * m_DrawingThread_ThreadData = 0;
 
 	std::string m_CurrentLevel;
 
@@ -177,7 +299,7 @@ namespace MirvPgl
 
 	void Thread()
 	{
-		m_TempData.clear();
+		m_SendThreadTempData.clear();
 
 		while (true)
 		{
@@ -197,19 +319,18 @@ namespace MirvPgl
 			// this would eat our shit: m_Ws->dispatch(Recv_String); 
 			m_Ws->dispatchBinary(Recv_Bytes);
 
-			std::unique_lock<std::mutex> dataLock(m_DataMutex);
-			m_DataAvailableCondition.wait_for(dataLock, m_ThreadSleepMsIfNoData * 1ms, [] { return !m_Data.empty() || m_WantClose; }); // if we don't need to send data, we are a bit lazy in order to save some CPU. Of course this assumes, that the data we get from network can wait that long ;)
+			std::unique_lock<std::mutex> dataLock(m_DataForSendThreadMutex);
+			m_DataForSendThreadAvailableCondition.wait_for(dataLock, m_ThreadSleepMsIfNoData * 1ms, [] { return !m_DataForSendThread.empty() || m_WantClose; }); // if we don't need to send data, we are a bit lazy in order to save some CPU. Of course this assumes, that the data we get from network can wait that long ;)
 
-			if (!m_Data.empty())
+			if (!m_DataForSendThread.empty())
 			{
-				m_TempData = std::move(m_Data);
-				m_Data.clear();
+				m_SendThreadTempData = std::move(m_DataForSendThread);
+				m_DataForSendThread.clear();
 				dataLock.unlock();
 
-				m_Ws->sendBinary(m_TempData);
+				m_Ws->sendBinary(m_SendThreadTempData);
 
-
-				m_TempData.clear();
+				m_SendThreadTempData.clear();
 			}
 			else
 				dataLock.unlock();
@@ -225,7 +346,7 @@ namespace MirvPgl
 		{
 			m_WantClose = true;
 			
-			m_DataAvailableCondition.notify_one();
+			m_DataForSendThreadAvailableCondition.notify_one();
 
 			m_Thread->join();
 			
@@ -286,13 +407,7 @@ namespace MirvPgl
 
 			if (0 != m_Ws)
 			{
-				AppendHello(m_Data);
-
-				if (!m_CurrentLevel.empty())
-				{
-					AppendCString("levelInit", m_Data);
-					AppendCString(m_CurrentLevel.c_str(), m_Data);
-				}
+				AppendHello(m_ThreadDataPool.AccessNextThreadData());
 
 				CreateThread();
 			}
@@ -301,6 +416,10 @@ namespace MirvPgl
 
 	void Stop()
 	{
+		m_DataActive = false;
+		m_ThreadDataPool.Cancel();
+		m_ThreadDataPool.AccessNextThreadData().clear();
+
 		EndThread();
 
 		m_WantWs = false;
@@ -309,6 +428,47 @@ namespace MirvPgl
 	bool IsStarted()
 	{
 		return m_WantWs;
+	}
+
+	void DataStart()
+	{
+		DataStop();
+
+		if (m_WantWs)
+		{
+			m_DataActive = true;
+
+			std::vector<uint8_t> & data = m_ThreadDataPool.AccessNextThreadData();
+
+			AppendCString("dataStart", data);
+
+			if (!m_CurrentLevel.empty())
+			{
+
+				AppendCString("levelInit", data);
+				AppendCString(m_CurrentLevel.c_str(), data);
+			}
+		}
+	}
+
+	void DataStop()
+	{
+		if (m_DataActive)
+		{
+			m_DataActive = false;
+
+			m_ThreadDataPool.Cancel();
+
+			if (m_WantWs)
+			{
+				AppendCString("dataStop", m_ThreadDataPool.AccessNextThreadData());
+			}
+		}
+	}
+
+	bool IsDataActive()
+	{
+		return m_DataActive;
 	}
 
 	void CheckStartedAndRestoreIfDown()
@@ -336,49 +496,33 @@ namespace MirvPgl
 		}
 	}
 
-	void SupplyCamData(CamData const & camData)
+	void QueueThreadDataForDrawingThread(void)
 	{
-		if (!m_WantWs)
-			return;
-
-		{
-			std::unique_lock<std::mutex> lock(m_DataMutex);
-
-			AppendCString("cam", m_Data);
-			AppendCamData(camData, m_Data);
-		}
-		m_DataAvailableCondition.notify_one();
+		if(m_DataActive || !m_ThreadDataPool.AccessNextThreadData().empty())
+			QueueOrExecute(GetCurrentContext()->GetOrg(), new CAfxLeafExecute_Functor(new CSupplyThreadData_Functor(m_ThreadDataPool.Acquire())));
 	}
 
 	void SupplyLevelInit(char const * mapName)
 	{
 		m_CurrentLevel = mapName;
 
-		if (!m_WantWs)
+		if (!m_DataActive)
 			return;
 
-		{
-			std::unique_lock<std::mutex> lock(m_DataMutex);
+		std::vector<uint8_t> & data = m_ThreadDataPool.AccessNextThreadData();
 
-			AppendCString("levelInit", m_Data);
-			AppendCString(mapName, m_Data);
-		}
-		m_DataAvailableCondition.notify_one();
+		AppendCString("levelInit", data);
+		AppendCString(mapName, data);
 	}
 
 	void SupplyLevelShutdown()
 	{
 		m_CurrentLevel.clear();
 
-		if (!m_WantWs)
+		if (!m_DataActive)
 			return;
 
-		{
-			std::unique_lock<std::mutex> lock(m_DataMutex);
-
-			AppendCString("levelShutdown", m_Data);
-		}
-		m_DataAvailableCondition.notify_one();
+		AppendCString("levelShutdown", m_ThreadDataPool.AccessNextThreadData());
 	}
 
 	void ExecuteQueuedCommands()
@@ -397,19 +541,47 @@ namespace MirvPgl
 		}
 	}
 
+	void DrawingThread_SupplyThreadData(CThreadData * threadData)
+	{
+		if (m_DrawingThread_ThreadData)
+		{
+			// should not happen.
+			Assert(0);
+
+			m_ThreadDataPool.Return(m_DrawingThread_ThreadData);
+		}
+
+		m_DrawingThread_ThreadData = threadData;
+	}
 
 	void DrawingThread_SupplyCamData(CamData const & camData)
 	{
-		m_CamDataAvailable = true;
-		m_CamData = camData;
+		if(m_DrawingThread_ThreadData)
+		{
+			std::vector<uint8_t> & data = m_DrawingThread_ThreadData->AccessData();
+
+			AppendCString("cam", data);
+			AppendCamData(camData, data);
+		}
 	}
 
-	void DrawingThread_PresentedUnleashCamDataOnFirstCall()
+	void DrawingThread_PresentedUnleashDataOnFirstCall()
 	{
-		if (m_CamDataAvailable)
+		if (m_DrawingThread_ThreadData && !m_DrawingThread_ThreadData->IsCancelled())
 		{
-			m_CamDataAvailable = false;
-			SupplyCamData(m_CamData);
+			std::vector<uint8_t> & data = m_DrawingThread_ThreadData->AccessData();
+
+			std::unique_lock<std::mutex> lock(m_DataForSendThreadMutex);
+
+			m_DataForSendThread.insert(m_DataForSendThread.end(), data.begin(), data.end());
+
+			lock.unlock();
+
+			m_DataForSendThreadAvailableCondition.notify_one();
+
+			m_ThreadDataPool.Return(m_DrawingThread_ThreadData);
+
+			m_DrawingThread_ThreadData = 0;
 		}
 	}
 
@@ -439,6 +611,16 @@ CON_COMMAND(mirv_pgl, "PGL")
 			MirvPgl::Stop();
 			return;
 		}
+		else if (0 == _stricmp("dataStart", cmd1))
+		{
+			MirvPgl::DataStart();
+			return;
+		}
+		else if (0 == _stricmp("dataStop", cmd1))
+		{
+			MirvPgl::DataStop();
+			return;
+		}
 		else if (0 == _stricmp("url", cmd1))
 		{
 			if (3 <= argc)
@@ -460,6 +642,8 @@ CON_COMMAND(mirv_pgl, "PGL")
 	Tier0_Msg(
 		"mirv_pgl start - (Re-)Starts connectinion to server.\n"
 		"mirv_pgl stop - Stops connection to server.\n"
+		"mirv_pgl dataStart - Start sending data.\n"
+		"mirv_pgl dataStop - Stop sending data.\n"
 		"mirv_pgl url [...] - Set url to use with start.\n"
 	);
 

@@ -17,6 +17,7 @@
 #include "AfxShaders.h"
 #include "csgo_Stdshader_dx9_Hooks.h"
 #include "CamIO.h"
+#include "MatRenderContextHook.h"
 
 #define AFX_SHADERS_CSGO 0
 
@@ -385,26 +386,13 @@ public:
 	{
 		AFXSTREAMS_REFTRACKER_INC
 
-		m_RefMutex.lock();
-
-		++m_RefCount;
-		int result = m_RefCount;
-
-		m_RefMutex.unlock();
-
-		return m_RefCount;
+		return ++m_RefCount;
 	}
 
 	virtual int Release(void)
 	{
-		m_RefMutex.lock();
-
-		--m_RefCount;
-
-		int result = m_RefCount;
-
-		m_RefMutex.unlock();
-
+		int result = --m_RefCount;
+		
 		if (0 == result)
 			delete this;
 
@@ -419,8 +407,46 @@ protected:
 	}
 
 private:
-	std::mutex m_RefMutex;
-	int m_RefCount;
+	std::atomic_int m_RefCount;
+};
+
+IAfxMatRenderContext * GetCurrentContext();
+
+void QueueOrExecute(IAfxMatRenderContextOrg * ctx, SOURCESDK::CSGO::CFunctor * functor);
+
+class CAfxLeafExecute_Functor
+	: public CAfxFunctor
+{
+public:
+	CAfxLeafExecute_Functor(SOURCESDK::CSGO::CFunctor * functor)
+		: m_Functor(functor)
+	{
+		m_Functor->AddRef();
+	}
+
+	virtual void operator()()
+	{
+		SOURCESDK::CSGO::ICallQueue * queue = GetCurrentContext()->GetOrg()->GetCallQueue();
+
+		if (queue)
+		{
+			queue->QueueFunctor(this);
+		}
+		else
+		{
+			(*m_Functor)();
+		}
+	}
+
+protected:
+	virtual ~CAfxLeafExecute_Functor()
+	{
+		m_Functor->Release();
+	}
+
+private:
+	SOURCESDK::CSGO::CFunctor * m_Functor;
+
 };
 
 class CAfxBaseFxStream;

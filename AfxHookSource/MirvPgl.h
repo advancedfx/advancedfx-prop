@@ -6,8 +6,33 @@
 
 /*
 
+Changes from version 1 to version 2:
+
+- Added messages "dataStart" and "dataStop"
+  All present other messages except "hello" will only be sent between those two.
+  Please note:
+  1) From issuing "mirv_pgl stop" to the actual "dataStop" message some time AND data may pass, due to threading and delays on the network layer or due to buffers!
+  2) It is possible to receive multiple "dataStop" message without an previous "dataStart" message, since "dataStop" cancels all other messages.
+  3) "dataStop" really cancels all messages, it can even cancel "hello", however if you made it do that, you already have done s.th. wrong!
+
+- Added "mirv_pgl dataStart" and "mirv_pgl dataStop" commands.
+
+- The initial state is only to send "hello" (no other data).
+
+- Remember: After an connection loss, the initial is the same again, meaning sending of data has to be enabled again (i.e. by using a exec message from server side.
+
+Tip1:
+  You can use exec to exec mirv_pgl commands from server, there is no deadlock. This is i.e. useful to make the server enable / disable sending of data!
+Tip2:
+  1) With "mirv_cvar_hack host_sleep x" you can make the game sleep x milliseconds, this is great for throttling, since you can enforce a maximum FPS this way (any value you want).
+  2) Not as useful but should be mentioned: With "mirv_cvar_hack fps_max 30" you can throttle the game down as low as 30 FPS.
+  This is not exactly the throttling that you might have thought off, but this should be pretty okay, because that way you can be sure that data for each frame is sent (nothing dropped).
+
+
 Changes from version 0 to version 1:
+
 - "cam" uses all Float (instead of Double) now.
+
 - "mirv_pgl url" sets / gets the url to use, "mirv_pgl start" doesn't take parameters anymore.
 
 
@@ -58,16 +83,30 @@ Format:
   CString cmd = "hello"
   UInt32 version = 1;
 
+"dataStart"
+Purpose:
+  Informs the server that a new transmission of data is about to start.
+Format:
+	CString cmd = "dataStart"
+
+"dataStop"
+Purpose:
+  Informs the server that the transmission of data has been cancelled.
+  It is possible to receive multiple "dataStop" messages without any "dataStart".
+  "dataStop" cancels all other messages (can even cancel "hello" if you use it wrong)!
+  Format:
+  CString cmd = "dataStop"
+
 "levelInit"
 Purpose:
-  Is sent if in a level upon (re)-connecting after "hello" message or if a new level is loaded.
+  Is sent if in a level upon after "dataStart" or if a new level is loaded.
 Format:
   CString cmd = "levelInit"
   CString levelName;
 
 "levelShutdown"
 Purpose:
-  Is sent after "levelInit" when level is shut down.
+  Is sent when level is shut down. (Can be sent multiple times.)
 Format:
   CString cmd = "levelShutdown"
 
@@ -100,11 +139,14 @@ Format:
 
 
 Ideas for the future:
+- Implement throttling.
 - Implement black image command with feedback when presented.
 - Implement white image command with feedback when presented.
 - Implement optional time-code (float) graphic overlay at top of screen, this would allow syncing the images and the camdata on remote PC perfectly (as long as turned on).
 
 */
+
+#include <vector>
 
 namespace MirvPgl
 {
@@ -123,6 +165,10 @@ namespace MirvPgl
 		CamData(float time, float xPosition, float yPosition, float zPosition, float xRotation, float yRotation, float zRotation, float fov);
 	};
 
+	class CThreadData;
+
+	// On Main thread:
+
 	void Init();
 	void Shutdown();
 
@@ -131,18 +177,25 @@ namespace MirvPgl
 
 	void Start();
 	void Stop();
-	bool IsStarted();
+
+	void DataStart();
+	void DataStop();
+
+	bool IsDataActive();
 
 	void CheckStartedAndRestoreIfDown();
-
 	void ExecuteQueuedCommands();
+	void QueueThreadDataForDrawingThread(void);
 
 	void SupplyLevelInit(char const * mapName);
 	void SupplyLevelShutdown();
 
+
+	// On Drawing thead:
+
 	void DrawingThread_SupplyCamData(CamData const & camData);
 
-	void DrawingThread_PresentedUnleashCamDataOnFirstCall();
+	void DrawingThread_PresentedUnleashDataOnFirstCall();
 }
 
 #endif

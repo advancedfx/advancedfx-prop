@@ -19,7 +19,6 @@
 #include "RenderView.h"
 #include "ClientTools.h"
 #include "d3d9Hooks.h"
-#include "MatRenderContextHook.h"
 #include "csgo_GlowOverlay.h"
 #include "MirvPgl.h"
 
@@ -443,42 +442,6 @@ private:
 };
 
 #endif
-
-class CAfxLeafExecute_Functor
-	: public CAfxFunctor
-{
-public:
-	CAfxLeafExecute_Functor(SOURCESDK::CSGO::CFunctor * functor)
-		: m_Functor(functor)
-	{
-		m_Functor->AddRef();
-	}
-
-	virtual void operator()()
-	{
-		SOURCESDK::CSGO::ICallQueue * queue = GetCurrentContext()->GetOrg()->GetCallQueue();
-
-		if (queue)
-		{
-			queue->QueueFunctor(this);
-		}
-		else
-		{
-			(*m_Functor)();
-		}
-	}
-
-protected:
-	virtual ~CAfxLeafExecute_Functor()
-	{
-		m_Functor->Release();
-	}
-
-private:
-	SOURCESDK::CSGO::CFunctor * m_Functor;
-	
-};
-
 
 // CAfxFileTracker /////////////////////////////////////////////////////////////
 
@@ -6387,7 +6350,7 @@ void CAfxStreams::View_Render(IAfxBaseClientDll * cl, SOURCESDK::vrect_t_csgo *r
 	cl->GetParent()->View_Render(rect);
 
 #ifdef AFX_MIRV_PGL
-	if (MirvPgl::IsStarted())
+	if (MirvPgl::IsDataActive())
 	{
 		MirvPgl::CamData camData(
 			g_Hook_VClient_RenderView.GetCurTime(),

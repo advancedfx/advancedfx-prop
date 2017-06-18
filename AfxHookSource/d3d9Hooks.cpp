@@ -768,7 +768,7 @@ public:
 		HRESULT result = m_Block_Present ? D3D_OK : g_OldDirect3DDevice9->Present(pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
 
 #ifdef AFX_MIRV_PGL
-		MirvPgl::DrawingThread_PresentedUnleashCamDataOnFirstCall();
+		MirvPgl::DrawingThread_PresentedUnleashDataOnFirstCall();
 #endif
 
 		return result;
