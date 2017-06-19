@@ -28,6 +28,7 @@
 #include "WrpVEngineClient.h"
 #include "AfxHookSourceInput.h"
 #include "aiming.h"
+#include "MirvCam.h"
 
 
 BvhExport * g_BvhExport = NULL;
@@ -172,6 +173,8 @@ void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, fl
 {
 	float curTime = GetCurTime();
 
+	g_MirvCam.ApplySource(Tx, Ty, Tz, Rz, Rx, Ry);
+
 	if(m_CamPath.Enabled_get() && m_CamPath.CanEval())
 	{
 		// no extrapolation:
@@ -279,6 +282,8 @@ void Hook_VClient_RenderView::OnViewOverride(float &Tx, float &Ty, float &Tz, fl
 			Rz = (float)dRz;
 		}
 	}
+
+	g_MirvCam.ApplyOffset(Tx, Ty, Tz, Rz, Rx, Ry);
 
 	if(m_Export) {
 		g_BvhExport->WriteFrame(

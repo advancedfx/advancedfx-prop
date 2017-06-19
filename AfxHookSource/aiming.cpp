@@ -100,7 +100,7 @@ bool Aiming::Aim(double deltaT, Vector3 const camOrigin, double & yPitch, double
 		SOURCESDK::IClientEntity_csgo * ce = SOURCESDK::g_Entitylist_csgo->GetClientEntity(EntityIndex);
 		SOURCESDK::C_BaseEntity_csgo * be = ce ? ce->GetBaseEntity() : 0;
 
-		if(ce)
+		if (be || ce && O_View != Origin && A_View != Angles)
 		{
 			SOURCESDK::Vector o =  be && O_View == Origin ? be->EyePosition() : ce->GetAbsOrigin();
 			SOURCESDK::QAngle a =  be && A_View == Angles ? be->EyeAngles() : ce->GetAbsAngles();

@@ -36,7 +36,7 @@
 #include "csgo_CCSGameMovement.h"
 #include "csgo_vphysics.h"
 #include "csgo_c_baseentity.h"
-#include"csgo_c_baseanimatingoverlay.h"
+#include "csgo_c_baseanimatingoverlay.h"
 
 #include "csgo_Stdshader_dx9_Hooks.h"
 

@@ -4907,6 +4907,46 @@ public:
 
 class IClientRenderable_csgo abstract
 {
+public:
+	virtual void _UNKNOWN_IClientRenderable_csgo_000(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_001(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_002(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_003(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_004(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_005(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_006(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_007(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_008(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_009(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_010(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_011(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_012(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_013(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_014(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_015(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_016(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_017(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_018(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_019(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_020(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_021(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_022(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_023(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_024(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_025(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_026(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_027(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_028(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_029(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_030(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_031(void);
+	virtual void _UNKNOWN_IClientRenderable_csgo_032(void);
+
+	// Attachments
+	virtual int LookupAttachment(const char *pAttachmentName) = 0;
+	virtual	bool GetAttachment(int number, Vector &origin, QAngle &angles) = 0;
+	virtual bool GetAttachment(int number, matrix3x4_t &matrix) = 0;
+
 	// More functions, but we don't care about this.
 };
 

@@ -168,6 +168,9 @@
     <ClCompile Include="csgo_MemAlloc.cpp">
       <Filter>AfxHookSource</Filter>
     </ClCompile>
+    <ClCompile Include="MirvCam.cpp">
+      <Filter>AfxHookSource</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -333,6 +336,9 @@
       <Filter>AfxHookSource</Filter>
     </ClInclude>
     <ClInclude Include="csgo_MemAlloc.h">
+      <Filter>AfxHookSource</Filter>
+    </ClInclude>
+    <ClInclude Include="MirvCam.h">
       <Filter>AfxHookSource</Filter>
     </ClInclude>
   </ItemGroup>

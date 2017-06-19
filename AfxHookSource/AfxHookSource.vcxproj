@@ -192,6 +192,7 @@
     <ClCompile Include="hlaeFolder.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MatRenderContextHook.cpp" />
+    <ClCompile Include="MirvCam.cpp" />
     <ClCompile Include="MirvCommands.cpp" />
     <ClCompile Include="MirvInputMem.cpp" />
     <ClCompile Include="MirvPgl.cpp" />
@@ -249,6 +250,7 @@
     <ClInclude Include="d3d9Hooks.h" />
     <ClInclude Include="hlaeFolder.h" />
     <ClInclude Include="MatRenderContextHook.h" />
+    <ClInclude Include="MirvCam.h" />
     <ClInclude Include="MirvInputMem.h" />
     <ClInclude Include="MirvPgl.h" />
     <ClInclude Include="RenderView.h" />
