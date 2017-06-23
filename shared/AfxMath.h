@@ -43,7 +43,7 @@ u x v = (u_1 X + u_2 Y + u_3 Z) x (v_1 X + v_2 Y + v_3 Z)
 
 */
 
-#include "RefCounted.h"
+#include <shared/RefCounted.h>
 #include <map>
 
 namespace Afx {
