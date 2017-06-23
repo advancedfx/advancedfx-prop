@@ -2928,13 +2928,14 @@ CON_COMMAND(mirv_listentities, "Print info about currently active entites. (CS:G
 			char const * playerName = "[n/a]";
 
 			Tier0_Msg(
-				"%i (%f): %s::%s %s :%i\n"
+				"%i (%f): %s::%s %s :%i |%i\n"
 				, i
 				, dist
 				, be->GetClassname()
 				, be->GetEntityName()
 				, playerName
 				, be->GetRefEHandle().ToInt()
+				, be->GetTeamNumber()
 				);
 		}
 	}
@@ -2989,6 +2990,37 @@ CON_COMMAND(mirv_aim, "Aiming system control.")
 			);
 			return;
 		}
+		else if (0 == _stricmp("calcVecAng", arg1))
+		{
+			if (3 <= argc)
+			{
+				IMirvVecAngCalc * vecAng = g_MirvVecAngCalcs.GetByName(args->ArgV(2));
+
+				if (!vecAng)
+					Tier0_Warning("No vecAng calc \"%s\" exists.\n", args->ArgV(2));
+
+				g_Aiming.Source_set(vecAng);
+
+				return;
+			}
+
+			IMirvVecAngCalc * vecAng = g_Aiming.Source_get();
+
+			Tier0_Msg(
+				"mirv_aim finder <sClacVecAngName> - Calc to use as source (<sClacVecAngName> is name form mirv_calcs vecAng).\n"
+				"Current value: %s\n"
+				, vecAng ? "" : "(none)"
+			);
+
+			if (vecAng) vecAng->Console_Print();
+			Tier0_Msg("\n");
+
+			return;
+		}
+		else if (0 == _stricmp("calcVecAngClear", arg1))
+		{
+			g_Aiming.Source_set(0);
+		}
 		else
 		if(0 == _stricmp("entityIndex", arg1))
 		{
@@ -2997,14 +3029,16 @@ CON_COMMAND(mirv_aim, "Aiming system control.")
 				char const * arg2 = args->ArgV(2);
 
 				g_Aiming.EntityIndex = atoi(arg2);
+				g_Aiming.RebuildCalc();
 				return;
 			}
 
 			Tier0_Msg(
 				"mirv_aim entityIndex <n> - Entity index to aim after (use mirv_listentities to get one). Use invalid index (i.e. -1) to deactivate re-targeting.\n"
-				"Current value: %i\n",
-				g_Aiming.EntityIndex
+				"Current value: %i\n"
+				, g_Aiming.EntityIndex
 			);
+
 			return;
 		}
 		else
@@ -3079,8 +3113,6 @@ CON_COMMAND(mirv_aim, "Aiming system control.")
 				"mirv_aim point abs <fX> <fY> <fz> - Absolute point in world coordinates.\n"
 				"mirv_aim point cam [<fOffsetX> <fOffsetY> <fOffsetZ>] - Aim at current camera position with optional offset in world coordinates.\n"
 				"mirv_aim point last [<fOffsetX> <fOffsetY> <fOffsetZ>] - Aim at last target position with optional offset in world coordinates.\n"
-				"Current value: %i\n",
-				g_Aiming.EntityIndex
 			);
 			return;
 		}
@@ -3190,12 +3222,14 @@ CON_COMMAND(mirv_aim, "Aiming system control.")
 				if(0 == _stricmp("net", arg2))
 				{
 					g_Aiming.Origin = Aiming::O_Net;
+					g_Aiming.RebuildCalc();
 					return;
 				}
 				else
 				if(0 == _stricmp("view", arg2))
 				{
 					g_Aiming.Origin = Aiming::O_View;
+					g_Aiming.RebuildCalc();
 					return;
 				}
 			}
@@ -3228,12 +3262,14 @@ CON_COMMAND(mirv_aim, "Aiming system control.")
 				if(0 == _stricmp("net", arg2))
 				{
 					g_Aiming.Angles = Aiming::A_Net;
+					g_Aiming.RebuildCalc();
 					return;
 				}
 				else
 				if(0 == _stricmp("view", arg2))
 				{
 					g_Aiming.Angles = Aiming::A_View;
+					g_Aiming.RebuildCalc();
 					return;
 				}
 			}
@@ -3299,6 +3335,8 @@ CON_COMMAND(mirv_aim, "Aiming system control.")
 	Tier0_Msg(
 		"mirv_aim active [...] - Whether aiming is active.\n"
 		"mirv_aim softDeactivate [...] - Wheter to support soft deactivation (for snapTo 0).\n"
+		"mirv_aim calcVecAng [...] - Source for target (overrides entityIndex, point, origin, angles).\n"
+		"mirv_aim calcVecAngClear [...] - Clears source for target (no target) (overrides entityIndex, point, origin, angles).\n"
 		"mirv_aim entityIndex [...] - Entity index to aim after (use mirv_listentities to get one).\n"
 		"mirv_aim point [...] - Point to aim after.\n"
 		"mirv_aim origin [...] - Target origin to use.\n"

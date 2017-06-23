@@ -171,6 +171,9 @@
     <ClCompile Include="MirvCam.cpp">
       <Filter>AfxHookSource</Filter>
     </ClCompile>
+    <ClCompile Include="MirvCalcs.cpp">
+      <Filter>AfxHookSource</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\bvhexport.h">
@@ -339,6 +342,9 @@
       <Filter>AfxHookSource</Filter>
     </ClInclude>
     <ClInclude Include="MirvCam.h">
+      <Filter>AfxHookSource</Filter>
+    </ClInclude>
+    <ClInclude Include="MirvCalcs.h">
       <Filter>AfxHookSource</Filter>
     </ClInclude>
   </ItemGroup>

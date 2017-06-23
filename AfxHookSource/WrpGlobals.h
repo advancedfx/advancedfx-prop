@@ -14,6 +14,7 @@ public:
 	virtual void frametime_set(float value) { } // csgo only
 	virtual float frametime_get(void) { return 0; } // csgo only
 	virtual void curtime_set(float value) { } // csgo only
+	virtual int maxclients_get(void) { return 0; } // csgo only
 
 	virtual float absoluteframetime_get(void) abstract = 0;
 	virtual float curtime_get(void) abstract = 0;
@@ -29,6 +30,7 @@ public:
 	virtual void frametime_set(float value);
 	virtual float frametime_get(void);
 	virtual void curtime_set(float value);
+	virtual int maxclients_get(void);
 
 	virtual float absoluteframetime_get(void);
 	virtual float curtime_get(void);

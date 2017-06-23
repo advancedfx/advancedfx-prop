@@ -2116,6 +2116,41 @@ public:
 
 // IVEngineClient_014_csgo /////////////////////////////////////////////////////
 
+#define SOURCESDK_CSGO_MAX_PLAYER_NAME_LENGTH	128
+#define SOURCESDK_CSGO_SIGNED_GUID_LEN 32
+#define SOURCESDK_CSGO_MAX_CUSTOM_FILES	4
+
+typedef unsigned long CRC32_t;
+typedef unsigned __int64 uint64;
+
+typedef struct player_info_s_csgo
+{
+	//DECLARE_BYTESWAP_DATADESC();
+	// version for future compatibility
+	uint64			version;
+	// network xuid
+	uint64			xuid;
+	// scoreboard information
+	char			name[SOURCESDK_CSGO_MAX_PLAYER_NAME_LENGTH];
+	// local server user ID, unique while server is running
+	int				userID;
+	// global unique player identifer
+	char			guid[SOURCESDK_CSGO_SIGNED_GUID_LEN + 1];
+	// friends identification number
+	uint32			friendsID;
+	// friends name
+	char			friendsName[SOURCESDK_CSGO_MAX_PLAYER_NAME_LENGTH];
+	// true, if player is a bot controlled by game.dll
+	bool			fakeplayer;
+	// true if player is the HLTV proxy
+	bool			ishltv;
+	// custom files CRC for this player
+	CRC32_t			customFiles[SOURCESDK_CSGO_MAX_CUSTOM_FILES];
+	// this counter increases each time the server downloaded a new file
+	unsigned char	filesDownloaded;
+} player_info_t_csgo;
+
+
 #define VENGINE_CLIENT_INTERFACE_VERSION_014_CSGO "VEngineClient014"
 
 /// <comments>
@@ -2140,7 +2175,9 @@ public:
 	//       Call ClientCmd_Unrestricted to have access to FCVAR_CLIENTCMD_CAN_EXECUTE vars.
 	virtual void				ClientCmd( const char *szCmdString ) = 0; // :7
 
-	virtual void _UNUSED_GetPlayerInfo(void)=0; // :8
+	// Fill in the player info structure for the specified player index (name, model, etc.)
+	virtual bool				GetPlayerInfo(int ent_num, player_info_t_csgo *pinfo) = 0; //:8
+
 	virtual void _UNUSED_GetPlayerForUserID(void)=0; // :9
 	virtual void _UNUSED_TextMessageGet(void)=0; // :10
 
@@ -4943,21 +4980,46 @@ public:
 	virtual void _UNKNOWN_IClientRenderable_csgo_032(void);
 
 	// Attachments
-	virtual int LookupAttachment(const char *pAttachmentName) = 0;
-	virtual	bool GetAttachment(int number, Vector &origin, QAngle &angles) = 0;
-	virtual bool GetAttachment(int number, matrix3x4_t &matrix) = 0;
+	virtual int LookupAttachment(const char *pAttachmentName) = 0; //:33
+	virtual	bool GetAttachment(int number, Vector &origin, QAngle &angles) = 0; //:34
+	virtual bool GetAttachment(int number, matrix3x4_t &matrix) = 0; //:35
 
+	// More functions, but we don't care about this.
+};
+
+
+class IClientModelRenderable_csgo
+{
+public:
 	// More functions, but we don't care about this.
 };
 
 class IClientNetworkable_csgo abstract
 {
+public:
+	virtual void _UNKNOWN_IClientNetworkable_000(void);
+	virtual void _UNKNOWN_IClientNetworkable_001(void);
+	virtual void _UNKNOWN_IClientNetworkable_002(void);
+	virtual void _UNKNOWN_IClientNetworkable_003(void);
+	virtual void _UNKNOWN_IClientNetworkable_004(void);
+	virtual void _UNKNOWN_IClientNetworkable_005(void);
+	virtual void _UNKNOWN_IClientNetworkable_006(void);
+	virtual void _UNKNOWN_IClientNetworkable_007(void);
+	virtual void _UNKNOWN_IClientNetworkable_008(void);
+	virtual void _UNKNOWN_IClientNetworkable_009(void);
+
+	// Ent Index is the server handle used to reference this entity.
+	// If the index is < 0, that indicates the entity is not known to the server
+	virtual int				entindex(void) const = 0; //:10
+
 	// More functions, but we don't care about this.
 };
 
 class IClientThinkable_csgo abstract
 {
+public:
 	// More functions, but we don't care about this.
+
 };
 
 
@@ -4986,7 +5048,9 @@ public:
 	virtual bool			IsBlurred( void ) = 0;
 };
 
-class C_BaseEntity_csgo abstract : public IClientEntity_csgo
+class C_BaseCombatCharacter_csgo;
+
+class C_BaseEntity_csgo : public IClientEntity_csgo
 {
 public:
 	// (0..14 is from IClientEntity_csgo)
@@ -5063,7 +5127,9 @@ public:
 	virtual void _UNKNOWN_C_BaseEntity_084(void);
 	virtual void _UNKNOWN_C_BaseEntity_085(void);
 	virtual void _UNKNOWN_C_BaseEntity_086(void);
-	virtual void _UNKNOWN_C_BaseEntity_087(void);
+	
+	virtual int						GetTeamNumber(void) const; //:087
+
 	virtual void _UNKNOWN_C_BaseEntity_088(void);
 	virtual void _UNKNOWN_C_BaseEntity_089(void);
 	virtual void _UNKNOWN_C_BaseEntity_090(void);
@@ -5137,10 +5203,14 @@ public:
 	virtual void _UNKNOWN_C_BaseEntity_149(void);
 	virtual void _UNKNOWN_C_BaseEntity_150(void);
 	virtual void _UNKNOWN_C_BaseEntity_151(void);
-	virtual void _UNKNOWN_C_BaseEntity_152(void);
+	
+	virtual bool					IsPlayer(void) const { return false; }; //:152
+
 	virtual void _UNKNOWN_C_BaseEntity_153(void);
 	virtual void _UNKNOWN_C_BaseEntity_154(void);
-	virtual void _UNKNOWN_C_BaseEntity_155(void);
+
+	virtual C_BaseCombatCharacter_csgo	*MyCombatCharacterPointer(void) { return NULL; } //:155
+
 	virtual void _UNKNOWN_C_BaseEntity_156(void);
 	virtual void _UNKNOWN_C_BaseEntity_157(void);
 	virtual void _UNKNOWN_C_BaseEntity_158(void);
@@ -5154,6 +5224,24 @@ public:
 	virtual const QAngle&	EyeAngles( void );		// Direction of eyes // :164
 	virtual const QAngle&	LocalEyeAngles( void );	// Direction of eyes in local space (pl.v_angle) // :165
 
+	virtual void _UNKNOWN_C_BaseEntity_166(void);
+	virtual void _UNKNOWN_C_BaseEntity_167(void);
+	virtual void _UNKNOWN_C_BaseEntity_168(void);
+	virtual void _UNKNOWN_C_BaseEntity_169(void);
+
+	virtual void _UNKNOWN_C_BaseEntity_170(void);
+	virtual void _UNKNOWN_C_BaseEntity_171(void);
+	virtual void _UNKNOWN_C_BaseEntity_172(void);
+	virtual void _UNKNOWN_C_BaseEntity_173(void);
+	virtual void _UNKNOWN_C_BaseEntity_174(void);
+	virtual void _UNKNOWN_C_BaseEntity_175(void);
+	virtual void _UNKNOWN_C_BaseEntity_176(void);
+	virtual void _UNKNOWN_C_BaseEntity_177(void);
+	virtual void _UNKNOWN_C_BaseEntity_178(void);
+	virtual void _UNKNOWN_C_BaseEntity_179(void);
+
+	virtual void _UNKNOWN_C_BaseEntity_180(void);
+
 public:
 	const char	*GetEntityName();
 
@@ -5166,6 +5254,119 @@ inline const char *C_BaseEntity_csgo::GetEntityName()
 { 
 	return m_iName; 
 }
+
+class C_BaseAnimating_csgo : public C_BaseEntity_csgo, public IClientModelRenderable_csgo
+{
+public:
+	virtual void _UNKNOWN_C_BaseAnimating_181(void);
+	virtual void _UNKNOWN_C_BaseAnimating_182(void);
+	virtual void _UNKNOWN_C_BaseAnimating_183(void);
+	virtual void _UNKNOWN_C_BaseAnimating_184(void);
+	virtual void _UNKNOWN_C_BaseAnimating_185(void);
+	virtual void _UNKNOWN_C_BaseAnimating_186(void);
+	virtual void _UNKNOWN_C_BaseAnimating_187(void);
+	virtual void _UNKNOWN_C_BaseAnimating_188(void);
+	virtual void _UNKNOWN_C_BaseAnimating_189(void);
+	virtual void _UNKNOWN_C_BaseAnimating_190(void);
+	virtual void _UNKNOWN_C_BaseAnimating_191(void);
+	virtual void _UNKNOWN_C_BaseAnimating_192(void);
+	virtual void _UNKNOWN_C_BaseAnimating_193(void);
+	virtual void _UNKNOWN_C_BaseAnimating_194(void);
+	virtual void _UNKNOWN_C_BaseAnimating_195(void);
+	virtual void _UNKNOWN_C_BaseAnimating_196(void);
+	virtual void _UNKNOWN_C_BaseAnimating_197(void);
+	virtual void _UNKNOWN_C_BaseAnimating_198(void);
+	virtual void _UNKNOWN_C_BaseAnimating_199(void);
+	virtual void _UNKNOWN_C_BaseAnimating_200(void);
+	virtual void _UNKNOWN_C_BaseAnimating_201(void);
+	virtual void _UNKNOWN_C_BaseAnimating_202(void);
+	virtual void _UNKNOWN_C_BaseAnimating_203(void);
+	virtual void _UNKNOWN_C_BaseAnimating_204(void);
+	virtual void _UNKNOWN_C_BaseAnimating_205(void);
+	virtual void _UNKNOWN_C_BaseAnimating_206(void);
+	virtual void _UNKNOWN_C_BaseAnimating_207(void);
+	virtual void _UNKNOWN_C_BaseAnimating_208(void);
+	virtual void _UNKNOWN_C_BaseAnimating_209(void);
+	virtual void _UNKNOWN_C_BaseAnimating_210(void);
+	virtual void _UNKNOWN_C_BaseAnimating_211(void);
+	virtual void _UNKNOWN_C_BaseAnimating_212(void);
+	virtual void _UNKNOWN_C_BaseAnimating_213(void);
+	virtual void _UNKNOWN_C_BaseAnimating_214(void);
+	virtual void _UNKNOWN_C_BaseAnimating_215(void);
+	virtual void _UNKNOWN_C_BaseAnimating_216(void);
+	virtual void _UNKNOWN_C_BaseAnimating_217(void);
+	virtual void _UNKNOWN_C_BaseAnimating_218(void);
+	virtual void _UNKNOWN_C_BaseAnimating_219(void);
+	virtual void _UNKNOWN_C_BaseAnimating_220(void);
+	virtual void _UNKNOWN_C_BaseAnimating_221(void);
+	virtual void _UNKNOWN_C_BaseAnimating_222(void);
+	virtual void _UNKNOWN_C_BaseAnimating_223(void);
+	virtual void _UNKNOWN_C_BaseAnimating_224(void);
+	virtual void _UNKNOWN_C_BaseAnimating_225(void);
+	virtual void _UNKNOWN_C_BaseAnimating_226(void);
+	virtual void _UNKNOWN_C_BaseAnimating_227(void);
+	virtual void _UNKNOWN_C_BaseAnimating_228(void);
+	virtual void _UNKNOWN_C_BaseAnimating_229(void);
+	virtual void _UNKNOWN_C_BaseAnimating_230(void);
+	virtual void _UNKNOWN_C_BaseAnimating_231(void);
+	virtual void _UNKNOWN_C_BaseAnimating_232(void);
+	virtual void _UNKNOWN_C_BaseAnimating_233(void);
+	virtual void _UNKNOWN_C_BaseAnimating_234(void);
+	virtual void _UNKNOWN_C_BaseAnimating_235(void);
+	virtual void _UNKNOWN_C_BaseAnimating_236(void);
+	virtual void _UNKNOWN_C_BaseAnimating_237(void);
+	virtual void _UNKNOWN_C_BaseAnimating_238(void);
+	virtual void _UNKNOWN_C_BaseAnimating_239(void);
+	virtual void _UNKNOWN_C_BaseAnimating_240(void);
+
+};
+
+class C_BaseAnimatingOverlay_csgo : public C_BaseAnimating_csgo
+{
+public:
+	virtual void _UNKNOWN_C_BaseAnimatingOverlay_241(void);
+	virtual void _UNKNOWN_C_BaseAnimatingOverlay_242(void);
+	virtual void _UNKNOWN_C_BaseAnimatingOverlay_243(void);
+	virtual void _UNKNOWN_C_BaseAnimatingOverlay_244(void);
+
+};
+
+class C_BaseFlex_csgo : public C_BaseAnimatingOverlay_csgo
+{
+public:
+	virtual void _UNKNOWN_C_BaseFlex_245(void);
+	virtual void _UNKNOWN_C_BaseFlex_246(void);
+	virtual void _UNKNOWN_C_BaseFlex_247(void);
+	virtual void _UNKNOWN_C_BaseFlex_248(void);
+	virtual void _UNKNOWN_C_BaseFlex_249(void);
+};
+
+class C_BaseCombatWeapon_csgo;
+
+class C_BaseCombatCharacter_csgo : public C_BaseFlex_csgo
+{
+public:
+	virtual void _UNKNOWN_C_BaseCombatChracter_250(void);
+	virtual void _UNKNOWN_C_BaseCombatChracter_251(void);
+	virtual void _UNKNOWN_C_BaseCombatChracter_252(void);
+	virtual void _UNKNOWN_C_BaseCombatChracter_253(void);
+	virtual void _UNKNOWN_C_BaseCombatChracter_254(void);
+	virtual void _UNKNOWN_C_BaseCombatChracter_255(void);
+	virtual void _UNKNOWN_C_BaseCombatChracter_256(void);
+	virtual void _UNKNOWN_C_BaseCombatChracter_257(void);
+	virtual void _UNKNOWN_C_BaseCombatChracter_258(void);
+	virtual void _UNKNOWN_C_BaseCombatChracter_259(void);
+	virtual void _UNKNOWN_C_BaseCombatChracter_260(void);
+	virtual void _UNKNOWN_C_BaseCombatChracter_261(void);
+
+	virtual C_BaseCombatWeapon_csgo	*GetActiveWeapon(void) const;
+
+};
+
+class C_BaseCombatWeapon_csgo : public C_BaseAnimating_csgo
+{
+public:
+};
 
 namespace CSGO {
 

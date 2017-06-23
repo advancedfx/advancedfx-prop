@@ -20,6 +20,7 @@ AFXADDR_DEF(csgo_C_BaseAnimating_vtable)
 AFXADDR_DEF(csgo_DT_Animationlayer_m_flCycle_fn)
 //AFXADDR_DEF(csgo_DT_Animationlayer_m_flPrevCycle_fn)
 //AFXADDR_DEF(csgo_mystique_animation)
+AFXADDR_DEF(csgo_C_BaseCombatWeapon_m_hWeaponWorldModel)
 AFXADDR_DEF(csgo_C_BaseEntity_ToolRecordEnties)
 AFXADDR_DEF(csgo_C_BaseEntity_ToolRecordEnties_DSZ)
 //AFXADDR_DEF(csgo_C_BasePlayer_OFS_m_bDucked)
@@ -1134,6 +1135,55 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 			//AFXADDR_SET(csgo_C_BasePlayer_OFS_m_flDuckAmount, ofs_m_Local_m_flDuckAmount);
 		}
 
+		// csgo_C_BaseCombatWeapon_m_hWeaponWorldModel
+		//
+		{
+			// this basically uses the RecvProp* functions in c_baseplayer.cpp to get the offsets of the fields.
+
+			DWORD strAddr_m_hWeaponWorldModel = 0;
+			DWORD ofs_m_hWeaponWorldModel = -1;
+			{
+				ImageSectionsReader sections((HMODULE)clientDll);
+				if (!sections.Eof())
+				{
+					sections.Next(); // skip .text
+					if (!sections.Eof())
+					{
+						{
+							MemRange result = FindCString(sections.GetMemRange(), "m_hWeaponWorldModel");
+							if (!result.IsEmpty())
+							{
+								strAddr_m_hWeaponWorldModel = result.Start;
+							}
+							else ErrorBox(MkErrStr(__FILE__, __LINE__));
+						}
+					}
+					else ErrorBox(MkErrStr(__FILE__, __LINE__));
+				}
+				else ErrorBox(MkErrStr(__FILE__, __LINE__));
+			}
+
+			if (strAddr_m_hWeaponWorldModel)
+			{
+				{
+					ImageSectionsReader sections((HMODULE)clientDll);
+
+					MemRange baseRange = sections.GetMemRange();
+					MemRange result = FindBytes(baseRange, (char const *)&strAddr_m_hWeaponWorldModel, sizeof(strAddr_m_hWeaponWorldModel));
+					if (!result.IsEmpty())
+					{
+						DWORD addr = result.Start;
+						addr += 4 + 2 + 4;
+						addr = *(DWORD *)addr;
+						ofs_m_hWeaponWorldModel = addr;
+					}
+					else ErrorBox(MkErrStr(__FILE__, __LINE__));
+				}
+			}
+
+			AFXADDR_SET(csgo_C_BaseCombatWeapon_m_hWeaponWorldModel, ofs_m_hWeaponWorldModel);
+		}
+
 		// csgo_C_BaseEntity_ToolRecordEnties: // Checked 2017-05-13.
 		{
 			DWORD addr = 0;
@@ -1682,6 +1732,7 @@ void Addresses_InitClientDll(AfxAddr clientDll, bool isCsgo)
 		AFXADDR_SET(csgo_C_BaseAnimating_vtable, 0x0);
 		AFXADDR_SET(csgo_DT_Animationlayer_m_flCycle_fn, 0x0);
 		//AFXADDR_SET(csgo_DT_Animationlayer_m_flPrevCycle_fn, 0x0);
+		AFXADDR_SET(csgo_C_BaseCombatWeapon_m_hWeaponWorldModel, -1);
 		AFXADDR_SET(csgo_C_BaseEntity_ToolRecordEnties, 0x0);
 		//AFXADDR_SET(csgo_C_BasePlayer_OFS_m_bDucked, (AfxAddr)-1);
 		//AFXADDR_SET(csgo_C_BasePlayer_OFS_m_bDucking, (AfxAddr)-1);

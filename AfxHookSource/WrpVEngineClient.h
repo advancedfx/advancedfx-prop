@@ -65,6 +65,11 @@ public:
 
 	/// <returns>0 if not available WrpVEngineClientDemoInfoEx interface otherwise</returns>
 	virtual WrpVEngineClientDemoInfoEx * GetDemoInfoEx(void) abstract = 0;
+
+	virtual SOURCESDK::IVEngineClient_014_csgo * GetVEngineClient_csgo(void)
+	{
+		return 0;
+	}
 };
 
 
@@ -216,6 +221,11 @@ public:
 	virtual void ClientCmd_Unrestricted( const char *szCmdString );
 
 	virtual WrpVEngineClientDemoInfoEx * GetDemoInfoEx(void);
+
+	virtual SOURCESDK::IVEngineClient_014_csgo * GetVEngineClient_csgo(void)
+	{
+		return m_VEngineClient;
+	}
 
 private:
 	SOURCESDK::IVEngineClient_014_csgo * m_VEngineClient;

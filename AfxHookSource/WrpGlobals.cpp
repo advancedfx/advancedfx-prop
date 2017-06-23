@@ -29,6 +29,12 @@ void WrpGlobalsCsGo::frametime_set(float value)
 	*(float *)((unsigned char *)m_pGlobals + 0x14) = value;
 }
 
+int WrpGlobalsCsGo::maxclients_get(void)
+{
+	return *(int *)((unsigned char *)m_pGlobals + 0x18);
+}
+
+
 
 float WrpGlobalsCsGo::absoluteframetime_get(void)
 {

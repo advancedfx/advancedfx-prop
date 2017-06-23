@@ -8,39 +8,34 @@
 #include <shared/AfxMath.h>
 
 
-void MirvCam::ApplySource(float & x, float & y, float & z, float & xRotation, float & yRotation, float & zRotation)
+void CMirvCam::ApplySource(float & x, float & y, float & z, float & xRotation, float & yRotation, float & zRotation)
 {
-	if (m_SourceHandle.IsValid())
+	if (m_Source)
 	{
-		SOURCESDK::IClientEntity_csgo * ce = SOURCESDK::g_Entitylist_csgo->GetClientEntityFromHandle(m_SourceHandle);
-		SOURCESDK::C_BaseEntity_csgo * be = ce ? ce->GetBaseEntity() : 0;
+		SOURCESDK::Vector o;
+		SOURCESDK::QAngle a;
 
-		if (be || ce && O_View != m_SourceOrigin && A_View != m_SourceAngles)
+		if (!m_Source->CalcVecAng(o, a))
 		{
-			SOURCESDK::Vector o = be && O_View == m_SourceOrigin ? be->EyePosition() : ce->GetAbsOrigin();
-			SOURCESDK::QAngle a = be && A_View == m_SourceAngles ? be->EyeAngles() : ce->GetAbsAngles();
-
-			if (!m_SourceAttachment.empty())
-			{
-				int idx = ce->LookupAttachment(m_SourceAttachment.c_str());
-				if (-1 != idx)
-				{
-					ce->GetAttachment(idx, o, a);
-				}
-			}
-
-			if (m_SourceUseX) x = o.x;
-			if (m_SourceUseY) y = o.y;
-			if (m_SourceUseZ) z = o.z;
-
-			if (m_SourceUseXRotation) xRotation = a.z;
-			if (m_SourceUseYRotation) yRotation = a.x;
-			if (m_SourceUseZRotation) zRotation = a.y;
+			o.x = x;
+			o.y = y;
+			o.z = z;
+			a.x = xRotation;
+			a.y = yRotation;
+			a.z = zRotation;
 		}
+
+		if (m_SourceUseX) x = o.x;
+		if (m_SourceUseY) y = o.y;
+		if (m_SourceUseZ) z = o.z;
+
+		if (m_SourceUseXRotation) xRotation = a.z;
+		if (m_SourceUseYRotation) yRotation = a.x;
+		if (m_SourceUseZRotation) zRotation = a.y;
 	}
 }
 
-void MirvCam::ApplyOffset(float & x, float & y, float & z, float & xRotation, float & yRotation, float & zRotation)
+void CMirvCam::ApplyOffset(float & x, float & y, float & z, float & xRotation, float & yRotation, float & zRotation)
 {
 	if (m_OffsetForwad || m_OffsetLeft || m_OffsetUp)
 	{
@@ -66,7 +61,31 @@ void MirvCam::ApplyOffset(float & x, float & y, float & z, float & xRotation, fl
 	}
 }
 
-MirvCam g_MirvCam;
+void CMirvCam::RebuildCalc(void)
+{
+	IMirvHandleCalc * handleCalc = g_MirvHandleCalcs.NewValueCalc(0, m_SourceHandle.ToInt());
+	if (handleCalc)
+	{
+		handleCalc->AddRef();
+
+		if (!m_SourceAttachment.empty())
+		{
+			Source_set(
+				g_MirvVecAngCalcs.NewHandleAttachmentCalc(0, handleCalc, m_SourceAttachment.c_str())
+			);
+		}
+		else
+		{
+			Source_set(
+				g_MirvVecAngCalcs.NewHandleCalcEx(0, handleCalc, O_View == m_SourceOrigin, A_View == m_SourceAngles)
+			);
+		}
+
+		handleCalc->Release();
+	}
+}
+
+CMirvCam g_MirvCam;
 
 CON_COMMAND(mirv_cam, "Control camera source entity and offset.")
 {
@@ -82,7 +101,38 @@ CON_COMMAND(mirv_cam, "Control camera source entity and offset.")
 			{
 				char const * arg2 = args->ArgV(2);
 
-				if (0 == _stricmp("handle", arg2))
+				if (0 == _stricmp("calcVecAng", arg2))
+				{
+					if (4 <= argc)
+					{
+						IMirvVecAngCalc * vecAng = g_MirvVecAngCalcs.GetByName(args->ArgV(3));
+
+						if (!vecAng)
+							Tier0_Warning("No vecAng calc \"%s\" exists.\n", args->ArgV(3));
+
+						g_MirvCam.Source_set(vecAng);
+
+						return;
+					}
+
+					IMirvVecAngCalc * vecAng = g_MirvCam.Source_get();
+
+					Tier0_Msg(
+						"mirv_cam source calcVecAng <sVecAngCalcName> - Calc to use as source (<sVecAngCalcName> is name form mirv_calcs vecAng).\n"
+						"Cuurent value: %s"
+						, vecAng ? "" : "(none)"
+					);
+
+					if (vecAng) vecAng->Console_Print();
+					Tier0_Msg("\n");
+
+					return;
+				}
+				else if (0 == _stricmp("calcVecAngClear", arg2))
+				{
+					g_MirvCam.Source_set(0);	
+				}
+				else if (0 == _stricmp("handle", arg2))
 				{
 					if (4 <= argc)
 					{
@@ -91,17 +141,20 @@ CON_COMMAND(mirv_cam, "Control camera source entity and offset.")
 						if (0 == _stricmp("none", arg3))
 							g_MirvCam.m_SourceHandle = SOURCESDK_CSGO_INVALID_EHANDLE_INDEX;
 						else
-							g_MirvCam.m_SourceHandle = (unsigned long)atoi(arg3);
+							g_MirvCam.m_SourceHandle = atoi(arg3);
+
+						g_MirvCam.RebuildCalc();
 
 						return;
 					}
 
 					Tier0_Msg(
 						"mirv_cam source handle none|<n> - Handle to use as source, use mirv_listentites to find the entityHandle or mirv_streams ... picker.\n"
-						"Current value: %i%s\n"
+						"Handle: %i%s\n"
 						, g_MirvCam.m_SourceHandle.ToInt()
 						, g_MirvCam.m_SourceHandle.IsValid() ? "" : " (none)"
 					);
+
 					return;
 				}
 				else if (0 == _stricmp("origin", arg2))
@@ -112,24 +165,30 @@ CON_COMMAND(mirv_cam, "Control camera source entity and offset.")
 
 						if (0 == _stricmp("net", arg3))
 						{
-							g_MirvCam.m_SourceOrigin = MirvCam::O_Net;
+							g_MirvCam.m_SourceOrigin = CMirvCam::O_Net;
+
+							g_MirvCam.RebuildCalc();
+
 							return;
 						}
 						else
-							if (0 == _stricmp("view", arg3))
-							{
-								g_MirvCam.m_SourceOrigin = MirvCam::O_View;
-								return;
-							}
+						if (0 == _stricmp("view", arg3))
+						{
+							g_MirvCam.m_SourceOrigin = CMirvCam::O_View;
+
+							g_MirvCam.RebuildCalc();
+
+							return;
+						}
 					}
 
 					char const * curValue = "[unknown]";
 					switch (g_MirvCam.m_SourceOrigin)
 					{
-					case MirvCam::O_Net:
+					case CMirvCam::O_Net:
 						curValue = "net";
 						break;
-					case MirvCam::O_View:
+					case CMirvCam::O_View:
 						curValue = "view";
 						break;
 					}
@@ -149,13 +208,19 @@ CON_COMMAND(mirv_cam, "Control camera source entity and offset.")
 
 						if (0 == _stricmp("net", arg3))
 						{
-							g_MirvCam.m_SourceAngles = MirvCam::A_Net;
+							g_MirvCam.m_SourceAngles = CMirvCam::A_Net;
+
+							g_MirvCam.RebuildCalc();
+
 							return;
 						}
 						else
 							if (0 == _stricmp("view", arg3))
 							{
-								g_MirvCam.m_SourceAngles = MirvCam::A_View;
+								g_MirvCam.m_SourceAngles = CMirvCam::A_View;
+
+								g_MirvCam.RebuildCalc();
+
 								return;
 							}
 					}
@@ -163,10 +228,10 @@ CON_COMMAND(mirv_cam, "Control camera source entity and offset.")
 					char const * curValue = "[unknown]";
 					switch (g_MirvCam.m_SourceAngles)
 					{
-					case MirvCam::A_Net:
+					case CMirvCam::A_Net:
 						curValue = "net";
 						break;
-					case MirvCam::A_View:
+					case CMirvCam::A_View:
 						curValue = "view";
 						break;
 					}
@@ -183,6 +248,9 @@ CON_COMMAND(mirv_cam, "Control camera source entity and offset.")
 					if (4 <= argc)
 					{
 						g_MirvCam.m_SourceAttachment = args->ArgV(3);
+
+						g_MirvCam.RebuildCalc();
+
 						return;
 					}
 
@@ -196,6 +264,9 @@ CON_COMMAND(mirv_cam, "Control camera source entity and offset.")
 				else if (0 == _stricmp("attachmentNone", arg2))
 				{
 					g_MirvCam.m_SourceAttachment.clear();
+
+					g_MirvCam.RebuildCalc();
+
 					return;
 				}
 				else if (0 == _stricmp("originUse", arg2))
@@ -239,11 +310,13 @@ CON_COMMAND(mirv_cam, "Control camera source entity and offset.")
 			}
 
 			Tier0_Msg(
+				"mirv_cam source calcVecAng [...] - Calc to use as source (overrides handle, origin, angles, attachment, attachmentNone).\n"
+				"mirv_cam source calcVecAngClear - Clear source (overrides handle, origin, angles, attachment, attachmentNone).\n"
 				"mirv_cam source handle [...] - Entity handle to use as source.\n"
 				"mirv_cam source origin [...] - Controls source origin type.\n"
 				"mirv_cam source angles [...] - Controls source angles type.\n"
-				"mirv_cam source atachment [...] - Controls if and what attachment to use as source.\n"
-				"mirv_cam source atachmentNone - Use no attachment.\n"
+				"mirv_cam source attachment [...] - Controls if and what attachment to use as source.\n"
+				"mirv_cam source attachmentNone - Use no attachment.\n"
 				"mirv_cam source originUse [...] - Controls which components of source origin to use.\n"
 				"mirv_cam source anglesUse [...] - Controls which components of source angles to use.\n"
 			);

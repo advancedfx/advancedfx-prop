@@ -10,6 +10,8 @@
 
 #include <shared/AfxMath.h>
 
+#include "MirvCalcs.h"
+
 using namespace Afx::Math;
 
 class Aiming
@@ -24,8 +26,6 @@ public:
 
 	bool Active;
 	bool SoftDeactivate;
-
-	int EntityIndex;
 
 	Vector3 OffSet;
 
@@ -49,7 +49,29 @@ public:
 		U_World
 	} Up;
 
+	int EntityIndex;
+
+	void RebuildCalc(void);
+
+	~Aiming()
+	{
+		Source_set(0);
+	}
+
+	IMirvVecAngCalc * Source_get(void)
+	{
+		return m_Source;
+	}
+
+	void Source_set(IMirvVecAngCalc * value)
+	{
+		if (m_Source) m_Source->Release();
+		m_Source = value;
+		if (m_Source) m_Source->AddRef();
+	}
+
 private:
+	IMirvVecAngCalc * m_Source = 0;
 	Vector3 LastTargetOrigin;
 	double m_YPitchVelocity;
 	double m_ZYawVelocity;

@@ -59,7 +59,6 @@ void LookAnglesFromTo(Vector3 const &from, Vector3 const &to, double fallBackPit
 Aiming::Aiming()
 : Active(false)
 , SoftDeactivate(false)
-, EntityIndex(-1)
 , OffSet(0.0,0.0,0.0)
 , SnapTo(true)
 , LimitVelocity(360)
@@ -80,6 +79,26 @@ Aiming::Aiming()
 
 }
 
+void Aiming::RebuildCalc(void)
+{
+	if (-1 != EntityIndex)
+	{
+		IMirvHandleCalc * handleCalc = g_MirvHandleCalcs.NewIndexCalc(0, EntityIndex);
+		if (handleCalc)
+		{
+			handleCalc->AddRef();
+
+			Source_set(
+				g_MirvVecAngCalcs.NewHandleCalcEx(0, handleCalc, O_View == Origin, A_View == Angles)
+			);
+
+			handleCalc->Release();
+		}
+	}
+	else
+		Source_set(0);
+}
+
 bool Aiming::Aim(double deltaT, Vector3 const camOrigin, double & yPitch, double & zYaw, double & xRoll)
 {
 	if(deltaT <= 0)
@@ -95,26 +114,26 @@ bool Aiming::Aim(double deltaT, Vector3 const camOrigin, double & yPitch, double
 	double targetZYaw = zYaw;
 	double targetXRoll = xRoll;
 
-	if(Active)
+	if(Active && m_Source)
 	{
-		SOURCESDK::IClientEntity_csgo * ce = SOURCESDK::g_Entitylist_csgo->GetClientEntity(EntityIndex);
-		SOURCESDK::C_BaseEntity_csgo * be = ce ? ce->GetBaseEntity() : 0;
+		SOURCESDK::Vector o;
+		SOURCESDK::QAngle a;
 
-		if (be || ce && O_View != Origin && A_View != Angles)
+		if (m_Source->CalcVecAng(o, a))
 		{
-			SOURCESDK::Vector o =  be && O_View == Origin ? be->EyePosition() : ce->GetAbsOrigin();
-			SOURCESDK::QAngle a =  be && A_View == Angles ? be->EyeAngles() : ce->GetAbsAngles();
-
 			double forward[3], right[3], up[3];
 
 			MakeVectors(a.z, a.x, a.y, forward, right, up);
 
 			LastTargetOrigin = Vector3(
-				o.x +OffSet.X * forward[0] + OffSet.Y * right[0] +OffSet.Z * up[0],
-				o.y +OffSet.X * forward[1] + OffSet.Y * right[1] +OffSet.Z * up[1],
-				o.z +OffSet.X * forward[2] + OffSet.Y * right[2] +OffSet.Z * up[2]
+				o.x + OffSet.X * forward[0] + OffSet.Y * right[0] + OffSet.Z * up[0],
+				o.y + OffSet.X * forward[1] + OffSet.Y * right[1] + OffSet.Z * up[1],
+				o.z + OffSet.X * forward[2] + OffSet.Y * right[2] + OffSet.Z * up[2]
 			);
-
+		}
+		else
+		{
+			LastTargetOrigin = camOrigin;
 		}
 	}
 	else
@@ -187,7 +206,7 @@ bool Aiming::Aim(double deltaT, Vector3 const camOrigin, double & yPitch, double
 
 void Aiming::TargetPoint(Vector3 origin)
 {
-	EntityIndex = -1;
+	Source_set(0);
 	LastTargetOrigin = origin;
 }
 
