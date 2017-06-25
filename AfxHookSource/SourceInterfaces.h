@@ -5363,6 +5363,11 @@ public:
 
 };
 
+// Weapon m_iState
+#define SOURCESDK_CSGO_WEAPON_NOT_CARRIED				0	// Weapon is on the ground
+#define SOURCESDK_CSGO_WEAPON_IS_CARRIED_BY_PLAYER		1	// This client is carrying this weapon.
+#define SOURCESDK_CSGO_WEAPON_IS_ACTIVE				2	// This client is carrying this weapon and it's the currently held weapon
+
 class C_BaseCombatWeapon_csgo : public C_BaseAnimating_csgo
 {
 public:
