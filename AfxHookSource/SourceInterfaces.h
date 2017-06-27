@@ -4948,7 +4948,9 @@ public:
 	virtual void _UNKNOWN_IClientRenderable_csgo_000(void);
 	virtual void _UNKNOWN_IClientRenderable_csgo_001(void);
 	virtual void _UNKNOWN_IClientRenderable_csgo_002(void);
-	virtual void _UNKNOWN_IClientRenderable_csgo_003(void);
+
+	virtual bool					ShouldDraw(void) = 0; //:003
+
 	virtual void _UNKNOWN_IClientRenderable_csgo_004(void);
 	virtual void _UNKNOWN_IClientRenderable_csgo_005(void);
 	virtual void _UNKNOWN_IClientRenderable_csgo_006(void);
