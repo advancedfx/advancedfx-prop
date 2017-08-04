@@ -25,8 +25,8 @@ namespace TF2 {
 //-----------------------------------------------------------------------------
 
 class IMaterial;
-class Vector;
-class Vector2D;
+//class Vector;
+//class Vector2D;
 struct model_t;
 typedef unsigned short ModelInstanceHandle_t;
 class IClientRenderable;

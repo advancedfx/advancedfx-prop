@@ -5681,7 +5681,7 @@ public:
 
 // handle to a KeyValues key name symbol
 typedef int HKeySymbol;
-#define INVALID_KEY_SYMBOL (-1)
+#define SOURCESDK_INVALID_KEY_SYMBOL (-1)
 
 //-----------------------------------------------------------------------------
 // Purpose: Interface to shared data repository for KeyValues (included in vgui_controls.lib)

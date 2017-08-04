@@ -819,7 +819,7 @@ KeyValues *KeyValues::FindKey(const char *keyName, bool bCreate)
 	// lookup the symbol for the search string
 	HKeySymbol iSearchStr = KeyValuesSystem()->GetSymbolForString( searchStr, bCreate );
 
-	if ( iSearchStr == INVALID_KEY_SYMBOL )
+	if ( iSearchStr == SOURCESDK_INVALID_KEY_SYMBOL )
 	{
 		// not found, couldn't possibly be in key value list
 		return NULL;

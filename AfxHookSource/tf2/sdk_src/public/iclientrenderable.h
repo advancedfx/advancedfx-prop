@@ -22,7 +22,7 @@ namespace SOURCESDK {
 namespace TF2 {
 
 struct model_t;
-struct matrix3x4_t;
+//struct matrix3x4_t;
 
 //extern void DefaultRenderBoundsWorldspace( IClientRenderable *pRenderable, Vector &absMins, Vector &absMaxs );
 

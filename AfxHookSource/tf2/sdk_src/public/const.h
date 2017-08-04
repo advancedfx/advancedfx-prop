@@ -369,7 +369,7 @@ enum Collision_Group_t
 } // namespace TF2 {
 } // namespace SOURCESDK {
 
-#include <tf2/sdk_src/public/tier0/basetypes.h>
+//#include <tf2/sdk_src/public/tier0/basetypes.h
 
 namespace SOURCESDK {
 namespace TF2 {
