@@ -1866,7 +1866,7 @@ public:
 	virtual void _UNKOWN_113(void); // :113
 
 	// This version does NOT check against FCVAR_CLIENTCMD_CAN_EXECUTE.
-	virtual void ClientCmd_Unrestricted( const char *szCmdString ) = 0; // :114
+	virtual void ClientCmd_Unrestricted( const char *szCmdString, int unknown = 1 ) = 0; // :114
 
 	//
 	// might be in-accurate:
