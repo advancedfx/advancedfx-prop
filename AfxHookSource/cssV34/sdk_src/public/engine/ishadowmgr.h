@@ -6,19 +6,19 @@
 //
 //=============================================================================//
 
-#ifndef SOURCESDK_TF2_ISHADOWMGR_H
-#define SOURCESDK_TF2_ISHADOWMGR_H
+#ifndef SOURCESDK_CSSV34_ISHADOWMGR_H
+#define SOURCESDK_CSSV34_ISHADOWMGR_H
 
 #ifdef _WIN32
 #pragma once
 #endif
 
 //#include "interface.h"
-//#include "mathlib/vmatrix.h"
-
+//#include "vmatrix.h"
 
 namespace SOURCESDK {
-namespace TF2 {
+namespace CSSV34 {
+
 
 //-----------------------------------------------------------------------------
 // forward declarations
@@ -33,7 +33,7 @@ class IClientRenderable;
 class ITexture;
 
 // change this when the new version is incompatable with the old
-#define SOURCESDK_TF2_ENGINE_SHADOWMGR_INTERFACE_VERSION	"VEngineShadowMgr002"
+#define SOURCESDK_CSSV34_ENGINE_SHADOWMGR_INTERFACE_VERSION	"VEngineShadowMgr002"
 
 
 //-----------------------------------------------------------------------------
@@ -47,7 +47,7 @@ enum ShadowFlags_t
 	SHADOW_FLAGS_LAST_FLAG				= SHADOW_FLAGS_SHADOW
 };
 
-#define SOURCESDK_TF2_SHADOW_FLAGS_PROJECTED_TEXTURE_TYPE_MASK ( SHADOW_FLAGS_FLASHLIGHT | SHADOW_FLAGS_SHADOW )
+#define SOURCESDK_CSSV34_SHADOW_FLAGS_PROJECTED_TEXTURE_TYPE_MASK ( SHADOW_FLAGS_FLASHLIGHT | SHADOW_FLAGS_SHADOW )
 
 
 //-----------------------------------------------------------------------------
@@ -79,9 +79,8 @@ enum ShadowCreateFlags_t
 	SHADOW_LAST_FLAG = SHADOW_FLASHLIGHT,
 };
 
+
 /*
-
-
 //-----------------------------------------------------------------------------
 // Information about a particular shadow
 //-----------------------------------------------------------------------------
@@ -140,12 +139,11 @@ public:
 	// the shadow size measured in the space of the shadow matrix; the
 	// shadow goes from +/- size.x/2 along the x axis of the shadow matrix
 	// and +/- size.y/2 along the y axis of the shadow matrix.
-	virtual void ProjectShadow( ShadowHandle_t handle, const Vector &origin, 
-		const Vector& projectionDir, const VMatrix& worldToShadow, const Vector2D& size,
-		int nLeafCount, const int *pLeafList,
-		float maxHeight, float falloffOffset, float falloffAmount, const Vector &vecCasterOrigin ) = 0;
+	virtual void ProjectShadow( ShadowHandle_t handle, const Vector& origin,
+		const Vector& projectionDir, const VMatrix &worldToShadow, const Vector2D &size,
+		float maxDistance, float falloffOffset, float falloffAmount, const Vector &vecCasterOrigin ) = 0;
 
-	virtual void ProjectFlashlight( ShadowHandle_t handle, const VMatrix &worldToShadow, int nLeafCount, const int *pLeafList ) = 0;
+	virtual void ProjectFlashlight( ShadowHandle_t handle, const VMatrix &worldToShadow ) = 0;
 
 	// Gets at information about a particular shadow
 	virtual const ShadowInfo_t &GetInfo( ShadowHandle_t handle ) = 0;
@@ -183,18 +181,13 @@ public:
 	virtual void DrawFlashlightDepthTexture( ) = 0;
 
 	virtual void AddFlashlightRenderable( ShadowHandle_t shadow, IClientRenderable *pRenderable ) = 0;
-	virtual ShadowHandle_t CreateShadowEx( IMaterial* pMaterial, IMaterial* pModelMaterial, void* pBindProxy, int creationFlags ) = 0;
+	virtual ShadowHandle_t CreateShadowEx( IMaterial* pMaterial, IMaterial* pModelMaterial, void* pBindProxy, int creationFlags, ITexture *pFlashlightDepthTexture ) = 0;
 
-	virtual void SetFlashlightDepthTexture( ShadowHandle_t shadowHandle, ITexture *pFlashlightDepthTexture, unsigned char ucShadowStencilBit ) = 0;
-
-	virtual const FlashlightState_t &GetFlashlightState( ShadowHandle_t handle ) = 0;
-
-	virtual void SetFlashlightRenderState( ShadowHandle_t handle ) = 0;
+	virtual void UpdateFlashlightStateEx( ShadowHandle_t shadowHandle, const FlashlightState_t &lightState, ITexture *pFlashlightDepthTexture ) = 0;
 };
-
 */
 
-} // namespace TF2 {
+} // namespace CSSV34 {
 } // namespace SOURCESDK {
 
 #endif

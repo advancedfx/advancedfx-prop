@@ -5,90 +5,82 @@
 // $NoKeywords: $
 //
 //=============================================================================//
-#ifndef SOURCESDK_TF2_CONST_H
-#define SOURCESDK_TF2_CONST_H
+#ifndef SOURCESDK_CSSV34_CONST_H
+#define SOURCESDK_CSSV34_CONST_H
 
 #ifdef _WIN32
 #pragma once
 #endif
 
+
 namespace SOURCESDK {
-namespace TF2 {
+namespace CSSV34 {
 
 // the command line param that tells the engine to use steam
-#define SOURCESDK_TF2_STEAM_PARM					"-steam"
+#define SOURCESDK_CSSV34_STEAM_PARM					"-steam"
 // the command line param to tell dedicated server to restart 
 // if they are out of date
-#define SOURCESDK_TF2_AUTO_RESTART "-autoupdate"
+#define SOURCESDK_CSSV34_AUTO_RESTART "-autoupdate"
 
 // the message a server sends when a clients steam login is expired
-#define SOURCESDK_TF2_INVALID_STEAM_TICKET "Invalid STEAM UserID Ticket\n"
-#define SOURCESDK_TF2_INVALID_STEAM_LOGON "No Steam logon\n"
-#define SOURCESDK_TF2_INVALID_STEAM_VACBANSTATE "VAC banned from secure server\n"
-#define SOURCESDK_TF2_INVALID_STEAM_LOGGED_IN_ELSEWHERE "This Steam account is being used in another location\n"
+#define SOURCESDK_CSSV34_INVALID_STEAM_TICKET "Invalid STEAM UserID Ticket\n"
+#define SOURCESDK_CSSV34_INVALID_STEAM_LOGON "No Steam logon\n"
+#define SOURCESDK_CSSV34_INVALID_STEAM_VACBANSTATE "VAC banned from secure server\n"
+#define SOURCESDK_CSSV34_INVALID_STEAM_LOGGED_IN_ELSEWHERE "This Steam account is being used in another location\n"
 
 // This is the default, see shareddefs.h for mod-specific value, which can override this
-#define SOURCESDK_TF2_DEFAULT_TICK_INTERVAL	(0.015)				// 15 msec is the default
-#define SOURCESDK_TF2_MINIMUM_TICK_INTERVAL   (0.001)
-#define SOURCESDK_TF2_MAXIMUM_TICK_INTERVAL	(0.1)
+#define SOURCESDK_CSSV34_DEFAULT_TICK_INTERVAL	(0.015)				// 15 msec is the default
+#define SOURCESDK_CSSV34_MINIMUM_TICK_INTERVAL   (0.001)
+#define SOURCESDK_CSSV34_MAXIMUM_TICK_INTERVAL	(0.1)
 
 // This is the max # of players the engine can handle
-#define SOURCESDK_TF2_ABSOLUTE_PLAYER_LIMIT 255  // not 256, so we can send the limit as a byte 
-#define SOURCESDK_TF2_ABSOLUTE_PLAYER_LIMIT_DW	( (SOURCESDK_TF2_ABSOLUTE_PLAYER_LIMIT/32) + 1 )
+#define SOURCESDK_CSSV34_ABSOLUTE_PLAYER_LIMIT 255  // not 256, so we can send the limit as a byte 
+#define SOURCESDK_CSSV34_ABSOLUTE_PLAYER_LIMIT_DW	( (SOURCESDK_CSSV34_ABSOLUTE_PLAYER_LIMIT/32) + 1 )
 
-// a player name may have 31 chars + 0 on the PC.
-// the 360 only allows 15 char + 0, but stick with the larger PC size for cross-platform communication
-#define SOURCESDK_TF2_MAX_PLAYER_NAME_LENGTH		32
-
-#ifdef _X360
-#define SOURCESDK_TF2_MAX_PLAYERS_PER_CLIENT		SOURCESDK_TF2_XUSER_MAX_COUNT	// Xbox 360 supports 4 players per console
-#else
-#define SOURCESDK_TF2_MAX_PLAYERS_PER_CLIENT		1	// One player per PC
-#endif
-
-#define SOURCESDK_TF2_MAX_MAP_NAME				32	
-#define	SOURCESDK_TF2_MAX_NETWORKID_LENGTH		64  // num chars for a network (i.e steam) ID
+#define SOURCESDK_CSSV34_MAX_PLAYER_NAME_LENGTH		32	// a player name may have 31 chars + 0
+#define SOURCESDK_CSSV34_MAX_MAP_NAME				32	
+#define	SOURCESDK_CSSV34_MAX_NETWORKID_LENGTH		64  // num chars for a network (i.e steam) ID
 
 // BUGBUG: Reconcile with or derive this from the engine's internal definition!
 // FIXME: I added an extra bit because I needed to make it signed
-#define SOURCESDK_TF2_SP_MODEL_INDEX_BITS			11
+#define SOURCESDK_CSSV34_SP_MODEL_INDEX_BITS			11
 
 // How many bits to use to encode an edict.
-#define	SOURCESDK_TF2_MAX_EDICT_BITS				11			// # of bits needed to represent max edicts
+#define	SOURCESDK_CSSV34_MAX_EDICT_BITS				11			// # of bits needed to represent max edicts
 // Max # of edicts in a level
-#define	SOURCESDK_TF2_MAX_EDICTS					(1<<SOURCESDK_TF2_MAX_EDICT_BITS)
+#define	SOURCESDK_CSSV34_MAX_EDICTS					(1<<SOURCESDK_CSSV34_MAX_EDICT_BITS)
 
 // How many bits to use to encode an server class index
-#define SOURCESDK_TF2_MAX_SERVER_CLASS_BITS		9
+#define SOURCESDK_CSSV34_MAX_SERVER_CLASS_BITS		9
 // Max # of networkable server classes
-#define SOURCESDK_TF2_MAX_SERVER_CLASSES			(1<<SOURCESDK_TF2_MAX_SERVER_CLASS_BITS)
+#define SOURCESDK_CSSV34_MAX_SERVER_CLASSES			(1<<SOURCESDK_CSSV34_MAX_SERVER_CLASS_BITS)
 
-#define SOURCESDK_TF2_SIGNED_GUID_LEN 32 // Hashed CD Key (32 hex alphabetic chars + 0 terminator )
+#define SOURCESDK_CSSV34_SIGNED_GUID_LEN 32 // Hashed CD Key (32 hex alphabetic chars + 0 terminator )
 
 // Used for networking ehandles.
-#define SOURCESDK_TF2_NUM_ENT_ENTRY_BITS		(SOURCESDK_TF2_MAX_EDICT_BITS + 1)
-#define SOURCESDK_TF2_NUM_ENT_ENTRIES			(1 << SOURCESDK_TF2_NUM_ENT_ENTRY_BITS)
-#define SOURCESDK_TF2_ENT_ENTRY_MASK			(SOURCESDK_TF2_NUM_ENT_ENTRIES - 1)
-#define SOURCESDK_TF2_INVALID_EHANDLE_INDEX	0xFFFFFFFF
+#define SOURCESDK_CSSV34_NUM_ENT_ENTRY_BITS		(SOURCESDK_CSSV34_MAX_EDICT_BITS + 1)
+#define SOURCESDK_CSSV34_NUM_ENT_ENTRIES			(1 << SOURCESDK_CSSV34_NUM_ENT_ENTRY_BITS)
+#define SOURCESDK_CSSV34_ENT_ENTRY_MASK			(SOURCESDK_CSSV34_NUM_ENT_ENTRIES - 1)
+#define SOURCESDK_CSSV34_INVALID_EHANDLE_INDEX	0xFFFFFFFF
 
-#define SOURCESDK_TF2_NUM_SERIAL_NUM_BITS		(32 - SOURCESDK_TF2_NUM_ENT_ENTRY_BITS)
+#define SOURCESDK_CSSV34_NUM_SERIAL_NUM_BITS		(32 - SOURCESDK_CSSV34_NUM_ENT_ENTRY_BITS)
 
 
 // Networked ehandles use less bits to encode the serial number.
-#define SOURCESDK_TF2_NUM_NETWORKED_EHANDLE_SERIAL_NUMBER_BITS	10
-#define SOURCESDK_TF2_NUM_NETWORKED_EHANDLE_BITS					(SOURCESDK_TF2_MAX_EDICT_BITS + SOURCESDK_TF2_NUM_NETWORKED_EHANDLE_SERIAL_NUMBER_BITS)
-#define SOURCESDK_TF2_INVALID_NETWORKED_EHANDLE_VALUE				((1 << SOURCESDK_TF2_NUM_NETWORKED_EHANDLE_BITS) - 1)
+#define SOURCESDK_CSSV34_NUM_NETWORKED_EHANDLE_SERIAL_NUMBER_BITS	10
+#define SOURCESDK_CSSV34_NUM_NETWORKED_EHANDLE_BITS					(SOURCESDK_CSSV34_MAX_EDICT_BITS + SOURCESDK_CSSV34_NUM_NETWORKED_EHANDLE_SERIAL_NUMBER_BITS)
+#define SOURCESDK_CSSV34_INVALID_NETWORKED_EHANDLE_VALUE				((1 << SOURCESDK_CSSV34_NUM_NETWORKED_EHANDLE_BITS) - 1)
 
 // This is the maximum amount of data a PackedEntity can have. Having a limit allows us
 // to use static arrays sometimes instead of allocating memory all over the place.
-#define SOURCESDK_TF2_MAX_PACKEDENTITY_DATA	(16384)
+#define SOURCESDK_CSSV34_MAX_PACKEDENTITY_DATA	2048
 
 // This is the maximum number of properties that can be delta'd. Must be evenly divisible by 8.
-#define SOURCESDK_TF2_MAX_PACKEDENTITY_PROPS	(4096)
+#define SOURCESDK_CSSV34_MAX_PACKEDENTITY_PROPS	1024
 
 // a client can have up to 4 customization files (logo, sounds, models, txt).
-#define SOURCESDK_TF2_MAX_CUSTOM_FILES		4		// max 4 files
-#define SOURCESDK_TF2_MAX_CUSTOM_FILE_SIZE	131072	
+#define SOURCESDK_CSSV34_MAX_CUSTOM_FILES		4		// max 4 files
+#define SOURCESDK_CSSV34_MAX_CUSTOM_FILE_SIZE	131072	
 
 //
 // Constants shared by the engine and dlls
@@ -97,47 +89,48 @@ namespace TF2 {
 
 // CBaseEntity::m_fFlags
 // PLAYER SPECIFIC FLAGS FIRST BECAUSE WE USE ONLY A FEW BITS OF NETWORK PRECISION
-#define	SOURCESDK_TF2_FL_ONGROUND				(1<<0)	// At rest / on the ground
-#define SOURCESDK_TF2_FL_DUCKING				(1<<1)	// Player flag -- Player is fully crouched
-#define	SOURCESDK_TF2_FL_WATERJUMP			(1<<3)	// player jumping out of water
-#define SOURCESDK_TF2_FL_ONTRAIN				(1<<4) // Player is _controlling_ a train, so movement commands should be ignored on client during prediction.
-#define SOURCESDK_TF2_FL_INRAIN				(1<<5)	// Indicates the entity is standing in rain
-#define SOURCESDK_TF2_FL_FROZEN				(1<<6) // Player is frozen for 3rd person camera
-#define SOURCESDK_TF2_FL_ATCONTROLS			(1<<7) // Player can't move, but keeps key inputs for controlling another entity
-#define	SOURCESDK_TF2_FL_CLIENT				(1<<8)	// Is a player
-#define SOURCESDK_TF2_FL_FAKECLIENT			(1<<9)	// Fake client, simulated server side; don't send network messages to them
-#define	SOURCESDK_TF2_FL_INWATER				(1<<10)	// In water
+#define	SOURCESDK_CSSV34_FL_ONGROUND				(1<<0)	// At rest / on the ground
+#define SOURCESDK_CSSV34_FL_DUCKING				(1<<1)	// Player flag -- Player is fully crouched
+#define	SOURCESDK_CSSV34_FL_WATERJUMP			(1<<2)	// player jumping out of water
+#define SOURCESDK_CSSV34_FL_ONTRAIN				(1<<3) // Player is _controlling_ a train, so movement commands should be ignored on client during prediction.
+#define SOURCESDK_CSSV34_FL_INRAIN				(1<<4)	// Indicates the entity is standing in rain
+#define SOURCESDK_CSSV34_FL_FROZEN				(1<<5) // Player is frozen for 3rd person camera
+#define SOURCESDK_CSSV34_FL_ATCONTROLS			(1<<6) // Player can't move, but keeps key inputs for controlling another entity
+#define	SOURCESDK_CSSV34_FL_CLIENT				(1<<7)	// Is a player
+#define SOURCESDK_CSSV34_FL_FAKECLIENT			(1<<8)	// Fake client, simulated server side; don't send network messages to them
+
 // NOTE if you move things up, make sure to change this value
-#define SOURCESDK_TF2_PLAYER_FLAG_BITS		11
+#define SOURCESDK_CSSV34_PLAYER_FLAG_BITS		9
 
 // NON-PLAYER SPECIFIC (i.e., not used by GameMovement or the client .dll ) -- Can still be applied to players, though
-#define	SOURCESDK_TF2_FL_FLY					(1<<11)	// Changes the SV_Movestep() behavior to not need to be on ground
-#define	SOURCESDK_TF2_FL_SWIM					(1<<12)	// Changes the SV_Movestep() behavior to not need to be on ground (but stay in water)
-#define	SOURCESDK_TF2_FL_CONVEYOR				(1<<13)
-#define	SOURCESDK_TF2_FL_NPC					(1<<14)
-#define	SOURCESDK_TF2_FL_GODMODE				(1<<15)
-#define	SOURCESDK_TF2_FL_NOTARGET				(1<<16)
-#define	SOURCESDK_TF2_FL_AIMTARGET			(1<<17)	// set if the crosshair needs to aim onto the entity
-#define	SOURCESDK_TF2_FL_PARTIALGROUND		(1<<18)	// not all corners are valid
-#define SOURCESDK_TF2_FL_STATICPROP			(1<<19)	// Eetsa static prop!		
-#define SOURCESDK_TF2_FL_GRAPHED				(1<<20) // worldgraph has this ent listed as something that blocks a connection
-#define SOURCESDK_TF2_FL_GRENADE				(1<<21)
-#define SOURCESDK_TF2_FL_STEPMOVEMENT			(1<<22)	// Changes the SV_Movestep() behavior to not do any processing
-#define SOURCESDK_TF2_FL_DONTTOUCH			(1<<23)	// Doesn't generate touch functions, generates Untouch() for anything it was touching when this flag was set
-#define SOURCESDK_TF2_FL_BASEVELOCITY			(1<<24)	// Base velocity has been applied this frame (used to convert base velocity into momentum)
-#define SOURCESDK_TF2_FL_WORLDBRUSH			(1<<25)	// Not moveable/removeable brush entity (really part of the world, but represented as an entity for transparency or something)
-#define SOURCESDK_TF2_FL_OBJECT				(1<<26) // Terrible name. This is an object that NPCs should see. Missiles, for example.
-#define SOURCESDK_TF2_FL_KILLME				(1<<27)	// This entity is marked for death -- will be freed by game DLL
-#define SOURCESDK_TF2_FL_ONFIRE				(1<<28)	// You know...
-#define SOURCESDK_TF2_FL_DISSOLVING			(1<<29) // We're dissolving!
-#define SOURCESDK_TF2_FL_TRANSRAGDOLL			(1<<30) // In the process of turning into a client side ragdoll.
-#define SOURCESDK_TF2_FL_UNBLOCKABLE_BY_PLAYER (1<<31) // pusher that can't be blocked by the player
+#define	SOURCESDK_CSSV34_FL_INWATER				(1<<9)	// In water
+#define	SOURCESDK_CSSV34_FL_FLY					(1<<10)	// Changes the SV_Movestep() behavior to not need to be on ground
+#define	SOURCESDK_CSSV34_FL_SWIM					(1<<11)	// Changes the SV_Movestep() behavior to not need to be on ground (but stay in water)
+#define	SOURCESDK_CSSV34_FL_CONVEYOR				(1<<12)
+#define	SOURCESDK_CSSV34_FL_NPC					(1<<13)
+#define	SOURCESDK_CSSV34_FL_GODMODE				(1<<14)
+#define	SOURCESDK_CSSV34_FL_NOTARGET				(1<<15)
+#define	SOURCESDK_CSSV34_FL_AIMTARGET			(1<<16)	// set if the crosshair needs to aim onto the entity
+#define	SOURCESDK_CSSV34_FL_PARTIALGROUND		(1<<17)	// not all corners are valid
+#define SOURCESDK_CSSV34_FL_STATICPROP			(1<<18)	// Eetsa static prop!		
+#define SOURCESDK_CSSV34_FL_GRAPHED				(1<<19) // worldgraph has this ent listed as something that blocks a connection
+#define SOURCESDK_CSSV34_FL_GRENADE				(1<<20)
+#define SOURCESDK_CSSV34_FL_STEPMOVEMENT			(1<<21)	// Changes the SV_Movestep() behavior to not do any processing
+#define SOURCESDK_CSSV34_FL_DONTTOUCH			(1<<22)	// Doesn't generate touch functions, generates Untouch() for anything it was touching when this flag was set
+#define SOURCESDK_CSSV34_FL_BASEVELOCITY			(1<<23)	// Base velocity has been applied this frame (used to convert base velocity into momentum)
+#define SOURCESDK_CSSV34_FL_WORLDBRUSH			(1<<24)	// Not moveable/removeable brush entity (really part of the world, but represented as an entity for transparency or something)
+#define SOURCESDK_CSSV34_FL_OBJECT				(1<<25) // Terrible name. This is an object that NPCs should see. Missiles, for example.
+#define SOURCESDK_CSSV34_FL_KILLME				(1<<26)	// This entity is marked for death -- will be freed by game DLL
+#define SOURCESDK_CSSV34_FL_ONFIRE				(1<<27)	// You know...
+#define SOURCESDK_CSSV34_FL_DISSOLVING			(1<<28) // We're dissolving!
+#define SOURCESDK_CSSV34_FL_TRANSRAGDOLL			(1<<29) // In the process of turning into a client side ragdoll.
+#define SOURCESDK_CSSV34_FL_UNBLOCKABLE_BY_PLAYER (1<<30) // pusher that can't be blocked by the player
 
 // edict->movetype values
 enum MoveType_t
 {
 	MOVETYPE_NONE		= 0,	// never moves
-	MOVETYPE_ISOMETRIC,			// For players -- in TF2 commander view, etc.
+	MOVETYPE_ISOMETRIC,			// For players
 	MOVETYPE_WALK,				// Player only - moving on the ground
 	MOVETYPE_STEP,				// gravity, special edge handling -- monsters use this
 	MOVETYPE_FLY,				// No gravity, but still collides with stuff
@@ -202,9 +195,8 @@ enum SolidFlags_t
 	FSOLID_FORCE_WORLD_ALIGNED	= 0x0040,	// Forces the collision rep to be world-aligned even if it's SOLID_BSP or SOLID_VPHYSICS
 	FSOLID_USE_TRIGGER_BOUNDS	= 0x0080,	// Uses a special trigger bounds separate from the normal OBB
 	FSOLID_ROOT_PARENT_ALIGNED	= 0x0100,	// Collisions are defined in root parent's local coordinate space
-	FSOLID_TRIGGER_TOUCH_DEBRIS	= 0x0200,	// This trigger will touch debris objects
 
-	FSOLID_MAX_BITS	= 10
+	FSOLID_MAX_BITS	= 9
 };
 
 //-----------------------------------------------------------------------------
@@ -217,11 +209,11 @@ inline bool IsSolid( SolidType_t solidType, int nSolidFlags )
 
 
 // m_lifeState values
-#define	SOURCESDK_TF2_LIFE_ALIVE				0 // alive
-#define	SOURCESDK_TF2_LIFE_DYING				1 // playing death animation or still falling off of a ledge waiting to hit ground
-#define	SOURCESDK_TF2_LIFE_DEAD				2 // dead. lying still.
-#define SOURCESDK_TF2_LIFE_RESPAWNABLE		3
-#define SOURCESDK_TF2_LIFE_DISCARDBODY		4
+#define	SOURCESDK_CSSV34_LIFE_ALIVE				0 // alive
+#define	SOURCESDK_CSSV34_LIFE_DYING				1 // playing death animation or still falling off of a ledge waiting to hit ground
+#define	SOURCESDK_CSSV34_LIFE_DEAD				2 // dead. lying still.
+#define SOURCESDK_CSSV34_LIFE_RESPAWNABLE		3
+#define SOURCESDK_CSSV34_LIFE_DISCARDBODY		4
 
 // entity effects
 enum
@@ -243,53 +235,53 @@ enum
 	EF_MAX_BITS = 10
 };
 
-#define SOURCESDK_TF2_EF_PARITY_BITS	3
-#define SOURCESDK_TF2_EF_PARITY_MASK  ((1<<SOURCESDK_TF2_EF_PARITY_BITS)-1)
+#define SOURCESDK_CSSV34_EF_PARITY_BITS	3
+#define SOURCESDK_CSSV34_EF_PARITY_MASK  ((1<<SOURCESDK_CSSV34_EF_PARITY_BITS)-1)
 
 // How many bits does the muzzle flash parity thing get?
-#define SOURCESDK_TF2_EF_MUZZLEFLASH_BITS 2
+#define SOURCESDK_CSSV34_EF_MUZZLEFLASH_BITS 2
 
 // plats
-#define	SOURCESDK_TF2_PLAT_LOW_TRIGGER	1
+#define	SOURCESDK_CSSV34_PLAT_LOW_TRIGGER	1
 
 // Trains
-#define	SOURCESDK_TF2_SF_TRAIN_WAIT_RETRIGGER	1
-#define SOURCESDK_TF2_SF_TRAIN_PASSABLE		8		// Train is not solid -- used to make water trains
+#define	SOURCESDK_CSSV34_SF_TRAIN_WAIT_RETRIGGER	1
+#define SOURCESDK_CSSV34_SF_TRAIN_PASSABLE		8		// Train is not solid -- used to make water trains
 
 // view angle update types for CPlayerState::fixangle
-#define SOURCESDK_TF2_FIXANGLE_NONE			0
-#define SOURCESDK_TF2_FIXANGLE_ABSOLUTE		1
-#define SOURCESDK_TF2_FIXANGLE_RELATIVE		2
+#define SOURCESDK_CSSV34_FIXANGLE_NONE			0
+#define SOURCESDK_CSSV34_FIXANGLE_ABSOLUTE		1
+#define SOURCESDK_CSSV34_FIXANGLE_RELATIVE		2
 
 // Break Model Defines
 
-#define SOURCESDK_TF2_BREAK_GLASS		0x01
-#define SOURCESDK_TF2_BREAK_METAL		0x02
-#define SOURCESDK_TF2_BREAK_FLESH		0x04
-#define SOURCESDK_TF2_BREAK_WOOD		0x08
+#define SOURCESDK_CSSV34_BREAK_GLASS		0x01
+#define SOURCESDK_CSSV34_BREAK_METAL		0x02
+#define SOURCESDK_CSSV34_BREAK_FLESH		0x04
+#define SOURCESDK_CSSV34_BREAK_WOOD		0x08
 
-#define SOURCESDK_TF2_BREAK_SMOKE		0x10
-#define SOURCESDK_TF2_BREAK_TRANS		0x20
-#define SOURCESDK_TF2_BREAK_CONCRETE	0x40
+#define SOURCESDK_CSSV34_BREAK_SMOKE		0x10
+#define SOURCESDK_CSSV34_BREAK_TRANS		0x20
+#define SOURCESDK_CSSV34_BREAK_CONCRETE	0x40
 
 // If this is set, then we share a lighting origin with the last non-slave breakable sent down to the client
-#define SOURCESDK_TF2_BREAK_SLAVE		0x80
+#define SOURCESDK_CSSV34_BREAK_SLAVE		0x80
 
 // Colliding temp entity sounds
 
-#define SOURCESDK_TF2_BOUNCE_GLASS	SOURCESDK_TF2_BREAK_GLASS
-#define	SOURCESDK_TF2_BOUNCE_METAL	SOURCESDK_TF2_BREAK_METAL
-#define SOURCESDK_TF2_BOUNCE_FLESH	SOURCESDK_TF2_BREAK_FLESH
-#define SOURCESDK_TF2_BOUNCE_WOOD		SOURCESDK_TF2_BREAK_WOOD
-#define SOURCESDK_TF2_BOUNCE_SHRAP	0x10
-#define SOURCESDK_TF2_BOUNCE_SHELL	0x20
-#define	SOURCESDK_TF2_BOUNCE_CONCRETE SOURCESDK_TF2_BREAK_CONCRETE
-#define SOURCESDK_TF2_BOUNCE_SHOTSHELL 0x80
+#define SOURCESDK_CSSV34_BOUNCE_GLASS	SOURCESDK_CSSV34_BREAK_GLASS
+#define	SOURCESDK_CSSV34_BOUNCE_METAL	SOURCESDK_CSSV34_BREAK_METAL
+#define SOURCESDK_CSSV34_BOUNCE_FLESH	SOURCESDK_CSSV34_BREAK_FLESH
+#define SOURCESDK_CSSV34_BOUNCE_WOOD		SOURCESDK_CSSV34_BREAK_WOOD
+#define SOURCESDK_CSSV34_BOUNCE_SHRAP	0x10
+#define SOURCESDK_CSSV34_BOUNCE_SHELL	0x20
+#define	SOURCESDK_CSSV34_BOUNCE_CONCRETE SOURCESDK_CSSV34_BREAK_CONCRETE
+#define SOURCESDK_CSSV34_BOUNCE_SHOTSHELL 0x80
 
 // Temp entity bounce sound types
-#define SOURCESDK_TF2_TE_BOUNCE_NULL		0
-#define SOURCESDK_TF2_TE_BOUNCE_SHELL		1
-#define SOURCESDK_TF2_TE_BOUNCE_SHOTSHELL	2
+#define SOURCESDK_CSSV34_TE_BOUNCE_NULL		0
+#define SOURCESDK_CSSV34_TE_BOUNCE_SHELL		1
+#define SOURCESDK_CSSV34_TE_BOUNCE_SHOTSHELL	2
 
 // Rendering constants
 // if this is changed, update common/MaterialSystem/Sprite.cpp
@@ -348,8 +340,8 @@ enum Collision_Group_t
 	COLLISION_GROUP_PLAYER,
 	COLLISION_GROUP_BREAKABLE_GLASS,
 	COLLISION_GROUP_VEHICLE,
-	COLLISION_GROUP_PLAYER_MOVEMENT,  // For HL2, same as Collision_Group_Player, for
-										// TF2, this filters out other players and CBaseObjects
+	COLLISION_GROUP_PLAYER_MOVEMENT,  // For HL2, same as Collision_Group_Player
+										
 	COLLISION_GROUP_NPC,			// Generic NPC group
 	COLLISION_GROUP_IN_VEHICLE,		// for any entity inside a vehicle
 	COLLISION_GROUP_WEAPON,			// for any weapons that need collision detection
@@ -361,39 +353,25 @@ enum Collision_Group_t
 	COLLISION_GROUP_PUSHAWAY,		// Nonsolid on client and server, pushaway in player code
 
 	COLLISION_GROUP_NPC_ACTOR,		// Used so NPCs in scripts ignore the player.
-	COLLISION_GROUP_NPC_SCRIPTED,	// USed for NPCs in scripts that should not collide with each other
 
 	LAST_SHARED_COLLISION_GROUP
 };
 
-} // namespace TF2 {
+} // namespace CSSV34 {
 } // namespace SOURCESDK {
 
-//#include <tf2/sdk_src/public/tier0/basetypes.h
+//#include <csv34/sdk_src/public/tier0/bbasetypes.h>
 
 namespace SOURCESDK {
-namespace TF2 {
+namespace CSSV34 {
 
-#define SOURCESDK_TF2_SOUND_NORMAL_CLIP_DIST	1000.0f
+#define SOURCESDK_CSSV34_SOUND_NORMAL_CLIP_DIST	1000.0f
 
 // How many networked area portals do we allow?
-#define SOURCESDK_TF2_MAX_AREA_STATE_BYTES		32
-#define SOURCESDK_TF2_MAX_AREA_PORTAL_STATE_BYTES 24
+#define SOURCESDK_CSSV34_MAX_AREA_STATE_BYTES		32
+#define SOURCESDK_CSSV34_MAX_AREA_PORTAL_STATE_BYTES 24
 
-// user message max payload size (note, this value is used by the engine, so MODs cannot change it)
-#define SOURCESDK_TF2_MAX_USER_MSG_DATA 255
-#define SOURCESDK_TF2_MAX_ENTITY_MSG_DATA 255
-
-#define SOURCESDK_TF2_SOURCE_MT
-#ifdef SOURCESDK_TF2_SOURCE_MT
-class CThreadMutex;
-typedef CThreadMutex CSourceMutex;
-#else
-class CThreadNullMutex;
-typedef CThreadNullMutex CSourceMutex;
-#endif
-
-} // namespace TF2 {
+} // namespace CSSV34 {
 } // namespace SOURCESDK {
 
 #endif

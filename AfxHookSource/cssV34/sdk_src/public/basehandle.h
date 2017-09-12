@@ -4,18 +4,19 @@
 //
 //=============================================================================//
 
-#ifndef SOURCESDK_TF2_BASEHANDLE_H
-#define SOURCESDK_TF2_BASEHANDLE_H
+#ifndef SOURCESDK_CSSV34_BASEHANDLE_H
+#define SOURCESDK_CSSV34_BASEHANDLE_H
 #ifdef _WIN32
 #pragma once
 #endif
 
+
 #include <SourceSdkShared.h>
-#include <tf2/sdk_src/public/const.h>
-//#include <tf2/sdk_src/public/tier0/dbg.h>
+#include <cssV34/sdk_src/public/const.h>
+//#include "tier0/dbg.h"
 
 namespace SOURCESDK {
-namespace TF2 {
+namespace CSSV34 {
 
 class IHandleEntity;
 
@@ -68,18 +69,13 @@ protected:
 	unsigned long	m_Index;
 };
 
-} // namespace TF2 {
-} // namespace SOURCESDK {
 
-#include <tf2/sdk_src/public/ihandleentity.h>
-
-namespace SOURCESDK {
-namespace TF2 {
+#include <cssV34/sdk_src/public/ihandleentity.h>
 
 
 inline CBaseHandle::CBaseHandle()
 {
-	m_Index = SOURCESDK_TF2_INVALID_EHANDLE_INDEX;
+	m_Index = SOURCESDK_CSSV34_INVALID_EHANDLE_INDEX;
 }
 
 inline CBaseHandle::CBaseHandle( const CBaseHandle &other )
@@ -99,30 +95,30 @@ inline CBaseHandle::CBaseHandle( int iEntry, int iSerialNumber )
 
 inline void CBaseHandle::Init( int iEntry, int iSerialNumber )
 {
-	SOURCESDK_Assert( iEntry >= 0 && iEntry < SOURCESDK_TF2_NUM_ENT_ENTRIES );
-	SOURCESDK_Assert( iSerialNumber >= 0 && iSerialNumber < (1 << SOURCESDK_TF2_NUM_SERIAL_NUM_BITS) );
+	SOURCESDK_Assert( iEntry >= 0 && iEntry < SOURCESDK_CSSV34_NUM_ENT_ENTRIES );
+	SOURCESDK_Assert( iSerialNumber >= 0 && iSerialNumber < (1 << SOURCESDK_CSSV34_NUM_SERIAL_NUM_BITS) );
 
-	m_Index = iEntry | (iSerialNumber << SOURCESDK_TF2_NUM_ENT_ENTRY_BITS);
+	m_Index = iEntry | (iSerialNumber << SOURCESDK_CSSV34_NUM_ENT_ENTRY_BITS);
 }
 
 inline void CBaseHandle::Term()
 {
-	m_Index = SOURCESDK_TF2_INVALID_EHANDLE_INDEX;
+	m_Index = SOURCESDK_CSSV34_INVALID_EHANDLE_INDEX;
 }
 
 inline bool CBaseHandle::IsValid() const
 {
-	return m_Index != SOURCESDK_TF2_INVALID_EHANDLE_INDEX;
+	return m_Index != SOURCESDK_CSSV34_INVALID_EHANDLE_INDEX;
 }
 
 inline int CBaseHandle::GetEntryIndex() const
 {
-	return m_Index & SOURCESDK_TF2_ENT_ENTRY_MASK;
+	return m_Index & SOURCESDK_CSSV34_ENT_ENTRY_MASK;
 }
 
 inline int CBaseHandle::GetSerialNumber() const
 {
-	return m_Index >> SOURCESDK_TF2_NUM_ENT_ENTRY_BITS;
+	return m_Index >> SOURCESDK_CSSV34_NUM_ENT_ENTRY_BITS;
 }
 
 inline int CBaseHandle::ToInt() const
@@ -157,7 +153,7 @@ inline bool CBaseHandle::operator <( const CBaseHandle &other ) const
 
 inline bool CBaseHandle::operator <( const IHandleEntity *pEntity ) const
 {
-	unsigned long otherIndex = (pEntity) ? pEntity->GetRefEHandle().m_Index : SOURCESDK_TF2_INVALID_EHANDLE_INDEX;
+	unsigned long otherIndex = (pEntity) ? pEntity->GetRefEHandle().m_Index : SOURCESDK_CSSV34_INVALID_EHANDLE_INDEX;
 	return m_Index < otherIndex;
 }
 
@@ -174,13 +170,13 @@ inline const CBaseHandle& CBaseHandle::Set( const IHandleEntity *pEntity )
 	}
 	else
 	{
-		m_Index = SOURCESDK_TF2_INVALID_EHANDLE_INDEX;
+		m_Index = SOURCESDK_CSSV34_INVALID_EHANDLE_INDEX;
 	}
 	
 	return *this;
 }
 
-} // namespace TF2 {
+} // namespace CSSV34 {
 } // namespace SOURCESDK {
 
-#endif // SOURCESDK_TF2_BASEHANDLE_H
+#endif // SOURCESDK_CSSV34_BASEHANDLE_H

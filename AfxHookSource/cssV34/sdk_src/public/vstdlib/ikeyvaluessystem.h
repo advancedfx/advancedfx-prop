@@ -4,8 +4,8 @@
 //
 // $NoKeywords: $
 //=============================================================================//
-#ifndef SOURCESDK_TF2_VSTDLIB_IKEYVALUESSYSTEM_H
-#define SOURCESDK_TF2_VSTDLIB_IKEYVALUESSYSTEM_H
+#ifndef SOURCESDK_CSSV34_VSTDLIB_IKEYVALUESSYSTEM_H
+#define SOURCESDK_CSSV34_VSTDLIB_IKEYVALUESSYSTEM_H
 #ifdef _WIN32
 #pragma once
 #endif
@@ -13,11 +13,11 @@
 //#include "vstdlib/vstdlib.h"
 
 namespace SOURCESDK {
-namespace TF2 {
+namespace CSSV34 {
 
 // handle to a KeyValues key name symbol
 typedef int HKeySymbol;
-#define SOURCESDK_TF2_INVALID_KEY_SYMBOL (-1)
+#define SOURCESDK_CSSV34_INVALID_KEY_SYMBOL (-1)
 
 //-----------------------------------------------------------------------------
 // Purpose: Interface to shared data repository for KeyValues (included in vgui_controls.lib)
@@ -36,7 +36,7 @@ public:
 	virtual void FreeKeyValuesMemory(void *pMem) = 0;
 
 	// symbol table access (used for key names)
-	virtual HKeySymbol GetSymbolForString( const char *name, bool bCreate = true ) = 0;
+	virtual HKeySymbol GetSymbolForString(const char *name) = 0;
 	virtual const char *GetStringForSymbol(HKeySymbol symbol) = 0;
 
 	// for debugging, adds KeyValues record into global list so we can track memory leaks
@@ -48,7 +48,7 @@ public:
 
 // #define KEYVALUESSYSTEM_INTERFACE_VERSION "KeyValuesSystem002"
 
-} // namespace TF2 {
+} // namespace CSSV34 {
 } // namespace SOURCESDK {
 
-#endif // SOURCESDK_TF2_VSTDLIB_IKEYVALUESSYSTEM_H
+#endif // SOURCESDK_CSSV34_VSTDLIB_IKEYVALUESSYSTEM_H
