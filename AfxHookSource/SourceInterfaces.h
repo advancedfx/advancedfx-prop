@@ -495,28 +495,28 @@ class IAppSystem_csgo abstract
 {
 public:
 	// Here's where the app systems get to learn about each other 
-	virtual bool Connect( CreateInterfaceFn factory ) = 0;
-	virtual void Disconnect() = 0;
+	virtual bool Connect( CreateInterfaceFn factory ) = 0; //:000
+	virtual void Disconnect() = 0; //:001
 
 	// Here's where systems can access other interfaces implemented by this object
 	// Returns NULL if it doesn't implement the requested interface
-	virtual void *QueryInterface( const char *pInterfaceName ) = 0;
+	virtual void *QueryInterface( const char *pInterfaceName ) = 0; //:002
 
 	// Init, shutdown
-	virtual InitReturnVal_t Init() = 0;
-	virtual void Shutdown() = 0;
+	virtual InitReturnVal_t Init() = 0; //:003
+	virtual void Shutdown() = 0; //:004
 
 	// Returns all dependent libraries
-	virtual const AppSystemInfo_t* GetDependencies() = 0;
+	virtual const AppSystemInfo_t* GetDependencies() = 0; //:005
 
 	// Returns the tier
-	virtual AppSystemTier_t GetTier() = 0;
+	virtual AppSystemTier_t GetTier() = 0; //:006
 
 	// Reconnect to a particular interface
-	virtual void Reconnect( CreateInterfaceFn factory, const char *pInterfaceName ) = 0;
+	virtual void Reconnect( CreateInterfaceFn factory, const char *pInterfaceName ) = 0; //:007
 
 	// Returns whether or not the app system is a singleton
-	virtual bool IsSingleton() = 0;
+	virtual bool IsSingleton() = 0; //:008
 };
 
 
@@ -6176,13 +6176,112 @@ class ISurface abstract : public IAppSystem_csgo
 {
 public:
 	// call to Shutdown surface; surface can no longer be used after this is called
-	virtual void Shutdown() = 0;
+	virtual void Shutdown() = 0; //:004 (overload)
 
 	// frame
-	virtual void RunFrame() = 0;
+	virtual void RunFrame() = 0; //:009
 
 	// hierarchy root
-	virtual VPANEL GetEmbeddedPanel() = 0;
+	virtual VPANEL GetEmbeddedPanel() = 0; //:010
+
+	virtual void _ISurface_011(void) abstract = 0;
+	virtual void _ISurface_012(void) abstract = 0;
+	virtual void _ISurface_013(void) abstract = 0;
+	virtual void _ISurface_014(void) abstract = 0;
+	virtual void _ISurface_015(void) abstract = 0;
+	virtual void _ISurface_016(void) abstract = 0;
+	virtual void _ISurface_017(void) abstract = 0;
+	virtual void _ISurface_018(void) abstract = 0;
+	virtual void _ISurface_019(void) abstract = 0;
+	virtual void _ISurface_020(void) abstract = 0;
+	virtual void _ISurface_021(void) abstract = 0;
+	virtual void _ISurface_022(void) abstract = 0;
+	virtual void _ISurface_023(void) abstract = 0;
+	virtual void _ISurface_024(void) abstract = 0;
+	virtual void _ISurface_025(void) abstract = 0;
+	virtual void _ISurface_026(void) abstract = 0;
+	virtual void _ISurface_027(void) abstract = 0;
+	virtual void _ISurface_028(void) abstract = 0;
+	virtual void _ISurface_029(void) abstract = 0;
+	virtual void _ISurface_030(void) abstract = 0;
+	virtual void _ISurface_031(void) abstract = 0;
+	virtual void _ISurface_032(void) abstract = 0;
+	virtual void _ISurface_033(void) abstract = 0;
+	virtual void _ISurface_034(void) abstract = 0;
+	virtual void _ISurface_035(void) abstract = 0;
+	virtual void _ISurface_036(void) abstract = 0;
+	virtual void _ISurface_037(void) abstract = 0;
+	virtual void _ISurface_038(void) abstract = 0;
+	virtual void _ISurface_039(void) abstract = 0;
+	virtual void _ISurface_040(void) abstract = 0;
+	virtual void _ISurface_041(void) abstract = 0;
+	virtual void _ISurface_042(void) abstract = 0;
+	virtual void _ISurface_043(void) abstract = 0;
+	virtual void _ISurface_044(void) abstract = 0;
+	virtual void _ISurface_045(void) abstract = 0;
+	virtual void _ISurface_046(void) abstract = 0;
+	virtual void _ISurface_047(void) abstract = 0;
+	virtual void _ISurface_048(void) abstract = 0;
+	virtual void _ISurface_049(void) abstract = 0;
+	virtual void _ISurface_050(void) abstract = 0;
+	virtual void _ISurface_051(void) abstract = 0;
+	virtual void _ISurface_052(void) abstract = 0;
+	virtual void _ISurface_053(void) abstract = 0;
+	virtual void _ISurface_054(void) abstract = 0;
+	virtual void _ISurface_055(void) abstract = 0;
+	virtual void _ISurface_056(void) abstract = 0;
+	virtual void _ISurface_057(void) abstract = 0;
+	virtual void _ISurface_058(void) abstract = 0;
+	virtual void _ISurface_059(void) abstract = 0;
+	virtual void _ISurface_060(void) abstract = 0;
+	virtual void _ISurface_061(void) abstract = 0;
+	virtual void _ISurface_062(void) abstract = 0;
+	virtual void _ISurface_063(void) abstract = 0;
+	virtual void _ISurface_064(void) abstract = 0;
+	virtual void _ISurface_065(void) abstract = 0;
+	virtual void _ISurface_066(void) abstract = 0;
+	virtual void _ISurface_067(void) abstract = 0;
+	virtual void _ISurface_068(void) abstract = 0;
+	virtual void _ISurface_069(void) abstract = 0;
+	virtual void _ISurface_070(void) abstract = 0;
+	virtual void _ISurface_071(void) abstract = 0;
+	virtual void _ISurface_072(void) abstract = 0;
+	virtual void _ISurface_073(void) abstract = 0;
+	virtual void _ISurface_074(void) abstract = 0;
+	virtual void _ISurface_075(void) abstract = 0;
+	virtual void _ISurface_076(void) abstract = 0;
+	virtual void _ISurface_077(void) abstract = 0;
+	virtual void _ISurface_078(void) abstract = 0;
+	virtual void _ISurface_079(void) abstract = 0;
+	virtual void _ISurface_080(void) abstract = 0;
+	virtual void _ISurface_081(void) abstract = 0;
+	virtual void _ISurface_082(void) abstract = 0;
+	virtual void _ISurface_083(void) abstract = 0;
+	virtual void _ISurface_084(void) abstract = 0;
+	virtual void _ISurface_085(void) abstract = 0;
+	virtual void _ISurface_086(void) abstract = 0;
+	virtual void _ISurface_087(void) abstract = 0;
+	virtual void _ISurface_088(void) abstract = 0;
+	virtual void _ISurface_089(void) abstract = 0;
+	virtual void _ISurface_090(void) abstract = 0;
+	virtual void _ISurface_091(void) abstract = 0;
+	virtual void _ISurface_092(void) abstract = 0;
+	virtual void _ISurface_093(void) abstract = 0;
+	virtual void _ISurface_094(void) abstract = 0;
+	virtual void _ISurface_095(void) abstract = 0;
+	virtual void _ISurface_096(void) abstract = 0;
+	virtual void _ISurface_097(void) abstract = 0;
+	virtual void _ISurface_098(void) abstract = 0;
+	virtual void _ISurface_099(void) abstract = 0;
+	virtual void _ISurface_100(void) abstract = 0;
+	virtual void _ISurface_101(void) abstract = 0;
+	virtual void _ISurface_102(void) abstract = 0;
+	virtual void _ISurface_103(void) abstract = 0;
+	virtual void _ISurface_104(void) abstract = 0;
+	virtual void _ISurface_105(void) abstract = 0;
+	virtual void _ISurface_106(void) abstract = 0;
+
+	virtual const wchar_t *GetTitle(VPANEL panel) = 0; //:107
 
 	// ... more we don't care about.
 };
