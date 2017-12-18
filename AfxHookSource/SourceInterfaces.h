@@ -3400,8 +3400,13 @@ public:
 	virtual void _UNKOWN_012(void) = 0;
 	virtual void _UNKOWN_013(void) = 0;
 	virtual void _UNKOWN_014(void) = 0;
-	virtual void _UNKOWN_015(void) = 0;
-	virtual void _UNKOWN_016(void) = 0;
+
+	// Mouse Input Interfaces
+	// Activate the mouse (hides the cursor and locks it to the center of the screen)
+	virtual void			IN_ActivateMouse(void) = 0; //:015
+	// Deactivates the mouse (shows the cursor and unlocks it)
+	virtual void			IN_DeactivateMouse(void) = 0; //:016
+	
 	virtual void _UNKOWN_017(void) = 0;
 	virtual void _UNKOWN_018(void) = 0;
 	virtual void _UNKOWN_019(void) = 0;
@@ -6282,6 +6287,7 @@ public:
 	virtual void _ISurface_106(void) abstract = 0;
 
 	virtual const wchar_t *GetTitle(VPANEL panel) = 0; //:107
+	virtual bool IsCursorLocked(void) const = 0; //:108
 
 	// ... more we don't care about.
 };
