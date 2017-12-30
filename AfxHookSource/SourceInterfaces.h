@@ -3452,21 +3452,21 @@ public:
 	virtual void _UNKOWN_051(void) = 0;
 	virtual void _UNKOWN_052(void) = 0;
 	virtual void _UNKOWN_053(void) = 0;
-	virtual void _UNKOWN_054(void) = 0;
+
+	virtual void			OnDemoPlaybackStart(char const* pDemoBaseName) = 0; //:054
+
 	virtual void _UNKOWN_055(void) = 0;
-	virtual void _UNKOWN_056(void) = 0;
+
+	virtual void			OnDemoPlaybackStop() = 0; //:056
+
 	virtual void _UNKOWN_057(void) = 0;
 	virtual void _UNKOWN_058(void) = 0;
 	virtual void _UNKOWN_059(void) = 0;
 	virtual void _UNKOWN_060(void) = 0;
 	virtual void _UNKOWN_061(void) = 0;
 	virtual void _UNKOWN_062(void) = 0;
-
-	// 063:
-	virtual void _UNUSED_GetScreenWidth(void) = 0;
-	
-	// 064:
-	virtual void _UNUSED_GetScreenHeight(void) = 0;
+	virtual void _UNKOWN_063(void) = 0;
+	virtual void _UNKOWN_064(void) = 0;
 	
 	// 065:
 	virtual void WriteSaveGameScreenshotOfSize( const char *pFilename, int width, int height, bool bCreatePowerOf2Padded = false, bool bWriteVTF = false ) = 0;
