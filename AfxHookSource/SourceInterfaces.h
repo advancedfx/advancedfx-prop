@@ -2840,9 +2840,11 @@ public:
 	virtual void _UNKNOWN_037(void) = 0;
 	virtual void _UNKNOWN_038(void) = 0;
 	virtual void _UNKNOWN_039(void) = 0;
-	virtual void _UNKNOWN_040(void) = 0;
-	virtual void _UNKNOWN_041(void) = 0;
-	virtual void _UNKNOWN_042(void) = 0;
+	
+	// Sets/gets the viewport
+	virtual void				Viewport(int x, int y, int width, int height) = 0;
+	virtual void				GetViewport(int& x, int& y, int& width, int& height) const = 0;	virtual void _UNKNOWN_042(void) = 0;
+
 	virtual void _UNKNOWN_043(void) = 0;
 	virtual void _UNKNOWN_044(void) = 0;
 	virtual void _UNKNOWN_045(void) = 0;
@@ -3543,7 +3545,21 @@ public:
 
 // IVRenderView_csgo ///////////////////////////////////////////////////////////
 
+namespace CSGO
+{
+	// In-game panels are cropped to the current engine viewport size
+	enum PaintMode_t
+	{
+		PAINT_UIPANELS = (1 << 0),
+		PAINT_INGAMEPANELS = (1 << 1),
+	};
+
+}
+
 #define VENGINE_RENDERVIEW_INTERFACE_VERSION_CSGO "VEngineRenderView014"
+
+class VPlane_csgo;
+typedef VPlane_csgo  * Frustum_csgo;
 
 class IVRenderView_csgo abstract
 {
@@ -3599,11 +3615,16 @@ public:
 	virtual void _UNKOWN_039(void) = 0;
 	virtual void _UNKOWN_040(void) = 0;
 	virtual void _UNKOWN_041(void) = 0;
-	virtual void _UNKOWN_042(void) = 0;
+
+	// See i
+	virtual void			VGui_Paint(int mode) = 0; //:042
+
 	virtual void _UNKOWN_043(void) = 0;
 	virtual void _UNKOWN_044(void) = 0;
-	virtual void _UNKOWN_045(void) = 0;
-	virtual void _UNKOWN_046(void) = 0;
+	
+	virtual void			Push2DView(const CViewSetup_csgo &view, int nFlags, ITexture_csgo* pRenderTarget, Frustum_csgo frustumPlanes) = 0; //:045
+	virtual void			PopView(Frustum_csgo frustumPlanes) = 0; //:046
+
 	virtual void _UNKOWN_047(void) = 0;
 	virtual void _UNKOWN_048(void) = 0;
 	virtual void _UNKOWN_049(void) = 0;
@@ -3641,7 +3662,10 @@ public:
 	virtual void _UNKOWN_007(void) = 0;
 	virtual void _UNKOWN_008(void) = 0;
 	virtual void _UNKOWN_009(void) = 0;
-	virtual void _UNKOWN_010(void) = 0;
+
+	// This can only be called during rendering (while within RenderView).
+	virtual VPlane_csgo*		GetFrustum() = 0; //:010
+
 	virtual void _UNKOWN_011(void) = 0;
 
 	// 012:
@@ -3772,11 +3796,6 @@ public:
 	int			m_nUnscaledHeight;
 
 	char _unknown_20_14c[0x12c];
-
-	bool		m_bCacheFullSceneState : 1;
-
-	// ...
-	// more we don't care about.
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6295,6 +6314,40 @@ public:
 #define SOURCESDK_CSGO_VGUI_VGUI_SURFACE_INTERFACE_VERSION "VGUI_Surface031"
 
 } // namespace vgui
+
+
+#define SOURCESDK_CSGO_SCALEFORM_ITERNFACE_VERSION "ScaleformUI002"
+
+class IScaleformUI abstract {
+public:
+	virtual void _IScaleformUI_000(void) = 0;
+	virtual void _IScaleformUI_001(void) = 0;
+	virtual void _IScaleformUI_002(void) = 0;
+	virtual void _IScaleformUI_003(void) = 0;
+	virtual void _IScaleformUI_004(void) = 0;
+	virtual void _IScaleformUI_005(void) = 0;
+	virtual void _IScaleformUI_006(void) = 0;
+	virtual void _IScaleformUI_007(void) = 0;
+	virtual void _IScaleformUI_008(void) = 0;
+	virtual void _IScaleformUI_009(void) = 0;
+	virtual void _IScaleformUI_010(void) = 0;
+	virtual void _IScaleformUI_011(void) = 0;
+	virtual void _IScaleformUI_012(void) = 0;
+	virtual void _IScaleformUI_013(void) = 0;
+	virtual void _IScaleformUI_014(void) = 0;
+	virtual void _IScaleformUI_015(void) = 0;
+	virtual void _IScaleformUI_016(void) = 0;
+	virtual void _IScaleformUI_017(void) = 0;
+	virtual void _IScaleformUI_018(void) = 0;
+	virtual void _IScaleformUI_019(void) = 0;
+	virtual void _IScaleformUI_020(void) = 0;
+
+	// -2 = begin frame
+	// -1 = end frame
+	// 1 = draw
+	// 0 = ?
+	virtual void BeginEndFrame(int mode) = 0;
+};
 
 } // namespace CSGO {
 } // namespace SOURCESDK {
