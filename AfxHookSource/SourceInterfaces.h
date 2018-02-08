@@ -1,13 +1,5 @@
 #pragma once
 
-// Copyright (c) advancedfx.org
-//
-// Last changes:
-// 2017-08-02 dominik.matrixstorm.com
-//
-// First changes:
-// 2009-09-30 dominik.matrixstorm.com
-
 // Based on Source engine SDK:
 // Copyright (c) 1996-2005, Valve Corporation, All rights reserved
 
@@ -3147,6 +3139,16 @@ enum MaterialRenderTargetDepth_t_csgo
 	MATERIAL_RT_DEPTH_ONLY	   = 0x3,
 };
 
+namespace CSGO
+{
+enum MaterialContextType_t
+{
+	MATERIAL_HARDWARE_CONTEXT,
+	MATERIAL_QUEUED_CONTEXT,
+	MATERIAL_NULL_CONTEXT
+};
+}
+
 class IMaterialSystem_csgo abstract : public IAppSystem_csgo
 {
 public:
@@ -3292,7 +3294,9 @@ public:
 	virtual void _UNKNOWN_117(void) = 0;
 	virtual void _UNKNOWN_118(void) = 0;
 	virtual void _UNKNOWN_119(void) = 0;
-	virtual void _UNKNOWN_120(void) = 0;
+
+	// Create a custom render context. Cannot be used to create MATERIAL_HARDWARE_CONTEXT
+	virtual IMatRenderContext_csgo *CreateRenderContext(CSGO::MaterialContextType_t type) = 0; //:120
 
 	// 121:
 	/// <remarks>SetRenderContext calls AddRef on param!</remarks>
