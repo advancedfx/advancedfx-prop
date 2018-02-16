@@ -53,10 +53,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="SharpDX">
-      <HintPath>..\..\..\ShaprDX\Bin\DirectX11-net40\SharpDX.dll</HintPath>
+      <HintPath>..\..\..\SharpDX\Bin\DirectX11-net40\SharpDX.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.D3DCompiler">
-      <HintPath>..\..\..\ShaprDX\Bin\DirectX11-net40\SharpDX.D3DCompiler.dll</HintPath>
+      <HintPath>..\..\..\SharpDX\Bin\DirectX11-net40\SharpDX.D3DCompiler.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

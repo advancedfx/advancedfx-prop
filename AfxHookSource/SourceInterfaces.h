@@ -1666,7 +1666,9 @@ public:
 	// Fill in the player info structure for the specified player index (name, model, etc.)
 	virtual bool				GetPlayerInfo(int ent_num, player_info_t_csgo *pinfo) = 0; //:8
 
-	virtual void _UNUSED_GetPlayerForUserID(void)=0; // :9
+	// Retrieve the player entity number for a specified userID
+	virtual int					GetPlayerForUserID(int userID) = 0; //:009
+
 	virtual void _UNUSED_TextMessageGet(void)=0; // :10
 
 	// Returns true if the console is visible
