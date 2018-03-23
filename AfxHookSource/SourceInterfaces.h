@@ -2214,6 +2214,10 @@ public:
 
 class IMaterialVar_csgo;
 
+class IMaterial_csgo;
+
+typedef IMaterial_csgo IMaterialInternal_csgo;
+
 class IMaterial_csgo abstract
 {
 public:
@@ -2302,6 +2306,54 @@ public:
 
 	// 056:
 	virtual int Probably_GetReferenceCount(void) = 0;
+
+	virtual void _UNKNOWN_057(void) = 0;
+	virtual void _UNKNOWN_058(void) = 0;
+	virtual void _UNKNOWN_059(void) = 0;
+
+	virtual void _UNKNOWN_060(void) = 0;
+	virtual void _UNKNOWN_061(void) = 0;
+	virtual void _UNKNOWN_062(void) = 0;
+	virtual void _UNKNOWN_063(void) = 0;
+	virtual void _UNKNOWN_064(void) = 0;
+	virtual void _UNKNOWN_065(void) = 0;
+	virtual void _UNKNOWN_066(void) = 0;
+	virtual void _UNKNOWN_067(void) = 0;
+	virtual void _UNKNOWN_068(void) = 0;
+	virtual void _UNKNOWN_069(void) = 0;
+
+	virtual void _UNKNOWN_070(void) = 0;
+	virtual void _UNKNOWN_071(void) = 0;
+	virtual void _UNKNOWN_072(void) = 0;
+	virtual void _UNKNOWN_073(void) = 0;
+	virtual void _UNKNOWN_074(void) = 0;
+	virtual void _UNKNOWN_075(void) = 0;
+	virtual void _UNKNOWN_076(void) = 0;
+	virtual void _UNKNOWN_077(void) = 0;
+	virtual void _UNKNOWN_078(void) = 0;
+	virtual void _UNKNOWN_079(void) = 0;
+
+	virtual void _UNKNOWN_080(void) = 0;
+	virtual void _UNKNOWN_081(void) = 0;
+	virtual void _UNKNOWN_082(void) = 0;
+	virtual void _UNKNOWN_083(void) = 0;
+	virtual void _UNKNOWN_084(void) = 0;
+	virtual void _UNKNOWN_085(void) = 0;
+	virtual void _UNKNOWN_086(void) = 0;
+	virtual void _UNKNOWN_087(void) = 0;
+	virtual void _UNKNOWN_088(void) = 0;
+	virtual void _UNKNOWN_089(void) = 0;
+
+	virtual void _UNKNOWN_090(void) = 0;
+	virtual void _UNKNOWN_091(void) = 0;
+	virtual void _UNKNOWN_092(void) = 0;
+	virtual void _UNKNOWN_093(void) = 0;
+	virtual void _UNKNOWN_094(void) = 0;
+	virtual void _UNKNOWN_095(void) = 0;
+	virtual void _UNKNOWN_096(void) = 0;
+	virtual void _UNKNOWN_097(void) = 0;
+
+	virtual IMaterialInternal_csgo * GetRealTimeVersion(void) = 0; //:098 // Internal only
 
 	// ...
 	// there are more here that we don't care about.
