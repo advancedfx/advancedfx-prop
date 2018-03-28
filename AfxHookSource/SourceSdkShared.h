@@ -56,8 +56,42 @@ public:
 	void Init(vec_t ix = 0.0f, vec_t iy = 0.0f, vec_t iz = 0.0f);
 	// TODO (Ilya): Should there be an init that takes a single float for consistency?
 
+	// array access...
+	vec_t operator[](int i) const;
+	vec_t& operator[](int i);
+
+	// Get the vector's magnitude squared.
+	SOURCESDK_FORCEINLINE vec_t LengthSqr(void) const
+	{
+		SOURCESDK_CHECK_VALID(*this);
+		return (x*x + y * y + z * z);
+	}
+
+	SOURCESDK_FORCEINLINE Vector&	operator*=(float s);
+
 	// shortened.
 };
+
+inline vec_t& Vector::operator[](int i)
+{
+	SOURCESDK_Assert((i >= 0) && (i < 3));
+	return ((vec_t*)this)[i];
+}
+
+inline vec_t Vector::operator[](int i) const
+{
+	SOURCESDK_Assert((i >= 0) && (i < 3));
+	return ((vec_t*)this)[i];
+}
+
+SOURCESDK_FORCEINLINE  Vector& Vector::operator*=(float fl)
+{
+	x *= fl;
+	y *= fl;
+	z *= fl;
+	SOURCESDK_CHECK_VALID(*this);
+	return *this;
+}
 
 
 // QAngle //////////////////////////////////////////////////////////////////////
