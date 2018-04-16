@@ -9,26 +9,26 @@
 // $NoKeywords: $
 //===========================================================================//
 
-#ifndef SOURCESDK_SWARM_CONVAR_H
-#define SOURCESDK_SWARM_CONVAR_H
+#ifndef SOURCESDK_L4D2_CONVAR_H
+#define SOURCESDK_L4D2_CONVAR_H
 
 #if _WIN32
 #pragma once
 #endif
 
 //#include "tier0/dbg.h"
-#include <swarm/sdk_src/public/tier1/iconvar.h>
+#include <l4d2/sdk_src/public/tier1/iconvar.h>
 //#include "tier1/utlvector.h"
 //#include "tier1/utlstring.h"
 //#include "color.h"
-#include <swarm/sdk_src/public/icvar.h>
+#include <l4d2/sdk_src/public/icvar.h>
 
 #include <SourceSdkShared.h>
 #include <csgo/sdk_src/public/tier0/memalloc.h>
 
 
 namespace SOURCESDK {
-namespace SWARM {
+namespace L4D2 {
 
 //#ifdef _WIN32
 //#define FORCEINLINE_CVAR FORCEINLINE
@@ -85,13 +85,13 @@ void ConVar_PublishToVXConsole();
 typedef void ( *FnCommandCallbackV1_t )( void );
 typedef void ( *FnCommandCallback_t )( const CCommand &command );
 
-#define SOURCESDK_SWARM_COMMAND_COMPLETION_MAXITEMS		64
-#define SOURCESDK_SWARM_COMMAND_COMPLETION_ITEM_LENGTH	64
+#define SOURCESDK_L4D2_COMMAND_COMPLETION_MAXITEMS		64
+#define SOURCESDK_L4D2_COMMAND_COMPLETION_ITEM_LENGTH	64
 
 //-----------------------------------------------------------------------------
 // Returns 0 to COMMAND_COMPLETION_MAXITEMS worth of completion strings
 //-----------------------------------------------------------------------------
-typedef int  ( *FnCommandCompletionCallback )( const char *partial, char commands[SOURCESDK_SWARM_COMMAND_COMPLETION_MAXITEMS ][SOURCESDK_SWARM_COMMAND_COMPLETION_ITEM_LENGTH ] );
+typedef int  ( *FnCommandCompletionCallback )( const char *partial, char commands[SOURCESDK_L4D2_COMMAND_COMPLETION_MAXITEMS ][SOURCESDK_L4D2_COMMAND_COMPLETION_ITEM_LENGTH ] );
 
 
 //-----------------------------------------------------------------------------
@@ -535,7 +535,7 @@ SOURCESDK_FORCEINLINE_CVAR const char *ConVar::GetString( void ) const
 #ifdef CONVAR_TEST_MATERIAL_THREAD_CONVARS
 	Assert( ThreadInMainThread() || IsFlagSet( FCVAR_MATERIAL_THREAD_MASK | FCVAR_ACCESSIBLE_FROM_THREADS ) );
 #endif
-	if ( m_nFlags & SOURCESDK_SWARM_FCVAR_NEVER_AS_STRING )
+	if ( m_nFlags & SOURCESDK_L4D2_FCVAR_NEVER_AS_STRING )
 		return "FCVAR_NEVER_AS_STRING";
 	
 	char const *str = m_pParent->m_Value.m_pszString;
@@ -552,7 +552,7 @@ SOURCESDK_FORCEINLINE_CVAR const char *ConVar::GetString( void ) const
 //			pName, 
 //			pBaseVar->GetDefault(), 
 //			// Keep basevar flags, except remove _SS and add _SS_ADDED instead
-//			( pBaseVar->GetFlags() & ~SOURCESDK_SWARM_FCVAR_SS ) | SOURCESDK_SWARM_FCVAR_SS_ADDED,
+//			( pBaseVar->GetFlags() & ~SOURCESDK_L4D2_FCVAR_SS ) | SOURCESDK_L4D2_FCVAR_SS_ADDED,
 //			pBaseVar->GetHelpText(), 
 //			pBaseVar->HasMin(),
 //			pBaseVar->GetMinValue(),
@@ -569,8 +569,8 @@ SOURCESDK_FORCEINLINE_CVAR const char *ConVar::GetString( void ) const
 //		SOURCESDK_Assert( nSplitScreenSlot >= 1 );
 //		SOURCESDK_Assert( nSplitScreenSlot < MAX_SPLITSCREEN_CLIENTS );
 //		SOURCESDK_Assert( m_pBaseVar );
-//		SOURCESDK_Assert( IsFlagSet(SOURCESDK_SWARM_FCVAR_SS_ADDED ) );
-//		SOURCESDK_Assert( !IsFlagSet(SOURCESDK_SWARM_FCVAR_SS ) );
+//		SOURCESDK_Assert( IsFlagSet(SOURCESDK_L4D2_FCVAR_SS_ADDED ) );
+//		SOURCESDK_Assert( !IsFlagSet(SOURCESDK_L4D2_FCVAR_SS ) );
 //	}
 //
 //	const ConVar *GetBaseVar() const;
@@ -706,7 +706,7 @@ SOURCESDK_FORCEINLINE_CVAR int ConVarRef::GetInt( void ) const
 //-----------------------------------------------------------------------------
 SOURCESDK_FORCEINLINE_CVAR const char *ConVarRef::GetString( void ) const
 {
-	SOURCESDK_Assert( !IsFlagSet( SOURCESDK_SWARM_FCVAR_NEVER_AS_STRING ) );
+	SOURCESDK_Assert( !IsFlagSet( SOURCESDK_L4D2_FCVAR_NEVER_AS_STRING ) );
 	return m_pConVarState->m_Value.m_pszString;
 }
 
@@ -935,7 +935,7 @@ void ConVar_PrintDescription( const ConCommandBase *pVar );
 //-----------------------------------------------------------------------------
 // Purpose: Utility macros to quicky generate a simple console command
 //-----------------------------------------------------------------------------
-#define SOURCESDK_SWARM_CON_COMMAND( name, description ) \
+#define SOURCESDK_L4D2_CON_COMMAND( name, description ) \
    static void name( const CCommand &args ); \
    static ConCommand name##_command( #name, name, description ); \
    static void name( const CCommand &args )
@@ -946,14 +946,14 @@ void ConVar_PrintDescription( const ConCommandBase *pVar );
 		static ConCommand name##_command_client( #name "_client", name, description ); \
 		static void name( const CCommand &args )
 #else
-	#define SOURCESDK_SWARM_CON_COMMAND_SHARED( name, description ) \
+	#define SOURCESDK_L4D2_CON_COMMAND_SHARED( name, description ) \
 		static void name( const CCommand &args ); \
 		static ConCommand name##_command( #name, name, description ); \
 		static void name( const CCommand &args )
 #endif
 
 
-#define SOURCESDK_SWARM_CON_COMMAND_F( name, description, flags ) \
+#define SOURCESDK_L4D2_CON_COMMAND_F( name, description, flags ) \
 	static void name( const CCommand &args ); \
 	static ConCommand name##_command( #name, name, description, flags ); \
 	static void name( const CCommand &args )
@@ -964,14 +964,14 @@ void ConVar_PrintDescription( const ConCommandBase *pVar );
 		static ConCommand name##_command_client( #name "_client", name, description, flags ); \
 		static void name( const CCommand &args )
 #else
-	#define SOURCESDK_SWARM_CON_COMMAND_F_SHARED( name, description, flags ) \
+	#define SOURCESDK_L4D2_CON_COMMAND_F_SHARED( name, description, flags ) \
 		static void name( const CCommand &args ); \
 		static ConCommand name##_command( #name, name, description, flags ); \
 		static void name( const CCommand &args )
 #endif
 
 
-#define SOURCESDK_SWARM_CON_COMMAND_F_COMPLETION( name, description, flags, completion ) \
+#define SOURCESDK_L4D2_CON_COMMAND_F_COMPLETION( name, description, flags, completion ) \
 	static void name( const CCommand &args ); \
 	static ConCommand name##_command( #name, name, description, flags, completion ); \
 	static void name( const CCommand &args )
@@ -982,24 +982,24 @@ void ConVar_PrintDescription( const ConCommandBase *pVar );
 		static ConCommand name##_command_client( #name "_client", name, description, flags, completion ); \
 		static void name( const CCommand &args )
 #else
-	#define SOURCESDK_SWARM_CON_COMMAND_F_COMPLETION_SHARED( name, description, flags, completion ) \
+	#define SOURCESDK_L4D2_CON_COMMAND_F_COMPLETION_SHARED( name, description, flags, completion ) \
 		static void name( const CCommand &args ); \
 		static ConCommand name##_command( #name, name, description, flags, completion ); \
 		static void name( const CCommand &args )
 #endif
 
 
-#define SOURCESDK_SWARM_CON_COMMAND_EXTERN( name, _funcname, description ) \
+#define SOURCESDK_L4D2_CON_COMMAND_EXTERN( name, _funcname, description ) \
 	void _funcname( const CCommand &args ); \
 	static ConCommand name##_command( #name, _funcname, description ); \
 	void _funcname( const CCommand &args )
 
-#define SOURCESDK_SWARM_CON_COMMAND_EXTERN_F( name, _funcname, description, flags ) \
+#define SOURCESDK_L4D2_CON_COMMAND_EXTERN_F( name, _funcname, description, flags ) \
 	void _funcname( const CCommand &args ); \
 	static ConCommand name##_command( #name, _funcname, description, flags ); \
 	void _funcname( const CCommand &args )
 
-#define SOURCESDK_SWARM_CON_COMMAND_MEMBER_F( _thisclass, name, _funcname, description, flags ) \
+#define SOURCESDK_L4D2_CON_COMMAND_MEMBER_F( _thisclass, name, _funcname, description, flags ) \
 	void _funcname( const CCommand &args );						\
 	friend class CCommandMemberInitializer_##_funcname;			\
 	class CCommandMemberInitializer_##_funcname					\
@@ -1016,7 +1016,7 @@ void ConVar_PrintDescription( const ConCommandBase *pVar );
 	CCommandMemberInitializer_##_funcname m_##_funcname##_register;		\
 
 
-} // namespace SWARM {
+} // namespace L4D2 {
 } // namespace SOURCESDK {
 
-#endif // SOURCESDK_SWARM_CONVAR_H
+#endif // SOURCESDK_L4D2_CONVAR_H

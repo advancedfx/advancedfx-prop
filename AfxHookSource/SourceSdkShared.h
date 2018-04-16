@@ -844,4 +844,40 @@ protected:
 
 } // namespace SWARM {
 
+namespace L4D2 {
+
+	class CUtlString;
+
+	template< class T, class I = int >
+	/// <remarks>Warning, only required elements declared and defined!</remarks>
+	class CUtlMemory
+	{
+	public:
+		//
+		// We don't need this
+	};
+
+	template< class T, class A = CUtlMemory<T> >
+	/// <remarks>Warning, only required elements declared and defined!</remarks>
+	class CUtlVector
+	{
+		typedef A CAllocator;
+	public:
+		typedef T ElemType_t;
+
+	protected:
+		CAllocator m_Memory;
+		int m_Size;
+
+#ifndef _X360
+		// For easier access to the elements through the debugger
+		// it's in release builds so this can be used in libraries correctly
+		T *m_pElements;
+
+#else
+#endif
+	};
+
+} // namespace L4D2 {
+
 } // namespace SOURCESDK {

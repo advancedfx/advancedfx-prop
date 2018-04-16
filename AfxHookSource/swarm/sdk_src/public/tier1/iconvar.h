@@ -9,8 +9,8 @@
 // $NoKeywords: $
 //===========================================================================//
 
-#ifndef SOURCESDK_ICONVAR_H
-#define SOURCESDK_ICONVAR_H
+#ifndef SOURCESDK_SWARM_ICONVAR_H
+#define SOURCESDK_SWARM_ICONVAR_H
 
 #if _WIN32
 #pragma once

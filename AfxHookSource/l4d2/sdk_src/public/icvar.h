@@ -4,20 +4,20 @@
 //
 //===========================================================================//
 
-#ifndef SOURCESDK_SWARM_ICVAR_H
-#define SOURCESDK_SWARM_ICVAR_H
+#ifndef SOURCESDK_L4D2_ICVAR_H
+#define SOURCESDK_L4D2_ICVAR_H
 #ifdef _WIN32
 #pragma once
 #endif
 
-#include <swarm/sdk_src/public/appframework/IAppSystem.h>
-#include <swarm/sdk_src/public/tier1/iconvar.h>
+#include <l4d2/sdk_src/public/appframework/IAppSystem.h>
+#include <l4d2/sdk_src/public/tier1/iconvar.h>
 //#include "tier1/utlvector.h"
 
 #include <SourceSdkShared.h>
 
 namespace SOURCESDK {
-namespace SWARM {
+namespace L4D2 {
 
 class ConCommandBase;
 class ConCommand;
@@ -208,10 +208,10 @@ inline ConCommandBase * ICvar::Iterator::Get( void )
 //-----------------------------------------------------------------------------
 
 // These are marked DLL_EXPORT for Linux.
-SOURCESDK_SWARM_DECLARE_TIER1_INTERFACE( ICvar, cvar );
-SOURCESDK_SWARM_DECLARE_TIER1_INTERFACE( ICvar, g_pCVar );
+SOURCESDK_L4D2_DECLARE_TIER1_INTERFACE( ICvar, cvar );
+SOURCESDK_L4D2_DECLARE_TIER1_INTERFACE( ICvar, g_pCVar );
 
-} // namespace SWARM {
+} // namespace L4D2 {
 } // namespace SOURCESDK {
 
-#endif // SOURCESDK_SWARM_ICVAR_H
+#endif // SOURCESDK_L4D2_ICVAR_H
