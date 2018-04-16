@@ -9,6 +9,8 @@ namespace SOURCESDK {
 #define SOURCESDK_NULL 0
 #endif
 
+#define SOURCESDK_abstract_class class __declspec(novtable)
+
 #define SOURCESDK_FORCEINLINE __forceinline
 #define SOURCESDK_FORCEINLINE_CVAR SOURCESDK_FORCEINLINE
 
@@ -20,6 +22,7 @@ namespace SOURCESDK {
 #define SOURCESDK_Q_memcpy strncpy
 
 typedef float vec_t;
+typedef signed __int32 int32;
 typedef unsigned __int32 uint32;
 typedef unsigned __int16 uint16;
 typedef unsigned __int64 uint64;
@@ -769,5 +772,76 @@ enum ClientFrameStage_t
 };
 
 } // namespace CSSV34 {
+
+
+namespace CSGO {
+
+template< class T, class I = int >
+/// <remarks>Warning, only required elements declared and defined!</remarks>
+class CUtlMemory
+{
+public:
+	//
+	// We don't need this
+};
+
+template< class T, class A = CUtlMemory<T> >
+/// <remarks>Warning, only required elements declared and defined!</remarks>
+class CUtlVector
+{
+	typedef A CAllocator;
+public:
+	typedef T ElemType_t;
+
+protected:
+	CAllocator m_Memory;
+	int m_Size;
+
+#ifndef _X360
+	// For easier access to the elements through the debugger
+	// it's in release builds so this can be used in libraries correctly
+	T *m_pElements;
+
+#else
+#endif
+};
+
+} // namespace CSGO {
+
+namespace SWARM {
+
+class CUtlString;
+
+template< class T, class I = int >
+/// <remarks>Warning, only required elements declared and defined!</remarks>
+class CUtlMemory
+{
+public:
+	//
+	// We don't need this
+};
+
+template< class T, class A = CUtlMemory<T> >
+/// <remarks>Warning, only required elements declared and defined!</remarks>
+class CUtlVector
+{
+	typedef A CAllocator;
+public:
+	typedef T ElemType_t;
+
+protected:
+	CAllocator m_Memory;
+	int m_Size;
+
+#ifndef _X360
+	// For easier access to the elements through the debugger
+	// it's in release builds so this can be used in libraries correctly
+	T *m_pElements;
+
+#else
+#endif
+};
+
+} // namespace SWARM {
 
 } // namespace SOURCESDK {

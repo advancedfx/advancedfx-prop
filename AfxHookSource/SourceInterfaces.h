@@ -105,29 +105,6 @@ public:
 
 typedef int CVarDLLIdentifier_t_007;
 
-// IMemAlloc ///////////////////////////////////////////////////////////////////////
-
-class IMemAlloc_csgo
-{
-public:
-	virtual void _UNUSED_000(void) = 0;
-	virtual void _UNUSED_001(void) = 0;
-	virtual void _UNUSED_002(void) = 0;
-	virtual void _UNUSED_003(void) = 0;
-	virtual void _UNUSED_004(void) = 0;
-
-	virtual void Free( void *pMem ) = 0; //:005
-
-	virtual void _UNUSED_006(void) = 0;
-	virtual void _UNUSED_007(void) = 0;
-
-	virtual size_t GetSize(void *pMem) = 0; //:008
-
-	// There is more, but we don't need it at the moment
-	// [....]
-};
-
-IMemAlloc_csgo * Get_g_pMemAlloc(void);
 
 // IConCommandBaseAccessor_003 /////////////////////////////////////////////////////
 
@@ -603,590 +580,6 @@ public:
 #endif
 };
 
-// ICvar_007 ///////////////////////////////////////////////////////////////////
-
-#define CVAR_INTERFACE_VERSION_007 "VEngineCvar007"
-
-class ConCommandBase_007;
-class ConVar_007;
-class ConCommand_007;
-class IConVar_007;
-class CCommand_007;
-
-typedef void ( *FnChangeCallback_t_007 )( IConVar_007 *var, const char *pOldValue, float flOldValue );
-
-class IConCommandBaseAccessor_007
-{
-public:
-	// Flags is a combination of FCVAR flags in cvar.h.
-	// hOut is filled in with a handle to the variable.
-	virtual bool RegisterConCommandBase( ConCommandBase_007 *pVar ) = 0;
-};
-
-typedef void ( *FnCommandCallbackV1_t_007 )( void );
-typedef void ( *FnCommandCallback_t_007 )( const CCommand_007 &command );
-
-#define COMMAND_COMPLETION_MAXITEMS_007		64
-#define COMMAND_COMPLETION_ITEM_LENGTH_007	64
-
-//-----------------------------------------------------------------------------
-// Returns 0 to COMMAND_COMPLETION_MAXITEMS worth of completion strings
-//-----------------------------------------------------------------------------
-typedef int  ( *FnCommandCompletionCallback_007 )( const char *partial, char commands[ COMMAND_COMPLETION_MAXITEMS_007	 ][ COMMAND_COMPLETION_ITEM_LENGTH_007 ] );
-
-class ICommandCallback_007
-{
-public:
-	virtual void CommandCallback( const CCommand_007 &command ) = 0;
-};
-
-class ICommandCompletionCallback_007;
-
-
-class ConCommandBase_007
-{
-	friend ::WrpConCommands; // ugly hack, just like Valve did
-
-public:
-								ConCommandBase_007( void );
-								ConCommandBase_007( const char *pName, const char *pHelpString = 0, 
-									int flags = 0 );
-
-	virtual						~ConCommandBase_007( void );
-
-	virtual	bool				IsCommand( void ) const;
-
-	// Check flag
-	virtual bool				IsFlagSet( int flag ) const;
-	// Set flag
-	virtual void				AddFlags( int flags );
-	// Clear flag
-	virtual void				RemoveFlags( int flags );
-
-	virtual int					GetFlags() const;
-
-	// Return name of cvar
-	virtual const char			*GetName( void ) const;
-
-	// Return help text for cvar
-	virtual const char			*GetHelpText( void ) const;
-
-	// Deal with next pointer
-	const ConCommandBase_007		*GetNext( void ) const;
-	ConCommandBase_007				*GetNext( void );
-	
-	virtual bool				IsRegistered( void ) const;
-
-	// Returns the DLL identifier
-	virtual CVarDLLIdentifier_t_007	GetDLLIdentifier() const;
-
-protected:
-	virtual void				Create( const char *pName, const char *pHelpString = 0, 
-									int flags = 0 );
-
-	// Used internally by OneTimeInit to initialize/shutdown
-	virtual void				Init();
-	void _NOT_IMPLEMENTED_Shutdown();
-
-	// Internal copy routine ( uses new operator from correct module )
-	void _NOT_IMPLEMENTED_CopyString(void);
-
-private:
-	// Next ConVar in chain
-	// Prior to register, it points to the next convar in the DLL.
-	// Once registered, though, m_pNext is reset to point to the next
-	// convar in the global list
-	ConCommandBase_007				*m_pNext;
-
-	// Has the cvar been added to the global list?
-	bool						m_bRegistered;
-
-	// Static data
-	char 					*m_pszName;
-	char 					*m_pszHelpString;
-	
-	// ConVar flags
-	int							m_nFlags;
-
-protected:
-	// ConVars add themselves to this list for the executable. 
-	// Then ConVar_Register runs through  all the console variables 
-	// and registers them into a global list stored in vstdlib.dll
-	static ConCommandBase_007		*s_pConCommandBases;
-
-	// ConVars in this executable use this 'global' to access values.
-	static IConCommandBaseAccessor_007	*s_pAccessor;
-};
-
-
-//-----------------------------------------------------------------------------
-// Command tokenizer
-//-----------------------------------------------------------------------------
-class CCommand_007
-{
-public:
-	CCommand_007();
-	CCommand_007( int nArgC, const char **ppArgV );
-	bool _NOT_IMPLEMENTED_Tokenize(void);
-	void _NOT_IMPLEMENTED_Reset(void);
-
-	int ArgC() const;
-	const char **ArgV() const;
-	const char *ArgS() const;					// All args that occur after the 0th arg, in string form
-	const char *GetCommandString() const;		// The entire command in string form, including the 0th arg
-	const char *operator[]( int nIndex ) const;	// Gets at arguments
-	const char *Arg( int nIndex ) const;		// Gets at arguments
-	
-	// Helper functions to parse arguments to commands.
-	void _NOT_IMPLEMENTED_FindArg(void) const;
-	void _NOT_IMPLEMENTED_FindArgInt(void) const;
-
-	static int MaxCommandLength();
-	static void _NOT_IMPLEMENTED_DefaultBreakSet();
-
-private:
-	enum
-	{
-		COMMAND_MAX_ARGC = 64,
-		COMMAND_MAX_LENGTH = 512,
-	};
-
-	int		m_nArgc;
-	int		m_nArgv0Size;
-	char	m_pArgSBuffer[ COMMAND_MAX_LENGTH ];
-	char	m_pArgvBuffer[ COMMAND_MAX_LENGTH ];
-	const char*	m_ppArgv[ COMMAND_MAX_ARGC ];
-};
-
-inline int CCommand_007::MaxCommandLength()
-{
-	return COMMAND_MAX_LENGTH - 1;
-}
-
-inline int CCommand_007::ArgC() const
-{
-	return m_nArgc;
-}
-
-inline const char **CCommand_007::ArgV() const
-{
-	return m_nArgc ? (const char**)m_ppArgv : 0;
-}
-
-inline const char *CCommand_007::ArgS() const
-{
-	return m_nArgv0Size ? &m_pArgSBuffer[m_nArgv0Size] : "";
-}
-
-inline const char *CCommand_007::GetCommandString() const
-{
-	return m_nArgc ? m_pArgSBuffer : "";
-}
-
-inline const char *CCommand_007::Arg( int nIndex ) const
-{
-	// FIXME: Many command handlers appear to not be particularly careful
-	// about checking for valid argc range. For now, we're going to
-	// do the extra check and return an empty string if it's out of range
-	if ( nIndex < 0 || nIndex >= m_nArgc )
-		return "";
-	return m_ppArgv[nIndex];
-}
-
-inline const char *CCommand_007::operator[]( int nIndex ) const
-{
-	return Arg( nIndex );
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: The console invoked command
-//-----------------------------------------------------------------------------
-class ConCommand_007 : public ConCommandBase_007
-{
-friend class CCvar_007;
-
-public:
-	typedef ConCommandBase_007 BaseClass;
-
-	/// <remarks>not implemented</remarks>
-	ConCommand_007( const char *pName, FnCommandCallbackV1_t_007 callback, 
-		const char *pHelpString = 0, int flags = 0, FnCommandCompletionCallback_007 completionFunc = 0 );
-	
-	/// <remarks> tweaked since we don't support completition and use a callback wrapper </remarks>
-	ConCommand_007( const char *pName, WrpCommandCallback callback, 
-		const char *pHelpString = 0, int flags = 0, FnCommandCompletionCallback_007 completionFunc = 0 );
-	
-	/// <remarks>not implemented</remarks>
-	ConCommand_007( const char *pName, ICommandCallback_007 *pCallback, 
-		const char *pHelpString = 0, int flags = 0, ICommandCompletionCallback_007 *pCommandCompletionCallback = 0 );
-
-	virtual ~ConCommand_007( void );
-
-	virtual	bool IsCommand( void ) const;
-
-	/// <remarks> we don't support autocompletition, thus we always return 0 </remarks>
-	virtual int	AutoCompleteSuggest(void * dummy1, void * dummy2);
-
-	/// <remarks> we don't support autocompletition, thus we always return false </remarks>
-	virtual bool CanAutoComplete( void );
-
-	// Invoke the function
-	virtual void Dispatch( const CCommand_007 &command );
-
-private:
-	// NOTE: To maintain backward compat, we have to be very careful:
-	// All public virtual methods must appear in the same order always
-	// since engine code will be calling into this code, which *does not match*
-	// in the mod code; it's using slightly different, but compatible versions
-	// of this class. Also: Be very careful about adding new fields to this class.
-	// Those fields will not exist in the version of this class that is instanced
-	// in mod code.
-
-	// Call this function when executing the command
-	union
-	{
-		FnCommandCallbackV1_t_007 m_fnCommandCallbackV1;
-		WrpCommandCallback m_fnCommandCallback;
-		ICommandCallback_007 *m_pCommandCallback; 
-	};
-
-	union
-	{
-		FnCommandCompletionCallback_007	m_fnCompletionCallback;
-		ICommandCompletionCallback_007 *m_pCommandCompletionCallback;
-	};
-
-	bool m_bHasCompletionCallback : 1;
-	bool m_bUsingNewCommandCallback : 1;
-	bool m_bUsingCommandCallbackInterface : 1;
-};
-
-class Color;
-
-class IConsoleDisplayFunc abstract
-{
-public:
-	virtual void ColorPrint( const Color& clr, const char *pMessage ) = 0;
-	virtual void Print( const char *pMessage ) = 0;
-	virtual void DPrint( const char *pMessage ) = 0;
-
-	virtual void GetConsoleText( char *pchText, size_t bufSize ) const = 0;
-};
-
-
-class ICvar_007 abstract : public IAppSystem_csgo
-{
-public:
-	// Allocate a unique DLL identifier
-	virtual CVarDLLIdentifier_t_007 AllocateDLLIdentifier() = 0;
-
-	// Register, unregister commands
-	virtual void			RegisterConCommand( ConCommandBase_007 *pCommandBase ) = 0;
-	virtual void			UnregisterConCommand( ConCommandBase_007 *pCommandBase ) = 0;
-	virtual void			UnregisterConCommands( CVarDLLIdentifier_t_007 id ) = 0;
-
-	// If there is a +<varname> <value> on the command line, this returns the value.
-	// Otherwise, it returns NULL.
-	virtual const char*		GetCommandLineValue( const char *pVariableName ) = 0;
-
-	// Try to find the cvar pointer by name
-	virtual ConCommandBase_007 *FindCommandBase( const char *name ) = 0;
-	virtual const ConCommandBase_007 *FindCommandBase( const char *name ) const = 0;
-	virtual ConVar_007			*FindVar ( const char *var_name ) = 0;
-	virtual const ConVar_007	*FindVar ( const char *var_name ) const = 0;
-	virtual ConCommand_007		*FindCommand( const char *name ) = 0;
-	virtual const ConCommand_007 *FindCommand( const char *name ) const = 0;
-
-
-
-	// Install a global change callback (to be called when any convar changes) 
-	virtual void			InstallGlobalChangeCallback( FnChangeCallback_t_007 callback ) = 0;
-	virtual void			RemoveGlobalChangeCallback( FnChangeCallback_t_007 callback ) = 0;
-	virtual void			CallGlobalChangeCallbacks( ConVar_007 *var, const char *pOldString, float flOldValue ) = 0;
-
-	virtual void			InstallConsoleDisplayFunc( IConsoleDisplayFunc* pDisplayFunc ) = 0;
-	virtual void			RemoveConsoleDisplayFunc( IConsoleDisplayFunc* pDisplayFunc ) = 0;
-	virtual void			_UNUSED_ConsoleColorPrintf( void ) const = 0;
-	virtual void			_UNUSED_ConsolePrintf( void ) const = 0;
-	virtual void			_UNUSED_ConsoleDPrintf( void ) const = 0;
-	virtual void			_UNUSED_RevertFlaggedConVars( void ) = 0;
-	virtual void			_UNUSED_InstallCVarQuery( void ) = 0;
-
-#if defined( _X360 )
-	virtual void			_UNUSED_PublishToVXConsole( ) = 0;
-#endif
-
-	virtual void			_UNUSED_SetMaxSplitScreenSlots( int nSlots ) = 0;
-	virtual int				_UNUSED_GetMaxSplitScreenSlots() const = 0;
-
-	virtual void			_UNUSED_AddSplitScreenConVars() = 0;
-	virtual void			_UNUSED_RemoveSplitScreenConVars( CVarDLLIdentifier_t_007 id ) = 0;
-
-	virtual int				_UNUSED_GetConsoleDisplayFuncCount() const = 0;
-	virtual void			_UNUSED_GetConsoleText( int nDisplayFuncIndex, char *pchText, size_t bufSize ) const = 0;
-
-	virtual bool			_UNUSED_IsMaterialThreadSetAllowed( ) const = 0;
-	virtual void			_UNUSED_QueueMaterialThreadSetValue( ConVar_007 *pConVar, const char *pValue ) = 0;
-	virtual void			_UNUSED_QueueMaterialThreadSetValue( ConVar_007 *pConVar, int nValue ) = 0;
-	virtual void			_UNUSED_QueueMaterialThreadSetValue( ConVar_007 *pConVar, float flValue ) = 0;
-	virtual bool			_UNUSED_HasQueuedMaterialThreadConVarSets() const = 0;
-	virtual int				_UNUSED_ProcessQueuedMaterialThreadConVarSets() = 0;
-
-protected:	class ICVarIteratorInternal;
-public:
-	/// Iteration over all cvars. 
-	/// (THIS IS A SLOW OPERATION AND YOU SHOULD AVOID IT.)
-	/// usage: 
-	/// { ICVar::Iterator iter(g_pCVar); 
-	///   for ( iter.SetFirst() ; iter.IsValid() ; iter.Next() )
-	///   {  
-	///       ConCommandBase *cmd = iter.Get();
-	///   } 
-	/// }
-	/// The Iterator class actually wraps the internal factory methods
-	/// so you don't need to worry about new/delete -- scope takes care
-	//  of it.
-	/// We need an iterator like this because we can't simply return a 
-	/// pointer to the internal data type that contains the cvars -- 
-	/// it's a custom, protected class with unusual semantics and is
-	/// prone to change.
-	class Iterator
-	{
-	public:
-		inline Iterator(ICvar_007 *icvar);
-		inline ~Iterator(void);
-		inline void		SetFirst( void );
-		inline void		Next( void );
-		inline bool		IsValid( void );
-		inline ConCommandBase_007 *Get( void );
-	private:
-		ICVarIteratorInternal *m_pIter;
-	};
-
-protected:
-	// internals for  ICVarIterator
-	class ICVarIteratorInternal
-	{
-	public:
-		virtual void		SetFirst( void ) = 0;
-		virtual void		Next( void ) = 0;
-		virtual	bool		IsValid( void ) = 0;
-		virtual ConCommandBase_007 *Get( void ) = 0;
-	};
-
-	virtual ICVarIteratorInternal	*FactoryInternalIterator( void ) = 0;
-	friend class Iterator;
-};
-
-inline ICvar_007::Iterator::Iterator(ICvar_007 *icvar)
-{
-	m_pIter = icvar->FactoryInternalIterator();
-}
-
-inline ICvar_007::Iterator::~Iterator( void )
-{
-	Get_g_pMemAlloc()->Free(m_pIter);
-}
-
-inline void ICvar_007::Iterator::SetFirst( void )
-{
-	m_pIter->SetFirst();
-}
-
-inline void ICvar_007::Iterator::Next( void )
-{
-	m_pIter->Next();
-}
-
-inline bool ICvar_007::Iterator::IsValid( void )
-{
-	return m_pIter->IsValid();
-}
-
-inline ConCommandBase_007 * ICvar_007::Iterator::Get( void )
-{
-	return m_pIter->Get();
-}
-
-//-----------------------------------------------------------------------------
-// Abstract interface for ConVars
-//-----------------------------------------------------------------------------
-class IConVar_007 abstract
-{
-public:
-	// Value set
-	virtual void SetValue( const char *pValue ) = 0;
-	virtual void SetValue( float flValue ) = 0;
-	virtual void SetValue( int nValue ) = 0;
-	virtual void SetValue( Color value ) = 0;
-
-	// Return name of command
-	virtual const char *GetName( void ) const = 0;
-
-	// Return name of command (usually == GetName(), except in case of FCVAR_SS_ADDED vars
-	virtual const char *GetBaseName( void ) const = 0;
-
-	// Accessors.. not as efficient as using GetState()/GetInfo()
-	// if you call these methods multiple times on the same IConVar
-	virtual bool IsFlagSet( int nFlag ) const = 0;
-
-	virtual int GetSplitScreenPlayerSlot() const = 0;
-};
-
-template< class T, class I = int >
-/// <remarks>Warning, only required elements declared and defined!</remarks>
-class CUtlMemory_007
-{
-public:
-	//
-	// We don't need this
-};
-
-template< class T, class A = CUtlMemory_007<T> >
-/// <remarks>Warning, only required elements declared and defined!</remarks>
-class CUtlVector_007
-{
-	typedef A CAllocator;
-public:
-	typedef T ElemType_t;
-
-protected:
-	CAllocator m_Memory;
-	int m_Size;
-
-#ifndef _X360
-	// For easier access to the elements through the debugger
-	// it's in release builds so this can be used in libraries correctly
-	T *m_pElements;
-
-#else
-#endif
-};
-
-//-----------------------------------------------------------------------------
-// Called when a ConVar changes value
-// NOTE: For FCVAR_NEVER_AS_STRING ConVars, pOldValue == NULL
-//-----------------------------------------------------------------------------
-typedef void ( *FnChangeCallback_t_007 )( IConVar_007 *var, const char *pOldValue, float flOldValue );
-
-//-----------------------------------------------------------------------------
-// Purpose: A console variable
-//-----------------------------------------------------------------------------
-/// <remarks>Warning, only required elements declared and defined!</remarks>
-class ConVar_007 abstract : public ConCommandBase_007, public IConVar_007
-{
-friend class CCvar_007;
-friend class ConVarRef_007;
-friend class SplitScreenConVarRef_007;
-
-friend class ::WrpConVarRef;
-
-public:
-	typedef ConCommandBase_007 BaseClass;
-
-	/// <remarks>not implemented</remarks>
-	virtual						~ConVar_007( void ) = 0;
-
-	/// <remarks>not implemented</remarks>
-	virtual bool				IsFlagSet( int flag ) const = 0;
-
-	/// <remarks>not implemented</remarks>
-	virtual const char*			GetHelpText( void ) const = 0;
-
-	/// <remarks>not implemented</remarks>
-	virtual bool				IsRegistered( void ) const = 0;
-
-	/// <remarks>not implemented</remarks>
-	virtual const char			*GetName( void ) const = 0;
-
-	// Return name of command (usually == GetName(), except in case of FCVAR_SS_ADDED vars
-	/// <remarks>not implemented</remarks>
-	virtual const char			*GetBaseName( void ) const = 0;
-
-	/// <remarks>not implemented</remarks>
-	//virtual int					GetSplitScreenPlayerSlot() const = 0;
-
-	/// <remarks>not implemented</remarks>
-	virtual void				AddFlags( int flags ) = 0;
-
-	/// <remarks>not implemented</remarks>
-	virtual int					GetFlags() const = 0;
-
-	/// <remarks>not implemented</remarks>
-	virtual	bool				IsCommand( void ) const = 0;
-
-	virtual float			GetFloat(void) const = 0; // new
-	virtual int			GetInt(void) const = 0; // new
-
-	// These just call into the IConCommandBaseAccessor to check flags and set the var (which ends up calling InternalSetValue).
-	virtual void				SetValue( const char *value ) = 0;
-	virtual void				SetValue( float value ) = 0;
-	virtual void				SetValue( int value ) = 0;
-	virtual void				SetValue( Color value ) = 0;
-	
-	// Value
-	struct CVValue_t
-	{
-		char						*m_pszString;
-		int							m_StringLength;
-
-		// Values
-		float						m_fValue;
-		int							m_nValue;
-	};
-
-	FORCEINLINE_CVAR CVValue_t &GetRawValue()
-	{
-		return m_Value;
-	}
-	FORCEINLINE_CVAR const CVValue_t &GetRawValue() const
-	{
-		return m_Value;
-	}
-
-private:
-	// Called by CCvar when the value of a var is changing.
-	//virtual void				InternalSetValue(const char *value) = 0;
-
-	// For CVARs marked FCVAR_NEVER_AS_STRING
-	//virtual void				InternalSetFloatValue( float fNewValue ) = 0;
-	//virtual void				InternalSetIntValue( int nValue ) = 0;
-	//virtual void				InternalSetColorValue( Color value ) = 0;
-
-	virtual bool				ClampValue( float& value ) = 0;
-	virtual void				ChangeStringValue( const char *tempVal, float flOldValue ) = 0;
-
-	virtual void				Create( const char *pName, const char *pDefaultValue, int flags = 0,
-									const char *pHelpString = 0, bool bMin = false, float fMin = 0.0,
-									bool bMax = false, float fMax = false, FnChangeCallback_t_007 callback = 0 ) = 0;
-
-	// Used internally by OneTimeInit to initialize.
-	virtual void				Init() = 0;
-
-
-
-protected:
-
-	// This either points to "this" or it points to the original declaration of a ConVar.
-	// This allows ConVars to exist in separate modules, and they all use the first one to be declared.
-	// m_pParent->m_pParent must equal m_pParent (ie: m_pParent must be the root, or original, ConVar).
-	ConVar_007						*m_pParent;
-
-	// Static data
-	const char					*m_pszDefaultValue;
-	
-	CVValue_t					m_Value;
-
-	// Min/Max values
-	bool						m_bHasMin;
-	float						m_fMinVal;
-	bool						m_bHasMax;
-	float						m_fMaxVal;
-	
-	// Call this function when ConVar changes
-	CUtlVector_007<FnChangeCallback_t_007> m_fnChangeCallbacks;
-};
 
 // IVEngineClient_012 //////////////////////////////////////////////////////////
 
@@ -1198,178 +591,177 @@ protected:
 class IVEngineClient_012 abstract
 {
 public:
-	virtual void _UNUSED_GetIntersectingSurfaces(void)=0;
-	virtual void _UNUSED_GetLightForPoint(void)=0;
-	virtual void _UNUSED_TraceLineMaterialAndLighting(void)=0;
-	virtual void _UNUSED_ParseFile(void)=0;
-	virtual void _UNUSED_CopyFile(void)=0;
+	virtual void _UNUSED_GetIntersectingSurfaces(void) = 0;
+	virtual void _UNUSED_GetLightForPoint(void) = 0;
+	virtual void _UNUSED_TraceLineMaterialAndLighting(void) = 0;
+	virtual void _UNUSED_ParseFile(void) = 0;
+	virtual void _UNUSED_CopyFile(void) = 0;
 
 	// Gets the dimensions of the game window
-	virtual void				GetScreenSize( int& width, int& height ) = 0;
+	virtual void				GetScreenSize(int& width, int& height) = 0;
 
 	// Forwards szCmdString to the server, sent reliably if bReliable is set
-	virtual void				ServerCmd( const char *szCmdString, bool bReliable = true ) = 0;
+	virtual void				ServerCmd(const char *szCmdString, bool bReliable = true) = 0;
 	// Inserts szCmdString into the command buffer as if it was typed by the client to his/her console.
-	virtual void				ClientCmd( const char *szCmdString ) = 0;
+	virtual void				ClientCmd(const char *szCmdString) = 0;
 
-	virtual void _UNUSED_GetPlayerInfo(void)=0;
-	virtual void _UNUSED_GetPlayerForUserID(void)=0;
-	virtual void _UNUSED_TextMessageGet(void)=0;
+	virtual void _UNUSED_GetPlayerInfo(void) = 0;
+	virtual void _UNUSED_GetPlayerForUserID(void) = 0;
+	virtual void _UNUSED_TextMessageGet(void) = 0;
 
 	// Returns true if the console is visible
-	virtual bool				Con_IsVisible( void ) = 0;
+	virtual bool				Con_IsVisible(void) = 0;
 
-	virtual void _UNUSED_GetLocalPlayer(void)=0;
-	virtual void _UNUSED_LoadModel(void)=0;
+	virtual void _UNUSED_GetLocalPlayer(void) = 0;
+	virtual void _UNUSED_LoadModel(void) = 0;
 
 	// Get accurate, sub-frame clock ( profiling use )
-	virtual float				Time( void ) = 0; 
+	virtual float				Time(void) = 0;
 
 	// Get the exact server timesstamp ( server time ) from the last message received from the server
-	virtual float				GetLastTimeStamp( void ) = 0; 
+	virtual float				GetLastTimeStamp(void) = 0;
 
-	virtual void _UNUSED_GetSentence(void)=0;
-	virtual void _UNUSED_GetSentenceLength(void)=0;
-	virtual void _UNUSED_IsStreaming(void)=0;
+	virtual void _UNUSED_GetSentence(void) = 0;
+	virtual void _UNUSED_GetSentenceLength(void) = 0;
+	virtual void _UNUSED_IsStreaming(void) = 0;
 
 	// Copy current view orientation into va
-	virtual void				GetViewAngles( QAngle& va ) = 0;
+	virtual void				GetViewAngles(QAngle& va) = 0;
 	// Set current view orientation from va
-	virtual void				SetViewAngles( QAngle& va ) = 0;
-	
-	// Retrieve the current game's maxclients setting
-	virtual int					GetMaxClients( void ) = 0;
+	virtual void				SetViewAngles(QAngle& va) = 0;
 
-	virtual void _UNUSED_Key_Event(void)=0;
-	virtual void _UNUSED_Key_LookupBinding(void)=0;
-	virtual void _UNUSED_StartKeyTrapMode(void)=0;
-	virtual void _UNUSED_CheckDoneKeyTrapping(void)=0;
+	// Retrieve the current game's maxclients setting
+	virtual int					GetMaxClients(void) = 0;
+
+	virtual void _UNUSED_Key_Event(void) = 0;
+	virtual void _UNUSED_Key_LookupBinding(void) = 0;
+	virtual void _UNUSED_StartKeyTrapMode(void) = 0;
+	virtual void _UNUSED_CheckDoneKeyTrapping(void) = 0;
 
 	// Returns true if the player is fully connected and active in game (i.e, not still loading)
-	virtual bool				IsInGame( void ) = 0;
+	virtual bool				IsInGame(void) = 0;
 	// Returns true if the player is connected, but not necessarily active in game (could still be loading)
-	virtual bool				IsConnected( void ) = 0;
+	virtual bool				IsConnected(void) = 0;
 	// Returns true if the loading plaque should be drawn
-	virtual bool				IsDrawingLoadingImage( void ) = 0;
+	virtual bool				IsDrawingLoadingImage(void) = 0;
 
 	// Prints the formatted string to the notification area of the screen ( down the right hand edge
 	//  numbered lines starting at position 0
-	virtual void				Con_NPrintf( int pos, const char *fmt, ... ) = 0;
-	
-	virtual void _UNUSED_Con_NXPrintf(void)=0;
+	virtual void				Con_NPrintf(int pos, const char *fmt, ...) = 0;
+
+	virtual void _UNUSED_Con_NXPrintf(void) = 0;
 
 	// During ConCommand processing functions, use this function to get the total # of tokens passed to the command parser
-	virtual int					Cmd_Argc( void ) = 0;	
+	virtual int					Cmd_Argc(void) = 0;
 	// During ConCommand processing, this API is used to access each argument passed to the parser
-	virtual const char			*Cmd_Argv( int arg ) = 0;
+	virtual const char			*Cmd_Argv(int arg) = 0;
 
-	virtual void _UNUSED_IsBoxVisible(void)=0;
-	virtual void _UNUSED_IsBoxInViewCluster(void)=0;
-	virtual void _UNUSED_CullBox(void)=0;
-	virtual void _UNUSED_Sound_ExtraUpdate(void)=0;
+	virtual void _UNUSED_IsBoxVisible(void) = 0;
+	virtual void _UNUSED_IsBoxInViewCluster(void) = 0;
+	virtual void _UNUSED_CullBox(void) = 0;
+	virtual void _UNUSED_Sound_ExtraUpdate(void) = 0;
 
 	// Get the current game directory ( e.g., hl2, tf2, cstrike, hl1 )
-	virtual const char			*GetGameDirectory( void ) = 0;
+	virtual const char			*GetGameDirectory(void) = 0;
 
 	// Get access to the world to screen transformation matrix
 	virtual const VMatrix& 		WorldToScreenMatrix() = 0;
-	
+
 	// Get the matrix to move a point from world space into view space
 	// (translate and rotate so the camera is at the origin looking down X).
 	virtual const VMatrix& 		WorldToViewMatrix() = 0;
 
-	virtual void _UNUSED_GameLumpVersion(void)=0;
-	virtual void _UNUSED_GameLumpSize(void)=0;
-	virtual void _UNUSED_LoadGameLump(void)=0;
-	virtual void _UNUSED_LevelLeafCount(void)=0;
-	virtual void _UNUSED_GetBSPTreeQuery(void)=0;
-	virtual void _UNUSED_LinearToGamma(void)=0;
-	virtual void _UNUSED_LightStyleValue(void)=0;
-	virtual void _UNUSED_ComputeDynamicLighting(void)=0;
-	virtual void _UNUSED_GetAmbientLightColor(void)=0;
-	virtual void _UNUSED_GetDXSupportLevel(void)=0;
-	virtual void _UNUSED_SupportsHDR(void)=0;
-	virtual void _UNUSED_Mat_Stub(void)=0;
+	virtual void _UNUSED_GameLumpVersion(void) = 0;
+	virtual void _UNUSED_GameLumpSize(void) = 0;
+	virtual void _UNUSED_LoadGameLump(void) = 0;
+	virtual void _UNUSED_LevelLeafCount(void) = 0;
+	virtual void _UNUSED_GetBSPTreeQuery(void) = 0;
+	virtual void _UNUSED_LinearToGamma(void) = 0;
+	virtual void _UNUSED_LightStyleValue(void) = 0;
+	virtual void _UNUSED_ComputeDynamicLighting(void) = 0;
+	virtual void _UNUSED_GetAmbientLightColor(void) = 0;
+	virtual void _UNUSED_GetDXSupportLevel(void) = 0;
+	virtual void _UNUSED_SupportsHDR(void) = 0;
+	virtual void _UNUSED_Mat_Stub(void) = 0;
 
 	// Get the name of the current map
-	virtual char const	*GetLevelName( void ) = 0;
+	virtual char const	*GetLevelName(void) = 0;
 #ifndef _XBOX
-	virtual void _UNUSED_GetVoiceTweakAPI(void)=0;
+	virtual void _UNUSED_GetVoiceTweakAPI(void) = 0;
 #endif
 	// Tell engine stats gathering system that the rendering frame is beginning/ending
-	virtual void		EngineStats_BeginFrame( void ) = 0;
-	virtual void		EngineStats_EndFrame( void ) = 0;
-	
-	virtual void _UNUSED_FireEvents(void)=0;
-	virtual void _UNUSED_GetLeavesArea(void)=0;
-	virtual void _UNUSED_DoesBoxTouchAreaFrustum(void)=0;
-	virtual void _UNUSED_SetHearingOrigin(void)=0;
-	virtual void _UNUSED_SentenceGroupPick(void)=0;
-	virtual void _UNUSED_SentenceGroupPickSequential(void)=0;
-	virtual void _UNUSED_SentenceIndexFromName(void)=0;
-	virtual void _UNUSED_SentenceNameFromIndex(void)=0;
-	virtual void _UNUSED_SentenceGroupIndexFromName(void)=0;
-	virtual void _UNUSED_SentenceGroupNameFromIndex(void)=0;
-	virtual void _UNUSED_SentenceLength(void)=0;
-	virtual void _UNUSED_ComputeLighting(void)=0;
-	virtual void _UNUSED_ActivateOccluder(void)=0;
-	virtual void _UNUSED_IsOccluded(void)=0;
-	virtual void _UNUSED_SaveAllocMemory(void)=0;
-	virtual void _UNUSED_SaveFreeMemory(void)=0;
-	virtual void _UNUSED_GetNetChannelInfo(void)=0;
-	virtual void _UNUSED_DebugDrawPhysCollide(void)=0;
-	virtual void _UNUSED_CheckPoint(void)=0;
-	virtual void _UNUSED_DrawPortals(void)=0;
+	virtual void		EngineStats_BeginFrame(void) = 0;
+	virtual void		EngineStats_EndFrame(void) = 0;
+
+	virtual void _UNUSED_FireEvents(void) = 0;
+	virtual void _UNUSED_GetLeavesArea(void) = 0;
+	virtual void _UNUSED_DoesBoxTouchAreaFrustum(void) = 0;
+	virtual void _UNUSED_SetHearingOrigin(void) = 0;
+	virtual void _UNUSED_SentenceGroupPick(void) = 0;
+	virtual void _UNUSED_SentenceGroupPickSequential(void) = 0;
+	virtual void _UNUSED_SentenceIndexFromName(void) = 0;
+	virtual void _UNUSED_SentenceNameFromIndex(void) = 0;
+	virtual void _UNUSED_SentenceGroupIndexFromName(void) = 0;
+	virtual void _UNUSED_SentenceGroupNameFromIndex(void) = 0;
+	virtual void _UNUSED_SentenceLength(void) = 0;
+	virtual void _UNUSED_ComputeLighting(void) = 0;
+	virtual void _UNUSED_ActivateOccluder(void) = 0;
+	virtual void _UNUSED_IsOccluded(void) = 0;
+	virtual void _UNUSED_SaveAllocMemory(void) = 0;
+	virtual void _UNUSED_SaveFreeMemory(void) = 0;
+	virtual void _UNUSED_GetNetChannelInfo(void) = 0;
+	virtual void _UNUSED_DebugDrawPhysCollide(void) = 0;
+	virtual void _UNUSED_CheckPoint(void) = 0;
+	virtual void _UNUSED_DrawPortals(void) = 0;
 
 	// Determine whether the client is playing back or recording a demo
-	virtual bool		IsPlayingDemo( void ) = 0;
-	virtual bool		IsRecordingDemo( void ) = 0;
-	virtual bool		IsPlayingTimeDemo( void ) = 0;
+	virtual bool		IsPlayingDemo(void) = 0;
+	virtual bool		IsRecordingDemo(void) = 0;
+	virtual bool		IsPlayingTimeDemo(void) = 0;
 	// Is the game paused?
-	virtual bool		IsPaused( void ) = 0;
+	virtual bool		IsPaused(void) = 0;
 	// Is the game currently taking a screenshot?
-	virtual bool		IsTakingScreenshot( void ) = 0;
+	virtual bool		IsTakingScreenshot(void) = 0;
 	// Is this a HLTV broadcast ?
-	virtual bool		IsHLTV( void ) = 0;
+	virtual bool		IsHLTV(void) = 0;
 	// is this level loaded as just the background to the main menu? (active, but unplayable)
-	virtual bool		IsLevelMainMenuBackground( void ) = 0;
+	virtual bool		IsLevelMainMenuBackground(void) = 0;
 	// returns the name of the background level
-	virtual void		GetMainMenuBackgroundName( char *dest, int destlen ) = 0;
+	virtual void		GetMainMenuBackgroundName(char *dest, int destlen) = 0;
 
-	virtual void _UNUSED_SetOcclusionParameters(void)=0;
-	virtual void _UNUSED_GetUILanguage(void)=0;
-	virtual void _UNUSED_IsSkyboxVisibleFromPoint(void)=0;
-	virtual void _UNUSED_GetMapEntitiesString(void)=0;
+	virtual void _UNUSED_SetOcclusionParameters(void) = 0;
+	virtual void _UNUSED_GetUILanguage(void) = 0;
+	virtual void _UNUSED_IsSkyboxVisibleFromPoint(void) = 0;
+	virtual void _UNUSED_GetMapEntitiesString(void) = 0;
 
 	// Is the engine in map edit mode ?
-	virtual bool		IsInEditMode( void ) = 0;
+	virtual bool		IsInEditMode(void) = 0;
 
 	// current screen aspect ratio (eg. 4.0f/3.0f, 16.0f/9.0f)
 	virtual float		GetScreenAspectRatio() = 0;
 
-	virtual void _UNUSED_SteamRefreshLogin(void)=0;
-	virtual void _UNUSED_SteamProcessCall(void)=0;
+	virtual void _UNUSED_SteamRefreshLogin(void) = 0;
+	virtual void _UNUSED_SteamProcessCall(void) = 0;
 
 	// allow other modules to know about engine versioning (one use is a proxy for network compatability)
 	virtual unsigned int	GetEngineBuildNumber() = 0; // engines build
 	virtual const char *	GetProductVersionString() = 0; // mods version number (steam.inf)
 
-	virtual void _UNUSED_GetLastPressedEngineKey(void)=0;
-	virtual void _UNUSED_GrabPreColorCorrectedFrame(void)=0;
+	virtual void _UNUSED_GetLastPressedEngineKey(void) = 0;
+	virtual void _UNUSED_GrabPreColorCorrectedFrame(void) = 0;
 
-	virtual bool			IsHammerRunning( ) const = 0;
+	virtual bool			IsHammerRunning() const = 0;
 
 	// Inserts szCmdString into the command buffer as if it was typed by the client to his/her console.
 	// And then executes the command string immediately (vs ClientCmd() which executes in the next frame)
-	virtual void			ExecuteClientCmd( const char *szCmdString ) = 0;
+	virtual void			ExecuteClientCmd(const char *szCmdString) = 0;
 
-	virtual void _UNUSED_MapHasHDRLighting(void)=0;
+	virtual void _UNUSED_MapHasHDRLighting(void) = 0;
 
 	virtual int	GetAppID() = 0;
 
-	virtual void _UNUSED_GetLightForPointFast(void)=0;
+	virtual void _UNUSED_GetLightForPointFast(void) = 0;
 };
-
 
 // IVEngineClient_013 //////////////////////////////////////////////////////////
 
@@ -5105,36 +4497,6 @@ inline bool CBaseHandle::operator <(const CBaseHandle &other) const
 }
 
 class CUtlBuffer;
-
-template< class T, class I = int >
-/// <remarks>Warning, only required elements declared and defined!</remarks>
-class CUtlMemory
-{
-public:
-	//
-	// We don't need this
-};
-
-template< class T, class A = CUtlMemory<T> >
-/// <remarks>Warning, only required elements declared and defined!</remarks>
-class CUtlVector
-{
-	typedef A CAllocator;
-public:
-	typedef T ElemType_t;
-
-protected:
-	CAllocator m_Memory;
-	int m_Size;
-
-#ifndef _X360
-	// For easier access to the elements through the debugger
-	// it's in release builds so this can be used in libraries correctly
-	T *m_pElements;
-
-#else
-#endif
-};
 
 // callback to evaluate a $<symbol> during evaluation, return true or false
 typedef bool(*GetSymbolProc_t)(const char *pKey);
