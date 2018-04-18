@@ -13,7 +13,9 @@
 #include <csgo/sdk_src/public/appframework/IAppSystem.h>
 #include <csgo/sdk_src/public/tier1/iconvar.h>
 //#include "tier1/utlvector.h"
+#include <csgo/sdk_src/public/tier0/memalloc.h>
 #include <SourceSdkShared.h>
+
 
 
 namespace SOURCESDK {
@@ -180,7 +182,7 @@ inline ICvar::Iterator::Iterator(ICvar *icvar)
 
 inline ICvar::Iterator::~Iterator( void )
 {
-	delete m_pIter;
+	g_pMemAlloc->Free(m_pIter);
 }
 
 inline void ICvar::Iterator::SetFirst( void )

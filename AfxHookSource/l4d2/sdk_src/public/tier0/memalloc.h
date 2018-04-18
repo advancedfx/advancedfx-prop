@@ -19,41 +19,8 @@
 namespace SOURCESDK {
 namespace L4D2 {
 
-// These memory debugging switches aren't relevant under Linux builds since memoverride.cpp
-// isn't built into Linux projects
-#ifndef POSIX
-// Define this in release to get memory tracking even in release builds
-//#define USE_MEM_DEBUG 1
-
-// Define this in release to get light memory debugging
-//#define USE_LIGHT_MEM_DEBUG
-
-// Define this to require -uselmd to turn light memory debugging on
-//#define LIGHT_MEM_DEBUG_REQUIRES_CMD_LINE_SWITCH
-#endif
-
-#if defined( _MEMTEST )
-#ifdef _WIN32
-#define USE_MEM_DEBUG 1
-#endif
-#endif
-
-// Undefine this if using a compiler lacking threadsafe RTTI (like vc6)
-#define MEM_DEBUG_CLASSNAME 1
-
-#if !defined(STEAM) && !defined(NO_MALLOC_OVERRIDE)
-
-#include <stddef.h>
-#ifdef LINUX
-#undef offsetof
-#define offsetof(s,m)	(size_t)&(((s *)0)->m)
-#endif
-
-//#include "tier0/mem.h"
-
 struct _CrtMemState;
 
-#define MEMALLOC_VERSION 1
 
 typedef size_t (*MemAllocFailHandler_t)( size_t );
 
@@ -152,13 +119,6 @@ public:
 //-----------------------------------------------------------------------------
 //MEM_INTERFACE IMemAlloc *g_pMemAlloc;
 extern IMemAlloc *g_pMemAlloc;
-
-
-//-----------------------------------------------------------------------------
-
-#endif // !STEAM && !NO_MALLOC_OVERRIDE
-
-//-----------------------------------------------------------------------------
 
 } // namespace L4D2 {
 } // namespace SOURCESDK {
