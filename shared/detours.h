@@ -26,7 +26,7 @@ typedef void(*DetourIfacePtr_fn)(void);
 /// <remarks>This is somewhat threadsafe, but be aware that outTarget can be already called while you are still in this function.</remarks>
 void DetourIfacePtr(DWORD * ptr, void const * hookk, DetourIfacePtr_fn & outTarget);
 
-void * InterceptDllCall(HMODULE hModule, char * szDllName, char * szFunctionName, DWORD pNewFunction);
+void * InterceptDllCall(HMODULE hModule, const char * szDllName, const char * szFunctionName, DWORD pNewFunction);
 
 void MdtMemAccessBegin(LPVOID lpAddress, size_t size, MdtMemBlockInfos *mdtMemBlockInfos);
 void MdtMemAccessEnd(MdtMemBlockInfos *mdtMemBlockInfos);

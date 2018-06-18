@@ -45,8 +45,8 @@
 --*/
 HRESULT PatchIat(
   __in HMODULE Module,
-  __in PSTR ImportedModuleName,
-  __in PSTR ImportedProcName,
+  __in PCSTR ImportedModuleName,
+  __in PCSTR ImportedProcName,
   __in PVOID AlternateProc,
   __out_opt PVOID *OldProc
   )
@@ -188,7 +188,7 @@ HRESULT PatchIat(
   return HRESULT_FROM_WIN32( ERROR_MOD_NOT_FOUND );
 }
 
-void *InterceptDllCall(HMODULE hModule, char *szDllName, char *szFunctionName, DWORD pNewFunction)
+void *InterceptDllCall(HMODULE hModule, const char *szDllName, const char *szFunctionName, DWORD pNewFunction)
 {
 /*
 	For some setups this old code won't probably because GetProcAddress returns
