@@ -2459,8 +2459,9 @@ public:
 	virtual void _UNKNOWN_164(void) = 0;
 	virtual void _UNKNOWN_165(void) = 0; 
 	virtual void _UNKNOWN_166(void) = 0; // GetMorphAccumulatorTexCoord?
-	
-	// 167:
+	virtual void _UNKNOWN_167(void) = 0;
+
+	// 168:
 	virtual IMeshEx_csgo* GetDynamicMeshEx(
 		VertexFormat_t_csgo vertexFormat,
 		bool buffered = true, 
@@ -2469,8 +2470,7 @@ public:
 		IMaterial_csgo *pAutoBind = 0
 	) = 0;
 
-	virtual void _UNKNOWN_168(void) = 0; // FogMaxDensity?
-	virtual void _UNKNOWN_169(void) = 0;
+	virtual void _UNKNOWN_169(void) = 0; // FogMaxDensity?
 	virtual void _UNKNOWN_170(void) = 0;
 	virtual void _UNKNOWN_171(void) = 0;
 	virtual void _UNKNOWN_172(void) = 0;
@@ -2493,13 +2493,13 @@ public:
 	virtual void _UNKNOWN_189(void) = 0;
 	virtual void _UNKNOWN_190(void) = 0;
 	virtual void _UNKNOWN_191(void) = 0;
+	virtual void _UNKNOWN_192(void) = 0;
 
-	// 192:
+	// 193:
 	virtual void DrawInstances( int nInstanceCount, const MeshInstanceData_t_csgo *pInstance ) = 0;
 
-	virtual void _UNKNOWN_193(void) = 0; // OverrideAlphaWriteEnable?
-	virtual void _UNKNOWN_194(void) = 0; // OverrideColorWriteEnable?
-	virtual void _UNKNOWN_195(void) = 0;
+	virtual void _UNKNOWN_194(void) = 0; // OverrideAlphaWriteEnable?
+	virtual void _UNKNOWN_195(void) = 0; // OverrideColorWriteEnable?
 	virtual void _UNKNOWN_196(void) = 0;
 	virtual void _UNKNOWN_197(void) = 0;
 	virtual void _UNKNOWN_198(void) = 0;
@@ -2557,6 +2557,13 @@ public:
 	virtual void _UNKNOWN_250(void) = 0;
 	virtual void _UNKNOWN_251(void) = 0;
 	virtual void _UNKNOWN_252(void) = 0;
+	virtual void _UNKNOWN_253(void) = 0;
+	virtual void _UNKNOWN_254(void) = 0;
+	virtual void _UNKNOWN_255(void) = 0;
+	virtual void _UNKNOWN_256(void) = 0;
+	virtual void _UNKNOWN_257(void) = 0;
+	virtual void _UNKNOWN_258(void) = 0;
+	virtual void _UNKNOWN_259(void) = 0;
 };
 
 // IMaterialSystem_csgo ////////////////////////////////////////////////////////
@@ -2854,14 +2861,14 @@ public:
 	virtual void _UNKOWN_012(void) = 0;
 	virtual void _UNKOWN_013(void) = 0;
 	virtual void _UNKOWN_014(void) = 0;
+	virtual void _UNKOWN_015(void) = 0;
 
 	// Mouse Input Interfaces
 	// Activate the mouse (hides the cursor and locks it to the center of the screen)
-	virtual void			IN_ActivateMouse(void) = 0; //:015
+	virtual void			IN_ActivateMouse(void) = 0; //:016
 	// Deactivates the mouse (shows the cursor and unlocks it)
-	virtual void			IN_DeactivateMouse(void) = 0; //:016
+	virtual void			IN_DeactivateMouse(void) = 0; //:017
 	
-	virtual void _UNKOWN_017(void) = 0;
 	virtual void _UNKOWN_018(void) = 0;
 	virtual void _UNKOWN_019(void) = 0;
 	virtual void _UNKOWN_020(void) = 0;
@@ -2870,14 +2877,14 @@ public:
 	virtual void _UNKOWN_023(void) = 0;
 	virtual void _UNKOWN_024(void) = 0;
 	virtual void _UNKOWN_025(void) = 0;
-
-	// 026:
-	virtual void View_Render( vrect_t_csgo *rect )= 0;
+	virtual void _UNKOWN_026(void) = 0;
 
 	// 027:
+	virtual void View_Render( vrect_t_csgo *rect )= 0;
+
+	// 028:
 	virtual void RenderView( const CViewSetup_csgo &view, int nClearFlags, int whatToDraw )= 0;
 
-	virtual void _UNKOWN_028(void)= 0;
 	virtual void _UNKOWN_029(void) = 0;
 	virtual void _UNKOWN_030(void) = 0;
 	virtual void _UNKOWN_031(void) = 0;
@@ -2885,11 +2892,11 @@ public:
 	virtual void _UNKOWN_033(void) = 0;
 	virtual void _UNKOWN_034(void) = 0;
 	virtual void _UNKOWN_035(void) = 0;
-	
-	// 036:
+	virtual void _UNKOWN_036(void) = 0;
+
+	// 037:
 	virtual void FrameStageNotify(SOURCESDK::CSGO::ClientFrameStage_t curStage) = 0;
 
-	virtual void _UNKOWN_037(void) = 0;
 	virtual void _UNKOWN_038(void) = 0;
 	virtual void _UNKOWN_039(void) = 0;
 	virtual void _UNKOWN_040(void) = 0;
@@ -2906,14 +2913,14 @@ public:
 	virtual void _UNKOWN_051(void) = 0;
 	virtual void _UNKOWN_052(void) = 0;
 	virtual void _UNKOWN_053(void) = 0;
+	virtual void _UNKOWN_054(void) = 0;
 
-	virtual void			OnDemoPlaybackStart(char const* pDemoBaseName) = 0; //:054
+	virtual void			OnDemoPlaybackStart(char const* pDemoBaseName) = 0; //:055
 
-	virtual void _UNKOWN_055(void) = 0;
+	virtual void _UNKOWN_056(void) = 0;
 
-	virtual void			OnDemoPlaybackStop() = 0; //:056
+	virtual void			OnDemoPlaybackStop() = 0; //:057
 
-	virtual void _UNKOWN_057(void) = 0;
 	virtual void _UNKOWN_058(void) = 0;
 	virtual void _UNKOWN_059(void) = 0;
 	virtual void _UNKOWN_060(void) = 0;
@@ -2921,11 +2928,11 @@ public:
 	virtual void _UNKOWN_062(void) = 0;
 	virtual void _UNKOWN_063(void) = 0;
 	virtual void _UNKOWN_064(void) = 0;
-	
+	virtual void _UNKOWN_065(void) = 0;
+
 	// 065:
 	virtual void WriteSaveGameScreenshotOfSize( const char *pFilename, int width, int height, bool bCreatePowerOf2Padded = false, bool bWriteVTF = false ) = 0;
 	
-	virtual void _UNKOWN_066(void) = 0;
 	virtual void _UNKOWN_067(void) = 0;
 	virtual void _UNKOWN_068(void) = 0;
 	virtual void _UNKOWN_069(void) = 0;
@@ -2971,9 +2978,6 @@ public:
 	virtual void _UNKOWN_109(void) = 0;
 	virtual void _UNKOWN_110(void) = 0;
 	virtual void _UNKOWN_111(void) = 0;
-
-	// and a few more to be save from updates:
-
 	virtual void _UNKOWN_112(void) = 0;
 	virtual void _UNKOWN_113(void) = 0;
 	virtual void _UNKOWN_114(void) = 0;
@@ -2989,10 +2993,22 @@ public:
 	virtual void _UNKOWN_124(void) = 0;
 	virtual void _UNKOWN_125(void) = 0;
 	virtual void _UNKOWN_126(void) = 0;
+
+	// and a few more to be save from updates:
+
 	virtual void _UNKOWN_127(void) = 0;
 	virtual void _UNKOWN_128(void) = 0;
 	virtual void _UNKOWN_129(void) = 0;
 	virtual void _UNKOWN_130(void) = 0;
+	virtual void _UNKOWN_131(void) = 0;
+	virtual void _UNKOWN_132(void) = 0;
+	virtual void _UNKOWN_133(void) = 0;
+	virtual void _UNKOWN_134(void) = 0;
+	virtual void _UNKOWN_135(void) = 0;
+	virtual void _UNKOWN_136(void) = 0;
+	virtual void _UNKOWN_137(void) = 0;
+	virtual void _UNKOWN_138(void) = 0;
+	virtual void _UNKOWN_139(void) = 0;
 };
 
 // IVRenderView_csgo ///////////////////////////////////////////////////////////
