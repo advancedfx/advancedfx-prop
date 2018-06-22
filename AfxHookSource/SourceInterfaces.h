@@ -5458,14 +5458,14 @@ public:
 														  // Data access
 	virtual bool GetBool(const char *keyName = NULL, bool defaultValue = false) = 0;
 	virtual int GetInt(const char *keyName = NULL, int defaultValue = 0) = 0;
+	virtual uint64 GetUint64(const char *keyName = NULL, uint64 defaultValue = 0) = 0;
 	virtual float GetFloat(const char *keyName = NULL, float defaultValue = 0.0f) = 0;
-	virtual void __unkown_008(void);
 	virtual const char *GetString(const char *keyName = NULL, const char *defaultValue = "") = 0;
 
 	virtual void SetBool(const char *keyName, bool value) = 0;
 	virtual void SetInt(const char *keyName, int value) = 0;
+	virtual void SetUint64(const char *keyName, uint64 value) = 0;
 	virtual void SetFloat(const char *keyName, float value) = 0;
-	virtual void __unkown_013(void);
 	virtual void SetString(const char *keyName, const char *value) = 0;
 };
 
@@ -5752,41 +5752,6 @@ public:
 #define SOURCESDK_CSGO_VGUI_VGUI_SURFACE_INTERFACE_VERSION "VGUI_Surface031"
 
 } // namespace vgui
-
-
-#define SOURCESDK_CSGO_SCALEFORM_ITERNFACE_VERSION "ScaleformUI002"
-
-class IScaleformUI abstract {
-public:
-	virtual void _IScaleformUI_000(void) = 0;
-	virtual void _IScaleformUI_001(void) = 0;
-	virtual void _IScaleformUI_002(void) = 0;
-	virtual void _IScaleformUI_003(void) = 0;
-	virtual void _IScaleformUI_004(void) = 0;
-	virtual void _IScaleformUI_005(void) = 0;
-	virtual void _IScaleformUI_006(void) = 0;
-	virtual void _IScaleformUI_007(void) = 0;
-	virtual void _IScaleformUI_008(void) = 0;
-	virtual void _IScaleformUI_009(void) = 0;
-	virtual void _IScaleformUI_010(void) = 0;
-	virtual void _IScaleformUI_011(void) = 0;
-	virtual void _IScaleformUI_012(void) = 0;
-	virtual void _IScaleformUI_013(void) = 0;
-	virtual void _IScaleformUI_014(void) = 0;
-	virtual void _IScaleformUI_015(void) = 0;
-	virtual void _IScaleformUI_016(void) = 0;
-	virtual void _IScaleformUI_017(void) = 0;
-	virtual void _IScaleformUI_018(void) = 0;
-	virtual void _IScaleformUI_019(void) = 0;
-	virtual void _IScaleformUI_020(void) = 0;
-
-	// -2 = begin frame
-	// -1 = end frame
-	// 1 = draw
-	// 0 = ?
-	virtual void BeginEndFrame(int mode) = 0;
-};
-
 
 //-----------------------------------------------------------------------------
 // The standard trace filter... NOTE: Most normal traces inherit from CTraceFilter!!!
