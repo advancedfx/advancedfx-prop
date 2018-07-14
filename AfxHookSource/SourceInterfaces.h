@@ -5701,8 +5701,10 @@ public:
 	virtual void _ISurface_063(void) abstract = 0;
 	virtual void _ISurface_064(void) abstract = 0;
 	virtual void _ISurface_065(void) abstract = 0;
-	virtual void _ISurface_066(void) abstract = 0;
-	virtual void _ISurface_067(void) abstract = 0;
+	
+	virtual void UnlockCursor() = 0; //:066
+	virtual void LockCursor() = 0; //:067
+
 	virtual void _ISurface_068(void) abstract = 0;
 	virtual void _ISurface_069(void) abstract = 0;
 	virtual void _ISurface_070(void) abstract = 0;
@@ -5728,7 +5730,7 @@ public:
 	virtual void _ISurface_090(void) abstract = 0;
 	virtual void _ISurface_091(void) abstract = 0;
 	virtual void _ISurface_092(void) abstract = 0;
-	virtual void _ISurface_093(void) abstract = 0;
+	virtual void EnableMouseCapture(VPANEL panel, bool state) = 0; //:093
 	virtual void _ISurface_094(void) abstract = 0;
 	virtual void _ISurface_095(void) abstract = 0;
 	virtual void _ISurface_096(void) abstract = 0;
@@ -5745,8 +5747,6 @@ public:
 
 	virtual const wchar_t *GetTitle(VPANEL panel) = 0; //:107
 	virtual bool IsCursorLocked(void) const = 0; //:108
-
-	// ... more we don't care about.
 };
 
 #define SOURCESDK_CSGO_VGUI_VGUI_SURFACE_INTERFACE_VERSION "VGUI_Surface031"
