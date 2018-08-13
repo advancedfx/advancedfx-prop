@@ -2516,8 +2516,10 @@ public:
 	virtual void _UNKNOWN_209(void) = 0;
 	virtual void _UNKNOWN_210(void) = 0;
 	virtual void _UNKNOWN_211(void) = 0;
-	virtual void _UNKNOWN_212(void) = 0;
-	virtual void _UNKNOWN_213(void) = 0;
+	
+	virtual void UnkDrawVguiA(bool notInRenderView) = 0; // :212
+	virtual void UnkDrawVguiB(bool notInRenderView) = 0; // :213
+
 	virtual void _UNKNOWN_214(void) = 0;
 	virtual void _UNKNOWN_215(void) = 0;
 	virtual void _UNKNOWN_216(void) = 0;
