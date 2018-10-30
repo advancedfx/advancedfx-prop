@@ -6156,5 +6156,189 @@ public:
 #define	SOURCESDK_CSGO_MASK_ALL					(0xFFFFFFFF)
 #define SOURCESDK_CSGO_MASK_SHOT_HULL				(SOURCESDK_CSGO_CONTENTS_SOLID|SOURCESDK_CSGO_CONTENTS_MOVEABLE|SOURCESDK_CSGO_CONTENTS_MONSTER|SOURCESDK_CSGO_CONTENTS_WINDOW|SOURCESDK_CSGO_CONTENTS_DEBRIS|SOURCESDK_CSGO_CONTENTS_GRATE)
 
+
+///////////////////
+
+#define SORUCESDK_CSGO_VENGINE_GAMEUIFUNCS_VERSION "VENGINE_GAMEUIFUNCS_VERSION005"
+#define SOURCECSDK_CSGO_PANORAMAUIENGINE "PanoramaUIEngine001"
+
+typedef void * CGameUIFuncs_SomeShit_t;
+
+class __declspec(novtable) CGameUIFuncs abstract {
+public:
+	virtual void _Unknown_000(void) = 0;
+	virtual void _Unknown_001(void) = 0;
+	virtual void _Unknown_002(void) = 0;
+	virtual void _Unknown_003(void) = 0;
+	virtual void _Unknown_004(void) = 0;
+	virtual void _Unknown_005(void) = 0;
+	virtual void _Unknown_006(void) = 0;
+	virtual void _Unknown_007(void) = 0;
+	virtual void _Unknown_008(void) = 0;
+	virtual void _Unknown_009(void) = 0;
+	virtual void _Unknown_010(void) = 0;
+
+	virtual CGameUIFuncs_SomeShit_t * GetSomeShit(void) = 0;
+};
+
+namespace panorama {
+
+class __declspec(novtable) CTopLevelWindowSource2 abstract {
+public:
+	virtual void RunFrame(void * hWnd, int flags) = 0;
+	virtual void _Unknown_001(void) = 0;
+	virtual void SetVisible(bool value) = 0;
+	virtual void _Unknown_003(void) = 0;
+	virtual void _Unknown_004(void) = 0;
+	virtual void _Unknown_005(void) = 0;
+	virtual void _Unknown_006(void) = 0;
+	virtual void _Unknown_007(void) = 0;
+	virtual void _Unknown_008(void) = 0;
+	virtual void _Unknown_009(void) = 0;
+	virtual void _Unknown_010(void) = 0;
+	virtual void _Unknown_011(void) = 0;
+	virtual void _Unknown_012(void) = 0;
+	virtual void _Unknown_013(void) = 0;
+	virtual void _Unknown_014(void) = 0;
+	virtual void _Unknown_015(void) = 0;
+	virtual void _Unknown_016(void) = 0;
+	virtual void _Unknown_017(void) = 0;
+	virtual void _Unknown_018(void) = 0;
+	virtual void _Unknown_019(void) = 0;
+	virtual void _Unknown_020(void) = 0;
+	virtual void _Unknown_021(void) = 0;
+	virtual void _Unknown_022(void) = 0;
+	virtual void _Unknown_023(void) = 0;
+	virtual void _Unknown_024(void) = 0;
+	virtual void _Unknown_025(void) = 0;
+	virtual void _Unknown_026(void) = 0;
+	virtual void _Unknown_027(void) = 0;
+	virtual void _Unknown_028(void) = 0;
+	virtual void _Unknown_029(void) = 0;
+	virtual void _Unknown_030(void) = 0;
+	virtual void _Unknown_031(void) = 0;
+	virtual void _Unknown_032(void) = 0;
+	virtual void _Unknown_033(void) = 0;
+	virtual void _Unknown_034(void) = 0;
+	virtual void _Unknown_035(void) = 0;
+	virtual void _Unknown_036(void) = 0;
+	virtual void _Unknown_037(void) = 0;
+	virtual void _Unknown_038(void) = 0;
+	virtual void _Unknown_039(void) = 0;
+	virtual void _Unknown_040(void) = 0;
+	virtual void _Unknown_041(void) = 0;
+	virtual void _Unknown_042(void) = 0;
+	virtual void _Unknown_043(void) = 0;
+	virtual void _Unknown_044(void) = 0;
+	virtual void _Unknown_045(void) = 0;
+	virtual void _Unknown_046(void) = 0;
+	virtual void _Unknown_047(void) = 0;
+	virtual void _Unknown_048(void) = 0;
+	virtual void _Unknown_049(void) = 0;
+	virtual void _Unknown_050(void) = 0;
+	virtual void _Unknown_051(void) = 0;
+	virtual void _Unknown_052(void) = 0;
+	virtual void _Unknown_053(void) = 0;
+	virtual void _Unknown_054(void) = 0;
+	virtual void _Unknown_055(void) = 0;
+	virtual void _Unknown_056(void) = 0;
+	virtual void _Unknown_057(void) = 0;
+	virtual void _Unknown_058(void) = 0;
+	virtual void _Unknown_059(void) = 0;
+	virtual void _Unknown_060(void) = 0;
+	virtual void _Unknown_061(void) = 0;
+	virtual void _Unknown_062(void) = 0;
+	virtual void _Unknown_063(void) = 0;
+	virtual void _Unknown_064(void) = 0;
+	virtual void _Unknown_065(void) = 0;
+	virtual void _Unknown_066(void) = 0;
+	virtual void _Unknown_067(void) = 0;
+	virtual void _Unknown_068(void) = 0;
+	virtual void _Unknown_069(void) = 0;
+	virtual void _Unknown_070(void) = 0;
+	virtual void _Unknown_071(void) = 0;
+	virtual void _Unknown_072(void) = 0;
+	virtual void _Unknown_073(void) = 0;
+	virtual void _Unknown_074(void) = 0;
+	virtual void _Unknown_075(void) = 0;
+	virtual void _Unknown_076(void) = 0;
+	virtual void _Unknown_077(void) = 0;
+	virtual void _Unknown_078(void) = 0;
+	virtual void _Unknown_079(void) = 0;
+	virtual void _Unknown_080(void) = 0;
+	virtual void _Unknown_081(void) = 0;
+	virtual void _Unknown_082(void) = 0;
+	virtual void _Unknown_083(void) = 0;
+
+	virtual void LayoutAndPaintIfNeeded(void) = 0;
+	virtual void PaintEmptyFrame(void) = 0;
+
+};
+
+class __declspec(novtable) CUIEngineSource2 abstract {
+public:
+	virtual void _Unknown_000(void) = 0;
+	virtual void _Unknown_001(void) = 0;
+	virtual void _Unknown_002(void) = 0;
+	virtual void _Unknown_003(void) = 0;
+	virtual void _Unknown_004(void) = 0;
+	virtual void _Unknown_005(void) = 0;
+	virtual void _Unknown_006(void) = 0;
+	virtual void _Unknown_007(void) = 0;
+	virtual void _Unknown_008(void) = 0;
+	virtual void _Unknown_009(void) = 0;
+	virtual void _Unknown_010(void) = 0;
+	virtual void _Unknown_011(void) = 0;
+	virtual void _Unknown_012(void) = 0;
+
+	virtual CTopLevelWindowSource2 *  CreateTopLevelWindow(int x, int y, int width, int height, int unk1_0, int unk2_0, int unk3_0, int unk4_1, const char * jsScope /* CSGOJsRegistration */, CGameUIFuncs_SomeShit_t * someShit) = 0;
+
+};
+
+class __declspec(novtable) CPanoramaUIEngine abstract  {
+public:
+	virtual void _Unknown_000(void) = 0;
+	virtual void _Unknown_001(void) = 0;
+	virtual void _Unknown_002(void) = 0;
+	virtual void _Unknown_003(void) = 0;
+	virtual void _Unknown_004(void) = 0;
+	virtual void _Unknown_005(void) = 0;
+	virtual void _Unknown_006(void) = 0;
+	virtual void _Unknown_007(void) = 0;
+	virtual void _Unknown_008(void) = 0;
+	virtual void _Unknown_009(void) = 0;
+	virtual void _Unknown_010(void) = 0;
+
+	virtual CUIEngineSource2 * GetUIEngineSoruce2(void) = 0;
+};
+
+class __declspec(novtable) CDebugger abstract {
+public:
+
+};
+
+} // panorama
+
+#define SOURCESDK_CSGO_PANORAMAUICLIENT_VERSION "PanoramaUIClient001"
+
+class __declspec(novtable) CPanoramaUIClient abstract {
+public:
+	virtual void _Unknown_000(void) = 0;
+	virtual void _Unknown_001(void) = 0;
+	virtual void _Unknown_002(void) = 0;
+	virtual void _Unknown_003(void) = 0;
+	virtual void _Unknown_004(void) = 0;
+	virtual void _Unknown_005(void) = 0;
+	virtual void _Unknown_006(void) = 0;
+	virtual void _Unknown_007(void) = 0;
+	virtual void _Unknown_008(void) = 0;
+	virtual void _Unknown_009(void) = 0;
+	virtual void _Unknown_010(void) = 0;
+	virtual void _Unknown_011(void) = 0;
+	virtual void _Unknown_012(void) = 0;
+
+	virtual panorama::CDebugger * CreateDebugger(panorama::CTopLevelWindowSource2 * topLevelWindow, const char * factory = "Debugger") = 0;
+};
+
 } // namespace CSGO {
 } // namespace SOURCESDK {
