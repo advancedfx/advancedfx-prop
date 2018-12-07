@@ -2282,9 +2282,10 @@ public:
 	virtual void _UNKNOWN_039(void) = 0;
 	
 	// Sets/gets the viewport
-	virtual void				Viewport(int x, int y, int width, int height) = 0;
-	virtual void				GetViewport(int& x, int& y, int& width, int& height) const = 0;	virtual void _UNKNOWN_042(void) = 0;
-
+	virtual void				Viewport(int x, int y, int width, int height) = 0; //:040
+	virtual void				GetViewport(int& x, int& y, int& width, int& height) const = 0;  //:041
+	
+	virtual void _UNKNOWN_042(void) = 0;
 	virtual void _UNKNOWN_043(void) = 0;
 	virtual void _UNKNOWN_044(void) = 0;
 	virtual void _UNKNOWN_045(void) = 0;
@@ -2368,8 +2369,9 @@ public:
 	virtual void _UNKNOWN_110(void) = 0;
 	virtual void _UNKNOWN_111(void) = 0;
 	virtual void _UNKNOWN_112(void) = 0;
+	virtual void _UNKNOWN_113(void) = 0;
 
-	// 113:
+	// 114:
 	// This function performs a texture map from one texture map to the render destination, doing
 	// all the necessary pixel/texel coordinate fix ups. fractional values can be used for the
 	// src_texture coordinates to get linear sampling - integer values should produce 1:1 mappings
@@ -2387,44 +2389,43 @@ public:
 		int nXDice = 1,
 		int nYDice = 1 )=0;
 
-	virtual void _UNKNOWN_114(void) = 0;
+	virtual void _UNKNOWN_115(void) = 0;
 	
-	// 118:
+	// 119:
 	// This version will push the current rendertarget + current viewport onto the stack
 	virtual void PushRenderTargetAndViewport( ) = 0;
 
-	// 117:
+	// 118:
 	// This version will push a new rendertarget + a maximal viewport for that rendertarget onto the stack
 	virtual void PushRenderTargetAndViewport( ITexture_csgo *pTexture ) = 0;
 
-	// 116:
+	// 117:
 	// This version will push a new rendertarget + a specified viewport onto the stack
 	virtual void PushRenderTargetAndViewport( ITexture_csgo *pTexture, int nViewX, int nViewY, int nViewW, int nViewH ) = 0;
 
-	// 115:
+	// 116:
 	// This version will push a new rendertarget + a specified viewport onto the stack
 	virtual void PushRenderTargetAndViewport( ITexture_csgo *pTexture, ITexture_csgo *pDepthTexture, int nViewX, int nViewY, int nViewW, int nViewH ) = 0;
 
-	// 119:
+	// 120:
 	// This will pop a rendertarget + viewport
 	virtual void PopRenderTargetAndViewport( void ) = 0;
 
-	virtual void _UNKNOWN_120(void) = 0; // BindLightmapTexture?
-	virtual void _UNKNOWN_121(void) = 0; // CopyRenderTargetToTextureEx?
-	virtual void _UNKNOWN_122(void) = 0;
+	virtual void _UNKNOWN_121(void) = 0; // BindLightmapTexture?
+	virtual void _UNKNOWN_122(void) = 0; // CopyRenderTargetToTextureEx?
 	virtual void _UNKNOWN_123(void) = 0;
 	virtual void _UNKNOWN_124(void) = 0;
 	virtual void _UNKNOWN_125(void) = 0;
 	virtual void _UNKNOWN_126(void) = 0;
 	virtual void _UNKNOWN_127(void) = 0;
 	virtual void _UNKNOWN_128(void) = 0;
-	virtual void _UNKNOWN_129(void) = 0; 
-	virtual void _UNKNOWN_130(void) = 0; // PushCustomClipPlane?
-	virtual void _UNKNOWN_131(void) = 0; // PopCustomClipPlane?
-	virtual void _UNKNOWN_132(void) = 0; // GetMaxToRender?
-	virtual void _UNKNOWN_133(void) = 0; // GetMaxVerticesToRender?
-	virtual void _UNKNOWN_134(void) = 0; // GetMaxIndicesToRender?
-	virtual void _UNKNOWN_135(void) = 0;
+	virtual void _UNKNOWN_129(void) = 0;
+	virtual void _UNKNOWN_130(void) = 0; 
+	virtual void _UNKNOWN_131(void) = 0; // PushCustomClipPlane?
+	virtual void _UNKNOWN_132(void) = 0; // PopCustomClipPlane?
+	virtual void _UNKNOWN_133(void) = 0; // GetMaxToRender?
+	virtual void _UNKNOWN_134(void) = 0; // GetMaxVerticesToRender?
+	virtual void _UNKNOWN_135(void) = 0; // GetMaxIndicesToRender?
 	virtual void _UNKNOWN_136(void) = 0;
 	virtual void _UNKNOWN_137(void) = 0;
 	virtual void _UNKNOWN_138(void) = 0;
@@ -2439,11 +2440,11 @@ public:
 	virtual void _UNKNOWN_147(void) = 0;
 	virtual void _UNKNOWN_148(void) = 0;
 	virtual void _UNKNOWN_149(void) = 0;
-	
-	// Raw access to the call queue, which can be NULL if not in a queued mode
-	virtual SOURCESDK::CSGO::ICallQueue *GetCallQueue() = 0; //:150
+	virtual void _UNKNOWN_150(void) = 0;
 
-	virtual void _UNKNOWN_151(void) = 0;
+	// Raw access to the call queue, which can be NULL if not in a queued mode
+	virtual SOURCESDK::CSGO::ICallQueue *GetCallQueue() = 0; //:151
+
 	virtual void _UNKNOWN_152(void) = 0;
 	virtual void _UNKNOWN_153(void) = 0;
 	virtual void _UNKNOWN_154(void) = 0;
@@ -2457,11 +2458,12 @@ public:
 	virtual void _UNKNOWN_162(void) = 0;
 	virtual void _UNKNOWN_163(void) = 0;
 	virtual void _UNKNOWN_164(void) = 0;
-	virtual void _UNKNOWN_165(void) = 0; 
-	virtual void _UNKNOWN_166(void) = 0; // GetMorphAccumulatorTexCoord?
-	virtual void _UNKNOWN_167(void) = 0;
+	virtual void _UNKNOWN_165(void) = 0;
+	virtual void _UNKNOWN_166(void) = 0; 
+	virtual void _UNKNOWN_167(void) = 0; // GetMorphAccumulatorTexCoord?
+	virtual void _UNKNOWN_168(void) = 0;
 
-	// 168:
+	// 169:
 	virtual IMeshEx_csgo* GetDynamicMeshEx(
 		VertexFormat_t_csgo vertexFormat,
 		bool buffered = true, 
@@ -2470,8 +2472,7 @@ public:
 		IMaterial_csgo *pAutoBind = 0
 	) = 0;
 
-	virtual void _UNKNOWN_169(void) = 0; // FogMaxDensity?
-	virtual void _UNKNOWN_170(void) = 0;
+	virtual void _UNKNOWN_170(void) = 0; // FogMaxDensity?
 	virtual void _UNKNOWN_171(void) = 0;
 	virtual void _UNKNOWN_172(void) = 0;
 	virtual void _UNKNOWN_173(void) = 0;
@@ -2494,13 +2495,13 @@ public:
 	virtual void _UNKNOWN_190(void) = 0;
 	virtual void _UNKNOWN_191(void) = 0;
 	virtual void _UNKNOWN_192(void) = 0;
+	virtual void _UNKNOWN_193(void) = 0;
 
-	// 193:
+	// 194:
 	virtual void DrawInstances( int nInstanceCount, const MeshInstanceData_t_csgo *pInstance ) = 0;
 
-	virtual void _UNKNOWN_194(void) = 0; // OverrideAlphaWriteEnable?
-	virtual void _UNKNOWN_195(void) = 0; // OverrideColorWriteEnable?
-	virtual void _UNKNOWN_196(void) = 0;
+	virtual void _UNKNOWN_195(void) = 0; // OverrideAlphaWriteEnable?
+	virtual void _UNKNOWN_196(void) = 0; // OverrideColorWriteEnable?
 	virtual void _UNKNOWN_197(void) = 0;
 	virtual void _UNKNOWN_198(void) = 0;
 	virtual void _UNKNOWN_199(void) = 0;
@@ -2516,11 +2517,11 @@ public:
 	virtual void _UNKNOWN_209(void) = 0;
 	virtual void _UNKNOWN_210(void) = 0;
 	virtual void _UNKNOWN_211(void) = 0;
+	virtual void _UNKNOWN_212(void) = 0;
 	
-	virtual void UnkDrawVguiA(bool notInRenderView) = 0; // :212
-	virtual void UnkDrawVguiB(bool notInRenderView) = 0; // :213
+	virtual void UnkDrawVguiA(bool notInRenderView) = 0; // :213
+	virtual void UnkDrawVguiB(bool notInRenderView) = 0; // :214
 
-	virtual void _UNKNOWN_214(void) = 0;
 	virtual void _UNKNOWN_215(void) = 0;
 	virtual void _UNKNOWN_216(void) = 0;
 	virtual void _UNKNOWN_217(void) = 0;
@@ -4110,7 +4111,7 @@ public:
 	virtual void _UNKNOWN_C_BaseEntity_083(void);
 	virtual void _UNKNOWN_C_BaseEntity_084(void);
 	virtual void _UNKNOWN_C_BaseEntity_085(void);
-	virtual void _UNKNOWN_C_BaseEntity_086(void);
+	virtual void _UNKNOWN_C_BaseEntity_086(void); // GetTeam
 	
 	virtual int						GetTeamNumber(void) const; //:087
 
@@ -4128,7 +4129,7 @@ public:
 	virtual void _UNKNOWN_C_BaseEntity_099(void);
 	virtual void _UNKNOWN_C_BaseEntity_100(void);
 	virtual void _UNKNOWN_C_BaseEntity_101(void);
-	virtual void _UNKNOWN_C_BaseEntity_102(void);
+	virtual void _UNKNOWN_C_BaseEntity_102(void); // GetToolRecordingState, If This changes needs update in ClientToolsCS:GO
 	virtual void _UNKNOWN_C_BaseEntity_103(void);
 	virtual void _UNKNOWN_C_BaseEntity_104(void);
 	virtual void _UNKNOWN_C_BaseEntity_105(void);
@@ -4167,17 +4168,17 @@ public:
 	virtual void _UNKNOWN_C_BaseEntity_136(void);
 	virtual void _UNKNOWN_C_BaseEntity_137(void);
 	virtual void _UNKNOWN_C_BaseEntity_138(void);
+	virtual void _UNKNOWN_C_BaseEntity_139(void);
 
-	// 139
+	// 140
 	virtual char const				*GetClassname( void );
 	
-	//char const						*GetDebugName( void );
+	// 141
+	virtual char const				*GetDebugName( void );
 	
-	// 140
+	// 142
 	virtual const char				*GetPlayerName() const { return 0; }
 
-	virtual void _UNKNOWN_C_BaseEntity_141(void);
-	virtual void _UNKNOWN_C_BaseEntity_142(void);
 	virtual void _UNKNOWN_C_BaseEntity_143(void);
 	virtual void _UNKNOWN_C_BaseEntity_144(void);
 	virtual void _UNKNOWN_C_BaseEntity_145(void);
@@ -4187,33 +4188,33 @@ public:
 	virtual void _UNKNOWN_C_BaseEntity_149(void);
 	virtual void _UNKNOWN_C_BaseEntity_150(void);
 	virtual void _UNKNOWN_C_BaseEntity_151(void);
+	virtual void _UNKNOWN_C_BaseEntity_152(void);
 	
-	virtual bool					IsPlayer(void) const { return false; }; //:152
+	virtual bool					IsPlayer(void) const { return false; }; //:153
 
-	virtual void _UNKNOWN_C_BaseEntity_153(void);
 	virtual void _UNKNOWN_C_BaseEntity_154(void);
+	virtual void _UNKNOWN_C_BaseEntity_155(void);
 
-	virtual C_BaseCombatCharacter_csgo	*MyCombatCharacterPointer(void) { return NULL; } //:155
+	virtual C_BaseCombatCharacter_csgo	*MyCombatCharacterPointer(void) { return NULL; } //:156
 
-	virtual void _UNKNOWN_C_BaseEntity_156(void);
 	virtual void _UNKNOWN_C_BaseEntity_157(void);
 	virtual void _UNKNOWN_C_BaseEntity_158(void);
 	virtual void _UNKNOWN_C_BaseEntity_159(void);
 	virtual void _UNKNOWN_C_BaseEntity_160(void);
 	virtual void _UNKNOWN_C_BaseEntity_161(void);
 	virtual void _UNKNOWN_C_BaseEntity_162(void);
+	virtual void _UNKNOWN_C_BaseEntity_163(void);
 
 	// Returns the eye point + angles (used for viewing + shooting)
-	virtual Vector			EyePosition( void ); // :163
-	virtual const QAngle&	EyeAngles( void );		// Direction of eyes // :164
-	virtual const QAngle&	LocalEyeAngles( void );	// Direction of eyes in local space (pl.v_angle) // :165
+	virtual Vector			EyePosition( void ); // :164
+	virtual const QAngle&	EyeAngles( void );		// Direction of eyes // :165
+	virtual const QAngle&	LocalEyeAngles( void );	// Direction of eyes in local space (pl.v_angle) // :166
 
-	virtual void _UNKNOWN_C_BaseEntity_166(void);
 	virtual void _UNKNOWN_C_BaseEntity_167(void);
 	virtual void _UNKNOWN_C_BaseEntity_168(void);
 	virtual void _UNKNOWN_C_BaseEntity_169(void);
-
 	virtual void _UNKNOWN_C_BaseEntity_170(void);
+
 	virtual void _UNKNOWN_C_BaseEntity_171(void);
 	virtual void _UNKNOWN_C_BaseEntity_172(void);
 	virtual void _UNKNOWN_C_BaseEntity_173(void);
@@ -4223,8 +4224,8 @@ public:
 	virtual void _UNKNOWN_C_BaseEntity_177(void);
 	virtual void _UNKNOWN_C_BaseEntity_178(void);
 	virtual void _UNKNOWN_C_BaseEntity_179(void);
-
 	virtual void _UNKNOWN_C_BaseEntity_180(void);
+	virtual void _UNKNOWN_C_BaseEntity_181(void);
 
 public:
 	const char	*GetEntityName();
@@ -4242,7 +4243,6 @@ inline const char *C_BaseEntity_csgo::GetEntityName()
 class C_BaseAnimating_csgo : public C_BaseEntity_csgo, public IClientModelRenderable_csgo
 {
 public:
-	virtual void _UNKNOWN_C_BaseAnimating_181(void);
 	virtual void _UNKNOWN_C_BaseAnimating_182(void);
 	virtual void _UNKNOWN_C_BaseAnimating_183(void);
 	virtual void _UNKNOWN_C_BaseAnimating_184(void);
@@ -4302,27 +4302,26 @@ public:
 	virtual void _UNKNOWN_C_BaseAnimating_238(void);
 	virtual void _UNKNOWN_C_BaseAnimating_239(void);
 	virtual void _UNKNOWN_C_BaseAnimating_240(void);
-
+	virtual void _UNKNOWN_C_BaseAnimating_241(void);
 };
 
 class C_BaseAnimatingOverlay_csgo : public C_BaseAnimating_csgo
 {
 public:
-	virtual void _UNKNOWN_C_BaseAnimatingOverlay_241(void);
 	virtual void _UNKNOWN_C_BaseAnimatingOverlay_242(void);
 	virtual void _UNKNOWN_C_BaseAnimatingOverlay_243(void);
 	virtual void _UNKNOWN_C_BaseAnimatingOverlay_244(void);
-
+	virtual void _UNKNOWN_C_BaseAnimatingOverlay_245(void);
 };
 
 class C_BaseFlex_csgo : public C_BaseAnimatingOverlay_csgo
 {
 public:
-	virtual void _UNKNOWN_C_BaseFlex_245(void);
 	virtual void _UNKNOWN_C_BaseFlex_246(void);
 	virtual void _UNKNOWN_C_BaseFlex_247(void);
 	virtual void _UNKNOWN_C_BaseFlex_248(void);
 	virtual void _UNKNOWN_C_BaseFlex_249(void);
+	virtual void _UNKNOWN_C_BaseFlex_250(void);
 };
 
 class C_BaseCombatWeapon_csgo;
@@ -4330,7 +4329,6 @@ class C_BaseCombatWeapon_csgo;
 class C_BaseCombatCharacter_csgo : public C_BaseFlex_csgo
 {
 public:
-	virtual void _UNKNOWN_C_BaseCombatChracter_250(void);
 	virtual void _UNKNOWN_C_BaseCombatChracter_251(void);
 	virtual void _UNKNOWN_C_BaseCombatChracter_252(void);
 	virtual void _UNKNOWN_C_BaseCombatChracter_253(void);
@@ -4342,8 +4340,11 @@ public:
 	virtual void _UNKNOWN_C_BaseCombatChracter_259(void);
 	virtual void _UNKNOWN_C_BaseCombatChracter_260(void);
 	virtual void _UNKNOWN_C_BaseCombatChracter_261(void);
+	virtual void _UNKNOWN_C_BaseCombatChracter_262(void);
 
-	virtual C_BaseCombatWeapon_csgo	*GetActiveWeapon(void) const;
+	virtual C_BaseCombatWeapon_csgo	*GetActiveWeapon(void) const; //:263
+
+	// more we don't care about
 
 };
 
