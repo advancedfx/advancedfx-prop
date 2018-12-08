@@ -2932,10 +2932,7 @@ public:
 	virtual void _UNKOWN_063(void) = 0;
 	virtual void _UNKOWN_064(void) = 0;
 	virtual void _UNKOWN_065(void) = 0;
-
-	// 065:
-	virtual void WriteSaveGameScreenshotOfSize( const char *pFilename, int width, int height, bool bCreatePowerOf2Padded = false, bool bWriteVTF = false ) = 0;
-	
+	virtual void _UNKOWN_066(void) = 0;
 	virtual void _UNKOWN_067(void) = 0;
 	virtual void _UNKOWN_068(void) = 0;
 	virtual void _UNKOWN_069(void) = 0;
@@ -2996,14 +2993,14 @@ public:
 	virtual void _UNKOWN_124(void) = 0;
 	virtual void _UNKOWN_125(void) = 0;
 	virtual void _UNKOWN_126(void) = 0;
-
-	// and a few more to be save from updates:
-
 	virtual void _UNKOWN_127(void) = 0;
 	virtual void _UNKOWN_128(void) = 0;
 	virtual void _UNKOWN_129(void) = 0;
 	virtual void _UNKOWN_130(void) = 0;
 	virtual void _UNKOWN_131(void) = 0;
+
+	// and a few more to be save from updates:
+
 	virtual void _UNKOWN_132(void) = 0;
 	virtual void _UNKOWN_133(void) = 0;
 	virtual void _UNKOWN_134(void) = 0;
