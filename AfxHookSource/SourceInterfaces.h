@@ -3263,7 +3263,29 @@ public:
 	int			height;
 	int			m_nUnscaledHeight;
 
-	char _unknown_20_14c[0x12c];
+	char _unknown_20_b0[0x90];
+
+	// horizontal FOV in degrees
+	float		fov;
+	// horizontal FOV in degrees for in-view model
+	float		fovViewmodel;
+
+	// 3D origin of camera
+	Vector		origin;
+
+	// heading of camera (pitch, yaw, roll)
+	QAngle		angles;
+	// local Z coordinate of near plane of camera
+	float		zNear;
+	// local Z coordinate of far plane of camera
+	float		zFar;
+
+	// local Z coordinate of near plane of camera ( when rendering view model )
+	float		zNearViewmodel;
+	// local Z coordinate of far plane of camera ( when rendering view model )
+	float		zFarViewmodel;
+
+	char _unknown_e0_17c[0x9c];
 };
 
 ////////////////////////////////////////////////////////////////////////////////
