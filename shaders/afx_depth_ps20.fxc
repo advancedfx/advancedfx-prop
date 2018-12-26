@@ -40,39 +40,36 @@ float4 main( PS_INPUT i ) : COLOR
 
 	float f1 = (-1) * g_Afx_zFar * g_Afx_zNear * 1.0;
 	float xD = g_Afx_zFar - g_Afx_zNear;
+	
 
 #if 0 == AFXDEPTHMODE
 
 	float outNear = (f1 / g_Afx_OutNear + g_Afx_zFar)/xD;
 	float outFar = (f1 / g_Afx_OutFar + g_Afx_zFar)/xD;
+	
+	depth = (depth - outNear) / (outFar - outNear);
 
 #elif 1 <= AFXDEPTHMODE
-
+	
 	// Linearize Quake-like depth buffer:
 	
 	depth = f1/(depth * xD -g_Afx_zFar);
 	
-	float outNear = g_Afx_OutNear;
-	float outFar = g_Afx_OutFar;
-
-#if 2 == AFXDEPTHMODE
-
-	// Logarithmize depth buffer:
-
-	float yL = log(g_Afx_zNear);
-	float yD = log(g_Afx_zFar) -yL;
-
-	depth = (log(xD*depth + g_Afx_zNear) -yL)/yD;
+	// Transform [outNear,OutFar] to [0,1]
 	
-	outNear = (log(xD*outNear + g_Afx_zNear) -yL)/yD;
-	outFar = (log(xD*outFar + g_Afx_zNear) -yL)/yD;
+	depth = (depth - g_Afx_OutNear) / (g_Afx_OutFar - g_Afx_OutNear);
+	
+#if 2 == AFXDEPTHMODE
+	
+	// Logarithmize depth buffer:
+	
+	depth = log(1 + depth);
 #endif
 
 #endif
 	
 	// Offset and scale for output (slicing):
 	
-	depth = (depth - outNear) / (outFar - outNear);
 	
 #if 0 == AFXD24
 	return float4(depth, depth, depth, 1.0);
