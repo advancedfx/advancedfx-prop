@@ -612,7 +612,9 @@ public:
 	// Returns true if the console is visible
 	virtual bool				Con_IsVisible(void) = 0;
 
-	virtual void _UNUSED_GetLocalPlayer(void) = 0;
+	// Get the entity index of the local player
+	virtual int					GetLocalPlayer(void) = 0;
+
 	virtual void _UNUSED_LoadModel(void) = 0;
 
 	// Get accurate, sub-frame clock ( profiling use )
@@ -797,7 +799,9 @@ public:
 	// Returns true if the console is visible
 	virtual bool				Con_IsVisible( void ) = 0;
 
-	virtual void _UNUSED_GetLocalPlayer(void)=0;
+	// Get the entity index of the local player
+	virtual int					GetLocalPlayer(void) = 0;
+
 	virtual void _UNUSED_LoadModel(void)=0;
 
 	// Get accurate, sub-frame clock ( profiling use )
@@ -1068,7 +1072,9 @@ public:
 	// Returns true if the console is visible
 	virtual bool				Con_IsVisible( void ) = 0; // :11
 
-	virtual void _UNUSED_GetLocalPlayer(void)=0; // :12
+	// Get the entity index of the local player
+	virtual int					GetLocalPlayer(void) = 0;
+
 	virtual void _UNUSED_LoadModel(void)=0; // :13
 
 	// Get the exact server timesstamp ( server time ) from the last message received from the server
@@ -3948,8 +3954,10 @@ class IClientRenderable_csgo abstract
 {
 public:
 	virtual void _UNKNOWN_IClientRenderable_csgo_000(void);
-	virtual void _UNKNOWN_IClientRenderable_csgo_001(void);
-	virtual void _UNKNOWN_IClientRenderable_csgo_002(void);
+
+	// Data accessors
+	virtual Vector const&			GetRenderOrigin(void) = 0; //:001
+	virtual QAngle const&			GetRenderAngles(void) = 0; //:002
 
 	virtual bool					ShouldDraw(void) = 0; //:003
 
@@ -4363,8 +4371,40 @@ public:
 
 	virtual C_BaseCombatWeapon_csgo	*GetActiveWeapon(void) const; //:263
 
-	// more we don't care about
+	virtual void _UNKNOWN_C_BaseCombatChracter_264(void);
+	virtual void _UNKNOWN_C_BaseCombatChracter_265(void);
+	virtual void _UNKNOWN_C_BaseCombatChracter_266(void);
+};
 
+class C_BasePlayer_csgo : public C_BaseCombatCharacter_csgo
+{
+public:
+	virtual void _UNKNOWN_C_BasePlayer_csgo_267(void);
+	virtual void _UNKNOWN_C_BasePlayer_csgo_268(void);
+	virtual void _UNKNOWN_C_BasePlayer_csgo_269(void);
+	virtual void _UNKNOWN_C_BasePlayer_csgo_270(void);
+	virtual void _UNKNOWN_C_BasePlayer_csgo_271(void);
+	virtual void _UNKNOWN_C_BasePlayer_csgo_272(void);
+	virtual void _UNKNOWN_C_BasePlayer_csgo_273(void);
+	virtual void _UNKNOWN_C_BasePlayer_csgo_274(void);
+	virtual void _UNKNOWN_C_BasePlayer_csgo_275(void);
+	virtual void _UNKNOWN_C_BasePlayer_csgo_276(void);
+	virtual void _UNKNOWN_C_BasePlayer_csgo_277(void);
+	virtual void _UNKNOWN_C_BasePlayer_csgo_278(void);
+	virtual void _UNKNOWN_C_BasePlayer_csgo_279(void);
+	virtual void _UNKNOWN_C_BasePlayer_csgo_280(void);
+	virtual void _UNKNOWN_C_BasePlayer_csgo_281(void);
+	virtual void _UNKNOWN_C_BasePlayer_csgo_282(void);
+	virtual void _UNKNOWN_C_BasePlayer_csgo_283(void);
+	virtual void _UNKNOWN_C_BasePlayer_csgo_284(void);
+	virtual void _UNKNOWN_C_BasePlayer_csgo_285(void);
+	virtual void _UNKNOWN_C_BasePlayer_csgo_286(void);
+	virtual void _UNKNOWN_C_BasePlayer_csgo_287(void);
+
+	virtual int			GetObserverMode() const; //:288
+	virtual C_BaseEntity_csgo	*GetObserverTarget() const; //:289
+
+	// ... more we don't carea about
 };
 
 // Weapon m_iState

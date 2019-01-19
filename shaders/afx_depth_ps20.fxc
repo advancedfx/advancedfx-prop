@@ -15,6 +15,12 @@
 // 0 - draw gray depth
 // 1 - draw rgb-encoded depth
 
+// TODO:
+//vec4 eyeVec = invProjectionMatrix * vec4(uv.x, uv.y, depthValue, 1.0);
+//eyeVec.xyz /= eyeVec.w;
+//and the length of the vector is the real view distance
+
+
 const float4 g_AfxConstants : register( c5 );
 const float4 g_AfxConstants2 : register( c6 );
 
