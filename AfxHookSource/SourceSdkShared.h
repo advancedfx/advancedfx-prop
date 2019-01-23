@@ -63,6 +63,10 @@ public:
 	vec_t operator[](int i) const;
 	vec_t& operator[](int i);
 
+	// Base address...
+	vec_t* Base();
+	vec_t const* Base() const;
+
 	// Get the vector's magnitude squared.
 	SOURCESDK_FORCEINLINE vec_t LengthSqr(void) const
 	{
@@ -86,6 +90,17 @@ inline vec_t Vector::operator[](int i) const
 	SOURCESDK_Assert((i >= 0) && (i < 3));
 	return ((vec_t*)this)[i];
 }
+
+inline vec_t* Vector::Base()
+{
+	return (vec_t*)this;
+}
+
+inline vec_t const* Vector::Base() const
+{
+	return (vec_t const*)this;
+}
+
 
 SOURCESDK_FORCEINLINE  Vector& Vector::operator*=(float fl)
 {

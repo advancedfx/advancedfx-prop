@@ -3989,7 +3989,9 @@ public:
 	virtual void _UNKNOWN_IClientRenderable_csgo_029(void);
 	virtual void _UNKNOWN_IClientRenderable_csgo_030(void);
 	virtual void _UNKNOWN_IClientRenderable_csgo_031(void);
-	virtual void _UNKNOWN_IClientRenderable_csgo_032(void);
+	
+	// Returns the transform from RenderOrigin/RenderAngles to world
+	virtual const matrix3x4_t &RenderableToWorldTransform() = 0; //:032
 
 	// Attachments
 	virtual int LookupAttachment(const char *pAttachmentName) = 0; //:33
