@@ -768,6 +768,7 @@ public:
 // IVEngineClient_013 //////////////////////////////////////////////////////////
 
 #define VENGINE_CLIENT_INTERFACE_VERSION_013 "VEngineClient013"
+#define VENGINE_CLIENT_INTERFACE_VERSION_014 "VEngineClient014"
 #define VENGINE_CLIENT_INTERFACE_VERSION_015 "VEngineClient015"
 
 /// <comments>

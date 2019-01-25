@@ -21,15 +21,25 @@ namespace SOURCESDK {
 #define SOURCESDK_Q_memset memset
 #define SOURCESDK_Q_memcpy strncpy
 
+#define SOURCESDK_DECLARE_POINTER_HANDLE(name) struct name##__ { int unused; }; typedef struct name##__ *name
+#define SOURCESDK_FORWARD_DECLARE_HANDLE(name) typedef struct name##__ *name
+
 typedef float vec_t;
+typedef signed char int8;
 typedef signed __int32 int32;
+typedef unsigned char uint8;
 typedef unsigned __int32 uint32;
 typedef unsigned __int16 uint16;
 typedef unsigned __int64 uint64;
 
+// for when we don't care about how many bits we use
+typedef unsigned int	uint;
+
 typedef void * FileHandle_t;
 
 typedef unsigned char byte;
+
+typedef int	string_t;
 
 inline vec_t BitsToFloat(uint32 i)
 {
