@@ -2231,6 +2231,26 @@ enum ImageFormat_csgo
 	NUM_IMAGE_FORMATS
 };
 
+enum MaterialMatrixMode_t_csgo
+{
+	MATERIAL_VIEW = 0,
+	MATERIAL_PROJECTION,
+
+	MATERIAL_MATRIX_UNUSED0,
+	MATERIAL_MATRIX_UNUSED1,
+	MATERIAL_MATRIX_UNUSED2,
+	MATERIAL_MATRIX_UNUSED3,
+	MATERIAL_MATRIX_UNUSED4,
+	MATERIAL_MATRIX_UNUSED5,
+	MATERIAL_MATRIX_UNUSED6,
+	MATERIAL_MATRIX_UNUSED7,
+
+	MATERIAL_MODEL,
+
+	// Total number of matrices
+	NUM_MATRIX_MODES = MATERIAL_MODEL + 1,
+};
+
 class IMatRenderContext_csgo abstract : public IRefCounted_csgo
 {
 public:
@@ -2279,14 +2299,15 @@ public:
 	virtual void _UNKNOWN_029(void) = 0;
 	virtual void _UNKNOWN_030(void) = 0;
 	virtual void _UNKNOWN_031(void) = 0;
-	virtual void _UNKNOWN_032(void) = 0;
-	virtual void _UNKNOWN_033(void) = 0;
-	virtual void _UNKNOWN_034(void) = 0;
-	virtual void _UNKNOWN_035(void) = 0;
-	virtual void _UNKNOWN_036(void) = 0;
-	virtual void _UNKNOWN_037(void) = 0;
-	virtual void _UNKNOWN_038(void) = 0;
-	virtual void _UNKNOWN_039(void) = 0;
+
+	virtual void				GetMatrix(MaterialMatrixMode_t_csgo matrixMode, VMatrix *matrix) = 0; //:032
+	virtual void				LoadIdentity(void) = 0; //:033
+	virtual void				Ortho(double left, double top, double right, double bottom, double zNear, double zFar) = 0; //:034
+	virtual void				PerspectiveX(double fovx, double aspect, double zNear, double zFar) = 0; //:035
+	virtual void				PickMatrix(int x, int y, int width, int height) = 0; //:036
+	virtual void				Rotate(float angle, float x, float y, float z) = 0; //:037
+	virtual void				Translate(float x, float y, float z) = 0; //:038
+	virtual void				Scale(float x, float y, float z) = 0; //:039
 	
 	// Sets/gets the viewport
 	virtual void				Viewport(int x, int y, int width, int height) = 0; //:040
@@ -3109,8 +3130,12 @@ public:
 	virtual void _UNKOWN_053(void) = 0;
 	virtual void _UNKOWN_054(void) = 0;
 	virtual void _UNKOWN_055(void) = 0;
-	virtual void _UNKOWN_056(void) = 0;
+
+	virtual void			GetMatricesForView(const CViewSetup_csgo &view, VMatrix *pWorldToView, VMatrix *pViewToProjection, VMatrix *pWorldToProjection, VMatrix *pWorldToPixels) = 0; // :056
+
 	virtual void _UNKOWN_057(void) = 0;
+
+
 	virtual void _UNKOWN_058(void) = 0;
 	virtual void _UNKOWN_059(void) = 0;
 };
@@ -3292,7 +3317,7 @@ public:
 	// local Z coordinate of far plane of camera ( when rendering view model )
 	float		zFarViewmodel;
 
-	char _unknown_e0_17c[0x9c];
+	char _unknown_e0_198[0xB8];
 };
 
 ////////////////////////////////////////////////////////////////////////////////

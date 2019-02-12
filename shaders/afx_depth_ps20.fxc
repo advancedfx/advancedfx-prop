@@ -1,6 +1,8 @@
 // AFX: "AFXCLIP" "0..1"
 // AFX: "AFXDEPTHMODE" "0..2"
-// AFX: "AFXD24" "0..1"
+// AFX: "AFXD24" "0..2"
+
+// SKIP: $AFXD24 == 2 && ($AFXDEPTHMODE != 0)
 
 // AFXCLIP:
 // 0 - no clipping
@@ -14,6 +16,7 @@
 // AFXD24:
 // 0 - draw gray depth
 // 1 - draw rgb-encoded depth
+// 2 - rgba pack (for afx_interop)
 
 // TODO:
 //vec4 eyeVec = invProjectionMatrix * vec4(uv.x, uv.y, depthValue, 1.0);
@@ -88,5 +91,16 @@ float4 main( PS_INPUT i ) : COLOR
 	color.g -= color.r/256.0;
 	color *= 256/255.0;
 	return float4(color, 1.0);
+#elif 2 == AFXD24
+	if(depth < 0) return float4(0,0,0,0);
+	if(depth >= 1) return float4(1,1,1,1);
+	
+	const float4 kEncodeMul = float4(1.0, 255.0, 65025.0, 16581375.0);
+	const float4 kEncodeBit = 1.0/255.0;
+	
+    float4 enc = kEncodeMul * depth;
+    enc = frac (enc);
+    enc -= enc.yzww * kEncodeBit;
+    return enc;
 #endif
 }
