@@ -2,7 +2,7 @@
 // AFX: "AFXDEPTHMODE" "0..2"
 // AFX: "AFXD24" "0..2"
 
-// SKIP: $AFXD24 == 2 && ($AFXDEPTHMODE != 0)
+// SKIP: $AFXD24 == 2 && ($AFXDEPTHMODE != 0) && ($AFXSPHERICAL != 0)
 
 // AFXCLIP:
 // 0 - no clipping
@@ -10,27 +10,28 @@
 
 // AFXDEPTHMODE:
 // 0 - inverse depth (original)
-// 1 - linear depth
-// 2 - logarithmic depth (natural logarithm)
+// 1 - linear depth (with spherical correction)
+// 2 - logarithmic depth (with spherical correction) (natural logarithm)
 
 // AFXD24:
 // 0 - draw gray depth
 // 1 - draw rgb-encoded depth
 // 2 - rgba pack (for afx_interop)
 
-// TODO:
-//vec4 eyeVec = invProjectionMatrix * vec4(uv.x, uv.y, depthValue, 1.0);
-//eyeVec.xyz /= eyeVec.w;
-//and the length of the vector is the real view distance
-
+// AFXSPHERICAL:
+// 0 - no correction
+// 1 - convert pyramidal depth buffer to spherical depth
 
 const float4 g_AfxConstants : register( c5 );
-const float4 g_AfxConstants2 : register( c6 );
 
 #define g_Afx_zNear g_AfxConstants.x
 #define g_Afx_zFar g_AfxConstants.y
 #define g_Afx_OutNear g_AfxConstants.z
 #define g_Afx_OutFar g_AfxConstants.w
+
+#if 1 <= AFXDEPTHMODE
+const float4x4 g_AfxInvProjection : register( c6 );
+#endif
 
 sampler g_sDepthTextureSampler : register( s0 );
 
@@ -59,10 +60,14 @@ float4 main( PS_INPUT i ) : COLOR
 	depth = (depth - outNear) / (outFar - outNear);
 
 #elif 1 <= AFXDEPTHMODE
+
+	// Linearize Quake-like depth buffer with spherical correction using the inverse projection matrix:
+
+	float4 eyeVec = mul(g_AfxInvProjection, float4(2 * i.t0.x - 1, 2 * i.t0.y - 1, depth, 1.0));
 	
-	// Linearize Quake-like depth buffer:
+	eyeVec.xyz /= eyeVec.w;
 	
-	depth = f1/(depth * xD -g_Afx_zFar);
+	depth = length(eyeVec.xyz);
 	
 	// Transform [outNear,OutFar] to [0,1]
 	
