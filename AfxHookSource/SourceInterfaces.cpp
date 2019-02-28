@@ -504,7 +504,7 @@ MdtMatrix::MdtMatrix()
 
 MdtMatrix::MdtMatrix(const MdtMatrix & mdtMatrix)
 {
-	memcpy(m[0],mdtMatrix.m[0], sizeof(m));
+	memcpy(&m[0][0],&(mdtMatrix.m[0][0]), sizeof(m));
 }
 
 
