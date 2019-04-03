@@ -3317,7 +3317,27 @@ public:
 	// local Z coordinate of far plane of camera ( when rendering view model )
 	float		zFarViewmodel;
 
-	char _unknown_e0_198[0xB8];
+	char _unknown_eo_148[0x68];
+
+	bool		m_bOffCenter : 1;
+
+	// set to true if this is to draw into a subrect of the larger screen
+	// this really is a hack, but no more than the rest of the way this class is used
+	bool		m_bRenderToSubrectOfLargerScreen : 1;
+
+	// Controls that the SFM needs to tell the engine when to do certain post-processing steps
+	bool		m_bDoBloomAndToneMapping : 1;
+	bool		m_bDoDepthOfField : 1;
+	bool		m_bHDRTarget : 1;
+	bool		m_bDrawWorldNormal : 1;
+	bool		m_bCullFrontFaces : 1;
+
+	// Cached mode for certain full-scene per-frame varying state such as sun entity coverage
+	bool		m_bCacheFullSceneState : 1;
+
+	bool		m_bRenderFlashlightDepthTranslucents : 1;
+
+	char _unknown_14a_198[0x4e];
 };
 
 ////////////////////////////////////////////////////////////////////////////////
