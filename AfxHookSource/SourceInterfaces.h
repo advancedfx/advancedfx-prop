@@ -4262,7 +4262,9 @@ public:
 	virtual void _UNKNOWN_C_BaseEntity_148(void);
 	virtual void _UNKNOWN_C_BaseEntity_149(void);
 	virtual void _UNKNOWN_C_BaseEntity_150(void);
-	virtual void _UNKNOWN_C_BaseEntity_151(void);
+
+	virtual bool					IsAlive(void); //:151
+
 	virtual void _UNKNOWN_C_BaseEntity_152(void);
 	
 	virtual bool					IsPlayer(void) const { return false; }; //:153
