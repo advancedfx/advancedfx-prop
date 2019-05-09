@@ -6502,5 +6502,24 @@ public:
 	// one more we don't know.
 };
 
+class CRefCountedAfxDummy
+{
+
+};
+
+class CBase3dView : public CRefCountedAfxDummy, protected CViewSetup_csgo
+{
+public:
+
+	CViewSetup_csgo & AfxHackGetViewSetup()
+	{
+		return *this;
+	}
+};
+
+class CRendering3dView : public CBase3dView
+{
+};
+
 } // namespace CSGO {
 } // namespace SOURCESDK {
