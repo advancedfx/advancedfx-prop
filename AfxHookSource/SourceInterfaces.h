@@ -5584,6 +5584,15 @@ public:
 	virtual void SetString(const char *keyName, const char *value) = 0;
 };
 
+class CGameEventDescriptor;
+
+class CGameEvent : public IGameEvent
+{
+public:
+	CGameEventDescriptor	*m_pDescriptor;
+	KeyValues				*m_pDataKeys;
+};
+
 //-----------------------------------------------------------------------------
 // Purpose: Engine interface into client side prediction system
 //-----------------------------------------------------------------------------
@@ -6519,6 +6528,31 @@ public:
 
 class CRendering3dView : public CBase3dView
 {
+};
+
+// GameEvents related:
+
+#define SOURCESDK_CSGO_MAX_EVENT_NAME_LENGTH 32
+
+class CGameEventDescriptor
+{
+public:
+	CGameEventDescriptor()
+	{
+		name_index = -1;
+		eventid = -1;
+		keys = NULL;
+		local = false;
+		reliable = true;
+	}
+
+public:
+	int	name_index;
+	int	eventid;
+	KeyValues *keys;
+	bool local;
+	bool reliable;
+	// ... more stuf we don't care about.
 };
 
 } // namespace CSGO {
