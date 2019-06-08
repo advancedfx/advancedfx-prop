@@ -1,8 +1,8 @@
 // AFX: "AFXCLIP" "0..1"
-// AFX: "AFXDEPTHMODE" "0..2"
+// AFX: "AFXDEPTHMODE" "0..4"
 // AFX: "AFXD24" "0..2"
 
-// SKIP: $AFXD24 == 2 && ($AFXDEPTHMODE != 0) && ($AFXSPHERICAL != 0)
+// SKIP: $AFXD24 == 2 && ($AFXDEPTHMODE != 0)
 
 // AFXCLIP:
 // 0 - no clipping
@@ -12,6 +12,8 @@
 // 0 - inverse depth (original)
 // 1 - linear depth (with spherical correction)
 // 2 - logarithmic depth (with spherical correction) (natural logarithm)
+// 3 - linear depth
+// 4 - logarithmic depth (natural logarithm)
 
 // AFXD24:
 // 0 - draw gray depth
@@ -29,7 +31,7 @@ const float4 g_AfxConstants : register( c5 );
 #define g_Afx_OutNear g_AfxConstants.z
 #define g_Afx_OutFar g_AfxConstants.w
 
-#if 1 <= AFXDEPTHMODE
+#if 1 == AFXDEPTHMODE || 2 == AFXDEPTHMODE
 const float4x4 g_AfxInvProjection : register( c6 );
 #endif
 
@@ -48,18 +50,17 @@ float4 main( PS_INPUT i ) : COLOR
 	clip(depth >= 1 ? -1 : 1);
 #endif
 
+#if 0 == AFXDEPTHMODE
+
 	float f1 = (-1) * g_Afx_zFar * g_Afx_zNear * 1.0;
 	float xD = g_Afx_zFar - g_Afx_zNear;
-	
-
-#if 0 == AFXDEPTHMODE
 
 	float outNear = (f1 / g_Afx_OutNear + g_Afx_zFar)/xD;
 	float outFar = (f1 / g_Afx_OutFar + g_Afx_zFar)/xD;
 	
 	depth = (depth - outNear) / (outFar - outNear);
 
-#elif 1 <= AFXDEPTHMODE
+#elif 1 == AFXDEPTHMODE || 2 == AFXDEPTHMODE
 
 	// Linearize Quake-like depth buffer with spherical correction using the inverse projection matrix:
 
@@ -80,11 +81,29 @@ float4 main( PS_INPUT i ) : COLOR
 	depth = log(1 + depth);
 #endif
 
+#elif 3 == AFXDEPTHMODE || 4 == AFXDEPTHMODE
+
+	float f1 = (-1) * g_Afx_zFar * g_Afx_zNear * 1.0;
+	float xD = g_Afx_zFar - g_Afx_zNear;
+
+	// Linearize Quake-like depth buffer:
+
+	depth = f1/(depth * xD -g_Afx_zFar);
+	
+	// Transform [outNear,OutFar] to [0,1]
+	
+	depth = (depth - g_Afx_OutNear) / (g_Afx_OutFar - g_Afx_OutNear);
+	
+#if 4 == AFXDEPTHMODE
+	
+	// Logarithmize depth buffer:
+	
+	depth = log(1 + depth);
 #endif
-	
-	// Offset and scale for output (slicing):
-	
-	
+
+#endif
+
+
 #if 0 == AFXD24
 	return float4(depth, depth, depth, 1.0);
 #elif 1 == AFXD24
