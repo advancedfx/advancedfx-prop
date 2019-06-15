@@ -52,6 +52,8 @@ namespace Math {
 
 #define AFX_MATH_EPS 1.0e-6
 
+double AngleModDeg(double x);
+
 /// <summary>Make vectors from angles in degrees in right-hand-grip rule.</summary>
 void MakeVectors(
 	double rForward, double rLeft, double rUp,

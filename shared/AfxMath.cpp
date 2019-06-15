@@ -1491,5 +1491,13 @@ Vector3 Vector3::Normalize()
 	return *this;
 }
 
+double AngleModDeg(double x)
+{
+	x = fmod(x + 180, 360.0);
+	if (x < 0)
+		x += 360;
+	return x - 180;
+}
+
 } // namespace Afx {
 } // namespace Math
