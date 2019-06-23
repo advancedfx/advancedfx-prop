@@ -188,6 +188,8 @@ struct Quaternion
 
     double Norm() const;
 
+	Quaternion Normalized() const;
+
 	Quaternion Conjugate() const;
 	
 	/// <returns>slew angle between this and y in radians</returns>

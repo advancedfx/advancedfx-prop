@@ -1250,6 +1250,13 @@ double Quaternion::Norm() const
     return sqrt(W*W +X*X +Y*Y +Z*Z);
 }
 
+Quaternion Quaternion::Normalized() const
+{
+	double norm = this->Norm();
+
+	return Quaternion(W / norm, X / norm, Y / norm, Z / norm);
+}
+
 Quaternion Quaternion::Conjugate() const
 {
 	return Quaternion(W, -X, -Y, -Z);
