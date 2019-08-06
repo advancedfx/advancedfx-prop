@@ -8,6 +8,36 @@
 namespace SOURCESDK {
 namespace CSGO {
 
+// CCommand ///////////////////////////////////////////////////////////////////
+
+
+CCommand::CCommand(int nArgC, const char **ppArgV)
+	: m_nArgc(nArgC)
+{
+	m_nArgv0Size = 0 < nArgC ? strlen(ppArgV[0]) : 0;
+
+	size_t argVLen = 0;
+	size_t argSLen = 0;
+	for (int i = 0; i < nArgC; ++i)
+	{
+		size_t curLen = strlen(ppArgV[i]);
+		m_ppArgv[i] = ppArgV[i];
+		if (argVLen + curLen + 1 <= COMMAND_MAX_LENGTH)
+		{
+			memcpy_s(m_pArgvBuffer + argVLen, curLen + 1, ppArgV[i], curLen + 1);
+			argVLen += curLen;
+		}
+		if (0 < i && argVLen + curLen + 1 <= COMMAND_MAX_LENGTH)
+		{
+			memcpy_s(m_pArgSBuffer + argSLen, curLen + 1, ppArgV[i], curLen + 1);
+			argSLen += curLen;
+		}
+	}
+
+	m_pArgvBuffer[argVLen] = 0;
+	m_pArgSBuffer[argSLen] = 0;
+}
+
 
 // ConCommandBase /////////////////////////////////////////////////////////////
 
