@@ -3317,8 +3317,13 @@ public:
 	// local Z coordinate of far plane of camera ( when rendering view model )
 	float		zFarViewmodel;
 
-	char _unknown_eo_148[0x68];
+	char _unknown_eo_148[0x58];
 
+	// Controls for off-center projection (needed for poster rendering)
+	float		m_flOffCenterTop;
+	float		m_flOffCenterBottom;
+	float		m_flOffCenterLeft;
+	float		m_flOffCenterRight;
 	bool		m_bOffCenter : 1;
 
 	// set to true if this is to draw into a subrect of the larger screen
