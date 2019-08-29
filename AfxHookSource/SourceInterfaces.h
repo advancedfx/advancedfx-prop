@@ -8,6 +8,8 @@
 
 #include "SourceSdkShared.h"
 
+#include "csgo/sdk_src/public/appframework/IAppSystem.h"
+
 #include <float.h>
 
 
@@ -443,54 +445,6 @@ public:
 	virtual InitReturnVal_t Init() = 0;
 	virtual void Shutdown() = 0;
 };
-
-// IAppSystem_csgo ////////////////////////////////////////////////////////////
-
-struct AppSystemInfo_t
-{
-	const char *m_pModuleName;
-	const char *m_pInterfaceName;
-};
-
-enum AppSystemTier_t
-{
-	APP_SYSTEM_TIER0 = 0,
-	APP_SYSTEM_TIER1,
-	APP_SYSTEM_TIER2,
-	APP_SYSTEM_TIER3,
-
-	APP_SYSTEM_TIER_OTHER,
-};
-
-class IAppSystem_csgo abstract
-{
-public:
-	// Here's where the app systems get to learn about each other 
-	virtual bool Connect( CreateInterfaceFn factory ) = 0; //:000
-	virtual void Disconnect() = 0; //:001
-
-	// Here's where systems can access other interfaces implemented by this object
-	// Returns NULL if it doesn't implement the requested interface
-	virtual void *QueryInterface( const char *pInterfaceName ) = 0; //:002
-
-	// Init, shutdown
-	virtual InitReturnVal_t Init() = 0; //:003
-	virtual void Shutdown() = 0; //:004
-
-	// Returns all dependent libraries
-	virtual const AppSystemInfo_t* GetDependencies() = 0; //:005
-
-	// Returns the tier
-	virtual AppSystemTier_t GetTier() = 0; //:006
-
-	// Reconnect to a particular interface
-	virtual void Reconnect( CreateInterfaceFn factory, const char *pInterfaceName ) = 0; //:007
-
-	// Returns whether or not the app system is a singleton
-	virtual bool IsSingleton() = 0; //:008
-};
-
-
 
 // ICvar_003 ///////////////////////////////////////////////////////////////////
 
@@ -2635,7 +2589,7 @@ enum MaterialContextType_t
 };
 }
 
-class IMaterialSystem_csgo abstract : public IAppSystem_csgo
+class IMaterialSystem_csgo abstract : public SOURCESDK::CSGO::IAppSystem
 {
 public:
 	virtual void _UNKNOWN_009(void) = 0; // Init
@@ -3227,7 +3181,7 @@ public:
 
 #define FILESYSTEM_INTERFACE_VERSION_CSGO_017 "VFileSystem017"
 
-class IFileSystem_csgo abstract : public IAppSystem_csgo, public IBaseFileSystem_csgo
+class IFileSystem_csgo abstract : public SOURCESDK::CSGO::IAppSystem, public IBaseFileSystem_csgo
 {
 public:
 	//--------------------------------------------------------
@@ -5776,7 +5730,7 @@ public:
 //-----------------------------------------------------------------------------
 // Purpose: Wraps contextless windows system functions
 //-----------------------------------------------------------------------------
-class ISurface abstract : public IAppSystem_csgo
+class ISurface abstract : public SOURCESDK::CSGO::IAppSystem
 {
 public:
 	// call to Shutdown surface; surface can no longer be used after this is called

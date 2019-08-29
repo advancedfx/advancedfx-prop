@@ -70,7 +70,7 @@ public:
 	virtual CVarDLLIdentifier_t AllocateDLLIdentifier() = 0;
 
 	// Register, unregister commands
-	virtual void			RegisterConCommand( ConCommandBase *pCommandBase ) = 0;
+	virtual void			RegisterConCommand( ConCommandBase *pCommandBase, int _arg1 = 0) = 0;
 	virtual void			UnregisterConCommand( ConCommandBase *pCommandBase ) = 0;
 	virtual void			UnregisterConCommands( CVarDLLIdentifier_t id ) = 0;
 
