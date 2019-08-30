@@ -4464,6 +4464,8 @@ typedef ::SOURCESDK::IHandleEntity_csgo IHandleEntity;
 #define SOURCESDK_CSGO_NUM_SERIAL_NUM_SHIFT_BITS (32 - SOURCESDK_CSGO_NUM_SERIAL_NUM_BITS)
 #define SOURCESDK_CSGO_ENT_ENTRY_MASK	(( 1 << SOURCESDK_CSGO_NUM_SERIAL_NUM_BITS) - 1)
 
+#define SOURCESDK_CSGO_STATICPROP_EHANDLE_MASK 0x40000000
+
 
 // -------------------------------------------------------------------------------------------------- //
 // CBaseHandle.
