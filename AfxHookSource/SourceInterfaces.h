@@ -4081,6 +4081,168 @@ public:
 };
 
 class C_BaseCombatCharacter_csgo;
+class C_BaseCombatWeapon_csgo;
+
+namespace CSGO {
+
+typedef ::SOURCESDK::IHandleEntity_csgo IHandleEntity;
+
+// How many bits to use to encode an edict.
+#define	SOURCESDK_CSGO_MAX_EDICT_BITS				11			// # of bits needed to represent max edicts
+// Max # of edicts in a level
+#define	SOURCESDK_CSGO_MAX_EDICTS					(1<<MAX_EDICT_BITS)
+
+// Used for networking ehandles.
+#define SOURCESDK_CSGO_NUM_ENT_ENTRY_BITS		(SOURCESDK_CSGO_MAX_EDICT_BITS + 2)
+#define SOURCESDK_CSGO_NUM_ENT_ENTRIES			(1 << SOURCESDK_CSGO_NUM_ENT_ENTRY_BITS)
+#define SOURCESDK_CSGO_INVALID_EHANDLE_INDEX	0xFFFFFFFF
+
+#define SOURCESDK_CSGO_NUM_SERIAL_NUM_BITS		16 // (32 - NUM_ENT_ENTRY_BITS)
+#define SOURCESDK_CSGO_NUM_SERIAL_NUM_SHIFT_BITS (32 - SOURCESDK_CSGO_NUM_SERIAL_NUM_BITS)
+#define SOURCESDK_CSGO_ENT_ENTRY_MASK	(( 1 << SOURCESDK_CSGO_NUM_SERIAL_NUM_BITS) - 1)
+
+
+// -------------------------------------------------------------------------------------------------- //
+// CBaseHandle.
+// -------------------------------------------------------------------------------------------------- //
+
+class CBaseHandle
+{
+	friend class CBaseEntityList;
+
+public:
+
+	CBaseHandle();
+	CBaseHandle(const CBaseHandle &other);
+	CBaseHandle(unsigned long value);
+	CBaseHandle(int iEntry, int iSerialNumber);
+
+	void Init(int iEntry, int iSerialNumber);
+	void Term();
+
+	// Even if this returns true, Get() still can return return a non-null value.
+	// This just tells if the handle has been initted with any values.
+	bool IsValid() const;
+
+	int GetEntryIndex() const;
+	int GetSerialNumber() const;
+
+	int ToInt() const;
+	bool operator !=(const CBaseHandle &other) const;
+	bool operator ==(const CBaseHandle &other) const;
+	bool operator ==(const IHandleEntity* pEnt) const;
+	bool operator !=(const IHandleEntity* pEnt) const;
+	bool operator <(const CBaseHandle &other) const;
+	bool operator <(const IHandleEntity* pEnt) const;
+
+	// Assign a value to the handle.
+	const CBaseHandle& operator=(const IHandleEntity *pEntity);
+	const CBaseHandle& Set(const IHandleEntity *pEntity);
+
+	// Use this to dereference the handle.
+	// Note: this is implemented in game code (ehandle.h)
+	IHandleEntity* Get() const;
+
+	void AfxAssign(const CBaseHandle &other)
+	{
+		m_Index = other.m_Index;
+	}
+
+protected:
+	// The low NUM_SERIAL_BITS hold the index. If this value is less than MAX_EDICTS, then the entity is networkable.
+	// The high NUM_SERIAL_NUM_BITS bits are the serial number.
+	unsigned long	m_Index;
+};
+
+inline CBaseHandle::CBaseHandle()
+{
+	m_Index = SOURCESDK_CSGO_INVALID_EHANDLE_INDEX;
+}
+
+inline CBaseHandle::CBaseHandle(const CBaseHandle &other)
+{
+	m_Index = other.m_Index;
+}
+
+inline CBaseHandle::CBaseHandle(unsigned long value)
+{
+	m_Index = value;
+}
+
+inline CBaseHandle::CBaseHandle(int iEntry, int iSerialNumber)
+{
+	Init(iEntry, iSerialNumber);
+}
+
+inline void CBaseHandle::Init(int iEntry, int iSerialNumber)
+{
+	Assert(iEntry >= 0 && (iEntry & SOURCESDK_CSGO_ENT_ENTRY_MASK) == iEntry);
+	Assert(iSerialNumber >= 0 && iSerialNumber < (1 << SOURCESDK_CSGO_NUM_SERIAL_NUM_BITS));
+
+	m_Index = iEntry | (iSerialNumber << SOURCESDK_CSGO_NUM_SERIAL_NUM_SHIFT_BITS);
+}
+
+inline void CBaseHandle::Term()
+{
+	m_Index = SOURCESDK_CSGO_INVALID_EHANDLE_INDEX;
+}
+
+inline bool CBaseHandle::IsValid() const
+{
+	return m_Index != SOURCESDK_CSGO_INVALID_EHANDLE_INDEX;
+}
+
+inline int CBaseHandle::GetEntryIndex() const
+{
+	// There is a hack here: due to a bug in the original implementation of the 
+	// entity handle system, an attempt to look up an invalid entity index in 
+	// certain cirumstances might fall through to the the mask operation below.
+	// This would mask an invalid index to be in fact a lookup of entity number
+	// NUM_ENT_ENTRIES, so invalid ent indexes end up actually looking up the
+	// last slot in the entities array. Since this slot is always empty, the 
+	// lookup returns NULL and the expected behavior occurs through this unexpected
+	// route.
+	// A lot of code actually depends on this behavior, and the bug was only exposed
+	// after a change to NUM_SERIAL_NUM_BITS increased the number of allowable
+	// static props in the world. So the if-stanza below detects this case and 
+	// retains the prior (bug-submarining) behavior.
+	if (!IsValid())
+		return SOURCESDK_CSGO_NUM_ENT_ENTRIES - 1;
+	return m_Index & SOURCESDK_CSGO_ENT_ENTRY_MASK;
+}
+
+inline int CBaseHandle::GetSerialNumber() const
+{
+	return m_Index >> SOURCESDK_CSGO_NUM_SERIAL_NUM_SHIFT_BITS;
+}
+
+inline int CBaseHandle::ToInt() const
+{
+	return (int)m_Index;
+}
+
+inline bool CBaseHandle::operator !=(const CBaseHandle &other) const
+{
+	return m_Index != other.m_Index;
+}
+
+inline bool CBaseHandle::operator ==(const CBaseHandle &other) const
+{
+	return m_Index == other.m_Index;
+}
+
+inline bool CBaseHandle::operator <(const CBaseHandle &other) const
+{
+	return m_Index < other.m_Index;
+}
+
+template<class T> class CHandle : public CBaseHandle
+{
+	// TODO: Implement actually xD
+};
+
+
+} // namespace CSGO {
 
 class C_BaseEntity_csgo : public IClientEntity_csgo
 {
@@ -4254,7 +4416,9 @@ public:
 	virtual void _UNKNOWN_C_BaseEntity_161(void);
 	virtual void _UNKNOWN_C_BaseEntity_162(void);
 	virtual void _UNKNOWN_C_BaseEntity_163(void);
-	virtual void _UNKNOWN_C_BaseEntity_164(void);
+	
+	virtual C_BaseCombatWeapon_csgo * MyCombatWeaponPointer(void) { return NULL; } //:164
+	
 	virtual void _UNKNOWN_C_BaseEntity_165(void);
 
 	// Returns the eye point + angles (used for viewing + shooting)
@@ -4283,14 +4447,23 @@ public:
 public:
 	const char	*GetEntityName();
 
+	SOURCESDK::CSGO::CBaseHandle AfxGetMoveParentHandle() const;
+
 private:
-	int _pad_000[82];
-	char m_iName[260];
+	char _pad_000[328];
+	char m_iName[260]; //:328
+	char _pad_588[184];
+	SOURCESDK::CSGO::CHandle<C_BaseEntity_csgo> m_pMoveParent;
 };
 
 inline const char *C_BaseEntity_csgo::GetEntityName() 
 { 
 	return m_iName; 
+}
+
+inline SOURCESDK::CSGO::CBaseHandle C_BaseEntity_csgo::AfxGetMoveParentHandle() const
+{
+	return m_pMoveParent;
 }
 
 class C_BaseAnimating_csgo : public C_BaseEntity_csgo, public IClientModelRenderable_csgo
@@ -4440,166 +4613,19 @@ public:
 class C_BaseCombatWeapon_csgo : public C_BaseAnimating_csgo
 {
 public:
+	typedef SOURCESDK::CSGO::CHandle< C_BaseCombatCharacter_csgo > CBaseCombatCharacterHandle;
+
+	SOURCESDK::CSGO::CBaseHandle AfxGet_m_hOwner()
+	{
+		CBaseCombatCharacterHandle * pHandle = (CBaseCombatCharacterHandle *)((char *)this + 0x3210);
+		return *pHandle;
+	}
 };
 
 namespace CSGO {
 
 #define IClientRenderable IClientRenderable_csgo
 #define IBaseFileSystem IBaseFileSystem_csgo
-
-typedef ::SOURCESDK::IHandleEntity_csgo IHandleEntity;
-
-
-// How many bits to use to encode an edict.
-#define	SOURCESDK_CSGO_MAX_EDICT_BITS				11			// # of bits needed to represent max edicts
-// Max # of edicts in a level
-#define	SOURCESDK_CSGO_MAX_EDICTS					(1<<MAX_EDICT_BITS)
-
-// Used for networking ehandles.
-#define SOURCESDK_CSGO_NUM_ENT_ENTRY_BITS		(SOURCESDK_CSGO_MAX_EDICT_BITS + 2)
-#define SOURCESDK_CSGO_NUM_ENT_ENTRIES			(1 << SOURCESDK_CSGO_NUM_ENT_ENTRY_BITS)
-#define SOURCESDK_CSGO_INVALID_EHANDLE_INDEX	0xFFFFFFFF
-
-#define SOURCESDK_CSGO_NUM_SERIAL_NUM_BITS		16 // (32 - NUM_ENT_ENTRY_BITS)
-#define SOURCESDK_CSGO_NUM_SERIAL_NUM_SHIFT_BITS (32 - SOURCESDK_CSGO_NUM_SERIAL_NUM_BITS)
-#define SOURCESDK_CSGO_ENT_ENTRY_MASK	(( 1 << SOURCESDK_CSGO_NUM_SERIAL_NUM_BITS) - 1)
-
-#define SOURCESDK_CSGO_STATICPROP_EHANDLE_MASK 0x40000000
-
-
-// -------------------------------------------------------------------------------------------------- //
-// CBaseHandle.
-// -------------------------------------------------------------------------------------------------- //
-
-class CBaseHandle
-{
-friend class CBaseEntityList;
-
-public:
-
-	CBaseHandle();
-	CBaseHandle( const CBaseHandle &other );
-	CBaseHandle( unsigned long value );
-	CBaseHandle( int iEntry, int iSerialNumber );
-
-	void Init( int iEntry, int iSerialNumber );
-	void Term();
-
-	// Even if this returns true, Get() still can return return a non-null value.
-	// This just tells if the handle has been initted with any values.
-	bool IsValid() const;
-
-	int GetEntryIndex() const;
-	int GetSerialNumber() const;
-
-	int ToInt() const;
-	bool operator !=( const CBaseHandle &other ) const;
-	bool operator ==( const CBaseHandle &other ) const;
-	bool operator ==( const IHandleEntity* pEnt ) const;
-	bool operator !=( const IHandleEntity* pEnt ) const;
-	bool operator <( const CBaseHandle &other ) const;
-	bool operator <( const IHandleEntity* pEnt ) const;
-
-	// Assign a value to the handle.
-	const CBaseHandle& operator=( const IHandleEntity *pEntity );
-	const CBaseHandle& Set( const IHandleEntity *pEntity );
-
-	// Use this to dereference the handle.
-	// Note: this is implemented in game code (ehandle.h)
-	IHandleEntity* Get() const;
-
-	void AfxAssign(const CBaseHandle &other)
-	{
-		m_Index = other.m_Index;
-	}
-
-protected:
-	// The low NUM_SERIAL_BITS hold the index. If this value is less than MAX_EDICTS, then the entity is networkable.
-	// The high NUM_SERIAL_NUM_BITS bits are the serial number.
-	unsigned long	m_Index;
-};
-
-inline CBaseHandle::CBaseHandle()
-{
-	m_Index = SOURCESDK_CSGO_INVALID_EHANDLE_INDEX;
-}
-
-inline CBaseHandle::CBaseHandle( const CBaseHandle &other )
-{
-	m_Index = other.m_Index;
-}
-
-inline CBaseHandle::CBaseHandle( unsigned long value )
-{
-	m_Index = value;
-}
-
-inline CBaseHandle::CBaseHandle( int iEntry, int iSerialNumber )
-{
-	Init( iEntry, iSerialNumber );
-}
-
-inline void CBaseHandle::Init( int iEntry, int iSerialNumber )
-{
-	Assert( iEntry >= 0 && (iEntry & SOURCESDK_CSGO_ENT_ENTRY_MASK) == iEntry);
-	Assert( iSerialNumber >= 0 && iSerialNumber < (1 << SOURCESDK_CSGO_NUM_SERIAL_NUM_BITS) );
-
-	m_Index = iEntry | (iSerialNumber << SOURCESDK_CSGO_NUM_SERIAL_NUM_SHIFT_BITS);
-}
-
-inline void CBaseHandle::Term()
-{
-	m_Index = SOURCESDK_CSGO_INVALID_EHANDLE_INDEX;
-}
-
-inline bool CBaseHandle::IsValid() const
-{
-	return m_Index != SOURCESDK_CSGO_INVALID_EHANDLE_INDEX;
-}
-
-inline int CBaseHandle::GetEntryIndex() const
-{
-	// There is a hack here: due to a bug in the original implementation of the 
-	// entity handle system, an attempt to look up an invalid entity index in 
-	// certain cirumstances might fall through to the the mask operation below.
-	// This would mask an invalid index to be in fact a lookup of entity number
-	// NUM_ENT_ENTRIES, so invalid ent indexes end up actually looking up the
-	// last slot in the entities array. Since this slot is always empty, the 
-	// lookup returns NULL and the expected behavior occurs through this unexpected
-	// route.
-	// A lot of code actually depends on this behavior, and the bug was only exposed
-	// after a change to NUM_SERIAL_NUM_BITS increased the number of allowable
-	// static props in the world. So the if-stanza below detects this case and 
-	// retains the prior (bug-submarining) behavior.
-	if ( !IsValid() )
-		return SOURCESDK_CSGO_NUM_ENT_ENTRIES-1;
-	return m_Index & SOURCESDK_CSGO_ENT_ENTRY_MASK;
-}
-
-inline int CBaseHandle::GetSerialNumber() const
-{
-	return m_Index >> SOURCESDK_CSGO_NUM_SERIAL_NUM_SHIFT_BITS;
-}
-
-inline int CBaseHandle::ToInt() const
-{
-	return (int)m_Index;
-}
-
-inline bool CBaseHandle::operator !=( const CBaseHandle &other ) const
-{
-	return m_Index != other.m_Index;
-}
-
-inline bool CBaseHandle::operator ==( const CBaseHandle &other ) const
-{
-	return m_Index == other.m_Index;
-}
-
-inline bool CBaseHandle::operator <(const CBaseHandle &other) const
-{
-	return m_Index < other.m_Index;
-}
 
 class CUtlBuffer;
 
