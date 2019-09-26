@@ -4400,34 +4400,34 @@ public:
 	virtual void _UNKNOWN_C_BaseEntity_151(void);
 	virtual void _UNKNOWN_C_BaseEntity_152(void);
 	virtual void _UNKNOWN_C_BaseEntity_153(void);
+	virtual void _UNKNOWN_C_BaseEntity_154(void);
 
-	virtual bool					IsAlive(void); //:154
+	virtual bool					IsAlive(void); //:155
 
-	virtual void _UNKNOWN_C_BaseEntity_155(void);
+	virtual void _UNKNOWN_C_BaseEntity_156(void);
 	
-	virtual bool					IsPlayer(void) const { return false; }; //:156
+	virtual bool					IsPlayer(void) const { return false; }; //:157
 
-	virtual void _UNKNOWN_C_BaseEntity_157(void);
 	virtual void _UNKNOWN_C_BaseEntity_158(void);
+	virtual void _UNKNOWN_C_BaseEntity_159(void);
 
-	virtual C_BaseCombatCharacter_csgo	*MyCombatCharacterPointer(void) { return NULL; } //:159
+	virtual C_BaseCombatCharacter_csgo	*MyCombatCharacterPointer(void) { return NULL; } //:160
 
-	virtual void _UNKNOWN_C_BaseEntity_160(void);
 	virtual void _UNKNOWN_C_BaseEntity_161(void);
 	virtual void _UNKNOWN_C_BaseEntity_162(void);
 	virtual void _UNKNOWN_C_BaseEntity_163(void);
 	virtual void _UNKNOWN_C_BaseEntity_164(void);
+	virtual void _UNKNOWN_C_BaseEntity_165(void);
 
-	virtual C_BaseCombatWeapon_csgo * MyCombatWeaponPointer(void) { return NULL; } //:165
+	virtual C_BaseCombatWeapon_csgo * MyCombatWeaponPointer(void) { return NULL; } //:166
 	
-	virtual void _UNKNOWN_C_BaseEntity_166(void);
+	virtual void _UNKNOWN_C_BaseEntity_167(void);
 
 	// Returns the eye point + angles (used for viewing + shooting)
-	virtual Vector			EyePosition( void ); // :167
-	virtual const QAngle&	EyeAngles( void );		// Direction of eyes // :168
-	virtual const QAngle&	LocalEyeAngles( void );	// Direction of eyes in local space (pl.v_angle) // :169
+	virtual Vector			EyePosition( void ); // :168
+	virtual const QAngle&	EyeAngles( void );		// Direction of eyes // :169
+	virtual const QAngle&	LocalEyeAngles( void );	// Direction of eyes in local space (pl.v_angle) // :170
 
-	virtual void _UNKNOWN_C_BaseEntity_170(void);
 	virtual void _UNKNOWN_C_BaseEntity_171(void);
 	virtual void _UNKNOWN_C_BaseEntity_172(void);
 	virtual void _UNKNOWN_C_BaseEntity_173(void);
@@ -4566,9 +4566,10 @@ public:
 	virtual void _UNKNOWN_C_BaseCombatChracter_263(void);
 	virtual void _UNKNOWN_C_BaseCombatChracter_264(void);
 	virtual void _UNKNOWN_C_BaseCombatChracter_265(void);
+	virtual void _UNKNOWN_C_BaseCombatChracter_266(void);
 
-	virtual C_BaseCombatWeapon_csgo	*GetActiveWeapon(void) const; //:266
-	virtual void _UNKNOWN_C_BaseCombatChracter_267(void);
+	virtual C_BaseCombatWeapon_csgo* GetActiveWeapon(void) const; //:267
+
 	virtual void _UNKNOWN_C_BaseCombatChracter_268(void);
 	virtual void _UNKNOWN_C_BaseCombatChracter_269(void);
 	virtual void _UNKNOWN_C_BaseCombatChracter_270(void);
@@ -4597,9 +4598,10 @@ public:
 	virtual void _UNKNOWN_C_BasePlayer_csgo_288(void);
 	virtual void _UNKNOWN_C_BasePlayer_csgo_289(void);
 	virtual void _UNKNOWN_C_BasePlayer_csgo_290(void);
+	virtual void _UNKNOWN_C_BasePlayer_csgo_291(void);
 
-	virtual int			GetObserverMode() const; //:291
-	virtual C_BaseEntity_csgo	*GetObserverTarget() const; //:292
+	virtual int			GetObserverMode() const; //:292
+	virtual C_BaseEntity_csgo	*GetObserverTarget() const; //:293
 
 	// ... more we don't care about
 };
