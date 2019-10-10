@@ -4038,9 +4038,7 @@ public:
 	virtual void _UNKNOWN_IClientNetworkable_006(void);
 	virtual void _UNKNOWN_IClientNetworkable_007(void);
 	virtual void _UNKNOWN_IClientNetworkable_008(void);
-
-	// Objects become dormant on the client if they leave the PVS on the server.
-	virtual bool			IsDormant(void) = 0;
+	virtual void _UNKNOWN_IClientNetworkable_009(void);
 
 	// Ent Index is the server handle used to reference this entity.
 	// If the index is < 0, that indicates the entity is not known to the server
