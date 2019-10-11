@@ -102,22 +102,17 @@ SOURCESDK_abstract_class IConVar
 {
 public:
 	// Value set
+	virtual void SetValue( Color value ) = 0;
 	virtual void SetValue( const char *pValue ) = 0;
 	virtual void SetValue( float flValue ) = 0;
-	virtual void SetValue( int nValue ) = 0;
-	virtual void SetValue( Color value ) = 0;
+	virtual void SetValue( int nValue ) = 0;	
 
 	// Return name of command
 	virtual const char *GetName( void ) const = 0;
 
-	// Return name of command (usually == GetName(), except in case of FCVAR_SS_ADDED vars
-	virtual const char *GetBaseName( void ) const = 0;
-
 	// Accessors.. not as efficient as using GetState()/GetInfo()
 	// if you call these methods multiple times on the same IConVar
 	virtual bool IsFlagSet( int nFlag ) const = 0;
-
-	virtual int GetSplitScreenPlayerSlot() const = 0;
 };
 
 } // namespace BM {

@@ -14,7 +14,7 @@
 #endif
 
 //#include <bm/public/tier1/interface.h>
-#include <bm/sdk_src/public/interfaces/interfaces.h>
+//#include <bm/sdk_src/public/interfaces/interfaces.h>
 
 #include <SourceSdkShared.h>
 
@@ -58,7 +58,7 @@ enum AppSystemTier_t
 };
 
 
-SOURCESDK_abstract_class IAppSystem
+SOURCESDK_abstract_class IAppSystem_BM
 {
 public:
 	// Here's where the app systems get to learn about each other 

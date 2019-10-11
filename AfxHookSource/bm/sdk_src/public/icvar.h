@@ -10,6 +10,7 @@
 #pragma once
 #endif
 
+#include <bm/sdk_src/public/interfaces/interfaces.h>
 #include <bm/sdk_src/public/appframework/IAppSystem.h>
 #include <bm/sdk_src/public/tier1/iconvar.h>
 //#include "tier1/utlvector.h"
@@ -43,7 +44,7 @@ public:
 	virtual void Print( const char *pMessage ) = 0;
 	virtual void DPrint( const char *pMessage ) = 0;
 
-	virtual void GetConsoleText( char *pchText, size_t bufSize ) const = 0;
+//	virtual void GetConsoleText( char *pchText, size_t bufSize ) const = 0;
 };
 
 
@@ -51,7 +52,7 @@ public:
 // Purpose: Applications can implement this to modify behavior in ICvar
 //-----------------------------------------------------------------------------
 #define SOURCESDK_CVAR_QUERY_INTERFACE_VERSION "VCvarQuery001"
-SOURCESDK_abstract_class ICvarQuery : public IAppSystem
+SOURCESDK_abstract_class ICvarQuery : public IAppSystem_BM
 {
 public:
 	// Can these two convars be aliased?
@@ -61,7 +62,7 @@ public:
 //-----------------------------------------------------------------------------
 // Purpose: DLL interface to ConVars/ConCommands
 //-----------------------------------------------------------------------------
-SOURCESDK_abstract_class ICvar : public IAppSystem
+SOURCESDK_abstract_class ICvar : public IAppSystem_BM
 {
 public:
 	// Allocate a unique DLL identifier
@@ -110,7 +111,15 @@ public:
 	virtual void			PublishToVXConsole( ) = 0;
 #endif
 
-	virtual void			SetMaxSplitScreenSlots( int nSlots ) = 0;
+	virtual void __IAppSystem_UNKNOWN_001__() = 0;
+	virtual void __IAppSystem_UNKNOWN_002__() = 0;
+	virtual void __IAppSystem_UNKNOWN_003__() = 0;
+	virtual void __IAppSystem_UNKNOWN_004__() = 0;
+	virtual void __IAppSystem_UNKNOWN_005__() = 0;
+	virtual void __IAppSystem_UNKNOWN_006__() = 0;
+	virtual void __IAppSystem_UNKNOWN_007__() = 0;
+
+/*	virtual void			SetMaxSplitScreenSlots( int nSlots ) = 0;
 	virtual int				GetMaxSplitScreenSlots() const = 0;
 
 	virtual void			AddSplitScreenConVars() = 0;
@@ -125,7 +134,7 @@ public:
 	virtual void			QueueMaterialThreadSetValue( ConVar *pConVar, int nValue ) = 0;
 	virtual void			QueueMaterialThreadSetValue( ConVar *pConVar, float flValue ) = 0;
 	virtual bool			HasQueuedMaterialThreadConVarSets() const = 0;
-	virtual int				ProcessQueuedMaterialThreadConVarSets() = 0;
+	virtual int				ProcessQueuedMaterialThreadConVarSets() = 0;*/
 
 protected:	class ICVarIteratorInternal;
 public:
