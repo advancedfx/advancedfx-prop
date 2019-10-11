@@ -237,6 +237,8 @@ public:
 	// Given an input text buffer data pointer, parses a single token into the variable token and returns the new
 	//  reading position
 	virtual const char			*ParseFile(const char *data, char *token, int maxlen) = 0;
+	
+	#undef CopyFile
 	virtual bool				CopyFile(const char *source, const char *destination) = 0;
 
 	// Gets the dimensions of the game window
@@ -376,12 +378,14 @@ public:
 	// Get the name of the current map
 	virtual void GetChapterName(char *pchBuff, int iMaxLength) = 0;
 	virtual char const	*GetLevelName(void) = 0;
-	virtual void _UNKNOWN_055(void) = 0;
+	
 #if !defined( SOURCESDK_BM_NO_VOICE )
 	// Obtain access to the voice tweaking API
 	virtual struct IVoiceTweak_s *GetVoiceTweakAPI(void) = 0;
 #endif
 
+	virtual void _UNKNOWN_055(void) = 0;
+	virtual void _UNKNOWN_056(void) = 0;
 	virtual void _UNKNOWN_057(void) = 0;
 	virtual void _UNKNOWN_058(void) = 0;
 	virtual void _UNKNOWN_059(void) = 0;
@@ -436,22 +440,18 @@ public:
 	// Determine whether the client is playing back or recording a demo
 	virtual bool		IsPlayingDemo(void) = 0;
 	virtual bool		IsRecordingDemo(void) = 0;
-	virtual bool		IsPlayingTimeDemo(void) = 0;
+	virtual bool		IsPlayingTimeDemo(void) = 0;	
 	virtual int			GetDemoRecordingTick(void) = 0;
 	virtual int			GetDemoPlaybackTick(void) = 0;
 	virtual int			GetDemoPlaybackStartTick(void) = 0;
 	virtual float		GetDemoPlaybackTimeScale(void) = 0;
 	virtual int			GetDemoPlaybackTotalTicks(void) = 0;
+
 	// Is the game paused?
 	virtual bool		IsPaused(void) = 0;
-
-	// What is the game timescale multiplied with the host_timescale?
-	virtual float GetTimescale(void) const = 0;
-
 	// Is the game currently taking a screenshot?
 	virtual bool		IsTakingScreenshot(void) = 0;
-	
-	//// Is this a HLTV broadcast ?
+	// Is this a HLTV broadcast ?
 	virtual bool		IsHLTV(void) = 0;
 
 	// Is this a Replay demo?
@@ -476,7 +476,7 @@ public:
 	// Is the engine in map edit mode ?
 	virtual bool		IsInEditMode(void) = 0;
 
-	virtual void _UNKNOWN_100(void) = 0;
+//	virtual void _UNKNOWN_100(void) = 0;
 
 	// current screen aspect ratio (eg. 4.0f/3.0f, 16.0f/9.0f)
 	virtual float		GetScreenAspectRatio(int viewportWidth, int viewportHeight) = 0;
