@@ -78,7 +78,7 @@ bool ConCommandBase::IsFlagSet(int flag) const {
 void ConCommandBase::AddFlags(int flags) {
 	m_nFlags |= flags;
 }
-
+/*
 void ConCommandBase::RemoveFlags(int flags)
 {
 	m_nFlags &= ~flags;
@@ -88,7 +88,7 @@ int ConCommandBase::GetFlags() const
 {
 	return m_nFlags;
 }
-
+*/
 CVarDLLIdentifier_t ConCommandBase::GetDLLIdentifier() const
 {
 	return -1;

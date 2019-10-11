@@ -138,9 +138,9 @@ public:
 	// Set flag
 	virtual void				AddFlags( int flags );
 	// Clear flag
-	virtual void				RemoveFlags( int flags );
+//	virtual void				RemoveFlags( int flags );
 
-	virtual int					GetFlags() const;
+//	virtual int					GetFlags() const;
 
 	// Return name of cvar
 	virtual const char			*GetName( void ) const;
@@ -364,11 +364,11 @@ public:
 	virtual bool				IsRegistered( void ) const;
 	virtual const char			*GetName( void ) const;
 	// Return name of command (usually == GetName(), except in case of FCVAR_SS_ADDED vars
-	virtual const char			*GetBaseName( void ) const;
-	virtual int					GetSplitScreenPlayerSlot() const;
+//	virtual const char			*GetBaseName( void ) const;
+//	virtual int					GetSplitScreenPlayerSlot() const;
 
 	virtual void				AddFlags( int flags );
-	virtual int					GetFlags() const;
+//	virtual int					GetFlags() const;
 	virtual	bool				IsCommand( void ) const;
 
 	// Install a change callback (there shouldn't already be one....)
@@ -435,6 +435,9 @@ public:
 
 private:
 	bool						InternalSetColorFromString( const char *value );
+	virtual void __ConVar_UNKNOWN_001__() = 0;
+	virtual void __ConVar_UNKNOWN_002__() = 0;
+	virtual void __ConVar_UNKNOWN_003__() = 0;
 	// Called by CCvar when the value of a var is changing.
 	virtual void				InternalSetValue(const char *value);
 	// For CVARs marked FCVAR_NEVER_AS_STRING
@@ -638,9 +641,9 @@ public:
 
 	const char *GetDefault() const;
 
-	const char *GetBaseName() const;
+//	const char *GetBaseName() const;
 
-	int	GetSplitScreenPlayerSlot() const;
+//	int	GetSplitScreenPlayerSlot() const;
 
 private:
 	// High-speed method to read convar data
@@ -666,7 +669,7 @@ SOURCESDK_FORCEINLINE_CVAR const char *ConVarRef::GetName() const
 {
 	return m_pConVar->GetName();
 }
-
+/*
 SOURCESDK_FORCEINLINE_CVAR const char *ConVarRef::GetBaseName() const
 {
 	return m_pConVar->GetBaseName();
@@ -676,7 +679,7 @@ SOURCESDK_FORCEINLINE_CVAR int ConVarRef::GetSplitScreenPlayerSlot() const
 {
 	return m_pConVar->GetSplitScreenPlayerSlot();
 }
-
+*/
 //-----------------------------------------------------------------------------
 // Purpose: Return ConVar value as a float
 //-----------------------------------------------------------------------------
