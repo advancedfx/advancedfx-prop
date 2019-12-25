@@ -27,7 +27,7 @@ SOURCESDK_abstract_class IMemAlloc
 {
 public:
 	virtual void _UNUSED_000(void) = 0;
-	virtual void _UNUSED_001(void) = 0;
+	virtual void* Alloc(size_t nSize) = 0;
 	virtual void _UNUSED_002(void) = 0;
 	virtual void _UNUSED_003(void) = 0;
 	virtual void _UNUSED_004(void) = 0;
