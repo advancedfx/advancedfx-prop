@@ -6,14 +6,15 @@
 // Description:
 // Interface definitions for accessing the Source engine.
 
+#include <shared/AfxConsole.h>
 #include "SourceSdkShared.h"
 
 #include "csgo/sdk_src/public/appframework/IAppSystem.h"
 
 #include <float.h>
 
-
-class IWrpCommandArgs;
+typedef advancedfx::ICommandArgs IWrpCommandArgs;
+typedef advancedfx::CommandCallback_t WrpCommandCallback;
 class WrpConCommands;
 class WrpConVarRef;
 
