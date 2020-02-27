@@ -48,23 +48,41 @@ void MakeVectors(
 	outUp[2] = cr*cp;
 }
 
-bool LUdecomposition(const double matrix[4][4], unsigned char (&outP)[4], unsigned char (&outQ)[4], double (& outL)[4][4], double (& outU)[4][4])
+bool LUdecomposition(const double matrix[4][4], unsigned char outP[4], unsigned char outQ[4], double outL[4][4], double outU[4][4])
 {
-	for(int i=0; i<4; ++i)
+    const double* nMatrix[4] = { matrix[0], matrix[1], matrix[2], matrix[3] };
+    double* nOutL[4] = { outL[0], outL[1], outL[2], outL[3] };
+    double* nOutU[4] = { outU[0], outU[1], outU[2], outU[3] };
+
+    return LUdecompositionEx(nMatrix, outP, outQ, nOutL, nOutU, 4);
+}
+
+void SolveWithLU(const double L[4][4], const double U[4][4], const unsigned char P[4], const unsigned char Q[4], const double b[4], double outX[4])
+{
+    double y[4];
+    const double* nL[4] = { L[0], L[1], L[2], L[3] };
+    const double* nU[4] = { U[0], U[1], U[2], U[3] };
+
+    return SolveWithLUEx(nL, nU, P, Q, b, outX, 4, y);
+}
+
+bool LUdecompositionEx(const double** matrix, unsigned char* outP, unsigned char* outQ, double** outL, double** outU, int size)
+{
+	for(int i=0; i< size; ++i)
 	{
 		outP[i] = i; outQ[i] = i;
 
-		for(int j=0; j<4; ++j)
+		for(int j=0; j< size; ++j)
 		{
 			outU[i][j] = matrix[i][j];
 		}
 	}
 
-	for(int n=0; n<4-1; ++n)
+	for(int n=0; n< size -1; ++n)
 	{
 		int t = -1;
 		double maxVal = 0;
-		for(int i=n; i<4; ++i)
+		for(int i=n; i< size; ++i)
 		{
 			double tabs = abs(outU[i][n]);
 			if(maxVal < tabs)
@@ -83,7 +101,7 @@ bool LUdecomposition(const double matrix[4][4], unsigned char (&outP)[4], unsign
 			outP[n] = outP[t];
 			outP[t] = ucTmp;
 
-			for(int i=0; i<4; ++i)
+			for(int i=0; i< size; ++i)
 			{
 				double dTmp = outU[n][i];
 				outU[n][i] = outU[t][i];
@@ -91,17 +109,17 @@ bool LUdecomposition(const double matrix[4][4], unsigned char (&outP)[4], unsign
 			}
 		}
 
-		for(int i=n+1; i<4; ++i)
+		for(int i=n+1; i< size; ++i)
 		{
 			outU[i][n] = outU[i][n]/outU[n][n];
-			for(int j=n+1; j<4; ++j)
+			for(int j=n+1; j< size; ++j)
 			{
 				outU[i][j] = outU[i][j] -outU[i][n] * outU[n][j];
 			}
 		}
 	}
 
-	for(int i=0; i<4; ++i)
+	for(int i=0; i< size; ++i)
 	{
 		for(int j=0; j<i; ++j)
 		{
@@ -109,7 +127,7 @@ bool LUdecomposition(const double matrix[4][4], unsigned char (&outP)[4], unsign
 			outU[i][j] = 0;
 		}
 		outL[i][i] = 1;
-		for(int j=i+1; j<4; ++j)
+		for(int j=i+1; j< size; ++j)
 		{
 			outL[i][j] = 0;
 		}
@@ -118,12 +136,10 @@ bool LUdecomposition(const double matrix[4][4], unsigned char (&outP)[4], unsign
 	return true;
 }
 
-void SolveWithLU(const double L[4][4], const double U[4][4], const unsigned char P[4], const unsigned char Q[4], const double b[4], double (& outX)[4])
+void SolveWithLUEx(const double** L, const double** U, const unsigned char* P, const unsigned char* Q, const double* b, double* outX, int size, double* y)
 {
-	double y[4];
-
 	// solve L*y = b with forward subsitituion:
-	for(int i=0; i<4; i++)
+	for(int i=0; i< size; i++)
 	{
 		double sum = 0;
 		for(int k=0;k<i;k++)
@@ -132,10 +148,10 @@ void SolveWithLU(const double L[4][4], const double U[4][4], const unsigned char
 		y[i] = 1.0/L[i][i] * (b[P[i]] -sum);
 	}
 
-	for(int i=4-1; i>=0; i--)
+	for(int i= size -1; i>=0; i--)
 	{
 		double sum = 0;
-		for(int k=i+1;k<4;k++)
+		for(int k=i+1;k< size;k++)
 			sum += U[i][k]*outX[Q[k]];
 		
 		outX[Q[i]] = 1.0/U[i][i] * (y[i] - sum);

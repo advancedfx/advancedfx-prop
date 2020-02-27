@@ -62,6 +62,15 @@ inline vec_t BitsToFloat(uint32 i)
 class Vector				
 {
 public:
+	Vector() : x(SOURCESDK_VEC_T_NAN), y(SOURCESDK_VEC_T_NAN), z(SOURCESDK_VEC_T_NAN) {}
+
+	Vector(vec_t X, vec_t Y, vec_t Z) : x(X), y(Y), z(Z) {}
+
+	Vector(const Vector& other)
+	{
+		x = other.x; y = other.y; z = other.z;
+	}
+
 	// Members
 	vec_t x, y, z;
 

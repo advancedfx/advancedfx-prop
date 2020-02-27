@@ -60,9 +60,14 @@ void MakeVectors(
 	double (& outForward)[3], double (& outRight)[3], double (& outUp)[3]
 );
 
-bool LUdecomposition(const double matrix[4][4], unsigned char (&outP)[4], unsigned char (&outQ)[4], double (& outL)[4][4], double (& outU)[4][4]);
 
-void SolveWithLU(const double L[4][4], const double U[4][4], const unsigned char P[4], const unsigned char Q[4], const double b[4], double (& outX)[4]);
+bool LUdecomposition(const double matrix[4][4], unsigned char outP[4], unsigned char outQ[4], double outL[4][4], double outU[4][4]);
+
+void SolveWithLU(const double L[4][4], const double U[4][4], const unsigned char P[4], const unsigned char Q[4], const double b[4], double outX[4]);
+
+bool LUdecompositionEx(const double ** matrix, unsigned char *outP, unsigned char *outQ, double **outL, double **outU, int size);
+
+void SolveWithLUEx(const double ** L, const double **U, const unsigned char *P, const unsigned char *Q, const double *b, double *outX, int size4, double *y);
 
 ////////////////////////////////////////////////////////////////////////////////
 
