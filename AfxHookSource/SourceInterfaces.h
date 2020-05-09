@@ -4290,8 +4290,11 @@ public:
 	virtual void _UNKNOWN_C_BaseEntity_050(void);
 	virtual void _UNKNOWN_C_BaseEntity_051(void);
 	virtual void _UNKNOWN_C_BaseEntity_052(void);
-	virtual void _UNKNOWN_C_BaseEntity_053(void);
-	virtual void _UNKNOWN_C_BaseEntity_054(void);
+
+	virtual void _UNKNOWN_C_BaseEntity_053(void); // GetAttackDamageScale
+	
+	virtual void _UNKNOWN_C_BaseEntity_054(void); // ValidateModelIndex
+
 	virtual void _UNKNOWN_C_BaseEntity_055(void);
 	virtual void _UNKNOWN_C_BaseEntity_056(void);
 	virtual void _UNKNOWN_C_BaseEntity_057(void);
