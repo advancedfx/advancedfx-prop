@@ -4589,8 +4589,10 @@ public:
 	virtual void _UNKNOWN_C_BasePlayer_csgo_273(void);
 	virtual void _UNKNOWN_C_BasePlayer_csgo_274(void);
 	virtual void _UNKNOWN_C_BasePlayer_csgo_275(void);
-	virtual void _UNKNOWN_C_BasePlayer_csgo_276(void);
-	virtual void _UNKNOWN_C_BasePlayer_csgo_277(void);
+	
+	virtual void		CalcView(Vector& eyeOrigin, QAngle& eyeAngles, float& zNear, float& zFar, float& fov) = 0; // :276
+	virtual void		CalcViewModelView(const Vector& eyeOrigin, const QAngle& eyeAngles); // :277
+
 	virtual void _UNKNOWN_C_BasePlayer_csgo_278(void);
 	virtual void _UNKNOWN_C_BasePlayer_csgo_279(void);
 	virtual void _UNKNOWN_C_BasePlayer_csgo_280(void);
