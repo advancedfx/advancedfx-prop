@@ -4457,10 +4457,10 @@ public:
 	SOURCESDK::CSGO::CBaseHandle AfxGetMoveParentHandle() const;
 
 private:
-	char _pad_000[328];
-	char m_iName[260]; //:328
-	char _pad_588[184];
-	SOURCESDK::CSGO::CHandle<C_BaseEntity_csgo> m_pMoveParent;
+	char _pad_h00c[0x14c-0x0c];
+	char m_iName[260]; //:0x14c
+	char _pad_h250[0x0b8];
+	SOURCESDK::CSGO::CHandle<C_BaseEntity_csgo> m_pMoveParent; //:0x308
 };
 
 inline const char *C_BaseEntity_csgo::GetEntityName() 
