@@ -4457,9 +4457,9 @@ public:
 	SOURCESDK::CSGO::CBaseHandle AfxGetMoveParentHandle() const;
 
 private:
-	char _pad_h00c[0x14c-0x0c];
-	char m_iName[260]; //:0x14c
-	char _pad_h250[0x0b8];
+	char _pad_h00c[0x154 -0x0c];
+	char m_iName[260]; //:0x154
+	char _pad_h258[0x0b0];
 	SOURCESDK::CSGO::CHandle<C_BaseEntity_csgo> m_pMoveParent; //:0x308
 };
 
