@@ -22,24 +22,15 @@ class WrpConVarRef;
 typedef char tier0_char;
 
 typedef void (*Tier0MsgFn)( const tier0_char* pMsg, ... );
-typedef void (*Tier0DMsgFn)( const tier0_char *pGroupName, int level, const tier0_char *pMsg, ... );
+typedef void (*Tier0DevMsgFn)( int level, const tier0_char *pMsg, ... );
 
 // debug and message fns, available after tier0.dll has been loaded:
 extern Tier0MsgFn Tier0_Msg;
-extern Tier0DMsgFn Tier0_DMsg;
 extern Tier0MsgFn Tier0_Warning;
-extern Tier0DMsgFn Tier0_DWarning;
-extern Tier0MsgFn Tier0_Log;
-extern Tier0DMsgFn Tier0_DLog;
 extern Tier0MsgFn Tier0_Error;
 
-extern Tier0MsgFn Tier0_ConMsg;
-extern Tier0MsgFn Tier0_ConWarning;
-extern Tier0MsgFn Tier0_ConLog;
-extern Tier0MsgFn Tier0_ConDMsg;
-extern Tier0MsgFn Tier0_ConDWarning;
-extern Tier0MsgFn Tier0_ConDLog;
-
+extern Tier0DevMsgFn Tier0_DevMsg;
+extern Tier0DevMsgFn Tier0_DevWarning;
 
 namespace SOURCESDK {
 

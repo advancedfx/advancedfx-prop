@@ -19,19 +19,11 @@
 #include <windows.h>
 
 Tier0MsgFn Tier0_Msg=0;
-Tier0DMsgFn Tier0_DMsg=0;
-Tier0MsgFn Tier0_Warning=0;
-Tier0DMsgFn Tier0_DWarning=0;
-Tier0MsgFn Tier0_Log=0;
-Tier0DMsgFn Tier0_DLog=0;
-Tier0MsgFn Tier0_Error=0;
+Tier0MsgFn Tier0_Warning = 0;
+Tier0MsgFn Tier0_Error = 0;
+Tier0DevMsgFn Tier0_DevMsg = 0;
+Tier0DevMsgFn Tier0_DevWarning=0;
 
-Tier0MsgFn Tier0_ConMsg=0;
-Tier0MsgFn Tier0_ConWarning=0;
-Tier0MsgFn Tier0_ConLog=0;
-Tier0MsgFn Tier0_ConDMsg=0;
-Tier0MsgFn Tier0_ConDWarning=0;
-Tier0MsgFn Tier0_ConDLog=0;
 
 namespace SOURCESDK {
 
