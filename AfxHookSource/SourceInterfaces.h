@@ -4018,6 +4018,17 @@ public:
 	// More functions, but we don't care about this.
 };
 
+
+namespace CSGO {
+	enum DataUpdateType_t
+	{
+		DATA_UPDATE_CREATED = 0,
+		DATA_UPDATE_DATATABLE_CHANGED,
+		DATA_UPDATE_POST_UPDATE,
+	};
+}
+
+
 class IClientNetworkable_csgo abstract
 {
 public:
@@ -4027,8 +4038,10 @@ public:
 	virtual void _UNKNOWN_IClientNetworkable_003(void);
 	virtual void _UNKNOWN_IClientNetworkable_004(void);
 	virtual void _UNKNOWN_IClientNetworkable_005(void);
-	virtual void _UNKNOWN_IClientNetworkable_006(void);
-	virtual void _UNKNOWN_IClientNetworkable_007(void);
+
+	virtual void			PreDataUpdate(CSGO::DataUpdateType_t updateType) = 0;
+	virtual void			PostDataUpdate(CSGO::DataUpdateType_t updateType) = 0;
+
 	virtual void _UNKNOWN_IClientNetworkable_008(void);
 
 	// Objects become dormant on the client if they leave the PVS on the server.
