@@ -4374,7 +4374,10 @@ public:
 	virtual void _UNKNOWN_C_BaseEntity_123(void);
 	virtual void _UNKNOWN_C_BaseEntity_124(void);
 	virtual void _UNKNOWN_C_BaseEntity_125(void);
-	virtual void _UNKNOWN_C_BaseEntity_126(void);
+	
+	// 126
+	virtual void UpdateOnRemove(void);
+
 	virtual void _UNKNOWN_C_BaseEntity_127(void);
 	virtual void _UNKNOWN_C_BaseEntity_128(void);
 	virtual void _UNKNOWN_C_BaseEntity_129(void);
