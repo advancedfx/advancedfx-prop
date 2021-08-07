@@ -2579,6 +2579,13 @@ enum MaterialContextType_t
 	MATERIAL_QUEUED_CONTEXT,
 	MATERIAL_NULL_CONTEXT
 };
+
+enum MaterialThreadMode_t
+{
+	MATERIAL_SINGLE_THREADED,
+	MATERIAL_QUEUED_SINGLE_THREADED,
+	MATERIAL_QUEUED_THREADED
+};
 }
 
 class IMaterialSystem_csgo abstract : public SOURCESDK::CSGO::IAppSystem
@@ -2590,7 +2597,7 @@ public:
 	virtual void _UNKNOWN_012(void) = 0; // ModInit
 	virtual void _UNKNOWN_013(void) = 0; // ModShutdown
 	virtual void _UNKNOWN_014(void) = 0;
-	virtual void _UNKNOWN_015(void) = 0;
+	virtual SOURCESDK::CSGO::MaterialThreadMode_t GetThreadMode() = 0; //:015
 	virtual void _UNKNOWN_016(void) = 0;
 	virtual void _UNKNOWN_017(void) = 0;
 	virtual void _UNKNOWN_018(void) = 0;
