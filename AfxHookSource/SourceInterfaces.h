@@ -4495,7 +4495,9 @@ public:
 	virtual void _UNKNOWN_C_BaseAnimating_196(void);
 	virtual void _UNKNOWN_C_BaseAnimating_197(void);
 	virtual void _UNKNOWN_C_BaseAnimating_198(void);
-	virtual void _UNKNOWN_C_BaseAnimating_199(void);
+
+	virtual void FireEvent( const Vector& origin, const QAngle& angles, int event, const char *options ) = 0; //:199
+
 	virtual void _UNKNOWN_C_BaseAnimating_200(void);
 	virtual void _UNKNOWN_C_BaseAnimating_201(void);
 	virtual void _UNKNOWN_C_BaseAnimating_202(void);
@@ -4637,6 +4639,17 @@ public:
 		CBaseCombatCharacterHandle * pHandle = (CBaseCombatCharacterHandle *)((char *)this + 0x3210);
 		return *pHandle;
 	}
+};
+
+class C_BaseViewModel_csgo : public C_BaseAnimating_csgo
+{
+public:
+	virtual void _UNKNOWN_C_BaseViewModel_csgo_247(void);
+	virtual void _UNKNOWN_C_BaseViewModel_csgo_248(void);
+	virtual void _UNKNOWN_C_BaseViewModel_csgo_249(void);
+	virtual void _UNKNOWN_C_BaseViewModel_csgo_250(void);
+
+	virtual C_BaseEntity_csgo *GetOwner( void ) = 0; //:251
 };
 
 namespace CSGO {
