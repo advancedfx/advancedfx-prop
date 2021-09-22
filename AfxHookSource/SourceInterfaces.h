@@ -4337,11 +4337,11 @@ public:
 	virtual void _UNKNOWN_C_BaseEntity_083(void);
 	virtual void _UNKNOWN_C_BaseEntity_084(void);
 	virtual void _UNKNOWN_C_BaseEntity_085(void);
-	virtual void _UNKNOWN_C_BaseEntity_086(void); // GetTeam
+	virtual void _UNKNOWN_C_BaseEntity_086(void);
+	virtual void _UNKNOWN_C_BaseEntity_087(void); // GetTeam
 	
-	virtual int						GetTeamNumber(void) const; //:087
+	virtual int						GetTeamNumber(void) const; //:088
 
-	virtual void _UNKNOWN_C_BaseEntity_088(void);
 	virtual void _UNKNOWN_C_BaseEntity_089(void);
 	virtual void _UNKNOWN_C_BaseEntity_090(void);
 	virtual void _UNKNOWN_C_BaseEntity_091(void);
@@ -4355,8 +4355,8 @@ public:
 	virtual void _UNKNOWN_C_BaseEntity_099(void);
 	virtual void _UNKNOWN_C_BaseEntity_100(void);
 	virtual void _UNKNOWN_C_BaseEntity_101(void);
-	virtual void _UNKNOWN_C_BaseEntity_102(void); // GetToolRecordingState, If This changes needs update in ClientToolsCS:GO
-	virtual void _UNKNOWN_C_BaseEntity_103(void);
+	virtual void _UNKNOWN_C_BaseEntity_102(void);
+	virtual void _UNKNOWN_C_BaseEntity_103(void); // GetToolRecordingState, If This changes needs update in ClientToolsCS:GO
 	virtual void _UNKNOWN_C_BaseEntity_104(void);
 	virtual void _UNKNOWN_C_BaseEntity_105(void);
 	virtual void _UNKNOWN_C_BaseEntity_106(void);
@@ -4365,10 +4365,10 @@ public:
 	virtual void _UNKNOWN_C_BaseEntity_109(void);
 	virtual void _UNKNOWN_C_BaseEntity_110(void);
 	virtual void _UNKNOWN_C_BaseEntity_111(void);
+	virtual void _UNKNOWN_C_BaseEntity_112(void);
 
-	virtual float					GetInterpolationAmount(int flags); //:112
+	virtual float					GetInterpolationAmount(int flags); //:113
 
-	virtual void _UNKNOWN_C_BaseEntity_113(void);
 	virtual void _UNKNOWN_C_BaseEntity_114(void);
 	virtual void _UNKNOWN_C_BaseEntity_115(void);
 	virtual void _UNKNOWN_C_BaseEntity_116(void);
@@ -4381,11 +4381,10 @@ public:
 	virtual void _UNKNOWN_C_BaseEntity_123(void);
 	virtual void _UNKNOWN_C_BaseEntity_124(void);
 	virtual void _UNKNOWN_C_BaseEntity_125(void);
+	virtual void _UNKNOWN_C_BaseEntity_126(void);
 	
-	// 126
-	virtual void UpdateOnRemove(void);
+	virtual void UpdateOnRemove(void); //:127
 
-	virtual void _UNKNOWN_C_BaseEntity_127(void);
 	virtual void _UNKNOWN_C_BaseEntity_128(void);
 	virtual void _UNKNOWN_C_BaseEntity_129(void);
 	virtual void _UNKNOWN_C_BaseEntity_130(void);
@@ -4400,18 +4399,15 @@ public:
 	virtual void _UNKNOWN_C_BaseEntity_139(void);
 	virtual void _UNKNOWN_C_BaseEntity_140(void);
 	virtual void _UNKNOWN_C_BaseEntity_141(void);
+	virtual void _UNKNOWN_C_BaseEntity_142(void); //:142
 
 
-	// 142
-	virtual char const				*GetClassname( void );
+	virtual char const				*GetClassname( void ); //:143
 	
-	// 143
-	virtual char const				*GetDebugName( void );
+	virtual char const				*GetDebugName( void ); //:144
 	
-	// 144
-	virtual const char				*GetPlayerName() const { return 0; }
+	virtual const char				*GetPlayerName() const { return 0; } //:145
 
-	virtual void _UNKNOWN_C_BaseEntity_145(void);
 	virtual void _UNKNOWN_C_BaseEntity_146(void);
 	virtual void _UNKNOWN_C_BaseEntity_147(void);
 	virtual void _UNKNOWN_C_BaseEntity_148(void);
@@ -4421,34 +4417,34 @@ public:
 	virtual void _UNKNOWN_C_BaseEntity_152(void);
 	virtual void _UNKNOWN_C_BaseEntity_153(void);
 	virtual void _UNKNOWN_C_BaseEntity_154(void);
+	virtual void _UNKNOWN_C_BaseEntity_155(void);
 
-	virtual bool					IsAlive(void); //:155
+	virtual bool					IsAlive(void); //:156
 
-	virtual void _UNKNOWN_C_BaseEntity_156(void);
+	virtual void _UNKNOWN_C_BaseEntity_157(void);
 	
-	virtual bool					IsPlayer(void) const { return false; }; //:157
+	virtual bool					IsPlayer(void) const { return false; }; //:158
 
-	virtual void _UNKNOWN_C_BaseEntity_158(void);
 	virtual void _UNKNOWN_C_BaseEntity_159(void);
+	virtual void _UNKNOWN_C_BaseEntity_160(void);
 
-	virtual C_BaseCombatCharacter_csgo	*MyCombatCharacterPointer(void) { return NULL; } //:160
+	virtual C_BaseCombatCharacter_csgo	*MyCombatCharacterPointer(void) { return NULL; } //:161
 
-	virtual void _UNKNOWN_C_BaseEntity_161(void);
 	virtual void _UNKNOWN_C_BaseEntity_162(void);
 	virtual void _UNKNOWN_C_BaseEntity_163(void);
 	virtual void _UNKNOWN_C_BaseEntity_164(void);
 	virtual void _UNKNOWN_C_BaseEntity_165(void);
+	virtual void _UNKNOWN_C_BaseEntity_166(void);
 
-	virtual C_BaseCombatWeapon_csgo * MyCombatWeaponPointer(void) { return NULL; } //:166
+	virtual C_BaseCombatWeapon_csgo * MyCombatWeaponPointer(void) { return NULL; } //:167
 	
-	virtual void _UNKNOWN_C_BaseEntity_167(void);
+	virtual void _UNKNOWN_C_BaseEntity_168(void);
 
 	// Returns the eye point + angles (used for viewing + shooting)
-	virtual Vector			EyePosition( void ); // :168
-	virtual const QAngle&	EyeAngles( void );		// Direction of eyes // :169
-	virtual const QAngle&	LocalEyeAngles( void );	// Direction of eyes in local space (pl.v_angle) // :170
+	virtual Vector			EyePosition( void ); // :169
+	virtual const QAngle&	EyeAngles( void );		// Direction of eyes // :170
+	virtual const QAngle&	LocalEyeAngles( void );	// Direction of eyes in local space (pl.v_angle) // :171
 
-	virtual void _UNKNOWN_C_BaseEntity_171(void);
 	virtual void _UNKNOWN_C_BaseEntity_172(void);
 	virtual void _UNKNOWN_C_BaseEntity_173(void);
 	virtual void _UNKNOWN_C_BaseEntity_174(void);
@@ -4464,6 +4460,7 @@ public:
 	virtual void _UNKNOWN_C_BaseEntity_184(void);
 	virtual void _UNKNOWN_C_BaseEntity_185(void);
 	virtual void _UNKNOWN_C_BaseEntity_186(void);
+	virtual void _UNKNOWN_C_BaseEntity_187(void);
 
 public:
 	const char	*GetEntityName();
@@ -4490,7 +4487,6 @@ inline SOURCESDK::CSGO::CBaseHandle C_BaseEntity_csgo::AfxGetMoveParentHandle() 
 class C_BaseAnimating_csgo : public C_BaseEntity_csgo, public IClientModelRenderable_csgo
 {
 public:
-	virtual void _UNKNOWN_C_BaseAnimating_187(void);
 	virtual void _UNKNOWN_C_BaseAnimating_188(void);
 	virtual void _UNKNOWN_C_BaseAnimating_189(void);
 	virtual void _UNKNOWN_C_BaseAnimating_190(void);
@@ -4502,10 +4498,10 @@ public:
 	virtual void _UNKNOWN_C_BaseAnimating_196(void);
 	virtual void _UNKNOWN_C_BaseAnimating_197(void);
 	virtual void _UNKNOWN_C_BaseAnimating_198(void);
+	virtual void _UNKNOWN_C_BaseAnimating_199(void);
 
-	virtual void FireEvent( const Vector& origin, const QAngle& angles, int event, const char *options ) = 0; //:199
+	virtual void FireEvent( const Vector& origin, const QAngle& angles, int event, const char *options ) = 0; //:200
 
-	virtual void _UNKNOWN_C_BaseAnimating_200(void);
 	virtual void _UNKNOWN_C_BaseAnimating_201(void);
 	virtual void _UNKNOWN_C_BaseAnimating_202(void);
 	virtual void _UNKNOWN_C_BaseAnimating_203(void);
@@ -4552,25 +4548,26 @@ public:
 	virtual void _UNKNOWN_C_BaseAnimating_244(void);
 	virtual void _UNKNOWN_C_BaseAnimating_245(void);
 	virtual void _UNKNOWN_C_BaseAnimating_246(void);
+	virtual void _UNKNOWN_C_BaseAnimating_247(void);
 };
 
 class C_BaseAnimatingOverlay_csgo : public C_BaseAnimating_csgo
 {
 public:
-	virtual void _UNKNOWN_C_BaseAnimatingOverlay_247(void);
 	virtual void _UNKNOWN_C_BaseAnimatingOverlay_248(void);
 	virtual void _UNKNOWN_C_BaseAnimatingOverlay_249(void);
 	virtual void _UNKNOWN_C_BaseAnimatingOverlay_250(void);
+	virtual void _UNKNOWN_C_BaseAnimatingOverlay_251(void);
 };
 
 class C_BaseFlex_csgo : public C_BaseAnimatingOverlay_csgo
 {
 public:
-	virtual void _UNKNOWN_C_BaseFlex_251(void);
 	virtual void _UNKNOWN_C_BaseFlex_252(void);
 	virtual void _UNKNOWN_C_BaseFlex_253(void);
 	virtual void _UNKNOWN_C_BaseFlex_254(void);
 	virtual void _UNKNOWN_C_BaseFlex_255(void);
+	virtual void _UNKNOWN_C_BaseFlex_256(void);
 };
 
 class C_BaseCombatWeapon_csgo;
@@ -4578,7 +4575,6 @@ class C_BaseCombatWeapon_csgo;
 class C_BaseCombatCharacter_csgo : public C_BaseFlex_csgo
 {
 public:
-	virtual void _UNKNOWN_C_BaseCombatChracter_256(void);
 	virtual void _UNKNOWN_C_BaseCombatChracter_257(void);
 	virtual void _UNKNOWN_C_BaseCombatChracter_258(void);
 	virtual void _UNKNOWN_C_BaseCombatChracter_259(void);
@@ -4589,27 +4585,27 @@ public:
 	virtual void _UNKNOWN_C_BaseCombatChracter_264(void);
 	virtual void _UNKNOWN_C_BaseCombatChracter_265(void);
 	virtual void _UNKNOWN_C_BaseCombatChracter_266(void);
+	virtual void _UNKNOWN_C_BaseCombatChracter_267(void);
 
-	virtual C_BaseCombatWeapon_csgo* GetActiveWeapon(void) const; //:267
+	virtual C_BaseCombatWeapon_csgo* GetActiveWeapon(void) const; //:268
 
-	virtual void _UNKNOWN_C_BaseCombatChracter_268(void);
 	virtual void _UNKNOWN_C_BaseCombatChracter_269(void);
 	virtual void _UNKNOWN_C_BaseCombatChracter_270(void);
 	virtual void _UNKNOWN_C_BaseCombatChracter_271(void);
+	virtual void _UNKNOWN_C_BaseCombatChracter_272(void);
 };
 
 class C_BasePlayer_csgo : public C_BaseCombatCharacter_csgo
 {
 public:
-	virtual void _UNKNOWN_C_BasePlayer_csgo_272(void);
 	virtual void _UNKNOWN_C_BasePlayer_csgo_273(void);
 	virtual void _UNKNOWN_C_BasePlayer_csgo_274(void);
 	virtual void _UNKNOWN_C_BasePlayer_csgo_275(void);
+	virtual void _UNKNOWN_C_BasePlayer_csgo_276(void);
 	
-	virtual void		CalcView(Vector& eyeOrigin, QAngle& eyeAngles, float& zNear, float& zFar, float& fov) = 0; // :276
-	virtual void		CalcViewModelView(const Vector& eyeOrigin, const QAngle& eyeAngles); // :277
+	virtual void		CalcView(Vector& eyeOrigin, QAngle& eyeAngles, float& zNear, float& zFar, float& fov) = 0; // :277
+	virtual void		CalcViewModelView(const Vector& eyeOrigin, const QAngle& eyeAngles); // :278
 
-	virtual void _UNKNOWN_C_BasePlayer_csgo_278(void);
 	virtual void _UNKNOWN_C_BasePlayer_csgo_279(void);
 	virtual void _UNKNOWN_C_BasePlayer_csgo_280(void);
 	virtual void _UNKNOWN_C_BasePlayer_csgo_281(void);
@@ -4624,9 +4620,10 @@ public:
 	virtual void _UNKNOWN_C_BasePlayer_csgo_290(void);
 	virtual void _UNKNOWN_C_BasePlayer_csgo_291(void);
 	virtual void _UNKNOWN_C_BasePlayer_csgo_292(void);
+	virtual void _UNKNOWN_C_BasePlayer_csgo_293(void);
 
-	virtual int			GetObserverMode() const; //:293
-	virtual C_BaseEntity_csgo	*GetObserverTarget() const; //:294
+	virtual int			GetObserverMode() const; //:294
+	virtual C_BaseEntity_csgo	*GetObserverTarget() const; //:295
 
 	// ... more we don't care about
 };
@@ -4643,7 +4640,7 @@ public:
 
 	SOURCESDK::CSGO::CBaseHandle AfxGet_m_hOwner()
 	{
-		CBaseCombatCharacterHandle * pHandle = (CBaseCombatCharacterHandle *)((char *)this + 0x3210);
+		CBaseCombatCharacterHandle * pHandle = (CBaseCombatCharacterHandle *)((char *)this + 0x3240);
 		return *pHandle;
 	}
 };
@@ -4651,12 +4648,12 @@ public:
 class C_BaseViewModel_csgo : public C_BaseAnimating_csgo
 {
 public:
-	virtual void _UNKNOWN_C_BaseViewModel_csgo_247(void);
 	virtual void _UNKNOWN_C_BaseViewModel_csgo_248(void);
 	virtual void _UNKNOWN_C_BaseViewModel_csgo_249(void);
 	virtual void _UNKNOWN_C_BaseViewModel_csgo_250(void);
+	virtual void _UNKNOWN_C_BaseViewModel_csgo_251(void);
 
-	virtual C_BaseEntity_csgo *GetOwner( void ) = 0; //:251
+	virtual C_BaseEntity_csgo *GetOwner( void ) = 0; //:252
 };
 
 namespace CSGO {
