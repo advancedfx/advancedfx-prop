@@ -97,6 +97,14 @@ public:
 	SOURCESDK_FORCEINLINE Vector&	operator*=(float s);
 
 	// shortened.
+
+	Vector operator+(const Vector other) const {
+		return Vector(this->x + other.x, this->y + other.y, this->z + other.z);
+	}
+
+	Vector operator-(const Vector other) const {
+		return Vector(this->x - other.x, this->y - other.y, this->z - other.z);
+	}
 };
 
 inline vec_t& Vector::operator[](int i)
