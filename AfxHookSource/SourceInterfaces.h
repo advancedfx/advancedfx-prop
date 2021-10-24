@@ -4258,6 +4258,8 @@ template<class T> class CHandle : public CBaseHandle
 
 } // namespace CSGO {
 
+class C_BasePlayer_csgo;
+
 class C_BaseEntity_csgo : public IClientEntity_csgo
 {
 public:
@@ -4381,11 +4383,15 @@ public:
 	virtual void _UNKNOWN_C_BaseEntity_123(void);
 	virtual void _UNKNOWN_C_BaseEntity_124(void);
 	virtual void _UNKNOWN_C_BaseEntity_125(void);
-	virtual void _UNKNOWN_C_BaseEntity_126(void);
+	
+	virtual bool IsClientCreated( void ) const; //:126
 	
 	virtual void UpdateOnRemove(void); //:127
 
 	virtual void _UNKNOWN_C_BaseEntity_128(void);
+
+	virtual SOURCESDK::C_BasePlayer_csgo *GetPredictionOwner( void ) = 0; //:129
+
 	virtual void _UNKNOWN_C_BaseEntity_129(void);
 	virtual void _UNKNOWN_C_BaseEntity_130(void);
 	virtual void _UNKNOWN_C_BaseEntity_131(void);
@@ -4395,7 +4401,9 @@ public:
 	virtual void _UNKNOWN_C_BaseEntity_135(void);
 	virtual void _UNKNOWN_C_BaseEntity_136(void);
 	virtual void _UNKNOWN_C_BaseEntity_137(void);
-	virtual void _UNKNOWN_C_BaseEntity_138(void);
+
+	virtual bool ShouldPredict( void ) = 0; //:138
+
 	virtual void _UNKNOWN_C_BaseEntity_139(void);
 	virtual void _UNKNOWN_C_BaseEntity_140(void);
 	virtual void _UNKNOWN_C_BaseEntity_141(void);
