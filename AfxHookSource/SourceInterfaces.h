@@ -4392,7 +4392,6 @@ public:
 
 	virtual SOURCESDK::C_BasePlayer_csgo *GetPredictionOwner( void ) = 0; //:129
 
-	virtual void _UNKNOWN_C_BaseEntity_129(void);
 	virtual void _UNKNOWN_C_BaseEntity_130(void);
 	virtual void _UNKNOWN_C_BaseEntity_131(void);
 	virtual void _UNKNOWN_C_BaseEntity_132(void);
