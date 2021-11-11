@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//===== Copyright ï¿½ 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
@@ -32,6 +32,17 @@ namespace SOURCESDK {
 namespace CSGO {
 
 #define SOURCESDK_CSGO_CVAR_INTERFACE_VERSION "VEngineCvar007"
+
+enum cmd_source_t
+{
+	kCommandSrcCode,
+	kCommandSrcClientCmd,
+	kCommandSrcUserInput,
+	kCommandSrcNetClient,
+	kCommandSrcNetServer,
+	kCommandSrcDemoFile,
+	kCommandSrcInvalid = -1
+};
 
 //-----------------------------------------------------------------------------
 // Forward declarations
@@ -187,6 +198,9 @@ public:
 	const char *GetCommandString() const;		// The entire command in string form, including the 0th arg
 	const char *operator[]( int nIndex ) const;	// Gets at arguments
 	const char *Arg( int nIndex ) const;		// Gets at arguments
+	cmd_source_t Source() const {
+		return m_source;
+	}
 	
 	// Helper functions to parse arguments to commands.
 	void _NOT_IMPLEMENTED_FindArg(void) const;
@@ -207,6 +221,7 @@ private:
 	char	m_pArgSBuffer[ COMMAND_MAX_LENGTH ];
 	char	m_pArgvBuffer[ COMMAND_MAX_LENGTH ];
 	const char*	m_ppArgv[ COMMAND_MAX_ARGC ];
+	cmd_source_t m_source;
 };
 
 inline int CCommand::MaxCommandLength()
