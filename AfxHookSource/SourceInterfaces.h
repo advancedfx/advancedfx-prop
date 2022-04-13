@@ -6786,4 +6786,58 @@ public:
 #define SOURCESDK_CSGO_STUDIO_RENDER_INTERFACE_VERSION			"VStudioRender026"
 
 } // namespace CSGO {
+
+struct mstudiobone_t
+{
+	int	sznameindex;
+	inline char * const pszName( void ) const { return ((char *)this) + sznameindex; }
+	int	parent;
+	int	bonecontroller[6];
+
+	Vector pos;
+	Quaternion quat;
+	Vector rot;
+
+	Vector posscale;
+	Vector rotscale;
+
+	matrix3x4_t			poseToBone;
+	Quaternion			qAlignment;
+	int					flags;
+	int					proctype;
+	int					procindex;		// procedural rule
+	mutable int			physicsbone;	// index into physically simulated bone
+	inline void *pProcedure( ) const { if (procindex == 0) return NULL; else return  (void *)(((byte *)this) + procindex); };
+	int					surfacepropidx;	// index into string tablefor property name
+	inline char * const pszSurfaceProp( void ) const { return ((char *)this) + surfacepropidx; }
+	int					contents;		// See BSPFlags.h for the contents flags
+
+	int					unused[8];		// remove as appropriate
+
+	mstudiobone_t(){}
+private:
+	// No copy constructors allowed
+	mstudiobone_t(const mstudiobone_t& vOther);
+};
+
+
+struct studiohdr_t
+{
+	unsigned char __unknown[0x9c];
+	int numbones;
+	int boneindex;
+	inline const mstudiobone_t *pBone( int i ) const { Assert( i >= 0 && i < numbones); return (mstudiobone_t *)(((byte *)this) + boneindex) + i; };
+};
+
+class CStudioHdr
+{
+private:
+	mutable const studiohdr_t		*m_pStudioHdr;
+public:
+	inline int numbones( void ) const { return m_pStudioHdr->numbones; };
+	inline const mstudiobone_t *pBone( int i ) const { return m_pStudioHdr->pBone( i ); };
+};
+
+#define SOURCESDK_BONE_USED_BY_ANYTHING 0x000FFF00
+
 } // namespace SOURCESDK {

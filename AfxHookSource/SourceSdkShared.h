@@ -24,6 +24,9 @@ namespace SOURCESDK {
 #define SOURCESDK_DECLARE_POINTER_HANDLE(name) struct name##__ { int unused; }; typedef struct name##__ *name
 #define SOURCESDK_FORWARD_DECLARE_HANDLE(name) typedef struct name##__ *name
 
+#define SOURCESDK_ALIGN16 __declspec( align( 16 ) )
+#define SOURCESDK_ALIGN16_POST
+
 typedef float vec_t;
 typedef signed char int8;
 typedef signed __int32 int32;
@@ -524,6 +527,10 @@ struct matrix3x4_t
 	float m_flMatVal[3][4];
 };
 
+class SOURCESDK_ALIGN16 matrix3x4a_t : public matrix3x4_t {
+
+} SOURCESDK_ALIGN16_POST;
+
 //-----------------------------------------------------------------------------
 // Quaternion
 //-----------------------------------------------------------------------------
@@ -958,5 +965,22 @@ namespace BM {
 	};
 
 } // namespace BM {
+
+////////////////////////////////////////////////////////////////////////////////
+
+SOURCESDK::vec_t DotProduct(const SOURCESDK::vec_t * v1, const SOURCESDK::vec_t * v2);
+
+void VectorAngles( const SOURCESDK::Vector& forward, SOURCESDK::QAngle &angles );
+
+void VectorTransform(const SOURCESDK::Vector & in1, const SOURCESDK::matrix3x4_t & in2, SOURCESDK::Vector & out);
+
+void MatrixAngles(const SOURCESDK::matrix3x4_t & matrix, SOURCESDK::QAngle & angles);
+
+void AngleMatrix( const SOURCESDK::QAngle &angles,  SOURCESDK::matrix3x4_t& matrix );
+
+void AngleMatrix( const QAngle &angles, const Vector &position, matrix3x4_t& matrix );
+
+// This is actually from Half-Life 1 sort of, but will do haha.
+void R_ConcatTransforms (const SOURCESDK::matrix3x4_t & in1, const SOURCESDK::matrix3x4_t & in2, SOURCESDK::matrix3x4_t & out);
 
 } // namespace SOURCESDK {
