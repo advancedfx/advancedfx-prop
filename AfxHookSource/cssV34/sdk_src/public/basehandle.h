@@ -15,6 +15,8 @@
 #include <cssV34/sdk_src/public/const.h>
 //#include "tier0/dbg.h"
 
+#include <cssV34/sdk_src/public/ihandleentity.h>
+
 namespace SOURCESDK {
 namespace CSSV34 {
 
@@ -68,9 +70,6 @@ protected:
 	// The high NUM_SERIAL_NUM_BITS bits are the serial number.
 	unsigned long	m_Index;
 };
-
-
-#include <cssV34/sdk_src/public/ihandleentity.h>
 
 
 inline CBaseHandle::CBaseHandle()

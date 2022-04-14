@@ -10,6 +10,8 @@
 #pragma once
 #endif
 
+namespace SOURCESDK {
+namespace CSSV34 {
 
 class CBaseHandle;
 
@@ -23,5 +25,7 @@ public:
 	virtual const CBaseHandle& GetRefEHandle() const = 0;
 };
 
+} // namespace SOURCESDK {
+} // namespace CSSV34 {
 
 #endif // SOURCESDK_CSSV34_IHANDLEENTITY_H

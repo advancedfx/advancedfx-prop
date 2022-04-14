@@ -270,7 +270,7 @@ private:
 		unsigned char m_Color[4];
 	};
 	
-#ifdef _XBOX
+#ifdef SOURCESDK_CSSV34_XBOX
 	char	   m_iDataType;
 	char	   m_bHasEscapeSequences; // true, if while parsing this KeyValue, Escape Sequences are used (default false)
 	char	   reserved[2];
