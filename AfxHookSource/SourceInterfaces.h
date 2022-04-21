@@ -1724,7 +1724,6 @@ typedef unsigned __int64 uint64;
 typedef uint64 VertexFormat_t_csgo;
 
 typedef void MeshBoneRemap_t_csgo;
-typedef void matrix3x4_t_csgo;
 typedef void MaterialLightingState_t_csgo;
 
 class ITexture_csgo
@@ -2085,7 +2084,7 @@ struct MeshInstanceData_t_csgo
 	int						m_nIndexCount;
 	int						m_nBoneCount;
 	MeshBoneRemap_t_csgo *		m_pBoneRemap;		// there are bone count of these, they index into pose to world
-	matrix3x4_t_csgo	*			m_pPoseToWorld;	// transforms for the *entire* model, indexed into by m_pBoneIndex. Potentially more than bone count of these
+	matrix3x4_t	*			m_pPoseToWorld;	// transforms for the *entire* model, indexed into by m_pBoneIndex. Potentially more than bone count of these
 	const ITexture_csgo *		m_pEnvCubemap;
 	MaterialLightingState_t_csgo *m_pLightingState;
 	MaterialPrimitiveType_t_csgo m_nPrimType;
@@ -3962,6 +3961,19 @@ namespace CSGO
 	{
 		MODEL_INSTANCE_INVALID = (ModelInstanceHandle_t)~0
 	};
+
+	typedef void model_t;
+
+	class IVModelInfoClient
+	{
+	public:
+		virtual					~IVModelInfoClient() {};
+		virtual const model_t*	GetModel(int modelindex) const = 0;
+		virtual int				GetModelIndex(const char* name) const = 0;
+		virtual const char*		GetModelName(const model_t* model) const = 0;
+	};
+
+#define SOURCESDK_CSGO_VMODELINFO_CLIENT_INTERFACE_VERSION "VModelInfoClient004"
 }
 
 class IClientRenderable_csgo abstract
@@ -3980,12 +3992,17 @@ public:
 	virtual void _UNKNOWN_IClientRenderable_csgo_005(void);
 	virtual void _UNKNOWN_IClientRenderable_csgo_006(void);
 	virtual void _UNKNOWN_IClientRenderable_csgo_007(void);
-	virtual void _UNKNOWN_IClientRenderable_csgo_008(void);
+
+	virtual const SOURCESDK::CSGO::model_t* GetModel(void) const = 0; //:008
+
 	virtual void _UNKNOWN_IClientRenderable_csgo_009(void);
 	virtual void _UNKNOWN_IClientRenderable_csgo_010(void);
 	virtual void _UNKNOWN_IClientRenderable_csgo_011(void);
 	virtual void _UNKNOWN_IClientRenderable_csgo_012(void);
+
+	// virtual bool	SetupBones( matrix3x4a_t *pBoneToWorldOut, int nMaxBones, int boneMask, float currentTime ) = 0;
 	virtual void _UNKNOWN_IClientRenderable_csgo_013(void);
+
 	virtual void _UNKNOWN_IClientRenderable_csgo_014(void);
 	virtual void _UNKNOWN_IClientRenderable_csgo_015(void);
 	virtual void _UNKNOWN_IClientRenderable_csgo_016(void);
