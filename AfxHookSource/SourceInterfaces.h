@@ -5334,6 +5334,8 @@ public:
 	virtual void *AllocKeyValuesMemory(int size) = 0;
 	virtual void FreeKeyValuesMemory(void *pMem) = 0;
 
+	virtual void _Unknown_003(void) = 0;
+
 	// symbol table access (used for key names)
 	virtual HKeySymbol GetSymbolForString(const char *name, bool bCreate = true) = 0;
 	virtual const char *GetStringForSymbol(HKeySymbol symbol) = 0;
