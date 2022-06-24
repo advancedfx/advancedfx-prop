@@ -4691,6 +4691,7 @@ class CUtlBuffer;
 typedef bool(*GetSymbolProc_t)(const char *pKey);
 
 class IKeyValuesDumpContext;
+class IKeyValuesSystem;
 
 //-----------------------------------------------------------------------------
 // Purpose: Simple recursive data access class
@@ -4987,6 +4988,10 @@ private:
 	char	   m_iDataType;
 	char	   m_bHasEscapeSequences; // true, if while parsing this KeyValue, Escape Sequences are used (default false)
 	uint16	   m_iKeyNameCaseSensitive2;	// 2nd part of case sensitive symbol defined in KeyValueSystem;
+
+	IKeyValuesSystem *m_pKeyValuesSystem;
+	char m_bOwnsCustomKeyValuesSystem;
+	char _padding_3[3];	
 
 	KeyValues *m_pPeer;	// pointer to next key in list
 	KeyValues *m_pSub;	// pointer to Start of a new sub key list
@@ -5325,6 +5330,8 @@ typedef int HKeySymbol;
 class IKeyValuesSystem
 {
 public:
+	virtual ~IKeyValuesSystem() = 0;
+
 	// registers the size of the KeyValues in the specified instance
 	// so it can build a properly sized memory pool for the KeyValues objects
 	// the sizes will usually never differ but this is for versioning safety
@@ -5333,8 +5340,6 @@ public:
 	// allocates/frees a KeyValues object from the shared mempool
 	virtual void *AllocKeyValuesMemory(int size) = 0;
 	virtual void FreeKeyValuesMemory(void *pMem) = 0;
-
-	virtual void _Unknown_003(void) = 0;
 
 	// symbol table access (used for key names)
 	virtual HKeySymbol GetSymbolForString(const char *name, bool bCreate = true) = 0;
