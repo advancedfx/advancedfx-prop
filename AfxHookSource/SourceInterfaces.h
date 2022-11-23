@@ -4470,7 +4470,9 @@ public:
 	virtual const QAngle&	LocalEyeAngles( void );	// Direction of eyes in local space (pl.v_angle) // :171
 
 	virtual void _UNKNOWN_C_BaseEntity_172(void);
-	virtual void _UNKNOWN_C_BaseEntity_173(void);
+
+	virtual bool ShouldCollide( int collisionGroup, int contentsMask ) const; // :173
+
 	virtual void _UNKNOWN_C_BaseEntity_174(void);
 	virtual void _UNKNOWN_C_BaseEntity_175(void);
 	virtual void _UNKNOWN_C_BaseEntity_176(void);
