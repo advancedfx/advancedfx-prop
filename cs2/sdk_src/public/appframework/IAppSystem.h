@@ -6,8 +6,8 @@
 // $NoKeywords: $
 //===========================================================================//
 
-#ifndef SOURCESDK_CSGO_IAPPSYSTEM_H
-#define SOURCESDK_CSGO_IAPPSYSTEM_H
+#ifndef SOURCESDK_CS2_IAPPSYSTEM_H
+#define SOURCESDK_CS2_IAPPSYSTEM_H
 
 #ifdef COMPILER_MSVC
 #pragma once
@@ -15,10 +15,10 @@
 
 //#include "tier1/interface.h"
 #include "../interfaces/interfaces.h"
-#include "../../../../SourceSdkShared.h"
+#include "../../../../AfxHookSource/SourceSdkShared.h"
 
 namespace SOURCESDK {
-namespace CSGO {
+namespace CS2 {
 
 //-----------------------------------------------------------------------------
 // Specifies a module + interface name for initialization
@@ -60,28 +60,30 @@ SOURCESDK_abstract_class IAppSystem
 {
 public:
 	// Here's where the app systems get to learn about each other 
-	virtual bool Connect( CreateInterfaceFn factory ) = 0;
-	virtual void Disconnect() = 0;
+	virtual bool Connect( CreateInterfaceFn factory ) = 0; //:000
+	virtual void Disconnect() = 0; //:001
 
 	// Here's where systems can access other interfaces implemented by this object
 	// Returns NULL if it doesn't implement the requested interface
-	virtual void *QueryInterface( const char *pInterfaceName ) = 0;
+	virtual void *QueryInterface( const char *pInterfaceName ) = 0; //:002
 
 	// Init, shutdown
-	virtual InitReturnVal_t Init() = 0;
-	virtual void Shutdown() = 0;
+	virtual InitReturnVal_t Init() = 0; //:003
+	virtual void Shutdown() = 0; //:004
+
+	virtual void PreShutdown(void) = 0; //:005
 
 	// Returns all dependent libraries
-	virtual const AppSystemInfo_t* GetDependencies() = 0;
+	virtual const AppSystemInfo_t* GetDependencies() = 0; //:006
 
 	// Returns the tier
-	virtual AppSystemTier_t GetTier() = 0;
+	virtual AppSystemTier_t GetTier() = 0; //:007
 
 	// Reconnect to a particular interface
-	virtual void Reconnect( CreateInterfaceFn factory, const char *pInterfaceName ) = 0;
+	virtual void Reconnect( CreateInterfaceFn factory, const char *pInterfaceName ) = 0; //:008
 
 	// Returns whether or not the app system is a singleton
-	virtual bool IsSingleton() = 0;
+	virtual bool IsSingleton() = 0; //:009
 };
 
 
@@ -124,7 +126,7 @@ class CTier0AppSystem : public CBaseAppSystem< IInterface >
 
 
 } // namespace SOURCESDK {
-} // namespace CSGO {
+} // namespace CS2 {
 
-#endif // SOURCESDK_CSGO_IAPPSYSTEM_H
+#endif // SOURCESDK_CS2_IAPPSYSTEM_H
 
