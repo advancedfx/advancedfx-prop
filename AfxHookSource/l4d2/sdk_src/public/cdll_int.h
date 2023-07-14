@@ -162,7 +162,7 @@ public:
 	virtual void _UNUSED_GetChapterName(void)=0;
 
 	virtual char const	*GetLevelName( void ) = 0;
-	virtual int	GetLevelVersion( void ) = 0;
+	virtual char const	*GetLevelNameShort(void) = 0;
 
 #if !defined( NO_VOICE )
 	virtual void _UNUSED_GetVoiceTweakAPI(void)=0;
@@ -174,6 +174,7 @@ public:
 	virtual void _UNUSED_FireEvents(void)=0;
 	virtual void _UNUSED_GetLeavesArea(void)=0;
 	virtual void _UNUSED_DoesBoxTouchAreaFrustum(void)=0;
+	virtual void _UNUSED_GetFrustumList(void) = 0;
 	
 	virtual void _UNUSED_SetAudioState(void)=0;
 	virtual void _UNUSED_SentenceGroupPick(void)=0;
@@ -190,6 +191,7 @@ public:
 	virtual void _UNUSED_SaveFreeMemory(void)=0;
 	virtual void _UNUSED_GetNetChannelInfo(void)=0;
 	virtual void _UNUSED_DebugDrawPhysCollide(void)=0;
+	virtual void _UNKNOWN_076(void)=0;
 	virtual void _UNUSED_CheckPoint(void)=0;
 	virtual void _UNUSED_DrawPortals(void)=0;
 
@@ -215,7 +217,9 @@ public:
 
 
 	// Is the game paused?
-	virtual bool		IsPaused( void ) = 0;
+	virtual bool		IsPaused( void ) = 0; //:087
+
+	virtual float GetTimescale( void ) const = 0;
 	
 	// Is the game currently taking a screenshot?
 	virtual bool		IsTakingScreenshot( void ) = 0;
@@ -241,10 +245,7 @@ public:
 	virtual bool		IsInEditMode( void ) = 0;
 
 	// current screen aspect ratio (eg. 4.0f/3.0f, 16.0f/9.0f)
-	virtual float		GetScreenAspectRatio() = 0;
-
-	virtual void _UNUSED_REMOVED_SteamRefreshLogin(void)=0;
-	virtual void _UNUSED_REMOVED_SteamProcessCall(void)=0;
+	virtual float		GetScreenAspectRatio( int viewportWidth, int viewportHeight ) = 0;
 
 	// allow other modules to know about engine versioning (one use is a proxy for network compatability)
 	virtual unsigned int	GetEngineBuildNumber() = 0; // engines build
@@ -269,28 +270,7 @@ public:
 	// This version does NOT check against FCVAR_CLIENTCMD_CAN_EXECUTE.
 	virtual void ClientCmd_Unrestricted( const char *szCmdString ) = 0;
 
-	virtual void _UNUSED_SetRestrictServerCommands(void)=0;
-	virtual void _UNUSED_SetRestrictClientCommands(void)=0;
-	virtual void _UNUSED_SetOverlayBindProxy(void)=0;
-	virtual void _UNUSED_CopyFrameBufferToMaterial(void)=0;
-	virtual void _UNUSED_ChangeTeam(void)=0;
-	virtual void _UNUSED_ReadConfiguration(void)=0;
-	virtual void _UNUSED_SetAchievementMgr(void)=0;
-	virtual void _UNUSED_GetAchievementMgr(void)=0;
-	virtual void _UNUSED_MapLoadFailed(void)=0;
-	virtual void _UNUSED_SetMapLoadFailed(void)=0;
-	virtual void _UNUSED_IsLowViolence(void)=0;
-	virtual void _UNUSED_GetMostRecentSaveGame(void)=0;
-	virtual void _UNUSED_SetMostRecentSaveGame(void)=0;
-	virtual void _UNUSED_StartXboxExitingProcess(void)=0;
-	virtual void _UNUSED_IsSaveInProgress(void)=0;
-	virtual void _UNUSED_OnStorageDeviceAttached(void)=0;
-	virtual void _UNUSED_OnStorageDeviceDetached(void)=0;
-	virtual void _UNUSED_ResetDemoInterpolation(void)=0;
-	virtual void _UNUSED_SetGamestatsData(void)=0;
-	virtual void _UNUSED_GetGamestatsData(void)=0;
-
-	// .... might be more in some games (i.e. source-sdk-2013)
+	// ... more
 };
 
 } // namespace SOURCESDK {
