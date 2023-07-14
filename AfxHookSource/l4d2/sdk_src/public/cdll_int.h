@@ -232,10 +232,6 @@ public:
 	// returns the name of the background level
 	virtual void		GetMainMenuBackgroundName( char *dest, int destlen ) = 0;
 
-	// new in Source SDK 2013:
-	// Get video modes 
-	virtual void _UNUSED_GetVideoModes(void) = 0; 
-
 	virtual void _UNUSED_SetOcclusionParameters(void)=0;
 	virtual void _UNUSED_GetUILanguage(void)=0;
 	virtual void _UNUSED_IsSkyboxVisibleFromPoint(void)=0;
