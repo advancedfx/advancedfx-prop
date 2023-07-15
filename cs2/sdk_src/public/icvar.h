@@ -11,7 +11,7 @@
 #endif
 
 #include "appframework/IAppSystem.h"
-#include "tier1/iconvar.h"
+//#include "tier1/iconvar.h"
 //#include "tier1/utlvector.h"
 #include "tier0/memalloc.h"
 #include "../../../AfxHookSource/SourceSdkShared.h"
@@ -22,47 +22,64 @@
 namespace SOURCESDK {
 namespace CS2 {
 
+struct CvarIterator{
+	size_t index = (unsigned short)-1;
 
-class ConCommandBase;
-class ConCommand;
-class ConVar;
-class Color;
+	bool IsValid() const {
+		return index != (unsigned short)-1;
+	}
 
-
-//-----------------------------------------------------------------------------
-// ConVars/ComCommands are marked as having a particular DLL identifier
-//-----------------------------------------------------------------------------
-typedef int CVarDLLIdentifier_t;
-
-
-//-----------------------------------------------------------------------------
-// Used to display console messages
-//-----------------------------------------------------------------------------
-SOURCESDK_abstract_class IConsoleDisplayFunc
-{
-public:
-	virtual void ColorPrint( const Color& clr, const char *pMessage ) = 0;
-	virtual void Print( const char *pMessage ) = 0;
-	virtual void DPrint( const char *pMessage ) = 0;
-
-	virtual void GetConsoleText( char *pchText, size_t bufSize ) const = 0;
+	size_t GetIndex() const {
+		return index;
+	}
 };
 
+class CCommand {
+public:
+	size_t ArgC() const {
+		return m_nArgc;
+	}
 
-//-----------------------------------------------------------------------------
-// Purpose: Applications can implement this to modify behavior in ICvar
-//-----------------------------------------------------------------------------
-//#define CVAR_QUERY_INTERFACE_VERSION "VCvarQuery001"
-//abstract_class ICvarQuery : public IAppSystem
-//{
-//public:
-//	// Can these two convars be aliased?
-//	virtual bool AreConVarsLinkable( const ConVar *child, const ConVar *parent ) = 0;
-//};
-class ICvarQuery;
+	const char * ArgS() const {
+		return m_pArgSBuffer;
+	}
 
+	const char * ArgV(size_t index) const {
+		return m_ppArgv[index];
+	}
 
-// size: 7*8 Bytes
+private:
+	enum
+	{
+		COMMAND_MAX_ARGC = 64, // might be inaccurate
+		COMMAND_MAX_LENGTH = 512,
+	};
+
+	size_t _unknown_0;
+
+	// Probably some kind of CUtlVector.
+	size_t _ArgSBuffer_Len;
+	void * _ppArgSBuffer_Ptr;
+	size_t _ArgSBuffer_Unknown;
+	char	m_pArgSBuffer[ COMMAND_MAX_LENGTH ];
+
+	// Probably some kind of CUtlVector.
+	size_t _ArgvBuffer_Len;
+	void * _ArgvBuffer_Ptr;
+	size_t _ArgvBufferLen_Unknown;
+	char	m_pArgvBuffer[ COMMAND_MAX_LENGTH ];
+
+	size_t m_nArgc;
+
+	const char*	m_ppArgv[ COMMAND_MAX_ARGC ];	
+};
+
+class ICommandCallback {
+public:
+	virtual void CommandCallback(void * _unknown1_rdx_ptr, CCommand * pArgs);
+};
+
+// size: 10*8 Bytes
 struct Cvar_s {
 	const char 					*m_pszName;
 	void * _unknown_8;
@@ -73,13 +90,50 @@ struct Cvar_s {
 	int							m_nFlags;	
 };
 
-// size: 10*8 Bytes
-struct Cmd_s {
+// size: 8*8 Bytes
+class CCmd {
+public:
+	CCmd(const char * pszName, const char * pszHelpString, int nFlags, ICommandCallback * pCommandCallback) {
+		m_pszName = pszName;
+		m_pszHelpString = pszHelpString;
+		m_nFlags = nFlags;
+		m_pCommandCallback = pCommandCallback;
+	}
+
+	const char * GetName() const {
+		return m_pszName;
+	}
+
+	const char * GetHelpString() const {
+		return m_pszHelpString;
+	}
+
+	int GetFlags() const {
+		return m_nFlags;
+	}
+
+	void SetFlags(int value) {
+		m_nFlags = value;
+	}
+
+	CvarIterator GetNextCommand() const {
+		return m_NextCommand;
+	}
+
+private:
 	const char 					*m_pszName;
 	const char 					*m_pszHelpString;
-	int							m_nFlags;	
+	int							m_nFlags;
+	int _unknown_20 = 0;
+	void * m_pCommandCallback;
+	size_t _unknown_32 = 0x0101; // this indicates that we are using the interface version and not a flat callback I guess.
+	size_t _unknown_40 = 0;
+	size_t _unknown_48 = 0x01;
+	CvarIterator m_NextCommand;
 };
 
+
+typedef int CVarDLLIdentifier_t;
 
 //-----------------------------------------------------------------------------
 // Purpose: DLL interface to ConVars/ConCommands
@@ -87,33 +141,21 @@ struct Cmd_s {
 SOURCESDK_abstract_class ICvar : public IAppSystem
 {
 public:
-	struct Iterator{
-		size_t index;
-
-		bool IsValid() const {
-			return index != (unsigned short)-1;
-		}
-
-		size_t GetIndex() const {
-			return index;
-		}
-	};
-
 	// Allocate a unique DLL identifier
 	virtual CVarDLLIdentifier_t AllocateDLLIdentifier() = 0; //:010
 
 	virtual void _Unknown_011(void) = 0;
 
 	// Usless, doesn't iterate over hidden cvars:
-	virtual Iterator GetCvarBegin() = 0; //:012
-	virtual Iterator GetCvarNext( Iterator iterator ) = 0; //:013
+	virtual CvarIterator GetCvarBegin() = 0; //:012
+	virtual CvarIterator GetCvarNext( CvarIterator iterator ) = 0; //:013
 
 	virtual void _Unknown_014(void) = 0;
 	virtual void _Unknown_015(void) = 0;
 
 	// Usless, doesn't iterate over hidden cmds:
-	virtual Iterator GetCmdBegin() = 0; //:016
-	virtual Iterator GetCmdNext( Iterator iterator ) = 0; //:017
+	virtual CvarIterator GetCmdBegin() = 0; //:016
+	virtual CvarIterator GetCmdNext( CvarIterator iterator ) = 0; //:017
 
 	virtual void _Unknown_018(void) = 0;
 	virtual void _Unknown_019(void) = 0;
@@ -137,11 +179,10 @@ public:
 
 	virtual Cvar_s * GetCvar( size_t i ); //:037
 
-	virtual void _Unknown_038(void) = 0;
+	virtual CvarIterator RegisterConCommand( CCmd * pCmd  ) = 0; //:038
 	virtual void _Unknown_039(void) = 0;
 
-	virtual Cmd_s * GetCmd( size_t i ); //:040;
-
+	virtual CCmd * GetCmd( size_t i ); //:040;
 };
 
 //-----------------------------------------------------------------------------
