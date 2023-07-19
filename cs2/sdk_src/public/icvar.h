@@ -76,7 +76,7 @@ private:
 
 class ICommandCallback {
 public:
-	virtual void CommandCallback(void * _unknown1_rdx_ptr, CCommand * pArgs);
+	virtual void CommandCallback(void * _unknown1_rdx_ptr, CCommand * pArgs) = 0;
 };
 
 // size: 10*8 Bytes
