@@ -37,7 +37,7 @@ struct CvarIterator{
 class CCommand {
 public:
 	size_t ArgC() const {
-		return m_nArgc;
+		return _Argv_Len;
 	}
 
 	const char * ArgS() const {
@@ -69,8 +69,9 @@ private:
 	size_t _ArgvBufferLen_Unknown;
 	char	m_pArgvBuffer[ COMMAND_MAX_LENGTH ];
 
-	size_t m_nArgc;
-
+	size_t _Argv_Len;
+	void * _Argv_Ptr;
+	size_t _Argv_Unknown;	
 	const char*	m_ppArgv[ COMMAND_MAX_ARGC ];	
 };
 
