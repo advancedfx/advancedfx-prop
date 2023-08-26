@@ -1,11 +1,11 @@
-//===== Copyright 1996-2005, Valve Corporation, All rights reserved. ======//
+//===== Copyright 1996-2023, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: Interfaces between the client.dll and engine
 //
 //===========================================================================//
 
-#ifndef SOURCESDK_CS2_CDLL_INT_H
-#define SOURCESDK_CS2_CDLL_INT_H
+#ifndef SOURCESDK_CS2_GAMEUISERVICE_INT_H
+#define SOURCESDK_CS2_GAMEUISERVICE_INT_H
 #ifdef _WIN32
 #pragma once
 #endif
@@ -14,12 +14,9 @@ namespace SOURCESDK {
 namespace CS2 {
 
 // change this when the new version is incompatable with the old
-#define SOURCESDK_CS2_ENGINE_TO_CLIENT_INTERFACE_VERSION "Source2EngineToClient001"
+#define SOURCESDK_CS2_GAMEUISERVICE_INTERFACE_VERSION "GameUIService_001"
 
-//-----------------------------------------------------------------------------
-// Purpose: Interface exposed from the engine to the client .dll
-//-----------------------------------------------------------------------------
-SOURCESDK_abstract_class ISource2EngineToClient
+SOURCESDK_abstract_class IGameUIService
 {
 public:
     virtual void _Unknown_000(void) = 0;
@@ -47,20 +44,10 @@ public:
     virtual void _Unknown_022(void) = 0;
     virtual void _Unknown_023(void) = 0;
     virtual void _Unknown_024(void) = 0;
-    virtual void _Unknown_025(void) = 0;
-    virtual void _Unknown_026(void) = 0;
-    virtual void _Unknown_027(void) = 0;
-    virtual void _Unknown_028(void) = 0;
-    virtual void _Unknown_029(void) = 0;
-    virtual void _Unknown_030(void) = 0;
-    virtual void _Unknown_031(void) = 0;
-    virtual void _Unknown_032(void) = 0;
-
-    virtual bool IsPlayingDemo(void) = 0; //:033
-
+    virtual bool Con_IsVisible(void) = 0; //:025
 };
 
 } // namespace CS2 {
 } // namespace SOURCESDK {
 
-#endif // SOURCESDK_CS2_CDLL_INT_H
+#endif // SOURCESDK_CS2_GAMEUISERVICE_INT_H
