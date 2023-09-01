@@ -55,8 +55,9 @@ public:
     virtual void _Unknown_030(void) = 0;
     virtual void _Unknown_031(void) = 0;
     virtual void _Unknown_032(void) = 0;
+    virtual void _Unknown_033(void) = 0;
 
-    virtual bool IsPlayingDemo(void) = 0; //:033
+    virtual bool IsPlayingDemo(void) = 0; //:034
 
 };
 
