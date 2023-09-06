@@ -13,6 +13,33 @@
 namespace SOURCESDK {
 namespace CS2 {
 
+SOURCESDK_abstract_class IDemoFile
+{
+public:
+    virtual void _Unknown_000(void) = 0;
+    virtual void _Unknown_001(void) = 0;
+
+    virtual int GetDemoStartTick(void) = 0; //:002
+
+    virtual int GetDemoTick(void) = 0; //:003
+
+    virtual void _Unknown_004(void) = 0;
+    virtual void _Unknown_005(void) = 0;
+
+    virtual void _Unknown_006(void) = 0;
+    virtual void _Unknown_007(void) = 0;
+    virtual void _Unknown_008(void) = 0;
+    virtual void _Unknown_009(void) = 0;
+    virtual void _Unknown_010(void) = 0;
+    virtual void _Unknown_011(void) = 0;
+    virtual void _Unknown_012(void) = 0;
+    virtual void _Unknown_013(void) = 0;
+    virtual void _Unknown_014(void) = 0;
+    virtual void _Unknown_015(void) = 0;
+
+    virtual float GetDemoTimeScale(void) = 0; //:003
+};
+
 // change this when the new version is incompatable with the old
 #define SOURCESDK_CS2_ENGINE_TO_CLIENT_INTERFACE_VERSION "Source2EngineToClient001"
 
@@ -59,6 +86,29 @@ public:
 
     virtual bool IsPlayingDemo(void) = 0; //:034
 
+    virtual void _Unknown_035(void) = 0;
+    virtual void _Unknown_036(void) = 0;
+    virtual void _Unknown_037(void) = 0;
+    virtual void _Unknown_038(void) = 0;
+    virtual void _Unknown_039(void) = 0;
+    virtual void _Unknown_040(void) = 0;
+    virtual void _Unknown_041(void) = 0;
+    virtual void _Unknown_042(void) = 0;
+    virtual void _Unknown_043(void) = 0;
+    virtual void _Unknown_044(void) = 0;
+    virtual void _Unknown_045(void) = 0;
+    virtual void _Unknown_046(void) = 0;
+    virtual void _Unknown_047(void) = 0;
+    virtual void _Unknown_048(void) = 0;
+    virtual void _Unknown_049(void) = 0;
+    virtual void _Unknown_050(void) = 0;
+    virtual void _Unknown_051(void) = 0;
+    virtual void _Unknown_052(void) = 0;
+    virtual void _Unknown_053(void) = 0;
+    virtual void _Unknown_054(void) = 0;
+    virtual void _Unknown_055(void) = 0;
+
+    virtual IDemoFile* GetDemoFile(void) = 0; //:056
 };
 
 } // namespace CS2 {
