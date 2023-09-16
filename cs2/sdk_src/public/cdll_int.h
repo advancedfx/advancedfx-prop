@@ -90,7 +90,9 @@ public:
     virtual void _Unknown_036(void) = 0;
     virtual void _Unknown_037(void) = 0;
     virtual void _Unknown_038(void) = 0;
-    virtual void _Unknown_039(void) = 0;
+
+    virtual void ExecuteClientCmd(int iUnk0MaybeSplitScreenSlotSetTo0, const char * pszCommands, bool bUnk2SetToTrue) = 0; //:039
+
     virtual void _Unknown_040(void) = 0;
     virtual void _Unknown_041(void) = 0;
     virtual void _Unknown_042(void) = 0;
