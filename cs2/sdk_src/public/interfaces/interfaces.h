@@ -22,8 +22,8 @@ typedef void* (*CreateInterfaceFn)(const char *pName, int *pReturnCode);
 
 // [....]
 
-} // namespace SOURCESDK {
 } // namespace CS2 {
+} // namespace SOURCESDK {
 
 #endif // SOURCESDK_CS2_INTERFACES_H
 
