@@ -19,6 +19,10 @@
 #include "interfaces/interfaces.h"
 //#include "tier1/bitbuf.h"
 
+#ifndef NULL
+#define NULL 0
+#endif
+
 namespace SOURCESDK {
 namespace CS2 {
 
