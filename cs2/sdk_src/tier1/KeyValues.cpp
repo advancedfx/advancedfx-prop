@@ -25,31 +25,30 @@
 namespace SOURCESDK {
 namespace CS2 {
 
-
 //-----------------------------------------------------------------------------
 // Purpose: Get the name of the current key section
 //-----------------------------------------------------------------------------
 const char *KeyValues::GetName( void ) const
 {
-	return KeyValuesSystem()->GetStringForSymbol(m_iKeyNameCaseSensitive);
+	return KeyValuesSystem()->GetStringForSymbol(HKeySymbol(a.m_iKeyNameCaseSensitive));
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: Get the symbol name of the current key section
 //-----------------------------------------------------------------------------
-int KeyValues::GetNameSymbol() const
+HKeySymbol KeyValues::GetNameSymbol() const
 {
-	return m_iKeyNameCaseSensitive;
+	return HKeySymbol(a.m_iKeyNameCaseSensitive);
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: looks up a key by symbol name
 //-----------------------------------------------------------------------------
-KeyValues *KeyValues::FindKey(int keySymbol) const
+KeyValues *KeyValues::FindKey(HKeySymbol keySymbol) const
 {
-	for (KeyValues *dat = m_pSub; dat != NULL; dat = dat->m_pPeer)
+	for (KeyValues *dat = a.m_pSub; dat != NULL; dat = dat->a.m_pPeer)
 	{
-		if (dat->m_iKeyNameCaseSensitive == keySymbol)
+		if (dat->a.m_iKeyNameCaseSensitive == keySymbol.Get())
 			return dat;
 	}
 
@@ -89,7 +88,7 @@ KeyValues *KeyValues::FindKey(const char *keyName, bool bCreate)
 	// lookup the symbol for the search string
 	HKeySymbol iSearchStr = KeyValuesSystem()->GetSymbolForString( searchStr, bCreate );
 
-	if ( iSearchStr == SOURCESDK_INVALID_KEY_SYMBOL )
+	if ( iSearchStr.Get() == SOURCESDK_INVALID_KEY_SYMBOL )
 	{
 		// not found, couldn't possibly be in key value list
 		return NULL;
@@ -97,14 +96,14 @@ KeyValues *KeyValues::FindKey(const char *keyName, bool bCreate)
 
 	KeyValues *lastItem = NULL;
 	KeyValues *dat = nullptr;
-    if(m_bStoredSubKey) {
+    if(a.m_bStoredSubKey) {
         // find the searchStr in the current peer list
-        for (dat = m_pSub; dat != NULL; dat = dat->m_pPeer)
+        for (dat = a.m_pSub; dat != NULL; dat = dat->a.m_pPeer)
         {
             lastItem = dat;	// record the last item looked at (for if we need to append to the end of the list)
 
             // symbol compare
-            if (dat->m_iKeyNameCaseSensitive == iSearchStr)
+            if (dat->a.m_iKeyNameCaseSensitive == iSearchStr.Get())
             {
                 break;
             }
@@ -167,7 +166,7 @@ KeyValues *KeyValues::FindKey(const char *keyName, bool bCreate)
 //-----------------------------------------------------------------------------
 KeyValues *KeyValues::GetFirstSubKey() const
 {
-	return m_pSub;
+	return a.m_pSub;
 }
 
 //-----------------------------------------------------------------------------
@@ -175,7 +174,7 @@ KeyValues *KeyValues::GetFirstSubKey() const
 //-----------------------------------------------------------------------------
 KeyValues *KeyValues::GetNextKey() const
 {
-	return m_pPeer;
+	return a.m_pPeer;
 }
 
 //-----------------------------------------------------------------------------
@@ -183,42 +182,42 @@ KeyValues *KeyValues::GetNextKey() const
 //-----------------------------------------------------------------------------
 void KeyValues::SetNextKey(KeyValues *pDat)
 {
-	m_pPeer = pDat;
+	a.m_pPeer = pDat;
 }
 
 
 KeyValues* KeyValues::GetFirstTrueSubKey() const
 {
-	KeyValues *pRet = m_pSub;
-	while (pRet && pRet->m_iDataType != TYPE_NONE)
-		pRet = pRet->m_pPeer;
+	KeyValues *pRet = a.m_pSub;
+	while (pRet && pRet->a.m_iDataType != TYPE_NONE)
+		pRet = pRet->a.m_pPeer;
 
 	return pRet;
 }
 
 KeyValues* KeyValues::GetNextTrueSubKey() const
 {
-	KeyValues *pRet = m_pPeer;
-	while (pRet && pRet->m_iDataType != TYPE_NONE)
-		pRet = pRet->m_pPeer;
+	KeyValues *pRet = a.m_pPeer;
+	while (pRet && pRet->a.m_iDataType != TYPE_NONE)
+		pRet = pRet->a.m_pPeer;
 
 	return pRet;
 }
 
 KeyValues* KeyValues::GetFirstValue() const
 {
-	KeyValues *pRet = m_pSub;
-	while (pRet && pRet->m_iDataType == TYPE_NONE)
-		pRet = pRet->m_pPeer;
+	KeyValues *pRet =a.m_pSub;
+	while (pRet && pRet->a.m_iDataType == TYPE_NONE)
+		pRet = pRet->a.m_pPeer;
 
 	return pRet;
 }
 
 KeyValues* KeyValues::GetNextValue() const
 {
-	KeyValues *pRet = m_pPeer;
-	while (pRet && pRet->m_iDataType == TYPE_NONE)
-		pRet = pRet->m_pPeer;
+	KeyValues *pRet = a.m_pPeer;
+	while (pRet && pRet->a.m_iDataType == TYPE_NONE)
+		pRet = pRet->a.m_pPeer;
 
 	return pRet;
 }
@@ -233,14 +232,14 @@ int KeyValues::GetInt(const char *keyName, int defaultValue) const
 	const KeyValues *dat = FindKey(keyName);
 	if (dat)
 	{
-		switch (dat->m_iDataType)
+		switch (dat->a.m_iDataType)
 		{
 		case TYPE_STRING:
-			return atoi(dat->m_sValue);
+			return atoi(dat->a.m_sValue);
 		case TYPE_WSTRING:
-			return _wtoi(dat->m_wsValue);
+			return _wtoi(dat->a.m_wsValue);
 		case TYPE_FLOAT:
-			return (int)dat->m_flValue;
+			return (int)dat->a.m_flValue;
 		case TYPE_UINT64:
 			// can't convert, since it would lose data
 			SOURCESDK_Assert(0);
@@ -248,7 +247,7 @@ int KeyValues::GetInt(const char *keyName, int defaultValue) const
 		case TYPE_INT:
 		case TYPE_PTR:
 		default:
-			return dat->m_iValue;
+			return dat->a.m_iValue;
 		};
 	}
 	return defaultValue;
@@ -263,10 +262,10 @@ void *KeyValues::GetPtr(const char *keyName, void *defaultValue) const
 	const KeyValues *dat = FindKey(keyName);
 	if (dat)
 	{
-		switch (dat->m_iDataType)
+		switch (dat->a.m_iDataType)
 		{
 		case TYPE_PTR:
-			return dat->m_pValue;
+			return dat->a.m_pValue;
 
 		case TYPE_WSTRING:
 		case TYPE_STRING:
@@ -303,3 +302,7 @@ IKeyValuesSystem *KeyValuesSystem()
 
 } // namespace CSS {
 } // namespace SOURCESDK {
+
+const char * GetStringForSymbol(int value) {
+	return SOURCESDK::CS2::KeyValuesSystem()->GetStringForSymbol(SOURCESDK::CS2::HKeySymbol(value));
+}

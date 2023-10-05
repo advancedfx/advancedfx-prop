@@ -71,6 +71,7 @@ private:
 	HTemporaryKeyValueAllocationScope m_hScope;
 };*/
 
+#pragma pack(push,1)
 class CKeyValues_Data
 {
 public:
@@ -143,31 +144,45 @@ protected:
 	bool Internal_HasEscapeSequences() const;
 	void Internal_SetHasEscapeSequences( bool state );
 
-	void *m_pUnk;
+	union  {
+		struct {
+			union
+			{
+				int m_iValue;
+				float m_flValue;
+				void *m_pValue;
+				unsigned char m_Color[4];
+				uintp m_uValue;
+				const char *m_sValue;
+				const wchar_t *m_wsValue;
+				KeyValues * m_pSub;
+			};
 
-	union
-	{
-		int m_iValue;
-		float m_flValue;
-		void *m_pValue;
-		unsigned char m_Color[4];
-		uintp m_uValue;
-		const char *m_sValue;
-		const wchar_t *m_wsValue;
-		KeyValues *m_pSub;
+			void * pUnk1;
+
+			uint32 m_iKeyNameCaseSensitive : 24;
+			uint32 m_iDataType : 3;
+			uint32 m_bHasEscapeSequences : 1;
+			uint32 m_bAllocatedExternalMemory : 1;
+			uint32 m_bKeySymbolCaseSensitiveMatchesCaseInsensitive : 1;
+			uint32 m_bStoredSubKey : 1;
+
+			KeyValues * m_pPeer;
+		} a;
+		struct {
+			KeyValues * m_pKeys0;
+			KeyValues * m_pKeys1;
+			KeyValues * m_pKeys2;
+			KeyValues * m_pKeys3;
+			KeyValues * m_pKeys4;
+			KeyValues * m_pKeys5;
+			KeyValues * m_pKeys6;
+			KeyValues * m_pKeys7;
+		} b;
+		unsigned char c[8*8];
 	};
-
-	void *m_pUnk2;
-
-	uint32 m_iKeyNameCaseSensitive : 24;
-	uint32 m_iDataType : 3;
-	uint32 m_bHasEscapeSequences : 1;
-	uint32 m_bAllocatedExternalMemory : 1;
-	uint32 m_bKeySymbolCaseSensitiveMatchesCaseInsensitive : 1;
-	uint32 m_bStoredSubKey : 1;
-
-	KeyValues *m_pPeer;	// pointer to next key in list    
 };
+#pragma pack(pop)
 
 //-----------------------------------------------------------------------------
 // Purpose: Simple recursive data access class
@@ -194,6 +209,8 @@ protected:
 class KeyValues : public CKeyValues_Data
 {
 public:
+	KeyValues() {}
+
 	//
 	// AutoDelete class to automatically free the keyvalues.
 	// Simply construct it with the keyvalues you allocated and it will free them when falls out of scope.

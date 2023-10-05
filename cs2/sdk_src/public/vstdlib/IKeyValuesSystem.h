@@ -17,9 +17,9 @@ namespace CS2 {
 
 class KeyValues;
 
-/*
 class HKeySymbol
 {
+public:
 	HKeySymbol() : nIndex(~0) { }
 	HKeySymbol(uint32 idx) : nIndex(idx) { }
 
@@ -27,9 +27,7 @@ class HKeySymbol
 
 private:
 	uint32 nIndex;
-};*/
-
-typedef int HKeySymbol;
+};
 
 //-----------------------------------------------------------------------------
 // Purpose: Interface to shared data repository for KeyValues (included in vgui_controls.lib)
@@ -38,6 +36,8 @@ typedef int HKeySymbol;
 class IKeyValuesSystem
 {
 public:
+	virtual ~IKeyValuesSystem() = 0;
+
 	// allocates/frees a KeyValues object from the shared mempool
 	virtual void *AllocKeyValuesMemory() = 0;
 	virtual void FreeKeyValuesMemory(KeyValues *pKV) = 0;

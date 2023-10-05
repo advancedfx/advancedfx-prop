@@ -126,12 +126,12 @@ public:
 	virtual void SetPlayer( const char *keyName, CBasePlayer *value ) = 0;
 	/* ============================================================ */
 
-	// Something script vm related
-	virtual void unk001() = 0;
+	virtual void unk002() = 0;
 
 	virtual bool HasKey( const char *keyName ) = 0;
 
-	virtual void unk002() = 0;
+	// Something script vm related
+	virtual void unk001() = 0;
 	
 	virtual KeyValues *GetDataKeys() const = 0;
 };
@@ -149,10 +149,8 @@ public:
 	}
 
 public:
-	void * pUnk1;
 	int	name_index;
 	int	eventid;
-	void * pUnk2;
 	KeyValues *keys;
 	bool local;
 	bool reliable;
