@@ -74,6 +74,7 @@ public:
     virtual void _Unknown_022(void) = 0;
     virtual void _Unknown_023(void) = 0;
     virtual void _Unknown_024(void) = 0;
+
     virtual void _Unknown_025(void) = 0;
     virtual void _Unknown_026(void) = 0;
     virtual void _Unknown_027(void) = 0;
@@ -83,14 +84,13 @@ public:
     virtual void _Unknown_031(void) = 0;
     virtual void _Unknown_032(void) = 0;
     virtual void _Unknown_033(void) = 0;
-
     virtual void _Unknown_034(void) = 0;
 
     virtual bool IsPlayingDemo(void) = 0; //:035
 
-    virtual void _Unknown_036(void) = 0;
+    virtual void _Unknown_036(void) = 0; // Demo related
     virtual void _Unknown_037(void) = 0;
-    virtual void _Unknown_038(void) = 0;
+    virtual void _Unknown_038(void) = 0; // Demo related
     virtual void _Unknown_039(void) = 0;
 
     virtual void ExecuteClientCmd(int iUnk0MaybeSplitScreenSlotSetTo0, const char * pszCommands, bool bUnk2SetToTrue) = 0; //:040
@@ -107,12 +107,35 @@ public:
     virtual void _Unknown_050(void) = 0;
     virtual void _Unknown_051(void) = 0;
     virtual void _Unknown_052(void) = 0;
-    virtual void _Unknown_053(void) = 0;
-    virtual void _Unknown_054(void) = 0;
+
+	virtual char const	*GetLevelName( void ) = 0; //:053
+	virtual char const	*GetLevelNameShort( void ) = 0; //:054
+
     virtual void _Unknown_055(void) = 0;
     virtual void _Unknown_056(void) = 0;
 
     virtual IDemoFile* GetDemoFile(void) = 0; //:057
+
+    virtual void _Unknown_058(void) = 0; // Demo related
+    virtual void _Unknown_059(void) = 0; // Demo related
+
+    virtual void _Unknown_060(void) = 0; // Demo recording related
+    virtual void _Unknown_061(void) = 0; // Demo related
+    virtual void _Unknown_062(void) = 0; // Demo related
+    virtual void _Unknown_063(void) = 0; // Demo related
+    virtual void _Unknown_064(void) = 0; // Demo related
+    virtual void _Unknown_065(void) = 0; // Demo related
+    virtual void _Unknown_066(void) = 0; // Demo related
+    virtual void _Unknown_067(void) = 0; // Demo related
+    virtual void _Unknown_068(void) = 0; // Demo related
+    virtual void _Unknown_069(void) = 0; // Demo related
+    virtual void _Unknown_070(void) = 0; // Demo related
+    virtual void _Unknown_071(void) = 0; // Demo related
+    virtual void _Unknown_072(void) = 0; // Demo related
+
+    
+
+
 };
 
 enum ClientFrameStage_t
