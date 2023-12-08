@@ -37,15 +37,15 @@ struct CvarIterator{
 class CCommand {
 public:
 	size_t ArgC() const {
-		return m_ArgsBuffer_Size;
+		return m_Args.m_Size;
 	}
 
 	const char * ArgS() const {
-		return m_ArgSBuffer_pMemory;
+		return m_ArgSBuffer.m_pMemory;
 	}
 
 	const char * ArgV(size_t index) const {
-		return m_ArgsBuffer_pFixedMemory[index];
+		return m_Args.m_pMemory[index];
 	}
 
 private:
@@ -58,25 +58,31 @@ private:
 	int m_nArgv0Size;
 
 	// CUtlVectorFixedGrowable<char, COMMAND_MAX_LENGTH> m_ArgSBuffer;
-	int m_ArgSBuffer_Size;
-	char * m_ArgSBuffer_pMemory;
-	int m_ArgSBuffer_nAllocationCount;
-	int m_ArgSBuffer_nGrowSize;
-	char m_ArgSBuffer_pFixedMemory[ COMMAND_MAX_LENGTH ];
+	struct {
+		int m_Size;
+		char * m_pMemory;
+		int m_nAllocationCount;
+		int m_nGrowSize;
+		char m_pFixedMemory[ COMMAND_MAX_LENGTH ];
+	} m_ArgSBuffer;
 
 	// CUtlVectorFixedGrowable<char, COMMAND_MAX_LENGTH> m_ArgvBuffer;
-	int m_ArgvBuffer_Size;
-	char * m_ArgvBuffer_pMemory;
-	int m_ArgvBuffer_nAllocationCount;
-	int m_ArgvBuffer_nGrowSize;
-	char m_ArgvBuffer_pFixedMemory[ COMMAND_MAX_LENGTH ];
+	struct {
+		int m_Size;
+		char * m_pMemory;
+		int m_nAllocationCount;
+		int m_nGrowSize;
+		char m_pFixedMemory[ COMMAND_MAX_LENGTH ];
+	} m_ArgvBuffer;
 
 	// CUtlVectorFixedGrowable<char*, COMMAND_MAX_ARGC> m_Args;
-	int m_ArgsBuffer_Size;
-	char ** m_ArgsBuffer_pMemory;
-	int m_ArgsBuffer_nAllocationCount;
-	int m_ArgsBuffer_nGrowSize;
-	char * m_ArgsBuffer_pFixedMemory[ COMMAND_MAX_ARGC ];
+	struct {
+		int m_Size;
+		char ** m_pMemory;
+		int m_nAllocationCount;
+		int m_nGrowSize;
+		char * m_pFixedMemory[ COMMAND_MAX_ARGC ];
+	} m_Args;
 };
 
 class ICommandCallback {
