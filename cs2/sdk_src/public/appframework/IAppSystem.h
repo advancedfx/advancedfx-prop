@@ -55,6 +55,10 @@ enum AppSystemTier_t
 	APP_SYSTEM_TIER_OTHER,
 };
 
+enum BuildType_t
+{
+	kBuildTypeRelease = 2
+};
 
 SOURCESDK_abstract_class IAppSystem
 {
@@ -84,6 +88,8 @@ public:
 
 	// Returns whether or not the app system is a singleton
 	virtual bool IsSingleton() = 0; //:009
+
+	virtual BuildType_t	GetBuildType() = 0; //:010
 };
 
 
@@ -124,9 +130,8 @@ class CTier0AppSystem : public CBaseAppSystem< IInterface >
 {
 };
 
-
-} // namespace SOURCESDK {
 } // namespace CS2 {
+} // namespace SOURCESDK {
 
 #endif // SOURCESDK_CS2_IAPPSYSTEM_H
 

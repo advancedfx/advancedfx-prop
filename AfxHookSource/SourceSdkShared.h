@@ -29,6 +29,7 @@ namespace SOURCESDK {
 
 typedef float vec_t;
 typedef signed char int8;
+typedef signed __int16 int16;
 typedef signed __int32 int32;
 typedef signed __int64 int64;
 typedef unsigned char uint8;
@@ -1016,36 +1017,6 @@ namespace CS2 {
 typedef void* (*CreateInterfaceFn)(const char *pName, int *pReturnCode);
 
 class CGlobalVarsBase;
-
-template< class T, class I = int >
-/// <remarks>Warning, only required elements declared and defined!</remarks>
-class CUtlMemory
-{
-public:
-	//
-	// We don't need this
-};
-
-template< class T, class A = CUtlMemory<T> >
-/// <remarks>Warning, only required elements declared and defined!</remarks>
-class CUtlVector
-{
-	typedef A CAllocator;
-public:
-	typedef T ElemType_t;
-
-protected:
-	CAllocator m_Memory;
-	int m_Size;
-
-#ifndef _X360
-	// For easier access to the elements through the debugger
-	// it's in release builds so this can be used in libraries correctly
-	T *m_pElements;
-
-#else
-#endif
-};
 
 } // namespace CS2 {
 

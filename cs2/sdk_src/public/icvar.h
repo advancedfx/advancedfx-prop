@@ -11,8 +11,8 @@
 #endif
 
 #include "appframework/IAppSystem.h"
-//#include "tier1/iconvar.h"
-//#include "tier1/utlvector.h"
+#include "tier1/convar.h"
+#include "tier1/utlvector.h"
 #include "tier0/memalloc.h"
 #include "../../../AfxHookSource/SourceSdkShared.h"
 
@@ -34,71 +34,63 @@ struct CvarIterator{
 	}
 };
 
-class CCommand {
-public:
-	size_t ArgC() const {
-		return m_Args.m_Size;
-	}
-
-	const char * ArgS() const {
-		return m_ArgSBuffer.m_pMemory;
-	}
-
-	const char * ArgV(size_t index) const {
-		return m_Args.m_pMemory[index];
-	}
-
-private:
-	enum
-	{
-		COMMAND_MAX_ARGC = 64, // might be inaccurate
-		COMMAND_MAX_LENGTH = 512,
-	};
-
-	int m_nArgv0Size;
-
-	// CUtlVectorFixedGrowable<char, COMMAND_MAX_LENGTH> m_ArgSBuffer;
-	struct {
-		int m_Size;
-		char * m_pMemory;
-		int m_nAllocationCount;
-		int m_nGrowSize;
-		char m_pFixedMemory[ COMMAND_MAX_LENGTH ];
-	} m_ArgSBuffer;
-
-	// CUtlVectorFixedGrowable<char, COMMAND_MAX_LENGTH> m_ArgvBuffer;
-	struct {
-		int m_Size;
-		char * m_pMemory;
-		int m_nAllocationCount;
-		int m_nGrowSize;
-		char m_pFixedMemory[ COMMAND_MAX_LENGTH ];
-	} m_ArgvBuffer;
-
-	// CUtlVectorFixedGrowable<char*, COMMAND_MAX_ARGC> m_Args;
-	struct {
-		int m_Size;
-		char ** m_pMemory;
-		int m_nAllocationCount;
-		int m_nGrowSize;
-		char * m_pFixedMemory[ COMMAND_MAX_ARGC ];
-	} m_Args;
-};
-
 class ICommandCallback {
 public:
 	virtual void CommandCallback(void * _unknown1_rdx_ptr, CCommand * pArgs) = 0;
 };
 
+
+//-----------------------------------------------------------------------------
+// Purpose: Internal structure of ConVar objects
+//-----------------------------------------------------------------------------
+enum EConVarType : int16_t
+{
+	EConVarType_Invalid = -1,
+	EConVarType_Bool,
+	EConVarType_Int16,
+	EConVarType_UInt16,
+	EConVarType_Int32,
+	EConVarType_UInt32,
+	EConVarType_Int64,
+	EConVarType_UInt64,
+	EConVarType_Float32,
+	EConVarType_Float64,
+	EConVarType_String,
+	EConVarType_Color,
+	EConVarType_Vector2,
+	EConVarType_Vector3,
+	EConVarType_Vector4,
+	EConVarType_Qangle,
+	EConVarType_MAX
+};
+
 // size: 10*8 Bytes
 struct Cvar_s {
-	const char 					*m_pszName;
-	void * _unknown_8;
-	void * _unknown_16;
-	void * _unknown_24;
-	const char 					*m_pszHelpString;
-	void * _unknown_40;
-	int							m_nFlags;	
+
+	const char* m_pszName;
+
+	void* m_defaultValue;
+	void* m_minValue;
+	void* m_maxValue;
+	const char* m_pszHelpString;
+	EConVarType m_eVarType;
+
+	// This gets copied from the ConVarDesc_t on creation
+	short unk1;
+
+	unsigned int m_iTimesChanged;
+	int64 m_nFlags;
+	unsigned int m_iCallbackIndex;
+
+	// Used when setting default, max, min values from the ConVarDesc_t
+	// although that's not the only place of usage
+	// flags seems to be:
+	// (1 << 0) Skip setting value to split screen slots and also something keyvalues related
+	// (1 << 1) Skip setting default value
+	// (1 << 2) Skip setting min/max values
+	int m_nUnknownAllocFlags;
+
+	CVValue_t m_Value= {}; 
 };
 
 // size: 8*8 Bytes
@@ -152,23 +144,16 @@ typedef int CVarDLLIdentifier_t;
 SOURCESDK_abstract_class ICvar : public IAppSystem
 {
 public:
-	// Allocate a unique DLL identifier
-	virtual CVarDLLIdentifier_t AllocateDLLIdentifier() = 0; //:010
+	virtual ConVarHandle	FindConVar( const char *name, bool bAllowDeveloper = false ) = 0; //:011
+	virtual ConVarHandle	FindFirstConVar() = 0; //:012
+	virtual ConVarHandle	FindNextConVar( ConVarHandle prev ) = 0; //:013
+	virtual void			CallChangeCallback( ConVarHandle cvarid, CSplitScreenSlot nSlot, CVValue_t *pNewValue, CVValue_t *pOldValue ) = 0; //:014
 
-	virtual void _Unknown_011(void) = 0;
+	virtual ConCommandHandle	FindCommand( const char *name, CSplitScreenSlot nSlot ) = 0; //:015
+	virtual ConCommandHandle	FindFirstCommand() = 0; //:016
+	virtual ConCommandHandle	FindNextCommand( ConCommandHandle prev ) = 0; //:016
+	virtual void				DispatchConCommand( ConCommandHandle cmd, const CCommandContext &ctx, const CCommand &args ) = 0; //:018
 
-	// Usless, doesn't iterate over hidden cvars:
-	virtual CvarIterator GetCvarBegin() = 0; //:012
-	virtual CvarIterator GetCvarNext( CvarIterator iterator ) = 0; //:013
-
-	virtual void _Unknown_014(void) = 0;
-	virtual void _Unknown_015(void) = 0;
-
-	// Usless, doesn't iterate over hidden cmds:
-	virtual CvarIterator GetCmdBegin() = 0; //:016
-	virtual CvarIterator GetCmdNext( CvarIterator iterator ) = 0; //:017
-
-	virtual void _Unknown_018(void) = 0;
 	virtual void _Unknown_019(void) = 0;
 	virtual void _Unknown_020(void) = 0;
 	virtual void _Unknown_021(void) = 0;
