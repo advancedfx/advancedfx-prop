@@ -144,12 +144,12 @@ typedef int CVarDLLIdentifier_t;
 SOURCESDK_abstract_class ICvar : public IAppSystem
 {
 public:
-	virtual ConVarHandle	FindConVar( const char *name, bool bAllowDeveloper = false ) = 0; //:011
+	virtual ConVarHandle	FindConVar( const char *name, bool bDiallowDeveloper = true ) = 0; //:011
 	virtual ConVarHandle	FindFirstConVar() = 0; //:012
 	virtual ConVarHandle	FindNextConVar( ConVarHandle prev ) = 0; //:013
 	virtual void			CallChangeCallback( ConVarHandle cvarid, CSplitScreenSlot nSlot, CVValue_t *pNewValue, CVValue_t *pOldValue ) = 0; //:014
 
-	virtual ConCommandHandle	FindCommand( const char *name, CSplitScreenSlot nSlot ) = 0; //:015
+	virtual ConCommandHandle	FindCommand( const char *name, bool bDiallowDeveloper = true ) = 0; //:015
 	virtual ConCommandHandle	FindFirstCommand() = 0; //:016
 	virtual ConCommandHandle	FindNextCommand( ConCommandHandle prev ) = 0; //:016
 	virtual void				DispatchConCommand( ConCommandHandle cmd, const CCommandContext &ctx, const CCommand &args ) = 0; //:018
