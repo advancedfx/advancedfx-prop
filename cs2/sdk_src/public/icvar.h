@@ -175,7 +175,7 @@ public:
 	virtual Cvar_s * GetCvar( size_t i ); //:037
 
 	virtual CvarIterator RegisterConCommand( CCmd * pCmd, int64 nAdditionalFlags = 0 ) = 0; //:038
-	virtual void _Unknown_039(void) = 0;
+	virtual void UnregisterConCommand( size_t i ) = 0;
 
 	virtual CCmd * GetCmd( size_t i ); //:040;
 };
