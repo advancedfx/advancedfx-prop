@@ -116,8 +116,8 @@ public:
     virtual void _Unknown_059(void) = 0;
     virtual void _Unknown_060(void) = 0;
     virtual void _Unknown_061(void) = 0;
-
-    virtual IDemoFile* GetDemoFile(void) = 0; //:062
+    virtual void _Unknown_062(void) = 0;
+    virtual IDemoFile* GetDemoFile(void) = 0; //:063
 
 };
 
