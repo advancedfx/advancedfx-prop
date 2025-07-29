@@ -148,12 +148,13 @@ public:
 	virtual ConVarHandle	FindNextConVar( ConVarHandle prev ) = 0; //:013
 	virtual void			CallChangeCallback( ConVarHandle cvarid, CSplitScreenSlot nSlot, CVValue_t *pNewValue, CVValue_t *pOldValue ) = 0; //:014
 
-	virtual ConCommandHandle	FindCommand( const char *name, bool bDiallowDeveloper = true ) = 0; //:015
-	virtual ConCommandHandle	FindFirstCommand() = 0; //:016
-	virtual ConCommandHandle	FindNextCommand( ConCommandHandle prev ) = 0; //:016
-	virtual void				DispatchConCommand( ConCommandHandle cmd, const CCommandContext &ctx, const CCommand &args ) = 0; //:018
+	virtual void _Unknown_015(void) = 0;
 
-	virtual void _Unknown_019(void) = 0;
+	virtual ConCommandHandle	FindCommand( const char *name, bool bDiallowDeveloper = true ) = 0; //:016
+	virtual ConCommandHandle	FindFirstCommand() = 0; //:017
+	virtual ConCommandHandle	FindNextCommand( ConCommandHandle prev ) = 0; //:018
+	virtual void				DispatchConCommand( ConCommandHandle cmd, const CCommandContext &ctx, const CCommand &args ) = 0; //:019
+
 	virtual void _Unknown_020(void) = 0;
 	virtual void _Unknown_021(void) = 0;
 	virtual void _Unknown_022(void) = 0;
