@@ -171,13 +171,17 @@ public:
 	virtual void _Unknown_034(void) = 0;
 	virtual void _Unknown_035(void) = 0;
 	virtual void _Unknown_036(void) = 0;
+	virtual void _Unknown_037(void) = 0;
+	virtual void _Unknown_038(void) = 0;
+	virtual void _Unknown_039(void) = 0;
+	virtual void _Unknown_040(void) = 0;
 
-	virtual Cvar_s * GetCvar( size_t i ); //:037
+	virtual Cvar_s * GetCvar( size_t i ); //:041
 
-	virtual CvarIterator RegisterConCommand( CCmd * pCmd, int64 nAdditionalFlags = 0 ) = 0; //:038
-	virtual void UnregisterConCommand( size_t i ) = 0;
+	virtual CvarIterator RegisterConCommand( CCmd * pCmd, int64 nAdditionalFlags = 0 ) = 0; //:042
+	virtual void UnregisterConCommand( size_t i ) = 0; //:043
 
-	virtual CCmd * GetCmd( size_t i ); //:040;
+	virtual CCmd * GetCmd( size_t i ); //:044;
 };
 
 //-----------------------------------------------------------------------------
