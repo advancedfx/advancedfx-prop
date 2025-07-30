@@ -75,8 +75,8 @@ struct Cvar_s {
 	const char* m_pszHelpString;
 	EConVarType m_eVarType;
 
-	// This gets copied from the ConVarDesc_t on creation
-	short unk1;
+	// Might be set by a gameinfo config via "version" key
+	short m_Version;
 
 	unsigned int m_iTimesChanged;
 	int64 m_nFlags;
@@ -89,6 +89,9 @@ struct Cvar_s {
 	// (1 << 1) Skip setting default value
 	// (1 << 2) Skip setting min/max values
 	int m_nUnknownAllocFlags;
+
+	int unk0;
+	int unk1;
 
 	CVValue_t m_Value= {}; 
 };
