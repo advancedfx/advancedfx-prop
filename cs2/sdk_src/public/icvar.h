@@ -140,6 +140,7 @@ private:
 
 
 typedef int CVarDLLIdentifier_t;
+typedef void * FnCvarCallbacksReader_t;
 
 //-----------------------------------------------------------------------------
 // Purpose: DLL interface to ConVars/ConCommands
@@ -151,11 +152,11 @@ public:
 	virtual ConVarHandle	FindFirstConVar() = 0; //:012
 	virtual ConVarHandle	FindNextConVar( ConVarHandle prev ) = 0; //:013
 
-	virtual void			CallChangeCallback( ConVarRef cvar, const CSplitScreenSlot nSlot, const CVValue_t* pNewValue, const CVValue_t* pOldValue, void *__unk01 = nullptr ) = 0; //:014
+	virtual void			CallChangeCallback( ConVarHandle cvar, const CSplitScreenSlot nSlot, const CVValue_t* pNewValue, const CVValue_t* pOldValue, void *__unk01 = nullptr ) = 0; //:014
 	// Would call cb for every change callback defined for this cvar
-	virtual void			IterateConVarCallbacks( ConVarRef cvar, FnCvarCallbacksReader_t cb ) = 0; //:015
+	virtual void			IterateConVarCallbacks( ConVarHandle cvar, FnCvarCallbacksReader_t cb ) = 0; //:015
 	// If returns false value shouldn't be modified
-	virtual bool			CallFilterCallback( ConVarRef cvar, const CSplitScreenSlot nSlot, const CVValue_t *pNewValue, const CVValue_t *pOldValue, void *__unk01 = nullptr ) = 0; //:016
+	virtual bool			CallFilterCallback( ConVarHandle cvar, const CSplitScreenSlot nSlot, const CVValue_t *pNewValue, const CVValue_t *pOldValue, void *__unk01 = nullptr ) = 0; //:016
 
 	virtual ConCommandHandle	FindCommand( const char *name, bool bDiallowDeveloper = true ) = 0; //:017
 	virtual ConCommandHandle	FindFirstCommand() = 0; //:018
