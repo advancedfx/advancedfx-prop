@@ -64,14 +64,19 @@ enum EConVarType : int16_t
 	EConVarType_MAX
 };
 
-// size: 10*8 Bytes
 struct Cvar_s {
 
 	const char* m_pszName;
 
-	void* m_defaultValue;
-	void* m_minValue;
-	void* m_maxValue;
+	// Default value is expected to always be present,
+	// even if convar wasn't created with default value
+	// it would use global per type default value in that case
+	CVValue_t* m_defaultValue;
+
+	// Min/Max Could be nullptr if not set
+	CVValue_t* m_minValue;
+	CVValue_t* m_maxValue;
+
 	const char* m_pszHelpString;
 	EConVarType m_eVarType;
 
@@ -80,18 +85,14 @@ struct Cvar_s {
 
 	unsigned int m_iTimesChanged;
 	int64 m_nFlags;
+
+	// Index into a linked list of cvar callbacks
 	unsigned int m_iCallbackIndex;
+	// Index into a linked list of cvar filter callbacks
+	unsigned int m_iFilterCBIndex;
 
-	// Used when setting default, max, min values from the ConVarDesc_t
-	// although that's not the only place of usage
-	// flags seems to be:
-	// (1 << 0) Skip setting value to split screen slots and also something keyvalues related
-	// (1 << 1) Skip setting default value
-	// (1 << 2) Skip setting min/max values
-	int m_nUnknownAllocFlags;
-
-	int unk0;
-	int unk1;
+	int m_GameInfoFlags;
+	int m_UserInfoByteIndex;
 
 	CVValue_t m_Value= {}; 
 };
@@ -149,43 +150,46 @@ public:
 	virtual ConVarHandle	FindConVar( const char *name, bool bDiallowDeveloper = true ) = 0; //:011
 	virtual ConVarHandle	FindFirstConVar() = 0; //:012
 	virtual ConVarHandle	FindNextConVar( ConVarHandle prev ) = 0; //:013
-	virtual void			CallChangeCallback( ConVarHandle cvarid, CSplitScreenSlot nSlot, CVValue_t *pNewValue, CVValue_t *pOldValue ) = 0; //:014
 
-	virtual void _Unknown_015(void) = 0;
+	virtual void			CallChangeCallback( ConVarRef cvar, const CSplitScreenSlot nSlot, const CVValue_t* pNewValue, const CVValue_t* pOldValue, void *__unk01 = nullptr ) = 0; //:014
+	// Would call cb for every change callback defined for this cvar
+	virtual void			IterateConVarCallbacks( ConVarRef cvar, FnCvarCallbacksReader_t cb ) = 0; //:015
+	// If returns false value shouldn't be modified
+	virtual bool			CallFilterCallback( ConVarRef cvar, const CSplitScreenSlot nSlot, const CVValue_t *pNewValue, const CVValue_t *pOldValue, void *__unk01 = nullptr ) = 0; //:016
 
-	virtual ConCommandHandle	FindCommand( const char *name, bool bDiallowDeveloper = true ) = 0; //:016
-	virtual ConCommandHandle	FindFirstCommand() = 0; //:017
-	virtual ConCommandHandle	FindNextCommand( ConCommandHandle prev ) = 0; //:018
-	virtual void				DispatchConCommand( ConCommandHandle cmd, const CCommandContext &ctx, const CCommand &args ) = 0; //:019
+	virtual ConCommandHandle	FindCommand( const char *name, bool bDiallowDeveloper = true ) = 0; //:017
+	virtual ConCommandHandle	FindFirstCommand() = 0; //:018
+	virtual ConCommandHandle	FindNextCommand( ConCommandHandle prev ) = 0; //:019
+	virtual void				DispatchConCommand( ConCommandHandle cmd, const CCommandContext &ctx, const CCommand &args ) = 0; //:020
 
-	virtual void _Unknown_020(void) = 0;
-	virtual void _Unknown_021(void) = 0;
-	virtual void _Unknown_022(void) = 0;
-	virtual void _Unknown_023(void) = 0;
-	virtual void _Unknown_024(void) = 0;
-	virtual void _Unknown_025(void) = 0;
-	virtual void _Unknown_026(void) = 0;
-	virtual void _Unknown_027(void) = 0;
-	virtual void _Unknown_028(void) = 0;
-	virtual void _Unknown_029(void) = 0;
-	virtual void _Unknown_030(void) = 0;
-	virtual void _Unknown_031(void) = 0;
-	virtual void _Unknown_032(void) = 0;
-	virtual void _Unknown_033(void) = 0;
-	virtual void _Unknown_034(void) = 0;
-	virtual void _Unknown_035(void) = 0;
-	virtual void _Unknown_036(void) = 0;
-	virtual void _Unknown_037(void) = 0;
-	virtual void _Unknown_038(void) = 0;
-	virtual void _Unknown_039(void) = 0;
-	virtual void _Unknown_040(void) = 0;
+	virtual void _Unknown_021(void) = 0; // InstallGlobalChangeCallback
+	virtual void _Unknown_022(void) = 0; // RemoveGlobalChangeCallback
+	virtual void _Unknown_023(void) = 0; // CallGlobalChangeCallbacks
+	virtual void _Unknown_024(void) = 0; // ResetConVarsToDefaultValuesByFlag
+	virtual void _Unknown_025(void) = 0; // SetMaxSplitScreenSlots
+	virtual void _Unknown_026(void) = 0; // GetMaxSplitScreenSlots
+	virtual void _Unknown_027(void) = 0; // RegisterCreationListeners
+	virtual void _Unknown_028(void) = 0; // RemoveCreationListeners
+	virtual void _Unknown_029(void) = 0; // unknown
+	virtual void _Unknown_030(void) = 0; // ResetConVarsToDefaultValuesByName
+	virtual void _Unknown_031(void) = 0; // TakeConVarSnapshot
+	virtual void _Unknown_032(void) = 0; // ResetConVarsToSnapshot
+	virtual void _Unknown_033(void) = 0; // DestroyConVarSnapshot
+	virtual void _Unknown_034(void) = 0; // GetCharacterSet
+	virtual void _Unknown_035(void) = 0; // SetConVarsFromGameInfo
+	virtual void _Unknown_036(void) = 0; // StripDevelopmentFlags
+	virtual void _Unknown_037(void) = 0; // GetTotalUserInfoCvarsByteSize
+	virtual void _Unknown_038(void) = 0; // CopyUserInfoCvarDefaults
+	virtual void _Unknown_039(void) = 0; // RegisterConVar
+	virtual void _Unknown_040(void) = 0; // UnregisterConVarCallbacks
+	virtual void _Unknown_041(void) = 0; // LockConVarValueInitialisation
 
-	virtual Cvar_s * GetCvar( size_t i ); //:041
+	virtual Cvar_s * GetCvar( size_t i ); //:042
 
-	virtual CvarIterator RegisterConCommand( CCmd * pCmd, int64 nAdditionalFlags = 0 ) = 0; //:042
-	virtual void UnregisterConCommand( size_t i ) = 0; //:043
+	virtual CvarIterator RegisterConCommand( CCmd * pCmd, int64 nAdditionalFlags = 0 ) = 0; //:043
+	virtual void UnregisterConCommand( size_t i ) = 0; //:044
 
-	virtual CCmd * GetCmd( size_t i ); //:044;
+	virtual CCmd * GetCmd( size_t i ); //:045;
 };
 
 //-----------------------------------------------------------------------------
