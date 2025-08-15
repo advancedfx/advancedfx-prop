@@ -80,18 +80,14 @@ struct Cvar_s {
 
 	unsigned int m_iTimesChanged;
 	int64 m_nFlags;
+	
+	// Index into a linked list of cvar callbacks
 	unsigned int m_iCallbackIndex;
+	// Index into a linked list of cvar filter callbacks
+	unsigned int m_iFilterCBIndex;
 
-	// Used when setting default, max, min values from the ConVarDesc_t
-	// although that's not the only place of usage
-	// flags seems to be:
-	// (1 << 0) Skip setting value to split screen slots and also something keyvalues related
-	// (1 << 1) Skip setting default value
-	// (1 << 2) Skip setting min/max values
-	int m_nUnknownAllocFlags;
-
-	int unk0;
-	int unk1;
+	int m_GameInfoFlags;
+	int m_UserInfoByteIndex;
 
 	CVValue_t m_Value= {}; 
 };
@@ -149,16 +145,18 @@ public:
 	virtual ConVarHandle	FindConVar( const char *name, bool bDiallowDeveloper = true ) = 0; //:011
 	virtual ConVarHandle	FindFirstConVar() = 0; //:012
 	virtual ConVarHandle	FindNextConVar( ConVarHandle prev ) = 0; //:013
-	virtual void			CallChangeCallback( ConVarHandle cvarid, CSplitScreenSlot nSlot, CVValue_t *pNewValue, CVValue_t *pOldValue ) = 0; //:014
+
+	virtual void			CallChangeCallback( ConVarHandle cvar, const CSplitScreenSlot nSlot, const CVValue_t* pNewValue, const CVValue_t* pOldValue, void *__unk01 = nullptr ) = 0;//:014
 
 	virtual void _Unknown_015(void) = 0;
 
-	virtual ConCommandHandle	FindCommand( const char *name, bool bDiallowDeveloper = true ) = 0; //:016
-	virtual ConCommandHandle	FindFirstCommand() = 0; //:017
-	virtual ConCommandHandle	FindNextCommand( ConCommandHandle prev ) = 0; //:018
-	virtual void				DispatchConCommand( ConCommandHandle cmd, const CCommandContext &ctx, const CCommand &args ) = 0; //:019
+	virtual bool			CallFilterCallback( ConVarHandle cvar, const CSplitScreenSlot nSlot, const CVValue_t *pNewValue, const CVValue_t *pOldValue, void *__unk01 = nullptr ) = 0;//:016
 
-	virtual void _Unknown_020(void) = 0;
+	virtual ConCommandHandle	FindCommand( const char *name, bool bDiallowDeveloper = true ) = 0; //:017
+	virtual ConCommandHandle	FindFirstCommand() = 0; //:018
+	virtual ConCommandHandle	FindNextCommand( ConCommandHandle prev ) = 0; //:019
+	virtual void				DispatchConCommand( ConCommandHandle cmd, const CCommandContext &ctx, const CCommand &args ) = 0; //:020
+
 	virtual void _Unknown_021(void) = 0;
 	virtual void _Unknown_022(void) = 0;
 	virtual void _Unknown_023(void) = 0;
@@ -179,13 +177,14 @@ public:
 	virtual void _Unknown_038(void) = 0;
 	virtual void _Unknown_039(void) = 0;
 	virtual void _Unknown_040(void) = 0;
+	virtual void _Unknown_041(void) = 0;
 
-	virtual Cvar_s * GetCvar( size_t i ); //:041
+	virtual Cvar_s * GetCvar( size_t i ); //:042
 
-	virtual CvarIterator RegisterConCommand( CCmd * pCmd, int64 nAdditionalFlags = 0 ) = 0; //:042
-	virtual void UnregisterConCommand( size_t i ) = 0; //:043
+	virtual CvarIterator RegisterConCommand( CCmd * pCmd, int64 nAdditionalFlags = 0 ) = 0; //:043
+	virtual void UnregisterConCommand( size_t i ) = 0;//:044
 
-	virtual CCmd * GetCmd( size_t i ); //:044;
+	virtual CCmd * GetCmd( size_t i ); //:045;
 };
 
 //-----------------------------------------------------------------------------
