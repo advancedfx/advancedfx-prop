@@ -94,6 +94,7 @@ struct Cvar_s {
 	int m_GameInfoFlags;
 	int m_UserInfoByteIndex;
 
+	// This one leaks memory on destroy like the original thing in AlliedModders hl2sdk/cs2 (but cvars are only allocated one-time during a run of the game).
 	CVValue_t m_Value= {}; 
 };
 

@@ -19,8 +19,8 @@
 //#include "tier0/dbg.h"
 #include "iconvar.h"
 #include "../tier1/utlvector.h"
-//#include "tier1/utlstring.h"
-//#include "color.h"
+#include "../tier1/utlstring.h"
+#include "../color.h"
 
 #include "../../../../AfxHookSource/SourceSdkShared.h"
 #include "../tier0/platform.h"
@@ -122,10 +122,12 @@ struct CSplitScreenSlot
 };
 
 class Vector2D {
+public:
 	vec_t x, y;
 };
 
 class Vector4D {
+public:
 	vec_t x, y, z, w;
 };
 
@@ -140,12 +142,14 @@ union CVValue_t
 	uint64		m_u64Value;
 	float		m_flValue;
 	double		m_dbValue;
-	const char *m_szValue;
+	CUtlString	m_szValue;
 	Color		m_clrValue;
 	Vector2D	m_vec2Value;
-	Vector		m_vec3Value;
+	::SOURCESDK::Vector		m_vec3Value;
 	Vector4D	m_vec4Value;
-	QAngle		m_angValue;
+	::SOURCESDK::QAngle		m_angValue;
+
+	~CVValue_t() {}
 };
 
 #define SOURCESDK_CS2_CVAR_INTERFACE_VERSION "VEngineCvar007"
