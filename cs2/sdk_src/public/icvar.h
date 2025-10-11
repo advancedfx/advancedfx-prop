@@ -22,6 +22,9 @@
 namespace SOURCESDK {
 namespace CS2 {
 
+#define SOURCESDK_CS2_MAX_VALID_CVARS 8192
+#define SOURCESDK_CS2_MAX_VALID_CVAR_INDEX (SOURCESDK_CS2_MAX_VALID_CVARS-1)
+
 struct CvarIterator{
 	size_t index = (unsigned short)-1;
 
