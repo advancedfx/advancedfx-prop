@@ -97,6 +97,8 @@ struct Cvar_s {
 	int m_GameInfoFlags;
 	int m_UserInfoByteIndex;
 
+	int unk;
+
 	// This one leaks memory on destroy like the original thing in AlliedModders hl2sdk/cs2 (but cvars are only allocated one-time during a run of the game).
 	CVValue_t m_Value= {}; 
 };
@@ -188,13 +190,14 @@ public:
 	virtual void _Unknown_039(void) = 0; // RegisterConVar
 	virtual void _Unknown_040(void) = 0; // UnregisterConVarCallbacks
 	virtual void _Unknown_041(void) = 0; // LockConVarValueInitialisation
+	virtual void _Unknown_042(void) = 0; 
 
-	virtual Cvar_s * GetCvar( size_t i ); //:042
+	virtual Cvar_s * GetCvar( size_t i ); //:043
 
-	virtual CvarIterator RegisterConCommand( CCmd * pCmd, int64 nAdditionalFlags = 0 ) = 0; //:043
-	virtual void UnregisterConCommand( size_t i ) = 0; //:044
+	virtual CvarIterator RegisterConCommand( CCmd * pCmd, int64 nAdditionalFlags = 0 ) = 0; //:044
+	virtual void UnregisterConCommand( size_t i ) = 0; //:045
 
-	virtual CCmd * GetCmd( size_t i ); //:045;
+	virtual CCmd * GetCmd( size_t i ); //:046;
 };
 
 //-----------------------------------------------------------------------------
