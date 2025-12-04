@@ -89,7 +89,7 @@ CCommand::CCommand( int nArgC, const char **ppArgV )
 		memcpy( pBuf, ppArgV[i], nLen+1 );
 		if ( i == 0 )
 		{
-			m_nArgv0Size = nLen;
+			m_nArgv0Size = nLen + 1;
 		}
 		pBuf += nLen+1;
 
@@ -110,6 +110,7 @@ CCommand::CCommand( int nArgC, const char **ppArgV )
 			*pSBuf++ = ' ';
 		}
 	}
+	*pSBuf++ = '\0';
 }
 
 void CCommand::Reset()
