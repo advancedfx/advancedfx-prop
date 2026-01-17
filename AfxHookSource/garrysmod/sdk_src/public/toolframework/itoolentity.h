@@ -40,7 +40,7 @@ class KeyValues;
 //-----------------------------------------------------------------------------
 // Safe accessor to an entity
 //-----------------------------------------------------------------------------
-typedef unsigned int HTOOLHANDLE;
+typedef size_t HTOOLHANDLE;
 enum
 {
 	HTOOLHANDLE_INVALID = 0

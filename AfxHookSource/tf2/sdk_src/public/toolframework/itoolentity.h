@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//====== Copyright ï¿½ 1996-2005, Valve Corporation, All rights reserved. =======
 //
 // Purpose: 
 //
@@ -45,7 +45,7 @@ class KeyValues;
 //-----------------------------------------------------------------------------
 // Safe accessor to an entity
 //-----------------------------------------------------------------------------
-typedef unsigned int HTOOLHANDLE;
+typedef size_t HTOOLHANDLE;
 enum
 {
 	HTOOLHANDLE_INVALID = 0
