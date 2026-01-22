@@ -16,7 +16,11 @@ namespace CS2 {
 class CKV3MemberName
 {
 public:
-	inline CKV3MemberName(const char* pszString): m_nHashCode(0), m_pszString("")
+    CKV3MemberName(int iHashCode, int iUnknown, const char* pszString): m_nHashCode(iHashCode), m_iUnknown(iUnknown), m_pszString(pszString) {
+
+    }
+
+	inline CKV3MemberName(const char* pszString): m_nHashCode(0), m_iUnknown(-1), m_pszString("")
 	{	
 		if (!pszString || !pszString[0])
 			return;
@@ -40,7 +44,7 @@ public:
 
 private:
 	unsigned int m_nHashCode;
-    unsigned int m_Unknown = -1;
+    unsigned int m_iUnknown;
 	const char* m_pszString;
 };
 
