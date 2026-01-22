@@ -31,9 +31,8 @@ public:
     virtual void _Unknown_008(void) = 0;
     virtual void _Unknown_009(void) = 0;
     virtual void _Unknown_010(void) = 0;
-    virtual void _Unknown_011(void) = 0;
-    virtual bool IsPlayingDemo(void) = 0; //:012
-    virtual bool IsDemoPaused(void) = 0; //:013
+    virtual bool IsPlayingDemo(void) = 0; //:011
+    virtual bool IsDemoPaused(void) = 0; //:012
     virtual void _Unknown_014(void) = 0;
     virtual void _Unknown_015(void) = 0;
 };
