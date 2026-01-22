@@ -19,6 +19,7 @@
 #include "interfaces/interfaces.h"
 #include "entityhandle.h"
 //#include "tier1/bitbuf.h"
+#include "tier1/keyvalues3.h"
 
 #ifndef NULL
 #define NULL 0
@@ -81,8 +82,8 @@ SOURCESDK_abstract_class IToolGameEventAPI
 	virtual void unk001( void * ) = 0;
 };*/
 
-// GameEventKeySymbol_t is murmur2 hash of keyName, supposedly
-typedef unsigned int GameEventKeySymbol_t;
+typedef CKV3MemberName GameEventKeySymbol_t;
+
 typedef void* ScriptVariant_t;
 
 SOURCESDK_abstract_class IGameEvent
