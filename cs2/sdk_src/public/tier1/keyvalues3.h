@@ -40,6 +40,7 @@ public:
 
 private:
 	unsigned int m_nHashCode;
+    unsigned int m_Unknown = -1;
 	const char* m_pszString;
 };
 
