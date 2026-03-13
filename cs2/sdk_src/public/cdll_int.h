@@ -33,8 +33,8 @@ public:
     virtual void _Unknown_010(void) = 0;
     virtual bool IsPlayingDemo(void) = 0; //:011
     virtual bool IsDemoPaused(void) = 0; //:012
-    virtual void _Unknown_014(void) = 0;
-    virtual void _Unknown_015(void) = 0;
+
+    // ...
 };
 
 // change this when the new version is incompatable with the old
@@ -99,7 +99,7 @@ public:
     virtual void _Unknown_047(void) = 0;
     virtual void _Unknown_048(void) = 0;
 
-    virtual void ExecuteClientCmd(int iUnk0MaybeSplitScreenSlotSetTo0, const char * pszCommands, bool bUnk2SetToTrue) = 0; //:048
+    virtual void ExecuteClientCmd(int iUnk0MaybeSplitScreenSlotSetTo0, const char * pszCommands, bool bUnk2SetToTrue) = 0; //:049
 
     virtual void _Unknown_050(void) = 0;
     virtual void _Unknown_051(void) = 0;
