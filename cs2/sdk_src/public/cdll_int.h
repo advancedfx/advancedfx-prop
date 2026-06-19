@@ -92,7 +92,8 @@ public:
 
     virtual bool IsPlayingDemo(void) = 0; //:042
 
-    virtual void _Unknown_043(void) = 0; // Demo related
+    virtual const char * GetDemoFilePath(void) = 0; //:043
+    
     virtual void _Unknown_044(void) = 0;
     virtual void _Unknown_045(void) = 0; // Demo related
     virtual void _Unknown_046(void) = 0;
