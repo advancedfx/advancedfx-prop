@@ -77,6 +77,8 @@ inline void Destruct( T* pMemory )
 
 #define SOURCESDK_CS2_FMTFUNCTION( a, b )
 
+const char * Plat_GetGameDirectory( int unknown=0 );
+
 } // namespace SOURCESDK {
 } // namespace CS2 {
 

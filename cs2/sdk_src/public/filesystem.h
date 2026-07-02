@@ -12,8 +12,29 @@
 #pragma once
 #endif
 
+#include "tier1/bufferstring.h"
+
 namespace SOURCESDK {
 namespace CS2 {
+
+// search path filtering
+enum PathTypeFilter_t
+{
+	FILTER_NONE          = 0,	// no filtering, all search path types match
+	FILTER_CULLLOCALIZED = 1,
+	FILTER_CULLPACK      = 2,	// pack based search paths are culled (maps and zips)
+	FILTER_CULLNONPACK   = 3,	// non-pack based search paths are culled
+};
+
+// search path querying (bit flags)
+enum
+{
+	PATH_IS_NORMAL      = 0x00, // normal path, not pack based
+	PATH_IS_PACKFILE    = 0x01, // path is a pack file
+	PATH_IS_MAPPACKFILE = 0x02, // path is a map pack file
+	PATH_IS_DVDDEV		= 0x04, // path is the dvddev cache
+};
+typedef uint32 PathTypeQuery_t;
 
 enum SearchPathAdd_t
 {
@@ -69,7 +90,7 @@ public:
     virtual void _Unknown_029(void) = 0;
 
     virtual void _Unknown_030(void) = 0;
-	virtual void AddSearchPath( const char *pPath, const char *pathID, SearchPathAdd_t addType = PATH_ADD_TO_TAIL, SearchPathPriority_t priority = SEARCH_PATH_PRIORITY_DEFAULT, int unknown = 0 ) = 0;
+	virtual void AddSearchPath( const char *pPath, const char *pathID, SearchPathAdd_t addType = PATH_ADD_TO_TAIL, SearchPathPriority_t priority = SEARCH_PATH_PRIORITY_DEFAULT, int unknown = 0 ) = 0; //:031
     virtual void _Unknown_032(void) = 0;
     virtual void _Unknown_033(void) = 0;
     virtual void _Unknown_034(void) = 0;
@@ -80,7 +101,7 @@ public:
     virtual void _Unknown_039(void) = 0;
 
     virtual void _Unknown_040(void) = 0;
-    virtual void _Unknown_041(void) = 0;
+    virtual const char * RelativePathToFullPath( const char *pFileName, const char *pPathID, CBufferString &pLocalPath, PathTypeFilter_t pathFilter = FILTER_NONE, PathTypeQuery_t *pPathType = NULL ) = 0; //:041
     virtual void _Unknown_042(void) = 0;
     virtual void _Unknown_043(void) = 0;
     virtual void _Unknown_044(void) = 0;
