@@ -148,6 +148,7 @@ union CVValue_t
 	::SOURCESDK::Vector		m_vec3Value;
 	Vector4D	m_vec4Value;
 	::SOURCESDK::QAngle		m_angValue;
+	::SOURCESDK::VectorWS	m_vecwsValue;
 
 	~CVValue_t() {}
 };

@@ -64,6 +64,7 @@ enum EConVarType : int16_t
 	EConVarType_Vector3,
 	EConVarType_Vector4,
 	EConVarType_Qangle,
+	EConVarType_VectorWS,
 	EConVarType_MAX
 };
 
@@ -175,30 +176,28 @@ public:
 	virtual void _Unknown_023(void) = 0; // CallGlobalChangeCallbacks
 	virtual void _Unknown_024(void) = 0; // ResetConVarsToDefaultValuesByFlag
 	virtual void _Unknown_025(void) = 0; // SetMaxSplitScreenSlots
-	virtual void _Unknown_026(void) = 0; // GetMaxSplitScreenSlots
-	virtual void _Unknown_027(void) = 0; // RegisterCreationListeners
-	virtual void _Unknown_028(void) = 0; // RemoveCreationListeners
-	virtual void _Unknown_029(void) = 0; // unknown
-	virtual void _Unknown_030(void) = 0; // ResetConVarsToDefaultValuesByName
-	virtual void _Unknown_031(void) = 0; // TakeConVarSnapshot
-	virtual void _Unknown_032(void) = 0; // ResetConVarsToSnapshot
-	virtual void _Unknown_033(void) = 0; // DestroyConVarSnapshot
-	virtual void _Unknown_034(void) = 0; // GetCharacterSet
-	virtual void _Unknown_035(void) = 0; // SetConVarsFromGameInfo
-	virtual void _Unknown_036(void) = 0; // StripDevelopmentFlags
-	virtual void _Unknown_037(void) = 0; // GetTotalUserInfoCvarsByteSize
-	virtual void _Unknown_038(void) = 0; // CopyUserInfoCvarDefaults
-	virtual void _Unknown_039(void) = 0; // RegisterConVar
-	virtual void _Unknown_040(void) = 0; // UnregisterConVarCallbacks
-	virtual void _Unknown_041(void) = 0; // LockConVarValueInitialisation
-	virtual void _Unknown_042(void) = 0; 
+	virtual void _Unknown_026(void) = 0; // RegisterCreationListeners
+	virtual void _Unknown_027(void) = 0; // RemoveCreationListeners
+	virtual void _Unknown_028(void) = 0; // ResetConVarsToDefaultValuesByName
+	virtual void _Unknown_029(void) = 0; // TakeConVarSnapshot
+	virtual void _Unknown_030(void) = 0; // ResetConVarsToSnapshot
+	virtual void _Unknown_031(void) = 0; // DestroyConVarSnapshot
+	virtual void _Unknown_032(void) = 0; // GetCharacterSet
+	virtual void _Unknown_033(void) = 0; // SetConVarsFromGameInfo
+	virtual void _Unknown_034(void) = 0; // StripDevelopmentFlags
+	virtual void _Unknown_035(void) = 0; // GetTotalUserInfoCvarsByteSize
+	virtual void _Unknown_036(void) = 0; // CopyUserInfoCvarDefaults
+	virtual void _Unknown_037(void) = 0; // RegisterConVar
+	virtual void _Unknown_038(void) = 0; // UnregisterConVarCallbacks
+	virtual void _Unknown_039(void) = 0; // LockConVarValueInitialisation
+	virtual void _Unknown_040(void) = 0; 
 
-	virtual Cvar_s * GetCvar( size_t i ); //:043
+	virtual Cvar_s * GetCvar( size_t i ); //:041
 
-	virtual CvarIterator RegisterConCommand( CCmd * pCmd, int64 nAdditionalFlags = 0 ) = 0; //:044
-	virtual void UnregisterConCommand( size_t i ) = 0; //:045
+	virtual CvarIterator RegisterConCommand( CCmd * pCmd, int64 nAdditionalFlags = 0 ) = 0; //:042
+	virtual void UnregisterConCommand( size_t i ) = 0; //:043
 
-	virtual CCmd * GetCmd( size_t i ); //:046;
+	virtual CCmd * GetCmd( size_t i ); //:044;
 };
 
 //-----------------------------------------------------------------------------

@@ -149,6 +149,14 @@ SOURCESDK_FORCEINLINE  Vector& Vector::operator*=(float fl)
 	return *this;
 }
 
+// VectorWS ////////////////////////////////////////////////////////////////////
+
+// AMNOTE: Mostly a stub over a real VectorWS,
+// most likely meaning of it is world space vector
+class VectorWS : public Vector
+{
+	using Vector::Vector;
+};
 
 // QAngle //////////////////////////////////////////////////////////////////////
 
