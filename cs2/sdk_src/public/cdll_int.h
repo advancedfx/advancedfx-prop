@@ -130,7 +130,7 @@ public:
 enum ClientFrameStage_t
 {
 	FRAME_UNDEFINED=-1,     // (haven't run any frames yet)
-	FRAME_RENDER_PASS = 11   // Render a frame for display
+	FRAME_RENDER_PASS = 12   // Render a frame for display
     // There are more values in-between, but their meanings have changed and we did not confirm them yet.
 };
 
