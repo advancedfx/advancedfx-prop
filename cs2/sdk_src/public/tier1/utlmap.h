@@ -29,9 +29,10 @@ struct Node {
 
 template <typename Key, typename Value, typename Index = int>
 struct CUtlMap {
-    Index size;
-    Index allocationCount;
+	void* unk;
     Node<Key, Value, Index>* memory;
+	int allocationCount;
+    int growSize;
     Index root;
     Index numElements;
 };
