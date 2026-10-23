@@ -19,19 +19,25 @@
 #include <tf2/sdk_src/public/tier1/KeyValues.h>
 //#include "filesystem.h"
 #include <tf2/sdk_src/public/vstdlib/IKeyValuesSystem.h>
-
+//#include "tier0/icommandline.h"
+//#include "tier0/vprof_telemetry.h"
 //#include <Color.h>
 //#include <stdlib.h>
 //#include "tier0/dbg.h"
 //#include "tier0/mem.h"
-//#include "utlvector.h"
 //#include "utlbuffer.h"
 //#include "utlhash.h"
+//#include "utlvector.h"
+//#include "utlqueue.h"
 //#include "UtlSortVector.h"
-//#include "convar.h"
+//#include "convar.h
 
 // memdbgon must be the last include file in a .cpp file!!!
 //#include <tier0/memdbgon.h>
+
+#ifndef MIN
+#define MIN( a, b ) ( ( ( a ) < ( b ) ) ? ( a ) : ( b ) )
+#endif
 
 namespace SOURCESDK {
 namespace TF2 {
@@ -50,6 +56,7 @@ void KVStringDelete(void* pMem)
 
 static const char * s_LastFileLoadingFrom = "unknown"; // just needed for error messages
 */
+
 // Statics for the growable string table
 int (*KeyValues::s_pfGetSymbolForString)( const char *name, bool bCreate ) = &KeyValues::GetSymbolForStringClassic;
 const char *(*KeyValues::s_pfGetStringForSymbol)( int symbol ) = &KeyValues::GetStringForSymbolClassic;
@@ -85,7 +92,7 @@ public:
 			m_errorStack[m_errorIndex] = symName;
 		}
 		m_errorIndex++;
-		m_maxErrorIndex = MAX( m_maxErrorIndex, (m_errorIndex-1) );
+		m_maxErrorIndex = max( m_maxErrorIndex, (m_errorIndex-1) );
 		return m_errorIndex-1;
 	}
 
@@ -101,16 +108,19 @@ public:
 	{
 		Assert( stackLevel >= 0 );
 		Assert( stackLevel < m_errorIndex );
-		m_errorStack[stackLevel] = symName;
+		if ( stackLevel < MAX_ERROR_STACK )		
+			m_errorStack[stackLevel] = symName;
 	}
 
 	// Hit an error, report it and the parsing stack for context
 	void ReportError( const char *pError )
 	{
+		bool bSpewCR = false;
+
 		Warning( "KeyValues Error: %s in file %s\n", pError, m_pFilename );
 		for ( int i = 0; i < m_maxErrorIndex; i++ )
 		{
-			if ( m_errorStack[i] != INVALID_KEY_SYMBOL )
+			if ( i < MAX_ERROR_STACK && m_errorStack[i] != INVALID_KEY_SYMBOL )
 			{
 				if ( i < m_errorIndex )
 				{
@@ -120,9 +130,13 @@ public:
 				{
 					Warning( "(*%s*), ", KeyValues::CallGetStringForSymbol(m_errorStack[i]) );
 				}
+
+				bSpewCR = true;					
 			}
 		}
-		Warning( "\n" );
+		
+		if ( bSpewCR )			
+			Warning( "\n" );
 	}
 
 private:
@@ -154,6 +168,10 @@ public:
 	{
 		g_KeyValuesErrorStack.Reset( m_stackLevel, symName );
 	}
+	int GetStackLevel() const
+	{
+		return m_stackLevel;
+	}		
 private:
 	void Init( int symName )
 	{
@@ -233,7 +251,7 @@ static CLeakTrack track;
 class CKeyValuesGrowableStringTable
 {
 public: 
-	// Constructor
+	// Constructor for global singleton string table
 	CKeyValuesGrowableStringTable() :
 		m_hashLookup( 2048, 0, 0, m_Functor, m_Functor ),
 		#ifdef PLATFORM_64BITS
@@ -241,6 +259,14 @@ public:
 		#else
 			m_vecStrings( 0, 512 * 1024 )
 		#endif
+	{
+		m_vecStrings.AddToTail( '\0' );
+	}
+
+	// Constructor for per-instance string table
+	CKeyValuesGrowableStringTable( int nInitialStringCapacity ) :
+		m_hashLookup( 16, 0, 0, m_Functor, m_Functor ),
+		m_vecStrings( 0, nInitialStringCapacity )
 	{
 		m_vecStrings.AddToTail( '\0' );
 	}
@@ -363,7 +389,6 @@ const char *KeyValues::GetStringForSymbolClassic( int symbol )
 	return KeyValuesSystem()->GetStringForSymbol( symbol );
 }
 
-
 int KeyValues::GetSymbolForStringGrowable( const char *name, bool bCreate )
 {
 	return GetSymbolForStringClassic(name, bCreate);
@@ -382,7 +407,10 @@ const char *KeyValues::GetStringForSymbolGrowable( int symbol )
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
-KeyValues::KeyValues( const char *setName )
+KeyValues::KeyValues( const char *setName ) :
+	m_bIsUsingLocalStringTable( false ),
+	m_bOwnsLocalStringTable( false ),
+	m_pLocalStringTable( NULL )
 {
 	TRACK_KV_ADD( this, setName );
 
@@ -391,9 +419,46 @@ KeyValues::KeyValues( const char *setName )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Constructor with optional per-instance string table
+//-----------------------------------------------------------------------------
+KeyValues::KeyValues( const char *setName, bool bUsesLocalStorage ) :
+	m_bIsUsingLocalStringTable( false ),
+	m_bOwnsLocalStringTable( false ),
+	m_pLocalStringTable( NULL )
+{
+	TRACK_KV_ADD( this, setName );
+
+	Init();
+	if ( bUsesLocalStorage )
+	{
+		m_pLocalStringTable = new CKeyValuesGrowableStringTable( 256 );
+		m_bIsUsingLocalStringTable = true;
+		m_bOwnsLocalStringTable = true;
+	}
+	SetName( setName );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Constructor for child nodes sharing a per-instance string table
+//-----------------------------------------------------------------------------
+KeyValues::KeyValues( const char *setName, CKeyValuesGrowableStringTable *pLocalStringTable ) :
+	m_bIsUsingLocalStringTable( pLocalStringTable != NULL ),
+	m_bOwnsLocalStringTable( false ),
+	m_pLocalStringTable( pLocalStringTable )
+{
+	TRACK_KV_ADD( this, setName );
+
+	Init();
+	SetName( setName );
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
-KeyValues::KeyValues( const char *setName, const char *firstKey, const char *firstValue )
+KeyValues::KeyValues( const char *setName, const char *firstKey, const char *firstValue ) :
+	m_bIsUsingLocalStringTable( false ),
+	m_bOwnsLocalStringTable( false ),
+	m_pLocalStringTable( NULL )
 {
 	TRACK_KV_ADD( this, setName );
 
@@ -405,7 +470,10 @@ KeyValues::KeyValues( const char *setName, const char *firstKey, const char *fir
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
-KeyValues::KeyValues( const char *setName, const char *firstKey, const wchar_t *firstValue )
+KeyValues::KeyValues( const char *setName, const char *firstKey, const wchar_t *firstValue ) :
+	m_bIsUsingLocalStringTable( false ),
+	m_bOwnsLocalStringTable( false ),
+	m_pLocalStringTable( NULL )
 {
 	TRACK_KV_ADD( this, setName );
 
@@ -417,7 +485,10 @@ KeyValues::KeyValues( const char *setName, const char *firstKey, const wchar_t *
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
-KeyValues::KeyValues( const char *setName, const char *firstKey, int firstValue )
+KeyValues::KeyValues( const char *setName, const char *firstKey, int firstValue ) :
+	m_bIsUsingLocalStringTable( false ),
+	m_bOwnsLocalStringTable( false ),
+	m_pLocalStringTable( NULL )
 {
 	TRACK_KV_ADD( this, setName );
 
@@ -429,7 +500,10 @@ KeyValues::KeyValues( const char *setName, const char *firstKey, int firstValue 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
-KeyValues::KeyValues( const char *setName, const char *firstKey, const char *firstValue, const char *secondKey, const char *secondValue )
+KeyValues::KeyValues( const char *setName, const char *firstKey, const char *firstValue, const char *secondKey, const char *secondValue ) :
+	m_bIsUsingLocalStringTable( false ),
+	m_bOwnsLocalStringTable( false ),
+	m_pLocalStringTable( NULL )
 {
 	TRACK_KV_ADD( this, setName );
 
@@ -442,7 +516,10 @@ KeyValues::KeyValues( const char *setName, const char *firstKey, const char *fir
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
-KeyValues::KeyValues( const char *setName, const char *firstKey, int firstValue, const char *secondKey, int secondValue )
+KeyValues::KeyValues( const char *setName, const char *firstKey, int firstValue, const char *secondKey, int secondValue ) :
+	m_bIsUsingLocalStringTable( false ),
+	m_bOwnsLocalStringTable( false ),
+	m_pLocalStringTable( NULL )
 {
 	TRACK_KV_ADD( this, setName );
 
@@ -470,9 +547,6 @@ void KeyValues::Init()
 	
 	m_bHasEscapeSequences = false;
 	m_bEvaluateConditionals = true;
-
-	// for future proof
-	memset( unused, 0, sizeof(unused) );
 }
 
 //-----------------------------------------------------------------------------
@@ -483,6 +557,11 @@ KeyValues::~KeyValues()
 	TRACK_KV_REMOVE( this );
 
 	RemoveEverything();
+	if ( m_bOwnsLocalStringTable )
+	{
+		delete m_pLocalStringTable;
+		m_pLocalStringTable = NULL;
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -538,10 +617,28 @@ void KeyValues::ChainKeyValue( KeyValues* pChain )
 //-----------------------------------------------------------------------------
 const char *KeyValues::GetName( void ) const
 {
+	if ( m_bIsUsingLocalStringTable )
+	{
+		SOURCESDK_Assert( m_pLocalStringTable );
+		throw "Not implemented.";
+		//return m_pLocalStringTable->GetStringForSymbol( m_iKeyName );
+	}
 	return s_pfGetStringForSymbol( m_iKeyName );
 }
 
 /*
+//-----------------------------------------------------------------------------
+// Purpose: Create a child that shares this node's local string table, if any
+//-----------------------------------------------------------------------------
+KeyValues *KeyValues::CreateChild( const char *keyName ) const
+{
+	if ( m_bIsUsingLocalStringTable )
+	{
+		return new KeyValues( keyName, m_pLocalStringTable );
+	}
+	return new KeyValues( keyName );
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Read a single token from buffer (0 terminated)
 //-----------------------------------------------------------------------------
@@ -661,13 +758,59 @@ void KeyValues::UsesConditionals(bool state)
 //bool KeyValues::LoadFromFile( IBaseFileSystem *filesystem, const char *resourceName, const char *pathID )
 /*
 {
+	TM_ZONE_DEFAULT( TELEMETRY_LEVEL0 );
+	TM_ZONE_DEFAULT_PARAM( TELEMETRY_LEVEL0, resourceName );
+
 	Assert(filesystem);
 #ifdef WIN32
 	Assert( IsX360() || ( IsPC() && _heapchk() == _HEAPOK ) );
 #endif
+*/
+	/*
+	People are cheating with the keyvalue cache enabled by doing the below, so disable it.
+
+	For example if one is to allow a blue demoman texture on sv_pure they
+	change it to this, "$basetexture" "temp/demoman_blue". Remember to move the
+	demoman texture to the temp folder in the materials folder. It will likely
+	not be there so make a new folder for it. Once the directory in the
+	demoman_blue vmt is changed to the temp folder and the vtf texture is in
+	the temp folder itself you are finally done.
+
+	I packed my mods into a vpk but I don't think it's required. Once in game
+	you must create a server via the create server button and select the map
+	that will load the custom texture before you join a valve server. I suggest
+	you only do this with player textures and such as they are always loaded.
+	After you load the map you join the valve server and the textures should
+	appear and work on valve servers.
+
+	This can be done on any sv_pure 1 server but it depends on what is type of
+	files are allowed. All valve servers allow temp files so that is the
+	example I used here."
+
+	So all vmt's files can bypass sv_pure 1. And I believe this mod is mostly
+	made of vmt files, so valve's sv_pure 1 bull is pretty redundant.
+	*/
+/*
+	const bool bUseCache = false;
+
+	// If pathID is null, we cannot cache the result because that has a weird iterate-through-a-bunch-of-locations behavior.
+	const bool bUseCacheForRead = bUseCache && !refreshCache && pathID != NULL; 
+	const bool bUseCacheForWrite = bUseCache && pathID != NULL;
+
+	COM_TimestampedLog( "KeyValues::LoadFromFile(%s%s%s): Begin", pathID ? pathID : "", pathID && resourceName ? "/" : "", resourceName ? resourceName : "" );
+
+	// Keep a cache of keyvalues, try to load it here.
+	if ( bUseCacheForRead && KeyValuesSystem()->LoadFileKeyValuesFromCache( this, resourceName, pathID, filesystem ) ) {
+		COM_TimestampedLog( "KeyValues::LoadFromFile(%s%s%s): End / CacheHit", pathID ? pathID : "", pathID && resourceName ? "/" : "", resourceName ? resourceName : "" );
+		return true;
+	}
+
 	FileHandle_t f = filesystem->Open(resourceName, "rb", pathID);
 	if ( !f )
+	{
+		COM_TimestampedLog("KeyValues::LoadFromFile(%s%s%s): End / FileNotFound", pathID ? pathID : "", pathID && resourceName ? "/" : "", resourceName ? resourceName : "");
 		return false;
+	}
 
 	s_LastFileLoadingFrom = (char*)resourceName;
 
@@ -690,7 +833,16 @@ void KeyValues::UsesConditionals(bool state)
 		bRetOK = LoadFromBuffer( resourceName, buffer, filesystem );
 	}
 
-	((IFileSystem *)filesystem)->FreeOptimalReadBuffer( buffer );
+	// The cache relies on the KeyValuesSystem string table, which will only be valid if we're
+	// using classic mode. 
+	if ( bUseCacheForWrite && bRetOK )
+	{
+		KeyValuesSystem()->AddFileKeyValuesToCache( this, resourceName, pathID );
+	}
+
+	( (IFileSystem *)filesystem )->FreeOptimalReadBuffer( buffer );
+
+	COM_TimestampedLog("KeyValues::LoadFromFile(%s%s%s): End / Success", pathID ? pathID : "", pathID && resourceName ? "/" : "", resourceName ? resourceName : "");
 
 	return bRetOK;
 }
@@ -713,6 +865,10 @@ void KeyValues::UsesConditionals(bool state)
 		return false;
 	}
 
+	KeyValuesSystem()->InvalidateCacheForFile( resourceName, pathID );
+	if ( bCacheResult ) {
+		KeyValuesSystem()->AddFileKeyValuesToCache( this, resourceName, pathID );
+	}
 	RecursiveSaveToFile(filesystem, f, NULL, 0, sortKeys, bAllowEmptyString );
 	filesystem->Close(f);
 
@@ -951,22 +1107,23 @@ KeyValues *KeyValues::FindKey(const char *keyName, bool bCreate)
 		return this;
 
 	// look for '/' characters deliminating sub fields
-	char szBuf[256];
+	char szBuf[256] = { 0 };
 	const char *subStr = strchr(keyName, '/');
 	const char *searchStr = keyName;
 
 	// pull out the substring if it exists
 	if (subStr)
 	{
-		int size = subStr - keyName;
-		SOURCESDK_Q_memcpy( szBuf, keyName, size );
-		szBuf[size] = 0;
+		int size = MIN( (int)(subStr - keyName + 1), (int)sizeof( szBuf ) );
+		strncpy( szBuf, keyName, size );
 		searchStr = szBuf;
 	}
 
 	// lookup the symbol for the search string
-	HKeySymbol iSearchStr = s_pfGetSymbolForString( searchStr, bCreate );
-
+	HKeySymbol iSearchStr = m_bIsUsingLocalStringTable
+		? (throw "Not implemented.",/*m_pLocalStringTable->GetSymbolForString( searchStr, bCreate )*/s_pfGetSymbolForString( searchStr, bCreate ))
+		: s_pfGetSymbolForString( searchStr, bCreate );
+	
 	if ( iSearchStr == SOURCESDK_TF2_INVALID_KEY_SYMBOL )
 	{
 		// not found, couldn't possibly be in key value list
@@ -999,7 +1156,7 @@ KeyValues *KeyValues::FindKey(const char *keyName, bool bCreate)
 		{
 			/*
 			// we need to create a new key
-			dat = new KeyValues( searchStr );
+			dat = CreateChild( searchStr );
 //			Assert(dat != NULL);
 
 			dat->UsesEscapeSequences( m_bHasEscapeSequences != 0 );	// use same format as parent
@@ -1082,7 +1239,7 @@ KeyValues* KeyValues::CreateKey( const char *keyName )
 KeyValues* KeyValues::CreateKeyUsingKnownLastChild( const char *keyName, KeyValues *pLastChild )
 {
 	// Create a new key
-	KeyValues* dat = new KeyValues( keyName );
+	KeyValues* dat = CreateChild( keyName );
 
 	dat->UsesEscapeSequences( m_bHasEscapeSequences != 0 ); // use same format as parent does
 	dat->UsesConditionals( m_bEvaluateConditionals != 0 );
@@ -1186,6 +1343,7 @@ void KeyValues::RemoveSubKey(KeyValues *subKey)
 	subKey->m_pPeer = NULL;
 }
 */
+
 
 
 //-----------------------------------------------------------------------------
@@ -1301,8 +1459,9 @@ uint64 KeyValues::GetUint64( const char *keyName, uint64 defaultValue )
 			return (int)dat->m_flValue;
 		case TYPE_UINT64:
 			return *((uint64 *)dat->m_sValue);
-		case TYPE_INT:
 		case TYPE_PTR:
+			return (uint64)(uintp)dat->m_pValue;
+		case TYPE_INT:
 		default:
 			return dat->m_iValue;
 		};
@@ -1492,14 +1651,19 @@ const wchar_t *KeyValues::GetWString( const char *keyName, const wchar_t *defaul
 bool KeyValues::GetBool( const char *keyName, bool defaultValue, bool* optGotDefault )
 {
 	if ( FindKey( keyName ) )
-	{
-		if ( optGotDefault )
-			(*optGotDefault) = false;
+    {
+        if ( optGotDefault )
+		{
+            *optGotDefault = false;
+		}
+
 		return 0 != GetInt( keyName, 0 );
-	}
+    }
     
-	if ( optGotDefault )
-		(*optGotDefault) = true;
+    if ( optGotDefault )
+	{
+        *optGotDefault = true;
+	}
 
 	return defaultValue;
 }
@@ -1697,7 +1861,9 @@ void KeyValues::SetFloat( const char *keyName, float value )
 
 void KeyValues::SetName( const char * setName )
 {
-	m_iKeyName = s_pfGetSymbolForString( setName, true );
+	m_iKeyName = m_bIsUsingLocalStringTable
+		? m_pLocalStringTable->GetSymbolForString( setName, true )
+		: s_pfGetSymbolForString( setName, true );
 }
 
 //-----------------------------------------------------------------------------
@@ -1714,107 +1880,130 @@ void KeyValues::SetPtr( const char *keyName, void *value )
 	}
 }
 
-void KeyValues::RecursiveCopyKeyValues( KeyValues& src )
+//-----------------------------------------------------------------------------
+// Purpose: Copies the tree from the other KeyValues into this one, recursively
+// beginning with the root specified by rootSrc.
+//-----------------------------------------------------------------------------
+void KeyValues::CopyKeyValuesFromRecursive( const KeyValues& rootSrc )
 {
-	// garymcthack - need to check this code for possible buffer overruns.
-	
+	// This code used to be recursive, which was more elegant. Unfortunately, it also blew the stack for large 
+	// KeyValues. So now we have the iterative version which is uglier but doesn't blow the stack.
+	// This uses breadth-first traversal.
+
+	struct CopyStruct
+	{
+		KeyValues* dst;
+		const KeyValues* src;
+	};
+
+	char tmp[256];
+	KeyValues* localDst = NULL;
+
+	CUtlQueue<CopyStruct> nodeQ;
+	nodeQ.Insert({ this, &rootSrc });
+
+	while ( nodeQ.Count() > 0 ) 
+	{
+		CopyStruct cs = nodeQ.RemoveAtHead();
+
+		// Process all the siblings of the current node. If anyone has a child, add it to the queue.
+		while (cs.src)
+		{
+			Assert( (cs.src != NULL) == (cs.dst != NULL) );
+
+			// Copy the node contents
+			cs.dst->CopyKeyValue( *cs.src, sizeof(tmp), tmp );
+
+			// Add children to the queue to process later. 
+			if (cs.src->m_pSub) {
+				cs.dst->m_pSub = localDst = cs.dst->CreateChild( NULL );
+				nodeQ.Insert({ localDst, cs.src->m_pSub });
+			}
+
+			// Process siblings until we hit the end of the line. 
+			if (cs.src->m_pPeer) {
+				cs.dst->m_pPeer = cs.dst->CreateChild( NULL );
+			}
+			else {
+				cs.dst->m_pPeer = NULL;
+			}
+
+			// Advance to the next peer.
+			cs.src = cs.src->m_pPeer;
+			cs.dst = cs.dst->m_pPeer;
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Copies a single KeyValue from src to this, using the provided temporary
+// buffer if the keytype requires it. Does NOT recurse.
+//-----------------------------------------------------------------------------
+void KeyValues::CopyKeyValue( const KeyValues& src, size_t tmpBufferSizeB, char* tmpBuffer )
+{
 	m_iKeyName = src.GetNameSymbol();
 
-	if( !src.m_pSub )
+	if ( src.m_pSub )
+		return;
+
+	m_iDataType = src.m_iDataType;
+		
+	switch( src.m_iDataType )
 	{
-		m_iDataType = src.m_iDataType;
-		char buf[256];
-		switch( src.m_iDataType )
+	case TYPE_NONE:
+		break;
+	case TYPE_STRING:
+		if( src.m_sValue )
 		{
-		case TYPE_NONE:
-			break;
-		case TYPE_STRING:
-			if( src.m_sValue )
-			{
-				int len = Q_strlen(src.m_sValue) + 1;
-				m_sValue = KVStringAlloc<char>(len);
-				Q_strncpy( m_sValue, src.m_sValue, len );
-			}
-			break;
-		case TYPE_INT:
-			{
-				m_iValue = src.m_iValue;
-				Q_snprintf( buf,sizeof(buf), "%d", m_iValue );
-				int len = Q_strlen(buf) + 1;
-				m_sValue = KVStringAlloc<char>(len);
-				Q_strncpy( m_sValue, buf, len  );
-			}
-			break;
-		case TYPE_FLOAT:
-			{
-				m_flValue = src.m_flValue;
-				Q_snprintf( buf,sizeof(buf), "%f", m_flValue );
-				int len = Q_strlen(buf) + 1;
-				m_sValue = KVStringAlloc<char>(len);
-				Q_strncpy( m_sValue, buf, len );
-			}
-			break;
-		case TYPE_PTR:
-			{
-				m_pValue = src.m_pValue;
-			}
-			break;
-		case TYPE_UINT64:
-			{
-				m_sValue = KVStringAlloc<char>(sizeof(uint64));
-				Q_memcpy( m_sValue, src.m_sValue, sizeof(uint64) );
-			}
-			break;
-		case TYPE_COLOR:
-			{
-				m_Color[0] = src.m_Color[0];
-				m_Color[1] = src.m_Color[1];
-				m_Color[2] = src.m_Color[2];
-				m_Color[3] = src.m_Color[3];
-			}
-			break;
+			int len = Q_strlen(src.m_sValue) + 1;
+			m_sValue = KVStringAlloc<char>[len];
+			Q_strncpy( m_sValue, src.m_sValue, len );
+		}
+		break;
+	case TYPE_INT:
+		{
+			m_iValue = src.m_iValue;
+			Q_snprintf( tmpBuffer, (int)tmpBufferSizeB, "%d", m_iValue );
+			int len = Q_strlen(tmpBuffer) + 1;
+			m_sValue = KVStringAlloc<char>[len];
+			Q_strncpy( m_sValue, tmpBuffer, len  );
+		}
+		break;
+	case TYPE_FLOAT:
+		{
+			m_flValue = src.m_flValue;
+			Q_snprintf( tmpBuffer, (int)tmpBufferSizeB, "%f", m_flValue );
+			int len = Q_strlen(tmpBuffer) + 1;
+			m_sValue = KVStringAlloc<char>[len];
+			Q_strncpy( m_sValue, tmpBuffer, len );
+		}
+		break;
+	case TYPE_PTR:
+		{
+			m_pValue = src.m_pValue;
+		}
+		break;
+	case TYPE_UINT64:
+		{
+			m_sValue = KVStringAlloc<char>[sizeof(uint64)];
+			Q_memcpy( m_sValue, src.m_sValue, sizeof(uint64) );
+		}
+		break;
+	case TYPE_COLOR:
+		{
+			m_Color[0] = src.m_Color[0];
+			m_Color[1] = src.m_Color[1];
+			m_Color[2] = src.m_Color[2];
+			m_Color[3] = src.m_Color[3];
+		}
+		break;
 			
-		default:
-			{
-				// do nothing . .what the heck is this?
-				Assert( 0 );
-			}
-			break;
-		}
-
-	}
-#if 0
-	KeyValues *pDst = this;
-	for ( KeyValues *pSrc = src.m_pSub; pSrc; pSrc = pSrc->m_pPeer )
-	{
-		if ( pSrc->m_pSub )
+	default:
 		{
-			pDst->m_pSub = new KeyValues( pSrc->m_pSub->getName() );
-			pDst->m_pSub->RecursiveCopyKeyValues( *pSrc->m_pSub );
+			// do nothing . .what the heck is this?
+			SOURCESDK_Assert( 0 );
 		}
-		else
-		{
-			// copy non-empty keys
-			if ( pSrc->m_sValue && *(pSrc->m_sValue) )
-			{
-				pDst->m_pPeer = new KeyValues( 
-			}
-		}
-	}
-#endif
-
-	// Handle the immediate child
-	if( src.m_pSub )
-	{
-		m_pSub = new KeyValues( NULL );
-		m_pSub->RecursiveCopyKeyValues( *src.m_pSub );
-	}
-
-	// Handle the immediate peer
-	if( src.m_pPeer )
-	{
-		m_pPeer = new KeyValues( NULL );
-		m_pPeer->RecursiveCopyKeyValues( *src.m_pPeer );
+		break;
 	}
 }
 
@@ -1822,7 +2011,7 @@ KeyValues& KeyValues::operator=( KeyValues& src )
 {
 	RemoveEverything();
 	Init();	// reset all values
-	RecursiveCopyKeyValues( src );
+	CopyKeyValuesFromRecursive( src );
 	return *this;
 }
 
@@ -1919,6 +2108,26 @@ KeyValues *KeyValues::MakeCopy( void ) const
 	// recursively copy subkeys
 	CopySubkeys( newKeyValue );
 	return newKeyValue;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+KeyValues *KeyValues::MakeCopy( bool copySiblings ) const
+{
+	KeyValues* rootDest = MakeCopy();
+	if ( !copySiblings )
+		return rootDest;
+
+	const KeyValues* curSrc = GetNextKey();
+	KeyValues* curDest = rootDest;
+	while (curSrc) {
+		curDest->SetNextKey( curSrc->MakeCopy() );
+		curDest = curDest->GetNextKey();
+		curSrc = curSrc->GetNextKey();
+	}
+
+	return rootDest;
 }
 */
 
@@ -2105,6 +2314,38 @@ void KeyValues::RecursiveMergeKeyValues( KeyValues *baseKV )
 	}
 }
 
+bool IsSteamDeck( bool bTrulyHardwareOnly )
+{
+	static int s_nSteamDeckCached = -1;
+	static int s_nGamepadUICached = -1;
+
+	if ( s_nGamepadUICached == -1 || s_nSteamDeckCached == -1 )
+	{
+		bool bIsDeck = false;
+		bool bIsGamepadUI = false;
+
+		if ( CommandLine()->CheckParm( "-nogamepadui" ) )
+			bIsGamepadUI = false;
+		else if ( CommandLine()->CheckParm( "-gamepadui" ) )
+			bIsGamepadUI = true;
+		else
+		{
+			const char *deckEnv = getenv( "SteamDeck" );
+			bIsDeck = deckEnv && *deckEnv && atoi( deckEnv ) != 0;
+
+			const char *bigPictureEnv = getenv( "SteamTenFoot" );
+			bIsGamepadUI = bigPictureEnv && *bigPictureEnv && atoi( bigPictureEnv ) != 0;
+		}
+
+		s_nSteamDeckCached = bIsDeck ? 1 : 0;
+		s_nGamepadUICached = bIsGamepadUI ? 1 : 0;
+	}
+
+	if ( bTrulyHardwareOnly )
+		return s_nSteamDeckCached == 1;
+	return s_nGamepadUICached == 1 || s_nSteamDeckCached == 1;
+}
+
 //-----------------------------------------------------------------------------
 // Returns whether a keyvalues conditional evaluates to true or false
 // Needs more flexibility with conditionals, checking convars would be nice.
@@ -2120,6 +2361,9 @@ bool EvaluateConditional( const char *str )
 	bool bNot = false; // should we negate this command?
 	if ( *str == '!' )
 		bNot = true;
+
+	if ( Q_stristr( str, "$DECK" ) )
+		return IsSteamDeck() ^ bNot;
 
 	if ( Q_stristr( str, "$X360" ) )
 		return IsX360() ^ bNot;
@@ -2142,12 +2386,14 @@ bool EvaluateConditional( const char *str )
 	return false;
 }
 
-
+// prevent two threads from entering this at the same time and trying to share the global error reporting and parse buffers
+static CThreadFastMutex g_KVMutex;
 //-----------------------------------------------------------------------------
 // Read from a buffer...
 //-----------------------------------------------------------------------------
 bool KeyValues::LoadFromBuffer( char const *resourceName, CUtlBuffer &buf, IBaseFileSystem* pFileSystem, const char *pPathID )
 {
+	SOURCESDK_AUTO_LOCK( g_KVMutex );
 	KeyValues *pPreviousKey = NULL;
 	KeyValues *pCurrentKey = this;
 	CUtlVector< KeyValues * > includedKeys;
@@ -2199,7 +2445,7 @@ bool KeyValues::LoadFromBuffer( char const *resourceName, CUtlBuffer &buf, IBase
 
 		if ( !pCurrentKey )
 		{
-			pCurrentKey = new KeyValues( s );
+			pCurrentKey = CreateChild( s );
 			Assert( pCurrentKey );
 
 			pCurrentKey->UsesEscapeSequences( m_bHasEscapeSequences != 0 ); // same format has parent use
@@ -2286,6 +2532,8 @@ bool KeyValues::LoadFromBuffer( char const *resourceName, const char *pBuffer, I
 {
 	if ( !pBuffer )
 		return true;
+	
+	COM_TimestampedLog("KeyValues::LoadFromBuffer(%s%s%s): Begin", pPathID ? pPathID : "", pPathID && resourceName ? "/" : "", resourceName ? resourceName : "");
 
 	int nLen = Q_strlen( pBuffer );
 	CUtlBuffer buf( pBuffer, nLen, CUtlBuffer::READ_ONLY | CUtlBuffer::TEXT_BUFFER );
@@ -2299,7 +2547,11 @@ bool KeyValues::LoadFromBuffer( char const *resourceName, const char *pBuffer, I
 		buf.AssumeMemory( pUTF8Buf, nUTF8Len, nUTF8Len, CUtlBuffer::READ_ONLY | CUtlBuffer::TEXT_BUFFER );
 	}
 
-	return LoadFromBuffer( resourceName, buf, pFileSystem, pPathID );
+	bool retVal = LoadFromBuffer( resourceName, buf, pFileSystem, pPathID );
+
+	COM_TimestampedLog("KeyValues::LoadFromBuffer(%s%s%s): End", pPathID ? pPathID : "", pPathID && resourceName ? "/" : "", resourceName ? resourceName : "");
+
+	return retVal;
 }
 
 //-----------------------------------------------------------------------------
@@ -2310,6 +2562,12 @@ void KeyValues::RecursiveLoadFromBuffer( char const *resourceName, CUtlBuffer &b
 	CKeyErrorContext errorReport(this);
 	bool wasQuoted;
 	bool wasConditional;
+	if ( errorReport.GetStackLevel() > 100 )
+	{
+		g_KeyValuesErrorStack.ReportError( "RecursiveLoadFromBuffer:  recursion overflow" );
+		return;
+	}
+
 	// keep this out of the stack until a key is parsed
 	CKeyErrorContext errorKey( INVALID_KEY_SYMBOL );
 
@@ -2569,7 +2827,18 @@ bool KeyValues::WriteAsBinary( CUtlBuffer &buffer )
 			}
 		case TYPE_PTR:
 			{
-				buffer.PutUnsignedInt( (int)dat->m_pValue );
+#if defined( PLATFORM_64BITS )
+				// We only put an int here, because 32-bit clients do not expect 64 bits. It'll cause them to read the wrong
+				// amount of data and then crash. Longer term, we may bump this up in size on all platforms, but short term 
+				// we don't really have much of a choice other than sticking in something that appears to not be NULL.
+				if ( dat->m_pValue != 0 && ( ( (int)(intp)dat->m_pValue ) == 0 ) )
+					buffer.PutInt( 31337 ); // Put not 0, but not a valid number. Yuck.
+				else
+					buffer.PutInt( ( (int)(intp)dat->m_pValue ) );
+#else
+				buffer.PutPtr( dat->m_pValue );
+#endif
+				break;
 			}
 
 		default:
@@ -2623,8 +2892,9 @@ bool KeyValues::ReadAsBinary( CUtlBuffer &buffer, int nStackDepth )
 		{
 		case TYPE_NONE:
 			{
-				dat->m_pSub = new KeyValues("");
-				dat->m_pSub->ReadAsBinary( buffer, nStackDepth + 1 );
+				dat->m_pSub = dat->CreateChild( "" );
+				if ( !dat->m_pSub->ReadAsBinary( buffer, nStackDepth + 1 ) )
+					return false;
 				break;
 			}
 		case TYPE_STRING:
@@ -2641,7 +2911,7 @@ bool KeyValues::ReadAsBinary( CUtlBuffer &buffer, int nStackDepth )
 			}
 		case TYPE_WSTRING:
 			{
-				Assert( !"TYPE_WSTRING" );
+				SOURCESDK_Assert( !"TYPE_WSTRING" );// !! MERGE WARNING: Other branches were found to have security issues here, use caution if taking this from another branch (CS:GO known fixed)
 				break;
 			}
 
@@ -2673,7 +2943,14 @@ bool KeyValues::ReadAsBinary( CUtlBuffer &buffer, int nStackDepth )
 			}
 		case TYPE_PTR:
 			{
-				dat->m_pValue = (void*)buffer.GetUnsignedInt();
+#if defined( PLATFORM_64BITS )
+				// We need to ensure we only read 32 bits out of the stream because 32 bit clients only wrote 
+				// 32 bits of data there. The actual pointer is irrelevant, all that we really care about here
+				// contractually is whether the pointer is zero or not zero.
+				dat->m_pValue = ( void* )( intp )buffer.GetInt();
+#else
+				dat->m_pValue = buffer.GetPtr();
+#endif
 			}
 
 		default:
@@ -2689,7 +2966,7 @@ bool KeyValues::ReadAsBinary( CUtlBuffer &buffer, int nStackDepth )
 			break;
 
 		// new peer follows
-		dat->m_pPeer = new KeyValues("");
+		dat->m_pPeer = dat->CreateChild( "" );
 		dat = dat->m_pPeer;
 	}
 
@@ -2902,15 +3179,50 @@ bool KeyValues::ProcessResolutionKeys( const char *pResString )
 */
 
 
+
 //
 // KeyValues dumping implementation
 //
-//bool KeyValues::Dump( IKeyValuesDumpContext *pDump, int nIndentLevel /* = 0 */ )
+//bool KeyValues::Dump( IKeyValuesDumpContext *pDump, int nIndentLevel /* = 0 */,  bool bSorted /*= false*/ )
 /*
 {
 	if ( !pDump->KvBeginKey( this, nIndentLevel ) )
 		return false;
+
+	if ( bSorted )
+	{
+		CUtlSortVector< KeyValues*, CUtlSortVectorKeyValuesByName > vecSortedKeys;
 	
+		// Dump values
+		for ( KeyValues *val = this ? GetFirstValue() : NULL; val; val = val->GetNextValue() )
+		{
+			vecSortedKeys.InsertNoSort( val );
+		}
+		vecSortedKeys.RedoSort();
+
+		FOR_EACH_VEC( vecSortedKeys, i )
+		{
+			if ( !pDump->KvWriteValue( vecSortedKeys[i], nIndentLevel + 1 ) )
+				return false;
+		}
+		
+		vecSortedKeys.Purge();
+
+		// Dump subkeys
+		for ( KeyValues *sub = this ? GetFirstTrueSubKey() : NULL; sub; sub = sub->GetNextTrueSubKey() )
+		{
+			vecSortedKeys.InsertNoSort( sub );
+		}
+		vecSortedKeys.RedoSort();
+
+		FOR_EACH_VEC( vecSortedKeys, i )
+		{
+			if ( !vecSortedKeys[i]->Dump( pDump, nIndentLevel + 1, bSorted ) )
+				return false;
+		}
+	}
+	else
+	{	
 	// Dump values
 	for ( KeyValues *val = this ? GetFirstValue() : NULL; val; val = val->GetNextValue() )
 	{
@@ -2928,7 +3240,6 @@ bool KeyValues::ProcessResolutionKeys( const char *pResString )
 	return pDump->KvEndKey( this, nIndentLevel );
 }
 
-
 bool IKeyValuesDumpContextAsText::KvBeginKey( KeyValues *pKey, int nIndentLevel )
 {
 	if ( pKey )
@@ -2936,7 +3247,9 @@ bool IKeyValuesDumpContextAsText::KvBeginKey( KeyValues *pKey, int nIndentLevel 
 		return
 			KvWriteIndent( nIndentLevel ) &&
 			KvWriteText( pKey->GetName() ) &&
-			KvWriteText( " {\n" );
+			KvWriteText( "\n" ) &&
+			KvWriteIndent( nIndentLevel ) &&
+			KvWriteText( "{\n" );
 	}
 	else
 	{

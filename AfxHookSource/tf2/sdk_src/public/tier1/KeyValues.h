@@ -116,6 +116,7 @@ public:
 	KeyValues( const char *setName, const char *firstKey, int firstValue );
 	KeyValues( const char *setName, const char *firstKey, const char *firstValue, const char *secondKey, const char *secondValue );
 	KeyValues( const char *setName, const char *firstKey, int firstValue, const char *secondKey, int secondValue );
+	KeyValues( const char *setName, bool bUsesLocalStorage );
 */
 
 	// Section name
@@ -123,6 +124,8 @@ public:
 /*
 	void SetName( const char *setName);
 */
+
+	bool IsUsingLocalStorage() const { return m_bIsUsingLocalStringTable != 0; }
 
 	// gets the name as a unique int
 	int GetNameSymbol() const { return m_iKeyName; }
@@ -159,6 +162,8 @@ public:
 	//
 	KeyValues *GetFirstSubKey() { return m_pSub; }	// returns the first subkey in the list
 	KeyValues *GetNextKey() { return m_pPeer; }		// returns the next subkey
+	const KeyValues *GetNextKey() const { return m_pPeer; }		// returns the next subkey
+
 	void SetNextKey( KeyValues * pDat);
 	KeyValues *FindLastSubKey();	// returns the LAST subkey in the list.  This requires a linked list iteration to find the key.  Returns NULL if we don't have any children
 
@@ -222,8 +227,9 @@ public:
 	void *operator new( size_t iAllocSize, int nBlockUse, const char *pFileName, int nLine );
 	void operator delete( void *pMem );
 	void operator delete( void *pMem, int nBlockUse, const char *pFileName, int nLine );
+	
+	KeyValues& operator=( const KeyValues& src );
 
-	KeyValues& operator=( KeyValues& src );
 */
 	// Adds a chain... if we don't find stuff in this keyvalue, we'll look
 	// in the one we're chained to.
@@ -237,6 +243,10 @@ public:
 
 	// Allocate & create a new copy of the keys
 	KeyValues *MakeCopy( void ) const;
+
+	// Allocate & create a new copy of the keys, including the next keys. This is useful for top level files
+	// that don't use the usual convention of a root key with lots of children (like soundscape files).
+	KeyValues *MakeCopy( bool copySiblings ) const;
 
 	// Make a new copy of all subkeys, add them all to the passed-in keyvalues
 	void CopySubkeys( KeyValues *pParent ) const;
@@ -277,25 +287,31 @@ public:
 		
 	// Merge in another KeyValues, keeping "our" settings
 	void RecursiveMergeKeyValues( KeyValues *baseKV );
+
+	void AddSubkeyUsingKnownLastChild( KeyValues *pSubKey, KeyValues *pLastChild );
+
+	KeyValues* CreateKey( const char *keyName );	
 */
 
 private:
 /*
 	KeyValues( KeyValues& );	// prevent copy constructor being used
+	KeyValues( const char *setName, CKeyValuesGrowableStringTable *pLocalStringTable );
 
 	// prevent delete being called except through deleteThis()
 	~KeyValues();
+	KeyValues *CreateChild( const char *keyName ) const;
 
-	KeyValues* CreateKey( const char *keyName );
 
 	/// Create a child key, given that we know which child is currently the last child.
 	/// This avoids the O(N^2) behaviour when adding children in sequence to KV,
 	/// when CreateKey() wil have to re-locate the end of the list each time.  This happens,
 	/// for example, every time we load any KV file whatsoever.
 	KeyValues* CreateKeyUsingKnownLastChild( const char *keyName, KeyValues *pLastChild );
-	void AddSubkeyUsingKnownLastChild( KeyValues *pSubKey, KeyValues *pLastChild );
 
-	void RecursiveCopyKeyValues( KeyValues& src );
+	void CopyKeyValuesFromRecursive( const KeyValues& src );
+	void CopyKeyValue( const KeyValues& src, size_t tmpBufferSizeB, char* tmpBuffer );
+
 	void RemoveEverything();
 //	void RecursiveSaveToFile( IBaseFileSystem *filesystem, CUtlBuffer &buffer, int indentLevel );
 //	void WriteConvertedString( CUtlBuffer &buffer, const char *pszString );
@@ -307,8 +323,9 @@ private:
 	void WriteConvertedString( IBaseFileSystem *filesystem, FileHandle_t f, CUtlBuffer *pBuf, const char *pszString );
 	
 	void RecursiveLoadFromBuffer( char const *resourceName, CUtlBuffer &buf );
+
 */
-	/*
+/*
 	// For handling #include "filename"
 	void AppendIncludedKeys( CUtlVector< KeyValues * >& includedKeys );
 	void ParseIncludedKeys( char const *resourceName, const char *filetoinclude, 
@@ -316,7 +333,7 @@ private:
 
 	// For handling #base "filename"
 	void MergeBaseKeys( CUtlVector< KeyValues * >& baseKeys );
-	*/
+*/
 
 /*
 	// NOTE: If both filesystem and pBuf are non-null, it'll save to both of them.
@@ -349,11 +366,14 @@ private:
 	char	   m_iDataType;
 	char	   m_bHasEscapeSequences; // true, if while parsing this KeyValue, Escape Sequences are used (default false)
 	char	   m_bEvaluateConditionals; // true, if while parsing this KeyValue, conditionals blocks are evaluated (default true)
-	char	   unused[1];
+	char	   m_bIsUsingLocalStringTable; // true if this node uses a per-instance growable string table
+	char	   m_bOwnsLocalStringTable; // true if this node owns and must delete the per-instance string table
 
 	KeyValues *m_pPeer;	// pointer to next key in list
 	KeyValues *m_pSub;	// pointer to Start of a new sub key list
 	KeyValues *m_pChain;// Search here if it's not in our list
+
+	CKeyValuesGrowableStringTable *m_pLocalStringTable;
 
 private:
 	// Statics to implement the optional growable string table
@@ -455,6 +475,8 @@ inline bool  KeyValues::IsEmpty( int keySymbol )
 }
 
 /*
+bool IsSteamDeck( bool bTrulyHardwareOnly = false );
+
 bool EvaluateConditional( const char *str );
 
 class CUtlSortVectorKeyValuesByName
