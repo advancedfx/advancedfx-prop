@@ -10,6 +10,8 @@
 #pragma once
 #endif
 
+#include <math.h>
+
 namespace SOURCESDK {
 namespace CS2 {
 
@@ -102,7 +104,7 @@ public:
     virtual void _Unknown_049(void) = 0;
     virtual void _Unknown_050(void) = 0;
 
-    virtual void ExecuteClientCmd(int iUnk0MaybeSplitScreenSlotSetTo0, const char * pszCommands, bool bUnk2SetToTrue) = 0; //:051
+    virtual void ExecuteClientCmd(int iUnk0MaybeSplitScreenSlotSetTo0, const char * pszCommands, bool bUnk2SetToTrue, double unk2 = NAN, unsigned __int64 nRequiredFlags = 0) = 0; //:051
 
     virtual void _Unknown_052(void) = 0;
     virtual void _Unknown_053(void) = 0;
