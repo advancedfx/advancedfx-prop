@@ -37,7 +37,7 @@ public:
 	int GetEntryIndex() const;
 	int GetSerialNumber() const;
 
-	int ToInt() const;
+	uint32 ToInt() const;
 	bool operator !=(const CEntityHandle& other) const;
 	bool operator ==(const CEntityHandle& other) const;
 	bool operator ==(const CEntityInstance* pEnt) const;
@@ -116,7 +116,7 @@ inline int CEntityHandle::GetSerialNumber() const
 	return m_Parts.m_Serial;
 }
 
-inline int CEntityHandle::ToInt() const
+inline uint32 CEntityHandle::ToInt() const
 {
 	return m_Index;
 }
